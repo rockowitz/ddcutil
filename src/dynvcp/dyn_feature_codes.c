@@ -45,14 +45,11 @@ version_feature_info_to_metadata(
 }
 
 
-
-/* Formats the value of a non-continuous feature whose value is returned in byte SL.
- * The names of possible values is stored in a value list in the feature table entry
- * for the feature.
+/* Formats the name of a non-continuous feature whose value is returned in byte SL.
  *
  * Arguments:
  *    code_info   parsed feature data
- *    vcp_version VCP version
+ *    value_table lookup table, if NULL, create generic name
  *    buffer      buffer in which to store output
  *    bufsz       buffer size
  *
@@ -60,21 +57,14 @@ version_feature_info_to_metadata(
  *    true if formatting successful, false if not
  */
 bool dyn_format_feature_detail_sl_lookup(
-        Nontable_Vcp_Value *     code_info,
-        // Display_Ref *            dref,
-        // DDCA_MCCS_Version_Spec   vcp_version,
-        DDCA_Feature_Value_Table value_table,
-        char *                   buffer,
-        int                      bufsz)
+        Nontable_Vcp_Value *       code_info,
+        DDCA_Feature_Value_Entry * value_table,
+        char *                     buffer,
+        int                        bufsz)
 {
    bool debug = false;
    DBGMSF(debug, "Starting.");
 
-   // Internal_Feature_Metadata * intmeta = NULL;
-
-
-   // char * s = lookup_value_name(code_info->vcp_code, vcp_version, code_info->sl);
-   // DDCA_Feature_Value_Entry * table = intmeta->external_metadata->sl_values;
    if (value_table) {
       char * s = vcp_get_feature_value_name(value_table, code_info->sl);
       if (!s)
