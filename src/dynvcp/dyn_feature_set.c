@@ -18,7 +18,7 @@ dyn_create_feature_set(
       Feature_Set_Flags      flags)
    // bool                   exclude_table_features)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, flags=0x%02x - %s",
                  subset_id,
                  feature_subset_name(subset_id),
