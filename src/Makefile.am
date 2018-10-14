@@ -87,14 +87,22 @@ app_ddcutil/app_getvcp.c
 # it's a hack for using API calls in standalone executable
 if USE_API_COND
 ddcutil_SOURCES += \
-   libmain/ddcutil_c_api.c  
+   libmain/api_base.c \
+   libmain/api_displays.c \
+   libmain/api_metadata.c \
+   libmain/api_feature_access.c \
+   libmain/api_capabilities.c
 endif
 
 #
 # Files only in libddcutil
 #
 libddcutil_la_SOURCES = \
-libmain/ddcutil_c_api.c  
+   libmain/api_base.c \
+   libmain/api_displays.c \
+   libmain/api_metadata.c \
+   libmain/api_feature_access.c \
+   libmain/api_capabilities.c 
 
 # libhack_la_SOURCES = \
 # libmain/ddcutil_c_api.c  
