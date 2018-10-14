@@ -177,20 +177,20 @@ typedef Byte Dref_Flags;
  * or a USB bus number/device number pair.
  */
 typedef struct _display_ref {
-   char          marker[4];
-   DDCA_IO_Path  io_path;
-   int           usb_bus;
-   int           usb_device;
-   char *        usb_hiddev_name;
-   DDCA_MCCS_Version_Spec vcp_version;
-   Dref_Flags    flags;
-   char *        capabilities_string;    // added 4/2017, private copy
-   Parsed_Edid * pedid;                  // added 4/2017
-   DDCA_Monitor_Model_Key * mmid;         // will be set iff pedid
-   int           dispno;
-   void *        detail;    // I2C_Bus_Info *, ADL_Display_Detail *, or Usb_Monitor_Info *
-   Display_Async_Rec * async_rec;
-   Dynamic_Features_Rec *  dfr;       // for future Dynamic_Features_Record *
+   char                     marker[4];
+   DDCA_IO_Path             io_path;
+   int                      usb_bus;
+   int                      usb_device;
+   char *                   usb_hiddev_name;
+   DDCA_MCCS_Version_Spec   vcp_version;
+   Dref_Flags               flags;
+   char *                   capabilities_string;    // added 4/2017, private copy
+   Parsed_Edid *            pedid;                  // added 4/2017
+   DDCA_Monitor_Model_Key * mmid;                   // will be set iff pedid
+   int                      dispno;
+   void *                   detail;    // I2C_Bus_Info, ADL_Display_Detail, or Usb_Monitor_Info
+   Display_Async_Rec *      async_rec;
+   Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
