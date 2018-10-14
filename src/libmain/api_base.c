@@ -9,43 +9,16 @@
 #include <assert.h>
 #include <errno.h>
  
-#include "util/data_structures.h"
-#include "util/error_info.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
-#include "util/udev_util.h"
-
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
-#include "base/ddc_errno.h"
-#include "base/ddc_packets.h"
-#include "base/displays.h"
-// #include "base/dynamic_features.h"
-#include "base/execution_stats.h"
-#include "base/feature_lists.h"
-#include "base/monitor_model_key.h"
 #include "base/parms.h"
-
-//#include "vcp/ddc_command_codes.h"
-//#include "vcp/parse_capabilities.h"
-//#include "vcp/parsed_capabilities_feature.h"
-//#include "vcp/vcp_feature_codes.h"
-//#include "vcp/vcp_feature_values.h"
-
-// #include "dynvcp/dyn_feature_codes.h"
 
 #include "adl/adl_shim.h"
 
-//#include "ddc/ddc_async.h"
-//#include "ddc/ddc_displays.h"
-//#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_multi_part_io.h"
-//#include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
-//#include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_services.h"
-//#include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
 #include "private/ddcutil_types_private.h"
@@ -55,11 +28,9 @@
 #include "api_base.h"
 
 
-
 //
 // Library Build Information
 //
-
 
 DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void) {
    static DDCA_Ddcutil_Version_Spec vspec = {255,255,255};
