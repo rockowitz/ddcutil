@@ -1126,6 +1126,7 @@ ddca_get_display_info_list2(
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
          DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
          if (dref->dispno != -1) {
+            // DBGMSF(debug, "dref->vcp_version (1) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
             // hack:
             // vcp version is unqueried to improve performance of the command line version
             // mccs_version_spec_to_id has assert error if unqueried
@@ -1133,6 +1134,7 @@ ddca_get_display_info_list2(
                vspec = get_vcp_version_by_display_ref(dref);
             }
             version_id = mccs_version_spec_to_id(vspec);
+            // DBGMSF(debug, "dref->vcp_version (2) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
          }
 
          memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
@@ -1244,6 +1246,11 @@ ddca_report_display_info(
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
+   if (debug) {
+   rpt_vstring(d1, "dref:                %p - %s", dinfo->dref, dref_repr_t(dinfo->dref));
+   rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
+                                                  format_vspec(((Display_Ref*)dinfo->dref)->vcp_version));
+   }
    DBGMSF(debug, "Done");
 }
 
@@ -1467,10 +1474,11 @@ ddca_get_feature_list_by_dref(
                      p_feature_list);
 #endif
                bool debug = false;
-               DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%s, include_table_features=%s, p_feature_list=%p",
-                      feature_set_id, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
+               DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
+                      feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+               // DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
                // Whether a feature is a table feature can vary by version, so can't
                // specify VCP_SPEC_ANY to request feature ids in any version
                if (!vcp_version_is_valid(vspec, /* allow unknown */ false)) {
@@ -2102,7 +2110,7 @@ ddca_get_simple_sl_value_table(
 
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
-      DDCA_Feature_Value_Table    feature_value_table,
+      DDCA_Feature_Value_Entry *  feature_value_table,
       uint8_t                     feature_value,
       char**                      value_name_loc)
 {

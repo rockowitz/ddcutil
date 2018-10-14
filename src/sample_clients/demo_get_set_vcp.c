@@ -211,8 +211,8 @@ bye:
 // been looked up.
 bool
 show_simple_nc_feature_value_by_table(
-        DDCA_Feature_Value_Table feature_table,
-        uint8_t                  feature_value)
+      DDCA_Feature_Value_Entry * feature_table,
+      uint8_t                    feature_value)
 {
     char * feature_value_name = NULL;
     bool ok = false;

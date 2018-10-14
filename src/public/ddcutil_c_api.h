@@ -913,7 +913,7 @@ DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Feature_Value_Table *  value_table_loc);   // DDCA_Feature_Value_Entry **
+      DDCA_Feature_Value_Entry**  value_table_loc);
 
 
 // New master functions for feature metadata
@@ -1064,7 +1064,7 @@ ddca_get_feature_name_by_dref(
  */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
-      DDCA_Feature_Value_Table    feature_value_table,
+      DDCA_Feature_Value_Entry *  feature_value_table,
       uint8_t                     feature_value,
       char**                      value_name_loc);
 
