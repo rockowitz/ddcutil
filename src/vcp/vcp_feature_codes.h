@@ -104,12 +104,12 @@ bool (*Format_Normal_Feature_Detail_Function) (
 
 typedef
 bool (*Format_Normal_Feature_Detail_Function2) (
-          Nontable_Vcp_Value*     code_info,
-          // Display_Ref *           dref,
-          // DDCA_MCCS_Version_Spec  vcp_version,
-          DDCA_Feature_Value_Table   sl_values,
-          char *                  buffer,
-          int                     bufsz);
+          Nontable_Vcp_Value*        code_info,
+       // Display_Ref *              dref,
+       // DDCA_MCCS_Version_Spec     vcp_version,
+          DDCA_Feature_Value_Entry * sl_values,
+          char *                     buffer,
+          int                        bufsz);
 
 typedef
 bool (*Format_Table_Feature_Detail_Function) (
