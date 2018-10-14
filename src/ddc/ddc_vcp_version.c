@@ -1,29 +1,12 @@
-/* ddc_vcp_version.c
+/** @file ddc_vcp_version.c
  *
  * Functions to obtain the VCP (MCCS) version for a display.
  * These functions are in a separate source file to simplify
  * the acyclic graph of #includes within the ddc source directory.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
@@ -71,7 +54,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    // TMI
    DBGMSF(debug, "Starting. dh=%s, dh->dref->vcp_version =  %d.%d, %s",
                  dh_repr(dh), dh->dref->vcp_version.major, dh->dref->vcp_version.minor, format_vspec(dh->dref->vcp_version));
-   if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
+   // if (vcp_version_is_unqueried(dh->dref->vcp_version)) {
+   if (vcp_version_eq(dh->dref->vcp_version, DDCA_VSPEC_UNQUERIED)) {
       if (debug) {
          DBGMSG0("Starting.  vcp_version not set");
          dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
@@ -158,7 +142,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    // ddc_open_display() should not fail
    assert(dref->flags & DREF_DDC_COMMUNICATION_WORKING);
 
-   if (vcp_version_is_unqueried(dref->vcp_version)) {
+   // if (vcp_version_is_unqueried(dref->vcp_version)) {
+   if (vcp_version_eq(dref->vcp_version, DDCA_VSPEC_UNQUERIED)) {
       Display_Handle * dh = NULL;
       // no need to check return code since aborting if error
       // should never fail, since open already succeeded - but what if locked?
