@@ -1,6 +1,9 @@
-// api_capabilities.c
+/** api_capabilities.c
+ *
+ *  Capabilities related functions of the API
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -20,6 +23,7 @@
 #include "util/error_info.h"
 
 #include "base/displays.h"
+#include "base/vcp_version.h"
 
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/parse_capabilities.h"
@@ -29,6 +33,7 @@
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_vcp_version.h"
  
 
 
@@ -156,9 +161,10 @@ ddca_free_parsed_capabilities(
 }
 
 
-void
-ddca_report_parsed_capabilities(
+DDCA_Status
+ddca_report_parsed_capabilities_by_dref(
       DDCA_Capabilities *      p_caps,
+      DDCA_Display_Ref         ddca_dref,
       int                      depth)
 {
    bool debug = false;
@@ -186,32 +192,62 @@ ddca_report_parsed_capabilities(
          rpt_vstring(d2, "0x%02x (%s)", cur_code, cmd_name);
       }
    }
+
    rpt_vstring(d1, "VCP Feature codes:");
    for (int code_ndx = 0; code_ndx < p_caps->vcp_code_ct; code_ndx++) {
       DDCA_Cap_Vcp * cur_vcp = &p_caps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
 
-      char * feature_name
-              = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
+      DDCA_Feature_Metadata info;
+      DDCA_Status ddcrc =
+           ddca_get_feature_metadata_by_dref(
+            cur_vcp->feature_code,
+            ddca_dref,         // ok if NULL
+            false,             // create_default_if_not_found,
+            &info);
+      bool found_metadata = true;
+      if (ddcrc != 0) {
+         DBGMSG("ddca_get_feature_metadata_by_dref() returned %s", ddca_rc_desc(ddcrc));
+         found_metadata = false;
+      }
+
+      char * feature_name = NULL;
+      if (found_metadata)
+         feature_name = info.feature_name;
+      else
+         feature_name = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
+
+      // char * feature_name
+      //         = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
       // FUTURE:
       //        = dyn_get_feature_name(cur_vcp->feature_code, dref));  // n. handles dref == NULL
 
       rpt_vstring(d2, "Feature:  0x%02x (%s)", cur_vcp->feature_code, feature_name);
 
       DDCA_Feature_Value_Entry * feature_value_table;
-      DDCA_Status ddcrc = ddca_get_simple_sl_value_table_by_vspec(
-            cur_vcp->feature_code,
-            p_caps->version_spec,
-            NULL,
-            &feature_value_table);
+
+
 
       if (cur_vcp->value_ct > 0) {
+         if (found_metadata)
+            feature_value_table = info.sl_values;
+         else {
+            ddcrc = ddca_get_simple_sl_value_table_by_vspec(
+                  cur_vcp->feature_code,
+                  p_caps->version_spec,
+                  NULL,
+                  &feature_value_table);
+            DBGMSG("ddca_get_simple_sl_value_table_by_vspec() returned %s", ddca_rc_desc(ddcrc));
+         }
+
+
+
          if (ol > DDCA_OL_VERBOSE)
             rpt_vstring(d3, "Unparsed values:     %s", hexstring_t(cur_vcp->values, cur_vcp->value_ct) );
          rpt_label(d3, "Values:");
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
-            if (ddcrc == 0) {
+            if (feature_value_table) {
                value_desc = "Unrecognized feature value";
                ddca_get_simple_nc_feature_value_name_by_table(
                           feature_value_table,
@@ -222,9 +258,54 @@ ddca_report_parsed_capabilities(
          }
       }
    }
+   return 0;           // *** TEMP ***
 }
 
 
+void
+ddca_report_parsed_capabilities(
+      DDCA_Capabilities *      p_caps,
+      int                      depth)
+{
+   ddca_report_parsed_capabilities_by_dref(p_caps, NULL, depth);
+}
+
+
+DDCA_Status
+ddca_report_parsed_capabilities_by_dh(
+      DDCA_Capabilities *      p_caps,
+      DDCA_Display_Handle      ddca_dh,
+      int                      depth)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. p_caps=%p, ddca_dh=%s, depth=%d", p_caps, ddca_dh_repr(ddca_dh), depth);
+   DDCA_Status ddcrc = 0;
+   if (!library_initialized) {
+      ddcrc = DDCRC_UNINITIALIZED;
+      goto bye;
+   }
+
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {
+      ddcrc = DDCRC_ARG;
+      goto bye;
+   }
+
+   // Ensure dh->dref->vcp_version is not unqueried,
+   // ddca_report_parsed_capabilities_by_dref() will fail trying to lock the already open device
+   get_vcp_version_by_display_handle(dh);
+   DBGMSF(debug, "After get_vcp_version_by_display_handle(), dh->dref->vcp_version=%s",
+                 format_vspec(dh->dref->vcp_version) );
+
+   ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
+
+bye:
+   DBGMSF(debug, "Done. Returning %s", ddca_rc_desc(ddcrc));
+   return ddcrc;
+}
+
+
+// Unpublished
 void
 ddca_parse_and_report_capabilities(
       char *                    capabilities_string,
@@ -235,6 +316,7 @@ ddca_parse_and_report_capabilities(
       dyn_report_parsed_capabilities(pcaps, dref, 0);
       free_parsed_capabilities(pcaps);
 }
+
 
 DDCA_Feature_List
 ddca_feature_list_from_capabilities(
