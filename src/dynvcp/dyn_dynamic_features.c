@@ -291,7 +291,7 @@ dfr_load_by_edid(
 
 Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. ");
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref));
 
    Error_Info * errs = NULL;
    if (!enable_dynamic_features)    // global variable
