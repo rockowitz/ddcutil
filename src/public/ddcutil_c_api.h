@@ -127,6 +127,8 @@ DDCA_Build_Option_Flags ddca_build_options(void);
   */
  void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec);
 
+ void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth);
+
 
 //
 // Status Codes
@@ -406,7 +408,6 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
  *  @return prior value
  */
 bool ddca_enable_error_info(bool enable);
-
 
 
 
@@ -806,15 +807,30 @@ ddca_free_parsed_capabilities(
  *  information is written, including command codes.
  *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
+ *  @param[in]  ddca_dref            display reference
  *  @param[in]  depth  logical       indentation depth
  *
  *  @remark
- *  Future:  Feature value names will reflect any loaded monitor definition files
+ *  If ddca_dref is not NULL, feature value names will reflect any loaded monitor definition files
  */
+DDCA_Status
+ddca_report_parsed_capabilities_by_dref(
+      DDCA_Capabilities *      parsed_capabilities,
+      DDCA_Display_Ref         ddca_dref,
+      int                      depth);
+
+
+DDCA_Status
+ddca_report_parsed_capabilities_by_dh(
+      DDCA_Capabilities *      p_caps,
+      DDCA_Display_Handle      ddca_dh,
+      int                      depth);
+
 void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      parsed_capabilities,
       int                      depth);
+
 
 
 /** Returns the VCP feature codes defined in a
@@ -896,6 +912,13 @@ ddca_get_simple_sl_value_table(
 
 
 // New master functions for feature metadata
+
+
+DDCA_Status
+ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref);
+
+DDCA_Status
+ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh);
 
 /**
  * Gets information for a VCP feature.
