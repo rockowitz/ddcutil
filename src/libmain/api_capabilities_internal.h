@@ -4,10 +4,10 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
-
 #ifndef API_CAPABILITIES_INTERNAL_H_
 #define API_CAPABILITIES_INTERNAL_H_
+
+#include "public/ddcutil_types.h"
 
 // UNPUBLISHED
 /** Parses a capabilities string, and reports the parsed string
@@ -35,5 +35,5 @@ void ddca_parse_and_report_capabilities(
       DDCA_Display_Ref          dref,
       int                       depth);
 
-
 #endif /* API_CAPABILITIES_INTERNAL_H_ */
+
