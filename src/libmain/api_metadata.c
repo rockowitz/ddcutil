@@ -368,7 +368,7 @@ ddca_get_feature_info_by_vcp_version(
       DDCA_MCCS_Version_Id        mccs_version_id,
       DDCA_Version_Feature_Info** p_info)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, mccs_version_id=%d", feature_code, mccs_version_id);
 
    DDCA_Status psc = 0;
@@ -602,8 +602,12 @@ ddca_get_feature_metadata_by_dh(
    WITH_DH(
          ddca_dh,
          {
-               // DBGMSG("Starting");
-               // dbgrpt_display_ref(dh->dref, 1);
+               bool debug = false;
+               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s",
+                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found));
+               if (debug)
+                  dbgrpt_display_ref(dh->dref, 1);
+
 #ifdef OLD
                // Note:  dh->dref->vcp_version may be Unqueried (255,255)
                // Query vcp version here instead of calling
@@ -620,12 +624,25 @@ ddca_get_feature_metadata_by_dh(
                       info);
 #endif
 
+#ifdef FAILS_GET_VERSION
                 psc = ddca_get_feature_metadata_by_dref(
                      feature_code,
                      dh->dref,
                      create_default_if_not_found,
                      info);
-            }
+#endif
+
+                Internal_Feature_Metadata * intmeta =
+                   dyn_get_feature_metadata_by_dh(feature_code, dh, create_default_if_not_found);
+                if (!intmeta) {
+                   psc = DDCRC_NOT_FOUND;
+                }
+                else {
+                   memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
+                }
+
+                DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
+         }
       );
 }
 
@@ -863,12 +880,12 @@ ddca_get_simple_nc_feature_value_name_by_display(
 
 
 //
-//  Dynamic Features (future)
+//  Dynamic
 //
 
 DDCA_Status
-ddca_dfr_check_by_dref(DDCA_Display_Ref * ddca_dref) {
-
+ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
+{
    WITH_DR(ddca_dref,
       {
          free_thread_error_detail();
@@ -878,6 +895,16 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref * ddca_dref) {
             save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
             errinfo_free(ddc_excp);
          }
+      }
+   );
+}
+
+DDCA_Status
+ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
+{
+   WITH_DH(ddca_dh,
+      {
+         psc = ddca_dfr_check_by_dref(dh->dref);
       }
    );
 }
