@@ -4,13 +4,14 @@
  *  and of otherwise unpublished and archived functions.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
- 
 
 #ifndef API_FEATURE_ACCESS_INTERNAL_H_
 #define API_FEATURE_ACCESS_INTERNAL_H_
+
+#include "public/ddcutil_types.h"
+#include "private/ddcutil_types_private.h"
 
 
 // NEVER PUBLISHED, USED INTERNALLY
