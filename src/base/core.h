@@ -337,6 +337,7 @@ void terminate_execution_on_error(
 DDCA_Error_Detail * error_info_to_ddca_detail(Error_Info * erec);
 DDCA_Error_Detail * dup_error_detail(DDCA_Error_Detail * old);
 void free_error_detail(DDCA_Error_Detail * ddca_erec);
+void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth);
 
 void free_thread_error_detail();
 DDCA_Error_Detail * get_thread_error_detail();
