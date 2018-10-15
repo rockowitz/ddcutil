@@ -1,27 +1,11 @@
-/* demo_capabilities.c
+/** @file demo_capabilities.c
  *
- * Query capabilities string
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Query capabilities string
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #define _GNU_SOURCE        // for asprintf()
 
@@ -148,9 +132,19 @@ void demo_get_capabilities() {
    if (!dh)
       goto bye;
 
+   DDCA_Status rc = 0;
+
+   ddca_dfr_check_by_dh(dh);
+   if (rc != 0) {
+      DDCA_Error_Detail * erec = ddca_get_error_detail();
+      ddca_report_error_detail(erec, 1);
+      ddca_free_error_detail(erec);
+   }
+
+
    char * capabilities = NULL;
    printf("Calling ddca_get_capabilities_string...\n");
-   DDCA_Status rc =  ddca_get_capabilities_string(dh, &capabilities);
+   rc =  ddca_get_capabilities_string(dh, &capabilities);
    if (rc != 0)
       DDC_ERRMSG("ddca_get_capabilities_string", rc);
    else
@@ -175,8 +169,9 @@ void demo_get_capabilities() {
 
          printf("\nReport the result using API function ddca_report_parsed_capabilities()...\n");
          DDCA_Output_Level saved_ol = ddca_set_output_level(DDCA_OL_VERBOSE);
-         ddca_report_parsed_capabilities(
+         ddca_report_parsed_capabilities_by_dh(
                pcaps,
+               dh,
                0);
          ddca_set_output_level(saved_ol);
          ddca_free_parsed_capabilities(pcaps);
