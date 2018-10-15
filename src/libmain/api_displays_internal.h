@@ -3,7 +3,7 @@
  *  For use only by other api_... files.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 
@@ -128,7 +128,5 @@ ddca_mmk_from_dref(
 DDCA_Monitor_Model_Key
 ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh);
-
-
 
 #endif /* API_DISPLAYS_INTERNAL_H_ */
