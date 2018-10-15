@@ -90,6 +90,7 @@ dyn_get_feature_metadata_by_dref(
    bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
+   DBGMSF(debug, "dref->dfr=%p", dref->dfr);
 
    Internal_Feature_Metadata * result = NULL;
 
@@ -172,9 +173,16 @@ dyn_get_feature_metadata_by_dh(
       Display_Handle *      dh,
       bool                  with_default)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. id=0x%02x, dh=%s, with_default=%s",
+                 id, dh_repr_t(dh), sbool(with_default) );
+
    // ensure dh->dref->vcp_version set without incurring additional open/close
    get_vcp_version_by_display_handle(dh);
-   return dyn_get_feature_metadata_by_dref(id, dh->dref, with_default);
+   Internal_Feature_Metadata * result = dyn_get_feature_metadata_by_dref(id, dh->dref, with_default);
+
+   DBGMSF(debug, "Done. Returning: %p", result);
+   return result;
 
 }
 
