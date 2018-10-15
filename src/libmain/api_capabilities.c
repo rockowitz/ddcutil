@@ -4,6 +4,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <libmain/api_base_internal.h>
+#include <libmain/api_capabilities_internal.h>
+#include <libmain/api_displays_internal.h>
+#include <libmain/api_metadata_internal.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -26,11 +30,6 @@
 
 #include "ddc/ddc_read_capabilities.h"
  
-#include "api_base.h"
-#include "api_displays.h"
-#include "api_metadata.h"
-
-#include "api_capabilities.h"
 
 
 //

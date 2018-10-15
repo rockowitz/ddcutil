@@ -18,11 +18,12 @@
 
 #include "private/ddcutil_c_api_private.h"
 
-#include "api_displays.h"
-#include "api_base.h"
-
 #include "base/displays.h"
 #include "base/monitor_model_key.h"
+
+#include "libmain/api_base_internal.h"
+#include "libmain/api_displays_internal.h"
+
 
 static inline bool valid_display_handle(Display_Handle * dh) {
    return (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
@@ -769,6 +770,7 @@ bye:
 // Reports
 //
 
+// deprecated, use ddca_report_displays()
 int
 ddca_report_active_displays(int depth) {
    return ddc_report_displays(false, depth);

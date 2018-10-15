@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <errno.h>
+
  
 #include "base/base_init.h"
 #include "base/build_info.h"
@@ -23,9 +24,9 @@
 
 #include "private/ddcutil_types_private.h"
 #include "private/ddcutil_c_api_private.h"
+#include "libmain/api_base_internal.h"
 #include "public/ddcutil_c_api.h"
 
-#include "api_base.h"
 
 
 //

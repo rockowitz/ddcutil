@@ -4,6 +4,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <errno.h>
+#include <libmain/api_base_internal.h>
+#include <libmain/api_displays_internal.h>
+
  
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -25,9 +28,7 @@
 
 #include "private/ddcutil_c_api_private.h"
 
-#include "api_base.h"
-#include "api_displays.h"
-#include "api_metadata.h"
+#include "api_metadata_internal.h"
 
 
 

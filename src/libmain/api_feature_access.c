@@ -4,12 +4,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <libmain/api_feature_access_internal.h>
+
 
 #include "util/report_util.h"
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
+#include "private/ddcutil_c_api_private.h"
  
 #include "base/displays.h"
 #include "util/error_info.h"
@@ -19,10 +22,8 @@
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_async.h"
 
-#include "api_base.h"
-#include "api_displays.h"
-
-#include "api_feature_access.h"
+#include "libmain/api_base_internal.h"
+#include "libmain/api_displays_internal.h"
 
 //
 // Get and Set Feature Values
