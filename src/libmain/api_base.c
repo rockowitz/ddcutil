@@ -3,12 +3,11 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <errno.h>
-
  
 #include "base/base_init.h"
 #include "base/build_info.h"
@@ -22,18 +21,17 @@
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 
-#include "private/ddcutil_types_private.h"
-#include "private/ddcutil_c_api_private.h"
-#include "libmain/api_base_internal.h"
 #include "public/ddcutil_c_api.h"
 
+#include "libmain/api_base_internal.h"
 
 
 //
 // Library Build Information
 //
 
-DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void) {
+DDCA_Ddcutil_Version_Spec
+ddca_ddcutil_version(void) {
    static DDCA_Ddcutil_Version_Spec vspec = {255,255,255};
    static bool vspec_init = false;
 
@@ -44,20 +42,17 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void) {
    }
    // DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
    return vspec;
-
 }
 
 
-/*  Returns the ddcutil version as a string in the form "major.minor.micro".
- */
+//  Returns the ddcutil version as a string in the form "major.minor.micro".
 const char *
 ddca_ddcutil_version_string(void) {
    return BUILD_VERSION;
 }
 
 
-/* Indicates whether the ddcutil library was built with ADL support. .
- */
+// Indicates whether the ddcutil library was built with ADL support. .
 bool
 ddca_built_with_adl(void) {
 #ifdef HAVE_ADL
@@ -65,11 +60,10 @@ ddca_built_with_adl(void) {
 #else
    return false;
 #endif
-
 }
 
-/* Indicates whether the ddcutil library was built with support for USB connected monitors. .
- */
+
+// Indicates whether the ddcutil library was built with support for USB connected monitors. .
 bool
 ddca_built_with_usb(void) {
 #ifdef USE_USB
@@ -77,16 +71,6 @@ ddca_built_with_usb(void) {
 #else
    return false;
 #endif
-}
-
-/* Indicates whether ADL successfully initialized.
- * (e.g. fglrx driver not found)
- *
- * @return true/false
- */
-bool
-ddca_adl_is_available(void) {
-   return adlshim_is_available();
 }
 
 
@@ -110,21 +94,17 @@ ddca_build_options(void) {
 }
 
 
+// Indicates whether ADL successfully initialized.
+// (would fail e.g. fglrx driver not found)
+bool
+ddca_adl_is_available(void) {
+   return adlshim_is_available();
+}
+
+
 //
 // Initialization
 //
-
-#ifdef NOT_NEEDED_HEADER_FILE_SEGMENT
-/**
- * Initializes the ddcutil library module.
- *
- * Must be called before most other functions.
- *
- * It is not an error if this function is called more than once.
- */
-// void __attribute__ ((constructor)) _ddca_init(void);
-#endif
-
 
 bool library_initialized = false;
 
@@ -182,13 +162,21 @@ ddca_get_global_failure_information()
 // Error Detail
 //
 
-DDCA_Error_Detail * ddca_get_error_detail() {
+DDCA_Error_Detail *
+ddca_get_error_detail() {
    return dup_error_detail(get_thread_error_detail());
 }
 
-void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
+
+void
+ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
    free_error_detail(ddca_erec);
 }
+
+void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth) {
+   report_error_detail(ddca_erec, depth);
+}
+
 
 // DDCA_Error_Detail * ddca_dup_error_detail(DDCA_Error_Detail * original) {
 //     return dup_error_detail(original);
@@ -218,9 +206,11 @@ ddca_rc_desc(DDCA_Status status_code) {
    return result;
 }
 
+
 // quick and dirty for now
 // TODO: make thread safe, wrap in mutex
-bool ddca_enable_error_info(bool enable) {
+bool
+ddca_enable_error_info(bool enable) {
    bool old_value = report_freed_exceptions;
    report_freed_exceptions = enable;            // global in core.c
    return old_value;
@@ -245,12 +235,14 @@ ddca_set_fout_to_default(void) {
 
 
 // Redirects output that normally would go to STDERR
-void ddca_set_ferr(FILE * ferr) {
+void
+ddca_set_ferr(FILE * ferr) {
    set_ferr(ferr);
 }
 
 
-void ddca_set_ferr_to_default(void) {
+void
+ddca_set_ferr_to_default(void) {
    set_ferr_to_default();
 }
 
@@ -267,7 +259,8 @@ typedef struct {
 } In_Memory_File_Desc;
 
 
-static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
+static In_Memory_File_Desc *
+get_thread_capture_buf_desc() {
    static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
 
    In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
@@ -285,7 +278,8 @@ static In_Memory_File_Desc *  get_thread_capture_buf_desc() {
 }
 
 
-void ddca_start_capture(DDCA_Capture_Option_Flags flags) {
+void
+ddca_start_capture(DDCA_Capture_Option_Flags flags) {
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
 
    if (!fdesc->in_memory_file) {
@@ -299,7 +293,8 @@ void ddca_start_capture(DDCA_Capture_Option_Flags flags) {
 }
 
 
-char * ddca_end_capture(void) {
+char *
+ddca_end_capture(void) {
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
    // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
 
@@ -363,10 +358,12 @@ ddca_get_output_level(void) {
    return get_output_level();
 }
 
+
 DDCA_Output_Level
 ddca_set_output_level(DDCA_Output_Level newval) {
      return set_output_level(newval);
 }
+
 
 char *
 ddca_output_level_name(DDCA_Output_Level val) {
@@ -376,8 +373,9 @@ ddca_output_level_name(DDCA_Output_Level val) {
 
 bool
 ddca_enable_report_ddc_errors(bool onoff) {
-   return enable_report_ddc_errors(onoff);;
+   return enable_report_ddc_errors(onoff);
 }
+
 
 bool
 ddca_is_report_ddc_errors_enabled(void) {
@@ -393,6 +391,7 @@ int
 ddca_max_max_tries(void) {
    return MAX_MAX_TRIES;
 }
+
 
 int
 ddca_get_max_tries(DDCA_Retry_Type retry_type) {
@@ -438,11 +437,14 @@ ddca_set_max_tries(
 }
 
 
-bool ddca_enable_verify(bool onoff) {
+bool
+ddca_enable_verify(bool onoff) {
    return ddc_set_verify_setvcp(onoff);
 }
 
-bool ddca_is_verify_enabled() {
+
+bool
+ddca_is_verify_enabled() {
    return ddc_get_verify_setvcp();
 }
 
@@ -478,17 +480,20 @@ ddca_set_timeout_millis(
 // Tracing
 //
 
-void ddca_add_traced_function(const char * funcname) {
+void
+ddca_add_traced_function(const char * funcname) {
    add_traced_function(funcname);
 }
 
 
-void ddca_add_traced_file(const char * filename) {
+void
+ddca_add_traced_file(const char * filename) {
    add_traced_file(filename);
 }
 
 
-void ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
+void
+ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
    set_trace_levels(trace_flags);
 }
 
@@ -499,13 +504,16 @@ void ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
 
 // TODO: Add functions to access ddcutil's runtime error statistics
 
-void ddca_reset_stats(void) {
+void
+ddca_reset_stats(void) {
    ddc_reset_stats_main();
 }
 
 // TODO: Functions that return stats in data structures
-void ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
+void
+ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
    ddc_report_stats_main( stats_types,    // stats to show
                           depth);         // logical indentation depth
 }
+
 
