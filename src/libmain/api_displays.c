@@ -16,8 +16,6 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 
-#include "private/ddcutil_c_api_private.h"
-
 #include "base/displays.h"
 #include "base/monitor_model_key.h"
 
@@ -222,7 +220,8 @@ bye:
 }
 
 
-DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
+DDCA_Status
+ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
    WITH_DR(ddca_dref,
          {
             if (dref->flags & DREF_TRANSIENT)
@@ -235,7 +234,7 @@ DDCA_Status ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 // static char dref_work_buf[100];
 
 char *
-ddca_dref_repr(DDCA_Display_Ref ddca_dref){
+ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
@@ -262,6 +261,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref){
    return result;
 }
 
+
 void
 ddca_dbgrpt_display_ref(
       DDCA_Display_Ref ddca_dref,
@@ -275,6 +275,33 @@ ddca_dbgrpt_display_ref(
 }
 
 
+DDCA_Status
+ddca_report_display_by_dref(
+      DDCA_Display_Ref ddca_dref,
+      int depth)
+{
+   DDCA_Status rc = 0;
+
+    if (!library_initialized) {
+       rc = DDCRC_UNINITIALIZED;
+       goto bye;
+    }
+
+    Display_Ref * dref = (Display_Ref *) ddca_dref;
+    if ( !valid_display_ref(dref) )  {
+       rc = DDCRC_ARG;
+       goto bye;
+    }
+
+    ddc_report_display_by_dref(dref, depth);
+
+bye:
+   return rc;
+}
+
+
+//
+// Open and close display
 
 DDCA_Status
 ddca_open_display(
@@ -334,6 +361,10 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 }
 
 
+//
+// Display Handle
+//
+
 char *
 ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
@@ -354,7 +385,6 @@ ddca_display_ref_from_handle(
       result = dh->dref;
    return result;
 }
-
 
 
 DDCA_Status
@@ -381,6 +411,7 @@ ddca_get_mccs_version_by_dh(
    return rc;
 }
 
+
 // not published
 DDCA_Status
 ddca_get_mccs_version_with_default(
@@ -393,6 +424,11 @@ ddca_get_mccs_version_with_default(
       *p_spec = default_spec;
    return rc;
 }
+
+
+//
+// DDCA_MCCS_Version_Id functions - Deprecated
+//
 
 DDCA_Status
 ddca_get_mccs_version_id(
@@ -416,6 +452,7 @@ char *
 ddca_mccs_version_id_name(DDCA_MCCS_Version_Id version_id) {
    return vcp_version_id_name(version_id);
 }
+
 
 #ifdef DEFINED_BUT_NOT_RELEASED
 /**  Returns the descriptive name of a #DDCA_MCCS_Version_Id,
@@ -490,7 +527,6 @@ ddca_mmk_from_dref(
 }
 
 
-
 DDCA_Monitor_Model_Key
 ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh)
@@ -503,7 +539,9 @@ ddca_mmk_from_dh(
 }
 
 
-
+//
+// Display Info
+//
 
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
@@ -704,6 +742,10 @@ ddca_report_display_info_list(
 }
 
 
+//
+// Miscellaneous
+//
+
 // deprecated
 DDCA_Status
 ddca_get_edid_by_dref(
@@ -743,28 +785,6 @@ DDCA_Status
 ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
 #endif
 
-
-
-DDCA_Status
-ddca_report_display_by_dref(DDCA_Display_Ref ddca_dref, int depth) {
-   DDCA_Status rc = 0;
-
-    if (!library_initialized) {
-       rc = DDCRC_UNINITIALIZED;
-       goto bye;
-    }
-
-    Display_Ref * dref = (Display_Ref *) ddca_dref;
-    if ( !valid_display_ref(dref) )  {
-       rc = DDCRC_ARG;
-       goto bye;
-    }
-
-    ddc_report_display_by_dref(dref, depth);
-
-bye:
-   return rc;
-}
 
 //
 // Reports
