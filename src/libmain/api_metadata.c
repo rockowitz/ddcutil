@@ -604,8 +604,8 @@ ddca_get_feature_metadata_by_dh(
          ddca_dh,
          {
                bool debug = false;
-               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s",
-                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found));
+               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s, info=%p",
+                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), info);
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
 
@@ -643,6 +643,10 @@ ddca_get_feature_metadata_by_dh(
                 }
 
                 DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
+                // if (psc == 0) {
+                //    dbgrpt_internal_feature_metadata(intmeta, 3);
+                //    dbgrpt_ddca_feature_metadata(info, 5);
+                // }
          }
       );
 }
