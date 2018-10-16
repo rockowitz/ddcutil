@@ -36,7 +36,6 @@
 #include "ddc/ddc_vcp_version.h"
  
 
-
 //
 // Monitor Capabilities
 //
@@ -305,7 +304,7 @@ bye:
 }
 
 
-// Unpublished
+// UNPUBLISHED
 void
 ddca_parse_and_report_capabilities(
       char *                    capabilities_string,
@@ -329,6 +328,5 @@ ddca_feature_list_from_capabilities(
    }
    return result;
 }
-
 
 
