@@ -1,4 +1,7 @@
-// api_feature_access.c
+/** \file api_feature_access.c
+ *
+ *  Get, set, and format feature values
+ */
 
 // Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
