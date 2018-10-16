@@ -1181,6 +1181,7 @@ error_info_to_ddca_detail(Error_Info * erec)
       int reqd_size = sizeof(DDCA_Error_Detail) + erec->cause_ct * sizeof(DDCA_Error_Detail*);
       result = calloc(1, reqd_size);
       memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
+      result->status_code = erec->status_code;
       if (erec->detail)
          result->detail = strdup(erec->detail);
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
@@ -1212,6 +1213,7 @@ dup_error_detail(DDCA_Error_Detail * old) {
       int reqd_size = sizeof(DDCA_Error_Detail) + old->cause_ct * sizeof(DDCA_Error_Detail*);
       result = calloc(1, reqd_size);
       memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
+      result->status_code = old->status_code;
       if (old->detail)
          result->detail = strdup(old->detail);
       for (int ndx = 0; ndx < old->cause_ct; ndx++) {
@@ -1219,6 +1221,7 @@ dup_error_detail(DDCA_Error_Detail * old) {
          result->causes[ndx] = cause;
       }
    }
+
    return result;
 }
 
