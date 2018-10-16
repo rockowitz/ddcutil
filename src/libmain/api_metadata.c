@@ -13,6 +13,7 @@
 
 #include "util/report_util.h"
 
+#include "base/core.h"
 #include "base/displays.h"
 #include "base/feature_lists.h"
 #include "base/feature_sets.h"
@@ -888,13 +889,18 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
    WITH_DR(ddca_dref,
       {
-         free_thread_error_detail();
-         Error_Info * ddc_excp = dfr_check_by_dref(dref);
-         if (ddc_excp) {
-            psc = ddc_excp->status_code;
-            save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
-            errinfo_free(ddc_excp);
-         }
+            bool debug = false;
+            DBGMSF(debug, "dref=%s", dref_repr_t(dref));
+
+            free_thread_error_detail();
+            Error_Info * ddc_excp = dfr_check_by_dref(dref);
+            if (ddc_excp) {
+               psc = ddc_excp->status_code;
+               // DBGMSF(debug, "excp->status_code=%s, psc=%s", ddca_rc_name(ddc_excp->status_code), ddca_rc_name(psc));
+               save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+               errinfo_free(ddc_excp);
+            }
+            DBGMSF(debug, "Returning: %s", ddca_rc_name(psc));
       }
    );
 }
@@ -904,7 +910,12 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
    WITH_DH(ddca_dh,
       {
-         psc = ddca_dfr_check_by_dref(dh->dref);
+            bool debug = false;
+            DBGMSF(debug, "dref=%s", dh_repr_t(dh));
+
+            psc = ddca_dfr_check_by_dref(dh->dref);
+
+            DBGMSF(debug, "Returning: %s", ddca_rc_name(psc));
       }
    );
 }
