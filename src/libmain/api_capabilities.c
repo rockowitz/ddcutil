@@ -207,7 +207,7 @@ ddca_report_parsed_capabilities_by_dref(
             &info);
       bool found_metadata = true;
       if (ddcrc != 0) {
-         DBGMSG("ddca_get_feature_metadata_by_dref() returned %s", ddca_rc_desc(ddcrc));
+         DBGMSF(debug, "ddca_get_feature_metadata_by_dref() returned %s", ddca_rc_desc(ddcrc));
          found_metadata = false;
       }
 
@@ -277,7 +277,7 @@ ddca_report_parsed_capabilities_by_dh(
       DDCA_Display_Handle      ddca_dh,
       int                      depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. p_caps=%p, ddca_dh=%s, depth=%d", p_caps, ddca_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
    if (!library_initialized) {
