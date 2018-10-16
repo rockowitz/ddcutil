@@ -12,6 +12,7 @@
 /** \cond */
 #include <stdio.h>
 
+#include "util/data_structures.h"
 #include "util/string_util.h"
 /** \endcond */
 
