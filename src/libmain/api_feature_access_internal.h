@@ -33,6 +33,7 @@ ddca_format_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
 
+
 // NEVER PUBLISHED, USED INTERNALLY
 /** Returns a formatted representation of a table VCP value.
  *  It is the responsibility of the caller to free the returned string.
@@ -51,7 +52,6 @@ ddca_format_table_vcp_value(
       DDCA_Monitor_Model_Key * mmid,
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
-
 
 
 /** Returns a formatted representation of a VCP value of any type
@@ -73,9 +73,6 @@ ddca_format_any_vcp_value(
       char **                 formatted_value_loc);
 
 
-
-
-
 //
 // Experimental - Not for public use
 //
@@ -90,7 +87,7 @@ ddca_start_get_any_vcp_value(
       DDCA_Notification_Func      callback_func);
 
 
-// unimplemented
+// UNIMPLEMENTED
 /** Registers a callback function to call when a VCP value changes */
 DDCA_Status
 ddca_register_callback(

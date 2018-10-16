@@ -25,6 +25,7 @@
 #define DDC_ASYNC_H_
 
 #include "public/ddcutil_types.h"
+#include "private/ddcutil_types_private.h"
 
 #include "util/coredefs.h"
 #include "util/error_info.h"

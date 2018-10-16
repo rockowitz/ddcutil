@@ -87,6 +87,34 @@ typedef struct {
 } DDCA_Monitor_Model_Key;
 
 
+// Experimental async access - used in Python API
+
+// values are in sync with CMD_ constants defined in ddc_command_codes.h, unify?
+typedef enum {
+    DDCA_Q_VCP_GET         = 0x01,    // CMD_VCP_REQUEST
+    DDCA_Q_VCP_SET         = 0x03,    // CMD_VCP_SET
+    DDCA_Q_VCP_RESET       = 0x09,    // CMD_VCP_RESET
+    DDCA_Q_SAVE_SETTINGS  =  0x0c,    // CMD_SAVE_SETTINGS
+    DDCA_Q_TABLE_READ     =  0xe2,    // CMD_TABLE_READ_REQUST
+    DDCA_Q_TABLE_WRITE    = -0xe7,    // CMD_TABLE_WRITE
+    DDCA_Q_CAPABILITIES   =  0xf3,    // CMD_CAPABILITIES_REQUEST
+} DDCA_Queued_Request_Type;
+
+
+typedef struct {
+   DDCA_Queued_Request_Type   request_type;
+   DDCA_Vcp_Feature_Code      vcp_code;
+   // for DDCA_Q_SET
+   DDCA_Non_Table_Vcp_Value       non_table_value;
+} DDCA_Queued_Request;
+
+
+/** Callback function to report VCP value change */
+typedef void (*DDCA_Notification_Func)(DDCA_Status psc, DDCA_Any_Vcp_Value* valrec);
+
+typedef int (*Simple_Callback_Func)(int val);
+
+
 
 
 
