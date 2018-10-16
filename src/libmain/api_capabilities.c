@@ -7,33 +7,34 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
-#include <libmain/api_base_internal.h>
-#include <libmain/api_capabilities_internal.h>
-#include <libmain/api_displays_internal.h>
-#include <libmain/api_metadata_internal.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
-
-#include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
+#include "public/ddcutil_status_codes.h"
 
 #include "util/error_info.h"
+#include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/displays.h"
 #include "base/vcp_version.h"
 
-#include "vcp/parsed_capabilities_feature.h"
-#include "vcp/parse_capabilities.h"
-#include "vcp/vcp_feature_codes.h"
 #include "vcp/ddc_command_codes.h"
+#include "vcp/parse_capabilities.h"
+#include "vcp/parsed_capabilities_feature.h"
+#include "vcp/vcp_feature_codes.h"
 
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp_version.h"
+
+#include "libmain/api_base_internal.h"
+#include "libmain/api_displays_internal.h"
+#include "libmain/api_metadata_internal.h"
+
+#include "libmain/api_capabilities_internal.h"
  
 
 //
