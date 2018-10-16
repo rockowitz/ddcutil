@@ -78,12 +78,13 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
       char * feature_name = "";
       DDCA_Feature_Value_Entry * feature_value_table = NULL;
       DDCA_Feature_Metadata metadata = {{0}};
-      DDCA_Status ddcrc =
-      ddca_get_feature_metadata_by_dh(
-            cur_vcp->feature_code,
-            dh,
-            false,     // create_default_if_not_found,
-            &metadata);
+      // printf("(%s) Before ddca_get_feature_metadata_by_dh(),  &metadata=%p", __func__, &metadata);
+      DDCA_Status ddcrc = ddca_get_feature_metadata_by_dh(
+                             cur_vcp->feature_code,
+                             dh,
+                             true,     // create_default_if_not_found,
+                             &metadata);
+      // printf("(%s) ddca_get_feature_metadata_by_dh() returned: %s\n", __func__, ddca_rc_name(ddcrc));
       if (ddcrc == 0) {
          feature_value_table = metadata.sl_values;
          feature_name = metadata.feature_name;
@@ -93,6 +94,7 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
          printf("      Values:\n");
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
+            uint8_t feature_value = cur_vcp->values[ndx];
             if (feature_value_table) {
                value_desc = "Unrecognized feature value";
 
@@ -100,7 +102,8 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
                      entry->value_name;
                      entry++)
                {
-                  if (entry->value_code == cur_vcp->feature_code) {
+                  // printf("entry->value_code = 0x%02x, entry->value_name=%s\n", entry->value_code, entry->value_name);
+                  if (entry->value_code == feature_value) {
                      value_desc = entry->value_name;
                      break;
                   }
@@ -131,9 +134,10 @@ void demo_get_capabilities() {
 
    DDCA_Status rc = 0;
 
-   ddca_dfr_check_by_dh(dh);
+   rc = ddca_dfr_check_by_dh(dh);
    if (rc != 0) {
       DDCA_Error_Detail * erec = ddca_get_error_detail();
+      printf("OOPS  ddca_dfr_check_by_dh() returned %s\n", ddca_rc_name(rc));
       ddca_report_error_detail(erec, 1);
       ddca_free_error_detail(erec);
    }
