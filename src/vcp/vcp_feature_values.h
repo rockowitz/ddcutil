@@ -71,7 +71,7 @@ typedef struct {
 
 char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type);
 
-
+#ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
 create_nontable_vcp_value(
       Byte     feature_code,
@@ -79,10 +79,10 @@ create_nontable_vcp_value(
       Byte     ml,
       Byte     sh,
       Byte     sl);
+#else
 
-#ifdef ALT
 DDCA_Any_Vcp_Value *
-create_nontable_vcp_value2(
+create_nontable_vcp_value(
       Byte feature_code,
       Byte mh,
       Byte ml,
@@ -90,47 +90,61 @@ create_nontable_vcp_value2(
       Byte sl);
 #endif
 
+#ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
+#else
+DDCA_Any_Vcp_Value *
+#endif
 create_cont_vcp_value(
       Byte     feature_code,
       ushort   max_val,
       ushort   cur_val);
 
+#ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
 create_table_vcp_value_by_bytes(
       Byte     feature_code,
       Byte *   bytes,
       ushort   bytect);
+#else
 
-#ifdef ALT
 DDCA_Any_Vcp_Value *
-create_table_vcp_value_by_bytes2(
+create_table_vcp_value_by_bytes(
       Byte   feature_code,
       Byte * bytes,
       ushort bytect);
 #endif
 
+#ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
 create_table_vcp_value_by_buffer(
       Byte     feature_code,
       Buffer*  buffer);
-
-#ifdef ALT
+#else
 DDCA_Any_Vcp_Value *
-create_table_vcp_value_by_buffer2(
+create_table_vcp_value_by_buffer(
       Byte     feature_code,
       Buffer*  buffer);
 #endif
 
+#ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
+#else
+DDCA_Any_Vcp_Value *
+#endif
 create_single_vcp_value_by_parsed_vcp_response(
       Byte feature_id,
       Parsed_Vcp_Response * presp);
 
 Parsed_Vcp_Response *
 single_vcp_value_to_parsed_vcp_response(
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value * valrec);
+#else
+      DDCA_Any_Vcp_Value * valrec);
+#endif
 
+#ifdef SINGLE_VCP_VALUE
 DDCA_Any_Vcp_Value *
 single_vcp_value_to_any_vcp_value(
       Single_Vcp_Value * valrec);
@@ -138,6 +152,7 @@ single_vcp_value_to_any_vcp_value(
 Single_Vcp_Value *
 any_vcp_value_to_single_vcp_value(
       DDCA_Any_Vcp_Value * anyval);
+#endif
 
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
 // for use within vcp_feature_codes.c
@@ -154,20 +169,39 @@ struct {
    Byte   sl;
 } Nontable_Vcp_Value;
 
-
+#ifdef SINGLE_VCP_VALUE
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec);
+#else
+Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Any_Vcp_Value * valrec);
+#endif
 
+#ifdef SINGLE_VCP_VALUE
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
+#else
+void free_single_vcp_value(DDCA_Any_Vcp_Value * vcp_value);
+#endif
 
-
+#ifdef SINGLE_VCP_VALUE
 void dbgrpt_single_vcp_value(Single_Vcp_Value * valrec, int depth);
+#else
+void dbgrpt_single_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
+#endif
+#ifdef SINGLE_VCP_VALUE
 void report_single_vcp_value(     Single_Vcp_Value * valrec, int depth);
+#else
+void report_single_vcp_value(     DDCA_Any_Vcp_Value * valrec, int depth);
+#endif
 void report_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
 
 
 extern const int summzrize_single_vcp_value_buffer_size;
+#ifdef SINGLE_VCP_VALUE
 char * summarize_single_vcp_value_r(Single_Vcp_Value * valrec, char * buffer, int bufsz);
 char * summarize_single_vcp_value(Single_Vcp_Value * valrec);
+#else
+char * summarize_single_vcp_value_r(DDCA_Any_Vcp_Value * valrec, char * buffer, int bufsz);
+char * summarize_single_vcp_value(DDCA_Any_Vcp_Value * valrec);
+#endif
 
 
 typedef GPtrArray *  Vcp_Value_Set;   // GPtrArray of DDCA_Single_Vcp_Value
@@ -176,11 +210,21 @@ Vcp_Value_Set vcp_value_set_new(int initial_size);
 
 void free_vcp_value_set(Vcp_Value_Set vset);
 
-void vcp_value_set_add(Vcp_Value_Set vset,  Single_Vcp_Value * pval);
+void vcp_value_set_add(Vcp_Value_Set vset,
+#ifdef SINGLE_VCP_VALUE
+      Single_Vcp_Value * pval);
+#else
+      DDCA_Any_Vcp_Value * pval);
+#endif
 
 int vcp_value_set_size(Vcp_Value_Set vset);
 
-Single_Vcp_Value * vcp_value_set_get(Vcp_Value_Set vset, int ndx);
+#ifdef SINGLE_VCP_VALUE
+Single_Vcp_Value *
+#else
+DDCA_Any_Vcp_Value *
+#endif
+vcp_value_set_get(Vcp_Value_Set vset, int ndx);
 
 
 void report_vcp_value_set(Vcp_Value_Set vset, int depth);

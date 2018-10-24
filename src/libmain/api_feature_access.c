@@ -138,7 +138,11 @@ ddca_get_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Vcp_Value_Type    call_type,   // why is this needed?   look it up from dh and feature_code
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value **    pvalrec)
+#else
+      DDCA_Any_Vcp_Value **  pvalrec)
+#endif
 {
    Error_Info * ddc_excp = NULL;
 
@@ -219,12 +223,20 @@ ddca_get_any_vcp_value_using_explicit_type(
    *pvalrec = NULL;
    DDCA_Status rc = DDCRC_ARG;
 
+#ifdef SINGLE_VCP_VaLUE
    Single_Vcp_Value *  valrec2 = NULL;
+#else
+   DDCA_Any_Vcp_Value * valrec2 = NULL;
+#endif
    rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
    if (rc == 0) {
+#ifdef SINGLE_VCP_VALUE
       DDCA_Any_Vcp_Value * valrec = single_vcp_value_to_any_vcp_value(valrec2);
       free_single_vcp_value(valrec2);
       *pvalrec = valrec;
+#else
+      *pvalrec = valrec2;
+#endif
    }
 
    DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
@@ -371,7 +383,11 @@ ddca_get_formatted_vcp_value(
                      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
                       // n. will default to NON_TABLE_VCP_VALUE if not a known code
                       DDCA_Vcp_Value_Type call_type = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+#ifdef SINGLE_VCP_VALUE
                       Single_Vcp_Value * pvalrec;
+#else
+                      DDCA_Any_Vcp_Value * pvalrec;
+#endif
                       ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, &pvalrec);
                       psc = (ddc_excp) ? ddc_excp->status_code : 0;
                       errinfo_free(ddc_excp);
@@ -442,15 +458,21 @@ ddca_format_any_vcp_value(
        goto bye;
    }
 
+#ifdef SINGLE_VCP_VALUE
    // only copies pointer to table bytes, not the bytes
    Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
    bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
+#else
+   bool ok = vcp_format_feature_detail(pentry,vspec, anyval,formatted_value_loc);
+#endif
    if (!ok) {
        psc = DDCRC_ARG;    // ??
        assert(!formatted_value_loc);
        *formatted_value_loc = g_strdup_printf("Unable to format value for feature 0x%02x", feature_code);
    }
+#ifdef SINGLE_VCP_VALUE
    free(valrec);  // does not free any table bytes, which are in anyval
+#endif
 
 bye:
    if (pentry)
@@ -563,8 +585,13 @@ static
 DDCA_Status
 set_single_vcp_value(
       DDCA_Display_Handle  ddca_dh,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value *   valrec,
       Single_Vcp_Value **  verified_value_loc)
+#else
+      DDCA_Any_Vcp_Value *   valrec,
+      DDCA_Any_Vcp_Value **  verified_value_loc)
+#endif
 {
       Error_Info * ddc_excp = NULL;
       WITH_DH(ddca_dh,  {
@@ -603,16 +630,33 @@ ddca_set_continuous_vcp_value_verify(
 {
    DDCA_Status rc = 0;
 
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value valrec;
+#else
+   DDCA_Any_Vcp_Value valrec;
+#endif
    valrec.opcode = feature_code;
    valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
+#ifdef SINGLE_VCP_VALUE
    valrec.val.c.cur_val = new_value;
+#else
+   valrec.val.c_nc.sh = (new_value >> 8) && 0xff;
+   valrec.val.c_nc.sl = new_value & 0xff;
+#endif
 
    if (verified_value_loc) {
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value * verified_single_value = NULL;
+#else
+      DDCA_Any_Vcp_Value * verified_single_value;
+#endif
       rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
       if (verified_single_value)
+#ifdef SINGLE_VCP_VALUE
          *verified_value_loc = verified_single_value->val.c.cur_val;
+#else
+      *verified_value_loc = VALREC_CUR_VAL(verified_single_value);
+#endif
    }
    else {
       rc = set_single_vcp_value(ddca_dh, &valrec, NULL);
@@ -747,14 +791,22 @@ ddca_set_table_vcp_value_verify(
 {
    DDCA_Status rc = 0;
 
+#ifdef SINGLE_VCP_VALUE
     Single_Vcp_Value valrec;
+#else
+    DDCA_Any_Vcp_Value valrec;
+#endif
     valrec.opcode = feature_code;
     valrec.value_type = DDCA_TABLE_VCP_VALUE;
     valrec.val.t.bytect = table_value->bytect;
     valrec.val.t.bytes  = table_value->bytes;  // copies pointer, not bytes
 
     if (verified_value_loc) {
+#ifdef SINGLE_VCP_VALUE
        Single_Vcp_Value * verified_single_value = NULL;
+#else
+       DDCA_Any_Vcp_Value * verified_single_value = NULL;
+#endif
        rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
        if (verified_single_value) {
           DDCA_Table_Vcp_Value * verified_table_value = calloc(1,sizeof(DDCA_Table_Vcp_Value));
@@ -807,23 +859,41 @@ ddca_set_any_vcp_value_verify(
 {
    DDCA_Status rc = 0;
 
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(new_value);
+#endif
 
    if (verified_value_loc) {
+
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value * verified_single_value = NULL;
       rc = set_single_vcp_value(ddca_dh, valrec, &verified_single_value);
+#else
+      DDCA_Any_Vcp_Value * verified_single_value = NULL;
+      rc = set_single_vcp_value(ddca_dh, new_value, &verified_single_value);
+#endif
       if (verified_single_value) {
+#ifdef SINGLE_VCP_VALUE
          DDCA_Any_Vcp_Value * verified_anyval =
                single_vcp_value_to_any_vcp_value(verified_single_value);
          free_single_vcp_value(verified_single_value);
          *verified_value_loc = verified_anyval;
+#else
+         *verified_value_loc = verified_single_value;       // do in need to make a copy for client?
+#endif
       }
    }
    else {
+#ifdef SINGLE_VCP_VALUE
       rc = set_single_vcp_value(ddca_dh, valrec, NULL);
+#else
+      rc = set_single_vcp_value(ddca_dh, new_value, NULL);
+#endif
    }
 
+#ifdef SINGLE_VCP_VALUE
    free(valrec);     // do not free pointer to bytes, ref was copied when creating
+#endif
    return rc;
 }
 

@@ -171,7 +171,11 @@ get_raw_value_for_feature_table_entry(
       Display_Handle *           dh,
       VCP_Feature_Table_Entry *  frec,
       bool                       ignore_unsupported,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value **   pvalrec,
+#else
+      DDCA_Any_Vcp_Value ** pvalrec,
+#endif
       FILE *                     msg_fh)
 {
    bool debug = false;
@@ -190,7 +194,11 @@ get_raw_value_for_feature_table_entry(
    bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value * valrec = NULL;
+#else
+   DDCA_Any_Vcp_Value * valrec = NULL;
+#endif
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
      psc = usb_get_vcp_value(
@@ -272,6 +280,9 @@ get_raw_value_for_feature_table_entry(
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    if (*pvalrec && (debug || IS_TRACING())) {
       dbgrpt_single_vcp_value(*pvalrec, 1);
+#ifdef SINGLE_VCP_VALUE
+      dbgrpt_any_vcp_value(*pvalrec, 1);   // what should this be
+#endif
    }
    if (ddc_excp) {
 #ifdef OLD
@@ -292,7 +303,11 @@ get_raw_value_for_feature_metadata(
       Display_Handle *           dh,
       DDCA_Feature_Metadata *    frec,
       bool                       ignore_unsupported,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value **   pvalrec,
+#else
+      DDCA_Any_Vcp_Value ** pvalrec,
+#endif
       FILE *                     msg_fh)
 {
    bool debug = false;
@@ -313,7 +328,11 @@ get_raw_value_for_feature_metadata(
    bool is_table_feature = frec->feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value * valrec = NULL;
+#else
+   DDCA_Any_Vcp_Value * valrec = NULL;
+#endif
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
      psc = usb_get_vcp_value(
@@ -444,7 +463,11 @@ collect_raw_feature_set_values(
    for (ndx=0; ndx< features_ct; ndx++) {
       VCP_Feature_Table_Entry * entry = get_feature_set_entry(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, entry->code);
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value *    pvalrec;
+#else
+      DDCA_Any_Vcp_Value *  pvalrec;
+#endif
       Public_Status_Code cur_status_code =
        get_raw_value_for_feature_table_entry(
          dh,
@@ -565,7 +588,11 @@ get_formatted_value_for_feature_table_entry(
                             feature_name);
    }
 
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value *    pvalrec = NULL;
+#else
+   DDCA_Any_Vcp_Value *  pvalrec = NULL;
+#endif
 
    // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
    bool ignore_unsupported = suppress_unsupported;
@@ -610,20 +637,36 @@ get_formatted_value_for_feature_table_entry(
             if (vflags & DDCA_CONT) {
                snprintf(buf, 200, "VCP %02X C %d %d",
                                   vcp_entry->code,
+#ifdef SINGLE_VCP_VALUE
                                   pvalrec->val.c.cur_val, pvalrec->val.c.max_val);
+#else
+               VALREC_CUR_VAL(pvalrec), VALREC_MAX_VAL(pvalrec));
+#endif
             }
             else if (vflags & DDCA_SIMPLE_NC) {
                snprintf(buf, 200, "VCP %02X SNC x%02x",
-                                   vcp_entry->code, pvalrec->val.nc.sl);
+                                   vcp_entry->code,
+#ifdef SINGLE_VCP_VALUE
+                                   pvalrec->val.nc.sl);
+#else
+                                   pvalrec->val.c_nc.sl);
+#endif
             }
             else {
                assert(vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
                snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
                                   vcp_entry->code,
+#ifdef SINGLE_VCP_VALUE
                                   pvalrec->val.nc.mh,
                                   pvalrec->val.nc.ml,
                                   pvalrec->val.nc.sh,
                                   pvalrec->val.nc.sl
+#else
+                                  pvalrec->val.c_nc.mh,
+                                  pvalrec->val.c_nc.ml,
+                                  pvalrec->val.c_nc.sh,
+                                  pvalrec->val.c_nc.sl
+#endif
                                   );
             }
             *formatted_value_loc = strdup(buf);
@@ -709,7 +752,11 @@ get_formatted_value_for_internal_metadata(
                             feature_name);
    }
 
+#ifdef SINGLE_VCP_VALUE
    Single_Vcp_Value *    pvalrec = NULL;
+#else
+   DDCA_Any_Vcp_Value *  pvalrec = NULL;
+#endif
 
    // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
    bool ignore_unsupported = suppress_unsupported;
@@ -754,20 +801,35 @@ get_formatted_value_for_internal_metadata(
             if (vflags & DDCA_CONT) {
                snprintf(buf, 200, "VCP %02X C %d %d",
                                   feature_code,
+#ifdef SINGLE_VCP_VALUE
                                   pvalrec->val.c.cur_val, pvalrec->val.c.max_val);
+#else
+               VALREC_CUR_VAL(pvalrec), VALREC_MAX_VAL(pvalrec));
+#endif
             }
             else if (vflags & DDCA_SIMPLE_NC) {
                snprintf(buf, 200, "VCP %02X SNC x%02x",
+#ifdef SINGLE_VCP_VALUE
                                    feature_code, pvalrec->val.nc.sl);
+#else
+               feature_code, pvalrec->val.c_nc.sl);
+#endif
             }
             else {
                assert(vflags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
                snprintf(buf, 200, "VCP %02X CNC x%02x x%02x x%02x x%02x",
                                   feature_code,
+#ifdef SINGLE_VCP_VALUE
                                   pvalrec->val.nc.mh,
                                   pvalrec->val.nc.ml,
                                   pvalrec->val.nc.sh,
                                   pvalrec->val.nc.sl
+#else
+                                  pvalrec->val.c_nc.mh,
+                                  pvalrec->val.c_nc.ml,
+                                  pvalrec->val.c_nc.sh,
+                                  pvalrec->val.c_nc.sl
+#endif
                                   );
             }
             *formatted_value_loc = strdup(buf);

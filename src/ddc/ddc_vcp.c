@@ -334,8 +334,13 @@ is_rereadable_feature(
 
 static bool
 single_vcp_value_equal(
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value * vrec1,
       Single_Vcp_Value * vrec2)
+#else
+      DDCA_Any_Vcp_Value * vrec1,
+      DDCA_Any_Vcp_Value * vrec2)
+#endif
 {
    assert(vrec1 && vrec2);  // no implementation for degenerate cases
    bool debug = false;
@@ -347,7 +352,11 @@ single_vcp_value_equal(
       switch(vrec1->value_type) {
       case(DDCA_NON_TABLE_VCP_VALUE):
             // only check SL byte which would be set for any VCP, monitor
+#ifdef SINGLE_VCP_VALUE
             result = (vrec1->val.nc.sl == vrec2->val.nc.sl);
+#else
+      result = (vrec1->val.c_nc.sl == vrec2->val.c_nc.sl);
+#endif
             break;
       case(DDCA_TABLE_VCP_VALUE):
             result = (vrec1->val.t.bytect == vrec2->val.t.bytect) &&
@@ -381,8 +390,13 @@ single_vcp_value_equal(
 Error_Info *
 ddc_set_vcp_value(
       Display_Handle *    dh,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value *  vrec,
       Single_Vcp_Value ** newval_loc)
+#else
+      DDCA_Any_Vcp_Value *  vrec,
+      DDCA_Any_Vcp_Value ** newval_loc)
+#endif
 {
    bool debug = false;
    DBGMSF0(debug, "Starting. ");
@@ -395,7 +409,11 @@ ddc_set_vcp_value(
    if (newval_loc)
       *newval_loc = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+#ifdef SINGLE_VCP_VALUE
       ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, vrec->val.c.cur_val);
+#else
+      ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
+#endif
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
    else {
@@ -407,7 +425,11 @@ ddc_set_vcp_value(
    if (!ddc_excp && ddc_get_verify_setvcp()) {
       if (is_rereadable_feature(dh, vrec->opcode) ) {
          f0printf(verbose_msg_dest, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+#ifdef SINGLE_VCP_VALUE
          Single_Vcp_Value * newval = NULL;
+#else
+         DDCA_Any_Vcp_Value * newval = NULL;
+#endif
          ddc_excp = ddc_get_vcp_value(
              dh,
              vrec->opcode,
@@ -623,6 +645,7 @@ Error_Info * ddc_get_table_vcp_value(
  *
  * The caller is responsible for freeing the value returned at **valrec_loc**.
  */
+#ifdef SINGLE_VCP_VALUE
 Error_Info *
 ddc_get_vcp_value(
        Display_Handle *       dh,
@@ -719,10 +742,10 @@ ddc_get_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
+#else
 
-#ifdef ALT
 Error_Info *
-ddc_get_vcp_value2(
+ddc_get_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        DDCA_Vcp_Value_Type    call_type,
@@ -751,7 +774,7 @@ ddc_get_vcp_value2(
                       feature_code,
                       &parsed_nontable_response);    //
                 if (psc == 0) {
-                   valrec = create_nontable_vcp_value2(
+                   valrec = create_nontable_vcp_value(
                                feature_code,
                                parsed_nontable_response->mh,
                                parsed_nontable_response->ml,
@@ -780,7 +803,7 @@ ddc_get_vcp_value2(
                           &parsed_nontable_response);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             if (!ddc_excp) {
-               valrec = create_nontable_vcp_value2(
+               valrec = create_nontable_vcp_value(
                            feature_code,
                            parsed_nontable_response->mh,
                            parsed_nontable_response->ml,
@@ -797,7 +820,7 @@ ddc_get_vcp_value2(
                     &buffer);
             psc = ERRINFO_STATUS(ddc_excp);
             if (!ddc_excp) {
-               valrec = create_table_vcp_value_by_buffer2(feature_code, buffer);
+               valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
             }
             break;

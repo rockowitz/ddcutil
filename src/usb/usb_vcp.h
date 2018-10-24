@@ -3,7 +3,7 @@
  * Get and set VCP feature codes for USB connected monitors.
  *
  * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,6 +27,8 @@
 #define USB_VCP_H_
 
 #include <linux/hiddev.h>
+
+#include "ddcutil_types.h"
 
 #include "util/coredefs.h"
 
@@ -53,7 +55,11 @@ Public_Status_Code usb_get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       DDCA_Vcp_Value_Type            call_type,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value **       pvalrec);
+#else
+      DDCA_Any_Vcp_Value **  pvalrec);
+#endif
 
 Public_Status_Code usb_set_nontable_vcp_value(
       Display_Handle *          dh,
@@ -62,7 +68,11 @@ Public_Status_Code usb_set_nontable_vcp_value(
 
 Public_Status_Code usb_set_vcp_value(
       Display_Handle *           dh,
-      Single_Vcp_Value *         valrec);
+#ifdef SINGLE_VCP_VALUE
+      Single_Vcp_Value **       pvalrec);
+#else
+      DDCA_Any_Vcp_Value *  pvalrec);
+#endif
 
 __s32 usb_get_vesa_version(int fd);
 

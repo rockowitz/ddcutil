@@ -66,7 +66,11 @@ bool
 dyn_format_feature_detail(
       Internal_Feature_Metadata * intmeta,
       DDCA_MCCS_Version_Spec      vcp_version,
+#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value *          valrec,
+#else
+      DDCA_Any_Vcp_Value *        valrec,
+#endif
       char * *                    aformatted_data);
 
 char *

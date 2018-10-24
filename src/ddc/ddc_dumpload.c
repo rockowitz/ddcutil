@@ -234,7 +234,11 @@ create_dumpload_data_from_g_ptr_array(
                      valid_data = false;
                   }
                   else {     // valid opcode
+#ifdef SINGLE_VCP_VALUE
                      Single_Vcp_Value * valrec = NULL;
+#else
+                     DDCA_Any_Vcp_Value * valrec = NULL;
+#endif
                      // look up opcode, is it valid?
 
                      // table values need special handling
@@ -347,7 +351,12 @@ ddc_set_multiple(
 
    int ndx;
    for (ndx=0; ndx < value_ct; ndx++) {
-      Single_Vcp_Value * vrec = vcp_value_set_get(vset, ndx);
+#ifdef SINGLE_VCP_VALUE
+      Single_Vcp_Value * vrec
+#else
+      DDCA_Any_Vcp_Value * vrec
+#endif
+      = vcp_value_set_get(vset, ndx);
       Byte   feature_code = vrec->opcode;
 
 #ifdef OLD
@@ -810,10 +819,20 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 
    for (int ndx=0; ndx < data->vcp_values->len; ndx++) {
       // n. get_formatted_value_for_feature_table_entry() also has code for table type values
-      Single_Vcp_Value * vrec = vcp_value_set_get(data->vcp_values,ndx);
+#ifdef SINGLE_VCP_VALUE
+      Single_Vcp_Value * vrec
+#else
+      DDCA_Any_Vcp_Value * vrec
+#endif
+      = vcp_value_set_get(data->vcp_values,ndx);
       char buf[200];
       snprintf(buf, 200, "VCP %02X %5d",
-                         vrec->opcode, vrec->val.c.cur_val);
+                         vrec->opcode,
+#ifdef SINGLE_VCP_VALUE
+                         vrec->val.c.cur_val);
+#else
+                         VALREC_CUR_VAL(vrec));
+#endif
       g_ptr_array_add(strings, strdup(buf));
    }
    return strings;
