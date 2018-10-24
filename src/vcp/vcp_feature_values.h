@@ -33,6 +33,7 @@
 
 #include "base/ddc_packets.h"
 
+#ifdef SINGLE_VCP_VALUE
 
 // Removed from API due to complexity.  Used only internally.
 // TODO: replace with DDCA_Any_Vcp_Value
@@ -67,6 +68,8 @@ typedef struct {
       }         nc;                /**< non-continuous (NC) value */
    }       val;
 } Single_Vcp_Value;
+
+#endif
 
 
 char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type);
