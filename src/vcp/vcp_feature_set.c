@@ -252,7 +252,7 @@ create_feature_set(
 
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
-   bool debug = true;
+   bool debug = false;
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
