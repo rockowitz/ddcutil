@@ -1378,7 +1378,7 @@ vcp_create_dynamic_feature(
       DDCA_Vcp_Feature_Code   id,
       DDCA_Feature_Metadata * dynamic_metadata)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. id=0x%02x", id);
    VCP_Feature_Table_Entry * pentry = vcp_new_feature_table_entry(id);
    pentry->v20_name = dynamic_metadata->feature_name;
@@ -1796,10 +1796,13 @@ bool format_feature_detail_sl_byte(
         char *                   buffer,
         int                      bufsz)
 {
-    snprintf(buffer, bufsz,
-             "Value: 0x%02x" ,
-             code_info->sl);
-   return true;
+    bool debug = false;
+    DBGMSF(debug, "vcp_code=0x%02x, sl=0x%02x", code_info->vcp_code, code_info->sl);
+
+    snprintf(buffer, bufsz, "Value: 0x%02x", code_info->sl);
+
+    DBGMSF(debug, "Returning true, buffer=%s", buffer);
+    return true;
 }
 
 
