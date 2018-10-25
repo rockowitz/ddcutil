@@ -238,12 +238,17 @@ void free_single_vcp_value(Single_Vcp_Value * vcp_value) {
    void free_single_vcp_value(DDCA_Any_Vcp_Value * vcp_value) {
 #endif
    bool debug = false;
-   DBGMSF(debug, "Starting. vcp_value=%s", summarize_single_vcp_value(vcp_value));
-   if (vcp_value->value_type == DDCA_TABLE_VCP_VALUE) {
-      if (vcp_value->val.t.bytes)
-         free(vcp_value->val.t.bytes);
+
+   if (vcp_value) {
+      DBGMSF(debug, "Starting. vcp_value=%s", summarize_single_vcp_value(vcp_value));
+      if (vcp_value->value_type == DDCA_TABLE_VCP_VALUE) {
+         if (vcp_value->val.t.bytes)
+            free(vcp_value->val.t.bytes);
+      }
+      free(vcp_value);
    }
-   free(vcp_value);
+   else
+      DBGMSF(debug, "Starting. vcp_value == NULL");
    DBGMSF(debug, "Done");
 }
 
