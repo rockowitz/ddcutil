@@ -220,7 +220,7 @@ get_raw_value_for_feature_table_entry(
               &valrec);
       psc = ERRINFO_STATUS(ddc_excp);
    }
-   assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
+   assert ( (psc==0 && !ddc_excp && valrec) || (psc!=0 && ddc_excp && !valrec) );
 
    switch(psc) {
    case 0:
@@ -230,6 +230,8 @@ get_raw_value_for_feature_table_entry(
       if (output_level >= DDCA_OL_NORMAL)
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                          feature_code, feature_name, "Invalid response");
+      if (!ddc_excp->detail)
+         errinfo_set_detail(ddc_excp, "Invalid response");
       break;
 
    case DDCRC_NULL_RESPONSE:
@@ -241,6 +243,7 @@ get_raw_value_for_feature_table_entry(
       }
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       psc = DDCRC_DETERMINED_UNSUPPORTED;
+      ddc_excp = errinfo_new_with_cause2(psc, ddc_excp, __func__, "Unsupported feature code (Null response)");
       break;
 
    case DDCRC_READ_ALL_ZERO:
@@ -251,11 +254,14 @@ get_raw_value_for_feature_table_entry(
       }
       psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+      ddc_excp = errinfo_new_with_cause2(psc, ddc_excp, __func__, "Unsupported feature code (All zero response)");
       break;
 
    case DDCRC_RETRIES:
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                       feature_code, feature_name, "Maximum retries exceeded");
+      if (!ddc_excp->detail)
+         errinfo_set_detail(ddc_excp, "Maximum retries exceeded");
       break;
 
    case DDCRC_REPORTED_UNSUPPORTED:
@@ -264,6 +270,8 @@ get_raw_value_for_feature_table_entry(
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                          feature_code, feature_name, "Unsupported feature code");
       }
+      if (!ddc_excp->detail)
+         errinfo_set_detail(ddc_excp, "Unsupported feature code");
       break;
 
    default:
@@ -272,6 +280,7 @@ get_raw_value_for_feature_table_entry(
       snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                        feature_code, feature_name, buf);
+      ddc_excp = errinfo_new_with_cause2(psc, ddc_excp, __func__, buf);
    }
    }
 
@@ -292,6 +301,7 @@ get_raw_value_for_feature_table_entry(
       }
       errinfo_free(ddc_excp);
 #endif
+      // TODO: return ddc_excp instead of psc
       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
    }
    return psc;
