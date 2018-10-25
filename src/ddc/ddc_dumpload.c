@@ -102,7 +102,7 @@ void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
    rpt_int( "vcp_value_ct", NULL, data->vcp_value_ct, d1);
    rpt_structure_loc("vcp_values", data->vcp_values, d1);
    if (data->vcp_values)
-      report_vcp_value_set(data->vcp_values, d1);
+      dbgrpt_vcp_value_set(data->vcp_values, d1);
 }
 
 #define ADD_DATA_ERROR(_expl) \

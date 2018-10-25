@@ -613,7 +613,7 @@ Public_Status_Code usb_get_vcp_value(
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc) );
    if (psc == 0 && debug)
-      report_single_vcp_value(valrec,1);
+      dbgrpt_single_vcp_value(valrec,1);
    assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
    return psc;
 }

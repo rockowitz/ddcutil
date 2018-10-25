@@ -168,14 +168,12 @@ struct {
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec);
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
 void dbgrpt_single_vcp_value(Single_Vcp_Value * valrec, int depth);
-void report_single_vcp_value(     Single_Vcp_Value * valrec, int depth);
 #else
 Nontable_Vcp_Value *
       single_vcp_value_to_nontable_vcp_value(
                                DDCA_Any_Vcp_Value * valrec);
 void  free_single_vcp_value(   DDCA_Any_Vcp_Value * vcp_value);
 void  dbgrpt_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
-void  report_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
 #endif
 
 void report_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
@@ -191,6 +189,8 @@ char * summarize_single_vcp_value(DDCA_Any_Vcp_Value * valrec);
 #endif
 
 
+// Vcp_Value_Set declarations
+
 typedef GPtrArray *  Vcp_Value_Set;   // GPtrArray of DDCA_Single_Vcp_Value
 
 Vcp_Value_Set vcp_value_set_new(int initial_size);
@@ -205,7 +205,6 @@ void vcp_value_set_add(Vcp_Value_Set vset,
       DDCA_Any_Vcp_Value * pval);
 #endif
 
-
 int vcp_value_set_size(Vcp_Value_Set vset);
 
 #ifdef SINGLE_VCP_VALUE
@@ -216,6 +215,6 @@ DDCA_Any_Vcp_Value *
 vcp_value_set_get(Vcp_Value_Set vset, int ndx);
 #endif
 
-void report_vcp_value_set(Vcp_Value_Set vset, int depth);
+void dbgrpt_vcp_value_set(Vcp_Value_Set vset, int depth);
 
 #endif /* SRC_VCP_VCP_FEATURE_VALUES_H_ */
