@@ -83,7 +83,6 @@ create_nontable_vcp_value(
       Byte     sh,
       Byte     sl);
 #else
-
 DDCA_Any_Vcp_Value *
 create_nontable_vcp_value(
       Byte feature_code,
@@ -95,13 +94,17 @@ create_nontable_vcp_value(
 
 #ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
-#else
-DDCA_Any_Vcp_Value *
-#endif
 create_cont_vcp_value(
       Byte     feature_code,
       ushort   max_val,
       ushort   cur_val);
+#else
+DDCA_Any_Vcp_Value *
+create_cont_vcp_value(
+      Byte     feature_code,
+      ushort   max_val,
+      ushort   cur_val);
+#endif
 
 #ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
@@ -132,20 +135,26 @@ create_table_vcp_value_by_buffer(
 
 #ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
-#else
-DDCA_Any_Vcp_Value *
-#endif
 create_single_vcp_value_by_parsed_vcp_response(
       Byte feature_id,
       Parsed_Vcp_Response * presp);
+#else
+DDCA_Any_Vcp_Value *
+create_single_vcp_value_by_parsed_vcp_response(
+      Byte feature_id,
+      Parsed_Vcp_Response * presp);
+#endif
 
+#ifdef SINGLE_VCP_VALUE
 Parsed_Vcp_Response *
 single_vcp_value_to_parsed_vcp_response(
-#ifdef SINGLE_VCP_VALUE
       Single_Vcp_Value * valrec);
 #else
-      DDCA_Any_Vcp_Value * valrec);
+Parsed_Vcp_Response *
+single_vcp_value_to_parsed_vcp_response(
+            DDCA_Any_Vcp_Value * valrec);
 #endif
+
 
 #ifdef SINGLE_VCP_VALUE
 DDCA_Any_Vcp_Value *
@@ -174,26 +183,18 @@ struct {
 
 #ifdef SINGLE_VCP_VALUE
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(Single_Vcp_Value * valrec);
-#else
-Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Any_Vcp_Value * valrec);
-#endif
-
-#ifdef SINGLE_VCP_VALUE
 void free_single_vcp_value(Single_Vcp_Value * vcp_value);
-#else
-void free_single_vcp_value(DDCA_Any_Vcp_Value * vcp_value);
-#endif
-
-#ifdef SINGLE_VCP_VALUE
 void dbgrpt_single_vcp_value(Single_Vcp_Value * valrec, int depth);
-#else
-void dbgrpt_single_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
-#endif
-#ifdef SINGLE_VCP_VALUE
 void report_single_vcp_value(     Single_Vcp_Value * valrec, int depth);
 #else
-void report_single_vcp_value(     DDCA_Any_Vcp_Value * valrec, int depth);
+Nontable_Vcp_Value *
+      single_vcp_value_to_nontable_vcp_value(
+                               DDCA_Any_Vcp_Value * valrec);
+void  free_single_vcp_value(   DDCA_Any_Vcp_Value * vcp_value);
+void  dbgrpt_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
+void  report_single_vcp_value( DDCA_Any_Vcp_Value * valrec, int depth);
 #endif
+
 void report_any_vcp_value(DDCA_Any_Vcp_Value * valrec, int depth);
 
 
@@ -213,22 +214,24 @@ Vcp_Value_Set vcp_value_set_new(int initial_size);
 
 void free_vcp_value_set(Vcp_Value_Set vset);
 
-void vcp_value_set_add(Vcp_Value_Set vset,
 #ifdef SINGLE_VCP_VALUE
+void vcp_value_set_add(Vcp_Value_Set vset,
       Single_Vcp_Value * pval);
 #else
+void vcp_value_set_add(Vcp_Value_Set vset,
       DDCA_Any_Vcp_Value * pval);
 #endif
+
 
 int vcp_value_set_size(Vcp_Value_Set vset);
 
 #ifdef SINGLE_VCP_VALUE
 Single_Vcp_Value *
+vcp_value_set_get(Vcp_Value_Set vset, int ndx);
 #else
 DDCA_Any_Vcp_Value *
-#endif
 vcp_value_set_get(Vcp_Value_Set vset, int ndx);
-
+#endif
 
 void report_vcp_value_set(Vcp_Value_Set vset, int depth);
 
