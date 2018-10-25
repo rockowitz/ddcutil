@@ -178,7 +178,7 @@ get_raw_value_for_feature_table_entry(
 #endif
       FILE *                     msg_fh)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting", NULL);
 
    assert(dh);
@@ -310,7 +310,7 @@ get_raw_value_for_feature_metadata(
 #endif
       FILE *                     msg_fh)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting", NULL);
 
    assert(dh);
