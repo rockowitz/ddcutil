@@ -32,7 +32,7 @@ char * vcp_value_type_name(DDCA_Vcp_Value_Type value_type) {
 }
 
 
-char * ddca_vcp_value_type_name(DDCA_Vcp_Value_Type  value_type) {
+char * vcp_value_type_id(DDCA_Vcp_Value_Type  value_type) {
    char * result = NULL;
    switch(value_type) {
    case DDCA_NON_TABLE_VCP_VALUE:
@@ -65,7 +65,7 @@ void dbgrpt_single_vcp_value(
    rpt_vstring(depth, "Single_Vcp_Value at %p:", valrec);
    if (valrec) {
       rpt_vstring(d1, "Opcode:          0x%02x", valrec->opcode);
-      rpt_vstring(d1, "Value type       %d - %s", valrec->value_type, ddca_vcp_value_type_name(valrec->value_type));
+      rpt_vstring(d1, "Value type       %d - %s", valrec->value_type, vcp_value_type_id(valrec->value_type));
       if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
          rpt_vstring(d1, "Bytes:");
          rpt_hex_dump(valrec->val.t.bytes, valrec->val.t.bytect, d2);
