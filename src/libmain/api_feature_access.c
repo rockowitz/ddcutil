@@ -303,10 +303,12 @@ void
 ddca_free_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec)
 {
-   if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
-      free(valrec->val.t.bytes);
+   if (valrec) {
+      if (valrec->value_type == DDCA_TABLE_VCP_VALUE) {
+         free(valrec->val.t.bytes);
+      }
+      free(valrec);
    }
-   free(valrec);
 }
 
 
