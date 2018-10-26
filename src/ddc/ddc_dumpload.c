@@ -1,31 +1,10 @@
-/* dumpload.c
+/** \file dumpload.c
  *
  * Load/store VCP settings from/to file.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  */
 
-/** \file
- * Load/store VCP settings from/to file
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -127,7 +106,7 @@ create_dumpload_data_from_g_ptr_array(
       Dumpload_Data ** dumpload_data_loc)
 {
    bool debug = false;
-   DBGMSF0(debug, "Starting.");
+   DBGMSF(debug, "Starting.");
 
    Error_Info * errs = errinfo_new(DDCRC_BAD_DATA, __func__);
    *dumpload_data_loc = NULL;
@@ -184,7 +163,12 @@ create_dumpload_data_from_g_ptr_array(
                // }
             }
             else if (streq(s0, "PRODUCT_CODE")) {
-               // ignore for now
+               int ival;
+               bool ok = str_to_int(s1, &ival, 10);
+               if (ok && ival >= 0 && ival <= 65535)
+                  data->product_code = (uint16_t) ival;
+               else
+                  valid_data = false;
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
                g_strlcpy(data->edidstr, s1, sizeof(data->edidstr));
@@ -681,7 +665,7 @@ collect_profile_related_values(
       GPtrArray**      pvals)
 {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
    assert( get_output_level() == OL_PROGRAM);
    Public_Status_Code psc = 0;
    GPtrArray * vals = g_ptr_array_sized_new(50);
@@ -722,7 +706,7 @@ dumpvcp_as_dumpload_data(
       Dumpload_Data** pdumpload_data)
 {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
    Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
 
@@ -853,7 +837,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 Public_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    Public_Status_Code psc    = 0;
    Dumpload_Data *    data   = NULL;
