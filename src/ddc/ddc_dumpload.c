@@ -21,15 +21,20 @@
 #include "util/glib_util.h"
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
+
+#include "ddcutil_types.h"
 /** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 #include "base/vcp_version.h"
+
+#include "dynvcp/dyn_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -231,12 +236,23 @@ create_dumpload_data_from_g_ptr_array(
                      // VCP code table and definitively know if it's a table feature.
                      // One solution: rework data structures to parse later
                      // second solution: vcp version in dumpload data
-
+// #ifdef OLD
                      VCP_Feature_Table_Entry * pvft_entry =
                          vcp_find_feature_by_hexid_w_default(feature_id);
 
-                     bool is_table_feature = is_table_feature_by_vcp_version(
+                     bool is_table_feature0 = is_table_feature_by_vcp_version(
                                                 pvft_entry,data->vcp_version);
+// #endif
+                     DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
+                           data->mfg_id, data->model, data->product_code);
+                     Internal_Feature_Metadata * ifm =
+                           dyn_get_feature_metadata_by_mmk_and_vspec(
+                                feature_id,
+                                mmk,
+                                data->vcp_version,
+                                /*with_default=*/ true);
+                     bool is_table_feature = ifm->external_metadata->feature_flags & DDCA_NORMAL_TABLE;
+                     assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
 
                      if (is_table_feature) {
                         // s2 is hex string
