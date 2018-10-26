@@ -572,11 +572,15 @@ ddc_get_nontable_vcp_value(
       if (excp) {
          DBGMSG("Error reading feature x%02x.  Returning exception: ", feature_code);
          errinfo_report(excp, 1);
+         DBGMSG("Done");
       }
       else {
          DBGMSG("Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
-         DBGMSG("  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-                parsed_response->mh, parsed_response->ml, parsed_response->sh, parsed_response->sl);
+         DBGMSG("  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
+                parsed_response->mh, parsed_response->ml,
+                parsed_response->sh, parsed_response->sl,
+                (parsed_response->mh<<8) | parsed_response->ml,
+                (parsed_response->sh<<8) | parsed_response->sl);
       }
    }
    *ppInterpretedCode = parsed_response;
