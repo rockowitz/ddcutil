@@ -380,6 +380,7 @@ vcp_format_feature_detail(
 int
 vcp_get_feature_code_count();
 
+char * get_func_name_by_addr(void * func_addr);
 
 void
 init_vcp_feature_codes();

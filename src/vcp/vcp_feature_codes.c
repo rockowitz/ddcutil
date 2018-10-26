@@ -4550,6 +4550,67 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
       dbgrpt_sl_value_table(pfte->v22_sl_values, d1+1);
 }
 
+static GHashTable * func_name_table = NULL;
+
+void init_func_name_table() {
+   func_name_table = g_hash_table_new(g_direct_hash, g_direct_equal);
+#define ADD_FUNC(_NAME) g_hash_table_insert(func_name_table, _NAME, #_NAME);
+   ADD_FUNC(vcp_format_nontable_feature_detail);
+   ADD_FUNC(vcp_format_table_feature_detail);
+   ADD_FUNC(vcp_format_feature_detail);
+   ADD_FUNC(default_table_feature_detail_function);
+   ADD_FUNC(format_feature_detail_x73_lut_size);
+   ADD_FUNC(format_feature_detail_debug_sl_sh);
+   ADD_FUNC(format_feature_detail_debug_continuous);
+   ADD_FUNC(format_feature_detail_debug_bytes );
+   ADD_FUNC(format_feature_detail_sl_byte);
+   ADD_FUNC(format_feature_detail_sl_lookup);
+   ADD_FUNC(format_feature_detail_standard_continuous);
+   ADD_FUNC(format_feature_detail_ushort);
+   ADD_FUNC(format_feature_detail_new_control_value);
+   ADD_FUNC(x0b_format_feature_detail_color_temperature_increment);
+   ADD_FUNC(x0c_format_feature_detail_color_temperature_request);
+   ADD_FUNC(format_feature_detail_select_color_preset);
+   ADD_FUNC(format_feature_detail_audio_speaker_volume);
+   ADD_FUNC(format_feature_detail_x8d_v22_mute_audio_blank_screen);
+   ADD_FUNC(format_feature_detail_audio_treble_bass);
+   ADD_FUNC(format_feature_detail_audio_balance_v30);
+   ADD_FUNC(format_feature_detail_xac_horizontal_frequency);
+   ADD_FUNC(format_feature_detail_6_axis_hue);
+   ADD_FUNC(format_feature_detail_xae_vertical_frequency);
+   ADD_FUNC(format_feature_detail_xbe_link_control);
+   ADD_FUNC(format_feature_detail_xc0_display_usage_time);
+   ADD_FUNC(format_feature_detail_application_enable_key);
+   ADD_FUNC(format_feature_detail_display_controller_type);
+   ADD_FUNC(format_feature_detail_version);
+#undef ADD_FUNC
+}
+
+void dbgrpt_func_name_table(int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Function name table at %p", func_name_table);
+   GHashTableIter iter;
+   gpointer key, value;
+   g_hash_table_iter_init(&iter, func_name_table);
+   while (g_hash_table_iter_next(&iter, &key, &value)) {
+      rpt_vstring(d1, "%p: %s", key, value);
+   }
+}
+
+char * get_func_name_by_addr(void * ptr) {
+   char * result = "";
+   if (ptr) {
+      result = g_hash_table_lookup(func_name_table, ptr);
+      if (!result)
+         result = "<Not Found>";
+   }
+
+   return result;
+}
+
+
+
+
 
 /* Initialize the vcp_feature_codes module.
  * Must be called before any other function.
@@ -4561,6 +4622,8 @@ void init_vcp_feature_codes() {
    for (int ndx=0; ndx < vcp_feature_code_count; ndx++) {
       memcpy( vcp_code_table[ndx].marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4);
    }
+   init_func_name_table();
+   // dbgrpt_func_name_table(0);
 }
 
 
