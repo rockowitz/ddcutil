@@ -19,6 +19,8 @@
 
 #include "vcp/vcp_feature_values.h"
 
+#include "dynvcp/dyn_feature_codes.h"
+
 #include "ddc/ddc_async.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_vcp_version.h"
@@ -429,6 +431,7 @@ ddca_format_any_vcp_value(
 
    // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
+#ifdef OLD
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid_w_default(feature_code);
    if (!pentry) {
       psc = DDCRC_ARG;
@@ -437,6 +440,18 @@ ddca_format_any_vcp_value(
    }
 
    DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+#endif
+
+   Internal_Feature_Metadata * ifr =
+   dyn_get_feature_metadata_by_mmk_and_vspec(
+        feature_code, *mmid, vspec, /*with_default=*/ true);
+   if (!ifr) {
+      psc = DDCRC_ARG;
+      *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
+      goto bye;
+   }
+   DDCA_Feature_Flags flags = ifr->external_metadata->feature_flags;
+
    if (!(flags & DDCA_READABLE)) {
       if (flags & DDCA_DEPRECATED)
          *formatted_value_loc = g_strdup_printf("Feature %02x is deprecated in MCCS %d.%d",
@@ -465,7 +480,8 @@ ddca_format_any_vcp_value(
    Single_Vcp_Value * valrec = any_vcp_value_to_single_vcp_value(anyval);
    bool ok = vcp_format_feature_detail(pentry,vspec, valrec,formatted_value_loc);
 #else
-   bool ok = vcp_format_feature_detail(pentry,vspec, anyval,formatted_value_loc);
+   bool ok = dyn_format_feature_detail(ifr,vspec, anyval,formatted_value_loc);
+   // bool ok = vcp_format_feature_detail(pentry,vspec, anyval,formatted_value_loc);
 #endif
    if (!ok) {
        psc = DDCRC_ARG;    // ??
@@ -477,8 +493,9 @@ ddca_format_any_vcp_value(
 #endif
 
 bye:
-   if (pentry)
-      free_synthetic_vcp_entry(pentry);   // does nothing if not synthetic
+   // TODO: free ifr ?
+   // if (pentry)
+   //    free_synthetic_vcp_entry(pentry);   // does nothing if not synthetic
 
    DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
    return psc;
