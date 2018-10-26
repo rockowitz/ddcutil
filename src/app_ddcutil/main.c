@@ -24,6 +24,7 @@
 #include "util/data_structures.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
+#include "util/report_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
 
@@ -229,11 +230,23 @@ void probe_display_by_dh(Display_Handle * dh)
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+               Internal_Feature_Metadata * ifm =
+                     dyn_get_feature_metadata_by_dh(
+                        code,
+                         dh,
+                         true);   //  with_default
                char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
+               if (!streq(feature_name, ifm->external_metadata->feature_name)) {
+                  rpt_vstring(1, "VCP_Feature_Table_Entry feature name: %s", feature_name);
+                  rpt_vstring(1, "Internal_Feature_Metadata feature name: %s",
+                                 ifm->external_metadata->feature_name);
+               }
+               // assert( streq(feature_name, ifm->external_metadata->feature_name));
                f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
                   free_synthetic_vcp_entry(vfte);
                }
+               // need to free ifm?
             }
          }
       }
@@ -245,11 +258,23 @@ void probe_display_by_dh(Display_Handle * dh)
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(seen_not_caps, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
+               Internal_Feature_Metadata * ifm =
+                     dyn_get_feature_metadata_by_dh(
+                        code,
+                         dh,
+                         true);   //  with_default
                char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
                f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
+               if (!streq(feature_name, ifm->external_metadata->feature_name)) {
+                  rpt_vstring(1, "VCP_Feature_Table_Entry feature name: %s", feature_name);
+                  rpt_vstring(1, "Internal_Feature_Metadata feature name: %s",
+                                 ifm->external_metadata->feature_name);
+               }
+               // assert( streq(feature_name, ifm->external_metadata->feature_name));
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
                   free_synthetic_vcp_entry(vfte);
                }
+               // free ifm
             }
          }
       }
