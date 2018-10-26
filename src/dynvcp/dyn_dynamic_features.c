@@ -227,16 +227,17 @@ read_feature_definition_file(
 #endif
 
 
+
 Error_Info *
-dfr_load_by_edid(
-      Parsed_Edid *           edid,
+dfr_load_by_mmk(
+      DDCA_Monitor_Model_Key  mmk,
       Dynamic_Features_Rec ** dfr_loc)
 {
    bool debug = false;
 
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
-   char * simple_fn = model_id_string(edid->mfg_id, edid->model_name,edid->product_code);
+   char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name,mmk.product_code);
 
    char * fqfn = find_feature_def_file(simple_fn);
    if (fqfn) {
@@ -247,9 +248,9 @@ dfr_load_by_edid(
 
       if (!errs) {
          errs = create_monitor_dynamic_features(
-             edid->mfg_id,
-             edid->model_name,
-             edid->product_code,
+             mmk.mfg_id,
+             mmk.model_name,
+             mmk.product_code,
              lines,
              fqfn,
              &dfr);
@@ -266,7 +267,7 @@ dfr_load_by_edid(
    assert( (errs && !dfr) || (!errs && dfr));   // avoid clang warning
 
    if (errs) {
-      dfr = dfr_new(edid->mfg_id, edid->model_name, edid->product_code, NULL);
+      dfr = dfr_new(mmk.mfg_id, mmk.model_name, mmk.product_code, NULL);
       dfr->flags |= DFR_FLAGS_NOT_FOUND;
    }
    else {
@@ -286,6 +287,19 @@ dfr_load_by_edid(
    }
 
    return errs;
+}
+
+
+
+
+Error_Info *
+dfr_load_by_edid(
+      Parsed_Edid *           edid,
+      Dynamic_Features_Rec ** dfr_loc)
+{
+   DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
+         edid->mfg_id, edid->model_name, edid->product_code);
+   return dfr_load_by_mmk(mmk, dfr_loc);
 }
 
 
@@ -318,6 +332,29 @@ bye:
       }
       else
          DBGMSG("Done.  dref->dfr=%p", dref->dfr);
+   }
+   return errs;
+}
+
+
+Error_Info *  dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", mmk_repr(mmk));
+
+   Error_Info * errs = NULL;
+   Dynamic_Features_Rec * dfr = NULL;
+   if (enable_dynamic_features)    // global variable
+   {
+      errs = dfr_load_by_mmk(mmk, &dfr);
+   }
+
+   if (debug || IS_TRACING_GROUP(DDCA_TRC_UDF) ) {
+      if (errs) {
+         DBGMSG("Done.  Returning errs: ");
+         errinfo_report(errs, 1);
+      }
+      else
+         DBGMSG("Done.  dfr=%p", dfr);
    }
    return errs;
 }
