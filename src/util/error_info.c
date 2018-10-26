@@ -204,6 +204,31 @@ errinfo_set_detail(
       erec->detail = strdup(detail);
 }
 
+static void
+errinfo_set_detailv(
+      Error_Info *  erec,
+      const char * detail,
+      va_list      args)
+{
+   if (detail) {
+      erec->detail = g_strdup_vprintf(detail, args);
+   }
+}
+
+
+void errinfo_set_detail3(
+      Error_Info *   erec,
+      const char *  detail_fmt,
+      ...)
+{
+   va_list ap;
+      va_start(ap, detail_fmt);
+
+
+   errinfo_set_detailv(erec, detail_fmt, ap);
+   va_end(ap);
+}
+
 
 /** Adds a cause to an existing #Error_Info instance
  *
@@ -274,7 +299,7 @@ static Error_Info *
 errinfo_newv(
       int            status_code,
       const char *   func,
-      char *         detail,
+      const char *   detail,
       va_list        args)
 {
    Error_Info * erec = calloc(1, sizeof(Error_Info));
@@ -319,7 +344,7 @@ Error_Info *
 errinfo_new2(
       int            status_code,
       const char *   func,
-      char *         detail,
+      const char *   detail,
       ...)
 {
    Error_Info * erec = NULL;
@@ -349,6 +374,21 @@ Error_Info * errinfo_new_with_cause(
 }
 
 
+static
+Error_Info *
+errinfo_new_with_causev(
+      int            status_code,
+      Error_Info *   cause,
+      const char *   func,
+      const char *   detail_fmt,
+      va_list        args)
+{
+   Error_Info * erec = errinfo_newv(status_code, func, detail_fmt, args);
+   if (cause)
+      errinfo_add_cause(erec, cause);
+   return erec;
+}
+
 /** Creates a new #Error_Info instance with a detail string, including a
  * reference to another instance that is the cause of the current error.
  *
@@ -370,6 +410,23 @@ errinfo_new_with_cause2(
    errinfo_add_cause(erec, cause);
    return erec;
 }
+
+Error_Info *
+errinfo_new_with_cause3(
+      int            status_code,
+      Error_Info *   cause,
+      const char *   func,
+      const char *   detail_fmt,
+      ...)
+{
+   Error_Info * erec = NULL;
+   va_list ap;
+   va_start(ap, detail_fmt);
+   erec = errinfo_new_with_causev(status_code, cause, func, detail_fmt, ap);
+   va_end(ap);
+   return erec;
+}
+
 
 /** Creates a new #Error_Info instance, including a reference to another
  *  instance that is the cause of the current error.  The status code
@@ -609,8 +666,8 @@ errinfo_report(Error_Info * erec, int depth) {
    assert(erec);
    int d1 = depth+1;
 
-   // rpt_vstring(depth, "Status code: %s", psc_desc(erec->psc));
-   // rpt_vstring(depth, "Location: %s", (erec->func) ? erec->func : "not set");
+   // rpt_vstring(depth, "(%s) Status code: %d", __func__, erec->status_code);
+   // rpt_vstring(depth, "(%s) Location: %s", __func__, (erec->func) ? erec->func : "not set");
    rpt_push_output_dest(stderr);
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set", errinfo_desc_func(erec->status_code) );
@@ -633,6 +690,7 @@ errinfo_report(Error_Info * erec, int depth) {
       }
    }
 #endif
+   // rpt_vstring(depth, "(%s) Done", __func__);
 }
 
 
