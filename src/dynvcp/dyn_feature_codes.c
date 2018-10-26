@@ -87,7 +87,7 @@ dyn_get_feature_metadata_by_dref(
       Display_Ref *         dref,
       bool                  with_default)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
    DBGMSF(debug, "dref->dfr=%p", dref->dfr);
@@ -123,6 +123,8 @@ dyn_get_feature_metadata_by_dref(
                              : vcp_find_feature_by_hexid(feature_code);
         if (pentry) {
            DDCA_Version_Feature_Info * info = extract_version_feature_info(pentry, vspec, /*version_sensitive*/ true);
+           if (debug)
+              dbgrpt_vcp_entry(pentry, 2);
            DDCA_Feature_Metadata * meta = calloc(1, sizeof(DDCA_Feature_Metadata));
            memcpy(meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
            version_feature_info_to_metadata(info, meta);
@@ -143,52 +145,55 @@ dyn_get_feature_metadata_by_dref(
            #define DDCA_NORMAL_TABLE 0x0004       /**< Normal RW table type feature */
            #define DDCA_WO_TABLE     0x0002       /**< Write only table feature */
 #endif
-           if (meta->feature_flags & DDCA_STD_CONT) {
-              result->nontable_formatter = format_feature_detail_standard_continuous;
-           }
-           else if (meta->feature_flags & DDCA_COMPLEX_CONT) {
-              // TODO: handle case of special function defined
-              result->nontable_formatter = format_feature_detail_debug_bytes;
-           }
-           else if (meta->feature_flags & DDCA_SIMPLE_NC) {
-              if (meta->sl_values) {
-                 DBGMSG("format_feature_detail_sl_lookup");
-                 result->nontable_formatter = format_feature_detail_sl_lookup;
-              }
+           if (meta->feature_flags & DDCA_TABLE) {
+              if (pentry->table_formatter)
+                 result->table_formatter = pentry->table_formatter;
               else {
-                 DBGMSG("format_feature_detail_sl_byte");
-                 result->nontable_formatter = format_feature_detail_sl_byte;
+                 if (meta->feature_flags & DDCA_NORMAL_TABLE) {
+                    result->table_formatter = default_table_feature_detail_function;
+                 }
+                 else if (meta->feature_flags & DDCA_WO_TABLE) {
+                    // program logic error?
+                    result->table_formatter = NULL;
+                 }
+                 else {
+                    PROGRAM_LOGIC_ERROR("Neither DDCA_NORMAL_TABLE or DDCA_WO_TABLE  set in meta->feature_flags");
+                 }
               }
-           }
-           else if (meta->feature_flags & DDCA_COMPLEX_NC) {
-              if (pentry->nontable_formatter) {
-                 DBGMSG("nontable_formatter");
-                 result->nontable_formatter = pentry->nontable_formatter;
-              }
-              else {
-                 result->nontable_formatter = format_feature_detail_debug_bytes;
-              }
-           }
-           else if (meta->feature_flags & DDCA_NC_CONT) {
-              // TODO: handle case of special function defined
-              result->nontable_formatter = format_feature_detail_debug_bytes;
-           }
-           else if (meta->feature_flags & DDCA_NC_CONT) {
-              // program logic error?
-              result->nontable_formatter = NULL;
-           }
-           else if (meta->feature_flags & DDCA_NORMAL_TABLE) {
-              result->table_formatter = pentry->table_formatter;
-              if (!result->table_formatter)
-                 result->table_formatter = default_table_feature_detail_function;
-           }
-           else if (meta->feature_flags & DDCA_WO_TABLE) {
-              // program logic error?
-              result->table_formatter = NULL;
            }
            else {
-              PROGRAM_LOGIC_ERROR("No feature type set in meta->feature_flags");
-           }
+              if (pentry->nontable_formatter)
+                 result->nontable_formatter = pentry->nontable_formatter;
+              else {
+                 if (meta->feature_flags & DDCA_STD_CONT) {
+                    result->nontable_formatter = format_feature_detail_standard_continuous;
+                 }
+                 else if (meta->feature_flags & DDCA_COMPLEX_CONT) {
+                    result->nontable_formatter = format_feature_detail_debug_bytes;
+                 }
+                 else if (meta->feature_flags & DDCA_SIMPLE_NC) {
+                    if (meta->sl_values) {
+                       DBGMSG("format_feature_detail_sl_lookup");
+                       result->nontable_formatter = format_feature_detail_sl_lookup;
+                    }
+                    else {
+                       DBGMSG("format_feature_detail_sl_byte");
+                       result->nontable_formatter = format_feature_detail_sl_byte;
+                    }
+                 }
+                 else if (meta->feature_flags & DDCA_COMPLEX_NC) {
+                    result->nontable_formatter = format_feature_detail_debug_bytes;
+                 }
+                 else if (meta->feature_flags & DDCA_NC_CONT) {
+                    result->nontable_formatter = format_feature_detail_debug_bytes;
+                 }
+                 else {
+                    result->nontable_formatter = format_feature_detail_debug_bytes;
+                 }
+              }  // pentry->nontable_formatter == NULL
+           }  // DDCA_NONTABLE
+
+
 
 
 #ifdef OLD
