@@ -24,9 +24,9 @@ dbgrpt_internal_feature_metadata(
    int d1 = depth+1;
    rpt_vstring(depth, "Internal_Feature_Metadata at %p", intmeta);
    dbgrpt_ddca_feature_metadata(intmeta->external_metadata, d1);
-   rpt_vstring(d1, "nontable_formatter:   %p", intmeta->nontable_formatter);
-   rpt_vstring(d1, "vcp_nontable_formatter:   %p", intmeta->vcp_nontable_formatter);
-   rpt_vstring(d1, "table_formatter:      %p", intmeta->table_formatter);
+   rpt_vstring(d1, "nontable_formatter:     %p  %s", intmeta->nontable_formatter,     get_func_name_by_addr(intmeta->nontable_formatter));
+   rpt_vstring(d1, "vcp_nontable_formatter: %p  %s", intmeta->vcp_nontable_formatter, get_func_name_by_addr(intmeta->vcp_nontable_formatter));
+   rpt_vstring(d1, "table_formatter:        %p  %s", intmeta->table_formatter,        get_func_name_by_addr(intmeta->table_formatter));
 }
 
 void
