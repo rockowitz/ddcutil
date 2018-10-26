@@ -4505,8 +4505,8 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
 
    rpt_vstring(d1, "code:       0x%02x", pfte->code);
    rpt_vstring(d1, "desc:       %s", pfte->desc);
-   rpt_vstring(d1, "nontable_formatter: %p", pfte->nontable_formatter);
-   rpt_vstring(d1, "table_formatter:    %p", pfte->table_formatter);
+   rpt_vstring(d1, "nontable_formatter: %p %s", pfte->nontable_formatter, get_func_name_by_addr(pfte->nontable_formatter));
+   rpt_vstring(d1, "table_formatter:    %p %s", pfte->table_formatter,  get_func_name_by_addr(pfte->table_formatter));
    rpt_vstring(d1, "vcp_global_flags:   0x%02x - %s",
                    pfte->vcp_global_flags,
                    vcp_interpret_global_feature_flags(pfte->vcp_global_flags, buf, bufsz));
