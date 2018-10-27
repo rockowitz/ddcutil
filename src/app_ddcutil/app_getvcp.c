@@ -1,29 +1,8 @@
-/* app_getvcp.c
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file app_getvcp.c
  */
 
-/** \file
- *
- */
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <config.h>
@@ -63,6 +42,10 @@
 #include "app_ddcutil/app_getvcp.h"
 
 
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
+
+
 /* Shows a single VCP value specified by its feature table entry.
  *
  * Arguments:
@@ -80,8 +63,8 @@ app_show_single_vcp_value_by_feature_table_entry(
       VCP_Feature_Table_Entry *  entry)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
-                 entry->code, dh_repr(dh) );
+   DBGTRC(debug, TRACE_GROUP,
+         "Starting. Getting feature 0x%02x for %s", entry->code, dh_repr(dh) );
 
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
    Public_Status_Code     psc        = 0;
@@ -113,9 +96,10 @@ app_show_single_vcp_value_by_feature_table_entry(
       }
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
+
 
 DDCA_Status
 app_show_single_vcp_value_by_internal_metadata(
@@ -123,8 +107,8 @@ app_show_single_vcp_value_by_internal_metadata(
       Internal_Feature_Metadata *  meta)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s",
-                 meta->external_metadata->feature_code, dh_repr(dh) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. Getting feature 0x%02x for %s",
+                               meta->external_metadata->feature_code, dh_repr(dh) );
 
    DDCA_Feature_Metadata * extmeta = meta->external_metadata;
 
@@ -160,9 +144,10 @@ app_show_single_vcp_value_by_internal_metadata(
       }
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", psc_desc(ddcrc));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(ddcrc));
    return ddcrc;
 }
+
 
 #ifdef PRE_UDF
 /* Shows a single VCP value specified by its feature id.
@@ -207,6 +192,7 @@ app_show_single_vcp_value_by_feature_id(
 }
 #endif
 
+
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id_new(
       Display_Handle *      dh,
@@ -214,8 +200,8 @@ app_show_single_vcp_value_by_feature_id_new(
       bool                  force)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Getting feature 0x%02x for %s, force=%s",
-                 feature_id, dh_repr(dh), bool_repr(force) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. Getting feature 0x%02x for %s, force=%s",
+                              feature_id, dh_repr(dh), bool_repr(force) );
 
    Public_Status_Code         psc = 0;
 
@@ -237,10 +223,9 @@ app_show_single_vcp_value_by_feature_id_new(
       psc = app_show_single_vcp_value_by_internal_metadata(dh, intmeta);
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", psc_desc(psc));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
-
 
 
 /* Shows the VCP values for all features in a VCP feature subset.
@@ -261,10 +246,24 @@ app_show_vcp_subset_values_by_display_handle(
         Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
-   // DBGMSG("Starting.  subset=%d   ", subset );
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP,
+          "Starting. dh=%s, subset_id=%s, flags=%s, features_seen=%p",
+          dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names(flags), features_seen );
 
    GPtrArray * collector = NULL;
    Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, flags, features_seen);
+
+   if (debug || IS_TRACING()) {
+      if (features_seen) {
+        char * s = bbf_to_string(features_seen, NULL, 0);
+        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc), s);
+        free(s);
+      }
+      else {
+         DBGMSG("Returning: %s", psc_desc(psc));
+      }
+   }
    return psc;
 }
 
@@ -329,10 +328,10 @@ app_show_feature_set_values_by_display_handle(
       Feature_Set_Flags    flags)
 {
    bool debug = false;
-   if (debug) {
+   if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
-      DBGMSG("Starting. flags: %s, dh: %s", s0, dh_repr(dh));
-      dbgrpt_feature_set_ref(fsref,1);
+      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr(fsref), s0);
+      // dbgrpt_feature_set_ref(fsref,1);
       free(s0);
    }
 
@@ -348,6 +347,8 @@ app_show_feature_set_values_by_display_handle(
             flags,
             NULL);
    }
+
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
    return psc;
 }
 
