@@ -1035,7 +1035,7 @@ show_vcp_values(
 {
    Public_Status_Code psc = 0;
    bool debug = false;
-   if (debug) {
+   if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
       free(s0);
@@ -1058,13 +1058,13 @@ show_vcp_values(
       filter_feature_set(feature_set, hack42);
    }
 #endif
-   if (debug)
+   if (debug || IS_TRACING())
       report_feature_set(feature_set, 0);
 
    psc = show_feature_set_values(
             dh, feature_set, collector, flags, features_seen);
    free_vcp_feature_set(feature_set);
-   DBGMSF0(debug, "Done");
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning %s", psc_desc(psc));
    return psc;
 }
 
