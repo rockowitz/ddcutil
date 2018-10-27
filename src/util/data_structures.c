@@ -1,32 +1,9 @@
-/* data_structures.c
- *
- * General purpose data structures..
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
 /** @file data_structures.c
- *  Generic data structures
+ *  General purpose data structures
  */
 
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -159,6 +136,7 @@ static int bva_comp_func(const void * val1, const void * val2) {
    // printf("(%s) *v1=%u, *v2=%u, returning: %d\n", __func__, *v1, *v2, result);
    return result;
 }
+
 
 /** Sorts a **Byte_Value_Array** in ascending order
  *
