@@ -698,7 +698,7 @@ dyn_get_feature_name(
    return result;
 }
 
-
+void init_dyn_feature_codes();
 
 
 

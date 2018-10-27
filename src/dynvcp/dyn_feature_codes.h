@@ -85,4 +85,12 @@ dyn_get_feature_name(
       Byte                       feature_code,
       Display_Ref*               dref);
 
+
+void init_dyn_feature_codes() {
+   func_name_table_add(dyn_format_nontable_feature_detail, "dyn_format_nontable_feature_detail");
+   func_name_table_add(dyn_format_table_feature_detail, "dyn_format_table_feature_detail");
+   func_name_table_add(dyn_format_feature_detail, "dyn_format_feature_detail");
+   dbgrpt_func_name_table(0);
+}
+
 #endif /* DYN_FEATURE_CODES_H_ */
