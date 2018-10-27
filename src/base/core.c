@@ -520,7 +520,7 @@ DDCA_Trace_Group trace_class_name_to_value(char * name) {
                            DDCA_TRC_NONE);
 }
 
-static Byte trace_levels = DDCA_TRC_NONE;   // 0x00
+static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
 
 
 /** Specifies the trace groups to be traced.
@@ -531,7 +531,7 @@ static Byte trace_levels = DDCA_TRC_NONE;   // 0x00
  */
 void set_trace_levels(DDCA_Trace_Group trace_flags) {
    bool debug = false;
-   DBGMSF(debug, "trace_flags=0x%02x\n", trace_flags);
+   DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
    trace_levels = trace_flags;
 }
@@ -704,6 +704,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
  *  Output is written to the current **FOUT** device.
  */
 void show_trace_groups() {
+   DBGMSG("trace_levels: 0x%04x", trace_levels);
    char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Trace groups active: ",
