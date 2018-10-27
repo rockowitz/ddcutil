@@ -495,6 +495,7 @@ Value_Name_Title_Table trace_group_table = {
       VNT(DDCA_TRC_ENV, "ENV"),
       VNT(DDCA_TRC_API, "API"),
       VNT(DDCA_TRC_UDF, "UDF"),
+      VNT(DDCA_TRC_VCP, "VCP"),
       VNT_END
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
