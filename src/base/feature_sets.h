@@ -82,5 +82,6 @@ typedef enum {
 char * feature_set_flag_names(Feature_Set_Flags flags);
 
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth);
+char * fsref_repr(Feature_Set_Ref * fsref);
 
 #endif /* FEATURE_SETS_H_ */

@@ -108,6 +108,17 @@ void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
 }
 
 
+char * fsref_repr(Feature_Set_Ref * fsref) {
+   // TODO: make thread safe
+   static char buf[100];
+   if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
+      snprintf(buf, 100, "[VCP_SUBSET_SINGLE_FEATURE, 0x%02x]", fsref->specific_feature);
+   else
+      snprintf(buf, 100, "[%s]",  feature_subset_name(fsref->subset));
+   return buf;
+}
+
+
 static
 Value_Name_Title_Table feature_set_flag_table = {
       VNT(FSF_FORCE,            "force"),
