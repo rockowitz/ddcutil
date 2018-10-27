@@ -381,6 +381,9 @@ int
 vcp_get_feature_code_count();
 
 char * get_func_name_by_addr(void * func_addr);
+void func_name_table_add(void * func_addr, char * func_name);
+void dbgrpt_func_name_table(int depth);
+
 
 void
 init_vcp_feature_codes();

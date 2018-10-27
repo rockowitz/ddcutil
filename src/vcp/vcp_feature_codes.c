@@ -34,6 +34,7 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
 
+static bool vcp_feature_codes_initialized = false;
 
 //
 // Functions implementing the VCPINFO command
@@ -1406,6 +1407,7 @@ vcp_create_dynamic_feature(
       pentry->nontable_formatter = format_feature_detail_debug_bytes;
    }
    pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   pentry->vcp_global_flags |= DDCA_USER_DEFINED;
    DBGMSF(debug, "Done");
    return pentry;
 }
@@ -4608,6 +4610,11 @@ char * get_func_name_by_addr(void * ptr) {
    return result;
 }
 
+void func_name_table_add(void * func_addr, char * func_name) {
+   assert(vcp_feature_codes_initialized);
+   g_hash_table_insert(func_name_table, func_addr, func_name);
+}
+
 
 
 
@@ -4624,6 +4631,7 @@ void init_vcp_feature_codes() {
    }
    init_func_name_table();
    // dbgrpt_func_name_table(0);
+   vcp_feature_codes_initialized = true;
 }
 
 
