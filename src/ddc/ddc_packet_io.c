@@ -1,33 +1,11 @@
-/* ddc_packet_io.c
+/** \file ddc_packet_io.c
  *
- *  Functions for performing DDC packet IO, using either the I2C bus API
- *  or the ADL API, as appropriate.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file
  *  Functions for performing DDC packet IO, using either the I2C bus API
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
+
+// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
 // packet functions are for I2C and ADL only.  Consider splitting.
@@ -72,7 +50,7 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 #ifdef DEPRECATED
 // Deprecated - use all_bytes_zero() in string_util.c
