@@ -30,6 +30,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
 
 // Feature Lists
 
+#ifdef NEVER_PUBLISHED
 // NEVER PUBLISHED, USED INTERNALLY
 /** Given a feature set id, returns a #DDCA_Feature_List specifying all the
  *  feature codes in the set.
@@ -47,7 +48,7 @@ ddca_get_feature_list(
       DDCA_MCCS_Version_Spec  vcp_version,
       bool                    include_table_features,
       DDCA_Feature_List*      p_feature_list);
-
+#endif
 
 
 

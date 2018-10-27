@@ -83,7 +83,7 @@ ddca_feature_list_id_name(
 }
 
 
-
+#ifdef NEVER_PUBLISHED
 DDCA_Status
 ddca_get_feature_list(
       DDCA_Feature_Subset_Id  feature_subset_id,
@@ -151,6 +151,7 @@ bye:
    return ddcrc;
 
 }
+#endif
 
 
 DDCA_Status
