@@ -131,6 +131,7 @@ typedef enum {
  DDCA_TRC_API  = 0x0001,        /**< top level API functions */
  DDCA_TRC_UDF  = 0x0100,        /**< user-defined, aka dynamic, features */
  DDCA_TRC_VCP  = 0x0200,        /**< VCP layer, feature definitions */
+ DDCA_TRC_DDCIO = 0x0400,       /**< DDC IO functions */
 
  DDCA_TRC_NONE = 0x0000,        /**< all tracing disabled    */
  DDCA_TRC_ALL  = 0xffff         /**< all tracing enabled     */
