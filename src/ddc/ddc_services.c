@@ -150,5 +150,6 @@ void init_ddc_services() {
    // ddc:
    ddc_reset_ddc_stats();
    init_vcp_feature_codes();
+   init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_ddc_display_lock();
 }
