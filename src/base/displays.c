@@ -928,7 +928,8 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref 
    dh->dref = dref;
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
    dh->repr = g_strdup_printf(
-                "Display_Handle[i2c: fh=%d, busno=%d]",
+                "[i2c: fh=%d, busno=%d]",
+                // "Display_Handle[i2c: fh=%d, busno=%d]",
                 dh->fh, dh->dref->io_path.path.i2c_busno);
    return dh;
 }
@@ -950,7 +951,8 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
    dh->dref = dref;
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;   // needed?
    dh->repr = g_strdup_printf(
-                "Display_Handle[adl: display %d.%d]",
+                "[adl: display %d.%d]",
+                // "Display_Handle[adl: display %d.%d]",
                  dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
    return dh;
 }
@@ -974,7 +976,8 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref 
    dh->fh = fh;
    dh->dref = dref;
    dh->repr = g_strdup_printf(
-                "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                "[usb: %d:%d, %s/hiddev%d]",
+                // "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                 dh->dref->usb_bus, dh->dref->usb_device,
                 usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
