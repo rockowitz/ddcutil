@@ -25,6 +25,8 @@ struct vcp_feature_set {
    GPtrArray *         members;     // array of pointers to VCP_Feature_Table_Entry
 };
 
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
 
 
 /* Free only synthetic VCP_Feature_Table_Entrys,
@@ -61,10 +63,16 @@ create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members)
 {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
+                              subset_id, (members) ? members->len : -1);
+
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
    fset->members = members;
+
+   DBGTRC(debug, TRACE_GROUP, "Returning %p", fset);
    return fset;
 }
 
@@ -100,7 +108,7 @@ create_feature_set(
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
    bool debug = false;
-   if (debug) {
+   if (debug || IS_TRACING()) {
       char * sflags = feature_set_flag_names(flags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
@@ -150,7 +158,7 @@ create_feature_set(
    else {
       if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
          exclude_table_features = false;
-         DBGMSF(debug, "Reset exclude_table_features = false");
+         DBGTRC(debug, TRACE_GROUP, "Reset exclude_table_features = false");
       }
       int known_feature_ct = vcp_get_feature_code_count();
       int ndx = 0;
@@ -241,7 +249,7 @@ create_feature_set(
       }
    }
 
-   if (debug) {
+   if (debug || IS_TRACING()) {
       DBGMSG("Returning: %p", fset);
       if (fset)
          dbgrpt_feature_set(fset, 1);
@@ -253,6 +261,7 @@ create_feature_set(
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. vcp_entry=%p", vcp_entry);
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
@@ -260,7 +269,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    fset->subset = VCP_SUBSET_SINGLE_FEATURE;
    g_ptr_array_add(fset->members, vcp_entry);
 
-   if (debug) {
+   if (debug || IS_TRACING()) {
       DBGMSG("Returning: %p", fset);
       if (fset)
          dbgrpt_feature_set(fset, 1);
@@ -280,6 +289,9 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
  */
 VCP_Feature_Set
 create_single_feature_set_by_hexid(Byte id, bool force) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. id=0x%02x, force=%s", id, sbool(force));
+
    struct vcp_feature_set * fset = NULL;
    VCP_Feature_Table_Entry* vcp_entry = NULL;
    if (force)
@@ -288,6 +300,12 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
       vcp_entry = vcp_find_feature_by_hexid(id);
    if (vcp_entry)
       fset = create_single_feature_set_by_vcp_entry(vcp_entry);
+
+   if (debug || IS_TRACING()) {
+      DBGMSG("Returning: %p", fset);
+      if (fset)
+         dbgrpt_feature_set(fset, 1);
+   }
    return fset;
 }
 
@@ -314,12 +332,25 @@ create_feature_set_from_feature_set_ref(
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
 {
+   bool debug = false;
+   if (debug || IS_TRACING()) {
+      char * flag_names = feature_set_flag_names(flags);
+      DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
+              fsref_repr(fsref), vcp_version.major, vcp_version.minor, flag_names);
+      free(flag_names);
+   }
+
     struct vcp_feature_set * fset = NULL;
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
        fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
     }
     else {
        fset = create_feature_set(fsref->subset, vcp_version, flags);
+    }
+
+    if (debug || IS_TRACING()) {
+       DBGMSG("Done. Returning: %p", fset);
+       dbgrpt_feature_set(fset, 1);
     }
     return fset;
 }
@@ -454,6 +485,10 @@ filter_feature_set(
 DDCA_Feature_List
 feature_list_from_feature_set(VCP_Feature_Set feature_set) {
    bool debug = false;
+   if (debug || IS_TRACING()) {
+      DBGMSG("Starting. feature_set:");
+      dbgrpt_feature_set(feature_set, 1);
+   }
 
    DDCA_Feature_List vcplist = {{0}};
    struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
@@ -474,13 +509,12 @@ feature_list_from_feature_set(VCP_Feature_Set feature_set) {
       // uint8_t bval = vcplist.bytes[flagndx];
       // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
    }
-   if (debug) {
+
+   if (debug || IS_TRACING()) {
       DBGMSG("Returning: ");
       rpt_hex_dump(vcplist.bytes, 32, 1);
    }
 
    return vcplist;
 }
-
-
 
