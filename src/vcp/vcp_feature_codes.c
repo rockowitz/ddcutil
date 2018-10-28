@@ -527,8 +527,8 @@ void dbgrpt_version_feature_info(
  */
 void dbgrpt_ddca_feature_metadata(
       DDCA_Feature_Metadata * meta, int depth) {
+   assert(meta);
    char workbuf[200];
-
    int d1 = depth+1;
 
    rpt_vstring(depth, "VCP code %02X: %s", meta->feature_code, meta->feature_name);
