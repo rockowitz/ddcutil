@@ -269,11 +269,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
-#ifdef SINGLE_VCP_VALUE
-   Single_Vcp_Value * pvalrec;
-#else
    DDCA_Any_Vcp_Value * pvalrec;
-#endif
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       Public_Status_Code psc = 0;
@@ -379,11 +375,7 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
    static GPrivate  firmware_version_key = G_PRIVATE_INIT(g_free);
    char * version = get_thread_fixed_buffer(&firmware_version_key, 40);
 
-#ifdef SINGLE_VCP_VALUE
-   Single_Vcp_Value * valrec = NULL;
-#else
    DDCA_Any_Vcp_Value * valrec = NULL;
-#endif
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = ddc_get_vcp_value(
                                dh,
@@ -399,13 +391,8 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
       }
    }
    else {
-#ifdef SINGLE_VCP_VALUE
-      g_snprintf(version, 40, "%d.%d", valrec->val.nc.sh, valrec->val.nc.sl);
-      free_single_vcp_value(valrec);
-#else
       g_snprintf(version, 40, "%d.%d", valrec->val.c_nc.sh, valrec->val.c_nc.sl);
       free_single_vcp_value(valrec);
-#endif
    }
    return version;
 }
@@ -430,11 +417,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
    char * mfg_name_buf = get_thread_fixed_buffer(&controller_mfg_key, MFG_NAME_BUF_SIZE);
 
    char * mfg_name = NULL;
-#ifdef SINGLE_VCP_VALUE
-   Single_Vcp_Value * valrec;
-#else
    DDCA_Any_Vcp_Value * valrec;
-#endif
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
@@ -445,19 +428,11 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
       mfg_name =  vcp_get_feature_value_name(
                             vals,
-#ifdef SINGLE_VCP_VALUE
-                            valrec->val.nc.sl);
-#else
                             valrec->val.c_nc.sl);
-#endif
       if (!mfg_name) {
          g_snprintf(mfg_name_buf, MFG_NAME_BUF_SIZE,
                        "Unrecognized manufacturer code 0x%02x",
-#ifdef SINGLE_VCP_VALUE
-                       valrec->val.nc.sl);
-#else
                        valrec->val.c_nc.sl);
-#endif
 
          mfg_name = mfg_name_buf;
       }
