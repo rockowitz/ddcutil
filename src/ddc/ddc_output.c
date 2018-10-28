@@ -60,6 +60,7 @@ const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
 // VCP Feature Table inquiry
 //
 
+#ifdef OLD
 /* Checks if a feature is a table type feature, given
  * the VCP version of a monitor.
  *
@@ -89,7 +90,7 @@ is_table_feature_by_display_handle(
    // DBGMSF(debug, "returning: %d", result);
    return result;
 }
-
+#endif
 
 
 #ifdef FUTURE
@@ -135,6 +136,7 @@ check_valid_operation_by_feature_id_and_dh(
 // Get raw VCP feature values
 //
 
+#ifdef OLD
 /* Get the raw value (i.e. bytes) for a feature table entry.
  *
  * Convert and refine status codes, issue error messages.
@@ -278,8 +280,23 @@ get_raw_value_for_feature_table_entry(
    }
    return psc;
 }
+#endif
 
 
+/* Get the raw value (i.e. bytes) for a feature table entry.
+ *
+ * Convert and refine status codes, issue error messages.
+ *
+ * Arguments;
+ *    dh                  display handle
+ *    frec                pointer to VCP_Feature_Table_Entry for feature
+ *    ignore_unsupported  if false, issue error message for unsupported feature
+ *    pvalrec             location where to return pointer to feature value
+ *    msg_fh              file handle for error messages
+ *
+ * Returns:
+ *    status code
+ */
 Public_Status_Code
 get_raw_value_for_feature_metadata(
       Display_Handle *           dh,
@@ -405,7 +422,7 @@ get_raw_value_for_feature_metadata(
 
 
 
-
+#ifdef OLD
 /* Gather values for the features in a feature set.
  *
  * Arguments:
@@ -463,8 +480,21 @@ collect_raw_feature_set_values(
 
    return master_status_code;
 }
+#endif
 
 
+/* Gather values for the features in a feature set.
+ *
+ * Arguments:
+ *    dh                  display handle
+ *    feature_set         feature set identifying features to be queried
+ *    vset                append values retrieved to this value set
+ *    ignore_unsupported  unsupported features are not an error
+ *    msg_fh              destination for error messages
+ *
+ * Returns:
+ *    status code
+ */
 Public_Status_Code
 collect_raw_feature_set_values2(
       Display_Handle *      dh,
@@ -514,6 +544,7 @@ collect_raw_feature_set_values2(
 }
 
 
+#ifdef OLD
 /* Gather values for the features in a named feature subset
  *
  * Arguments:
@@ -554,7 +585,21 @@ collect_raw_subset_values(
    DBGMSF0(debug, "Done");
    return psc;
 }
+#endif
 
+
+/* Gather values for the features in a named feature subset
+ *
+ * Arguments:
+ *    dh                 display handle
+ *    subset             feature set identifier
+ *    vset               append values retrieved to this value set
+ *    ignore_unsupported  unsupported features are not an error
+ *    msg_fh             destination for error messages
+ *
+ * Returns:
+ *    status code
+ */
 Public_Status_Code
 collect_raw_subset_values2(
         Display_Handle *    dh,
@@ -589,6 +634,7 @@ collect_raw_subset_values2(
 // Get formatted feature values
 //
 
+#ifdef OLD
 /** Queries the monitor for a VCP feature value, and returns
  *  a formatted interpretation of the value.
  *
@@ -749,9 +795,28 @@ get_formatted_value_for_feature_table_entry(
           psc_desc(psc), formatted_value_loc);
    return psc;
 }
+#endif
 
 
-
+/** Queries the monitor for a VCP feature value, and returns
+ *  a formatted interpretation of the value.
+ *
+ * \param  dh         handle for open display
+ * \param  internal_metadata
+ * \param  suppress_unsupported
+ *                    if true, do not report unsupported features
+ * \param  prefix_value_with_feature_code
+ *                    include feature code in formatted value
+ * \param  pformatted_value
+ *                    where to return pointer to formatted value
+ * \param msg_fh      where to write extended messages for verbose
+ *                    value retrieval, etc.
+ * \return status code
+ *
+ * \remark
+ * This function is a kitchen sink of functionality, extracted from
+ * earlier code.  It needs refactoring.
+ */
 Public_Status_Code
 get_formatted_value_for_internal_metadata(
       Display_Handle *            dh,
@@ -895,8 +960,7 @@ get_formatted_value_for_internal_metadata(
 }
 
 
-
-
+#ifdef OLD
 Public_Status_Code
 show_feature_set_values(
       Display_Handle *      dh,
@@ -993,6 +1057,7 @@ show_feature_set_values(
    DBGMSF(debug, "Returning: %s", psc_desc(master_status_code));
    return master_status_code;
 }
+#endif
 
 
 Public_Status_Code
@@ -1112,6 +1177,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
 #endif
 
 
+#ifdef OLD
 /* Shows the VCP values for all features in a VCP feature subset.
  *
  * Arguments:
@@ -1166,7 +1232,21 @@ show_vcp_values0(
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %s", psc_desc(psc));
    return psc;
 }
+#endif
 
+
+/* Shows the VCP values for all features in a VCP feature subset.
+ *
+ * Arguments:
+ *    dh         display handle for open display
+ *    subset     feature subset id
+ *    collector  accumulates output    // if null, write to current stdout device
+ *    flags      feature set flags
+ *    features_seen   if non-null, collect ids of features that exist
+ *
+ * Returns:
+ *    status code
+ */
 Public_Status_Code
 show_vcp_values(
         Display_Handle *    dh,

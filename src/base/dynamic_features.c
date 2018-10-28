@@ -226,7 +226,7 @@ get_dynamic_feature_metadata(
    DBGMSF(debug, "dfr=%s, feature_code=0x%02x", dfr_repr_t(dfr), feature_code);
 
    DDCA_Feature_Metadata * result = NULL;
-   if (dfr->features)
+   if (dfr && dfr->features)
       result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
 
    DBGMSF(debug, "Returning %p", result);

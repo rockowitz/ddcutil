@@ -741,12 +741,23 @@ dumpvcp_as_dumpload_data(
 
    // VCP values
    Vcp_Value_Set vset = vcp_value_set_new(50);
+#ifdef OLD
    psc = collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
              true,               //  ignore_unsupported
              ferr());
+#else
+   psc = collect_raw_subset_values2(
+             dh,
+             VCP_SUBSET_PROFILE,
+             vset,
+             true,               //  ignore_unsupported
+             ferr());
+#endif
+
+
    if (psc == 0) {
       dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
       dumped_data->vcp_value_ct = vcp_value_set_size(vset);

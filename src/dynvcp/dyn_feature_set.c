@@ -39,7 +39,7 @@ void dbgrpt_dyn_feature_set(
    }
 }
 
-
+#ifdef OLD
 VCP_Feature_Set
 dyn_create_feature_set(
       VCP_Feature_Subset     subset_id,
@@ -137,6 +137,8 @@ dyn_create_feature_set(
    }
    return result;
 }
+#endif
+
 
 Internal_Feature_Metadata *
 dyn_create_dynamic_feature_from_dfr_metadata(DDCA_Feature_Metadata * dfr_metadata)
@@ -350,7 +352,7 @@ dyn_create_feature_set2(
    return result;
 }
 
-
+#ifdef OLD
 VCP_Feature_Set
 dyn_create_single_feature_set_by_hexid(Byte feature_code, DDCA_Display_Ref dref, bool force) {
    VCP_Feature_Set result = NULL;
@@ -371,6 +373,7 @@ dyn_create_single_feature_set_by_hexid(Byte feature_code, DDCA_Display_Ref dref,
 
    return result;
 }
+#endif
 
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
@@ -436,7 +439,7 @@ dyn_get_feature_set_size2(
 }
 
 
-
+#ifdef OLD
 VCP_Feature_Set
 dyn_create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
@@ -464,6 +467,7 @@ dyn_create_feature_set_from_feature_set_ref(
    }
    return result;
 }
+#endif
 
 
 Dyn_Feature_Set *

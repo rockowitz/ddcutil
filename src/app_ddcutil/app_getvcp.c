@@ -45,7 +45,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
-
+#ifdef OLD
 /* Shows a single VCP value specified by its feature table entry.
  *
  * Arguments:
@@ -99,8 +99,20 @@ app_show_single_vcp_value_by_feature_table_entry(
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
+#endif
 
 
+/* Shows a single VCP value specified by its #Internal_Feature_Metadata
+ *
+ * Arguments:
+ *    dh          handle of open display
+ *    meta        feature metadata
+ *
+ * Returns:
+ *    status code 0 = normal
+ *                DDCRC_INVALID_OPERATION - feature is deprecated or write-only
+ *                from get_formatted_value_for_feature_table_entry()
+ */
 DDCA_Status
 app_show_single_vcp_value_by_internal_metadata(
       Display_Handle *             dh,

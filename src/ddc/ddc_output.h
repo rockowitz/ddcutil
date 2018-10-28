@@ -46,7 +46,7 @@ check_valid_operation_by_feature_id_and_dh(
       Version_Feature_Flags operation_flags);
 #endif
 
-
+#ifdef OLD
 Public_Status_Code
 collect_raw_subset_values(
       Display_Handle *    dh,
@@ -54,7 +54,18 @@ collect_raw_subset_values(
       Vcp_Value_Set       vset,
       bool                ignore_unsupported,
       FILE *              msg_fh);
+#endif
 
+Public_Status_Code
+collect_raw_subset_values2(
+      Display_Handle *    dh,
+      VCP_Feature_Subset  subset,
+      Vcp_Value_Set       vset,
+      bool                ignore_unsupported,
+      FILE *              msg_fh);
+
+
+#ifdef OLD
 Public_Status_Code
 get_formatted_value_for_feature_table_entry(
       Display_Handle *           dh,
@@ -63,6 +74,7 @@ get_formatted_value_for_feature_table_entry(
       bool                       prefix_value_with_feature_code,
       char **                    pformatted_value,
       FILE *                     msg_fh);
+#endif
 
 Public_Status_Code
 get_formatted_value_for_internal_metadata(
