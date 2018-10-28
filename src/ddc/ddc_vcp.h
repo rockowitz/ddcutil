@@ -61,14 +61,8 @@ ddc_set_nontable_vcp_value(
 Error_Info *
 ddc_set_vcp_value(
       Display_Handle *          dh,
-#ifdef SINGLE_VCP_VALUE
-      Single_Vcp_Value *        vrec,
-      Single_Vcp_Value **       newval_loc);
-#else
       DDCA_Any_Vcp_Value *        vrec,
       DDCA_Any_Vcp_Value **       newval_loc);
-#endif
-
 
 Error_Info *
 ddc_get_table_vcp_value(
@@ -82,14 +76,6 @@ ddc_get_nontable_vcp_value(
       Byte                      feature_code,
       Parsed_Nontable_Vcp_Response** parsed_response_loc);
 
-#ifdef SINGLE_VCP_VALUE
-Error_Info *
-ddc_get_vcp_value(
-      Display_Handle *          dh,
-      Byte                      feature_code,
-      DDCA_Vcp_Value_Type       call_type,
-      Single_Vcp_Value **       valrec_loc);
-#else
 
 Error_Info *
 ddc_get_vcp_value(
@@ -97,6 +83,5 @@ ddc_get_vcp_value(
        Byte                     feature_code,
        DDCA_Vcp_Value_Type      call_type,
        DDCA_Any_Vcp_Value **    valrec_loc);
-#endif
 
 #endif /* DDC_VCP_H_ */
