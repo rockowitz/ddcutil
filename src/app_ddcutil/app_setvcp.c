@@ -104,11 +104,7 @@ app_set_vcp_value(
    Byte                       hexid;
    VCP_Feature_Table_Entry *  entry = NULL;
    bool                       good_value = false;
-#ifdef SINGLE_VCP_VALUE
-   Single_Vcp_Value           vrec;
-#else
    DDCA_Any_Vcp_Value         vrec;
-#endif
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &hexid);
@@ -214,13 +210,9 @@ app_set_vcp_value(
 
       vrec.opcode        = entry->code;
       vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
-#ifdef SINGLE_VCP_VALUE
-      vrec.val.c.cur_val = longtemp;
-#else
       vrec.val.c_nc.sh = (longtemp >> 8) & 0xff;   // should always be 0
       assert(vrec.val.c_nc.sh == 0);
       vrec.val.c_nc.sl = longtemp & 0xff;
-#endif
    }
 
    ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
