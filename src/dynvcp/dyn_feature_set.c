@@ -9,6 +9,7 @@
 
 #include "dynvcp/dyn_feature_set.h"
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 VCP_Feature_Set
 dyn_create_feature_set(
@@ -18,7 +19,7 @@ dyn_create_feature_set(
       Feature_Set_Flags      flags)
    // bool                   exclude_table_features)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, flags=0x%02x - %s",
                  subset_id,
                  feature_subset_name(subset_id),
@@ -31,7 +32,7 @@ dyn_create_feature_set(
    Display_Ref * dref2 = (Display_Ref *) dref;
    assert( dref2 && memcmp(dref2->marker, DISPLAY_REF_MARKER, 4) == 0);
 
-   if (subset_id == VCP_SUBSET_DYNAMIC) {
+   if (subset_id == VCP_SUBSET_DYNAMIC) {  // all user defined features
       if (dref2->dfr) {
 #ifdef REF
          typedef enum {
@@ -76,7 +77,28 @@ dyn_create_feature_set(
       }
    }
    else {
+      // TODO:  insert DFR records if necessary
       result = create_feature_set(subset_id, dref2->vcp_version, flags);
+      assert(result);
+
+      // For those features for which user defined metadata exists, replace
+      // the feature set entry with one reflecting the user defined metadata
+      int ct = get_feature_set_size(result);
+      for (int ndx = 0; ndx < ct; ndx++) {
+         VCP_Feature_Table_Entry * cur_entry = get_feature_set_entry(result, ndx);
+         DDCA_Vcp_Feature_Code feature_code =  cur_entry->code;
+
+         //  GHashTable * feature_hash = dref2->dfr->features;
+         DDCA_Feature_Metadata * feature_metadata = get_dynamic_feature_metadata(dref2->dfr, feature_code);
+         if (feature_metadata) {
+            DBGMSG("Replacing feature set entry for feature 0x%02x with user defined metadata", feature_code);
+            dbgrpt_feature_metadata(feature_metadata, 1);
+            VCP_Feature_Table_Entry * pfte =
+              vcp_create_dynamic_feature(feature_metadata->feature_code, feature_metadata);
+            dbgrpt_vcp_entry(pfte, 1);
+            replace_feature_set_entry(result, ndx,pfte);
+         }
+      }
    }
 
    if (debug) {
@@ -118,12 +140,22 @@ dyn_create_feature_set_from_feature_set_ref(
    Feature_Set_Flags       flags)
  //  bool                    force);
 {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting. fsref=%s, dref=%s, flags=%s",
+          fsref_repr(fsref), dref_repr_t(dref), interpret_ddca_feature_flags(flags));
+
    VCP_Feature_Set result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
       result = dyn_create_single_feature_set_by_hexid(fsref->specific_feature, dref, flags & FSF_FORCE);
    }
    else {
       result = dyn_create_feature_set(fsref->subset, dref, flags);
+   }
+
+   if (debug || IS_TRACING()) {
+      DBGMSG("Returning VCP_Feature_Set %p",  result);
+      if (result)
+         dbgrpt_feature_set(result, 1);
    }
    return result;
 }
