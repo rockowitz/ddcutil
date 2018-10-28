@@ -361,7 +361,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
-
+// TODO: recode to use API
 static bool is_edp_device(int busno) {
    bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
@@ -372,12 +372,13 @@ static bool is_edp_device(int busno) {
    // DBGMSG("cmd: %s", cmd);
 
    GPtrArray * lines = execute_shell_cmd_collect(cmd);
-
-   for (int ndx = 0; ndx < lines->len; ndx++) {
-      char * s = g_ptr_array_index(lines, ndx);
-      if (strstr(s, "-eDP-")) {
-         result = true;
-         break;
+   if (lines)  {    // command should never fail, but just in case
+      for (int ndx = 0; ndx < lines->len; ndx++) {
+         char * s = g_ptr_array_index(lines, ndx);
+         if (strstr(s, "-eDP-")) {
+            result = true;
+            break;
+         }
       }
    }
 
