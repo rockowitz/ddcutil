@@ -35,6 +35,11 @@ dbgrpt_internal_feature_metadata(
       Internal_Feature_Metadata * intmeta,
       int                         depth);
 
+void
+version_feature_info_to_metadata(
+      DDCA_Version_Feature_Info * info,
+      DDCA_Feature_Metadata * meta);
+
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
@@ -84,6 +89,12 @@ char *
 dyn_get_feature_name(
       Byte                       feature_code,
       Display_Ref*               dref);
+
+bool dyn_format_feature_detail_sl_lookup(
+        Nontable_Vcp_Value *       code_info,
+        DDCA_Feature_Value_Entry * value_table,
+        char *                     buffer,
+        int                        bufsz);
 
 void init_dyn_feature_codes();
 

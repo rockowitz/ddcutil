@@ -24,9 +24,13 @@ dbgrpt_internal_feature_metadata(
       Internal_Feature_Metadata * intmeta,
       int                         depth)
 {
+   assert(intmeta);
    int d1 = depth+1;
    rpt_vstring(depth, "Internal_Feature_Metadata at %p", intmeta);
-   dbgrpt_ddca_feature_metadata(intmeta->external_metadata, d1);
+   if (intmeta->external_metadata)
+      dbgrpt_ddca_feature_metadata(intmeta->external_metadata, d1);
+   else
+      rpt_vstring(d1, "intmeta->external_metadata == NULL !!!");
    rpt_vstring(d1, "nontable_formatter:     %p  %s", intmeta->nontable_formatter,     get_func_name_by_addr(intmeta->nontable_formatter));
    rpt_vstring(d1, "vcp_nontable_formatter: %p  %s", intmeta->vcp_nontable_formatter, get_func_name_by_addr(intmeta->vcp_nontable_formatter));
    rpt_vstring(d1, "table_formatter:        %p  %s", intmeta->table_formatter,        get_func_name_by_addr(intmeta->table_formatter));
@@ -37,6 +41,7 @@ version_feature_info_to_metadata(
       DDCA_Version_Feature_Info * info,
       DDCA_Feature_Metadata * meta)
 {
+   assert(info);
    assert(meta);
    assert( memcmp(meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    meta->feature_code = info->feature_code;
@@ -65,7 +70,7 @@ bool dyn_format_feature_detail_sl_lookup(
         char *                     buffer,
         int                        bufsz)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.");
 
    if (value_table) {
@@ -702,7 +707,7 @@ void init_dyn_feature_codes() {
    func_name_table_add(dyn_format_nontable_feature_detail, "dyn_format_nontable_feature_detail");
    func_name_table_add(dyn_format_table_feature_detail, "dyn_format_table_feature_detail");
    func_name_table_add(dyn_format_feature_detail, "dyn_format_feature_detail");
-   dbgrpt_func_name_table(0);
+   // dbgrpt_func_name_table(0);
 }
 
 
