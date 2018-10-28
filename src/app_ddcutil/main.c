@@ -295,11 +295,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
    puts("");
    // get VCP 0B
-#ifdef SINGLE_VCP_VALUE
-   Single_Vcp_Value * valrec;
-#else
    DDCA_Any_Vcp_Value * valrec;
-#endif
    int color_temp_increment = 0;
    int color_temp_units = 0;
    ddc_excp = ddc_get_vcp_value(
@@ -311,11 +307,7 @@ void probe_display_by_dh(Display_Handle * dh)
    if (psc == 0) {
       if (debug)
          f0printf(fout, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
-#ifdef SINGLE_VCP_VALUE
-      color_temp_increment = valrec->val.c.cur_val;
-#else
       color_temp_increment = valrec->val.c_nc.sl;
-#endif
       free_single_vcp_value(valrec);
 
       ddc_excp = ddc_get_vcp_value(
@@ -327,12 +319,7 @@ void probe_display_by_dh(Display_Handle * dh)
       if (psc == 0) {
          if (debug)
             f0printf(fout, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
-#ifdef SINGLE_VCP_VALUE
-         color_temp_units = valrec->val.c.cur_val;
-#else
          color_temp_units = valrec->val.c_nc.sl;
-#endif
-         free_single_vcp_value(valrec);
          int color_temp = 3000 + color_temp_units * color_temp_increment;
          f0printf(fout, "Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
          f0printf(fout, "Color temperature request   (x0c) = %d\n", color_temp_units);
