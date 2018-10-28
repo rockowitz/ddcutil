@@ -1034,7 +1034,7 @@ show_vcp_values(
         Byte_Bit_Flags      features_seen)
 {
    Public_Status_Code psc = 0;
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
