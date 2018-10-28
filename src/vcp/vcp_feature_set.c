@@ -63,7 +63,7 @@ create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
                               subset_id, (members) ? members->len : -1);
 
@@ -249,10 +249,10 @@ create_feature_set(
       }
    }
 
+   assert(fset);
    if (debug || IS_TRACING()) {
       DBGMSG("Returning: %p", fset);
-      if (fset)
-         dbgrpt_feature_set(fset, 1);
+      dbgrpt_feature_set(fset, 1);
    }
    return fset;
 }
@@ -403,6 +403,26 @@ get_feature_set_entry(
       ventry = g_ptr_array_index(fset->members,index);
    return ventry;
 }
+
+void replace_feature_set_entry(
+      VCP_Feature_Set   feature_set,
+      unsigned          index,
+      VCP_Feature_Table_Entry * new_entry)
+{
+   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+   assert(feature_set);
+   assert(new_entry);
+   assert (index < fset->members->len);
+   if (index < fset->members->len) {
+      VCP_Feature_Table_Entry * old_entry = g_ptr_array_index(fset->members, index);
+      g_ptr_array_remove_index(fset->members, index);
+      g_ptr_array_insert(fset->members, index, new_entry);
+      if (old_entry->vcp_global_flags & DDCA_SYNTHETIC) {
+         // free_vcp_feature_table_entry(old_entry);    // UNIMPLEMENTED
+      }
+   }
+}
+
 
 
 int get_feature_set_size(VCP_Feature_Set feature_set) {

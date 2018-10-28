@@ -48,6 +48,11 @@ create_single_feature_set_by_hexid(Byte id, bool force);
 VCP_Feature_Table_Entry *
 get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
 
+void replace_feature_set_entry(
+      VCP_Feature_Set   feature_set,
+      unsigned          index,
+      VCP_Feature_Table_Entry * new_entry);
+
 int
 get_feature_set_size(VCP_Feature_Set feature_set);
 
