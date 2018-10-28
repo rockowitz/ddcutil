@@ -57,30 +57,18 @@ gpointer threaded_get_vcp_value(gpointer data) {
       assert(memcmp(parms->marker, ASYNC_GETVCP_DATA_MARKER, 4) == 0 );
 
       Public_Status_Code psc = 0;
-#ifdef SINGLE_VCP_VALUE
-      Single_Vcp_Value * valrec = NULL;
-#endif
       DDCA_Any_Vcp_Value    * anyval = NULL;
       Error_Info * ddc_excp = ddc_get_vcp_value(
             parms->dh,
             parms->feature_code,
             parms->call_type,
-#ifdef SINGLE_VCP_VALUE
-            &valrec);
-#else
             &anyval);
-#endif
 
       if (ddc_excp) {
          psc = ERRINFO_STATUS(ddc_excp);
          ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
       }
       else {
-#ifdef SINGLE_VCP_VALUE
-         // convert valrec = DDCA_Any_Vcp_Value
-         anyval = single_vcp_value_to_any_vcp_value(valrec);
-         free_single_vcp_value(valrec);
-#endif
          psc = 0;
          // free(valrec);   // ??? what of table bytes
       }
