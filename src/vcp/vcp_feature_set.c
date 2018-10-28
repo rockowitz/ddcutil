@@ -258,12 +258,14 @@ create_feature_set(
 }
 
 
+// used only for VCPINFO
 VCP_Feature_Set
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. vcp_entry=%p", vcp_entry);
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
+   assert(fset);     // avoid coverity "Dereference before null check" warning
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->members = g_ptr_array_sized_new(1);
    fset->subset = VCP_SUBSET_SINGLE_FEATURE;
@@ -286,6 +288,8 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
  *                 - if false, returns NULL
  * \return  feature set containing a single feature,
  *          NULL if the feature not found and force not specified
+ *
+ * \remark used only for VCPINFO
  */
 VCP_Feature_Set
 create_single_feature_set_by_hexid(Byte id, bool force) {
@@ -325,6 +329,8 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
  *  @remark
  *  If creating a named feature set, see called function #create_feature_set_ref()
  *  for the effect of #FSF_FORCE and other flags.
+ *  @remark
+ *  Used only for VCPINFO
  */
 VCP_Feature_Set
 create_feature_set_from_feature_set_ref(
