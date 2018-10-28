@@ -54,7 +54,7 @@
 
 
 // Default race class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 
 static GPtrArray * all_displays = NULL;    // all detected displays
