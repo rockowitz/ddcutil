@@ -55,11 +55,7 @@ Public_Status_Code usb_get_vcp_value(
       Display_Handle *          dh,
       Byte                      feature_code,
       DDCA_Vcp_Value_Type            call_type,
-#ifdef SINGLE_VCP_VALUE
-      Single_Vcp_Value **       pvalrec);
-#else
       DDCA_Any_Vcp_Value **  pvalrec);
-#endif
 
 Public_Status_Code usb_set_nontable_vcp_value(
       Display_Handle *          dh,
@@ -68,11 +64,7 @@ Public_Status_Code usb_set_nontable_vcp_value(
 
 Public_Status_Code usb_set_vcp_value(
       Display_Handle *           dh,
-#ifdef SINGLE_VCP_VALUE
-      Single_Vcp_Value **       pvalrec);
-#else
       DDCA_Any_Vcp_Value *  pvalrec);
-#endif
 
 __s32 usb_get_vesa_version(int fd);
 
