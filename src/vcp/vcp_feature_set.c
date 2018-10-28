@@ -63,7 +63,7 @@ create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
                               subset_id, (members) ? members->len : -1);
 
