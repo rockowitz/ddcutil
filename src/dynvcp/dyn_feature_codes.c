@@ -698,7 +698,12 @@ dyn_get_feature_name(
    return result;
 }
 
-void init_dyn_feature_codes();
+void init_dyn_feature_codes() {
+   func_name_table_add(dyn_format_nontable_feature_detail, "dyn_format_nontable_feature_detail");
+   func_name_table_add(dyn_format_table_feature_detail, "dyn_format_table_feature_detail");
+   func_name_table_add(dyn_format_feature_detail, "dyn_format_feature_detail");
+   dbgrpt_func_name_table(0);
+}
 
 
 
