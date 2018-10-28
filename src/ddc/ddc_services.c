@@ -38,6 +38,8 @@
 
 #include "vcp/vcp_feature_codes.h"
 
+#include "dynvcp/dyn_feature_codes.h"
+
 #include "i2c/i2c_do_io.h"
 
 #include "adl/adl_shim.h"
