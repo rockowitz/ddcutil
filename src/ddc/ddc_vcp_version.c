@@ -80,11 +80,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 #endif
       }
       else {    // normal case, not USB
-#ifdef SINGLE_VCP_VALUE
-         Single_Vcp_Value * pvalrec;
-#else
          DDCA_Any_Vcp_Value * pvalrec;
-#endif
 
          // verbose output is distracting since this function is called when
          // querying for other things
@@ -101,13 +97,8 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             set_output_level(olev);
 
          if (psc == 0) {
-#ifdef SINGLE_VCP_VALUE
-            dh->dref->vcp_version.major = pvalrec->val.nc.sh;
-            dh->dref->vcp_version.minor = pvalrec->val.nc.sl;
-#else
             dh->dref->vcp_version.major = pvalrec->val.c_nc.sh;
             dh->dref->vcp_version.minor = pvalrec->val.c_nc.sl;
-#endif
             DBGMSF(debug, "Set dh->dref->vcp_version to %d.%d, %s",
                           dh->dref->vcp_version.major,
                           dh->dref->vcp_version.minor,
