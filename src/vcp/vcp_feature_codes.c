@@ -1262,11 +1262,7 @@ bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vfte,
        DDCA_MCCS_Version_Spec    vcp_version,
-#ifdef SINGLE_VCP_VALUE
-       Single_Vcp_Value *        valrec,
-#else
        DDCA_Any_Vcp_Value *      valrec,
-#endif
        char * *                  aformatted_data
      )
 {
