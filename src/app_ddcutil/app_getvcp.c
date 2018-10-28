@@ -221,7 +221,7 @@ app_show_single_vcp_value_by_feature_id_new(
    dyn_get_feature_metadata_by_dh(
          feature_id,
          dh,
-         force || feature_id >- 0xe0    // with_default
+         force || feature_id >= 0xe0    // with_default
          );
 
    // VCP_Feature_Table_Entry *  entry = NULL;
