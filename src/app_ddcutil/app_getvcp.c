@@ -246,7 +246,7 @@ app_show_vcp_subset_values_by_display_handle(
         Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP,
           "Starting. dh=%s, subset_id=%s, flags=%s, features_seen=%p",
           dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names(flags), features_seen );
@@ -327,7 +327,7 @@ app_show_feature_set_values_by_display_handle(
       Feature_Set_Ref *    fsref,
       Feature_Set_Flags    flags)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr(fsref), s0);
