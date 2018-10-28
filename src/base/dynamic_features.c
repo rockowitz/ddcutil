@@ -72,7 +72,7 @@ Tokenized first_word(char * s) {
  *
  * Returns:      string representation, caller must free
  */
-char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
+char * interpret_ddca_feature_flags(DDCA_Version_Feature_Flags flags) {
    char * buffer = NULL;
    int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
@@ -113,7 +113,7 @@ dbgrpt_feature_metadata(
 // rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
-   char * s = interpret_feature_flags(md->feature_flags);
+   char * s = interpret_ddca_feature_flags(md->feature_flags);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", s);
    free(s);
@@ -123,6 +123,32 @@ dbgrpt_feature_metadata(
       while(curval->value_code || curval->value_name) {
          rpt_vstring(d2, "0x%02x  - %s", curval->value_code, curval->value_name);
          curval++;
+      }
+   }
+}
+
+void dbgrpt_dynamic_features_rec(
+      Dynamic_Features_Rec*   dfr,
+      int                     depth)
+{
+   assert(dfr && memcmp(dfr->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+   int d1 = depth + 1;
+   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
+   rpt_vstring(d1, "marker:         %4s", dfr->marker);
+   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
+   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
+   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
+   rpt_vstring(d1, "filename:       %s", dfr->filename);
+   rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
+   rpt_vstring(d1, "flags:          0x%02 %s", dfr->flags,
+         interpret_ddca_feature_flags(dfr->flags));
+   if (dfr->features) {
+      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
+      for (int ndx = 1; ndx < 256; ndx++) {
+         DDCA_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
+               GINT_TO_POINTER(ndx));
+         if (cur_feature)
+            dbgrpt_feature_metadata(cur_feature, d1);
       }
    }
 }
@@ -262,32 +288,6 @@ dfr_free(
       free(frec);
    }
 }
-
-
-void
-dbgrpt_dfr(
-      Dynamic_Features_Rec * dfr,
-      int                    depth)
-{
-   int d1 = depth+1;
-   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
-   rpt_vstring(d1, "marker:         %4s",   dfr->marker);
-   rpt_vstring(d1, "mfg_id:         %s",    dfr->mfg_id);
-   rpt_vstring(d1, "model_name:     %s",    dfr->model_name);
-   rpt_vstring(d1, "product_code:   %u",    dfr->product_code);
-   rpt_vstring(d1, "filename:       %s",    dfr->filename);
-   rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
-   if (dfr->features) {
-      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
-      for (int ndx = 1; ndx < 256; ndx++) {
-         DDCA_Feature_Metadata * cur_feature =
-               g_hash_table_lookup(dfr->features, GINT_TO_POINTER(ndx));
-         if (cur_feature)
-            dbgrpt_feature_metadata(cur_feature, d1);
-      }
-   }
-}
-
 
 //
 // Functions private to create_monitor_dynamic_featuers()
@@ -648,7 +648,7 @@ create_monitor_dynamic_features(
       g_ptr_array_free(errors, false);
       *dynamic_features_loc = frec;
       if (debug)
-         dbgrpt_dfr(frec, 0);
+         dbgrpt_dynamic_features_rec(frec, 0);
    }
 
    DBGMSF(debug, "Done. *dynamic_features_loc=%p, returning %s",

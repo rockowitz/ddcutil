@@ -13,7 +13,6 @@
 /** \cond */
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
-// #include <stdlib.h>
 /** \endcond */
 
 #include "ddcutil_types.h"
@@ -38,7 +37,7 @@ typedef struct {
    char *                     filename;     // source filename, if applicable
    DDCA_MCCS_Version_Spec     vspec;
    DFR_Flags                  flags;
-   GHashTable *               features;     // array of DDCA_Feature_Metadata
+   GHashTable *               features;     // hash table of DDCA_Feature_Metadata
 } Dynamic_Features_Rec;
 
 
@@ -58,10 +57,7 @@ void
 dfr_free(
       Dynamic_Features_Rec *  frec);
 
-void
-dbgrpt_dfr(
-      Dynamic_Features_Rec *  dfr,
-      int                     depth);
+
 
 Error_Info *
 create_monitor_dynamic_features(
@@ -77,6 +73,18 @@ DDCA_Feature_Metadata *
 get_dynamic_feature_metadata(
       Dynamic_Features_Rec *  dfr,
       uint8_t                 feature_code);
+
+
+// belongs in more generic location
+char * interpret_ddca_feature_flags(DDCA_Version_Feature_Flags flags);
+void
+dbgrpt_feature_metadata(
+      DDCA_Feature_Metadata * md,
+      int                     depth);
+
+void dbgrpt_dynamic_features_rec(
+      Dynamic_Features_Rec*   dfr,
+      int                     depth);
 
 
 #endif /* BASE_DYNAMIC_FEATURES_H_ */
