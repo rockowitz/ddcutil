@@ -618,7 +618,7 @@ ddca_set_continuous_vcp_value_verify(
    DDCA_Any_Vcp_Value valrec;
    valrec.opcode = feature_code;
    valrec.value_type = DDCA_NON_TABLE_VCP_VALUE;
-   valrec.val.c_nc.sh = (new_value >> 8) && 0xff;
+   valrec.val.c_nc.sh = (new_value >> 8) & 0xff;
    valrec.val.c_nc.sl = new_value & 0xff;
 
    if (verified_value_loc) {
