@@ -1392,7 +1392,9 @@ vcp_create_dynamic_feature(
    pentry->v20_flags = dynamic_metadata->feature_flags;
    if (pentry->v20_flags & DDCA_SIMPLE_NC) {
       if (dynamic_metadata->sl_values) {
+         // WRONG needs to a function that can find the lookup table
          pentry->nontable_formatter = format_feature_detail_sl_lookup;
+           //   dyn_format_nontable_feature_detail
          pentry->default_sl_values = dynamic_metadata->sl_values;   // need to copy?
       }
       else {
@@ -1831,10 +1833,19 @@ bool format_feature_detail_sl_lookup(
         char *                   buffer,
         int                      bufsz)
 {
+   // TODO: lookup feature code in dynamic_sl_value_table
    char * s = lookup_value_name(code_info->vcp_code, vcp_version, code_info->sl);
    snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);
    return true;
 }
+
+// wrong, needs to be per-display
+void register_dynamic_sl_values(
+      DDCA_Vcp_Feature_Code feature_code,
+      DDCA_Feature_Value_Entry * table)
+{
+}
+
 
 
 /* Standard feature detail formatting function for a feature marked

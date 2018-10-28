@@ -139,6 +139,7 @@ struct {
    char *                                desc;
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
+   // Format_Normal_Feature_Detail_Function2 dynamic_nc_formatter;   // only set for synthetic, udf features
    DDCA_Global_Feature_Flags             vcp_global_flags;
    ushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
