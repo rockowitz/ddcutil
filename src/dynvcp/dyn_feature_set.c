@@ -348,8 +348,6 @@ dyn_create_feature_set2(
           dbgrpt_dyn_feature_set(result, 1);
     }
     return result;
-
-   return result;
 }
 
 #ifdef OLD
