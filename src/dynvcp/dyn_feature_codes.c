@@ -10,13 +10,18 @@
 #include <assert.h>
 
 #include "util/report_util.h"
+
 #include "base/displays.h"
 #include "base/dynamic_features.h"
-#include "vcp/vcp_feature_codes.h"
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
+
+#include "vcp/vcp_feature_codes.h"
+
+#include "dynvcp/dyn_dynamic_features.h"
 
 #include "dynvcp/dyn_feature_codes.h"
-#include "dynvcp/dyn_dynamic_features.h"
+
 
 #ifdef IFM
 void
@@ -993,9 +998,9 @@ dyn_get_feature_name(
 }
 
 void init_dyn_feature_codes() {
-   func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
-   func_name_table_add(dyn_format_table_feature_detail_dfm, "dyn_format_table_feature_detail_dfm");
-   func_name_table_add(dyn_format_feature_detail_dfm, "dyn_format_feature_detail_dfm");
+   rtti_func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
+   rtti_func_name_table_add(dyn_format_table_feature_detail_dfm,    "dyn_format_table_feature_detail_dfm");
+   rtti_func_name_table_add(dyn_format_feature_detail_dfm,          "dyn_format_feature_detail_dfm");
    // dbgrpt_func_name_table(0);
 }
 

@@ -44,6 +44,7 @@ feature_metadata.c        \
 feature_sets.c            \
 linux_errno.c             \
 monitor_model_key.c       \
+rtti.c                    \
 sleep.c                   \
 status_code_mgt.c         \
 vcp_version.c

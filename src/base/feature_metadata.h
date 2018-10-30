@@ -103,13 +103,10 @@ struct {
 } Display_Feature_Metadata;
 
 
-
-
 void
 dbgrpt_display_feature_metadata(
       Display_Feature_Metadata * meta,
       int                        depth);
-
 
 void
 free_display_feature_metadata(
@@ -137,11 +134,5 @@ dfm_to_ddca_version_feature_info(
       Display_Feature_Metadata * dfm);
 #endif
 
-// from vcp_feature_codes
-// GHashTable * func_name_table = NULL;
-
-char * get_func_name_by_addr(void * func_addr);
-void func_name_table_add(void * func_addr, char * func_name);
-void dbgrpt_func_name_table(int depth);
 
 #endif /* FEATURE_METADATA_H_ */

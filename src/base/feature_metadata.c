@@ -18,10 +18,10 @@
 #include "util/report_util.h"
 
 #include "base/displays.h"
+#include "base/rtti.h"
 #include "base/vcp_version.h"
 
 #include "base/feature_metadata.h"
-
 
 
 
@@ -75,18 +75,17 @@ dbgrpt_display_feature_metadata(
       free(s);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
-                      get_func_name_by_addr(meta->nontable_formatter)) ;
+                      rtti_get_func_name_by_addr(meta->nontable_formatter)) ;
       rpt_vstring(d1, "nontable_formatter_sl:        %p - %s",
                       meta->nontable_formatter_sl,
-                      get_func_name_by_addr(meta->nontable_formatter_sl));
+                      rtti_get_func_name_by_addr(meta->nontable_formatter_sl));
       rpt_vstring(d1, "nontable_formatter_universal: %p - %s",
                       meta->nontable_formatter_universal,
-                      get_func_name_by_addr(meta->nontable_formatter_universal)) ;   // the future
+                      rtti_get_func_name_by_addr(meta->nontable_formatter_universal)) ;   // the future
       rpt_vstring(d1, "table_formatter:              %p - %s",
                       meta->table_formatter,
-                      get_func_name_by_addr(meta->table_formatter));
+                      rtti_get_func_name_by_addr(meta->table_formatter));
    }
-
 }
 
 
@@ -168,8 +167,6 @@ dfm_from_ddca_feature_metadata(
 }
 
 
-
-
 #ifdef DVFI
 
 DDCA_Version_Feature_Info *
@@ -190,35 +187,4 @@ dfm_to_ddca_version_feature_info(
    return vfi;
 }
 #endif
-
-GHashTable * func_name_table = NULL;
-
-void dbgrpt_func_name_table(int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "Function name table at %p", func_name_table);
-   GHashTableIter iter;
-   gpointer key, value;
-   g_hash_table_iter_init(&iter, func_name_table);
-   while (g_hash_table_iter_next(&iter, &key, &value)) {
-      rpt_vstring(d1, "%p: %s", key, value);
-   }
-}
-
-char * get_func_name_by_addr(void * ptr) {
-   char * result = "";
-   if (ptr) {
-      result = g_hash_table_lookup(func_name_table, ptr);
-      if (!result)
-         result = "<Not Found>";
-   }
-
-   return result;
-}
-
-void func_name_table_add(void * func_addr, char * func_name) {
-   // assert(vcp_feature_codes_initialized);
-   g_hash_table_insert(func_name_table, func_addr, func_name);
-}
-
-
 

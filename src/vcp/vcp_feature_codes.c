@@ -15,9 +15,11 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/report_util.h"
+
 /** \cond */
 
 #include "base/ddc_errno.h"
+#include "base/rtti.h"
 #include "base/vcp_version.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -4623,11 +4625,12 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    const int bufsz = 100;
    char buf[bufsz];
 
-
    rpt_vstring(d1, "code:       0x%02x", pfte->code);
    rpt_vstring(d1, "desc:       %s", pfte->desc);
-   rpt_vstring(d1, "nontable_formatter: %p %s", pfte->nontable_formatter, get_func_name_by_addr(pfte->nontable_formatter));
-   rpt_vstring(d1, "table_formatter:    %p %s", pfte->table_formatter,  get_func_name_by_addr(pfte->table_formatter));
+   rpt_vstring(d1, "nontable_formatter: %p %s", pfte->nontable_formatter,
+                                                rtti_get_func_name_by_addr(pfte->nontable_formatter));
+   rpt_vstring(d1, "table_formatter:    %p %s", pfte->table_formatter,
+                                                rtti_get_func_name_by_addr(pfte->table_formatter));
    rpt_vstring(d1, "vcp_global_flags:   0x%02x - %s",
                    pfte->vcp_global_flags,
                    vcp_interpret_global_feature_flags(pfte->vcp_global_flags, buf, bufsz));
@@ -4671,12 +4674,9 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
       dbgrpt_sl_value_table(pfte->v22_sl_values, d1+1);
 }
 
-// static GHashTable * func_name_table = NULL;
-extern GHashTable * func_name_table;
 
 void init_func_name_table() {
-   func_name_table = g_hash_table_new(g_direct_hash, g_direct_equal);
-#define ADD_FUNC(_NAME) g_hash_table_insert(func_name_table, _NAME, #_NAME);
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(vcp_format_nontable_feature_detail);
    ADD_FUNC(vcp_format_table_feature_detail);
    ADD_FUNC(vcp_format_feature_detail);
