@@ -465,7 +465,8 @@ dyn_get_feature_metadata_by_dref_dfm(
 
    Display_Feature_Metadata * result =
          dyn_get_feature_metadata_by_dfr_and_vspec_dfm(feature_code, dref->dfr, vspec, with_default);
-   result->display_ref = dref;
+   if (result)
+      result->display_ref = dref;
 
    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
    return result;

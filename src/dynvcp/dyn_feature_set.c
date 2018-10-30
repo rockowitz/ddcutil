@@ -4,6 +4,7 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "util/debug_util.h"
 #include "util/report_util.h"
 
 #include "base/displays.h"
@@ -463,17 +464,17 @@ Dyn_Feature_Set *
 dyn_create_feature_set2_dfm(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       display_ref,
-      Feature_Set_Flags      flags)
+      Feature_Set_Flags      feature_set_flags)
 {
-   Dyn_Feature_Set * result = NULL;
    bool debug = false;
-   DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, flags=0x%02x - %s",
+   DBGMSF(debug, "Starting. subset_id=%d - %s, dref=%s, feature_setflags=0x%02x - %s",
                   subset_id,
                   feature_subset_name(subset_id),
                   dref_repr_t(display_ref),
-                  flags,
-                  feature_set_flag_names(flags));
+                  feature_set_flags,
+                  feature_set_flag_names(feature_set_flags));
 
+    Dyn_Feature_Set * result = NULL;
     Display_Ref * dref = (Display_Ref *) display_ref;
     assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 
@@ -485,26 +486,6 @@ dyn_create_feature_set2_dfm(
 
        if (dref->dfr) {
           DBGMSF(debug, "dref->dfr is set");
- #ifdef REF
-          typedef enum {
-             DFR_FLAGS_NONE      = 0,
-             DFR_FLAGS_NOT_FOUND = 1
-          } DFR_Flags;
-
-
-          #define DYNAMIC_FEATURES_REC_MARKER "DFRC"
-          typedef struct {
-             char                       marker[4];
-             char *                     mfg_id;       // [EDID_MFG_ID_FIELD_SIZE];
-             char *                     model_name;   // [EDID_MODEL_NAME_FIELD_SIZE];
-             uint16_t                   product_code;
-             char *                     filename;     // source filename, if applicable
-             DDCA_MCCS_Version_Spec     vspec;
-             DFR_Flags                  feature_flags;
-             GHashTable *               features;     // array of DDCA_Feature_Metadata
-          } Dynamic_Features_Rec;
- #endif
-
           GHashTableIter iter;
           gpointer hash_key;
           gpointer hash_value;
@@ -514,58 +495,47 @@ dyn_create_feature_set2_dfm(
              DDCA_Feature_Metadata * feature_metadata = hash_value;
              assert( memcmp(feature_metadata, DDCA_FEATURE_METADATA_MARKER, 4) == 0 );
 
-//             Internal_Feature_Metadata * ifm =
-//                dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
-//             g_ptr_array_add(members, ifm);
-
-             Display_Feature_Metadata * dfm =
-                dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
-             g_ptr_array_add(members_dfm, dfm);
+             // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED, FSF_FORCE,
+             // which do not apply in this context
+             bool include = true;
+             if ( ((feature_set_flags & FSF_NOTABLE) &&  (feature_metadata->feature_flags & DDCA_TABLE)) ||
+                  ((feature_set_flags & FSF_RO_ONLY) && !(feature_metadata->feature_flags & DDCA_RO)   ) ||
+                  ((feature_set_flags & FSF_RW_ONLY) && !(feature_metadata->feature_flags & DDCA_RW)   ) ||
+                  ((feature_set_flags & FSF_WO_ONLY) && !(feature_metadata->feature_flags & DDCA_WO)   )
+                )
+                include = false;
+             if (include) {
+                Display_Feature_Metadata * dfm =
+                   dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
+                g_ptr_array_add(members_dfm, dfm);
+             }
 
              found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           }
        }   // if (dref->dfr)
+       result = dyn_create_feature_set0(subset_id, members, members_dfm);
+    }      // VCP_SUBSET_DYNAMIC
 
-    }
     else {   // (subset_id != VCP_SUBSET_DYNAMIC
-       // TODO:  insert DFR records if necessary
-       result = create_feature_set(subset_id, dref->vcp_version, flags);
-       assert(result);
-
-       // For those features for which user defined metadata exists, replace
-       // the feature set entry with one reflecting the user defined metadata
-       int ct = get_feature_set_size(result);
+       VCP_Feature_Set * vcp_feature_set =
+       create_feature_set(
+             subset_id,
+             dref->vcp_version,
+             feature_set_flags);
+       int ct = get_feature_set_size(vcp_feature_set);
        for (int ndx = 0; ndx < ct; ndx++) {
-          VCP_Feature_Table_Entry * cur_entry = get_feature_set_entry(result, ndx);
-          DDCA_Vcp_Feature_Code feature_code =  cur_entry->code;
-
-          //  GHashTable * feature_hash = dref->dfr->features;
-          DDCA_Feature_Metadata * feature_metadata = get_dynamic_feature_metadata(dref->dfr, feature_code);
-          if (feature_metadata) {
-//             Internal_Feature_Metadata * ifm =
-//                dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
-//             g_ptr_array_add(members, ifm);
-
-             Display_Feature_Metadata * dfm =
-                dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
+          VCP_Feature_Table_Entry * vfte = get_feature_set_entry(vcp_feature_set, ndx);
+          DDCA_Vcp_Feature_Code feature_code = vfte->code;
+          Display_Feature_Metadata * dfm =
+                dyn_get_feature_metadata_by_dref_dfm(
+                      feature_code,
+                      dref,
+                      feature_set_flags & FSF_SHOW_UNSUPPORTED);   // with_default
+          if (dfm)
              g_ptr_array_add(members_dfm, dfm);
-
-          }
-          else {
-//             // create Internal_Feature_Metadata from VCP_Feature_Table_Entry
-//             Internal_Feature_Metadata * ifm =
-//                   dyn_create_dynamic_feature_from_vcp_feature_table_entry(cur_entry, dref->vcp_version);
-//             g_ptr_array_add(members, ifm);
-
-             Display_Feature_Metadata * dfm =
-                   dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(cur_entry, dref->vcp_version);
-             g_ptr_array_add(members_dfm, dfm);
-
-          }
        }
+       result = dyn_create_feature_set0(subset_id, members, members_dfm);
     }
-
-    result = dyn_create_feature_set0(subset_id, members, members_dfm);
 
     if (debug) {
        DBGMSG("Returning: %p", result);
@@ -704,7 +674,9 @@ int
 dyn_get_feature_set_size2_dfm(
       Dyn_Feature_Set * feature_set)
 {
-   assert(feature_set && feature_set->members);
+   // show_backtrace(2);
+   assert(feature_set);
+   assert(feature_set->members_dfm);
    int result = feature_set->members_dfm->len;
    return result;
 }
@@ -774,3 +746,45 @@ void dyn_free_feature_set(
 {
    DBGMSG("Unimplemented");
 }
+
+
+
+// or, take DDCA_Feature_List address as parm
+DDCA_Feature_List
+feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
+{
+   bool debug = true;
+   if (debug || IS_TRACING()) {
+      DBGMSG("Starting. feature_set = %p", fset);
+      show_backtrace(2);
+      dbgrpt_dyn_feature_set(fset, 1);
+   }
+
+   DDCA_Feature_List vcplist = {{0}};
+   assert( fset && memcmp(fset->marker, DYN_FEATURE_SET_MARKER, 4) == 0);
+   int ndx = 0;
+   for (; ndx < fset->members_dfm->len; ndx++) {
+      Display_Feature_Metadata * vcp_entry = NULL;
+      vcp_entry = g_ptr_array_index(fset->members_dfm,ndx);
+
+      uint8_t vcp_code = vcp_entry->feature_code;
+      DBGMSG("Setting feature: 0x%02x", vcp_code);
+      int flagndx   = vcp_code >> 3;
+      int shiftct   = vcp_code & 0x07;
+      Byte flagbit  = 0x01 << shiftct;
+      // printf("(%s) vcp_code=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+      //        __func__, vcp_code, flagndx, shiftct, flagbit);
+      vcplist.bytes[flagndx] |= flagbit;
+      // uint8_t bval = vcplist.bytes[flagndx];
+      // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
+   }
+
+   if (debug || IS_TRACING()) {
+      DBGMSG("Returning: ");
+      rpt_hex_dump(vcplist.bytes, 32, 1);
+   }
+
+   return vcplist;
+}
+
+

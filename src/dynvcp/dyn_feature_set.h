@@ -128,10 +128,9 @@ typedef bool (*Dyn_Feature_Set_Filter_Func)(Display_Feature_Metadata * p_metadat
 
 void filter_feature_set2(Dyn_Feature_Set* fset, Dyn_Feature_Set_Filter_Func func);
 
-DDCA_Feature_List feature_list_from_feature_set2(Dyn_Feature_Set * feature_set);
-
 void dyn_free_feature_set(
       Dyn_Feature_Set * feature_set);
 
+DDCA_Feature_List feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset);
 
 #endif /* DYN_FEATURE_SET_H_ */

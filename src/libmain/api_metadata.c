@@ -173,7 +173,7 @@ ddca_get_feature_list_by_dref(
                      include_table_features,
                      p_feature_list);
 #endif
-               bool debug = false;
+               bool debug = true;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
                       feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
 
@@ -207,19 +207,18 @@ ddca_get_feature_list_by_dref(
                Feature_Set_Flags flags = 0x00;
                if (!include_table_features)
                   flags |= FSF_NOTABLE;
-               VCP_Feature_Set fset = dyn_create_feature_set2_dfm(subset, dref, flags);
+               Dyn_Feature_Set * fset = dyn_create_feature_set2_dfm(subset, dref, flags);
                // VCP_Feature_Set fset = create_feature_set(subset, vspec, !include_table_features);
 
                // TODO: function variant that takes result location as a parm, avoid memcpy
-               DDCA_Feature_List result = feature_list_from_feature_set(fset);
+               DDCA_Feature_List result = feature_list_from_dyn_feature_set(fset);
                memcpy(p_feature_list, &result, 32);
-               free_vcp_feature_set(fset);
+               dyn_free_feature_set(fset);
 
             bye:
                DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
                if (debug)
                   rpt_hex_dump((Byte*) p_feature_list, 32, 1);
-
          }
       );
 }

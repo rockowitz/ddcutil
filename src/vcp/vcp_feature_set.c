@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/debug_util.h"
 #include "util/report_util.h"
 /** \endcond */
 
@@ -18,12 +19,7 @@
 #include "vcp/vcp_feature_set.h"
 
 
-#define VCP_FEATURE_SET_MARKER "FSET"
-struct vcp_feature_set {
-   char                marker[4];
-   VCP_Feature_Subset  subset;      // subset identifier
-   GPtrArray *         members;     // array of pointers to VCP_Feature_Table_Entry
-};
+
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
@@ -45,9 +41,8 @@ void free_transient_vcp_entry(gpointer ptr) {
 }
 
 
-void free_vcp_feature_set(VCP_Feature_Set fset) {
-   if (fset) {
-      struct vcp_feature_set * pset = (struct vcp_feature_set *) fset;
+void free_vcp_feature_set(VCP_Feature_Set * pset) {
+   if (pset) {
       assert( memcmp(pset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
 
       if (pset->members) {
@@ -58,12 +53,13 @@ void free_vcp_feature_set(VCP_Feature_Set fset) {
    }
 }
 
-VCP_Feature_Set
+
+VCP_Feature_Set *
 create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
                               subset_id, (members) ? members->len : -1);
 
@@ -98,26 +94,25 @@ create_feature_set0(
  *  - FSF_RW_ONLY, FSF_RO_ONLY, FSF_WO_ONLy - filter feature ids by whether they are
  *    RW, RO, or WO
  */
-VCP_Feature_Set
+VCP_Feature_Set *
 create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_MCCS_Version_Spec vcp_version,
-      Feature_Set_Flags      flags)
+      Feature_Set_Flags      feature_setflags)
 {
    assert(subset_id);
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * sflags = feature_set_flag_names(flags);
+      char * sflags = feature_set_flag_names(feature_setflags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
       free(sflags);
    }
 
-   bool exclude_table_features = flags & FSF_NOTABLE;
-
+   bool exclude_table_features = feature_setflags & FSF_NOTABLE;
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
@@ -221,17 +216,17 @@ create_feature_set(
          case VCP_SUBSET_NONE:
             break;
          }
-         if ( ( flags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
+         if ( ( feature_setflags & (FSF_RW_ONLY | FSF_RO_ONLY | FSF_WO_ONLY) ) &&
                subset_id != VCP_SUBSET_SINGLE_FEATURE && subset_id != VCP_SUBSET_NONE) {
-            if (flags &FSF_RW_ONLY) {
+            if (feature_setflags &FSF_RW_ONLY) {
                if (! (vflags & DDCA_RW) )
                   showit = false;
             }
-            else if (flags & FSF_RO_ONLY) {
+            else if (feature_setflags & FSF_RO_ONLY) {
                if (! (vflags & DDCA_RO) )
                   showit = false;
             }
-            else if (flags & FSF_WO_ONLY) {
+            else if (feature_setflags & FSF_WO_ONLY) {
                if (! (vflags & DDCA_WO) )
                   showit = false;
             }
@@ -259,9 +254,9 @@ create_feature_set(
 
 
 // used only for VCPINFO
-VCP_Feature_Set
+VCP_Feature_Set *
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. vcp_entry=%p", vcp_entry);
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
@@ -291,9 +286,9 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
  *
  * \remark used only for VCPINFO
  */
-VCP_Feature_Set
+VCP_Feature_Set *
 create_single_feature_set_by_hexid(Byte id, bool force) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. id=0x%02x, force=%s", id, sbool(force));
 
    struct vcp_feature_set * fset = NULL;
@@ -332,13 +327,13 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
  *  @remark
  *  Used only for VCPINFO
  */
-VCP_Feature_Set
+VCP_Feature_Set *
 create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       char * flag_names = feature_set_flag_names(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
@@ -369,7 +364,7 @@ VCP_Feature_Set create_single_feature_set_by_charid(Byte id, bool force) {
 }
 #endif
 
-
+#ifdef OLD
 static inline struct vcp_feature_set *
 unopaque_feature_set(
       VCP_Feature_Set feature_set)
@@ -378,10 +373,10 @@ unopaque_feature_set(
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset;
 }
+#endif
 
 
-void free_feature_set(VCP_Feature_Set feature_set) {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+void free_feature_set(VCP_Feature_Set * fset) {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    // free all generated members
@@ -399,10 +394,9 @@ void free_feature_set(VCP_Feature_Set feature_set) {
 
 VCP_Feature_Table_Entry *
 get_feature_set_entry(
-      VCP_Feature_Set feature_set,
-      unsigned         index)
+      VCP_Feature_Set * fset,
+      unsigned          index)
 {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    VCP_Feature_Table_Entry * ventry = NULL;
    if (index >= 0 || index < fset->members->len)
@@ -411,12 +405,11 @@ get_feature_set_entry(
 }
 
 void replace_feature_set_entry(
-      VCP_Feature_Set   feature_set,
+      VCP_Feature_Set * fset,
       unsigned          index,
       VCP_Feature_Table_Entry * new_entry)
 {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
-   assert(feature_set);
+   assert(fset);
    assert(new_entry);
    assert (index < fset->members->len);
    if (index < fset->members->len) {
@@ -431,22 +424,19 @@ void replace_feature_set_entry(
 
 
 
-int get_feature_set_size(VCP_Feature_Set feature_set) {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+int get_feature_set_size(VCP_Feature_Set * fset) {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->members->len;
 }
 
 
-VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set feature_set) {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set* fset) {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    return fset->subset;
 }
 
 
-void report_feature_set(VCP_Feature_Set feature_set, int depth) {
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
+void report_feature_set(VCP_Feature_Set* fset, int depth) {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    for (; ndx < fset->members->len; ndx++) {
@@ -460,10 +450,9 @@ void report_feature_set(VCP_Feature_Set feature_set, int depth) {
    }
 }
 
-void dbgrpt_feature_set(VCP_Feature_Set feature_set, int depth) {
+void dbgrpt_feature_set(VCP_Feature_Set* fset, int depth) {
    int d1 = depth+1;
 
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    rpt_vstring(depth, "Subset: %d (%s)", fset->subset, feature_subset_name(fset->subset));
    int ndx = 0;
@@ -485,13 +474,12 @@ void dbgrpt_feature_set(VCP_Feature_Set feature_set, int depth) {
 
 void
 filter_feature_set(
-      VCP_Feature_Set              feature_set,
+      VCP_Feature_Set *            fset,
       VCP_Feature_Set_Filter_Func  func)
 {
    bool debug = false;
 
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
-   assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
+   assert(fset);
 
    for (int ndx = fset->members->len -1; ndx >= 0; ndx--) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
@@ -509,15 +497,16 @@ filter_feature_set(
 
 // or, take DDCA_Feature_List address as parm
 DDCA_Feature_List
-feature_list_from_feature_set(VCP_Feature_Set feature_set) {
-   bool debug = false;
+feature_list_from_feature_set(VCP_Feature_Set * fset)
+{
+   bool debug = true;
    if (debug || IS_TRACING()) {
-      DBGMSG("Starting. feature_set:");
-      dbgrpt_feature_set(feature_set, 1);
+      DBGMSG("Starting. feature_set = %p", fset);
+      show_backtrace(2);
+      dbgrpt_feature_set(fset, 1);
    }
 
    DDCA_Feature_List vcplist = {{0}};
-   struct vcp_feature_set * fset = (struct vcp_feature_set *) feature_set;
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    for (; ndx < fset->members->len; ndx++) {
