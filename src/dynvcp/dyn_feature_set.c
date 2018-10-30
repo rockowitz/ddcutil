@@ -333,7 +333,9 @@ dyn_create_feature_set0(
    Dyn_Feature_Set * fset = calloc(1,sizeof(Dyn_Feature_Set));
    memcpy(fset->marker, DYN_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
+#ifndef DFM
    fset->members = members;
+#endif
    fset->members_dfm = members_dfm;
 
    DBGTRC(debug, TRACE_GROUP, "Returning %p", fset);
@@ -582,7 +584,9 @@ dyn_create_single_feature_set_by_hexid2(
    memcpy(result->marker, DYN_FEATURE_SET_MARKER, 4);
    result->dref = dref;
    result->subset = VCP_SUBSET_SINGLE_FEATURE;
+#ifndef DFM
    result->members = g_ptr_array_new();
+#endif
    result->members_dfm = g_ptr_array_new();
 #ifdef IFM
    Internal_Feature_Metadata * ifm = NULL;
@@ -660,7 +664,7 @@ dyn_get_feature_set_entry2_dfm(
    return result;
 }
 
-
+#ifndef DFM
 int
 dyn_get_feature_set_size2(
       Dyn_Feature_Set * feature_set)
@@ -669,6 +673,7 @@ dyn_get_feature_set_size2(
    int result = feature_set->members->len;
    return result;
 }
+#endif
 
 int
 dyn_get_feature_set_size2_dfm(

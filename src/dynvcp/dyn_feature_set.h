@@ -31,7 +31,9 @@ typedef struct {
    char                marker[4];
    VCP_Feature_Subset  subset;      // subset identifier
    DDCA_Display_Ref    dref;
+#ifndef DFM
    GPtrArray *         members;     // array of pointers to Internal_Feature_Metadata
+#endif
    GPtrArray *         members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
 
@@ -94,9 +96,11 @@ dyn_get_feature_set_entry2_dfm(
 // int
 // get_feature_set_size(VCP_Feature_Set feature_set);
 
+#ifndef DFM
 int
 dyn_get_feature_set_size2(
       Dyn_Feature_Set * feature_set);
+#endif
 
 int
 dyn_get_feature_set_size2_dfm(
