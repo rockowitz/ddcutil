@@ -8,6 +8,7 @@
 #include "util/report_util.h"
 
 #include "base/displays.h"
+#include "base/feature_lists.h"
 #include "base/feature_sets.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -27,6 +28,7 @@ typedef struct {
 
 void dbgrpt_dyn_feature_set(
       Dyn_Feature_Set * fset,
+      bool              verbose,
       int               depth)
 {
    int d0 = depth;
@@ -43,7 +45,10 @@ void dbgrpt_dyn_feature_set(
    rpt_label  (d0, "Members (dfm):");
    for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
       Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm,ndx);
-      dbgrpt_display_feature_metadata(dfm, d1);
+      if (verbose)
+         dbgrpt_display_feature_metadata(dfm, d1);
+      else
+         rpt_vstring(d1, "0x%02x - %s", dfm->feature_code, dfm->feature_name);
    }
 #endif
 }
@@ -542,7 +547,7 @@ dyn_create_feature_set2_dfm(
     if (debug) {
        DBGMSG("Returning: %p", result);
        if (result)
-          dbgrpt_dyn_feature_set(result, 1);
+          dbgrpt_dyn_feature_set(result, false, 1);
     }
     return result;
 }
@@ -740,7 +745,7 @@ dyn_create_feature_set_from_feature_set_ref2(
    if (debug || IS_TRACING()) {
       DBGMSG("Returning VCP_Feature_Set %p",  result);
       if (result)
-         dbgrpt_dyn_feature_set(result, 1);
+         dbgrpt_dyn_feature_set(result, true, 1);
    }
    return result;
 }
@@ -761,8 +766,8 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
    bool debug = true;
    if (debug || IS_TRACING()) {
       DBGMSG("Starting. feature_set = %p", fset);
-      show_backtrace(2);
-      dbgrpt_dyn_feature_set(fset, 1);
+      // show_backtrace(2);
+      dbgrpt_dyn_feature_set(fset, false, 1);
    }
 
    DDCA_Feature_List vcplist = {{0}};
@@ -773,7 +778,7 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
       vcp_entry = g_ptr_array_index(fset->members_dfm,ndx);
 
       uint8_t vcp_code = vcp_entry->feature_code;
-      DBGMSG("Setting feature: 0x%02x", vcp_code);
+      // DBGMSG("Setting feature: 0x%02x", vcp_code);
       int flagndx   = vcp_code >> 3;
       int shiftct   = vcp_code & 0x07;
       Byte flagbit  = 0x01 << shiftct;
@@ -785,7 +790,7 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
    }
 
    if (debug || IS_TRACING()) {
-      DBGMSG("Returning: ");
+      DBGMSG("Returning: %s", feature_list_string(&vcplist, "", ","));
       rpt_hex_dump(vcplist.bytes, 32, 1);
    }
 

@@ -218,6 +218,7 @@ ddca_get_feature_list_by_dref(
             bye:
                DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
                if (debug)
+                  DBGMSF(debug, "Feature list: %s", feature_list_string(p_feature_list, "", ","));
                   rpt_hex_dump((Byte*) p_feature_list, 32, 1);
          }
       );

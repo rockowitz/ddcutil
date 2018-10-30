@@ -803,7 +803,7 @@ collect_raw_subset_values2(
                                 //   false);      // exclude_table_features
 #endif
    if (debug)
-      dbgrpt_dyn_feature_set(feature_set, 0);
+      dbgrpt_dyn_feature_set(feature_set, true, 0);
 
 #ifdef IFM
    psc = collect_raw_feature_set_values2(
@@ -1725,7 +1725,7 @@ show_vcp_values(
 #endif
    if (debug || IS_TRACING()) {
       DBGMSG("feature_set:");
-      dbgrpt_dyn_feature_set(feature_set, 0);
+      dbgrpt_dyn_feature_set(feature_set, true, 0);
    }
 
 #ifndef DFM

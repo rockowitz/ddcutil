@@ -334,7 +334,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                   }
                   else if (result->feature_flags & DDCA_SIMPLE_NC) {
                      if (result->sl_values) {
-                        DBGMSG("format_feature_detail_sl_lookup");
+                        // DBGMSG("format_feature_detail_sl_lookup");
                         result->nontable_formatter = format_feature_detail_sl_lookup;
                      }
                      else {
@@ -1002,6 +1002,7 @@ void init_dyn_feature_codes() {
    rtti_func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
    rtti_func_name_table_add(dyn_format_table_feature_detail_dfm,    "dyn_format_table_feature_detail_dfm");
    rtti_func_name_table_add(dyn_format_feature_detail_dfm,          "dyn_format_feature_detail_dfm");
+   rtti_func_name_table_add(dyn_format_feature_detail_sl_lookup,    "dyn_format_feature_detail_sl_lookup");
    // dbgrpt_func_name_table(0);
 }
 

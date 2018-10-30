@@ -37,7 +37,7 @@ typedef struct {
    GPtrArray *         members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
 
-void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, int depth);
+void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, bool verbose, int depth);
 
 #ifdef OLD
 VCP_Feature_Set
