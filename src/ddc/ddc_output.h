@@ -86,6 +86,16 @@ get_formatted_value_for_internal_metadata(
       FILE *                      msg_fh);
 
 Public_Status_Code
+get_formatted_value_for_display_feature_metadata(
+      Display_Handle *            dh,
+      Display_Feature_Metadata *  dfm,
+      bool                        suppress_unsupported,
+      bool                        prefix_value_with_feature_code,
+      char **                     formatted_value_loc,
+      FILE *                      msg_fh);
+
+
+Public_Status_Code
 show_vcp_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,

@@ -107,7 +107,7 @@ create_feature_set(
    assert(subset_id);
    assert(subset_id != VCP_SUBSET_SINGLE_FEATURE);
 
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       char * sflags = feature_set_flag_names(flags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",

@@ -274,6 +274,16 @@ bool dbgtrc(
     dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format)
 
 
+// typedef (*dbg_struct_func)(void * structptr, int depth);
+#define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
+if (_flag) { \
+   dbgtrc(0xff, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
+   if (_structptr) { \
+      _dbgfunc(_structptr, 1); \
+   } \
+}
+
+
 //
 // Error handling
 //

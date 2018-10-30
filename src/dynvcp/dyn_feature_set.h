@@ -32,6 +32,7 @@ typedef struct {
    VCP_Feature_Subset  subset;      // subset identifier
    DDCA_Display_Ref    dref;
    GPtrArray *         members;     // array of pointers to Internal_Feature_Metadata
+   GPtrArray *         members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
 
 void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, int depth);
@@ -51,6 +52,13 @@ dyn_create_feature_set2(
       VCP_Feature_Subset     subset,
       DDCA_Display_Ref       dref,
       Feature_Set_Flags      flags);
+
+Dyn_Feature_Set *
+dyn_create_feature_set2_dfm(
+      VCP_Feature_Subset     subset,
+      DDCA_Display_Ref       dref,
+      Feature_Set_Flags      flags);
+
 
 // VCP_Feature_Set
 // ddc_create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
@@ -74,11 +82,20 @@ dyn_get_feature_set_entry2(
       Dyn_Feature_Set * feature_set,
       unsigned          index);
 
+Display_Feature_Metadata *
+dyn_get_feature_set_entry2_dfm(
+      Dyn_Feature_Set * feature_set,
+      unsigned          index);
+
 // int
 // get_feature_set_size(VCP_Feature_Set feature_set);
 
 int
 dyn_get_feature_set_size2(
+      Dyn_Feature_Set * feature_set);
+
+int
+dyn_get_feature_set_size2_dfm(
       Dyn_Feature_Set * feature_set);
 
 // VCP_Feature_Subset

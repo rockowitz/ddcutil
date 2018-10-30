@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "util/data_structures.h"
+#include "util/debug_util.h"
 #include "util/report_util.h"
 /** \cond */
 
@@ -966,9 +967,11 @@ extract_version_feature_info(
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
                  vspec.major, vspec.minor, bool_repr(version_sensitive));
+   if (debug)
+      show_backtrace(1);
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
 
@@ -994,7 +997,48 @@ extract_version_feature_info(
          ? get_version_sensitive_sl_values(vfte, vspec)
          : get_version_specific_sl_values(vfte, vspec);
 
+   DBG_RET_STRUCT(debug, DDCA_Version_Feature_Info, dbgrpt_version_feature_info, info);
    return info;
+}
+
+// alternative
+Display_Feature_Metadata *
+extract_version_feature_info_dfm(
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vspec,
+      bool                       version_sensitive)
+{
+   bool debug = false;
+   DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
+                 vspec.major, vspec.minor, bool_repr(version_sensitive));
+   assert(vfte);
+   // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
+   dbgrpt_vcp_entry(vfte, 2);
+
+   Display_Feature_Metadata * dfm = dfm_new(vfte->code);
+
+   // redundant, for now
+   // info->version_id   = mccs_version_spec_to_id(vspec);
+   dfm->vcp_version        = vspec;
+
+   dfm->flags = (version_sensitive)
+         ? get_version_sensitive_feature_flags(vfte, vspec)
+         : get_version_specific_feature_flags(vfte, vspec);
+
+   dfm_set_feature_desc(dfm, vfte->desc);
+
+   char * feature_name = (version_sensitive)
+           ? get_version_sensitive_feature_name(vfte, vspec)
+           : get_version_specific_feature_name(vfte, vspec);
+   dfm_set_feature_name(dfm, feature_name);
+
+   dfm->flags |= vfte->vcp_global_flags;
+   dfm->sl_values = (version_sensitive)
+         ? get_version_sensitive_sl_values(vfte, vspec)
+         : get_version_specific_sl_values(vfte, vspec);
+
+   DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
+   return dfm;
 }
 
 
@@ -1113,6 +1157,29 @@ get_version_feature_info_by_version_id(
    return get_version_feature_info_by_vspec(feature_code, vspec, with_default, version_sensitive);
 }
 
+// alternative
+Display_Feature_Metadata *
+get_version_feature_info_by_version_id_dfm(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Id    mccs_version_id,
+      bool                    with_default,
+      bool                    version_sensitive)
+{
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, mccs_version_id=%d(%s), with_default=%s, version_sensitive=%s",
+         feature_code,
+         mccs_version_id,
+         vcp_version_id_name(mccs_version_id),
+         bool_repr(with_default),
+         bool_repr(version_sensitive));
+
+   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
+
+   return get_version_feature_info_by_vspec_dfm(feature_code, vspec, with_default, version_sensitive);
+}
+
+
+
 
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_vspec(
@@ -1149,6 +1216,44 @@ get_version_feature_info_by_vspec(
       DBGMSG("Returning: %p", info);
    }
    return info;
+}
+
+// alternative
+Display_Feature_Metadata *
+get_version_feature_info_by_vspec_dfm(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      bool                    with_default,
+      bool                    version_sensitive)
+{
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, mccs_version=%d.%d, with_default=%s, version_sensitive=%s",
+         feature_code,
+         vspec.major, vspec.minor,
+         bool_repr(with_default),
+         bool_repr(version_sensitive));
+
+   Display_Feature_Metadata * dfm = NULL;
+
+   VCP_Feature_Table_Entry * pentry =
+         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
+                        : vcp_find_feature_by_hexid(feature_code);
+   if (pentry) {
+      dfm = extract_version_feature_info_dfm(pentry, vspec, version_sensitive);
+
+      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+         free_synthetic_vcp_entry(pentry);
+   }
+
+   if (debug) {
+
+      if (dfm) {
+         DBGMSG("Success.  feature info:");
+         dbgrpt_display_feature_metadata(dfm, 1);
+      }
+      DBGMSG("Returning: %p", dfm);
+   }
+   return dfm;
 }
 
 
@@ -4559,7 +4664,8 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
       dbgrpt_sl_value_table(pfte->v22_sl_values, d1+1);
 }
 
-static GHashTable * func_name_table = NULL;
+// static GHashTable * func_name_table = NULL;
+extern GHashTable * func_name_table;
 
 void init_func_name_table() {
    func_name_table = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -4594,35 +4700,6 @@ void init_func_name_table() {
    ADD_FUNC(format_feature_detail_version);
 #undef ADD_FUNC
 }
-
-void dbgrpt_func_name_table(int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "Function name table at %p", func_name_table);
-   GHashTableIter iter;
-   gpointer key, value;
-   g_hash_table_iter_init(&iter, func_name_table);
-   while (g_hash_table_iter_next(&iter, &key, &value)) {
-      rpt_vstring(d1, "%p: %s", key, value);
-   }
-}
-
-char * get_func_name_by_addr(void * ptr) {
-   char * result = "";
-   if (ptr) {
-      result = g_hash_table_lookup(func_name_table, ptr);
-      if (!result)
-         result = "<Not Found>";
-   }
-
-   return result;
-}
-
-void func_name_table_add(void * func_addr, char * func_name) {
-   assert(vcp_feature_codes_initialized);
-   g_hash_table_insert(func_name_table, func_addr, func_name);
-}
-
-
 
 
 

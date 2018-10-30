@@ -232,7 +232,7 @@ create_dumpload_data_from_g_ptr_array(
                      // VCP code table and definitively know if it's a table feature.
                      // One solution: rework data structures to parse later
                      // second solution: vcp version in dumpload data
-// #ifdef OLD
+// #ifndef DFM
                      VCP_Feature_Table_Entry * pvft_entry =
                          vcp_find_feature_by_hexid_w_default(feature_id);
 
@@ -241,6 +241,7 @@ create_dumpload_data_from_g_ptr_array(
 // #endif
                      DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
                            data->mfg_id, data->model, data->product_code);
+#ifndef DFM
                      Internal_Feature_Metadata * ifm =
                            dyn_get_feature_metadata_by_mmk_and_vspec(
                                 feature_id,
@@ -249,6 +250,18 @@ create_dumpload_data_from_g_ptr_array(
                                 /*with_default=*/ true);
                      bool is_table_feature = ifm->external_metadata->feature_flags & DDCA_NORMAL_TABLE;
                      assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
+#else
+                     Display_Feature_Metadata * dfm =
+                                              dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+                                                   feature_id,
+                                                   mmk,
+                                                   data->vcp_version,
+                                                   /*with_default=*/ true);
+                                        bool is_table_feature = dfm->flags & DDCA_NORMAL_TABLE;
+                                        assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
+#endif
+
+
 
                      if (is_table_feature) {
                         // s2 is hex string

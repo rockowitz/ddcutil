@@ -35,6 +35,7 @@
 #include "base/base_init.h"
 #include "base/parms.h"
 #include "base/sleep.h"
+#include "base/feature_metadata.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -153,5 +154,6 @@ void init_ddc_services() {
    ddc_reset_ddc_stats();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
+   // dbgrpt_func_name_table(1);
    init_ddc_display_lock();
 }

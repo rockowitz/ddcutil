@@ -13,6 +13,8 @@
 
 #include "ddcutil_types.h"
 
+#include "base/feature_metadata.h"
+
 #include "vcp/vcp_feature_codes.h"
 
 #include "ddc/ddc_vcp_version.h"
@@ -47,14 +49,34 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default);
 
+Display_Feature_Metadata *
+dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+     DDCA_Vcp_Feature_Code    feature_code,
+     DDCA_Monitor_Model_Key   mmk,
+     DDCA_MCCS_Version_Spec   vspec,
+     bool                     with_default);
+
+
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       id,
       Display_Ref *               dref,
       bool                        with_default);
 
+Display_Feature_Metadata *
+dyn_get_feature_metadata_by_dref_dfm(
+      DDCA_Vcp_Feature_Code       id,
+      Display_Ref *               dref,
+      bool                        with_default);
+
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_dh(
+      DDCA_Vcp_Feature_Code       id,
+      Display_Handle *            dh,
+      bool                        with_default);
+
+Display_Feature_Metadata *
+dyn_get_feature_metadata_by_dh_dfm(
       DDCA_Vcp_Feature_Code       id,
       Display_Handle *            dh,
       bool                        with_default);
@@ -68,6 +90,15 @@ dyn_format_nontable_feature_detail(
       int                         bufsz);
 
 bool
+dyn_format_nontable_feature_detail_dfm(
+        Display_Feature_Metadata * dfm,
+        DDCA_MCCS_Version_Spec     vcp_version,
+        Nontable_Vcp_Value *       code_info,
+        char *                     buffer,
+        int                        bufsz);
+
+
+bool
 dyn_format_table_feature_detail(
       Internal_Feature_Metadata * intmeta,
       DDCA_MCCS_Version_Spec      vcp_version,
@@ -75,15 +106,28 @@ dyn_format_table_feature_detail(
       char * *                    aformatted_data);
 
 bool
+dyn_format_table_feature_detail_dfm(
+      Display_Feature_Metadata *  dfm,
+       DDCA_MCCS_Version_Spec     vcp_version,
+       Buffer *                   accumulated_value,
+       char * *                   aformatted_data
+     );
+
+
+bool
 dyn_format_feature_detail(
       Internal_Feature_Metadata * intmeta,
       DDCA_MCCS_Version_Spec      vcp_version,
-#ifdef SINGLE_VCP_VALUE
-      Single_Vcp_Value *          valrec,
-#else
       DDCA_Any_Vcp_Value *        valrec,
-#endif
       char * *                    aformatted_data);
+
+bool
+dyn_format_feature_detail_dfm(
+       Display_Feature_Metadata * dfm,
+       DDCA_MCCS_Version_Spec    vcp_version,
+       DDCA_Any_Vcp_Value *      valrec,
+       char * *                  aformatted_data
+     );
 
 char *
 dyn_get_feature_name(
@@ -98,6 +142,11 @@ bool dyn_format_feature_detail_sl_lookup(
 
 void init_dyn_feature_codes();
 
+
+// for transition:
+Internal_Feature_Metadata *
+dfm_to_internal_feature_metadata(
+      Display_Feature_Metadata * dfm);
 
 
 #endif /* DYN_FEATURE_CODES_H_ */

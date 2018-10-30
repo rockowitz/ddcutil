@@ -14,6 +14,7 @@
 #include "util/data_structures.h"
 
 #include "base/ddc_packets.h"
+#include "base/feature_metadata.h"
 
 #ifdef SINGLE_VCP_VALUE
 
@@ -91,7 +92,7 @@ Parsed_Vcp_Response *
 single_vcp_value_to_parsed_vcp_response(
             DDCA_Any_Vcp_Value * valrec);
 
-
+#ifdef MOVED_TO_FEATURE_METADATA
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
 // for use within vcp_feature_codes.c
 
@@ -106,6 +107,7 @@ struct {
    Byte   sh;
    Byte   sl;
 } Nontable_Vcp_Value;
+#endif
 
 Nontable_Vcp_Value *
       single_vcp_value_to_nontable_vcp_value(

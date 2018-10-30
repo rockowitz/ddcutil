@@ -22,6 +22,7 @@
 #include "base/displays.h"
 #include "base/ddc_packets.h"
 #include "base/feature_sets.h"
+#include "base/feature_metadata.h"
 
 #include "vcp/vcp_feature_values.h"
 
@@ -95,7 +96,7 @@ typedef enum {
 // #define MCCS_V22          0x10
 
 
-
+#ifdef MOVED_TO_FEATURE_METADATA
 typedef
 bool (*Format_Normal_Feature_Detail_Function) (
           Nontable_Vcp_Value*     code_info,
@@ -117,8 +118,7 @@ bool (*Format_Table_Feature_Detail_Function) (
           Buffer *                data_bytes,
           DDCA_MCCS_Version_Spec  vcp_version,
           char **                 p_result_buffer);
-
-
+#endif
 
 extern DDCA_Feature_Value_Entry * pxc8_display_controller_type_values;
 
@@ -274,6 +274,14 @@ extract_version_feature_info(
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive);
 
+// alternative
+Display_Feature_Metadata *
+extract_version_feature_info_dfm(
+      VCP_Feature_Table_Entry *  vfte,
+      DDCA_MCCS_Version_Spec     vspec,
+      bool                       version_sensitive);
+
+
 //
 // Functions that query the feature table by VCP feature code
 //
@@ -311,12 +319,29 @@ get_version_feature_info_by_version_id(
       bool                    with_default,
       bool                    version_sensitive);
 
+// alternative
+Display_Feature_Metadata *
+get_version_feature_info_by_version_id_dfm(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Id    mccs_version_id,
+      bool                    with_default,
+      bool                    version_sensitive);
+
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_vspec(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
       bool                    with_default,
       bool                    version_sensitive);
+
+// alternative
+Display_Feature_Metadata *
+get_version_feature_info_by_vspec_dfm(
+      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_MCCS_Version_Spec  vspec,
+      bool                    with_default,
+      bool                    version_sensitive);
+
 
 
 void
@@ -377,9 +402,11 @@ vcp_format_feature_detail(
 int
 vcp_get_feature_code_count();
 
+#ifdef MOVED_TO_FEATURE_METADATA
 char * get_func_name_by_addr(void * func_addr);
 void func_name_table_add(void * func_addr, char * func_name);
 void dbgrpt_func_name_table(int depth);
+#endif
 
 
 void
