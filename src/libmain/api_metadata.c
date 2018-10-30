@@ -207,7 +207,7 @@ ddca_get_feature_list_by_dref(
                Feature_Set_Flags flags = 0x00;
                if (!include_table_features)
                   flags |= FSF_NOTABLE;
-               VCP_Feature_Set fset = dyn_create_feature_set2(subset, dref, flags);
+               VCP_Feature_Set fset = dyn_create_feature_set2_dfm(subset, dref, flags);
                // VCP_Feature_Set fset = create_feature_set(subset, vspec, !include_table_features);
 
                // TODO: function variant that takes result location as a parm, avoid memcpy

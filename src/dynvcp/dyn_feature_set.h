@@ -47,11 +47,13 @@ dyn_create_feature_set(
    // bool                   exclude_table_features);
 #endif
 
+#ifndef DFM
 Dyn_Feature_Set *
 dyn_create_feature_set2(
       VCP_Feature_Subset     subset,
       DDCA_Display_Ref       dref,
       Feature_Set_Flags      flags);
+#endif
 
 Dyn_Feature_Set *
 dyn_create_feature_set2_dfm(
