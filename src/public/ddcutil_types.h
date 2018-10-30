@@ -452,7 +452,7 @@ struct {
 // deprecated
 // typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
-
+#ifdef DVFI
 #define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
 /**  \deprecated - but used internally!
  * Describes a VCP feature code, tailored for a specific VCP version
@@ -471,7 +471,7 @@ struct {
    char *                                feature_name;  /**< feature name */
    DDCA_Feature_Flags                    feature_flags;
 } DDCA_Version_Feature_Info;
-
+#endif
 
 #define DDCA_FEATURE_METADATA_MARKER  "FMET"
 /** Describes a VCP feature code, tailored for a specific VCP version */

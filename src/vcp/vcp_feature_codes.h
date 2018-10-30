@@ -268,11 +268,13 @@ char *
 get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
+#ifdef DVFI
 DDCA_Version_Feature_Info *
 extract_version_feature_info(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive);
+#endif
 
 // alternative
 Display_Feature_Metadata *
@@ -312,12 +314,14 @@ get_version_sensitive_feature_info(
       DDCA_MCCS_Version_Id   mccs_version_id);
 #endif
 
+#ifdef DVFI
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_version_id(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
       bool                    with_default,
       bool                    version_sensitive);
+#endif
 
 // alternative
 Display_Feature_Metadata *
@@ -327,12 +331,14 @@ get_version_feature_info_by_version_id_dfm(
       bool                    with_default,
       bool                    version_sensitive);
 
+#ifdef DVFI
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_vspec(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
       bool                    with_default,
       bool                    version_sensitive);
+#endif
 
 // alternative
 Display_Feature_Metadata *
@@ -343,10 +349,11 @@ get_version_feature_info_by_vspec_dfm(
       bool                    version_sensitive);
 
 
-
+#ifdef DVFI
 void
 free_version_feature_info(
       DDCA_Version_Feature_Info * info);
+#endif
 
 // not used externally
 // DDCA_Feature_Value_Entry *
@@ -368,9 +375,11 @@ report_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * vfte,
       int                       depth);
 
+#ifdef DVFI
 void
 dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth);
+#endif
 
 void
 dbgrpt_ddca_feature_metadata(

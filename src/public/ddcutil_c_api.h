@@ -876,6 +876,7 @@ ddca_get_mccs_version_id(
 // VCP Feature Metadata
 //
 
+#ifdef DVFI
 // Deprecated functions using DDCA_Version_Feature_Info
 
 /** \deprecated Use #ddca_get_feature_flags_by_vspec() */
@@ -899,6 +900,7 @@ __attribute__ ((deprecated))
 DDCA_Status
 ddca_free_feature_info(
       DDCA_Version_Feature_Info * info);
+#endif
 
 // Deprecated functions using DDCA_MCCS_Version_Id
 

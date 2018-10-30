@@ -40,10 +40,12 @@ dbgrpt_internal_feature_metadata(
       int                         depth);
 #endif
 
+#ifdef DVFI
 void
 version_feature_info_to_metadata(
       DDCA_Version_Feature_Info * info,
       DDCA_Feature_Metadata * meta);
+#endif
 
 #ifdef IFM
 Internal_Feature_Metadata *

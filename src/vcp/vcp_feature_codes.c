@@ -488,7 +488,7 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 // End of VCPINFO related functions
 
 
-
+#ifdef DVFI
 /* Emits a report on a Version_Specific_Feature_Info struct.  This is a
  * debugging report.  The report is written to the current report destination.
  *
@@ -518,6 +518,7 @@ void dbgrpt_version_feature_info(
       report_sl_values(info->sl_values, d1+1);
    }
 }
+#endif
 
 /* Emits a report on a Version_Specific_Feature_Info struct.  This is a
  * debugging report.  The report is written to the current report destination.
@@ -960,7 +961,7 @@ get_non_version_specific_feature_name(
 }
 
 
-
+#ifdef DVFI
 DDCA_Version_Feature_Info *
 extract_version_feature_info(
       VCP_Feature_Table_Entry *  vfte,
@@ -1000,6 +1001,7 @@ extract_version_feature_info(
    DBG_RET_STRUCT(debug, DDCA_Version_Feature_Info, dbgrpt_version_feature_info, info);
    return info;
 }
+#endif
 
 // alternative
 Display_Feature_Metadata *
@@ -1042,7 +1044,7 @@ extract_version_feature_info_dfm(
    return dfm;
 }
 
-
+#ifdef DVFI
 void free_version_feature_info(DDCA_Version_Feature_Info * info) {
    // be careful, may be called from client
    // DBGMSG("Starting. info=%p", info);
@@ -1059,7 +1061,7 @@ void free_version_feature_info(DDCA_Version_Feature_Info * info) {
    }
    // DBGMSG("Done.");
 }
-
+#endif
 
 #ifdef OLD
 DDCA_Version_Feature_Info *
@@ -1111,6 +1113,7 @@ get_version_sensitive_feature_info(
 #endif
 
 
+#ifdef DVFI
 /** Gets information about a VCP feature.
  *
  *  @param feature_code
@@ -1157,6 +1160,7 @@ get_version_feature_info_by_version_id(
 #endif
    return get_version_feature_info_by_vspec(feature_code, vspec, with_default, version_sensitive);
 }
+#endif
 
 // alternative
 Display_Feature_Metadata *
@@ -1181,7 +1185,7 @@ get_version_feature_info_by_version_id_dfm(
 
 
 
-
+#ifdef DVFI
 DDCA_Version_Feature_Info *
 get_version_feature_info_by_vspec(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1218,6 +1222,7 @@ get_version_feature_info_by_vspec(
    }
    return info;
 }
+#endif
 
 // alternative
 Display_Feature_Metadata *

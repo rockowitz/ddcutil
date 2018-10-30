@@ -37,6 +37,7 @@ dbgrpt_internal_feature_metadata(
 }
 #endif
 
+#ifdef DVFI
 void
 version_feature_info_to_metadata(
       DDCA_Version_Feature_Info * info,
@@ -52,6 +53,7 @@ version_feature_info_to_metadata(
    meta->sl_values = info->sl_values;    // need to copy?
 
 }
+#endif
 
 
 /* Formats the name of a non-continuous feature whose value is returned in byte SL.

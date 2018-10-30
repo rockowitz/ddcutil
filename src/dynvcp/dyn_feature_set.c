@@ -210,7 +210,7 @@ dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_met
    return dfm;
 }
 
-
+#ifndef DFM
 DDCA_Feature_Metadata *
 dyn_create_feature_metadata_from_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * pentry, DDCA_MCCS_Version_Spec vspec)
@@ -228,6 +228,22 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
    // free info
    return meta;
 }
+#else
+DDCA_Feature_Metadata *
+dyn_create_feature_metadata_from_vcp_feature_table_entry(
+      VCP_Feature_Table_Entry * pentry, DDCA_MCCS_Version_Spec vspec)
+{
+   Display_Feature_Metadata * dfm =
+     extract_version_feature_info_dfm(pentry, vspec, /*version_sensitive*/ true);
+
+   if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+      free_synthetic_vcp_entry(pentry);
+
+   DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(dfm);
+   // free info
+   return meta;
+}
+#endif
 
 #ifdef IFM
 Internal_Feature_Metadata *

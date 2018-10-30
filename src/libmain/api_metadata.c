@@ -361,7 +361,7 @@ DDCA_Status ddca_get_feature_flags_by_vcp_version(
 }
 #endif
 
-
+#ifdef DVFI
 // deprecated
 DDCA_Status
 ddca_get_feature_info_by_vcp_version(
@@ -392,6 +392,7 @@ ddca_get_feature_info_by_vcp_version(
    return psc;
 
 }
+#endif
 
 
 #ifdef NEVER_RELEASED
@@ -446,14 +447,16 @@ ddca_get_feature_flags_by_vspec(
 {
    DDCA_Status psc = DDCRC_ARG;
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
-      DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+//    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
+      Display_Feature_Metadata * dfm =  get_version_feature_info_by_vspec_dfm(
             feature_code,
             vspec,
             false,                       // with_default
             true);                       // false => version specific, true=> version sensitive
-      if (full_info) {
-         *feature_flags = full_info->feature_flags;
-         free_version_feature_info(full_info);
+      if (dfm) {
+         *feature_flags = dfm->flags;
+//          free_version_feature_info(full_info);
+         free_display_feature_metadata(dfm);
          psc = 0;
       }
       else {
@@ -488,6 +491,7 @@ ddca_get_feature_flags_by_version_id(
 #endif
 
 
+#ifdef DVFI
 // deprecated
 DDCA_Status
 ddca_get_feature_info_by_display(
@@ -512,7 +516,10 @@ ddca_get_feature_info_by_display(
       }
    );
 }
+#endif
 
+
+#ifdef DVFI
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -551,6 +558,51 @@ ddca_get_feature_metadata_by_vspec(
       // DBGMSG("Reading full_info done");
 
       free_version_feature_info(full_info);
+      psc = 0;
+   }
+   return psc;
+}
+#endif
+
+DDCA_Status
+ddca_get_feature_metadata_by_vspec(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_MCCS_Version_Spec      vspec,
+      bool                        create_default_if_not_found,
+      DDCA_Feature_Metadata *     info) //   change to **?
+{
+   // DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
+   DDCA_Status psc = DDCRC_ARG;
+   memset(info, 0, sizeof(DDCA_Feature_Metadata));
+   memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
+   Display_Feature_Metadata * dfm =
+         get_version_feature_info_by_vspec_dfm(
+               feature_code,
+               vspec,
+               create_default_if_not_found,
+               true);                      // false => version specific, true=> version sensitive
+   if (dfm) {
+      // DBGMSG("Reading full_info");
+      info->feature_code  = feature_code;
+ //   info->vspec         = vspec;
+      info->feature_flags = dfm->flags;
+      if (info->feature_flags & DDCA_SIMPLE_NC)
+         info->sl_values = dfm->sl_values;
+      if (info->feature_flags & DDCA_SYNTHETIC) {
+         // strdup so that don't have to worry about synthesized entries when free
+         if (dfm->feature_name)
+            dfm->feature_name  = strdup(dfm->feature_name);
+         if (dfm->feature_desc)
+            info->feature_desc  = strdup(dfm->feature_desc);
+      }
+      else {
+         info->feature_name  = dfm->feature_name;
+         info->feature_desc  = dfm->feature_desc;
+      }
+      // DBGMSG("Reading full_info done");
+
+      // free_version_feature_info(full_info);
+      free_display_feature_metadata(dfm);
       psc = 0;
    }
    return psc;
@@ -693,7 +745,7 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    return 0;
 }
 
-
+#ifdef DVFI
 DDCA_Status
 ddca_free_feature_info(
       DDCA_Version_Feature_Info * info)
@@ -709,6 +761,7 @@ ddca_free_feature_info(
    }
    return rc;
 }
+#endif
 
 // returns pointer into permanent internal data structure, caller should not free
 char *

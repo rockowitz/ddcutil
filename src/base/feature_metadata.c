@@ -170,7 +170,7 @@ dfm_from_ddca_feature_metadata(
 
 
 
-
+#ifdef DVFI
 
 DDCA_Version_Feature_Info *
 dfm_to_ddca_version_feature_info(
@@ -189,6 +189,7 @@ dfm_to_ddca_version_feature_info(
    // vfi->version_id = ??
    return vfi;
 }
+#endif
 
 GHashTable * func_name_table = NULL;
 

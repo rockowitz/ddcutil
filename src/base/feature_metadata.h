@@ -130,11 +130,12 @@ Display_Feature_Metadata *
 dfm_from_ddca_feature_metadata(
       DDCA_Feature_Metadata * meta);
 
-
+#ifdef DVFI
 // for transition
 DDCA_Version_Feature_Info *
 dfm_to_ddca_version_feature_info(
       Display_Feature_Metadata * dfm);
+#endif
 
 // from vcp_feature_codes
 // GHashTable * func_name_table = NULL;
