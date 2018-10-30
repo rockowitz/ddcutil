@@ -190,10 +190,10 @@ app_show_single_vcp_value_by_dfm(
    DDCA_Status            ddcrc      = 0;
    DDCA_Vcp_Feature_Code  feature_id = dfm->feature_code;
 
-   if (!(dfm->flags & DDCA_READABLE)) {
+   if (!(dfm->feature_flags & DDCA_READABLE)) {
       char * feature_name =  dfm->feature_name;
 
-      DDCA_Feature_Flags vflags = dfm->flags;
+      DDCA_Feature_Flags vflags = dfm->feature_flags;
       // should get vcp version from metadata
       if (vflags & DDCA_DEPRECATED)
          printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
@@ -443,7 +443,7 @@ void app_show_vcp_subset_values_by_display_ref(
    if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
       // Is this needed?  or checked by openDisplay?
       Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
-      if (!bus_info ||  !(bus_info->flags & I2C_BUS_ADDR_0X37) ) {
+      if (!bus_info ||  !(bus_info->feature_flags & I2C_BUS_ADDR_0X37) ) {
          printf("Address 0x37 not detected on bus %d. I2C communication not available.\n", dref->busno );
          validDisp = false;
       }
@@ -491,7 +491,7 @@ app_show_feature_set_values_by_display_handle(
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
 #ifndef DFM
       psc = app_show_single_vcp_value_by_feature_id_new(
-            dh, fsref->specific_feature, flags&FSF_FORCE);
+            dh, fsref->specific_feature, feature_flags&FSF_FORCE);
 #else
       psc = app_show_single_vcp_value_by_feature_id_new_dfm(
             dh, fsref->specific_feature, flags&FSF_FORCE);

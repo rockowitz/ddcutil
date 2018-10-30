@@ -1171,7 +1171,7 @@ get_formatted_value_for_display_feature_metadata(
    DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
-   bool is_table_feature = dfm->flags & DDCA_TABLE;
+   bool is_table_feature = dfm->feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
@@ -1219,7 +1219,7 @@ get_formatted_value_for_display_feature_metadata(
             free(hexbuf);
          }
          else {                                // OL_PROGRAM, not table feature
-            DDCA_Version_Feature_Flags vflags = dfm->flags;
+            DDCA_Version_Feature_Flags vflags = dfm->feature_flags;
             // =   get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
             assert(vflags & (DDCA_CONT | DDCA_SIMPLE_NC | DDCA_COMPLEX_NC | DDCA_NC_CONT));
@@ -1301,12 +1301,12 @@ show_feature_set_values(
       Display_Handle *      dh,
       VCP_Feature_Set       feature_set,
       GPtrArray *           collector,     // if null, write to current stdout device
-      Feature_Set_Flags     flags,
+      Feature_Set_Flags     feature_flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
    Public_Status_Code master_status_code = 0;
    bool debug = false;
-   char * s0 = feature_set_flag_names(flags);
+   char * s0 = feature_set_flag_names(feature_flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
    free(s0);
 
@@ -1315,7 +1315,7 @@ show_feature_set_values(
    VCP_Feature_Subset subset_id = get_feature_set_subset_id(feature_set);
    DDCA_Output_Level output_level = get_output_level();
    bool show_unsupported = false;
-   if ( (flags & FSF_SHOW_UNSUPPORTED)  ||
+   if ( (feature_flags & FSF_SHOW_UNSUPPORTED)  ||
         output_level >= DDCA_OL_VERBOSE ||
         subset_id == VCP_SUBSET_SINGLE_FEATURE
        )
@@ -1346,7 +1346,7 @@ show_feature_set_values(
 #ifdef NO
          if (subset_id != VCP_SUBSET_SINGLE_FEATURE &&
              is_feature_table_by_vcp_version(entry, vcp_version) &&
-             (flags & FSF_NOTABLE) )
+             (feature_flags & FSF_NOTABLE) )
          {
             skip_feature = true;
          }
@@ -1400,12 +1400,12 @@ show_feature_set_values2(
       Display_Handle *      dh,
       Dyn_Feature_Set*      feature_set,
       GPtrArray *           collector,     // if null, write to current stdout device
-      Feature_Set_Flags     flags,
+      Feature_Set_Flags     feature_flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
    Public_Status_Code master_status_code = 0;
    bool debug = false;
-   char * s0 = feature_set_flag_names(flags);
+   char * s0 = feature_set_flag_names(feature_flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
    free(s0);
 
@@ -1414,7 +1414,7 @@ show_feature_set_values2(
    VCP_Feature_Subset subset_id = feature_set->subset;
    DDCA_Output_Level output_level = get_output_level();
    bool show_unsupported = false;
-   if ( (flags & FSF_SHOW_UNSUPPORTED)  ||
+   if ( (feature_flags & FSF_SHOW_UNSUPPORTED)  ||
         output_level >= DDCA_OL_VERBOSE ||
         subset_id == VCP_SUBSET_SINGLE_FEATURE
        )
@@ -1445,7 +1445,7 @@ show_feature_set_values2(
 #ifdef NO
          if (subset_id != VCP_SUBSET_SINGLE_FEATURE &&
              is_feature_table_by_vcp_version(entry, vcp_version) &&
-             (flags & FSF_NOTABLE) )
+             (feature_flags & FSF_NOTABLE) )
          {
             skip_feature = true;
          }
@@ -1530,11 +1530,11 @@ show_feature_set_values2_dfm(
       Display_Feature_Metadata * dfm = dyn_get_feature_set_entry2_dfm(feature_set, ndx);
       // DDCA_Feature_Metadata * extmeta = ifm->external_metadata;
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, dfm->feature_code);
-      if ( !(dfm->flags & DDCA_READABLE) ) {
+      if ( !(dfm->feature_flags & DDCA_READABLE) ) {
          // confuses the output if suppressing unsupported
          if (show_unsupported) {
             char * feature_name =  dfm->feature_name;
-            char * msg = (dfm->flags & DDCA_DEPRECATED) ? "Deprecated" : "Write-only feature";
+            char * msg = (dfm->feature_flags & DDCA_DEPRECATED) ? "Deprecated" : "Write-only feature";
             f0printf(outf, FMT_CODE_NAME_DETAIL_W_NL,
                           dfm->feature_code, feature_name, msg);
          }
@@ -1544,7 +1544,7 @@ show_feature_set_values2_dfm(
 #ifdef NO
          if (subset_id != VCP_SUBSET_SINGLE_FEATURE &&
              is_feature_table_by_vcp_version(entry, vcp_version) &&
-             (flags & FSF_NOTABLE) )
+             (feature_flags & FSF_NOTABLE) )
          {
             skip_feature = true;
          }
@@ -1630,13 +1630,13 @@ show_vcp_values0(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
-        Feature_Set_Flags   flags,
+        Feature_Set_Flags   feature_flags,
         Byte_Bit_Flags      features_seen)
 {
    Public_Status_Code psc = 0;
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names(flags);
+      char * s0 = feature_set_flag_names(feature_flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
       free(s0);
    }
@@ -1646,7 +1646,7 @@ show_vcp_values0(
    VCP_Feature_Set feature_set = dyn_create_feature_set(
                                     subset,
                                     dh->dref,   // vcp_version,
-                                    flags);
+                                    feature_flags);
                                //   flags & FSF_NOTABLE);
 #ifdef FUTURE
    Parsed_Capabilities * pcaps = NULL;   // TODO: HOW TO GET Parsed_Capabilities?, will only be set for probe/interrogate
@@ -1662,7 +1662,7 @@ show_vcp_values0(
       report_feature_set(feature_set, 0);
 
    psc = show_feature_set_values(
-            dh, feature_set, collector, flags, features_seen);
+            dh, feature_set, collector, feature_flags, features_seen);
    free_vcp_feature_set(feature_set);
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %s", psc_desc(psc));
    return psc;
@@ -1704,7 +1704,7 @@ show_vcp_values(
    Dyn_Feature_Set* feature_set = dyn_create_feature_set2(
                                     subset,
                                     dh->dref,   // vcp_version,
-                                    flags);
+                                    feature_flags);
                                //   flags & FSF_NOTABLE);
 #else
    Dyn_Feature_Set* feature_set = dyn_create_feature_set2_dfm(
@@ -1730,7 +1730,7 @@ show_vcp_values(
 
 #ifndef DFM
    psc = show_feature_set_values2(
-            dh, feature_set, collector, flags, features_seen);
+            dh, feature_set, collector, feature_flags, features_seen);
 #else
    psc = show_feature_set_values2_dfm(
             dh, feature_set, collector, flags, features_seen);

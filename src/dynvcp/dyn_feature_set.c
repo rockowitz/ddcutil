@@ -53,7 +53,7 @@ dyn_create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       dref,
      // DDCA_MCCS_Version_Spec vcp_version,
-      Feature_Set_Flags      flags)
+      Feature_Set_Flags      feature_flags)
    // bool                   exclude_table_features)
 {
    bool debug = false;
@@ -61,8 +61,8 @@ dyn_create_feature_set(
                  subset_id,
                  feature_subset_name(subset_id),
                  dref_repr_t(dref),
-                 flags,
-                 feature_set_flag_names(flags));
+                 feature_flags,
+                 feature_set_flag_names(feature_flags));
 
    VCP_Feature_Set result = NULL;
 
@@ -86,7 +86,7 @@ dyn_create_feature_set(
             uint16_t                   product_code;
             char *                     filename;     // source filename, if applicable
             DDCA_MCCS_Version_Spec     vspec;
-            DFR_Flags                  flags;
+            DFR_Flags                  feature_flags;
             GHashTable *               features;     // array of DDCA_Feature_Metadata
          } Dynamic_Features_Rec;
 #endif
@@ -115,7 +115,7 @@ dyn_create_feature_set(
    }
    else {
       // TODO:  insert DFR records if necessary
-      result = create_feature_set(subset_id, dref2->vcp_version, flags);
+      result = create_feature_set(subset_id, dref2->vcp_version, feature_flags);
       assert(result);
 
       // For those features for which user defined metadata exists, replace
@@ -294,15 +294,15 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(meta);
 
 
-   if (dfm->flags & DDCA_SIMPLE_NC) {
+   if (dfm->feature_flags & DDCA_SIMPLE_NC) {
       if (dfm->sl_values)
          dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup;
       else
          dfm->nontable_formatter = format_feature_detail_sl_byte;
    }
-   else if (dfm->flags & DDCA_STD_CONT)
+   else if (dfm->feature_flags & DDCA_STD_CONT)
       dfm->nontable_formatter = format_feature_detail_standard_continuous;
-   else if (dfm->flags & DDCA_TABLE)
+   else if (dfm->feature_flags & DDCA_TABLE)
       dfm->table_formatter = default_table_feature_detail_function;
    else
       dfm->nontable_formatter = format_feature_detail_debug_bytes;
@@ -344,7 +344,7 @@ Dyn_Feature_Set *
 dyn_create_feature_set2(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       display_ref,
-      Feature_Set_Flags      flags)
+      Feature_Set_Flags      feature_flags)
 {
    Dyn_Feature_Set * result = NULL;
    bool debug = true;
@@ -352,8 +352,8 @@ dyn_create_feature_set2(
                   subset_id,
                   feature_subset_name(subset_id),
                   dref_repr_t(display_ref),
-                  flags,
-                  feature_set_flag_names(flags));
+                  feature_flags,
+                  feature_set_flag_names(feature_flags));
 
     Display_Ref * dref = (Display_Ref *) display_ref;
     assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -381,7 +381,7 @@ dyn_create_feature_set2(
              uint16_t                   product_code;
              char *                     filename;     // source filename, if applicable
              DDCA_MCCS_Version_Spec     vspec;
-             DFR_Flags                  flags;
+             DFR_Flags                  feature_flags;
              GHashTable *               features;     // array of DDCA_Feature_Metadata
           } Dynamic_Features_Rec;
  #endif
@@ -411,7 +411,7 @@ dyn_create_feature_set2(
     }
     else {   // (subset_id != VCP_SUBSET_DYNAMIC
        // TODO:  insert DFR records if necessary
-       result = create_feature_set(subset_id, dref->vcp_version, flags);
+       result = create_feature_set(subset_id, dref->vcp_version, feature_flags);
        assert(result);
 
        // For those features for which user defined metadata exists, replace
@@ -500,7 +500,7 @@ dyn_create_feature_set2_dfm(
              uint16_t                   product_code;
              char *                     filename;     // source filename, if applicable
              DDCA_MCCS_Version_Spec     vspec;
-             DFR_Flags                  flags;
+             DFR_Flags                  feature_flags;
              GHashTable *               features;     // array of DDCA_Feature_Metadata
           } Dynamic_Features_Rec;
  #endif
@@ -716,19 +716,19 @@ dyn_create_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
    // DDCA_MCCS_Version_Spec  vcp_version,
    DDCA_Display_Ref        dref,
-   Feature_Set_Flags       flags)
+   Feature_Set_Flags       feature_flags)
  //  bool                    force);
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fsref=%s, dref=%s, flags=%s",
-          fsref_repr(fsref), dref_repr_t(dref), interpret_ddca_feature_flags(flags));
+          fsref_repr(fsref), dref_repr_t(dref), interpret_ddca_feature_flags(feature_flags));
 
    VCP_Feature_Set result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      result = dyn_create_single_feature_set_by_hexid(fsref->specific_feature, dref, flags & FSF_FORCE);
+      result = dyn_create_single_feature_set_by_hexid(fsref->specific_feature, dref, feature_flags & FSF_FORCE);
    }
    else {
-      result = dyn_create_feature_set(fsref->subset, dref, flags);
+      result = dyn_create_feature_set(fsref->subset, dref, feature_flags);
    }
 
    if (debug || IS_TRACING()) {

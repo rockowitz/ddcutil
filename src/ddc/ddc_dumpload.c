@@ -257,7 +257,7 @@ create_dumpload_data_from_g_ptr_array(
                                                    mmk,
                                                    data->vcp_version,
                                                    /*with_default=*/ true);
-                                        bool is_table_feature = dfm->flags & DDCA_NORMAL_TABLE;
+                                        bool is_table_feature = dfm->feature_flags & DDCA_NORMAL_TABLE;
                                         assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
 #endif
 

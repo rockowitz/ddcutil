@@ -121,10 +121,10 @@ ddca_get_feature_list(
       subset = VCP_SUBSET_NONE;
       break;
    }
-   Feature_Set_Flags flags = 0x00;
+   Feature_Set_Flags feature_flags = 0x00;
    if (!include_table_features)
-      flags |= FSF_NOTABLE;
-   VCP_Feature_Set fset = create_feature_set(subset, vspec, flags);
+      feature_flags |= FSF_NOTABLE;
+   VCP_Feature_Set fset = create_feature_set(subset, vspec, feature_flags);
    // VCP_Feature_Set fset = create_feature_set(subset, vspec, !include_table_features);
 
    // TODO: function variant that takes result location as a parm, avoid memcpy
@@ -314,45 +314,45 @@ ddca_feature_list_string(
 DDCA_Status ddca_get_feature_flags_by_vcp_version(
       DDCA_Vcp_Feature_Code         feature_code,
       DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Version_Feature_Flags *  flags)
+      DDCA_Version_Feature_Flags *  feature_flags)
 {
    DDCA_Status rc = 0;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (!pentry) {
-      *flags = 0;
+      *feature_flags = 0;
       rc = DDCRC_ARG;
    }
    else {
       DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
-      *flags = 0;
+      *feature_flags = 0;
       // TODO handle subvariants REWORK
       if (vflags & VCP2_RO)
-         *flags |= DDCA_RO;
+         *feature_flags |= DDCA_RO;
       if (vflags & VCP2_WO)
-         *flags |= DDCA_WO;
+         *feature_flags |= DDCA_WO;
       if (vflags & VCP2_RW)
-         *flags |= DDCA_RW;
+         *feature_flags |= DDCA_RW;
       if (vflags & VCP2_CONT)
-         *flags |= DDCA_CONTINUOUS;
+         *feature_flags |= DDCA_CONTINUOUS;
 #ifdef OLD
-      if (pentry->flags & VCP_TYPE_V2NC_V3T) {
+      if (pentry->feature_flags & VCP_TYPE_V2NC_V3T) {
          if (vspec.major < 3)
-            *flags |= DDCA_SIMPLE_NC;
+            *feature_flags |= DDCA_SIMPLE_NC;
          else
-            *flags |= DDCA_TABLE;
+            *feature_flags |= DDCA_TABLE;
       }
 #endif
       else if (vflags & DDCA_TABLE)
-         *flags |= DDCA_TABLE;
+         *feature_flags |= DDCA_TABLE;
       else if (vflags & VCP2_NC) {
          if (vspec.major < 3)
-            *flags |= DDCA_SIMPLE_NC;
+            *feature_flags |= DDCA_SIMPLE_NC;
          else {
             // TODO: In V3, some features use combination of high and low bytes
             // for now, mark all as simple
-            *flags |= DDCA_SIMPLE_NC;
+            *feature_flags |= DDCA_SIMPLE_NC;
             // alt: DDCT_COMPLEX_NC
          }
       }
@@ -454,7 +454,7 @@ ddca_get_feature_flags_by_vspec(
             false,                       // with_default
             true);                       // false => version specific, true=> version sensitive
       if (dfm) {
-         *feature_flags = dfm->flags;
+         *feature_flags = dfm->feature_flags;
 //          free_version_feature_info(full_info);
          free_display_feature_metadata(dfm);
          psc = 0;
@@ -585,7 +585,7 @@ ddca_get_feature_metadata_by_vspec(
       // DBGMSG("Reading full_info");
       info->feature_code  = feature_code;
  //   info->vspec         = vspec;
-      info->feature_flags = dfm->flags;
+      info->feature_flags = dfm->feature_flags;
       if (info->feature_flags & DDCA_SIMPLE_NC)
          info->sl_values = dfm->sl_values;
       if (info->feature_flags & DDCA_SYNTHETIC) {

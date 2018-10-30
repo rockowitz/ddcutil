@@ -70,8 +70,8 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:   %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      char * s = interpret_ddca_feature_flags2(meta->flags);
-      rpt_vstring(d1, "flags:           0x%04x = %s", meta->flags, s);
+      char * s = interpret_ddca_feature_flags2(meta->feature_flags);
+      rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
       free(s);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
@@ -137,7 +137,7 @@ dfm_to_ddca_feature_metadata(
    DDCA_Feature_Metadata * ddca_meta = calloc(1, sizeof(DDCA_Feature_Metadata));
    memcpy(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
    ddca_meta->feature_code = dfm->feature_code;
-   ddca_meta->feature_flags = dfm->flags;
+   ddca_meta->feature_flags = dfm->feature_flags;
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
    return ddca_meta;
@@ -157,7 +157,7 @@ dfm_from_ddca_feature_metadata(
    dfm->feature_code = ddca_meta->feature_code;
    dfm->feature_desc = (ddca_meta->feature_desc) ? strdup(ddca_meta->feature_desc) : NULL;
    dfm->feature_name = (ddca_meta->feature_name) ? strdup(ddca_meta->feature_name) : NULL;
-   dfm->flags = ddca_meta->feature_flags;
+   dfm->feature_flags = ddca_meta->feature_flags;
    dfm->nontable_formatter = NULL;
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;
@@ -179,7 +179,7 @@ dfm_to_ddca_version_feature_info(
    vfi->feature_name  = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    vfi->desc          = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
    vfi->feature_code  = dfm->feature_code;
-   vfi->feature_flags = dfm->flags;
+   vfi->feature_flags = dfm->feature_flags;
 
    vfi->sl_values     = dfm->sl_values;    // NEED TO COPY?
    vfi->vspec         = dfm->vcp_version;

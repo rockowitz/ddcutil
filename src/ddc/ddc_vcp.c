@@ -292,7 +292,7 @@ is_rereadable_feature(
                );
          // if not found, assume readable  ??
          if (dfm) {
-            result = dfm->flags & DDCA_READABLE;
+            result = dfm->feature_flags & DDCA_READABLE;
          }
 #endif
 #ifdef OLD

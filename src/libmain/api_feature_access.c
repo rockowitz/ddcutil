@@ -172,10 +172,10 @@ get_value_type_parm(
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(ddca_dh);
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (pentry) {
-      DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+      DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vspec);
       // Version_Feature_Flags flags = feature_info->internal_feature_flags;
       // n. will default to NON_TABLE_VCP_VALUE if not a known code
-      result = (flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+      result = (feature_flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    }
 
    DBGMSF(debug, "Returning %d", result);
@@ -421,7 +421,7 @@ ddca_format_any_vcp_value(
       goto bye;
    }
 
-   DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
+   DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vspec);
 #endif
 
 #ifdef IFM
@@ -433,7 +433,7 @@ ddca_format_any_vcp_value(
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
       goto bye;
    }
-   DDCA_Feature_Flags flags = ifr->external_metadata->feature_flags;
+   DDCA_Feature_Flags feature_flags = ifr->external_metadata->feature_flags;
 #endif
 #ifdef DFM
    Display_Feature_Metadata * dfm =
@@ -444,7 +444,7 @@ ddca_format_any_vcp_value(
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
       goto bye;
    }
-   DDCA_Feature_Flags flags = dfm->flags;
+   DDCA_Feature_Flags flags = dfm->feature_flags;
 #endif
 
    if (!(flags & DDCA_READABLE)) {

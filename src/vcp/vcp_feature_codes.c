@@ -1026,7 +1026,7 @@ extract_version_feature_info_dfm(
    // info->version_id   = mccs_version_spec_to_id(vspec);
    dfm->vcp_version        = vspec;
 
-   dfm->flags = (version_sensitive)
+   dfm->feature_flags = (version_sensitive)
          ? get_version_sensitive_feature_flags(vfte, vspec)
          : get_version_specific_feature_flags(vfte, vspec);
 
@@ -1037,7 +1037,7 @@ extract_version_feature_info_dfm(
            : get_version_specific_feature_name(vfte, vspec);
    dfm_set_feature_name(dfm, feature_name);
 
-   dfm->flags |= vfte->vcp_global_flags;
+   dfm->feature_flags |= vfte->vcp_global_flags;
    dfm->sl_values = (version_sensitive)
          ? get_version_sensitive_sl_values(vfte, vspec)
          : get_version_specific_sl_values(vfte, vspec);

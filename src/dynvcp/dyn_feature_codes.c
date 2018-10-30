@@ -306,14 +306,14 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
             if (debug)
                dbgrpt_vcp_entry(pentry, 2);
 
-            if (result->flags & DDCA_TABLE) {
+            if (result->feature_flags & DDCA_TABLE) {
                if (pentry->table_formatter)
                   result->table_formatter = pentry->table_formatter;
                else {
-                  if (result->flags & DDCA_NORMAL_TABLE) {
+                  if (result->feature_flags & DDCA_NORMAL_TABLE) {
                      result->table_formatter = default_table_feature_detail_function;
                   }
-                  else if (result->flags & DDCA_WO_TABLE) {
+                  else if (result->feature_flags & DDCA_WO_TABLE) {
                      // program logic error?
                      result->table_formatter = NULL;
                   }
@@ -326,13 +326,13 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                if (pentry->nontable_formatter)
                   result->nontable_formatter = pentry->nontable_formatter;
                else {
-                  if (result->flags & DDCA_STD_CONT) {
+                  if (result->feature_flags & DDCA_STD_CONT) {
                      result->nontable_formatter = format_feature_detail_standard_continuous;
                   }
-                  else if (result->flags & DDCA_COMPLEX_CONT) {
+                  else if (result->feature_flags & DDCA_COMPLEX_CONT) {
                      result->nontable_formatter = format_feature_detail_debug_bytes;
                   }
-                  else if (result->flags & DDCA_SIMPLE_NC) {
+                  else if (result->feature_flags & DDCA_SIMPLE_NC) {
                      if (result->sl_values) {
                         DBGMSG("format_feature_detail_sl_lookup");
                         result->nontable_formatter = format_feature_detail_sl_lookup;
@@ -342,10 +342,10 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                         result->nontable_formatter = format_feature_detail_sl_byte;
                      }
                   }
-                  else if (result->flags & DDCA_COMPLEX_NC) {
+                  else if (result->feature_flags & DDCA_COMPLEX_NC) {
                      result->nontable_formatter = format_feature_detail_debug_bytes;
                   }
-                  else if (result->flags & DDCA_NC_CONT) {
+                  else if (result->feature_flags & DDCA_NC_CONT) {
                      result->nontable_formatter = format_feature_detail_debug_bytes;
                   }
                   else {
