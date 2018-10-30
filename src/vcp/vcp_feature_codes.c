@@ -501,7 +501,7 @@ void dbgrpt_version_feature_info(
    char workbuf[200];
 
    int d1 = depth+1;
-
+   show_backtrace(1);
    rpt_vstring(depth, "VCP code %02X: %s", info->feature_code, info->feature_name);
 
    rpt_vstring(d1, "Version spec: %d.%d", info->vspec.major, info->vspec.minor);
@@ -967,7 +967,7 @@ extract_version_feature_info(
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
                  vspec.major, vspec.minor, bool_repr(version_sensitive));
    if (debug)
@@ -1013,7 +1013,8 @@ extract_version_feature_info_dfm(
                  vspec.major, vspec.minor, bool_repr(version_sensitive));
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
-   dbgrpt_vcp_entry(vfte, 2);
+   // if (debug)
+   //    dbgrpt_vcp_entry(vfte, 2);
 
    Display_Feature_Metadata * dfm = dfm_new(vfte->code);
 
@@ -4611,6 +4612,7 @@ void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
 
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(depth, "VCP_Feature_Table_Entry at %p:", pfte);
+   show_backtrace(2);
    assert(pfte && memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
    int d1 = depth+1;
    const int bufsz = 100;

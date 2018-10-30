@@ -18,7 +18,7 @@
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_dynamic_features.h"
 
-
+#ifdef IFM
 void
 dbgrpt_internal_feature_metadata(
       Internal_Feature_Metadata * intmeta,
@@ -35,6 +35,7 @@ dbgrpt_internal_feature_metadata(
    rpt_vstring(d1, "vcp_nontable_formatter: %p  %s", intmeta->vcp_nontable_formatter, get_func_name_by_addr(intmeta->vcp_nontable_formatter));
    rpt_vstring(d1, "table_formatter:        %p  %s", intmeta->table_formatter,        get_func_name_by_addr(intmeta->table_formatter));
 }
+#endif
 
 void
 version_feature_info_to_metadata(
@@ -88,7 +89,7 @@ bool dyn_format_feature_detail_sl_lookup(
 
 
 
-
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_dfr_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
@@ -249,7 +250,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec(
     }
     return result;
 }
-
+#endif
 
 
 Display_Feature_Metadata *
@@ -363,7 +364,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
 
 
 
-
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
@@ -392,6 +393,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
 
     return result;
  }
+#endif
 
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
@@ -420,7 +422,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
 
 
 
-
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code feature_code,
@@ -439,6 +441,7 @@ dyn_get_feature_metadata_by_dref(
 
    return result;
 }
+#endif
 
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dref_dfm(
@@ -624,6 +627,7 @@ dyn_get_feature_metadata_by_dref0(
 }
 #endif
 
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code id,
@@ -642,6 +646,7 @@ dyn_get_feature_metadata_by_dh(
    return result;
 
 }
+#endif
 
 
 
@@ -669,7 +674,7 @@ dyn_get_feature_metadata_by_dh_dfm(
 
 
 // Functions that apply formatting
-
+#ifdef IFM
 bool
 dyn_format_nontable_feature_detail(
         Internal_Feature_Metadata *  intmeta,
@@ -700,6 +705,7 @@ dyn_format_nontable_feature_detail(
    DBGMSF(debug, "Returning: %s", sbool(ok));
    return ok;
 }
+#endif
 
 bool
 dyn_format_nontable_feature_detail_dfm(
@@ -731,7 +737,7 @@ dyn_format_nontable_feature_detail_dfm(
 }
 
 
-
+#ifdef IFM
 bool
 dyn_format_table_feature_detail(
       Internal_Feature_Metadata * intmeta,
@@ -745,6 +751,7 @@ dyn_format_table_feature_detail(
    bool ok = ffd_func(accumulated_value, vcp_version, aformatted_data);
    return ok;
 }
+#endif
 
 bool
 dyn_format_table_feature_detail_dfm(
@@ -844,6 +851,7 @@ dyn_format_feature_detail(
  *
  * It is the caller's responsibility to free the returned string.
  */
+#ifdef IFM
 bool
 dyn_format_feature_detail(
        Internal_Feature_Metadata * intmeta,
@@ -896,6 +904,7 @@ dyn_format_feature_detail(
    DBGMSF(debug, "Done.  Returning %d, *aformatted_data=%p", ok, *aformatted_data);
    return ok;
 }
+#endif
 
 bool
 dyn_format_feature_detail_dfm(
@@ -982,13 +991,13 @@ dyn_get_feature_name(
 }
 
 void init_dyn_feature_codes() {
-   func_name_table_add(dyn_format_nontable_feature_detail, "dyn_format_nontable_feature_detail");
-   func_name_table_add(dyn_format_table_feature_detail, "dyn_format_table_feature_detail");
-   func_name_table_add(dyn_format_feature_detail, "dyn_format_feature_detail");
+   func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
+   func_name_table_add(dyn_format_table_feature_detail_dfm, "dyn_format_table_feature_detail_dfm");
+   func_name_table_add(dyn_format_feature_detail_dfm, "dyn_format_feature_detail_dfm");
    // dbgrpt_func_name_table(0);
 }
 
-
+#ifdef IFM
 // for transition
 Internal_Feature_Metadata *
 dfm_to_internal_feature_metadata(
@@ -1001,4 +1010,4 @@ dfm_to_internal_feature_metadata(
    ifm->table_formatter = dfm->table_formatter;
    return ifm;
 }
-
+#endif

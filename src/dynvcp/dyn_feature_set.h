@@ -77,10 +77,12 @@ dyn_create_single_feature_set_by_hexid2(
 // VCP_Feature_Table_Entry *
 // get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
 
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_set_entry2(
       Dyn_Feature_Set * feature_set,
       unsigned          index);
+#endif
 
 Display_Feature_Metadata *
 dyn_get_feature_set_entry2_dfm(
@@ -120,7 +122,7 @@ dyn_create_feature_set_from_feature_set_ref2(
    DDCA_Display_Ref        dref,
    Feature_Set_Flags       flags);
 
-typedef bool (*Dyn_Feature_Set_Filter_Func)(Internal_Feature_Metadata * p_metadata);
+typedef bool (*Dyn_Feature_Set_Filter_Func)(Display_Feature_Metadata * p_metadata);
 
 void filter_feature_set2(Dyn_Feature_Set* fset, Dyn_Feature_Set_Filter_Func func);
 

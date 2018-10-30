@@ -113,6 +113,7 @@ app_show_single_vcp_value_by_feature_table_entry(
  *                DDCRC_INVALID_OPERATION - feature is deprecated or write-only
  *                from get_formatted_value_for_feature_table_entry()
  */
+#ifdef IFM
 DDCA_Status
 app_show_single_vcp_value_by_internal_metadata(
       Display_Handle *             dh,
@@ -159,6 +160,7 @@ app_show_single_vcp_value_by_internal_metadata(
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(ddcrc));
    return ddcrc;
 }
+#endif
 
 
 
@@ -266,6 +268,7 @@ app_show_single_vcp_value_by_feature_id(
 #endif
 
 
+#ifdef IFM
 Public_Status_Code
 app_show_single_vcp_value_by_feature_id_new(
       Display_Handle *      dh,
@@ -299,6 +302,7 @@ app_show_single_vcp_value_by_feature_id_new(
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
    return psc;
 }
+#endif
 
 
 
@@ -571,7 +575,7 @@ Byte show_changed_feature(Display_Handle * dh) {
      changed_feature = p_nontable_response->sl;
      free(p_nontable_response);
      if (changed_feature)
-#ifdef DFM
+#ifndef DFM
         app_show_single_vcp_value_by_feature_id_new(dh, changed_feature, false);
 #else
         app_show_single_vcp_value_by_feature_id_new_dfm(dh, changed_feature, false);

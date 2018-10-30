@@ -32,16 +32,19 @@ void dbgrpt_dyn_feature_set(
    int d1 = depth+1;
 
    rpt_vstring(d0, "Subset: %d (%s)", fset->subset, feature_subset_name(fset->subset));
+#ifndef DFM
    rpt_label  (d0, "Members:");
    for (int ndx=0; ndx < fset->members->len; ndx++) {
       Internal_Feature_Metadata * ifm = g_ptr_array_index(fset->members,ndx);
       dbgrpt_internal_feature_metadata(ifm, d1);
    }
+#else
    rpt_label  (d0, "Members (dfm):");
    for (int ndx=0; ndx < fset->members_dfm->len; ndx++) {
       Display_Feature_Metadata * dfm = g_ptr_array_index(fset->members_dfm,ndx);
       dbgrpt_display_feature_metadata(dfm, d1);
    }
+#endif
 }
 
 #ifdef OLD
@@ -144,7 +147,7 @@ dyn_create_feature_set(
 }
 #endif
 
-
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_create_dynamic_feature_from_dfr_metadata(DDCA_Feature_Metadata * dfr_metadata)
 {
@@ -175,6 +178,7 @@ dyn_create_dynamic_feature_from_dfr_metadata(DDCA_Feature_Metadata * dfr_metadat
    }
    return ifm;
 }
+#endif
 
 Display_Feature_Metadata *
 dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_metadata)
@@ -225,7 +229,7 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
    return meta;
 }
 
-
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_create_dynamic_feature_from_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * vfte, DDCA_MCCS_Version_Spec vspec)
@@ -259,6 +263,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry(
    }
    return ifm;
 }
+#endif
 
 
 Display_Feature_Metadata *
@@ -272,6 +277,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    DDCA_Feature_Metadata * meta = dyn_create_feature_metadata_from_vcp_feature_table_entry(vfte, vspec);
    Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(meta);
 
+
    if (dfm->flags & DDCA_SIMPLE_NC) {
       if (dfm->sl_values)
          dfm->nontable_formatter_sl = dyn_format_feature_detail_sl_lookup;
@@ -280,7 +286,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    }
    else if (dfm->flags & DDCA_STD_CONT)
       dfm->nontable_formatter = format_feature_detail_standard_continuous;
-   else if (meta->feature_flags & DDCA_TABLE)
+   else if (dfm->flags & DDCA_TABLE)
       dfm->table_formatter = default_table_feature_detail_function;
    else
       dfm->nontable_formatter = format_feature_detail_debug_bytes;
@@ -317,7 +323,7 @@ dyn_create_feature_set0(
    return fset;
 }
 
-
+#ifdef IFM
 Dyn_Feature_Set *
 dyn_create_feature_set2(
       VCP_Feature_Subset     subset_id,
@@ -434,7 +440,7 @@ dyn_create_feature_set2(
     }
     return result;
 }
-
+#endif
 
 
 Dyn_Feature_Set *
@@ -530,14 +536,14 @@ dyn_create_feature_set2_dfm(
 
           }
           else {
-             // create Internal_Feature_Metadata from VCP_Feature_Table_Entry
-             Internal_Feature_Metadata * ifm =
-                   dyn_create_dynamic_feature_from_vcp_feature_table_entry(cur_entry, dref->vcp_version);
-             g_ptr_array_add(members, ifm);
+//             // create Internal_Feature_Metadata from VCP_Feature_Table_Entry
+//             Internal_Feature_Metadata * ifm =
+//                   dyn_create_dynamic_feature_from_vcp_feature_table_entry(cur_entry, dref->vcp_version);
+//             g_ptr_array_add(members, ifm);
 
-//             Display_Feature_Metadata * dfm =
-//                   dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(cur_entry, dref->vcp_version);
-//             g_ptr_array_add(members_dfm, dfm);
+             Display_Feature_Metadata * dfm =
+                   dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(cur_entry, dref->vcp_version);
+             g_ptr_array_add(members_dfm, dfm);
 
           }
        }
@@ -592,16 +598,21 @@ dyn_create_single_feature_set_by_hexid2(
    result->subset = VCP_SUBSET_SINGLE_FEATURE;
    result->members = g_ptr_array_new();
    result->members_dfm = g_ptr_array_new();
+#ifdef IFM
    Internal_Feature_Metadata * ifm = NULL;
+#endif
    Display_Feature_Metadata *  dfm = NULL;
    if (dref->dfr) {
       DDCA_Feature_Metadata * feature_metadata  =
          get_dynamic_feature_metadata(dref->dfr, feature_code);
       if (feature_metadata) {
+#ifdef IFM
          ifm = dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
+#endif
          dfm = dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
       }
    }
+#ifdef IFM
    if (!ifm) {
       VCP_Feature_Table_Entry* vcp_entry = NULL;
        if (force)
@@ -611,8 +622,21 @@ dyn_create_single_feature_set_by_hexid2(
        if (vcp_entry)
           ifm = dyn_create_dynamic_feature_from_vcp_feature_table_entry(vcp_entry, dref->vcp_version);
    }
+#endif
+   if (!dfm) {
+      VCP_Feature_Table_Entry* vcp_entry = NULL;
+       if (force)
+          vcp_entry = vcp_find_feature_by_hexid_w_default(feature_code);
+       else
+          vcp_entry = vcp_find_feature_by_hexid(feature_code);
+       if (vcp_entry)
+          dfm = dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(vcp_entry, dref->vcp_version);
+   }
+#ifdef IFM
    if (ifm)
       g_ptr_array_add(result->members, ifm);
+#endif
+
    if (dfm)
       g_ptr_array_add(result->members_dfm, dfm);
 
@@ -624,6 +648,7 @@ dyn_create_single_feature_set_by_hexid2(
    return result;
 }
 
+#ifdef IFM
 Internal_Feature_Metadata *
 dyn_get_feature_set_entry2(
       Dyn_Feature_Set * feature_set,
@@ -635,6 +660,7 @@ dyn_get_feature_set_entry2(
       result = g_ptr_array_index(feature_set->members, index);
    return result;
 }
+#endif
 
 Display_Feature_Metadata *
 dyn_get_feature_set_entry2_dfm(
@@ -711,10 +737,11 @@ dyn_create_feature_set_from_feature_set_ref2(
 
    Dyn_Feature_Set* result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
+      // iftests within function
       result = dyn_create_single_feature_set_by_hexid2(fsref->specific_feature, dref, flags & FSF_FORCE);
    }
    else {
-      result = dyn_create_feature_set2(fsref->subset, dref, flags);
+      result = dyn_create_feature_set2_dfm(fsref->subset, dref, flags);
    }
 
    if (debug || IS_TRACING()) {

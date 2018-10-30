@@ -272,6 +272,7 @@ is_rereadable_feature(
           break;
       }
    }
+#ifndef DFM
    if (result) {
       Internal_Feature_Metadata * intmeta = dyn_get_feature_metadata_by_dh(
             opcode,
@@ -282,6 +283,18 @@ is_rereadable_feature(
       if (intmeta) {
          result = intmeta->external_metadata->feature_flags & DDCA_READABLE;
       }
+#else
+      if (result) {
+         Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh_dfm(
+               opcode,
+               dh,
+               false    //                  with_default
+               );
+         // if not found, assume readable  ??
+         if (dfm) {
+            result = dfm->flags & DDCA_READABLE;
+         }
+#endif
 #ifdef OLD
       VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
       DBGMSF(debug, "vfte=%p", vfte);

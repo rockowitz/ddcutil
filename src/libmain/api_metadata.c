@@ -581,6 +581,7 @@ ddca_get_feature_metadata_by_dref(
                      info);
 #endif
 
+#ifdef IFM
                Internal_Feature_Metadata * intmeta =
                   dyn_get_feature_metadata_by_dref(feature_code, dref, create_default_if_not_found);
                if (!intmeta) {
@@ -589,6 +590,19 @@ ddca_get_feature_metadata_by_dref(
                else {
                   memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
                }
+#endif
+#ifdef DFM
+               Display_Feature_Metadata * intmeta =
+                  dyn_get_feature_metadata_by_dref_dfm(feature_code, dref, create_default_if_not_found);
+               if (!intmeta) {
+                  psc = DDCRC_NOT_FOUND;
+               }
+               else {
+                  DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(intmeta);
+                  memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
+                  // MEMORY MANAGEMENT !!!
+               }
+#endif
          }
       );
 }
@@ -634,6 +648,7 @@ ddca_get_feature_metadata_by_dh(
                      info);
 #endif
 
+#ifdef IFM
                 Internal_Feature_Metadata * intmeta =
                    dyn_get_feature_metadata_by_dh(feature_code, dh, create_default_if_not_found);
                 if (!intmeta) {
@@ -642,6 +657,19 @@ ddca_get_feature_metadata_by_dh(
                 else {
                    memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
                 }
+#endif
+#ifdef DFM
+               Display_Feature_Metadata * intmeta =
+                  dyn_get_feature_metadata_by_dh_dfm(feature_code, dh, create_default_if_not_found);
+               if (!intmeta) {
+                  psc = DDCRC_NOT_FOUND;
+               }
+               else {
+                  DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(intmeta);
+                  memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
+                  // MEMORY MANAGEMENT !!!
+               }
+#endif
 
                 DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
                 // if (psc == 0) {

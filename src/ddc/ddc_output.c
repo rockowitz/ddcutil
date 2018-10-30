@@ -619,6 +619,7 @@ collect_raw_feature_set_values(
  * Returns:
  *    status code
  */
+#ifdef IFM
 Public_Status_Code
 collect_raw_feature_set_values2(
       Display_Handle *      dh,
@@ -666,7 +667,7 @@ collect_raw_feature_set_values2(
 
    return master_status_code;
 }
-
+#endif
 
 Public_Status_Code
 collect_raw_feature_set_values2_dfm(
@@ -804,9 +805,11 @@ collect_raw_subset_values2(
    if (debug)
       dbgrpt_dyn_feature_set(feature_set, 0);
 
+#ifdef IFM
    psc = collect_raw_feature_set_values2(
             dh, feature_set, vset,
             ignore_unsupported, msg_fh);
+#endif
 #ifdef DFM
    psc = collect_raw_feature_set_values2_dfm(
             dh, feature_set, vset,
@@ -1005,6 +1008,7 @@ get_formatted_value_for_feature_table_entry(
  * This function is a kitchen sink of functionality, extracted from
  * earlier code.  It needs refactoring.
  */
+#ifdef IFM
 Public_Status_Code
 get_formatted_value_for_internal_metadata(
       Display_Handle *            dh,
@@ -1146,6 +1150,7 @@ get_formatted_value_for_internal_metadata(
           psc_desc(psc), formatted_value_loc);
    return psc;
 }
+#endif
 
 Public_Status_Code
 get_formatted_value_for_display_feature_metadata(
@@ -1389,7 +1394,7 @@ show_feature_set_values(
 }
 #endif
 
-
+#ifdef IFM
 Public_Status_Code
 show_feature_set_values2(
       Display_Handle *      dh,
@@ -1486,6 +1491,7 @@ show_feature_set_values2(
    DBGMSF(debug, "Returning: %s", psc_desc(master_status_code));
    return master_status_code;
 }
+#endif
 
 
 Public_Status_Code

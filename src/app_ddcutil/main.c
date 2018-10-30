@@ -230,7 +230,7 @@ void probe_display_by_dh(Display_Handle * dh)
          for (int code = 0; code < 256; code++) {
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
-#ifndef PRE_DFM
+#ifndef DFM
                Internal_Feature_Metadata * ifm =
                      dyn_get_feature_metadata_by_dh(
                         code,

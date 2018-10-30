@@ -76,6 +76,7 @@ get_formatted_value_for_feature_table_entry(
       FILE *                     msg_fh);
 #endif
 
+#ifdef IFM
 Public_Status_Code
 get_formatted_value_for_internal_metadata(
       Display_Handle *            dh,
@@ -84,6 +85,7 @@ get_formatted_value_for_internal_metadata(
       bool                        prefix_value_with_feature_code,
       char **                     formatted_value_loc,
       FILE *                      msg_fh);
+#endif
 
 Public_Status_Code
 get_formatted_value_for_display_feature_metadata(
