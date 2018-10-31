@@ -16,6 +16,7 @@
 #include "util/report_util.h"
 
 #include "base/displays.h"
+#include "base/monitor_model_key.h"
 
 #include "vcp/vcp_feature_values.h"
 
@@ -405,11 +406,23 @@ ddca_format_any_vcp_value(
       DDCA_Any_Vcp_Value *    anyval,
       char **                 formatted_value_loc)
 {
-   bool debug = false;
-   DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
+   bool debug = true;
+   DBGMSF(debug, "Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
+                 feature_code,
+                 vspec.major, vspec.minor,
+                 mmid,
+                 (mmid) ? mmk_repr(*mmid) : "NULL"
+                 );
    DDCA_Status psc = 0;
 
    *formatted_value_loc = NULL;
+
+   if (!mmid) {
+      *formatted_value_loc = strdup("Programming error. mmid not specified");
+      psc = DDCRC_ARG;
+      goto bye;
+   }
+
 
    // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
@@ -499,6 +512,14 @@ ddca_format_any_vcp_value_by_dref(
 {
    WITH_DR(ddca_dref,
          {
+               bool debug = true;
+               if (debug) {
+                  DBGMSG("feature_code=0x%02x, ddca_dref=%s, valrec=%s",
+                         feature_code,
+                         dref_repr_t(dref),
+                         summarize_single_vcp_value(valrec) );
+                  dbgrpt_display_ref( dref, 1);
+               }
                return ddca_format_any_vcp_value(
                          feature_code,
                          dref->vcp_version,
@@ -518,6 +539,14 @@ ddca_format_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
+   bool debug = true;
+   if (debug) {
+      DBGMSG("feature_code=0x%02x, vspec=%d.%d, mmid=%s",
+             feature_code,
+             vspec.major, vspec.minor,
+             (mmid) ? mmk_repr(*mmid) : "NULL");
+   }
+
    DDCA_Any_Vcp_Value anyval;
    anyval.opcode = feature_code;
    anyval.value_type = DDCA_NON_TABLE_VCP_VALUE;
@@ -538,6 +567,14 @@ ddca_format_non_table_vcp_value_by_dref(
 {
    WITH_DR(ddca_dref,
          {
+               bool debug = true;
+               if (debug) {
+                  DBGMSG("feature_code=0x%02x, ddca_dref=%s",
+                         feature_code,
+                         dref_repr_t(dref) );
+                         // summarize_single_vcp_value(valrec) );
+                  dbgrpt_display_ref( dref, 1);
+               }
                return ddca_format_non_table_vcp_value(
                          feature_code,
                          dref->vcp_version,
