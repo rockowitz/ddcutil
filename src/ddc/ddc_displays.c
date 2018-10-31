@@ -28,6 +28,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -988,6 +989,11 @@ ddc_detect_all_displays() {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
          dref->dispno = -1;
          dref->pedid = businfo->edid;    // needed?
+         dref->mmid  = monitor_model_key_new(
+                          dref->pedid->mfg_id,
+                          dref->pedid->model_name,
+                          dref->pedid->product_code);
+
          // drec->detail.bus_detail = businfo;
          dref->detail = businfo;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -1003,6 +1009,10 @@ ddc_detect_all_displays() {
      Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
      dref->dispno = -1;
      dref->pedid = detail->pEdid;   // needed?
+     dref->mmid  = monitor_model_key_new(
+                      dref->pedid->mfg_id,
+                      dref->pedid->model_name,
+                      dref->pedid->product_code);
      // drec->detail.adl_detail = detail;
      dref->detail = detail;
      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -1026,6 +1036,13 @@ ddc_detect_all_displays() {
                                 curmon->hiddev_device_name);
       dref->dispno = -1;
       dref->pedid = curmon->edid;
+      if (dref->pedid)
+         dref->mmid  = monitor_model_key_new(
+                          dref->pedid->mfg_id,
+                          dref->pedid->model_name,
+                          dref->pedid->product_code);
+      else
+         dref->mmid = monitor_model_key_new("UNK", "UNK", 0);
       // drec->detail.usb_detail = curmon;
       dref->detail = curmon;
       dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
@@ -1033,6 +1050,7 @@ ddc_detect_all_displays() {
       g_ptr_array_add(display_list, dref);
    }
 #endif
+
 
    // verbose output is distracting within scans
    // saved and reset here so that async threads are not adjusting output level
