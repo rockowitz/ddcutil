@@ -140,6 +140,7 @@ dfm_to_ddca_feature_metadata(
    ddca_meta->feature_flags = dfm->feature_flags;
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
+   ddca_meta->sl_values = dfm->sl_values;     // copy table?
    return ddca_meta;
 }
 
