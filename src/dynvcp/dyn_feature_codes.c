@@ -410,7 +410,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
      bool                     with_default)
 
 {
-   bool debug = false;
+   bool debug = true;
     DBGMSF(debug, "Starting. feature_code=0x%02x, mmk=%s, vspec=%d.%d, with_default=%s",
                   feature_code, mmk_repr(mmk), vspec.major, vspec.minor, sbool(with_default));
 
@@ -423,6 +423,12 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
 
     Display_Feature_Metadata * result =
           dyn_get_feature_metadata_by_dfr_and_vspec_dfm(feature_code, dfr, vspec, with_default);
+
+    if (debug) {
+       DBGMSG("Returning Display_Feature_Metadata at %p", result);
+       if (result)
+          dbgrpt_display_feature_metadata(result, 1);
+    }
 
     return result;
  }
@@ -922,7 +928,7 @@ dyn_format_feature_detail_dfm(
        char * *                  aformatted_data
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting");
 
    bool ok = true;
