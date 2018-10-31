@@ -22,9 +22,11 @@
 #include "util/udev_usb_util.h"
 /** \endcond */
 
-#include "public/ddcutil_c_api.h"
+#include "public/ddcutil_types.h"
+// #include "public/ddcutil_c_api.h"
 
 #include "core.h"
+#include "monitor_model_key.h"
 #include "vcp_version.h"
 
 #include "displays.h"
@@ -831,7 +833,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d2, "DDC NULL response usage checked:            %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
    if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
    rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-}
+   rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
 
 #ifdef OLD
