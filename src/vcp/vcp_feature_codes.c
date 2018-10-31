@@ -339,6 +339,21 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
    }
 }
 
+#ifdef UNUSED
+static void report_sl_values_table(DDCA_Feature_Value_Entry * sl_values, int depth) {
+   if (sl_values) {
+      rpt_vstring(depth, "Values:");
+      while (sl_values->value_name != NULL) {
+         rpt_vstring(depth+1, "0x%02x: %s", sl_values->value_code, sl_values->value_name);
+         sl_values++;
+      }
+   }
+   else {
+      rpt_vstring(depth, "Values:  none");
+   }
+}
+#endif
+
 
 static char * interpret_ddca_version_feature_flags_readwrite(
       DDCA_Version_Feature_Flags feature_flags)
@@ -549,6 +564,8 @@ void dbgrpt_ddca_feature_metadata(
       rpt_vstring(d1, "Simple NC values:");
       report_sl_values(meta->sl_values, d1+1);
    }
+   else
+      rpt_vstring(d1, "Simple NC values; No table specified");
 }
 
 
