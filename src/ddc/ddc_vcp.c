@@ -75,7 +75,6 @@ static Thread_Vcp_Settings *  get_thread_vcp_settings() {
 }
 
 
-
 //
 //  Save Control Settings
 //
@@ -272,50 +271,17 @@ is_rereadable_feature(
           break;
       }
    }
-#ifndef DFM
+
    if (result) {
-      Internal_Feature_Metadata * intmeta = dyn_get_feature_metadata_by_dh(
+      Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh_dfm(
             opcode,
             dh,
             false    //                  with_default
             );
       // if not found, assume readable  ??
-      if (intmeta) {
-         result = intmeta->external_metadata->feature_flags & DDCA_READABLE;
+      if (dfm) {
+         result = dfm->feature_flags & DDCA_READABLE;
       }
-#else
-      if (result) {
-         Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh_dfm(
-               opcode,
-               dh,
-               false    //                  with_default
-               );
-         // if not found, assume readable  ??
-         if (dfm) {
-            result = dfm->feature_flags & DDCA_READABLE;
-         }
-#endif
-#ifdef OLD
-      VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(opcode);
-      DBGMSF(debug, "vfte=%p", vfte);
-      if (vfte) {
-         assert(opcode < 0xe0);
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);  // ensure dh->vcp_version set
-         DBGMSF(debug, "vspec = %d.%d", vspec.major, vspec.minor);
-         // hack, make a guess
-         if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)   ||
-              vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED ))
-            vspec = DDCA_VSPEC_V22;
-
-         // if ( !vcp_version_eq(vspec, VCP_SPEC_UNKNOWN) &&
-         //      !vcp_version_eq(vspec, VCP_SPEC_UNQUERIED ))
-         // {
-            result = is_feature_readable_by_vcp_version(vfte, vspec);
-            DBGMSF(debug, "vspec=%d.%d, readable feature = %s", vspec.major, vspec.minor, bool_repr(result));
-         // }
-      }
-#endif
-
    }
 
    DBGMSF(debug, "Returning: %s", bool_repr(result));

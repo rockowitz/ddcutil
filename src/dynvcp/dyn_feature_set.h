@@ -31,31 +31,10 @@ typedef struct {
    char                marker[4];
    VCP_Feature_Subset  subset;      // subset identifier
    DDCA_Display_Ref    dref;
-#ifndef DFM
-   GPtrArray *         members;     // array of pointers to Internal_Feature_Metadata
-#endif
    GPtrArray *         members_dfm; // array of pointers to Display_Feature_Metadata - alt
 } Dyn_Feature_Set;
 
 void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, bool verbose, int depth);
-
-#ifdef OLD
-VCP_Feature_Set
-dyn_create_feature_set(
-      VCP_Feature_Subset     subset,
-      DDCA_Display_Ref       dref,
-      // DDCA_MCCS_Version_Spec vcp_version,
-      Feature_Set_Flags      flags);
-   // bool                   exclude_table_features);
-#endif
-
-#ifndef DFM
-Dyn_Feature_Set *
-dyn_create_feature_set2(
-      VCP_Feature_Subset     subset,
-      DDCA_Display_Ref       dref,
-      Feature_Set_Flags      flags);
-#endif
 
 Dyn_Feature_Set *
 dyn_create_feature_set2_dfm(
@@ -63,14 +42,8 @@ dyn_create_feature_set2_dfm(
       DDCA_Display_Ref       dref,
       Feature_Set_Flags      flags);
 
-
 // VCP_Feature_Set
 // ddc_create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
-
-#ifdef OLD
-VCP_Feature_Set
-dyn_create_single_feature_set_by_hexid(Byte id, DDCA_Display_Ref dref, bool force);
-#endif
 
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
@@ -81,13 +54,6 @@ dyn_create_single_feature_set_by_hexid2(
 // VCP_Feature_Table_Entry *
 // get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
 
-#ifdef IFM
-Internal_Feature_Metadata *
-dyn_get_feature_set_entry2(
-      Dyn_Feature_Set * feature_set,
-      unsigned          index);
-#endif
-
 Display_Feature_Metadata *
 dyn_get_feature_set_entry2_dfm(
       Dyn_Feature_Set * feature_set,
@@ -95,12 +61,6 @@ dyn_get_feature_set_entry2_dfm(
 
 // int
 // get_feature_set_size(VCP_Feature_Set feature_set);
-
-#ifndef DFM
-int
-dyn_get_feature_set_size2(
-      Dyn_Feature_Set * feature_set);
-#endif
 
 int
 dyn_get_feature_set_size2_dfm(
@@ -110,16 +70,6 @@ dyn_get_feature_set_size2_dfm(
 // get_feature_set_subset_id(VCP_Feature_Set feature_set);
 
 // void report_feature_set(VCP_Feature_Set feature_set, int depth);
-
-#ifdef OLD
-VCP_Feature_Set
-dyn_create_feature_set_from_feature_set_ref(
-   Feature_Set_Ref *       fsref,
-   // DDCA_MCCS_Version_Spec  vcp_version,
-   DDCA_Display_Ref        dref,
-   Feature_Set_Flags       flags);
- //  bool                    force);
-#endif
 
 Dyn_Feature_Set *
 dyn_create_feature_set_from_feature_set_ref2(

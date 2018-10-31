@@ -28,8 +28,6 @@
 extern const char* FMT_CODE_NAME_DETAIL_W_NL;
 extern const char* FMT_CODE_NAME_DETAIL_WO_NL;
 
-
-
 #ifdef FUTURE
 // not currently used
 Public_Status_Code
@@ -46,15 +44,6 @@ check_valid_operation_by_feature_id_and_dh(
       Version_Feature_Flags operation_flags);
 #endif
 
-#ifdef OLD
-Public_Status_Code
-collect_raw_subset_values(
-      Display_Handle *    dh,
-      VCP_Feature_Subset  subset,
-      Vcp_Value_Set       vset,
-      bool                ignore_unsupported,
-      FILE *              msg_fh);
-#endif
 
 Public_Status_Code
 collect_raw_subset_values2(
@@ -64,29 +53,6 @@ collect_raw_subset_values2(
       bool                ignore_unsupported,
       FILE *              msg_fh);
 
-
-#ifdef OLD
-Public_Status_Code
-get_formatted_value_for_feature_table_entry(
-      Display_Handle *           dh,
-      VCP_Feature_Table_Entry *  vcp_entry,
-      bool                       suppress_unsupported,
-      bool                       prefix_value_with_feature_code,
-      char **                    pformatted_value,
-      FILE *                     msg_fh);
-#endif
-
-#ifdef IFM
-Public_Status_Code
-get_formatted_value_for_internal_metadata(
-      Display_Handle *            dh,
-      Internal_Feature_Metadata * internal_meta,
-      bool                        suppress_unsupported,
-      bool                        prefix_value_with_feature_code,
-      char **                     formatted_value_loc,
-      FILE *                      msg_fh);
-#endif
-
 Public_Status_Code
 get_formatted_value_for_display_feature_metadata(
       Display_Handle *            dh,
@@ -95,7 +61,6 @@ get_formatted_value_for_display_feature_metadata(
       bool                        prefix_value_with_feature_code,
       char **                     formatted_value_loc,
       FILE *                      msg_fh);
-
 
 Public_Status_Code
 show_vcp_values(

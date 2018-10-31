@@ -24,7 +24,6 @@
 #include "base/feature_metadata.h"
 
 
-
 // copied from dynamic_features.c, make it thread safe
 
 char * interpret_ddca_feature_flags2(DDCA_Version_Feature_Flags flags) {
@@ -166,26 +165,4 @@ dfm_from_ddca_feature_metadata(
    dfm->sl_values = ddca_meta->sl_values;      // OR DUPLICATE?
    return dfm;
 }
-
-
-#ifdef DVFI
-
-DDCA_Version_Feature_Info *
-dfm_to_ddca_version_feature_info(
-      Display_Feature_Metadata * dfm)
-{
-   DDCA_Version_Feature_Info * vfi = calloc(1, sizeof(DDCA_Version_Feature_Info));
-   memcpy(vfi->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4);
-
-   vfi->feature_name  = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
-   vfi->desc          = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
-   vfi->feature_code  = dfm->feature_code;
-   vfi->feature_flags = dfm->feature_flags;
-
-   vfi->sl_values     = dfm->sl_values;    // NEED TO COPY?
-   vfi->vspec         = dfm->vcp_version;
-   // vfi->version_id = ??
-   return vfi;
-}
-#endif
 

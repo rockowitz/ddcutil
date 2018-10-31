@@ -32,7 +32,6 @@
 #include "api_metadata_internal.h"
 
 
-
 //
 // Feature Lists
 //
@@ -164,15 +163,6 @@ ddca_get_feature_list_by_dref(
    WITH_DR(
          ddca_dref,
          {
-#ifdef OLD
-               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
-
-               psc = ddca_get_feature_list(
-                     feature_set_id,
-                     vspec,               // dref->vcp_version,
-                     include_table_features,
-                     p_feature_list);
-#endif
                bool debug = true;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
                       feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
@@ -309,91 +299,6 @@ ddca_feature_list_string(
 // Feature Metadata
 //
 
-#ifdef OLD
-// or return a struct?
-DDCA_Status ddca_get_feature_flags_by_vcp_version(
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Version_Feature_Flags *  feature_flags)
-{
-   DDCA_Status rc = 0;
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
-
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
-   if (!pentry) {
-      *feature_flags = 0;
-      rc = DDCRC_ARG;
-   }
-   else {
-      DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
-      *feature_flags = 0;
-      // TODO handle subvariants REWORK
-      if (vflags & VCP2_RO)
-         *feature_flags |= DDCA_RO;
-      if (vflags & VCP2_WO)
-         *feature_flags |= DDCA_WO;
-      if (vflags & VCP2_RW)
-         *feature_flags |= DDCA_RW;
-      if (vflags & VCP2_CONT)
-         *feature_flags |= DDCA_CONTINUOUS;
-#ifdef OLD
-      if (pentry->feature_flags & VCP_TYPE_V2NC_V3T) {
-         if (vspec.major < 3)
-            *feature_flags |= DDCA_SIMPLE_NC;
-         else
-            *feature_flags |= DDCA_TABLE;
-      }
-#endif
-      else if (vflags & DDCA_TABLE)
-         *feature_flags |= DDCA_TABLE;
-      else if (vflags & VCP2_NC) {
-         if (vspec.major < 3)
-            *feature_flags |= DDCA_SIMPLE_NC;
-         else {
-            // TODO: In V3, some features use combination of high and low bytes
-            // for now, mark all as simple
-            *feature_flags |= DDCA_SIMPLE_NC;
-            // alt: DDCT_COMPLEX_NC
-         }
-      }
-   }
-   return rc;
-}
-#endif
-
-#ifdef DVFI
-// deprecated
-DDCA_Status
-ddca_get_feature_info_by_vcp_version(
-      DDCA_Vcp_Feature_Code       feature_code,
-   // DDCT_MCCS_Version_Spec      vspec,
-      DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Version_Feature_Info** p_info)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. feature_code=0x%02x, mccs_version_id=%d", feature_code, mccs_version_id);
-
-   DDCA_Status psc = 0;
-   *p_info = NULL;
-   // DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
-
-   // or should this be a version sensitive call?
-   DDCA_Version_Feature_Info * info =  get_version_feature_info_by_version_id(
-         feature_code,
-         mccs_version_id,
-         false,                       // with_default
-         true);                       // false => version specific, true=> version sensitive
-   if (!info)
-      psc = DDCRC_ARG;
-   else
-      *p_info = info;
-
-   DBGMSF(debug, "Returning:%d, *p_info=%p", psc, *p_info);
-   return psc;
-
-}
-#endif
-
 
 #ifdef NEVER_RELEASED
 DDCA_Status
@@ -491,79 +396,6 @@ ddca_get_feature_flags_by_version_id(
 #endif
 
 
-#ifdef DVFI
-// deprecated
-DDCA_Status
-ddca_get_feature_info_by_display(
-      DDCA_Display_Handle           ddca_dh,    // needed because in rare cases feature info is MCCS version dependent
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Version_Feature_Info **  p_info)
-{
-   WITH_DH(
-      ddca_dh,
-      {
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-         //DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
-         //psc = ddca_get_feature_info_by_vcp_version(feature_code, version_id, p_info);
-
-         *p_info = get_version_feature_info_by_vspec(
-                      feature_code,
-                      vspec,
-                      false,      //   with_default,
-                      true);      //   version_sensitive
-         if (!*p_info)
-            psc = DDCRC_ARG;
-      }
-   );
-}
-#endif
-
-
-#ifdef DVFI
-DDCA_Status
-ddca_get_feature_metadata_by_vspec(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Spec      vspec,
-      bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info) //   change to **?
-{
-   // DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
-   DDCA_Status psc = DDCRC_ARG;
-   memset(info, 0, sizeof(DDCA_Feature_Metadata));
-   memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
-   DDCA_Version_Feature_Info * full_info =
-         get_version_feature_info_by_vspec(
-               feature_code,
-               vspec,
-               create_default_if_not_found,
-               true);                      // false => version specific, true=> version sensitive
-   if (full_info) {
-      // DBGMSG("Reading full_info");
-      info->feature_code  = feature_code;
- //   info->vspec         = vspec;
-      info->feature_flags = full_info->feature_flags;
-      if (info->feature_flags & DDCA_SIMPLE_NC)
-         info->sl_values = full_info->sl_values;
-      if (info->feature_flags & DDCA_SYNTHETIC) {
-         // strdup so that don't have to worry about synthesized entries when free
-         if (full_info->feature_name)
-            info->feature_name  = strdup(full_info->feature_name);
-         if (full_info->desc)
-            info->feature_desc  = strdup(full_info->desc);
-      }
-      else {
-         info->feature_name  = full_info->feature_name;
-         info->feature_desc  = full_info->desc;
-      }
-      // DBGMSG("Reading full_info done");
-
-      free_version_feature_info(full_info);
-      psc = 0;
-   }
-   return psc;
-}
-#endif
-
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
@@ -628,31 +460,6 @@ ddca_get_feature_metadata_by_dref(
    WITH_DR(
          ddca_dref,
          {
-#ifdef OLD
-               // DBGMSG("Starting");
-               // dbgrpt_display_ref(dref, 1);
-
-               // returns dref->vcp_version if already cached, queries monitor if not
-               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(ddca_dref);
-
-               psc = ddca_get_feature_metadata_by_vspec(
-                     feature_code,
-                     vspec,               // dref->vcp_version,
-                     create_default_if_not_found,
-                     info);
-#endif
-
-#ifdef IFM
-               Internal_Feature_Metadata * intmeta =
-                  dyn_get_feature_metadata_by_dref(feature_code, dref, create_default_if_not_found);
-               if (!intmeta) {
-                  psc = DDCRC_NOT_FOUND;
-               }
-               else {
-                  memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
-               }
-#endif
-#ifdef DFM
                bool debug = true;
                DBGMSF(debug, "feature_code=0x%02x, dref=%%s, create_default_if_not_found=%s, info=%p",
                              feature_code, dref_repr_t(dref), create_default_if_not_found, info);
@@ -667,7 +474,6 @@ ddca_get_feature_metadata_by_dref(
                   memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
                   // MEMORY MANAGEMENT !!!
                }
-#endif
                if (debug) {
                   DBGMSG("Returning: %s", psc_desc(psc));
                   if (psc == 0)
@@ -694,41 +500,6 @@ ddca_get_feature_metadata_by_dh(
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
 
-#ifdef OLD
-               // Note:  dh->dref->vcp_version may be Unqueried (255,255)
-               // Query vcp version here instead of calling
-               // ddca_get_feature_metadata_by_dref() because we already have
-               // display handle, don't need to open display.
-
-                DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(ddca_dh);
-                // DDCA_Monitor_Model_Key* p_mmid = dh->dref->mmid;
-
-                psc = ddca_get_feature_metadata_by_vspec(
-                      feature_code,
-                      vspec,               // dref->vcp_version,
-                      create_default_if_not_found,
-                      info);
-#endif
-
-#ifdef FAILS_GET_VERSION
-                psc = ddca_get_feature_metadata_by_dref(
-                     feature_code,
-                     dh->dref,
-                     create_default_if_not_found,
-                     info);
-#endif
-
-#ifdef IFM
-                Internal_Feature_Metadata * intmeta =
-                   dyn_get_feature_metadata_by_dh(feature_code, dh, create_default_if_not_found);
-                if (!intmeta) {
-                   psc = DDCRC_NOT_FOUND;
-                }
-                else {
-                   memcpy(info, intmeta->external_metadata, sizeof(DDCA_Feature_Metadata));
-                }
-#endif
-#ifdef DFM
                Display_Feature_Metadata * intmeta =
                   dyn_get_feature_metadata_by_dh_dfm(feature_code, dh, create_default_if_not_found);
                if (!intmeta) {
@@ -739,7 +510,6 @@ ddca_get_feature_metadata_by_dh(
                   memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
                   // MEMORY MANAGEMENT !!!
                }
-#endif
 
                 DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
                 if (psc == 0) {
@@ -763,23 +533,6 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    return 0;
 }
 
-#ifdef DVFI
-DDCA_Status
-ddca_free_feature_info(
-      DDCA_Version_Feature_Info * info)
-{
-   DDCA_Status rc = 0;
-   if (info) {
-      if (memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) != 0 )  {
-        rc = DDCRC_ARG;
-      }
-      else {
-         free_version_feature_info(info);
-      }
-   }
-   return rc;
-}
-#endif
 
 // returns pointer into permanent internal data structure, caller should not free
 char *

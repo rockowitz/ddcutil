@@ -159,30 +159,6 @@ ddca_get_vcp_value(
    );
 }
 
-#ifdef OLD
-static DDCA_Vcp_Value_Type_Parm
-get_value_type_parm(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type_Parm    default_value)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, default_value=%d",
-          ddca_dh, feature_code, default_value);
-   DDCA_Vcp_Value_Type_Parm result = default_value;
-   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(ddca_dh);
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
-   if (pentry) {
-      DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vspec);
-      // Version_Feature_Flags flags = feature_info->internal_feature_flags;
-      // n. will default to NON_TABLE_VCP_VALUE if not a known code
-      result = (feature_flags & DDCA_TABLE) ?  DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
-   }
-
-   DBGMSF(debug, "Returning %d", result);
-   return result;
-}
-#endif
 
 static DDCA_Status
 get_value_type(
@@ -423,32 +399,6 @@ ddca_format_any_vcp_value(
       goto bye;
    }
 
-
-   // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
-
-#ifdef OLD
-   VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid_w_default(feature_code);
-   if (!pentry) {
-      psc = DDCRC_ARG;
-      *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
-      goto bye;
-   }
-
-   DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(pentry, vspec);
-#endif
-
-#ifdef IFM
-   Internal_Feature_Metadata * ifr =
-   dyn_get_feature_metadata_by_mmk_and_vspec(
-        feature_code, *mmid, vspec, /*with_default=*/ true);
-   if (!ifr) {
-      psc = DDCRC_ARG;
-      *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
-      goto bye;
-   }
-   DDCA_Feature_Flags feature_flags = ifr->external_metadata->feature_flags;
-#endif
-#ifdef DFM
    Display_Feature_Metadata * dfm =
    dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
         feature_code, *mmid, vspec, /*with_default=*/ true);
@@ -458,7 +408,6 @@ ddca_format_any_vcp_value(
       goto bye;
    }
    DDCA_Feature_Flags flags = dfm->feature_flags;
-#endif
 
    if (!(flags & DDCA_READABLE)) {
       if (flags & DDCA_DEPRECATED)
@@ -482,11 +431,7 @@ ddca_format_any_vcp_value(
        psc = DDCRC_ARG;
        goto bye;
    }
-#ifndef DFM
-   bool ok = dyn_format_feature_detail(ifr,vspec, anyval,formatted_value_loc);
-#else
    bool ok = dyn_format_feature_detail_dfm(dfm, vspec, anyval,formatted_value_loc);
-#endif
    if (!ok) {
        psc = DDCRC_ARG;    // ??
        assert(!formatted_value_loc);

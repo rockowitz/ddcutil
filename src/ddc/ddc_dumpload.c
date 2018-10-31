@@ -232,36 +232,17 @@ create_dumpload_data_from_g_ptr_array(
                      // VCP code table and definitively know if it's a table feature.
                      // One solution: rework data structures to parse later
                      // second solution: vcp version in dumpload data
-// #ifndef DFM
-                     VCP_Feature_Table_Entry * pvft_entry =
-                         vcp_find_feature_by_hexid_w_default(feature_id);
 
-                     bool is_table_feature0 = is_table_feature_by_vcp_version(
-                                                pvft_entry,data->vcp_version);
-// #endif
                      DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
                            data->mfg_id, data->model, data->product_code);
-#ifndef DFM
-                     Internal_Feature_Metadata * ifm =
-                           dyn_get_feature_metadata_by_mmk_and_vspec(
-                                feature_id,
-                                mmk,
-                                data->vcp_version,
-                                /*with_default=*/ true);
-                     bool is_table_feature = ifm->external_metadata->feature_flags & DDCA_NORMAL_TABLE;
-                     assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
-#else
+
                      Display_Feature_Metadata * dfm =
                                               dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
                                                    feature_id,
                                                    mmk,
                                                    data->vcp_version,
                                                    /*with_default=*/ true);
-                                        bool is_table_feature = dfm->feature_flags & DDCA_NORMAL_TABLE;
-                                        assert(is_table_feature == is_table_feature0);   // for testing, will be true so long as not user defined feature
-#endif
-
-
+                     bool is_table_feature = dfm->feature_flags & DDCA_NORMAL_TABLE;
 
                      if (is_table_feature) {
                         // s2 is hex string
@@ -363,18 +344,6 @@ ddc_set_multiple(
       DDCA_Any_Vcp_Value * vrec
       = vcp_value_set_get(vset, ndx);
       Byte   feature_code = vrec->opcode;
-
-#ifdef OLD
-      assert(vrec->value_type == DDCA_NON_TABLE_VCP_VALUE);     // Table not yet implemented
-      ushort new_value    = vrec->val.c.cur_val;
-      psc = set_nontable_vcp_value(dh, feature_code, new_value);
-      if (psc != 0) {
-         f0printf(ferr(), "Error setting value %d for VCP feature code 0x%02x: %s\n",
-                         new_value, feature_code, psc_desc(psc) );
-         f0printf(ferr(), "Terminating.");
-         break;
-      }
-#endif
 
       // HACK: will this affect intermittent error of silently failing sets?
       // pointless, ddc_it2_write_only) calls call_tuned_sleep() after write
@@ -754,23 +723,12 @@ dumpvcp_as_dumpload_data(
 
    // VCP values
    Vcp_Value_Set vset = vcp_value_set_new(50);
-#ifdef OLD
-   psc = collect_raw_subset_values(
-             dh,
-             VCP_SUBSET_PROFILE,
-             vset,
-             true,               //  ignore_unsupported
-             ferr());
-#else
    psc = collect_raw_subset_values2(
              dh,
              VCP_SUBSET_PROFILE,
              vset,
              true,               //  ignore_unsupported
              ferr());
-#endif
-
-
    if (psc == 0) {
       dumped_data->vcp_values = vset;             // NOTE REFERENCE, BE CAREFUL WHEN FREE
       dumped_data->vcp_value_ct = vcp_value_set_size(vset);

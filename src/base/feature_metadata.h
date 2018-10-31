@@ -14,14 +14,8 @@
 
 #include "ddcutil_types.h"
 
-// #include "vcp/vcp_feature_values.h"
-// #include "vcp/vcp_feature_codes.h"
-// #include "dynvcp/dyn_feature_codes.h"
-
 #include "util/data_structures.h"
 
-
-#define DFM 1
 
 // Moved from vcp_feature_values.h
 
@@ -126,13 +120,5 @@ dfm_to_ddca_feature_metadata(
 Display_Feature_Metadata *
 dfm_from_ddca_feature_metadata(
       DDCA_Feature_Metadata * meta);
-
-#ifdef DVFI
-// for transition
-DDCA_Version_Feature_Info *
-dfm_to_ddca_version_feature_info(
-      Display_Feature_Metadata * dfm);
-#endif
-
 
 #endif /* FEATURE_METADATA_H_ */
