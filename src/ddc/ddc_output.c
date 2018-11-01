@@ -411,7 +411,7 @@ collect_raw_feature_set_values2_dfm(
       bool                  ignore_unsupported,  // if false, is error if unsupported
       FILE *                msg_fh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.");
 
    Public_Status_Code master_status_code = 0;
@@ -475,7 +475,7 @@ collect_raw_subset_values2(
         bool                ignore_unsupported,
         FILE *              msg_fh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
 
    Public_Status_Code psc = 0;
