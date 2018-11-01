@@ -924,48 +924,6 @@ get_non_version_specific_feature_name(
 }
 
 
-#ifdef DVFI
-DDCA_Version_Feature_Info *
-extract_version_feature_info(
-      VCP_Feature_Table_Entry *  vfte,
-      DDCA_MCCS_Version_Spec     vspec,
-      bool                       version_sensitive)
-{
-   bool debug = false;
-   DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
-                 vspec.major, vspec.minor, bool_repr(version_sensitive));
-   if (debug)
-      show_backtrace(1);
-   assert(vfte);
-   // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
-
-   DDCA_Version_Feature_Info * info = calloc(1, sizeof(DDCA_Version_Feature_Info));
-   memcpy(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER , 4);
-   info->feature_code = vfte->code;
-
-   // redundant, for now
-   info->version_id   = mccs_version_spec_to_id(vspec);
-   info->vspec        = vspec;
-
-   info->feature_flags = (version_sensitive)
-         ? get_version_sensitive_feature_flags(vfte, vspec)
-         : get_version_specific_feature_flags(vfte, vspec);
-
-   info->desc = vfte->desc;
-   info->feature_name = (version_sensitive)
-           ? get_version_sensitive_feature_name(vfte, vspec)
-           : get_version_specific_feature_name(vfte, vspec);
-
-   info->feature_flags |= vfte->vcp_global_flags;
-   info->sl_values = (version_sensitive)
-         ? get_version_sensitive_sl_values(vfte, vspec)
-         : get_version_specific_sl_values(vfte, vspec);
-
-   DBG_RET_STRUCT(debug, DDCA_Version_Feature_Info, dbgrpt_version_feature_info, info);
-   return info;
-}
-#endif
-
 // alternative
 Display_Feature_Metadata *
 extract_version_feature_info_dfm(
@@ -1007,76 +965,7 @@ extract_version_feature_info_dfm(
    return dfm;
 }
 
-#ifdef DVFI
-void free_version_feature_info(DDCA_Version_Feature_Info * info) {
-   // be careful, may be called from client
-   // DBGMSG("Starting. info=%p", info);
-   if (info && memcmp(info->marker, VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER, 4) == 0) {
-      info->marker[3] = 'x';
 
-      // Only need to free pointers to values that were allocated when creating
-      // this struct, not those that are pointers into permanent data structures.
-      // info->desc, info->name, info->sl values point into VCP_Feature_Table_Entry
-
-      // TODO: Address case of synthetic VCP_Feature_Table_Entry
-
-      free(info);
-   }
-   // DBGMSG("Done.");
-}
-#endif
-
-#ifdef OLD
-DDCA_Version_Feature_Info *
-get_version_specific_feature_info(
-      DDCA_Vcp_Feature_Code        feature_code,
-      bool                    with_default,
-   // DDCT_MCCS_Version_Spec  vspec,
-      DDCA_MCCS_Version_Id    mccs_version_id)
-{
-   DDCA_Version_Feature_Info* info = NULL;
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
-
-   VCP_Feature_Table_Entry * pentry =
-         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
-                        : vcp_find_feature_by_hexid(feature_code);
-   if (pentry)
-      info = extract_version_feature_info(pentry, vspec, /*version_sensitive=*/false);
-
-   if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
-      free_synthetic_vcp_entry(pentry);
-
-   return info;
-
-}
-
-
-DDCA_Version_Feature_Info *
-get_version_sensitive_feature_info(
-      DDCA_Vcp_Feature_Code        feature_code,
-      bool                    with_default,
-   // DDCT_MCCS_Version_Spec  vspec,
-      DDCA_MCCS_Version_Id    mccs_version_id)
-{
-   DDCA_Version_Feature_Info* info = NULL;
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
-
-   VCP_Feature_Table_Entry * pentry =
-         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
-                        : vcp_find_feature_by_hexid(feature_code);
-   if (pentry)
-      info = extract_version_feature_info(pentry, vspec, /*version_sensitive=*/ true);
-
-   if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
-      free_synthetic_vcp_entry(pentry);
-
-   return info;
-
-}
-#endif
-
-
-#ifdef DVFI
 /** Gets information about a VCP feature.
  *
  *  @param feature_code
@@ -1088,44 +977,6 @@ get_version_sensitive_feature_info(
  *  @retval pointer to DDCA_Version_Feature_Info
  *  @retval NULL if feature not found and with_default == false
  */
-
-DDCA_Version_Feature_Info *
-get_version_feature_info_by_version_id(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Id    mccs_version_id,
-      bool                    with_default,
-      bool                    version_sensitive)
-{
-   bool debug = false;
-   DBGMSF(debug, "feature_code=0x%02x, mccs_version_id=%d(%s), with_default=%s, version_sensitive=%s",
-         feature_code,
-         mccs_version_id,
-         vcp_version_id_name(mccs_version_id),
-         bool_repr(with_default),
-         bool_repr(version_sensitive));
-#ifdef OLD
-   DDCA_Version_Feature_Info* info = NULL;
-#endif
-   DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
-
-#ifdef OLD
-   VCP_Feature_Table_Entry * pentry =
-         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
-                        : vcp_find_feature_by_hexid(feature_code);
-   if (pentry) {
-      info = extract_version_feature_info(pentry, vspec, version_sensitive);
-
-      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
-         free_synthetic_vcp_entry(pentry);
-   }
-
-   return info;
-#endif
-   return get_version_feature_info_by_vspec(feature_code, vspec, with_default, version_sensitive);
-}
-#endif
-
-// alternative
 Display_Feature_Metadata *
 get_version_feature_info_by_version_id_dfm(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1147,47 +998,6 @@ get_version_feature_info_by_version_id_dfm(
 }
 
 
-
-#ifdef DVFI
-DDCA_Version_Feature_Info *
-get_version_feature_info_by_vspec(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
-      bool                    with_default,
-      bool                    version_sensitive)
-{
-   bool debug = false;
-   DBGMSF(debug, "feature_code=0x%02x, mccs_version=%d.%d, with_default=%s, version_sensitive=%s",
-         feature_code,
-         vspec.major, vspec.minor,
-         bool_repr(with_default),
-         bool_repr(version_sensitive));
-
-   DDCA_Version_Feature_Info* info = NULL;
-
-   VCP_Feature_Table_Entry * pentry =
-         (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
-                        : vcp_find_feature_by_hexid(feature_code);
-   if (pentry) {
-      info = extract_version_feature_info(pentry, vspec, version_sensitive);
-
-      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
-         free_synthetic_vcp_entry(pentry);
-   }
-
-   if (debug) {
-
-      if (info) {
-         DBGMSG("Success.  feature info:");
-         dbgrpt_version_feature_info(info, 1);
-      }
-      DBGMSG("Returning: %p", info);
-   }
-   return info;
-}
-#endif
-
-// alternative
 Display_Feature_Metadata *
 get_version_feature_info_by_vspec_dfm(
       DDCA_Vcp_Feature_Code   feature_code,
