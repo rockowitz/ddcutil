@@ -21,6 +21,8 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/feature_metadata.h"
+
 #include "core.h"
 #include "monitor_model_key.h"
 #include "vcp_version.h"
@@ -64,69 +66,6 @@ Tokenized first_word(char * s) {
 }
 
 
-// copied from sample code, more to more generic location
-/* Creates a string representation of DDCA_Feature_Flags bitfield.
- *
- * Arguments:
- *    flags      feature characteristics
- *
- * Returns:      string representation, caller must free
- */
-char * interpret_ddca_feature_flags(DDCA_Version_Feature_Flags flags) {
-   char * buffer = NULL;
-   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-       flags & DDCA_RO             ? "Read-Only, "                   : "",
-       flags & DDCA_WO             ? "Write-Only, "                  : "",
-       flags & DDCA_RW             ? "Read-Write, "                  : "",
-       flags & DDCA_STD_CONT       ? "Continuous (standard), "       : "",
-       flags & DDCA_COMPLEX_CONT   ? "Continuous (complex), "        : "",
-       flags & DDCA_SIMPLE_NC      ? "Non-Continuous (simple), "     : "",
-       flags & DDCA_COMPLEX_NC     ? "Non-Continuous (complex), "    : "",
-       flags & DDCA_NC_CONT        ? "Non-Continuous with continuous subrange, " :"",
-       flags & DDCA_WO_NC          ? "Non-Continuous (write-only), " : "",
-       flags & DDCA_NORMAL_TABLE   ? "Table (readable), "            : "",
-       flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
-       flags & DDCA_DEPRECATED     ? "Deprecated, "                  : "",
-       flags & DDCA_USER_DEFINED   ? "User-defined, "                : "",
-       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : ""
-       );
-   assert(rc >= 0);   // real life code would check for malloc() failure in asprintf()
-   // remove final comma and blank
-   if (strlen(buffer) > 0)
-      buffer[strlen(buffer)-2] = '\0';
-
-   return buffer;
-}
-
-
-// eventually move to a more shared location
-void
-dbgrpt_feature_metadata(
-      DDCA_Feature_Metadata * md,
-      int                     depth)
-{
-   int d0 = depth;
-   int d1 = depth+1;
-   int d2 = depth+2;
-   rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
-   rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
-// rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
-   rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
-   rpt_vstring(d1, "Description:       %s",     md->feature_desc);
-   char * s = interpret_ddca_feature_flags(md->feature_flags);
-   rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", s);
-   free(s);
-   if (md->sl_values) {
-      rpt_label(d1, "SL values:");
-      DDCA_Feature_Value_Entry * curval = md->sl_values;
-      while(curval->value_code || curval->value_name) {
-         rpt_vstring(d2, "0x%02x  - %s", curval->value_code, curval->value_name);
-         curval++;
-      }
-   }
-}
-
 void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
       int                     depth)
@@ -141,14 +80,14 @@ void dbgrpt_dynamic_features_rec(
    rpt_vstring(d1, "filename:       %s", dfr->filename);
    rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
    rpt_vstring(d1, "flags:          0x%02 %s", dfr->flags,
-         interpret_ddca_feature_flags(dfr->flags));
+         interpret_feature_flags(dfr->flags));
    if (dfr->features) {
       rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
       for (int ndx = 1; ndx < 256; ndx++) {
          DDCA_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
                GINT_TO_POINTER(ndx));
          if (cur_feature)
-            dbgrpt_feature_metadata(cur_feature, d1);
+            dbgrpt_ddca_feature_metadata(cur_feature, d1);
       }
    }
 }

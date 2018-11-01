@@ -9,6 +9,7 @@
 
 #include "base/displays.h"
 #include "base/feature_lists.h"
+#include "base/feature_metadata.h"
 #include "base/feature_sets.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -304,7 +305,7 @@ dyn_create_feature_set_from_feature_set_ref2(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fsref=%s, dref=%s, flags=%s",
-          fsref_repr(fsref), dref_repr_t(dref), interpret_ddca_feature_flags(flags));
+          fsref_repr(fsref), dref_repr_t(dref), interpret_feature_flags(flags));
 
    Dyn_Feature_Set* result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {

@@ -23,12 +23,23 @@
 
 #include "base/feature_metadata.h"
 
+#include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
 
-// copied from dynamic_features.c, make it thread safe
+// void dbgrpt_sl_value_table1(DDCA_Feature_Value_Entry * table, int depth);
 
-char * interpret_ddca_feature_flags2(DDCA_Version_Feature_Flags flags) {
+// Feature flags
+
+// copied from sample code, more to more generic location
+/* Creates a string representation of DDCA_Feature_Flags bitfield.
+ *
+ * Arguments:
+ *    flags      feature characteristics
+ *
+ * Returns:      string representation, caller must free
+ */
+char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
    char * buffer = NULL;
-   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
        flags & DDCA_WO             ? "Write-Only, "                  : "",
        flags & DDCA_RW             ? "Read-Write, "                  : "",
@@ -42,7 +53,8 @@ char * interpret_ddca_feature_flags2(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED     ? "Deprecated, "                  : "",
        flags & DDCA_USER_DEFINED   ? "User-defined, "                : "",
-       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : ""
+       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : "",
+       flags & DDCA_FULLY_SYNTHETIC      ? "Fully Synthesized, "                 : ""
        );
    assert(rc >= 0);   // real life code would check for malloc() failure in asprintf()
    // remove final comma and blank
@@ -52,7 +64,163 @@ char * interpret_ddca_feature_flags2(DDCA_Version_Feature_Flags flags) {
    return buffer;
 }
 
-// if move to dir vcp or dynvcp can easily pick up function names
+
+// SL value tables
+
+
+// size including terminating entry
+int sl_value_table_size(DDCA_Feature_Value_Entry * table) {
+   int ct = 0;
+   if (table) {
+      DDCA_Feature_Value_Entry * cur = table;
+      while (true) {
+         ct++;
+         if (cur->value_code == 0x00 && !cur->value_name)
+            break;
+         cur++;
+      }
+   }
+   return ct;
+}
+
+void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Feature value table at %p", table);
+   if (table) {
+      rpt_vstring(depth, "Members: ");
+      DDCA_Feature_Value_Entry * cur = table;
+      while (cur->value_code != 0x00 || cur->value_name) {
+         rpt_vstring(d1, "0x%02x -> %s", cur->value_code, cur->value_name);
+         cur++;
+      }
+   }
+}
+
+
+void dbgrpt_sl_value_table_dup(DDCA_Feature_Value_Entry * table, int depth) {
+   rpt_vstring(depth, "DDCA_Feature_Value_Table at %p", table);
+   if (table) {
+      DDCA_Feature_Value_Entry * cur = table;
+      while (cur->value_code != 0x00 || cur->value_name) {
+         rpt_vstring(depth+1, "0x%02x - %s", cur->value_code, cur->value_name);
+         cur++;
+      }
+   }
+}
+
+
+DDCA_Feature_Value_Entry *
+copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. oldtable=%p", oldtable);
+   DDCA_Feature_Value_Entry * newtable = NULL;
+   if (oldtable) {
+      int oldsize = sl_value_table_size(oldtable);
+      DBGMSF(debug, "Size of oldtable: %d",  oldsize);
+      newtable = calloc(oldsize, sizeof(DDCA_Feature_Value_Entry));
+      DDCA_Feature_Value_Entry * oldentry = oldtable;
+      DDCA_Feature_Value_Entry * newentry = newtable;
+      int ct = 0;
+      while(true) {
+         ct++;
+         newentry->value_code = oldentry->value_code;
+         if (oldentry->value_name)
+            newentry->value_name = strdup(oldentry->value_name);
+         if (oldentry->value_code == 0x00 && !oldentry->value_name)
+            break;
+         oldentry++;
+         newentry++;
+      };
+      DBGMSF(debug, "Copied %d entries, including terminating entry", ct);
+   }
+   // else
+   //    DBGMSF(debug, "*** oldtable not set. oldtable=%p", oldtable);
+
+   DBGMSF(debug, "Done. Returning: %p", newtable);
+   return newtable;
+}
+
+void free_sl_value_table(DDCA_Feature_Value_Entry * table) {
+   if (table) {
+      DDCA_Feature_Value_Entry * cur = table;
+      while(true) {
+         if (cur->value_name)
+            free(cur->value_name);
+         else if (cur->value_code == 0x00)
+            break;
+         cur++;
+      }
+      free(table);
+   }
+}
+
+
+// DDCA_Feature_Metadata
+
+void
+dbgrpt_ddca_feature_metadata(
+      DDCA_Feature_Metadata * md,
+      int                     depth)
+{
+   int d0 = depth;
+   int d1 = depth+1;
+   int d2 = depth+2;
+   rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
+   rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
+// rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
+   rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
+   rpt_vstring(d1, "Description:       %s",     md->feature_desc);
+   char * s = interpret_feature_flags(md->feature_flags);
+   rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
+   rpt_vstring(d1, "Interpreted flags: %s", s);
+   free(s);
+   if (md->sl_values) {
+      rpt_label(d1, "SL values:");
+      DDCA_Feature_Value_Entry * curval = md->sl_values;
+      while(curval->value_code || curval->value_name) {
+         rpt_vstring(d2, "0x%02x  - %s", curval->value_code, curval->value_name);
+         curval++;
+      }
+   }
+}
+
+
+/* Emits a report on a Version_Specific_Feature_Info struct.  This is a
+ * debugging report.  The report is written to the current report destination.
+ *
+ * Arguments:
+ *    info     pointer to version feature information struct
+ *    depth    logical indentation depth
+ */
+void dbgrpt_ddca_feature_metadata_dup(
+      DDCA_Feature_Metadata * meta, int depth) {
+   assert(meta);
+   int d1 = depth+1;
+
+   rpt_vstring(depth, "VCP code %02X: %s", meta->feature_code, meta->feature_name);
+
+   // rpt_vstring(d1, "Version spec: %d.%d", meta->vspec.major, meta->vspec.minor);
+
+   rpt_vstring(d1, "Description:  %s", meta->feature_desc);
+   DDCA_Version_Feature_Flags  vflags = meta->feature_flags;
+   char * s = interpret_feature_flags(vflags);
+   rpt_vstring(d1, "Attributes:   %s", s);
+   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
+
+   if(meta->sl_values) {
+      rpt_vstring(d1, "Simple NC values:");
+      dbgrpt_sl_value_table(meta->sl_values, d1+1);
+   }
+   else
+      rpt_vstring(d1, "Simple NC values; No table specified");
+}
+
+
+//
+// Display_Feature_Metadata (used internally)
+//
+
 
 void
 dbgrpt_display_feature_metadata(
@@ -69,9 +237,13 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:   %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      char * s = interpret_ddca_feature_flags2(meta->feature_flags);
+      char * s = interpret_feature_flags(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
       free(s);
+      if (meta->sl_values)
+         dbgrpt_sl_value_table(meta->sl_values, d1);
+      else
+         rpt_vstring(d1, "sl_values:                    NULL");
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
                       rtti_get_func_name_by_addr(meta->nontable_formatter)) ;
@@ -89,7 +261,7 @@ dbgrpt_display_feature_metadata(
 
 
 void
-free_display_feature_metadata(
+dfm_free(
       Display_Feature_Metadata * meta)
 {
    if (meta) {
@@ -129,17 +301,27 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
    meta->feature_name = strdup(feature_desc);
 }
 
+
 DDCA_Feature_Metadata *
 dfm_to_ddca_feature_metadata(
       Display_Feature_Metadata * dfm)
 {
+   DBGMSG("Starting. dfm=%p", dfm);
+   dbgrpt_display_feature_metadata(dfm, 2);
+
    DDCA_Feature_Metadata * ddca_meta = calloc(1, sizeof(DDCA_Feature_Metadata));
    memcpy(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
    ddca_meta->feature_code = dfm->feature_code;
    ddca_meta->feature_flags = dfm->feature_flags;
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
-   ddca_meta->sl_values = dfm->sl_values;     // copy table?
+   DBGMSG("** dfm->sl_values = %p", dfm->sl_values);
+   ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);     // copy table?
+   ddca_meta->feature_flags |= DDCA_FULLY_SYNTHETIC;      // for transition
+
+   DBGMSG("Done. Returning: %p", ddca_meta);
+   dbgrpt_ddca_feature_metadata(ddca_meta, 2);
+
    return ddca_meta;
 }
 

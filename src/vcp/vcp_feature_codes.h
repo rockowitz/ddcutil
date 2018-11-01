@@ -158,7 +158,6 @@ struct {
 } VCP_Feature_Table_Entry;
 
 
-void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth);
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth);
 
 
@@ -381,9 +380,6 @@ dbgrpt_version_feature_info(
       DDCA_Version_Feature_Info * info, int depth);
 #endif
 
-void
-dbgrpt_ddca_feature_metadata(
-      DDCA_Feature_Metadata * meta, int depth);
 
 void
 vcp_list_feature_codes(FILE * fh);
@@ -410,13 +406,6 @@ vcp_format_feature_detail(
 
 int
 vcp_get_feature_code_count();
-
-#ifdef MOVED_TO_FEATURE_METADATA
-char * get_func_name_by_addr(void * func_addr);
-void func_name_table_add(void * func_addr, char * func_name);
-void dbgrpt_func_name_table(int depth);
-#endif
-
 
 void
 init_vcp_feature_codes();

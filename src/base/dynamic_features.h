@@ -75,13 +75,6 @@ get_dynamic_feature_metadata(
       uint8_t                 feature_code);
 
 
-// belongs in more generic location
-char * interpret_ddca_feature_flags(DDCA_Version_Feature_Flags flags);
-void
-dbgrpt_feature_metadata(
-      DDCA_Feature_Metadata * md,
-      int                     depth);
-
 void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
       int                     depth);

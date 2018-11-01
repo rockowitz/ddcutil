@@ -19,6 +19,7 @@
 /** \cond */
 
 #include "base/ddc_errno.h"
+#include "base/feature_metadata.h"
 #include "base/rtti.h"
 #include "base/vcp_version.h"
 
@@ -106,11 +107,16 @@ vcp_interpret_global_feature_flags(
    if (flags & DDCA_SYNTHETIC)
       synmsg = "Synthetic ";
 
+   char * synmsg2 = "";
+   if (flags & DDCA_FULLY_SYNTHETIC)
+      synmsg = "Fully-Synthetic ";
+
+
    char * dynmsg = "";
    if (flags & DDCA_USER_DEFINED)
       dynmsg = "Dynamic ";
 
-   snprintf(buf, buflen, "%s%s", synmsg, dynmsg);
+   snprintf(buf, buflen, "%s%s%s", synmsg, synmsg2, dynmsg);
    return buf;
 }
 
@@ -505,68 +511,6 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 // End of VCPINFO related functions
 
 
-#ifdef DVFI
-/* Emits a report on a Version_Specific_Feature_Info struct.  This is a
- * debugging report.  The report is written to the current report destination.
- *
- * Arguments:
- *    info     pointer to version feature information struct
- *    depth    logical indentation depth
- */
-void dbgrpt_version_feature_info(
-      DDCA_Version_Feature_Info * info, int depth) {
-   char workbuf[200];
-
-   int d1 = depth+1;
-   show_backtrace(1);
-   rpt_vstring(depth, "VCP code %02X: %s", info->feature_code, info->feature_name);
-
-   rpt_vstring(d1, "Version spec: %d.%d", info->vspec.major, info->vspec.minor);
-   rpt_vstring(d1, "Version id:   %d", info->version_id);   // to do: need repr_mccs_version_id() function
-
-   rpt_vstring(d1, "Description:  %s", info->desc);
-   DDCA_Version_Feature_Flags  vflags = info->feature_flags;
-   interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
-   rpt_vstring(d1, "Attributes:   %s", workbuf);
-   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
-
-   if(info->sl_values) {
-      rpt_vstring(d1, "Simple NC values:");
-      report_sl_values(info->sl_values, d1+1);
-   }
-}
-#endif
-
-/* Emits a report on a Version_Specific_Feature_Info struct.  This is a
- * debugging report.  The report is written to the current report destination.
- *
- * Arguments:
- *    info     pointer to version feature information struct
- *    depth    logical indentation depth
- */
-void dbgrpt_ddca_feature_metadata(
-      DDCA_Feature_Metadata * meta, int depth) {
-   assert(meta);
-   char workbuf[200];
-   int d1 = depth+1;
-
-   rpt_vstring(depth, "VCP code %02X: %s", meta->feature_code, meta->feature_name);
-
-   // rpt_vstring(d1, "Version spec: %d.%d", meta->vspec.major, meta->vspec.minor);
-
-   rpt_vstring(d1, "Description:  %s", meta->feature_desc);
-   DDCA_Version_Feature_Flags  vflags = meta->feature_flags;
-   interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
-   rpt_vstring(d1, "Attributes:   %s", workbuf);
-   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
-
-   if(meta->sl_values) {
-      rpt_vstring(d1, "Simple NC values:");
-      report_sl_values(meta->sl_values, d1+1);
-   }
-   else
-      rpt_vstring(d1, "Simple NC values; No table specified");
-}
 
 
 //
@@ -2725,7 +2669,7 @@ static DDCA_Feature_Value_Entry xa5_window_select_values[] = {
       {0x05, "Window 5 selected"},
       {0x06, "Window 6 selected"},
       {0x07, "Window 7 selected"},
-      {0xff, NULL}     // terminator
+      {0x00, NULL}     // terminator
 };
 
 // 0xaa
@@ -2735,7 +2679,7 @@ static DDCA_Feature_Value_Entry xaa_screen_orientation_values[] = {
       {0x03, "180 degrees"},
       {0x04, "270 degrees"},
       {0xff, "Display cannot supply orientation"},
-      {0xff, NULL}     // terminator
+      {0x00, NULL}     // terminator
 };
 
 // 0xb0
@@ -2758,7 +2702,7 @@ static DDCA_Feature_Value_Entry xb2_flat_panel_subpixel_layout_values[] = {
       {0x07, "Delta (triad)"},
       {0x08, "Mosaic"},
       // end of v2.0 values
-      {0xff, NULL}     // terminator
+      {0x00, NULL}     // terminator
 };
 
 // 0xb6
@@ -2771,7 +2715,7 @@ static DDCA_Feature_Value_Entry xb6_v20_display_technology_type_values[] = {
           { 0x06, "OLED"},
           { 0x07, "EL"},
           { 0x08, "MEM"},     // MEM in 2.0
-          {0xff, NULL}     // terminator
+          {0x00, NULL}     // terminator
 };
 
 // 0xb6
@@ -2785,7 +2729,7 @@ static DDCA_Feature_Value_Entry xb6_display_technology_type_values[] = {
           { 0x07, "EL"},
           { 0x08, "Dynamic MEM"},     // MEM in 2.0
           { 0x09, "Static MEM"},      // not in 2.0
-          {0xff, NULL}     // terminator
+          {0x00, NULL}     // terminator
 };
 
 // 0xc8
@@ -2822,7 +2766,7 @@ DDCA_Feature_Value_Entry xc8_display_controller_type_values[] = {
    {0x1d,  "Micros"},
    // end of values added in MCCS 2.2
    {0xff,  "Not defined - a manufacturer designed controller"},
-   {0xff, NULL}     // terminator
+   {0x00, NULL}     // terminator
 };
 DDCA_Feature_Value_Entry * pxc8_display_controller_type_values = xc8_display_controller_type_values;
 
@@ -2831,7 +2775,7 @@ static DDCA_Feature_Value_Entry xca_osd_values[] = {
       {0x01, "OSD Disabled"},
       {0x02, "OSD Enabled"},
       {0xff, "Display cannot supply this information"},
-      {0xff, NULL}     // terminator
+      {0x00, NULL}     // terminator
 };
 
 // 0xcc
@@ -2957,7 +2901,7 @@ static DDCA_Feature_Value_Entry xdc_display_application_values[] = {
    {0x09, "Standard/Default mode with low power consumption"},
    {0x0a, "Demonstration"},
    {0xf0, "Dynamic contrast"},
-   {0xff, NULL}     // terminator
+   {0x00, NULL}     // terminator
 };
 
 
@@ -4622,21 +4566,11 @@ struct {
 #endif
 
 
-void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
-   rpt_vstring(depth, "DDCA_Feature_Value_Table at %p", table);
-   if (table) {
-      DDCA_Feature_Value_Entry * cur = table;
-      while (cur->value_code != 0x00 || cur->value_name) {
-         rpt_vstring(depth+1, "0x%02x - %s", cur->value_code, cur->value_name);
-         cur++;
-      }
-   }
-}
 
 
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(depth, "VCP_Feature_Table_Entry at %p:", pfte);
-   show_backtrace(2);
+   // show_backtrace(2);
    assert(pfte && memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
    int d1 = depth+1;
    const int bufsz = 100;

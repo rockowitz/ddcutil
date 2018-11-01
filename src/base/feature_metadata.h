@@ -22,6 +22,9 @@
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
 // for use within vcp_feature_codes.c
 
+
+// Prototypes for functions that format feature values
+
 typedef
 struct {
    DDCA_Vcp_Feature_Code   vcp_code;
@@ -33,6 +36,7 @@ struct {
    Byte   sh;
    Byte   sl;
 } Nontable_Vcp_Value;
+
 
 // Moved from vcp_feature_codes.h:
 
@@ -75,6 +79,25 @@ bool (*Format_Normal_Feature_Detail_Function3) (
 //          char **                 p_result_buffer);
 
 
+// Feature value table functions
+
+void   dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth);
+DDCA_Feature_Value_Entry *
+       copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable);
+void   free_sl_value_table(DDCA_Feature_Value_Entry * table);
+
+// Feature Flags
+
+char * interpret_feature_flags(DDCA_Version_Feature_Flags flags);
+
+
+// DDCA_Feature_Metadata
+
+void dbgrpt_ddca_feature_metadata(DDCA_Feature_Metadata * md, int depth);
+
+
+// Display_Feature_Metadata
+
 // merges DDCA_Version_Feature_Info, DDCA_Feature_Metadata, Internal_Feature_Metadata
 
 /** Display specific feature description */
@@ -97,28 +120,26 @@ struct {
 } Display_Feature_Metadata;
 
 
-void
-dbgrpt_display_feature_metadata(
+void dbgrpt_display_feature_metadata(
       Display_Feature_Metadata * meta,
       int                        depth);
 
-void
-free_display_feature_metadata(
+void dfm_free(
       Display_Feature_Metadata * meta);
 
 Display_Feature_Metadata *
-dfm_new(
-      DDCA_Vcp_Feature_Code feature_code);
+      dfm_new(DDCA_Vcp_Feature_Code feature_code);
 
-void dfm_set_feature_name(Display_Feature_Metadata * meta, const char * feature_name);
-void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_desc);
+void  dfm_set_feature_name(Display_Feature_Metadata * meta, const char * feature_name);
+void  dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_desc);
+
+// Conversion functions
 
 DDCA_Feature_Metadata *
-dfm_to_ddca_feature_metadata(
-      Display_Feature_Metadata * dfm);
+      dfm_to_ddca_feature_metadata(Display_Feature_Metadata * dfm);
 
 Display_Feature_Metadata *
-dfm_from_ddca_feature_metadata(
-      DDCA_Feature_Metadata * meta);
+      dfm_from_ddca_feature_metadata(DDCA_Feature_Metadata * meta);
+
 
 #endif /* FEATURE_METADATA_H_ */
