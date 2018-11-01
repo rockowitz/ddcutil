@@ -313,7 +313,7 @@ ddca_get_formatted_vcp_value(
       DDCA_Vcp_Feature_Code  feature_code,
       char**                 formatted_value_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
@@ -382,7 +382,7 @@ ddca_format_any_vcp_value(
       DDCA_Any_Vcp_Value *    anyval,
       char **                 formatted_value_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
                  feature_code,
                  vspec.major, vspec.minor,
@@ -457,7 +457,7 @@ ddca_format_any_vcp_value_by_dref(
 {
    WITH_DR(ddca_dref,
          {
-               bool debug = true;
+               bool debug = false;
                if (debug) {
                   DBGMSG("feature_code=0x%02x, ddca_dref=%s, valrec=%s",
                          feature_code,
@@ -484,7 +484,7 @@ ddca_format_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug) {
       DBGMSG("feature_code=0x%02x, vspec=%d.%d, mmid=%s",
              feature_code,
@@ -512,7 +512,7 @@ ddca_format_non_table_vcp_value_by_dref(
 {
    WITH_DR(ddca_dref,
          {
-               bool debug = true;
+               bool debug = false;
                if (debug) {
                   DBGMSG("feature_code=0x%02x, ddca_dref=%s",
                          feature_code,

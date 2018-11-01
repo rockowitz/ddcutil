@@ -207,9 +207,10 @@ ddca_get_feature_list_by_dref(
 
             bye:
                DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
-               if (debug)
-                  DBGMSF(debug, "Feature list: %s", feature_list_string(p_feature_list, "", ","));
-                  rpt_hex_dump((Byte*) p_feature_list, 32, 1);
+               if (debug) {
+                  DBGMSG("Feature list: %s", feature_list_string(p_feature_list, "", ","));
+                  // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
+               }
          }
       );
 }
@@ -516,18 +517,19 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    return 0;
 }
 
-// frees the contents of info, not info itself
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
-   if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
-      if (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) {
-         free(metadata->feature_name);
-         free(metadata->feature_desc);
-         free_sl_value_table(metadata->sl_values);
+   DDCA_Status ddcrc = 0;
+   if (metadata) {
+      if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
+           (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) )
+      {
+         free_ddca_feature_metadata(metadata);
       }
-      metadata->marker[3] = 'x';
+      else
+         ddcrc = DDCRC_ARG;
    }
-   return 0;
+   return ddcrc;
 }
 
 

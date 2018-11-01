@@ -986,9 +986,22 @@ ddca_get_feature_metadata_by_dh(
  *
  *  @since 0.9.0
  */
+__attribute__ ((deprecated ("use ddca_free_feature_metadata()")))
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
 
+/**
+ *  Frees a #DDCA_Feature_Metadata instance.
+ *
+ *  @param[in] metadata pointer to instance
+ *  @retval   0  normal
+ *  @retval   DDCRC_ARG  does not point to a #DDCA_Feature_Metadata instance
+ *                       or instance was not fully synthesized
+ *  @since 0.9.3
+ *
+ *  @remark
+ *  It is not an error if the ***metadata*** pointer argument is NULL
+ */
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
 
