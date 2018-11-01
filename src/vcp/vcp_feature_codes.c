@@ -957,9 +957,11 @@ extract_version_feature_info_dfm(
    dfm_set_feature_name(dfm, feature_name);
 
    dfm->feature_flags |= vfte->vcp_global_flags;
-   dfm->sl_values = (version_sensitive)
+   DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
          ? get_version_sensitive_sl_values(vfte, vspec)
          : get_version_specific_sl_values(vfte, vspec);
+   dfm->sl_values = (sl_values) ? copy_sl_value_table(sl_values) : NULL;
+   dfm->feature_flags |= DDCA_FULLY_SYNTHETIC;
 
    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
