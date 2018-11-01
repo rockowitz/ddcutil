@@ -109,8 +109,9 @@ void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
 
 
 char * fsref_repr(Feature_Set_Ref * fsref) {
-   // TODO: make thread safe
-   static char buf[100];
+   static GPrivate  fsref_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&fsref_repr_key, 100);
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
       snprintf(buf, 100, "[VCP_SUBSET_SINGLE_FEATURE, 0x%02x]", fsref->specific_feature);
    else
@@ -131,11 +132,19 @@ Value_Name_Title_Table feature_set_flag_table = {
 };
 const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
 
+
 char * feature_set_flag_names(Feature_Set_Flags flags) {
-   return vnt_interpret_flags(
+   static GPrivate  feature_set_flag_names_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&feature_set_flag_names_key, 100);
+
+   char * s = vnt_interpret_flags(
              flags,
              feature_set_flag_table,
              false,                      // use value name, not description
              "|");                      // sepstr
+   g_strlcpy(buf, s, 100);
+   free(s);
+   return buf;
 }
 
