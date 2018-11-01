@@ -110,6 +110,7 @@ create_feature_set(
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
       free(sflags);
+      show_backtrace(2);
    }
 
    bool exclude_table_features = feature_setflags & FSF_NOTABLE;

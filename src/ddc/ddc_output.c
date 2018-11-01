@@ -411,9 +411,10 @@ collect_raw_feature_set_values2_dfm(
       bool                  ignore_unsupported,  // if false, is error if unsupported
       FILE *                msg_fh)
 {
-   Public_Status_Code master_status_code = 0;
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting.");
+
+   Public_Status_Code master_status_code = 0;
    int features_ct = dyn_get_feature_set_size2_dfm(feature_set);
    // needed when called from C API, o.w. get get NULL response for first feature
    // DBGMSG("Inserting sleep() before first call to get_raw_value_for_feature_table_entry()");
@@ -474,9 +475,11 @@ collect_raw_subset_values2(
         bool                ignore_unsupported,
         FILE *              msg_fh)
 {
-   Public_Status_Code psc = 0;
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
+
+   Public_Status_Code psc = 0;
+
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
@@ -493,7 +496,8 @@ collect_raw_subset_values2(
             ignore_unsupported, msg_fh);
 
    dyn_free_feature_set(feature_set);
-   DBGMSF(debug, "Done");
+
+   DBGMSF(debug, "Returning: %s", psc_desc(psc));
    return psc;
 }
 
@@ -673,11 +677,12 @@ show_feature_set_values2_dfm(
       Feature_Set_Flags     flags,
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
-   Public_Status_Code master_status_code = 0;
    bool debug = false;
    char * s0 = feature_set_flag_names(flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
    free(s0);
+
+   Public_Status_Code master_status_code = 0;
 
    FILE * outf = fout();
 
@@ -804,13 +809,14 @@ show_vcp_values(
         Feature_Set_Flags   flags,
         Byte_Bit_Flags      features_seen)
 {
-   Public_Status_Code psc = 0;
    bool debug = false;
    if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
       free(s0);
    }
+
+   Public_Status_Code psc = 0;
 
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);

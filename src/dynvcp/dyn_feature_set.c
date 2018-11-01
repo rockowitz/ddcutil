@@ -211,7 +211,7 @@ dyn_create_feature_set2_dfm(
                 dyn_get_feature_metadata_by_dref_dfm(
                       feature_code,
                       dref,
-                      feature_set_flags & FSF_SHOW_UNSUPPORTED);   // with_default
+                      true);    // with_default
           if (dfm)
              g_ptr_array_add(members_dfm, dfm);
        }
