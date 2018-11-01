@@ -79,9 +79,9 @@ typedef enum {
    FSF_FORCE                 = 0x20
 } Feature_Set_Flags;
 
-char * feature_set_flag_names(Feature_Set_Flags flags);
+char * feature_set_flag_names_t(Feature_Set_Flags flags);
 
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth);
-char * fsref_repr(Feature_Set_Ref * fsref);
+char * fsref_repr_t(Feature_Set_Ref * fsref);
 
 #endif /* FEATURE_SETS_H_ */

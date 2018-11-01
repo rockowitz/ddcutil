@@ -105,7 +105,7 @@ create_feature_set(
 
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * sflags = feature_set_flag_names(feature_setflags);
+      char * sflags = feature_set_flag_names_t(feature_setflags);
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
@@ -335,9 +335,9 @@ create_feature_set_from_feature_set_ref(
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * flag_names = feature_set_flag_names(flags);
+      char * flag_names = feature_set_flag_names_t(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
-              fsref_repr(fsref), vcp_version.major, vcp_version.minor, flag_names);
+              fsref_repr_t(fsref), vcp_version.major, vcp_version.minor, flag_names);
    }
 
     struct vcp_feature_set * fset = NULL;

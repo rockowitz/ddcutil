@@ -153,7 +153,7 @@ dyn_create_feature_set2_dfm(
                   feature_subset_name(subset_id),
                   dref_repr_t(display_ref),
                   feature_set_flags,
-                  feature_set_flag_names(feature_set_flags));
+                  feature_set_flag_names_t(feature_set_flags));
 
     Dyn_Feature_Set * result = NULL;
     Display_Ref * dref = (Display_Ref *) display_ref;
@@ -306,7 +306,7 @@ dyn_create_feature_set_from_feature_set_ref2(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fsref=%s, dref=%s, flags=%s",
-          fsref_repr(fsref), dref_repr_t(dref), interpret_feature_flags(flags));
+          fsref_repr_t(fsref), dref_repr_t(dref), interpret_feature_flags(flags));
 
    Dyn_Feature_Set* result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {

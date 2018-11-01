@@ -217,7 +217,7 @@ app_show_vcp_subset_values_by_display_handle(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Starting. dh=%s, subset_id=%s, flags=%s, features_seen=%p",
-          dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names(flags), features_seen );
+          dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names_t(flags), features_seen );
 
    GPtrArray * collector = NULL;
    Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, flags, features_seen);
@@ -297,8 +297,8 @@ app_show_feature_set_values_by_display_handle(
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names(flags);
-      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr(fsref), s0);
+      char * s0 = feature_set_flag_names_t(flags);
+      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(fsref), s0);
       // dbgrpt_feature_set_ref(fsref,1);
    }
 

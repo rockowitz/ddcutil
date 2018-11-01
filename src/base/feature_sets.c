@@ -108,7 +108,7 @@ void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
 }
 
 
-char * fsref_repr(Feature_Set_Ref * fsref) {
+char * fsref_repr_t(Feature_Set_Ref * fsref) {
    static GPrivate  fsref_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&fsref_repr_key, 100);
@@ -133,7 +133,7 @@ Value_Name_Title_Table feature_set_flag_table = {
 const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
 
 
-char * feature_set_flag_names(Feature_Set_Flags flags) {
+char * feature_set_flag_names_t(Feature_Set_Flags flags) {
    static GPrivate  feature_set_flag_names_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&feature_set_flag_names_key, 100);

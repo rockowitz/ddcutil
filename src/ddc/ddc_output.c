@@ -678,7 +678,7 @@ show_feature_set_values2_dfm(
       Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
 {
    bool debug = false;
-   char * s0 = feature_set_flag_names(flags);
+   char * s0 = feature_set_flag_names_t(flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
 
    Public_Status_Code master_status_code = 0;
@@ -810,7 +810,7 @@ show_vcp_values(
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names(flags);
+      char * s0 = feature_set_flag_names_t(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
    }
 
