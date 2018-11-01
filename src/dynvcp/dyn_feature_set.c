@@ -38,6 +38,17 @@ void dbgrpt_dyn_feature_set(
 }
 
 
+
+char * dynfs_repr_t(Dyn_Feature_Set * fset) {
+   static GPrivate  dynfs_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&dynfs_repr_key, 200);
+   snprintf(buf, 100, "[%s,%s]",  feature_subset_name(fset->subset), dref_repr_t(fset->dref));
+   return buf;
+}
+
+
+
 Display_Feature_Metadata *
 dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_metadata)
 {
@@ -326,10 +337,25 @@ dyn_create_feature_set_from_feature_set_ref2(
 }
 
 
+
+// wrap dfm_free() in signature of GDestroyNotify()
+void free_dfm_func(gpointer data) {
+   dfm_free((Display_Feature_Metadata *) data);
+}
+
+
 void dyn_free_feature_set(
       Dyn_Feature_Set * feature_set)
 {
-   DBGMSG("Unimplemented");
+   bool debug = true;
+   DBGMSF(debug, "Starting. feature_set=%s", dynfs_repr_t(feature_set));
+   if (feature_set->members_dfm) {
+      g_ptr_array_set_free_func(feature_set->members_dfm, free_dfm_func);
+      g_ptr_array_free(feature_set->members_dfm,true);
+   }
+
+   free(feature_set);
+   DBGMSF(debug, "Done");
 }
 
 

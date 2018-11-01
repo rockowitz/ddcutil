@@ -35,6 +35,7 @@ typedef struct {
 } Dyn_Feature_Set;
 
 void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, bool verbose, int depth);
+char * dynfs_repr_t(Dyn_Feature_Set * fset);
 
 Dyn_Feature_Set *
 dyn_create_feature_set2_dfm(
