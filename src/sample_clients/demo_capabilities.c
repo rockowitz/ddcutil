@@ -77,7 +77,8 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
 
       char * feature_name = "";
       DDCA_Feature_Value_Entry * feature_value_table = NULL;
-      DDCA_Feature_Metadata metadata = {{0}};
+      // DDCA_Feature_Metadata metadata = {{0}};
+      DDCA_Feature_Metadata * metadata = NULL;
       // printf("(%s) Before ddca_get_feature_metadata_by_dh(),  &metadata=%p", __func__, &metadata);
       DDCA_Status ddcrc = ddca_get_feature_metadata_by_dh(
                              cur_vcp->feature_code,
@@ -86,8 +87,8 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
                              &metadata);
       // printf("(%s) ddca_get_feature_metadata_by_dh() returned: %s\n", __func__, ddca_rc_name(ddcrc));
       if (ddcrc == 0) {
-         feature_value_table = metadata.sl_values;
-         feature_name = metadata.feature_name;
+         feature_value_table = metadata->sl_values;
+         feature_name = metadata->feature_name;
       }
       printf("   Feature:  0x%02x (%s)\n", cur_vcp->feature_code, feature_name);
       if (cur_vcp->value_ct > 0) {
@@ -120,7 +121,7 @@ simple_report_parsed_capabilities(DDCA_Capabilities * pcaps, DDCA_Display_Handle
             printf("         0x%02x: %s\n", cur_vcp->values[ndx], value_desc);
          }
       }
-      ddca_free_feature_metadata_contents(metadata);
+      ddca_free_feature_metadata(metadata);
    }
 }
 

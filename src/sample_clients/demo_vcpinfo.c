@@ -153,7 +153,7 @@ void test_single_feature_info(
    //        feature_code, vspec.major, vspec.minor);
    // printf("Feature name: %s\n", ddca_feature_name_by_vspec(feature_code, vspec));
 
-   DDCA_Feature_Metadata metadata;
+   DDCA_Feature_Metadata* metadata;
    DDCA_Status rc = ddca_get_feature_metadata_by_vspec(
                        feature_code,
                        vspec,
@@ -166,13 +166,13 @@ void test_single_feature_info(
       DDC_ERRMSG("ddca_get_feature_info_by_vcp_version", rc);
    }
    else {
-      if (metadata.feature_flags & DDCA_SYNTHETIC) {
+      if (metadata->feature_flags & DDCA_SYNTHETIC) {
          if (feature_code >= 0xe0)
             printf("\nCreated synthetic metadata for manufacturer-specific feature.\n");
          else
             printf("\nCreated synthetic metadata for unrecognized feature code.\n");
       }
-      show_feature_metadata(&metadata);
+      show_feature_metadata(metadata);
    }
    // printf("%s) Done.\n", __func__);
 }

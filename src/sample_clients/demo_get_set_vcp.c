@@ -148,7 +148,7 @@ test_continuous_value(
    ddca_reset_stats();
 
    bool create_default_if_not_found = false;
-   DDCA_Feature_Metadata info;
+   DDCA_Feature_Metadata* info;
    ddcrc = ddca_get_feature_metadata_by_dh(
            feature_code,
            dh,
@@ -158,7 +158,7 @@ test_continuous_value(
       DDC_ERRMSG("ddca_get_feature_metadata_by_display", ddcrc);
       goto bye;
    }
-   if ( !(info.feature_flags & DDCA_CONT) ) {
+   if ( !(info->feature_flags & DDCA_CONT) ) {
       printf("Feature 0x%02x is not Continuous\n", feature_code);
       goto bye;
    }
@@ -252,7 +252,7 @@ test_simple_nc_value(
     DDCA_Status ddcrc;
     bool ok = false;
 
-    DDCA_Feature_Metadata info;
+    DDCA_Feature_Metadata* info;
     ddcrc = ddca_get_feature_metadata_by_dh(
             feature_code,
             dh,
@@ -264,7 +264,7 @@ test_simple_nc_value(
     }
     // Issue: currently synthesized values are Complex-Continuous, synthesized
     //        metadata would fail test if create_default_if_not_found == true
-    if ( !(info.feature_flags & DDCA_SIMPLE_NC) ) {
+    if ( !(info->feature_flags & DDCA_SIMPLE_NC) ) {
        printf("Feature 0x%02x is not simple NC\n", feature_code);
        goto bye;
     }
@@ -283,7 +283,7 @@ test_simple_nc_value(
               valrec.sl);
     uint8_t old_value = valrec.sl;
 
-    ok = show_simple_nc_feature_value_by_table(info.sl_values, old_value);
+    ok = show_simple_nc_feature_value_by_table(info->sl_values, old_value);
     if (!ok)
        goto bye;
 
@@ -326,7 +326,7 @@ test_complex_nc_value(
     DDCA_Status ddcrc;
     bool ok = false;
 
-    DDCA_Feature_Metadata info;
+    DDCA_Feature_Metadata* info;
     ddcrc = ddca_get_feature_metadata_by_dh(
            feature_code,
             dh,              // feature info can be MCCS version dependent
@@ -336,7 +336,7 @@ test_complex_nc_value(
        DDC_ERRMSG("ddca_get_feature_metadata_by_display", ddcrc);
        goto bye;
     }
-    assert(info.feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
+    assert(info->feature_flags & (DDCA_COMPLEX_NC|DDCA_NC_CONT));
 
     DDCA_Non_Table_Vcp_Value valrec;
     ddcrc = ddca_get_non_table_vcp_value(
