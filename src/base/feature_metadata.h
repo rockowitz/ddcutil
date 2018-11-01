@@ -88,6 +88,8 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags);
 
 void dbgrpt_ddca_feature_metadata(DDCA_Feature_Metadata * md, int depth);
 
+void free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata);
+
 
 // Display_Feature_Metadata
 

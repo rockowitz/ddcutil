@@ -222,6 +222,19 @@ void dbgrpt_ddca_feature_metadata_dup(
 }
 
 
+void free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
+   if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
+      assert(metadata->feature_flags & DDCA_FULLY_SYNTHETIC);
+      if (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) {
+         free(metadata->feature_name);
+         free(metadata->feature_desc);
+         free_sl_value_table(metadata->sl_values);
+      }
+      metadata->marker[3] = 'x';
+   }
+}
+
+
 //
 // Display_Feature_Metadata (used internally)
 //
@@ -274,6 +287,7 @@ dfm_free(
       meta->marker[3] = 'x';
       free(meta->feature_name);
       free(meta->feature_desc);
+      free_sl_value_table(meta->sl_values);
       free(meta);
    }
 }
@@ -340,19 +354,20 @@ dfm_from_ddca_feature_metadata(
    assert(ddca_meta);
    assert(memcmp(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
 
-
-   Display_Feature_Metadata * dfm = calloc(1, sizeof(Display_Feature_Metadata));
-   memcpy(dfm->marker, DISPLAY_FEATURE_METADATA_MARKER, 4);
+   Display_Feature_Metadata * dfm = dfm_new(ddca_meta->feature_code);
+   // Display_Feature_Metadata * dfm = calloc(1, sizeof(Display_Feature_Metadata));
+   // memcpy(dfm->marker, DISPLAY_FEATURE_METADATA_MARKER, 4);
    dfm->display_ref = NULL;
-   dfm->feature_code = ddca_meta->feature_code;
+   // dfm->feature_code = ddca_meta->feature_code;
    dfm->feature_desc = (ddca_meta->feature_desc) ? strdup(ddca_meta->feature_desc) : NULL;
    dfm->feature_name = (ddca_meta->feature_name) ? strdup(ddca_meta->feature_name) : NULL;
    dfm->feature_flags = ddca_meta->feature_flags;
+   dfm->feature_flags |= DDCA_FULLY_SYNTHETIC;
    dfm->nontable_formatter = NULL;
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
-   dfm->sl_values = ddca_meta->sl_values;      // OR DUPLICATE?
+   dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);      // OR DUPLICATE?
    return dfm;
 }
 
