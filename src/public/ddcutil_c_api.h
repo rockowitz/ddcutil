@@ -948,7 +948,7 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info); //    change to **?
+      DDCA_Feature_Metadata **    info); //    change to **?
 
 
 /**
@@ -972,7 +972,7 @@ ddca_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info);
+      DDCA_Feature_Metadata **    info);
 
 
 /**
@@ -996,7 +996,7 @@ ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info);
+      DDCA_Feature_Metadata **    info);
 
 
 /**
@@ -1013,6 +1013,9 @@ ddca_get_feature_metadata_by_dh(
  */
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
+
+DDCA_Status
+ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
 
 
 // Granular functions for metadata
