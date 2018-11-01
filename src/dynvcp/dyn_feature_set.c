@@ -336,7 +336,7 @@ void dyn_free_feature_set(
 DDCA_Feature_List
 feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug || IS_TRACING()) {
       DBGMSG("Starting. feature_set = %p", fset);
       // show_backtrace(2);
@@ -364,7 +364,7 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
 
    if (debug || IS_TRACING()) {
       DBGMSG("Returning: %s", feature_list_string(&vcplist, "", ","));
-      rpt_hex_dump(vcplist.bytes, 32, 1);
+      // rpt_hex_dump(vcplist.bytes, 32, 1);
    }
 
    return vcplist;
