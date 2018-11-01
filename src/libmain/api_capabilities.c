@@ -25,6 +25,7 @@
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"
 
+#include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "ddc/ddc_read_capabilities.h"
@@ -198,22 +199,15 @@ ddca_report_parsed_capabilities_by_dref(
       DDCA_Cap_Vcp * cur_vcp = &p_caps->vcp_codes[code_ndx];
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
 
-      DDCA_Feature_Metadata info;
-      DDCA_Status ddcrc =
-           ddca_get_feature_metadata_by_dref(
-            cur_vcp->feature_code,
-            ddca_dref,         // ok if NULL
-            false,             // create_default_if_not_found,
-            &info);
-      bool found_metadata = true;
-      if (ddcrc != 0) {
-         DBGMSF(debug, "ddca_get_feature_metadata_by_dref() returned %s", ddca_rc_desc(ddcrc));
-         found_metadata = false;
-      }
+      Display_Feature_Metadata * dfm =
+         dyn_get_feature_metadata_by_dref_dfm(
+               cur_vcp->feature_code,
+               ddca_dref,
+               false);    // create_default_if_not_found);
 
       char * feature_name = NULL;
-      if (found_metadata)
-         feature_name = info.feature_name;
+      if (dfm)
+         feature_name = dfm->feature_name;
       else
          feature_name = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
 
@@ -226,11 +220,10 @@ ddca_report_parsed_capabilities_by_dref(
 
       DDCA_Feature_Value_Entry * feature_value_table;
 
-
-
+      DDCA_Status ddcrc = 0;
       if (cur_vcp->value_ct > 0) {
-         if (found_metadata)
-            feature_value_table = info.sl_values;
+         if (dfm)
+            feature_value_table = dfm->sl_values;
          else {
             ddcrc = ddca_get_simple_sl_value_table_by_vspec(
                   cur_vcp->feature_code,
@@ -239,8 +232,6 @@ ddca_report_parsed_capabilities_by_dref(
                   &feature_value_table);
             DBGMSG("ddca_get_simple_sl_value_table_by_vspec() returned %s", ddca_rc_desc(ddcrc));
          }
-
-
 
          if (ol > DDCA_OL_VERBOSE)
             rpt_vstring(d3, "Unparsed values:     %s", hexstring_t(cur_vcp->values, cur_vcp->value_ct) );

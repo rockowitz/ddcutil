@@ -163,7 +163,7 @@ ddca_get_feature_list_by_dref(
    WITH_DR(
          ddca_dref,
          {
-               bool debug = true;
+               bool debug = false;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
                       feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
 
@@ -361,7 +361,7 @@ ddca_get_feature_flags_by_vspec(
       if (dfm) {
          *feature_flags = dfm->feature_flags;
 //          free_version_feature_info(full_info);
-         free_display_feature_metadata(dfm);
+         dfm_free(dfm);
          psc = 0;
       }
       else {
@@ -401,50 +401,33 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info) //   change to **?
+      DDCA_Feature_Metadata **    info_loc) //
 {
-   bool debug = true;
-   DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info=%p",
-                 feature_code, vspec.major, vspec.minor, create_default_if_not_found, info);
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info_loc=%p",
+                 feature_code, vspec.major, vspec.minor, create_default_if_not_found, info_loc);
    // DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
+   DDCA_Feature_Metadata * meta = NULL;
    DDCA_Status psc = DDCRC_ARG;
-   memset(info, 0, sizeof(DDCA_Feature_Metadata));
-   memcpy(info->marker, DDCA_FEATURE_METADATA_MARKER, 4);
    Display_Feature_Metadata * dfm =
          get_version_feature_info_by_vspec_dfm(
                feature_code,
                vspec,
                create_default_if_not_found,
-               true);                      // false => version specific, true=> version sensitive
+               true);        // false => version specific, true=> version sensitive
    if (dfm) {
       // DBGMSG("Reading full_info");
-      info->feature_code  = feature_code;
- //   info->vspec         = vspec;
-      info->feature_flags = dfm->feature_flags;
-      if (info->feature_flags & DDCA_SIMPLE_NC)
-         info->sl_values = dfm->sl_values;
-      if (info->feature_flags & DDCA_SYNTHETIC) {
-         // strdup so that don't have to worry about synthesized entries when free
-         if (dfm->feature_name)
-            dfm->feature_name  = strdup(dfm->feature_name);
-         if (dfm->feature_desc)
-            info->feature_desc  = strdup(dfm->feature_desc);
-      }
-      else {
-         info->feature_name  = dfm->feature_name;
-         info->feature_desc  = dfm->feature_desc;
-      }
-      // DBGMSG("Reading full_info done");
-
-      // free_version_feature_info(full_info);
-      free_display_feature_metadata(dfm);
+      meta = dfm_to_ddca_feature_metadata(dfm);
+      dfm_free(dfm);
       psc = 0;
    }
+
    if (debug) {
       DBGMSG("Returning: %s", psc_desc(psc));
       if (psc == 0)
-         dbgrpt_ddca_feature_metadata(info, 2);
+         dbgrpt_ddca_feature_metadata(meta, 2);
    }
+   *info_loc = meta;
 
    return psc;
 }
@@ -455,29 +438,30 @@ ddca_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info)
+      DDCA_Feature_Metadata **    meta_loc)
 {
    WITH_DR(
          ddca_dref,
          {
-               bool debug = true;
-               DBGMSF(debug, "feature_code=0x%02x, dref=%%s, create_default_if_not_found=%s, info=%p",
-                             feature_code, dref_repr_t(dref), create_default_if_not_found, info);
+               bool debug = false;
+               DBGMSF(debug, "feature_code=0x%02x, dref=%%s, create_default_if_not_found=%s, meta_loc=%p",
+                             feature_code, dref_repr_t(dref), create_default_if_not_found, meta_loc);
 
+               DDCA_Feature_Metadata * meta = NULL;
                Display_Feature_Metadata * intmeta =
                   dyn_get_feature_metadata_by_dref_dfm(feature_code, dref, create_default_if_not_found);
                if (!intmeta) {
                   psc = DDCRC_NOT_FOUND;
                }
                else {
-                  DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(intmeta);
-                  memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
-                  // MEMORY MANAGEMENT !!!
+                  meta = dfm_to_ddca_feature_metadata(intmeta);
                }
+               *meta_loc = meta;
+
                if (debug) {
                   DBGMSG("Returning: %s", psc_desc(psc));
                   if (psc == 0)
-                     dbgrpt_ddca_feature_metadata(info, 2);
+                     dbgrpt_ddca_feature_metadata(meta, 2);
                }
          }
       );
@@ -489,32 +473,31 @@ ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata *     info)
+      DDCA_Feature_Metadata **    metadata_loc)
 {
    WITH_DH(
          ddca_dh,
          {
-               bool debug = true;
-               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s, info=%p",
-                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), info);
+               bool debug = false;
+               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s, metadata_loc=%p",
+                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
 
+               DDCA_Feature_Metadata * meta = NULL;
                Display_Feature_Metadata * intmeta =
                   dyn_get_feature_metadata_by_dh_dfm(feature_code, dh, create_default_if_not_found);
                if (!intmeta) {
                   psc = DDCRC_NOT_FOUND;
                }
                else {
-                  DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(intmeta);
-                  memcpy(info, meta, sizeof(DDCA_Feature_Metadata));
-                  // MEMORY MANAGEMENT !!!
+                  meta = dfm_to_ddca_feature_metadata(intmeta);
                }
+               *metadata_loc = meta;
 
                 DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
-                if (psc == 0) {
-                //    dbgrpt_internal_feature_metadata(intmeta, 3);
-                   dbgrpt_ddca_feature_metadata(info, 5);
+                if (psc == 0 && debug) {
+                   dbgrpt_ddca_feature_metadata(meta, 5);
                 }
          }
       );
@@ -532,6 +515,21 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    }
    return 0;
 }
+
+// frees the contents of info, not info itself
+DDCA_Status
+ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
+   if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
+      if (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) {
+         free(metadata->feature_name);
+         free(metadata->feature_desc);
+         free_sl_value_table(metadata->sl_values);
+      }
+      metadata->marker[3] = 'x';
+   }
+   return 0;
+}
+
 
 
 // returns pointer into permanent internal data structure, caller should not free
@@ -746,7 +744,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
    WITH_DR(ddca_dref,
       {
-            bool debug = true;
+            bool debug = false;
             DBGMSF(debug, "dref=%s", dref_repr_t(dref));
 
             free_thread_error_detail();
@@ -767,7 +765,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
    WITH_DH(ddca_dh,
       {
-            bool debug = true;
+            bool debug = false;
             DBGMSF(debug, "dref=%s", dh_repr_t(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
