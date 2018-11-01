@@ -300,7 +300,6 @@ app_show_feature_set_values_by_display_handle(
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr(fsref), s0);
       // dbgrpt_feature_set_ref(fsref,1);
-      free(s0);
    }
 
    Public_Status_Code psc = 0;

@@ -109,7 +109,6 @@ create_feature_set(
       DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
-      free(sflags);
       // show_backtrace(2);
    }
 
@@ -339,7 +338,6 @@ create_feature_set_from_feature_set_ref(
       char * flag_names = feature_set_flag_names(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
               fsref_repr(fsref), vcp_version.major, vcp_version.minor, flag_names);
-      free(flag_names);
    }
 
     struct vcp_feature_set * fset = NULL;

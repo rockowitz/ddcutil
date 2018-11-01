@@ -680,7 +680,6 @@ show_feature_set_values2_dfm(
    bool debug = false;
    char * s0 = feature_set_flag_names(flags);
    DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
-   free(s0);
 
    Public_Status_Code master_status_code = 0;
 
@@ -813,7 +812,6 @@ show_vcp_values(
    if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names(flags);
       DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
-      free(s0);
    }
 
    Public_Status_Code psc = 0;
