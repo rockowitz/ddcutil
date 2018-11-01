@@ -199,7 +199,7 @@ dyn_create_feature_set2_dfm(
 
     else {   // (subset_id != VCP_SUBSET_DYNAMIC
        VCP_Feature_Set * vcp_feature_set =
-       create_feature_set(
+          create_feature_set(
              subset_id,
              dref->vcp_version,
              feature_set_flags);
@@ -216,6 +216,7 @@ dyn_create_feature_set2_dfm(
              g_ptr_array_add(members_dfm, dfm);
        }
        result = dyn_create_feature_set0(subset_id, members, members_dfm);
+       free_vcp_feature_set(vcp_feature_set);
     }
 
     if (debug) {
@@ -231,7 +232,7 @@ Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Display_Ref       display_ref,
-      bool                   force)
+      bool                  force)
 {
    Display_Ref * dref = (Display_Ref *) display_ref;
    assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
