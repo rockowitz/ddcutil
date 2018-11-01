@@ -166,7 +166,7 @@ dbgrpt_ddca_feature_metadata(
 {
    int d0 = depth;
    int d1 = depth+1;
-   int d2 = depth+2;
+// int d2 = depth+2;
    rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
    rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
 // rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
@@ -176,6 +176,8 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", s);
    free(s);
+   dbgrpt_sl_value_table(md->sl_values, d1);
+#ifdef OLD
    if (md->sl_values) {
       rpt_label(d1, "SL values:");
       DDCA_Feature_Value_Entry * curval = md->sl_values;
@@ -184,6 +186,8 @@ dbgrpt_ddca_feature_metadata(
          curval++;
       }
    }
+#endif
+
 }
 
 
@@ -307,8 +311,10 @@ DDCA_Feature_Metadata *
 dfm_to_ddca_feature_metadata(
       Display_Feature_Metadata * dfm)
 {
-   DBGMSG("Starting. dfm=%p", dfm);
-   dbgrpt_display_feature_metadata(dfm, 2);
+   bool debug = false;
+   DBGMSF(debug, "Starting. dfm=%p", dfm);
+   if (debug)
+      dbgrpt_display_feature_metadata(dfm, 2);
 
    DDCA_Feature_Metadata * ddca_meta = calloc(1, sizeof(DDCA_Feature_Metadata));
    memcpy(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
@@ -316,12 +322,13 @@ dfm_to_ddca_feature_metadata(
    ddca_meta->feature_flags = dfm->feature_flags;
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
-   DBGMSG("** dfm->sl_values = %p", dfm->sl_values);
+   DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
    ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);     // copy table?
    ddca_meta->feature_flags |= DDCA_FULLY_SYNTHETIC;      // for transition
 
-   DBGMSG("Done. Returning: %p", ddca_meta);
-   dbgrpt_ddca_feature_metadata(ddca_meta, 2);
+   DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
+   // DBGMS("Done. Returning: %p", ddca_meta);
+   // dbgrpt_ddca_feature_metadata(ddca_meta, 2);
 
    return ddca_meta;
 }
