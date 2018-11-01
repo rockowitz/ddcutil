@@ -59,7 +59,7 @@ create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
                               subset_id, (members) ? members->len : -1);
 
@@ -110,7 +110,7 @@ create_feature_set(
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
       free(sflags);
-      show_backtrace(2);
+      // show_backtrace(2);
    }
 
    bool exclude_table_features = feature_setflags & FSF_NOTABLE;
@@ -257,7 +257,7 @@ create_feature_set(
 // used only for VCPINFO
 VCP_Feature_Set *
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. vcp_entry=%p", vcp_entry);
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
@@ -289,7 +289,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
  */
 VCP_Feature_Set *
 create_single_feature_set_by_hexid(Byte id, bool force) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. id=0x%02x, force=%s", id, sbool(force));
 
    struct vcp_feature_set * fset = NULL;
@@ -334,7 +334,7 @@ create_feature_set_from_feature_set_ref(
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug || IS_TRACING()) {
       char * flag_names = feature_set_flag_names(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
@@ -500,7 +500,7 @@ filter_feature_set(
 DDCA_Feature_List
 feature_list_from_feature_set(VCP_Feature_Set * fset)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug || IS_TRACING()) {
       DBGMSG("Starting. feature_set = %p", fset);
       show_backtrace(2);
