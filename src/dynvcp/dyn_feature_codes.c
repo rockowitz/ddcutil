@@ -177,7 +177,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
     Dynamic_Features_Rec * dfr = NULL;
     Error_Info * erec = dfr_load_by_mmk(mmk, &dfr);
     if (erec) {
-       // TODO test for not found, that's ok
+       if (erec->status_code != DDCRC_NOT_FOUND || debug)
        errinfo_report(erec,1);
     }
 
