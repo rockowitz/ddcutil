@@ -1,5 +1,6 @@
 /* @file feature_metadata.c
- * Consolidated data structures for internal representation of
+ *
+ * Functions for external and internal representation of
  * display-specific feature metadata.
  */
 

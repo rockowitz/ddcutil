@@ -1,6 +1,6 @@
 /* @file feature_metadata.h
  *
- * Consolidated data structures for internal representation of
+ * Functions for external and internal representation of
  * display-specific feature metadata.
  */
 
@@ -17,14 +17,7 @@
 #include "util/data_structures.h"
 
 
-// Moved from vcp_feature_values.h
-
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
-// for use within vcp_feature_codes.c
-
-
-// Prototypes for functions that format feature values
-
 typedef
 struct {
    DDCA_Vcp_Feature_Code   vcp_code;
@@ -38,7 +31,7 @@ struct {
 } Nontable_Vcp_Value;
 
 
-// Moved from vcp_feature_codes.h:
+// Prototypes for functions that format feature values
 
 typedef
 bool (*Format_Normal_Feature_Detail_Function) (
