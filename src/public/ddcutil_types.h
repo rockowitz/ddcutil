@@ -453,27 +453,6 @@ struct {
 // deprecated
 // typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
-#ifdef DVFI
-#define VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER "VSFI"
-/**  \deprecated - but used internally!
- * Describes a VCP feature code, tailored for a specific VCP version
- */
-typedef
-struct {
-   char                                  marker[4];      /**< equals VCP_VERSION_SPECIFIC_FEATURE_INFO_MARKER */
-   DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
-   DDCA_MCCS_Version_Spec                vspec;            // ???
-   DDCA_MCCS_Version_Id                  version_id;       // which ?
-   char *                                desc;           /**< feature description */
-   // Format_Normal_Feature_Detail_Function nontable_formatter;
-   // Format_Table_Feature_Detail_Function  table_formatter;
-   DDCA_Feature_Value_Entry *            sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   // VCP_Feature_Subset                 vcp_subsets;   // Need it?
-   char *                                feature_name;  /**< feature name */
-   DDCA_Feature_Flags                    feature_flags;
-} DDCA_Version_Feature_Info;
-#endif
-
 #define DDCA_FEATURE_METADATA_MARKER  "FMET"
 /** Describes a VCP feature code, tailored for a specific VCP version */
 typedef

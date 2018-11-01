@@ -876,31 +876,6 @@ ddca_get_mccs_version_id(
 // VCP Feature Metadata
 //
 
-#ifdef DVFI
-// Deprecated functions using DDCA_Version_Feature_Info
-
-/** \deprecated Use #ddca_get_feature_flags_by_vspec() */
-__attribute__ ((deprecated ("use ddca_get_feature_flags_by_vspec()")))
-DDCA_Status
-ddca_get_feature_info_by_vcp_version(
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_MCCS_Version_Id          mccs_version_id,
-      DDCA_Version_Feature_Info**   info_loc) ;
-
-/** \deprecated Use #ddca_get_feature_flags_by_vspec() */
-__attribute__ ((deprecated ("use ddca_get_feature_flags_by_vspec()")))
-DDCA_Status
-ddca_get_feature_info_by_display(
-      DDCA_Display_Handle           ddca_dh,
-      DDCA_Vcp_Feature_Code         feature_code,
-      DDCA_Version_Feature_Info **  info_loc);
-
-/** \deprecated */
-__attribute__ ((deprecated))
-DDCA_Status
-ddca_free_feature_info(
-      DDCA_Version_Feature_Info * info);
-#endif
 
 // Deprecated functions using DDCA_MCCS_Version_Id
 
