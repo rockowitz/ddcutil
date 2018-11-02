@@ -42,6 +42,7 @@ Makefile.in
 /src/ddcutil
 /src/laclient
 /src/ddc_global_settings_sample
+/src/app_common0
 /src/fixit
 stamp-h1
 * src/.libs
