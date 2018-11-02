@@ -7,6 +7,7 @@
 
 
 #include <glib-2.0/glib.h>
+#include <string.h>
  
 #include "util/report_util.h"
 #include "base/rtti.h"

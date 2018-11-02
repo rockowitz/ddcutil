@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <string.h>
 
 #include "util/report_util.h"
 

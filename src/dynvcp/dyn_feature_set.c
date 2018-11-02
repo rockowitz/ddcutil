@@ -4,6 +4,8 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <string.h>
+
 #include "util/debug_util.h"
 #include "util/report_util.h"
 
@@ -38,7 +40,6 @@ void dbgrpt_dyn_feature_set(
 }
 
 
-
 char * dynfs_repr_t(Dyn_Feature_Set * fset) {
    static GPrivate  dynfs_repr_key = G_PRIVATE_INIT(g_free);
 
@@ -46,7 +47,6 @@ char * dynfs_repr_t(Dyn_Feature_Set * fset) {
    snprintf(buf, 100, "[%s,%s]",  feature_subset_name(fset->subset), dref_repr_t(fset->dref));
    return buf;
 }
-
 
 
 Display_Feature_Metadata *
@@ -335,7 +335,6 @@ dyn_create_feature_set_from_feature_set_ref2(
    }
    return result;
 }
-
 
 
 // wrap dfm_free() in signature of GDestroyNotify()

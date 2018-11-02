@@ -15,6 +15,7 @@
 #include <glib-2.0/glib.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util/report_util.h"
 
@@ -26,7 +27,6 @@
 
 #include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
 
-// void dbgrpt_sl_value_table1(DDCA_Feature_Value_Entry * table, int depth);
 
 // Feature flags
 

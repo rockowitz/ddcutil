@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <util/report_util.h>
 #include <util/string_util.h>
