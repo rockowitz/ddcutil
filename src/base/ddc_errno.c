@@ -145,8 +145,8 @@ bool ddcrc_is_not_error(Public_Status_Code gsc) {
  * @return status code description
  *
  * @remark
- * The result is built in an internal buffer.  The contents will be
- * valid until the next call to this function.
+ * The result is built in an internal thread-specific buffer.  The contents
+ * will be valid until the next call to this function in the current thread.
  * @remark
  * A generic message is returned if the status code is unrecognized.
  */
