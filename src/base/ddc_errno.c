@@ -73,9 +73,7 @@ static int ddcrc_desc_ct = sizeof(ddcrc_info)/sizeof(Status_Code_Info);
  */
 Status_Code_Info * ddcrc_find_status_code_info(int rc) {
    Status_Code_Info * result = NULL;
-
-   int ndx;
-   for (ndx=0; ndx < ddcrc_desc_ct; ndx++) {
+   for (int ndx=0; ndx < ddcrc_desc_ct; ndx++) {
        if (rc == ddcrc_info[ndx].code) {
           result = &ddcrc_info[ndx];
           break;
@@ -83,6 +81,7 @@ Status_Code_Info * ddcrc_find_status_code_info(int rc) {
    }
    return result;
 }
+
 
 /* Status code classification
 
@@ -151,7 +150,6 @@ bool ddcrc_is_not_error(Public_Status_Code gsc) {
  */
 char * ddcrc_desc(int rc) {
    static char workbuf[200];
-   // char * result = NULL;
    Status_Code_Info * pdesc = ddcrc_find_status_code_info(rc);
    if (pdesc) {
       snprintf(workbuf, 200,
@@ -160,8 +158,6 @@ char * ddcrc_desc(int rc) {
    else {
       snprintf(workbuf, 200, "Unexpected status code %d", rc);
    }
-   // result = workbuf;
-   // return result;
    return workbuf;
 }
 
@@ -191,28 +187,3 @@ bool ddc_error_name_to_number(const char * error_name, Status_DDC * p_errnum) {
    return found;
 }
 
-#ifdef OLD
-/** Gets the (modulated) ddcutil error number for a symbolic name.
- *
- * @param   error_name   symbolic name, e.g. DDCRC_CHECKSUM
- * @param   p_errnum     where to return error number
- *
- * Returns:         true if found, false if not
- *
- * @remark
- * Since **ddcutil** specific error numbers are always modulated,
- * the return value for this function is always identical to
- * ddc_error_name_to_number().
- */
-bool ddc_error_name_to_modulated_number(
-        const char *          error_name,
-        Global_Status_Code *  p_errnum)
-{
-   int result = 0;
-   bool found = ddc_error_name_to_number(error_name, &result);
-   assert(result <= 0);
-   // ddcutil error numbers are already modulated
-   *p_errnum = result;
-   return found;
-}
-#endif
