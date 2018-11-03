@@ -7,9 +7,11 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 /** \endcond */
 
+#include "util/glib_util.h"
 #include "util/string_util.h"
 
 #include "base/ddc_errno.h"
@@ -149,7 +151,9 @@ bool ddcrc_is_not_error(Public_Status_Code gsc) {
  * A generic message is returned if the status code is unrecognized.
  */
 char * ddcrc_desc(int rc) {
-   static char workbuf[200];
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * workbuf = get_thread_fixed_buffer(&buf_key, 200);
+
    Status_Code_Info * pdesc = ddcrc_find_status_code_info(rc);
    if (pdesc) {
       snprintf(workbuf, 200,
