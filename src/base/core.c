@@ -924,7 +924,14 @@ void program_logic_error(
 }
 
 
+//
+// DDCA_Error_Detail related functions
+//
 
+/** Frees a #DDCA_Error_Detail instance
+ *
+ *  @param  instance to free
+ */
 void
 free_error_detail(DDCA_Error_Detail * ddca_erec)
 {
@@ -939,17 +946,12 @@ free_error_detail(DDCA_Error_Detail * ddca_erec)
    }
 }
 
-// static Thread_Output_Settings *  get_thread_settings()
 
-void free_thread_error_detail() {
-   Thread_Output_Settings * settings = get_thread_settings();
-   if (settings->error_detail) {
-      free_error_detail(settings->error_detail);
-      settings->error_detail = NULL;
-   }
-}
-
-
+/** Converts a #Error_Info instance to a #DDCA_Error_Detail
+ *
+ *  @param  erec  instance to convert
+ *  @return new #DDCA_Error_Detail instance
+ */
 DDCA_Error_Detail *
 error_info_to_ddca_detail(Error_Info * erec)
 {
@@ -967,22 +969,15 @@ error_info_to_ddca_detail(Error_Info * erec)
          result->causes[ndx] = cause;
       }
    }
-
    return result;
 }
 
-DDCA_Error_Detail * get_thread_error_detail() {
-   Thread_Output_Settings * settings = get_thread_settings();
-   return settings->error_detail;
-}
 
-void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
-   Thread_Output_Settings * settings = get_thread_settings();
-   if (settings->error_detail)
-      free_error_detail(settings->error_detail);
-   settings->error_detail = error_detail;
-}
-
+/** Makes a deep copy of a #DDC_Error_Detail instance.
+ *
+ *  @param  old  instance to copy
+ *  @return new copy
+ */
 DDCA_Error_Detail *
 dup_error_detail(DDCA_Error_Detail * old) {
    DDCA_Error_Detail * result = NULL;
@@ -999,11 +994,16 @@ dup_error_detail(DDCA_Error_Detail * old) {
          result->causes[ndx] = cause;
       }
    }
-
    return result;
 }
 
 
+/** Emits a detailed report of a #DDCA_Error_Detail struct.
+ *  Output is written to the current report output destination.
+ *
+ *  @param ddca_erec  instance to report
+ *  @param depth      logical indentation depth
+ */
 void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth)
 {
    if (ddca_erec) {
@@ -1018,4 +1018,38 @@ void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth)
    }
 }
 
+
+// Thread-specific functions
+
+/** Frees the #DDCA_Error_Detail (if any) for the current thread.
+ */
+void free_thread_error_detail() {
+   Thread_Output_Settings * settings = get_thread_settings();
+   if (settings->error_detail) {
+      free_error_detail(settings->error_detail);
+      settings->error_detail = NULL;
+   }
+}
+
+
+/** Gets the #DDCA_Error_Detail record for the current thread
+ *
+ *  @return #DDCA_Error_Detail instance, NULL if none
+ */
+DDCA_Error_Detail * get_thread_error_detail() {
+   Thread_Output_Settings * settings = get_thread_settings();
+   return settings->error_detail;
+}
+
+
+/** Set the #DDCA_Error_Detail record for the current thread.
+ *
+ *  @param error_detail  #DDCA_Error_Detail record to set
+ */
+void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
+   Thread_Output_Settings * settings = get_thread_settings();
+   if (settings->error_detail)
+      free_error_detail(settings->error_detail);
+   settings->error_detail = error_detail;
+}
 
