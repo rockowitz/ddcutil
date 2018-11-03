@@ -375,18 +375,6 @@ int main(int argc, char *argv[]) {
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
 
-#ifdef OBSOLETE
-   // For aborting out of shared library
-   jmp_buf abort_buf;
-   int jmprc = setjmp(abort_buf);
-   if (jmprc) {
-      fprintf(stderr, "Aborting. Internal status code = %d\n", jmprc);
-      goto bye;       // main_rc == EXIT_FAILURE
-   }
-
-   register_jmp_buf(&abort_buf);
-#endif
-
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    init_base_services();  // so tracing related modules are initialized
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);

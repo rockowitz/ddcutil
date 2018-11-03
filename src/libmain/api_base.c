@@ -137,28 +137,6 @@ _ddca_init(void) {
 }
 
 
-#ifdef OBSOLETE
-
-void
-ddca_register_jmp_buf(jmp_buf* jb) {
-   register_jmp_buf(jb);
-}
-
-
-DDCA_Global_Failure_Information *
-ddca_get_global_failure_information()
-{
-   // return NULL if !global_failure_information.info_set_fg, or always return pointer
-   // i.e. is it better if caller checks for NULL or checks info_set_fg?
-   // return &global_failure_information;
-   return (global_failure_information.info_set_fg)
-                  ? &global_failure_information
-                  : NULL;
-}
-
-#endif
-
-
 //
 // Error Detail
 //

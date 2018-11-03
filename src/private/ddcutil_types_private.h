@@ -28,19 +28,6 @@
 #include "public/ddcutil_types.h"     // for #defines
 
 
-#ifdef OBSOLETE
-//! Failure information filled in at the time of a program abort,
-//! before longjmp() is called.
-typedef struct {
-   bool       info_set_fg;
-   char       funcname[64];
-   int        lineno;
-   char       fn[PATH_MAX];
-   int        status;
-} DDCA_Global_Failure_Information;
-#endif
-
-
 #ifdef UNUSED
 /** #DDCA_Vcp_Value_Type_Parm extends #DDCA_Vcp_Value_Type to allow for its use as a
     function call parameter where the type is unknown */
