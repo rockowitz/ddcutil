@@ -244,58 +244,6 @@ void register_jmp_buf(jmp_buf* jb) {
 #endif
 
 
-#ifdef UNUSED
-// currently unused, iftest out to avoid rpmlint complaint about exit from library
-
-/** Primary function for terminating **ddcutil** execution
- * due to an internal error.
- *
- * If a longjump jump buffer has been registered, basic error information
- * is stored in buffer global_failure_information, and longjmp() is called.
- * Otherwise, exit() is called.
- *
- *  @param funcname  function name of error
- *  @param lineno    line number of error
- *  @param fn        file name of error
- *  @param status    status code
- *
- *  @ingroup abnormal_termination
- */
-/* coverity [+kill] avoid coverity memory leak warnings */
-void ddc_abort(
-      const char * funcname,
-      const int    lineno,
-      const char * fn,
-      int          status)
-{
-   show_backtrace(2);
-
-#ifdef OBSOLETE
-   DBGMSG("global_abort_jmp_buf_ptr = %p", global_abort_jmp_buf_ptr);
-   if (global_abort_jmp_buf_ptr) {
-
-      // save failure information in case it's of use at longjmp() return
-      global_failure_information.info_set_fg = true;
-      global_failure_information.status = status;
-      g_strlcpy(global_failure_information.funcname, funcname, sizeof(global_failure_information.funcname));
-      global_failure_information.lineno = lineno;
-      g_strlcpy(global_failure_information.fn, fn, sizeof(global_failure_information.fn));
-
-      longjmp(*global_abort_jmp_buf_ptr, status);
-   }
-   else {
-#endif
-      // no point setting global_failure_information, we're outta here
-      f0puts("Terminating execution.\n", FERR);
-      fflush(FERR);
-      exit(EXIT_FAILURE);     // or return status?
-#ifdef OBSOLETE
-   }
-#endif
-}
-#endif
-
-
 //
 // Standard call options
 //
@@ -967,37 +915,6 @@ bool dbgtrc(
 // error messages and possible program termination.
 //
 
-#ifdef OLD
-/* Report an IOCTL error and possibly terminate execution.
- *
- * Arguments:
- *    errnum         errno value
- *    funcname       function name of error
- *    lineno         line number of error
- *    filename       file name of error
- *    fatal          if true, terminate execution
- *
- *  Returns:         nothing
- */
-void report_ioctl_error_old(
-      int   errnum,
-      const char* funcname,   // const to avoid warning msg on references at compile time
-      int   lineno,
-      char* filename,
-      bool  fatal) {
-   int errsv = errno;
-   f0printf(FERR, "ioctl error in function %s at line %d in file %s: errno=%s\n",
-           funcname, lineno, filename, linux_errno_desc(errnum) );
-   // not worth the linkage issues:
-   // fprintf(stderr, "  %s\n", explain_errno_ioctl(errnum, filedes, request, data));
-   if (fatal) {
-      ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
-   }
-   errno = errsv;
-}
-#endif
-
-
 /** Reports an IOCTL error.
  *  The message is written to the current **FERR** device.
  *
@@ -1061,92 +978,6 @@ void program_logic_error(
   f0puts("\n",   f);
   fflush(f);
 }
-
-
-#ifdef UNUSED
-/** Called when a condition that should be impossible has been detected.
- * Issues messages to **stderr** and terminates execution.
- *
- * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
- *
- *  @param  funcname    function name
- *  @param  lineno      line number in source file
- *  @param  fn          source file name
- *  @param  format      format string, as in printf()
- *  @param  ...         one or more substitution values for the format string
- *
- * @ingroup output_redirection
- */
-void program_logic_error_fatal(
-      const char * funcname,
-      const int    lineno,
-      const char * fn,
-      char *       format,
-      ...)
-{
-  // assemble the error message
-  char buffer[200];
-  va_list(args);
-  va_start(args, format);
-  vsnprintf(buffer, 200, format, args);
-
-  // assemble the location message:
-  char buf2[250];
-  snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:\n",
-                      funcname, lineno, fn);
-
-  // don't combine into 1 line, might be very long.  just output 2 lines:
-  f0puts(buf2,   FERR);
-  f0puts(buffer, FERR);
-  f0puts("\n",   FERR);
-
-  // fputs("Terminating execution.\n", stderr);
-  ddc_abort(funcname, lineno, fn, DDCL_INTERNAL_ERROR);
-}
-#endif
-
-
-
-#ifdef UNUSED
-/** This function is called to terminate execution on a fatal error.
- *
- *  It is normally wrapped in macro TERMINATE_EXECUTION_ON_ERROR(format,...)
- *
- *  @param  trace_group trace group for function where error occurred
- *  @param  funcname    function name
- *  @param  lineno      line number
- *  @param  filename    file name
- *  @param  format      printf() style format string
- *  @param  ...         arguments for format string
- *
- *  @ingroup output_redirection
- */
-void terminate_execution_on_error(
-        DDCA_Trace_Group   trace_group,
-        const char * funcname,
-        const int    lineno,
-        const char * filename,
-        char *       format,
-        ...)
-{
-   char buffer[200];
-   char buf2[250];
-   char * finalBuffer = buffer;
-   va_list(args);
-   va_start(args, format);
-   vsnprintf(buffer, 200, format, args);
-
-   if ( is_tracing(trace_group, filename, funcname) ) {
-      snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-      finalBuffer = buf2;
-   }
-
-   f0puts(finalBuffer, FERR);
-   f0puts("\n", FERR);
-
-   ddc_abort(funcname, lineno, filename, DDCL_INTERNAL_ERROR);
-}
-#endif
 
 
 

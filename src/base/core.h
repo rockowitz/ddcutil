@@ -60,16 +60,6 @@ void init_msg_control();
 void register_jmp_buf(jmp_buf* jb);
 #endif
 
-#ifdef UNUSED
-void ddc_abort(
-      const char * funcname,
-      const int    lineno,
-      const char * fn,
-      int          status);
-
-#define DDC_ABORT(status) \
-   ddc_abort(__func__, __LINE__, __FILE__, status)
-#endif
 
 #ifdef OBSOLETE
 extern DDCA_Global_Failure_Information global_failure_information;
@@ -288,15 +278,6 @@ if (_flag) { \
 // Error handling
 //
 
-#ifdef OLD
-void report_ioctl_error_old(
-      int         errnum,
-      const char* funcname,
-      int         lineno,
-      char*       filename,
-      bool        fatal);
-#endif
-
 void report_ioctl_error(
       const char * ioctl_name,
       int          errnum,
@@ -323,26 +304,6 @@ void program_logic_error(
  */
 #define PROGRAM_LOGIC_ERROR(format, ...) \
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
-
-#ifdef OLD
-void terminate_execution_on_error(
-        DDCA_Trace_Group  trace_group,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...);
-
-/** @def TERMINATE_EXECUTION_ON_ERROR(format,...)
- *  Wraps call to terminate_execution_on_error()
- * @ingroup abnormal_termination
- */
-#define TERMINATE_EXECUTION_ON_ERROR(format, ...) \
-   terminate_execution_on_error(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-#endif
-
-
 
 DDCA_Error_Detail * error_info_to_ddca_detail(Error_Info * erec);
 DDCA_Error_Detail * dup_error_detail(DDCA_Error_Detail * old);
