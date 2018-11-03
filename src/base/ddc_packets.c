@@ -633,23 +633,7 @@ create_ddc_response_packet(
 // Packet data parsers
 //
 
-// Capabilities response data 
-
-#ifdef OLD
-// deprecated, use more general dbgrpt_interpreted_multi_read_fragment()
-void
-report_interpreted_capabilities(
-      Interpreted_Multi_Part_Read_Fragment * interpreted,
-      int depth)
-{
-   int d1 = depth+1;
-   rpt_vstring(depth, "Capabilities response contents:");
-   rpt_vstring(d1,    "offset:          %d", interpreted->fragment_offset);
-   rpt_vstring(d1,    "fragment length: %d", interpreted->fragment_length);
-   rpt_vstring(d1,    "text:            |%.*s|", interpreted->fragment_length, interpreted->bytes);
-}
-#endif
-
+// Capabilities and table response data
 
 /** Interprets the bytes of a multi part read response.
  *
