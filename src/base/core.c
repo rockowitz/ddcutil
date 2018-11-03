@@ -231,26 +231,6 @@ Value_Name_Table callopt_bitname_table2 = {
 };
 
 
-#ifdef OLD
-/** Interprets a **Call_Options** byte as a printable string.
- *  The returned value is valid until the next call of this function.
- *
- *  @param calloptions  **Call_Options** byte
- *
- *  @return interpreted value
- */
-char * interpret_call_options(Call_Options calloptions) {
-   static char * buffer = NULL;
-   if (buffer) {
-      free(buffer);
-      buffer = NULL;
-   }
-   buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
-   return buffer;
-}
-#endif
-
-
 /** Thread safe version of **interpret_call_options()**.
  *
  *  Interprets a **Call_Options** byte as a printable string.
@@ -281,14 +261,6 @@ char * interpret_call_options_t(Call_Options calloptions) {
 
    return buf;
 }
-
-
-#ifdef UNUSED
-char * interpret_call_options_a(Call_Options calloptions) {
-   char * buffer = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
-   return buffer;
-}
-#endif
 
 
 // Local definitions and functions shared by all message control categories
