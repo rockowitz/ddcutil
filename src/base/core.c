@@ -307,6 +307,7 @@ DDCA_Output_Level get_output_level() {
    return settings->output_level;
 }
 
+
 /** Sets the output level.
  *
  * @param newval output level to set
@@ -322,6 +323,7 @@ DDCA_Output_Level set_output_level(DDCA_Output_Level newval) {
    settings->output_level = newval;
    return old_level;
 }
+
 
 /** Gets the printable name of an output level.
  *
@@ -617,8 +619,6 @@ bool report_freed_exceptions = false;
 //
 // Report DDC data errors
 //
-
-
 
 #ifdef PER_THREAD
 bool enable_report_ddc_errors(bool onoff) {

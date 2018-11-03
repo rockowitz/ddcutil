@@ -16,8 +16,6 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
-
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
@@ -34,9 +32,6 @@
 #include "util/coredefs.h"
 #include "util/error_info.h"
 
-
-// /** @addtogroup abnormal_termination
-//  */
 
 //
 // Common macros
