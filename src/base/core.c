@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <errno.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -213,33 +212,6 @@ FILE * cur_fout() {
    // special handling for unpushed case because can't statically initialize
    // output_dest_stack[0] to stdout
    return (fout_stack_pos < 0) ? stdout : fout_stack[fout_stack_pos];
-}
-#endif
-
-
-//
-// Global error return
-//
-
-#ifdef OBSOLETE
-/** @defgroup abnormal_termination Abnormal Termination
- *
- */
-
-static jmp_buf* global_abort_jmp_buf_ptr = NULL;
-
-// It's an error handler.  Do not dynamically allocate
-DDCA_Global_Failure_Information global_failure_information = {0};
-
-/** Registers the longjmp() target with the **ddcutil** library.
- *
- * @param jb  pointer to jmp_buf
- *
- * @ingroup abnormal_termination
- */
-void register_jmp_buf(jmp_buf* jb) {
-   DBGMSG("setting global_abort_jmp_buf_ptr = %p", jb);
-   global_abort_jmp_buf_ptr = jb;
 }
 #endif
 

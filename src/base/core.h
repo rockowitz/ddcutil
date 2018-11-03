@@ -23,7 +23,6 @@
 
 /** \cond */
 #include <linux/limits.h>
-#include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -51,19 +50,6 @@
 // Initialization
 //
 void init_msg_control();
-
-
-//
-// For aborting out of shared library
-//
-#ifdef OBSOLETE
-void register_jmp_buf(jmp_buf* jb);
-#endif
-
-
-#ifdef OBSOLETE
-extern DDCA_Global_Failure_Information global_failure_information;
-#endif
 
 
 //
