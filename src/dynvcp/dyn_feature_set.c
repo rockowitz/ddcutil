@@ -346,7 +346,7 @@ void free_dfm_func(gpointer data) {
 void dyn_free_feature_set(
       Dyn_Feature_Set * feature_set)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_set=%s", dynfs_repr_t(feature_set));
    if (feature_set->members_dfm) {
       g_ptr_array_set_free_func(feature_set->members_dfm, free_dfm_func);
