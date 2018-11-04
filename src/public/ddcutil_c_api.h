@@ -864,14 +864,6 @@ ddca_get_mccs_version_by_dh(
       DDCA_MCCS_Version_Spec* p_vspec);
 
 
-/** \deprecated */
-__attribute__ ((deprecated))
-DDCA_Status
-ddca_get_mccs_version_id(
-      DDCA_Display_Handle     ddca_dh,
-      DDCA_MCCS_Version_Id*   p_version_id);
-
-
 //
 // VCP Feature Metadata
 //
