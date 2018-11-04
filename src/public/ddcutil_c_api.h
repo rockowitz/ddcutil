@@ -807,11 +807,12 @@ ddca_free_parsed_capabilities(
  *  information is written, including command codes.
  *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
- *  @param[in]  ddca_dref            display reference
+ *  @param[in]  ddca_dref            display reference, may be NULL
  *  @param[in]  depth  logical       indentation depth
  *
  *  @remark
  *  If ddca_dref is not NULL, feature value names will reflect any loaded monitor definition files
+ *  @since 0.9.3
  */
 DDCA_Status
 ddca_report_parsed_capabilities_by_dref(
@@ -819,19 +820,45 @@ ddca_report_parsed_capabilities_by_dref(
       DDCA_Display_Ref         ddca_dref,
       int                      depth);
 
-
+/** Reports the contents of a DDCA_Capabilities struct.
+ *
+ *  The report is written to the current FOUT location.
+ *
+ *  If the current output level is #DDCA_OL_VERBOSE, additional
+ *  information is written, including command codes.
+ *
+ *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
+ *  @param[in]  ddca_dh              display handle, may be NULL
+ *  @param[in]  depth  logical       indentation depth
+ *
+ *  @remark
+ *  If ddca_dh is not NULL, feature value names will reflect any loaded monitor definition files
+ *  @since 0.9.3
+ */
 DDCA_Status
 ddca_report_parsed_capabilities_by_dh(
       DDCA_Capabilities *      p_caps,
       DDCA_Display_Handle      ddca_dh,
       int                      depth);
 
+/** Reports the contents of a DDCA_Capabilities struct.
+ *
+ *  The report is written to the current FOUT location.
+ *
+ *  If the current output level is #DDCA_OL_VERBOSE, additional
+ *  information is written, including command codes.
+ *
+ *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
+ *  @param[in]  ddca_dref            display reference
+ *  @param[in]  depth  logical       indentation depth
+ *
+ *  @remark
+ *  Any user supplied feature definitions for the monitor are ignored.
+ */
 void
 ddca_report_parsed_capabilities(
       DDCA_Capabilities *      parsed_capabilities,
       int                      depth);
-
-
 
 /** Returns the VCP feature codes defined in a
  *  parsed capabilities record as a #DDCA_Feature_LIst
@@ -843,7 +870,6 @@ ddca_report_parsed_capabilities(
 DDCA_Feature_List
 ddca_feature_list_from_capabilities(
       DDCA_Capabilities * parsed_caps);
-
 
 
 //
@@ -868,92 +894,109 @@ ddca_get_mccs_version_by_dh(
 // VCP Feature Metadata
 //
 
-
-// New master functions for feature metadata
-
-
+/**
+ * Loads any user supplied feature definition files for the specified
+ * display.  Does nothing if they have already been loaded.
+ *
+ * @param[in] ddca_dref display reference
+ *
+ * @remark
+ * User supplied feature definition files are not yet publicly supported.
+ * @since 0.9.3
+ */
 DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref);
 
+/**
+ * Loads any user supplied feature definition files for the specified
+ * display.  Does nothing if they have already been loaded.
+ *
+ * @param[in] ddca_dh display handle
+ *
+ * @remark
+ * User supplied feature definition files are not yet publicly supported.
+ * @since 0.9.3
+ */
 DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh);
 
 /**
- * Gets information for a VCP feature.
+ * Gets metadata for a VCP feature.
  *
  * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  *
  * @param[in]  vspec            VCP version
  * @param[in]  feature_code     VCP feature code
  * @param[in]  create_default_if_not_found
- * @param[out] info             caller buffer to fill in
+ * @param[out] meta_loc         return pointer to metadata here
  * @return     status code
  * @retval     DDCRC_ARG        invalid display handle
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
+ *
+ *  It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
  *
  * @remark
  * Only takes into account VCP version.  Useful for reporting display agnostic
  * feature information.  For display sensitive feature information, i.e. taking
  * into account the specific monitor model, use #ddca_get_feature_metdata_by_dref().
  *
- * @since 0.9.0
+ * @since 0.9.3
  */
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    info); //    change to **?
-
+      DDCA_Feature_Metadata **    meta_loc);
 
 /**
- * Gets information for a VCP feature.
+ * Gets metadata for a VCP feature.
  *
  * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  *
  * @param[in]  ddca_dref        display reference
  * @param[in]  feature_code     VCP feature code
  * @param[in]  create_default_if_not_found
- * @param[out] info             caller buffer to fill in
+ * @param[out] meta_loc         return pointer to metadata here
  * @return     status code
  * @retval     DDCRC_ARG        invalid display reference
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
  *
- * @since 0.9.0
+ * It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
+ * @since 0.9.3
  */
 DDCA_Status
 ddca_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    info);
-
+      DDCA_Feature_Metadata **    meta_loc);
 
 /**
- * Gets information for a VCP feature.
+ * Gets metadata for a VCP feature.
  *
  * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  *
  * @param[in]  ddca_dh          display handle
  * @param[in]  feature_code     VCP feature code
  * @param[in]  create_default_if_not_found
- * @param[out] info             caller buffer to fill in
+ * @param[out] meta_loc         return pointer to metadata here
  * @return     status code
  * @retval     DDCRC_ARG        invalid display handle
  * @retval     DDCRC_UNKNOWN_FEATURE unrecognized feature code and
  *                              !create_default_if_not_found
  *
- * @since 0.9.0
+ * It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
+ * @since 0.9.3
  */
 DDCA_Status
 ddca_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Handle         ddca_dh,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    info);
-
+      DDCA_Feature_Metadata **    meta_loc);
 
 /**
  *  Frees a #DDCA_Feature_Metadata instance.
@@ -969,12 +1012,6 @@ ddca_get_feature_metadata_by_dh(
  */
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
-
-
-// Granular functions for metadata
-
-
-// Current functions - Feature name
 
 /** Gets the VCP feature name.  If different MCCS versions use different names
  *  for the feature, this function makes a best guess.
@@ -1004,31 +1041,23 @@ ddca_get_feature_name_by_dref(
       DDCA_Display_Ref       dref,
       char **                name_loc);
 
-
-// Current functions - Feature characteristics
-
-
-// Current functions - NC lookup tables
-
-/** Convenience function that searches a #DDCA_Feature_Value_Table for a
+/** Convenience function that searches a Feature Value Table for a
  *  value and returns the corresponding name.
- *  @param[in]   feature_value_table pointer to first entry of table
- *  @param[in]   feature_value value to search for
- *  @param[out]  where to return pointer to name
+ *  @param[in]   feature_value_table  pointer to first entry of table
+ *  @param[in]   feature_value        value to search for
+ *  @param[out]  value_name_loc       where to return pointer to name
  *  @retval      DDCRC_OK  value found
  *  @retval      DDCRC_NOT_FOUND  value not found
  *
  * @remark
- * The value returned in **value_name_Loc** is a pointer into internal
- * ddcutil data structures.  Do not free.
+ * The value returned in **value_name_Loc** is a pointer into an existing
+ * data structures.  Do not free.
  */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Entry *  feature_value_table,
       uint8_t                     feature_value,
       char**                      value_name_loc);
-
-
 
 // /** \deprecated */
 __attribute__ ((deprecated))
@@ -1039,7 +1068,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       uint8_t                feature_value,
       char**                 feature_name_loc);
 
-//
+
 //
 //  Miscellaneous Monitor Specific Functions
 //
@@ -1050,7 +1079,6 @@ DDCA_Status
 ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
-
 
 /** Shows information about a display, specified by a #Display_Ref
  *
@@ -1069,7 +1097,6 @@ ddca_get_edid_by_dref(
  */
 DDCA_Status
 ddca_report_display_by_dref(DDCA_Display_Ref dref, int depth);
-
 
 //
 // Feature Lists
@@ -1091,7 +1118,6 @@ const char *
 ddca_feature_list_id_name(
       DDCA_Feature_Subset_Id  feature_set_id);
 
-
 /** Given a feature set id, returns a #DDCA_Feature_List specifying all the
  *  feature codes in the set.
  *
@@ -1109,15 +1135,14 @@ ddca_get_feature_list_by_dref(
       bool                    include_table_features,
       DDCA_Feature_List*      p_feature_list);
 
-
-
 /** Empties a #DDCA_Feature_List
  *
  *  @param[in]  vcplist pointer to feature list
  *
  *  @since 0.9.0
  */
-void ddca_feature_list_clear(
+void
+ddca_feature_list_clear(
       DDCA_Feature_List* vcplist);
 
 /** Adds a feature code to a #DDCA_Feature_List
@@ -1161,7 +1186,6 @@ ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2);
 
-
 /** Creates the intersection of 2 feature lists.
  *
  *  @param[in] vcplist1   pointer to first feature list
@@ -1177,7 +1201,6 @@ DDCA_Feature_List
 ddca_feature_list_and(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List * vcplist2);
-
 
 /** Returns a feature list consisting of all the features in the
  *  first list that are not in the second.
@@ -1195,7 +1218,6 @@ DDCA_Feature_List
 ddca_feature_list_and_not(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2);
-
 
 /** Returns the number of features in a feature list
  *
@@ -1228,7 +1250,6 @@ ddca_feature_list_string(
       DDCA_Feature_List * feature_list,
       char * value_prefix,
       char * sepstr);
-
 
 
 /*
@@ -1272,7 +1293,6 @@ void
 ddca_free_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec);
 
-
 /** Produces a debugging report of a #DDCA_Any_Vcp_Value instance.
  *  The report is written to the current FOUT device.
  *  @param  valrec  instance to report
@@ -1306,7 +1326,6 @@ ddca_get_non_table_vcp_value(
        DDCA_Vcp_Feature_Code      feature_code,
        DDCA_Non_Table_Vcp_Value*  valrec);
 
-
 /** Gets the value of a table VCP feature.
  *
  * @param[in]  ddca_dh         display handle
@@ -1322,7 +1341,6 @@ ddca_get_table_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
        DDCA_Table_Vcp_Value ** table_value_loc);
-
 
 /** Gets the value of a VCP feature of any type.
  *
@@ -1344,7 +1362,6 @@ ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type         value_type,
        DDCA_Any_Vcp_Value **       valrec_loc);
-
 
 /** Gets the value of a VCP feature of any type.
  *  The type is determined by using ddcutil's internal
@@ -1371,7 +1388,6 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Any_Vcp_Value **       valrec_loc);
 
-
 /** Returns a string containing a formatted representation of the VCP value
  *  of a feature.  It is the responsibility of the caller to free this value.
  *
@@ -1386,8 +1402,6 @@ ddca_get_formatted_vcp_value(
        DDCA_Display_Handle     ddca_dh,
        DDCA_Vcp_Feature_Code   feature_code,
        char**                  formatted_value_loc);
-
-
 
 /** Returns a formatted representation of a table VCP value.
  *  It is the responsibility of the caller to free the returned string.
@@ -1406,8 +1420,6 @@ ddca_format_table_vcp_value_by_dref(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc);
 
-
-
 /** Returns a formatted representation of a non-table VCP value.
  *  It is the responsibility of the caller to free the returned string.
  *
@@ -1424,7 +1436,6 @@ ddca_format_non_table_vcp_value_by_dref(
       DDCA_Display_Ref            dref,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc);
-
 
 /** Returns a formatted representation of a VCP value of any type
  *  It is the responsibility of the caller to free the returned string.
