@@ -31,5 +31,22 @@
 // been removed from ddcutil_c_api.h
 
 
+/**
+ *  Frees the contents a #DDCA_Feature_Metadata instance.
+ *
+ *  Note that #DDCA_Feature_Metadata instances are typically
+ *  allocated on the stack,  This function frees any data
+ *  pointed to by the metadata instance, not the instance itself.
+ *
+ *  @param[in] info  metadata instance, passed by value
+ *  @return    status code
+ *
+ *  @since 0.9.0
+ */
+__attribute__ ((deprecated ("use ddca_free_feature_metadata()")))
+DDCA_Status
+ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
+
+
 
 #endif /* DDCUTIL_C_API_PRIVATE_H_ */
