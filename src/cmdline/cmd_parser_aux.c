@@ -160,7 +160,8 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MFG",        "Same as MANUFACTURER"},
-   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "DYNAMIC",    "User defined features"},
+   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "UDF",        "User defined features"},
+   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "USER",       "User defined features"},
 
    // ddcutil defined groups
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},
@@ -194,7 +195,8 @@ char * assemble_command_argument_help() {
    // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
    // -1 for double VCP_SUBSET_KNOWN
    // -1 for double VCP_SUBSET_MFG
-   assert(subset_table_ct+(2-1-1) == vcp_subset_count);
+   // -1 for double VCP_SUBSET_DYNAMIC
+   assert(subset_table_ct+(2-3) == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
