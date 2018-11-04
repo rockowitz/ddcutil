@@ -14,7 +14,6 @@
 #define DDCUTIL_TYPES_H_
 
 /** \cond */
-// #include <linux/limits.h>
 #include <stdbool.h>
 #include <stdint.h>                // for uint8_t, unit16_t
 /** \endcond */
