@@ -869,17 +869,6 @@ ddca_get_mccs_version_by_dh(
 //
 
 
-// Deprecated functions using DDCA_MCCS_Version_Id
-
-/** \deprecated Use #ddca_get_simple_sl_value_table_by_vspec() */
-__attribute__ ((deprecated))
-DDCA_Status
-ddca_get_simple_sl_value_table(
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_MCCS_Version_Id        mccs_version_id,
-      DDCA_Feature_Value_Entry**  value_table_loc);
-
-
 // New master functions for feature metadata
 
 
