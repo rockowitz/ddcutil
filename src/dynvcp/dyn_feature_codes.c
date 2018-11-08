@@ -58,6 +58,18 @@ bool dyn_format_feature_detail_sl_lookup(
 }
 
 
+/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+ *  checking for a user supplied feature definition, and then from the internal
+ *  feature definition tables.
+ *
+ * @param  feature_code   feature code
+ * @param  dfr            if non-NULL, points to Dynamic_Features_Record for the display
+ * @param  vspec          VCP version of the display
+ * @param  with_default   create default value if not found
+ * @return Display_Feature_Metadata for the feature, caller must free,
+ *         NULL if feature not found either in the user supplied feature definitions
+ *         (Dynamic_Features_Record) or in the internal feature definitions
+ */
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
      DDCA_Vcp_Feature_Code    feature_code,
@@ -163,6 +175,21 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
 }
 
 
+/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+ *  checking for a user supplied feature definition using the specified
+ *  #DDCA_Monitor_Model_Key, and then from the internal feature definition tables.
+ *
+ * @param  feature_code   feature code
+ * @param  mmk            monitor model key
+ * @param  vspec          VCP version of the display
+ * @param  with_default   create default value if not found
+ * @return Display_Feature_Metadata for the feature, caller must free,
+ *         NULL if feature not found either in the user supplied feature definitions
+ *         (Dynamic_Features_Record) or in the internal feature definitions
+ *
+ * @remark
+ * Ensures user supplied featues have been loaded by calling #dfr_load_by_mmk()
+ */
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
      DDCA_Vcp_Feature_Code    feature_code,
@@ -196,6 +223,17 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
  }
 
 
+/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+ *  checking for a user supplied feature definition, and then from the internal
+ *  feature definition tables.
+ *
+ * @param  feature_code   feature code
+ * @param  dref           display reference
+ * @param  with_default   create default value if not found
+ * @return Display_Feature_Metadata for the feature, caller must free,
+ *         NULL if feature not found either in the user supplied feature definitions
+ *         (Dynamic_Features_Record) or in the internal feature definitions
+ */
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dref_dfm(
       DDCA_Vcp_Feature_Code feature_code,
@@ -219,6 +257,17 @@ dyn_get_feature_metadata_by_dref_dfm(
 }
 
 
+/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+ *  checking for a user supplied feature definition, and then from the internal
+ *  feature definition tables.
+ *
+ * @param  feature_code   feature code
+ * @param  dh             display handle
+ * @param  with_default   create default value if not found
+ * @return Display_Feature_Metadata for the feature, caller must free,
+ *         NULL if feature not found either in the user supplied feature definitions
+ *         (Dynamic_Features_Record) or in the internal feature definitions
+ */
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_dh_dfm(
       DDCA_Vcp_Feature_Code id,
