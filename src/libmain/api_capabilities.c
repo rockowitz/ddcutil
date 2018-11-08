@@ -204,13 +204,14 @@ ddca_report_parsed_capabilities_by_dref(
          dyn_get_feature_metadata_by_dref_dfm(
                cur_vcp->feature_code,
                ddca_dref,
-               false);    // create_default_if_not_found);
+               true);    // create_default_if_not_found);
+      assert(dfm);
 
       char * feature_name = NULL;
-      if (dfm)
+      // if (dfm)
          feature_name = dfm->feature_name;
-      else
-         feature_name = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
+      // else
+      //    feature_name = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
 
       // char * feature_name
       //         = get_feature_name_by_id_and_vcp_version(cur_vcp->feature_code, p_caps->version_spec);
@@ -219,13 +220,18 @@ ddca_report_parsed_capabilities_by_dref(
 
       rpt_vstring(d2, "Feature:  0x%02x (%s)", cur_vcp->feature_code, feature_name);
 
+
       DDCA_Feature_Value_Entry * feature_value_table;
 
-      DDCA_Status ddcrc = 0;
+      // feature_value_table = dfm->sl_values;
+
       if (cur_vcp->value_ct > 0) {
+         feature_value_table = dfm->sl_values;
+#ifdef OLD
          if (dfm)
             feature_value_table = dfm->sl_values;
          else {
+            DDCA_Status
             ddcrc = ddca_get_simple_sl_value_table_by_vspec(
                   cur_vcp->feature_code,
                   p_caps->version_spec,
@@ -233,6 +239,7 @@ ddca_report_parsed_capabilities_by_dref(
                   &feature_value_table);
             DBGMSG("ddca_get_simple_sl_value_table_by_vspec() returned %s", ddca_rc_desc(ddcrc));
          }
+#endif
 
          if (ol > DDCA_OL_VERBOSE)
             rpt_vstring(d3, "Unparsed values:     %s", hexstring_t(cur_vcp->values, cur_vcp->value_ct) );
