@@ -598,7 +598,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
  *  Output is written to the current **FOUT** device.
  */
 void show_trace_groups() {
-   DBGMSG("trace_levels: 0x%04x", trace_levels);
+   // DBGMSG("trace_levels: 0x%04x", trace_levels);
    char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Trace groups active: ",
