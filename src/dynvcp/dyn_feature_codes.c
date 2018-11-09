@@ -14,6 +14,7 @@
 
 #include "base/displays.h"
 #include "base/dynamic_features.h"
+#include "base/feature_metadata.h"
 #include "base/monitor_model_key.h"
 #include "base/rtti.h"
 
@@ -45,7 +46,7 @@ bool dyn_format_feature_detail_sl_lookup(
    DBGMSF(debug, "Starting.");
 
    if (value_table) {
-      char * s = vcp_get_feature_value_name(value_table, code_info->sl);
+      char * s = sl_value_table_lookup(value_table, code_info->sl);
       if (!s)
          s = "Unrecognized value";
       snprintf(buffer, bufsz,"%s (sl=0x%02x)", s, code_info->sl);

@@ -691,7 +691,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
    DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
-   *value_name_loc = vcp_get_feature_value_name(feature_value_entries, feature_value);
+   *value_name_loc = sl_value_table_lookup(feature_value_entries, feature_value);
    if (!*value_name_loc)
       rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
    return rc;

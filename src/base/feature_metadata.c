@@ -157,6 +157,39 @@ void free_sl_value_table(DDCA_Feature_Value_Entry * table) {
 }
 
 
+/* Given a hex value to be interpreted and an array of value table entries,
+ * return the explanation string for value.
+ *
+ * Arguments:
+ *    value_entries   array of Feature_Value_Entry
+ *    value_id        value to look up
+ *
+ * Returns:
+ *    explanation string from the Feature_Value_Entry found (do not free)
+ *    NULL if not found
+ */
+char *
+sl_value_table_lookup(
+      DDCA_Feature_Value_Entry * value_entries,
+      Byte                       value_id)
+{
+   // DBGMSG("Starting. pvalues_for_feature=%p, value_id=0x%02x", pvalues_for_feature, value_id);
+   char * result = NULL;
+   DDCA_Feature_Value_Entry *  cur_value = value_entries;
+   while (cur_value->value_name != NULL) {
+      // DBGMSG("value_code=0x%02x, value_name = %s", cur_value->value_code, cur_value->value_name);
+      if (cur_value->value_code == value_id) {
+         result = cur_value->value_name;
+         // DBGMSG("Found");
+         break;
+      }
+      cur_value++;
+   }
+   return result;
+}
+
+
+
 // DDCA_Feature_Metadata
 
 void

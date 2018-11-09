@@ -329,11 +329,6 @@ vcp_list_feature_codes(FILE * fh);
 // Miscellaneous Functions
 //
 
-char *
-vcp_get_feature_value_name(
-      DDCA_Feature_Value_Entry * value_entries,
-      Byte                       value_id);
-
 bool
 vcp_format_feature_detail(
        VCP_Feature_Table_Entry * vcp_entry,

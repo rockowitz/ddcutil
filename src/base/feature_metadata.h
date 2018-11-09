@@ -78,6 +78,10 @@ void   dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth);
 DDCA_Feature_Value_Entry *
        copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable);
 void   free_sl_value_table(DDCA_Feature_Value_Entry * table);
+char * sl_value_table_lookup(
+          DDCA_Feature_Value_Entry * value_entries,
+          Byte                       value_id);
+
 
 // Feature Flags
 

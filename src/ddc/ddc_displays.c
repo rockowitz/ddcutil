@@ -27,6 +27,7 @@
 #include "base/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/feature_metadata.h"
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
@@ -408,7 +409,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 
    if (psc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
-      mfg_name =  vcp_get_feature_value_name(
+      mfg_name =  sl_value_table_lookup(
                             vals,
                             valrec->val.c_nc.sl);
       if (!mfg_name) {

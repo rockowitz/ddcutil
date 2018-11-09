@@ -19,6 +19,7 @@
 #include "util/string_util.h"
 
 #include "base/displays.h"
+#include "base/feature_metadata.h"
 #include "base/vcp_version.h"
 
 #include "vcp/ddc_command_codes.h"
@@ -229,10 +230,8 @@ ddca_report_parsed_capabilities_by_dref(
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
             if (feature_value_table) {
-               // although this is a vcp_ function, it is just a utility to scan the
-               // table passed to it
                char * value_desc =
-                   vcp_get_feature_value_name(feature_value_table, cur_vcp->values[ndx]);
+                   sl_value_table_lookup(feature_value_table, cur_vcp->values[ndx]);
                if (!value_desc)
                   value_desc = "Unrecognized feature value";
             }
