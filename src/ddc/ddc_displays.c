@@ -396,18 +396,17 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 
    const int MFG_NAME_BUF_SIZE = 100;
 
-   static GPrivate  controller_mfg_key = G_PRIVATE_INIT(g_free);
-   char * mfg_name_buf = get_thread_fixed_buffer(&controller_mfg_key, MFG_NAME_BUF_SIZE);
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * mfg_name_buf = get_thread_fixed_buffer(&buf_key, MFG_NAME_BUF_SIZE);
 
    char * mfg_name = NULL;
    DDCA_Any_Vcp_Value * valrec;
 
-   Public_Status_Code psc = 0;
+   DDCA_Status ddcrc = 0;
    Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0xc8, DDCA_NON_TABLE_VCP_VALUE, &valrec);
-   psc = (ddc_excp) ? ddc_excp->status_code : 0;
-   // DBGMSF(debug, "ddc_excp=%p, psc=%d", ddc_excp, psc);
+   ddcrc = (ddc_excp) ? ddc_excp->status_code : 0;
 
-   if (psc == 0) {
+   if (ddcrc == 0) {
       DDCA_Feature_Value_Entry * vals = pxc8_display_controller_type_values;
       mfg_name =  sl_value_table_lookup(
                             vals,
@@ -421,15 +420,17 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
       }
       free_single_vcp_value(valrec);
    }
-   else if (psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+   else if (ddcrc == DDCRC_REPORTED_UNSUPPORTED || ddcrc == DDCRC_DETERMINED_UNSUPPORTED) {
       mfg_name = "Unspecified";
    }
    else {
-      DBGMSF(debug, "get_nontable_vcp_value(0xc8) returned %s", psc_desc(psc));
-      if (debug)
+      if (debug) {
+         DBGMSG("get_nontable_vcp_value(0xc8) returned %s", psc_desc(ddcrc));
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
+      }
       mfg_name = "DDC communication failed";
     }
+
    DBGMSF(debug, "Returning: %s", mfg_name);
    return mfg_name;
 }
