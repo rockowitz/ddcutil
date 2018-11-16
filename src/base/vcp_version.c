@@ -71,7 +71,6 @@ bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown) {
 *
 */
 
-
 /** Checks if one #DDCA_MCCS_Version_Spec is less than or equal
  *  to another.
  *
@@ -171,8 +170,6 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
 }
 
 
-// new way:
-
 Value_Name_Title_Table version_id_table = {
       VNT(DDCA_MCCS_V10,   "1.0"),
       VNT(DDCA_MCCS_V20,   "2.0"),
@@ -184,8 +181,7 @@ Value_Name_Title_Table version_id_table = {
 };
 
 
-
-/** Returns a #DDCA_MCCS_Version_Id in a form suitable for display,
+/** Converts a #DDCA_MCCS_Version_Id to a humanly readable form,
  *  e.g. "2.0".
  *
  * @param version_id version id value
@@ -230,6 +226,12 @@ char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
 }
 #endif
 
+
+/** Returns the symbolic name of a #DDCA_MCCS_Version_Id value.
+ *
+ * @param   version_id version id value
+ * @return  symbolic name, e.g. "DDCA_V20";
+ */
 char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
    bool debug = false;
    DBGMSF(debug, "Starting. version_id=%d", version_id);
