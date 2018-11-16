@@ -562,11 +562,8 @@ static Public_Status_Code ddc_write_read_raw(
  *  \param expected_subtype    expected subtype to check for
  *  \param response_packet_ptr_loc  where to write address of response packet received
  *
- *  \return >= 0 if success (positive values possible for ADL?)\n
- *          modulated ADL status code if ADL error or special success case\n
- *          -errno for Linux errors\n
- *          as from #create_ddc_typed_response_packet()
- * \remark
+ *  \return pointer to #Error_Info struct if failure, NULL if success
+ *  \remark
  *  Issue: positive ADL codes, need to handle?
  */
 Error_Info *
@@ -646,7 +643,7 @@ ddc_write_read(
  *  \param all_zero_response_ok treat a response of all 0s as valid
  *  \param response_packet_ptr_loc  where to write address of response packet received
  *
- *  \return pointer to #Ddc_Error if failure, NULL if success
+ *  \return pointer to #Error_Info struct if failure, NULL if success
  *
  *  \remark
  *  status code from #ddc_write_read() may be positive for positive ADL status code ??
@@ -654,7 +651,7 @@ ddc_write_read(
  *            DDCRC_RETRIES, DDCRC_ALL_TRIES_ZERO, DDCRC_ALL_RESPONES_NULL if maximum tries exceeded
  *
  *\remark
- *   Issue: positive ADL codes, need to handle?
+ * Issue: positive ADL codes, need to handle?
  * \remark
  * The maximum number of tries is set in global variable max_write_read_exchange_tries.
  */
@@ -675,11 +672,9 @@ ddc_write_read_with_retry(
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
-   // will be false on initial call to verify DDC communication
-   // bool null_response_checked = dh->dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED;   // unused
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
 
-   Public_Status_Code  psc;
+   DDCA_Status  psc;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
@@ -777,7 +772,6 @@ ddc_write_read_with_retry(
       }
    }
 
-   // Using new Ddc_Error mechanism
    Error_Info * ddc_excp = NULL;
 
    if (psc < 0) {
@@ -820,7 +814,7 @@ ddc_write_read_with_retry(
  *   0 if success
  *   -errno if error
  */
-Public_Status_Code
+static Status_Errno_DDC
 ddc_i2c_write_only(
          int           fh,
          DDC_Packet *  request_packet_ptr
@@ -851,7 +845,7 @@ ddc_i2c_write_only(
  *
  * \param  dh                  Display_Handle for open I2C or ADL device
  * \param  request_packet_ptr  DDC packet to write
- * \return NULL if success, #Ddc_Error if error
+ * \return NULL if success, #Error_Info struct if error
  */
 Error_Info *
 ddc_write_only(
@@ -893,7 +887,7 @@ ddc_write_only(
  *
  *  \param  dh                  display handle (for either I2C or ADL device)
  *  \param  request_packet_ptr  DDC packet to write
- *  \return pointer to #Ddc_Error if failure, NULL if success
+ *  \return pointer to #Error_Info struct if failure, NULL if success
  *
  *  The maximum number of tries allowed has been set in global variable
  *  max_write_only_exchange_tries.
