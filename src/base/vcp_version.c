@@ -203,28 +203,7 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    return result;
 }
 
-#ifdef OLD
-char * vcp_version_id_name0(DDCA_MCCS_Version_Id version_id) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. version_id=%d", version_id);
 
-   char * result = NULL;
-   switch (version_id) {
-   case DDCA_MCCS_V10:    result = "DDCA_V10";     break;
-   case DDCA_MCCS_V20:    result = "DDCA_V20";     break;
-   case DDCA_MCCS_V21:    result = "DDCA_V21";     break;
-   case DDCA_MCCS_V30:    result = "DDCA_V30";     break;
-   case DDCA_MCCS_V22:    result = "DDCA_V22";     break;
-   case DDCA_MCCS_VNONE:  result = "DDCA_VNONE";   break;
-   }
-
-   char * result2 = vnt_name(version_id_table, version_id);
-   assert(streq(result, result2));
-
-   DBGMSF(debug, "Returning: %s", result);
-   return result;
-}
-#endif
 
 
 /** Returns the symbolic name of a #DDCA_MCCS_Version_Id value.
