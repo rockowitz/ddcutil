@@ -231,9 +231,7 @@ Value_Name_Table callopt_bitname_table2 = {
 };
 
 
-/** Thread safe version of **interpret_call_options()**.
- *
- *  Interprets a **Call_Options** byte as a printable string.
+/** Interprets a **Call_Options** byte as a printable string.
  *  The returned value is valid until the next call of this function in
  *  the current thread.
  *
@@ -242,6 +240,10 @@ Value_Name_Table callopt_bitname_table2 = {
  *  @return interpreted value
  */
 char * interpret_call_options_t(Call_Options calloptions) {
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&buf_key, 100);
+
+#ifdef OLD
    static GPrivate  callopts_buf_key = G_PRIVATE_INIT(g_free);
 
    char * buf = g_private_get(&callopts_buf_key);
@@ -254,6 +256,7 @@ char * interpret_call_options_t(Call_Options calloptions) {
       buf = g_new(char, 200);
       g_private_set(&callopts_buf_key, buf);
    }
+#endif
 
    char * buftemp = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
    g_strlcpy(buf, buftemp, 200);
