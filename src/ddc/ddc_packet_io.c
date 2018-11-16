@@ -545,8 +545,6 @@ static Public_Status_Code ddc_write_read_raw(
       DBGTRC(debug, TRACE_GROUP,
              "      readbuf: %s",
              hexstring3_t(readbuf, *p_rcvd_bytes_ct, " ", 4, false));
-
-            // hexstring_t(readbuf, *pbytes_received));
    }
    return psc;
 }
