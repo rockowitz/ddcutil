@@ -2250,30 +2250,6 @@ bool format_feature_detail_version(
    return true;
 }
 
-
-#ifdef REF
-DDCA_Feature_Value_Entry * sl_values = x8d_tv_audio_mute_source_values;
-DDCA_Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
-
-char * sl_name = sl_value_table_lookup(sl_values, code_info->sl);
-if (!sl_name)
-   sl_name = "Invalid value";
-
-if (vcp_version_eq(vcp_version, DDCA_VSPEC_V22)) {
-   char * sh_name = sl_value_table_lookup(sh_values, code_info->sh);
-   if (!sh_name)
-      sh_name = "Invalid value";
-   snprintf(buffer, bufsz,"%s (sl=0x%02x), %s (sh=0x%02x)",
-            sl_name, code_info->sl,
-            sh_name, code_info->sh);
-}
-else {
-   snprintf(buffer, bufsz,"%s (sl=0x%02x)",
-            sl_name, code_info->sl);
-}
-return true;
-#endif
-
 // 0xca
 bool format_feature_detail_xca_osd_button_control(
       Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
@@ -2299,7 +2275,6 @@ bool format_feature_detail_xca_osd_button_control(
 
    return true;
 }
-
 
 // 0xce
 bool format_feature_detail_xce_aux_display_size(
