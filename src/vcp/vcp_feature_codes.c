@@ -2757,7 +2757,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_MISC,
       // defined in 2.0, identical in 3.0, 2.2
       .nontable_formatter = format_feature_detail_new_control_value,   // ??
-      .default_sl_values = x02_new_control_values,
+      .default_sl_values = x02_new_control_values,  // ignored, hardcoded in nontable_formatter
       .desc = "Indicates that a display user control (other than power) has been "
               "used to change and save (or autosave) a new value.",
       .v20_flags = DDCA_RW | DDCA_COMPLEX_NC,
@@ -2878,7 +2878,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // what is appropriate choice for 2.1 ?
       // interpretation varies depending on VCP version
       .nontable_formatter=format_feature_detail_select_color_preset,
-      .default_sl_values= x14_color_preset_absolute_values,
+      .default_sl_values= x14_color_preset_absolute_values,  // ignored, referenced in nontable_formatter
       .desc="Select a specified color temperature",
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
@@ -3633,7 +3633,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_AUDIO,
       .desc = "Mute/unmute audio, and (v2.2) screen blank",
       .nontable_formatter=format_feature_detail_x8d_mute_audio_blank_screen,
-      .default_sl_values = x8d_tv_audio_mute_source_values,
+       .default_sl_values = x8d_tv_audio_mute_source_values, // ignored, table hardcoded in nontable_formatter
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Audio Mute",
       .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
@@ -4050,7 +4050,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0xc8,
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,    // 2.0: MISC, 3.0: CONTROL
       .nontable_formatter=format_feature_detail_display_controller_type,
-      .default_sl_values=xc8_display_controller_type_values,
+      .default_sl_values=xc8_display_controller_type_values, // ignored, hardcoded in nontable_formatter
       .desc = "Mfg id of controller and 2 byte manufacturer-specific controller type",
       .v20_flags = DDCA_RO | DDCA_COMPLEX_NC,
       .v20_name = "Display controller type",
