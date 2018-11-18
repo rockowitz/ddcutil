@@ -37,6 +37,9 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
        DDCA_Feature_Value_Entry xc8_display_controller_type_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
+static DDCA_Feature_Value_Entry xca_osd_values[];
+static DDCA_Feature_Value_Entry xca_v22_osd_button_sl_values[];
+static DDCA_Feature_Value_Entry xca_v22_osd_button_sh_values[];
 
 static bool vcp_feature_codes_initialized = false;
 
@@ -2247,6 +2250,57 @@ bool format_feature_detail_version(
    return true;
 }
 
+
+#ifdef REF
+DDCA_Feature_Value_Entry * sl_values = x8d_tv_audio_mute_source_values;
+DDCA_Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
+
+char * sl_name = sl_value_table_lookup(sl_values, code_info->sl);
+if (!sl_name)
+   sl_name = "Invalid value";
+
+if (vcp_version_eq(vcp_version, DDCA_VSPEC_V22)) {
+   char * sh_name = sl_value_table_lookup(sh_values, code_info->sh);
+   if (!sh_name)
+      sh_name = "Invalid value";
+   snprintf(buffer, bufsz,"%s (sl=0x%02x), %s (sh=0x%02x)",
+            sl_name, code_info->sl,
+            sh_name, code_info->sh);
+}
+else {
+   snprintf(buffer, bufsz,"%s (sl=0x%02x)",
+            sl_name, code_info->sl);
+}
+return true;
+#endif
+
+// 0xca
+bool format_feature_detail_xca_osd_button_control(
+      Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
+{
+   if (vcp_version_eq(vcp_version, DDCA_VSPEC_V22)) {
+      char * sl_name = sl_value_table_lookup(xca_v22_osd_button_sl_values, info->sl);
+      if (!sl_name)
+         sl_name = "Invalid value";
+      char * sh_name = sl_value_table_lookup(xca_v22_osd_button_sh_values, info->sh);
+      if (!sh_name)
+         sh_name = "Invalid value";
+      g_snprintf(buffer, bufsz,"%s (sl=0x%02x), %s (sh=0x%02x)",
+                 sl_name, info->sl,
+                 sh_name, info->sh);
+   }
+   else {
+      char * sl_name = sl_value_table_lookup(xca_osd_values, info->sl);
+      if (!sl_name)
+         sl_name = "Invalid value";
+      g_snprintf(buffer, bufsz,"%s (sl=0x%02x)",
+                 sl_name, info->sl);
+   }
+
+   return true;
+}
+
+
 // 0xce
 bool format_feature_detail_xce_aux_display_size(
         Nontable_Vcp_Value * code_info,
@@ -2592,6 +2646,25 @@ static DDCA_Feature_Value_Entry xca_osd_values[] = {
       {0x02, "OSD Enabled"},
       {0xff, "Display cannot supply this information"},
       {0x00, NULL}     // terminator
+};
+
+// 0xca, v2.2
+static DDCA_Feature_Value_Entry xca_v22_osd_button_sl_values[] = {
+      {0x00, "Host OSD control unsupported"},
+      {0x01, "OSD disabled, button events enabled"},
+      {0x02, "OSD enabled, button events enabled"},
+      {0x03, "OSD disabled, button events disabled"},
+      {0x04, "Display cannot supply this information"},
+      {0x00, NULL}    // terminator
+};
+
+// 0xca, v2.2
+static DDCA_Feature_Value_Entry xca_v22_osd_button_sh_values[] = {
+      {0x00, "Host control of power unsupported"},
+      {0x01, "Power button disabled, power button events enabled"},
+      {0x02, "Power button enabled, power button events enabled"},
+      {0x03, "Power button disabled, power button events disabled"},
+      {0x00, NULL}    // terminator
 };
 
 // 0xcc
@@ -4066,14 +4139,14 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Says the v2.2 spec: A new feature added to V3.0 and expanded in V2.2
       // BUT: xCA is present in 2.0 spec, defined identically to 3.0 spec
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
-      .default_sl_values=xca_osd_values,
+      // .default_sl_values=xca_osd_values, tables specified in nontable_formatter
       // .desc = "Indicates whether On Screen Display is enabled",
       .desc = "Sets and indicates the current operational state of OSD (and buttons in v2.2)",
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "OSD",
       .v22_flags = DDCA_RW | DDCA_COMPLEX_NC,
       // for v3.0:
-      .nontable_formatter = format_feature_detail_debug_sl_sh,   // TODO: write proper function for v3.0
+      .nontable_formatter = format_feature_detail_xca_osd_button_control,
       .v22_name = "OSD/Button Control"
    },
    {  .code=0xcc,
