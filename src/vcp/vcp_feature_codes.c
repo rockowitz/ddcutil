@@ -1959,14 +1959,13 @@ bool format_feature_detail_audio_speaker_volume(
   return true;
 }
 
-bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
+bool format_feature_detail_x8d_mute_audio_blank_screen(
         Nontable_Vcp_Value *     code_info,
         DDCA_MCCS_Version_Spec   vcp_version,
         char *                   buffer,
         int                      bufsz)
 {
    assert (code_info->vcp_code == 0x8d);
-   assert (vcp_version.major == 2 && vcp_version.minor >= 2);
 
    // As of v2.2, SH byte contains screen blank settings
 
@@ -1974,15 +1973,21 @@ bool format_feature_detail_x8d_v22_mute_audio_blank_screen(
    DDCA_Feature_Value_Entry * sh_values = x8d_sh_blank_screen_values;
 
    char * sl_name = sl_value_table_lookup(sl_values, code_info->sl);
-   char * sh_name = sl_value_table_lookup(sh_values, code_info->sh);
    if (!sl_name)
       sl_name = "Invalid value";
-   if (!sh_name)
-      sh_name = "Invalid value";
 
-   snprintf(buffer, bufsz,"%s (sl=0x%02x), %s (sh=0x%02x)",
-            sl_name, code_info->sl,
-            sh_name, code_info->sh);
+   if (vcp_version_eq(vcp_version, DDCA_VSPEC_V22)) {
+      char * sh_name = sl_value_table_lookup(sh_values, code_info->sh);
+      if (!sh_name)
+         sh_name = "Invalid value";
+      snprintf(buffer, bufsz,"%s (sl=0x%02x), %s (sh=0x%02x)",
+               sl_name, code_info->sl,
+               sh_name, code_info->sh);
+   }
+   else {
+      snprintf(buffer, bufsz,"%s (sl=0x%02x)",
+               sl_name, code_info->sl);
+   }
    return true;
 }
 
@@ -3627,7 +3632,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // v2.2 adds SH byte for screen blank
       .vcp_subsets = VCP_SUBSET_TV | VCP_SUBSET_AUDIO,
       .desc = "Mute/unmute audio, and (v2.2) screen blank",
-      .nontable_formatter=format_feature_detail_x8d_v22_mute_audio_blank_screen,
+      .nontable_formatter=format_feature_detail_x8d_mute_audio_blank_screen,
       .default_sl_values = x8d_tv_audio_mute_source_values,
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Audio Mute",
@@ -4455,7 +4460,7 @@ void init_func_name_table() {
    ADD_FUNC(x0c_format_feature_detail_color_temperature_request);
    ADD_FUNC(format_feature_detail_select_color_preset);
    ADD_FUNC(format_feature_detail_audio_speaker_volume);
-   ADD_FUNC(format_feature_detail_x8d_v22_mute_audio_blank_screen);
+   ADD_FUNC(format_feature_detail_x8d_mute_audio_blank_screen);
    ADD_FUNC(format_feature_detail_audio_treble_bass);
    ADD_FUNC(format_feature_detail_audio_balance_v30);
    ADD_FUNC(format_feature_detail_xac_horizontal_frequency);
