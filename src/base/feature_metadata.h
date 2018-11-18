@@ -85,7 +85,7 @@ char * sl_value_table_lookup(
 
 // Feature Flags
 
-char * interpret_feature_flags(DDCA_Version_Feature_Flags flags);
+char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags);
 
 
 // DDCA_Feature_Metadata

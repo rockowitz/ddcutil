@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/glib_util.h"
 #include "util/report_util.h"
 
 #include "base/displays.h"
@@ -30,17 +31,17 @@
 
 // Feature flags
 
-// copied from sample code, more to more generic location
-/* Creates a string representation of DDCA_Feature_Flags bitfield.
+/** Creates a string representation of DDCA_Feature_Flags bitfield.
  *
- * Arguments:
- *    flags      feature characteristics
- *
- * Returns:      string representation, caller must free
+ *  @param  flags      feature characteristics
+ *  @return string representation, valid until the next call
+ *          of this function in the current thread, do not free
  */
-char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
-   char * buffer = NULL;
-   int rc = asprintf(&buffer, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buffer = get_thread_fixed_buffer(&buf_key, 100);
+
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO             ? "Read-Only, "                   : "",
        flags & DDCA_WO             ? "Write-Only, "                  : "",
        flags & DDCA_RW             ? "Read-Write, "                  : "",
@@ -57,7 +58,6 @@ char * interpret_feature_flags(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : "",
        flags & DDCA_FULLY_SYNTHETIC      ? "Fully Synthesized, "                 : ""
        );
-   assert(rc >= 0);   // real life code would check for malloc() failure in asprintf()
    // remove final comma and blank
    if (strlen(buffer) > 0)
       buffer[strlen(buffer)-2] = '\0';
@@ -205,10 +205,8 @@ dbgrpt_ddca_feature_metadata(
 // rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
-   char * s = interpret_feature_flags(md->feature_flags);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
-   rpt_vstring(d1, "Interpreted flags: %s", s);
-   free(s);
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, d1);
 #ifdef OLD
    if (md->sl_values) {
@@ -242,8 +240,7 @@ void dbgrpt_ddca_feature_metadata_dup(
 
    rpt_vstring(d1, "Description:  %s", meta->feature_desc);
    DDCA_Version_Feature_Flags  vflags = meta->feature_flags;
-   char * s = interpret_feature_flags(vflags);
-   rpt_vstring(d1, "Attributes:   %s", s);
+   rpt_vstring(d1, "Attributes:   %s", interpret_feature_flags_t(vflags));
    // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
 
    if(meta->sl_values) {
@@ -288,9 +285,8 @@ dbgrpt_display_feature_metadata(
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
       rpt_vstring(d1, "feature_name:   %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
-      char * s = interpret_feature_flags(meta->feature_flags);
+      char * s = interpret_feature_flags_t(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
-      free(s);
       if (meta->sl_values)
          dbgrpt_sl_value_table(meta->sl_values, d1);
       else

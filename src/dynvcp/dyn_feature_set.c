@@ -317,7 +317,7 @@ dyn_create_feature_set_from_feature_set_ref2(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fsref=%s, dref=%s, flags=%s",
-          fsref_repr_t(fsref), dref_repr_t(dref), interpret_feature_flags(flags));
+          fsref_repr_t(fsref), dref_repr_t(dref), interpret_feature_flags_t(flags));
 
    Dyn_Feature_Set* result = NULL;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {

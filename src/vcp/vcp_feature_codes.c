@@ -1529,7 +1529,8 @@ find_feature_value_table(
       DDCA_MCCS_Version_Spec  vcp_version)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
+   DBGMSF(debug, "Starting. feature_code=0x%02x, vcp_version=%d.%d",
+                 feature_code, vcp_version.major, vcp_version.minor);
 
    DDCA_Feature_Value_Entry * result = NULL;
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
@@ -1543,7 +1544,11 @@ find_feature_value_table(
     	//   feature_flags = DDCA_RW | VCP2_SIMPLE_NC;
       assert(feature_flags);
 
-      if (feature_flags & DDCA_SIMPLE_NC) {
+      // feature 0xca is of type DDCA_COMPLEX_NC when vcp version = 2.2,
+      // it uses the sl byte for one lookup table, and the sh byte for another
+      // This hack lets capabilities interpretation look up the sl byte
+      // Normal interpretation of function xca uses dedicated function
+      if ( (feature_flags & DDCA_SIMPLE_NC) || feature_code == 0xca) {
          result = get_version_specific_sl_values(pentry, vcp_version);
       }
    }
@@ -4114,7 +4119,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // Says the v2.2 spec: A new feature added to V3.0 and expanded in V2.2
       // BUT: xCA is present in 2.0 spec, defined identically to 3.0 spec
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
-      // .default_sl_values=xca_osd_values, tables specified in nontable_formatter
+      .default_sl_values=xca_osd_values,  // tables specified in nontable_formatter
       // .desc = "Indicates whether On Screen Display is enabled",
       .desc = "Sets and indicates the current operational state of OSD (and buttons in v2.2)",
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
@@ -4458,18 +4463,33 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(d1, "v21_name:          %s", pfte->v21_name);
    rpt_vstring(d1, "v30_name:          %s", pfte->v30_name);
    rpt_vstring(d1, "v22_name:          %s", pfte->v22_name);
+//   rpt_vstring(d1, "v20_flags:         0x%04x - %s",
+//                   pfte->v20_flags,
+//                   vcp_interpret_version_feature_flags(pfte->v20_flags, buf, bufsz));
    rpt_vstring(d1, "v20_flags:         0x%04x - %s",
                    pfte->v20_flags,
-                   vcp_interpret_version_feature_flags(pfte->v20_flags, buf, bufsz));
+                   interpret_feature_flags_t(pfte->v20_flags));
+
+//   rpt_vstring(d1, "v21_flags:         0x%04x - %s",
+//                   pfte->v21_flags,
+//                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
    rpt_vstring(d1, "v21_flags:         0x%04x - %s",
                    pfte->v21_flags,
-                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
+                   interpret_feature_flags_t(pfte->v21_flags));
+
+//   rpt_vstring(d1, "v30_flags:         0x%04x - %s",
+//                   pfte->v30_flags,
+//                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
    rpt_vstring(d1, "v30_flags:         0x%04x - %s",
                    pfte->v30_flags,
-                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
+                   interpret_feature_flags_t(pfte->v30_flags));
+
+//   rpt_vstring(d1, "v22_flags:         0x%04x - %s",
+//                   pfte->v22_flags,
+//                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
    rpt_vstring(d1, "v22_flags:         0x%04x - %s",
                    pfte->v22_flags,
-                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
+                   interpret_feature_flags_t(pfte->v22_flags));
 
    rpt_vstring(d1, "default_sl_values: %p", pfte->default_sl_values);
    if (pfte->default_sl_values)
@@ -4516,6 +4536,7 @@ void init_func_name_table() {
    ADD_FUNC(format_feature_detail_xae_vertical_frequency);
    ADD_FUNC(format_feature_detail_xbe_link_control);
    ADD_FUNC(format_feature_detail_xc0_display_usage_time);
+   ADD_FUNC(format_feature_detail_xca_osd_button_control);
    ADD_FUNC(format_feature_detail_application_enable_key);
    ADD_FUNC(format_feature_detail_display_controller_type);
    ADD_FUNC(format_feature_detail_version);
