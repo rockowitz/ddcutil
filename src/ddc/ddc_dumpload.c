@@ -723,7 +723,7 @@ dumpvcp_as_dumpload_data(
 
    // VCP values
    Vcp_Value_Set vset = vcp_value_set_new(50);
-   psc = collect_raw_subset_values2(
+   psc = ddc_collect_raw_subset_values(
              dh,
              VCP_SUBSET_PROFILE,
              vset,

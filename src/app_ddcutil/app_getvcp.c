@@ -143,7 +143,7 @@ app_show_single_vcp_value_by_dfm(
 
    if (ddcrc == 0) {
       char * formatted_value = NULL;
-      ddcrc = get_formatted_value_for_display_feature_metadata(
+      ddcrc = ddc_get_formatted_value_for_display_feature_metadata(
                dh,
                dfm,
                false,      /* suppress_unsupported */
@@ -220,7 +220,7 @@ app_show_vcp_subset_values_by_display_handle(
           dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names_t(flags), features_seen );
 
    GPtrArray * collector = NULL;
-   Public_Status_Code psc = show_vcp_values(dh, subset_id, collector, flags, features_seen);
+   Public_Status_Code psc = ddc_show_vcp_values(dh, subset_id, collector, flags, features_seen);
 
    if (debug || IS_TRACING()) {
       if (features_seen) {
@@ -271,7 +271,7 @@ void app_show_vcp_subset_values_by_display_ref(
    if (validDisp) {
       GPtrArray * collector = NULL;
       Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      show_vcp_values(pDispHandle, subset_id, collector, show_unsupported);
+      ddc_show_vcp_values(pDispHandle, subset_id, collector, show_unsupported);
       ddc_close_display(pDispHandle);
    }
 }

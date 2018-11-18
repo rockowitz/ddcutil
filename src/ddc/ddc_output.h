@@ -4,7 +4,6 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
@@ -46,7 +45,7 @@ check_valid_operation_by_feature_id_and_dh(
 
 
 Public_Status_Code
-collect_raw_subset_values2(
+ddc_collect_raw_subset_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,
       Vcp_Value_Set       vset,
@@ -54,7 +53,7 @@ collect_raw_subset_values2(
       FILE *              msg_fh);
 
 Public_Status_Code
-get_formatted_value_for_display_feature_metadata(
+ddc_get_formatted_value_for_display_feature_metadata(
       Display_Handle *            dh,
       Display_Feature_Metadata *  dfm,
       bool                        suppress_unsupported,
@@ -63,7 +62,7 @@ get_formatted_value_for_display_feature_metadata(
       FILE *                      msg_fh);
 
 Public_Status_Code
-show_vcp_values(
+ddc_show_vcp_values(
       Display_Handle *    dh,
       VCP_Feature_Subset  subset,
       GPtrArray *         collector,

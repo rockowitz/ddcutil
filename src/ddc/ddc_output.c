@@ -468,7 +468,7 @@ collect_raw_feature_set_values2_dfm(
  *    status code
  */
 Public_Status_Code
-collect_raw_subset_values2(
+ddc_collect_raw_subset_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         Vcp_Value_Set       vset,
@@ -527,7 +527,7 @@ collect_raw_subset_values2(
  * earlier code.  It needs refactoring.
  */
 Public_Status_Code
-get_formatted_value_for_display_feature_metadata(
+ddc_get_formatted_value_for_display_feature_metadata(
       Display_Handle *            dh,
       Display_Feature_Metadata *  dfm,
       bool                        suppress_unsupported,
@@ -728,7 +728,7 @@ show_feature_set_values2_dfm(
 
             char * formatted_value = NULL;
             Public_Status_Code psc =
-            get_formatted_value_for_display_feature_metadata(
+            ddc_get_formatted_value_for_display_feature_metadata(
                   dh,
                   dfm,
                   suppress_unsupported,
@@ -801,7 +801,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
  *    status code
  */
 Public_Status_Code
-show_vcp_values(
+ddc_show_vcp_values(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
