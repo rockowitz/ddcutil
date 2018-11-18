@@ -114,7 +114,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
                               : vcp_find_feature_by_hexid(feature_code);
          if (pentry) {
-            result = extract_version_feature_info_dfm(pentry, vspec, /*version_sensitive*/ true);
+            result = extract_version_feature_info_from_feature_table_entry(pentry, vspec, /*version_sensitive*/ true);
             if (debug)
                dbgrpt_vcp_entry(pentry, 2);
 

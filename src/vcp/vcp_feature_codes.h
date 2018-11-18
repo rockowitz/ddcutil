@@ -70,8 +70,6 @@ bool format_feature_detail_sl_byte(
 // xdf: VCP Version:
 //    NC, uses both high and low bytes
 
-
-
 // MCCS specification group to which feature belongs
 // Note a function can appear in multiple groups, e.g. in different spec versions
 // Should probably have been made version specific, but it's not worth redoing
@@ -157,10 +155,7 @@ struct {
    DDCA_Feature_Value_Entry *            v22_sl_values;
 } VCP_Feature_Table_Entry;
 
-
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth);
-
-
 
 //
 // Functions that return or destroy a VCP_Feature_Table_Entry
@@ -230,7 +225,6 @@ is_table_feature_by_vcp_version(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vcp_version);
 
-
 DDCA_Version_Feature_Flags
 get_version_specific_feature_flags(
       VCP_Feature_Table_Entry *  vfte,
@@ -257,7 +251,6 @@ get_version_sensitive_feature_name(
       VCP_Feature_Table_Entry * vfte,
       DDCA_MCCS_Version_Spec    vcp_version);
 
-
 char *
 get_version_specific_feature_name(
       VCP_Feature_Table_Entry * vfte,
@@ -268,11 +261,10 @@ get_non_version_specific_feature_name(
        VCP_Feature_Table_Entry * pvft_entry);
 
 Display_Feature_Metadata *
-extract_version_feature_info_dfm(
+extract_version_feature_info_from_feature_table_entry(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive);
-
 
 //
 // Functions that query the feature table by VCP feature code
@@ -324,7 +316,6 @@ report_vcp_feature_table_entry(
 void
 vcp_list_feature_codes(FILE * fh);
 
-
 //
 // Miscellaneous Functions
 //
@@ -343,7 +334,16 @@ vcp_get_feature_code_count();
 void
 init_vcp_feature_codes();
 
-char * vcp_interpret_version_feature_flags(DDCA_Version_Feature_Flags flags, char * buf, int bufsz);
-char * vcp_interpret_global_feature_flags(DDCA_Global_Feature_Flags flags, char * buf, int bufsz);
+char *
+vcp_interpret_version_feature_flags(
+      DDCA_Version_Feature_Flags flags,
+      char *                     buf,
+      int                        bufsz);
+
+char *
+vcp_interpret_global_feature_flags(
+      DDCA_Global_Feature_Flags flags,
+      char *                    buf,
+      int                       bufsz);
 
 #endif /* VCP_FEATURE_CODES_H_ */

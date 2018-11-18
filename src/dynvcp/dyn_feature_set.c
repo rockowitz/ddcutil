@@ -85,7 +85,7 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * pentry, DDCA_MCCS_Version_Spec vspec)
 {
    Display_Feature_Metadata * dfm =
-     extract_version_feature_info_dfm(pentry, vspec, /*version_sensitive*/ true);
+     extract_version_feature_info_from_feature_table_entry(pentry, vspec, /*version_sensitive*/ true);
 
    if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
       free_synthetic_vcp_entry(pentry);

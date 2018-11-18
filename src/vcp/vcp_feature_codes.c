@@ -913,8 +913,17 @@ get_version_sensitive_feature_name(
 }
 
 
-// for use when we don't know the version
-// returns pointer into internal data structure, caller should not free
+/** Returns a feature name from a feature table entry without specifying the VCP version.
+ *
+ *  For use when we don't know the version or just need a generic
+ *  name, as in the vcpinfo command.
+ *
+ *  @param  vfte          feature table entry
+ *  @return feature name
+ *
+ *  @remark
+ *  Returns a pointer into an internal data structure.  Caller should not free.
+ */
 char *
 get_non_version_specific_feature_name(
       VCP_Feature_Table_Entry * vfte)
@@ -924,9 +933,17 @@ get_non_version_specific_feature_name(
 }
 
 
-// alternative
+/** Given a #VCP_Feature_Table_Entry, creates a VCP-version specific
+ *  #Display_Feature_Metadata.
+ *
+ *  @param  vfte feature table entry
+ *  @param  vspec VCP version
+ *  @param  version_sensitive  if true, creation is version sensitive,
+ *                             if false, version specific
+ *  @return newly allocated #Display_Feature_Metadata, caller must free
+ */
 Display_Feature_Metadata *
-extract_version_feature_info_dfm(
+extract_version_feature_info_from_feature_table_entry(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vspec,
       bool                       version_sensitive)
@@ -968,6 +985,7 @@ extract_version_feature_info_dfm(
 }
 
 
+#ifdef UNUSED
 /** Gets information about a VCP feature.
  *
  *  @param feature_code
@@ -998,8 +1016,21 @@ get_version_feature_info_by_version_id_dfm(
 
    return get_version_feature_info_by_vspec_dfm(feature_code, vspec, with_default, version_sensitive);
 }
+#endif
 
 
+
+/** Given a VCP feature code and VCP version, creates a VCP-version specific
+ *  #Display_Feature_Metadata.
+ *
+ *  @param  feature_code  VCP feature code
+ *  @param  vspec         VCP version
+ *  @param  with_default  synthesize an entry if no feature table entry
+ *                        found for the feature code
+ *  @param  version_sensitive  if true, creation is version sensitive,
+ *                             if false, version specific
+ *  @return newly allocated #Display_Feature_Metadata, caller must free
+ */
 Display_Feature_Metadata *
 get_version_feature_info_by_vspec_dfm(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -1020,7 +1051,7 @@ get_version_feature_info_by_vspec_dfm(
          (with_default) ? vcp_find_feature_by_hexid_w_default(feature_code)
                         : vcp_find_feature_by_hexid(feature_code);
    if (pentry) {
-      dfm = extract_version_feature_info_dfm(pentry, vspec, version_sensitive);
+      dfm = extract_version_feature_info_from_feature_table_entry(pentry, vspec, version_sensitive);
 
       if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
          free_synthetic_vcp_entry(pentry);
@@ -1443,7 +1474,8 @@ bool default_table_feature_detail_function(
 //
 
 // x73
-bool format_feature_detail_x73_lut_size(
+bool
+format_feature_detail_x73_lut_size(
         Buffer *                data_bytes,
         DDCA_MCCS_Version_Spec  vcp_version,
         char **                 pformatted_result)
@@ -1488,8 +1520,7 @@ bool format_feature_detail_x73_lut_size(
  * Returns:
  *   pointer to feature value table, NULL if not found
  */
-static
-DDCA_Feature_Value_Entry *
+static DDCA_Feature_Value_Entry *
 find_feature_value_table(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vcp_version)
@@ -4347,7 +4378,6 @@ struct {
 
 
 
-
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(depth, "VCP_Feature_Table_Entry at %p:", pfte);
    // show_backtrace(2);
@@ -4440,7 +4470,6 @@ void init_func_name_table() {
 }
 
 
-
 /* Initialize the vcp_feature_codes module.
  * Must be called before any other function.
  */
@@ -4455,6 +4484,4 @@ void init_vcp_feature_codes() {
    // dbgrpt_func_name_table(0);
    vcp_feature_codes_initialized = true;
 }
-
-
 
