@@ -98,6 +98,7 @@ void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
 }
 
 
+#ifdef UNUSED
 void dbgrpt_sl_value_table_dup(DDCA_Feature_Value_Entry * table, int depth) {
    rpt_vstring(depth, "DDCA_Feature_Value_Table at %p", table);
    if (table) {
@@ -108,6 +109,7 @@ void dbgrpt_sl_value_table_dup(DDCA_Feature_Value_Entry * table, int depth) {
       }
    }
 }
+#endif
 
 
 DDCA_Feature_Value_Entry *
