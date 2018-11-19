@@ -560,7 +560,7 @@ create_ddc_base_response_packet(
       *packet_ptr_addr = NULL;
 
    DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
+          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc_t(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -623,7 +623,7 @@ create_ddc_response_packet(
    }
 
    DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc(result), *packet_ptr_addr);
+          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc_t(result), *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -678,7 +678,7 @@ interpret_multi_part_read_response(
       // aux_data->text[text_length] = '\0';     // CHANGED
    }
    if (debug)
-      DBGMSG("returning %s", ddcrc_desc(result));
+      DBGMSG("returning %s", ddcrc_desc_t(result));
    return result;
 }
 
@@ -942,7 +942,7 @@ create_ddc_typed_response_packet(
       *packet_ptr_addr = NULL;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc(rc), *packet_ptr_addr);
+   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc_t(rc), *packet_ptr_addr);
    if ( (debug || IS_TRACING()) && rc >= 0)
       dbgrpt_packet(*packet_ptr_addr, 1);
 
@@ -969,7 +969,7 @@ create_ddc_multi_part_read_response_packet(
                                               &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
+      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc_t(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1024,7 +1024,7 @@ create_ddc_getvcp_response_packet(
                &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc(rc), packet);
+      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc_t(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);

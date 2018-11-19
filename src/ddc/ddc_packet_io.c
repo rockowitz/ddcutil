@@ -601,7 +601,7 @@ ddc_write_read(
               response_packet_ptr_loc);
        DBGTRC(debug, TRACE_GROUP,
               "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
-              ddcrc_desc(psc), *response_packet_ptr_loc );
+              ddcrc_desc_t(psc), *response_packet_ptr_loc );
 
        if (psc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);

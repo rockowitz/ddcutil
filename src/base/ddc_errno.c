@@ -150,17 +150,17 @@ bool ddcrc_is_not_error(Public_Status_Code gsc) {
  * @remark
  * A generic message is returned if the status code is unrecognized.
  */
-char * ddcrc_desc(int rc) {
+char * ddcrc_desc_t(int rc) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * workbuf = get_thread_fixed_buffer(&buf_key, 200);
 
    Status_Code_Info * pdesc = ddcrc_find_status_code_info(rc);
    if (pdesc) {
-      snprintf(workbuf, 200,
+      g_snprintf(workbuf, 200,
                "%s(%d): %s", pdesc->name, rc, pdesc->description);
    }
    else {
-      snprintf(workbuf, 200, "Unexpected status code %d", rc);
+      g_snprintf(workbuf, 200, "Unexpected status code %d", rc);
    }
    return workbuf;
 }

@@ -995,7 +995,7 @@ dup_error_detail(DDCA_Error_Detail * old) {
 void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth)
 {
    if (ddca_erec) {
-      rpt_vstring(depth, "status_code=%s, detail=%s", ddcrc_desc(ddca_erec->status_code), ddca_erec->detail);
+      rpt_vstring(depth, "status_code=%s, detail=%s", ddcrc_desc_t(ddca_erec->status_code), ddca_erec->detail);
       if (ddca_erec->cause_ct > 0) {
          rpt_label(depth,"Caused by: ");
          for (int ndx = 0; ndx < ddca_erec->cause_ct; ndx++) {
