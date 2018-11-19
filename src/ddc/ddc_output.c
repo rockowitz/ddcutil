@@ -506,7 +506,6 @@ ddc_collect_raw_subset_values(
 // Get formatted feature values
 //
 
-
 /** Queries the monitor for a VCP feature value, and returns
  *  a formatted interpretation of the value.
  *
