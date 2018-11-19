@@ -82,7 +82,7 @@ static Thread_Vcp_Settings *  get_thread_vcp_settings() {
 /** Executes the DDC Save Control Settings command.
  *
  * \param  dh handle of open display device
- * \return NULL if success, pointer to #Ddc_Error if failure
+ * \return NULL if success, pointer to #Error_Info if failure
  */
 Error_Info *
 ddc_save_current_settings(
@@ -129,7 +129,7 @@ ddc_save_current_settings(
  *  \param  feature_code  VCP feature code
  *  \param  new_value     new value
  *  \return NULL if success,
- *          pointer to #Ddc_Error from #ddc_write_only_with_retry() if failure
+ *          pointer to #Error_Info from #ddc_write_only_with_retry() if failure
  */
 Error_Info *
 ddc_set_nontable_vcp_value(
@@ -179,7 +179,7 @@ ddc_set_nontable_vcp_value(
  *  \param  bytect        number of bytes
  *  \return NULL  if success
  *          DDCL_UNIMPLEMENTED if io mode is USB
- *          #Ddc_Error from #multi_part_write_with_retry() otherwise
+ *          #Error_Info from #multi_part_write_with_retry() otherwise
  */
 Error_Info *
 set_table_vcp_value(
@@ -325,7 +325,7 @@ single_vcp_value_equal(
  *  \param  dh            display handle for open display
  *  \param  vrec          pointer to value record
  *  \param  newval_loc    if non-null, address at which to return verified value
- *  \return NULL if success, pointer to #Ddc_Error if failure
+ *  \return NULL if success, pointer to #Error_Info if failure
  *
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
@@ -416,7 +416,7 @@ ddc_set_vcp_value(
  *  \param  dh                 handle for open display
  *  \param  feature_code       VCP feature code
  *  \param  ppInterpretedCode  where to return parsed respons
- *  \return NULL if success, pointer to #Ddc_Error if failure
+ *  \return NULL if success, pointer to #Error_Info if failure
  *
  * It is the responsibility of the caller to free the parsed response.
  *
@@ -530,7 +530,7 @@ ddc_get_nontable_vcp_value(
  *  \param  dh              display handle
  *  \param  feature_code    VCP feature code
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
- *  \return NULL if success, pointer to #Ddc_Error if failure
+ *  \return NULL if success, pointer to #Error_Info if failure
  */
 Error_Info * ddc_get_table_vcp_value(
        Display_Handle *       dh,
@@ -578,14 +578,12 @@ Error_Info * ddc_get_table_vcp_value(
  * \param  feature_code    feature code id
  * \param  call_type       indicates whether table or non-table
  * \param  pvalrec         location where to return newly allocated #Single_Vcp_Value
- * \return NULL if success, pointer to #Ddc_Error if failure
+ * \return NULL if success, pointer to #Error_Info if failure
  *
  * The value pointed to by pvalrec is non-null iff the returned status code is 0.
  *
  * The caller is responsible for freeing the value returned at **valrec_loc**.
  */
-
-
 Error_Info *
 ddc_get_vcp_value(
        Display_Handle *       dh,
@@ -679,3 +677,4 @@ ddc_get_vcp_value(
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
+
