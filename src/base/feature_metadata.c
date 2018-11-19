@@ -201,7 +201,6 @@ dbgrpt_ddca_feature_metadata(
 {
    int d0 = depth;
    int d1 = depth+1;
-// int d2 = depth+2;
    rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
    rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
 // rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
@@ -210,17 +209,6 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, d1);
-#ifdef OLD
-   if (md->sl_values) {
-      rpt_label(d1, "SL values:");
-      DDCA_Feature_Value_Entry * curval = md->sl_values;
-      while(curval->value_code || curval->value_name) {
-         rpt_vstring(d2, "0x%02x  - %s", curval->value_code, curval->value_name);
-         curval++;
-      }
-   }
-#endif
-
 }
 
 
