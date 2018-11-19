@@ -1061,7 +1061,6 @@ get_version_feature_info_by_vspec_dfm(
    }
 
    if (debug) {
-
       if (dfm) {
          DBGMSG("Success.  feature info:");
          dbgrpt_display_feature_metadata(dfm, 1);
