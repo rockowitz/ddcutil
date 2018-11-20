@@ -20,7 +20,6 @@
 
 #include "base/feature_sets.h"
 
-
 //
 // VCP_Feature_Subset utilities
 //
