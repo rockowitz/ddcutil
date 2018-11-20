@@ -103,14 +103,6 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids) {
 }
 
 
-#ifdef REFERENCE
-   typedef struct {
-      VCP_Feature_Subset  subset;
-      Byte                specific_feature;
-   } Feature_Set_Ref;
-#endif
-
-
 /** Outputs a debug report of #Feature_Set_Ref instance
  *
  *  @param  fsref  feature set reference
