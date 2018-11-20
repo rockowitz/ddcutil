@@ -9,16 +9,17 @@
 
 #define _GNU_SOURCE     // for asprintf in stdio.h
 
+/** \cond */
 #include <assert.h>
-
-#include <stdio.h>
 #include <glib-2.0/glib.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/glib_util.h"
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/displays.h"
 #include "base/rtti.h"
@@ -26,7 +27,7 @@
 
 #include "base/feature_metadata.h"
 
-#include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
+// #include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
 
 
 // Feature flags
@@ -36,8 +37,12 @@
  *  @param  flags      feature characteristics
  *  @return string representation, valid until the next call
  *          of this function in the current thread, do not free
+ *
+ *  @remark
+ *  Currently used only in debug code.  (11/2018)
  */
-char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
+char *
+interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
@@ -55,8 +60,10 @@ char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_WO_TABLE         ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED       ? "Deprecated, "                  : "",
        flags & DDCA_USER_DEFINED     ? "User-defined, "                : "",
-       flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY        ? "Synthesized, "                 : "",
-       flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA  ? "Fully Synthesized, "          : ""
+       flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA   ? "Freeable feature metadata, " : "",
+
+       // Should never occur in DDCA_Version_Feature_Flags:
+       flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY ? "Synthesized VFTE, "          : ""
        );
    // remove final comma and blank
    if (strlen(buffer) > 0)
@@ -133,11 +140,10 @@ DDCA_Feature_Value_Entry *
 copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. oldtable=%p", oldtable);
+   DBGMSF(debug, "Starting. oldtable=%p, size=%d", oldtable, sl_value_table_size(oldtable));
    DDCA_Feature_Value_Entry * newtable = NULL;
    if (oldtable) {
       int oldsize = sl_value_table_size(oldtable);
-      DBGMSF(debug, "Size of oldtable: %d",  oldsize);
       newtable = calloc(oldsize, sizeof(DDCA_Feature_Value_Entry));
       DDCA_Feature_Value_Entry * oldentry = oldtable;
       DDCA_Feature_Value_Entry * newentry = newtable;
@@ -154,8 +160,6 @@ copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
       };
       DBGMSF(debug, "Copied %d entries, including terminating entry", ct);
    }
-   // else
-   //    DBGMSF(debug, "*** oldtable not set. oldtable=%p", oldtable);
 
    DBGMSF(debug, "Done. Returning: %p", newtable);
    return newtable;
@@ -236,35 +240,6 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, d1);
-}
-
-
-/** Emits a debug report on a #DDCA_Feature_Metadata instance.
- *  The report is written to the current report destination.
- *
- *  @param  meta   pointer to instance
- *  @param  depth  logical indentation depth
- */
-void dbgrpt_ddca_feature_metadata_dup(
-      DDCA_Feature_Metadata * meta, int depth) {
-   assert(meta);
-   int d1 = depth+1;
-
-   rpt_vstring(depth, "VCP code %02X: %s", meta->feature_code, meta->feature_name);
-
-   // rpt_vstring(d1, "Version spec: %d.%d", meta->vspec.major, meta->vspec.minor);
-
-   rpt_vstring(d1, "Description:  %s", meta->feature_desc);
-   DDCA_Version_Feature_Flags  vflags = meta->feature_flags;
-   rpt_vstring(d1, "Attributes:   %s", interpret_feature_flags_t(vflags));
-   // rpt_vstring(d1, "Global_flags: 0x%02x",  info->global_flags);  // TODO: interpretation function
-
-   if(meta->sl_values) {
-      rpt_vstring(d1, "Simple NC values:");
-      dbgrpt_sl_value_table(meta->sl_values, d1+1);
-   }
-   else
-      rpt_vstring(d1, "Simple NC values; No table specified");
 }
 
 
@@ -418,9 +393,6 @@ dfm_to_ddca_feature_metadata(
    ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
 
    DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
-   // DBGMS("Done. Returning: %p", ddca_meta);
-   // dbgrpt_ddca_feature_metadata(ddca_meta, 2);
-
    return ddca_meta;
 }
 
@@ -441,13 +413,10 @@ dfm_from_ddca_feature_metadata(
    assert(memcmp(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
 
    Display_Feature_Metadata * dfm = dfm_new(ddca_meta->feature_code);
-   // Display_Feature_Metadata * dfm = calloc(1, sizeof(Display_Feature_Metadata));
-   // memcpy(dfm->marker, DISPLAY_FEATURE_METADATA_MARKER, 4);
    dfm->display_ref = NULL;
-   // dfm->feature_code = ddca_meta->feature_code;
    dfm->feature_desc = (ddca_meta->feature_desc) ? strdup(ddca_meta->feature_desc) : NULL;
    dfm->feature_name = (ddca_meta->feature_name) ? strdup(ddca_meta->feature_name) : NULL;
-   dfm->feature_flags = ddca_meta->feature_flags;
+   dfm->feature_flags = ddca_meta->feature_flags & ~DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
    dfm->nontable_formatter = NULL;
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;
