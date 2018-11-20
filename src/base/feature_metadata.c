@@ -311,7 +311,7 @@ dbgrpt_display_feature_metadata(
       rpt_vstring(d1, "feature_code:    0x%02x", meta->feature_code);
       rpt_vstring(d1, "vcp_version:     %d.%d = %s",
                       meta->vcp_version.major, meta->vcp_version.minor, format_vspec(meta->vcp_version));
-      rpt_vstring(d1, "feature_name:   %s", meta->feature_name);
+      rpt_vstring(d1, "feature_name:    %s", meta->feature_name);
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
       char * s = interpret_feature_flags_t(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
@@ -354,6 +354,13 @@ dfm_free(
 }
 
 
+/** Common allocation and basic initialization for #Display_Feature_Metadata.
+ *
+ *  @param feature_code
+ *  @return newly allocated #Display_Feature_Metadata
+ *
+ *  @remark sets marker and feature_code fields, all other fields to 0
+ */
 Display_Feature_Metadata *
 dfm_new(
       DDCA_Vcp_Feature_Code feature_code)
