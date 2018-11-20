@@ -150,10 +150,10 @@ check_valid_operation_by_feature_id_and_dh(
  * Returns:
  *    status code
  */
-Public_Status_Code
+static Public_Status_Code
 get_raw_value_for_feature_metadata(
       Display_Handle *           dh,
-      DDCA_Feature_Metadata *    frec,
+      Display_Feature_Metadata *    frec,
       bool                       ignore_unsupported,
       DDCA_Any_Vcp_Value ** pvalrec,
       FILE *                     msg_fh)
@@ -424,12 +424,12 @@ collect_raw_feature_set_values2_dfm(
       Display_Feature_Metadata * dfm = dyn_get_feature_set_entry2_dfm(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, dfm->feature_code);
       DDCA_Any_Vcp_Value *  pvalrec;
-      DDCA_Feature_Metadata * ddca_meta = dfm_to_ddca_feature_metadata(dfm);
+      // DDCA_Feature_Metadata * ddca_meta = dfm_to_ddca_feature_metadata(dfm);
 
       Public_Status_Code cur_status_code =
             get_raw_value_for_feature_metadata(
                   dh,
-                  ddca_meta,
+                  dfm,    // ddca_meta,
                   ignore_unsupported,
                   &pvalrec,
                    msg_fh);
@@ -541,7 +541,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
    *formatted_value_loc = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-   DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
+   // DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
    bool is_table_feature = dfm->feature_flags & DDCA_TABLE;
@@ -561,7 +561,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
 
    psc = get_raw_value_for_feature_metadata(
             dh,
-            extmeta,
+            dfm,    // extmeta,
             ignore_unsupported,
             &pvalrec,
             (output_level == DDCA_OL_TERSE) ? NULL : msg_fh);
