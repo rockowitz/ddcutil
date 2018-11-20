@@ -42,21 +42,21 @@ char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
    g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-       flags & DDCA_RO             ? "Read-Only, "                   : "",
-       flags & DDCA_WO             ? "Write-Only, "                  : "",
-       flags & DDCA_RW             ? "Read-Write, "                  : "",
-       flags & DDCA_STD_CONT       ? "Continuous (standard), "       : "",
-       flags & DDCA_COMPLEX_CONT   ? "Continuous (complex), "        : "",
-       flags & DDCA_SIMPLE_NC      ? "Non-Continuous (simple), "     : "",
-       flags & DDCA_COMPLEX_NC     ? "Non-Continuous (complex), "    : "",
-       flags & DDCA_NC_CONT        ? "Non-Continuous with continuous subrange, " :"",
-       flags & DDCA_WO_NC          ? "Non-Continuous (write-only), " : "",
-       flags & DDCA_NORMAL_TABLE   ? "Table (readable), "            : "",
-       flags & DDCA_WO_TABLE       ? "Table (write-only), "          : "",
-       flags & DDCA_DEPRECATED     ? "Deprecated, "                  : "",
-       flags & DDCA_USER_DEFINED   ? "User-defined, "                : "",
-       flags & DDCA_SYNTHETIC      ? "Synthesized, "                 : "",
-       flags & DDCA_FULLY_SYNTHETIC      ? "Fully Synthesized, "                 : ""
+       flags & DDCA_RO               ? "Read-Only, "                   : "",
+       flags & DDCA_WO               ? "Write-Only, "                  : "",
+       flags & DDCA_RW               ? "Read-Write, "                  : "",
+       flags & DDCA_STD_CONT         ? "Continuous (standard), "       : "",
+       flags & DDCA_COMPLEX_CONT     ? "Continuous (complex), "        : "",
+       flags & DDCA_SIMPLE_NC        ? "Non-Continuous (simple), "     : "",
+       flags & DDCA_COMPLEX_NC       ? "Non-Continuous (complex), "    : "",
+       flags & DDCA_NC_CONT          ? "Non-Continuous with continuous subrange, " :"",
+       flags & DDCA_WO_NC            ? "Non-Continuous (write-only), " : "",
+       flags & DDCA_NORMAL_TABLE     ? "Table (readable), "            : "",
+       flags & DDCA_WO_TABLE         ? "Table (write-only), "          : "",
+       flags & DDCA_DEPRECATED       ? "Deprecated, "                  : "",
+       flags & DDCA_USER_DEFINED     ? "User-defined, "                : "",
+       flags & DDCA_SYNTHETIC        ? "Synthesized, "                 : "",
+       flags & DDCA_FULLY_SYNTHETIC  ? "Fully Synthesized, "          : ""
        );
    // remove final comma and blank
    if (strlen(buffer) > 0)
@@ -68,15 +68,20 @@ char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
 
 // SL value tables
 
-
-// size including terminating entry
-int sl_value_table_size(DDCA_Feature_Value_Entry * table) {
+/** Returns the number of entries in a feature value table, including the
+ *  final terminating entry.
+ *
+ *  @param  table  feature value table
+ *  @return number of entries
+ */
+static int
+sl_value_table_size(DDCA_Feature_Value_Entry * table) {
    int ct = 0;
    if (table) {
       DDCA_Feature_Value_Entry * cur = table;
       while (true) {
          ct++;
-         if (cur->value_code == 0x00 && !cur->value_name)
+         if (!cur->value_name)
             break;
          cur++;
       }
@@ -84,13 +89,20 @@ int sl_value_table_size(DDCA_Feature_Value_Entry * table) {
    return ct;
 }
 
-void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
+
+/** Emit a debugging report of a feature value table.
+ *
+ *  @param table  pointer to first #DDCA_Feature_Value_Entry in table
+ *  @param depth  logical indentation depth
+ */
+void
+dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Feature value table at %p", table);
    if (table) {
       rpt_vstring(depth, "Members: ");
       DDCA_Feature_Value_Entry * cur = table;
-      while (cur->value_code != 0x00 || cur->value_name) {
+      while (cur->value_name) {
          rpt_vstring(d1, "0x%02x -> %s", cur->value_code, cur->value_name);
          cur++;
       }
@@ -98,7 +110,7 @@ void dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
 }
 
 
-#ifdef UNUSED
+#ifdef UNUSED_VARIANT
 void dbgrpt_sl_value_table_dup(DDCA_Feature_Value_Entry * table, int depth) {
    rpt_vstring(depth, "DDCA_Feature_Value_Table at %p", table);
    if (table) {
@@ -112,6 +124,11 @@ void dbgrpt_sl_value_table_dup(DDCA_Feature_Value_Entry * table, int depth) {
 #endif
 
 
+/** Make a deep copy of a feature value table
+ *
+ *  @param oldtable  pointer to first #DDCA_Feature_Value_Entry in table to copy
+ *  @return copied table.
+ */
 DDCA_Feature_Value_Entry *
 copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
 {
@@ -130,7 +147,7 @@ copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
          newentry->value_code = oldentry->value_code;
          if (oldentry->value_name)
             newentry->value_name = strdup(oldentry->value_name);
-         if (oldentry->value_code == 0x00 && !oldentry->value_name)
+         else
             break;
          oldentry++;
          newentry++;
@@ -144,13 +161,19 @@ copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
    return newtable;
 }
 
-void free_sl_value_table(DDCA_Feature_Value_Entry * table) {
+
+/** Free a feature value table.
+ *
+ *  @param table pointer to first entry in table
+ */
+void
+free_sl_value_table(DDCA_Feature_Value_Entry * table) {
    if (table) {
       DDCA_Feature_Value_Entry * cur = table;
       while(true) {
          if (cur->value_name)
             free(cur->value_name);
-         else if (cur->value_code == 0x00)
+         else
             break;
          cur++;
       }
@@ -191,9 +214,13 @@ sl_value_table_lookup(
 }
 
 
-
 // DDCA_Feature_Metadata
 
+/** Output a debug report of a #DDCA_Feature_Metadata instance
+ *
+ *  @param  md     instance to report
+ *  @param  depth  logical indentation depth
+ */
 void
 dbgrpt_ddca_feature_metadata(
       DDCA_Feature_Metadata * md,
@@ -212,12 +239,11 @@ dbgrpt_ddca_feature_metadata(
 }
 
 
-/* Emits a report on a Version_Specific_Feature_Info struct.  This is a
- * debugging report.  The report is written to the current report destination.
+/** Emits a debug report on a #DDCA_Feature_Metadata instance.
+ *  The report is written to the current report destination.
  *
- * Arguments:
- *    info     pointer to version feature information struct
- *    depth    logical indentation depth
+ *  @param  meta   pointer to instance
+ *  @param  depth  logical indentation depth
  */
 void dbgrpt_ddca_feature_metadata_dup(
       DDCA_Feature_Metadata * meta, int depth) {
@@ -242,7 +268,14 @@ void dbgrpt_ddca_feature_metadata_dup(
 }
 
 
-void free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
+/** Frees a #DDCA_Feature_Metadata instance.
+ *  Should never be called for permanent instances that are part of user defined
+ *  feature records.
+ *
+ *  @param metadata  pointer to instance
+ */
+void
+free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
    if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
       assert(metadata->feature_flags & DDCA_FULLY_SYNTHETIC);
       if (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) {
@@ -259,7 +292,12 @@ void free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
 // Display_Feature_Metadata (used internally)
 //
 
-
+/** Emits a debug report on a #Display_Feature_Metadata instance.
+ *  The report is written to the current report destination.
+ *
+ *  @param  meta   pointer to instance
+ *  @param  depth  logical indentation depth
+ */
 void
 dbgrpt_display_feature_metadata(
       Display_Feature_Metadata * meta,
@@ -297,6 +335,10 @@ dbgrpt_display_feature_metadata(
 }
 
 
+/** Frees a #Display_Feature_Metadata instance.
+ *
+ *  @param meta pointer to instance
+ */
 void
 dfm_free(
       Display_Feature_Metadata * meta)
@@ -340,6 +382,14 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
 }
 
 
+/** Converts a #Display_Feature_Metadata to a DDCA_Feature_Metadata
+ *
+ *  @param ddca_meta  instance to convert
+ *  @result newly created #DDCA_Feature_Metadata
+ *
+ *  @remark
+ *  It is the responsibility of the caller to free the returned instance
+ */
 DDCA_Feature_Metadata *
 dfm_to_ddca_feature_metadata(
       Display_Feature_Metadata * dfm)
@@ -366,6 +416,15 @@ dfm_to_ddca_feature_metadata(
    return ddca_meta;
 }
 
+
+/** Converts a #DDCA_Feature_Metadata to a #Display_Feature_Metadata.
+ *
+ *  @param ddca_meta  instance to convert
+ *  @result newly created #Display_Feature_Metadata
+ *
+ *  @remark
+ *  It is the responsibility of the caller to free the returned instance
+ */
 Display_Feature_Metadata *
 dfm_from_ddca_feature_metadata(
       DDCA_Feature_Metadata * ddca_meta)
