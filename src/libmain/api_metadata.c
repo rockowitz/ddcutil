@@ -504,11 +504,12 @@ ddca_get_feature_metadata_by_dh(
       );
 }
 
+#ifdef OLD
 // frees the contents of info, not info itself
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    if ( memcmp(info.marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
-      if (info.feature_flags & DDCA_SYNTHETIC) {
+      if (info.feature_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
          free(info.feature_name);
          free(info.feature_desc);
       }
@@ -516,13 +517,15 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
    }
    return 0;
 }
+#endif
+
 
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    DDCA_Status ddcrc = 0;
    if (metadata) {
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
-           (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) )
+           (metadata->feature_flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA) )
       {
          free_ddca_feature_metadata(metadata);
       }

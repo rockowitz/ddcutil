@@ -55,8 +55,8 @@ char * interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_WO_TABLE         ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED       ? "Deprecated, "                  : "",
        flags & DDCA_USER_DEFINED     ? "User-defined, "                : "",
-       flags & DDCA_SYNTHETIC        ? "Synthesized, "                 : "",
-       flags & DDCA_FULLY_SYNTHETIC  ? "Fully Synthesized, "          : ""
+       flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY        ? "Synthesized, "                 : "",
+       flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA  ? "Fully Synthesized, "          : ""
        );
    // remove final comma and blank
    if (strlen(buffer) > 0)
@@ -277,8 +277,8 @@ void dbgrpt_ddca_feature_metadata_dup(
 void
 free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
    if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
-      assert(metadata->feature_flags & DDCA_FULLY_SYNTHETIC);
-      if (metadata->feature_flags & DDCA_FULLY_SYNTHETIC) {
+      assert(metadata->feature_flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA);
+      if (metadata->feature_flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA) {
          free(metadata->feature_name);
          free(metadata->feature_desc);
          free_sl_value_table(metadata->sl_values);
@@ -364,7 +364,7 @@ dfm_new(
    return result;
 }
 
-
+#ifdef UNUSED
 void dfm_set_feature_name(Display_Feature_Metadata * meta, const char * feature_name)
 {
    assert(meta);
@@ -378,8 +378,9 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
    assert(meta);
    if (meta->feature_desc)
       free(meta->feature_desc);
-   meta->feature_name = strdup(feature_desc);
+   meta->feature_desc = strdup(feature_desc);
 }
+#endif
 
 
 /** Converts a #Display_Feature_Metadata to a DDCA_Feature_Metadata
@@ -406,8 +407,8 @@ dfm_to_ddca_feature_metadata(
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
-   ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);     // copy table?
-   ddca_meta->feature_flags |= DDCA_FULLY_SYNTHETIC;      // for transition
+   ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);
+   ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
 
    DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
    // DBGMS("Done. Returning: %p", ddca_meta);
@@ -440,7 +441,6 @@ dfm_from_ddca_feature_metadata(
    dfm->feature_desc = (ddca_meta->feature_desc) ? strdup(ddca_meta->feature_desc) : NULL;
    dfm->feature_name = (ddca_meta->feature_name) ? strdup(ddca_meta->feature_name) : NULL;
    dfm->feature_flags = ddca_meta->feature_flags;
-   dfm->feature_flags |= DDCA_FULLY_SYNTHETIC;
    dfm->nontable_formatter = NULL;
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;

@@ -30,7 +30,7 @@
 // Declarations of API functions that haven't yet been published or that have
 // been removed from ddcutil_c_api.h
 
-
+#ifdef OLD
 /**
  *  Frees the contents a #DDCA_Feature_Metadata instance.
  *
@@ -47,6 +47,6 @@ __attribute__ ((deprecated ("use ddca_free_feature_metadata()")))
 DDCA_Status
 ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info);
 
-
+#endif
 
 #endif /* DDCUTIL_C_API_PRIVATE_H_ */

@@ -166,7 +166,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                }  // pentry->nontable_formatter == NULL
             }  // DDCA_NONTABLE
 
-            if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+            if (pentry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
                free_synthetic_vcp_entry(pentry);
          }
     }

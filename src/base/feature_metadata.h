@@ -129,8 +129,10 @@ void dfm_free(
 Display_Feature_Metadata *
       dfm_new(DDCA_Vcp_Feature_Code feature_code);
 
+#ifdef UNUSED
 void  dfm_set_feature_name(Display_Feature_Metadata * meta, const char * feature_name);
 void  dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_desc);
+#endif
 
 // Conversion functions
 

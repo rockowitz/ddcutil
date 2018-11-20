@@ -87,7 +87,7 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
    Display_Feature_Metadata * dfm =
      extract_version_feature_info_from_feature_table_entry(pentry, vspec, /*version_sensitive*/ true);
 
-   if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+   if (pentry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
       free_synthetic_vcp_entry(pentry);
 
    DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(dfm);

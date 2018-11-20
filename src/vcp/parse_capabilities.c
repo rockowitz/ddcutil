@@ -510,7 +510,7 @@ Byte_Bit_Flags parsed_capabilities_feature_ids(
             VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(frec->feature_id);
             if (!is_feature_readable_by_vcp_version(vfte, pcaps->parsed_mccs_version))
                add_feature_to_list = false;
-            if (vfte->vcp_global_flags & DDCA_SYNTHETIC)
+            if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
                free_synthetic_vcp_entry(vfte);
          }
          if (add_feature_to_list)

@@ -107,11 +107,11 @@ vcp_interpret_global_feature_flags(
 {
    // DBGMSG("flags: 0x%04x", flags);
    char * synmsg = "";
-   if (flags & DDCA_SYNTHETIC)
+   if (flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
       synmsg = "Synthetic ";
 
    char * synmsg2 = "";
-   if (flags & DDCA_FULLY_SYNTHETIC)
+   if (flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA)
       synmsg = "Fully-Synthetic ";
 
 
@@ -414,7 +414,7 @@ static char * interpret_ddca_global_feature_flags(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = "";
-   if (feature_flags & DDCA_SYNTHETIC)
+   if (feature_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
       result = "Synthetic";
    return result;
 }
@@ -969,19 +969,18 @@ extract_version_feature_info_from_feature_table_entry(
          ? get_version_sensitive_feature_flags(vfte, vspec)
          : get_version_specific_feature_flags(vfte, vspec);
 
-   dfm_set_feature_desc(dfm, vfte->desc);
+   dfm->feature_desc = (dfm->feature_desc) ? strdup(vfte->desc) : NULL;
 
    char * feature_name = (version_sensitive)
            ? get_version_sensitive_feature_name(vfte, vspec)
            : get_version_specific_feature_name(vfte, vspec);
-   dfm_set_feature_name(dfm, feature_name);
+   dfm->feature_name = strdup(feature_name);
 
    dfm->feature_flags |= vfte->vcp_global_flags;
    DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
          ? get_version_sensitive_sl_values(vfte, vspec)
          : get_version_specific_sl_values(vfte, vspec);
    dfm->sl_values = (sl_values) ? copy_sl_value_table(sl_values) : NULL;
-   dfm->feature_flags |= DDCA_FULLY_SYNTHETIC;
 
    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
@@ -1056,7 +1055,7 @@ get_version_feature_info_by_vspec_dfm(
    if (pentry) {
       dfm = extract_version_feature_info_from_feature_table_entry(pentry, vspec, version_sensitive);
 
-      if (pentry->vcp_global_flags & DDCA_SYNTHETIC)
+      if (pentry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
          free_synthetic_vcp_entry(pentry);
    }
 
@@ -1243,9 +1242,9 @@ void free_synthetic_vcp_entry(VCP_Feature_Table_Entry * pfte) {
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
    // DBGMSG("code=0x%02x", pfte->code);
    // report_vcp_feature_table_entry(pfte, 1);
-   if (pfte->vcp_global_flags & DDCA_SYNTHETIC) {
+   if (pfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
 #ifdef NO
-      // if synthetic, strings were not malloed
+      // if synthetic, strings were not malloced
       DBGMSG("pfte->desc=%p", pfte->desc);
       DBGMSG("pfte->v20_name=%p", pfte->v20_name);
       DBGMSG("pfte->v21_name=%p", pfte->v21_name);
@@ -1323,7 +1322,7 @@ vcp_create_dynamic_feature(
       // 3/2018: complex cont may not work for API callers
       pentry->nontable_formatter = format_feature_detail_debug_bytes;
    }
-   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
    pentry->vcp_global_flags |= DDCA_USER_DEFINED;
    DBGMSF(debug, "Done");
    return pentry;
@@ -1355,7 +1354,7 @@ vcp_create_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
    // 3/2018: complex cont may not work for API callers
    pentry->nontable_formatter = format_feature_detail_debug_bytes;
    pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_NC;
-   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
    return pentry;
 }
 
@@ -1380,7 +1379,7 @@ vcp_create_table_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
    }
    pentry->table_formatter = default_table_feature_detail_function,
    pentry->v20_flags = DDCA_RW | DDCA_NORMAL_TABLE;
-   pentry->vcp_global_flags = DDCA_SYNTHETIC;   // indicates caller should free
+   pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
    return pentry;
 }
 

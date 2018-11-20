@@ -35,7 +35,7 @@ void free_transient_vcp_entry(gpointer ptr) {
    VCP_Feature_Table_Entry * pfte = (VCP_Feature_Table_Entry *) ptr;
    // DBGMSG("pfte=%p, marker = %.4s   %s", pfte, pfte->marker, hexstring(pfte->marker,4));
    assert(memcmp(pfte->marker, VCP_FEATURE_TABLE_ENTRY_MARKER, 4) == 0);
-   if (pfte->vcp_global_flags & DDCA_SYNTHETIC) {
+   if (pfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
       free_synthetic_vcp_entry(pfte);
    }
 }
@@ -382,8 +382,8 @@ void free_feature_set(VCP_Feature_Set * fset) {
    for (; ndx < fset->members->len; ndx++) {
       VCP_Feature_Table_Entry * vcp_entry = NULL;
       vcp_entry = g_ptr_array_index(fset->members,ndx);
-      if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC) {
-         // free_vcp_feature_table_entry(vcp_entry);    // UNIMPLEMENTED
+      if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
+         free_synthetic_vcp_entry(vcp_entry);
       }
    }
    fset->marker[3] = 'x';
@@ -415,8 +415,8 @@ void replace_feature_set_entry(
       VCP_Feature_Table_Entry * old_entry = g_ptr_array_index(fset->members, index);
       g_ptr_array_remove_index(fset->members, index);
       g_ptr_array_insert(fset->members, index, new_entry);
-      if (old_entry->vcp_global_flags & DDCA_SYNTHETIC) {
-         // free_vcp_feature_table_entry(old_entry);    // UNIMPLEMENTED
+      if (old_entry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
+         free_synthetic_vcp_entry(old_entry);
       }
    }
 }
@@ -487,7 +487,7 @@ filter_feature_set(
          DBGMSF(debug, "Removing entry");
          // memory leak?
          g_ptr_array_remove_index(fset->members, ndx);
-         if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC) {
+         if (vcp_entry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
             free_synthetic_vcp_entry(vcp_entry);
          }
       }

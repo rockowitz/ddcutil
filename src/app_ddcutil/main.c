@@ -243,7 +243,7 @@ void probe_display_by_dh(Display_Handle * dh)
                }
                // assert( streq(feature_name, ifm->external_metadata->feature_name));
                f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
-               if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
+               if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
                   free_synthetic_vcp_entry(vfte);
                }
                // need to free ifm?
@@ -272,7 +272,7 @@ void probe_display_by_dh(Display_Handle * dh)
                                  dfm->feature_name);
                }
                // assert( streq(feature_name, ifm->external_metadata->feature_name));
-               if (vfte->vcp_global_flags & DDCA_SYNTHETIC) {
+               if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
                   free_synthetic_vcp_entry(vfte);
                }
                // free ifm
