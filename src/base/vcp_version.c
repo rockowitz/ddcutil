@@ -204,8 +204,6 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
 }
 
 
-
-
 /** Returns the symbolic name of a #DDCA_MCCS_Version_Id value.
  *
  * @param   version_id version id value
