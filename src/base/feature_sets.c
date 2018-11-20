@@ -57,7 +57,7 @@ Value_Name_Table vcp_subset_table = {
 
       VNT(VCP_SUBSET_MFG,             "MFG"),
 
-      VNT(VCP_SUBSET_DYNAMIC,         "DYNAMIC"),
+      VNT(VCP_SUBSET_DYNAMIC,         "UDF"),
       VNT(VCP_SUBSET_SINGLE_FEATURE,  NULL),
       VNT(VCP_SUBSET_NONE,            NULL),
       VNT_END
@@ -75,7 +75,7 @@ char * feature_subset_name(VCP_Feature_Subset subset_id) {
 }
 
 
-/** Returns a comma separated list of subset names in a set of subset ids.
+/** Returns a comma separated list of external subset names for a set of subset ids.
  *  The returned value is valid until the next call to this
  *  function in the current thread.
  *
@@ -145,7 +145,8 @@ Value_Name_Title_Table feature_set_flag_table = {
 const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
 
 
-/* Returns a string description of a set of feature set flag names.
+/* Returns a string representation containing the symbolic names of the
+ * flags in a #Feature_Set_Flags instance.
  * The returned value is valid until the next call to this function in the current thread.
  *
  * @param  flags  feature set flags
@@ -153,9 +154,7 @@ const int feature_set_flag_ct = ARRAY_SIZE(feature_set_flag_table)-1;
  */
 char * feature_set_flag_names_t(Feature_Set_Flags flags) {
    static GPrivate  feature_set_flag_names_key = G_PRIVATE_INIT(g_free);
-
    char * buf = get_thread_fixed_buffer(&feature_set_flag_names_key, 100);
-
    char * s = vnt_interpret_flags(
              flags,
              feature_set_flag_table,
