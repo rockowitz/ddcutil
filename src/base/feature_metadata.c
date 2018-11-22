@@ -172,6 +172,10 @@ copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
  */
 void
 free_sl_value_table(DDCA_Feature_Value_Entry * table) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. table=%p", table);
+   DBGMSF(debug, "table size = %d", sl_value_table_size(table));
+
    if (table) {
       DDCA_Feature_Value_Entry * cur = table;
       while(true) {
@@ -183,6 +187,8 @@ free_sl_value_table(DDCA_Feature_Value_Entry * table) {
       }
       free(table);
    }
+
+   DBGMSF(debug, "Done");
 }
 
 
