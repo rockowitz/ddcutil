@@ -127,6 +127,12 @@ DDCA_Build_Option_Flags ddca_build_options(void);
   */
  void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec);
 
+
+ /** Issues a detailed report of a #DDCA_Error_Detail instance.
+  *
+  *  @param ddca_erec  error information record
+  *  @param depth      logical indentation depth
+  */
  void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth);
 
 
