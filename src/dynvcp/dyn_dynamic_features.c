@@ -267,10 +267,13 @@ dfr_load_by_mmk(
    assert( (errs && !dfr) || (!errs && dfr));   // avoid clang warning
 
    if (errs) {
+      // DBGMSG("errs set, create dummy entry");
+      // save a dummy entry so we don't issue error messages again for same record
       dfr = dfr_new(mmk.mfg_id, mmk.model_name, mmk.product_code, NULL);
       dfr->flags |= DFR_FLAGS_NOT_FOUND;
    }
    else {
+      // DBGMSG("Success.  errs not set");
       *dfr_loc = dfr;
    }
 
