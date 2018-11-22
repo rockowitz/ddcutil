@@ -66,32 +66,6 @@ Tokenized first_word(char * s) {
 }
 
 
-void dbgrpt_dynamic_features_rec(
-      Dynamic_Features_Rec*   dfr,
-      int                     depth)
-{
-   assert(dfr && memcmp(dfr->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
-   int d1 = depth + 1;
-   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
-   rpt_vstring(d1, "marker:         %4s", dfr->marker);
-   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
-   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
-   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
-   rpt_vstring(d1, "filename:       %s", dfr->filename);
-   rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
-   rpt_vstring(d1, "flags:          0x%02 %s", dfr->flags, interpret_feature_flags_t(dfr->flags));
-   if (dfr->features) {
-      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
-      for (int ndx = 1; ndx < 256; ndx++) {
-         DDCA_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
-               GINT_TO_POINTER(ndx));
-         if (cur_feature)
-            dbgrpt_ddca_feature_metadata(cur_feature, d1);
-      }
-   }
-}
-
-
 // TODO: modify parse_vcp_value() in app_setvcp.c to use this function.
 //       Move this function to a more general location.
 
@@ -135,6 +109,36 @@ char * canonicalize_possible_hex_value(char * string_value) {
 // End of generic functions
 
 
+// Dynamic_Features_Rec
+
+void dbgrpt_dynamic_features_rec(
+      Dynamic_Features_Rec*   dfr,
+      int                     depth)
+{
+   assert(dfr && memcmp(dfr->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+   int d1 = depth + 1;
+   rpt_structure_loc("Dynamic_Features_Rec", dfr, depth);
+   rpt_vstring(d1, "marker:         %4s", dfr->marker);
+   rpt_vstring(d1, "mfg_id:         %s", dfr->mfg_id);
+   rpt_vstring(d1, "model_name:     %s", dfr->model_name);
+   rpt_vstring(d1, "product_code:   %u", dfr->product_code);
+   rpt_vstring(d1, "filename:       %s", dfr->filename);
+   rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
+   rpt_vstring(d1, "flags:          0x%02 %s", dfr->flags, interpret_feature_flags_t(dfr->flags));
+   if (dfr->features) {
+      rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
+      for (int ndx = 1; ndx < 256; ndx++) {
+         DDCA_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
+               GINT_TO_POINTER(ndx));
+         if (cur_feature)
+            dbgrpt_ddca_feature_metadata(cur_feature, d1);
+      }
+   }
+}
+
+
+
+
 /** Thread safe function that returns a string representation of a #Dynamic_Features_Rec
  *  suitable for diagnostic messages. The returned value is valid until the
  *  next call to this function on the current thread.
@@ -153,6 +157,8 @@ char * dfr_repr_t(Dynamic_Features_Rec * dfr) {
       g_snprintf(buf, 100, "NULL");
    return buf;
 }
+
+
 
 
 DDCA_Feature_Metadata *
@@ -174,23 +180,34 @@ get_dynamic_feature_metadata(
 
 void
 free_feature_metadata(
-      gpointer data)
+      gpointer data)    // i.e. DDCA_Feature_Metadata *
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. DDCA_Feature_Metadata * data = %p", data);
+
    DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
    assert(memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    // compare vs ddca_free_metadata_contents()
 
+   if (debug)
+      dbgrpt_ddca_feature_metadata(info, 2);
+
    free(info->feature_desc);
    free(info->feature_name);
    if (info->sl_values) {
+      free_sl_value_table(info->sl_values);
+#ifdef OLD
       DDCA_Feature_Value_Entry * cur = info->sl_values;
       for ( ;cur->value_code != 0x00 || cur->value_name; cur++ ) {
          free(cur->value_name);
       }
       free(info->sl_values);      // is this right? freeing a hunk allocated by GPtrArray
+#endif
    }
    info->marker[3] = 'x';
    free(info);
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -201,8 +218,12 @@ dfr_new(
       uint16_t     product_code,
       const char * filename)
 {
+   assert(mfg_id);
+   assert(model_name);
+
    Dynamic_Features_Rec * frec = calloc(1, sizeof(Dynamic_Features_Rec));
    memcpy(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4);
+
    frec->mfg_id       = strdup(mfg_id);
    frec->model_name   = strdup(model_name);
    frec->product_code = product_code;
@@ -216,15 +237,26 @@ void
 dfr_free(
       Dynamic_Features_Rec * frec)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. frec=%p", frec);
+
    if (frec) {
       assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+
+      if (debug)
+         dbgrpt_dynamic_features_rec(frec, 2);
+
       free(frec->mfg_id);
       free(frec->model_name);
       free(frec->filename);
-      if (frec->features)
+      if (frec->features) {
+         DBGMSF(debug, "Calling g_hash_table_destroy() for %p", frec->features);
          g_hash_table_destroy(frec->features); // n. destroy function for values set at creation
+      }
       free(frec);
    }
+
+   DBGMSF(debug, "Done");
 }
 
 //
@@ -424,9 +456,10 @@ create_monitor_dynamic_features(
             else if (streq(t1.word, "MODEL")) {
                model_name_seen = true;
                if ( !streq(t1.rest, model_name) ) {
+                  // DBGMSG("Expected model_name: \"%s\"", model_name);
                   ADD_ERROR(linectr, "Unexpected model name \"%s\"", t1.rest);
                }
-                  }
+            }
             else if (streq(t1.word, "MCCS_VERSION")) {
                // mccs_version_seen = true;   // not required for now
                // default as set by calloc() is 0.0, which is DDCA_VSPEC_UNKNOWN
@@ -494,7 +527,7 @@ create_monitor_dynamic_features(
                   }
                   else {     // valid opcode
                      cur_feature_metadata->feature_code = feature_id;
-                     cur_feature_metadata->feature_name = feature_name;
+                     cur_feature_metadata->feature_name = strdup(feature_name);
                      cur_feature_metadata->feature_desc = NULL;   // ignore for now
                   }
                }
