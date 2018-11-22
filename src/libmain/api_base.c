@@ -143,7 +143,17 @@ _ddca_init(void) {
 
 DDCA_Error_Detail *
 ddca_get_error_detail() {
-   return dup_error_detail(get_thread_error_detail());
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   DDCA_Error_Detail * result = dup_error_detail(get_thread_error_detail());
+
+   if (debug) {
+      DBGMSG("Done.  Returning: %p", result);
+      if (result)
+         report_error_detail(result, 2);
+   }
+   return result;
 }
 
 
@@ -151,6 +161,7 @@ void
 ddca_free_error_detail(DDCA_Error_Detail * ddca_erec) {
    free_error_detail(ddca_erec);
 }
+
 
 void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth) {
    report_error_detail(ddca_erec, depth);
