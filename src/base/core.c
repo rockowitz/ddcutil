@@ -935,7 +935,7 @@ free_error_detail(DDCA_Error_Detail * ddca_erec)
 }
 
 
-/** Converts a #Error_Info instance to a #DDCA_Error_Detail
+/** Converts an internal #Error_Info instance to a publicly visible #DDCA_Error_Detail
  *
  *  @param  erec  instance to convert
  *  @return new #DDCA_Error_Detail instance
@@ -943,6 +943,11 @@ free_error_detail(DDCA_Error_Detail * ddca_erec)
 DDCA_Error_Detail *
 error_info_to_ddca_detail(Error_Info * erec)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. erec=%p", erec);
+   if (debug)
+      errinfo_report(erec, 2);
+
    DDCA_Error_Detail * result = NULL;
    if (erec) {
       // ???
@@ -956,7 +961,12 @@ error_info_to_ddca_detail(Error_Info * erec)
          DDCA_Error_Detail * cause = error_info_to_ddca_detail(erec->causes[ndx]);
          result->causes[ndx] = cause;
       }
+      result->cause_ct = erec->cause_ct;
    }
+
+   DBGMSF(debug, "Done. Returning: %p", result);
+   if (debug)
+      report_error_detail(result, 2);
    return result;
 }
 
@@ -968,6 +978,11 @@ error_info_to_ddca_detail(Error_Info * erec)
  */
 DDCA_Error_Detail *
 dup_error_detail(DDCA_Error_Detail * old) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. old=%p", old);
+   if (debug)
+      report_error_detail(old, 2);
+
    DDCA_Error_Detail * result = NULL;
    if (old) {
       // ???
@@ -981,7 +996,12 @@ dup_error_detail(DDCA_Error_Detail * old) {
          DDCA_Error_Detail * cause = dup_error_detail(old->causes[ndx]);
          result->causes[ndx] = cause;
       }
+      result->cause_ct = old->cause_ct;
    }
+
+   DBGMSF(debug, "Done. Returning: %p", result);
+   if (debug)
+      report_error_detail(result, 2);
    return result;
 }
 
@@ -1035,9 +1055,16 @@ DDCA_Error_Detail * get_thread_error_detail() {
  *  @param error_detail  #DDCA_Error_Detail record to set
  */
 void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. error_detail=%p", error_detail);
+   if (debug)
+      report_error_detail(error_detail, 2);
+
    Thread_Output_Settings * settings = get_thread_settings();
    if (settings->error_detail)
       free_error_detail(settings->error_detail);
    settings->error_detail = error_detail;
+
+   DBGMSF(debug, "Done");
 }
 
