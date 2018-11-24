@@ -93,7 +93,7 @@ ddca_build_options(void) {
 #ifdef FAILSIM_ENABLED
          result |= DDCA_BUILT_WITH_FAILSIM;
 #endif
-   DBGMSG("Returning 0x%02x", result);
+   // DBGMSG("Returning 0x%02x", result);
    return result;
 }
 
