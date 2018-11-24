@@ -6,6 +6,8 @@
 // Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -91,6 +93,7 @@ ddca_build_options(void) {
 #ifdef FAILSIM_ENABLED
          result |= DDCA_BUILT_WITH_FAILSIM;
 #endif
+   DBGMSG("Returning 0x%02x", result);
    return result;
 }
 

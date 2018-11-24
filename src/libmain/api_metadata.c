@@ -3,6 +3,8 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <errno.h>
 #include <string.h>
  
@@ -29,7 +31,7 @@
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_displays_internal.h"
-#include "api_metadata_internal.h"
+#include "libmain/api_metadata_internal.h"
 
 
 //
