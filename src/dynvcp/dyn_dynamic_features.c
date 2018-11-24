@@ -37,7 +37,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
-/* static */ bool enable_dynamic_features = true;
+/* static */ bool enable_dynamic_features = false;
 
 
 // for now, just use an array of pointers to DDCA_Feature_Metadata
