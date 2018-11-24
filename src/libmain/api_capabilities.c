@@ -13,7 +13,6 @@
 #include <stddef.h>
 #include <string.h>
 
-
 #include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
 
