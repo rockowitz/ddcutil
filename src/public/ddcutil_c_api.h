@@ -900,6 +900,26 @@ ddca_get_mccs_version_by_dh(
 // VCP Feature Metadata
 //
 
+/** Controls whether user defined features (aka dynamic features) are supported.
+ *
+ *  @param[in] onoff true/false
+ *  @return    prior value
+ *
+ *  @since 0.9.3
+ */
+bool
+ddca_enable_udf(bool onoff);
+
+/** Query whether user defined features (aka dynamic features) are supported.
+ *
+ *  @retval true  UDF enabled
+ *  @retval false UDF disabled
+ *
+ *  @since 0.9.3
+ */
+bool
+ddca_is_udf_enabled(void);
+
 /**
  * Loads any user supplied feature definition files for the specified
  * display.  Does nothing if they have already been loaded.
@@ -908,6 +928,7 @@ ddca_get_mccs_version_by_dh(
  *
  * @remark
  * User supplied feature definition files are not yet publicly supported.
+ *
  * @since 0.9.3
  */
 DDCA_Status

@@ -744,6 +744,22 @@ ddca_get_simple_nc_feature_value_name_by_display(
 //  Dynamic
 //
 
+bool
+ddca_enable_udf(bool onoff)
+{
+   bool oldval = enable_dynamic_features;
+   enable_dynamic_features = onoff;
+   return oldval;
+}
+
+
+bool
+ddca_is_udf_enabled(void)
+{
+   return enable_dynamic_features;
+}
+
+
 DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
