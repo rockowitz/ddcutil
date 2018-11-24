@@ -280,8 +280,10 @@ add_error(
       va_start(args, fmt);
       vsnprintf(detail, 200, fmt, args);
       if (filename) {
-         if (linectr > 0)
-            snprintf(xdetail, sizeof(xdetail), "%s at line %d of file %s", detail, linectr, filename);
+         if (linectr > 0) {
+            snprintf(xdetail, sizeof(xdetail), "%s at line %d", detail, linectr);
+            // snprintf(xdetail, sizeof(xdetail), "%s at line %d of file %s", detail, linectr, filename);
+         }
          else
             snprintf(xdetail, sizeof(xdetail), "%s in file %s", detail, filename);
          final_detail = xdetail;
