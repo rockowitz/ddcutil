@@ -171,7 +171,7 @@ ddca_report_parsed_capabilities_by_dref(
       int                      depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. p_caps=%p", p_caps);
+   DBGMSF(debug, "Starting. p_caps=%p, ddca_dref=%s", p_caps, dref_repr_t((Display_Ref*) ddca_dref));
 
    DDCA_Status ddcrc = 0;
 
@@ -218,6 +218,7 @@ ddca_report_parsed_capabilities_by_dref(
                ddca_dref,
                true);    // create_default_if_not_found);
       assert(dfm);
+      // dbgrpt_display_feature_metadata(dfm, 3);
 
       rpt_vstring(d1, "Feature:  0x%02x (%s)", cur_vcp->feature_code, dfm->feature_name);
 
@@ -230,7 +231,7 @@ ddca_report_parsed_capabilities_by_dref(
          for (int ndx = 0; ndx < cur_vcp->value_ct; ndx++) {
             char * value_desc = "No lookup table";
             if (feature_value_table) {
-               char * value_desc =
+               value_desc =
                    sl_value_table_lookup(feature_value_table, cur_vcp->values[ndx]);
                if (!value_desc)
                   value_desc = "Unrecognized feature value";
