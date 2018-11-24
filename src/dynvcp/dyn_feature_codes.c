@@ -77,7 +77,6 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
      Dynamic_Features_Rec *   dfr,
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default)
-
 {
     bool debug = false;
     DBGMSF(debug, "Starting. feature_code=0x%02x, dfr=%p, vspec=%d.%d, with_default=%s",
