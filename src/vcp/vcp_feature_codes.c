@@ -114,13 +114,16 @@ vcp_interpret_global_feature_flags(
    // if (flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA)
    //    synmsg = "Fully-Synthetic ";
 
-   char * synmsg3 = "";
+   if (flags & DDCA_SYNTHETIC)    // should not occur for a VCP feature table entry
+      synmsg = "Synthetic ";
+
+   char * synmsg3 = "";            // should not occur for a VCP feature table entry
      if (flags & DDCA_PERSISTENT_METADATA)
         synmsg = "Persistent ";
 
 
    char * dynmsg = "";
-   if (flags & DDCA_USER_DEFINED)
+   if (flags & DDCA_USER_DEFINED)     // should not occur for a VCP feature table entry
       dynmsg = "Dynamic ";
 
    g_snprintf(buf, buflen, "%s%s%s%s", synmsg, synmsg2, synmsg3, dynmsg);
