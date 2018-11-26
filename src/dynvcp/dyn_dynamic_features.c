@@ -75,7 +75,11 @@ bool enable_dynamic_features = false;
 //
 //
 
-
+#ifdef UNUSED
+// Dynamic feature records are currently hung off the Display_Ref for a display,
+// so there is no need to look them up in a central table.
+// This might change if support for dynamically adding and removing displays is added,
+// in which case some variant of this code might prove useful.
 
 static GHashTable * dynamic_features_records;
 
@@ -157,6 +161,7 @@ get_feature_metadata(
       assert( memcmp(result->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    return result;
 }
+#endif
 
 
 /** Look for feature definition file in the current directory and
@@ -231,6 +236,20 @@ read_feature_definition_file(
 #endif
 
 
+/** Search the file system for a feature definition file specified by
+ *  a #DDCA_Monitor_Model_Key, and create a #Dynamic_Features_Rec for
+ *  the result.
+ *
+ *  @param  mmk  monitor specifier
+ *  @param  dfr_loc where to return the created #Dynamic_Features_Rec
+ *  @return #Error_Info struct describing errors.
+ *
+ *  @remark
+ *  If a #Error_Info struct is returned, then a dummy #Dynamic_Features_Rec is
+ *  created and returned, with flag DFR_FLAGS_NOT_FOUND set.  This record can then
+ *  be saved along with with valid #Dynamic_Features_Rec instances to avoid
+ *  repeatedly scanning for non-existent or invalid feature definition files.
+ */
 Error_Info *
 dfr_load_by_mmk(
       DDCA_Monitor_Model_Key  mmk,
@@ -240,15 +259,15 @@ dfr_load_by_mmk(
 
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
+
+   // dfr = dfr_lookup(mmk.mfg_id, mmk.model_name, mmk.product_code);
+
    char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name,mmk.product_code);
 
    char * fqfn = find_feature_def_file(simple_fn);
    if (fqfn) {
-      // read file into GPtrArray * lines
       GPtrArray * lines = g_ptr_array_new();
-      // errs = read_feature_definition_file(fqfn, lines);
-      errs = file_getlines_errinfo(fqfn, lines);
-
+      errs = file_getlines_errinfo(fqfn, lines); // read file into lines
       if (!errs) {
          errs = create_monitor_dynamic_features(
              mmk.mfg_id,
@@ -257,13 +276,11 @@ dfr_load_by_mmk(
              lines,
              fqfn,
              &dfr);
-         // TODO: check that dfr == NULL if error
          assert( (errs && !dfr) || (!errs && dfr));
       }
       free(fqfn);
    }
    else {
-      // DBGMSG("simple=fn=%s", simple_fn);
       errs = errinfo_new2(DDCRC_NOT_FOUND, __func__,
                           "Feature definition file not found: %s.mccs", simple_fn);
    }
@@ -276,12 +293,13 @@ dfr_load_by_mmk(
       dfr->flags |= DFR_FLAGS_NOT_FOUND;
    }
    else {
-      // DBGMSG("Success.  errs not set");
       *dfr_loc = dfr;
    }
 
    free(simple_fn);
+#ifdef UNUSED
    dfr_save(dfr);
+#endif
 
    if (debug || IS_TRACING()) {
       if (errs) {
@@ -295,7 +313,20 @@ dfr_load_by_mmk(
    return errs;
 }
 
-
+#ifdef UNUSED
+/** Search the file system for a feature definition file indicated by an EDID,
+ *  and create a #Dynamic_Features_Rec for the result.
+ *
+ *  @param  mmk  monitor specifier
+ *  @param  dfr_loc where to return the created #Dynamic_Features_Rec
+ *  @return #Error_Info struct describing errors.
+ *
+ *  @remark
+ *  If a #Error_Info struct is returned, then a dummy #Dynamic_Features_Rec is
+ *  created and returned, with flag DFR_FLAGS_NOT_FOUND set.  This record can then
+ *  be saved along with with valid #Dynamic_Features_Rec instances to avoid
+ *  repeatedly scanning for non-existent or invalid feature definition files.
+ */
 Error_Info *
 dfr_load_by_edid(
       Parsed_Edid *           edid,
@@ -305,9 +336,13 @@ dfr_load_by_edid(
          edid->mfg_id, edid->model_name, edid->product_code);
    return dfr_load_by_mmk(mmk, dfr_loc);
 }
+#endif
 
 
-Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
+Error_Info *
+dfr_check_by_dref(
+      Display_Ref * dref)
+{
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref));
 
@@ -320,7 +355,9 @@ Error_Info *  dfr_check_by_dref(Display_Ref * dref) {
       dref->dfr = NULL;
 
       Dynamic_Features_Rec * dfr = NULL;
-      errs = dfr_load_by_edid(dref->pedid, &dfr);
+      DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
+            dref->pedid->mfg_id, dref->pedid->model_name, dref->pedid->product_code);
+      errs = dfr_load_by_mmk(mmk, &dfr);
       if (!errs) {
          dref->dfr = dfr;
       }
@@ -341,7 +378,11 @@ bye:
 }
 
 
-Error_Info *  dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk) {
+#ifdef UNUSED
+Error_Info *
+dfr_check_by_mmk(
+      DDCA_Monitor_Model_Key mmk)
+{
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", mmk_repr(mmk));
 
@@ -362,4 +403,5 @@ Error_Info *  dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk) {
    }
    return errs;
 }
+#endif
 
