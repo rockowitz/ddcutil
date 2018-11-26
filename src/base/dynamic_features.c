@@ -398,6 +398,18 @@ finalize_feature(
 }
 
 
+/** Parse a set of lines describing a dynamic feature record, returning a
+ *  newly created #Dynamic_Feature_Rec if successful.
+ *
+ *  @param  mfg_id        3 character manufacturer identifier
+ *  @param  model_name    model name
+ *  @param  product_code  product code
+ *  @param  lines         array of input lines
+ *  @param  filename      source file name, for diagnostic messages, may be NULL
+ *  @param  dynamic_features_loc where to return newly allocated #Dynamic_Features_Rec,
+ *                        set to null if an #Error_Info struct is returned
+ *  @return error info struct, NULL if no error
+ */
 Error_Info *
 create_monitor_dynamic_features(
       const char * mfg_id,
