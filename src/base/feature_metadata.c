@@ -46,7 +46,7 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    char * buffer = get_thread_fixed_buffer(&buf_key, 100);
 
-   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+   g_snprintf(buffer, 100, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
        flags & DDCA_RO               ? "Read-Only, "                   : "",
        flags & DDCA_WO               ? "Write-Only, "                  : "",
        flags & DDCA_RW               ? "Read-Write, "                  : "",
@@ -60,7 +60,7 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
        flags & DDCA_WO_TABLE         ? "Table (write-only), "          : "",
        flags & DDCA_DEPRECATED       ? "Deprecated, "                  : "",
        flags & DDCA_USER_DEFINED     ? "User-defined, "                : "",
-     //flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA   ? "Freeable feature metadata, " : "",
+       flags & DDCA_SYNTHETIC        ? "Synthesized metadata, "        : "",
 
 
        // Should never occur in DDCA_Version_Feature_Flags:
