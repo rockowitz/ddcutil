@@ -525,9 +525,12 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    DDCA_Status ddcrc = 0;
+   // Internal DDCA_Feature_Metadata instances should never make it out into the wild
+   assert(!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) ;
+
    if (metadata) {
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
-           (metadata->feature_flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA) )
+           (!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) )
       {
          free_ddca_feature_metadata(metadata);
       }

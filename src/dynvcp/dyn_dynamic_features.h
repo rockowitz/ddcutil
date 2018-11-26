@@ -13,10 +13,11 @@
 
 #include "util/error_info.h"
 /** \endcond */
+
 #include "base/displays.h"
 
 
-bool enable_dynamic_features;
+extern bool enable_dynamic_features;
 
 Error_Info *
 dfr_load_by_mmk(

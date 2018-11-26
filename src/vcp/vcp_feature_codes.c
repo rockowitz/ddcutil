@@ -108,18 +108,22 @@ vcp_interpret_global_feature_flags(
    // DBGMSG("flags: 0x%04x", flags);
    char * synmsg = "";
    if (flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
-      synmsg = "Synthetic ";
+      synmsg = "Synthetic VCP Feature Table Entry";
 
    char * synmsg2 = "";
-   if (flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA)
-      synmsg = "Fully-Synthetic ";
+   // if (flags & DDCA_SYNTHETIC_DDCA_FEATURE_METADATA)
+   //    synmsg = "Fully-Synthetic ";
+
+   char * synmsg3 = "";
+     if (flags & DDCA_PERSISTENT_METADATA)
+        synmsg = "Persistent ";
 
 
    char * dynmsg = "";
    if (flags & DDCA_USER_DEFINED)
       dynmsg = "Dynamic ";
 
-   snprintf(buf, buflen, "%s%s%s", synmsg, synmsg2, dynmsg);
+   g_snprintf(buf, buflen, "%s%s%s%s", synmsg, synmsg2, synmsg3, dynmsg);
    return buf;
 }
 
@@ -1292,6 +1296,7 @@ vcp_get_feature_table_entry(int ndx) {
 }
 
 
+#ifdef UNUSED
 VCP_Feature_Table_Entry *
 vcp_create_dynamic_feature(
       DDCA_Vcp_Feature_Code   id,
@@ -1327,6 +1332,7 @@ vcp_create_dynamic_feature(
    DBGMSF(debug, "Done");
    return pentry;
 }
+#endif
 
 
 /* Creates a dummy VCP feature table entry for a feature code.
@@ -1355,6 +1361,7 @@ vcp_create_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
    pentry->nontable_formatter = format_feature_detail_debug_bytes;
    pentry->v20_flags = DDCA_RW | DDCA_COMPLEX_NC;
    pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
+   pentry->vcp_global_flags |= DDCA_SYNTHETIC;                          // indicates generated feature metadata
    return pentry;
 }
 
@@ -1380,6 +1387,7 @@ vcp_create_table_dummy_feature_for_hexid(DDCA_Vcp_Feature_Code id) {
    pentry->table_formatter = default_table_feature_detail_function,
    pentry->v20_flags = DDCA_RW | DDCA_NORMAL_TABLE;
    pentry->vcp_global_flags = DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY;   // indicates caller should free
+   pentry->vcp_global_flags |= DDCA_SYNTHETIC;                          // indicates generated feature metadata
    return pentry;
 }
 
@@ -1792,11 +1800,12 @@ bool format_feature_detail_ushort(
 
 
 //
-// Functions for specific non-table VCP Feature Codes
+// Custom functions for specific non-table VCP Feature Codes
 //
 
 // 0x02
-bool format_feature_detail_new_control_value(    // 0x02
+static bool
+format_feature_detail_new_control_value(    // 0x02
         Nontable_Vcp_Value *    code_info,
         DDCA_MCCS_Version_Spec  vcp_version,
         char *                  buffer,
@@ -1817,7 +1826,8 @@ bool format_feature_detail_new_control_value(    // 0x02
 }
 
 // 0x0b
-bool x0b_format_feature_detail_color_temperature_increment(
+static bool
+x0b_format_feature_detail_color_temperature_increment(
       Nontable_Vcp_Value *      code_info,
       DDCA_MCCS_Version_Spec    vcp_version,
       char *                    buffer,
@@ -1834,7 +1844,8 @@ bool x0b_format_feature_detail_color_temperature_increment(
 }
 
 // 0x0c
-bool x0c_format_feature_detail_color_temperature_request(
+static bool
+x0c_format_feature_detail_color_temperature_request(
       Nontable_Vcp_Value *      code_info,
       DDCA_MCCS_Version_Spec    vcp_version,
       char *                    buffer,
@@ -1849,7 +1860,8 @@ bool x0c_format_feature_detail_color_temperature_request(
 }
 
 // 0x14
-bool format_feature_detail_select_color_preset(
+static bool
+format_feature_detail_select_color_preset(
       Nontable_Vcp_Value *      code_info,
       DDCA_MCCS_Version_Spec    vcp_version,
       char *                    buffer,
@@ -1940,7 +1952,8 @@ bool format_feature_detail_select_color_preset(
 }
 
 // 0x62
-bool format_feature_detail_audio_speaker_volume(
+static bool
+format_feature_detail_audio_speaker_volume(
       Nontable_Vcp_Value *   code_info,
       DDCA_MCCS_Version_Spec vcp_version,
       char *                 buffer,
@@ -1965,7 +1978,9 @@ bool format_feature_detail_audio_speaker_volume(
   return true;
 }
 
-bool format_feature_detail_x8d_mute_audio_blank_screen(
+// 0x8d
+static bool
+format_feature_detail_x8d_mute_audio_blank_screen(
         Nontable_Vcp_Value *     code_info,
         DDCA_MCCS_Version_Spec   vcp_version,
         char *                   buffer,
@@ -1998,7 +2013,8 @@ bool format_feature_detail_x8d_mute_audio_blank_screen(
 }
 
 // 0x8f, 0x91
-bool format_feature_detail_audio_treble_bass(
+static bool
+format_feature_detail_audio_treble_bass(
       Nontable_Vcp_Value *    code_info,
       DDCA_MCCS_Version_Spec  vcp_version,
       char *                  buffer,
@@ -2036,7 +2052,8 @@ bool format_feature_detail_audio_treble_bass(
 }
 
 // 0x93
-bool format_feature_detail_audio_balance_v30(
+static bool
+format_feature_detail_audio_balance_v30(
       Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0x93);
@@ -2069,7 +2086,8 @@ bool format_feature_detail_audio_balance_v30(
 }
 
 // 0xac
-bool format_feature_detail_xac_horizontal_frequency(
+static bool
+format_feature_detail_xac_horizontal_frequency(
       Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xac);
@@ -2092,14 +2110,14 @@ bool format_feature_detail_xac_horizontal_frequency(
   return true;
 }
 
-
 // This function implements the MCCS interpretation in MCCS 2.0 and 3.0.
 // However, the Dell U3011 returns a "nominal" value of 50 and a max
 // value of 100.  Therefore, this function is not used.  Instead, the
 // 6-axis hue values are interpreted as standard continuous values.
 
 // 0x9b..0xa0
-bool format_feature_detail_6_axis_hue(
+static bool
+format_feature_detail_6_axis_hue(
       Nontable_Vcp_Value * code_info,
       DDCA_MCCS_Version_Spec                   vcp_version,
       char *                         buffer,
@@ -2142,7 +2160,8 @@ bool format_feature_detail_6_axis_hue(
 }
 
 // 0xae
-bool format_feature_detail_xae_vertical_frequency(
+static bool
+format_feature_detail_xae_vertical_frequency(
       Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
   assert (code_info->vcp_code == 0xae);
@@ -2165,7 +2184,8 @@ bool format_feature_detail_xae_vertical_frequency(
 }
 
 // 0xbe
-bool format_feature_detail_xbe_link_control(
+static bool
+format_feature_detail_xbe_link_control(
         Nontable_Vcp_Value * code_info,
         DDCA_MCCS_Version_Spec vcp_version,
         char * buffer,
@@ -2183,7 +2203,8 @@ bool format_feature_detail_xbe_link_control(
 }
 
 // 0xc0
-bool format_feature_detail_xc0_display_usage_time(
+static bool
+format_feature_detail_xc0_display_usage_time(
         Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
@@ -2208,7 +2229,8 @@ bool format_feature_detail_xc0_display_usage_time(
 }
 
 // 0xc6
-bool format_feature_detail_application_enable_key(
+static bool
+format_feature_detail_application_enable_key(
         Nontable_Vcp_Value * code_info,
         DDCA_MCCS_Version_Spec vcp_version,
         char * buffer,
@@ -2221,7 +2243,8 @@ bool format_feature_detail_application_enable_key(
  }
 
 // 0xc8
-bool format_feature_detail_display_controller_type(
+static bool
+format_feature_detail_display_controller_type(
         Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert(info->vcp_code == 0xc8);
@@ -2244,7 +2267,8 @@ bool format_feature_detail_display_controller_type(
 }
 
 // xc9, xdf
-bool format_feature_detail_version(
+static bool
+format_feature_detail_version(
         Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    int version_number  = code_info->sh;
@@ -2254,7 +2278,8 @@ bool format_feature_detail_version(
 }
 
 // 0xca
-bool format_feature_detail_xca_osd_button_control(
+static bool
+format_feature_detail_xca_osd_button_control(
       Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    if (vcp_version_eq(vcp_version, DDCA_VSPEC_V22)) {
@@ -2280,11 +2305,12 @@ bool format_feature_detail_xca_osd_button_control(
 }
 
 // 0xce
-bool format_feature_detail_xce_aux_display_size(
-        Nontable_Vcp_Value * code_info,
-        DDCA_MCCS_Version_Spec                   vcp_version,
-        char *                         buffer,
-        int                            bufsz)
+static bool
+format_feature_detail_xce_aux_display_size(
+        Nontable_Vcp_Value *      code_info,
+        DDCA_MCCS_Version_Spec    vcp_version,
+        char *                    buffer,
+        int                       bufsz)
 {
    assert (code_info->vcp_code == 0xce);
 
@@ -2795,6 +2821,7 @@ DDCA_Feature_Value_Entry xde_wo_operation_mode_values[] =
 // In 3.0/2.2, the first letter of each word of a name is capitalized
 // Need to make this consistent throughout the table
 
+/** Feature Code Master Table */
 VCP_Feature_Table_Entry vcp_code_table[] = {
    {  .code=0x01,
       // defined in 2.0, identical in 3.0
@@ -4433,7 +4460,11 @@ struct {
 #endif
 
 
-
+/** Output a debug report for a specified #VCP_Feature_Table_Entry.
+ *
+ *  @param pfte  feature table entry
+ *  @param depth logical indentation depth
+ */
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(depth, "VCP_Feature_Table_Entry at %p:", pfte);
    // show_backtrace(2);
@@ -4507,7 +4538,7 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
 }
 
 
-void init_func_name_table() {
+static void init_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(vcp_format_nontable_feature_detail);
    ADD_FUNC(vcp_format_table_feature_detail);
@@ -4542,8 +4573,8 @@ void init_func_name_table() {
 }
 
 
-/* Initialize the vcp_feature_codes module.
- * Must be called before any other function.
+/** Initialize the vcp_feature_codes module.
+ *  Must be called before any other function in this file.
  */
 void init_vcp_feature_codes() {
 #ifdef DEVELOPMENT_ONLY

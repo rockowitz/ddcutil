@@ -7,10 +7,12 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/** \cond */
 #include <assert.h>
 #include <string.h>
 
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/displays.h"
 #include "base/dynamic_features.h"
@@ -434,6 +436,7 @@ dyn_get_feature_name(
    DBGMSF(debug, "Done. Returning: %s", result);
    return result;
 }
+
 
 void init_dyn_feature_codes() {
    rtti_func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");

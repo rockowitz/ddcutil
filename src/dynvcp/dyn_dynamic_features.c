@@ -37,7 +37,8 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
-/* static */ bool enable_dynamic_features = false;
+// global variable
+bool enable_dynamic_features = false;
 
 
 // for now, just use an array of pointers to DDCA_Feature_Metadata
@@ -78,8 +79,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 static GHashTable * dynamic_features_records;
 
+
 // entries are only added, never deleted or replaced
-void
+static void
 dfr_init() {
    if (!dynamic_features_records) {
       dynamic_features_records = g_hash_table_new(
@@ -88,7 +90,9 @@ dfr_init() {
    }
 }
 
-void dfr_save(
+
+static void
+dfr_save(
       Dynamic_Features_Rec * dfr)
 {
    char * key = model_id_string(
@@ -141,7 +145,6 @@ dfr_get(
    }
    return result;
 }
-
 
 /* static */ DDCA_Feature_Metadata *
 get_feature_metadata(
@@ -202,6 +205,7 @@ find_feature_def_file(
    return result;
 }
 
+
 #ifdef OLD
 // refactored to file_getlines_errinfo()
 // reads a feature definition file into an array of text lines
@@ -225,7 +229,6 @@ read_feature_definition_file(
    return errs;
 }
 #endif
-
 
 
 Error_Info *
@@ -291,8 +294,6 @@ dfr_load_by_mmk(
 
    return errs;
 }
-
-
 
 
 Error_Info *
@@ -361,5 +362,4 @@ Error_Info *  dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk) {
    }
    return errs;
 }
-
 

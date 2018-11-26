@@ -5,7 +5,6 @@
 
 /** \cond */
 #include <assert.h>
-#include <dynvcp/dyn_dynamic_features.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -20,10 +19,12 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
+#include "dynvcp/dyn_dynamic_features.h"
+
 #include "app_dynamic_features.h"
 
 
-extern bool enable_dynamic_features;   // *** TEMP ***
+// extern bool enable_dynamic_features;   // *** TEMP ***
 
 
 /** Wraps call to #dfr_check_by_dref(), writing error messages

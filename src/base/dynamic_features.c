@@ -507,7 +507,7 @@ create_monitor_dynamic_features(
 
                cur_feature_metadata = calloc(1, sizeof(DDCA_Feature_Metadata));
                memcpy(cur_feature_metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4);
-               cur_feature_metadata->feature_flags = DDCA_USER_DEFINED;
+               cur_feature_metadata->feature_flags = DDCA_USER_DEFINED | DDCA_PERSISTENT_METADATA;
 
                char * feature_code = t2.word;
                char * feature_name = t2.rest;
