@@ -628,7 +628,7 @@ collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
    g_ptr_array_add(vals, strdup(buf));
 
-   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
+   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", time_millis);
    g_ptr_array_add(vals, strdup(buf));
 }
 

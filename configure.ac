@@ -127,6 +127,11 @@ dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C
 
 dnl needed for OBS
 AC_PROG_CC_STDC
+AC_PROG_CC_C99
+
+if test "x$ac_cv_prog_cc_c99" = xno; then
+  AC_MSG_ERROR([Building ddcutil requires C99 enabled compiler])
+fi
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
