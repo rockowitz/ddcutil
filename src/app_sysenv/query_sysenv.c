@@ -103,6 +103,7 @@ static void report_endian(int depth) {
 static void query_base_env(Env_Accumulator * accum) {
    int d0 = 0;
    int d1 = d0+1;
+   int d2 = d0+2;
 
    rpt_vstring(d0, "ddcutil version: %s", BUILD_VERSION);
    rpt_nl();
@@ -148,6 +149,20 @@ static void query_base_env(Env_Accumulator * accum) {
    sysenv_rpt_file_first_line("/proc/cmdline", NULL, d0);
 
    if (get_output_level() >= DDCA_OL_VERBOSE) {
+      rpt_nl();
+      rpt_vstring(d0, "Compiler information:");
+      rpt_vstring(d1, "C standard: %ld", __STDC_VERSION__);
+#if defined(__GNUC__)
+      rpt_vstring(d1, "gcc compatible compiler:");
+      rpt_vstring(d2, "Compiler version: %d.%d.%d", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+// not detecting clang (11/2018)
+#if defined(__clang__)
+      rpt_vstring(d2, "Clang version: %s", __clang_version__);
+#endif
+#else
+      rpt_vstring(d1, "Not a gcc compatible compiler");
+#endif
+
       rpt_nl();
       rpt_vstring(d0,"Processor information as reported by lscpu:");
         bool ok = execute_shell_cmd_rpt("lscpu", 1);
