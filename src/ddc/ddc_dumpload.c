@@ -628,8 +628,11 @@ collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
    g_ptr_array_add(vals, strdup(buf));
 
-   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %ld", time_millis);
-   g_ptr_array_add(vals, strdup(buf));
+   // time_t is problematic.  %jd handles x32_abi where time_t is of type long long
+   // but per the c11 spec time_t can be a real type
+   // Value is ignored on input, so just don't output it and avoid the issues. (11/2018)
+   // snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", time_millis);
+   // g_ptr_array_add(vals, strdup(buf));
 }
 
 #ifdef UNUSED
