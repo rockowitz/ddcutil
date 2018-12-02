@@ -13,6 +13,7 @@
 #include <glib.h>
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -628,7 +629,7 @@ collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
    g_ptr_array_add(vals, strdup(buf));
 
-   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", time_millis);
+   snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", (intmax_t) time_millis);
    g_ptr_array_add(vals, strdup(buf));
 }
 
