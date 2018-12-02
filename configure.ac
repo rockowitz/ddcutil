@@ -29,8 +29,7 @@ AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [0])
 m4_define([ddcutil_minor_version], [9])
-dnl temp micro version for development
-m4_define([ddcutil_micro_version], [3])
+m4_define([ddcutil_micro_version], [4])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
@@ -113,6 +112,8 @@ dnl explicitly initialize pkg-config in case first call to pkg_check_modules is 
 PKG_PROG_PKG_CONFIG
 required_packages= 
 
+dnl Determines C compiler to use, sets output variable cc, ac_cv_prog_cc_c89
+dnl Called by other macros, but must be called explicitly at top level for proper initialization
 AC_PROG_CC
 
 dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
@@ -127,6 +128,8 @@ dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C
 
 dnl needed for OBS
 AC_PROG_CC_STDC
+
+AC_PROG_CC_C99
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
