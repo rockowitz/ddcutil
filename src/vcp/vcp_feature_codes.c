@@ -3341,7 +3341,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // observed in Dell U3011, which is VCP 2.1
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // Per spec, values range from x00..xff
       // On U3011 monitor, values range from 0..100, returned max value is 100
       // Change the .desc to fit observed reality
@@ -3356,7 +3357,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // .desc = "Value < 127 decreases yellow saturation, 127 nominal (default) value, "
       //         "> 127 increases yellow saturation",
       .desc="Increase/decrease yellow saturation",
@@ -3367,7 +3368,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // .desc = "Value < 127 decreases green saturation, 127 nominal (default) value, "
       //           "> 127 increases green saturation",
       .desc="Increase/decrease green saturation",
@@ -3378,7 +3379,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // .desc = "Value < 127 decreases cyan saturation, 127 nominal (default) value, "
       //          "> 127 increases cyan saturation",
       .desc="Increase/decrease cyan saturation",
@@ -3389,7 +3390,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // .desc = "Value < 127 decreases blue saturation, 127 nominal (default) value, "
       //          "> 127 increases blue saturation",
       .desc="Increase/decrease blue saturation",
@@ -3400,7 +3401,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       // not in 2.0, defined in 3.0, assume new as of 2.1
-      .nontable_formatter=format_feature_detail_sl_byte,
+      // .nontable_formatter=format_feature_detail_sl_byte,
       // .desc = "Value < 127 decreases magenta saturation, 127 nominal (default) value, "
       //            "> 127 increases magenta saturation",
       .desc="Increase/decrease magenta saturation",
