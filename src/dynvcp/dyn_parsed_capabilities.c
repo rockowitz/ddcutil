@@ -230,20 +230,32 @@ report_features(
 /** Reports the Parsed_Capabilities struct for human consumption.
  *
  * @param pcaps parsed capabilities
- * @param dref  display reference
+ * @param dh    display handle, may be null
+ * @param dref  display reference, may be null
  * @param depth logical indentation depth
  *
  * Output is written to the current stdout device.
+ *
+ * @remark
+ * dh/dref alternatives are needed to avoid double open of already opened device
+ * @remark
+ * If **dh** is non-null, dref is set to dh->dref.
  */
 void dyn_report_parsed_capabilities(
-      Parsed_Capabilities*     pcaps,
+      Parsed_Capabilities *    pcaps,
+      Display_Handle *         dh,
       Display_Ref *            dref,
       int                      depth)
 {
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
-   DBGMSF(debug, "Starting. dref=%s, pcaps->raw_cmds_segment_seen=%s, pcaps->commands=%p, pcaps->vcp_features=%p",
-          dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen), pcaps->commands, pcaps->vcp_features);
+   DBGMSF(debug, "Starting. dh-%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
+                 "pcaps->commands=%p, pcaps->vcp_features=%p",
+                 dh_repr_t(dh), dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen),
+                 pcaps->commands, pcaps->vcp_features);
+
+   if (dh)
+      dref = dh->dref;
 
    int d0 = depth;
    // int d1 = d0+1;
@@ -269,8 +281,13 @@ void dyn_report_parsed_capabilities(
 
    // if vcp version unspecified in capabilities string, use queried value
    DDCA_MCCS_Version_Spec vspec = pcaps->parsed_mccs_version;
-   if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) || vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED))
-      vspec = get_vcp_version_by_display_ref(dref);
+   // if (true) {
+   if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) || vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
+      if (dh)
+         vspec = get_vcp_version_by_display_handle(dh);
+      else if (dref)
+         vspec = get_vcp_version_by_display_ref(dref);
+   }
 
    if (pcaps->vcp_features)
       report_features(pcaps->vcp_features, dref, vspec);

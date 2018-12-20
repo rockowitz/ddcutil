@@ -86,7 +86,7 @@ ddca_parse_capabilities_string(
    if (pcaps) {
       if (debug) {
          DBGMSG("Parsing succeeded. ");
-         dyn_report_parsed_capabilities(pcaps, NULL, 0);
+         dyn_report_parsed_capabilities(pcaps, NULL, NULL, 0);
          DBGMSG("Convert to DDCA_Capabilities...");
       }
       result = calloc(1, sizeof(DDCA_Capabilities));
@@ -299,7 +299,7 @@ ddca_parse_and_report_capabilities(
       int                       depth)
 {
       Parsed_Capabilities* pcaps = parse_capabilities_string(capabilities_string);
-      dyn_report_parsed_capabilities(pcaps, dref, 0);
+      dyn_report_parsed_capabilities(pcaps, NULL, dref, 0);
       free_parsed_capabilities(pcaps);
 }
 

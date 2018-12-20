@@ -165,7 +165,8 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
          // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
          dyn_report_parsed_capabilities(
                pcap,
-               dh->dref,
+               dh,
+               NULL,
                0);
          // free_parsed_capabilities(pcap);
       }
