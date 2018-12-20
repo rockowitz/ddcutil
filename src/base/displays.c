@@ -1126,28 +1126,32 @@ char * dh_repr_t(Display_Handle * dh) {
    const int bufsz = 100;
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
 
-   assert(dh);
-   assert(dh->dref);
+   if (dh) {
+      assert(dh->dref);
 
-   switch (dh->dref->io_path.io_mode) {
-   case DDCA_IO_I2C:
-        snprintf(buf, bufsz,
-                 "Display_Handle[i2c: fh=%d, busno=%d]",
-                 dh->fh, dh->dref->io_path.path.i2c_busno);
-        break;
-    case DDCA_IO_ADL:
-        snprintf(buf, bufsz,
-                 "Display_Handle[adl: display %d.%d]",
-                 dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
-        break;
-    case DDCA_IO_USB:
-        snprintf(buf, bufsz,
-                 "Display_Handle[usb: %d:%d, %s/hiddev%d]",
-                 dh->dref->usb_bus, dh->dref->usb_device,
-                 usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
-        break;
-    }
-    buf[bufsz-1] = '\0';
+      switch (dh->dref->io_path.io_mode) {
+      case DDCA_IO_I2C:
+           snprintf(buf, bufsz,
+                    "Display_Handle[i2c: fh=%d, busno=%d]",
+                    dh->fh, dh->dref->io_path.path.i2c_busno);
+           break;
+       case DDCA_IO_ADL:
+           snprintf(buf, bufsz,
+                    "Display_Handle[adl: display %d.%d]",
+                    dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
+           break;
+       case DDCA_IO_USB:
+           snprintf(buf, bufsz,
+                    "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                    dh->dref->usb_bus, dh->dref->usb_device,
+                    usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
+           break;
+       }
+       buf[bufsz-1] = '\0';
+   }
+   else {
+      strcpy(buf, "Display_Handle[NULL]");
+   }
 
    return buf;
 }
