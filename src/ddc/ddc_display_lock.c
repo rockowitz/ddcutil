@@ -113,8 +113,8 @@ bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
 }
 
 
-static GPtrArray * display_descriptors = NULL;
-static GMutex descriptors_mutex;
+static GPtrArray * display_descriptors = NULL;  // array of Distinct_Display_Desc *
+static GMutex descriptors_mutex;                // single threads access to display_descriptors
 static GMutex master_display_lock_mutex;
 
 
