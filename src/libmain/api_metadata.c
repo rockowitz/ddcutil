@@ -506,6 +506,7 @@ ddca_get_feature_metadata_by_dh(
       );
 }
 
+
 #ifdef OLD
 // frees the contents of info, not info itself
 DDCA_Status
@@ -525,10 +526,8 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    DDCA_Status ddcrc = 0;
-   // Internal DDCA_Feature_Metadata instances should never make it out into the wild
-   assert(!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) ;
-
    if (metadata) {
+      // Internal DDCA_Feature_Metadata instances (DDCA_PERSISTENT_METADATA) should never make it out into the wild
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
            (!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) )
       {
@@ -539,7 +538,6 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    }
    return ddcrc;
 }
-
 
 
 // returns pointer into permanent internal data structure, caller should not free
