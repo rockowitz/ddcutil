@@ -1423,7 +1423,9 @@ ddca_get_any_vcp_value_using_implicit_type(
  *  @param[out] formatted_value_loc Address at which to return the formatted value
  *  @return     status code, 0 if success
  *  @since 0.9.0
+ *  @deprecated Does not support user-supplied feature definitions
  */
+__attribute__ ((deprecated ("Does not support user-supplied feature definitions")))
 DDCA_Status
 ddca_get_formatted_vcp_value(
        DDCA_Display_Handle     ddca_dh,

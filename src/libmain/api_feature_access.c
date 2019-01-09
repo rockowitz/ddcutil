@@ -309,7 +309,7 @@ dbgrpt_any_vcp_value(
    }
 }
 
-
+// deprecated, does not support user defined features
 DDCA_Status
 ddca_get_formatted_vcp_value(
       DDCA_Display_Handle    ddca_dh,
