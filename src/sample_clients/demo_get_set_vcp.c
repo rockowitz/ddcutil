@@ -3,7 +3,7 @@
  * Demonstrates getting, setting, and interpreting VCP feature values.
  *
  * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -177,7 +177,7 @@ test_continuous_value(
    uint16_t cur_val = valrec.sh << 8 | valrec.sl;
 
    printf("Feature 0x%02x (%s) current value = %d, max value = %d\n",
-          feature_code, feature_name, max_val, cur_val);
+          feature_code, feature_name, cur_val, max_val);
 
    uint16_t old_value = cur_val;
    uint16_t new_value = old_value/2;
