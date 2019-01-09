@@ -91,7 +91,8 @@ void ddc_set_async_threshold(int threshold) {
  *  \remark
  *  Monitors are supposed to set the unsupported feature bit in a valid DDC
  *  response, but a few monitors (mis)use the Null Response instead to indicate
- *  an unsupported feature.
+ *  an unsupported feature. Others return with the unsupported feature bit not
+ *  set, but all bytes (mh, ml, sh, sl) zero.
  *  \remark
  *  Note that the test here is not perfect, as a Null Response might
  *  in fact indicate a transient error, but that is rare.
@@ -125,6 +126,15 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
          if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
             dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+
+         if (psc == 0 &&
+             pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
+             pvalrec->val.c_nc.mh == 0 &&
+             pvalrec->val.c_nc.ml == 0 &&
+             pvalrec->val.c_nc.sh == 0 &&
+             pvalrec->val.c_nc.sl == 0
+            )
+            dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
       }
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
@@ -393,9 +403,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                ddc_close_display(dh);
             }
 
-            if (dref->io_path.io_mode != DDCA_IO_USB)
+            if (dref->io_path.io_mode != DDCA_IO_USB) {
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
                                   bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+               rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
+                                  bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+            }
          }
       }
    }

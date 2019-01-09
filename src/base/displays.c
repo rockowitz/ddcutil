@@ -833,6 +833,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d2, "DDC NULL response usage checked:            %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
    if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
    rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+   rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
 

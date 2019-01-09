@@ -161,15 +161,16 @@ bool               dsel_validate(          Display_Selector * dsel);
 
 // *** Display_Ref ***
 
-typedef Byte Dref_Flags;
-#define DREF_DDC_COMMUNICATION_CHECKED              0x80
-#define DREF_DDC_COMMUNICATION_WORKING              0x40
-#define DREF_DDC_NULL_RESPONSE_CHECKED              0x20
-#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED 0x10
-#define DREF_DDC_IS_MONITOR_CHECKED                 0x08
-#define DREF_DDC_IS_MONITOR                         0x04
-#define DREF_TRANSIENT                              0x02
-#define DREF_DYNAMIC_FEATURES_CHECKED               0x01
+typedef uint16_t Dref_Flags;
+#define DREF_DDC_COMMUNICATION_CHECKED                 0x80
+#define DREF_DDC_COMMUNICATION_WORKING                 0x40
+#define DREF_DDC_NULL_RESPONSE_CHECKED                 0x20
+#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    0x10
+#define DREF_DDC_IS_MONITOR_CHECKED                    0x08
+#define DREF_DDC_IS_MONITOR                            0x04
+#define DREF_TRANSIENT                                 0x02
+#define DREF_DYNAMIC_FEATURES_CHECKED                  0x01
+#define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x010000
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
