@@ -80,7 +80,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default)
 {
-    bool debug = false;
+    bool debug = true;
     DBGMSF(debug, "Starting. feature_code=0x%02x, dfr=%p, vspec=%d.%d, with_default=%s",
                   feature_code, dfr, vspec.major, vspec.minor, sbool(with_default));
 
@@ -135,37 +135,38 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                   }
                }
             }
-            else {
-               if (pentry->nontable_formatter)
-                  result->nontable_formatter = pentry->nontable_formatter;
-               else {
-                  if (result->feature_flags & DDCA_STD_CONT) {
-                     result->nontable_formatter = format_feature_detail_standard_continuous;
-                  }
-                  else if (result->feature_flags & DDCA_COMPLEX_CONT) {
-                     result->nontable_formatter = format_feature_detail_debug_bytes;
-                  }
-                  else if (result->feature_flags & DDCA_SIMPLE_NC) {
-                     if (result->sl_values) {
-                        // DBGMSG("format_feature_detail_sl_lookup");
-                        result->nontable_formatter = format_feature_detail_sl_lookup;
-                     }
-                     else {
-                        DBGMSG("format_feature_detail_sl_byte");
-                        result->nontable_formatter = format_feature_detail_sl_byte;
-                     }
-                  }
-                  else if (result->feature_flags & DDCA_COMPLEX_NC) {
-                     result->nontable_formatter = format_feature_detail_debug_bytes;
-                  }
-                  else if (result->feature_flags & DDCA_NC_CONT) {
-                     result->nontable_formatter = format_feature_detail_debug_bytes;
+            else if (result->feature_flags & DDCA_NON_TABLE)  {
+               if (result->feature_flags & DDCA_STD_CONT) {
+                  result->nontable_formatter = format_feature_detail_standard_continuous;
+                  DBGMSG("DDCA_STD_CONT");
+               }
+               else if (result->feature_flags & DDCA_SIMPLE_NC) {
+                  if (result->sl_values) {
+                     // DBGMSG("format_feature_detail_sl_lookup");
+                     result->nontable_formatter = format_feature_detail_sl_lookup;
                   }
                   else {
-                     result->nontable_formatter = format_feature_detail_debug_bytes;
+                     DBGMSG("format_feature_detail_sl_byte");
+                     result->nontable_formatter = format_feature_detail_sl_byte;
                   }
-               }  // pentry->nontable_formatter == NULL
-            }  // DDCA_NONTABLE
+               }
+               else if (result->feature_flags & DDCA_WO_NC) {
+                  result->nontable_formatter = NULL;      // but should never be called for this case
+               }
+
+               else {
+                  assert(result->feature_flags & (DDCA_COMPLEX_CONT | DDCA_COMPLEX_NC | DDCA_NC_CONT));
+                  if (pentry->nontable_formatter)
+                     result->nontable_formatter = pentry->nontable_formatter;
+                  else
+                     result->nontable_formatter = format_feature_detail_debug_bytes;
+               }
+            }  // DDCA_NON_TABLE
+
+            else {
+               assert (result->feature_flags & DDCA_DEPRECATED);
+               result->nontable_formatter = format_feature_detail_debug_bytes;   // ??
+            }
 
             if (pentry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
                free_synthetic_vcp_entry(pentry);
@@ -302,7 +303,7 @@ dyn_format_nontable_feature_detail_dfm(
         char *                     buffer,
         int                        bufsz)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. Code=0x%02x, vcp_version=%d.%d",
                  dfm->feature_code, vcp_version.major, vcp_version.minor);
 
