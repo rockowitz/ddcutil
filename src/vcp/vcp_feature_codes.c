@@ -1169,6 +1169,9 @@ vcp_format_table_feature_detail(
 }
 
 
+// Used only in deprecated API function ddca_get_formatted_vcp_value()
+// to be iftested out once that function is deleted.
+
 /* Given a feature table entry and a raw feature value,
  * return a formatted string interpretation of the value.
  *
@@ -1191,7 +1194,7 @@ vcp_format_feature_detail(
        char * *                  aformatted_data
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    bool ok = true;
    *aformatted_data = NULL;
