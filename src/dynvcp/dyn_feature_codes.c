@@ -80,7 +80,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default)
 {
-    bool debug = true;
+    bool debug = false;
     DBGMSF(debug, "Starting. feature_code=0x%02x, dfr=%p, vspec=%d.%d, with_default=%s",
                   feature_code, dfr, vspec.major, vspec.minor, sbool(with_default));
 
@@ -303,7 +303,7 @@ dyn_format_nontable_feature_detail_dfm(
         char *                     buffer,
         int                        bufsz)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Code=0x%02x, vcp_version=%d.%d",
                  dfm->feature_code, vcp_version.major, vcp_version.minor);
 
