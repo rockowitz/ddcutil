@@ -1191,7 +1191,7 @@ vcp_format_feature_detail(
        char * *                  aformatted_data
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting");
    bool ok = true;
    *aformatted_data = NULL;
