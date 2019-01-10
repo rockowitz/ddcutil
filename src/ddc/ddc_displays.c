@@ -101,7 +101,7 @@ void ddc_set_async_threshold(int threshold) {
  *  verbose output is distracting.
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Any_Vcp_Value * pvalrec;
@@ -126,6 +126,15 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
          if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
             dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+
+         if (psc == 0) {
+            DBGTRC(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
+                     pvalrec->value_type,
+                     pvalrec->val.c_nc.mh,
+                     pvalrec->val.c_nc.ml,
+                     pvalrec->val.c_nc.sh,
+                     pvalrec->val.c_nc.sl);
+         }
 
          if (psc == 0 &&
              pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
