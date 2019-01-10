@@ -138,7 +138,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
             else if (result->feature_flags & DDCA_NON_TABLE)  {
                if (result->feature_flags & DDCA_STD_CONT) {
                   result->nontable_formatter = format_feature_detail_standard_continuous;
-                  DBGMSG("DDCA_STD_CONT");
+                  // DBGMSG("DDCA_STD_CONT");
                }
                else if (result->feature_flags & DDCA_SIMPLE_NC) {
                   if (result->sl_values) {
@@ -146,7 +146,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
                      result->nontable_formatter = format_feature_detail_sl_lookup;
                   }
                   else {
-                     DBGMSG("format_feature_detail_sl_byte");
+                     //  DBGMSG("format_feature_detail_sl_byte");
                      result->nontable_formatter = format_feature_detail_sl_byte;
                   }
                }
