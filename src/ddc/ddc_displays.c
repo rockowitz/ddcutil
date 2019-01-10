@@ -143,7 +143,10 @@ bool initial_checks_by_dh(Display_Handle * dh) {
              pvalrec->val.c_nc.sh == 0 &&
              pvalrec->val.c_nc.sl == 0
             )
+         {
+            DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
             dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+         }
       }
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
