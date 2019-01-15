@@ -76,6 +76,7 @@ void ddc_set_async_threshold(int threshold) {
  *  Performs the following tests:
  *  - Checks that DDC communication is working.
  *  - Checks if the monitor uses DDC Null Response to indicate invalid VCP code
+ *  - Checks if the monitor uses mh=ml=sh=sl=0 to indicate invalid VCP code
  *
  *  \param dh  pointer to #Display_Handle for open monitor device
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
@@ -101,7 +102,7 @@ void ddc_set_async_threshold(int threshold) {
  *  verbose output is distracting.
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Any_Vcp_Value * pvalrec;
@@ -418,8 +419,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             if (dref->io_path.io_mode != DDCA_IO_USB) {
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
                                   bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-               rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
-                                  bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+               // rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
+               //                    bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
             }
          }
       }
