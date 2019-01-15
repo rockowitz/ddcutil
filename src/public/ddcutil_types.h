@@ -59,6 +59,17 @@ typedef struct {
    uint8_t    micro;          ///< Micro release number
 } DDCA_Ddcutil_Version_Spec;
 
+//! Build option flags, as returned by #ddca_build_options()
+//! The enum values are defined as 1,2,4 etc so that they can be or'd.
+typedef enum {
+   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
+   DDCA_BUILT_WITH_ADL     = 0x01,
+   /** @brief ddcutil was built with support for USB connected monitors */
+   DDCA_BUILT_WITH_USB     = 0x02,
+  /** @brief ddcutil was built with support for failure simulation */
+   DDCA_BUILT_WITH_FAILSIM = 0x04
+} DDCA_Build_Option_Flags;
+
 
 //
 // Error Reporting
@@ -66,7 +77,6 @@ typedef struct {
 
 #define DDCA_ERROR_DETAIL_MARKER "EDTL"
 //! Detailed error report
-//!
 typedef struct ddca_error_detail {
    char                       marker[4];         ///< Always "EDTL"
    DDCA_Status                status_code;       ///< Error code
@@ -81,14 +91,12 @@ typedef struct ddca_error_detail {
 //
 
 //! I2C timeout types
-//!
 typedef enum{
    DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
    DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
 } DDCA_Timeout_Type;
 
 //! I2C retry limit types
-//
 typedef enum{
    DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
    DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
@@ -151,6 +159,21 @@ typedef enum {
    DDCA_STATS_ELAPSED  = 0x08,    ///< total elapsed time
    DDCA_STATS_ALL      = 0xFF     ///< indicates all statistics types
 } DDCA_Stats_Type;
+
+
+//
+// Output capture
+//
+
+//! Capture option flags, used by #ddca_start_capture()
+//!
+//! The enum values are defined as 1,2,4 etc so that they can be or'd.
+//!
+//!  @since 0.9.0
+typedef enum {
+   DDCA_CAPTURE_NOOPTS     = 0,     ///< @brief no options specified
+   DDCA_CAPTURE_STDERR     = 1      ///< @brief capture **stderr** as well as **stdout**
+} DDCA_Capture_Option_Flags;
 
 
 //

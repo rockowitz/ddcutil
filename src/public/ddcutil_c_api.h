@@ -68,19 +68,6 @@ const char * ddca_ddcutil_version_string(void);
 
 
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
-/** Build option flags
- *
- *  The enum values are defined as 1,2,4 etc so that they can be or'd.
- */
-typedef enum {
-   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
-   DDCA_BUILT_WITH_ADL     = 0x01,
-   /** @brief ddcutil was built with support for USB connected monitors */
-   DDCA_BUILT_WITH_USB     = 0x02,
-  /** @brief ddcutil was built with support for failure simulation */
-   DDCA_BUILT_WITH_FAILSIM = 0x04
-} DDCA_Build_Option_Flags;
-
 
 #ifdef ALT
  * Defined Bits
@@ -286,17 +273,6 @@ void ddca_set_ferr_to_default(void);
 // Convenience functions for capturing output by redirecting
 // to an in-memory buffer.
 //
-
-/** Capture option flags
- *
- *  The enum values are defined as 1,2,4 etc so that they can be or'd.
- *
- *  @since 0.9.0
- */
-typedef enum {
-   DDCA_CAPTURE_NOOPTS     = 0,     ///< @brief no options specified
-   DDCA_CAPTURE_STDERR     = 1      ///< @brief capture **stderr** as well as **stdout**
-} DDCA_Capture_Option_Flags;
 
 /** Begins capture of **stdout** and optionally **stderr** output on the
  *  current thread to a thread-specific in-memory buffer.
