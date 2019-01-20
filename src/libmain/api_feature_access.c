@@ -393,6 +393,7 @@ ddca_format_any_vcp_value(
                  (mmid) ? mmk_repr(*mmid) : "NULL"
                  );
    DDCA_Status psc = 0;
+   free_thread_error_detail();
 
    *formatted_value_loc = NULL;
 
@@ -495,6 +496,7 @@ ddca_format_non_table_vcp_value(
              (mmid) ? mmk_repr(*mmid) : "NULL");
    }
 
+   // free_thread_error_detail();   // unnecessary, done by ddca_format_any_vcp_value();
    DDCA_Any_Vcp_Value anyval;
    anyval.opcode = feature_code;
    anyval.value_type = DDCA_NON_TABLE_VCP_VALUE;
@@ -542,6 +544,7 @@ ddca_format_table_vcp_value(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
+   // free_thread_error_detail();   // unnecessary, done by ddca_format_any_vcp_value();
    DDCA_Any_Vcp_Value anyval;
    anyval.opcode = feature_code;
    anyval.value_type = DDCA_TABLE_VCP_VALUE;
@@ -616,6 +619,7 @@ ddca_set_continuous_vcp_value_verify(
       uint16_t *            verified_value_loc)
 {
    DDCA_Status rc = 0;
+   free_thread_error_detail();
 
    DDCA_Any_Vcp_Value valrec;
    valrec.opcode = feature_code;
@@ -699,6 +703,7 @@ ddca_set_non_table_vcp_value_verify(
       Byte *                 verified_hi_byte_loc,
       Byte *                 verified_lo_byte_loc)
 {
+   free_thread_error_detail();
    if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||
         (!verified_hi_byte_loc &&  verified_lo_byte_loc )
       )
@@ -760,7 +765,8 @@ ddca_set_table_vcp_value_verify(
       DDCA_Table_Vcp_Value *      table_value,
       DDCA_Table_Vcp_Value **     verified_value_loc)
 {
-   DDCA_Status rc = 0;
+    free_thread_error_detail();
+    DDCA_Status rc = 0;
 
     DDCA_Any_Vcp_Value valrec;
     valrec.opcode = feature_code;
@@ -820,6 +826,7 @@ ddca_set_any_vcp_value_verify(
       DDCA_Any_Vcp_Value *    new_value,
       DDCA_Any_Vcp_Value **   verified_value_loc)
 {
+   free_thread_error_detail();
    DDCA_Status rc = 0;
 
    if (verified_value_loc) {
