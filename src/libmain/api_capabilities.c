@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -77,6 +77,7 @@ ddca_parse_capabilities_string(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
+   free_thread_error_detail();
    DDCA_Status psc = DDCRC_OTHER;       // DDCL_BAD_DATA?
    DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
    DDCA_Capabilities * result = NULL;
@@ -175,6 +176,7 @@ ddca_report_parsed_capabilities_by_dref(
    bool debug = false;
    DBGMSF(debug, "Starting. p_caps=%p, ddca_dref=%s", p_caps, dref_repr_t((Display_Ref*) ddca_dref));
 
+   free_thread_error_detail();
    DDCA_Status ddcrc = 0;
 
    // no need to check marker since DDCA_Capabilities not opaque
@@ -266,6 +268,7 @@ ddca_report_parsed_capabilities_by_dh(
    bool debug = false;
    DBGMSF(debug, "Starting. p_caps=%p, ddca_dh=%s, depth=%d", p_caps, ddca_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
+   free_thread_error_detail();
    if (!library_initialized) {
       ddcrc = DDCRC_UNINITIALIZED;
       goto bye;
