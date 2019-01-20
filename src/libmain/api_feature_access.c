@@ -3,7 +3,7 @@
  *  Get, set, and format feature values
  */
 
-// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
