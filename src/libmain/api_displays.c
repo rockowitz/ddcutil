@@ -44,9 +44,9 @@ ddca_create_dispno_display_identifier(
       int                      dispno,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    Display_Identifier* did = create_dispno_display_identifier(dispno);
    *did_loc = did;
-   // DBGMSG("Done.  *did_loc = %p", *did_loc);
    return 0;
 }
 
@@ -56,6 +56,7 @@ ddca_create_busno_display_identifier(
       int busno,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
    return 0;
@@ -68,6 +69,7 @@ ddca_create_adlno_display_identifier(
       int                      iDisplayIndex,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    Display_Identifier* did = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);
    *did_loc = did;
    return 0;
@@ -81,6 +83,7 @@ ddca_create_mfg_model_sn_display_identifier(
       const char*              serial_ascii,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    *did_loc = NULL;
    DDCA_Status rc = 0;
 
@@ -114,6 +117,7 @@ ddca_create_edid_display_identifier(
       const Byte *              edid,
       DDCA_Display_Identifier * did_loc)    // 128 byte EDID
 {
+   free_thread_error_detail();
    *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
@@ -133,6 +137,7 @@ ddca_create_usb_display_identifier(
       int                      device,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
    return 0;
@@ -144,6 +149,7 @@ ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
       DDCA_Display_Identifier* did_loc)
 {
+   free_thread_error_detail();
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
    return 0;
@@ -154,6 +160,7 @@ DDCA_Status
 ddca_free_display_identifier(
       DDCA_Display_Identifier did)
 {
+   free_thread_error_detail();
    DDCA_Status rc = 0;
    Display_Identifier * pdid = (Display_Identifier *) did;
    if (pdid) {
@@ -193,6 +200,7 @@ ddca_create_display_ref(
    if (ddca_dref)
       DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
    DDCA_Status rc = 0;
+   free_thread_error_detail();
 
    if (!library_initialized) {
       rc =  DDCRC_UNINITIALIZED;
@@ -283,6 +291,7 @@ ddca_report_display_by_dref(
       DDCA_Display_Ref ddca_dref,
       int depth)
 {
+   free_thread_error_detail();
    DDCA_Status rc = 0;
 
     if (!library_initialized) {
@@ -320,6 +329,7 @@ ddca_open_display2(
       bool                  wait,
       DDCA_Display_Handle * p_dh)
 {
+   free_thread_error_detail();
    if (!library_initialized)
       return DDCRC_UNINITIALIZED;
 
@@ -346,6 +356,7 @@ ddca_open_display2(
 
 DDCA_Status
 ddca_close_display(DDCA_Display_Handle ddca_dh) {
+   free_thread_error_detail();
    if (!library_initialized)
       return DDCRC_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -395,6 +406,7 @@ ddca_get_mccs_version_by_dh(
       DDCA_Display_Handle     ddca_dh,
       DDCA_MCCS_Version_Spec* p_spec)
 {
+   free_thread_error_detail();
    if (!library_initialized)
       return DDCRC_UNINITIALIZED;
    DDCA_Status rc = 0;
@@ -562,6 +574,7 @@ ddca_get_display_info_list2(
 {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_API||DDCA_TRC_DDC, "Starting");
+   free_thread_error_detail();
 
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
@@ -757,6 +770,7 @@ ddca_get_edid_by_dref(
 {
    DDCA_Status rc = 0;
    *p_bytes = NULL;
+   free_thread_error_detail();
 
    if (!library_initialized) {
       rc = DDCRC_UNINITIALIZED;
@@ -803,5 +817,4 @@ int
 ddca_report_displays(bool include_invalid_displays, int depth) {
    return ddc_report_displays(include_invalid_displays, depth);
 }
-
 
