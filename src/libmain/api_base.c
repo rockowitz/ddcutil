@@ -3,7 +3,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -410,6 +410,7 @@ ddca_set_max_tries(
       int             max_tries)
 {
    DDCA_Status rc = 0;
+   free_thread_error_detail();
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = -EINVAL;
    else {
