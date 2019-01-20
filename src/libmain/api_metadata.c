@@ -353,6 +353,7 @@ ddca_get_feature_flags_by_vspec(
       DDCA_MCCS_Version_Spec        vspec,
       DDCA_Feature_Flags *          feature_flags)
 {
+   free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
 //    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
@@ -383,6 +384,7 @@ ddca_get_feature_flags_by_version_id(
       DDCA_MCCS_Version_Id          mccs_version_id,
       DDCA_Feature_Flags *          feature_flags)
 {
+   free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_version_id(
          feature_code,
@@ -409,7 +411,7 @@ ddca_get_feature_metadata_by_vspec(
    bool debug = false;
    DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info_loc=%p",
                  feature_code, vspec.major, vspec.minor, create_default_if_not_found, info_loc);
-   // DBGMSG("vspec=%d.%d", vspec.major, vspec.minor);
+   free_thread_error_detail();
    DDCA_Feature_Metadata * meta = NULL;
    DDCA_Status psc = DDCRC_ARG;
    Display_Feature_Metadata * dfm =
@@ -526,6 +528,7 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
 DDCA_Status
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    DDCA_Status ddcrc = 0;
+   free_thread_error_detail();
    if (metadata) {
       // Internal DDCA_Feature_Metadata instances (DDCA_PERSISTENT_METADATA) should never make it out into the wild
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
@@ -606,8 +609,8 @@ ddca_get_simple_sl_value_table_by_vspec(
    bool debug = false;
    DDCA_Status rc = 0;
    *value_table_loc = NULL;
-   DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d",
-                 feature_code, vspec.major, vspec.minor);
+   DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d", feature_code, vspec.major, vspec.minor);
+   free_thread_error_detail();
 
    if (!vcp_version_is_valid(vspec, /* unknown_ok */ true)) {
       rc = DDCRC_ARG;
@@ -696,6 +699,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
    // DBGMSG("feature_value_table=%p", feature_value_table);
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
+   free_thread_error_detail();
    DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
    *value_name_loc = sl_value_table_lookup(feature_value_entries, feature_value);
    if (!*value_name_loc)
@@ -712,6 +716,7 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       uint8_t                  feature_value,
       char**                   feature_name_loc)
 {
+   free_thread_error_detail();
    DDCA_Feature_Value_Entry * feature_value_entries = NULL;
 
    // this should be a function in vcp_feature_codes:
