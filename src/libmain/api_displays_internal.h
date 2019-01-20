@@ -24,6 +24,7 @@
          psc = DDCRC_ARG; \
       } \
       else { \
+         free_thread_error_detail(); \
          (action); \
       } \
       return psc; \
@@ -40,6 +41,7 @@
          psc = DDCRC_ARG; \
       } \
       else { \
+         free_thread_error_detail(); \
          (_action_); \
       } \
       return psc; \
