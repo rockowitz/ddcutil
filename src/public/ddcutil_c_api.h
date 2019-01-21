@@ -100,7 +100,7 @@ DDCA_Build_Option_Flags ddca_build_options(void);
   *  API call, if the call supports detailed error information (only a
   *  few do).
   *
-  *  @return  copy of detailed error information (user most free)
+  *  @return  copy of detailed error information (user must free)
   *
   *  @since 0.9.0
   */
