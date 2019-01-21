@@ -135,7 +135,7 @@ DDCA_Build_Option_Flags ddca_build_options(void);
  *
  * @remark
  * The returned value is a pointer into internal persistent
- * data structures and should not be free'd by the caller.
+ * data structures and should not be freed by the caller.
  *  */
 char * ddca_rc_name(DDCA_Status status_code);
 
