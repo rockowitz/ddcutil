@@ -422,7 +422,7 @@ bye:
 #endif
 
    ddcrc = ERRINFO_STATUS(ddc_excp);
-   DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   DBGMSF(debug, "Returning: %s", psc_desc(ddcrc));
    return ddc_excp;
 }
 
