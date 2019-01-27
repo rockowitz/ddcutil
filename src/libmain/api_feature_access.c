@@ -99,8 +99,9 @@ ddca_get_non_table_vcp_value(
        }
        else {
           psc = ddc_excp->status_code;
-          errinfo_free_with_report(ddc_excp, report_freed_exceptions, __func__);
-          // errinfo_free(ddc_excp);
+          save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+          // errinfo_free(ddc_excp, report_freed_exceptions, __func__);
+          errinfo_free(ddc_excp);
        }
     } );
 }
@@ -119,6 +120,7 @@ ddca_get_table_vcp_value(
          Buffer * p_table_bytes = NULL;
          ddc_excp =  ddc_get_table_vcp_value(dh, feature_code, &p_table_bytes);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
          errinfo_free(ddc_excp);
          if (psc == 0) {
             assert(p_table_bytes);  // avoid coverity warning
@@ -156,6 +158,7 @@ ddca_get_vcp_value(
                *pvalrec = NULL;
                ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->status_code : 0;
+               save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
                errinfo_free(ddc_excp);
                DBGMSF(debug, "*pvalrec=%p", *pvalrec);
          }
@@ -199,10 +202,9 @@ ddca_get_any_vcp_value_using_explicit_type(
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
           ddca_dh, feature_code, call_type, pvalrec);
    *pvalrec = NULL;
-   DDCA_Status rc = DDCRC_ARG;
 
    DDCA_Any_Vcp_Value * valrec2 = NULL;
-   rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
+   DDCA_Status rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
    if (rc == 0) {
       *pvalrec = valrec2;
    }
@@ -251,11 +253,10 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Any_Vcp_Value **       valrec_loc)
 {
+   free_thread_error_detail();
 
    DDCA_Vcp_Value_Type call_type;
-
    DDCA_Status ddcrc = get_value_type(ddca_dh, feature_code, &call_type);
-
    if (ddcrc == 0) {
       ddcrc = ddca_get_any_vcp_value_using_explicit_type(
                  ddca_dh,

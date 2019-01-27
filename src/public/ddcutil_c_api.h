@@ -1355,7 +1355,11 @@ dbgrpt_any_vcp_value(
  *                           which will be filled in
  * @return status code
  *
- * @remark renamed from **ddca_get_nontable_vcp_value()**
+ * @remark
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail()
+ * @remark
+ * Renamed from **ddca_get_nontable_vcp_value()**
  * @since 0.9.0
  */
 DDCA_Status
@@ -1371,6 +1375,9 @@ ddca_get_non_table_vcp_value(
  * @param[out] table_value_loc address at which to return the value
  * @return status code
  *
+ * @remark
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail()
  * @note
  * Implemented, but untested
  */
@@ -1389,6 +1396,9 @@ ddca_get_table_vcp_value(
  *                           allocated #DDCA_Any_Vcp_Value
  * @return status code
  *
+ * @remark
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail()
  * @remark
  * Replaces **ddca_get_any_vcp_value()
  *
@@ -1419,6 +1429,9 @@ ddca_get_any_vcp_value_using_explicit_type(
  * @remark
  * It an error to call this function for a manufacturer-specific feature or
  * an unrecognized feature.
+ * @remark
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail()
  */
 DDCA_Status
 ddca_get_any_vcp_value_using_implicit_type(
