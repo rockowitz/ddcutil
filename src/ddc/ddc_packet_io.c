@@ -96,7 +96,7 @@ bool is_ddc_null_message(Byte * packet) {
  *  - CALLOPT_WAIT
  *  - CALLOPT_ERR_MSG
  */
-Public_Status_Code ddc_open_display(
+DDCA_Status ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
       Display_Handle** pdh)
@@ -106,7 +106,7 @@ Public_Status_Code ddc_open_display(
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
 
    Display_Handle * dh = NULL;
-   Public_Status_Code psc = 0;
+   DDCA_Status psc = 0;
 
    Distinct_Display_Ref display_id = get_distinct_display_ref(dref);
    Distinct_Display_Flags ddisp_flags = DDISP_NONE;
@@ -347,7 +347,7 @@ int ddc_get_max_write_read_exchange_tries() {
 
 
 typedef
-Public_Status_Code (*Write_Read_Raw_Function)(
+DDCA_Status (*Write_Read_Raw_Function)(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -376,7 +376,7 @@ Public_Status_Code (*Write_Read_Raw_Function)(
  *   -errno if error in write
  *   DDCRC_READ_ALL_ZERO
  */
-static Public_Status_Code ddc_i2c_write_read_raw(
+static DDCA_Status ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -452,7 +452,7 @@ static Public_Status_Code ddc_i2c_write_read_raw(
  *   additional information.  Never seen.  How to handle?
  */
 
-static Public_Status_Code ddc_adl_write_read_raw(
+static DDCA_Status ddc_adl_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -467,7 +467,7 @@ static Public_Status_Code ddc_adl_write_read_raw(
    assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
    // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
 
-   Public_Status_Code psc = adlshim_ddc_write_only(
+   DDCA_Status psc = adlshim_ddc_write_only(
                                dh,
                                get_packet_start(request_packet_ptr),   // n. no adjustment, unlike i2c version
                                get_packet_len(request_packet_ptr)
@@ -509,7 +509,7 @@ static Public_Status_Code ddc_adl_write_read_raw(
 }
 
 
-static Public_Status_Code ddc_write_read_raw(
+static DDCA_Status ddc_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -524,7 +524,7 @@ static Public_Status_Code ddc_write_read_raw(
       DBGMSG0("request_packer_ptr->raw_bytes:");
       dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
    }
-   Public_Status_Code psc;
+   DDCA_Status psc;
 
    // This function should not be called for USB
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C || dh->dref->io_path.io_mode == DDCA_IO_ADL);
@@ -587,7 +587,7 @@ ddc_write_read(
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
-   Public_Status_Code    psc;
+   DDCA_Status    psc;
    *response_packet_ptr_loc = NULL;
 
    psc =  ddc_write_read_raw(
@@ -861,7 +861,7 @@ ddc_write_only(
    bool debug = false;
    DBGTRC0(debug, TRACE_GROUP, "Starting.");
 
-   Public_Status_Code psc = 0;
+   DDCA_Status psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
       psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
@@ -908,7 +908,7 @@ ddc_write_only_with_retry(
 
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
 
-   Public_Status_Code psc;
+   DDCA_Status        psc;
    int                tryctr;
    bool               retryable;
    Error_Info *       try_errors[MAX_MAX_TRIES];

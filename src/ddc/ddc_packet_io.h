@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKET_IO_H_
@@ -21,7 +21,7 @@
 
 // bool all_zero(Byte * bytes, int bytec);
 
-Public_Status_Code ddc_open_display(
+DDCA_Status ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
       Display_Handle** pdh);
