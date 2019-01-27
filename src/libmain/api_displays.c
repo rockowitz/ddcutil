@@ -330,8 +330,7 @@ ddca_open_display2(
       DDCA_Display_Handle * p_dh)
 {
    free_thread_error_detail();
-   if (!library_initialized)
-      return DDCRC_UNINITIALIZED;
+   assert(library_initialized);
 
    ddc_ensure_displays_detected();
 
@@ -357,8 +356,7 @@ ddca_open_display2(
 DDCA_Status
 ddca_close_display(DDCA_Display_Handle ddca_dh) {
    free_thread_error_detail();
-   if (!library_initialized)
-      return DDCRC_UNINITIALIZED;
+   assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    // if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
