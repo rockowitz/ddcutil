@@ -2,7 +2,7 @@
  * Display Specification
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -171,6 +171,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_TRANSIENT                                 0x02
 #define DREF_DYNAMIC_FEATURES_CHECKED                  0x01
 #define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x010000
+#define DREF_OPEN                                      0x020000
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
@@ -206,7 +207,7 @@ void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 // Display_Ref * clone_display_ref(Display_Ref * old);
-void          free_display_ref(Display_Ref * dref);
+DDCA_Status   free_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);

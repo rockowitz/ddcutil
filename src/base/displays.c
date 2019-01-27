@@ -2,7 +2,7 @@
  * Monitor identifier, reference, handle
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -23,7 +23,7 @@
 /** \endcond */
 
 #include "public/ddcutil_types.h"
-// #include "public/ddcutil_c_api.h"
+#include "public/ddcutil_status_codes.h"
 
 #include "core.h"
 #include "monitor_model_key.h"
@@ -723,18 +723,25 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
 
 // Is it still meaningful to free a display ref?
 
-void free_display_ref(Display_Ref * dref) {
+DDCA_Status free_display_ref(Display_Ref * dref) {
+   DDCA_Status ddcrc = 0;
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
-      assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
-      dref->marker[3] = 'x';
-      if (dref->usb_hiddev_name)       // always set by strdup()
-         free(dref->usb_hiddev_name);
-      if (dref->capabilities_string)   // always a private copy
-         free(dref->capabilities_string);
-      // 9/2017: what about pedid, detail2?
-      // what to do with gdl, request_queue?
-      free(dref);
+      if (dref->flags & DREF_OPEN) {
+         ddcrc = DDCRC_LOCKED;
+      }
+      else {
+         assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
+         dref->marker[3] = 'x';
+         if (dref->usb_hiddev_name)       // always set by strdup()
+            free(dref->usb_hiddev_name);
+         if (dref->capabilities_string)   // always a private copy
+            free(dref->capabilities_string);
+         // 9/2017: what about pedid, detail2?
+         // what to do with gdl, request_queue?
+         free(dref);
+      }
    }
+   return ddcrc;
 }
 
 /** Tests if 2 #Display_Ref instances specify the same path to the
@@ -834,6 +841,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
    rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
    rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+   rpt_vstring(d2, "Display Ref is open:                        %s",  sbool(dref->flags & DREF_OPEN));
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
 

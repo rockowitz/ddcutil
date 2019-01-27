@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -119,6 +119,11 @@ Public_Status_Code ddc_open_display(
       goto bye;
    }
 
+   if (dref->flags & DREF_OPEN) {
+      psc = DDCRC_LOCKED;         // need better status code?
+      goto bye;
+   }
+
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
@@ -199,6 +204,8 @@ Public_Status_Code ddc_open_display(
       call_tuned_sleep_i2c(SE_POST_OPEN);
    // dbgrpt_display_handle(dh, __func__, 1);
 
+   dref->flags |= DREF_OPEN;
+
 bye:
    if (psc != 0) {
       if (locked)
@@ -259,6 +266,7 @@ void ddc_close_display(Display_Handle * dh) {
 #endif
    } //switch
 
+   dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
    unlock_distinct_display(display_id);
 
