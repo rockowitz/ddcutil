@@ -114,7 +114,7 @@ bool library_initialized = false;
 
 /** Initializes the ddcutil library module.
  *
- *  Normally called automatically during when the shared library is loaded.
+ *  Normally called automatically when the shared library is loaded.
  *
  *  It is not an error if this function is called more than once.
  */
