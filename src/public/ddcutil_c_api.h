@@ -3,7 +3,7 @@
  *  Public C API for ddcutil
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -64,7 +64,8 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
  *
  * @return version string.
  */
-const char * ddca_ddcutil_version_string(void);
+const char *
+ddca_ddcutil_version_string(void);
 
 
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
@@ -89,7 +90,8 @@ const char * ddca_ddcutil_version_string(void);
  * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
  *
  */
-DDCA_Build_Option_Flags ddca_build_options(void);
+DDCA_Build_Option_Flags
+ddca_build_options(void);
 
 
  //
@@ -112,15 +114,19 @@ DDCA_Build_Option_Flags ddca_build_options(void);
   *
   *  @since 0.9.0
   */
- void ddca_free_error_detail(DDCA_Error_Detail * ddca_erec);
-
+ void
+ ddca_free_error_detail(
+       DDCA_Error_Detail * ddca_erec);
 
  /** Issues a detailed report of a #DDCA_Error_Detail instance.
   *
   *  @param ddca_erec  error information record
   *  @param depth      logical indentation depth
   */
- void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth);
+ void
+ ddca_report_error_detail(
+       DDCA_Error_Detail * ddca_erec,
+       int                 depth);
 
 
 //
@@ -137,7 +143,9 @@ DDCA_Build_Option_Flags ddca_build_options(void);
  * The returned value is a pointer into internal persistent
  * data structures and should not be freed by the caller.
  *  */
-char * ddca_rc_name(DDCA_Status status_code);
+char *
+ddca_rc_name(
+      DDCA_Status status_code);
 
 /** Returns a description of a ddcutil status code
  *
@@ -149,7 +157,9 @@ char * ddca_rc_name(DDCA_Status status_code);
  * The returned value is a pointer into internal persistent
  * data structures and should not be free'd by the caller.
  */
-char * ddca_rc_desc(DDCA_Status status_code);
+char *
+ddca_rc_desc(
+      DDCA_Status status_code);
 
 
 //
@@ -206,7 +216,8 @@ There are 3 retry contexts:
  *
  * @return maximum max tries value allowed on set_max_tries()
  */
-int ddca_max_max_tries(void);
+int
+ddca_max_max_tries(void);
 
 /** Gets the maximum number of I2C retries for the specified operation type.
  * @param[in]  retry_type   I2C operation type
@@ -215,8 +226,9 @@ int ddca_max_max_tries(void);
  * @remark
  * This setting is global, not thread-specific.
  */
-int ddca_get_max_tries(
-       DDCA_Retry_Type retry_type);
+int
+ddca_get_max_tries(
+    DDCA_Retry_Type retry_type);
 
 /** Sets the maximum number of I2C retries for the specified operation type
  * @param[in] retry_type    I2C operation type
@@ -228,8 +240,8 @@ int ddca_get_max_tries(
  */
 DDCA_Status
 ddca_set_max_tries(
-      DDCA_Retry_Type retry_type,
-      int             max_tries);
+    DDCA_Retry_Type retry_type,
+    int             max_tries);
 ///@}
 
 /** Controls whether VCP values are read after being set.
@@ -239,7 +251,9 @@ ddca_set_max_tries(
  *
  * \remark This setting is thread-specific.
  */
-bool ddca_enable_verify(bool onoff);
+bool
+ddca_enable_verify(
+      bool onoff);
 
 /** Query whether VCP values are read after being set.
  * \retval true values are verified after being set
@@ -247,7 +261,8 @@ bool ddca_enable_verify(bool onoff);
  *
  * \remark This setting is thread-specific.
  */
-bool ddca_is_verify_enabled(void);
+bool
+ddca_is_verify_enabled(void);
 
 
 //
@@ -255,18 +270,22 @@ bool ddca_is_verify_enabled(void);
 //
 
 /** Redirects output on the current thread that normally would go to **stdout**  */
-void ddca_set_fout(
-        FILE * fout);   /**< where to write normal messages, if NULL, suppress output */
+void
+ddca_set_fout(
+    FILE * fout);   /**< where to write normal messages, if NULL, suppress output */
 
 /** Redirects output on the current thread that normally goes to **stdout** back to **stdout** */
-void ddca_set_fout_to_default(void);
+void
+ddca_set_fout_to_default(void);
 
 /** Redirects output on the current thread that normally would go to **stderr**  */
-void ddca_set_ferr(
-        FILE * ferr);   /**< where to write error messages, If NULL, suppress output */
+void
+ddca_set_ferr(
+    FILE * ferr);   /**< where to write error messages, If NULL, suppress output */
 
 /** Redirects output on the current thread that normally goes to **stderr** back to **stderr** */
-void ddca_set_ferr_to_default(void);
+void
+ddca_set_ferr_to_default(void);
 
 
 //
@@ -280,7 +299,9 @@ void ddca_set_ferr_to_default(void);
  *  @note  If output is already being captured, this function has no effect.
  *  @since 0.9.0
  */
-void ddca_start_capture(DDCA_Capture_Option_Flags flags);
+void
+ddca_start_capture(
+      DDCA_Capture_Option_Flags flags);
 
 /** Ends capture of **stdout** output and returns the contents of the
  *  in-memory buffer.
@@ -294,7 +315,8 @@ void ddca_start_capture(DDCA_Capture_Option_Flags flags);
  *  @note  Writes messages to actual **stderr** in case of error.
  *  @since 0.9.0
  */
-char * ddca_end_capture(void);
+char *
+ddca_end_capture(void);
 
 
 //
@@ -319,8 +341,9 @@ ddca_set_output_level(
  *  @param[in]  val  output level id
  *  @return     output level name (do not free)
  */
-char * ddca_output_level_name(
-          DDCA_Output_Level val);   /**< output level id */
+char *
+ddca_output_level_name(
+      DDCA_Output_Level val);   /**< output level id */
 
 
 /** Controls whether messages describing DDC protocol errors are output
@@ -329,13 +352,16 @@ char * ddca_output_level_name(
  *
  *  This setting is global to all threads.
  */
-bool ddca_enable_report_ddc_errors(bool onoff);
+bool
+ddca_enable_report_ddc_errors(
+      bool onoff);
 
 /** Checks whether messages describing DDC protocol errors are output.
  *
  *  This setting is global to all threads.
  */
-bool ddca_is_report_ddc_errors_enabled(void);
+bool
+ddca_is_report_ddc_errors_enabled(void);
 
 
 //
@@ -349,22 +375,27 @@ bool ddca_is_report_ddc_errors_enabled(void);
  *  \remark
  *  The function must include trace calls.
  */
-void ddca_add_traced_function(const char * funcname);
-
+void
+ddca_add_traced_function(
+      const char * funcname);
 
 /** Turn on all tracing in a specific source file.
  *
  *  \param filename  simple file name, with or without the ".c" extension,
  *                   e.g. vcp_feature_set.c, vcp_feature_set
  */
-void ddca_add_traced_file(const char * filename);
-
+void
+ddca_add_traced_file(
+      const char * filename);
 
 /* Specify one or more trace groups.
  *
  *  \param trace_flags  bitfield indicating groups to trace
  */
-void ddca_set_trace_groups(DDCA_Trace_Group trace_flags);
+void
+ddca_set_trace_groups(
+      DDCA_Trace_Group trace_flags);
+
 
 //
 // Statistics and Diagnostics
@@ -373,14 +404,18 @@ void ddca_set_trace_groups(DDCA_Trace_Group trace_flags);
 //
 
 /** Resets all **ddcutil** statistics */
-void ddca_reset_stats(void);
+void
+ddca_reset_stats(void);
 
 /** Show execution statistics.
  *
  *  \param[in] stats  bitflags of statistics types to show
  *  \param[in] depth  logical indentation depth
  */
-void ddca_show_stats(DDCA_Stats_Type stats, int depth);
+void
+ddca_show_stats(
+      DDCA_Stats_Type stats,
+      int             depth);
 
 // TODO: Add functions to get stats
 
@@ -389,8 +424,9 @@ void ddca_show_stats(DDCA_Stats_Type stats, int depth);
  *  @param  enable   true/false
  *  @return prior value
  */
-bool ddca_enable_error_info(bool enable);
-
+bool
+ddca_enable_error_info(
+      bool enable);
 
 
 //
@@ -427,7 +463,9 @@ ddca_get_display_info_list2(
  *
  *  \param[in] dlist pointer to #DDCA_Display_Info_List
  */
-void ddca_free_display_info_list(DDCA_Display_Info_List * dlist);
+void
+ddca_free_display_info_list(
+      DDCA_Display_Info_List * dlist);
 
 /** Presents a report on a single display.
  *  The report is written to the current FOUT device for the current thread.
@@ -455,7 +493,6 @@ ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
 
-
 /** \deprecated use #ddca_report_displays()
  * Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
@@ -468,7 +505,6 @@ int
 ddca_report_active_displays(
       int depth);
 
-
 /** Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
  *
@@ -480,7 +516,6 @@ int
 ddca_report_displays(
       bool include_invalid_displays,
       int  depth);
-
 
 //
 // Display Identifier
