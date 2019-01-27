@@ -3,7 +3,7 @@
  *  Implement the SETVCP command
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -32,8 +32,6 @@
 
 /* Converts a VCP feature value from string form to internal form.
  *
- * Currently only handles values in range 0..255.
- *
  * Arguments:
  *    string_value
  *    parsed_value    location where to return result
@@ -41,42 +39,52 @@
  * Returns:
  *    true if conversion successful, false if not
  */
-bool parse_vcp_value(char * string_value, long* parsed_value) {
+bool
+parse_vcp_value(
+      char * string_value,
+      long * parsed_value)
+{
+   bool debug = false;
+
    FILE * ferr = stderr;
    assert(string_value);
    bool ok = true;
    char buf[20];
+
+   DBGMSF(debug, "Starting. string_value = |%s|", string_value);
    strupper(string_value);
    if (*string_value == 'X' ) {
       snprintf(buf, 20, "0%s", string_value);
       string_value = buf;
-      // DBGMSG("Adjusted value: |%s|", string_value);
+      DBGMSF(debug, "Adjusted value: |%s|", string_value);
    }
    else if (*(string_value + strlen(string_value)-1) == 'H') {
       int newlen = strlen(string_value)-1;
       snprintf(buf, 20, "0x%.*s", newlen, string_value);
       string_value = buf;
-      // DBGMSG("Adjusted value: |%s|", string_value);
+      DBGMSF(debug, "Adjusted value: |%s|", string_value);
    }
 
    char * endptr = NULL;
    errno = 0;
    long longtemp = strtol(string_value, &endptr, 0 );  // allow 0xdd  for hex values
    int errsv = errno;
-   // printf("errno=%d, new_value=|%s|, &new_value=%p, longtemp = %ld, endptr=0x%02x\n",
-   //        errsv, new_value, &new_value, longtemp, *endptr);
+   DBGMSF(debug, "errno=%d, string_value=|%s|, &string_value=%p, longtemp = %ld, endptr=0x%02x",
+                 errsv, string_value, &string_value, longtemp, *endptr);
    if (*endptr || errsv != 0) {
       f0printf(ferr, "Not a number: %s\n", string_value);
       ok = false;
    }
-   else if (longtemp < 0 || longtemp > 255) {
-      f0printf(ferr, "Number must be in range 0..255 (for now at least):  %ld\n", longtemp);
+   else if (longtemp < 0 || longtemp > 32767) {
+      f0printf(ferr, "Number must be in range 0..32767:  %ld\n", longtemp);
       ok = false;
    }
    else {
       *parsed_value = longtemp;
       ok = true;
    }
+
+   DBGMSF(debug, "Done. *parsed_value=%d, returning: %s", *parsed_value, sbool(ok));
    return ok;
 }
 
@@ -103,7 +111,7 @@ app_set_vcp_value_old(
    DBGMSF(debug,"Starting");
    assert(new_value && strlen(new_value) > 0);
 
-   Public_Status_Code         psc = 0;
+   DDCA_Status                psc = 0;
    Error_Info *               ddc_excp = NULL;
    long                       longtemp;
    Byte                       hexid;
@@ -260,7 +268,7 @@ app_set_vcp_value(
    DBGMSF(debug,"Starting");
    assert(new_value && strlen(new_value) > 0);
 
-   Public_Status_Code         psc = 0;
+   DDCA_Status                ddcrc = 0;
    Error_Info *               ddc_excp = NULL;
    long                       longtemp;
    Byte                       feature_code;
@@ -347,15 +355,15 @@ app_set_vcp_value(
                        feature_code,
                        &parsed_response);
          if (ddc_excp) {
-            psc = ERRINFO_STATUS(ddc_excp);
+            ddcrc = ERRINFO_STATUS(ddc_excp);
             // is message needed?
             // char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
             // f0printf(ferr, "Error reading feature %s (%s)\n", feature, feature_name);
-            f0printf(ferr, "Getting value failed for feature %02x. rc=%s\n", feature_code, psc_desc(psc));
-            if (psc == DDCRC_RETRIES)
+            f0printf(ferr, "Getting value failed for feature %02x. rc=%s\n", feature_code, psc_desc(ddcrc));
+            if (ddcrc == DDCRC_RETRIES)
                f0printf(ferr, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-            ddc_excp = errinfo_new_with_cause3(psc, ddc_excp, __func__,
-                                               "Getting value failed for feature %02x, rc=%s", feature_code, psc_desc(psc));
+            ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
+                                               "Getting value failed for feature %02x, rc=%s", feature_code, psc_desc(ddcrc));
             goto bye;
          }
 
@@ -375,27 +383,27 @@ app_set_vcp_value(
 
       vrec.opcode        = feature_code;
       vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
-      vrec.val.c_nc.sh = (longtemp >> 8) & 0xff;   // should always be 0
-      assert(vrec.val.c_nc.sh == 0);
+      vrec.val.c_nc.sh = (longtemp >> 8) & 0xff;
+      // assert(vrec.val.c_nc.sh == 0);
       vrec.val.c_nc.sl = longtemp & 0xff;
    }
 
    ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
 
    if (ddc_excp) {
-      psc = ERRINFO_STATUS(ddc_excp);
-      switch(psc) {
+      ddcrc = ERRINFO_STATUS(ddc_excp);
+      switch(ddcrc) {
       case DDCRC_VERIFY:
             f0printf(ferr, "Verification failed for feature %02x\n", feature_code);
-            ddc_excp = errinfo_new_with_cause3(psc, ddc_excp, __func__,
+            ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
                                                "Verification failed for feature %02x", feature_code);
             break;
       default:
          // Is this proper error message?
-         f0printf(ferr, "Setting value failed for feature %02x. rc=%s\n", feature_code, psc_desc(psc));
-         if (psc == DDCRC_RETRIES)
+         f0printf(ferr, "Setting value failed for feature %02x. rc=%s\n", feature_code, psc_desc(ddcrc));
+         if (ddcrc == DDCRC_RETRIES)
             f0printf(ferr, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-         ddc_excp = errinfo_new_with_cause3(psc, ddc_excp, __func__,
+         ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
                                             "Setting value failed for feature %02x", feature_code);
       }
    }
@@ -413,7 +421,7 @@ bye:
    }
 #endif
 
-   psc = ERRINFO_STATUS(ddc_excp);
+   ddcrc = ERRINFO_STATUS(ddc_excp);
    DBGMSF(debug, "Returning: %s", psc_desc(psc));
    return ddc_excp;
 }
