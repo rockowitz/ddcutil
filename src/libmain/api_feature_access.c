@@ -268,6 +268,17 @@ ddca_get_any_vcp_value_using_implicit_type(
 
 
 void
+ddca_free_table_vcp_value(
+      DDCA_Table_Vcp_Value * table_value)
+{
+   if (table_value) {
+      free(table_value->bytes);
+      free(table_value);
+   }
+}
+
+
+void
 ddca_free_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec)
 {
