@@ -16,15 +16,14 @@
 
 #define WITH_DR(ddca_dref, action) \
    do { \
-      if (!library_initialized) \
-         return DDCRC_UNINITIALIZED; \
+      assert(library_initialized); \
       DDCA_Status psc = 0; \
+      free_thread_error_detail(); \
       Display_Ref * dref = (Display_Ref *) ddca_dref; \
       if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  { \
          psc = DDCRC_ARG; \
       } \
       else { \
-         free_thread_error_detail(); \
          (action); \
       } \
       return psc; \
@@ -33,15 +32,14 @@
 
 #define WITH_DH(_ddca_dh_, _action_) \
    do { \
-      if (!library_initialized) \
-         return DDCRC_UNINITIALIZED; \
+      assert(library_initialized); \
       DDCA_Status psc = 0; \
+      free_thread_error_detail(); \
       Display_Handle * dh = (Display_Handle *) _ddca_dh_; \
       if ( !dh || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
          psc = DDCRC_ARG; \
       } \
       else { \
-         free_thread_error_detail(); \
          (_action_); \
       } \
       return psc; \
