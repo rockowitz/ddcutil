@@ -25,7 +25,7 @@ extern "C" {
  *  @brief ddcutil public C API
  *
  *  Function names in the public C API begin with "ddca_"\n
- *  Status codes begin with "DDCRC_".
+ *  Status codes begin with "DDCRC_".\n
  *  Typedefs, other constants, etc. begin with "DDCA_".
  */
 
