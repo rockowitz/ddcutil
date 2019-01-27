@@ -4,7 +4,7 @@
  * Capabilities.
  *
  * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -79,6 +79,7 @@ void ddc_reset_multi_part_read_stats() {
       multi_part_read_stats_rec = try_data_create("multi-part read exchange", max_multi_part_read_tries);
 }
 
+
 /** Resets the statistics for multi-part writes */
 void ddc_reset_multi_part_write_stats() {
    if (multi_part_write_stats_rec)
@@ -87,11 +88,13 @@ void ddc_reset_multi_part_write_stats() {
       multi_part_write_stats_rec = try_data_create("multi-part write exchange", max_multi_part_write_tries);
 }
 
+
 /** Reports the statistics for multi-part reads */
 void ddc_report_multi_part_read_stats(int depth) {
    assert(multi_part_read_stats_rec);
    try_data_report(multi_part_read_stats_rec, depth);
 }
+
 
 /** Reports the statistics for multi-part writes */
 void ddc_report_multi_part_write_stats(int depth) {
@@ -128,6 +131,7 @@ int ddc_get_max_multi_part_read_tries() {
    return max_multi_part_read_tries;
 }
 
+
 /** Gets the current maximum number of multi-part write exchange tries allowed
   * @return maximum number of tries
   */
@@ -147,7 +151,7 @@ int ddc_get_max_multi_part_write_tries() {
 *
 * @return status code
 */
-Error_Info *
+static Error_Info *
 try_multi_part_read(
       Display_Handle * dh,
       Byte             request_type,
@@ -372,7 +376,7 @@ multi_part_read_with_retry(
 *
 *   @return status code
 */
-Error_Info *
+static Error_Info *
 try_multi_part_write(
       Display_Handle * dh,
       Byte             vcp_code,
