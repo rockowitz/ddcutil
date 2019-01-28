@@ -75,8 +75,8 @@ parse_vcp_value(
       f0printf(ferr, "Not a number: %s\n", string_value);
       ok = false;
    }
-   else if (longtemp < 0 || longtemp > 32767) {
-      f0printf(ferr, "Number must be in range 0..32767:  %ld\n", longtemp);
+   else if (longtemp < 0 || longtemp > 65535) {
+      f0printf(ferr, "Number must be in range 0..65535:  %ld\n", longtemp);
       ok = false;
    }
    else {
