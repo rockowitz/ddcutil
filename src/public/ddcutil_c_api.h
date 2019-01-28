@@ -106,7 +106,8 @@ ddca_build_options(void);
   *
   *  @since 0.9.0
   */
- DDCA_Error_Detail * ddca_get_error_detail();
+ DDCA_Error_Detail *
+ ddca_get_error_detail(void);
 
  /** Frees a detailed error information record
   *
