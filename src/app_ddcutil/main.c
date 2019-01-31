@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -27,6 +27,8 @@
 #include "util/report_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
+
+#include "public/ddcutil_types.h"
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
@@ -195,7 +197,10 @@ void probe_display_by_dh(Display_Handle * dh)
    // }
 
    // reports capabilities, and if successful returns Parsed_Capabilities
+   DDCA_Output_Level saved_ol = get_output_level();
+   set_output_level(DDCA_OL_VERBOSE);
    Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+   set_output_level(saved_ol);
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
    bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
