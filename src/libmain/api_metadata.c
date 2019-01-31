@@ -583,7 +583,7 @@ ddca_get_feature_name_by_dref(
                //*name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
                *name_loc = get_feature_name_by_id_and_vcp_version(feature_code, dref->vcp_version);
                if (!*name_loc)
-                  psc = -EINVAL;
+                  psc = DDCRC_ARG;
          }
    )
 }

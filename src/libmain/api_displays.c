@@ -84,6 +84,7 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
+   assert(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
 
@@ -94,7 +95,7 @@ ddca_create_mfg_model_sn_display_identifier(
          ( !model_name   || strlen(model_name)   == 0)  &&
          ( !serial_ascii || strlen(serial_ascii) == 0)
       )
-      rc = -EINVAL;
+      rc = DDCRC_ARG;
 
    // check if any arguments are too long
    else if (
@@ -102,7 +103,7 @@ ddca_create_mfg_model_sn_display_identifier(
         (mfg_id       && strlen(mfg_id)       >= EDID_MFG_ID_FIELD_SIZE)      ||
         (serial_ascii && strlen(serial_ascii) >= EDID_SERIAL_ASCII_FIELD_SIZE)
       )
-      rc = -EINVAL;
+      rc = DDCRC_ARG;
 
    else {
       *did_loc = create_mfg_model_sn_display_identifier(
@@ -117,11 +118,12 @@ ddca_create_edid_display_identifier(
       const Byte *              edid,
       DDCA_Display_Identifier * did_loc)    // 128 byte EDID
 {
+   assert(did_loc);
    free_thread_error_detail();
    *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
-      rc = -EINVAL;
+      rc = DDCRC_ARG;
       *did_loc = NULL;
    }
    else {
@@ -197,21 +199,17 @@ ddca_create_display_ref(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  did=%p, ddca_dref=%p", did, ddca_dref);
-   if (ddca_dref)
-      DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
+   assert(library_initialized);
+   assert(ddca_dref);
+   DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
    DDCA_Status rc = 0;
    free_thread_error_detail();
-
-   if (!library_initialized) {
-      rc =  DDCRC_UNINITIALIZED;
-      goto bye;
-   }
 
    ddc_ensure_displays_detected();
 
    Display_Identifier * pdid = (Display_Identifier *) did;
-   if (!pdid || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0  || !ddca_dref)  {
-     rc = -EINVAL;
+   if (!pdid || memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) != 0 )  {
+     rc = DDCRC_ARG;
    }
    else {
       Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_ERR_MSG);
@@ -223,7 +221,6 @@ ddca_create_display_ref(
          rc = DDCRC_INVALID_DISPLAY;
    }
 
-bye:
    DBGMSF(debug, "Done.  Returning: %d", rc);
    if (rc == 0)
       DBGMSF(debug,"    *ddca_dref=%p", *ddca_dref);
@@ -322,24 +319,25 @@ bye:
 DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
-      DDCA_Display_Handle * p_dh)
+      DDCA_Display_Handle * dh_loc)
 {
-   return ddca_open_display2(ddca_dref, false, p_dh);
+   return ddca_open_display2(ddca_dref, false, dh_loc);
 }
 
 DDCA_Status
 ddca_open_display2(
       DDCA_Display_Ref      ddca_dref,
       bool                  wait,
-      DDCA_Display_Handle * p_dh)
+      DDCA_Display_Handle * dh_loc)
 {
    free_thread_error_detail();
    assert(library_initialized);
+   assert(dh_loc);
 
    ddc_ensure_displays_detected();
 
    DDCA_Status rc = 0;
-   *p_dh = NULL;        // in case of error
+   *dh_loc = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCRC_ARG;
@@ -351,7 +349,7 @@ ddca_open_display2(
         callopts |= CALLOPT_WAIT;
      rc = ddc_open_display(dref,  callopts, &dh);
      if (rc == 0)
-        *p_dh = dh;
+        *dh_loc = dh;
    }
    return rc;
 }

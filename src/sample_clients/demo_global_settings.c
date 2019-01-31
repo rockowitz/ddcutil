@@ -1,28 +1,11 @@
-/* demo_global_settings.c
+/** \file demo_global_settings.c
  *
  * Sample program illustrating the use of libddcutil's functions for
  * querying build information and global settings management.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <errno.h>
@@ -32,6 +15,7 @@
 #include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
+#include "public/ddcutil_status_codes.h"
 
 
 #define DDC_ERRMSG(function_name,status_code) \
@@ -99,7 +83,7 @@ void demo_retry_management() {
   printf("   Calling ddca_set_max_tries() with a retry count that's too large...\n");
   int badct = max_max_tries + 1;
   rc = ddca_set_max_tries(DDCA_WRITE_READ_TRIES, badct);
-  assert(rc == -EINVAL);
+  assert(rc == DDCRC_ARG);
   printf("      ddca_set_max_tries(DDCA_WRITE_READ_TRIES, %d) returned: %d (%s)\n",
          badct, rc, ddca_rc_name(rc) );
 

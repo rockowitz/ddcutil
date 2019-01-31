@@ -234,7 +234,7 @@ ddca_get_max_tries(
 /** Sets the maximum number of I2C retries for the specified operation type
  * @param[in] retry_type    I2C operation type
  * @param[in] max_tries     maximum count to set
- * @retval   -EINVAL        max_tries < 1 or > #ddca_get_max_tries()
+ * @retval    DDCRC_ARG     max_tries < 1 or > #ddca_get_max_tries()
  *
  * @remark
  * This setting is global, not thread-specific.
@@ -562,11 +562,12 @@ ddca_create_adlno_display_identifier(
 
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
- * @param[in]  mfg_id   3 letter manufacturer id
- * @param[in]  model    model name string
- * @param[in]  sn       serial number string
- * @param[out] did_loc  where to return display identifier handle
- * @retval     0        success
+ * @param[in]  mfg_id    3 letter manufacturer id
+ * @param[in]  model     model name string
+ * @param[in]  sn        serial number string
+ * @param[out] did_loc   where to return display identifier handle
+ * @retval     0         success
+ * @retval     DDCRC_ARG all arguments NULL, or at least 1 too long
  *
  * \ingroup api_display_spec
  */
@@ -578,10 +579,10 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc);
 
 /** Creates a display identifier using a 128 byte EDID
- * @param[in]   edid     pointer to 128 byte EDID
- * @param[out]  did_loc  where to return display identifier handle
- * @retval      0        success
- * @retval      -EINVAL  edid==NULL
+ * @param[in]   edid       pointer to 128 byte EDID
+ * @param[out]  did_loc    where to return display identifier handle
+ * @retval      0          success
+ * @retval      DDCRC_ARG  edid==NULL
  *
  * \ingroup api_display_spec
  */
@@ -653,8 +654,8 @@ ddca_did_repr(
  *  Use #ddca_free_display_ref() to safely free.
  * @param[in]  did      display identifier
  * @param[out] dref_loc where to return display reference
- * @retval     0 success
- * @retval     -EINVAL  did is not a valid display identifier handle
+ * @retval     0                     success
+ * @retval     DDCRC_ARG             did is not a valid display identifier handle
  * @retval     DDCRC_INVALID_DISPLAY display not found
  *
  * \ingroup api_display_spec
@@ -1072,7 +1073,8 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  *
  * @param[in]  feature_code  feature code
  * @param[in]  dref          display reference
- * @return     pointer to feature name (do not free), NULL if unknown feature code
+ * @param[out] name_loc      where to return pointer to feature name (do not free)
+ * @return     status code
  *
  * @since 0.9.2
  */
