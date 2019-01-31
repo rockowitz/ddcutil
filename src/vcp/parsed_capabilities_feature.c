@@ -1,43 +1,23 @@
-/* parsed_capabilities_feature.c
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file
+/** \file parsed_capabilities_features.c
  * Describes one VCP feature in a capabilities string.
  *
  * The functions in this file are used only in parse_capabilities.c,
  * but were extracted for clarity.
  */
 
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-/** \endcond */
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
+/** \endcond */
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -80,15 +60,15 @@ Capabilities_Feature_Record * new_capabilities_feature(
       memcpy(vfr->value_string, value_string_start, value_string_len);
       vfr->value_string[value_string_len] = '\0';
 
-#ifdef OLD_BVA
+// #ifdef OLD_BVA
       Byte_Value_Array bva_values = bva_create();
       bool ok1 = store_bytehex_list(value_string_start, value_string_len, bva_values, bva_appender);
       if (!ok1) {
-         f0printf(FOUT,
+         SEVEREMSG(
                  "Error processing VCP feature value list into bva_values: %.*s\n",
                  value_string_len, value_string_start);
       }
-#endif
+// #endif
       Byte_Bit_Flags bbf_values = bbf_create();
       bool ok2 = store_bytehex_list(value_string_start, value_string_len, bbf_values, bbf_appender);
       if (!ok2) {
@@ -96,9 +76,9 @@ Capabilities_Feature_Record * new_capabilities_feature(
                      value_string_len, value_string_start);
        }
       if (debug) {
-#ifdef OLD_WAY
+// #ifdef OLD_BVA
           DBGMSG("store_bytehex_list for bva returned %d", ok1);
-#endif
+// #endif
           DBGMSG("store_bytehex_list for bbf returned %d", ok2);
           //DBGMSG("Comparing Byte_value_Array vs ByteBitFlags");
       }
@@ -117,11 +97,11 @@ Capabilities_Feature_Record * new_capabilities_feature(
       }
 #endif
 
-#ifdef OLD_BVA
+ // #ifdef OLD_BVA
       vfr->values = bva_values;
       if (debug)
          bva_report(vfr->values, "Feature values (array):");
-#endif
+// #endif
       vfr->bbflags = bbf_values;
       if (debug) {
          char buf[768];
@@ -148,11 +128,11 @@ void free_capabilities_feature(
       if (pfeat->value_string)
          free(pfeat->value_string);
 
-#ifdef OLD_BVA
+// #ifdef OLD_BVA
       // TODO: prune one implementation
       if (pfeat->values)
          bva_free(pfeat->values);
-#endif
+// #endif
 
       if (pfeat->bbflags)
          bbf_free(pfeat->bbflags);

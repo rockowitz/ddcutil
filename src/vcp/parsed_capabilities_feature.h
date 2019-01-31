@@ -1,7 +1,7 @@
 /* parsed_capabilities_feature.h
  *
  * <copyright>
- * Copyright (C) 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -41,10 +41,10 @@
 typedef struct {
      char              marker[4];     ///<  always "VCPF"
      Byte              feature_id;    ///<  VCP feature code
-#ifdef OLD_BVA
-     Byte_Value_Array  values;
-#endif
-     Byte_Bit_Flags    bbflags;       // alternative
+// #ifdef OLD_BVA
+     Byte_Value_Array  values;        // need unsorted values for gamma
+// #endif
+     Byte_Bit_Flags    bbflags;       // alternative, but sorts values, screws up gamma
      char *            value_string;  ///< value substring from capabilities string
 } Capabilities_Feature_Record;
 
