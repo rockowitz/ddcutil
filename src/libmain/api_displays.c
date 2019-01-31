@@ -233,10 +233,14 @@ bye:
 
 DDCA_Status
 ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
+   if (!ddca_dref) {
+      free_thread_error_detail();
+      return DDCRC_OK;
+   }
    WITH_DR(ddca_dref,
          {
             if (dref->flags & DREF_TRANSIENT)
-               free_display_ref(dref);
+               psc = free_display_ref(dref);
          }
    );
 }

@@ -670,7 +670,10 @@ ddca_create_display_ref(
  * If the display reference was dynamically created, it is freed.
  * If the display references was permanently allocated (normal case), does nothing.
  * @param[in] dref  display reference to free
- * @return status code
+ * @retval DDCRC_OK     success, or dref == NULL
+ * @retval DDCRC_ARG    dref does not point to a valid display reference
+ * @retval DDCRC_LOCKED dref is to a transient instance, and it is referenced
+ *                      by an open display handle
  *
  * \ingroup api_display_spec
  */
