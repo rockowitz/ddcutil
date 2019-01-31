@@ -737,8 +737,10 @@ ddca_open_display2(
       DDCA_Display_Handle * ddca_dh_loc);
 
 /** Close an open display
- * @param[in]  ddca_dh   display handle
- * @return     DDCA status code
+ * @param[in]  ddca_dh   display handle, if NULL do nothing
+ * @retval     DDCRC_OK  close succeeded, or ddca_dh == NULL
+ * @retval     DDCRC_ARG invalid handle
+ * @return     -errno    from underlying OS close()
  *
  * \ingroup api_display_spec
  */

@@ -359,15 +359,14 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   // if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-   if (!valid_display_handle(dh)) {
-      rc = DDCRC_ARG;
-   }
-   else {
-      // TODO: ddc_close_display() needs an action if failure parm,
-      // should return status code
-      ddc_close_display(dh);
-      rc = 0;    // is this what to do?
+   if (dh) {
+      if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
+         rc = DDCRC_ARG;
+      }
+      else {
+         // TODO: ddc_close_display() needs an action if failure parm,
+         rc = ddc_close_display(dh);
+      }
    }
    return rc;
 }
