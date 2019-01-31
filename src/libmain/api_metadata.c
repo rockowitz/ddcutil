@@ -525,10 +525,8 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
 #endif
 
 
-DDCA_Status
+void
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
-   DDCA_Status ddcrc = 0;
-   free_thread_error_detail();
    if (metadata) {
       // Internal DDCA_Feature_Metadata instances (DDCA_PERSISTENT_METADATA) should never make it out into the wild
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
@@ -536,10 +534,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
       {
          free_ddca_feature_metadata(metadata);
       }
-      else
-         ddcrc = DDCRC_ARG;
    }
-   return ddcrc;
 }
 
 
