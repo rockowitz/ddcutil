@@ -269,10 +269,7 @@ ddca_report_parsed_capabilities_by_dh(
    DBGMSF(debug, "Starting. p_caps=%p, ddca_dh=%s, depth=%d", p_caps, ddca_dh_repr(ddca_dh), depth);
    DDCA_Status ddcrc = 0;
    free_thread_error_detail();
-   if (!library_initialized) {
-      ddcrc = DDCRC_UNINITIALIZED;
-      goto bye;
-   }
+   assert(library_initialized);
 
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {

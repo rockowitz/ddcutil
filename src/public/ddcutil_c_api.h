@@ -853,7 +853,9 @@ ddca_report_parsed_capabilities_by_dref(
  *
  *  @param[in]  parsed_capabilities  pointer to #DDCA_Capabilities struct
  *  @param[in]  ddca_dh              display handle, may be NULL
- *  @param[in]  depth  logical       indentation depth
+ *  @param[in]  depth                logical indentation depth
+ *  @retval     0                    success
+ *  @retval     DDCRC_ARG            invalid display handle
  *
  *  @remark
  *  If ddca_dh is not NULL, feature value names will reflect any loaded monitor definition files
@@ -1128,8 +1130,8 @@ ddca_get_edid_by_dref(
  *
  * Output is written using report functions
  *
- * \param dref   pointer to display reference
- * \param depth  logical indentation depth
+ * \param dref       pointer to display reference
+ * \param depth      logical indentation depth
  * \retval DDCRC_ARG invalid display ref
  * \retval 0         success
  *

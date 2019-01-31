@@ -295,10 +295,7 @@ ddca_report_display_by_dref(
    free_thread_error_detail();
    DDCA_Status rc = 0;
 
-    if (!library_initialized) {
-       rc = DDCRC_UNINITIALIZED;
-       goto bye;
-    }
+    assert(library_initialized);
 
     Display_Ref * dref = (Display_Ref *) ddca_dref;
     if ( !valid_display_ref(dref) )  {
@@ -406,8 +403,7 @@ ddca_get_mccs_version_by_dh(
       DDCA_MCCS_Version_Spec* p_spec)
 {
    free_thread_error_detail();
-   if (!library_initialized)
-      return DDCRC_UNINITIALIZED;
+   assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
@@ -771,10 +767,7 @@ ddca_get_edid_by_dref(
    *p_bytes = NULL;
    free_thread_error_detail();
 
-   if (!library_initialized) {
-      rc = DDCRC_UNINITIALIZED;
-      goto bye;
-   }
+   assert(library_initialized);
 
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    // if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
