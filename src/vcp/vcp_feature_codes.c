@@ -1984,6 +1984,96 @@ format_feature_detail_audio_speaker_volume(
   return true;
 }
 
+// 0x72
+static bool
+format_feature_detail_x72_gamma(
+      Nontable_Vcp_Value *     code_info,
+      DDCA_MCCS_Version_Spec   vcp_version,
+      char *                   buffer,
+      int                      bufsz)
+{
+   assert (code_info->vcp_code == 0x72);
+
+   char formatted_sh_sl[20];
+   g_snprintf(formatted_sh_sl, 20, "0x%02x%02x", code_info->sh, code_info->sl);
+
+   char * ssl = NULL;
+   switch(code_info->sl) {
+   case 0x00:    ssl = "White absolute adjustment";       break;
+   case 0x01:    ssl = "Red absolute adjustment";         break;
+   case 0x02:    ssl = "Green absolute adjustment";       break;
+   case 0x03:    ssl = "Blue absolute adjustment";        break;
+   case 0x04:    ssl = "White relative adjustment";       break;
+   case 0x05:    ssl = "Disable all gamma correction in display";  break;
+   default:      ssl = "Reserved, ignored";
+   }
+
+   // if absolute adjustment
+   if (code_info->sl == 0x00  ||
+       code_info->sl == 0x01  ||
+       code_info->sl == 0x02  ||
+       code_info->sl == 0x03  )
+   {
+      int    igamma = code_info->sh + 100;
+      char   sgamma[10];
+      char   sgamma2[10];
+      g_snprintf (sgamma, 10, "%d", igamma);
+      int slen = strlen(sgamma);
+      g_snprintf(sgamma2, 10, "%s.%s", substr(sgamma, 0, slen-2), substr(sgamma, slen-2, 2) );
+      g_snprintf(buffer, bufsz, "%s - Mode: %s (sl=0x%02x), gamma=%s (sh=0x%02x)",
+                                 formatted_sh_sl,
+                                 ssl, code_info->sl, sgamma2, code_info->sh);
+   }
+   else if (code_info->sl == 0x04) {  // relative adjustment
+      char * ssh = NULL;
+      switch(code_info->sh) {
+      case 0x00:   ssh = "Display default gamma";    break;
+      case 0x01:   ssh = "Default gamma - 0.1";      break;
+      case 0x02:   ssh = "Default gamma - 0.2";      break;
+      case 0x03:   ssh = "Default gamma - 0.3";      break;
+      case 0x04:   ssh = "Default gamma - 0.4";      break;
+      case 0x05:   ssh = "Default gamma - 0.5";      break;
+      case 0x06:   ssh = "Default gamma - 0.6";      break;
+      case 0x07:   ssh = "Default gamma - 0.7";      break;
+      case 0x08:   ssh = "Default gamma - 0.8";      break;
+      case 0x09:   ssh = "Default gamma - 0.9";      break;
+      case 0x0a:   ssh = "Default gamma - 1.0";      break;
+
+      case 0x11:   ssh = "Default gamma + 0.1";      break;
+      case 0x12:   ssh = "Default gamma + 0.2";      break;
+      case 0x13:   ssh = "Default gamma + 0.3";      break;
+      case 0x14:   ssh = "Default gamma + 0.4";      break;
+      case 0x15:   ssh = "Default gamma + 0.5";      break;
+      case 0x16:   ssh = "Default gamma + 0.6";      break;
+      case 0x17:   ssh = "Default gamma + 0.7";      break;
+      case 0x18:   ssh = "Default gamma + 0.8";      break;
+      case 0x19:   ssh = "Default gamma + 0.9";      break;
+      case 0x1a:   ssh = "Default gamma + 1.0";      break;
+
+      case 0x20:   ssh = "Disable all gamma correction";      break;
+
+      default:     ssh = "Invalid SH value";
+      }
+      g_snprintf(buffer, bufsz, "%s - %s (sl=0x%02x) %s (sh=0x%02x)",
+                                formatted_sh_sl,
+                                ssl, code_info->sl, ssh, code_info->sh);
+
+   }
+   else if (code_info->sl == 0x05) {
+      g_snprintf(buffer, bufsz, "%s - Mode: gamma correction disabled (sl=0x%02x), sh=0x%02x",
+                                 formatted_sh_sl,
+                                 code_info->sl, code_info->sh);
+   }
+   else {
+      g_snprintf(buffer, bufsz, "%s - Invalid sl value. sl=0x%02x, sh=0x%02x",
+                                formatted_sh_sl,
+                                code_info->sl, code_info->sh);
+   }
+
+   return true;
+}
+
+
 // 0x8d
 static bool
 format_feature_detail_x8d_mute_audio_blank_screen(
@@ -3529,8 +3619,9 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_spec_groups = VCP_SPEC_IMAGE,
       .vcp_subsets = VCP_SUBSET_COLOR,
       .desc="Select relative or absolute gamma",
-      .nontable_formatter=format_feature_detail_debug_sl_sh,
-      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,    // TODO implement function
+      // .nontable_formatter=format_feature_detail_debug_sl_sh,  // TODO implement function
+      .nontable_formatter=format_feature_detail_x72_gamma,
+      .v21_flags = DDCA_RW | DDCA_COMPLEX_NC,
       .v21_name = "Gamma",
    },
    {  .code=0x73,
