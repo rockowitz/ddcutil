@@ -1,29 +1,10 @@
-/* query_sysenv_modules.c
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
+/** \f query_sysenv_modules.c
  *  Module checks
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 #include <config.h>
@@ -164,16 +145,16 @@ bool is_module_loadable(char * module_name, int depth) {
 }
 
 
-/* Checks if module i2c_dev is required and if so whether it is loaded.
- * Reports the result.
+/** Checks if module i2c_dev is required and if so whether it is loaded.
+ *  Reports the result.
  *
- * \param  accum  collects environment information
- * \param  depth  logical indentation depth
+ *  \param  accum  collects environment information
+ *  \param  depth  logical indentation depth
  *
- * \remark
- * Sets #accum->module_i2c_dev_needed
- *      #accum->module_i2c_dev_loaded
- *      #accum->loadable_i2c_dev_exists
+ *  \remark
+ *  Sets #accum->module_i2c_dev_needed
+ *       #accum->module_i2c_dev_loaded
+ *       #accum->loadable_i2c_dev_exists
  */
 void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    int d0 = depth;
@@ -197,10 +178,10 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    if (!is_builtin)
       rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-   bool module_required = !only_nvidia_or_fglrx(accum->driver_list);
+   bool module_required = !only_fglrx(accum->driver_list);
    if (!module_required) {
       rpt_nl();
-      rpt_vstring(d0,"Using only proprietary nvidia or fglrx driver. Module i2c_dev not required.");
+      rpt_vstring(d0,"Using only proprietary fglrx driver. Module i2c_dev not required.");
       accum->module_i2c_dev_needed = false;
    }
    else if (!is_builtin) {
