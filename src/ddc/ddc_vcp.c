@@ -2,7 +2,7 @@
  *  Virtual Control Panel access
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -407,6 +407,55 @@ ddc_set_vcp_value(
 }
 
 
+/** Possibly returns a mock value for a non-table feature
+ *
+ *  \param  feature_code  VCP Feature Code
+ *  \param  resp_loc      where to return pointer to pseudo-response,
+ *                        NULL if no pseudo-response
+ *  \return pseudo error information, if simulating a failure
+ *
+ *  \remark
+ *  If return NULL and *resp_loc == NULL, then no pseudo response was generated
+ */
+Error_Info *
+mock_get_nontable_vcp_value(
+      DDCA_Vcp_Feature_Code   feature_code,
+      Parsed_Nontable_Vcp_Response** resp_loc)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. feature_code = 0x%02x, resp_loc = %p",
+                 feature_code, resp_loc);
+   Error_Info * pseudo_errinfo = NULL;
+   *resp_loc = NULL;
+
+#ifdef TEST_X72
+   if (feature_code == 0x72) {
+      Parsed_Nontable_Vcp_Response * resp = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+      resp->vcp_code = feature_code;
+      resp->valid_response = true;
+      resp->supported_opcode = true;
+      resp->mh = 0;
+      resp->ml = 0;
+      resp->sh = 0x78;
+      resp->sl = 0x00;
+      resp->max_value = resp->mh << 8 | resp->ml;
+      resp->cur_value = resp->sh << 8 | resp->sl;
+
+      *resp_loc = resp;
+   }
+#endif
+
+   if (debug) {
+      DBGMSG("Feature 0x%02x, *resp_loc = %p, returning: %s",
+          feature_code,
+          *resp_loc,
+          errinfo_summary(pseudo_errinfo) );
+      if (*resp_loc)
+         dbgrpt_interpreted_nontable_vcp_response(*resp_loc, 2);
+   }
+   return pseudo_errinfo;
+}
+
 //
 // Get VCP values
 //
@@ -415,7 +464,7 @@ ddc_set_vcp_value(
  *
  *  \param  dh                 handle for open display
  *  \param  feature_code       VCP feature code
- *  \param  ppInterpretedCode  where to return parsed respons
+ *  \param  ppInterpretedCode  where to return parsed response
  *  \return NULL if success, pointer to #Error_Info if failure
  *
  * It is the responsibility of the caller to free the parsed response.
@@ -434,6 +483,13 @@ ddc_get_nontable_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
+   *ppInterpretedCode = NULL;
+
+   Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, ppInterpretedCode);
+   if (mock_errinfo || *ppInterpretedCode) {
+      DBGMSF(debug, "Returning mock response for feature 0x%02x", feature_code);
+      return mock_errinfo;
+   }
 
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
