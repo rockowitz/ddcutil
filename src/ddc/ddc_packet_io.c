@@ -220,27 +220,30 @@ bye:
 }
 
 
-/* Closes a DDC display.
+/** Closes a DDC display.
  *
- * Arguments:
- *    dh            display handle
+ *  \param  dh            display handle
+ *  \return 0 if success, or -errno if error
  *
- * Logs status code but continues execution if error.
+ *  \remark
+ *  Logs underlying status code if error.
  */
-void ddc_close_display(Display_Handle * dh) {
+Status_Errno
+ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    if (debug) {
       DBGMSG0("Starting.");
       dbgrpt_display_handle(dh, __func__, 1);
    }
+   Status_Errno rc = 0;
 
    switch(dh->dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         Status_Errno rc = i2c_close_bus(dh->fh, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
+         rc = i2c_close_bus(dh->fh, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
-            DBGMSG("close_i2c_bus returned %d", rc);
+            DBGMSG("i2c_close_bus returned %d", rc);
             COUNT_STATUS_CODE(rc);
          }
          dh->fh = -1;    // indicate invalid, in case we try to continue using dh
@@ -252,7 +255,7 @@ void ddc_close_display(Display_Handle * dh) {
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         Status_Errno rc = usb_close_device(dh->fh, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
+         rc = usb_close_device(dh->fh, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("usb_close_device returned %d", rc);
@@ -271,6 +274,7 @@ void ddc_close_display(Display_Handle * dh) {
    unlock_distinct_display(display_id);
 
    free_display_handle(dh);
+   return rc;
 }
 
 
