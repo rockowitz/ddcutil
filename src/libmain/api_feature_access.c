@@ -79,7 +79,7 @@ ddca_get_non_table_vcp_value(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_Non_Table_Vcp_Value*  valrec)
 {
-
+   assert(valrec);
    WITH_DH(ddca_dh,  {
        Error_Info * ddc_excp = NULL;
        Parsed_Nontable_Vcp_Response * code_info;
@@ -116,6 +116,7 @@ ddca_get_table_vcp_value(
 {
    WITH_DH(ddca_dh,
       {
+         assert(table_value_loc);
          Error_Info * ddc_excp = NULL;
          Buffer * p_table_bytes = NULL;
          ddc_excp =  ddc_get_table_vcp_value(dh, feature_code, &p_table_bytes);
@@ -135,6 +136,7 @@ ddca_get_table_vcp_value(
 
             buffer_free(p_table_bytes, __func__);
          }
+         assert( (psc==0 && *table_value_loc) || (psc!=0 && !*table_value_loc));
       }
    );
 }
@@ -196,20 +198,22 @@ ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Display_Handle         ddca_dh,
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Vcp_Value_Type         call_type,
-       DDCA_Any_Vcp_Value **       pvalrec)
+       DDCA_Any_Vcp_Value **       valrec_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
-          ddca_dh, feature_code, call_type, pvalrec);
-   *pvalrec = NULL;
+   DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, valrec_loc=%p",
+          ddca_dh, feature_code, call_type, valrec_loc);
+   assert(valrec_loc);
+   *valrec_loc = NULL;
 
    DDCA_Any_Vcp_Value * valrec2 = NULL;
    DDCA_Status rc = ddca_get_vcp_value(ddca_dh, feature_code, call_type, &valrec2);
    if (rc == 0) {
-      *pvalrec = valrec2;
+      *valrec_loc = valrec2;
    }
 
-   DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
+   DBGMSF(debug, "Done. Returning %s, *valrec_loc=%p", psc_desc(rc), *valrec_loc);
+   assert( (rc==0 && *valrec_loc) || (rc!=0 && !*valrec_loc) );
    return rc;
 }
 
@@ -253,6 +257,7 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Any_Vcp_Value **       valrec_loc)
 {
+   assert(valrec_loc);
    free_thread_error_detail();
 
    DDCA_Vcp_Value_Type call_type;
@@ -264,6 +269,7 @@ ddca_get_any_vcp_value_using_implicit_type(
                  feature_code,
                  valrec_loc);
    }
+   assert( (ddcrc==0 && *valrec_loc) || (ddcrc!=0 && !*valrec_loc) );
    return ddcrc;
 }
 
@@ -404,14 +410,15 @@ ddca_format_any_vcp_value(
                  mmid,
                  (mmid) ? mmk_repr(*mmid) : "NULL"
                  );
-   DDCA_Status psc = 0;
+   assert(formatted_value_loc);
+   DDCA_Status ddcrc = 0;
    free_thread_error_detail();
 
    *formatted_value_loc = NULL;
 
    if (!mmid) {
       *formatted_value_loc = strdup("Programming error. mmid not specified");
-      psc = DDCRC_ARG;
+      ddcrc = DDCRC_ARG;
       goto bye;
    }
 
@@ -419,7 +426,7 @@ ddca_format_any_vcp_value(
    dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
         feature_code, *mmid, vspec, /*with_default=*/ true);
    if (!dfm) {
-      psc = DDCRC_ARG;
+      ddcrc = DDCRC_ARG;
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
       goto bye;
    }
@@ -432,7 +439,7 @@ ddca_format_any_vcp_value(
       else
          *formatted_value_loc = g_strdup_printf("Feature %02x is not readable", feature_code);
       DBGMSF(debug, "%s", *formatted_value_loc);
-      psc = DDCRC_INVALID_OPERATION;
+      ddcrc = DDCRC_INVALID_OPERATION;
       goto bye;
    }
 
@@ -444,12 +451,12 @@ ddca_format_any_vcp_value(
    if (call_type != anyval->value_type) {
        *formatted_value_loc = g_strdup_printf(
              "Feature type in value does not match feature code");
-       psc = DDCRC_ARG;
+       ddcrc = DDCRC_ARG;
        goto bye;
    }
    bool ok = dyn_format_feature_detail_dfm(dfm, vspec, anyval,formatted_value_loc);
    if (!ok) {
-       psc = DDCRC_ARG;    // ??
+       ddcrc = DDCRC_ARG;    // ??
        assert(!formatted_value_loc);
        *formatted_value_loc = g_strdup_printf("Unable to format value for feature 0x%02x", feature_code);
    }
@@ -459,8 +466,9 @@ bye:
    // if (pentry)
    //    free_synthetic_vcp_entry(pentry);   // does nothing if not synthetic
 
-   DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(psc), *formatted_value_loc);
-   return psc;
+   DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(ddcrc), *formatted_value_loc);
+   assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
+   return ddcrc;
 }
 
 
@@ -473,6 +481,7 @@ ddca_format_any_vcp_value_by_dref(
 {
    WITH_DR(ddca_dref,
          {
+               assert(formatted_value_loc);
                bool debug = false;
                if (debug) {
                   DBGMSG("feature_code=0x%02x, ddca_dref=%s, valrec=%s",
@@ -481,12 +490,13 @@ ddca_format_any_vcp_value_by_dref(
                          summarize_single_vcp_value(valrec) );
                   dbgrpt_display_ref( dref, 1);
                }
-               return ddca_format_any_vcp_value(
+               psc = ddca_format_any_vcp_value(
                          feature_code,
                          dref->vcp_version,
                          dref->mmid,
                          valrec,
                          formatted_value_loc);
+               assert( (psc==0 && *formatted_value_loc) || (psc!=0 &&!*formatted_value_loc) );
          }
    )
 }
@@ -507,6 +517,7 @@ ddca_format_non_table_vcp_value(
              vspec.major, vspec.minor,
              (mmid) ? mmk_repr(*mmid) : "NULL");
    }
+   assert(formatted_value_loc);
 
    // free_thread_error_detail();   // unnecessary, done by ddca_format_any_vcp_value();
    DDCA_Any_Vcp_Value anyval;
@@ -517,7 +528,9 @@ ddca_format_non_table_vcp_value(
    anyval.val.c_nc.sh = valrec->sh;
    anyval.val.c_nc.sl = valrec->sl;
 
-   return ddca_format_any_vcp_value(feature_code, vspec, mmid, &anyval, formatted_value_loc);
+   DDCA_Status ddcrc =  ddca_format_any_vcp_value(feature_code, vspec, mmid, &anyval, formatted_value_loc);
+   assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
+   return ddcrc;
 }
 
 DDCA_Status
@@ -537,12 +550,14 @@ ddca_format_non_table_vcp_value_by_dref(
                          // summarize_single_vcp_value(valrec) );
                   dbgrpt_display_ref( dref, 1);
                }
-               return ddca_format_non_table_vcp_value(
+               assert(formatted_value_loc);
+               psc = ddca_format_non_table_vcp_value(
                          feature_code,
                          dref->vcp_version,
                          dref->mmid,
                          valrec,
                          formatted_value_loc);
+               assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
          }
    )
 }
@@ -878,11 +893,13 @@ ddca_get_profile_related_values(
          DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
                        " *profile_values_string_loc=%p",
                profile_values_string_loc, *profile_values_string_loc);
+         assert(profile_values_string_loc);
          psc = dumpvcp_as_string(dh, profile_values_string_loc);
          DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
                        " *profile_values_string_loc=%p",
                profile_values_string_loc, *profile_values_string_loc);
          DBGMSF(debug, "*profile_values_string_loc = |%s|", *profile_values_string_loc);
+         assert( (psc==0  && *profile_values_string_loc) || (psc!=0 && !*profile_values_string_loc) );
       }
    );
 }
