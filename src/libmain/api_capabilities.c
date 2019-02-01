@@ -49,9 +49,10 @@
 DDCA_Status
 ddca_get_capabilities_string(
       DDCA_Display_Handle  ddca_dh,
-      char**               pcaps)
+      char**               pcaps_loc)
 {
    bool debug = false;
+   assert(pcaps_loc);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
@@ -62,9 +63,10 @@ ddca_get_capabilities_string(
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
-            *pcaps = strdup(p_cap_string);
-            DBGMSF(debug, "*pcaps=%p", *pcaps);
+            *pcaps_loc = strdup(p_cap_string);
+            DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
          }
+         assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
       }
    );
 }
@@ -73,10 +75,11 @@ ddca_get_capabilities_string(
 DDCA_Status
 ddca_parse_capabilities_string(
       char *                   capabilities_string,
-      DDCA_Capabilities **     p_parsed_capabilities)
+      DDCA_Capabilities **     parsed_capabilities_loc)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
+   assert(parsed_capabilities_loc);
    free_thread_error_detail();
    DDCA_Status psc = DDCRC_OTHER;       // DDCL_BAD_DATA?
    DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
@@ -138,8 +141,9 @@ ddca_parse_capabilities_string(
       free_parsed_capabilities(pcaps);
    }
 
-   *p_parsed_capabilities = result;
+   *parsed_capabilities_loc = result;
    DBGMSF(debug, "Done. Returning: %d", psc);
+   assert( (psc==0 && *parsed_capabilities_loc) || (psc!=0 && !*parsed_capabilities_loc));
    return psc;
 }
 
