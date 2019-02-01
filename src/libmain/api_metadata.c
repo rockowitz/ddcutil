@@ -168,13 +168,14 @@ ddca_get_feature_list_by_dref(
                bool debug = false;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
                       feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
+               assert(p_feature_list);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
                // DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
                // Whether a feature is a table feature can vary by version, so can't
                // specify VCP_SPEC_ANY to request feature ids in any version
                if (!vcp_version_is_valid(vspec, /* allow unknown */ false)) {
-                  psc = -EINVAL;
+                  psc = DDCRC_ARG;
                   ddca_feature_list_clear(p_feature_list);
                   goto bye;
                }
@@ -355,6 +356,7 @@ ddca_get_feature_flags_by_vspec(
 {
    free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
+   assert(feature_flags);
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
 //    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
       Display_Feature_Metadata * dfm =  get_version_feature_info_by_vspec_dfm(
@@ -411,6 +413,7 @@ ddca_get_feature_metadata_by_vspec(
    bool debug = false;
    DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info_loc=%p",
                  feature_code, vspec.major, vspec.minor, create_default_if_not_found, info_loc);
+   assert(info_loc);
    free_thread_error_detail();
    DDCA_Feature_Metadata * meta = NULL;
    DDCA_Status psc = DDCRC_ARG;
@@ -434,6 +437,7 @@ ddca_get_feature_metadata_by_vspec(
    }
    *info_loc = meta;
 
+   assert( (psc==0 && *info_loc) || (psc!=0 &&!*info_loc) );
    return psc;
 }
 
@@ -451,6 +455,7 @@ ddca_get_feature_metadata_by_dref(
                bool debug = false;
                DBGMSF(debug, "feature_code=0x%02x, dref=%%s, create_default_if_not_found=%s, meta_loc=%p",
                              feature_code, dref_repr_t(dref), create_default_if_not_found, meta_loc);
+               assert(meta_loc);
 
                DDCA_Feature_Metadata * meta = NULL;
                Display_Feature_Metadata * intmeta =
@@ -468,6 +473,7 @@ ddca_get_feature_metadata_by_dref(
                   if (psc == 0)
                      dbgrpt_ddca_feature_metadata(meta, 2);
                }
+               assert( (psc==0 && *meta_loc) || (psc!=0 &&!*meta_loc) );
          }
       );
 }
@@ -488,6 +494,7 @@ ddca_get_feature_metadata_by_dh(
                              feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
+               assert(metadata_loc);
 
                DDCA_Feature_Metadata * meta = NULL;
                Display_Feature_Metadata * intmeta =
@@ -504,6 +511,7 @@ ddca_get_feature_metadata_by_dh(
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(meta, 5);
                 }
+                assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
       );
 }
@@ -596,15 +604,16 @@ ddca_get_feature_name_by_dref(
 // unpublished
 DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
-      DDCA_Vcp_Feature_Code      feature_code,
-      DDCA_MCCS_Version_Spec     vspec,
-      const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
-      DDCA_Feature_Value_Entry** value_table_loc)
+      DDCA_Vcp_Feature_Code          feature_code,
+      DDCA_MCCS_Version_Spec         vspec,
+      const DDCA_Monitor_Model_Key * p_mmid,   // currently ignored
+      DDCA_Feature_Value_Entry**     value_table_loc)
 {
    bool debug = false;
    DDCA_Status rc = 0;
    *value_table_loc = NULL;
    DBGMSF(debug, "feature_code = 0x%02x, vspec=%d.%d", feature_code, vspec.major, vspec.minor);
+   assert(value_table_loc);
    free_thread_error_detail();
 
    if (!vcp_version_is_valid(vspec, /* unknown_ok */ true)) {
@@ -639,8 +648,8 @@ ddca_get_simple_sl_value_table_by_vspec(
   }
 
 bye:
-  DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
-
+   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
+   assert ( (rc==0 && *value_table_loc) || (rc!=0 && !*value_table_loc) );
    return rc;
 }
 
@@ -655,8 +664,10 @@ ddca_get_simple_sl_value_table_by_dref(
 {
    WITH_DR(ddca_dref,
       {
+         assert(value_table_loc);
          psc = ddca_get_simple_sl_value_table_by_vspec(
                   feature_code, dref->vcp_version, dref->mmid, value_table_loc);
+         assert ( (psc==0 && *value_table_loc) || (psc!=0 && !*value_table_loc) );
       }
    )
 }
@@ -670,6 +681,7 @@ ddca_get_simple_sl_value_table(
 {
    bool debug = false;
    DDCA_Status rc = 0;
+   assert(value_table_loc);
    *value_table_loc = NULL;
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
    DBGMSF(debug, "feature_code = 0x%02x, mccs_version_id=%d, vspec=%d.%d",
@@ -678,7 +690,8 @@ ddca_get_simple_sl_value_table(
    rc = ddca_get_simple_sl_value_table_by_vspec(
            feature_code, vspec, &DDCA_UNDEFINED_MONITOR_MODEL_KEY,  value_table_loc);
 
-   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
+   DBGMSF(debug, "Done. *value_table_loc=%p, returning %s", *value_table_loc, psc_desc(rc));
+   assert ( (rc==0 && *value_table_loc) || (rc!=0 && !*value_table_loc) );
    return rc;
 }
 
@@ -695,10 +708,12 @@ ddca_get_simple_nc_feature_value_name_by_table(
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
    free_thread_error_detail();
+   assert(value_name_loc);
    DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
    *value_name_loc = sl_value_table_lookup(feature_value_entries, feature_value);
    if (!*value_name_loc)
       rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
+   assert ( (rc==0 && *value_name_loc) || (rc!=0 && !*value_name_loc) );
    return rc;
 }
 
@@ -711,6 +726,7 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       uint8_t                  feature_value,
       char**                   feature_name_loc)
 {
+   assert(feature_name_loc);
    free_thread_error_detail();
    DDCA_Feature_Value_Entry * feature_value_entries = NULL;
 
@@ -721,6 +737,7 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       // DBGMSG("&feature_value_entries = %p", &feature_value_entries);
       rc = ddca_get_simple_nc_feature_value_name_by_table(feature_value_entries, feature_value, feature_name_loc);
    }
+   assert ( (rc==0 && *feature_name_loc) || (rc!=0 && !*feature_name_loc) );
    return rc;
 }
 
