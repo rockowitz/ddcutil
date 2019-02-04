@@ -114,8 +114,7 @@ get_capabilities_buffer(
  *
  * Arguments:
  *   dh       display handle
- *   pcaps    location where to return pointer to capabilities string.
- *   retry_history if non-null, collects retryable errors
+ *   caps_loc location where to return pointer to capabilities string.
  *
  * Returns:
  *   status code
@@ -126,7 +125,7 @@ get_capabilities_buffer(
 Error_Info *
 get_capabilities_string(
       Display_Handle * dh,
-      char**           pcaps)
+      char**           caps_loc)
 {
    assert(dh);
    assert(dh->dref);
@@ -153,7 +152,7 @@ get_capabilities_string(
          }
       }
    }
-   *pcaps = dh->dref->capabilities_string;
+   *caps_loc = dh->dref->capabilities_string;
    return ddc_excp;
 }
 

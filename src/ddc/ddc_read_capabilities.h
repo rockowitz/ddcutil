@@ -20,6 +20,6 @@
 Error_Info *
 get_capabilities_string(
       Display_Handle * dh,
-      char**           pcaps);
+      char**           caps_loc);
 
 #endif /* DDC_READ_CAPABILITIES_H_ */
