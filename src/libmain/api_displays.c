@@ -44,8 +44,9 @@ ddca_create_dispno_display_identifier(
       int                      dispno,
       DDCA_Display_Identifier* did_loc)
 {
-   assert(did_loc);
    free_thread_error_detail();
+   // assert(did_loc);
+   PRECOND(did_loc);
    Display_Identifier* did = create_dispno_display_identifier(dispno);
    *did_loc = did;
    assert(*did_loc);
@@ -58,8 +59,9 @@ ddca_create_busno_display_identifier(
       int busno,
       DDCA_Display_Identifier* did_loc)
 {
-   assert(did_loc);
    free_thread_error_detail();
+   // assert(did_loc);
+   PRECOND(did_loc);
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
    assert(*did_loc);
@@ -73,8 +75,9 @@ ddca_create_adlno_display_identifier(
       int                      iDisplayIndex,
       DDCA_Display_Identifier* did_loc)
 {
-   assert(did_loc);
+   // assert(did_loc);
    free_thread_error_detail();
+   PRECOND(did_loc);
    Display_Identifier* did = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);
    *did_loc = did;
    assert(*did_loc);
@@ -90,7 +93,8 @@ ddca_create_mfg_model_sn_display_identifier(
       DDCA_Display_Identifier* did_loc)
 {
    free_thread_error_detail();
-   assert(did_loc);
+   // assert(did_loc);
+   PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
 
@@ -125,8 +129,9 @@ ddca_create_edid_display_identifier(
       const Byte *              edid,
       DDCA_Display_Identifier * did_loc)    // 128 byte EDID
 {
-   assert(did_loc);
+   // assert(did_loc);
    free_thread_error_detail();
+   PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
@@ -147,8 +152,9 @@ ddca_create_usb_display_identifier(
       int                      device,
       DDCA_Display_Identifier* did_loc)
 {
-   assert(did_loc);
+   // assert(did_loc);
    free_thread_error_detail();
+   PRECOND(did_loc);
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
    assert(*did_loc);
@@ -161,8 +167,9 @@ ddca_create_usb_hiddev_display_identifier(
       int                      hiddev_devno,
       DDCA_Display_Identifier* did_loc)
 {
-   assert(did_loc);
+   // assert(did_loc);
    free_thread_error_detail();
+   PRECOND(did_loc);
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
    assert(*did_loc);
@@ -209,13 +216,14 @@ ddca_create_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc)
 {
+   free_thread_error_detail();
    bool debug = false;
    DBGMSF(debug, "Starting.  did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
-   assert(dref_loc);
+   // assert(dref_loc);
+   PRECOND(dref_loc);
    DBGMSF(debug,"    *dref_loc=%p", *dref_loc);
    DDCA_Status rc = 0;
-   free_thread_error_detail();
 
    ddc_ensure_displays_detected();
 
@@ -343,7 +351,8 @@ ddca_open_display2(
 {
    free_thread_error_detail();
    assert(library_initialized);
-   assert(dh_loc);
+   // assert(dh_loc);
+   PRECOND(dh_loc);
 
    ddc_ensure_displays_detected();
 
@@ -584,8 +593,9 @@ ddca_get_display_info_list2(
 {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_API||DDCA_TRC_DDC, "Starting");
-   assert(dlist_loc);
    free_thread_error_detail();
+   // assert(dlist_loc);
+   PRECOND(dlist_loc);
 
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();
@@ -707,7 +717,8 @@ ddca_report_display_info(
    bool debug = false;
    DBGMSF(debug, "Starting. dinfo=%p, depth=%d", dinfo, depth);
 
-   assert(dinfo);
+   // assert(dinfo);
+   PRECOND_NORC(dinfo);
    assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
    int d0 = depth;
    int d1 = depth+1;
