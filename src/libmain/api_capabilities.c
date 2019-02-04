@@ -52,13 +52,16 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   assert(pcaps_loc);
+   free_thread_error_detail();
+   // assert(pcaps_loc);
+   PRECOND(pcaps_loc);
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
          ddc_excp = get_capabilities_string(dh, &p_cap_string);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
+         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
          errinfo_free(ddc_excp);
          if (psc == 0) {
             // make copy to ensure caller does not muck around in ddcutil's
@@ -79,8 +82,9 @@ ddca_parse_capabilities_string(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
-   assert(parsed_capabilities_loc);
+   // assert(parsed_capabilities_loc);
    free_thread_error_detail();
+   PRECOND(parsed_capabilities_loc);
    DDCA_Status psc = DDCRC_OTHER;       // DDCL_BAD_DATA?
    DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
    DDCA_Capabilities * result = NULL;
@@ -183,11 +187,14 @@ ddca_report_parsed_capabilities_by_dref(
    free_thread_error_detail();
    DDCA_Status ddcrc = 0;
 
+   PRECOND(p_caps);
+#ifdef ALT
    // no need to check marker since DDCA_Capabilities not opaque
    if (!p_caps) {
       ddcrc = DDCRC_ARG;
       goto bye;
    }
+#endif
 
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 ) {
