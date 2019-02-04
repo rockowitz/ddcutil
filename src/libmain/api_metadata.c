@@ -356,7 +356,8 @@ ddca_get_feature_flags_by_vspec(
 {
    free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
-   assert(feature_flags);
+   // assert(feature_flags);
+   PRECOND(feature_flags);
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
 //    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
       Display_Feature_Metadata * dfm =  get_version_feature_info_by_vspec_dfm(
@@ -453,8 +454,8 @@ ddca_get_feature_metadata_by_dref(
          ddca_dref,
          {
                bool debug = false;
-               DBGMSF(debug, "feature_code=0x%02x, dref=%%s, create_default_if_not_found=%s, meta_loc=%p",
-                             feature_code, dref_repr_t(dref), create_default_if_not_found, meta_loc);
+               DBGMSF(debug, "feature_code=0x%02x, dref=%s, create_default_if_not_found=%s, meta_loc=%p",
+                             feature_code, dref_repr_t(dref), sbool(create_default_if_not_found), meta_loc);
                assert(meta_loc);
 
                DDCA_Feature_Metadata * meta = NULL;
