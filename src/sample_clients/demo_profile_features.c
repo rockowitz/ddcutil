@@ -51,7 +51,7 @@ DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
    DDCA_Display_Ref        dref = NULL;
 
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
-   DDCA_Status rc = ddca_create_display_ref(did, &dref);
+   DDCA_Status rc = ddca_get_display_ref(did, &dref);
    if (rc != 0) {
       DDC_ERRMSG("ddca_create_display_ref", rc);
    }

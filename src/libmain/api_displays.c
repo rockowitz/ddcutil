@@ -212,7 +212,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
 //
 
 DDCA_Status
-ddca_create_display_ref(
+ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc)
 {
@@ -249,7 +249,17 @@ ddca_create_display_ref(
    return rc;
 }
 
+// deprecated
+DDCA_Status
+ddca_create_display_ref(
+      DDCA_Display_Identifier did,
+      DDCA_Display_Ref*       dref_loc)
+{
+   return ddca_get_display_ref(did, dref_loc);
+}
 
+
+// deprecated, not needed, in library there are no transient display refs
 DDCA_Status
 ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
    if (!ddca_dref) {

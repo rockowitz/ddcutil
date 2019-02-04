@@ -115,7 +115,7 @@ ddcg_display_ref_get(DdcgDisplayIdentifier * ddcg_did, GError ** error) {
    DDCA_Display_Ref ddct_dref = NULL;
    DDCA_Display_Identifier ddct_did = _ddcg_display_identifier_get_ddct_object(ddcg_did);
    assert(ddcg_did);
-   DDCA_Status ddct_status = ddca_create_display_ref( ddct_did, &ddct_dref);
+   DDCA_Status ddct_status = ddca_get_display_ref( ddct_did, &ddct_dref);
    if (ddct_status == 0) {
       ddcg_dref = g_object_new(DDCG_TYPE_DISPLAY_REF, NULL);
       // DBGMSG("ddcg_dref=%p", ddcg_dref);
