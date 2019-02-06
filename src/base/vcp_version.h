@@ -17,16 +17,35 @@
 
 #include "util/coredefs.h"
 
-#ifdef MOVED_TO_API
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V10;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V20;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V21;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V30;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_V22;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_ANY;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNKNOWN;
-extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED;
-#endif
+
+// Both DDCA_MCCS_Version_Spec and DDCA_MCCS_Version_Id exist for historical reasons.
+// DDCA_MCCS_Version_Spec is the form in which the version number is returned from a
+// GETVCP of feature xDF.  This form is used throughout much of ddcutil.
+// DDCA_MCCS_Version_Id reflects the fact that there are a small number of versions
+// and simplifies program logic that varies among versions.
+/** @name version_id
+ *  Ids for MCCS/VCP versions, reflecting the fact that
+ *  there is a small set of valid version values.
+ */
+///@{
+
+// in sync w constants MCCS_V.. in vcp_feature_codes.c
+/** MCCS (VCP) Feature Version IDs */
+typedef enum {
+   DDCA_MCCS_VNONE =   0,     /**< As response, version unknown */
+   DDCA_MCCS_V10   =   1,     /**< MCCS v1.0 */
+   DDCA_MCCS_V20   =   2,     /**< MCCS v2.0 */
+   DDCA_MCCS_V21   =   4,     /**< MCCS v2.1 */
+   DDCA_MCCS_V30   =   8,     /**< MCCS v3.0 */
+   DDCA_MCCS_V22   =  16,     /**< MCCS v2.2 */
+   DDCA_MCCS_VANY  = 255      /**< On queries, match any VCP version */
+} DDCA_MCCS_Version_Id;
+
+#define DDCA_MCCS_VUNK  DDCA_MCCS_VNONE    /**< For use on responses, indicates version unknown   */
+
+///@}
+
+
 
 bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
 bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min);

@@ -642,7 +642,9 @@ ddca_get_display_info_list2(
          }
 
          DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+#ifdef OLD
          DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
+#endif
          if (dref->dispno != -1) {
             // DBGMSF(debug, "dref->vcp_version (1) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
             // hack:
@@ -651,7 +653,9 @@ ddca_get_display_info_list2(
             if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
                vspec = get_vcp_version_by_display_ref(dref);
             }
+#ifdef OLD
             version_id = mccs_version_spec_to_id(vspec);
+#endif
             // DBGMSF(debug, "dref->vcp_version (2) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
          }
 
@@ -669,7 +673,9 @@ ddca_get_display_info_list2(
          curinfo->product_code   = dref->pedid->product_code;
 #endif
          curinfo->vcp_version    = vspec;
+#ifdef OLD
          curinfo->vcp_version_id = version_id;
+#endif
          curinfo->dref           = dref;
 
 #ifdef MMID

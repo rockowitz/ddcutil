@@ -270,12 +270,6 @@ typedef struct {
 // VCP Feature Information
 //
 
-// Both DDCA_MCCS_Version_Spec and DDCA_MCCS_Version_Id exist for historical reasons.
-// DDCA_MCCS_Version_Spec is the form in which the version number is returned from a
-// GETVCP of feature xDF.  This form is used throughout much of ddcutil.
-// DDCA_MCCS_Version_Id reflects the fact that there are a small number of versions
-// and simplifies program logic that varies among versions.
-
 /** MCCS Version in binary form */
 typedef struct {
    uint8_t    major;           /**< major version number */
@@ -291,29 +285,6 @@ extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_ANY;        ///< used as query sp
 extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNKNOWN;    ///< value for monitor has been queried unsuccessfully
 extern const DDCA_MCCS_Version_Spec DDCA_VSPEC_UNQUERIED;  ///< indicates version not queried
 
-
-
-/** @name version_id
- *  Ids for MCCS/VCP versions, reflecting the fact that
- *  there is a small set of valid version values.
- */
-///@{
-
-// in sync w constants MCCS_V.. in vcp_feature_codes.c
-/** MCCS (VCP) Feature Version IDs */
-typedef enum {
-   DDCA_MCCS_VNONE =   0,     /**< As response, version unknown */
-   DDCA_MCCS_V10   =   1,     /**< MCCS v1.0 */
-   DDCA_MCCS_V20   =   2,     /**< MCCS v2.0 */
-   DDCA_MCCS_V21   =   4,     /**< MCCS v2.1 */
-   DDCA_MCCS_V30   =   8,     /**< MCCS v3.0 */
-   DDCA_MCCS_V22   =  16,     /**< MCCS v2.2 */
-   DDCA_MCCS_VANY  = 255      /**< On queries, match any VCP version */
-} DDCA_MCCS_Version_Id;
-
-#define DDCA_MCCS_VUNK  DDCA_MCCS_VNONE    /**< For use on responses, indicates version unknown   */
-
-///@}
 
 /** MCCS VCP Feature Id */
 typedef uint8_t DDCA_Vcp_Feature_Code;
@@ -388,7 +359,9 @@ typedef struct {
    uint16_t               product_code;     ///< model product number
    uint8_t                edid_bytes[128];  ///< first 128 bytes of EDID
    DDCA_MCCS_Version_Spec vcp_version;      ///< VCP version as pair of numbers
+#ifdef OLD
    DDCA_MCCS_Version_Id   vcp_version_id;   ///< VCP version identifier (deprecated)
+#endif
    DDCA_Display_Ref       dref;             ///< opaque display reference
 } DDCA_Display_Info;
 
