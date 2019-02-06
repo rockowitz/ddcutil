@@ -681,21 +681,6 @@ ddca_dbgrpt_display_ref(
 // Display Handle
 //
 
-/** \deprecated Use #ddca_open_display2()
- * Open a display
- * @param[in]  ddca_dref    display reference for display to open
- * @param[out] ddca_dh_loc  where to return display handle
- * @return     status code
- *
- * Fails if display is already opened by another thread.
- * \ingroup api_display_spec
- */
-// __attribute__ ((deprecated ("use ddca_open_display2()")))
-DDCA_Status
-ddca_open_display(
-      DDCA_Display_Ref      ddca_dref,
-      DDCA_Display_Handle * ddca_dh_loc);
-
 /** Open a display
  * @param[in]  ddca_dref    display reference for display to open
  * @param[in]  wait         if true, wait if display locked by another thread
