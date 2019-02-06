@@ -57,7 +57,8 @@ extern "C" {
  *
  * @return version numbers
  */
-DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
+DDCA_Ddcutil_Version_Spec
+ddca_ddcutil_version(void);
 
 /**
  * Returns the ddcutil version as a string in the form "major.minor.micro".
