@@ -170,6 +170,18 @@ ddca_feature_name_by_vspec(
 
 
 
+// DEPRECATED IN 0.9.0
+
+
+// /** \deprecated */
+__attribute__ ((deprecated))
+DDCA_Status
+ddca_get_simple_nc_feature_value_name_by_display(
+      DDCA_Display_Handle    ddca_dh,    // needed because value lookup mccs version dependent
+      DDCA_Vcp_Feature_Code  feature_code,
+      uint8_t                feature_value,
+      char**                 feature_name_loc);
+
 
 
 
