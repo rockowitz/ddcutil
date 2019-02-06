@@ -1052,8 +1052,8 @@ ddca_get_feature_name_by_dref(
  *  @retval      DDCRC_NOT_FOUND  value not found
  *
  * @remark
- * The value returned in **value_name_Loc** is a pointer into an existing
- * data structures.  Do not free.
+ * The value returned in **value_name_loc** is a pointer into the table
+ * data structure.  Do not free.
  */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
@@ -1237,6 +1237,10 @@ ddca_feature_list_string(
       char * value_prefix,
       char * sepstr);
 
+
+//
+// GET AND SET VCP VALUES
+//
 
 /*
  * The API for getting and setting VCP values is doubly specified,
@@ -1496,7 +1500,7 @@ ddca_set_table_vcp_value(
  *  \param[in]   feature_code   feature code
  *  \param[in]   new_value      value to set
  *  \return      status code
- *  \since 0,9.0
+ *  \since 0.9.0
  */
 DDCA_Status
 ddca_set_any_vcp_value(
