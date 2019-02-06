@@ -1476,21 +1476,6 @@ ddca_set_non_table_vcp_value(
       uint8_t                  lo_byte
      );
 
-/** @deprecated Use #ddca_set_non_table_vcp_value() */
-__attribute__ ((deprecated ("use ddca_set_non_table_vcp_value()")))
-DDCA_Status
-ddca_set_continuous_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code,
-      uint16_t                 new_value);
-
-__attribute__ ((deprecated ("use ddca_set_non_table_vcp_value()")))
-DDCA_Status
-ddca_set_simple_nc_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code,
-      uint8_t                  new_value);
-
 /** Sets a Table VCP value.
  *
  *  \param[in]   ddca_dh             display handle
