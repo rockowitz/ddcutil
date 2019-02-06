@@ -67,9 +67,7 @@ DDCA_Ddcutil_Version_Spec ddca_ddcutil_version(void);       // ddcutil version
 const char *
 ddca_ddcutil_version_string(void);
 
-
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
-
 #ifdef ALT
  * Defined Bits
  * <table>
@@ -521,6 +519,7 @@ ddca_report_displays(
       bool include_invalid_displays,
       int  depth);
 
+
 //
 // Display Identifier
 //
@@ -687,7 +686,6 @@ DDCA_Status
 ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc);
-
 
 /**  \deprecated All display references are persistent
  *
