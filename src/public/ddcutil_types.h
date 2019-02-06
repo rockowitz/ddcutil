@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -182,51 +182,16 @@ typedef enum {
 
 /** \defgroup api_display_spec API Display Specification */
 
-
-/** @name Display Specification
-
-Monitors are referenced in 3 different ways depending on contexts:
-
-1) A #DDCA_Display_Identifier contains criteria for selecting a monitor,
-typically as entered by a user.
-These may directly identify a monitor (e.g. by I2C bus number), or entail a
-search (e.g. EDID).
-
-Resolving a #DDCA_Display_Identifier resolves to a #DDCA_Display_Ref.
-
-2) #DDCA_Display_Ref indicates the operating system path to a display.
-It can be an I2C identifier,an ADL identifier, or a USB identifier.
-
-For Display_Identifiers containing an I2C bus number or ADL adapter.display numbers,
-the translation from DDCA_Display_Identifier to DDCA_Display_Ref is direct.  
-Otherwise, a search of detected monitors must be performed.
-
-Opening a #DDCA_Display_Ref results in a #DDCA_Display_Handle.
-
-3) A #DDCA_Display_Handle references a display that has been "opened".  This is used
-for most function calls performing an operation on a display.
-
-For I2C and USB connected displays, an operating system open is performed when
-creating DDCA_Display_Handle from a DDCA_Display_Ref.
-DDCA_Display_Handle then contains the open file handle.
-
-For ADL displays, no actual open is performed when creating a DDCA_Display_Handle from
-a DDCA_Display_Ref.  The adapter number.device number pair are simply copied.
-
-\ingroup api_display_spec
-*/
-///@{
-
 /** Opaque display identifier
  *
- * A **DDCA_Display_Identifier** holds the criteria for selecting a display,
+ * A **DDCA_Display_Identifier** holds the criteria for selecting a monitor,
  * typically as specified by the user.
  *
  * It can take several forms:
  * - the display number assigned by **dccutil**
  * - an I2C bus number
  * - an ADL (adapter index, display index) pair
- * - a  USB (bus number, device number) pair
+ * - a  USB (bus number, device number) pair or USB device number
  * - an EDID
  * - manufacturer, model, and serial number strings
  *
@@ -236,11 +201,19 @@ typedef void * DDCA_Display_Identifier;
 
 /** Opaque display reference.
  *
- * A **DDCA_Display_Ref** references a display using the identifiers by which it is accessed
- * in Linux.  It takes one of three forms:
- * - an I2C bus number
- * - an ADL (adapter index, display index) pair
- * - a  USB (bus number, device number pair)
+ * A #DDCA_Display_Ref describes a monitor.  It contains 3 kinds of information:
+ * - Assigned ddcutil display number
+ * - The operating system path to the monitor, which is an I2C bus number, an
+ *   ADL identifier, or a USB device number.
+ * - Accumulated information about the monitor, such as the EDID or capabilities string.
+ *
+ * @remark
+ * When libddcutil is started, it detects all connected monitors and creates
+ * a persistent #DDCA_DisplayRef for each.
+ * @remark
+ * A #DDCA_Display_Ref can be obtained in 2 ways:
+ * - From the DDCA_Display_List returned by #ddca_get_display_info_list2()
+ * - Searching based on #DDCA_Display_Identifier using #ddca_get_display_ref()
  *
  * \ingroup api_display_spec
  */
@@ -249,7 +222,16 @@ typedef void * DDCA_Display_Ref;
 
 /** Opaque display handle
  *
- * A **DDCA_Display_Handle** represents an open display on which actions can be performed.
+ * A **DDCA_Display_Handle** represents an "open" display on which actions can be
+ * performed. This is required for communicating with a display. It is obtained by
+ * calling #ddca_open_display2().
+ *
+ * For I2C and USB connected displays, an operating system open is performed by
+ * # ddca_open_display2().  #DDCA_Display_Handle then contains the file handle
+ * returned by the operating system.
+ * For ADL displays, no actual operating system open is performed when creating
+ * a DDCA_Display_Handle.  The adapter number.device number pair are simply copied
+ * from the #DDCA_Display_Ref.
  *
  * \ingroup api_display_spec
  */
@@ -451,7 +433,8 @@ struct {
 // typedef DDCA_Feature_Value_Entry * DDCA_Feature_Value_Table;
 
 #define DDCA_FEATURE_METADATA_MARKER  "FMET"
-/** Describes a VCP feature code, tailored for a specific VCP version */
+/** Describes a VCP feature code, tailored for a specific monitor.
+ *  Feature metadata can vary by VCP version and user defined features */
 typedef
 struct {
    char                                  marker[4];      /**< always "FMET" */
