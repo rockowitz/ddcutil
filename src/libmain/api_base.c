@@ -218,7 +218,7 @@ void ddca_report_error_detail(DDCA_Error_Detail * ddca_erec, int depth) {
 // Status Code Management
 //
 
-char *
+const char *
 ddca_rc_name(DDCA_Status status_code) {
    char * result = NULL;
    Status_Code_Info * code_info = find_status_code_info(status_code);
@@ -228,7 +228,7 @@ ddca_rc_name(DDCA_Status status_code) {
 }
 
 
-char *
+const char *
 ddca_rc_desc(DDCA_Status status_code) {
    char * result = "unknown status code";
    Status_Code_Info * code_info = find_status_code_info(status_code);

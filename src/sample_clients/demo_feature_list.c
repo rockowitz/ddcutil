@@ -98,7 +98,7 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
    DDCA_Feature_List vcplist3 = ddca_feature_list_and_not(&vcplist2, &vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
-   char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
+   const char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
    printf("%s\n", s);
 }
 

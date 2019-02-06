@@ -143,7 +143,7 @@ ddca_build_options(void);
  * The returned value is a pointer into internal persistent
  * data structures and should not be freed by the caller.
  *  */
-char *
+const char *
 ddca_rc_name(
       DDCA_Status status_code);
 
@@ -157,7 +157,7 @@ ddca_rc_name(
  * The returned value is a pointer into internal persistent
  * data structures and should not be free'd by the caller.
  */
-char *
+const char *
 ddca_rc_desc(
       DDCA_Status status_code);
 
@@ -642,7 +642,7 @@ ddca_free_display_identifier(
  *
  *  \ingroup api_display_spec
  */
-char *
+const char *
 ddca_did_repr(
       DDCA_Display_Identifier did);
 
@@ -716,7 +716,7 @@ ddca_free_display_ref(
  *  @param[in]   dref display reference
  *  @return      string representation of display reference, NULL if invalid
  */
-char *
+const char *
 ddca_dref_repr(
       DDCA_Display_Ref dref);
 
@@ -787,7 +787,7 @@ ddca_close_display(
  *
  *  \ingroup api_display_spec
  */
-char *
+const char *
 ddca_dh_repr(
       DDCA_Display_Handle   ddca_dh);
 
@@ -1094,7 +1094,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
  * Since no specific display is indicated, this function ignores user defined
  * monitor feature information.
  */
-char *
+const char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
 /** Gets the VCP feature name, which may vary by MCCS version and monitor model.
@@ -1317,7 +1317,7 @@ ddca_feature_list_count(
  *  Returns NULL if feature_list == NULL
  *  @since 0.9.0
  */
-char *
+const char *
 ddca_feature_list_string(
       DDCA_Feature_List * feature_list,
       char * value_prefix,

@@ -289,7 +289,7 @@ ddca_feature_list_count(
 }
 
 
-char *
+const char *
 ddca_feature_list_string(
       DDCA_Feature_List * feature_list,
       char * value_prefix,
@@ -548,7 +548,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
 
 
 // returns pointer into permanent internal data structure, caller should not free
-char *
+const char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
    // do we want get_feature_name()'s handling of mfg specific and unrecognized codes?
    char * result = get_feature_name_by_id_only(feature_code);

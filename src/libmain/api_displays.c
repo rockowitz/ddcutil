@@ -194,7 +194,7 @@ ddca_free_display_identifier(
 }
 
 
-char *
+const char *
 ddca_did_repr(DDCA_Display_Identifier ddca_did) {
    // DBGMSG("Starting.  ddca_did=%p", ddca_did);
    char * result = NULL;
@@ -277,7 +277,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 // static char dref_work_buf[100];
 
-char *
+const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
@@ -409,7 +409,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
 // Display Handle
 //
 
-char *
+const char *
 ddca_dh_repr(DDCA_Display_Handle ddca_dh) {
    char * repr = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;

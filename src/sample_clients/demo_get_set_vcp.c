@@ -139,7 +139,7 @@ test_continuous_value(
 {
    DDCA_Status ddcrc;
    bool ok = false;
-   char * feature_name = ddca_get_feature_name(feature_code);
+   const char * feature_name = ddca_get_feature_name(feature_code);
    printf("\nTesting get and set continuous value. dh=%s, feature_code=0x%02x - %s\n",
            ddca_dh_repr(dh), feature_code, feature_name);
 
