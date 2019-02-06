@@ -404,17 +404,6 @@ ddca_enable_error_info(
 // Display Descriptions
 //
 
-/** @deprecated use #ddca_get_display_info_list2()
- * Gets a list of the detected displays.
- *
- *  Displays that do not support DDC are not included.
- *
- *  @return list of display summaries
- */
-__attribute__ ((deprecated ("use ddca_get_display_info_list2()")))
-DDCA_Display_Info_List *
-ddca_get_display_info_list(void);
-
 /** Gets a list of the detected displays.
  *
  *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
@@ -463,18 +452,6 @@ void
 ddca_report_display_info_list(
       DDCA_Display_Info_List * dlist,
       int                      depth);
-
-/** \deprecated use #ddca_report_displays()
- * Reports on all active displays.
- *  This function hooks into the code used by command "ddcutil detect"
- *
- *  @param[in] depth  logical indentation depth
- *  @return    number of MCCS capable displays
- */
-__attribute__ ((deprecated ("use ddca_report_displays()")))
-int
-ddca_report_active_displays(
-      int depth);
 
 /** Reports on all active displays.
  *  This function hooks into the code used by command "ddcutil detect"
