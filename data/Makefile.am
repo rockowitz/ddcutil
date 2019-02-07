@@ -32,5 +32,5 @@ install-data-hook:
 	@echo "datadir:        $(datadir)"
 	@echo "ddcutildir:     $(ddcutildir)"
 	@echo "srcdir:         $(srcdir)"
-
+	@echo "bindir:         ${bindir}"
 
