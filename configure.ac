@@ -1043,6 +1043,7 @@ AC_MSG_RESULT([
 	libtool version  	${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
 
 	prefix:                 ${prefix}
+	bindir:                 ${bindir}
 	datarootdir:            ${datarootdir}
 	datadir:                ${datadir}
 	docdir:                 ${docdir}
