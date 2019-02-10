@@ -141,7 +141,6 @@ report_gamma_capabilities(
    case 0xff:
    case 0xfe:
       gamma_mode = gfull_range;
-      bypass_supported = true;
       bypass_supported = (bytes[2] == 0xff) ? false : true;
       if (byte_ct != 3) {
          invalid_gamma_desc = true;
