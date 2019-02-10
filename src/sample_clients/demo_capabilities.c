@@ -44,7 +44,7 @@ DDCA_Display_Handle * open_first_display_by_dispno() {
       DDC_ERRMSG("ddca_create_display_ref", rc);
    }
    else {
-      rc = ddca_open_display(dref, &dh);
+      rc = ddca_open_display2(dref, false, &dh);
       if (rc != 0) {
          DDC_ERRMSG("ddca_open_display", rc);
       }

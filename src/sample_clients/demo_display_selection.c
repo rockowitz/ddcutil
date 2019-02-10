@@ -171,7 +171,7 @@ void demo_use_display_ref(DDCA_Display_Ref dref) {
    DDCA_Display_Handle dh;
 
    printf("\nOpen the display reference, creating a display handle...\n");
-   rc = ddca_open_display(dref, &dh);
+   rc = ddca_open_display2(dref, false, &dh);
    if (rc != 0) {
       DDC_ERRMSG("ddca_open_display", rc);
    }

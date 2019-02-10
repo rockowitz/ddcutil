@@ -87,7 +87,7 @@ demo_get_set_profile_related_values(
    DDCA_Display_Handle dh = NULL;
 
    // printf("Open display reference %s, creating a display handle...\n", ddca_dref_repr(dref));
-    ddcrc = ddca_open_display(dref, &dh);
+    ddcrc = ddca_open_display2(dref, false, &dh);
     if (ddcrc != 0) {
        DDC_ERRMSG("ddca_open_display", ddcrc);
        goto bye;
