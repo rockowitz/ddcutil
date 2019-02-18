@@ -231,6 +231,17 @@ get_raw_value_for_feature_metadata(
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       break;
 
+   case -EIO:
+      // Dell AW3418DW returns -EIO for unsupported features
+      // (except for feature 0x00, which returns mh=ml=sh=sl=0) (2/2019)
+      if (!ignore_unsupported) {
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                        feature_code, feature_name, "Unsupported feature code (EIO)");
+      }
+      psc = DDCRC_DETERMINED_UNSUPPORTED;
+      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+      break;
+
    case DDCRC_RETRIES:
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                       feature_code, feature_name, "Maximum retries exceeded");
