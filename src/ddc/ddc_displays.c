@@ -117,36 +117,46 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       if (ddc_excp)
          errinfo_free(ddc_excp);
 
-      if (psc == DDCRC_NULL_RESPONSE ||
-          psc == DDCRC_ALL_RESPONSES_NULL ||
-          psc == 0                   ||
-          psc == DDCRC_REPORTED_UNSUPPORTED ||
-          psc == DDCRC_DETERMINED_UNSUPPORTED)
+      assert(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels
+
+      // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
+      // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
+
+      if ( psc == DDCRC_NULL_RESPONSE        ||
+           psc == DDCRC_ALL_RESPONSES_NULL   ||
+           psc == 0                          ||
+           psc == DDCRC_REPORTED_UNSUPPORTED )
       {
          dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
 
-         if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
+         if (psc == DDCRC_REPORTED_UNSUPPORTED)
+            dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+
+         else if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
             dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
 
-         if (psc == 0) {
+         else {
+            assert( psc == 0);
+            assert( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
             DBGTRC(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
                      pvalrec->value_type,
                      pvalrec->val.c_nc.mh,
                      pvalrec->val.c_nc.ml,
                      pvalrec->val.c_nc.sh,
                      pvalrec->val.c_nc.sl);
-         }
-
-         if (psc == 0 &&
-             pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE &&
-             pvalrec->val.c_nc.mh == 0 &&
-             pvalrec->val.c_nc.ml == 0 &&
-             pvalrec->val.c_nc.sh == 0 &&
-             pvalrec->val.c_nc.sl == 0
-            )
-         {
-            DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
-            dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+            if ( pvalrec->val.c_nc.mh == 0 &&
+                 pvalrec->val.c_nc.ml == 0 &&
+                 pvalrec->val.c_nc.sh == 0 &&
+                 pvalrec->val.c_nc.sl == 0
+              )
+            {
+               DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
+               dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+            }
+            else {
+               DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
+               dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+            }
          }
       }
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
