@@ -445,6 +445,12 @@ mock_get_nontable_vcp_value(
    }
 #endif
 
+#ifdef TEST_EIO
+   if (feature_code == 0x45) {
+      pseudo_errinfo = errinfo_new2(-EIO, __func__, "Pseudo EIO error");
+   }
+#endif
+
    if (debug) {
       DBGMSG("Feature 0x%02x, *resp_loc = %p, returning: %s",
           feature_code,
@@ -494,7 +500,7 @@ ddc_get_nontable_vcp_value(
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
    request_packet_ptr = create_ddc_getvcp_request_packet(
-                           feature_code, "get_vcp_by_DisplayRef:request packet");
+                           feature_code, "ddc_get_nontable_vcp_value:request packet");
    // dump_packet(request_packet_ptr);
 
    Byte expected_response_type = DDC_PACKET_TYPE_QUERY_VCP_RESPONSE;
