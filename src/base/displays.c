@@ -825,23 +825,25 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    // alt:
    rpt_vstring(d1, "io_path:      %s", dpath_repr_t(&(dref->io_path)));
+
    if (dref->io_path.io_mode == DDCA_IO_USB) {
-      rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
-      rpt_int("usb_device", NULL, dref->usb_device, d1);
+      rpt_int("usb_bus",         NULL, dref->usb_bus,         d1);
+      rpt_int("usb_device",      NULL, dref->usb_device,      d1);
       rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
    }
 
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
    rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
    rpt_vstring(d1, "flags:        0x%02x", dref->flags);
-   rpt_vstring(d2, "DDC communication checked:                  %s", (dref->flags & DREF_DDC_COMMUNICATION_CHECKED) ? "true" : "false");
+   rpt_vstring(d2, "DDC communication checked:                  %s", sbool(dref->flags & DREF_DDC_COMMUNICATION_CHECKED) );
    if (dref->flags & DREF_DDC_COMMUNICATION_CHECKED)
-   rpt_vstring(d2, "DDC communication working:                  %s", (dref->flags & DREF_DDC_COMMUNICATION_WORKING) ? "true" : "false");
-   rpt_vstring(d2, "DDC NULL response usage checked:            %s", bool_repr(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED));
+   rpt_vstring(d2, "DDC communication working:                  %s", sbool(dref->flags & DREF_DDC_COMMUNICATION_WORKING) );
+   rpt_vstring(d2, "DDC NULL response usage checked:            %s", sbool(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED) );
    if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
-   rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-   rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
-   rpt_vstring(d2, "Display Ref is open:                        %s",  sbool(dref->flags & DREF_OPEN));
+   rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", sbool(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+   rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+   rpt_vstring(d2, "DDC does not indicate unsupported:          %s", sbool(dref->flags & DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED));
+   rpt_vstring(d2, "Display Ref is open:                        %s", sbool(dref->flags & DREF_OPEN));
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
 

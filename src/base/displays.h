@@ -162,16 +162,19 @@ bool               dsel_validate(          Display_Selector * dsel);
 // *** Display_Ref ***
 
 typedef uint16_t Dref_Flags;
-#define DREF_DDC_COMMUNICATION_CHECKED                 0x80
-#define DREF_DDC_COMMUNICATION_WORKING                 0x40
-#define DREF_DDC_NULL_RESPONSE_CHECKED                 0x20
-#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    0x10
-#define DREF_DDC_IS_MONITOR_CHECKED                    0x08
-#define DREF_DDC_IS_MONITOR                            0x04
-#define DREF_TRANSIENT                                 0x02
-#define DREF_DYNAMIC_FEATURES_CHECKED                  0x01
-#define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x010000
-#define DREF_OPEN                                      0x020000
+#define DREF_DDC_COMMUNICATION_CHECKED                 0x0080
+#define DREF_DDC_COMMUNICATION_WORKING                 0x0040
+#define DREF_DDC_NULL_RESPONSE_CHECKED                 0x0020
+#define DREF_DDC_IS_MONITOR_CHECKED                    0x0010
+#define DREF_DDC_IS_MONITOR                            0x0008
+#define DREF_TRANSIENT                                 0x0004
+#define DREF_DYNAMIC_FEATURES_CHECKED                  0x0002
+#define DREF_OPEN                                      0x0001
+#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    0x0800
+#define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x0400
+#define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
+#define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
+
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
