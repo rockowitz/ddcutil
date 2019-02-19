@@ -185,7 +185,7 @@ report_gamma_capabilities(
 
    else {       // absolute adjustment
       // DBGMSF(debug, "Absolute adjustment (bytes[0] = 0x%02x)", bytes[0]);
-      if ( bytes[0] >= 0x00 && bytes[0] <= 0x0a ) {
+      if ( bytes[0] <= 0x0a ) {
          switch (bytes[0]) {
          case 0x00:  absolute_tolerance_desc = "ideal";   break;
          case 0x01:  absolute_tolerance_desc = "+/- 1%";  break;
