@@ -179,12 +179,10 @@ report_gamma_capabilities(
    // for absolute adjustment the tolerance
    if (bytes[0] == 0xff) {   // relative adjustment
       DBGMSF(debug, "Relative adjustment (bytes[0] = 0x%02x)", bytes[0]);
-      // relative adjustment
       relative_gamma = true;
    }
 
    else {       // absolute adjustment
-      // DBGMSF(debug, "Absolute adjustment (bytes[0] = 0x%02x)", bytes[0]);
       if ( bytes[0] <= 0x0a ) {
          switch (bytes[0]) {
          case 0x00:  absolute_tolerance_desc = "ideal";   break;
@@ -203,7 +201,6 @@ report_gamma_capabilities(
          }
       }
       else {
-         // absolute_tolerance_specified = false;
          absolute_tolerance_desc = "None specified";
       }
       DBGMSF(debug, "absolute_tolerance: %s (bytes[0] = 0x%02x)", absolute_tolerance_desc, bytes[0]);
