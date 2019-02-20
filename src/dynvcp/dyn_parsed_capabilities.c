@@ -41,7 +41,8 @@
  *  \param  bgamma byte representing gamma
  *  \return buf
  */
-char * format_absolute_gamma(char * buf, int bufsz, Byte bgamma) {
+static char *
+format_absolute_gamma(char * buf, int bufsz, Byte bgamma) {
    int i_gamma = bgamma + 100;
    char sgamma1[10];
    g_snprintf(sgamma1, 10, "%d", i_gamma);
@@ -58,7 +59,8 @@ char * format_absolute_gamma(char * buf, int bufsz, Byte bgamma) {
  *  \param  relative_gamma byte representing gamma
  *  \return string representation (do not free)
  */
-char * format_relative_gamma(Byte relative_gamma)
+static char *
+format_relative_gamma(Byte relative_gamma)
 {
    char * desc = NULL;
    switch(relative_gamma) {
@@ -101,7 +103,7 @@ char * format_relative_gamma(Byte relative_gamma)
  *  because the former returns the bytes in the order specified, whereas
  *  the latter effectively sorts them.
  */
-void
+static void
 report_gamma_capabilities(
       Byte_Value_Array               feature_value_bytes,
       int                            depth)
@@ -262,9 +264,7 @@ report_gamma_capabilities(
          else {  // absolute gamma
             sgamma = format_absolute_gamma(bgamma, 10, raw_gamma);
          }
-         // int offset = strlen(buf);
          char buf2[100];
-
          g_snprintf(buf2, 100, "%s %s (0x%02x)",
                                (ndx > 0) ? "," : "",
                                sgamma, raw_gamma);
@@ -584,5 +584,4 @@ void dyn_report_parsed_capabilities(
    if (damaged)
       rpt_label(d0, "Capabilities string not completely parsed");
 }
-
 
