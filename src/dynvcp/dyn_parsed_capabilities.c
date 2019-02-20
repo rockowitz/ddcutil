@@ -1,6 +1,6 @@
 /** @file dyn_parsed_capabilities.c
  *
- *  Parse the capabilities string returned by DDC, query the parsed data structure.
+ * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
