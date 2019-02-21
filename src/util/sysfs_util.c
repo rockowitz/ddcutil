@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //* \cond */
@@ -161,7 +161,8 @@ is_module_loaded_using_sysfs(
  *  \remark
  *  Caller is responsible for freeing returned value
  */
-char * get_i2c_device_sysfs_name(int busno) {
+char *
+get_i2c_device_sysfs_name(int busno) {
    char workbuf[50];
    snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
    char * name = file_get_first_line(workbuf, /*verbose */ false);
@@ -180,7 +181,8 @@ char * get_i2c_device_sysfs_name(int busno) {
  *  \remark
  *  Caller is responsible for freeing returned value
  */
-static char * get_i2c_device_sysfs_driver(int busno) {
+static char *
+get_i2c_device_sysfs_driver(int busno) {
    char * driver_name = NULL;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
@@ -226,7 +228,8 @@ static bool is_smbus_device_using_sysfs(int busno) {
 #endif
 
 
-static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
+static bool
+ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
    bool result = false;
    const char * ignorable_prefixes[] = {
          "SMBus",
@@ -261,7 +264,8 @@ static bool ignorable_i2c_device_sysfs_name(const char * name, const char * driv
  *  This function avoids unnecessary calls to i2cdetect, which can be
  *  slow for SMBus devices and fills the system logs with errors
  */
-bool is_ignorable_i2c_device(int busno) {
+bool
+is_ignorable_i2c_device(int busno) {
    bool result = false;
    char * name = get_i2c_device_sysfs_name(busno);
    char * driver = get_i2c_device_sysfs_driver(busno);
@@ -273,6 +277,4 @@ bool is_ignorable_i2c_device(int busno) {
    free(driver);  // ditto
    return result;
 }
-
-
 
