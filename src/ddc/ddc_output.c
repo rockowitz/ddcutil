@@ -200,38 +200,13 @@ get_raw_value_for_feature_metadata(
    }
    assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 
-   switch(psc) {
-   case 0:
-      break;
-
-   case DDCRC_DDC_DATA:           // was DDCRC_INVALID_DATA
-      if (output_level >= DDCA_OL_NORMAL)
-         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                         feature_code, feature_name, "Invalid response");
-      break;
-
-   case DDCRC_NULL_RESPONSE:
-      // for unsupported features, some monitors return null response rather than a valid response
-      // with unsupported feature indicator set
-      if (!ignore_unsupported) {
-         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                        feature_code, feature_name, "Unsupported feature code (Null response)");
-      }
-      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-      psc = DDCRC_DETERMINED_UNSUPPORTED;
-      break;
-
-   case DDCRC_READ_ALL_ZERO:
-      // treat as invalid response if not table type?
-      if (!ignore_unsupported) {
-         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                        feature_code, feature_name, "Unsupported feature code (All zero response)");
-      }
-      psc = DDCRC_DETERMINED_UNSUPPORTED;
-      COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-      break;
-
-   case -EIO:
+   // For now, only regard -EIO as unsupported feature for the
+   // single model on which this has been observed
+   if (psc ==  -EIO &&
+       dh->dref->io_path.io_mode == DDCA_IO_I2C &&
+       streq(dh->dref->pedid->mfg_id, "DEL")    &&
+       streq(dh->dref->pedid->model_name, "AW3418DW") )
+   {
       // Dell AW3418DW returns -EIO for unsupported features
       // (except for feature 0x00, which returns mh=ml=sh=sl=0) (2/2019)
       if (!ignore_unsupported) {
@@ -240,28 +215,75 @@ get_raw_value_for_feature_metadata(
       }
       psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-      break;
-
-   case DDCRC_RETRIES:
-      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                      feature_code, feature_name, "Maximum retries exceeded");
-      break;
-
-   case DDCRC_REPORTED_UNSUPPORTED:
-   case DDCRC_DETERMINED_UNSUPPORTED:
-      if (!ignore_unsupported) {
-         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                         feature_code, feature_name, "Unsupported feature code");
-      }
-      break;
-
-   default:
-   {
-      char buf[200];
-      snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
-      f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                       feature_code, feature_name, buf);
    }
+
+   else {
+      switch(psc) {
+      case 0:
+         break;
+
+      case DDCRC_DDC_DATA:           // was DDCRC_INVALID_DATA
+         if (output_level >= DDCA_OL_NORMAL)
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                            feature_code, feature_name, "Invalid response");
+         break;
+
+      case DDCRC_NULL_RESPONSE:
+         // for unsupported features, some monitors return null response rather than a valid response
+         // with unsupported feature indicator set
+         if (!ignore_unsupported) {
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                           feature_code, feature_name, "Unsupported feature code (Null response)");
+         }
+         COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+         psc = DDCRC_DETERMINED_UNSUPPORTED;
+         break;
+
+      case DDCRC_READ_ALL_ZERO:
+         // treat as invalid response if not table type?
+         if (!ignore_unsupported) {
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                           feature_code, feature_name, "Unsupported feature code (All zero response)");
+         }
+         psc = DDCRC_DETERMINED_UNSUPPORTED;
+         COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+         break;
+
+#ifdef FUTURE
+      case -EIO:
+         // Dell AW3418DW returns -EIO for unsupported features
+         // (except for feature 0x00, which returns mh=ml=sh=sl=0) (2/2019)
+         if (!ignore_unsupported) {
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                           feature_code, feature_name, "Unsupported feature code (EIO)");
+         }
+         psc = DDCRC_DETERMINED_UNSUPPORTED;
+         COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+         break;
+#endif
+
+      case DDCRC_RETRIES:
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                         feature_code, feature_name, "Maximum retries exceeded");
+         break;
+
+      case DDCRC_REPORTED_UNSUPPORTED:
+      case DDCRC_DETERMINED_UNSUPPORTED:
+         if (!ignore_unsupported) {
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                            feature_code, feature_name, "Unsupported feature code");
+         }
+         break;
+
+      default:
+      {
+         char buf[200];
+         snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
+         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                          feature_code, feature_name, buf);
+      }
+      }
+
    }
 
    *pvalrec = valrec;
