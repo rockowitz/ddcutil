@@ -175,6 +175,11 @@ report_gamma_capabilities(
       break;
    default:
       invalid_gamma_desc = true;
+
+      // meaningless assignment to avoid subsequent -Werror=maybe-uninitialized error
+      // when building for ppenSUSE_Leap_42.2 and OpenSUSE_Leap_42.3 under OBS
+      // n. openSUSE_Leap_15.0 and openSUSE_Tumbleweed do not show this problem (2/2019)
+      gamma_mode = gfull_range;
    }
 
    // first byte indicates relative vs absolute adjustment, and
