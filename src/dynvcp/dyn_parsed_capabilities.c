@@ -120,7 +120,12 @@ report_gamma_capabilities(
    int byte_ct = bva_length(feature_value_bytes);
    bool invalid_gamma_desc = false;
    bool relative_gamma = false;
-   enum {gfull_range, glimited_range,gspecific_presets} gamma_mode;
+
+   // meaningless default assignment to avoid subsequent -Werror=maybe-uninitialized error
+   // when building for openSUSE_Leap_42.2 and openSUSE_Leap_42.3 under OBS
+   // n. openSUSE_Leap_15.0 and openSUSE_Tumbleweed do not show this problem (2/2019)
+   enum {gfull_range, glimited_range,gspecific_presets} gamma_mode = gfull_range;
+
    bool bypass_supported = false;
    char * absolute_tolerance_desc = "None";
    Byte specific_gammas[256];
@@ -175,11 +180,6 @@ report_gamma_capabilities(
       break;
    default:
       invalid_gamma_desc = true;
-
-      // meaningless assignment to avoid subsequent -Werror=maybe-uninitialized error
-      // when building for openSUSE_Leap_42.2 and openSUSE_Leap_42.3 under OBS
-      // n. openSUSE_Leap_15.0 and openSUSE_Tumbleweed do not show this problem (2/2019)
-      gamma_mode = gfull_range;
    }
 
    // first byte indicates relative vs absolute adjustment, and
