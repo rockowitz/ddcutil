@@ -7,7 +7,7 @@ brightness and color levels.
 ddcutil uses DDC/CI to communicate with monitors implementing MCCS 
 (Monitor Control Command Set) over I2C.  Normally, the video driver for the
 monitor exposes the I2C channel as devices named /dev/i2c-n.  There is also
-psupport for monitors (such as Apple Cinema and Eizo ColorEdge) that implement 
+support for monitors (such as Apple Cinema and Eizo ColorEdge) that implement 
 MCCS using a USB connection and conform to the VESA USB Monitor Control Class Specification. 
 
 A particular use case for ddcutil is as part of color profile management. 
