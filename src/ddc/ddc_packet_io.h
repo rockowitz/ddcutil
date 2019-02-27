@@ -24,7 +24,7 @@
 DDCA_Status ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
-      Display_Handle** pdh);
+      Display_Handle** dh_loc);
 Status_Errno ddc_close_display(Display_Handle * dh);
 
 
