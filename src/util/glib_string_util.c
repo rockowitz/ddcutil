@@ -1,32 +1,12 @@
-/* glib_string_util.c
+/** @file glib_string_util.c
  *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ *  Functions that depend on both glib_util.c and string_util.c.
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  glib_string_util.c/h exists to avoid circular dependencies within directory util.
  */
 
-/** @file glib_string_util.c
- * Functions that depend on both glib_util.c and string_util.c.
- *
- * glib_string_util.c/h exists to avoid circular dependencies within
- * directory util.
- */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <stdbool.h>
@@ -46,7 +26,7 @@
  *  @param strings   GPtrArray of strings
  *  @param sepstr   if non-null, separator to insert between joined strings
  *
- *  @return joined string
+ *  @return joined string, caller is responsible for freeing
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    bool debug = false;
@@ -82,6 +62,31 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
 #endif
 
    return catenated;
+}
+
+
+/** Joins a GPtrArray containing pointers to character strings
+ *  into a single string,
+ *
+ *  The result is returned in a thread-specific private buffer that is
+ *  valid until the next call of this function in the current thread.
+ *
+ *  @param strings   GPtrArray of strings
+ *  @param sepstr   if non-null, separator to insert between joined strings
+ *
+ *  @return joined string, do not free
+ */
+
+char * join_string_g_ptr_array_t(GPtrArray* strings, char * sepstr) {
+   static GPrivate  buffer_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  buffer_len_key = G_PRIVATE_INIT(g_free);
+
+   char * catenated = join_string_g_ptr_array(strings, sepstr);
+   int required_size = strlen(catenated) + 1;
+   char * buf = get_thread_dynamic_buffer(&buffer_key, &buffer_len_key, required_size);
+   strncpy(buf, catenated, required_size);
+   free(catenated);
+   return buf;
 }
 
 
