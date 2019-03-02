@@ -102,7 +102,7 @@ ddc_open_display(
       Call_Options     callopts,
       Display_Handle** dh_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
    assert(dh_loc);
@@ -137,11 +137,10 @@ ddc_open_display(
          }
 
          DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
-         Status_Errno base_rc =  i2c_set_addr(fd, 0x37, callopts);
-         if (base_rc != 0) {
-            assert(base_rc < 0);
+         ddcrc =  i2c_set_addr(fd, 0x37, callopts);
+         if (ddcrc != 0) {
+            assert(ddcrc < 0);
             close(fd);
-            ddcrc = base_rc;
             goto bye;
          }
 
@@ -161,13 +160,11 @@ ddc_open_display(
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
             DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
-            // if (!(callopts & CALLOPT_FORCE)) {
-               close(fd);
-               ddcrc = DDCRC_EDID;
-               goto bye;
-            // }
-            // else
-            //    DBGMSG0("Continuing");
+            close(fd);
+            ddcrc = DDCRC_EDID;
+            free_display_handle(dh);
+            dh = NULL;
+            goto bye;
          }
       }
       break;
