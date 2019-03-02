@@ -648,47 +648,53 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
 void query_drm_using_sysfs() {
    struct dirent *dent;
    struct dirent *dent2;
-   DIR           *d;
+   DIR           *dir1;
    char          *dname;
    char          dnbuf[90];
    const int     cardname_sz = 20;
    char          cardname[cardname_sz];
 
-   rpt_vstring(0,"Examining /sys/class/drm...");
+   int depth = 0;
+   int d1    = depth+1;
+   int d2    = depth+2;
+
+   rpt_vstring(depth,"Examining /sys/class/drm...");
    dname = "/sys/class/drm";
-   d = opendir(dname);
-   if (!d) {
-      rpt_vstring(1, "drm not defined in sysfs. Unable to open directory %s: %s\n",
+   dir1 = opendir(dname);
+   if (!dir1) {
+      rpt_vstring(d1, "drm not defined in sysfs. Unable to open directory %s: %s\n",
                      dname, strerror(errno));
    }
    else {
-      closedir(d);
+      closedir(dir1);
       int cardno = 0;
       for (;;cardno++) {
          snprintf(cardname, cardname_sz, "card%d", cardno);
          snprintf(dnbuf, 80, "/sys/class/drm/%s", cardname);
-         d = opendir(dnbuf);
-         if (!d) {
-            // rpt_vstring(1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+         dir1 = opendir(dnbuf);
+         if (!dir1) {
+            // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
             break;
          }
          else {
-            while ((dent = readdir(d)) != NULL) {
+            while ((dent = readdir(dir1)) != NULL) {
                // DBGMSG("%s", dent->d_name);
                // char cur_fn[100];
                if (str_starts_with(dent->d_name, cardname)) {
-                  rpt_vstring(1, "Found connector: %s", dent->d_name);
+                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
                   char cur_dir_name[PATH_MAX];
                   g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
 
+                  // attribute dpms always "On"
                   // char * s_dpms = read_sysfs_attr(cur_dir_name, "dpms", false);
-                  // rpt_vstring(1, "%s/dpms: %s", cur_dir_name, s_dpms);
+                  // rpt_vstring(d1, "%s/dpms: %s", cur_dir_name, s_dpms);
 
+                  // attribute enabled always "disabled"
                   // char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
-                  //  rpt_vstring(1, "%s/enabled: %s", cur_dir_name, s_enabled);
+                  // rpt_vstring(d1, "%s/enabled: %s", cur_dir_name, s_enabled);
 
                   char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
-                  rpt_vstring(2, "%s/status: %s", cur_dir_name, s_status);
+                  rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
                   // edid present iff status == "connected"
                   if (streq(s_status, "connected")) {
                      GByteArray * gba_edid = read_binary_sysfs_attr(
@@ -697,7 +703,7 @@ void query_drm_using_sysfs() {
                      // hex_dump(gba_edid->data, gba_edid->len);
 
 #ifdef UNNEEDED
-                    rpt_vstring(2, "Raw EDID:");
+                    rpt_vstring(d2, "Raw EDID:");
                     rpt_hex_dump(gba_edid->data, gba_edid->len, 2);
                     if (gba_edid->len >= 128) {
                        Parsed_Edid * parsed_edid = create_parsed_edid(gba_edid->data);
@@ -711,7 +717,7 @@ void query_drm_using_sysfs() {
 
                        }
                        else {
-                           rpt_vstring(2, "Unable to parse EDID");
+                           rpt_vstring(d2, "Unable to parse EDID");
                            // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
                            // hex_dump(prec->edidbytes, 128);
                        }
@@ -720,24 +726,24 @@ void query_drm_using_sysfs() {
 
                     // look for i2c-n subdirectory, may or may not be present depending on driver
                     // DBGMSG("cur_dir_name: %s", cur_dir_name);
-                    DIR* d2 = opendir(cur_dir_name);
+                    DIR* dir2 = opendir(cur_dir_name);
                     char * i2c_node_name = NULL;
 
-                    if (!d2) {
-                       rpt_vstring(1, "Unexpected error. Unable to open sysfs directory %s: %s\n",
+                    if (!dir2) {
+                       rpt_vstring(d1, "Unexpected error. Unable to open sysfs directory %s: %s\n",
                                       cur_dir_name, strerror(errno));
                        break;
                     }
                     else {
-                       while ((dent2 = readdir(d2)) != NULL) {
+                       while ((dent2 = readdir(dir2)) != NULL) {
                           // DBGMSG("%s", dent2->d_name);
                           if (str_starts_with(dent2->d_name, "i2c")) {
-                             rpt_vstring(2, "I2C device: %s", dent2->d_name);
+                             rpt_vstring(d2, "I2C device: %s", dent2->d_name);
                              i2c_node_name = strdup(dent2->d_name);
                              break;
                           }
                        }
-                       closedir(d2);
+                       closedir(dir2);
                     }
 
                     // rpt_nl();
@@ -753,14 +759,11 @@ void query_drm_using_sysfs() {
                  rpt_nl();
                }
             }
-            closedir(d);
+            closedir(dir1);
          }
-
       }
       if (cardno==0)
-         rpt_vstring(1, "No drm class cards found in %s", dname);
-      // closedir(d);
-
+         rpt_vstring(d1, "No drm class cards found in %s", dname);
    }
 
    rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 1);
