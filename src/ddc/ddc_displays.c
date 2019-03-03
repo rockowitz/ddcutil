@@ -761,10 +761,11 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 
 
 /** Searches the master display list for a display matching the
- * specified #Display_Identifier, returning its #Display_Ref
+ *  specified #Display_Identifier, returning its #Display_Ref
  *
- * \param did display identifier to search for
- * \return #Display_Ref for the display.
+ *  \param did display identifier to search for
+ *  \return #Display_Ref for the display, NULL if not found or
+ *          display doesn't support DDC
  *
  * \remark
  * The returned value is a pointer into an internal data structure
@@ -806,7 +807,6 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
       break;
    case DISP_ID_HIDDEV:
       criteria->hiddev = did->hiddev_devno;
-
    }
 
    result = ddc_find_display_ref_by_criteria(criteria);
