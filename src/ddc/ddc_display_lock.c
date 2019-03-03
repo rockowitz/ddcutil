@@ -151,7 +151,7 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
  *  \retval DDCRC_OK           success
  *  \retval DDCRC_LOCKED       locking failed, display already locked by another
  *                             thread and DDISP_WAIT not set
- *  \retval DDCRC_SELF_LOCKED  display already locked in current thread
+ *  \retval DDCRC_ALREADY_OPEN display already locked in current thread
  */
 DDCA_Status
 lock_distinct_display(
