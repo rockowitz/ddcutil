@@ -11,7 +11,7 @@
  * (which are \#defines), they are specified as \#defines rather than enum values.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -47,7 +47,8 @@
 #define DDCRC_VERIFY                 (-(RCRANGE_DDC_START+23) ) ///< read after VCP write failed or wrong value
 #define DDCRC_NOT_FOUND              (-(RCRANGE_DDC_START+24) ) ///< generic not found
 #define DDCRC_LOCKED                 (-(RCRANGE_DDC_START+25) ) ///< resource locked
-#define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+26) ) ///< invalid data
+#define DDCRC_ALREADY_OPEN           (-(RCRANGE_DDC_START+26) ) ///< already open in current thread
+#define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+27) ) ///< invalid data
 
 // TODO: consider replacing DDCRC_INVALID_EDID by a more generic DDCRC_BAD_DATA,
 //       or DDC_INVALID_DATA, could be used for e.g. invalid capabilities string
