@@ -23,6 +23,15 @@ void assert_ddcrc_ok(DDCA_Status ddcrc, const char * ddc_func, const char * call
     }
 }
 
+void report_ddcrc_error(DDCA_Status ddcrc, const char * ddc_func, const char * caller) {
+    if (ddcrc) {
+        printf("Error in %s(): %s() returned %d (%s): %s\n",
+               caller, ddc_func, ddcrc, ddca_rc_name(ddcrc), ddca_rc_desc(ddcrc));
+    }
+}
+
+
+
 DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
    printf("Getting display reference for display %d...\n", dispno);
    DDCA_Display_Identifier did;
@@ -30,7 +39,8 @@ DDCA_Display_Ref  get_dref_by_dispno(int dispno) {
 
    ddca_create_dispno_display_identifier(1, &did);     // always succeeds
    DDCA_Status rc = ddca_get_display_ref(did, &dref);
-   assert_ddcrc_ok(rc, "ddca_create_display_ref", __func__);
+   report_ddcrc_error(rc, "ddca_create_display_ref", __func__);
+   assert( (rc==0 && dref) || (rc!=0 && !dref));
    return dref;
 }
 
@@ -50,13 +60,13 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
          dref,
          false,                  // exclude table features
          &vcplist1);
-   assert_ddcrc_ok(ddcrc, "ddca_get_feature_list",__func__);        // this is sample code
+   assert_ddcrc_ok(ddcrc, "ddca_get_feature_list_by_dref",__func__);        // this is sample code
 
    // alternatively, use convenience function ddca_feature_list_string(), see below
    printf("\nFeatures in feature set PROFILE:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist1, ndx))
-         printf(" 0x%02x", ndx);
+         printf(" %02x", ndx);
    }
    puts("");
 
@@ -74,7 +84,7 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
    printf("\nFeatures in feature set COLOR:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
       if (ddca_feature_list_contains(&vcplist2, ndx))
-         printf(" 0x%02x", ndx);
+         printf(" %02x", ndx);
    }
    puts("");
 
@@ -82,7 +92,8 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
    DDCA_Feature_List vcplist3 = ddca_feature_list_and_not(&vcplist2, &vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
-   const char * s = ddca_feature_list_string(&vcplist3, "x", ",");  // a convenience function
+   // a convenience function:
+   const char * s = ddca_feature_list_string(&vcplist3, /*prefix=*/ "", /*sepstr=*/ " ");
    printf("%s\n", s);
 }
 
@@ -92,6 +103,7 @@ int main(int argc, char** argv) {
     // In real code, we'd get the MCCS version from the monitor information.
 
     DDCA_Display_Ref dref = get_dref_by_dispno(1);
+    assert(dref);      // there's at least 1 display
 
     demo_feature_lists_for_dref(dref);
 

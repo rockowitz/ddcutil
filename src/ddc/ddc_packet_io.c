@@ -110,22 +110,24 @@ ddc_open_display(
    Display_Handle * dh = NULL;
    DDCA_Status ddcrc = 0;
 
-   Distinct_Display_Ref display_id = get_distinct_display_ref(dref);
+   Distinct_Display_Ref ddisp_ref = get_distinct_display_ref(dref);
    Distinct_Display_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
-   bool locked = lock_distinct_display(display_id, ddisp_flags);
-   if (!locked) {
+   DDCA_Status lockrc = lock_distinct_display(ddisp_ref, ddisp_flags);
+   if (lockrc == DDCRC_LOCKED) {     // locked in another thread
       ddcrc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
       goto bye;
    }
 
    if (dref->flags & DREF_OPEN) {
-      ddcrc = DDCRC_LOCKED;         // need better status code?
+      assert(ddcrc == DDCRC_ALREADY_OPEN);   // from lock_distinct_display()
+      ddcrc = DDCRC_ALREADY_OPEN;
       goto bye;
    }
 
+   assert(ddcrc == 0);
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
@@ -133,38 +135,38 @@ ddc_open_display(
          int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
          if (fd < 0) {
             ddcrc = fd;
-            goto bye;
          }
+         else {
+            DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
+            ddcrc =  i2c_set_addr(fd, 0x37, callopts);
+            if (ddcrc != 0) {
+               assert(ddcrc < 0);
+               close(fd);
+            }
 
-         DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
-         ddcrc =  i2c_set_addr(fd, 0x37, callopts);
-         if (ddcrc != 0) {
-            assert(ddcrc < 0);
-            close(fd);
-            goto bye;
-         }
+            else {
+               // Is this needed?
+               // 10/24/15, try disabling:
+               // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
-         // Is this needed?
-         // 10/24/15, try disabling:
-         // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+               dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
 
-         dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
+               I2C_Bus_Info * bus_info = dref->detail;
+               assert(bus_info);   // need to convert to a test?
+               assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
-         I2C_Bus_Info * bus_info = dref->detail;
-         assert(bus_info);   // need to convert to a test?
-         assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
-
-         dref->pedid = bus_info->edid;
-         if (!dref->pedid) {
-            // How is this even possible?
-            // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
-            //          close(fd) fails
-            DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
-            close(fd);
-            ddcrc = DDCRC_EDID;
-            free_display_handle(dh);
-            dh = NULL;
-            goto bye;
+               dref->pedid = bus_info->edid;
+               if (!dref->pedid) {
+                  // How is this even possible?
+                  // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
+                  //          close(fd) fails
+                  DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
+                  close(fd);
+                  ddcrc = DDCRC_EDID;
+                  free_display_handle(dh);
+                  dh = NULL;
+               }
+            }
          }
       }
       break;
@@ -186,10 +188,11 @@ ddc_open_display(
          int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {
             ddcrc = fd;
-            goto bye;
          }
-         dh = create_usb_display_handle_from_display_ref(fd, dref);
-         dref->pedid = usb_get_parsed_edid_by_display_handle(dh);
+         else {
+            dh = create_usb_display_handle_from_display_ref(fd, dref);
+            dref->pedid = usb_get_parsed_edid_by_display_handle(dh);
+         }
       }
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
@@ -197,18 +200,18 @@ ddc_open_display(
       break;
    } // switch
    assert(!dh || dh->dref->pedid);
-   // needed?  for both or just I2C?
-   // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-   if (dref->io_path.io_mode != DDCA_IO_USB)
-      call_tuned_sleep_i2c(SE_POST_OPEN);
-   // dbgrpt_display_handle(dh, __func__, 1);
 
-   dref->flags |= DREF_OPEN;
+   if (ddcrc == 0) {
+      if (dref->io_path.io_mode != DDCA_IO_USB)
+         call_tuned_sleep_i2c(SE_POST_OPEN);
+      dref->flags |= DREF_OPEN;
+   }
+   else {
+      unlock_distinct_display(ddisp_ref);
+   }
 
 bye:
    if (ddcrc != 0) {
-      if (locked)
-         unlock_distinct_display(display_id);
       COUNT_STATUS_CODE(ddcrc);
    }
    *dh_loc = dh;

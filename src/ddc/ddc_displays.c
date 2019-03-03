@@ -164,14 +164,15 @@ bool initial_checks_by_dh(Display_Handle * dh) {
    }
    bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
 
-   // commented out - defer checking version until actually needed to avoid
+   // Would prefer to defer checking version until actually needed to avoid
    // additional DDC io during monitor detection
-   // if (communication_working) {
-      // if ( vcp_version_is_unqueried(dh->dref->vcp_version)) {
-      //    dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
-      //    // dh->vcp_version = dh->dref->vcp_version;
-      // }
-   // }
+   // Unfortunately, introduces ddc_open_display(), with possible error states,
+   // into other functions, e.g. ddca_get_feature_list_by_dref()
+   if (communication_working) {
+      if ( vcp_version_eq(dh->dref->vcp_version, DDCA_VSPEC_UNQUERIED)) {
+         dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
+      }
+   }
 
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", bool_repr(communication_working));
    return communication_working;

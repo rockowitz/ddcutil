@@ -1,30 +1,12 @@
-/* ddc_display_lock.c
- *
- * <copyright>
- * Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
 /** \f ddc_display_lock.c
  *  Provides locking for displays to ensure that a given display is not
  *  opened simultaneously from multiple threads.
- *
+ */
+
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/*
 #ifdef TOO_MANY_EDGE_CASES
  *  It is conceivable that there are multiple paths to the same monitor, e.g.
  *  multiple cables from different video card outputs, or USB as well as I2c
@@ -39,15 +21,20 @@
  */
 
 #include <assert.h>
-#include <ddc/ddc_display_lock.h>
+
 #include <glib-2.0/glib.h>
 #include <string.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"
+
 #include "base/displays.h"
+#include "base/status_code_mgt.h"
+
+#include "ddc/ddc_display_lock.h"
 
 #include "ddcutil_types.h"
+#include "ddcutil_status_codes.h"
 
 
 #define DISTINCT_DISPLAY_DESC_MARKER "DDSC"
@@ -159,23 +146,24 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
 
 /** Locks a distinct display.
  *
- *  \param  id  distinct display identifier
- *  \param  flags  if **DDISP_WAIT** set, wait for locked display
- *  \retval **true** display locked
- *  \retval **false** display not locked (is locked by another thread
- *                    and DDISP_WAIT not set)
+ *  \param  id                 distinct display identifier
+ *  \param  flags              if **DDISP_WAIT** set, wait for locking
+ *  \retval DDCRC_OK           success
+ *  \retval DDCRC_LOCKED       locking failed, display already locked by another
+ *                             thread and DDISP_WAIT not set
+ *  \retval DDCRC_SELF_LOCKED  display already locked in current thread
  */
-bool
+DDCA_Status
 lock_distinct_display(
       Distinct_Display_Ref   id,
       Distinct_Display_Flags flags)
 {
+   DDCA_Status ddcrc = 0;
    bool debug = false;
    DBGMSF(debug, "Starting. id=%p", id);
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    assert(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
-   bool locked = true;
    bool self_thread = false;
    g_mutex_lock(&master_display_lock_mutex);  //wrong - will hold lock during wait
    if (ddesc->display_mutex_thread == g_thread_self() )
@@ -183,21 +171,24 @@ lock_distinct_display(
    g_mutex_unlock(&master_display_lock_mutex);
    if (self_thread) {
       DBGMSG("Attempting to lock display already locked by current thread");
-      locked = false;
+      ddcrc = DDCRC_ALREADY_OPEN;    // poor
    }
    else {
+      bool locked = true;
       if (flags & DDISP_WAIT) {
          g_mutex_lock(&ddesc->display_mutex);
       }
       else {
          locked = g_mutex_trylock(&ddesc->display_mutex);
+         if (!locked)
+            ddcrc = DDCRC_LOCKED;
       }
       if (locked)
          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGMSF(debug, "Done.  Returning: %s", bool_repr(locked));
-   return locked;
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(ddcrc));
+   return ddcrc;
 }
 
 

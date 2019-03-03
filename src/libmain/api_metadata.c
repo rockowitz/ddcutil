@@ -171,14 +171,12 @@ ddca_get_feature_list_by_dref(
                assert(p_feature_list);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
-               // DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
+               DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
+               // redundant:
+               // assert( !vcp_version_eq( vspec, DDCA_VSPEC_UNQUERIED) );
                // Whether a feature is a table feature can vary by version, so can't
                // specify VCP_SPEC_ANY to request feature ids in any version
-               if (!vcp_version_is_valid(vspec, /* allow unknown */ false)) {
-                  psc = DDCRC_ARG;
-                  ddca_feature_list_clear(p_feature_list);
-                  goto bye;
-               }
+               assert(vcp_version_is_valid(vspec, /* allow unknown */ false));
                VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
                switch (feature_set_id) {
                case DDCA_SUBSET_KNOWN:
@@ -208,7 +206,7 @@ ddca_get_feature_list_by_dref(
                memcpy(p_feature_list, &result, 32);
                dyn_free_feature_set(fset);
 
-            bye:
+            // bye:
                DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
                if (debug) {
                   DBGMSG("Feature list: %s", feature_list_string(p_feature_list, "", ","));
