@@ -1111,6 +1111,8 @@ ddca_feature_list_id_name(
  *  @param[in]  dref                   display reference
  *  @param[in]  include_table_features if true, Table type features are included
  *  @param[out] points to feature list to be filled in
+ *  @retval     DDCRC_ARG  invalid display reference
+ *  @retval     DDCRC_OK   success
  *
  *  @since 0.9.0
  */
