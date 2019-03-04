@@ -1,7 +1,7 @@
 /** \file ddc_watch_displays.c - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -157,6 +157,55 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
    return result;
 }
 
+GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
+
+   Watch_Displays_Data * wdd = data;
+   assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+
+   typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
+   Change_Type change_type = Changed_None;
+
+   GPtrArray * cur_displays = get_sysfs_drm_displays();
+   if ( !displays_eq(prev_displays, cur_displays) ) {
+      if ( debug || IS_TRACING() ) {
+         DBGMSG("Displays changed!");
+         DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
+         DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
+      }
+   }
+
+   GPtrArray * removed = displays_minus(prev_displays, cur_displays);
+   if (removed->len > 0) {
+      DBGTRC(debug, TRACE_GROUP,
+             "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+      change_type = Changed_Removed;
+   }
+   g_ptr_array_free(removed, true);
+
+   GPtrArray * added = displays_minus(cur_displays, prev_displays);
+   if (added->len > 0) {
+      DBGTRC(debug, TRACE_GROUP,
+             "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
+      change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
+   }
+   g_ptr_array_free(added, true);
+
+   g_ptr_array_free(prev_displays, true);
+
+   if (change_type != Changed_None) {
+      // assert( change_type != Changed_Both);
+      if (wdd && wdd->display_change_handler) {
+         wdd->display_change_handler( change_type);
+      }
+   }
+
+
+   return cur_displays;
+}
+
+
 
 gpointer watch_displays(gpointer data) {
    bool debug = false;
@@ -167,31 +216,7 @@ gpointer watch_displays(gpointer data) {
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
-      GPtrArray * cur_displays = get_sysfs_drm_displays();
-      if ( !displays_eq(prev_displays, cur_displays) ) {
-         if ( debug || IS_TRACING() ) {
-            DBGMSG("Displays changed!");
-            DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
-            DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
-         }
-      }
-
-      GPtrArray * removed = displays_minus(prev_displays, cur_displays);
-      if (removed->len > 0) {
-         DBGTRC(debug, TRACE_GROUP,
-                "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
-      }
-      g_ptr_array_free(removed, true);
-
-      GPtrArray * added = displays_minus(cur_displays, prev_displays);
-      if (added->len > 0) {
-         DBGTRC(debug, TRACE_GROUP,
-                "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
-      }
-      g_ptr_array_free(added, true);
-
-      g_ptr_array_free(prev_displays, true);
-      prev_displays = cur_displays;
+      prev_displays = check_displays(prev_displays, data);
 
       usleep(5000*1000);
       // printf(".");
@@ -211,17 +236,66 @@ void show_udev_list_entries(
    printf( "   %s: \n", title);
    struct udev_list_entry * cur = NULL;
    udev_list_entry_foreach(cur, entries) {
-      const char * name = udev_list_entry_get_name(cur);
+      const char * name  = udev_list_entry_get_name(cur);
       const char * value = udev_list_entry_get_value(cur);
       printf("      %s  -> %s\n", name, value);
 
    }
 }
 
+void show_sysattr_list_entries(
+      struct udev_device *       dev,
+      struct udev_list_entry * head)
+{
+   int d1 = 1;
+   int d2 = 2;
+
+   rpt_vstring(d1, "Sysattrs:");
+   struct udev_list_entry * cur_entry = NULL;
+   udev_list_entry_foreach(cur_entry, head) {
+      const char * attr_name   = udev_list_entry_get_name(cur_entry);
+      const char * attr_value  = udev_list_entry_get_value(cur_entry);
+      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
+      assert(attr_value == NULL);
+      // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
+      if (attr_value2 && strchr(attr_value2, '\n')) {
+      // if (streq(attr_name, "uevent")) {
+         // output is annoying to visually scan since it contains newlines
+         char * av = strdup(attr_value2);
+         char * p = av;
+         while (*p) {
+            if (*p == 0x0a)
+               *p = ',';
+            p++;
+         }
+         rpt_vstring(d2, "%s -> %s", attr_name, av);
+         free(av);
+
+      }
+      // n. attr_name "descriptors" returns a hex value, not a null-terminated string
+      //    should display as hex, but how to determine length?
+      // for example of reading, see http://fossies.org/linux/systemd/src/udev/udev-builtin-usb_id.c
+      // not worth pursuing
+      else {
+         rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
+      }
+   }
+}
+
+void set_fd_blocking(int fd) {
+   int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
+   assert (flags != -1);
+   flags &= ~O_NONBLOCK;
+   int rc = fcntl(fd, F_SETFL, flags);
+   assert(rc != -1);
+}
 
 
 gpointer watch_devices(gpointer data) {
-   bool blocking = true;
+   bool debug = true;
+
+   Watch_Displays_Data * wdd = data;
+   assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
    struct udev* udev;
    udev = udev_new();
@@ -229,123 +303,76 @@ gpointer watch_devices(gpointer data) {
    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
    udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // alt "hidraw"
    udev_monitor_enable_receiving(mon);
-   /* Get the file descriptor (fd) for the monitor.
-         This fd will get passed to select() */
-   int fd = 0;
 
-      fd = udev_monitor_get_fd(mon);
-
-   if (blocking) {
-      int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
-      assert (flags != -1);
-      flags &= ~O_NONBLOCK;
-      int rc = fcntl(fd, F_SETFL, flags);
-      assert(rc != -1);
-   }
-
-   /* This section will run continuously, calling usleep() at
-        the end of each pass. This is to demonstrate how to use
-        a udev_monitor in a non-blocking way. */
-     while (1) {
-        /* Set up the call to select(). In this case, select() will
-           only operate on a single file descriptor, the one
-           associated with our udev_monitor. Note that the timeval
-           object is set to 0, which will cause select() to not
-           block. */
-
-        fd_set fds;
-        int ret;
-
-        if (!blocking) {
-
-           struct timeval tv;
-           FD_ZERO(&fds);
-           FD_SET(fd, &fds);
-           tv.tv_sec = 0;
-           tv.tv_usec = 0;
-           ret = select(fd+1, &fds, NULL, NULL, &tv);
-        }
-
-        /* Check if our file descriptor has received data. */
-        if (blocking || (ret > 0 && FD_ISSET(fd, &fds))) {
-           if (!blocking)
-              printf("\nselect() says there should be data\n");
-           else
-              printf("\nblocking until there is data\n");
-
-           /* Make the call to receive the device.
-              select() ensured that this will not block. */
-           // by default, is non-blocking as of lubudev 171
-           struct udev_device* dev = udev_monitor_receive_device(mon);
-           if (dev) {
-              printf("Got Device\n");
-              printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
-              printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
-              printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
-
-              printf("   Action: %s\n",udev_device_get_action(dev));         // change
+   // make udev_monitor_receive_device() blocking
+   int fd = udev_monitor_get_fd(mon);
+   set_fd_blocking(fd);
 
 
-              printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
-              printf("   subsystem: %s\n", udev_device_get_subsystem(dev));
-              printf("   devtype:   %s\n", udev_device_get_devtype(  dev));
-              printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
-              printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
-              printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
-              printf("   devnode:   %s\n", udev_device_get_devnode(  dev));
+   GPtrArray * prev_displays = get_sysfs_drm_displays();
+
+   while (true) {
+      printf("\nblocking until there is data\n");
+      // by default, is non-blocking as of lubudev 171, use fcntl() to make file descriptor blocking
+      struct udev_device* dev = udev_monitor_receive_device(mon);
+      if (dev) {
+         if (debug) {
+            printf("Got Device\n");
+            // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
+            // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
+            // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
+
+            printf("   Action:    %s\n", udev_device_get_action(   dev));     // "change"
+            printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
+            printf("   subsystem: %s\n", udev_device_get_subsystem(dev));     // drm
+            printf("   devtype:   %s\n", udev_device_get_devtype(  dev));     // drm_minor
+            printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
+            printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
+            printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
+            printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
 
 
-              struct udev_list_entry * entries = NULL;
-              entries = udev_device_get_devlinks_list_entry(dev);
-              show_udev_list_entries(entries, "devlinks");
+            struct udev_list_entry * entries = NULL;
+            entries = udev_device_get_devlinks_list_entry(dev);
+            show_udev_list_entries(entries, "devlinks");
 
-              entries = udev_device_get_properties_list_entry(dev);
-              show_udev_list_entries(entries, "properties");
+            entries = udev_device_get_properties_list_entry(dev);
+            show_udev_list_entries(entries, "properties");
 
-              entries = udev_device_get_tags_list_entry(dev);
-              show_udev_list_entries(entries, "tags");
+            entries = udev_device_get_tags_list_entry(dev);
+            show_udev_list_entries(entries, "tags");
 
-              entries = udev_device_get_sysattr_list_entry(dev);
-              show_udev_list_entries(entries, "sysattrs");
+            entries = udev_device_get_sysattr_list_entry(dev);
+            //show_udev_list_entries(entries, "sysattrs");
+            show_sysattr_list_entries(dev,entries);
+         }
 
-              const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
-              printf("   HOTPLUG:   %s\n", hotplug);
+         const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
+         if (debug)
+            printf("   HOTPLUG:   %s\n", hotplug);
 
-              udev_device_unref(dev);
-           }
-           else {
-              printf("No Device from receive_device(). An error occurred.\n");
-           }
-        }
-        if (!blocking)
-           usleep(250*1000);
-        printf(".");
-        fflush(stdout);
-     }
+         prev_displays = check_displays(prev_displays, data);
 
+         udev_device_unref(dev);
+
+
+      }
+      else {
+         printf("No Device from udev_monitor_receive_device(). An error occurred.\n");
+      }
+
+      printf(".");
+      fflush(stdout);
+   }  // while
 
     return NULL;
-
 }
-// #endif
 
-#ifdef UNUSED
-Error_Info *
-start_watch_devices()
-{
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. " );
 
-   Error_Info * ddc_excp = NULL;
-
-   // GThread * th =
-   g_thread_new(
-         "watch_devices",
-         watch_devices,
-         NULL);
-   return ddc_excp;
+void dummy_display_change_handler(Displays_Change_Type changes) {
+   DBGMSG("changes=%d", changes);
 }
-#endif
+
 
 Error_Info *
 ddc_start_watch_displays()
@@ -355,13 +382,15 @@ ddc_start_watch_displays()
 
    Error_Info * ddc_excp = NULL;
 
+   Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
+   memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+   data->display_change_handler = dummy_display_change_handler;
 
    // GThread * th =
    g_thread_new(
          "watch_displays",
-         // watch_displays,
-         watch_devices,
-         NULL);
+         watch_displays,    // watch_display or watch_devices
+         data);
    return ddc_excp;
 }
 
