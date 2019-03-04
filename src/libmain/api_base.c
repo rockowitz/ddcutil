@@ -19,12 +19,13 @@
 
 #include "adl/adl_shim.h"
 
-#include "i2c/i2c_bus_core.h"   // for testing watch_devices
+// #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_watch_displays.h"
 
 #include "public/ddcutil_c_api.h"
 
@@ -171,8 +172,7 @@ _ddca_init(void) {
       // set_output_level(DDCA_OL_NORMAL);
       // enable_report_ddc_errors(false);
 
-      // start_watch_devices();       // TEMP FOR DEVELOPMENT
-      start_watch_displays();
+      ddc_start_watch_displays();
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
    }

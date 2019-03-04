@@ -98,8 +98,4 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
 // Reports all detected i2c buses:
 int  i2c_report_buses(bool report_all, int depth);
 
-// Experimental:
-// Error_Info * start_watch_devices();
-Error_Info * start_watch_displays();
-
 #endif /* I2C_BUS_CORE_H_ */
