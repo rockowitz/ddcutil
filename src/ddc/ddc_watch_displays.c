@@ -29,7 +29,20 @@
 
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+
+
+const char * displays_change_type_name(Displays_Change_Type change_type) {
+   char * result = NULL;
+   switch(change_type)
+   {
+   case Changed_None:    result = "Changed_None";    break;
+   case Changed_Added:   result = "Changed_Added";   break;
+   case Changed_Removed: result = "Changed_Removed"; break;
+   case Changed_Both:    result = "Changed_Both";    break;
+   }
+   return result;
+}
 
 
 GPtrArray *  get_sysfs_drm_displays() {
@@ -87,7 +100,6 @@ GPtrArray *  get_sysfs_drm_displays() {
                      g_ptr_array_add(connected_displays, strdup(dent->d_name));
 
                     // g_byte_array_free(gba_edid, true);
-
                  }
                }
             }
@@ -113,7 +125,6 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
    int ndx1 = 0;
    int ndx2 = 0;
    while(true) {
-
       if (ndx1 == first->len)
          break;
       if (ndx2 == second->len) {
@@ -137,7 +148,6 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
             ndx2++;
          }
       }
-
    }
    return result;
 }
@@ -157,15 +167,16 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
    return result;
 }
 
+
 GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
-   typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
-   Change_Type change_type = Changed_None;
+   // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
+   Displays_Change_Type change_type = Changed_None;
 
    GPtrArray * cur_displays = get_sysfs_drm_displays();
    if ( !displays_eq(prev_displays, cur_displays) ) {
@@ -182,7 +193,6 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
              "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
       change_type = Changed_Removed;
    }
-   g_ptr_array_free(removed, true);
 
    GPtrArray * added = displays_minus(cur_displays, prev_displays);
    if (added->len > 0) {
@@ -190,44 +200,40 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
              "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
       change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
    }
-   g_ptr_array_free(added, true);
-
-   g_ptr_array_free(prev_displays, true);
 
    if (change_type != Changed_None) {
       // assert( change_type != Changed_Both);
       if (wdd && wdd->display_change_handler) {
-         wdd->display_change_handler( change_type);
+         wdd->display_change_handler( change_type, removed, added);
       }
    }
 
+   g_ptr_array_free(prev_displays, true);
+   g_ptr_array_free(removed,       true);
+   g_ptr_array_free(added,         true);
 
    return cur_displays;
 }
 
 
 
-gpointer watch_displays(gpointer data) {
+gpointer watch_displays_using_poll(gpointer data) {
    bool debug = false;
+   DBGMSG("Starting");
 
    GPtrArray * prev_displays = get_sysfs_drm_displays();
-
    DBGTRC(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
       prev_displays = check_displays(prev_displays, data);
 
-      usleep(5000*1000);
+      usleep(3000*1000);
       // printf(".");
-      fflush(stdout);
+      // fflush(stdout);
    }
 }
 
-
-
-
-// #ifdef UNUSED
 
 void show_udev_list_entries(
       struct udev_list_entry * entries,
@@ -242,6 +248,7 @@ void show_udev_list_entries(
 
    }
 }
+
 
 void show_sysattr_list_entries(
       struct udev_device *       dev,
@@ -270,7 +277,6 @@ void show_sysattr_list_entries(
          }
          rpt_vstring(d2, "%s -> %s", attr_name, av);
          free(av);
-
       }
       // n. attr_name "descriptors" returns a hex value, not a null-terminated string
       //    should display as hex, but how to determine length?
@@ -282,6 +288,7 @@ void show_sysattr_list_entries(
    }
 }
 
+
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
    assert (flags != -1);
@@ -291,8 +298,9 @@ void set_fd_blocking(int fd) {
 }
 
 
-gpointer watch_devices(gpointer data) {
-   bool debug = true;
+gpointer watch_displays_using_udev(gpointer data) {
+   bool debug = false;
+   DBGMSG("Starting");
 
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -308,11 +316,12 @@ gpointer watch_devices(gpointer data) {
    int fd = udev_monitor_get_fd(mon);
    set_fd_blocking(fd);
 
-
    GPtrArray * prev_displays = get_sysfs_drm_displays();
+   DBGTRC(debug, TRACE_GROUP,
+          "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
-      printf("\nblocking until there is data\n");
+      DBGMSF(debug, "Blocking until there is data");
       // by default, is non-blocking as of lubudev 171, use fcntl() to make file descriptor blocking
       struct udev_device* dev = udev_monitor_receive_device(mon);
       if (dev) {
@@ -330,7 +339,8 @@ gpointer watch_devices(gpointer data) {
             printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
             printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
             printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
-
+            printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
+            printf("   driver:    %s\n", udev_device_get_driver(  dev));
 
             struct udev_list_entry * entries = NULL;
             entries = udev_device_get_devlinks_list_entry(dev);
@@ -349,28 +359,37 @@ gpointer watch_devices(gpointer data) {
 
          const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
          if (debug)
-            printf("   HOTPLUG:   %s\n", hotplug);
+            printf("   HOTPLUG:   %s\n", hotplug);     // "1"
 
          prev_displays = check_displays(prev_displays, data);
 
          udev_device_unref(dev);
-
-
       }
       else {
-         printf("No Device from udev_monitor_receive_device(). An error occurred.\n");
+         DBGMSG("No Device from udev_monitor_receive_device(). An error occurred.");
       }
 
-      printf(".");
-      fflush(stdout);
+      // printf(".");
+      // fflush(stdout);
    }  // while
 
     return NULL;
 }
 
 
-void dummy_display_change_handler(Displays_Change_Type changes) {
-   DBGMSG("changes=%d", changes);
+void dummy_display_change_handler(
+        Displays_Change_Type changes,
+        GPtrArray *          removed,
+        GPtrArray *          added)
+{
+   bool debug = true;
+   DBGMSF(debug, "changes = %s", displays_change_type_name(changes));
+   if (removed && removed->len > 0) {
+      DBGMSF(debug, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+   }
+   if (added && added->len > 0) {
+      DBGMSF(debug, "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
+   }
 }
 
 
@@ -389,10 +408,8 @@ ddc_start_watch_displays()
    // GThread * th =
    g_thread_new(
          "watch_displays",
-         watch_displays,    // watch_display or watch_devices
+         watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
          data);
    return ddc_excp;
 }
-
-
 
