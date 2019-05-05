@@ -1,27 +1,10 @@
-/* cmd_parser_goption.c
+/** @file cmd_parser_goption.c
  *
- * Parse the command line using the glib goption functions.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Parse the command line using the glib goption functions.
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
@@ -190,6 +173,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
    gboolean enable_udf_flag = false;
+   gboolean nousb_flag      = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -222,6 +206,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+      {"nousb",  '\0',  0, G_OPTION_ARG_NONE,     &nousb_flag,       "Do not detect USB devices", NULL},
 
       // output control
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
@@ -379,6 +364,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_WO_ONLY,           wo_only_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_UDF,        enable_udf_flag);
+   SET_CMDFLAG(CMD_FLAG_NOUSB,             nousb_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
