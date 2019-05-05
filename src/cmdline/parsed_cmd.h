@@ -1,29 +1,8 @@
-/* parsed_cmd.h
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file parsed_cmd.h
  */
 
-/** \f
- *
- */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
 #define PARSED_CMD_H_
@@ -60,8 +39,6 @@ typedef enum {
 } Cmd_Id_Type;
 
 
-
-
 typedef enum {
    CMD_FLAG_DDCDATA             = 0x0001,
    CMD_FLAG_FORCE               = 0x0002,
@@ -78,8 +55,8 @@ typedef enum {
    CMD_FLAG_RO_ONLY           = 0x020000,
    CMD_FLAG_WO_ONLY           = 0x040000,
    CMD_FLAG_ENABLE_UDF        = 0x100000,
+   CMD_FLAG_NOUSB             = 0x200000,
 } Parsed_Cmd_Flags;
-
 
 
 #define PARSED_CMD_MARKER  "PCMD"
