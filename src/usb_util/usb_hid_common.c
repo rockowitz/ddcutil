@@ -1,32 +1,17 @@
-/* usb_hid_common.c
+/** @file usb_hid_common.c
  *
- * Functions that are common to the wrappers for multiple USB HID
- * packages such as libusb, hiddev
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Functions that are common to the wrappers for multiple USB HID
+ *  packages such as libusb, hiddev
  */
 
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/** \cond */
 #include <stdio.h>
 
 #include "util/string_util.h"
+/** \endcond */
 
 #include "usb_util/usb_hid_common.h"
 
@@ -135,3 +120,49 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
       printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, bool_repr(result));
    return result;
 }
+
+
+/* Check for specific USB devices to not probe.
+ *
+ * This is a hack.
+ *
+ * Arguments:
+ *   vid      USB vendor id
+ *   pid      USB product id
+ *
+ * Returns    true/false
+ */
+bool deny_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
+   struct vid_pid {
+      uint16_t   vid;
+      uint16_t   pid;
+   };
+
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. vid=0x%04x, pid=0x%04x\n", __func__, vid, pid);
+   bool result = false;
+
+
+   struct vid_pid exceptions[] = {
+            {0x17ef, 0x6009},    // ThinkPad USB Keyboard with TrackPoint
+      };
+   const int vid_pid_ct = sizeof(exceptions)/sizeof(struct vid_pid);
+
+   for (int ndx = 0; ndx < vid_pid_ct && !result; ndx++) {
+      if (vid == exceptions[ndx].vid) {
+         // there used to be some buggy code here looking at case of exceptions[ndx].pid == 0,  why?
+         if ( pid == exceptions[ndx].pid) {
+            result = true;
+            // if (debug)
+               printf("(%s) Matched exception vid=0x%04x, pid=0x%04x\n", __func__,
+                      exceptions[ndx].vid, exceptions[ndx].pid);
+         }
+      }
+   }
+
+   if (debug)
+      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, bool_repr(result));
+   return result;
+}
+
