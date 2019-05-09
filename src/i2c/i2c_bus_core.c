@@ -699,10 +699,16 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // but, bus_info has already been filtered for ignorable devices
       assert( !is_ignorable_i2c_device(bus_info->busno) );
 
+#ifdef OLD
+      // tests no longer needed, see comment on above assert()
       if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
+         bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
          if ( !is_ignorable_i2c_device(bus_info->busno) )
             bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
       }
+#endif
+      bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
+      bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
 
       if (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED &&
           bus_info->flags & I2C_BUS_HAS_VALID_NAME )
@@ -830,11 +836,13 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    DBGMSF(debug, "bus_info=%p", bus_info);
    assert(bus_info);
 
-   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
-   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
+   rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
+   rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
+      rpt_vstring(depth, "Bus accessible:          %s", sbool(bus_info->flags&I2C_BUS_ACCESSIBLE ));
+      rpt_vstring(depth, "Bus is eDP:              %s", sbool(bus_info->flags&I2C_BUS_EDP ));
       rpt_vstring(depth, "Valid bus name checked:  %s", sbool(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED));
-      rpt_vstring(depth, "I2C bus has valid anem:  %s", sbool(bus_info->flags & I2C_BUS_HAS_VALID_NAME));
+      rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(bus_info->flags & I2C_BUS_HAS_VALID_NAME));
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(depth, "Address 0x30 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
