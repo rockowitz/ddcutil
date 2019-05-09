@@ -93,7 +93,7 @@ static void probe_uhid(int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
 
-   bool debug = false;
+   bool debug = true;
    DBGMSF0(debug, "Starting");
 
    struct dirent * ep;
@@ -131,17 +131,24 @@ static void probe_uhid(int depth) {
             // returns ct = 3, seq is unset,  why?
 #endif
 
-            bool is_monitor = is_hid_monitor_rdesc(fqfn);
-            if (!is_monitor) {
-               char * endptr;
-               uint16_t vid = (uint16_t) strtoul(ep->d_name+5,  &endptr, 16);
-               uint16_t pid = (uint16_t) strtoul(ep->d_name+10, &endptr, 16);
-               is_monitor = force_hid_monitor_by_vid_pid(vid, pid);
+            char * endptr;
+            uint16_t vid = (uint16_t) strtoul(ep->d_name+5,  &endptr, 16);
+            uint16_t pid = (uint16_t) strtoul(ep->d_name+10, &endptr, 16);
+
+            bool is_monitor = false;
+            if (deny_hid_monitor_by_vid_pid(vid, pid)) {
+               rpt_vstring(d1, "Device ignored by vid.pid %d.%d", vid, pid);
             }
-            if (is_monitor) {
-               rpt_nl();
-               rpt_vstring(d1, "%s:", fqfn);
-               rpt_file_contents(fqfn, /*verbose=*/true, d2);
+            else {
+               is_monitor = is_hid_monitor_rdesc(fqfn);
+               if (!is_monitor) {
+                  is_monitor = force_hid_monitor_by_vid_pid(vid, pid);
+               }
+               if (is_monitor) {
+                  rpt_nl();
+                  rpt_vstring(d1, "%s:", fqfn);
+                  rpt_file_contents(fqfn, /*verbose=*/true, d2);
+               }
             }
          }
       }
@@ -321,6 +328,9 @@ static void query_usb_monitors() {
    rpt_nl();
    rpt_vstring(0, "Checking for USB HID Report Descriptors in /sys/kernel/debug/hid...");
    probe_uhid(1);
+
+   rpt_nl();
+   rpt_vstring(0, "Checking for USB connected monitors complete");
 }
 
 
