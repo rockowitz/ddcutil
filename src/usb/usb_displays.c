@@ -1,29 +1,8 @@
-/* usb_displays.c
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file usb_displays.c
  */
 
-/** \file
- *
- */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -41,6 +20,7 @@
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
 
+#include "usb_util/usb_hid_common.h"
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 
@@ -307,7 +287,7 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
  *  The result is cached in global variable usb_monitors
  */
 GPtrArray * get_usb_monitor_list() {
-   bool debug = false;
+   bool debug = true;
    DBGMSF0(debug, "Starting...");
    DDCA_Output_Level ol = get_output_level();
 
@@ -351,6 +331,10 @@ GPtrArray * get_usb_monitor_list() {
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
          if ( hiddev_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0 )
             goto close;
+
+         if (deny_hid_monitor_by_vid_pid(devinfo->vendor, devinfo->product) )
+            goto close;
+
          if (!is_hiddev_monitor(fd))
             goto close;
 
