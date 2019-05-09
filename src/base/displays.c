@@ -579,7 +579,7 @@ char * dpath_short_name_t(DDCA_IO_Path * dpath) {
    char * buf = get_thread_fixed_buffer(&dpath_short_name_key, 100);
    switch(dpath->io_mode) {
    case DDCA_IO_I2C:
-      snprintf(buf, 100, "bus dev/i2c-%d", dpath->path.i2c_busno);
+      snprintf(buf, 100, "bus /dev/i2c-%d", dpath->path.i2c_busno);
       break;
    case DDCA_IO_ADL:
       snprintf(buf, 100, "adlno (%d.%d)", dpath->path.adlno.iAdapterIndex, dpath->path.adlno.iDisplayIndex);
