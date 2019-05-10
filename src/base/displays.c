@@ -756,34 +756,6 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
  *  \retval false different displays
  */
 bool dref_eq(Display_Ref* this, Display_Ref* that) {
-#ifdef OLD
-   bool result = false;
-   if (!this && !that)
-      result = true;
-   else if (this && that) {
-      if (this->io_mode == that->io_mode) {
-         switch (this->io_mode) {
-
-         case DDCA_IO_I2C:
-            result = (this->busno == that->busno);
-            break;
-
-         case DDCA_IO_ADL:
-            result = (this->iAdapterIndex == that->iAdapterIndex &&
-                      this->iDisplayIndex == that->iDisplayIndex);
-            break;
-
-         case DDCA_IO_USB:
-            result = (this->usb_bus    == that->usb_bus  &&
-                      this->usb_device == that->usb_device);
-            break;
-
-         }
-      }
-   }
-   return result;
-#endif
-   // return dpath_eq(dpath_from_dref(this), dpath_from_dref(that));
    return dpath_eq(this->io_path, that->io_path);
 }
 
