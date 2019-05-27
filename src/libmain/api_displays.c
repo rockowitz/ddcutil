@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
@@ -359,16 +360,19 @@ ddca_open_display2(
       bool                  wait,
       DDCA_Display_Handle * dh_loc)
 {
+   bool debug = false;
    free_thread_error_detail();
    assert(library_initialized);
    // assert(dh_loc);
    PRECOND(dh_loc);
 
-   ddc_ensure_displays_detected();
+   assert(ddc_displays_already_detected());
+   // ddc_ensure_displays_detected();
 
    DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
+   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s", dref_repr_t(dref), bool_repr(wait));
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCRC_ARG;
    }
@@ -382,6 +386,7 @@ ddca_open_display2(
         *dh_loc = dh;
    }
    assert( (rc==0 && *dh_loc) || (rc!=0 && !*dh_loc));
+   DBGTRC(debug, DDCA_TRC_API,  "Returning rc=%s, dh_loc=%p", psc_desc(rc), dh_loc);
    return rc;
 }
 
