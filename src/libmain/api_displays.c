@@ -777,11 +777,12 @@ ddca_report_display_info(
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
-   if (debug) {
+   // if (debug) {
    rpt_vstring(d1, "dref:                %p - %s", dinfo->dref, dref_repr_t(dinfo->dref));
+   if (dinfo->dref)   // paranoid, should never be NULL
    rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
                                                   format_vspec(((Display_Ref*)dinfo->dref)->vcp_version));
-   }
+   // }
    DBGMSF(debug, "Done");
 }
 
