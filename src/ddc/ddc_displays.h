@@ -65,4 +65,7 @@ ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 void
 ddc_ensure_displays_detected();
 
+bool
+ddc_displays_already_detected();
+
 #endif /* DDC_DISPLAYS_H_ */

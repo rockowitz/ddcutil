@@ -995,3 +995,8 @@ ddc_ensure_displays_detected() {
    }
 }
 
+bool ddc_displays_already_detected()
+{
+   return all_displays;
+}
+
