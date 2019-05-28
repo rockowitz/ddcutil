@@ -80,7 +80,7 @@ static int is_hiddev(const struct dirent *ent) {
  * Returns:   GPtrArray of device device names.
  */
 GPtrArray * get_hiddev_device_names_using_filesys() {
-   const char *hidraw_paths[] = { "/dev/", "/dev/usb", NULL };
+   const char *hidraw_paths[] = { "/dev/", "/dev/usb/", NULL };
    return get_filenames_by_filter(hidraw_paths, is_hiddev);
 }
 
