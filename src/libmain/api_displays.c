@@ -40,6 +40,19 @@ void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
 void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
 
 
+DDCA_Status
+ddca_enable_usb_display_detection(bool onoff) {
+   return ddc_enable_usb_display_detection(onoff);
+}
+
+bool
+ddca_ddca_is_usb_display_detection_enabled() {
+   return ddc_is_usb_display_detection_enabled();
+}
+
+
+
+
 //
 // Display Identifiers
 //

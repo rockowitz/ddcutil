@@ -404,6 +404,23 @@ ddca_enable_error_info(
 // Display Descriptions
 //
 
+
+/**
+ *
+ *  Must be called before any API call that triggers display identification
+ *
+ *  @param onoff
+ *  @retval  DDCRC_OK                success
+ *  @retval  DDCRC_INVALID_OPERATION display identification has already occurred
+ *  @retval  DDCRC_UNIMPLEMENTED     ddcutil not built with USB monitor support
+ */
+DDCA_Status
+ddca_enable_usb_display_detection(bool onoff);
+
+bool
+ddca_ddca_is_usb_display_detection_enabled();
+
+
 /** Gets a list of the detected displays.
  *
  *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
