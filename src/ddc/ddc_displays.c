@@ -1001,12 +1001,32 @@ ddc_ensure_displays_detected() {
    }
 }
 
-bool ddc_displays_already_detected()
+
+/** Indicates whether displays have already been detected
+ *
+ *  @return true/false
+ */
+bool
+ddc_displays_already_detected()
 {
    return all_displays;
 }
 
-DDCA_Status ddc_enable_usb_display_detection(bool onoff) {
+
+/** Controls whether USB displays are to be detected.
+ *
+ *  Must be called before any function that triggers display detection.
+ *
+ *  @param  onoff  true if USB displays are to be detected, false if not
+ *  @retval DDCRC_OK  normal
+ *  @retval DDCRC_INVALID_OPERATION function called after displays have been detected
+ *  @retval DDCRC_UNIMPLEMENTED ddcutil was not built with USB support
+ *
+ *  @remark
+ *  If this function is not called, the default (if built with USB support) is on
+ */
+DDCA_Status
+ddc_enable_usb_display_detection(bool onoff) {
 #ifdef USE_USB
    DDCA_Status rc = DDCRC_INVALID_OPERATION;
    if (!ddc_displays_already_detected()) {
@@ -1019,8 +1039,13 @@ DDCA_Status ddc_enable_usb_display_detection(bool onoff) {
 #endif
 }
 
-bool ddc_is_usb_display_detection_enabled() {
+
+/** Indicates whether USB displays are to be detected
+ *
+ *  @return true/false
+ */
+bool
+ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
-
 
