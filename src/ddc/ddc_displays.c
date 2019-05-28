@@ -62,7 +62,11 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 static GPtrArray * all_displays = NULL;    // all detected displays
 static int dispno_max = 0;                 // highest assigned display number
 static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
-
+#ifdef USE_USB
+static bool detect_usb_displays = true;
+#else
+static bool detect_usb_displays = false;
+#endif
 
 void ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
@@ -915,29 +919,31 @@ ddc_detect_all_displays() {
   g_ptr_array_free(all_adl_details, true);
 
 #ifdef USE_USB
-   GPtrArray * usb_monitors = get_usb_monitor_list();
-   // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
-   for (int ndx=0; ndx<usb_monitors->len; ndx++) {
-      Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
-      assert(memcmp(curmon->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
-      Display_Ref * dref = create_usb_display_ref(
-                                curmon->hiddev_devinfo->busnum,
-                                curmon->hiddev_devinfo->devnum,
-                                curmon->hiddev_device_name);
-      dref->dispno = -1;
-      dref->pedid = curmon->edid;
-      if (dref->pedid)
-         dref->mmid  = monitor_model_key_new(
-                          dref->pedid->mfg_id,
-                          dref->pedid->model_name,
-                          dref->pedid->product_code);
-      else
-         dref->mmid = monitor_model_key_new("UNK", "UNK", 0);
-      // drec->detail.usb_detail = curmon;
-      dref->detail = curmon;
-      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-      dref->flags |= DREF_DDC_IS_MONITOR;
-      g_ptr_array_add(display_list, dref);
+   if (detect_usb_displays) {
+      GPtrArray * usb_monitors = get_usb_monitor_list();
+      // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
+      for (int ndx=0; ndx<usb_monitors->len; ndx++) {
+         Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
+         assert(memcmp(curmon->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+         Display_Ref * dref = create_usb_display_ref(
+                                   curmon->hiddev_devinfo->busnum,
+                                   curmon->hiddev_devinfo->devnum,
+                                   curmon->hiddev_device_name);
+         dref->dispno = -1;
+         dref->pedid = curmon->edid;
+         if (dref->pedid)
+            dref->mmid  = monitor_model_key_new(
+                             dref->pedid->mfg_id,
+                             dref->pedid->model_name,
+                             dref->pedid->product_code);
+         else
+            dref->mmid = monitor_model_key_new("UNK", "UNK", 0);
+         // drec->detail.usb_detail = curmon;
+         dref->detail = curmon;
+         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+         dref->flags |= DREF_DDC_IS_MONITOR;
+         g_ptr_array_add(display_list, dref);
+      }
    }
 #endif
 
@@ -999,4 +1005,22 @@ bool ddc_displays_already_detected()
 {
    return all_displays;
 }
+
+DDCA_Status ddc_enable_usb_display_detection(bool onoff) {
+#ifdef USE_USB
+   DDCA_Status rc = DDCRC_INVALID_OPERATION;
+   if (!ddc_displays_already_detected()) {
+      detect_usb_displays = onoff;
+      rc = DDCRC_OK;
+   }
+   return rc;
+#else
+   return DDCRC_UNIMPLEMENTED;
+#endif
+}
+
+bool ddc_is_usb_display_detection_enabled() {
+   return detect_usb_displays;
+}
+
 

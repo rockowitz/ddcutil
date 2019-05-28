@@ -68,4 +68,10 @@ ddc_ensure_displays_detected();
 bool
 ddc_displays_already_detected();
 
+DDCA_Status
+ddc_enable_usb_display_detection(bool onoff);
+
+bool
+ddc_is_usb_display_detection_enabled();
+
 #endif /* DDC_DISPLAYS_H_ */
