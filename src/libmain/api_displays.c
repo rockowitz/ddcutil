@@ -35,6 +35,10 @@ static inline bool valid_display_ref(Display_Ref * dref) {
    return (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 }
 
+// forward declarations
+void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
+void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
+
 
 //
 // Display Identifiers
@@ -699,7 +703,7 @@ ddca_get_display_info_list2(
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API||DDCA_TRC_DDC )) {
       DBGMSG("Done. Returning %p", result_list);
-      ddca_report_display_info_list(result_list, 2);
+      dbgrpt_display_info_list(result_list, 2);
    }
 
    *dlist_loc = result_list;
@@ -777,13 +781,22 @@ ddca_report_display_info(
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
-   // if (debug) {
+   DBGMSF(debug, "Done");
+}
+
+
+void
+dbgrpt_display_info(
+      DDCA_Display_Info * dinfo,
+      int                 depth)
+{
+   ddca_report_display_info(dinfo, depth);
+   int d1 = depth+1;
+
    rpt_vstring(d1, "dref:                %p - %s", dinfo->dref, dref_repr_t(dinfo->dref));
    if (dinfo->dref)   // paranoid, should never be NULL
    rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
                                                   format_vspec(((Display_Ref*)dinfo->dref)->vcp_version));
-   // }
-   DBGMSF(debug, "Done");
 }
 
 
@@ -799,6 +812,22 @@ ddca_report_display_info_list(
    rpt_vstring(depth, "Found %d displays", dlist->ct);
    for (int ndx=0; ndx<dlist->ct; ndx++) {
       ddca_report_display_info(&dlist->info[ndx], d1);
+   }
+}
+
+
+void
+dbgrpt_display_info_list(
+      DDCA_Display_Info_List * dlist,
+      int                      depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting.  dlist=%p, depth=%d", dlist, depth);
+
+   int d1 = depth+1;
+   rpt_vstring(depth, "Found %d displays", dlist->ct);
+   for (int ndx=0; ndx<dlist->ct; ndx++) {
+      dbgrpt_display_info(&dlist->info[ndx], d1);
    }
 }
 
