@@ -387,6 +387,8 @@ int main(int argc, char *argv[]) {
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
+
+   // configure tracing
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)         // timestamps on debug and trace messages?
       dbgtrc_show_time = true;              // extern in core.h
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
@@ -399,6 +401,7 @@ int main(int argc, char *argv[]) {
       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
          add_traced_file(parsed_cmd->traced_files[ndx]);
    }
+
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -483,6 +486,13 @@ int main(int argc, char *argv[]) {
 
    if (parsed_cmd->sleep_strategy >= 0)
       set_sleep_strategy(parsed_cmd->sleep_strategy);
+
+#ifdef USE_USB
+   if (parsed_cmd->flags & CMD_FLAG_NOUSB) {
+      DDCA_Status rc = ddc_enable_usb_display_detection(false);
+      assert (rc == DDCRC_OK);
+   }
+#endif
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
    if (parsed_cmd->flags & CMD_FLAG_ASYNC)
