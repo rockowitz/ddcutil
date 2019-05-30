@@ -38,10 +38,10 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;  // may be unused if all diagnostics turned off
 
-// n. #pragma GCC diagnostic ignored "-Wunused-variable" not working
-void usb_core_unused_function_to_avoid_unused_variable_warning() {
-   printf("0x%02x\n",TRACE_GROUP);
-}
+// // n. #pragma GCC diagnostic ignored "-Wunused-variable" not working
+// void usb_core_unused_function_to_avoid_unused_variable_warning() {
+//    printf("0x%02x\n",TRACE_GROUP);
+// }
 
 // // Forward declarations
 // static GPtrArray * get_usb_monitor_list();  // returns array of Usb_Monitor_Info
@@ -287,8 +287,8 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
  *  The result is cached in global variable usb_monitors
  */
 GPtrArray * get_usb_monitor_list() {
-   bool debug = true;
-   DBGMSF0(debug, "Starting...");
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting...");
    DDCA_Output_Level ol = get_output_level();
 
    if (usb_monitors)      // already initialized?
@@ -385,7 +385,7 @@ GPtrArray * get_usb_monitor_list() {
    g_ptr_array_set_free_func(hiddev_names, free);
    g_ptr_array_free(hiddev_names, true);
 
-   if (debug) {
+   if ( debug || IS_TRACING() ) {
       DBGMSG("Returning  %d monitors ", usb_monitors->len);
       // report_usb_monitors(usb_monitors,1);
    }
