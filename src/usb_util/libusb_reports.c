@@ -211,9 +211,10 @@ char * lookup_libusb_string(struct libusb_device_handle * dh, int string_id) {
    else {
       // 7/2017: assert was triggered by user, why?
       // replace assert by diagnostic message
-      printf("(%s) rc=%d, LIBUSB_STRING_BUFFER_SIZE=%d, strlen=%zu\n",
-            __func__, rc, LIBUSB_STRING_BUFFER_SIZE,    strlen(libusb_string_buffer) );
-      // assert(rc == strlen(libusb_string_buffer));
+      if (rc != strlen(libusb_string_buffer)) {
+         printf("(%s) rc=%d, LIBUSB_STRING_BUFFER_SIZE=%d, strlen=%zu, value=|%s|\n",
+                __func__, rc, LIBUSB_STRING_BUFFER_SIZE,    strlen(libusb_string_buffer), libusb_string_buffer );
+      }
    }
    return libusb_string_buffer;
 }
