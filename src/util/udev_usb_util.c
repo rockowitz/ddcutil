@@ -1,4 +1,4 @@
- /** \file
+ /** \file udev_usb_util.c
   * USB specific udev utility functions
   */
 
