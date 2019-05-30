@@ -122,6 +122,11 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
 }
 
 
+// This function was introduced because of a user bug report that display detection
+// caused the trackpoint on a Lenovo SK-8855 Thinkpad keyboard with pointing device
+// to stop working.  It appears not to have solved the problem. (The reporting user ceased
+// running test builds.)
+
 /* Check for specific USB devices to not probe.
  *
  * This is a hack.
@@ -138,11 +143,10 @@ bool deny_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
       uint16_t   pid;
    };
 
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. vid=0x%04x, pid=0x%04x\n", __func__, vid, pid);
    bool result = false;
-
 
    struct vid_pid exceptions[] = {
             {0x17ef, 0x6009},    // ThinkPad USB Keyboard with TrackPoint
