@@ -1,5 +1,4 @@
 /** @file hiddev_util.c
- *
  */
 
 // Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -151,12 +150,12 @@ bye:
  * Arguments:     none
  * Returns:       array of hiddev path names in /dev
  *
- * Allows for easily switching between alternative implementation.
+ * Allows for easily switching between alternative implementations.
  */
 GPtrArray * get_hiddev_device_names() {
 
-   // return get_hiddev_device_names_using_udev();
-   return get_hiddev_device_names_using_filesys();
+   return get_hiddev_device_names_using_udev();
+   // return get_hiddev_device_names_using_filesys();
 }
 
 
