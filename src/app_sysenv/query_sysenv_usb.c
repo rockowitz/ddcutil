@@ -1,29 +1,10 @@
-/* query_usb_sysenv.c
- *
- * <copyright>
- * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file
+/** \file query_sysenv_usb.c
  *  Probe the USB environment
  */
+
+// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #include <config.h>
 
@@ -51,15 +32,12 @@
 
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
-// #include "usb_util/hidapi_util.h"
 #include "usb_util/hidraw_util.h"
-// #include "util/libusb_reports.h"
 #include "usb_util/libusb_util.h"
 #include "usb_util/usb_hid_common.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-// #include "base/linux_errno.h"
 
 #include "usb/usb_displays.h"
 
@@ -93,7 +71,7 @@ static void probe_uhid(int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
 
-   bool debug = true;
+   bool debug = false;
    DBGMSF0(debug, "Starting");
 
    struct dirent * ep;
