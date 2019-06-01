@@ -327,7 +327,7 @@ bool
 ddca_enable_report_ddc_errors(
       bool onoff);
 
-/** Checks whether messages describing DDC protocol errors are output.
+/** Indicates whether messages describing DDC protocol errors are output.
  *
  *  This setting is global to all threads.
  */
@@ -368,6 +368,17 @@ ddca_set_trace_groups(
       DDCA_Trace_Group trace_flags);
 
 
+/** Given a trace group name, returns its identifier.
+ *  Case is ignored.
+ *
+ *  \param   name trace group name
+ *  \return  trace group identifier
+ *  \retval  TRC_NEVER unrecognized name
+ */
+DDCA_Trace_Group
+ddca_trace_group_name_to_value(char * name);
+
+
 //
 // Statistics and Diagnostics
 //
@@ -404,22 +415,30 @@ ddca_enable_error_info(
 // Display Descriptions
 //
 
-
-/**
+/** Controls whether USB devices are checked during display detection
  *
- *  Must be called before any API call that triggers display identification
+ *  Must be called before any API call that triggers display detection.
  *
  *  @param onoff
  *  @retval  DDCRC_OK                success
- *  @retval  DDCRC_INVALID_OPERATION display identification has already occurred
+ *  @retval  DDCRC_INVALID_OPERATION display detection has already occurred
  *  @retval  DDCRC_UNIMPLEMENTED     ddcutil not built with USB monitor support
+ *
+ *  @remark
+ *  The default is to check USB devices.
+ *
+ *  This setting is global to all threads.
  */
 DDCA_Status
 ddca_enable_usb_display_detection(bool onoff);
 
+/** Reports whether USB devices are checked as part of display detection
+ *
+ *  @retval true  USB devices are checked
+ *  @retval valse UBB devices are not checked
+ */
 bool
 ddca_ddca_is_usb_display_detection_enabled();
-
 
 /** Gets a list of the detected displays.
  *

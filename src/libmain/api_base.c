@@ -534,6 +534,12 @@ ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
 }
 
 
+DDCA_Trace_Group
+ddca_trace_group_name_to_value(char * name) {
+   return trace_class_name_to_value(name);
+}
+
+
 //
 // Statistics
 //
