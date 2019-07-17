@@ -488,10 +488,10 @@ int main(int argc, char *argv[]) {
       set_sleep_strategy(parsed_cmd->sleep_strategy);
 
 #ifdef USE_USB
-   if (parsed_cmd->flags & CMD_FLAG_NOUSB) {
-      DDCA_Status rc = ddc_enable_usb_display_detection(false);
+   // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {
+      DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
       assert (rc == DDCRC_OK);
-   }
+   // }
 #endif
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;

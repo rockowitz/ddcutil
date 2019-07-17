@@ -1032,6 +1032,7 @@ ddc_enable_usb_display_detection(bool onoff) {
    if (!ddc_displays_already_detected()) {
       detect_usb_displays = onoff;
       rc = DDCRC_OK;
+      // DBGMSG("detect_usb_displays = %s", sbool(detect_usb_displays));
    }
    return rc;
 #else

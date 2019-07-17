@@ -174,7 +174,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean wo_only_flag   = false;
    gboolean enable_udf_flag = false;
 #ifdef USE_USB
-   gboolean nousb_flag      = false;
+   gboolean enable_usb_flag = true;
 #endif
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
@@ -209,7 +209,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
 #ifdef USE_USB
-      {"nousb",  '\0',  0, G_OPTION_ARG_NONE,     &nousb_flag,       "Do not detect USB devices", NULL},
+      {"disable-usb", '\0', G_OPTION_FLAG_REVERSE,
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
 #endif
 
       // output control
@@ -369,7 +370,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_UDF,        enable_udf_flag);
 #ifdef USE_USB
-   SET_CMDFLAG(CMD_FLAG_NOUSB,             nousb_flag);
+   SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
 
    if (failsim_fn_work) {
