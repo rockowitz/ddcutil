@@ -209,10 +209,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
 #ifdef USE_USB
-      {"disable-usb", '\0', G_OPTION_FLAG_REVERSE,
+//    {"disable-usb", '\0', G_OPTION_FLAG_REVERSE,
+//                             G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
+      {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
-#endif
 
+#endif
       // output control
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
