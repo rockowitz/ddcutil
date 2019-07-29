@@ -91,6 +91,7 @@ bool is_ddc_null_message(Byte * packet) {
  *  \param  dh_loc          address at which to return display handle
  *  \return status code     as from #i2c_open_bus(), #usb_open_hiddev_device()
  *  \retval DDCRC_LOCKED    display open in another thread
+ *  \retval DDCRC_ALREADY_OPEN display already open in current thread
  *
  *  **Call_Option** flags recognized:
  *  - CALLOPT_WAIT
