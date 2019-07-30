@@ -287,7 +287,7 @@ Value_Name_Table functionality_flag_table = {
  */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    bool debug = false;
-   DBGMSF(debug, "Starting.", NULL);
+   DBGMSF(debug, "Starting.");
 
    unsigned long funcs;
    int rc;
@@ -329,7 +329,7 @@ char * i2c_interpret_functionality_flags(unsigned long functionality) {
  */
 void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  functionality=0x%016x, maxline=%d", functionality, maxline);
+   DBGMSF(debug, "Starting.  functionality=0x%lx, maxline=%d", functionality, maxline);
 
    char * buf0 = i2c_interpret_functionality_flags(functionality);
    DBGMSF(debug, "buf0=|%s|", buf0);
@@ -354,7 +354,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
    free(buf0);
    ntsa_free(ntsa, /* free_strings */ true);
 
-   DBGMSF(debug, "Done", NULL);
+   DBGMSF(debug, "Done");
 }
 
 
@@ -636,7 +636,7 @@ Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) 
          if (edid)
             report_parsed_edid(edid, false /* dump hex */, 0);
          else
-            DBGMSG("create_parsed_edid() returned NULL", NULL);
+            DBGMSG("create_parsed_edid() returned NULL");
       }
       if (!edid)
          rc = DDCRC_INVALID_EDID;
@@ -686,7 +686,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
    int file = 0;
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
-      DBGMSF(debug, "Probing", NULL);
+      DBGMSF(debug, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
 
       if ( is_edp_device(bus_info->busno) ) {
@@ -856,7 +856,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       }
    }
 
-   DBGMSF(debug, "Done", NULL);
+   DBGMSF(debug, "Done");
 }
 
 
