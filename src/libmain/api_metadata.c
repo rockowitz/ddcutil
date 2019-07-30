@@ -411,7 +411,7 @@ ddca_get_feature_metadata_by_vspec(
 {
    bool debug = false;
    DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info_loc=%p",
-                 feature_code, vspec.major, vspec.minor, create_default_if_not_found, info_loc);
+                 feature_code, vspec.major, vspec.minor, sbool(create_default_if_not_found), info_loc);
    assert(info_loc);
    free_thread_error_detail();
    DDCA_Feature_Metadata * meta = NULL;
@@ -496,20 +496,21 @@ ddca_get_feature_metadata_by_dh(
                   dbgrpt_display_ref(dh->dref, 1);
                assert(metadata_loc);
 
-               DDCA_Feature_Metadata * meta = NULL;
-               Display_Feature_Metadata * intmeta =
+               DDCA_Feature_Metadata * external_metadata = NULL;
+               Display_Feature_Metadata * internal_metadata =
                   dyn_get_feature_metadata_by_dh_dfm(feature_code, dh, create_default_if_not_found);
-               if (!intmeta) {
+               if (!internal_metadata) {
                   psc = DDCRC_NOT_FOUND;
                }
                else {
-                  meta = dfm_to_ddca_feature_metadata(intmeta);
+                  external_metadata = dfm_to_ddca_feature_metadata(internal_metadata);
+                  dfm_free(internal_metadata);
                }
-               *metadata_loc = meta;
+               *metadata_loc = external_metadata;
 
                 DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
                 if (psc == 0 && debug) {
-                   dbgrpt_ddca_feature_metadata(meta, 5);
+                   dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
                 assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
