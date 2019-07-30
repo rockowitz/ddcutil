@@ -219,7 +219,7 @@ bye:
    assert(ddcrc <= 0);
    assert( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGMSF(debug, "Done.  Returning: %s, *dh_loc=%d", psc_desc(ddcrc), *dh_loc);
+   DBGMSF(debug, "Done.  Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
    return ddcrc;
 }
 
@@ -496,7 +496,7 @@ static DDCA_Status ddc_adl_write_read_raw(
       else {
          if ( all_bytes_zero(readbuf+1, max_read_bytes-1)) {
                  psc = DDCRC_READ_ALL_ZERO;
-                 DDCMSG(debug, "All zero response.", NULL);
+                 DDCMSG(debug, "All zero response.");
                  COUNT_STATUS_CODE(psc);
          }
          else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
