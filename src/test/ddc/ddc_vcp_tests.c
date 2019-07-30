@@ -1,7 +1,7 @@
 /* ddc_vcp_tests.h
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -257,6 +257,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
 
    file = i2c_open_bus(busno, CALLOPT_ERR_MSG);
    if (file < 0) {
+      free_ddc_packet(request_packet_ptr);
       return;
    }
    rc = i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG);
