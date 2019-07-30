@@ -2,7 +2,7 @@
  * Primitive runtime type information facilities
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -42,7 +42,7 @@ void dbgrpt_rtti_func_name_table(int depth) {
       gpointer key, value;
       g_hash_table_iter_init(&iter, func_name_table);
       while (g_hash_table_iter_next(&iter, &key, &value)) {
-         rpt_vstring(d1, "%p: %s", key, value);
+         rpt_vstring(d1, "%p: %s", key, (char *) value);
       }
    }
 }
