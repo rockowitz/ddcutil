@@ -61,6 +61,7 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    assert(strcmp(catenated, catenated2) == 0);
 #endif
 
+   free(pieces);
    return catenated;
 }
 
