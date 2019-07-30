@@ -292,9 +292,8 @@ dfr_load_by_mmk(
       dfr = dfr_new(mmk.mfg_id, mmk.model_name, mmk.product_code, NULL);
       dfr->flags |= DFR_FLAGS_NOT_FOUND;
    }
-   else {
-      *dfr_loc = dfr;
-   }
+
+   *dfr_loc = dfr;
 
    free(simple_fn);
 #ifdef UNUSED
