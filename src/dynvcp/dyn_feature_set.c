@@ -107,6 +107,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    DDCA_Feature_Metadata * meta = dyn_create_feature_metadata_from_vcp_feature_table_entry(vfte, vspec);
    Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(meta);
    free_ddca_feature_metadata(meta);
+   free(meta);
 
    if (dfm->feature_flags & DDCA_SIMPLE_NC) {
       if (dfm->sl_values)
