@@ -1,29 +1,13 @@
-/* base_hid_report_descriptor.c
+/** base_hid_report_descriptor.c
  *
  * Functions to perform basic parsing of the HID Report Descriptor and
  * display the contents of the Report Descriptor in the format used
  * in HID documentation.
- *
- * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  */
+
+// Copyright (C) 2016-2919 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #include <assert.h>
 #include <glib.h>
@@ -411,8 +395,8 @@ void report_hid_report_item(
    {
       // interpret the bits into 2 lines of text
       Ptr_Pair flag_names = item_flag_names(item->data);
-      rpt_vstring(d_indent, "%s", flag_names.p1);
-      rpt_vstring(d_indent, "%s", flag_names.p2);
+      rpt_vstring(d_indent, "%s", (char *) flag_names.p1);
+      rpt_vstring(d_indent, "%s", (char *) flag_names.p2);
       break;
    }
 
