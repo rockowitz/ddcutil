@@ -3,7 +3,7 @@
  *  Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE      // for asprintf()
@@ -381,7 +381,9 @@ finalize_feature(
             switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
       }
 
-      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
+      // replace DDCA_TABLE by DDCA_NORMAL_TABLE | DDCA_WO_TABLE to
+      // silence coverity error
+      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_NORMAL_TABLE | DDCA_WO_TABLE))
           ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
    }
 
