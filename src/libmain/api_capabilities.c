@@ -254,6 +254,7 @@ ddca_report_parsed_capabilities_by_dref(
             rpt_vstring(d3, "0x%02x: %s", cur_vcp->values[ndx], value_desc);
          }
       }
+      dfm_free(dfm);
    }
 
 bye:
