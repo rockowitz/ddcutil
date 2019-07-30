@@ -645,7 +645,7 @@ ddca_get_display_info_list2(
    int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
    DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
    result_list->ct = true_ct;
-   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %d, sizeof(Display_Info_List) = %d, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
+   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %zu, sizeof(Display_Info_List) = %zu, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %d",
            sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
 
    int true_ctr = 0;
