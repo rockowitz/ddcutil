@@ -5,7 +5,7 @@
  * libusb is not currently used by ddcutil.  This code is retained for reference.
  *
  * <copyright>
- * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -710,7 +710,7 @@ void report_libusb_config_descriptor(
    rpt_structure_loc("libusb_config_descriptor", config, depth);
 
    // Size of this descriptor (in bytes): uint8_t  bLength;
-   rpt_vstring(d1, "%-20s  %d", "bLength:", config->bLength, d1);
+   rpt_vstring(d1, "%-20s  %d", "bLength:", config->bLength);
 
 
    // Descriptor type. Will have value LIBUSB_DT_CONFIG in this context.
