@@ -1,27 +1,10 @@
-/* usb_edid.c
+/** usb_edid.c
  *
- * Functions to get EDID for USB connected monitors
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Functions to get EDID for USB connected monitors
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
@@ -263,14 +246,14 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
             g_strlcpy(parsed_edid->edid_source, "X11", EDID_SOURCE_FIELD_SIZE);
-            DBGMSF(debug, "Found matching EDID from X11\n", __func__);
+            DBGMSF(debug, "Found matching EDID from X11");
             break;
          }
          free_parsed_edid(parsed_edid);
       }
       else {
          if (debug || get_output_level() >= DDCA_OL_VERBOSE) {
-            DBGMSG("Unparsable EDID for output name: %s -> %p\n",
+            DBGMSG("Unparsable EDID for output name: %s -> %p",
                    prec->output_name, prec->edidbytes);
             rpt_hex_dump(prec->edidbytes, 128, /*depth=*/ 1);
          }
