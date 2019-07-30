@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -293,6 +293,6 @@ DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    case DDCA_MCCS_V22:    vspec = DDCA_VSPEC_V22;     break;
    }
 
-   DBGMSF(debug, "Returning: %d.%d", debug, vspec.major, vspec.minor);
+   DBGMSF(debug, "Returning: %d.%d", vspec.major, vspec.minor);
    return vspec;
 }
