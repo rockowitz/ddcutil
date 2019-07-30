@@ -189,6 +189,7 @@ app_show_single_vcp_value_by_feature_id_new_dfm(
    }
    else {
       psc = app_show_single_vcp_value_by_dfm(dh, dfm);
+      dfm_free(dfm);
    }
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
