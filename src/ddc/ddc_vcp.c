@@ -96,7 +96,7 @@ ddc_save_current_settings(
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
-      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command", NULL);
+      PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
       ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
    }
    else {
@@ -281,6 +281,7 @@ is_rereadable_feature(
       // if not found, assume readable  ??
       if (dfm) {
          result = dfm->feature_flags & DDCA_READABLE;
+         dfm_free(dfm);
       }
    }
 
