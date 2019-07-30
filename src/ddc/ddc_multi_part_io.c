@@ -178,7 +178,7 @@ try_multi_part_read(
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && !excp) {         // loop over fragments
-      DBGTRC(debug, DDCA_TRC_NONE, "Top of fragment loop", NULL);
+      DBGTRC(debug, DDCA_TRC_NONE, "Top of fragment loop");
 
       int fragment_size;
       update_ddc_multi_part_read_request_packet_offset(request_packet_ptr, cur_offset);
