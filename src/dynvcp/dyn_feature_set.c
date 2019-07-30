@@ -1,7 +1,7 @@
 /** @file dyn_feature_set.c
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <string.h>
@@ -91,7 +91,7 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
       free_synthetic_vcp_entry(pentry);
 
    DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(dfm);
-   // free info
+   dfm_free(dfm);
    return meta;
 }
 
@@ -106,7 +106,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    // Internal_Feature_Metadata * ifm = calloc(1, sizeof(Internal_Feature_Metadata));
    DDCA_Feature_Metadata * meta = dyn_create_feature_metadata_from_vcp_feature_table_entry(vfte, vspec);
    Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(meta);
-
+   free_ddca_feature_metadata(meta);
 
    if (dfm->feature_flags & DDCA_SIMPLE_NC) {
       if (dfm->sl_values)
