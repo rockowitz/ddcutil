@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -55,7 +55,7 @@
  */
 void free_dumpload_data(Dumpload_Data * data) {
    bool debug = false;
-   DBGMSF(debug, "Starting. data=%p");
+   DBGMSF(debug, "Starting. data=%p", data);
    if (data) {
       if (data->vcp_values)
          free_vcp_value_set(data->vcp_values);
@@ -284,6 +284,7 @@ create_dumpload_data_from_g_ptr_array(
                         data->vcp_value_ct++;
                         vcp_value_set_add(data->vcp_values, valrec);
                      }
+                     dfm_free(dfm);
                   } // valid opcode
 
                } // found feature id and value
