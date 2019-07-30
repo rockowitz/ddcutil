@@ -631,7 +631,8 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    }
    rpt_vstring(d1, "%-20s %d",          "count_enums:", p->count_enums);
    for (int ndx = 0; ndx < p->count_enums; ndx++) {
-      rpt_vstring(d2, "enums[%d] = " PRIu64 ": %s", ndx, p->enums[ndx].value,  p->enums[ndx].name);
+      rpt_vstring(d2, "enums[%d] = %" PRIu64 ": %s",
+                      ndx, p->enums[ndx].value,  p->enums[ndx].name);
    }
    rpt_vstring(d1, "%-20s %d",          "count_blobs:", p->count_blobs);
    for (int ndx = 0; ndx < p->count_blobs; ndx++) {
