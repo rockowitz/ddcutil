@@ -84,7 +84,7 @@ parse_vcp_value(
       ok = true;
    }
 
-   DBGMSF(debug, "Done. *parsed_value=%d, returning: %s", *parsed_value, sbool(ok));
+   DBGMSF(debug, "Done. *parsed_value=%ld, returning: %s", *parsed_value, sbool(ok));
    return ok;
 }
 
