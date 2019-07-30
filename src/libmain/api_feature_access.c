@@ -397,11 +397,11 @@ ddca_get_formatted_vcp_value(
 
 DDCA_Status
 ddca_format_any_vcp_value(
-      DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_MCCS_Version_Spec  vspec,
+      DDCA_Vcp_Feature_Code    feature_code,
+      DDCA_MCCS_Version_Spec   vspec,
       DDCA_Monitor_Model_Key * mmid,
-      DDCA_Any_Vcp_Value *    anyval,
-      char **                 formatted_value_loc)
+      DDCA_Any_Vcp_Value *     anyval,
+      char **                  formatted_value_loc)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
@@ -415,6 +415,7 @@ ddca_format_any_vcp_value(
    free_thread_error_detail();
 
    *formatted_value_loc = NULL;
+   Display_Feature_Metadata * dfm = NULL;
 
    if (!mmid) {
       *formatted_value_loc = strdup("Programming error. mmid not specified");
@@ -422,7 +423,7 @@ ddca_format_any_vcp_value(
       goto bye;
    }
 
-   Display_Feature_Metadata * dfm =
+   dfm =
    dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
         feature_code, *mmid, vspec, /*with_default=*/ true);
    if (!dfm) {
@@ -462,12 +463,11 @@ ddca_format_any_vcp_value(
    }
 
 bye:
-   // TODO: free ifr ?
-   // if (pentry)
-   //    free_synthetic_vcp_entry(pentry);   // does nothing if not synthetic
-
+   if (dfm)
+      dfm_free(dfm);
    DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(ddcrc), *formatted_value_loc);
-   assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
+   // 7/2019: wrong, *formatted_value_loc always set, why did this ever work?
+   // assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
    return ddcrc;
 }
 
