@@ -1,7 +1,7 @@
 /* udev_util.c
  *
  * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -273,7 +273,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
             rpt_vstring(d2, "%s -> %s", attr_name, ntsa[0]);
             int ndx = 1;
             while (ntsa[ndx]) {
-               rpt_vstring(d2, "%*s %s", strlen(attr_name) + 3, " ", ntsa[ndx]);
+               rpt_vstring(d2, "%*s %s", (int) strlen(attr_name) + 3, " ", ntsa[ndx]);
                ndx++;
             }
          }
