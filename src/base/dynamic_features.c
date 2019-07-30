@@ -124,7 +124,7 @@ void dbgrpt_dynamic_features_rec(
    rpt_vstring(d1, "product_code:   %u", dfr->product_code);
    rpt_vstring(d1, "filename:       %s", dfr->filename);
    rpt_vstring(d1, "MCCS vspec:     %d.%d", dfr->vspec.major, dfr->vspec.minor);
-   rpt_vstring(d1, "flags:          0x%02 %s", dfr->flags, interpret_feature_flags_t(dfr->flags));
+   rpt_vstring(d1, "flags:          0x%02x %s", dfr->flags, interpret_feature_flags_t(dfr->flags));
    if (dfr->features) {
       rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
       for (int ndx = 1; ndx < 256; ndx++) {
