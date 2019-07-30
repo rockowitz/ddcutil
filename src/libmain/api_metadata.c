@@ -446,33 +446,34 @@ ddca_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_Display_Ref            ddca_dref,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    meta_loc)
+      DDCA_Feature_Metadata **    metadata_loc)
 {
    WITH_DR(
          ddca_dref,
          {
                bool debug = false;
                DBGMSF(debug, "feature_code=0x%02x, dref=%s, create_default_if_not_found=%s, meta_loc=%p",
-                             feature_code, dref_repr_t(dref), sbool(create_default_if_not_found), meta_loc);
-               assert(meta_loc);
+                             feature_code, dref_repr_t(dref), sbool(create_default_if_not_found), metadata_loc);
+               assert(metadata_loc);
 
-               DDCA_Feature_Metadata * meta = NULL;
-               Display_Feature_Metadata * intmeta =
+               DDCA_Feature_Metadata * external_metadata = NULL;
+               Display_Feature_Metadata * internal_metadata =
                   dyn_get_feature_metadata_by_dref_dfm(feature_code, dref, create_default_if_not_found);
-               if (!intmeta) {
+               if (!internal_metadata) {
                   psc = DDCRC_NOT_FOUND;
                }
                else {
-                  meta = dfm_to_ddca_feature_metadata(intmeta);
+                  external_metadata = dfm_to_ddca_feature_metadata(internal_metadata);
+                  dfm_free(internal_metadata);
                }
-               *meta_loc = meta;
+               *metadata_loc = external_metadata;
 
                if (debug) {
                   DBGMSG("Returning: %s", psc_desc(psc));
                   if (psc == 0)
-                     dbgrpt_ddca_feature_metadata(meta, 2);
+                     dbgrpt_ddca_feature_metadata(external_metadata, 2);
                }
-               assert( (psc==0 && *meta_loc) || (psc!=0 &&!*meta_loc) );
+               assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
       );
 }
