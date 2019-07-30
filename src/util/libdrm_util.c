@@ -453,7 +453,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
 
    rpt_vstring(d1, "%-20s %d",  "count_props", p->count_props);
    for (int ndx = 0; ndx < p->count_props; ndx++) {
-       rpt_vstring(d2, "index=%d, property id (props)=" PRIu32 ", property value (prop_values)=" PRIu64 "  0x%08x",
+       rpt_vstring(d2, "index=%d, property id (props)=%" PRIu32 ", property value (prop_values)=" PRIu64 "  0x%08x",
                         ndx, p->props[ndx], p->prop_values[ndx], p->prop_values[ndx]);
 
        drmModePropertyPtr prop_ptr = drmModeGetProperty(fd, p->props[ndx]);
@@ -525,7 +525,7 @@ void report_property_value(
    rpt_vstring(d1, "Name:          %s", prop_ptr->name);
    rpt_vstring(d1, "Flags:         0x%04x - %s", prop_ptr->flags,
                                                  interpret_property_flags(prop_ptr->flags) );
-   rpt_vstring(d1, "prop_value:    %d  0x%08x", prop_value, prop_value);
+   rpt_vstring(d1, "prop_value:    %"PRIu64"  0x%08x", prop_value, prop_value);
 
    if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
       for (int i = 0; i < prop_ptr->count_enums; i++) {
@@ -632,7 +632,7 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    rpt_vstring(d1, "%-20s %d",          "count_enums:", p->count_enums);
    for (int ndx = 0; ndx < p->count_enums; ndx++) {
       rpt_vstring(d2, "enums[%d] = %" PRIu64 ": %s",
-                      ndx, p->enums[ndx].value,  p->enums[ndx].name);
+                      ndx, p->enums[ndx].value,  (char *) p->enums[ndx].name);
    }
    rpt_vstring(d1, "%-20s %d",          "count_blobs:", p->count_blobs);
    for (int ndx = 0; ndx < p->count_blobs; ndx++) {
