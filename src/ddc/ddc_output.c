@@ -1,7 +1,7 @@
 /** \file ddc_output.c
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -159,7 +159,7 @@ get_raw_value_for_feature_metadata(
       FILE *                     msg_fh)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting", NULL);
+   DBGTRC(debug, TRACE_GROUP, "Starting");
 
    assert(dh);
    assert(dh->dref);
