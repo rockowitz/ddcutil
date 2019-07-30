@@ -1,34 +1,13 @@
-/* libdrm_util.c
- *
- * Utilities for interpreting libdrm data structures.
- *
- * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file libdrm_util.c
+ * Utilities for interpreting libdrm data structures
  */
 
-/** @file libdrm_util.c
- * Utilities for use with libdrm
- */
+// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -474,7 +453,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
 
    rpt_vstring(d1, "%-20s %d",  "count_props", p->count_props);
    for (int ndx = 0; ndx < p->count_props; ndx++) {
-       rpt_vstring(d2, "index=%d, property id (props)=%u, property value (prop_values)=%u  0x%08x",
+       rpt_vstring(d2, "index=%d, property id (props)=" PRIu32 ", property value (prop_values)=" PRIu64 "  0x%08x",
                         ndx, p->props[ndx], p->prop_values[ndx], p->prop_values[ndx]);
 
        drmModePropertyPtr prop_ptr = drmModeGetProperty(fd, p->props[ndx]);
@@ -573,7 +552,7 @@ void report_property_value(
          rpt_vstring(d1, "Property value = %d, Missing min or max value", prop_value);
       }
       else {
-         rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
+         rpt_vstring(d1, "Property value(range) = " PRIu64 ", min=" PRIu64 ", max=" PRIu64,
                          prop_value, prop_ptr->values[0], prop_ptr->values[1]);
       }
    }
@@ -600,14 +579,14 @@ void report_property_value(
             rpt_vstring(d1, "Signed property value = %d, Missing min or max value", prop_value);
          }
         else {
-           rpt_vstring(d1, "Property value(range) = %d, min=%d, max=%d",
+           rpt_vstring(d1, "Property value(range) = " PRId64 ", min=" PRId64 ", max=" PRId64,
                            (int64_t) prop_value,
                            (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
         }
    }
 
    else {
-      rpt_vstring(d1, "Unrecognized type flags=0x%08x, value = %d", prop_ptr->flags, prop_value);
+      rpt_vstring(d1, "Unrecognized type flags=0x%08x, value = " PRIu64, prop_ptr->flags, prop_value);
    }
 }
 
@@ -652,7 +631,7 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    }
    rpt_vstring(d1, "%-20s %d",          "count_enums:", p->count_enums);
    for (int ndx = 0; ndx < p->count_enums; ndx++) {
-      rpt_vstring(d2, "enums[%d] = %u: %s", ndx, p->enums[ndx].value,  p->enums[ndx].name);
+      rpt_vstring(d2, "enums[%d] = " PRIu64 ": %s", ndx, p->enums[ndx].value,  p->enums[ndx].name);
    }
    rpt_vstring(d1, "%-20s %d",          "count_blobs:", p->count_blobs);
    for (int ndx = 0; ndx < p->count_blobs; ndx++) {
