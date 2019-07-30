@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -215,6 +215,9 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
 
     Display_Feature_Metadata * result =
           dyn_get_feature_metadata_by_dfr_and_vspec_dfm(feature_code, dfr, vspec, with_default);
+
+    if (dfr)
+       dfr_free(dfr);
 
     if (debug) {
        DBGMSG("Returning Display_Feature_Metadata at %p", result);
