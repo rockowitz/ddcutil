@@ -453,8 +453,9 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
 
    rpt_vstring(d1, "%-20s %d",  "count_props", p->count_props);
    for (int ndx = 0; ndx < p->count_props; ndx++) {
-       rpt_vstring(d2, "index=%d, property id (props)=%" PRIu32 ", property value (prop_values)=" PRIu64 "  0x%08x",
-                        ndx, p->props[ndx], p->prop_values[ndx], p->prop_values[ndx]);
+       uint64_t curval = p->prop_values[ndx];   // coverity workaround
+       rpt_vstring(d2, "index=%d, property id (props)=%" PRIu32 ", property value (prop_values)=%" PRIu64 ,
+                        ndx, p->props[ndx], curval);
 
        drmModePropertyPtr prop_ptr = drmModeGetProperty(fd, p->props[ndx]);
        if (prop_ptr) {
@@ -530,7 +531,7 @@ void report_property_value(
    if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
       for (int i = 0; i < prop_ptr->count_enums; i++) {
          if (prop_ptr->enums[i].value == prop_value) {
-            rpt_vstring(d1, "Property value(enum) = %d - %s", prop_value, prop_ptr->enums[i].name);
+            rpt_vstring(d1, "Property value(enum) = %"PRIu64" - %s", prop_value, prop_ptr->enums[i].name);
             break;
          }
       }
@@ -552,7 +553,7 @@ void report_property_value(
          rpt_vstring(d1, "Property value = %d, Missing min or max value", prop_value);
       }
       else {
-         rpt_vstring(d1, "Property value(range) = " PRIu64 ", min=" PRIu64 ", max=" PRIu64,
+         rpt_vstring(d1, "Property value(range) = %" PRIu64 ", min=%" PRIu64 ", max=%" PRIu64,
                          prop_value, prop_ptr->values[0], prop_ptr->values[1]);
       }
    }
@@ -579,14 +580,14 @@ void report_property_value(
             rpt_vstring(d1, "Signed property value = %d, Missing min or max value", prop_value);
          }
         else {
-           rpt_vstring(d1, "Property value(range) = " PRId64 ", min=" PRId64 ", max=" PRId64,
+           rpt_vstring(d1, "Property value(range) = %" PRId64 ", min=%" PRId64 ", max=%" PRId64,
                            (int64_t) prop_value,
                            (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
         }
    }
 
    else {
-      rpt_vstring(d1, "Unrecognized type flags=0x%08x, value = " PRIu64, prop_ptr->flags, prop_value);
+      rpt_vstring(d1, "Unrecognized type flags=0x%08x, value = %" PRIu64, prop_ptr->flags, prop_value);
    }
 }
 
@@ -631,8 +632,9 @@ void report_drm_modeProperty(drmModePropertyRes * p, int depth) {
    }
    rpt_vstring(d1, "%-20s %d",          "count_enums:", p->count_enums);
    for (int ndx = 0; ndx < p->count_enums; ndx++) {
+      uint64_t curval = p->enums[ndx].value;   // coverity workaround
       rpt_vstring(d2, "enums[%d] = %" PRIu64 ": %s",
-                      ndx, p->enums[ndx].value,  (char *) p->enums[ndx].name);
+                      ndx, curval,  (char *) p->enums[ndx].name);
    }
    rpt_vstring(d1, "%-20s %d",          "count_blobs:", p->count_blobs);
    for (int ndx = 0; ndx < p->count_blobs; ndx++) {
