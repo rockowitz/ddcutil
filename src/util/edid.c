@@ -393,7 +393,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
                break;
             default:
                // should be PROGRAM_LOGIC_ERROR, but that would violdate layering
-               rpt_vstring(d2, "Invalid digital display type: 0x02x", display_type);
+               rpt_vstring(d2, "Invalid digital display type: 0x%02x", display_type);
             }
          }
          else {   // analog input
