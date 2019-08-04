@@ -140,6 +140,16 @@ show:
 
 .PHONY: clang show
 
+# ldconfig fails when executed in pbuilder due to permissions
+# just have to tell users to run in manually
+
+# install-exec-local:
+# 	@echo "(install-exec-local):"
+# 	ldconfig
+
+# uninstall-local:
+# 	@echo "(uninstall-local):="
+#	ldconfig
 
 install-data-local:
 	@echo "(install-data-local):"
