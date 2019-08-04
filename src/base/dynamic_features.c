@@ -356,7 +356,7 @@ finalize_feature(
       const char *            filename,
       GPtrArray *             errors)
 {
-   DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
+   // DDCA_Feature_Flags * pflags = &cur_feature_metadata->feature_flags;
 
    if (cur_feature_values) {
       // add terminating entry
@@ -370,25 +370,23 @@ finalize_feature(
       // cur_feature_values = NULL;
    }
 
-   if ( *pflags & (DDCA_RW | DDCA_RO | DDCA_WO) )
-      *pflags |= DDCA_RW;
+   if ( cur_feature_metadata->feature_flags & (DDCA_RW | DDCA_RO | DDCA_WO) )
+      cur_feature_metadata->feature_flags |= DDCA_RW;
 
    if (cur_feature_metadata->sl_values) {
       if (cur_feature_metadata->feature_flags & DDCA_COMPLEX_NC) {
-         if ( *pflags & DDCA_WO)
-            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_WO_NC);
+         if ( cur_feature_metadata->feature_flags & DDCA_WO)
+            switch_bits(&cur_feature_metadata->feature_flags, DDCA_COMPLEX_NC, DDCA_WO_NC);
          else
-            switch_bits(pflags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
+            switch_bits(&cur_feature_metadata->feature_flags, DDCA_COMPLEX_NC, DDCA_SIMPLE_NC);
       }
 
-      // replace DDCA_TABLE by DDCA_NORMAL_TABLE | DDCA_WO_TABLE to
-      // silence coverity error
-      else if ( *pflags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_NORMAL_TABLE | DDCA_WO_TABLE))
+      else if ( cur_feature_metadata->feature_flags & (DDCA_COMPLEX_CONT | DDCA_STD_CONT | DDCA_TABLE))
           ADD_ERROR(-1,  "Feature values specified for Continuous or Table feature");
    }
 
-   if (*pflags & DDCA_NORMAL_TABLE & (*pflags & DDCA_WO))
-      switch_bits(pflags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
+   if (cur_feature_metadata->feature_flags & DDCA_NORMAL_TABLE & DDCA_WO)
+      switch_bits(&cur_feature_metadata->feature_flags, DDCA_NORMAL_TABLE, DDCA_WO_TABLE);
 
    // For now, to revisit
   //  cur_feature_metadata->vspec = frec->vspec;
