@@ -42,6 +42,11 @@ libddcdocdir = $(datarootdir)/doc/libddcutil
 endif
 
 
+dist-hook:
+	echo "(Makefile) Executing dist-hook..."
+	chmod a-x AUTHORS COPYING README.md
+
+
 # Too many false positives: 
 #  alpha.clone.CloneChecker
 #  alpha.deadcode.UnreachableCode
