@@ -171,3 +171,5 @@ sip/
 old/
 mod_copyright.pl
 run_mod_copyright
+src/**/am--include-marker
+src/**/#
