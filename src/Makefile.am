@@ -118,7 +118,7 @@ all-local:
 
 # Never executed:
 # all-hook:
-#	@echo "Executing hook all-hook..."
+#	@echo "(src/Makefile) Executing all-hook..."
 #	touch base/build_info.c
 
 # fails
@@ -154,7 +154,7 @@ endif
 
 
 dist-hook:
-	@echo "(src/Makefile) Executing hook dist-hook.top_distdir=$(top_distdir) distdir=$(distdir).."
+	@echo "(src/Makefile) Executing hook dist-hook. top_distdir=$(top_distdir) distdir=$(distdir).."
 	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
 	find $(distdir) -name ".deps" -prune -exec rm -rf {} \;  
 	find $(distdir) -name ".libs" -prune -exec rm -rf {} \;  
@@ -321,7 +321,7 @@ ddcutil_LDFLAGS += -export-dynamic
 
 
 install-exec-hook:
-	@echo "(install-exec-hook) Executing..." 
+	@echo "(src/Makefile) Executing install-exec-hook ..." 
 	rm -f $(DESTDIR)$(libdir)/libddcutil.la  
 	rm -f $(DESTDIR)$(libdir)/libddcutil.a  
 
@@ -334,7 +334,7 @@ install-exec-hook:
 #	fi
 
 #	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
-#	  echo "(install-exec-hook) Stripping dependency_libs from libddcutil.la" ; \
+#	  echo "(src/Makefile) install-exec-hook: Stripping dependency_libs from libddcutil.la" ; \
 #	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
 #	fi
 
