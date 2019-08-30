@@ -115,33 +115,57 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       Public_Status_Code psc = 0;
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
-      DBGTRC(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s", psc_desc(psc));
+      DBGTRC(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
+                                 psc_desc(psc), pvalrec);
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       if (ddc_excp)
          errinfo_free(ddc_excp);
 
-      assert(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels
+      DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
+      if (io_mode == DDCA_IO_USB) {
+         if (psc == 0 || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
 
-      // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
-      // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
+         }
+         assert( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
 
-      if ( psc == DDCRC_NULL_RESPONSE        ||
-           psc == DDCRC_ALL_RESPONSES_NULL   ||
-           psc == 0                          ||
-           psc == DDCRC_REPORTED_UNSUPPORTED )
-      {
-         dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+      }
+      else {
+         assert(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
 
-         if (psc == DDCRC_REPORTED_UNSUPPORTED)
-            dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+         // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
+         // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
 
-         else if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
-            dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+         if ( psc == DDCRC_NULL_RESPONSE        ||
+              psc == DDCRC_ALL_RESPONSES_NULL   ||
+              psc == 0                          ||
+              psc == DDCRC_REPORTED_UNSUPPORTED )
+         {
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
 
-         else {
-            assert( psc == 0);
+            if (psc == DDCRC_REPORTED_UNSUPPORTED)
+               dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+
+            else if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
+               dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+
+            else {
+               assert( psc == 0);
+               assert(pvalrec);
+
+            }
+            assert( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
+         }
+
+         if (psc == 0) {
+
             assert( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
+            if (debug || IS_TRACING()) {
+               DBGMSG("pvalrec:");
+               dbgrpt_single_vcp_value(pvalrec, 1);
+            }
+
             DBGTRC(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
                      pvalrec->value_type,
                      pvalrec->val.c_nc.mh,
