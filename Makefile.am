@@ -139,9 +139,10 @@ show:
 	@echo "  srcdir                  = $(srcdir)"
 	@echo "  pythondir               = $(pythondir)"
 	@echo "  pyexecdir               = $(pyexecdir)"
-
-
-
+	@echo ""
+	@echo "  CFLAGS                  = $(CFLAGS)"
+	@echo "  CPPFLAGS                = $(CPPFLAGS)"
+	@echo "  LDFLAGS                 = $(LDFLAGS)"
 
 .PHONY: clang show
 
