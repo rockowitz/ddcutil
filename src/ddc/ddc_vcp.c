@@ -685,6 +685,8 @@ ddc_get_vcp_value(
                                parsed_nontable_response->sl);
                    free(parsed_nontable_response);
                 }
+                else
+                   ddc_excp = errinfo_new(psc, __func__);
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
@@ -734,8 +736,10 @@ ddc_get_vcp_value(
    *valrec_loc = valrec;
 
    DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc) );
-   if (psc == 0 && debug)
-      report_any_vcp_value(valrec,1);
+   assert( (psc == 0 && valrec) || (psc != 0 && !valrec) );
+
+   if (psc == 0 && ( debug || IS_TRACING_GROUP(TRACE_GROUP)))
+      dbgrpt_single_vcp_value(valrec,1);
    assert( (psc == 0 && *valrec_loc) || (psc != 0 && !*valrec_loc) );
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
