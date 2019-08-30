@@ -381,6 +381,7 @@ static bool is_edp_device(int busno) {
             break;
          }
       }
+      g_ptr_array_free(lines, true);
    }
 
    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning: %s", busno, sbool(result));
