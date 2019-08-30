@@ -9,8 +9,10 @@
 
 /** \cond */
 #include <assert.h>
+// #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+// #include <fnmatch.h>
 #include <glib-2.0/glib.h>
 // #include <glib.h>
 #include <stdlib.h>
@@ -362,9 +364,45 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
+#ifdef NOT_WORKING
+
+DIR * open_subdir(
+      char * parent_dir_name,
+      struct dirent * entry,
+      char * pattern,
+      bool   exact_match,      // if false is prefix match
+      char * fq_subdir_name)
+{
+   bool debug = true;
+   DBGMSF(debug, "Starting. parent_dir_name=%s, Examining %s, pattern=%s, exact_match=%s",
+         parent_dir_name, entry->d_name, pattern, sbool(exact_match));
+   DIR * subdir = NULL;
+
+   if ( entry->d_type == DT_DIR) {   // but what if link?
+      DBGMSG("Is directory");
+      bool is_match = false;
+      if (exact_match)
+         is_match = streq(entry->d_name, pattern);
+      else {
+         DBGMSG("pattern match");
+         is_match = str_starts_with(entry->d_name, pattern);
+      }
+      DBGMSG("is_match=%s", sbool(is_match));
+      sprintf(fq_subdir_name, "%s/%s", parent_dir_name, entry->d_name);
+      if (is_match)
+         subdir = opendir(fq_subdir_name);
+   }
+
+   DBGMSF(debug, "Returning %p, fq_subdir_name=%s", subdir, fq_subdir_name);
+   return subdir;
+}
+
+#endif
+
+
 // TODO: recode to use API
 static bool is_edp_device(int busno) {
-   bool debug = false;
+   bool debug = true;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
 
@@ -384,6 +422,65 @@ static bool is_edp_device(int busno) {
       g_ptr_array_free(lines, true);
    }
 
+
+#ifdef NOT_WORKING
+   char final_subdir[20];
+   sprintf(final_subdir, "i2c-%d", busno);
+
+   char d0_name[] = "/sys/class/drm";
+   char d1_name[PATH_MAX];
+   char d2_name[PATH_MAX];
+   char d3_name[PATH_MAX];
+
+
+   bool result2 = false;
+   DIR* dir = opendir(d0_name);
+   if (dir) {
+      struct dirent * entry;
+
+
+      while ((entry = readdir(dir)) != NULL) {
+         DIR * dir = open_subdir(d0_name, entry, "card", false, d1_name);
+         if (dir) {
+            struct dirent * entry;
+            while ((entry = readdir(dir)) != NULL) {
+               DIR * dir = open_subdir(d1_name, entry, "card", false, d2_name);
+               if (dir) {
+                  struct dirent * entry;
+                  while ((entry = readdir(dir)) != NULL) {
+                     DIR * dir = open_subdir(d2_name, entry,final_subdir, true, d3_name);
+                     if (dir) {
+                        struct dirent * entry;
+                        while ((entry = readdir(dir)) != NULL) {
+                           DBGMSF(debug, "Examining entry %s", entry->d_name);
+                           if (strstr(entry->d_name, "-eDP-")) {
+                              result2 = true;
+                              DBGMSF(debug, "Matched");
+                              break;
+                           }
+                        }
+                        closedir(dir);
+                        if (result)
+                           break;
+                     }
+                  }
+                  closedir(dir);
+                  if (result)
+                     break;
+               }
+            }
+            closedir(dir);
+            if (result)
+               break;
+         }
+      }
+      closedir(dir);
+   }
+
+
+
+   DBGMSF(debug, "result2=%s", sbool(result2));
+#endif
    DBGTRC(debug, TRACE_GROUP, "busno=%d, returning: %s", busno, sbool(result));
    return result;
 }
