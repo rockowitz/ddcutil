@@ -362,7 +362,9 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
-// TODO: recode to use API
+// Attempting to recode using opendir() and readdir() produced
+// a complicated mess.  Using execute_shell_cmd_collect() is simple.
+// Simplicity has its virtues.
 static bool is_edp_device(int busno) {
    bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
