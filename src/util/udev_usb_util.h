@@ -61,7 +61,7 @@ typedef struct {
 
 void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum);
 void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth);
-Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname);
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname, bool verbose);
 
 /** USB bus number/device number pair */
 typedef struct udev_usb_devinfo {

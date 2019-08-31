@@ -70,6 +70,11 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    rpt_str("devnum_s",  NULL, devsum->devnum_s, d1);
 }
 
+static __inline__
+char * safe_strdup(const char * s) {
+   return (s) ? strdup(s) : NULL;
+}
+
 
 /** Look up information for a device name.
  * The expected use in in error messages.
@@ -78,10 +83,11 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
  * @return pointer to newly allocated **Usb_Detailed_Device_Summary** struct,
  *         NULL if not found
  */
-Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) {
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname, bool verbose) {
+   assert(devname);
    // printf("(%s) Starting. devname=%s\n", __func__, devname);
    int depth = 0;
-   // int d1 = depth+1;
+   int d1 = depth+1;
    struct udev * udev;
    struct udev_enumerate *enumerate;
    struct udev_list_entry *devices, *dev_list_entry;
@@ -91,7 +97,8 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
    /* Create the udev object */
    udev = udev_new();
    if (!udev) {
-      printf("(%s) Can't create udev\n", __func__);
+      if (verbose)
+         printf("(%s) Can't create udev\n", __func__);
       return NULL;   // exit(1);
    }
 
@@ -134,13 +141,16 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
              "usb",
              "usb_device");
       if (!dev) {
-         rpt_vstring(depth, "Unable to find parent USB device.");
+         if (verbose)
+            rpt_vstring(depth, "Unable to find parent USB device.");
          udev_device_unref(dev0);
          continue;   // exit(1);   // TODO: fix
       }
 
-      // puts("");
-      // rpt_vstring(depth, "Parent device:");
+      if (verbose) {
+         puts("");
+         rpt_vstring(depth, "Parent device:");
+      }
 
       /* From here, we can call get_sysattr_value() for each file
          in the device's /sys entry. The strings passed into these
@@ -150,13 +160,16 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname) 
          encoded, but the strings returned from
          udev_device_get_sysattr_value() are UTF-8 encoded. */
 
-      devsum->vendor_id    = strdup( udev_device_get_sysattr_value(dev,"idVendor") );
-      devsum->product_id   = strdup( udev_device_get_sysattr_value(dev,"idProduct") );
-      devsum->vendor_name  = strdup( udev_device_get_sysattr_value(dev,"manufacturer") );
-      devsum->product_name = strdup( udev_device_get_sysattr_value(dev,"product") );
-      devsum->busnum_s     = strdup( udev_device_get_sysattr_value(dev,"busnum") );
-      devsum->devnum_s     = strdup( udev_device_get_sysattr_value(dev,"devnum") );
-      // report_udev_device(dev, d1);
+      if (verbose)
+         report_udev_device(dev, d1);
+
+      devsum->vendor_id    = safe_strdup( udev_device_get_sysattr_value(dev,"idVendor") );
+      devsum->product_id   = safe_strdup( udev_device_get_sysattr_value(dev,"idProduct") );
+      devsum->vendor_name  = safe_strdup( udev_device_get_sysattr_value(dev,"manufacturer") );  // have seen null
+      devsum->product_name = safe_strdup( udev_device_get_sysattr_value(dev,"product") );
+      devsum->busnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"busnum") );
+      devsum->devnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"devnum") );
+
 
       // udev_device_unref(dev);
       udev_device_unref(dev0);   // freeing dev0 also frees dev
