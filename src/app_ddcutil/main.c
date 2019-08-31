@@ -86,6 +86,10 @@
 #endif
 
 
+// Default race class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
+
+
 //
 // Initialization and Statistics
 //
@@ -500,6 +504,7 @@ int main(int argc, char *argv[]) {
    ddc_set_async_threshold(threshold);
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
+   DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
       vcp_list_feature_codes(stdout);
@@ -553,8 +558,10 @@ int main(int argc, char *argv[]) {
    // start of commands that actually access monitors
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
+      DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
       ddc_ensure_displays_detected();
       ddc_report_displays(/*include_invalid_displays=*/ true, 0);
+      DBGTRC(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
 
@@ -607,8 +614,10 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
+      DBGTRC(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
+      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
 
       f0printf(fout, "The following tests probe the runtime environment using multiple overlapping methods.\n");
       query_sysenv();
@@ -617,8 +626,10 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
+      DBGTRC(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
       ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
+      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
       f0printf(fout, "The following tests probe for USB connected monitors.\n");
       // DBGMSG("Exploring USB runtime environment...\n");
       query_usbenv();
@@ -632,6 +643,7 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
 #ifdef USE_USB
       // DBGMSG("Processing command chkusbmon...\n");
+      DBGTRC(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
@@ -641,6 +653,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
+      DBGTRC(main_debug, TRACE_GROUP, "Processing command INTERROGATE...");
       dup2(1,2);   // redirect stderr to stdout
       // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
       f0printf(fout, "Setting output level verbose...\n");
@@ -655,6 +668,7 @@ int main(int argc, char *argv[]) {
       ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
 
       ddc_ensure_displays_detected();    // *** ???
+      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
 
       query_sysenv();
 #ifdef USE_USB
@@ -702,6 +716,7 @@ int main(int argc, char *argv[]) {
 
    // *** Commands that require Display Identifier ***
    else {
+      DBGTRC(main_debug, TRACE_GROUP, "display identifier supplied");
       if (!parsed_cmd->pdid)
          parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
       // assert(parsed_cmd->pdid);
@@ -742,7 +757,9 @@ int main(int argc, char *argv[]) {
          }
       }
       else {
+         DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
+         DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
          dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, callopts);
       }
 
@@ -906,6 +923,6 @@ int main(int argc, char *argv[]) {
    free_parsed_cmd(parsed_cmd);
 
 bye:
-   DBGMSF(main_debug, "Done.  main_rc=%d", main_rc);
+   DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
    return main_rc;
 }
