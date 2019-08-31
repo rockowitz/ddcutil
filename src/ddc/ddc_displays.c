@@ -116,7 +116,9 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       DBGTRC(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
-                                 psc_desc(psc), pvalrec);
+                             //    psc_desc(psc),
+                                 errinfo_summary(ddc_excp),
+                                 pvalrec);
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       if (ddc_excp)
@@ -136,6 +138,20 @@ bool initial_checks_by_dh(Display_Handle * dh) {
 
          // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
          // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
+
+#ifdef FORCE_SUCCESS
+         // for testing:
+         if (psc == DDCRC_RETRIES) {
+            DBGTRC(debug, TRACE_GROUP, "Forcing DDC communication success");
+            psc = 0;
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+            dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+            dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
+            goto bye;
+         }
+#endif
+
 
          if ( psc == DDCRC_NULL_RESPONSE        ||
               psc == DDCRC_ALL_RESPONSES_NULL   ||
@@ -190,6 +206,11 @@ bool initial_checks_by_dh(Display_Handle * dh) {
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
    }
+
+#ifdef FORCE_SUCCESS
+bye:
+   ;   // o.w. error that a label can only be part of a statement
+#endif
    bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
 
    // Would prefer to defer checking version until actually needed to avoid
