@@ -158,7 +158,7 @@ static void probe_hiddev(int depth) {
       int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
       if (fd < 0) {      // fd is -errno
           rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
-          Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn);
+          Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn, true);
           if (devsum) {
              // report_usb_detailed_device_summary(devsum, 2);
              rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
