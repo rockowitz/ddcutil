@@ -306,7 +306,7 @@ GPtrArray * get_usb_monitor_list() {
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
       if (fd < 0 && ol >= DDCA_OL_VERBOSE) {
-         Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(hiddev_fn);
+         Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(hiddev_fn, false);
          if (devsum) {
             // report_usb_detailed_device_summary(devsum, 2);
             f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
