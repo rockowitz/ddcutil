@@ -364,7 +364,7 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 
 // TODO: recode to use API
 static bool is_edp_device(int busno) {
-   bool debug = true;
+   bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
 
