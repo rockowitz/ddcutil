@@ -524,7 +524,7 @@ void report_property_value(
    int d1 = depth+1;
    rpt_vstring(depth, "Property id:   %d", prop_ptr->prop_id);
    rpt_vstring(d1, "Name:          %s", prop_ptr->name);
-   rpt_vstring(d1, "Flags:         0x%04x - %s", prop_ptr->flags,
+   rpt_vstring(d1, "Flags:         0x%04x - %s", (unsigned int) prop_ptr->flags,
                                                  interpret_property_flags(prop_ptr->flags) );
    rpt_vstring(d1, "prop_value:    %"PRIu64"  0x%08x", prop_value, prop_value);
 
@@ -550,7 +550,7 @@ void report_property_value(
 
    else if (prop_ptr->flags & DRM_MODE_PROP_RANGE) {
       if (prop_ptr->count_values != 2) {
-         rpt_vstring(d1, "Property value = %d, Missing min or max value", prop_value);
+         rpt_vstring(d1, "Property value = %"PRIu64", Missing min or max value", prop_value);
       }
       else {
          rpt_vstring(d1, "Property value(range) = %" PRIu64 ", min=%" PRIu64 ", max=%" PRIu64,
@@ -571,18 +571,18 @@ void report_property_value(
    }
 
    else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_OBJECT)) {
-      rpt_vstring(d1, "Object type, name = %s, value=%d",
+      rpt_vstring(d1, "Object type, name = %s, value=%"PRIu64,
                       prop_ptr->name, prop_value);
    }
 
    else if (drm_property_type_is(prop_ptr, DRM_MODE_PROP_SIGNED_RANGE)) {
          if (prop_ptr->count_values != 2) {
-            rpt_vstring(d1, "Signed property value = %d, Missing min or max value", prop_value);
+            rpt_vstring(d1, "Signed property value = %"PRIu64", Missing min or max value", prop_value);
          }
         else {
-           rpt_vstring(d1, "Property value(range) = %" PRId64 ", min=%" PRId64 ", max=%" PRId64,
-                           (int64_t) prop_value,
-                           (int64_t) prop_ptr->values[0], (int64_t) prop_ptr->values[1]);
+           rpt_vstring(d1, "Property value(range) = %" PRIu64 ", min=%" PRIu64 ", max=%" PRIu64,
+                           prop_value,
+                           prop_ptr->values[0], prop_ptr->values[1]);
         }
    }
 
