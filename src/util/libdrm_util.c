@@ -463,7 +463,7 @@ void report_drmModeConnector( int fd, drmModeConnector * p, int depth) {
           drmModeFreeProperty(prop_ptr);
        }
        else {
-          rpt_vstring(d2, "Unrecognized property id: %d, value=%u", p->props[ndx], p->prop_values[ndx]);
+          rpt_vstring(d2, "Unrecognized property id: %d, value=%"PRIu64, p->props[ndx], p->prop_values[ndx]);
        }
    }
 
