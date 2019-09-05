@@ -526,7 +526,7 @@ void report_property_value(
    rpt_vstring(d1, "Name:          %s", prop_ptr->name);
    rpt_vstring(d1, "Flags:         0x%04x - %s", (unsigned int) prop_ptr->flags,
                                                  interpret_property_flags(prop_ptr->flags) );
-   rpt_vstring(d1, "prop_value:    %"PRIu64"  0x%08x", prop_value, prop_value);
+   rpt_vstring(d1, "prop_value:    %"PRIu64"  0x%08x", prop_value, (unsigned int) prop_value);
 
    if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
       for (int i = 0; i < prop_ptr->count_enums; i++) {
@@ -545,7 +545,7 @@ void report_property_value(
               not_truncated = sbuf_append(buf, bufsz, ", ", prop_ptr->enums[i].name);
            }
         }
-      rpt_vstring(d1, "Property value(bitmask) = 0x%04x - %s", prop_value, buf);
+      rpt_vstring(d1, "Property value(bitmask) = 0x%04x - %s", (unsigned int) prop_value, buf);
    }
 
    else if (prop_ptr->flags & DRM_MODE_PROP_RANGE) {
