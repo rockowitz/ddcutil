@@ -360,7 +360,7 @@ static  Multi_Level_Map * load_multi_level_segment(
       }
    }
 
-   *curpos = (int*) linendx;
+   *curpos = (int) linendx;
    return header;
 }
 
