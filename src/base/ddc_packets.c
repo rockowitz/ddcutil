@@ -735,7 +735,7 @@ typedef
  * \param  aux_data            pointer to #Parsed_Nontable_Vcp_Response struct to be filled in
  *
  * \retval 0    success
- * \retval DDCRC_INVALID_DATA
+ * \retval DDCRC_DDC_DATA
  *
  * \remark
  * It is not an error if the supported_opcode byte is set false in an
