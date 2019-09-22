@@ -819,7 +819,8 @@ interpret_vcp_feature_response_std(
          aux_data->sl = vcpresp->sl;
       }
    }
-
+   
+   // result = DDCRC_DDC_DATA; // force error for testing
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(result));
    return result;
 }
