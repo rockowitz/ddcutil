@@ -411,18 +411,7 @@ app_set_vcp_value(
 bye:
    dfm_free(dfm);  // handles dfm == NULL
 
-#ifdef FUTURE
-   DBGMSG("New way to report errors");
-   if (ddc_excp) {
-      f0printf(ferr, "%s\n", ddc_excp->detail);
-      if (ddc_excp->cause_ct > 0 && ddc_excp->causes[0]->status_code == DDCRC_RETRIES) {
-         f0printf(ferr, "    Try errors: %s\n", errinfo_causes_string(ddc_excp->causes[0]));
-      }
-   }
-#endif
-
-   ddcrc = ERRINFO_STATUS(ddc_excp);
-   DBGMSF(debug, "Returning: %s", psc_desc(ddcrc));
+   DBGMSF(debug, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
