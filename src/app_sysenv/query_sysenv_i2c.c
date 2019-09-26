@@ -141,13 +141,8 @@ try_single_getvcp_call(
       goto bye;
    }
 
-   // printf("(%s) read() returned %s\n", __func__, hexstring(ddc_response_bytes+1, readct) );
-   if (debug) {
-      char * hs = hexstring(ddc_response_bytes+1, readct);
-      DBGMSF(debug, "read() returned %s", hs );
-      free(hs);
-      // hex_dump(ddc_response_bytes,1+rc);
-   }
+   DBGMSF(debug, "read() returned %s", hexstring_t(ddc_response_bytes+1, readct) );
+   // hex_dump(ddc_response_bytes,1+rc);
 
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF0(debug, "All bytes zero");
