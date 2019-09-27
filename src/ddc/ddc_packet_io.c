@@ -694,6 +694,7 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   ddcrc_null_response_max = 5;  // *** TEMP ***
    Error_Info * try_errors[MAX_MAX_TRIES];
 
    assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
