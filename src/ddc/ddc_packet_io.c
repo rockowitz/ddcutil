@@ -694,7 +694,7 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   ddcrc_null_response_max = 5;  // *** TEMP ***
+   ddcrc_null_response_max = 6;  // *** TEMP ***
    Error_Info * try_errors[MAX_MAX_TRIES];
 
    assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
@@ -738,7 +738,9 @@ ddc_write_read_with_retry(
                if (retryable) {
                   if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                      f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                  set_sleep_multiplier(ddcrc_null_response_ct+1);
                   call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
+
                }
             }
             // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
@@ -786,6 +788,8 @@ ddc_write_read_with_retry(
          DBGMSG("try_errors[%d] = %p", ndx, try_errors[ndx]);
       }
    }
+
+   set_sleep_multiplier(1);   // in case we changed it
 
    Error_Info * ddc_excp = NULL;
 
