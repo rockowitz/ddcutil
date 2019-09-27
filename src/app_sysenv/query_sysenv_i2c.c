@@ -145,7 +145,7 @@ try_single_getvcp_call(
    // hex_dump(ddc_response_bytes,1+rc);
 
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
-      DBGMSF0(debug, "All bytes zero");
+      DBGMSF(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
       goto bye;
    }
@@ -156,7 +156,7 @@ try_single_getvcp_call(
        ddc_data_length == 0          &&
        ddc_response_bytes[3] == 0xbe)     // 0xbe == checksum
    {
-      DBGMSF0(debug, "Received DDC null response");
+      DBGMSF(debug, "Received DDC null response");
       rc = DDCRC_NULL_RESPONSE;
       goto bye;
    }
