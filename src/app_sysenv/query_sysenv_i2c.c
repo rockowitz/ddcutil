@@ -3,7 +3,7 @@
  * Check I2C devices using directly coded I2C calls
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -228,7 +228,7 @@ bye:
  */
 void raw_scan_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    int depth = 0;
    int d1 = depth+1;
@@ -347,7 +347,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
    buffer_free(buf0, __func__);
 
-   DBGMSF0(debug, "Done" );
+   DBGMSF(debug, "Done" );
 }
 
 
