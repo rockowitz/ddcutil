@@ -567,6 +567,14 @@ char * sleep_strategy_desc(int sleep_strategy) {
    return result;
 }
 
+static int sleep_multiplier = 1;
+
+void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ int multiplier) {
+   assert(multiplier > 0 && multiplier < 100);
+   sleep_multiplier = multiplier;
+   DBGMSG("Setting sleep_multiplier = %d", sleep_multiplier);
+}
+
 
 /** Sleep for a period based on a failure event type and the number
  *  of consecutive failures.
@@ -735,6 +743,13 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    //   adjust by time since last i2c event
    // Is tracing useful, given that we know the event type?
    // void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
+
+   // crude, should be sensitive to event type
+   sleep_time_millis = sleep_multiplier * sleep_time_millis;
+   if (sleep_multiplier > 1) {
+      DBGMSG("Sleep event type: %s, sleep_multiplier = %d, sleep_time_millis = %d",
+             sleep_event_name(event_type), sleep_multiplier, sleep_time_millis);
+   }
 
    // For better performance, separate mutex for each index in array
    g_mutex_lock(&sleep_stats_mutex);

@@ -102,6 +102,7 @@ bool   set_sleep_strategy(int strategy);
 int    get_sleep_strategy();
 char * sleep_strategy_desc(int sleep_strategy);
 
+
 /** Sleep event type */
 typedef enum {
    SE_WRITE_TO_READ,         ///< between I2C write and read
@@ -113,7 +114,7 @@ typedef enum {
 } Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);
 
-
+void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ int multiplier);
 
 // Functions for sleeping.  The actual sleep time is determined
 // by the strategy in place given the situation in which sleep is invoked.
