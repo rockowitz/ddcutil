@@ -567,12 +567,12 @@ char * sleep_strategy_desc(int sleep_strategy) {
    return result;
 }
 
-static int sleep_multiplier = 1;
+static double sleep_multiplier = 1.0;
 
-void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ int multiplier) {
+void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ double multiplier) {
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier = multiplier;
-   DBGMSG("Setting sleep_multiplier = %d", sleep_multiplier);
+   DBGMSG("Setting sleep_multiplier = %6.1f", sleep_multiplier);
 }
 
 
@@ -746,8 +746,8 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
 
    // crude, should be sensitive to event type
    sleep_time_millis = sleep_multiplier * sleep_time_millis;
-   if (sleep_multiplier > 1) {
-      DBGMSG("Sleep event type: %s, sleep_multiplier = %d, sleep_time_millis = %d",
+   if (sleep_multiplier != 1.0 || debug) {
+      DBGMSG("Sleep event type: %s, sleep_multiplier = %9.1f, sleep_time_millis = %d",
              sleep_event_name(event_type), sleep_multiplier, sleep_time_millis);
    }
 

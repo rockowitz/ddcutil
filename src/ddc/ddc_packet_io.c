@@ -789,7 +789,7 @@ ddc_write_read_with_retry(
       }
    }
 
-   set_sleep_multiplier(1);   // in case we changed it
+   set_sleep_multiplier(1.0);   // in case we changed it
 
    Error_Info * ddc_excp = NULL;
 
