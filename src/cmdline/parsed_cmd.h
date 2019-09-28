@@ -76,6 +76,7 @@ struct {
    DDCA_Output_Level   output_level;
    int                 max_tries[3];
    int                 sleep_strategy;
+   float               sleep_multiplier;
    uint32_t            flags;      // Parsed_Cmd_Flags
 
    // which?

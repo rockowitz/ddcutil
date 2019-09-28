@@ -127,6 +127,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    free(interpreted_flags);
 #endif
 
+   rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
 }
 
 
