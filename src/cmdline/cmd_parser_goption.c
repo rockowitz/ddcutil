@@ -267,11 +267,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
 
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
-//    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
-      {"sleep-strategy",
-                      'y', 0,  G_OPTION_ARG_INT,      &i1_work, "Set sleep strategy", "strategy number" },
-      {"failsim", '\0', 0,
-                           G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
+//    {"myhelp",  '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
+      {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work, "special", "non-negative number" },
+      {"failsim", '\0', 0,  G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
       // other
       {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
