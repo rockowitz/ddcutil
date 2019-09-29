@@ -46,6 +46,7 @@ linux_errno.c             \
 monitor_model_key.c       \
 rtti.c                    \
 sleep.c                   \
+tuned_sleep.c             \
 status_code_mgt.c         \
 vcp_version.c
 

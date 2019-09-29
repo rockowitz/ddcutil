@@ -33,6 +33,7 @@
 #include "base/execution_stats.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
+#include "base/tuned_sleep.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"

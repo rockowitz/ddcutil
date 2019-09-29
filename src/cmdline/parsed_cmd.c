@@ -50,7 +50,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    // n. all flags are false, byte values 0, integers 0, pointers NULL because of calloc
    // parsed_cmd->output_level = OL_DEFAULT;
    parsed_cmd->output_level = DDCA_OL_NORMAL;
-   parsed_cmd->sleep_strategy = -1;    // use default
+   parsed_cmd->i1 = -1;    // if set, values should be >= 0
    // parsed_cmd->nodetect = true;
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
    return parsed_cmd;
@@ -104,7 +104,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    char buf[20];
    snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
    rpt_str("max_retries",        NULL, buf,                                                   d1);
-   rpt_int("sleep_stragegy",     NULL, parsed_cmd->sleep_strategy,                            d1);
+
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
    rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
    rpt_bool("nodetect",          NULL, parsed_cmd->flags & CMD_FLAG_NODETECT,                 d1);
@@ -128,6 +128,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
 
    rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
+   rpt_int("i1",                 NULL, parsed_cmd->i1,                            d1);
 }
 
 

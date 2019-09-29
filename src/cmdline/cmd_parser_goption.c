@@ -190,7 +190,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gint     hidwork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
-   gint     sleep_strategy_work = -1;
+   gint     i1_work = -1;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
@@ -269,7 +269,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp", '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
       {"sleep-strategy",
-                  'y', 0,  G_OPTION_ARG_INT,      &sleep_strategy_work, "Set sleep strategy", "strategy number" },
+                      'y', 0,  G_OPTION_ARG_INT,      &i1_work, "Set sleep strategy", "strategy number" },
       {"failsim", '\0', 0,
                            G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
@@ -362,7 +362,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
-   parsed_cmd->sleep_strategy   = sleep_strategy_work;
+   parsed_cmd->i1               = i1_work;
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);

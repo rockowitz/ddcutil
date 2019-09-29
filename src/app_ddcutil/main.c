@@ -40,6 +40,7 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
+#include "base/tuned_sleep.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
@@ -488,8 +489,8 @@ int main(int argc, char *argv[]) {
 #endif
    }
 
-   if (parsed_cmd->sleep_strategy >= 0)
-      set_sleep_strategy(parsed_cmd->sleep_strategy);
+   if (parsed_cmd->i1 >= 0)
+      set_sleep_strategy(parsed_cmd->i1);
 
 #ifdef USE_USB
    // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {
