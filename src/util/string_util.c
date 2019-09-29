@@ -1,29 +1,10 @@
-/* string_util.c
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
 /** @file string_util.c
  *  String utility functions
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 // for strcasestr()
@@ -820,7 +801,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
 
 
 //
-// Integer conversion
+// Numeric conversion
 //
 
 /** Converts a decimal or hexadecimal string to an integer value.
@@ -864,6 +845,45 @@ bool str_to_int(const char * sval, int * p_ival, int base)
    if (debug) {
       if (ok)
         printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
+      else
+        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
+   }
+   return ok;
+}
+
+
+/** Converts a string to a float value.
+ *
+ * @param sval   string representing an integer
+ * @param p_fval address at which to store float value
+ * @return true if conversion succeeded, false if it failed
+ *
+ * @remark
+ * \remark
+ * If conversion fails, the value pointed to by **p_fval** is unchanged.
+ * @remark
+ * This function wraps system function strtof(), hiding the ugly details.
+ */
+bool str_to_float(const char * sval, float * p_fval)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) sval->|%s|\n", __func__, sval);
+
+   bool ok = false;
+   if ( *sval != '\0') {
+      char * tailptr;
+      float result = strtof(sval, &tailptr);
+
+      if (*tailptr == '\0') {
+         *p_fval = result;
+         ok = true;
+      }
+   }
+
+   if (debug) {
+      if (ok)
+        printf("(%s) sval=%s, Returning: %s, *p_fval = %16.7f\n", __func__, sval, bool_repr(ok), *p_fval);
       else
         printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
    }
