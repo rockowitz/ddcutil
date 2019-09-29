@@ -67,11 +67,36 @@ char * sleep_strategy_desc(int sleep_strategy) {
 #endif
 
 
+typedef struct {
+   int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
+} Thread_Sleep_Settings;
+
+static Thread_Sleep_Settings *  get_thread_sleep_settings() {
+   static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
+
+   Thread_Sleep_Settings *settings = g_private_get(&per_thread_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
+
+   if (!settings) {
+      settings = g_new0(Thread_Sleep_Settings, 1);
+      settings->sleep_multiplier_ct = 1;
+      g_private_set(&per_thread_key, settings);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, settings);
+   return settings;
+}
+
+
+
 static double sleep_multiplier_factor = 1.0;
-static int    sleep_multiplier_ct = 1;
+// static int    sleep_multiplier_ct = 1;
 
 int get_sleep_multiplier_ct() {
-   return sleep_multiplier_ct;
+   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
+   return settings->sleep_multiplier_ct;
 }
 
 double get_sleep_multiplier_factor() {
@@ -81,8 +106,9 @@ double get_sleep_multiplier_factor() {
 
 void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
-   sleep_multiplier_ct = multiplier_ct;
-   DBGMSG("Setting sleep_multiplier_ct = %d", sleep_multiplier_ct);
+   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
+   settings->sleep_multiplier_ct = multiplier_ct;
+   DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
 void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double multiplier) {
@@ -264,6 +290,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    // void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
 
    // crude, should be sensitive to event type
+   int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread
    sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
    if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
       DBGMSG("Sleep event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
