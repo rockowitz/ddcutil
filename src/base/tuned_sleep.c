@@ -14,10 +14,12 @@
 // TODO: create table of sleep strategy number, description
 
 
-static int sleep_strategy = 0;
+
 
 static bool                 debug_sleep_stats_mutex = false;
 
+#ifdef SLEEP_STRATEGY
+static int sleep_strategy = 0;
 
 /** Rudimentary mechanism for changing the sleep strategy.
  */
@@ -62,7 +64,7 @@ char * sleep_strategy_desc(int sleep_strategy) {
    }
    return result;
 }
-
+#endif
 
 
 static double sleep_multiplier_factor = 1.0;
@@ -187,6 +189,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+#ifdef SLEEP_STRATEGY
             switch(sleep_strategy) {
             case (1):
                sleep_time_millis = sleep_time_millis/2;
@@ -197,9 +200,11 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
             default:
                break;
             }
+#endif
             break;
       case (SE_POST_WRITE):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+#ifdef SLEEP_STRATEGY
             switch(sleep_strategy) {
             case (1):
                sleep_time_millis = sleep_time_millis/2;
@@ -210,6 +215,7 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
             default:
                break;
             }
+#endif
             break;
       case (SE_POST_OPEN):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;

@@ -15,11 +15,13 @@
 #include "base/execution_stats.h"
 
 
+#ifdef SLEEP_STRATEGY
 // Sleep Strategy
 
 bool   set_sleep_strategy(int strategy);
 int    get_sleep_strategy();
 char * sleep_strategy_desc(int sleep_strategy);
+#endif
 
 
 void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier);
