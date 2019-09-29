@@ -687,6 +687,9 @@ ddc_write_read_with_retry(
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
+   if (debug)
+      dbgrpt_display_ref(dh->dref, 1);
+
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
 
    DDCA_Status  psc;
@@ -695,7 +698,9 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   ddcrc_null_response_max = 6;  // *** TEMP ***
+   // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
+   DBGMSF(debug, "retry_null_response = %s, ddcrc_null_response_max = %d",
+          sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES];
 
    assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
@@ -788,7 +793,7 @@ ddc_write_read_with_retry(
          tryctr, psc, bool_repr(retryable));
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {
-         DBGMSG("try_errors[%d] = %p", ndx, try_errors[ndx]);
+         DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
       }
    }
 
@@ -821,7 +826,7 @@ ddc_write_read_with_retry(
 
    try_data_record_tries(write_read_stats_rec, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 

@@ -108,13 +108,13 @@ void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
    settings->sleep_multiplier_ct = multiplier_ct;
-   DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
+   // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
 void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double multiplier) {
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier_factor = multiplier;
-   DBGMSG("Setting sleep_multiplier_factor = %6.1f", sleep_multiplier_factor);
+   // DBGMSG("Setting sleep_multiplier_factor = %6.1f", sleep_multiplier_factor);
 }
 
 
@@ -292,7 +292,8 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    // crude, should be sensitive to event type
    int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread
    sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
-   if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
+   if (debug) {
+   // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
       DBGMSG("Sleep event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
              sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_time_millis);
    }

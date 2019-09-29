@@ -206,6 +206,7 @@ typedef struct _display_ref {
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
+void          dbgrpt_dref_flags(Dref_Flags flags, int depth);
 void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call

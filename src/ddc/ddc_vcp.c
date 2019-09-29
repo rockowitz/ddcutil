@@ -485,7 +485,7 @@ ddc_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
+   DBGTRC(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
 
    Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
@@ -521,8 +521,9 @@ ddc_get_nontable_vcp_value(
         );
    assert( (!excp && response_packet_ptr) || (excp && !response_packet_ptr));
    if (debug || IS_TRACING() ) {
+      psc = ERRINFO_STATUS(excp);
       if (psc != 0)
-         DBGMSG("perform_ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
+         DBGMSG("ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
                 psc_desc(psc), response_packet_ptr);
    }
    // psc = (excp) ? excp->psc : 0;
@@ -543,11 +544,11 @@ ddc_get_nontable_vcp_value(
 
          if (!parsed_response->valid_response)  {
             psc = DDCRC_DDC_DATA;             // was DDCRC_INVALID_DATA
-            excp = errinfo_new(psc, __func__);
+            excp = errinfo_new(DDCRC_DDC_DATA, __func__);
          }
          else if (!parsed_response->supported_opcode) {
             psc = DDCRC_REPORTED_UNSUPPORTED;
-            excp = errinfo_new(psc, __func__);
+            excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__);
          }
 
          if (psc != 0) {
@@ -565,11 +566,14 @@ ddc_get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
+   // DBGMSG("excp = %s", errinfo_summary(excp));
+   // DBGMSG("parsed_response = %p", parsed_response);
+
    assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
    if (debug || IS_TRACING() ) {
       if (excp) {
-         DBGMSG("Error reading feature x%02x.  Returning exception: ", feature_code);
-         errinfo_report(excp, 1);
+         DBGMSG("Error reading feature x%02x.  Returning exception: %s", feature_code, errinfo_summary(excp));
+         // errinfo_report(excp, 1);
          DBGMSG("Done");
       }
       else {

@@ -760,6 +760,32 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
+void dbgrpt_dref_flags(Dref_Flags flags, int depth) {
+
+#define RPT_DREF_FLAG(FLAG_NAME) \
+   rpt_vstring(d1, "%s: %s", #FLAG_NAME, sbool(flags&FLAG_NAME) )
+
+   int d0 = depth;
+   int d1 = d0+1;
+   // DBGMSG("d1 = %d", d1);
+   rpt_vstring(d0, "flags:        0x%02x", flags);
+   RPT_DREF_FLAG(DREF_DDC_COMMUNICATION_CHECKED                 );
+   RPT_DREF_FLAG(DREF_DDC_COMMUNICATION_WORKING                 );
+   RPT_DREF_FLAG(DREF_DDC_NULL_RESPONSE_CHECKED                 );
+   RPT_DREF_FLAG(DREF_DDC_IS_MONITOR_CHECKED                    );
+   RPT_DREF_FLAG(DREF_DDC_IS_MONITOR                            );
+   RPT_DREF_FLAG(DREF_TRANSIENT                                 );
+   RPT_DREF_FLAG(DREF_DYNAMIC_FEATURES_CHECKED                  );
+   RPT_DREF_FLAG(DREF_OPEN                                      );
+   RPT_DREF_FLAG(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    );
+   RPT_DREF_FLAG(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED );
+   RPT_DREF_FLAG(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         );
+   RPT_DREF_FLAG(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         );
+
+#undef RPT_DREF_FLAG
+}
+
+
 /** Reports the contents of a #Display_Ref in a format appropriate for debugging.
  *
  *  \param  dref  pointer to #Display_Ref instance
@@ -806,6 +832,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
    rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
+#ifdef OLD
    rpt_vstring(d1, "flags:        0x%02x", dref->flags);
    rpt_vstring(d2, "DDC communication checked:                  %s", sbool(dref->flags & DREF_DDC_COMMUNICATION_CHECKED) );
    if (dref->flags & DREF_DDC_COMMUNICATION_CHECKED)
@@ -816,6 +843,8 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
    rpt_vstring(d2, "DDC does not indicate unsupported:          %s", sbool(dref->flags & DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED));
    rpt_vstring(d2, "Display Ref is open:                        %s", sbool(dref->flags & DREF_OPEN));
+#endif
+   dbgrpt_dref_flags(dref->flags, d1);
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
 
