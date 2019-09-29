@@ -193,6 +193,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gint     sleep_strategy_work = -1;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
+   char *   sleep_multiplier_work = NULL;
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
@@ -250,6 +251,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
+      {"sleep-multiplier", '\0', 0,
+                           G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
+
+
 
       // debugging
       {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
@@ -343,6 +348,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    if (rwo_flag_ct > 1) {
       fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive\n");
       ok = false;
+   }
+
+   if (sleep_multiplier_work) {
    }
 
 
@@ -563,6 +571,24 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          // which?
          parsed_cmd->mccs_vspec = vspec;
          parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
+      }
+   }
+
+   if (sleep_multiplier_work) {
+      DBGMSF(debug, "sleep_multiplier_work = |%s|", sleep_multiplier_work);
+      float multiplier = 0.0f;
+      bool arg_ok = str_to_float(sleep_multiplier_work, &multiplier);
+      if (arg_ok) {
+         if (multiplier <= 0.0f)
+            arg_ok = false;
+      }
+
+      if (!arg_ok) {
+          fprintf(stderr, "Invalid sleep-multiplier: %s\n", sleep_multiplier_work );
+          ok = false;
+      }
+      else {
+         parsed_cmd->sleep_multiplier = multiplier;
       }
    }
 
