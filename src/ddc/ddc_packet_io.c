@@ -740,7 +740,9 @@ ddc_write_read_with_retry(
                   if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                      f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
                   set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
+#ifdef DYNAMIC_TUNED_SLEEP
                   call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
+#endif
 
                }
             }

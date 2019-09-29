@@ -92,6 +92,7 @@ void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double mul
 }
 
 
+#ifdef DYNAMIC_TUNED_SLEEP
 
 /** Sleep for a period based on a failure event type and the number
  *  of consecutive failures.
@@ -156,7 +157,7 @@ call_dynamic_tuned_sleep_i2c(
 {
    call_dynamic_tuned_sleep(DDCA_IO_I2C, event_type, occno);
 }
-
+#endif
 
 /** Sleep for a period required by the DDC protocol.
  *

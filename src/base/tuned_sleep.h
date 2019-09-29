@@ -40,8 +40,11 @@ void call_tuned_sleep_adl(Sleep_Event_Type event_type);   // DDC_IO_ADL
 void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
 // The workhorse:
 void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type);
+
+#ifdef DYNAMIC_TUNED_SLEEP
 void call_dynamic_tuned_sleep( DDCA_IO_Mode io_mode,Sleep_Event_Type event_type, int occno);
 void call_dynamic_tuned_sleep_i2c(Sleep_Event_Type event_type, int occno);
+#endif
 
 
 #endif /* TUNED_SLEEP_H_ */
