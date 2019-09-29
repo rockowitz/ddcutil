@@ -503,6 +503,10 @@ int main(int argc, char *argv[]) {
       threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
    ddc_set_async_threshold(threshold);
 
+   if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
+      set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
+   }
+
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
