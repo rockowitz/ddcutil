@@ -814,7 +814,7 @@ void call_tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
  *
  * @param depth logical indentation depth
  */
-void report_sleep_strategy_stats(int depth) {
+void report_base_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Sleep Strategy Stats:", depth);
    rpt_vstring(d1, "Total IO events:      %5d", total_io_event_count());

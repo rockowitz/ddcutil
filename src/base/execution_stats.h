@@ -133,6 +133,6 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type);
 void call_dynamic_tuned_sleep( DDCA_IO_Mode io_mode,Sleep_Event_Type event_type, int occno);
 void call_dynamic_tuned_sleep_i2c(Sleep_Event_Type event_type, int occno);
 
-void report_sleep_strategy_stats(int depth);
+void report_base_stats(int depth);
 
 #endif /* EXECUTION_STATS_H_ */

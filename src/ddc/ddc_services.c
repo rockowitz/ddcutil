@@ -82,7 +82,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
    }
    if (stats & DDCA_STATS_CALLS) {
       rpt_nl();
-      report_sleep_strategy_stats(depth);
+      report_base_stats(depth);
       rpt_nl();
       report_io_call_stats(depth);
       rpt_nl();
