@@ -114,7 +114,12 @@ typedef enum {
 } Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);
 
-void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ double multiplier);
+void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier);
+int    get_sleep_multiplier_ct();
+
+void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double multiplier);
+double get_sleep_multiplier_factor();
+
 
 // Functions for sleeping.  The actual sleep time is determined
 // by the strategy in place given the situation in which sleep is invoked.

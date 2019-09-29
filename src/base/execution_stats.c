@@ -567,12 +567,28 @@ char * sleep_strategy_desc(int sleep_strategy) {
    return result;
 }
 
-static double sleep_multiplier = 1.0;
+static double sleep_multiplier_factor = 1.0;
+static int    sleep_multiplier_ct = 1;
 
-void   set_sleep_multiplier(/* Sleep_Event_Type event_types,*/ double multiplier) {
+int get_sleep_multiplier_ct() {
+   return sleep_multiplier_ct;
+}
+
+double get_sleep_multiplier_factor() {
+   return sleep_multiplier_factor;
+}
+
+
+void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier_ct) {
+   assert(multiplier_ct > 0 && multiplier_ct < 100);
+   sleep_multiplier_ct = multiplier_ct;
+   DBGMSG("Setting sleep_multiplier_ct = %d", sleep_multiplier_ct);
+}
+
+void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double multiplier) {
    assert(multiplier > 0 && multiplier < 100);
-   sleep_multiplier = multiplier;
-   DBGMSG("Setting sleep_multiplier = %6.1f", sleep_multiplier);
+   sleep_multiplier_factor = multiplier;
+   DBGMSG("Setting sleep_multiplier_factor = %6.1f", sleep_multiplier_factor);
 }
 
 
@@ -745,10 +761,10 @@ void call_tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type) {
    // void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
 
    // crude, should be sensitive to event type
-   sleep_time_millis = sleep_multiplier * sleep_time_millis;
-   if (sleep_multiplier != 1.0 || debug) {
-      DBGMSG("Sleep event type: %s, sleep_multiplier = %9.1f, sleep_time_millis = %d",
-             sleep_event_name(event_type), sleep_multiplier, sleep_time_millis);
+   sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
+   if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
+      DBGMSG("Sleep event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
+             sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_time_millis);
    }
 
    // For better performance, separate mutex for each index in array
