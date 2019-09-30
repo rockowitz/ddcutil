@@ -1,27 +1,4 @@
-/* sleep.c
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file sleep.h
+/** \file sleep.c
  * Sleep Management
  *
  * Sleeps are integral to the DDC protocol.  Most of **ddcutil's** elapsed
@@ -29,6 +6,10 @@
  * Sleep invocation is centralized here to keep statistics and facilitate
  * future tuning.
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 #include <stdbool.h>
@@ -48,6 +29,7 @@
 //
 
 static Sleep_Stats sleep_stats;
+static bool trace_sleep = false;    // consider controlling this by function enable_trace_sleep()
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
@@ -100,7 +82,7 @@ void sleep_millis(int milliseconds) {
  * \param caller_location name of calling function
  * \param message trace message
  *
- * Tracing is only performed if the trace_sleep function internal to this function
+ * Tracing is only performed if static variable trace_sleep
  * is set to **true**.
  */
 void sleep_millis_with_trace(
@@ -108,8 +90,6 @@ void sleep_millis_with_trace(
         const char * caller_location,
         const char * message)
 {
-   bool trace_sleep = false;
-
    if (trace_sleep) {
       char sloc[100];
       char smsg[200];
@@ -122,7 +102,7 @@ void sleep_millis_with_trace(
          snprintf(smsg, 200, "%s. ", message);
       else
          smsg[0] = '\0';
-      printf("%s%sSleeping for %d milliseconds\n", sloc, smsg, milliseconds);
+      printf("%sSleeping for %d milliseconds.%s\n", sloc, milliseconds, smsg);
    }
 
    sleep_millis(milliseconds);
