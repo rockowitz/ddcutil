@@ -305,7 +305,7 @@ void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, c
 
    record_sleep_event(event_type);
 
-   sleep_millis(sleep_time_millis);
+   sleep_millis_with_trace(sleep_time_millis, loc, msg);
 
    DBGMSF(debug, "Done");
 }
