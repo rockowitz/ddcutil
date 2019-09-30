@@ -65,73 +65,6 @@ void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double mul
 }
 
 
-#ifdef DYNAMIC_TUNED_SLEEP
-
-/** Sleep for a period based on a failure event type and the number
- *  of consecutive failures.
- *
- *  This function does 3 things:
- *  1. Determines the sleep period based on the communication
- *     mechanism, event type and occurrence number.
- *  2. Records the sleep event.
- *  3. Sleeps for period determined.
- *
- * @param io_mode     communication mechanism (must be #DDCA_IO_I2C)
- * @param event_type  reason for sleep (currently only #SE_DDC_NULL - DDC Null Response)
- * @param occno       occurrence count of event
- *
- * @remark
- * Can be called in a multi-threaded environment.  Guards changes to the stats
- * data structure with a mutex.
- */
-void
-call_dynamic_tuned_sleep(
-      DDCA_IO_Mode io_mode,
-      Sleep_Event_Type event_type,
-      int occno)
-{
-   bool debug =  false || debug_sleep_stats_mutex;
-
-   int sleep_time_millis = 0;
-   assert(io_mode == DDCA_IO_I2C);
-   assert(event_type == SE_DDC_NULL);
-
-   switch(event_type) {
-   case SE_DDC_NULL:
-      sleep_time_millis = occno * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-      break;
-
-   default:
-      // PROGRAM_LOGIC_ERROR("Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
-      DBGMSG("PROGRAM LOCIG ERROR: Invalid sleep event type: %d = %s", event_type, sleep_event_name(event_type));
-   }
-
-   DBGMSF(debug, "Event type=%s, occno=%d, calculated sleep time = %d millisec",
-                 sleep_event_name(event_type), occno, sleep_time_millis);
-
-   record_sleep_event(event_type);
-
-   sleep_millis(sleep_time_millis);
-
-   DBGMSF(debug, "Done");
-}
-
-
-/** Convenience function for invoking #call_dynamic_tuned_sleep() in
- *  the common case where the communication mechanism is I2C.
- *
- *  \param event_type
- *  \param occno occurrence count of event
- */
-void
-call_dynamic_tuned_sleep_i2c(
-      Sleep_Event_Type event_type,
-      int occno)
-{
-   call_dynamic_tuned_sleep(DDCA_IO_I2C, event_type, occno);
-}
-#endif
-
 /** Sleep for a period required by the DDC protocol.
  *
  *  This function allows for tuning the actual sleep time.
@@ -153,10 +86,6 @@ call_dynamic_tuned_sleep_i2c(
 void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, char * loc, char * msg) {
    bool debug = false || debug_sleep_stats_mutex;
    DBGMSF(debug, "Starting");
-
-#ifdef DYNAMIC_TUNED_SLEEP
-   assert(event_type != SE_DDC_NULL);  // SE_DDC_NULL uses call_dynamic_tuned_sleep()
-#endif
 
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
