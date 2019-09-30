@@ -489,11 +489,6 @@ int main(int argc, char *argv[]) {
 #endif
    }
 
-#ifdef SLEEP_STRATEGY
-   if (parsed_cmd->i1 >= 0)
-      set_sleep_strategy(parsed_cmd->i1);
-#endif
-
 #ifdef USE_USB
    // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {
       DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );

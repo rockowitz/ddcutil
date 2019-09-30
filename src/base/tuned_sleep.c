@@ -11,61 +11,8 @@
 #include "base/execution_stats.h"
 #include "base/sleep.h"
 
-// TODO: create table of sleep strategy number, description
-
-
-
 
 static bool                 debug_sleep_stats_mutex = false;
-
-#ifdef SLEEP_STRATEGY
-static int sleep_strategy = 0;
-
-/** Rudimentary mechanism for changing the sleep strategy.
- */
-bool set_sleep_strategy(int strategy) {
-   if (strategy == -1)    // if unset
-      strategy = 0;       // use default strategy
-   bool result = false;
-   if (strategy >= 0 && strategy <= 2) {
-      sleep_strategy = strategy;
-      result = true;
-   }
-   return result;
-}
-
-
-/** Gets the current sleep strategy number
- */
-int get_sleep_strategy() {
-   return sleep_strategy;
-}
-
-
-/** Gets description of a sleep strategy.
- *
- * \param sleep_strategy sleep strategy number
- * \return description
- */
-char * sleep_strategy_desc(int sleep_strategy) {
-   char * result = NULL;
-   switch(sleep_strategy) {
-   case (0):
-      result = "Default";
-      break;
-   case (1):
-      result = "Half sleep time";
-      break;
-   case (2):
-      result = "Double sleep time";
-      break;
-   default:
-      result = NULL;
-   }
-   return result;
-}
-#endif
-
 
 typedef struct {
    int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
@@ -218,33 +165,9 @@ void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, c
       switch(event_type) {
       case (SE_WRITE_TO_READ):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-#ifdef SLEEP_STRATEGY
-            switch(sleep_strategy) {
-            case (1):
-               sleep_time_millis = sleep_time_millis/2;
-               break;
-            case (2):
-               sleep_time_millis = sleep_time_millis*2;
-               break;
-            default:
-               break;
-            }
-#endif
             break;
       case (SE_POST_WRITE):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-#ifdef SLEEP_STRATEGY
-            switch(sleep_strategy) {
-            case (1):
-               sleep_time_millis = sleep_time_millis/2;
-               break;
-            case (2):
-               sleep_time_millis = sleep_time_millis*2;
-               break;
-            default:
-               break;
-            }
-#endif
             break;
       case (SE_POST_OPEN):
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
