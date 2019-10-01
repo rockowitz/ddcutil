@@ -836,7 +836,7 @@ bool dbgtrc(
       if (dbgtrc_show_time)
          snprintf(buf2, bufsz+60, "[%s](%s) %s\n", formatted_elapsed_time(), funcname, buffer);
       else
-         snprintf(buf2, bufsz+60, "(%s) %s\n", funcname, buffer);
+         snprintf(buf2, bufsz+60, "(%-30s) %s\n", funcname, buffer);
       f0puts(buf2, fout());    // no automatic terminating null
       fflush(fout());
       msg_emitted = true;
