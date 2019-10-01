@@ -147,7 +147,7 @@ uint64_t elapsed_time_nanosec() {
  *  as a formatted, printable string.
  *
  *  The string is built in a thread specific private buffer.  The returned
- *  string valid until the next call of this function in the same thread.
+ *  string is valid until the next call of this function in the same thread.
  *
  *  @return formatted elapsed time
  */
