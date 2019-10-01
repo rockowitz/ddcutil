@@ -163,6 +163,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean show_unsupported_flag = false;
    gboolean version_flag   = false;
    gboolean timestamp_trace_flag = false;
+   gboolean thread_id_trace_flag = false;
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
    gboolean nodetect_flag  = false;
@@ -224,6 +225,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
       {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+
+      // feature selection filters
       {"show-unsupported",
                   'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
       {"notable", '\0', G_OPTION_FLAG_HIDDEN,
@@ -254,17 +257,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"sleep-multiplier", '\0', 0,
                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
 
-
-
       // debugging
       {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
       {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
 //    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
       {"trcfunc", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_functions, "Trace functions",     "function name" },
       {"trcfile", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,    "Trace files",     "file name" },
+
       {"timestamp",'\0',  0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",      '\0',   0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
-
+      {"thread-id",'\0',  0, G_OPTION_ARG_NONE,   &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"tid",     '\0',   0, G_OPTION_ARG_NONE,   &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp",  '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
@@ -364,6 +367,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
+   SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
    //    parsed_cmd->flags |= CMD_FLAG_VERIFY;

@@ -394,8 +394,10 @@ int main(int argc, char *argv[]) {
    }
 
    // configure tracing
-   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)         // timestamps on debug and trace messages?
-      dbgtrc_show_time = true;              // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
+      dbgtrc_show_time = true;                           // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
+      dbgtrc_show_thread_id = true;                      // extern in core.h
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    set_trace_levels(parsed_cmd->traced_groups);
    if (parsed_cmd->traced_functions) {

@@ -51,6 +51,7 @@ typedef enum {
    CMD_FLAG_ASYNC               = 0x0100,
    CMD_FLAG_REPORT_FREED_EXCP   = 0x0200,
    CMD_FLAG_NOTABLE             = 0x0400,
+   CMD_FLAG_THREAD_ID_TRACE     = 0x0800,
    CMD_FLAG_RW_ONLY           = 0x010000,
    CMD_FLAG_RO_ONLY           = 0x020000,
    CMD_FLAG_WO_ONLY           = 0x040000,

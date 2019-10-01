@@ -105,7 +105,8 @@ char *            output_level_name(DDCA_Output_Level val);
 // Trace message control
 //
 
-extern bool dbgtrc_show_time;  // include elapsed time in debug/trace timestamps
+extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
+extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 
 void add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
