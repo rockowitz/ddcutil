@@ -16,6 +16,7 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#define GNU_SOURCE    // for syscall()
 
 //* \cond */
 #include <assert.h>
@@ -24,6 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 /** \endcond */
 
 #include "util/data_structures.h"
@@ -362,7 +367,8 @@ void show_output_level() {
  *
  */
 
-bool dbgtrc_show_time = false;    ///< include elapsed time in debug/trace output
+bool dbgtrc_show_time      = false;   ///< include elapsed time in debug/trace output
+bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace output
 
 static
 Value_Name_Title_Table trace_group_table = {
@@ -813,12 +819,24 @@ bool dbgtrc(
       int    bufsz = strlen(buffer) + 1;
       char * buf2  = calloc(bufsz+60, sizeof(char));
 
+      char  elapsed_prefix[15] = "";
       if (dbgtrc_show_time)
-         snprintf(buf2, bufsz+60, "[%s](%-30s) %s\n", formatted_elapsed_time(), funcname, buffer);
-      else
-         snprintf(buf2, bufsz+60, "(%-30s) %s\n", funcname, buffer);
+         g_snprintf(elapsed_prefix, 15, "[%s]", formatted_elapsed_time());
+
+      char thread_prefix[15] = "";
+      if (dbgtrc_show_thread_id) {
+         pid_t tid = syscall(SYS_gettid);
+         snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
+      }
+
+      g_snprintf(buf2, bufsz+60, "%s%s(%-30s) %s\n",
+                               thread_prefix,
+                               elapsed_prefix,
+                               funcname, buffer);
+
       f0puts(buf2, fout());    // no automatic terminating null
       fflush(fout());
+
       free(buffer);
       free(buf2);
       msg_emitted = true;
