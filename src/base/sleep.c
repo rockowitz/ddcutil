@@ -29,7 +29,7 @@
 //
 
 static Sleep_Stats sleep_stats;
-static bool trace_sleep = false;    // consider controlling this by function enable_trace_sleep()
+static bool trace_sleep = true;    // consider controlling this by function enable_trace_sleep()
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
@@ -76,6 +76,31 @@ void sleep_millis(int milliseconds) {
 }
 
 
+void sleep_millis_with_tracex(
+        int          milliseconds,
+        const char * func,
+        int          lineno,
+        const char * filename,
+        const char * message)
+{
+   bool debug = false;
+
+
+   if (trace_sleep) {
+      char smsg[200];
+
+      if (message)
+         g_snprintf(smsg, 200, ", %s", message);
+      else
+         smsg[0] = '\0';
+      // printf("%sSleeping for %d milliseconds%s\n", sloc, milliseconds, smsg);
+      dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP, func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, smsg);
+   }
+
+   sleep_millis(milliseconds);
+}
+
+
 /** Sleep for the specified number of milliseconds, with tracing
  *
  * \param milliseconds number of milliseconds to sleep
@@ -90,19 +115,24 @@ void sleep_millis_with_trace(
         const char * caller_location,
         const char * message)
 {
+   // bool debug = true;
+
+
    if (trace_sleep) {
       char sloc[100];
       char smsg[200];
 
       if (caller_location)
-         snprintf(sloc, 100, "(%s) ", caller_location);
+         snprintf(sloc, 100, "(%-25s) ", caller_location);
       else
          sloc[0] = '\0';
+
       if (message)
-         snprintf(smsg, 200, "%s. ", message);
+         g_snprintf(smsg, 200, ", %s", message);
       else
          smsg[0] = '\0';
-      printf("%sSleeping for %d milliseconds.%s\n", sloc, milliseconds, smsg);
+      // printf("%sSleeping for %d milliseconds%s\n", sloc, milliseconds, smsg);
+      dbgtrc(DDCA_TRC_SLEEP, caller_location, 0, NULL, "Sleeping for %d milliseconds%s", milliseconds, smsg);
    }
 
    sleep_millis(milliseconds);

@@ -21,6 +21,12 @@
 
 void sleep_millis(int milliseconds);
 void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
+void sleep_millis_with_tracex(
+        int          milliseconds,
+        const char * func,
+        int          lineno,
+        const char * filename,
+        const char * message);
 
 typedef struct {
    uint64_t actual_sleep_nanos;
