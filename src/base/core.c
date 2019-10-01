@@ -379,6 +379,7 @@ Value_Name_Title_Table trace_group_table = {
       VNT(DDCA_TRC_UDF, "UDF"),
       VNT(DDCA_TRC_VCP, "VCP"),
       VNT(DDCA_TRC_DDCIO, "DDCIO"),
+      VNT(DDCA_TRC_SLEEP, "SLEEP"),
       VNT_END
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
@@ -492,10 +493,13 @@ bool is_traced_function(const char * funcname) {
  *  @return **true** if trace is enabled for all functions in the file, **false** if not
  */
 bool is_traced_file(const char * filename) {
-   char * bname = g_path_get_basename(filename);
-   bool result = (traced_file_table && gaux_string_ptr_array_find(traced_file_table, bname) >= 0);
-   // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, bool_repr(result));
-   free(bname);
+   bool result = false;
+   if (filename) {
+      char * bname = g_path_get_basename(filename);
+      result = (traced_file_table && gaux_string_ptr_array_find(traced_file_table, bname) >= 0);
+      // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, bool_repr(result));
+      free(bname);
+   }
    return result;
 }
 
@@ -794,10 +798,10 @@ void severemsg(
  */
 bool dbgtrc(
         DDCA_Trace_Group  trace_group,
-        const char * funcname,
-        const int    lineno,
-        const char * filename,
-        char *       format,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        char *            format,
         ...)
 {
    static char * buffer = NULL;
