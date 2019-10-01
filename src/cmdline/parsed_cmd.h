@@ -55,7 +55,7 @@ typedef enum {
    CMD_FLAG_RO_ONLY           = 0x020000,
    CMD_FLAG_WO_ONLY           = 0x040000,
    CMD_FLAG_ENABLE_UDF        = 0x100000,
-   CMD_FLAG_ENABLE_USB             = 0x200000,
+   CMD_FLAG_ENABLE_USB        = 0x200000,
 } Parsed_Cmd_Flags;
 
 
@@ -70,7 +70,7 @@ struct {
    DDCA_Stats_Type     stats_types;
    char *              failsim_control_fn;
    Display_Identifier* pdid;
-   DDCA_Trace_Group         traced_groups;
+   DDCA_Trace_Group    traced_groups;
    gchar **            traced_files;
    gchar **            traced_functions;
    DDCA_Output_Level   output_level;
