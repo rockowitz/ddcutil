@@ -706,8 +706,11 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
       va_list(args);
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
-      if (debug_or_trace)
-         f0printf(fout(), "(%s) DDC: %s\n", funcname, buffer);
+      if (debug_or_trace) {
+         // f0printf(fout(), "(%s) DDC: %s\n", funcname, buffer);
+         // use dbgtrc() for consistent handling of timestamp and thread id prefixes
+         dbgtrc(0xff, funcname, lineno, filename, "DDC: %s", buffer);
+      }
       else
          f0printf(fout(), "DDC: %s\n", buffer);
       fflush(fout());
