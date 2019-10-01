@@ -83,7 +83,14 @@ void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double mul
  * Extend to take account of actual time since return from
  * last system call, previous error rate, etc.
  */
-void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, char * loc, char * msg) {
+void tuned_sleep_with_tracex(
+      DDCA_IO_Mode     io_mode,
+      Sleep_Event_Type event_type,
+      const char *     func,
+      int              lineno,
+      const char *     filename,
+      const char *     msg)
+{
    bool debug = false || debug_sleep_stats_mutex;
    DBGMSF(debug, "Starting");
 
@@ -157,10 +164,33 @@ void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, c
 
    record_sleep_event(event_type);
 
-   sleep_millis_with_trace(sleep_time_millis, loc, msg);
+   char msg_buf[100];
+   const char * evname = sleep_event_name(event_type);
+   if (msg)
+      g_snprintf(msg_buf, 100, "Event type: %s, %s", evname, msg);
+   else
+      g_snprintf(msg_buf, 100, "Event_type: %s", evname);
+
+   sleep_millis_with_tracex(sleep_time_millis, func, lineno, filename, msg_buf);
 
    DBGMSF(debug, "Done");
 }
+
+void tuned_sleep_with_trace(
+      DDCA_IO_Mode     io_mode,
+      Sleep_Event_Type event_type,
+      const char *     loc,
+      const char *     msg)
+{
+   tuned_sleep_with_tracex(
+         io_mode,
+         event_type,
+         loc,   // treat loc as function name
+         0,     // line number
+         NULL,  // file name
+         msg);
+}
+
 
 
 void tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type)
@@ -176,9 +206,18 @@ void tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type)
  *
  *  @param event_type sleep event type
  */
-void tuned_sleep_i2c(Sleep_Event_Type event_type) {
-   tuned_sleep(DDCA_IO_I2C, event_type);
+void tuned_sleep_i2c_with_trace(
+      Sleep_Event_Type event_type,
+      const char *     loc,
+      const char *     msg)
+{
+   tuned_sleep_with_trace(DDCA_IO_I2C, event_type, loc, msg);
 }
+
+void tuned_sleep_i2c(Sleep_Event_Type event_type) {
+   tuned_sleep_with_trace(DDCA_IO_I2C, event_type, NULL, NULL);
+}
+
 
 #ifdef DEPRECATED
 /** Convenience function that invokes call_tuned_sleep() for
