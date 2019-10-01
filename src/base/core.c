@@ -804,34 +804,14 @@ bool dbgtrc(
         char *            format,
         ...)
 {
-   static char * buffer = NULL;
-   static int    bufsz  = 200;     // initial value
-   static char * buf2   = NULL;
-
-   if (!buffer) {      // first call
-      buffer = calloc(bufsz,    sizeof(char));
-      buf2   = calloc(bufsz+60, sizeof(char));
-   }
-
    bool msg_emitted = false;
    if ( is_tracing(trace_group, filename, funcname) ) {
       va_list(args);
       va_start(args, format);
-      int ct = vsnprintf(buffer, bufsz, format, args);
+      char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
-      if (ct >= bufsz) {   // if buffer too small, reallocate
-         free(buffer);
-         free(buf2);
-
-         bufsz = ct+1;
-         buffer = calloc(bufsz, sizeof(char));
-         buf2   = calloc(bufsz+50, sizeof(char));
-         va_list(args);
-         va_start(args, format);
-         ct = vsnprintf(buffer, bufsz, format, args);
-         assert(ct < bufsz);
-         va_end(args);
-      }
+      int    bufsz = strlen(buffer) + 1;
+      char * buf2  = calloc(bufsz+60, sizeof(char));
 
       if (dbgtrc_show_time)
          snprintf(buf2, bufsz+60, "[%s](%-30s) %s\n", formatted_elapsed_time(), funcname, buffer);
@@ -839,6 +819,8 @@ bool dbgtrc(
          snprintf(buf2, bufsz+60, "(%-30s) %s\n", funcname, buffer);
       f0puts(buf2, fout());    // no automatic terminating null
       fflush(fout());
+      free(buffer);
+      free(buf2);
       msg_emitted = true;
    }
 
