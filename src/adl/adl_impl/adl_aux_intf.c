@@ -71,7 +71,8 @@ Base_Status_ADL adl_ddc_write_only_with_retry(
    for (tryctr=0; tryctr < maxTries && can_retry; tryctr++) {
       rc = adl_ddc_write_only(iAdapterIndex, iDisplayIndex, pSendMsgBuf, sendMsgLen);
       if (rc == -1) {
-         sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after adl_DDC_write_only");
+         SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_DEFAULT, "After adl_ddc_write_only");
+         // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after adl_DDC_write_only");
       }
       else
          can_retry=false;
@@ -110,7 +111,8 @@ Base_Status_ADL adl_ddc_write_read_with_retry(
    for (tryctr=0; tryctr < maxTries && can_retry; tryctr++) {
       rc = adl_ddc_write_read(iAdapterIndex, iDisplayIndex, pSendMsgBuf, sendMsgLen, pRcvMsgBuf, pRcvBytect);
       if (rc == -1) {
-         sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after adl_DDC_write_read");
+         SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_DEFAULT, "After adl_ddc_write_only");
+         // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after adl_DDC_write_read");
       }
       else
          can_retry=false;
@@ -148,7 +150,8 @@ Base_Status_ADL adl_ddc_write_read_with_retry_onecall(
    for (tryctr=0; tryctr < maxTries && can_retry; tryctr++) {
       rc = adl_ddc_write_read_onecall(iAdapterIndex, iDisplayIndex, pSendMsgBuf, sendMsgLen, pRcvMsgBuf, pRcvBytect);
       if (rc == -1) {
-         sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_RETRY, __func__, "retry timeout");
+         SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_RETRY, "retry timeout");
+         // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_RETRY, __func__, "retry timeout");
       }
       else
          can_retry=false;
@@ -263,7 +266,7 @@ Base_Status_ADL adl_ddc_set_vcp(int iAdapterIndex, int iDisplayIndex, Byte vcp_f
 
    Base_Status_ADL rc = adl_ddc_write_only(iAdapterIndex, iDisplayIndex, ddc_cmd_bytes, sendCt);
 
-   sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE, __func__, "after adl_DDC_write_only");
+   SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE, "after adl_ddc_write_only");
 
    if (adl_debug)
       DBGMSG("Returning %d  ", rc );

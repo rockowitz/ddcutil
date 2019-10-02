@@ -107,7 +107,7 @@ void get_luminosity_amd_sample(int adapterNdx, int displayNdx, int how, int send
 
       if (rc == 0) {
          // usleep(DEFAULT_TIMEOUT);
-         sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+         sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
 
          ADLI2C adli2cResponse;
          adli2cResponse.iSize = sizeof(adli2cResponse);

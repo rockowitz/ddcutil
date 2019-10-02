@@ -572,7 +572,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
    // 10/23/15, try disabling sleep before write
    if (conservative)
-      sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "before write");
+      sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, "Before write");
 
    Byte byte_to_write = 0x00;
 

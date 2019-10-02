@@ -1199,7 +1199,8 @@ Base_Status_ADL adl_ddc_write_read(
 
    rc = adl_ddc_write_only(iAdapterIndex, iDisplayIndex, pSendMsgBuf, sendMsgLen);
    if (rc == 0) {
-      sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after write");
+      // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "after write");
+      SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_DEFAULT, "after write");
       rc = adl_ddc_read_only(iAdapterIndex, iDisplayIndex, pRcvMsgBuf, pRcvBytect);
    }
 

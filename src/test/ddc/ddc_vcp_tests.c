@@ -267,7 +267,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
    }
    assert(rc == 0);    // CALLOPT_ERR_ABORT was set
    // usleep(DEFAULT_TIMEOUT);
-   sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
+   sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
 
    printf("(%s) calling perform_write()\n", __func__);
    set_i2c_write_mode(write_mode);
