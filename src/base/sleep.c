@@ -1,10 +1,9 @@
 /** \file sleep.c
- * Sleep Management
+ * Basic Sleep Services
  *
- * Sleeps are integral to the DDC protocol.  Most of **ddcutil's** elapsed
- * time is spent in sleeps mandated by the DDC protocol.
- * Sleep invocation is centralized here to keep statistics and facilitate
- * future tuning.
+ * Most of **ddcutil's** elapsed time is spent in sleeps mandated by the
+ * DDC protocol. Basic sleep invocation is centralized here to perform sleep
+ * tracing and and maintain sleep statistics.
  */
 
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -25,11 +24,10 @@
 
 
 //
-// Sleep and sleep statistics
+// Sleep statistics
 //
 
 static Sleep_Stats sleep_stats;
-// static bool trace_sleep = true;    // consider controlling this by function enable_trace_sleep()
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
@@ -47,6 +45,7 @@ Sleep_Stats get_sleep_stats() {
    return sleep_stats;
 }
 
+
 /** Reports the accumulated sleep statistics
  *
  * \param depth logical indentation depth
@@ -63,7 +62,13 @@ void report_sleep_stats(int depth) {
                    sleep_stats.actual_sleep_nanos);
 }
 
-/** Sleep for the specified number of milliseconds.
+
+//
+// Perform Sleep
+//
+
+/** Sleep for the specified number of milliseconds and
+ *  record sleep statistics.
  *
  * \param milliseconds number of milliseconds to sleep
  */
@@ -76,6 +81,17 @@ void sleep_millis(int milliseconds) {
 }
 
 
+/** Sleep for the specified number of milliseconds, record
+ *  sleep statistics, and perform tracing.
+ *
+ *  Tracing occurs if trace group DDCA_TRC_SLEEP is enabled.
+ *
+ * \param milliseconds number of milliseconds to sleep
+ * \param func name of function that invoked sleep
+ * \param lineno line number in file where sleep was invoked
+ * \param filename name of file from which sleep was invoked
+ * \param text to be appended to trace message
+ */
 void sleep_millis_with_tracex(
         int          milliseconds,
         const char * func,
@@ -85,67 +101,11 @@ void sleep_millis_with_tracex(
 {
    bool debug = false;
 
-   // if (trace_sleep) {
-      if (!message)
-         message = "";
-#ifdef OLD
-      char smsg[200];
-      if (message)
-         g_snprintf(smsg, 200, ", %s", message);
-      else
-         smsg[0] = '\0';
-#endif
-      // printf("%sSleeping for %d milliseconds%s\n", sloc, milliseconds, smsg);
-      dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP,
-              func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, message);
-   // }
+   if (!message)
+      message = "";
+
+   dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP,
+           func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, message);
 
    sleep_millis(milliseconds);
 }
-
-
-/** Sleep for the specified number of milliseconds, with tracing
- *
- * \param milliseconds number of milliseconds to sleep
- * \param caller_location name of calling function
- * \param message trace message
- *
- * Tracing is only performed if trace group SLEEP is set
- *
- * \remark
- * The only use of this function is in ADL and test code.
- */
-#ifdef UNUSED
-void sleep_millis_with_trace(
-        int          milliseconds,
-        const char * caller_location,
-        const char * message)
-{
-   sleep_millis_with_tracex(milliseconds, caller_location, 0, NULL, message);
-
-#ifdef OLD
-   // bool debug = true;
-
-
-   if (trace_sleep) {
-      char sloc[100];
-      char smsg[200];
-
-      if (caller_location)
-         snprintf(sloc, 100, "(%-25s) ", caller_location);
-      else
-         sloc[0] = '\0';
-
-      if (message)
-         g_snprintf(smsg, 200, ", %s", message);
-      else
-         smsg[0] = '\0';
-      // printf("%sSleeping for %d milliseconds%s\n", sloc, milliseconds, smsg);
-      dbgtrc(DDCA_TRC_SLEEP, caller_location, 0, NULL, "Sleeping for %d milliseconds%s", milliseconds, smsg);
-   }
-
-   sleep_millis(milliseconds);
-#endif
-}
-#endif
-
