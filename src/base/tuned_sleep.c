@@ -192,11 +192,12 @@ void tuned_sleep_with_trace(
 }
 
 
-
+#ifdef UNUSED
 void tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type)
 {
    tuned_sleep_with_trace(io_mode, event_type, NULL, NULL);
 }
+#endif
 
 
 // Convenience functions
@@ -214,9 +215,11 @@ void tuned_sleep_i2c_with_trace(
    tuned_sleep_with_trace(DDCA_IO_I2C, event_type, loc, msg);
 }
 
+#ifdef UNUSED
 void tuned_sleep_i2c(Sleep_Event_Type event_type) {
    tuned_sleep_with_trace(DDCA_IO_I2C, event_type, NULL, NULL);
 }
+#endif
 
 
 #ifdef DEPRECATED
@@ -237,5 +240,6 @@ void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
  *  @param event_type sleep event type
  */
 void tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   tuned_sleep(dh->dref->io_path.io_mode, event_type);
+   // tuned_sleep(dh->dref->io_path.io_mode, event_type);
+   tuned_sleep_with_tracex(dh->dref->io_path.io_mode, event_type, NULL, 0, NULL, NULL);
 }
