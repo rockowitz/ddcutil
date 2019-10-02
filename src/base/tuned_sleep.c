@@ -176,6 +176,7 @@ void tuned_sleep_with_tracex(
    DBGMSF(debug, "Done");
 }
 
+#ifdef UNUSED
 void tuned_sleep_with_trace(
       DDCA_IO_Mode     io_mode,
       Sleep_Event_Type event_type,
@@ -190,6 +191,7 @@ void tuned_sleep_with_trace(
          NULL,  // file name
          msg);
 }
+#endif
 
 
 #ifdef UNUSED
@@ -202,6 +204,7 @@ void tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type)
 
 // Convenience functions
 
+#ifdef UNUSED
 /** Convenience function that invokes call_tuned_sleep() for
  *  /dev/i2c devices.
  *
@@ -214,6 +217,7 @@ void tuned_sleep_i2c_with_trace(
 {
    tuned_sleep_with_trace(DDCA_IO_I2C, event_type, loc, msg);
 }
+#endif
 
 #ifdef UNUSED
 void tuned_sleep_i2c(Sleep_Event_Type event_type) {

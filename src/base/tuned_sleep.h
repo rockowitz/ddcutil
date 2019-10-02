@@ -25,7 +25,7 @@ double get_sleep_multiplier_factor();
 
 // Convenience methods that call call_tuned_sleep():
 // void tuned_sleep_i2c(Sleep_Event_Type event_type);   // DDCA_IO_I2C
-void tuned_sleep_i2c_with_trace(Sleep_Event_Type event_type, const char * loc, const char * msg);
+// void tuned_sleep_i2c_with_trace(Sleep_Event_Type event_type, const char * loc, const char * msg);
 #ifdef DEPRECATED
 void call_tuned_sleep_adl(Sleep_Event_Type event_type);   // DDCA_IO_ADL
 #endif
@@ -39,7 +39,7 @@ void tuned_sleep_with_tracex(
       int              lineno,
       const char *     filename,
       const char *     msg);
-void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, const char * loc, const char * msg);
+// void tuned_sleep_with_trace(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type, const char * loc, const char * msg);
 
 
 #define TUNED_SLEEP_WITH_TRACE(_io_mode, _event_type, _msg) \
