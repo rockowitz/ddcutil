@@ -29,7 +29,7 @@
 //
 
 static Sleep_Stats sleep_stats;
-static bool trace_sleep = true;    // consider controlling this by function enable_trace_sleep()
+// static bool trace_sleep = true;    // consider controlling this by function enable_trace_sleep()
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
@@ -85,17 +85,20 @@ void sleep_millis_with_tracex(
 {
    bool debug = false;
 
-
-   if (trace_sleep) {
+   // if (trace_sleep) {
+      if (!message)
+         message = "";
+#ifdef OLD
       char smsg[200];
-
       if (message)
          g_snprintf(smsg, 200, ", %s", message);
       else
          smsg[0] = '\0';
+#endif
       // printf("%sSleeping for %d milliseconds%s\n", sloc, milliseconds, smsg);
-      dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP, func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, smsg);
-   }
+      dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP,
+              func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, message);
+   // }
 
    sleep_millis(milliseconds);
 }
@@ -107,14 +110,19 @@ void sleep_millis_with_tracex(
  * \param caller_location name of calling function
  * \param message trace message
  *
- * Tracing is only performed if static variable trace_sleep
- * is set to **true**.
+ * Tracing is only performed if trace group SLEEP is set
+ *
+ * \remark
+ * The only use of this function is in ADL and test code.
  */
 void sleep_millis_with_trace(
         int          milliseconds,
         const char * caller_location,
         const char * message)
 {
+   sleep_millis_with_tracex(milliseconds, caller_location, 0, NULL, message);
+
+#ifdef OLD
    // bool debug = true;
 
 
@@ -136,5 +144,6 @@ void sleep_millis_with_trace(
    }
 
    sleep_millis(milliseconds);
+#endif
 }
 
