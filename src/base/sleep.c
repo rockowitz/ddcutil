@@ -115,6 +115,7 @@ void sleep_millis_with_tracex(
  * \remark
  * The only use of this function is in ADL and test code.
  */
+#ifdef UNUSED
 void sleep_millis_with_trace(
         int          milliseconds,
         const char * caller_location,
@@ -146,4 +147,5 @@ void sleep_millis_with_trace(
    sleep_millis(milliseconds);
 #endif
 }
+#endif
 

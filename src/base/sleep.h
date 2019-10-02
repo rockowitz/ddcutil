@@ -1,10 +1,9 @@
 /** \file sleep.h
  * Sleep Management
  *
- * Sleeps are integral to the DDC protocol.  Most of **ddcutil's** elapsed
- * time is spent in sleeps mandated by the DDC protocol.
- * Sleep invocation is centralized here to keep statistics and facilitate
- * future tuning.
+ * Most of **ddcutil's** elapsed time is spent in sleeps mandated by the
+ * DDC protocol. Basic sleep invocation is centralized here to perform sleep
+ * tracing and and maintain sleep statistics.
  */
 
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -20,10 +19,12 @@
 //
 
 void sleep_millis(int milliseconds);
+#ifdef UNUSED
 void sleep_millis_with_trace(
         int          milliseconds,
         const char * caller_location,
         const char * message);
+#endif
 void sleep_millis_with_tracex(
         int          milliseconds,
         const char * func,
