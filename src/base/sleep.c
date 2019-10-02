@@ -102,10 +102,10 @@ void sleep_millis(int milliseconds) {
  *  Tracing occurs if trace group DDCA_TRC_SLEEP is enabled.
  *
  * \param milliseconds number of milliseconds to sleep
- * \param func name of function that invoked sleep
- * \param lineno line number in file where sleep was invoked
- * \param filename name of file from which sleep was invoked
- * \param text to be appended to trace message
+ * \param func         name of function that invoked sleep
+ * \param lineno       line number in file where sleep was invoked
+ * \param filename     name of file from which sleep was invoked
+ * \param message      text to be appended to trace message
  */
 void sleep_millis_with_tracex(
         int          milliseconds,
