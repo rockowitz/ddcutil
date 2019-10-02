@@ -155,7 +155,7 @@ Public_Status_Code call_i2c_writer(
       if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
          sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
       if (sleep_millisec != DDC_TIMEOUT_NONE)
-         sleep_millis_with_trace(sleep_millisec, __func__, "after write");
+         SLEEP_MILLIS_WITH_TRACE(sleep_millisec, "after write");
    }
 
    // rc = modulate_base_errno_ddc_to_global(rc);
@@ -193,7 +193,7 @@ Public_Status_Code call_i2c_reader(
       if (sleep_millisec == DDC_TIMEOUT_USE_DEFAULT)
          sleep_millisec = DDC_TIMEOUT_MILLIS_DEFAULT;
       if (sleep_millisec != DDC_TIMEOUT_NONE)
-         sleep_millis_with_trace(sleep_millisec, __func__, "after read");
+         SLEEP_MILLIS_WITH_TRACE(sleep_millisec, "after read");
    }
 
    // rc = modulate_base_errno_ddc_to_global(rc);

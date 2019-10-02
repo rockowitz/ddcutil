@@ -64,7 +64,7 @@ void read_edid_ala_libxcm(int busno) {
       goto bye;
 
    // usleep(TIMEOUT);
-   sleep_millis_with_trace(100, __func__, "before write()");
+   SLEEP_MILLIS_WITH_TRACE(100, "before write()");
 
    rc = write(fd, &command, 1);
    if (rc != 1) {
