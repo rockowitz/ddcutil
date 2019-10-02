@@ -1,5 +1,7 @@
 /** @file tuned_sleep.c
  *
+ *  Perform sleep. The sleep time is determined by io mode, sleep event time,
+ *  and applicable multipliers.
  */
 
 // Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -12,11 +14,49 @@
 #include "base/sleep.h"
 
 
-static bool                 debug_sleep_stats_mutex = false;
+//
+// Sleep time adjustment
+//
+
+/* Two multipliers are applied to the sleep time determined from the
+ * io mode and event type.
+ *
+ * sleep_multiplier_factor: set globally, e.g. from arg passed on
+ * command line.  Consider making thread specific.
+ *
+ * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
+ */
+
+static double sleep_multiplier_factor = 1.0;
+
+/** Sets the sleep multiplier factor.  This is a global value and is a floating
+ *  point number.
+ *
+ *  \param multiplier
+ *
+ *  \todo
+ *  Add Sleep_Event_Type botfield to make sleep factor dependent on event type?
+ *  Make thread specific?
+ */
+void   set_sleep_multiplier_factor(double multiplier) {
+   assert(multiplier > 0 && multiplier < 100);
+   sleep_multiplier_factor = multiplier;
+   // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
+}
+
+/** Gets the current sleep multiplier factor.
+ *
+ *  \return sleep multiplier factor
+ */
+double get_sleep_multiplier_factor() {
+   return sleep_multiplier_factor;
+}
+
 
 typedef struct {
    int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
 } Thread_Sleep_Settings;
+
 
 static Thread_Sleep_Settings *  get_thread_sleep_settings() {
    static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
@@ -37,20 +77,20 @@ static Thread_Sleep_Settings *  get_thread_sleep_settings() {
 }
 
 
-
-static double sleep_multiplier_factor = 1.0;
-// static int    sleep_multiplier_ct = 1;
-
+/** Gets the multiplier count for the current thread.
+ *
+ *  \return multiplier count
+ */
 int get_sleep_multiplier_ct() {
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
    return settings->sleep_multiplier_ct;
 }
 
-double get_sleep_multiplier_factor() {
-   return sleep_multiplier_factor;
-}
 
-
+/** Sets the multiplier count for the current thread.
+ *
+ *  \parsm multipler_ct  value to set
+ */
 void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
@@ -58,30 +98,31 @@ void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
-void   set_sleep_multiplier_factor(/* Sleep_Event_Type event_types,*/ double multiplier) {
-   assert(multiplier > 0 && multiplier < 100);
-   sleep_multiplier_factor = multiplier;
-   // DBGMSG("Setting sleep_multiplier_factor = %6.1f", sleep_multiplier_factor);
-}
 
+//
+// Perform sleep
+//
 
-/** Sleep for a period required by the DDC protocol.
+/** Sleep for the period of time required by the DDC protocol, as indicated
+ *  by the io mode and sleep event type.
  *
- *  This function allows for tuning the actual sleep time.
+ *  The time is further adjusted by the sleep factor and sleep multiplier
+ *  currently in effect.
  *
- *  This function does 3 things:
- *  1.  Determine the sleep period based on the communication
- *      mechanism, call type, sleep strategy in effect,
- *      and potentially other information.
- *  2. Record the sleep event.
- *  3. Sleep for period determined.
+ *  \todo
+ *  Take into account the time since the last monitor return in the
+ *  current thread.
+ *  \todp
+ *  Take into account per-display error statistics.  Would require
+ *  error statistics be maintained on a per-display basis, either
+ *  in the display reference or display handle.
  *
- * @param io_mode     communication mechanism
- * @param event_type  reason for sleep
- *
- * @todo
- * Extend to take account of actual time since return from
- * last system call, previous error rate, etc.
+ * \param io_mode     communication mechanism
+ * \param event_type  reason for sleep
+ * \param func        name of function that invoked sleep
+ * \param lineno      line number in file where sleep was invoked
+ * \param filename    name of file from which sleep was invoked
+ * \param msg         text to append to trace message
  */
 void tuned_sleep_with_tracex(
       DDCA_IO_Mode     io_mode,
@@ -91,7 +132,7 @@ void tuned_sleep_with_tracex(
       const char *     filename,
       const char *     msg)
 {
-   bool debug = false || debug_sleep_stats_mutex;
+   bool debug = false;
    DBGMSF(debug, "Starting");
 
    int sleep_time_millis = 0;    // should be a default
@@ -144,16 +185,13 @@ void tuned_sleep_with_tracex(
    case DDCA_IO_USB:
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
       break;
-
    }
 
    // TODO:
    //   get error rate (total calls, total errors), current adjustment value
    //   adjust by time since last i2c event
-   // Is tracing useful, given that we know the event type?
-   // void sleep_millis_with_trace(int milliseconds, const char * caller_location, const char * message);
 
-   // crude, should be sensitive to event type
+   // crude, should be sensitive to event type?
    int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread
    sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
    if (debug) {
@@ -176,74 +214,19 @@ void tuned_sleep_with_tracex(
    DBGMSF(debug, "Done");
 }
 
-#ifdef UNUSED
-void tuned_sleep_with_trace(
-      DDCA_IO_Mode     io_mode,
-      Sleep_Event_Type event_type,
-      const char *     loc,
-      const char *     msg)
-{
-   tuned_sleep_with_tracex(
-         io_mode,
-         event_type,
-         loc,   // treat loc as function name
-         0,     // line number
-         NULL,  // file name
-         msg);
-}
-#endif
 
-
-#ifdef UNUSED
-void tuned_sleep(DDCA_IO_Mode io_mode, Sleep_Event_Type event_type)
-{
-   tuned_sleep_with_trace(io_mode, event_type, NULL, NULL);
-}
-#endif
-
-
+//
 // Convenience functions
-
-#ifdef UNUSED
-/** Convenience function that invokes call_tuned_sleep() for
- *  /dev/i2c devices.
- *
- *  @param event_type sleep event type
- */
-void tuned_sleep_i2c_with_trace(
-      Sleep_Event_Type event_type,
-      const char *     loc,
-      const char *     msg)
-{
-   tuned_sleep_with_trace(DDCA_IO_I2C, event_type, loc, msg);
-}
-#endif
-
-#ifdef UNUSED
-void tuned_sleep_i2c(Sleep_Event_Type event_type) {
-   tuned_sleep_with_trace(DDCA_IO_I2C, event_type, NULL, NULL);
-}
-#endif
-
-
-#ifdef DEPRECATED
-/** Convenience function that invokes call_tuned_sleep() for
- *  ADL devices.
- *
- *  @param event_type sleep event type
- */
-void call_tuned_sleep_adl(Sleep_Event_Type event_type) {
-   tuned_sleep(DDCA_IO_ADL, event_type);
-}
-#endif
-
+//
 
 /** Convenience function that determines the device type from the
  *  #Display_Handle before invoking all_tuned_sleep().
  *  @param dh         display handle of open device
  *  @param event_type sleep event type
+ *
+ *  \todp
+ *  Extend with location parmss
  */
 void tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   // tuned_sleep(dh->dref->io_path.io_mode, event_type);
    tuned_sleep_with_tracex(dh->dref->io_path.io_mode, event_type, NULL, 0, NULL, NULL);
 }
