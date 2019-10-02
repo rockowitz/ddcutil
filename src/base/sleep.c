@@ -11,6 +11,7 @@
 
 
 /** \cond */
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -28,21 +29,32 @@
 //
 
 static Sleep_Stats sleep_stats;
+G_LOCK_DEFINE(sleep_stats);
 
 /** Sets all sleep statistics to 0. */
 void init_sleep_stats() {
+   G_LOCK(sleep_stats);
    sleep_stats.total_sleep_calls = 0;
    sleep_stats.requested_sleep_milliseconds = 0;
    sleep_stats.actual_sleep_nanos = 0;
+   G_UNLOCK(sleep_stats);
 }
 
 
 /** Returns the current sleep statistics
  *
- * \return the current value of the accumulated sleep stats
+ * \return a copy of struct Sleep_Stats, containing thee current value
+ *         of the accumulated sleep stats
+ *
+ * \remark
+ * N.B.  Returns a copy of the struct on the stack, not a pointer to the struct.
  */
 Sleep_Stats get_sleep_stats() {
-   return sleep_stats;
+   Sleep_Stats stats_copy;
+   G_LOCK(sleep_stats);
+   stats_copy = sleep_stats;
+   G_UNLOCK(sleep_stats);
+   return stats_copy;;
 }
 
 
@@ -51,15 +63,16 @@ Sleep_Stats get_sleep_stats() {
  * \param depth logical indentation depth
  */
 void report_sleep_stats(int depth) {
+   Sleep_Stats stats_copy = get_sleep_stats();
    int d1 = depth+1;
    rpt_title("Sleep Call Stats:", depth);
    rpt_vstring(d1, "Total sleep calls:                              %10d",
-                   sleep_stats.total_sleep_calls);
+                   stats_copy.total_sleep_calls);
    rpt_vstring(d1, "Requested sleep time milliseconds :             %10d",
-                   sleep_stats.requested_sleep_milliseconds);
+                   stats_copy.requested_sleep_milliseconds);
    rpt_vstring(d1, "Actual sleep milliseconds (nanosec):            %10"PRIu64"  (%13" PRIu64 ")",
-                   sleep_stats.actual_sleep_nanos / (1000*1000),
-                   sleep_stats.actual_sleep_nanos);
+                   stats_copy.actual_sleep_nanos / (1000*1000),
+                   stats_copy.actual_sleep_nanos);
 }
 
 
@@ -75,9 +88,11 @@ void report_sleep_stats(int depth) {
 void sleep_millis(int milliseconds) {
    uint64_t start_nanos = cur_realtime_nanosec();
    usleep(milliseconds*1000);   // usleep takes microseconds, not milliseconds
+   G_LOCK(sleep_stats);
    sleep_stats.actual_sleep_nanos += (cur_realtime_nanosec()-start_nanos);
    sleep_stats.requested_sleep_milliseconds += milliseconds;
    sleep_stats.total_sleep_calls++;
+   G_UNLOCK(sleep_stats);
 }
 
 
