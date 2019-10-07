@@ -760,6 +760,14 @@ ddca_get_simple_nc_feature_value_name_by_display(
    );
 }
 
+void
+ddca_dbgrpt_feature_metadata(
+      DDCA_Feature_Metadata * md,
+      int                     depth)
+{
+   dbgrpt_ddca_feature_metadata(md, depth);
+}
+
 
 //
 //  Dynamic
