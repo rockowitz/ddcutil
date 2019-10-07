@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -34,6 +34,7 @@
 int vcp_feature_code_count;
 VCP_Feature_Table_Entry vcp_code_table[];
 static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[];
+static DDCA_Feature_Value_Entry x14_color_preset_tolerances[];
        DDCA_Feature_Value_Entry xc8_display_controller_type_values[];
 static DDCA_Feature_Value_Entry x8d_tv_audio_mute_source_values[];
 static DDCA_Feature_Value_Entry x8d_sh_blank_screen_values[];
@@ -1091,10 +1092,15 @@ get_nontable_feature_detail_function(
 {
    assert(vfte);
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF(debug, "Starting. feature = 0x%02x, vcp_version = %d.%d",
+         vfte->code,
+         vcp_version.major, vcp_version.minor);
 
    DDCA_Version_Feature_Flags version_specific_flags =
          get_version_sensitive_feature_flags(vfte, vcp_version);
+   DBGMSF(debug, "version_specific_flags = 0x%04x = %s",
+         version_specific_flags,
+         interpret_feature_flags_t(version_specific_flags));
    assert(version_specific_flags);
    assert(version_specific_flags & DDCA_NON_TABLE);
    Format_Normal_Feature_Detail_Function func = NULL;
@@ -1877,20 +1883,7 @@ format_feature_detail_select_color_preset(
    if (debug)
       DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
 
-   char buf0[100];
    bool ok = true;
-   char * mh_msg = NULL;
-   Byte mh = code_info->mh;
-   if (mh == 0x00)
-      mh_msg = "No tolerance specified";
-   else if (mh >= 0x0b) {
-      mh_msg = "Invalid tolerance";
-      ok = false;
-   }
-   else {
-      snprintf(buf0, 100, "Tolerance: %d%%", code_info->mh);
-      mh_msg = buf0;
-   }
 
    // char buf2[100];
    char * sl_msg = NULL;
@@ -1899,6 +1892,26 @@ format_feature_detail_select_color_preset(
       sl_msg = "Invalid SL value.";
       ok = false;
    }
+
+   // In 3.0 and 2.2, MH indicates the tolerance, with MH = 0x00 indicating no
+   // tolerance specified.  Per the spec, if MH = 0x00, then SL values 0x03..0x0a
+   // indicate relative adjustments from warmer to cooler. If MH != 0x00,
+   // i.e. a tolerance is specified, the SL byte indicates color temperature as usual.
+   // However, on the one v2.2 monitor that has been seen,
+   // an HP Z22i, the SL values listed in the capabilities string
+   // are clearly those for the usual color temperatures.
+   // Therefore, we always treat the SL byte as absolute temperatures,
+   // and for v3.0 and v2.2, we report the ML byte for tolerance.  (10/2019)
+
+   // as observed:
+   else {
+      sl_msg = sl_value_table_lookup(x14_color_preset_absolute_values, code_info->sl);
+      if (!sl_msg) {
+         sl_msg = "Invalid SL value";
+         ok = false;
+      }
+   }
+#ifdef PER_THE_SPEC
    else if (vcp_version.major < 3 || code_info->mh == 0x00) {
       sl_msg = sl_value_table_lookup(x14_color_preset_absolute_values, code_info->sl);
       if (!sl_msg) {
@@ -1942,16 +1955,38 @@ format_feature_detail_select_color_preset(
       default:    sl_msg = "Invalid SL value"; ok = false;
       }
    }
+#endif
 
-   if (vcp_version.major < 3) {
-   snprintf(buffer, bufsz,
-            "Setting: %s (0x%02x)",
-            sl_msg, sl);
+   if ( vcp_version_le(vcp_version, DDCA_VSPEC_V21) ) {
+      snprintf(buffer, bufsz,
+              "%s (0x%02x)",
+              sl_msg, sl);
    }
    else {
+      char * mh_msg = NULL;
+
+#ifdef ALT
+      Byte mh = code_info->mh;
+      char buf0[100];
+      if (mh == 0x00)
+         mh_msg = "No tolerance specified";
+      else if (mh >= 0x0b) {
+         mh_msg = "Invalid tolerance";
+         ok = false;
+      }
+      else {
+         snprintf(buf0, 100, "Tolerance: %d%%", code_info->mh);
+         mh_msg = buf0;
+      }
+#endif
+      mh_msg = sl_value_table_lookup(x14_color_preset_tolerances, code_info->mh);
+      if (!mh_msg) {
+         mh_msg = "Invalid MH value";
+         ok = false;
+      }
       snprintf(buffer, bufsz,
-               "Setting: %s (0x%02x), %s (0x%02x)",
-               sl_msg, sl, mh_msg, mh);
+               "%s (0x%02x), Tolerance: %s (0x%02x)",
+               sl_msg, sl, mh_msg, code_info->mh);
 
    }
    return ok;
@@ -2465,6 +2500,22 @@ static DDCA_Feature_Value_Entry x14_color_preset_absolute_values[] = {
      {0x0b, "User 1"},
      {0x0c, "User 2"},
      {0x0d, "User 3"},
+     {0x00, NULL}       // end of list marker
+};
+
+// MH byte for V2.2, V3.0
+static DDCA_Feature_Value_Entry x14_color_preset_tolerances[] = {
+     {0x00, "Unspecified"},
+     {0x01, "1%"},
+     {0x02, "2%"},
+     {0x03, "3%"},
+     {0x04, "4%"},
+     {0x05, "5%"},
+     {0x06, "6%"},
+     {0x07, "7%"},
+     {0x08, "8%"},
+     {0x09, "9%"},
+     {0x0a, "10%"},
      {0x00, NULL}       // end of list marker
 };
 
