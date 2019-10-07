@@ -1097,12 +1097,15 @@ ddca_get_simple_nc_feature_value_name_by_table(
       uint8_t                     feature_value,
       char**                      value_name_loc);
 
-
+/** Outputs a debugging report of the \DDCA_Feature_Metadata data structure.
+ *
+ *  @param md    pointer to \DDCA_Feature_Metadata instance
+ *  @param depth logical indentation depth
+ */
 void
 ddca_dbgrpt_feature_metadata(
       DDCA_Feature_Metadata * md,
       int                     depth);
-
 
 
 //
