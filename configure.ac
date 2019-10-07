@@ -1044,11 +1044,15 @@ AC_MSG_RESULT([
 	libtool version  	${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
 
 	prefix:                 ${prefix}
+	exec_prefix:		${exec_prefix}
+	libexecdir:		${libexecdir}
 	bindir:                 ${bindir}
+	libdir:			${libdir}
 	datarootdir:            ${datarootdir}
 	datadir:                ${datadir}
 	docdir:                 ${docdir}
 	mandir:               	${mandir}
+	includedir:		${includedir}
 
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
