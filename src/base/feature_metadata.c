@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE     // for asprintf in stdio.h
@@ -241,8 +241,8 @@ dbgrpt_ddca_feature_metadata(
    int d0 = depth;
    int d1 = depth+1;
    rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
-   rpt_vstring(d0, "Feature code:      0x%02x",  md->feature_code);
-// rpt_vstring(d1, "MCCS version:      %d.%d",  md->vspec.major, md->vspec.minor);
+   rpt_vstring(d0, "Feature code:      0x%02x", md->feature_code);
+   rpt_vstring(d1, "MCCS version:      %d.%d",  md->vcp_version.major, md->vcp_version.minor);
    rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
@@ -392,7 +392,8 @@ dfm_to_ddca_feature_metadata(
 
    DDCA_Feature_Metadata * ddca_meta = calloc(1, sizeof(DDCA_Feature_Metadata));
    memcpy(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4);
-   ddca_meta->feature_code = dfm->feature_code;
+   ddca_meta->feature_code  = dfm->feature_code;
+   ddca_meta->vcp_version   = dfm->vcp_version;
    ddca_meta->feature_flags = dfm->feature_flags;
    ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
    ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;

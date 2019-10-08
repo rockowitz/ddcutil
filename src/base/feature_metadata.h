@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_METADATA_H_
@@ -116,7 +116,7 @@ struct {
    char                                    marker[4];
    DDCA_Display_Ref                        display_ref;    // needed?
    DDCA_Vcp_Feature_Code                   feature_code;
-   DDCA_MCCS_Version_Spec                  vcp_version;    // needed ?
+   DDCA_MCCS_Version_Spec                  vcp_version;    // needed - yes, used in ddcui
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
