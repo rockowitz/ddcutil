@@ -440,7 +440,7 @@ typedef
 struct {
    char                                  marker[4];      /**< always "FMET" */
    DDCA_Vcp_Feature_Code                 feature_code;   /**< VCP feature code */
-// DDCA_MCCS_Version_Spec                vspec;          /**< MCCS version    */
+   DDCA_MCCS_Version_Spec                vcp_version;    /**< MCCS version    */
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Entry *            sl_values;      /**< valid when DDCA_SIMPLE_NC set */
    char *                                feature_name;   /**< feature name */
