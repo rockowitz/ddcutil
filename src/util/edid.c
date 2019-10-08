@@ -151,9 +151,9 @@ static void get_edid_descriptor_strings(
 {
    bool debug = false;
    assert(namebuf_len >= 14 && snbuf_len >= 14 && otherbuf_len >= 14);
-   strcpy(namebuf,  "Unspecified");
-   strcpy(snbuf,    "Unspecified");
-   strcpy(otherbuf, "Unspecified");
+   strcpy(namebuf,  "");
+   strcpy(snbuf,    "");
+   strcpy(otherbuf, "");
 
    int fields_found = 0;
 
@@ -462,8 +462,8 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
  */
 bool is_embedded_parsed_edid(Parsed_Edid * parsed_edid) {
    assert(parsed_edid);
-   bool result = streq(parsed_edid->model_name,  "Unspecified") &&
-                 streq(parsed_edid->serial_ascii,"Unspecified");
+   bool result = streq(parsed_edid->model_name,  "") &&
+                 streq(parsed_edid->serial_ascii,"");
    return result;
 }
 
