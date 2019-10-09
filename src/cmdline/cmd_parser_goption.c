@@ -351,9 +351,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       ok = false;
    }
 
-   if (sleep_multiplier_work) {
-   }
-
 
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
