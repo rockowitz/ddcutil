@@ -35,7 +35,7 @@ static double sleep_multiplier_factor = 1.0;
  *  \param multiplier
  *
  *  \todo
- *  Add Sleep_Event_Type botfield to make sleep factor dependent on event type?
+ *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
  *  Make thread specific?
  */
 void   set_sleep_multiplier_factor(double multiplier) {
