@@ -233,6 +233,13 @@ bool
 ddca_is_verify_enabled(void);
 
 
+void
+ddca_set_global_sleep_multiplier(double multiplier);
+
+double
+ddca_get_global_sleep_multiplier();
+
+
 //
 // Output Redirection
 //

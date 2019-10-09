@@ -16,6 +16,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/tuned_sleep.h"
 
 #include "adl/adl_shim.h"
 
@@ -484,6 +485,17 @@ ddca_is_verify_enabled() {
    return ddc_get_verify_setvcp();
 }
 
+void
+ddca_set_global_sleep_multiplier(double multiplier)
+{
+   set_sleep_multiplier_factor(multiplier);
+}
+
+double
+ddca_get_global_sleep_multiplier()
+{
+   return get_sleep_multiplier_factor();
+}
 
 
 #ifdef FUTURE
