@@ -120,7 +120,7 @@ void sleep_millis_with_tracex(
       message = "";
 
    dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP,
-           func, lineno, filename, "Sleeping for %d milliseconds%s", milliseconds, message);
+           func, lineno, filename, "Sleeping for %d milliseconds. %s", milliseconds, message);
 
    sleep_millis(milliseconds);
 }
