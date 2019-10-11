@@ -245,13 +245,13 @@ ddc_close_display(Display_Handle * dh) {
    switch(dh->dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         rc = i2c_close_bus(dh->fh, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
+         rc = i2c_close_bus(dh->fd, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("i2c_close_bus returned %d", rc);
             COUNT_STATUS_CODE(rc);
          }
-         dh->fh = -1;    // indicate invalid, in case we try to continue using dh
+         dh->fd = -1;    // indicate invalid, in case we try to continue using dh
          break;
       }
    case DDCA_IO_ADL:
@@ -260,13 +260,13 @@ ddc_close_display(Display_Handle * dh) {
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         rc = usb_close_device(dh->fh, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
+         rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
          if (rc != 0) {
             assert(rc < 0);
             DBGMSG("usb_close_device returned %d", rc);
             COUNT_STATUS_CODE(rc);
          }
-         dh->fh = -1;
+         dh->fd = -1;
          break;
       }
 #else
@@ -409,7 +409,7 @@ static DDCA_Status ddc_i2c_write_read_raw(
 
    Status_Errno_DDC rc =
          invoke_i2c_writer(
-                           dh->fh,
+                           dh->fd,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
    DBGMSF(debug, "invoke_i2c_writer() returned %d\n", rc);
@@ -419,10 +419,10 @@ static DDCA_Status ddc_i2c_write_read_raw(
 
       // ALTERNATIVE_THAT_DIDNT_WORK:
       // if (single_byte_reads)  // fails
-      //    rc = invoke_single_byte_i2c_reader(dh->fh, max_read_bytes, readbuf);
+      //    rc = invoke_single_byte_i2c_reader(dh->fd, max_read_bytes, readbuf);
       // else
 
-      rc = invoke_i2c_reader(dh->fh, max_read_bytes, readbuf);
+      rc = invoke_i2c_reader(dh->fd, max_read_bytes, readbuf);
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
       TUNED_SLEEP_I2C_WITH_TRACE(SE_POST_READ, NULL);
@@ -886,7 +886,7 @@ ddc_write_only(
    DDCA_Status psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
-      psc = ddc_i2c_write_only(dh->fh, request_packet_ptr);
+      psc = ddc_i2c_write_only(dh->fd, request_packet_ptr);
    }
    else {
       psc = adlshim_ddc_write_only(

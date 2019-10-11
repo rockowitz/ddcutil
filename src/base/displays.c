@@ -929,25 +929,24 @@ char * dref_repr_t(Display_Ref * dref) {
 
 /** Creates a #Display_Handle for an I2C #Display_Ref.
  *
- *  \param  fh   file handle of open display
+ *  \param  fd   Linux file descriptor of open display
  *  \param  dref pointer to #Display_Ref
  *  \return newly allocated #Display_Handle
  *
  *  \remark
  *  This functions handles the boilerplate of creating a #Display_Handle.
  */
-Display_Handle * create_bus_display_handle_from_display_ref(int fh, Display_Ref * dref) {
+Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref * dref) {
    // assert(dref->io_mode == DDCA_IO_DEVI2C);
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->fh = fh;
+   dh->fd = fd;
    dh->dref = dref;
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
    dh->repr = g_strdup_printf(
-                "[i2c: fh=%d, busno=%d]",
-                // "Display_Handle[i2c: fh=%d, busno=%d]",
-                dh->fh, dh->dref->io_path.path.i2c_busno);
+                "[i2c: fd=%d, busno=%d]",
+                dh->fd, dh->dref->io_path.path.i2c_busno);
    return dh;
 }
 
@@ -978,19 +977,19 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
 #ifdef USE_USB
 /** Creates a #Display_Handle for a USB #Display_Ref.
  *
- *  \param  fh   file handle of open display
- *  \param  dref pointer to #Display_Ref
+ *  \param  fh    Linux file descriptor of open display
+ *  \param  dref  pointer to #Display_Ref
  *  \return newly allocated #Display_Handle
  *
  *  \remark
  *  This functions handles to boilerplate of creating a #Display_Handle.
  */
-Display_Handle * create_usb_display_handle_from_display_ref(int fh, Display_Ref * dref) {
+Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref * dref) {
    // assert(dref->io_mode == DDCA_IO_USB);
    assert(dref->io_path.io_mode == DDCA_IO_USB);
    Display_Handle * dh = calloc(1, sizeof(Display_Handle));
    memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->fh = fh;
+   dh->fd = fd;
    dh->dref = dref;
    dh->repr = g_strdup_printf(
                 "[usb: %d:%d, %s/hiddev%d]",
@@ -1025,7 +1024,7 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
          switch (dh->dref->io_path.io_mode) {
          case (DDCA_IO_I2C):
             // rpt_vstring(d1, "ddc_io_mode = DDC_IO_DEVI2C");
-            rpt_vstring(d1, "fh:                  %d", dh->fh);
+            rpt_vstring(d1, "fd:                  %d", dh->fd);
             rpt_vstring(d1, "busno:               %d", dh->dref->io_path.path.i2c_busno);
             break;
          case (DDCA_IO_ADL):
@@ -1035,7 +1034,7 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
             break;
          case (DDCA_IO_USB):
             // rpt_vstring(d1, "ddc_io_mode = USB_IO");
-            rpt_vstring(d1, "fh:                  %d", dh->fh);
+            rpt_vstring(d1, "fd:                  %d", dh->fd);
             rpt_vstring(d1, "usb_bus:             %d", dh->dref->usb_bus);
             rpt_vstring(d1, "usb_device:          %d", dh->dref->usb_device);
             rpt_vstring(d1, "hiddev_device_name:  %s", dh->dref->usb_hiddev_name);
@@ -1054,8 +1053,8 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
  *
  *  This variant of #dh_repr() is thread safe.
  *
- * \param  dh    display handle
- * \return  string representation of handle
+ * \param   dh      display handle
+ * \return  string  representation of handle
  */
 char * dh_repr_t(Display_Handle * dh) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
@@ -1068,8 +1067,8 @@ char * dh_repr_t(Display_Handle * dh) {
       switch (dh->dref->io_path.io_mode) {
       case DDCA_IO_I2C:
            snprintf(buf, bufsz,
-                    "Display_Handle[i2c: fh=%d, busno=%d]",
-                    dh->fh, dh->dref->io_path.path.i2c_busno);
+                    "Display_Handle[i2c: fd=%d, busno=%d]",
+                    dh->fd, dh->dref->io_path.path.i2c_busno);
            break;
        case DDCA_IO_ADL:
            snprintf(buf, bufsz,

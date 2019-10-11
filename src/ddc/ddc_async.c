@@ -67,8 +67,8 @@ start_get_vcp_value(
        DDCA_Notification_Func    callback_func)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fh=%d",
-            feature_code, dh_repr_t(dh), dh->fh);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fd=%d",
+            feature_code, dh_repr_t(dh), dh->fd);
 
    Error_Info * ddc_excp = NULL;
 

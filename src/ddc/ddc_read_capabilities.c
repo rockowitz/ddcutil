@@ -42,6 +42,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/sleep.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -142,6 +143,7 @@ get_capabilities_string(
 #endif
       }
       else {
+         SLEEP_MILLIS_WITH_TRACE(200, "Before reading capabilities");
          Buffer * pcaps_buffer;
          ddc_excp = get_capabilities_buffer(dh, &pcaps_buffer);
          // psc = (ddc_excp) ? ddc_excp->psc : 0;

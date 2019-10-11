@@ -455,7 +455,7 @@ app_read_changes_usb(Display_Handle * dh) {
    // bool new_values_found = false;
 
    assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
-   int fd = dh->fh;
+   int fd = dh->fd;
    int flaguref = HIDDEV_FLAG_UREF;
    struct hiddev_usage_ref uref;
    int rc = ioctl(fd, HIDIOCSFLAG, &flaguref);

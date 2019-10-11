@@ -462,10 +462,10 @@ usb_get_nontable_vcp_value(
    if (use_alt_method) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
       psc = usb_get_usage_value_by_report_type_and_ucode(
-                  dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
+                  dh->fd, HID_REPORT_TYPE_FEATURE, usage_code, &maxval, &curval);
       if (psc != 0)
          psc = usb_get_usage_value_by_report_type_and_ucode(
-                  dh->fh, HID_REPORT_TYPE_INPUT,   usage_code, &maxval, &curval);
+                  dh->fd, HID_REPORT_TYPE_INPUT,   usage_code, &maxval, &curval);
    }
    else {
       // find the field record
@@ -488,7 +488,7 @@ usb_get_nontable_vcp_value(
 
             if (vcprec->report_type == HID_REPORT_TYPE_OUTPUT)
                continue;
-            psc = usb_get_usage_value_by_vcprec(dh->fh,  vcprec, &maxval, &curval);
+            psc = usb_get_usage_value_by_vcprec(dh->fd,  vcprec, &maxval, &curval);
             DBGMSF(debug, "usb_get_usage() usage index: %d returned %d, maxval=%d, curval=%d",
                           vcprec->usage_index, psc, maxval, curval);
             if (psc == 0)
@@ -620,7 +620,7 @@ usb_set_nontable_vcp_value(
    if (use_alt) {
       __u32 usage_code = 0x0082 << 16 | feature_code;
       psc = set_usage_value_by_report_type_and_ucode(
-               dh->fh, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
+               dh->fd, HID_REPORT_TYPE_FEATURE, usage_code, new_value);
       // if (gsc != 0)
       //    gsc = set_usage_value_by_report_type_and_ucode(dh->fh, HID_REPORT_TYPE_OUTPUT, usage_code, new_value);
       // if (gsc == modulate_rc(EINVAL, RR_ERRNO))
@@ -650,7 +650,7 @@ usb_set_nontable_vcp_value(
             if (vcprec->report_type == HID_REPORT_TYPE_INPUT)
                continue;
 
-            psc = usb_set_usage_value_by_vcprec(dh->fh,  vcprec, new_value);
+            psc = usb_set_usage_value_by_vcprec(dh->fd,  vcprec, new_value);
             DBGMSF(debug, "usb_set_usage() usage index: %d returned %s",
                           vcprec->usage_index, psc_desc(psc) );
             if (psc == 0)

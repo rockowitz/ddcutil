@@ -64,53 +64,53 @@ bool i2c_force_slave_addr_flag = false;
 
 /** Open an I2C bus device.
  *
- *  @param busno      bus number
+ *  @param busno     bus number
  *  @param callopts  call option flags, controlling failure action
  *
- *  @retval >=0  file descriptor
+ *  @retval >=0     Linux file descriptor
  *  @retval -errno  negative Linux errno if open fails
  *
  *  Call options recognized
  *  - CALLOPT_ERR_MSG
  */
 int i2c_open_bus(int busno, Byte callopts) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
-   int  file;
+   int  fd;             // Linux file descriptor
 
    snprintf(filename, 19, "/dev/i2c-%d", busno);
    RECORD_IO_EVENT(
          IE_OPEN,
-         ( file = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
+         ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
-   // per man open:
+   // DBGMSG("post open, fd=%d", fd);
    // returns file descriptor if successful
    // -1 if error, and errno is set
    int errsv = errno;
-   if (file < 0) {
+   if (fd < 0) {
 #ifdef OLD
       if (callopts & CALLOPT_ERR_ABORT) {
          TERMINATE_EXECUTION_ON_ERROR("Open failed for %s. errno=%s\n",
                                       filename, linux_errno_desc(errsv));
       }
 #endif
-      if (callopts & CALLOPT_ERR_MSG) {
+     //  if (callopts & CALLOPT_ERR_MSG) {
          f0printf(ferr(), "Open failed for %s: errno=%s\n",
                         filename, linux_errno_desc(errsv));
-      }
-      file = -errsv;
+     // }
+      fd = -errsv;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", file);
-   return file;
+   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
+   return fd;
 }
 
 
 /** Closes an open I2C bus device.
  *
- * @param  fd        file descriptor
+ * @param  fd        Linux file descriptor
  * @param  busno     bus number (for error messages), if -1, ignore
  * @param  callopts  call option flags, controlling failure action
  *
@@ -168,7 +168,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
 
 /** Sets I2C slave address to be used on subsequent calls
  *
- * @param  file      file descriptor for open /dev/i2c-n
+ * @param  fd        Linux file descriptor for open /dev/i2c-n
  * @param  addr      slave address
  * @param  callopts  call option flags, controlling failure action\n
  *                   if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE\n
@@ -181,16 +181,16 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
  * Errors which are recovered are counted here using COUNT_STATUS_CODE().
  * The final status code is left for the caller to count
  */
-Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
+Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
    bool debug = false;
 #ifdef FOR_TESTING
    bool force_i2c_slave_failure = false;
 #endif
    callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGTRC(debug, TRACE_GROUP,
-                 "file=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
-                 file, addr,
-                 bool_repr(i2c_force_slave_addr_flag),
+                 "fd=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
+                 fd, addr,
+                 sbool(i2c_force_slave_addr_flag),
                  interpret_call_options_t(callopts) );
    // FAILSIM;
 
@@ -201,7 +201,7 @@ Status_Errno i2c_set_addr(int file, int addr, Call_Options callopts) {
 
 retry:
    errno = 0;
-   RECORD_IO_EVENT( IE_OTHER, ( rc = ioctl(file, op, addr) ) );
+   RECORD_IO_EVENT( IE_OTHER, ( rc = ioctl(fd, op, addr) ) );
 #ifdef FOR_TESTING
    if (force_i2c_slave_failure) {
       if (op == I2C_SLAVE) {
@@ -282,7 +282,7 @@ Value_Name_Table functionality_flag_table = {
 /** Gets the I2C functionality flags for an open I2C bus,
  *  specified by its file descriptor.
  *
- *  @param fd  file descriptor
+ *  @param fd  Linux file descriptor
  *  @return functionality flags
  */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
@@ -362,6 +362,13 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
 // I2C Bus Inspection - Slave Addresses
 //
 
+
+/** Checks whether a /dev/i2c-n device represents an dDP device,
+ *  i.e. a laptop display.
+ *
+ *  @param  busno   i2c bus number
+ *  @return true/false
+ */
 // Attempting to recode using opendir() and readdir() produced
 // a complicated mess.  Using execute_shell_cmd_collect() is simple.
 // Simplicity has its virtues.
@@ -686,7 +693,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
    assert(bus_info);
    assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
 
-   int file = 0;
+   int fd = 0; // Linux file descriptor
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGMSF(debug, "Probing");
@@ -716,17 +723,17 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
       if (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED &&
           bus_info->flags & I2C_BUS_HAS_VALID_NAME )
       {
-         file = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
+         fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
 
-         if (file >= 0) {
+         if (fd >= 0) {
             bus_info->flags |= I2C_BUS_ACCESSIBLE;
 
-            bus_info->functionality = i2c_get_functionality_flags_by_fd(file);
+            bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
             // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
 
 #ifdef DETECT_SLAVE_ADDRS
             Byte ddc_addr_flags = 0x00;
-            Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(file, &ddc_addr_flags);
+            Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(fd, &ddc_addr_flags);
             if (psc != 0) {
                DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
                f0printf(ferr(), "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
@@ -742,7 +749,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
                // when the bytes are read in i2c_get_parsed_edid_by_fd()
                // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
                // but should never fail if detect_ddc_addrs_by_fd() succeeds
-               psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+               psc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
                if (psc != 0) {
                   DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
                   f0printf(ferr(), "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
@@ -763,7 +770,7 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
             }
    #endif
 #else
-            Public_Status_Code psc = i2c_get_parsed_edid_by_fd(file, &bus_info->edid);
+            Public_Status_Code psc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
             DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
             if (psc == 0)
                bus_info->flags |= I2C_BUS_ADDR_0X50;
@@ -775,8 +782,8 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
    }
 
 bye:
-   if (file >= 0)
-      i2c_close_bus(file, bus_info->busno,  CALLOPT_ERR_MSG);
+   if (fd >= 0)
+      i2c_close_bus(fd, bus_info->busno,  CALLOPT_ERR_MSG);
 
    // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
    if (debug || IS_TRACING() ) {
@@ -810,12 +817,12 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
 void i2c_dbgreport_bus_info_flags(I2C_Bus_Info * bus_info, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting.  bus_info=%p");
-   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_EXISTS));
-   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, bool_repr(bus_info->flags&I2C_BUS_PROBED ));
+   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
+   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
-      rpt_vstring(depth, "Address 0x30 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(depth, "Address 0x37 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X37));
-      rpt_vstring(depth, "Address 0x50 present:    %s", bool_repr(bus_info->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
    }
    i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
    DBGMSF(false, "Done");
@@ -880,14 +887,14 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    // The simple X37 test can have both false positives (DDC turned off in monitor but
    // X37 responsive), and false negatives (Dell P2715Q)
    // if (output_level >= DDCA_OL_NORMAL)
-   // rpt_vstring(depth, "Supports DDC:        %s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X37));
+   // rpt_vstring(depth, "Supports DDC:        %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
-      rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", bool_repr(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth+1, "Is eDP device:                   %-5s", sbool(businfo->flags & I2C_BUS_EDP));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
@@ -946,7 +953,7 @@ bool i2c_device_exists(int busno) {
                                    namebuf, rc, linux_errno_desc(errsv) );
     }
 
-    DBGMSF(debug, "busno=%d, returning %s", busno, bool_repr(result) );
+    DBGMSF(debug, "busno=%d, returning %s", busno, sbool(result) );
    return result;
 }
 
@@ -1088,7 +1095,6 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 }
 
 
-
 //
 // I2C Bus Inquiry
 //
@@ -1141,7 +1147,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
       result = true;
    }
 
-   DBGMSF(debug, "Returning %s", bool_repr(result));
+   DBGMSF(debug, "Returning %s", sbool(result));
    return result;
 }
 #endif
@@ -1160,7 +1166,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", bool_repr(report_all));
+   DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", sbool(report_all));
 
    assert(i2c_buses);
    int busct = i2c_buses->len;

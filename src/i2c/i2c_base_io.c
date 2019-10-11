@@ -1,33 +1,10 @@
-/* i2c_base_io.c
+/** \file i2c_base_io.c
  *
- *  Basic functions for writing to and reading from the I2C bus,
- *  using alternative mechanisms.
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -60,7 +37,7 @@
 
 /** Writes to i2c bus using write()
  *
- * @param  fh      file handle
+ * @param  fd      Linux file descriptor
  * @param  bytect  number of bytes to write
  * @param  pbytes  pointer to bytes to write
  *
@@ -69,9 +46,9 @@
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno            negative Linux error number
  */
-Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
+Status_Errno_DDC  write_writer(int fd, int bytect, Byte * pbytes) {
    bool debug = false;
-   int rc = write(fh, pbytes, bytect);
+   int rc = write(fd, pbytes, bytect);
    // per write() man page:
    // if >= 0, number of bytes actually written, must be <= bytect
    // if -1,   error occurred, errno is set
@@ -92,7 +69,7 @@ Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
 
 /** Reads from I2C bus using read()
  *
- * @param  fh        file handle
+ * @param  fd        Linux file descriptor
  * @param  bytect    number of bytes to read
  * @param  readbuf   read bytes into this buffer
  *
@@ -101,9 +78,9 @@ Status_Errno_DDC  write_writer(int fh, int bytect, Byte * pbytes) {
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno           negative Linux errno value
  */
-Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC read_reader(int fd, int bytect, Byte * readbuf) {
    bool debug = false;
-   int rc = read(fh, readbuf, bytect);
+   int rc = read(fd, readbuf, bytect);
    // per read() man page:
    // if >= 0, number of bytes actually read
    // if -1,   error occurred, errno is set
@@ -143,16 +120,16 @@ Status_Errno_DDC read_reader(int fh, int bytect, Byte * readbuf) {
 
 /** Writes to I2C bus using ioctl(I2C_RDWR)
  *
- * @param  fh      file handle
+ * @param  fd      Linux file descriptor
  * @param  bytect  number of bytes to write
  * @param  pbytes  pointer to bytes to write
  *
  * @retval 0       success
  * @retval <0      negative Linux errno value
  */
-Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
+Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p", fh, bytect, pbytes);
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p", fd, bytect, pbytes);
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
@@ -183,7 +160,7 @@ Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
    // if error:
    //    -1, errno is set
    // 11/15: as seen: always returns 1 for success
-   int rc = ioctl(fh, I2C_RDWR, &msgset);
+   int rc = ioctl(fd, I2C_RDWR, &msgset);
    int errsv = errno;
    if (rc < 0) {
       if (debug) {
@@ -210,14 +187,14 @@ Status_Errno_DDC ioctl_writer(int fh, int bytect, Byte * pbytes) {
 
 /** Reads from I2C bus using ioctl(I2C_RDWR)
  *
- * @param  fh        file handle
+ * @param  fd        Linux file descriptor
  * @param  bytect    number of bytes to read
  * @param  readbuf   read bytes into this buffer
  *
  * @retval 0         success
  * @retval <0        negative Linux errno value
  */
-Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf) {
    bool debug = false;
    // DBGMSG("Starting");
 
@@ -243,7 +220,7 @@ Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
    //    occasionally >0 is output parm
    // if error:
    //    -1, errno is set
-   int rc =  ioctl(fh, I2C_RDWR, &msgset);
+   int rc =  ioctl(fd, I2C_RDWR, &msgset);
    int errsv = errno;
    if (rc < 0) {
       if (debug) {
@@ -272,9 +249,9 @@ Status_Errno_DDC ioctl_reader(int fh, int bytect, Byte * readbuf) {
 // Write to I2C bus using i2c_smbus_write_i2c_block_data()
 
 // 11/2015:    fails:
-Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte * bytes_to_write) {
+Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fd, int bytect, Byte * bytes_to_write) {
    bool debug = true;
-   int rc = i2c_smbus_write_i2c_block_data(fh,
+   int rc = i2c_smbus_write_i2c_block_data(fd,
                                            bytes_to_write[0],   // cmd
                                            bytect-1,            // len of values
                                            bytes_to_write+1);   // values
@@ -294,14 +271,14 @@ Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fh, int bytect, Byte 
 
 // i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
 // "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
-Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fh, int bytect, Byte * readbuf) {
+Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fd, int bytect, Byte * readbuf) {
    bool debug = true;
    const int MAX_BYTECT = 256;
    assert(bytect <= MAX_BYTECT);
    Byte workbuf[MAX_BYTECT+1];
    Byte zeroByte = 0x00;
    // can't handle 32 byte fragments from capabilities reply
-   int rc = i2c_smbus_read_i2c_block_data(fh,
+   int rc = i2c_smbus_read_i2c_block_data(fd,
                                            zeroByte,   // cmd byte
                                            bytect,
                                            workbuf);
