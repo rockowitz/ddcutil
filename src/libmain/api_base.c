@@ -551,6 +551,16 @@ ddca_trace_group_name_to_value(char * name) {
    return trace_class_name_to_value(name);
 }
 
+void
+ddca_set_trace_options(DDCA_Trace_Options  options) {
+   // global variables in core.c
+   dbgtrc_show_time = options & DDCA_TRCOPT_TIMESTAMP;
+   dbgtrc_show_thread_id = options & DDCA_TRCOPT_THREAD_ID;
+}
+
+
+
+
 
 //
 // Statistics

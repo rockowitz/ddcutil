@@ -385,6 +385,9 @@ ddca_set_trace_groups(
 DDCA_Trace_Group
 ddca_trace_group_name_to_value(char * name);
 
+void
+ddca_set_trace_options(DDCA_Trace_Options  options);
+
 
 //
 // Statistics and Diagnostics
