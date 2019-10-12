@@ -35,6 +35,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/last_io_event.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/sleep.h"
@@ -74,8 +75,8 @@ bool i2c_force_slave_addr_flag = false;
  *  - CALLOPT_ERR_MSG
  */
 int i2c_open_bus(int busno, Byte callopts) {
-   bool debug = true;
-   DBGTRC(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
    int  fd;             // Linux file descriptor
@@ -89,6 +90,7 @@ int i2c_open_bus(int busno, Byte callopts) {
    // returns file descriptor if successful
    // -1 if error, and errno is set
    int errsv = errno;
+
    if (fd < 0) {
 #ifdef OLD
       if (callopts & CALLOPT_ERR_ABORT) {
@@ -102,8 +104,11 @@ int i2c_open_bus(int busno, Byte callopts) {
      // }
       fd = -errsv;
    }
+   else {
+      RECORD_IO_FINISH_NOW(fd, IE_OPEN);
+   }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
+   // DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
    return fd;
 }
 
@@ -135,7 +140,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    free(i2c_fn);
 #endif
 
-   RECORD_IO_EVENT(IE_CLOSE, ( rc = close(fd) ) );
+   RECORD_IO_EVENTX(fd, IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
    int errsv = errno;
    if (rc < 0) {
@@ -687,7 +692,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 static void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info);
@@ -787,8 +792,8 @@ bye:
 
    // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
    if (debug || IS_TRACING() ) {
-      DBGMSG("Done. flags=0x%04x", bus_info->flags );
-      i2c_dbgrpt_bus_info(bus_info, 1);
+      DBGMSG("Done. flags=0x%04x, bus info:", bus_info->flags );
+      i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
 
@@ -858,7 +863,8 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
 #endif
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
-      i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
+      // not useful and clutters the output
+      // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
          if (bus_info->edid) {
             report_parsed_edid(bus_info->edid, true /* verbose */, depth);
