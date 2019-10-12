@@ -16,6 +16,7 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
+#include "base/last_io_event.h"
 
 // #include "i2c/i2c_base_io.h"
 
@@ -82,6 +83,7 @@ Status_Errno_DDC invoke_i2c_writer(
      );
    // DBGMSF(debug, "writer() function returned %d", rc);
    assert (rc <= 0);
+   RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
    DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
    return rc;
@@ -97,7 +99,7 @@ Status_Errno_DDC invoke_i2c_writer(
  * @return  status code
  */
 Status_Errno_DDC invoke_i2c_reader(
-       int        fh,
+       int        fd,
        int        bytect,
        Byte *     readbuf)
 {
@@ -105,9 +107,10 @@ Status_Errno_DDC invoke_i2c_reader(
      DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
      Status_Errno_DDC rc;
-     RECORD_IO_EVENT(
+     RECORD_IO_EVENTX(
+        fd,
         IE_READ,
-        ( rc = i2c_io_strategy->i2c_reader(fh, bytect, readbuf) )
+        ( rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf) )
        );
      assert (rc <= 0);
 
