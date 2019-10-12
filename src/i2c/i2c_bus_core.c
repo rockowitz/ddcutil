@@ -108,7 +108,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       RECORD_IO_FINISH_NOW(fd, IE_OPEN);
    }
 
-   // DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
    return fd;
 }
 
@@ -692,7 +692,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 static void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info);
