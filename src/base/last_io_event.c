@@ -13,11 +13,15 @@
 
 static bool trace_finish_timestamps = false;
 
+static gsize leave_event_initialized = 0;
+
+G_LOCK_DEFINE_STATIC(timestamps_lock);
+
 // Maintain timestamps
 
 static GPtrArray * timestamps = NULL;
 
-void free_io_event_timestamp_internal(gpointer data) {
+static void free_io_event_timestamp_internal(gpointer data) {
    IO_Event_Timestamp * ptr = (IO_Event_Timestamp *) data;
    assert(memcmp(ptr->marker, IO_EVENT_TIMESTAMP_MARKER, 4) == 0);
    ptr->marker[3] = 'X';
@@ -26,9 +30,10 @@ void free_io_event_timestamp_internal(gpointer data) {
    free(data);
 }
 
-IO_Event_Timestamp* find_io_event_timestamp(int fd) {
+static IO_Event_Timestamp* find_io_event_timestamp(int fd) {
    assert(timestamps);
    IO_Event_Timestamp * result = NULL;
+
    for (int ndx = 0; ndx < timestamps->len; ndx++) {
       IO_Event_Timestamp * cur = g_ptr_array_index(timestamps, ndx);
       if (cur->fd == fd) {
@@ -36,16 +41,25 @@ IO_Event_Timestamp* find_io_event_timestamp(int fd) {
          break;
       }
    }
+
    // DBGMSG("Returning %p", result);
    return result;
+}
+
+static void ensure_initialized() {
+   if (g_once_init_enter(&leave_event_initialized)) {
+      if (!timestamps) {     // first call?
+         timestamps = g_ptr_array_new_full(4, free_io_event_timestamp_internal);
+      }
+      g_once_init_leave(&leave_event_initialized, 1);
+   }
 }
 
 
 IO_Event_Timestamp * get_io_event_timestamp(int fd)
 {
-   if (!timestamps) {     // first call?
-      timestamps = g_ptr_array_new_full(4, free_io_event_timestamp_internal);
-   }
+   ensure_initialized();
+   G_LOCK(timestamps_lock);
    IO_Event_Timestamp * ts = find_io_event_timestamp(fd);
    if (!ts) {
       ts = calloc(1, sizeof(IO_Event_Timestamp));
@@ -53,6 +67,7 @@ IO_Event_Timestamp * get_io_event_timestamp(int fd)
       ts->fd = fd;
       g_ptr_array_add(timestamps, ts);
    }
+   G_UNLOCK(timestamps_lock);
    assert(ts);
    return ts;
 }
@@ -61,11 +76,13 @@ IO_Event_Timestamp * get_io_event_timestamp(int fd)
 
 
 void free_io_event_timestamp(int fd) {
-   if (timestamps) {
-      IO_Event_Timestamp * ts = find_io_event_timestamp(fd);
-      if (ts)
-         g_ptr_array_remove(timestamps, ts);
-   }
+   ensure_initialized();
+   assert(timestamps);
+   G_LOCK(timestamps_lock);
+   IO_Event_Timestamp * ts = find_io_event_timestamp(fd);
+   if (ts)
+      g_ptr_array_remove(timestamps, ts);
+   G_UNLOCK(timestamps_lock);
 }
 
 
