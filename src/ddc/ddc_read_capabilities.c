@@ -130,6 +130,7 @@ get_capabilities_string(
 {
    assert(dh);
    assert(dh->dref);
+   DBGMSG("Starting. dh=%s", dh_repr_t(dh));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -155,6 +156,8 @@ get_capabilities_string(
       }
    }
    *caps_loc = dh->dref->capabilities_string;
+   DBGMSG("dh=%s, error_info = %s, capabilities: %s", dh_repr_t(dh),
+          errinfo_summary(ddc_excp), *caps_loc);
    return ddc_excp;
 }
 
