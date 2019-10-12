@@ -106,7 +106,7 @@ void ddc_set_async_threshold(int threshold) {
  *  verbose output is distracting.
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    assert(dh);
    DDCA_Any_Vcp_Value * pvalrec;
@@ -223,7 +223,8 @@ bye:
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", bool_repr(communication_working));
+   DBGTRC(debug, TRACE_GROUP, "dh=%s, Returning: %s",
+                 dh_repr_t(dh), sbool(communication_working));
    return communication_working;
 }
 
@@ -235,6 +236,8 @@ bye:
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
 bool initial_checks_by_dref(Display_Ref * dref) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref) );
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -245,16 +248,22 @@ bool initial_checks_by_dref(Display_Ref * dref) {
       ddc_close_display(dh);
    }
 
+   DBGMSF(debug, "Done. dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
    return result;
 }
 
 
 // function to be run in thread
 void * threaded_initial_checks_by_dref(gpointer data) {
+   bool debug = true;
+
    Display_Ref * dref = data;
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+   DBGMSF(debug, "Starting. dref = %s", dref_repr_t(dref) );
+
    initial_checks_by_dref(dref);
    // g_thread_exit(NULL);
+   DBGMSF(debug, "Done. dref = %s, returning NULL", dref_repr_t(dref) );
    return NULL;
 }
 
@@ -726,7 +735,7 @@ bye:
  *  \param all_displays #GPtrArray of pointers to #Display_Ref
  */
 void async_scan(GPtrArray * all_displays) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
 
    GPtrArray * threads = g_ptr_array_new();
@@ -766,7 +775,7 @@ void async_scan(GPtrArray * all_displays) {
 
 
 void non_async_scan(GPtrArray * all_displays) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. checking %d displays", all_displays->len);
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -908,7 +917,7 @@ get_display_ref_for_display_identifier(
 static
 GPtrArray *
 ddc_detect_all_displays() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    GPtrArray * display_list = g_ptr_array_new();
@@ -1034,10 +1043,15 @@ ddc_detect_all_displays() {
  */
 void
 ddc_ensure_displays_detected() {
+   bool debug = true;
+   DBGMSF(debug, "Starting.");
    if (!all_displays) {
       i2c_detect_buses();
       all_displays = ddc_detect_all_displays();
+
    }
+   DBGMSF(debug, "all_displays has %d displays", all_displays->len);
+
 }
 
 
