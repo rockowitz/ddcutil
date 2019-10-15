@@ -623,7 +623,7 @@ ddca_get_display_info_list2(
       bool                      include_invalid_displays,
       DDCA_Display_Info_List**  dlist_loc)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, DDCA_TRC_API||DDCA_TRC_DDC, "Starting");
    free_thread_error_detail();
    // assert(dlist_loc);

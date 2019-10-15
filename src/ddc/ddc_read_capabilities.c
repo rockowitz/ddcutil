@@ -1,38 +1,14 @@
-/* ddc_read_capabilities.c
- *
- * Functions to obtain the capabilities string for a display.
- * These functions are in a separate source file to simplify
- * the acyclic graph of #includes within the ddc source directory.
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
+/** \file read_capabilities.c */
 
-/** \file */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 #include <time.h>
 /** \endcond */
@@ -128,7 +104,7 @@ get_capabilities_string(
       Display_Handle * dh,
       char**           caps_loc)
 {
-   bool debug = true;
+   bool debug = false;
    assert(dh);
    assert(dh->dref);
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
@@ -157,7 +133,7 @@ get_capabilities_string(
       }
    }
    *caps_loc = dh->dref->capabilities_string;
-   DBGMSF(debug, "dh=%s, error_info = %s, capabilities: %s", dh_repr_t(dh),
+   DBGMSF(debug, "Done. dh=%s, error_info = %s, capabilities: %s", dh_repr_t(dh),
           errinfo_summary(ddc_excp), *caps_loc);
    return ddc_excp;
 }
