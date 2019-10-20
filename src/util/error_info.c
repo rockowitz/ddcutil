@@ -668,9 +668,11 @@ errinfo_report(Error_Info * erec, int depth) {
 
    // rpt_vstring(depth, "(%s) Status code: %d", __func__, erec->status_code);
    // rpt_vstring(depth, "(%s) Location: %s", __func__, (erec->func) ? erec->func : "not set");
+   // rpt_vstring(depth, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
    rpt_push_output_dest(stderr);
    rpt_vstring(depth, "Exception in function %s: status=%s",
-         (erec->func) ? erec->func : "not set", errinfo_desc_func(erec->status_code) );
+         (erec->func) ? erec->func : "not set",
+         errinfo_desc_func(erec->status_code) );  // can't call psc_desc(), violates layering
    if (erec->detail)
       rpt_label(depth+1, erec->detail);
    rpt_pop_output_dest();
@@ -709,6 +711,8 @@ errinfo_summary(Error_Info * erec) {
 
    static GPrivate  esumm_key     = G_PRIVATE_INIT(g_free);
    static GPrivate  esumm_len_key = G_PRIVATE_INIT(g_free);
+
+   // rpt_vstring(1, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
 
    char * desc = errinfo_desc_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
 
