@@ -794,15 +794,14 @@ get_version_specific_sl_values(
        DDCA_MCCS_Version_Spec     vcp_version)
 {
    bool debug = false;
+   DBGMSF(debug, "feature= 0x%02x, vcp_version = %d.%d", vfte->code, vcp_version.major, vcp_version.minor);
    DDCA_Feature_Value_Entry * result = NULL;
    if (vcp_version.major >= 3)
       result = vfte->v30_sl_values;
    else if (vcp_version.major == 2 && vcp_version.minor >= 2)
       result = vfte->v22_sl_values;
 
-   if (!result &&
-       (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor == 1))
-      )
+   if (!result && (vcp_version.major >= 3 || (vcp_version.major == 2 && vcp_version.minor == 1)) )
          result = vfte->v21_sl_values;
 
    if (!result)
@@ -2805,7 +2804,7 @@ static DDCA_Feature_Value_Entry xca_v22_osd_button_sl_values[] = {
       {0x01, "OSD disabled, button events enabled"},
       {0x02, "OSD enabled, button events enabled"},
       {0x03, "OSD disabled, button events disabled"},
-      {0x04, "Display cannot supply this information"},
+      {0xff, "Display cannot supply this information"},
       {0x00, NULL}    // terminator
 };
 
@@ -4294,6 +4293,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // BUT: xCA is present in 2.0 spec, defined identically to 3.0 spec
       .vcp_spec_groups = VCP_SPEC_MISC | VCP_SPEC_CONTROL,   // 2.0: MISC, 3.0: CONTROL
       .default_sl_values=xca_osd_values,  // tables specified in nontable_formatter
+      .v22_sl_values=xca_v22_osd_button_sl_values,
       // .desc = "Indicates whether On Screen Display is enabled",
       .desc = "Sets and indicates the current operational state of OSD (and buttons in v2.2)",
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
