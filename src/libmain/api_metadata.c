@@ -490,6 +490,8 @@ ddca_get_feature_metadata_by_dh(
          ddca_dh,
          {
                bool debug = false;
+               // if (feature_code == 0xca)
+               //    debug = true;
                DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s, metadata_loc=%p",
                              feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
                if (debug)
