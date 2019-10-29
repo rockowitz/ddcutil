@@ -41,9 +41,9 @@ if ENABLE_SHARED_LIB_COND
    pkgconfigdir = $(datadir)/pkgconfig
    pkgconfig_DATA = ddcutil.pc
 
-   cmakedir = $(datadir)/cmake/Modules
-   cmake_DATA = FindDDCUtil.cmake
-   EXTRA_DIST += FindDDCUtil.cmake
+   # cmakedir = $(datadir)/cmake/Modules
+   # cmake_DATA = FindDDCUtil.cmake
+   # EXTRA_DIST += FindDDCUtil.cmake
 endif
 
 if ENABLE_SHARED_LIB_COND
@@ -168,9 +168,14 @@ show:
 #	ldconfig
 
 install-data-local:
-	@echo "(install-data-local):"
+	@echo "(Makefile) install-data-local):"
 	@echo "  docdir                 = $(docdir)"
 
+
+
+install-cmake-local:
+	@echo "(Makefile) install-cmake-local):"
+	@echo "  cmakedir                 = $(cmakedir)"
 
 
 # rpmarch=`$(RPM) --showrc | grep "^build arc" | \

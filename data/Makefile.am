@@ -5,7 +5,7 @@ resfiles = \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 if ENABLE_SHARED_LIB_COND
-resfiles += usr/share/cmake/Modules/FindDDCUtil.cmake
+# resfiles += usr/share/cmake/Modules/FindDDCUtil.cmake
 endif
 
 
@@ -17,13 +17,21 @@ ddcutildir = $(datadir)/ddcutil/data
 # or /usr/share/ddcutil/data
 ddcutil_DATA = $(resfiles)
 
+if ENABLE_SHARED_LIB_COND
+   cmakedir = $(datadir)/cmake/Modules
+   cmake_DATA = usr/share/cmake/Modules/FindDDCUtil.cmake
+endif
+
 
 # Causes files (with directory structure) to be included in tarball:
 EXTRA_DIST = $(resfiles)
-EXTRA_DIST += usr/share/cmake/Modules/FindDDCUtil.cmake
+# EXTRA_DIST += usr/share/cmake/Modules/FindDDCUtil.cmake
 
 install-data-local:
-	@echo "Executing rule: install-data-local"
+	@echo "(data/Makefile) Executing rule: install-data-local"
+
+install-cmake-local:
+	@echo "(data/Makefile) Executing rule: install-cmake-local"
 
 # @xxx@ names are not defined, names with $() are 
 install-data-hook:
@@ -33,4 +41,5 @@ install-data-hook:
 	@echo "ddcutildir:     $(ddcutildir)"
 	@echo "srcdir:         $(srcdir)"
 	@echo "bindir:         ${bindir}"
+	@echo "cmakedir:       ${cmakedir}"
 
