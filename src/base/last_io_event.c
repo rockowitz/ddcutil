@@ -5,10 +5,10 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 #include <glib-2.0/glib.h>
 
 #include "last_io_event.h"
-
 
 
 static bool trace_finish_timestamps = false;
@@ -21,6 +21,7 @@ G_LOCK_DEFINE_STATIC(timestamps_lock);
 
 static GPtrArray * timestamps = NULL;
 
+
 static void free_io_event_timestamp_internal(gpointer data) {
    IO_Event_Timestamp * ptr = (IO_Event_Timestamp *) data;
    assert(memcmp(ptr->marker, IO_EVENT_TIMESTAMP_MARKER, 4) == 0);
@@ -29,6 +30,7 @@ static void free_io_event_timestamp_internal(gpointer data) {
    // to constants in compiled code
    free(data);
 }
+
 
 static IO_Event_Timestamp* find_io_event_timestamp(int fd) {
    assert(timestamps);
@@ -41,10 +43,10 @@ static IO_Event_Timestamp* find_io_event_timestamp(int fd) {
          break;
       }
    }
-
    // DBGMSG("Returning %p", result);
    return result;
 }
+
 
 static void ensure_initialized() {
    if (g_once_init_enter(&leave_event_initialized)) {
@@ -71,6 +73,7 @@ IO_Event_Timestamp * get_io_event_timestamp(int fd)
    assert(ts);
    return ts;
 }
+
 
 // IO_Event_Timestamp * new_io_event_timestamp(int fd);
 
@@ -138,9 +141,6 @@ void record_io_finish(
 }
 
 
-
-
-
 // I2C_RECORD_IO_EVENT(
 //       IE_OPEN,
 //       ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) ),
@@ -149,5 +149,4 @@ void record_io_finish(
 //       );
 // if (fd >= 0)
 // I2C_RECORD_IO_FINISH_NOW(busno, IE_OPEN, fd);
-
 
