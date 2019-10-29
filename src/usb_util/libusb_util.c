@@ -184,10 +184,12 @@ static bool possible_monitor_interface_descriptor(
    if (debug)
       printf("(%s) Starting.\n", __func__);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-   dpath.inter = inter;
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+// This pragma is undefined on older versions of gcc, results in warnings
+// when building for older OS releases on OBS.  So just use a cast instead.
+   dpath.inter = (struct libusb_interface_descriptor *) inter;
+// #pragma GCC diagnostic pop
 
    bool result = false;
    if (inter->bInterfaceClass == LIBUSB_CLASS_HID) {
@@ -221,11 +223,11 @@ static bool possible_monitor_interface(
    if (debug)
       printf("(%s) Starting.\n", __func__);
 
-// apparently doesn't work on older versions of GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-   dpath.interface = interface;
-#pragma GCC diagnostic pop
+// pragma doesn't work on older versions of GCC, so use cast
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+   dpath.interface =  (struct libusb_interface *) interface;
+// #pragma GCC diagnostic pop
 
    bool result = false;
    int ndx;
@@ -255,10 +257,10 @@ static bool possible_monitor_config_descriptor(
 {
     bool result = false;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-    dpath.config = config;
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+    dpath.config = (struct libusb_config_descriptor *) config;
+// #pragma GCC diagnostic pop
 
     int ndx = 0;
     if (config->bNumInterfaces > 1) {
