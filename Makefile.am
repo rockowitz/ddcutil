@@ -28,12 +28,21 @@ endif
 
 SUBDIRS = src man data  $(DOXYDIR)
 
+
+# The proper location for pkgconfig files is ambiguous, and the 
+# subject of much discussion.  Often, /usr/lib/pkgconfig is used.
+# However, it appears that: 
+#   - /usr/lib64/pkgconfig should hold x64 specific pkgconfig files
+#   - /usr/lib/pkgconfig should hold i386 specific pkgconfig files
+#   - /usr/share/pkgconfig should hold architecture agnostic pkgconfig files
+# Therefore we use $(datadir) instead of $(libdir)
+
 if ENABLE_SHARED_LIB_COND
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = ddcutil.pc
-# cmakedir = $(datadir)/cmake/Modules
-# cmake_DATA = FindDDCUtil.cmake
-# EXTRA_DIST += FindDDCUtil.cmake
+   pkgconfigdir = $(datadir)/pkgconfig
+   pkgconfig_DATA = ddcutil.pc
+   # cmakedir = $(datadir)/cmake/Modules
+   # cmake_DATA = FindDDCUtil.cmake
+   # EXTRA_DIST += FindDDCUtil.cmake
 endif
 
 if ENABLE_SHARED_LIB_COND
