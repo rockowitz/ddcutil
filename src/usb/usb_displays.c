@@ -299,7 +299,7 @@ GPtrArray * get_usb_monitor_list() {
    GPtrArray * hiddev_names = get_hiddev_device_names();
    for (int devname_ndx = 0; devname_ndx < hiddev_names->len; devname_ndx++) {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
-      DBGMSF(debug, "Examining device: %s", hiddev_fn);
+      DBGTRC(debug, TRACE_GROUP, "Examining device: %s", hiddev_fn);
       // will need better message handling for API
       Byte calloptions = CALLOPT_RDONLY;
       if (ol >= DDCA_OL_VERBOSE)
