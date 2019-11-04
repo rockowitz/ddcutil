@@ -459,7 +459,7 @@ void report_hid_field_locator(struct hid_field_locator * ploc, int depth) {
       rpt_vstring(d1, "%-20s %u", "report_id:",  ploc->report_id );
       rpt_vstring(d1, "%-20s %u", "field_index:",  ploc->field_index);
       // report_hiddev_report_info(ploc->rinfo, d1);
-      report_hiddev_field_info(ploc->finfo, d1);
+      dbgrpt_hiddev_field_info(ploc->finfo, d1);
    }
 }
 
@@ -549,7 +549,7 @@ bye:
    if (debug) {
       printf("(%s) Returning: %p\n", __func__, result);
       if (result)
-         report_hiddev_field_info(result, 1);
+         dbgrpt_hiddev_field_info(result, 1);
    }
 
    return result;
@@ -710,7 +710,7 @@ get_multibyte_value_by_uref_multi(
    bool debug = false;
    if (debug) {
       printf("(%s) Starting. fd=%d, uref_multi=%p\n",  __func__, fd, uref_multi);
-      report_hiddev_usage_ref_multi(uref_multi, 1);
+      dbgrpt_hiddev_usage_ref_multi(uref_multi, 1);
    }
    int      rc;
    Buffer * result = NULL;

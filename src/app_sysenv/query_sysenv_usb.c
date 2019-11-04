@@ -214,7 +214,7 @@ static void probe_hiddev(int depth) {
                    else
                       rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
 
-                   report_hiddev_device_by_fd(fd, d1);
+                   dbgrpt_hiddev_device_by_fd(fd, d1);
                 }
              }
           }

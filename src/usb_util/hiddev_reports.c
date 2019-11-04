@@ -5,7 +5,7 @@
  * ddcutil interrogate command.
  *
  * <copyright>
- * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -115,7 +115,7 @@ void report_hiddev_strings(int fd, int max_ct, int depth) {
  *
  * Returns:  nothing
  */
-void report_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int depth) {
+void dbgrpt_hiddev_devinfo(struct hiddev_devinfo * dinfo, bool lookup_names, int depth) {
    int d1 = depth+1;
 
    Pci_Usb_Id_Names names = {"","",""};
@@ -259,7 +259,7 @@ char * interpret_field_bits(__u32 flags) {
  *
  * Returns:  nothing
  */
-void report_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
+void dbgrpt_hiddev_report_info(struct hiddev_report_info * rinfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_report_info", rinfo, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", rinfo->report_type,
@@ -365,7 +365,7 @@ char * hiddev_interpret_usage_code(int usage_code ) {
  *
  * Returns:  nothing
  */
-void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
+void dbgrpt_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_field_info", finfo, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", finfo->report_type,
@@ -404,7 +404,7 @@ void report_hiddev_field_info(struct hiddev_field_info * finfo, int depth) {
  *
  * Returns:  nothing
  */
-void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
+void dbgrpt_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("hiddev_usage_ref", uref, depth);
    rpt_vstring(d1, "%-20s: %u %s", "report_type", uref->report_type,
@@ -424,11 +424,11 @@ void report_hiddev_usage_ref(struct hiddev_usage_ref * uref, int depth) {
 }
 
 
-void report_hiddev_usage_ref_multi(struct hiddev_usage_ref_multi * uref_multi, int depth) {
+void dbgrpt_hiddev_usage_ref_multi(struct hiddev_usage_ref_multi * uref_multi, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
    rpt_structure_loc("hiddev_usage_ref_multi", uref_multi, depth);
-   report_hiddev_usage_ref(&uref_multi->uref, d1);
+   dbgrpt_hiddev_usage_ref(&uref_multi->uref, d1);
    rpt_vstring(d1, "%-20s: %d", "num_values", uref_multi->num_values);
    rpt_vstring(d1, "%-20s at %p", "values", &uref_multi->values);
    // rpt_hex_dump(&uref_multi->values, uref_multi->num_values, d2);
@@ -524,7 +524,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
       //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
       puts("");
       rpt_vstring(d0, "Report %s:", hiddev_interpret_report_id(rinfo.report_id));
-      report_hiddev_report_info(&rinfo, d1);
+      dbgrpt_hiddev_report_info(&rinfo, d1);
       rptct++;
 
       if (rinfo.report_type != HID_REPORT_TYPE_OUTPUT) {
@@ -565,7 +565,7 @@ void report_report_descriptors_for_report_type(int fd, __u32 report_type, int de
             rpt_vstring(d3, "!! Note that HIDIOCGFIELDINFO changed field_index to %d",
                             finfo.field_index);
          }
-         report_hiddev_field_info(&finfo, d3);
+         dbgrpt_hiddev_field_info(&finfo, d3);
 
          bool usage_values_reported = false;
          __u32 common_ucode = 0;
@@ -691,7 +691,7 @@ void report_all_collections(int fd, int depth) {
  *
  * Returns:    nothing
  */
-void report_hiddev_device_by_fd(int fd, int depth) {
+void dbgrpt_hiddev_device_by_fd(int fd, int depth) {
    const int d1 = depth+1;
    const int d2 = depth+2;
 
@@ -716,7 +716,7 @@ void report_hiddev_device_by_fd(int fd, int depth) {
       REPORT_USB_IOCTL_ERROR("HIDIOCGDEVINFO", errno);
       return;
    }
-   report_hiddev_devinfo(&dev_info, /*lookup_names=*/true, depth);
+   dbgrpt_hiddev_devinfo(&dev_info, /*lookup_names=*/true, depth);
 
    // if (!is_interesting_device(&dev_info)) {
    //       printf("(%s) Uninteresting device\n", __func__);

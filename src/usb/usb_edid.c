@@ -359,7 +359,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    bool debug = false;
    if (debug) {
       DBGMSG("Starting");
-      report_hiddev_devinfo(dev_info, true, 1);
+      dbgrpt_hiddev_devinfo(dev_info, true, 1);
    }
 
    Parsed_Edid * parsed_edid = NULL;

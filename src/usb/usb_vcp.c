@@ -94,7 +94,7 @@ usb_get_usage_value_by_report_type_and_ucode(
 
       if (debug) {
          DBGMSG0("After hid_get_usage_value():");
-         report_hiddev_usage_ref(&uref, 1);
+         dbgrpt_hiddev_usage_ref(&uref, 1);
       }
       // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
       goto bye;
@@ -102,7 +102,7 @@ usb_get_usage_value_by_report_type_and_ucode(
    *curval = uref.value;
 
    if (debug)
-      report_hiddev_usage_ref(&uref, 1);
+      dbgrpt_hiddev_usage_ref(&uref, 1);
 
    struct hiddev_field_info finfo = {0};
    finfo.report_type = uref.report_type;
@@ -121,7 +121,7 @@ usb_get_usage_value_by_report_type_and_ucode(
    }
 
    if (debug)
-      report_hiddev_field_info(&finfo, 1);
+      dbgrpt_hiddev_field_info(&finfo, 1);
 
    // per spec, logical max/min bound the values in the report,
    // physical min/max bound the "real world" units
@@ -189,7 +189,7 @@ set_control_value(int fd,
    };
    if (debug) {
       DBGMSG0("Before HIDIOCSUSAGE");
-      report_hiddev_usage_ref(&uref, 1);
+      dbgrpt_hiddev_usage_ref(&uref, 1);
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       result = -errno;
@@ -243,7 +243,7 @@ set_usage_value_by_report_type_and_ucode(
    };
    if (debug) {
       DBGMSG0("Before HIDIOCSUSAGE");
-      report_hiddev_usage_ref(&uref, 1);
+      dbgrpt_hiddev_usage_ref(&uref, 1);
    }
    if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
       psc = -errno;
@@ -345,7 +345,7 @@ usb_get_usage_value_by_vcprec(
    uref->usage_index = vcprec->usage_index;
 #endif
    if (debug)
-      report_hiddev_usage_ref(uref, 1);
+      dbgrpt_hiddev_usage_ref(uref, 1);
 
    psc  = hiddev_get_usage_value(fd, uref, CALLOPT_ERR_MSG);
    // rc = ioctl(fd, HIDIOCGUSAGE, uref);  // Fills in usage value

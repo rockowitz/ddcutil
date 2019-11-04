@@ -476,7 +476,7 @@ app_read_changes_usb(Display_Handle * dh) {
          rpt_vstring(1, "Short read");
       }
       else {
-         report_hiddev_usage_ref(&uref, 1);
+         dbgrpt_hiddev_usage_ref(&uref, 1);
          rpt_vstring(1, "New value: 0x%04x (%d)", uref.value, uref.value);
       }
    }
