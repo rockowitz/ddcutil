@@ -35,15 +35,42 @@ SUBDIRS = src man data  $(DOXYDIR)
 #   - /usr/lib64/pkgconfig should hold x64 specific pkgconfig files
 #   - /usr/lib/pkgconfig should hold i386 specific pkgconfig files
 #   - /usr/share/pkgconfig should hold architecture agnostic pkgconfig files
-# Therefore we use $(datadir) instead of $(libdir)
+# Therefore we'd like to use $(datadir) instead of $(libdir).
+# The resulting .pc file is in fact architecture agnostic, with a ${libdir} statment that late
+# resolves the archicture appropriate lib directory. However, lintian flags this based on 
+# the value that is substituted with the pkg-config file is used: 
+#   libddcutil-dev: pkg-config-multi-arch-wrong-dir usr/share/pkgconfig/ddcutil.pc full text contains architecture specific dir x86_64-linux-gnu
+#
+# The warning could be suppressed, but that might cause problems when the package
+# is reviewed.  For now, just build x86_64 packages.  Those few people using i386
+# or x32 will either have to just build from source.  But what about the Raspberry Pi, 
+# which we do want to have binaries for?  (10/30/2019) 
+#
+# The tail wags the dog. libddcutil-dev can contain
+#   usr/*/pkgconfig
+# or 
+#   usr/lib/x86_64-linux-gnu/pkgconfig
+# but there's no way to or these two statements. 
+#
+# When building on OBS, the same libddcutil-dev.install is used for all (Debian based) builds, 
+# and if using $(libdir) the location of ddcutil.pc will depend on platform, e.g. 
+# some times it will be /usr/lib/x86_64-linux-gnu/pkgconfig, sometimes something else. 
+# So we really do need to use $(datadir) so that libddcutil-dev.install can use
+#   usr/share/pkgconfig
+# which works everywhere.  The lintian warning will be suppressed. (10/31/2019)
+# 
+# Note the the entry for ddcutil.pc in the Debian .install file needs
+# to be kept in sync with where autotools puts the files.
 
 if ENABLE_SHARED_LIB_COND
    pkgconfigdir = $(datadir)/pkgconfig
+   # pkgconfigdir = ${libdir}/pkgconfig
    pkgconfig_DATA = ddcutil.pc
 
    # cmakedir = $(datadir)/cmake/Modules
    # cmake_DATA = FindDDCUtil.cmake
    # EXTRA_DIST += FindDDCUtil.cmake
+   # cmake_DATA = data/usr/share/cmake/Modules/FindDDCUtil.cmake
 endif
 
 if ENABLE_SHARED_LIB_COND
@@ -149,6 +176,7 @@ show:
 	@echo "  srcdir                  = $(srcdir)"
 	@echo "  pythondir               = $(pythondir)"
 	@echo "  pyexecdir               = $(pyexecdir)"
+	@echo "  pkgconfigdir:           = ${pkgconfigdir}"
 	@echo ""
 	@echo "  CFLAGS                  = $(CFLAGS)"
 	@echo "  CPPFLAGS                = $(CPPFLAGS)"

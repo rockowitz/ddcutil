@@ -1053,6 +1053,7 @@ AC_MSG_RESULT([
 	docdir:                 ${docdir}
 	mandir:               	${mandir}
 	includedir:		${includedir}
+	pkgconfigdir:           ${pkgconfigdir}
 
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
