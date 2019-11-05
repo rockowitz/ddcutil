@@ -26,6 +26,8 @@
 
 #include "adl/adl_shim.h"
 
+#include "usb/usb_displays.h"
+
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -131,10 +133,14 @@ void init_ddc_services() {
    adl_debug = debug;      // turn on adl initialization tracing
    adlshim_initialize();
 
+   // usb
+   init_usb_displays();
+
    // ddc:
    ddc_reset_ddc_stats();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
-   // dbgrpt_func_name_table(1);
    init_ddc_display_lock();
+
+   // dbgrpt_func_name_table(1);
 }
