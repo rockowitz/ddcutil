@@ -101,7 +101,7 @@ static void report_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) 
  *
  * Returns:       nothing
  */
-void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
+void dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
    const int d1 = depth+1;
    const int d2 = depth+2;
    rpt_structure_loc("Usb_Monitor_Info", moninfo, d1);
@@ -137,7 +137,7 @@ void report_usb_monitors(GPtrArray * monitors, int depth) {
 
    rpt_vstring(depth, "GPtrArray of %d Usb_Monitor_Info at %p", monitors->len, monitors);
    for (int ndx = 0; ndx < monitors->len; ndx++) {
-      report_usb_monitor_info( g_ptr_array_index(monitors, ndx), d1);
+      dbgrpt_usb_monitor_info( g_ptr_array_index(monitors, ndx), d1);
    }
 }
 
@@ -293,13 +293,16 @@ avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
        //    Interface Subclass 01  Boot Interface Subclass
        //    Interface Protocol 02  Mouse
        //    Interface Protocol 01  Keyboard
-       //    Class               Subclass
-       //    alt: avoid any HID/Boot Interface Subclass device?
+       //
+       //    Q: is it even possible to have a interface protocol mouse when
+       //    sublass is not Boot Interface?  We're extra careful
        if (
              // streq( pieces[ndx], "030102" )   ||      // mouse
              // streq( pieces[ndx], "030101")   ||       // keyboard
+             (strncmp(pieces[ndx], "03",   2) != 0 ) ||  // not a HID device (why were re even called?)
              (strncmp(pieces[ndx], "0301", 4) == 0 ) ||  // any HID boot interface subclass device
-             (strncmp(pieces[ndx], "03",   2) != 0 )     // not some other HID device
+             (strncmp(pieces[ndx]+4, "01", 2) == 0 ) ||  // any keyboard
+             (strncmp(pieces[ndx]+4, "02", 2) == 0 )     // any mouse
           )
        {
           avoid = true;
@@ -314,8 +317,13 @@ avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
 }
 
 
-// Verifies that the device class of the Monitor is 3 (HID Device)
-// but the subclass and interface do not indicate a mouse or keybaord
+/**
+ * Verifies that the device class of the Monitor is 3 (HID Device)
+ * but the subclass and interface do not indicate a mouse or keybaord
+ *
+ *  @parmam   hiddev  device name
+ *  @return   true/false
+ */
 
 bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
    bool debug = false;
@@ -330,9 +338,7 @@ bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
       if (debug || IS_TRACING()) {
          report_usb_detailed_device_summary(devsum, 2);
       }
-      // DBGMSG("got devsum->prop_usb_interfaces");
       char * interfaces = devsum->prop_usb_interfaces;
-      // DBGMSG("interfaces: %s", hexstring_t((unsigned char *)interfaces, 30));
       avoid = avoid_device_by_usb_interfaces_property_string(interfaces);
       free_usb_detailed_device_summary(devsum);
    }
@@ -344,7 +350,6 @@ bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", sbool(!avoid));
    return !avoid;
 }
-
 
 
 //

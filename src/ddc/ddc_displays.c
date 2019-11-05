@@ -571,7 +571,7 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          rpt_vstring(d1, "USB device information: ");
          Usb_Monitor_Info * moninfo = dref->detail;
          assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
-         report_usb_monitor_info(moninfo, d2);
+         dbgrpt_usb_monitor_info(moninfo, d2);
 #else
          PROGRAM_LOGIC_ERROR("Built without USB support");
 #endif
