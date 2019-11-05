@@ -1085,7 +1085,7 @@ static void report_retrieved_report_descriptor_and_probe(
    Parsed_Hid_Descriptor* phd = parse_hid_report_desc_from_item_list(item_list);
    if (phd) {
       rpt_vstring(depth, "Parsed report descriptor:");
-      report_parsed_hid_descriptor(phd, d1);
+      dbgrpt_parsed_hid_descriptor(phd, d1);
       puts("");
 
       rpt_vstring(d1, "Finding HID report for EDID...");
@@ -1094,7 +1094,7 @@ static void report_retrieved_report_descriptor_and_probe(
          rpt_vstring(d2, "Not found");
       } else {
          // get EDID report
-         report_parsed_hid_report(edid_report_desc, d1);
+         dbgrpt_parsed_hid_report(edid_report_desc, d1);
          rpt_vstring(d1, "Get report data for EDID");
          uint16_t rptlen = 258;
 

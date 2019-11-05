@@ -252,7 +252,7 @@ void probe_hidraw_device(char * devname, bool show_monitors_only,  int depth) {
          rpt_vstring(d1, "HID Feature report id: %3d  0x%02x", a_report->report_id, a_report->report_id);
 
          rpt_vstring(d1, "Parsed report description:");
-         report_parsed_hid_report(a_report, d2);
+         dbgrpt_parsed_hid_report(a_report, d2);
 
          /* Get Feature */
          buf[0] = a_report->report_id; /* Report Number */

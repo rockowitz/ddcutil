@@ -1,25 +1,8 @@
-/* hid_report_descriptor.h
- *
- * <copyright>
- * Copyright (C) 2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file hid_report_descriptor.h
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef HID_REPORT_DESCRIPTOR_H_
 #define HID_REPORT_DESCRIPTOR_H_
@@ -129,9 +112,9 @@ void free_parsed_hid_descriptor(Parsed_Hid_Descriptor * phd);
 Parsed_Hid_Descriptor * parse_hid_report_desc_from_item_list(Hid_Report_Descriptor_Item * items_head);
 Parsed_Hid_Descriptor * parse_hid_report_desc(Byte * b, int desclen);
 
-void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
+void dbgrpt_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
 void summarize_parsed_hid_report(Parsed_Hid_Report * hr, int depth);
-void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
+void dbgrpt_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth);
 
 bool is_monitor_by_parsed_hid_report_descriptor(Parsed_Hid_Descriptor * phd);
 
@@ -152,8 +135,8 @@ typedef struct vcp_code_report {
    Parsed_Hid_Report * rpt;
 } Vcp_Code_Report;
 
-void report_vcp_code_report(Vcp_Code_Report * vcr, int depth);
-void report_vcp_code_report_array(GPtrArray * vcr_array,  int depth);
+void dbgrpt_vcp_code_report(Vcp_Code_Report * vcr, int depth);
+void dbgrpt_vcp_code_report_array(GPtrArray * vcr_array,  int depth);
 void summarize_vcp_code_report(Vcp_Code_Report * vcr, int depth);
 void summarize_vcp_code_report_array(GPtrArray * vcr_array,  int depth);
 GPtrArray * get_vcp_code_reports(Parsed_Hid_Descriptor * phd);

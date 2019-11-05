@@ -1,30 +1,8 @@
-/* hid_report_descriptor.c
- *
- * Interpret a HID Report Descriptor
- *
- * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- *
- * Report parsing adapted from lsusb.c (command lsusb) by Thomas Sailer and
- * David Brownell.
+/** @file hid_report_descriptor.c
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <glib.h>
@@ -266,7 +244,7 @@ void report_hid_field(Parsed_Hid_Field * hf, int depth) {
  *
  * Returns:     nothing
  */
-void report_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
+void dbgrpt_parsed_hid_report(Parsed_Hid_Report * hr, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
    // rpt_structure_loc("Hid_Report", hr,depth);
@@ -346,7 +324,7 @@ void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
          printf("(%s) ERROR: Dummy root collection contains reports\n", __func__);
       rpt_title("Reports:", d1);
       for (int ndx = 0; ndx < col->reports->len; ndx++)
-         report_parsed_hid_report(g_ptr_array_index(col->reports, ndx), d1);
+         dbgrpt_parsed_hid_report(g_ptr_array_index(col->reports, ndx), d1);
    }
    else
       rpt_vstring(d1, "%-20s:  None", "Reports");
@@ -361,7 +339,7 @@ void report_hid_collection(Parsed_Hid_Collection * col, int depth) {
  *
  * Returns:     nothing
  */
-void report_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
+void dbgrpt_parsed_hid_descriptor(Parsed_Hid_Descriptor * pdesc, int depth) {
    int d1 = depth + 1;
    rpt_structure_loc("Parsed_Hid_Descriptor", pdesc, depth);
    report_hid_collection(pdesc->root_collection, d1);
@@ -1054,19 +1032,19 @@ uint16_t get_vcp_code_from_parsed_hid_report(Parsed_Hid_Report * rpt) {
 
 
 
-void report_vcp_code_report(Vcp_Code_Report * vcr, int depth) {
+void dbgrpt_vcp_code_report(Vcp_Code_Report * vcr, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Vcp_Code_Report", vcr, depth);
    rpt_vstring(d1, "%-20s %d  0x%02x", "vcp_code", vcr->vcp_code, vcr->vcp_code);
    rpt_vstring(d1, "%-20s %p",         "rpt", vcr->rpt);
-   report_parsed_hid_report(vcr->rpt, d1);
+   dbgrpt_parsed_hid_report(vcr->rpt, d1);
 }
 
-void report_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
+void dbgrpt_vcp_code_report_array(GPtrArray * vcr_array, int depth) {
    rpt_vstring(depth, "Vcp_Code_Report array at %p contains %d entries:", vcr_array, vcr_array->len);
    int d1 = depth+1;
    for (int ndx=0; ndx < vcr_array->len; ndx++) {
-      report_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
+      dbgrpt_vcp_code_report( g_ptr_array_index(vcr_array, ndx), d1);
    }
 }
 
@@ -1195,7 +1173,7 @@ GPtrArray * get_vcp_code_reports(Parsed_Hid_Descriptor * phd) {
 
     if (debug) {
        printf("(%s) Returning array of %d reports at %p\n", __func__, vcp_reports->len, vcp_reports);
-       report_vcp_code_report_array(vcp_reports, 1);
+       dbgrpt_vcp_code_report_array(vcp_reports, 1);
     }
     return vcp_reports;
 }
