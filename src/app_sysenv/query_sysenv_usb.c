@@ -155,71 +155,79 @@ static void probe_hiddev(int depth) {
       rpt_nl();
       errno=0;
       char * curfn = g_ptr_array_index(hiddev_devices,devndx);
-      int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
-      if (fd < 0) {      // fd is -errno
-          rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
-          Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn, true);
-          if (devsum) {
-             // report_usb_detailed_device_summary(devsum, 2);
-             rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
-                             devsum->busnum_s,
-                             devsum->devnum_s,
-                             devsum->vendor_id,
-                             devsum->product_id,
-                             devsum->vendor_name,
-                             devsum->product_name);
-             free_usb_detailed_device_summary(devsum);
-          }
+      if (!is_possible_monitor_by_hiddev_name(curfn)) {
+         rpt_vstring(depth,
+               "Device %s is not a HID device or is a mouse or keyboard.  Skipping", curfn);
       }
       else {
-          char * cgname = get_hiddev_name(fd);
-          struct hiddev_devinfo dev_info;
-          errno = 0;
-          rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
-          if (rc != 0) {
-             rpt_vstring(d1, "Device %s, unable to retrieve information: %s",
-                    curfn, strerror(errno));
-          }
-          else {
-             char dev_summary[200];
-             snprintf(dev_summary, 200,
-                      "Device %s, devnum.busnum: %d.%d, vid:pid: %04x:%04x - %s",
-                      curfn,
-                      dev_info.busnum, dev_info.devnum,
-                      dev_info.vendor, dev_info.product & 0xffff,
-                      cgname);
-             rpt_vstring(depth, "%s", dev_summary);
-             bool b0 = is_hiddev_monitor(fd);
-             if (b0)
-                rpt_vstring(d1, "Identifies as a USB HID monitor");
-             else
-                rpt_vstring(d1, "Not a USB HID monitor");
+         int fd = usb_open_hiddev_device(curfn, CALLOPT_RDONLY);    // do not emit error msg
+         if (fd < 0) {      // fd is -errno
+             rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
+             Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn, true);
+             if (devsum) {
+                rpt_vstring(d1, "Detiled device summary for testing: ");
+                report_usb_detailed_device_summary(devsum, d1+1);
 
-             if (get_output_level() >= DDCA_OL_VERBOSE) {
-                if (!b0) {
-                   b0 = force_hiddev_monitor(fd);
-                   if (b0)
-                      rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.\n");
-                }
-                if (b0) {
-                   char * simple_devname = strstr(curfn, "hiddev");
-                   Udev_Usb_Devinfo * dinfo = get_udev_usb_devinfo("usbmisc", simple_devname);
-                   if (dinfo) {
-                      // report_hidraw_devinfo(dinfo, d2);
-                      rpt_vstring(
-                         d1,"Busno:Devno as reported by get_udev_usb_devinfo() for %s: %03d:%03d",
-                            simple_devname, dinfo->busno, dinfo->devno);
-                      free(dinfo);
+                rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
+                                devsum->busnum_s,
+                                devsum->devnum_s,
+                                devsum->vendor_id,
+                                devsum->product_id,
+                                devsum->vendor_name,
+                                devsum->product_name);
+                free_usb_detailed_device_summary(devsum);
+             }
+         }
+         else {
+             char * cgname = get_hiddev_name(fd);
+             struct hiddev_devinfo dev_info;
+             errno = 0;
+             rc = ioctl(fd, HIDIOCGDEVINFO, &dev_info);
+             if (rc != 0) {
+                rpt_vstring(d1, "Device %s, unable to retrieve information: %s",
+                       curfn, strerror(errno));
+             }
+             else {
+                char dev_summary[200];
+                snprintf(dev_summary, 200,
+                         "Device %s, devnum.busnum: %d.%d, vid:pid: %04x:%04x - %s",
+                         curfn,
+                         dev_info.busnum, dev_info.devnum,
+                         dev_info.vendor, dev_info.product & 0xffff,
+                         cgname);
+                rpt_vstring(depth, "%s", dev_summary);
+                bool b0 = is_hiddev_monitor(fd);
+                if (b0)
+                   rpt_vstring(d1, "Identifies as a USB HID monitor");
+                else
+                   rpt_vstring(d1, "Not a USB HID monitor");
+
+                if (get_output_level() >= DDCA_OL_VERBOSE) {
+                   if (!b0) {
+                      b0 = force_hiddev_monitor(fd);
+                      if (b0)
+                         rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.\n");
                    }
-                   else
-                      rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
+                   if (b0) {
+                      char * simple_devname = strstr(curfn, "hiddev");
+                      Udev_Usb_Devinfo * dinfo = get_udev_usb_devinfo("usbmisc", simple_devname);
+                      if (dinfo) {
+                         // report_hidraw_devinfo(dinfo, d2);
+                         rpt_vstring(
+                            d1,"Busno:Devno as reported by get_udev_usb_devinfo() for %s: %03d:%03d",
+                               simple_devname, dinfo->busno, dinfo->devno);
+                         free(dinfo);
+                      }
+                      else
+                         rpt_vstring(d1, "Error getting busno:devno using get_udev_usb_devinfo()");
 
-                   dbgrpt_hiddev_device_by_fd(fd, d1);
+                      dbgrpt_hiddev_device_by_fd(fd, d1);
+                   }
                 }
              }
-          }
-          free(cgname);
-          close(fd);
+             free(cgname);
+         }
+         close(fd);
       }
    }
 
@@ -245,9 +253,15 @@ static void query_usb_monitors() {
    execute_shell_cmd_rpt("lsusb|sort", 2);
    rpt_nl();
 
-   rpt_vstring(1, "USB device toplogy...");
+   rpt_vstring(1, "USB device topology...");
    execute_shell_cmd_rpt("lsusb -t", 2);
    rpt_nl();
+
+   if (output_level >= DDCA_OL_VERBOSE) {
+      rpt_vstring(1, "libusb verbose report...");
+      execute_shell_cmd_rpt("lsusb -v", 2);
+      rpt_nl();
+   }
 
    rpt_vstring(1, "Listing /dev/usb...");
    execute_shell_cmd_rpt("ls -l /dev/usb", 2);
@@ -270,6 +284,7 @@ static void query_usb_monitors() {
       rpt_nl();
       rpt_vstring(0, "Probing USB HID devices using udev, susbsystem %s...", subsys_name);
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
+
       subsys_name = "hidraw";
       rpt_nl();
       rpt_vstring(0, "Probing USB HID devices using udev, susbsystem %s...", subsys_name);
