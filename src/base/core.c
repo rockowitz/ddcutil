@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define GNU_SOURCE    // for syscall()
@@ -819,12 +819,12 @@ bool dbgtrc(
       va_start(args, format);
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
-      int    bufsz = strlen(buffer) + 1;
-      char * buf2  = calloc(bufsz+60, sizeof(char));
+      // int    bufsz = strlen(buffer) + 1;
+
 
       // *** TEMP ***
-      dbgtrc_show_time = true;
-      dbgtrc_show_thread_id = true;
+      // dbgtrc_show_time = true;
+      // dbgtrc_show_thread_id = true;
 
       char  elapsed_prefix[15] = "";
       if (dbgtrc_show_time)
@@ -836,10 +836,15 @@ bool dbgtrc(
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 
-      g_snprintf(buf2, bufsz+60, "%s%s(%-30s) %s\n",
+
+      int    buf2sz =  15+15+4 + strlen(funcname) + strlen(buffer) + 10;
+      char * buf2  = calloc(buf2sz, sizeof(char));
+      g_snprintf(buf2, buf2sz, "%s%s(%-30s) %s\n",
                                thread_prefix,
                                elapsed_prefix,
                                funcname, buffer);
+      assert( strlen(buf2) < buf2sz);
+
 
       f0puts(buf2, fout());    // no automatic terminating null
       fflush(fout());
