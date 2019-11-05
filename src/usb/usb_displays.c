@@ -28,6 +28,7 @@
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 
 #include "usb/usb_base.h"
 #include "usb/usb_edid.h"
@@ -151,6 +152,7 @@ void report_usb_monitors(GPtrArray * monitors, int depth) {
  */
 GPtrArray * collect_vcp_reports(int fd) {
    bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    GPtrArray * vcp_reports = g_ptr_array_new();
    for (__u32 report_type = HID_REPORT_TYPE_MIN; report_type <= HID_REPORT_TYPE_MAX; report_type++) {
       int reportinfo_rc = 0;
@@ -233,6 +235,7 @@ GPtrArray * collect_vcp_reports(int fd) {
           rinfo.report_id |= HID_REPORT_ID_NEXT;
        }
    }
+   DBGTRC(debug, TRACE_GROUP, "Returning %d VCP reports", vcp_reports->len);
    return vcp_reports;
 }
 
@@ -273,6 +276,76 @@ static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
 }
 
 
+static bool
+avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
+   bool debug = false;
+
+   DBGTRC(debug, TRACE_GROUP, "Starting. interfaces = |%s|", interfaces);
+   fflush(stdout);
+   Null_Terminated_String_Array pieces = strsplit(interfaces, ":");
+   // if (debug)
+   //    ntsa_show(pieces);
+
+   bool avoid = false;
+   int ndx = 0;
+   while (pieces[ndx]) {
+       //    Interface Class    03  Human Interface Device
+       //    Interface Subclass 01  Boot Interface Subclass
+       //    Interface Protocol 02  Mouse
+       //    Interface Protocol 01  Keyboard
+       //    Class               Subclass
+       //    alt: avoid any HID/Boot Interface Subclass device?
+       if (
+             // streq( pieces[ndx], "030102" )   ||      // mouse
+             // streq( pieces[ndx], "030101")   ||       // keyboard
+             (strncmp(pieces[ndx], "0301", 4) == 0 ) ||  // any HID boot interface subclass device
+             (strncmp(pieces[ndx], "03",   2) != 0 )     // not some other HID device
+          )
+       {
+          avoid = true;
+          DBGTRC(debug, TRACE_GROUP, "Avoiding device with interface %s", pieces[ndx]);
+          break;
+       }
+       ndx++;
+    }
+    ntsa_free(pieces, true);
+    DBGTRC(debug, TRACE_GROUP, "Returning: %s", sbool(avoid));
+    return avoid;
+}
+
+
+// Verifies that the device class of the Monitor is 3 (HID Device)
+// but the subclass and interface do not indicate a mouse or keybaord
+
+bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting.  hiddev_name = %s", hiddev_name);
+
+   Usb_Detailed_Device_Summary * devsum =  NULL;
+   bool avoid = false;
+   DBGTRC(debug, TRACE_GROUP, "Before lookup call");
+   devsum = lookup_udev_usb_device_by_devname(hiddev_name, /* verbose = */ false);
+   if (devsum) {
+      DBGTRC(debug, TRACE_GROUP, "detailed_device_summary: ");
+      if (debug || IS_TRACING()) {
+         report_usb_detailed_device_summary(devsum, 2);
+      }
+      // DBGMSG("got devsum->prop_usb_interfaces");
+      char * interfaces = devsum->prop_usb_interfaces;
+      // DBGMSG("interfaces: %s", hexstring_t((unsigned char *)interfaces, 30));
+      avoid = avoid_device_by_usb_interfaces_property_string(interfaces);
+      free_usb_detailed_device_summary(devsum);
+   }
+   else {
+      DBGTRC(debug, TRACE_GROUP, "Lookup failed");
+      avoid = true;
+   }
+
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", sbool(!avoid));
+   return !avoid;
+}
+
+
 
 //
 // Probe HID devices, create USB_Mon_Info data stuctures
@@ -292,7 +365,10 @@ GPtrArray * get_usb_monitor_list() {
    DDCA_Output_Level ol = get_output_level();
 
    if (usb_monitors)      // already initialized?
+   {
+      DBGTRC(debug, TRACE_GROUP, "Returning previously calculated monitor list");
       return usb_monitors;
+   }
 
    usb_monitors = g_ptr_array_new();
 
@@ -300,15 +376,23 @@ GPtrArray * get_usb_monitor_list() {
    for (int devname_ndx = 0; devname_ndx < hiddev_names->len; devname_ndx++) {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGTRC(debug, TRACE_GROUP, "Examining device: %s", hiddev_fn);
+
+      if (!is_possible_monitor_by_hiddev_name(hiddev_fn))
+         break;
+
+
       // will need better message handling for API
       Byte calloptions = CALLOPT_RDONLY;
       if (ol >= DDCA_OL_VERBOSE)
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
       if (fd < 0 && ol >= DDCA_OL_VERBOSE) {
-         Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(hiddev_fn, false);
+         Usb_Detailed_Device_Summary * devsum =
+               lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
          if (devsum) {
-            // report_usb_detailed_device_summary(devsum, 2);
+            DBGTRC(debug, TRACE_GROUP, "Open failed");
+            // report_usb_detailed_device_summary(devsum, 4);
+
             f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
                            devsum->busnum_s,
                            devsum->devnum_s,
@@ -320,6 +404,8 @@ GPtrArray * get_usb_monitor_list() {
          }
       }
       else if (fd > 1) {     // fd == 0 should never occur
+         DBGTRC(debug, TRACE_GROUP, "open succeeded");
+         // DBGTRC(debug, TRACE_GROUP, "Open succeeded");
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
          char *                    cgname      = NULL;
@@ -378,6 +464,7 @@ GPtrArray * get_usb_monitor_list() {
             free(devinfo);
          if (cgname)
             free(cgname);
+         // TODO, free device summary
          usb_close_device(fd, hiddev_fn, CALLOPT_NONE); // return error if failure
       }  // monitor opened
    } // loop over device names
@@ -708,16 +795,18 @@ bool check_usb_monitor( char * device_name ) {
    DBGMSF(debug, "Examining device: %s", device_name);
    bool result = false;
 
-   int fd = open(device_name, O_RDONLY);
-   if (fd < 1) {
-      if (ol >= DDCA_OL_VERBOSE)
-         printf("Unable to open device %s: %s\n", device_name, strerror(errno));
-      goto exit;
+   if (is_possible_monitor_by_hiddev_name(device_name))  {
+      // only check if a HID device that isn't a mouse or keyboard
+      int fd = open(device_name, O_RDONLY);
+      if (fd < 1) {
+         if (ol >= DDCA_OL_VERBOSE)
+            printf("Unable to open device %s: %s\n", device_name, strerror(errno));
+      }
+      else {
+         result = is_hiddev_monitor(fd);
+      }
+      close(fd);
    }
-
-   result = is_hiddev_monitor(fd);
-
-   close(fd);
 
    if (ol >= DDCA_OL_VERBOSE) {
       if (result)
@@ -725,7 +814,15 @@ bool check_usb_monitor( char * device_name ) {
       else
          printf("Device %s is not a USB HID compliant monitor.\n", device_name);
    }
-
- exit:
-    return result;
+   return result;
  }
+
+
+void init_usb_displays() {
+   rtti_func_name_table_add(get_usb_monitor_list, "get_usb_monitor_list");
+   rtti_func_name_table_add(avoid_device_by_usb_interfaces_property_string,
+                            "avoid_device_by_usb_interfaces_property_string");
+   rtti_func_name_table_add(is_possible_monitor_by_hiddev_name,
+                            "is_possible_monitor_by_hiddev_name");
+   // dbgrpt_func_name_table(0);
+}

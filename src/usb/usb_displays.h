@@ -1,7 +1,7 @@
 /* usb_displays.h
  *
  * <copyright>
- * Copyright (C) 2016-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -101,6 +101,10 @@ void report_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth);
 
 Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh);
 
+bool is_possible_monitor_by_hiddev_name(const char * hiddev_name);
+
 GPtrArray * get_usb_monitor_list();
+
+void init_usb_displays();
 
 #endif /* USB_DISPLAYS_H_ */
