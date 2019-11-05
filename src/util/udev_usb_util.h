@@ -57,11 +57,25 @@ typedef struct {
    char *    product_name;    ///< product name
    char *    busnum_s;        ///< bus number, as a string
    char *    devnum_s;        ///< device number, as a string
+
+   // to collect, then reduce to what's needed:
+   char *    prop_busnum  ;
+   char *    prop_devnum  ;
+   char *    prop_model  ;
+   char *    prop_model_id  ;
+   char *    prop_usb_interfaces  ;
+   char *    prop_vendor  ;
+   char *    prop_vendor_from_database  ;
+   char *    prop_vendor_id  ;
+   char *    prop_major ;
+   char *    prop_minor  ;
 } Usb_Detailed_Device_Summary;
 
 void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum);
 void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, int depth);
-Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname, bool verbose);
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(
+                                 const char * devname,
+                                 bool verbose);
 
 /** USB bus number/device number pair */
 typedef struct udev_usb_devinfo {

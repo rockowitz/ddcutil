@@ -68,6 +68,19 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    rpt_str("product_name",  NULL, devsum->product_name, d1);
    rpt_str("busnum_s",  NULL, devsum->busnum_s, d1);
    rpt_str("devnum_s",  NULL, devsum->devnum_s, d1);
+
+   rpt_str("prop_busnum ",        NULL, devsum->prop_busnum, d1);
+   rpt_str("prop_devnum ",        NULL, devsum->prop_devnum, d1);
+   rpt_str("prop_model ",         NULL, devsum->prop_model, d1);
+   rpt_str("prop_model_id",       NULL, devsum->prop_model_id, d1);
+   rpt_str("prop_usb_interfaces", NULL, devsum->prop_usb_interfaces, d1);
+   rpt_str("prop_vendor",         NULL, devsum->prop_vendor, d1);
+   rpt_str("prop_vendor_from_database", NULL, devsum->prop_vendor_from_database, d1);
+   rpt_str("prop_vendor_id",      NULL, devsum->prop_vendor_id, d1);
+   rpt_str("prop_major",          NULL, devsum->prop_major, d1);
+   rpt_str("prop_minor",          NULL, devsum->prop_minor, d1);
+
+
 }
 
 static __inline__
@@ -83,7 +96,7 @@ char * safe_strdup(const char * s) {
  * @return pointer to newly allocated **Usb_Detailed_Device_Summary** struct,
  *         NULL if not found
  */
-Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname, bool verbose) {
+Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(const char * devname, bool verbose) {
    assert(devname);
    // printf("(%s) Starting. devname=%s\n", __func__, devname);
    int depth = 0;
@@ -169,6 +182,16 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(char * devname, 
       devsum->product_name = safe_strdup( udev_device_get_sysattr_value(dev,"product") );
       devsum->busnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"busnum") );
       devsum->devnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"devnum") );
+      devsum->prop_busnum  = safe_strdup(udev_device_get_property_value(dev, "BUSNUM") );
+      devsum->prop_devnum  = safe_strdup(udev_device_get_property_value(dev, "DEVNUM") );
+      devsum->prop_model  = safe_strdup(udev_device_get_property_value(dev, "ID_MODEL") );
+      devsum->prop_model_id  = safe_strdup(udev_device_get_property_value(dev, "ID_MODEL_ID") );
+      devsum->prop_usb_interfaces  = safe_strdup(udev_device_get_property_value(dev, "ID_USB_INTERFACES") );
+      devsum->prop_vendor  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR") );
+      devsum->prop_vendor_from_database  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR_FROM_DATABASE") );
+      devsum->prop_vendor_id  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR_ID") );
+      devsum->prop_major = safe_strdup(udev_device_get_property_value(dev, "MAJOR") );
+      devsum->prop_minor  = safe_strdup(udev_device_get_property_value(dev, "MINOR") );
 
 
       // udev_device_unref(dev);
