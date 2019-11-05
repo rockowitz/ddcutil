@@ -26,7 +26,7 @@
 
 
 // Trace class for this file
-// static Trace_Group TRACE_GROUP = TRC_USB;     // currently unused
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
 // In keeping with the style of Linux USB code, this module prefers
 // "struct xxx {}" to "typedef {} xxx"
@@ -55,7 +55,7 @@ int usb_open_hiddev_device(
       Call_Options calloptions)
 {
    bool debug = false;
-   DBGMSF(debug, "hiddev_devname=%s, calloptions=0x%02x (%s)",
+   DBGTRC(debug, TRACE_GROUP, "hiddev_devname=%s, calloptions=0x%02x (%s)",
                  hiddev_devname, calloptions, interpret_call_options_t(calloptions) );
 
    int  file;
@@ -98,7 +98,7 @@ int usb_open_hiddev_device(
          file = -errsv;
       }
    }
-   DBGMSF(debug, "Returning file descriptor: %d", file);
+   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", file);
    return file;
 }
 
