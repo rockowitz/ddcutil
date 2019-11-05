@@ -1,29 +1,9 @@
-/* hiddev_util.h
- *
- * <copyright>
- * Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file hiddev_util.h
  */
 
-/** \f
- *
- */
+// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #ifndef HIDDEV_UTIL_H_
 #define HIDDEV_UTIL_H_
@@ -80,7 +60,7 @@ void report_hid_field_locator(struct hid_field_locator * ploc, int depth);
 struct hid_field_locator*
 hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes);
 Buffer * hiddev_get_multibyte_report_value_by_hid_field_locator(int fd, struct hid_field_locator * loc);
-Buffer * get_hiddev_edid(int fd);
+Buffer * hiddev_get_edid(int fd);
 
 Buffer * hiddev_get_multibyte_value_by_report_type_and_ucode(int fd, __u32 report_type, __u32 usage_code, __u32 num_values);
 Buffer * hiddev_get_multibyte_value_by_ucode(int fd, __u32 usage_code, __u32 num_values);

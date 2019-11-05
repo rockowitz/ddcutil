@@ -886,7 +886,7 @@ hiddev_get_multibyte_value_by_ucode(int fd,__u32 usage_code, __u32 num_values) {
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Buffer * get_hiddev_edid(int fd)  {
+Buffer * hiddev_get_edid(int fd)  {
    bool debug = false;
    if (debug)
       printf("(%s) Starting\n", __func__);

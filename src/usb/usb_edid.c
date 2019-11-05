@@ -364,7 +364,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
 
    Parsed_Edid * parsed_edid = NULL;
 
-   Buffer * edid_buffer = get_hiddev_edid(fd);    // in hiddev_util.c
+   Buffer * edid_buffer = hiddev_get_edid(fd);    // in hiddev_util.c
    // try alternative - both work, pick one
    Buffer * edid_buf2   = hiddev_get_multibyte_value_by_ucode(fd, 0x00800002, 128);
    if (edid_buffer && edid_buffer->len > 128)
