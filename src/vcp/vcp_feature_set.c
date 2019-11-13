@@ -118,9 +118,9 @@ create_feature_set(
    memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
    fset->subset = subset_id;
 
-   fset->members = g_ptr_array_sized_new(30);
+   fset->members = g_ptr_array_sized_new(250);
    if (subset_id == VCP_SUBSET_SCAN || subset_id == VCP_SUBSET_MFG) {
-      int ndx = 0;
+      int ndx = 1;
       if (subset_id == VCP_SUBSET_MFG)
          ndx = 0xe0;
       for (; ndx < 256; ndx++) {
