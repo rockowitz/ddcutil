@@ -67,4 +67,8 @@ multi_part_write_with_retry(
      Display_Handle * dh,
      Byte             vcp_code,
      Buffer *         value_to_set);
+
+void
+init_ddc_multi_part_io();
+
 #endif /* DDC_MULTI_PART_IO_H_ */

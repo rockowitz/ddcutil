@@ -44,6 +44,7 @@
 #include "base/ddc_packets.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_try_stats.h"
@@ -305,7 +306,7 @@ multi_part_read_with_retry(
       try_errors[tryctr] = ddc_excp;
       rc = (ddc_excp) ? ddc_excp->status_code : 0;
 
-      if (rc == DDCRC_NULL_RESPONSE) {
+      if (rc == DDCRC_NULL_RESPONSE || rc == DDCRC_ALL_RESPONSES_NULL) {
          // generally means this, but could conceivably indicate a protocol error.
          // try multiple times to ensure it's really unsupported?
 
@@ -332,12 +333,12 @@ multi_part_read_with_retry(
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
-   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%p",
-                            tryctr, rc, ddc_excp);
+   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%s",
+                            tryctr, rc, errinfo_summary(ddc_excp));
 
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {
-         DBGMSG("try_errors[%d] = %p", ndx, try_errors[ndx]);
+         DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
       }
    }
 
@@ -491,4 +492,17 @@ multi_part_write_with_retry(
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
+}
+
+
+static void init_ddc_multi_part_io_func_name_table() {
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(try_multi_part_read);
+   ADD_FUNC(multi_part_read_with_retry);
+#undef ADD_FUNC
+}
+
+
+void init_ddc_multi_part_io() {
+   init_ddc_multi_part_io_func_name_table();
 }
