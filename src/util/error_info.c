@@ -714,7 +714,7 @@ errinfo_summary(Error_Info * erec) {
 
    // rpt_vstring(1, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
 
-   char * desc = errinfo_desc_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
+   char * desc = errinfo_name_func(erec->status_code);  // thread safe buffer owned by psc_desc(), do not free()
 
    gchar * buf1 = NULL;
    if (erec->cause_ct == 0) {
