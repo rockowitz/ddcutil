@@ -24,6 +24,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -407,7 +408,6 @@ ddc_set_vcp_value(
    return ddc_excp;
 }
 
-
 /** Possibly returns a mock value for a non-table feature
  *
  *  \param  feature_code  VCP Feature Code
@@ -590,7 +590,6 @@ ddc_get_nontable_vcp_value(
    return excp;
 }
 
-
 /** Gets the value of a table feature in a newly allocated Buffer struct.
  *  It is the responsibility of the caller to free the Buffer.
  *
@@ -599,7 +598,8 @@ ddc_get_nontable_vcp_value(
  *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
  *  \return NULL if success, pointer to #Error_Info if failure
  */
-Error_Info * ddc_get_table_vcp_value(
+Error_Info *
+ddc_get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
        Buffer**               pp_table_bytes)
@@ -621,7 +621,7 @@ Error_Info * ddc_get_table_vcp_value(
    psc = (ddc_excp) ? ddc_excp->status_code : 0;
    if (debug || psc != 0) {
       DBGTRC(debug, TRACE_GROUP,
-             "perform_ddc_write_read_with_retry() returned %s", psc_desc(psc));
+             "multi_part_read_with_retry() returned %s", psc_desc(psc));
    }
 
    if (psc == 0) {
@@ -630,6 +630,14 @@ Error_Info * ddc_get_table_vcp_value(
          DBGMSG0("Bytes returned on table read:");
          dbgrpt_buffer(paccumulator, 1);
       }
+   }
+   // lowest level at which this check can be done, multi_part_read_with_retry() doesn't
+   // know it's being called for table value
+   else if (ddc_excp->status_code == DDCRC_NULL_RESPONSE ||
+            ddc_excp->status_code == DDCRC_ALL_RESPONSES_NULL)
+   {
+      Error_Info * wrapped_exception = ddc_excp;
+      ddc_excp = errinfo_new_with_cause(DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__);
    }
 
    DBGTRC(debug, TRACE_GROUP,
@@ -747,5 +755,16 @@ ddc_get_vcp_value(
    assert( (psc == 0 && *valrec_loc) || (psc != 0 && !*valrec_loc) );
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
+}
+
+static void init_ddc_vcp_func_name_table() {
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(ddc_get_table_vcp_value);
+   ADD_FUNC(ddc_get_vcp_value);
+#undef ADD_FUNC
+}
+
+void init_ddc_vcp() {
+   init_ddc_vcp_func_name_table();
 }
 

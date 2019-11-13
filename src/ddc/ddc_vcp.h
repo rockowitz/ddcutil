@@ -57,12 +57,14 @@ ddc_get_nontable_vcp_value(
       Byte                      feature_code,
       Parsed_Nontable_Vcp_Response** parsed_response_loc);
 
-
 Error_Info *
 ddc_get_vcp_value(
        Display_Handle *         dh,
        Byte                     feature_code,
        DDCA_Vcp_Value_Type      call_type,
        DDCA_Any_Vcp_Value **    valrec_loc);
+
+void
+init_ddc_vcp();
 
 #endif /* DDC_VCP_H_ */
