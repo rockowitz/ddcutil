@@ -13,6 +13,11 @@
 #ifndef DDCUTIL_TYPES_H_
 #define DDCUTIL_TYPES_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /** \cond */
 #include <stdbool.h>
 #include <stdint.h>                // for uint8_t, unit16_t
@@ -289,6 +294,7 @@ typedef struct {
    uint8_t bytes[32];
 } DDCA_Feature_List;
 
+extern const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST;
 
 /** Identifiers for publicly useful VCP feature subsets
  *
@@ -301,7 +307,8 @@ typedef enum {
    DDCA_SUBSET_KNOWN,          ///< All features defined in a MCCS spec
    DDCA_SUBSET_COLOR,          ///< Color related features
    DDCA_SUBSET_PROFILE,        ///< Features saved and restored by loadvcp/setvcp
-   DDCA_SUBSET_MFG             ///< Feature codes reserved for manufacturer use (0x0e..0xff)
+   DDCA_SUBSET_MFG,            ///< Feature codes reserved for manufacturer use (0x0e..0xff)
+   DDCA_SUBSET_CAPABILITIES    ///< Feature codes specified in capabilities string
 } DDCA_Feature_Subset_Id;
 
 
@@ -534,5 +541,9 @@ typedef struct {
 
 #define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DDCUTIL_TYPES_H_ */
