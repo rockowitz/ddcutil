@@ -68,4 +68,7 @@ Error_Info * ddc_write_read_with_retry(
       DDC_Packet **    response_packet_ptr_loc
      );
 
+void init_ddc_packet_io();
+
 #endif /* DDC_PACKET_IO_H_ */
+

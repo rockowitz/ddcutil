@@ -32,6 +32,7 @@
 #include "base/displays.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 
@@ -1005,3 +1006,18 @@ ddc_write_only_with_retry(
    return ddc_excp;
 }
 
+
+static void
+init_ddc_packet_io_func_name_table() {
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(ddc_write_read_raw);
+   ADD_FUNC(ddc_write_read);
+   ADD_FUNC(ddc_write_read_with_retry);
+#undef ADD_FUNC
+}
+
+
+void
+init_ddc_packet_io() {
+   init_ddc_packet_io_func_name_table();
+}
