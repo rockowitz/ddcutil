@@ -82,6 +82,9 @@ ddca_feature_list_id_name(
    case DDCA_SUBSET_CAPABILITIES:
       result = "VCP_SUBSET_CAPABILITIES";      // ???
       break;
+   case DDCA_SUBSET_SCAN:
+      result = "VCP_SUBSET_SCAN";
+      break;
    }
    return result;
 }
@@ -199,7 +202,10 @@ ddca_get_feature_list_by_dref(
                   break;
                case DDCA_SUBSET_CAPABILITIES:
                   subset = VCP_SUBSET_NONE;
+                  // Currently handled in ddcui
                   DBGMSG("DDCA_SUBSET_CAPABILITIES -> VCP_SUBSET_NONE");
+               case DDCA_SUBSET_SCAN:
+                  subset = VCP_SUBSET_SCAN;
                }
                Feature_Set_Flags flags = 0x00;
                if (!include_table_features)

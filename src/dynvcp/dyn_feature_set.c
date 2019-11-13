@@ -209,7 +209,32 @@ dyn_create_feature_set2_dfm(
        result = dyn_create_feature_set0(subset_id, members, members_dfm);
     }      // VCP_SUBSET_DYNAMIC
 
-    else {   // (subset_id != VCP_SUBSET_DYNAMIC
+    else if (subset_id == VCP_SUBSET_SCAN) {
+       VCP_Feature_Set * vcp_feature_set =
+          create_feature_set(
+             subset_id,
+             dref->vcp_version,
+             feature_set_flags);
+       int ct = get_feature_set_size(vcp_feature_set);
+       for (int ndx = 0; ndx < ct; ndx++) {
+           VCP_Feature_Table_Entry * vfte = get_feature_set_entry(vcp_feature_set, ndx);
+           DDCA_Vcp_Feature_Code feature_code = vfte->code;
+           Display_Feature_Metadata * dfm =
+                 dyn_get_feature_metadata_by_dref_dfm(
+                       feature_code,
+                       dref,
+                       true);    // with_default
+           bool showit = true;
+           if ( !(dfm->feature_flags & DDCA_READABLE) )
+              showit = false;
+           if (showit)
+              g_ptr_array_add(members_dfm, dfm);
+        }
+        result = dyn_create_feature_set0(subset_id, members, members_dfm);
+        free_vcp_feature_set(vcp_feature_set);
+    }
+
+    else {   // (subset_id != VCP_SUBSET_DYNAMIC, != VCP_SUBSET_SCAN
        VCP_Feature_Set * vcp_feature_set =
           create_feature_set(
              subset_id,
@@ -224,7 +249,10 @@ dyn_create_feature_set2_dfm(
                       feature_code,
                       dref,
                       true);    // with_default
-          if (dfm)
+          bool showit = true;
+          if ( !(dfm->feature_flags & DDCA_READABLE) )
+             showit = false;
+          if (showit)
              g_ptr_array_add(members_dfm, dfm);
        }
        result = dyn_create_feature_set0(subset_id, members, members_dfm);

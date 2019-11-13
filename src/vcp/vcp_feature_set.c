@@ -136,10 +136,14 @@ create_feature_set(
                     exclude_table_features  )
                   showit = false;
             }
+            if (!is_feature_readable_by_vcp_version(vcp_entry, vcp_version)) {
+               showit = false;
+            }
             if (showit) {
                g_ptr_array_add(fset->members, vcp_entry);
             }
          }
+
          else {  // unknown feature or manufacturer specific feature
             g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
             if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE && !exclude_table_features) ) {
