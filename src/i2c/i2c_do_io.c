@@ -114,6 +114,9 @@ Status_Errno_DDC invoke_i2c_reader(
        );
      assert (rc <= 0);
 
+     if (rc == 0) {
+        DBGTRC(debug, TRACE_GROUP, "Bytes read: %s", hexstring_t(readbuf, bytect) );
+     }
      DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
      return rc;
 }
