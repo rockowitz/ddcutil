@@ -191,6 +191,7 @@ dyn_create_feature_set2_dfm(
              // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED, FSF_FORCE,
              // which do not apply in this context
              bool include = true;
+             //     Feature_Set_Flags                     //DDCA_Feature_Flags
              if ( ((feature_set_flags & FSF_NOTABLE) &&  (feature_metadata->feature_flags & DDCA_TABLE)) ||
                   ((feature_set_flags & FSF_RO_ONLY) && !(feature_metadata->feature_flags & DDCA_RO)   ) ||
                   ((feature_set_flags & FSF_RW_ONLY) && !(feature_metadata->feature_flags & DDCA_RW)   ) ||
@@ -225,8 +226,10 @@ dyn_create_feature_set2_dfm(
                        dref,
                        true);    // with_default
            bool showit = true;
-           if ( !(dfm->feature_flags & DDCA_READABLE) )
-              showit = false;
+           if (feature_set_flags & FSF_RO_ONLY) {
+              if ( !(dfm->feature_flags & DDCA_READABLE) )
+                 showit = false;
+           }
            if (showit)
               g_ptr_array_add(members_dfm, dfm);
         }
@@ -250,8 +253,11 @@ dyn_create_feature_set2_dfm(
                       dref,
                       true);    // with_default
           bool showit = true;
-          if ( !(dfm->feature_flags & DDCA_READABLE) )
-             showit = false;
+          // if ( !(dfm->feature_flags & DDCA_READABLE) )
+          if (feature_set_flags & FSF_READABLE_ONLY) {
+             if ( !(dfm->feature_flags & DDCA_READABLE) )
+                showit = false;
+          }
           if (showit)
              g_ptr_array_add(members_dfm, dfm);
        }
@@ -337,7 +343,7 @@ dyn_get_feature_set_size2_dfm(
    return result;
 }
 
-
+#ifdef UNUSED
 Dyn_Feature_Set *
 dyn_create_feature_set_from_feature_set_ref2(
    Feature_Set_Ref *       fsref,
@@ -364,6 +370,7 @@ dyn_create_feature_set_from_feature_set_ref2(
    }
    return result;
 }
+#endif
 
 
 // wrap dfm_free() in signature of GDestroyNotify()
