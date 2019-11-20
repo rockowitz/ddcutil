@@ -38,10 +38,12 @@ create_feature_set(
       DDCA_MCCS_Version_Spec vcp_version,
       Feature_Set_Flags      flags);
 
+#ifdef OLD
 VCP_Feature_Set *
 create_feature_set0(
       VCP_Feature_Subset   subset_id,
       GPtrArray *          members);
+#endif
 
 
 VCP_Feature_Set *

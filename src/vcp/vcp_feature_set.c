@@ -54,6 +54,7 @@ void free_vcp_feature_set(VCP_Feature_Set * pset) {
 }
 
 
+#ifdef OLD
 VCP_Feature_Set *
 create_feature_set0(
       VCP_Feature_Subset   subset_id,
@@ -71,7 +72,7 @@ create_feature_set0(
    DBGTRC(debug, TRACE_GROUP, "Returning %p", fset);
    return fset;
 }
-
+#endif
 
 
 /** Given a feature set id for a named feature set (i.e. other than
