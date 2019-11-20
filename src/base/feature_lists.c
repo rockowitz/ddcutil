@@ -1,34 +1,19 @@
-/* feature_lists.c
- *
- * <copyright>
- * Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file feature_lists.c
  */
+
+// Copyright (C) 2018=2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "feature_lists.h"
 
+#include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "util/coredefs.h"
+#include "base/core.h"
 
 typedef struct {
    char * feature_list_string_buf;
@@ -51,6 +36,7 @@ static Thread_Feature_Lists_Data *  get_thread_data() {
    // printf("(%s) Returning: %p\n", __func__, thread_data);
    return thread_data;
 }
+
 
 
 
@@ -124,9 +110,8 @@ feature_list_and_not(
 }
 
 
-
 int
-feature_list_count(
+feature_list_count_old(
       DDCA_Feature_List * feature_list)
 {
    int result = 0;
@@ -137,6 +122,25 @@ feature_list_count(
       }
    }
    return result;
+}
+
+
+int feature_list_count(
+      DDCA_Feature_List * feature_list)
+{
+   // regard the array of 32 bytes as an array of 8 4-byte unsigned integers
+   uint64_t * list2 = (uint64_t *) feature_list;
+   unsigned int ct = 0;
+   for (int ndx = 0; ndx < 4; ndx++) {
+      // clever algorithm for counting number of bits per Brian Kernihgan
+      uint64_t v = list2[ndx];
+      for (; v; ct++) {
+        v &= v - 1; // clear the least significant bit set
+      }
+      // DBGMSG("feature_list_count() returning: %d", ct);
+   }
+   assert(ct == feature_list_count_old(feature_list));
+   return ct;
 }
 
 
@@ -161,7 +165,7 @@ feature_list_string(
          sepstr = "";
       int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
 
-      int feature_ct = feature_list_count(feature_list);
+      int feature_ct = feature_list_count_old(feature_list);
       int reqd_size = (feature_ct*vsize)+1;   // +1 for trailing null
 
       if (reqd_size > thread_data->feature_list_buf_size) {
