@@ -78,6 +78,7 @@ typedef enum {
    // applies to single feature feature set
    FSF_FORCE                 = 0x20
 } Feature_Set_Flags;
+#define FSF_READABLE_ONLY    (FSF_RW_ONLY | FSF_RO_ONLY)
 
 char * feature_set_flag_names_t(Feature_Set_Flags flags);
 
