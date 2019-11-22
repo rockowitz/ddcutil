@@ -300,7 +300,7 @@ void set_fd_blocking(int fd) {
 
 gpointer watch_displays_using_udev(gpointer data) {
    bool debug = false;
-   DBGMSG("Starting");
+   DBGMSF(debug, "Starting");
 
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
