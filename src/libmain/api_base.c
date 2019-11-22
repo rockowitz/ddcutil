@@ -173,7 +173,9 @@ _ddca_init(void) {
       // set_output_level(DDCA_OL_NORMAL);
       // enable_report_ddc_errors(false);
 
-      ddc_start_watch_displays();
+      // disable, all it does is issue trace message
+      // ddc_start_watch_displays();
+
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
    }
