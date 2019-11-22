@@ -173,8 +173,8 @@ _ddca_init(void) {
       // set_output_level(DDCA_OL_NORMAL);
       // enable_report_ddc_errors(false);
 
-      // disable, all it does is issue trace message
-      // ddc_start_watch_displays();
+      // dummy_display_change_handler() will issue messages if display is added or removed
+      ddc_start_watch_displays();
 
       library_initialized = true;
       DBGMSF(debug, "library initialization executed");
