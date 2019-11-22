@@ -61,7 +61,7 @@ bool dyn_format_feature_detail_sl_lookup(
 }
 
 
-/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+/** Returns a #Display_Feature_Metadata record for a specified feature, first
  *  checking for a user supplied feature definition, and then from the internal
  *  feature definition tables.
  *
@@ -229,7 +229,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
  }
 
 
-/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+/** Returns a #Display_Feature_Metadata record for a specified feature, first
  *  checking for a user supplied feature definition, and then from the internal
  *  feature definition tables.
  *
@@ -263,7 +263,7 @@ dyn_get_feature_metadata_by_dref_dfm(
 }
 
 
-/** Returns a #Dynamic_Feature_Metadata record for a specified feature, first
+/** Returns a #Display_Feature_Metadata record for a specified feature, first
  *  checking for a user supplied feature definition, and then from the internal
  *  feature definition tables.
  *
