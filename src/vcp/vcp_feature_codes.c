@@ -439,7 +439,7 @@ static char * interpret_feature_flags_r(
    assert(bufsz >= 100);     //  bigger than we'll need
    *workbuf = '\0';
    if (vflags & DDCA_DEPRECATED) {
-      strcpy(workbuf, "Deprecated");
+      strcpy(workbuf, "Deprecated, ");
    }
    else {
      strcpy(workbuf, interpret_ddca_version_feature_flags_readwrite(vflags));
@@ -3094,7 +3094,11 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .vcp_subsets = VCP_SUBSET_COLOR | VCP_SUBSET_PROFILE,
       .v21_flags = DDCA_RW | DDCA_COMPLEX_CONT,
       .v21_name  = "Backlight control",
-      .v22_flags = DDCA_DEPRECATED,
+      // DDCA_RW | DDCA_COMPLEX_CONT included in v22 flags so that
+      // information is available in ddcui to display, also in
+      // case the feature is implemented on a V22 monitor, even though
+      // it is deprecated
+      .v22_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_COMPLEX_CONT,
    },
    {  .code=0x14,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -3731,8 +3735,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the distance to the focal plane of the image",
       .v20_flags = DDCA_RW | DDCA_STD_CONT,
       .v20_name = "Adjust Focal Plane",
-      .v30_flags = DDCA_DEPRECATED,
-      .v22_flags = DDCA_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_STD_CONT,
+      .v22_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x7c,
       .vcp_spec_groups = VCP_SPEC_IMAGE,
@@ -3751,8 +3755,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       // when was it deleted?  v3.0 or v2.1?   For safety assume 3.0
       .desc = "Increase/decrease the trapezoid distortion in the image",
       .v20_flags= DDCA_RW | DDCA_STD_CONT,
-      .v30_flags=DDCA_DEPRECATED,
-      .v22_flags=DDCA_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_STD_CONT,
+      .v22_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_STD_CONT,
       .v20_name="Trapezoid",
    },
    {  .code=0x80,                                    // TODO: CHECK 2.2 SPEC
@@ -3766,7 +3770,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .desc="Increase/decrease the keystone distortion in the image.",
       .v20_flags= DDCA_RW | DDCA_STD_CONT,
       .v20_name="Keystone",
-      .v21_flags = DDCA_DEPRECATED,
+      .v21_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_STD_CONT,
    },
    {  .code=0x82,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_GEOMETRY,   // 2.0: Image, 3.0: Geometry
@@ -3979,8 +3983,8 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
             "from the desktop.",
       .v20_flags= DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name="Window control on/off",
-      .v30_flags = DDCA_DEPRECATED,
-      .v30_flags = DDCA_DEPRECATED,
+      .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
+      .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
    },
    {  .code=0x9a,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0, 2.2: IMAGE
