@@ -136,12 +136,11 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
 Dyn_Feature_Set *
 dyn_create_feature_set0(
       VCP_Feature_Subset   subset_id,
-      GPtrArray *          members,
       GPtrArray *          members_dfm)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
-                              subset_id, (members) ? members->len : -1);
+                              subset_id, (members_dfm) ? members_dfm->len : -1);
 
    Dyn_Feature_Set * fset = calloc(1,sizeof(Dyn_Feature_Set));
    memcpy(fset->marker, DYN_FEATURE_SET_MARKER, 4);
@@ -171,7 +170,6 @@ dyn_create_feature_set2_dfm(
     Display_Ref * dref = (Display_Ref *) display_ref;
     assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 
-    GPtrArray * members = g_ptr_array_new();
     GPtrArray * members_dfm = g_ptr_array_new();
 
     if (subset_id == VCP_SUBSET_DYNAMIC) {  // all user defined features
@@ -207,7 +205,7 @@ dyn_create_feature_set2_dfm(
              found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           }
        }   // if (dref->dfr)
-       result = dyn_create_feature_set0(subset_id, members, members_dfm);
+       result = dyn_create_feature_set0(subset_id, members_dfm);
     }      // VCP_SUBSET_DYNAMIC
 
     else if (subset_id == VCP_SUBSET_SCAN) {
@@ -233,7 +231,7 @@ dyn_create_feature_set2_dfm(
            if (showit)
               g_ptr_array_add(members_dfm, dfm);
         }
-        result = dyn_create_feature_set0(subset_id, members, members_dfm);
+        result = dyn_create_feature_set0(subset_id, members_dfm);
         free_vcp_feature_set(vcp_feature_set);
     }
 
@@ -261,7 +259,7 @@ dyn_create_feature_set2_dfm(
           if (showit)
              g_ptr_array_add(members_dfm, dfm);
        }
-       result = dyn_create_feature_set0(subset_id, members, members_dfm);
+       result = dyn_create_feature_set0(subset_id, members_dfm);
        free_vcp_feature_set(vcp_feature_set);
     }
 
