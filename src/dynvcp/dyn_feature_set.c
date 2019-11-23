@@ -261,6 +261,8 @@ dyn_create_feature_set2_dfm(
           }
           if (showit)
              g_ptr_array_add(members_dfm, dfm);
+          else
+             dfm_free(dfm);
        }
        result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
        free_vcp_feature_set(vcp_feature_set);
