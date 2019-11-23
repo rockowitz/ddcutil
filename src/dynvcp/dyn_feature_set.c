@@ -133,9 +133,10 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
 }
 
 
-Dyn_Feature_Set *
+static Dyn_Feature_Set *
 dyn_create_feature_set0(
       VCP_Feature_Subset   subset_id,
+      DDCA_Display_Ref     display_ref,
       GPtrArray *          members_dfm)
 {
    bool debug = false;
@@ -205,7 +206,7 @@ dyn_create_feature_set2_dfm(
              found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           }
        }   // if (dref->dfr)
-       result = dyn_create_feature_set0(subset_id, members_dfm);
+       result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
     }      // VCP_SUBSET_DYNAMIC
 
     else if (subset_id == VCP_SUBSET_SCAN) {
@@ -233,7 +234,7 @@ dyn_create_feature_set2_dfm(
            else
               dfm_free(dfm);
         }
-        result = dyn_create_feature_set0(subset_id, members_dfm);
+        result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
         free_vcp_feature_set(vcp_feature_set);
     }
 
@@ -261,7 +262,7 @@ dyn_create_feature_set2_dfm(
           if (showit)
              g_ptr_array_add(members_dfm, dfm);
        }
-       result = dyn_create_feature_set0(subset_id, members_dfm);
+       result = dyn_create_feature_set0(subset_id, display_ref, members_dfm);
        free_vcp_feature_set(vcp_feature_set);
     }
 
