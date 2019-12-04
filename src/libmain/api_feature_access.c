@@ -35,6 +35,10 @@
 
 #include "libmain/api_feature_access_internal.h"
 
+
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_API;
+
 //
 // Get and Set Feature Values
 //
@@ -404,7 +408,7 @@ ddca_format_any_vcp_value(
       char **                  formatted_value_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
                  feature_code,
                  vspec.major, vspec.minor,
                  mmid,
@@ -423,9 +427,8 @@ ddca_format_any_vcp_value(
       goto bye;
    }
 
-   dfm =
-   dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
-        feature_code, *mmid, vspec, /*with_default=*/ true);
+   dfm = dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+            feature_code, *mmid, vspec, /*with_default=*/ true);
    if (!dfm) {
       ddcrc = DDCRC_ARG;
       *formatted_value_loc = g_strdup_printf("Unrecognized feature code 0x%02x", feature_code);
@@ -439,7 +442,7 @@ ddca_format_any_vcp_value(
                                            feature_code, vspec.major, vspec.minor);
       else
          *formatted_value_loc = g_strdup_printf("Feature %02x is not readable", feature_code);
-      DBGMSF(debug, "%s", *formatted_value_loc);
+      DBGTRC(debug, TRACE_GROUP, "%s", *formatted_value_loc);
       ddcrc = DDCRC_INVALID_OPERATION;
       goto bye;
    }
@@ -458,14 +461,14 @@ ddca_format_any_vcp_value(
    bool ok = dyn_format_feature_detail_dfm(dfm, vspec, anyval,formatted_value_loc);
    if (!ok) {
        ddcrc = DDCRC_ARG;    // ??
-       assert(!formatted_value_loc);
+       assert(!*formatted_value_loc);
        *formatted_value_loc = g_strdup_printf("Unable to format value for feature 0x%02x", feature_code);
    }
 
 bye:
    if (dfm)
       dfm_free(dfm);
-   DBGMSF(debug, "Returning: %s, formatted_value_loc -> %s", psc_desc(ddcrc), *formatted_value_loc);
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, formatted_value_loc -> %s", psc_desc(ddcrc), *formatted_value_loc);
    // 7/2019: wrong, *formatted_value_loc always set, why did this ever work?
    // assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
    return ddcrc;
@@ -871,6 +874,7 @@ ddca_set_any_vcp_value_verify(
    return rc;
 }
 
+
 DDCA_Status
 ddca_set_any_vcp_value(
       DDCA_Display_Handle     ddca_dh,
@@ -879,7 +883,6 @@ ddca_set_any_vcp_value(
 {
    return ddca_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
 }
-
 
 
 DDCA_Status
@@ -979,4 +982,12 @@ ddca_pass_callback(
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
+
+#ifdef FUTURE
+// which header file would this go in?
+void init_api_access_feature_codes() {
+   rtti_func_name_table_add(ddca_format_any_vcp_value, "dyn_format_nontable_feature_detail_dfm");
+   // dbgrpt_func_name_table(0);
+}
+#endif
 
