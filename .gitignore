@@ -174,3 +174,5 @@ run_mod_copyright
 src/**/am--include-marker
 src/**/#
 new/
+ddcutil.pc.in0
+Makefile.am_with*
