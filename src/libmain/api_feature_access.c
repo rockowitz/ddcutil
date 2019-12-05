@@ -499,7 +499,8 @@ ddca_format_any_vcp_value_by_dref(
                          dref->mmid,
                          valrec,
                          formatted_value_loc);
-               assert( (psc==0 && *formatted_value_loc) || (psc!=0 &&!*formatted_value_loc) );
+               // no, if psc != 0, ddca_format_any_vcp_value() returns an error message
+               // assert( (psc==0 && *formatted_value_loc) || (psc!=0 &&!*formatted_value_loc) );
          }
    )
 }
@@ -532,7 +533,7 @@ ddca_format_non_table_vcp_value(
    anyval.val.c_nc.sl = valrec->sl;
 
    DDCA_Status ddcrc =  ddca_format_any_vcp_value(feature_code, vspec, mmid, &anyval, formatted_value_loc);
-   assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
+   // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
    return ddcrc;
 }
 
@@ -560,7 +561,7 @@ ddca_format_non_table_vcp_value_by_dref(
                          dref->mmid,
                          valrec,
                          formatted_value_loc);
-               assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
+               // assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
          }
    )
 }
