@@ -30,6 +30,8 @@
 //   in table validation functions (Benign)
 
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
+
 // Forward references
 int vcp_feature_code_count;
 VCP_Feature_Table_Entry vcp_code_table[];
@@ -2377,14 +2379,16 @@ static bool
 format_feature_detail_display_controller_type(
         Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    assert(info->vcp_code == 0xc8);
    bool ok = true;
    Byte mfg_id = info->sl;
    char *sl_msg = NULL;
    sl_msg = sl_value_table_lookup(xc8_display_controller_type_values, info->sl);
    if (!sl_msg) {
-      sl_msg = "Invalid SL value";
-      ok = false;
+      sl_msg = "Unrecognized";
+      ok = true;
    }
 
    // ushort controller_number = info->ml << 8 | info->sh;
@@ -2393,6 +2397,7 @@ format_feature_detail_display_controller_type(
    snprintf(buffer, bufsz,
             "Mfg: %s (sl=0x%02x), controller number: mh=0x%02x, ml=0x%02x, sh=0x%02x",
             sl_msg, mfg_id, info->mh, info->ml, info->sh);
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, buffer = |%s|", sbool(ok), buffer);
    return ok;
 }
 
