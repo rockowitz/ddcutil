@@ -27,6 +27,9 @@
 #include "dynvcp/dyn_feature_codes.h"
 
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
+
 /* Formats the name of a non-continuous feature whose value is returned in byte SL.
  *
  * Arguments:
@@ -45,7 +48,7 @@ bool dyn_format_feature_detail_sl_lookup(
         int                        bufsz)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    if (value_table) {
       char * s = sl_value_table_lookup(value_table, code_info->sl);
@@ -56,7 +59,7 @@ bool dyn_format_feature_detail_sl_lookup(
    else
       snprintf(buffer, bufsz, "0x%02x", code_info->sl);
 
-   DBGMSF(debug, "Done.  *buffer=|%s|. Returning true", buffer);
+   DBGTRC(debug, TRACE_GROUP, "Done.  *buffer=|%s|. Returning true", buffer);
    return true;
 }
 
@@ -307,23 +310,30 @@ dyn_format_nontable_feature_detail_dfm(
         int                        bufsz)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Code=0x%02x, vcp_version=%d.%d",
-                 dfm->feature_code, vcp_version.major, vcp_version.minor);
+   DBGTRC(debug, TRACE_GROUP, "Starting. Code=0x%02x, vcp_version=%d.%d",
+                              dfm->feature_code, vcp_version.major, vcp_version.minor);
+
+   assert(vcp_version_eq(dfm->vcp_version, vcp_version));   // check before eliminating vcp_version parm
 
    bool ok = false;
+   buffer[0] = '\0';
    if (dfm->nontable_formatter) {
       Format_Normal_Feature_Detail_Function ffd_func = dfm->nontable_formatter;
         // get_nontable_feature_detail_function(vfte, vcp_version);
+      DBGTRC(debug, TRACE_GROUP,
+            "Using normal feature detail function: %s", rtti_get_func_name_by_addr(ffd_func) );
       ok = ffd_func(code_info, vcp_version,  buffer, bufsz);
    }
    else if (dfm->nontable_formatter_sl) {
       Format_Normal_Feature_Detail_Function2 ffd_func = dfm->nontable_formatter_sl;
+      DBGTRC(debug, TRACE_GROUP,
+            "Using SL lookup feature detail function: %s", rtti_get_func_name_by_addr(ffd_func) );
       ok = ffd_func(code_info, dfm->sl_values, buffer, bufsz);
    }
    else
       PROGRAM_LOGIC_ERROR("Neither nontable_formatter nor vcp_nontable_formatter set");
 
-   DBGMSF(debug, "Returning: %s", sbool(ok));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, buffer=|%s|", sbool(ok), buffer);
    return ok;
 }
 
@@ -367,15 +377,17 @@ dyn_format_feature_detail_dfm(
      )
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   if (debug || IS_TRACING() ) {
+      DBGMSG("Starting.  valrec: ");
+      dbgrpt_single_vcp_value(valrec, 2);
+   }
 
    bool ok = true;
    *aformatted_data = NULL;
 
-   DBGMSF(debug, "valrec->value_type = %d", valrec->value_type);
-   char * formatted_data = NULL;
+   // DBGTRC(debug, TRACE_GROUP, "valrec->value_type = %d", valrec->value_type);
    if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
-      DBGMSF(debug, "DDCA_NON_TABLE_VCP_VALUE");
+      DBGTRC(debug, TRACE_GROUP, "DDCA_NON_TABLE_VCP_VALUE");
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
       ok = dyn_format_nontable_feature_detail_dfm(
@@ -385,29 +397,22 @@ dyn_format_feature_detail_dfm(
               workbuf,
               200);
       free(nontable_value);
-      if (ok)
-         formatted_data = strdup(workbuf);
+      if (ok) {
+         *aformatted_data = strdup(workbuf);
+      }
    }
    else {        // TABLE_VCP_CALL
-      DBGMSF(debug, "DDCA_TABLE_VCP_VALUE");
+      DBGTRC(debug, TRACE_GROUP, "DDCA_TABLE_VCP_VALUE");
       ok = dyn_format_table_feature_detail_dfm(
             dfm,
             vcp_version,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
-            &formatted_data);
+            aformatted_data);
    }
 
-   if (ok) {
-      *aformatted_data = formatted_data;
-      assert(*aformatted_data);
-   }
-   else {
-      if (formatted_data)
-         free(formatted_data);
-      assert(!*aformatted_data);
-   }
-
-   DBGMSF(debug, "Done.  Returning %d, *aformatted_data=%p", ok, *aformatted_data);
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning %s, *aformatted_data=%s",
+                              sbool(ok), *aformatted_data);
+   assert( (ok && *aformatted_data) || (!ok && !*aformatted_data) );
    return ok;
 }
 
@@ -444,7 +449,6 @@ dyn_get_feature_name(
 
 void init_dyn_feature_codes() {
    rtti_func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
-   rtti_func_name_table_add(dyn_format_table_feature_detail_dfm,    "dyn_format_table_feature_detail_dfm");
    rtti_func_name_table_add(dyn_format_feature_detail_dfm,          "dyn_format_feature_detail_dfm");
    rtti_func_name_table_add(dyn_format_feature_detail_sl_lookup,    "dyn_format_feature_detail_sl_lookup");
    // dbgrpt_func_name_table(0);
