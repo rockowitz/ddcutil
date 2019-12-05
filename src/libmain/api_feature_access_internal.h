@@ -62,6 +62,11 @@ ddca_format_table_vcp_value(
  *  @param[in]  valrec              non-table VCP value
  *  @param[out] formatted_value_loc address at which to return the formatted value.
  *  @return                         status code, 0 if success
+ *
+ *  @remark
+ *  If the returned status code is != 0, the string returned will
+ *  contain an explanation of the error.
+ *
  *  @since 0.9.0
  */
 DDCA_Status
