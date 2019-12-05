@@ -304,16 +304,17 @@ dyn_get_feature_metadata_by_dh_dfm(
 bool
 dyn_format_nontable_feature_detail_dfm(
         Display_Feature_Metadata * dfm,
-        DDCA_MCCS_Version_Spec     vcp_version,
+        // DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
         char *                     buffer,
         int                        bufsz)
 {
    bool debug = false;
+   DDCA_MCCS_Version_Spec vcp_version = dfm->vcp_version;
    DBGTRC(debug, TRACE_GROUP, "Starting. Code=0x%02x, vcp_version=%d.%d",
                               dfm->feature_code, vcp_version.major, vcp_version.minor);
 
-   assert(vcp_version_eq(dfm->vcp_version, vcp_version));   // check before eliminating vcp_version parm
+   // assert(vcp_version_eq(dfm->vcp_version, vcp_version));   // check before eliminating vcp_version parm
 
    bool ok = false;
    buffer[0] = '\0';
@@ -341,11 +342,12 @@ dyn_format_nontable_feature_detail_dfm(
 bool
 dyn_format_table_feature_detail_dfm(
        Display_Feature_Metadata *  dfm,
-       DDCA_MCCS_Version_Spec     vcp_version,
+       // DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
        char * *                   aformatted_data
      )
 {
+   DDCA_MCCS_Version_Spec     vcp_version = dfm->vcp_version;
    Format_Table_Feature_Detail_Function ffd_func = dfm->table_formatter;
       //   get_table_feature_detail_function(vfte, vcp_version);
    bool ok = ffd_func(accumulated_value, vcp_version, aformatted_data);
@@ -392,7 +394,7 @@ dyn_format_feature_detail_dfm(
       char workbuf[200];
       ok = dyn_format_nontable_feature_detail_dfm(
               dfm,
-              vcp_version,
+              // vcp_version,
               nontable_value,
               workbuf,
               200);
@@ -405,7 +407,7 @@ dyn_format_feature_detail_dfm(
       DBGTRC(debug, TRACE_GROUP, "DDCA_TABLE_VCP_VALUE");
       ok = dyn_format_table_feature_detail_dfm(
             dfm,
-            vcp_version,
+            // cp_version,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
             aformatted_data);
    }

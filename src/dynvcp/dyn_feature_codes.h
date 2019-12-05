@@ -42,15 +42,15 @@ dyn_get_feature_metadata_by_dh_dfm(
 bool
 dyn_format_nontable_feature_detail_dfm(
         Display_Feature_Metadata * dfm,
-        DDCA_MCCS_Version_Spec     vcp_version,
+        // DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
         char *                     buffer,
         int                        bufsz);
 
 bool
 dyn_format_table_feature_detail_dfm(
-      Display_Feature_Metadata *  dfm,
-       DDCA_MCCS_Version_Spec     vcp_version,
+       Display_Feature_Metadata *  dfm,
+       // DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
        char * *                   aformatted_data
      );
