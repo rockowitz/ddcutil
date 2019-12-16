@@ -29,6 +29,7 @@
 #include "usb/usb_displays.h"
 
 #include "ddc/ddc_display_lock.h"
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -142,6 +143,7 @@ void init_ddc_services() {
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_ddc_display_lock();
+   init_ddc_displays();
    init_ddc_packet_io();
    init_ddc_multi_part_io();
    init_ddc_vcp();

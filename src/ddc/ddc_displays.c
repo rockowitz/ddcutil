@@ -31,6 +31,7 @@
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -1102,4 +1103,12 @@ bool
 ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
+
+
+void
+init_ddc_displays() {
+   rtti_func_name_table_add(initial_checks_by_dh, "initial_checks_by_dh");
+   // dbgrpt_func_name_table(0);
+}
+
 

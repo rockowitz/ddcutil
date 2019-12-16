@@ -28,7 +28,6 @@ initial_checks_by_dref(Display_Ref * dref);
 GPtrArray *
 ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
-
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth);
 
@@ -73,5 +72,8 @@ ddc_enable_usb_display_detection(bool onoff);
 
 bool
 ddc_is_usb_display_detection_enabled();
+
+void
+init_ddc_displays();
 
 #endif /* DDC_DISPLAYS_H_ */
