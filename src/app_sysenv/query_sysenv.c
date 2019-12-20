@@ -658,6 +658,15 @@ void query_sysenv() {
       // temp
       // get_i2c_smbus_devices_using_udev();
 
+      Driver_Name_Node * driver_list = accumulator->driver_list;
+      rpt_nl();
+      rpt_vstring(0, "amdgpu configuration parameters:");
+      if (driver_name_list_find_exact(driver_list, "amdgpu")) {
+         query_sys_amdgpu_parameters(1);
+      }
+      // else
+      //    rpt_vstring(0, "!!! not amdgpu");
+
       probe_config_files(accumulator);
       probe_logs(accumulator);
 

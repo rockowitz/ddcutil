@@ -643,6 +643,57 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
 }
 
 
+
+int indirect_strcmp(const void * a, const void * b) {
+   char * alpha = *(char **) a;
+   char * beta  = *(char **) b;
+   return strcmp(alpha, beta);
+}
+
+
+void query_sys_amdgpu_parameters(int depth) {
+   const char * parmdir = "/sys/module/drm/holders/amdgpu/parameters";
+   int d1 = depth;
+   int d2 = depth+1;
+   rpt_vstring(d1, "amdgpu parameters (%s)", parmdir);
+   if (!directory_exists(parmdir)) {
+      rpt_vstring(d2, "Directory not found: %s", parmdir);
+   }
+   else {
+      DIR *dirp;
+      struct dirent *dp;
+
+      if ((dirp = opendir(parmdir)) == NULL) {
+         int errsv = errno;
+         rpt_vstring(d2, "Couldn't open %s. errmp = %d",
+                        parmdir, errsv);
+      }
+      else {
+         GPtrArray * sorted_names = g_ptr_array_new();
+         while (true){
+            dp = readdir(dirp);
+            if (!dp)
+               break;
+            if (dp->d_type & DT_REG) {
+               char * fn = dp->d_name;
+               g_ptr_array_add(sorted_names, fn);
+            }
+         }
+         g_ptr_array_sort(sorted_names, indirect_strcmp);
+
+         for (int ndx = 0; ndx < sorted_names->len; ndx++) {
+            char * fn = g_ptr_array_index(sorted_names, ndx);
+            char * value = read_sysfs_attr(parmdir, fn, /*verbose=*/ false);
+            char n[100];
+            g_snprintf(n, 100, "%s:", fn);
+            rpt_vstring(d2, "%-20s  %s", n, value);
+         }
+         closedir(dirp);
+      }
+   }
+}
+
+
 /** Examines /sys/class/drm
  */
 void query_drm_using_sysfs() {

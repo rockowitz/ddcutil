@@ -40,6 +40,7 @@ typedef struct {
 void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
 void query_loaded_modules_using_sysfs();
 void query_sys_bus_i2c(Env_Accumulator * accum);
+void query_sys_amdgpu_parameters(int depth);
 void query_drm_using_sysfs();
 
 #endif /* QUERY_SYSENV_SYSFS_H_ */
