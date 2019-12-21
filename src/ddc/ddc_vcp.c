@@ -467,6 +467,16 @@ mock_get_nontable_vcp_value(
 // Get VCP values
 //
 
+
+static inline bool
+value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {
+   return (parsed_val->mh == 0 &&
+           parsed_val->ml == 0 &&
+           parsed_val->sh == 0 &&
+           parsed_val->sl == 0);
+}
+
+
 /** Gets the value for a non-table feature.
  *
  *  \param  dh                 handle for open display
@@ -508,8 +518,6 @@ ddc_get_nontable_vcp_value(
    Byte expected_subtype = feature_code;
    int max_read_bytes  = 20;    // actually 3 + 8 + 1, or is it 2 + 8 + 1?
 
-   // retry:
-   // psc = ddc_write_read_with_retry(
    excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -526,7 +534,6 @@ ddc_get_nontable_vcp_value(
          DBGMSG("ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
                 psc_desc(psc), response_packet_ptr);
    }
-   // psc = (excp) ? excp->psc : 0;
 
    if (!excp) {
       assert(response_packet_ptr);
@@ -549,6 +556,15 @@ ddc_get_nontable_vcp_value(
          else if (!parsed_response->supported_opcode) {
             psc = DDCRC_REPORTED_UNSUPPORTED;
             excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__);
+            if (!value_bytes_zero(parsed_response)) {
+               // for exploring
+               DBGMSG("supported_opcode == false, bot not all value bytes 0");
+            }
+         }
+         else if (value_bytes_zero(parsed_response) )
+         {
+            // just a messages for now
+            DBGMSG("all value bytes 0, supported_opcode == true)");
          }
 
          if (psc != 0) {
@@ -759,6 +775,7 @@ ddc_get_vcp_value(
 
 static void init_ddc_vcp_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(ddc_get_nontable_vcp_value);
    ADD_FUNC(ddc_get_table_vcp_value);
    ADD_FUNC(ddc_get_vcp_value);
 #undef ADD_FUNC
