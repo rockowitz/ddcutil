@@ -1,4 +1,5 @@
 /** \f query_sysenv_modules.c
+ *
  *  Module checks
  */
 
@@ -207,4 +208,19 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
                            , d1);
       }
    }
+}
+
+
+void probe_modules_d(int depth) {
+   rpt_nl();
+   rpt_vstring(depth, "Video related contents of /etc/modprobe.d");
+   char ** strings = get_all_driver_module_strings();
+   char * grep_terms = strjoin((const char **) strings, ntsa_length(strings), "|");
+   int bufsz = strlen(grep_terms) + 100;
+   char * cmd = calloc(1, bufsz);
+   // g_snprintf(cmd, bufsz, "grep -El \"\(%s)\" /etc/modprobe.d/*conf | xargs tail -n +1", grep_terms );
+   g_snprintf(cmd, bufsz, "grep -EH \"\(%s)\" /etc/modprobe.d/*conf", grep_terms );
+   // DBGMSG("cmd: %s", cmd);
+   execute_shell_cmd_rpt(cmd, depth+1);
+   free(cmd);
 }
