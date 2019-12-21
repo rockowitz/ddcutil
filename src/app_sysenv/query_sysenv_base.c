@@ -3,8 +3,10 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
+
+#define _GNU_SOURCE   // for asprintf() in stdio.h
 
 /** \cond */
 #include <assert.h>
@@ -62,6 +64,15 @@ static char * other_driver_modules[] = {
       NULL
 };
 
+// in some contexts, module names are accepted with either underscores or hyphens
+static char * other_driver_modules_alt[] = {
+      "i2c-algo-bit",
+      "i2c-dev",
+      "i2c-piix4",
+      NULL
+};
+
+
 /** Returns the null terminated list of known video driver names */
 char ** get_known_video_driver_module_names() {
    return known_video_driver_modules;
@@ -76,6 +87,20 @@ char ** get_prefix_match_names() {
 char ** get_other_driver_module_names() {
    return other_driver_modules;
 }
+
+char ** get_all_driver_module_strings() {
+   static char ** all_strings = NULL;
+   if (!all_strings) {
+      char ** all1 = ntsa_join(known_video_driver_modules, prefix_matches, false);
+      char ** all2 = ntsa_join(all1, other_driver_modules, false);
+      char ** all3 = ntsa_join(all2, other_driver_modules_alt, false);
+      all_strings = all3;
+      ntsa_free(all1, false);
+      ntsa_free(all2, false);
+   }
+   return all_strings;
+}
+
 
 
 /** Reports the first line of a file, indented under a title.

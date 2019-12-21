@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_BASE_H_
@@ -20,6 +20,7 @@
 char ** get_known_video_driver_module_names();
 char ** get_prefix_match_names();
 char ** get_other_driver_module_names();
+char ** get_all_driver_module_strings();
 
 void sysenv_rpt_file_first_line(char * fn, char * title, int depth);
 bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth);
