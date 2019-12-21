@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -679,6 +679,8 @@ void query_sysenv() {
       query_drm_using_sysfs();
 
       device_xref_report(0);
+
+      probe_modules_d(0);
    }
 
    rpt_nl();
