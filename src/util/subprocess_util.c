@@ -1,29 +1,10 @@
-/* subprocess_util.c
+/** @file subprocess_util.c
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ * Functions to execute shell commands
  */
 
-/** @file subprocess_util.c
-* Functions to execute shell commands
-*/
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
@@ -56,8 +37,9 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
       printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
    bool ok = true;
    FILE * fp;
-   char cmdbuf[200];
-   snprintf(cmdbuf, sizeof(cmdbuf), "(%s) 2>&1", shell_cmd);
+   int bufsz = strlen(shell_cmd) + 50;
+   char * cmdbuf = calloc(1, bufsz);
+   snprintf(cmdbuf, bufsz, "(%s) 2>&1", shell_cmd);
    // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
    fp = popen(cmdbuf, "r");
    // printf("(%s) open. errno=%d\n", __func__, errno);
@@ -118,6 +100,7 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
        if (debug)
           printf("(%s) pclose() rc=%d, error=%d - %s\n", __func__, pclose_rc, errsv, strerror(errsv));
     }
+    free(cmdbuf);
     return ok;
  }
 
@@ -145,13 +128,13 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
    bool debug = false;
    GPtrArray * result = g_ptr_array_new();
    g_ptr_array_set_free_func(result, g_free);
-   // TO DO: set free func
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
    bool ok = true;
    FILE * fp;
-   char cmdbuf[200];
-   snprintf(cmdbuf, sizeof(cmdbuf), "(%s) 2>&1", shell_cmd);
+   int bufsz = strlen(shell_cmd) + 50;
+   char * cmdbuf = calloc(1, bufsz);
+   snprintf(cmdbuf, bufsz, "(%s) 2>&1", shell_cmd);
    // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
    fp = popen(cmdbuf, "r");
    // printf("(%s) open. errno=%d\n", __func__, errno);
@@ -190,6 +173,7 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
        g_ptr_array_free(result, true);
        result = NULL;
     }
+    free(cmdbuf);
     return result;
  }
 
