@@ -136,7 +136,9 @@ void init_ddc_services() {
    adlshim_initialize();
 
    // usb
+#ifdef USE_USB
    init_usb_displays();
+#endif
 
    // ddc:
    ddc_reset_ddc_stats();
