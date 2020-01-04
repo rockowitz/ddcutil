@@ -225,9 +225,9 @@ AC_ARG_ENABLE([lib],
               [enable_lib=${enableval}],
               [enable_lib=yes] )
 dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" == "xyes"] )
+AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
-AS_IF([test "x$enable_lib" == "xyes"],
+AS_IF([test "x$enable_lib" = "xyes"],
       AC_MSG_NOTICE( [lib... enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1) 
      ,
@@ -246,8 +246,8 @@ AC_ARG_ENABLE([swig],
               [enable_swig=${enableval}],
               [enable_swig=no] )
 dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_SWIG_COND], [test "x$enable_swig" == "xyes"] )
-AS_IF([test "x$enable_swig" == "xyes"],
+AM_CONDITIONAL([ENABLE_SWIG_COND], [test "x$enable_swig" = "xyes"] )
+AS_IF([test "x$enable_swig" = "xyes"],
       AC_MSG_NOTICE( [swig... enabled]  ),
       AC_MSG_NOTICE( [swig... disabled] )
      )
@@ -259,8 +259,8 @@ AC_ARG_ENABLE([cython],
               [enable_cython=${enableval}],
               [enable_cython=no] )
 dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_CYTHON_COND], [test "x$enable_cython" == "xyes"] )
-AS_IF([test "x$enable_cython" == "xyes"],
+AM_CONDITIONAL([ENABLE_CYTHON_COND], [test "x$enable_cython" = "xyes"] )
+AS_IF([test "x$enable_cython" = "xyes"],
       AC_MSG_NOTICE( [cython... enabled]  ),
       AC_MSG_NOTICE( [cython... disabled] )
      )
@@ -272,8 +272,8 @@ AC_ARG_ENABLE([cffi],
               [enable_cffi=${enableval}],
               [enable_cffi=no] )
 dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_CFFO_COND], [test "x$enable_cffi" == "xyes"] )
-AS_IF([test "x$enable_cffi" == "xyes"],
+AM_CONDITIONAL([ENABLE_CFFO_COND], [test "x$enable_cffi" = "xyes"] )
+AS_IF([test "x$enable_cffi" = "xyes"],
       AC_MSG_NOTICE( [cffi... enabled]  ),
       AC_MSG_NOTICE( [cffi... disabled] )
      )
@@ -294,9 +294,9 @@ AC_ARG_ENABLE([usb],
               [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
               [enable_usb=${enableval}],
               [enable_usb=yes] )
-AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" == "xyes"] )
+AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
 dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
-AS_IF([test "x$enable_usb" == "xyes"],
+AS_IF([test "x$enable_usb" = "xyes"],
         AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
         AC_SUBST(  ENABLE_USB_FLAG, [1] )
         AC_MSG_NOTICE( [usb... enabled]  )
@@ -310,7 +310,7 @@ AC_ARG_ENABLE([drm],
               [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
               [enable_drm=${enableval}],
               [enable_drm=yes] )
-AS_IF([test "x$enable_drm" == "xyes"],
+AS_IF([test "x$enable_drm" = "xyes"],
         AC_MSG_NOTICE( [drm... enabled (provisional) ]  )
       ,
         AC_MSG_NOTICE( [drm... disabled] )
@@ -321,7 +321,7 @@ AC_ARG_ENABLE([x11],
               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
               [enable_x11=${enableval}],
               [enable_x11=yes] )
-AS_IF([test "x$enable_x11" == "xyes"],
+AS_IF([test "x$enable_x11" = "xyes"],
         AC_MSG_NOTICE( [x11... enabled]  )
       ,
         AC_MSG_NOTICE( [x11... disabled] )
@@ -333,8 +333,8 @@ AC_ARG_ENABLE([doxygen],
               [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
               [enable_doxygen=${enableval}],
               [enable_doxygen=no] )
-AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" == "xyes"] )
-AS_IF([test "x$enable_doxygen" == "xyes"],
+AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" = "xyes"] )
+AS_IF([test "x$enable_doxygen" = "xyes"],
         AC_MSG_NOTICE( [doxygen... enabled]  )
       ,
         AC_MSG_NOTICE( [doxygen... disabled] )
@@ -348,8 +348,8 @@ AC_ARG_ENABLE([testcases],
               [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
               [include_testcases=${enableval}],
               [include_testcases=no] )
-AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" == "xyes"] )
-AS_IF([test "x$include_testcases" == "xyes"],
+AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" = "xyes"] )
+AS_IF([test "x$include_testcases" = "xyes"],
       AC_DEFINE( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]) 
       AC_MSG_NOTICE( [testcases... enabled]  )
       ,
@@ -361,8 +361,8 @@ AC_ARG_ENABLE([callgraph],
               [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
               [enable_callgraph=${enableval}],
               [enable_callgraph=no] )
-AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" == "xyes"] )
-AS_IF([test "x$enable_callgraph" == "xyes"],
+AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" = "xyes"] )
+AS_IF([test "x$enable_callgraph" = "xyes"],
       AC_MSG_NOTICE( [callgraph... enabled]  ),
       AC_MSG_NOTICE( [callgraph... disabled] )
      )
@@ -374,8 +374,8 @@ AC_ARG_ENABLE([gobject-api],
               [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
               [enable_gobject=${enableval}],
               [enable_gobject=no] )
-AM_CONDITIONAL([ENABLE_GOBJECT_COND], [test "x$enable_gobject" == "xyes"] )
-AS_IF([test "x$enable_gobject" == "xyes"],
+AM_CONDITIONAL([ENABLE_GOBJECT_COND], [test "x$enable_gobject" = "xyes"] )
+AS_IF([test "x$enable_gobject" = "xyes"],
       AC_MSG_NOTICE( [gobject-api... enabled]  ),
       AC_MSG_NOTICE( [gobject-api... disabled] )
      )
@@ -385,8 +385,8 @@ AC_ARG_ENABLE([failsim],
               [ AS_HELP_STRING( [--enable-failsim=@<:@no/yes@:>@], [Build with failure simulation@<:@default=no@:>@] )],
               [enable_failsim=${enableval}],
               [enable_failsim=no] )
-AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" == "xyes"] )
-AS_IF( [test "x$enable_failsim" == "xyes"],
+AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" = "xyes"] )
+AS_IF( [test "x$enable_failsim" = "xyes"],
          AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
          AC_MSG_NOTICE( [failsim..... enabled] )
       ,
@@ -399,8 +399,8 @@ AC_ARG_ENABLE([force-suse],
               [ AS_HELP_STRING( [--enable-force-suse=@<:@no/yes@:>@], [Force SUSE target directories@<:@default=no@:>@] )],
               [enable_force_suse=${enableval}],
               [enable_force_suse=no] )
-AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" == "xyes"] )
-AS_IF( [test "x$enable_force_suse" == "xyes"],
+AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" = "xyes"] )
+AS_IF( [test "x$enable_force_suse" = "xyes"],
          AC_DEFINE( [ENABLE_FORCE_SUSE], [1], [If defined, force SUSE target directories.])
          AC_MSG_NOTICE( [force-suse..... enabled] )
       ,
@@ -413,8 +413,8 @@ AC_ARG_ENABLE([use-api],
               [ AS_HELP_STRING( [--enable-internal-api-use=@<:@no/yes@:>@], [Use ddcutil API internally@<:@default=no@:>@] )],
               [enable_use_api=${enableval}],
               [enable_use_api=no] )
-AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" == "xyes"] )
-AS_IF( [test "x$enable_use_api" == "xyes"],
+AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" = "xyes"] )
+AS_IF( [test "x$enable_use_api" = "xyes"],
          AC_DEFINE( [USE_API], [1], [If defined, use ddcutil APIs internally.])
          AC_MSG_NOTICE( [use-api..... enabled] )
       ,
@@ -504,7 +504,7 @@ dnl TODO: use consistent pattern
 ### libusb 
 
 dnl know that 1.0.8 fails, 1.0.20  works
-AS_IF([test "x$enable_usb" == "xyes"],
+AS_IF([test "x$enable_usb" = "xyes"],
          [ PKG_CHECK_MODULES(LIBUSB, libusb-1.0 >= 1.0.15, [libusb_found=yes] ) ],
          [ AC_MSG_NOTICE( [usb disabled, not checking for libusb] ) ]
      )
@@ -519,7 +519,7 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-AS_IF([test "x$enable_drm" == "xyes"],
+AS_IF([test "x$enable_drm" = "xyes"],
          [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, 
              [libdrm_found=yes], 
              [libdrm_found=no
@@ -531,8 +531,8 @@ AS_IF([test "x$enable_drm" == "xyes"],
          [ AC_MSG_NOTICE( [drm disabled, not checking for libdrm] ) ]
      )
 
-AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" == "xyes"] )
-AS_IF([test "x$enable_drm" == "xyes"],
+AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" = "xyes"] )
+AS_IF([test "x$enable_drm" = "xyes"],
         AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
         AC_MSG_NOTICE( [drm... enabled]  )
       ,
@@ -551,19 +551,19 @@ AS_IF( [test 0$DBG -ne 0],
 dnl PKG_CHECK_MODULES(XRANDR, xrandr)
 dnl PKG_CHECK_MODULES(X11,    x11)
 
-AS_IF([test "x$enable_x11" == "xyes"],
+AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
          ]) 
 
-AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" == "xyes"] )
-AS_IF([test "x$enable_x11" == "xyes"],
+AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
+AS_IF([test "x$enable_x11" = "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
         AC_MSG_NOTICE( [x11... enabled]  )
       ,
         AC_MSG_NOTICE( [x11... disabled] )
      )
 
-AS_IF([test "x$enable_x11" == "xyes"],
+AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(XRANDR, xrandr)  
          ])
 
@@ -581,13 +581,13 @@ AS_IF( [test 0$DBG -ne 0],
 ### DOXYGEN
 
 dnl AC_MSG_NOTICE([Start of DOXYGEN])
-dnl AS_IF( [test "x$enable_doxygen" == "xyes"],
+dnl AS_IF( [test "x$enable_doxygen" = "xyes"],
 dnl         AC_MSG_NOTICE( [doxygen... enabled]  )
 dnl       ,
 dnl         AC_MSG_NOTICE( [doxygen... disabled] )
 dnl      )
 
-AS_IF([test "x$enable_doxygen" == "xyes"], 
+AS_IF([test "x$enable_doxygen" = "xyes"], 
       [
         dnl checks for doxygen program, sets or uses environment variable DOXYGEN
         AC_MSG_NOTICE([Checking for Doxygen...])
@@ -630,8 +630,8 @@ AS_IF([test "x$enable_doxygen" == "xyes"],
 dnl AC_MSG_NOTICE([enable_doxygen = ${enable_doxygen}])
 dnl AM_CONDITIONAL( [HAVE_DOXYGEN], [test -n "$DOXYGEN"] )
 
-dnl AM_CONDITIONAL( [USE_DOXYGEN], [test -n "$DOXYGEN" -a "x$enable_doxygen" == "xyes"])
-AM_CONDITIONAL( [USE_DOXYGEN], [test "x$enable_doxygen" == "xyes"])
+dnl AM_CONDITIONAL( [USE_DOXYGEN], [test -n "$DOXYGEN" -a "x$enable_doxygen" = "xyes"])
+AM_CONDITIONAL( [USE_DOXYGEN], [test "x$enable_doxygen" = "xyes"])
 
 AM_COND_IF([USE_DOXYGEN], 
     AC_MSG_NOTICE([USE_DOXYGEN is set])
@@ -660,13 +660,13 @@ AM_CONDITIONAL( [HAVE_DOCBASE], [test -n "$DOCBASE_INSTALL_DOCS"])
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([1.30.0])])
 AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
 
-AS_IF([test "x$enable_gobject" == "xyes"],
+AS_IF([test "x$enable_gobject" = "xyes"],
      [ PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14)  ],
      )
 
 ### Library
 
-AS_IF([test "x$enable_lib" == "xyes"],
+AS_IF([test "x$enable_lib" = "xyes"],
      [ PKG_CHECK_MODULES(ZLIB,  zlib)  ],
      )
 
@@ -704,7 +704,7 @@ dnl   So need to know the version number of Python 3 to construct a name
 dnl   to pass to pkg-config
 
 
-AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || test "x$enable_cffi" == "xyes"  ], [
+AS_IF( [ test "x$enable_swig" = "xyes" || test "x$enable_cython" = "xyes" || test "x$enable_cffi" = "xyes"  ], [
    AC_MSG_NOTICE( [SWIG, Cython, or CFFI  enabled, checking for Python and SWIG...] )
 
    # Python 3 
@@ -724,7 +724,7 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
 	    AC_MSG_NOTICE( [  pkgpy3execdir        = $pkgpy3execdir] )
 	 ])
 
-   AS_IF( [test "x$python3_found" == "xyes" ], [
+   AS_IF( [test "x$python3_found" = "xyes" ], [
       AC_MSG_NOTICE( [Looking for Python 3 pkgconfig information...] )
 
       PKG_CHECK_MODULES([PY3], [python-$PYTHON3_VERSION], [
@@ -745,7 +745,7 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
       AC_MSG_NOTICE( [Skipping check for Python3 pkgconfig] )
    ])
 
-   AS_IF( [test "x$enable_py3" == "xyes" ], [
+   AS_IF( [test "x$enable_py3" = "xyes" ], [
       AX_PYTHON_ENV($PYTHON3)
       AC_MSG_NOTICE([PY3_EXTRA_LDFLAGS:  $PY3_EXTRA_LDFLAGS])   
       AC_MSG_NOTICE([PY3_EXTRA_LIBS      $PY3_EXTRA_LIBS])
@@ -774,14 +774,14 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
 	    AC_MSG_NOTICE( [  pkgpyexecdir        = $pkgpyexecdir] )
    ])
 
-   AS_IF( [ test "x$python_found" == "xyes"], [
+   AS_IF( [ test "x$python_found" = "xyes"], [
 	   AM_PYTHON_CHECK_VERSION($PYTHON, [3.0], [
 	      AC_MSG_NOTICE( [No Python 2.x found])
 	      python_found = "no"
       ])
    ])
 
-   AS_IF( [test "x$python_found" == "xyes" ], [
+   AS_IF( [test "x$python_found" = "xyes" ], [
       AC_MSG_NOTICE( [Looking for Python2 pkgconfig information...] )
 
       PKG_CHECK_MODULES([PY2], [python-$PYTHON_VERSION], [
@@ -804,7 +804,7 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
    ])
 
 
-   AS_IF( [test "x$enable_py2" == "xyes" ], [
+   AS_IF( [test "x$enable_py2" = "xyes" ], [
       AX_PYTHON_ENV($PYTHON)
       AC_MSG_NOTICE([PY2_EXTRA_LDFLAGS:  $PY2_EXTRA_LDFLAGS])   
       AC_MSG_NOTICE([PY2_EXTRA_LIBS      $PY3_EXTRA_LIBS])
@@ -823,14 +823,14 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
    dnl enable_py3=no
    dnl AC_MSG_NOTICE( [enable_py2:    $enable_py2" ])
    dnl AC_MSG_NOTICE( [enable_py3:    $enable_py3" ])
-   AS_IF( [ test "x$enable_py2" == "xyes" -o  "x$enable_py3" == "xyes"], 
+   AS_IF( [ test "x$enable_py2" = "xyes" -o  "x$enable_py3" = "xyes"], 
      enable_some_python="yes"
    )
    AC_MSG_NOTICE( [ enable_some_python:   $enable_some_python ])
 
-   AS_IF( [ test "x$enable_swig" == "xyes"   ], [
+   AS_IF( [ test "x$enable_swig" = "xyes"   ], [
 
-      AS_IF( [test "x$enable_some_python" == "xyes"], [
+      AS_IF( [test "x$enable_some_python" = "xyes"], [
          AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
 
          dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
@@ -853,7 +853,7 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
          dnl dnl n.b. will fail if python2 not installed
          dnl dnl AX_PYTHON_DEVEL Calls AC_PATH_PROG() to find $PYTHON, fails if python not found
          dnl dnl PYTHON_SITE_PKG_EXEC set only in _alt version:
-         dnl AS_IF( [test "x$python_found" == "xyes" ], [
+         dnl AS_IF( [test "x$python_found" = "xyes" ], [
          dnl    AC_MSG_NOTICE( [Calling ax_python_devel for informational purposes...])
          dnl    AX_PYTHON_DEVEL
 
@@ -884,13 +884,13 @@ AS_IF( [ test "x$enable_swig" == "xyes" || test "x$enable_cython" == "xyes" || t
          dnl    AC_MSG_NOTICE( [   AX_SWIG_PYTHON_LIBS     = $AX_SWIG_PYTHON_LIBS ] )
          dnl ])
 
-         AS_IF([ test "x$swig_found" == "xyes" -a "x$enable_some_python" == "xyes"],
+         AS_IF([ test "x$swig_found" = "xyes" -a "x$enable_some_python" = "xyes"],
                [ python_and_swig_found="yes"],
                [ python_and_swig_found="no"]
               )
          AC_MSG_NOTICE( [python_and_swig_found  = $python_and_swig_found ])
 
-         AS_IF([test "x$enable_swig" == "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
+         AS_IF([test "x$enable_swig" = "xyes" -a  "x$python_and_swig_found" != "xyes" ] ,
                AC_MSG_ERROR( [--enable-swig requires some version of Python, its development package, and SWIG] ) 
            )
 		],
@@ -930,7 +930,7 @@ if test "x$enable_swig" = "xyes" ; then
   dnl AC_SUBST(PYEXECDIR,    $pyexecdir)
   dnl AC_SUBST(PKGPYEXECDIR, $pkgpyexecdir)
 
-	AS_IF([ test "x$swig_found" == "xyes" -a "x$python_found" == "xyes"],
+	AS_IF([ test "x$swig_found" = "xyes" -a "x$python_found" = "xyes"],
 	  AC_MSG_NOTICE( [pythondir    = $pythondir]    )
 	  AC_MSG_NOTICE( [pkgpythondir = $pkgpythondir] )
 	  AC_MSG_NOTICE( [pyexecdir    = $pyexecdir]    )
@@ -976,13 +976,13 @@ if test "x$enable_swig" = "xyes" ; then
 
 fi
 
-AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig   == xyes])
+AM_CONDITIONAL([ENABLE_PYTHON_SWIG],[test x$enable_swig   = xyes])
 dnl temporary crude flag:
-AM_CONDITIONAL([HAVE_PYTHON3],      [test x$enable_py3 == xyes])
+AM_CONDITIONAL([HAVE_PYTHON3],      [test x$enable_py3 = xyes])
 
 dnl temporary crude flag:
-AM_CONDITIONAL([ENABLE_CYTHON],[test x$enable_cython == xyes])
-AM_CONDITIONAL([ENABLE_CFFI],  [test x$enable_cffi   == xyes])
+AM_CONDITIONAL([ENABLE_CYTHON],[test x$enable_cython = xyes])
+AM_CONDITIONAL([ENABLE_CFFI],  [test x$enable_cffi   = xyes])
 
 dnl AC_MSG_NOTICE([======================== required_packages:   $required_packages])
 AC_SUBST(REQUIRED_PACKAGES,$required_packages)
@@ -1009,7 +1009,7 @@ dnl always tests true on OBS, i.e reports the OS on which the build system is ru
 dnl test using  [ ls -d /usr/share/doc/packages ]
 dnl always tests true on OBS 
 
-dnl test using  [test "x$enable_force_suse" == "xyes"], i.e. enable-force_suse parm passed to configure
+dnl test using  [test "x$enable_force_suse" = "xyes"], i.e. enable-force_suse parm passed to configure
 dnl works
 
 dnl test using  [ grep suse /etc/os-release ]
