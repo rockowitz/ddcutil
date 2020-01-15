@@ -1180,7 +1180,7 @@ int i2c_report_buses(bool report_all, int depth) {
 
    puts("");
    if (report_all)
-      rpt_vstring(depth,"Detected %d I2C buses:", busct);
+      rpt_vstring(depth,"Detected %d non-ignorable I2C buses:", busct);
    else
       rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
 
