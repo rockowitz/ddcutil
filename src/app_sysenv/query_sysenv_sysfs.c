@@ -1,29 +1,11 @@
-/* query_sysenv_sysfs.c
+/** @file query_sysenv_sysfs.c
  *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
  *  Query environment using /sys file system
  */
+
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 // #define _GNU_SOURCE   // for basename
@@ -696,7 +678,8 @@ void query_sys_amdgpu_parameters(int depth) {
 
 /** Examines /sys/class/drm
  */
-void query_drm_using_sysfs() {
+void query_drm_using_sysfs()
+{
    struct dirent *dent;
    struct dirent *dent2;
    DIR           *dir1;
@@ -708,6 +691,8 @@ void query_drm_using_sysfs() {
    int depth = 0;
    int d1    = depth+1;
    int d2    = depth+2;
+
+   bool debug = false;
 
    rpt_vstring(depth,"Examining /sys/class/drm...");
    dname = "/sys/class/drm";
@@ -799,13 +784,44 @@ void query_drm_using_sysfs() {
 
                     // rpt_nl();
 
-                    Device_Id_Xref * xref = device_xref_get(gba_edid->data);
-                    // xref->sysfs_drm_name = strdup(dent->d_name);
-                    xref->sysfs_drm_name = strdup(cur_dir_name);
-                    xref->sysfs_drm_i2c  = i2c_node_name;
+                    Device_Id_Xref * xref = NULL;
+                    DBGMSF(debug, "i2c_node_name = %s", i2c_node_name);
+                    if (i2c_node_name) {
+                       // DBGMSG("Using i2c_node_name");
+                       int drm_busno =  i2c_path_to_busno(i2c_node_name);
+                       xref = device_xref_find_by_busno(drm_busno);
+                       if (!xref)
+                          DBGMSG("Unexpected. Bus %d not in xref table", drm_busno);
+                    }
+                    if (!xref) {   // i.e. if !i2c_node_name or lookup by busno failed
+                       // DBGMSG("searching by EDID");
+                       Byte * edidbytes = gba_edid->data;
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+                       if (first_edid) {
+                          DBGMSG("Forcing duplicate EDID");
+                          edidbytes = first_edid;
+                       }
+#endif
+                       xref = device_xref_find_by_edid(edidbytes);
+                       if (!xref) {
+                          char * tag = device_xref_edid_tag(edidbytes);
+                          DBGMSG("Unexpected. EDID ...%s not in xref table", tag);
+                          free(tag);
+                       }
+                    }
+                    if (xref) {
+                       if (xref->ambiguous_edid) {
+                          rpt_vstring(d2, "Multiple displays have same EDID ...%s", xref->edid_tag);
+                          rpt_vstring(d2, "drm name, and bus number in device cross reference table may be incorrect");
+                       }
+                       // xref->sysfs_drm_name = strdup(dent->d_name);
+                       xref->sysfs_drm_name = strdup(cur_dir_name);
+                       xref->sysfs_drm_i2c  = i2c_node_name;
+                       xref->sysfs_drm_busno = i2c_path_to_busno(i2c_node_name);
+                       DBGMSF(debug, "sysfs_drm_busno = %d", xref->sysfs_drm_busno);
+                    }
 
                     g_byte_array_free(gba_edid, true);
-
                  }
                  rpt_nl();
                }

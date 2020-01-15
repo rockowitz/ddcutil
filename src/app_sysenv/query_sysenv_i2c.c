@@ -222,7 +222,12 @@ bye:
  *
  * This function largely uses direct coding to probe the I2C buses.
  * Allows for trying to read x37 even if X50 fails, and provides clearer
- * diagnostic messages than relying entirely on normal code path.
+ * diagnostic messages than relying entirely on the normal code path.
+ *
+ * As part of its scan, this function adds an entry to the display cross
+ * reference table for each I2C device reporting an EDID.
+ * It must be called before any other functions accessing the table, since
+ * they will search by I2C bus number.
  *
  * \param accum accumulates sysenv query information
  */
@@ -263,7 +268,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          if (fd < 0)
             continue;
 
-         // DBGMSG("Calling i2c_get_functionality_flags_by_fd()");
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
          // DBGMSG("i2c_get_functionality_flags_by_fd() returned %ul", functionality);
          i2c_report_functionality_flags(functionality, 90, d2);
@@ -287,8 +291,21 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             else
                rpt_vstring(d2, "Unable to parse EDID");
 
-            Device_Id_Xref * xref = device_xref_get(buf0->bytes);
-            xref->i2c_busno = busno;
+            Byte * edidbytes = buf0->bytes;
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+            if (!first_edid) {
+               DBGMSG("Setting first_edid");
+               first_edid = calloc(1,128);
+               memcpy(first_edid, buf0->bytes, 128);
+            }
+            else  {
+               DBGMSG("Forcing duplicate EDID");
+               edidbytes = first_edid;
+            }
+#endif
+            // Device_Id_Xref * xref = device_xref_get(buf0->bytes);
+            // xref->i2c_busno = busno;
+            device_xref_new_with_busno(busno, edidbytes);
          }
 
          rpt_nl();
@@ -341,21 +358,26 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    }
 
    if (busct == 0) {
-      rpt_vstring(d2, "No /dev/i2c-* devices found\n");
+      rpt_vstring(d2, "No /dev/i2c-* devices found");
+      rpt_nl();
    }
 
    i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
    buffer_free(buf0, __func__);
 
+   // DBGMSG("setting i2c_bus_scan_complete");
+   device_xref_set_i2c_bus_scan_complete();
+   // device_xref_report(3);
    DBGMSF(debug, "Done" );
 }
 
 
+/** Checks each I2C device, using the normal code path
+ */
 
 void query_i2c_buses() {
    rpt_vstring(0,"Examining I2C buses, as detected by I2C layer...");
    sysenv_rpt_current_time(NULL, 1);
    i2c_report_buses(true, 1 /* indentation depth */);    // in i2c_bus_core.c
 }
-
 

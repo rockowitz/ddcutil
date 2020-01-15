@@ -624,3 +624,35 @@ int execute_cmd_collect_with_filter(
    return rc;
 }
 
+/** Given a path whose final segment is of the form "i2c-n",
+ *  returns the bus number.
+ *
+ *  \param path  fully qualified or simple path name
+ *  \return  I2C bus number, -1 if cannot be sxtracted
+ */
+int  i2c_path_to_busno(char * path) {
+   bool debug = false;
+
+   int busno = -1;
+   if (path) {
+      char * lastslash = strrchr(path, '/');
+      char * basename = (lastslash) ? lastslash+1 : path;
+      // char * basename = basename(path);
+      if (basename) {
+         if (str_starts_with(basename, "i2c-")) {
+            int ival = 0;
+            if (str_to_int(basename+4, &ival, 10) )
+               busno = ival;
+         }
+      }
+   }
+
+   DBGMSF(debug, "path=%s, returning: %d", path, busno);
+   return busno;
+}
+
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+// For testing situation  where 2 displays have the same EDID, e.g. LG displays
+Byte * first_edid = NULL;
+#endif
+

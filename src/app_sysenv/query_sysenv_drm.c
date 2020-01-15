@@ -1,29 +1,11 @@
-/* query_drm_sysenv.c
+/** @file query_drm_sysenv.c
  *
- * <copyright>
- * Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \f
  *  drm reporting for the environment command
  */
+
+// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 // #define _GNU_SOURCE
 
@@ -58,6 +40,7 @@
 #include "base/linux_errno.h"
 /** \endcond */
 
+#include "query_sysenv_base.h"
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv_drm.h"
@@ -321,8 +304,10 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       if (prop_ptr) {
          if (debug)
             report_drm_modeProperty(prop_ptr, d2);
-         else
-            summarize_drm_modeProperty(prop_ptr, d2);
+         else {
+            // TMI
+            // summarize_drm_modeProperty(prop_ptr, d2);
+         }
 
          // printf("prop_id=%d\n", prop_id);
          if (streq(prop_ptr->name, "EDID")) {
@@ -414,12 +399,43 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                      free_parsed_edid(parsed_edid);
                   }
 
-                  Device_Id_Xref * xref = device_xref_get(blob_ptr->data);
+
+                  // DBGMSG("Before xref lookup by edid");
+                  // Initial bus scan by I2C device must already have occurred,
+                  // to populate the cross-reference table by bus number
+                  // bool complete = device_xref_i2c_bus_scan_complete();
+                  // DBGMSG("i2c bus scan completed: %s",  sbool(complete) );
+                  // assert(complete);
+                  // device_xref_report(3);
+
+                  Byte * edidbytes = blob_ptr->data;
+
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+                  if (first_edid) {
+                     DBGMSG("Forcing duplicate EDID");
+                     edidbytes = first_edid;
+                  }
+#endif
+
+                  // Device_Id_Xref * xref = device_xref_get(blob_ptr->data);
+                  Device_Id_Xref * xref = device_xref_find_by_edid(edidbytes);
+                  if (xref) {
+                  // TODO check for multiple entries with same edid
                   xref->drm_connector_name = strdup(connector_name);
                   xref->drm_connector_type = conn->connector_type;
                   // xref->drm_device_path    = strdup(conn->
 
-
+                  if (xref->ambiguous_edid) {
+                     rpt_vstring(d3, "Multiple displays have same EDID ...%s", xref->edid_tag);
+                     rpt_vstring(d3, "drm connector name and type for this EDID in device cross reference table may be incorrect");
+                  }
+                  }
+                  else {
+                     char * edid_tag = device_xref_edid_tag(edidbytes);
+                     DBGMSG("Unexpected: EDID ...%s not found in device cross reference table",
+                           edid_tag);
+                     free(edid_tag);
+                  }
                }
 
                drmModeFreePropertyBlob(blob_ptr);
@@ -469,7 +485,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 #endif
 
       }
-
+      rpt_nl();
    }
 
    if (edid_prop_ptr) {
@@ -621,7 +637,6 @@ static void probe_one_device_using_libdrm(char * devname, int depth) {
          rpt_vstring(depth+1, "Open succeeded for device: %s", devname);
    }
 
-
    if (fd >= 0) {
       probe_open_device_using_libdrm(fd, depth);
       close(fd);
@@ -689,7 +704,6 @@ void probe_using_libdrm() {
          execute_shell_cmd_rpt(cmd, 2);
       }
    }
-
 
    // Examining the implementation in xf86drm.c, we see that
    // drmAvailable first calls drmOpenMinor(), then if that

@@ -296,9 +296,19 @@ void query_x11() {
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
       rpt_vstring(1, "xrandr output: %s", prec->output_name);
+      Byte * edidbytes = prec->edidbytes;
+
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+      // for testing case of monitors with same EDID
+      if (first_edid) {
+         edidbytes = first_edid;
+         DBGMSG("Forcing duplicate EDID");
+      }
+#endif
+
       rpt_label  (2, "Raw EDID:");
-      rpt_hex_dump(prec->edidbytes, 128, 2);
-      Parsed_Edid * parsed_edid = create_parsed_edid(prec->edidbytes);
+      rpt_hex_dump(edidbytes, 128, 2);
+      Parsed_Edid * parsed_edid = create_parsed_edid(edidbytes);
       if (parsed_edid) {
          report_parsed_edid_base(
                parsed_edid,
@@ -312,10 +322,20 @@ void query_x11() {
          // printf(" Unparsable EDID for output name: %s -> %p\n", prec->output_name, prec->edidbytes);
          // hex_dump(prec->edidbytes, 128);
       }
-      rpt_nl();
 
-      Device_Id_Xref * xref = device_xref_get(prec->edidbytes);
-      xref->xrandr_name = strdup(prec->output_name);
+      // Device_Id_Xref * xref = device_xref_get(prec->edidbytes);
+      Device_Id_Xref * xref = device_xref_find_by_edid(edidbytes);
+      if (xref) {
+         xref->xrandr_name = strdup(prec->output_name);
+         if (xref->ambiguous_edid) {
+            rpt_vstring(2, "Multiple displays have same EDID ...%s", xref->edid_tag);
+            rpt_vstring(2, "xrandr name in device cross reference table may be incorrect.");
+         }
+      }
+      else {
+         DBGMSG("EDID not found");
+      }
+      rpt_nl();
    }
    free_x11_edids(edid_recs);
 
@@ -337,6 +357,11 @@ void query_x11() {
  */
 static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
    assert(i2c_device_numbers);
+
+#ifdef SYSENV_QUICK_TEST_RUN
+   DBGMSG("!!! Skipping i2cdetect checks to speed up testing !!!");
+   return;
+#endif
 
    int d0 = 0;
    int d1 = 1;
@@ -381,12 +406,13 @@ static void probe_i2c_devices_using_udev() {
    sysenv_rpt_current_time(NULL, 1);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
 
-   // Detailed scan of I2C device information
-   probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
-   rpt_nl();
+   // Detailed scan of I2C device information.   TMI
+   // probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
+   // rpt_nl();
 
    GPtrArray * summaries = get_i2c_devices_using_udev();
    report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
+
    for (int ndx = 0; ndx < summaries->len; ndx++) {
       Udev_Device_Summary * summary = g_ptr_array_index(summaries, ndx);
       assert( memcmp(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4) == 0);
@@ -395,6 +421,7 @@ static void probe_i2c_devices_using_udev() {
       if (xref) {
          xref->udev_name = strdup(summary->sysattr_name);
          xref->udev_syspath = strdup(summary->devpath);
+         xref->udev_busno = busno;
       }
       else {
          // DBGMSG("Device_Id_Xref not found for busno %d", busno);
@@ -652,7 +679,6 @@ void query_sysenv() {
       query_x11();
 #endif
 
-      // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
       probe_i2c_devices_using_udev();
 
       // temp
@@ -666,9 +692,14 @@ void query_sysenv() {
       }
       // else
       //    rpt_vstring(0, "!!! not amdgpu");
+      rpt_nl();
 
+#ifdef SYSENV_QUICK_TEST_RUN
+      DBGMSG("!!! Skipping config file and log checking to speed up testing !!!");
+#else
       probe_config_files(accumulator);
       probe_logs(accumulator);
+#endif
 
 #ifdef USE_LIBDRM
       probe_using_libdrm();

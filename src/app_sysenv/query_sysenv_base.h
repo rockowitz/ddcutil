@@ -40,6 +40,8 @@ char * driver_name_list_string(Driver_Name_Node * head);
 bool only_fglrx(Driver_Name_Node * driver_list);
 bool only_nvidia_or_fglrx(Driver_Name_Node * driver_list);
 
+int  i2c_path_to_busno(char * path);
+
 
 #define ENV_ACCUMULATOR_MARKER "ENVA"
 /** Collects system environment information */
@@ -109,4 +111,15 @@ int execute_cmd_collect_with_filter(
       bool         ignore_case,
       int          limit,
       GPtrArray ** result_loc);
+
+
+// if defined, some tests with long elapsed times are skipped to shorten time of test runs
+// #define SYSENV_QUICK_TEST_RUN
+
+// #define SYSENV_TEST_IDENTICAL_EDIDS
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+// For testing situation where 2 displays have the same EDID, e.g. LG displays
+extern Byte * first_edid;
+#endif
+
 #endif /* QUERY_SYSENV_BASE_H_ */
