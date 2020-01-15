@@ -47,7 +47,9 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include <dynvcp/dyn_dynamic_features.h>
+#include "dynvcp/dyn_dynamic_features.h"
+
+#include "public/ddcutil_types.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -74,6 +76,15 @@ void ddc_set_async_threshold(int threshold) {
    async_threshold = threshold;
 }
 
+static inline bool
+value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
+   bool result = pvalrec && pvalrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE &&
+                 pvalrec->val.c_nc.mh == 0 &&
+                 pvalrec->val.c_nc.ml == 0 &&
+                 pvalrec->val.c_nc.sh == 0 &&
+                 pvalrec->val.c_nc.sl == 0;
+   return result;
+}
 
 /** Collects initial monitor checks to perform them on a single open of the
  *  monitor device, and to avoid repeating them.
@@ -170,7 +181,6 @@ bool initial_checks_by_dh(Display_Handle * dh) {
             else {
                assert( psc == 0);
                assert(pvalrec);
-
             }
             assert( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
          }
@@ -189,11 +199,7 @@ bool initial_checks_by_dh(Display_Handle * dh) {
                      pvalrec->val.c_nc.ml,
                      pvalrec->val.c_nc.sh,
                      pvalrec->val.c_nc.sl);
-            if ( pvalrec->val.c_nc.mh == 0 &&
-                 pvalrec->val.c_nc.ml == 0 &&
-                 pvalrec->val.c_nc.sh == 0 &&
-                 pvalrec->val.c_nc.sl == 0
-              )
+            if (value_bytes_zero_for_any_value(pvalrec))
             {
                DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
                dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
