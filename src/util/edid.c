@@ -15,6 +15,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 /** \endcond */
@@ -329,8 +330,9 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       if (verbose) {
       // rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->product_code, edid->product_code);
          rpt_vstring(d1,"Product code:     %u",          edid->product_code);
-         // useless, binary serial number is typically 0x00000000 or 0x01010101
-         // rpt_vstring(d1,"Binary sn:        %u (0x%08x)", edid->serial_binary, edid->serial_binary);
+         // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
+         // useful for differentiating displays using a generic ASCII serial number
+         rpt_vstring(d1,"Binary sn:        "PRIu32"(0x%08x)", edid->serial_binary, edid->serial_binary);
          rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
 
          char explbuf[100];
