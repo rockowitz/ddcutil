@@ -65,6 +65,15 @@ struct {
 } Parsed_Nontable_Vcp_Response;
 
 
+inline bool
+value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {
+   return (parsed_val->mh == 0 &&
+           parsed_val->ml == 0 &&
+           parsed_val->sh == 0 &&
+           parsed_val->sl == 0);
+}
+
+
 /** For digesting capabilities or table read fragment */
 typedef
 struct {
