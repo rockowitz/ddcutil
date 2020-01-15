@@ -33,9 +33,8 @@
 #include "query_sysenv_access.h"
 
 
-
 /** Perform redundant checks as cross-verification */
-bool redundant_i2c_device_identification_checks = true;
+bool redundant_i2c_device_identification_checks = false;
 
 
 //
@@ -45,7 +44,12 @@ bool redundant_i2c_device_identification_checks = true;
 // Consolidate them here.  (IN PROGRESS)
 //
 
-Byte_Value_Array get_i2c_devices_by_existence_test() {
+/** Gets a list of all /dev/i2c devices by checking the file system
+ *  if devices named /dev/i2c-N exist.
+ *
+ *  @return Byte_Value_Array containing the valid bus numbers
+ */
+static Byte_Value_Array get_i2c_devices_by_existence_test() {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
@@ -57,7 +61,12 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 }
 
 
-Byte_Value_Array get_i2c_devices_by_ls() {
+/** Gets a list of all /dev/i2c-n devices by screen-scraping the output
+ *  of "ls /dev/i2c*".
+ *
+ *  @return Byte_Value_Array containing the valid bus numbers
+ */
+static Byte_Value_Array get_i2c_devices_by_ls() {
    Byte_Value_Array bva = bva_create();
 
    int ival;
@@ -99,7 +108,6 @@ bye:
  *
  *  \return #ByteValueArray of bus numbers for detected I2C devices
  */
-// TODO: simplify, no longer need to test with multiple methods
 Byte_Value_Array identify_i2c_devices() {
 
    Byte_Value_Array i2c_device_numbers_result = NULL;   // result
@@ -110,7 +118,7 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva4 = NULL;
 
    bva1 = get_i2c_devices_by_existence_test();
-   if (redundant_i2c_device_identification_checks) {
+   if (redundant_i2c_device_identification_checks) {     // normally false, set true for testing
       bva2 = get_i2c_devices_by_ls();
       bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
       bva4 = get_i2c_device_numbers_using_udev_w_sysattr_name_filter(NULL);
@@ -167,16 +175,22 @@ static char * get_username(Env_Accumulator * accum) {
    return uname;
 }
 
-/**
+
+/** Checks which /dev/i2c devices are readable and writable.
  *
  *  \param  accum  accumulates environment information
  *
  *  \remark
  *  Sets the following fields in **Env_Accumulator**:
+ *  - cur_user_all_devi2c_rw
+ *  - cur_user_any_devi2c_rw
+ *  - dev.i2c_common_group_name
+ *  - any_dev_i2c_is_group_rw
+ *  - all_dev_i2c_is_group_rw
  */
 static void check_dev_i2c_access(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    // bool all_i2c_rw = false;
    int busct = bva_length(accum->dev_i2c_device_numbers);
@@ -268,7 +282,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
                accum->cur_uname);
    }
 
-   DBGMSF0(debug, "Done");
+   DBGMSF(debug, "Done");
 }
 
 
@@ -384,7 +398,7 @@ static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
    }
 #endif
 
-   DBGMSF0(debug, "Done.");
+   DBGMSF(debug, "Done.");
 }
 
 
@@ -436,7 +450,7 @@ static void check_udev() {
  */
 void check_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    // Env_Accumulator values already set
    assert(accum->dev_i2c_device_numbers);
@@ -502,7 +516,7 @@ void check_i2c_devices(Env_Accumulator * accum) {
       check_udev();
    }
 
-   DBGMSF0(debug, "Done");
+   DBGMSF(debug, "Done");
 }
 
 

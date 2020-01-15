@@ -107,7 +107,7 @@ char * basename0(char * fn) {
 #endif
 
 
-char * drm_bus_type_name(uint8_t bus) {
+static char * drm_bus_type_name(uint8_t bus) {
    char * result = NULL;
    if (bus == DRM_BUS_PCI)
       result = "pci";
@@ -117,7 +117,7 @@ char * drm_bus_type_name(uint8_t bus) {
 }
 
 
-void report_drmVersion(drmVersion * vp, int depth) {
+static void report_drmVersion(drmVersion * vp, int depth) {
    rpt_vstring(depth, "Version:     %d.%d.%d",
                       vp->version_major, vp->version_minor, vp->version_patchlevel);
    rpt_vstring(depth, "Driver:      %.*s", vp->name_len, vp->name);

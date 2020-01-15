@@ -211,6 +211,10 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
 }
 
 
+/** Reports video related contents of directory /etc/modprobe.d
+ *
+ *  @param depth  logical indentation depth
+ */
 void probe_modules_d(int depth) {
    rpt_nl();
    rpt_vstring(depth, "Video related contents of /etc/modprobe.d");

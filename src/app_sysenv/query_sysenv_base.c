@@ -88,6 +88,7 @@ char ** get_other_driver_module_names() {
    return other_driver_modules;
 }
 
+/** Returns a null terminated list of all driver strings of interest */
 char ** get_all_driver_module_strings() {
    static char ** all_strings = NULL;
    if (!all_strings) {
@@ -100,7 +101,6 @@ char ** get_all_driver_module_strings() {
    }
    return all_strings;
 }
-
 
 
 /** Reports the first line of a file, indented under a title.
@@ -153,6 +153,13 @@ bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int d
    return result;
 }
 
+
+/** Reports the current time as both local time and UTC time,
+ *  and also the elapsed time in seconds since boot.
+ *
+ *  \param title  optional title
+ *  \param depth  logical indentation depth
+ */
 
 void sysenv_rpt_current_time(const char * title, int depth)
 {

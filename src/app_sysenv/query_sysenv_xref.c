@@ -23,15 +23,16 @@
 #include "query_sysenv_xref.h"
 
 
-
 /** Collection of #Device_Id_Xref */
 static GPtrArray * device_xref = NULL;
 static bool i2c_bus_scan_complete = false;
 
 
+/** Initializes the device cross reference table */
 void device_xref_init() {
    device_xref = g_ptr_array_new();
 }
+
 
 static void device_xref_mark_duplicate_edid(Byte * raw_edid) {
    assert(i2c_bus_scan_complete);
@@ -43,6 +44,7 @@ static void device_xref_mark_duplicate_edid(Byte * raw_edid) {
       }
    }
 }
+
 
 static int device_xref_count_by_edid(Byte * raw_edid) {
    int ct = 0;
@@ -70,7 +72,9 @@ static void device_xref_mark_duplicate_edids() {
    }
 }
 
-
+/** Indicates that scanning by I2C device number is complete,
+ *  and triggers check for duplicate EDIDs.
+ */
 void device_xref_set_i2c_bus_scan_complete() {
    bool debug = false;
    // DBGMSG("Setting i2c_bus_scan_complete");
@@ -82,10 +86,11 @@ void device_xref_set_i2c_bus_scan_complete() {
    }
 }
 
-
+#ifdef UNUSED
 bool device_xref_i2c_bus_scan_complete() {
    return i2c_bus_scan_complete;
 }
+#endif
 
 
 
@@ -96,8 +101,8 @@ bool device_xref_i2c_bus_scan_complete() {
  *  \return pointer to existing #Device_Id_Xref,\n
  *          NULL if not found
  *
- *  \todo Multiple monitors can have the same EDID, e.x. identical LG display monitors
- *        How to address?
+ *  \remark If multiple monitors have the same EDID (e.x. identical LG display monitors)
+ *          returns the first entry in the cross-reference list
  */
 Device_Id_Xref * device_xref_find_by_edid(Byte * raw_edid) {
    assert(i2c_bus_scan_complete);
@@ -114,25 +119,25 @@ Device_Id_Xref * device_xref_find_by_edid(Byte * raw_edid) {
 }
 
 
-
-
-
-
-
-// caller must free
+/** Returns the last 4 bytes of a 128-byte EDID as a
+ *  hexadecimal string.
+ *
+ *  @param   raw_edid pointer to EDID
+ *  @return  bytes 124..127 as a string, caller must free
+ */
 char * device_xref_edid_tag(Byte * raw_edid) {
    return  hexstring2(raw_edid+124, 4, NULL, true, NULL, 0);
 }
-
-
 
 
 /** Creates a new #Device_Id_Xref with the specified EDID value.
  *
  *  \param  raw_edid pointer 128 byte EDID
  *  \return pointer to newly allocated #Device_Id_Xref
+ *
+ *  \todo merge into #device_xref_new_with_busno()
  */
-Device_Id_Xref * device_xref_new(Byte * raw_edid) {
+static Device_Id_Xref * device_xref_new(Byte * raw_edid) {
    Device_Id_Xref * xref = calloc(1, sizeof(Device_Id_Xref));
    memcpy(xref->marker, DEVICE_ID_XREF_MARKER, 4);
    memcpy(xref->raw_edid, raw_edid, 128);
@@ -173,7 +178,6 @@ Device_Id_Xref * device_xref_get(Byte * raw_edid) {
  * \param  busno  I2C bus number
  * \return device identification cross-reference entry,\n
  *         NULL if not found
- *
  */
 Device_Id_Xref * device_xref_find_by_busno(int busno) {
    bool debug = false;
@@ -197,6 +201,12 @@ Device_Id_Xref * device_xref_find_by_busno(int busno) {
 }
 
 
+/** Creates a new #Device_Id_Xref with the specified bus number and EDID value.
+ *
+ *  \param  busno     I2C bus number
+ *  \param  raw_edid  pointer to 128 byte EDID
+ *  \return pointer to newly allocated #Device_Id_Xref
+ */
 Device_Id_Xref * device_xref_new_with_busno(int busno, Byte * raw_edid) {
    assert(busno >= 0);
    assert(raw_edid);
@@ -215,7 +225,6 @@ Device_Id_Xref * device_xref_new_with_busno(int busno, Byte * raw_edid) {
                  xref, xref->i2c_busno, xref->edid_tag);
    return xref;
 }
-
 
 
 /** Reports the device identification cross-reference table.
