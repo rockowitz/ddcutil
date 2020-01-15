@@ -468,6 +468,7 @@ mock_get_nontable_vcp_value(
 //
 
 
+#ifdef MOVED
 static inline bool
 value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {
    return (parsed_val->mh == 0 &&
@@ -475,6 +476,7 @@ value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {
            parsed_val->sh == 0 &&
            parsed_val->sl == 0);
 }
+#endif
 
 
 /** Gets the value for a non-table feature.
@@ -558,13 +560,16 @@ ddc_get_nontable_vcp_value(
             excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__);
             if (!value_bytes_zero(parsed_response)) {
                // for exploring
-               DBGMSG("supported_opcode == false, bot not all value bytes 0");
+               DBGMSG("supported_opcode == false, but not all value bytes 0");
             }
          }
-         else if (value_bytes_zero(parsed_response) )
+         else if (value_bytes_zero(parsed_response) &&
+               (dh->dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED) )
          {
             // just a messages for now
-            DBGMSG("all value bytes 0, supported_opcode == true)");
+            DBGMSG("all value bytes 0, supported_opcode == true, setting DDCRC_DETERMINED_UNSUPPORTED)");
+            psc = DDCRC_DETERMINED_UNSUPPORTED;
+            excp = errinfo_new(psc, __func__);
          }
 
          if (psc != 0) {
