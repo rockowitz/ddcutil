@@ -191,8 +191,24 @@ void probe_display_by_dh(Display_Handle * dh)
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
+   Parsed_Edid * pedid = dh->dref->pedid;
+   f0printf(fout, "\nEDID version: %d.%d", pedid->edid_version_major, pedid->edid_version_minor);
    f0printf(fout, "\nMfg id: %s, model: %s, sn: %s\n",
-                  dh->dref->pedid->mfg_id, dh->dref->pedid->model_name, dh->dref->pedid->serial_ascii);
+                  pedid->mfg_id, pedid->model_name, pedid->serial_ascii);
+   f0printf(fout,   "Product code: %u, binary serial number %"PRIu32" (0x%08x)\n",
+                  pedid->product_code, pedid->serial_binary, pedid->serial_binary);
+
+   Dref_Flags flags = dh->dref->flags;
+   char interpreted[200];
+#define FLAG_NAME(_flag) (flags & _flag) ? #_flag : ""
+   g_snprintf(interpreted, 200, "%s%s%s%s",
+         FLAG_NAME(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED),
+         FLAG_NAME(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED),
+         FLAG_NAME(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED),
+         FLAG_NAME(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED) );
+         f0printf(fout, "\nUnsupported feature indicator: %s\n", interpreted);
+#undef FLAG_NAME
+
    f0printf(fout, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
