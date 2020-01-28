@@ -239,7 +239,6 @@ char *           dh_repr_t(Display_Handle * dh);
 void             free_display_handle(Display_Handle * dh);
 
 
-
 // *** Video_Card_Info ***
 
 #define VIDEO_CARD_INFO_MARKER "VIDC"
