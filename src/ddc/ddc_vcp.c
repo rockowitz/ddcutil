@@ -569,7 +569,7 @@ ddc_get_nontable_vcp_value(
             // just a messages for now
             DBGMSG("all value bytes 0, supported_opcode == true, setting DDCRC_DETERMINED_UNSUPPORTED)");
             psc = DDCRC_DETERMINED_UNSUPPORTED;
-            excp = errinfo_new(psc, __func__);
+            excp = errinfo_new2(psc, __func__, "MH=ML=SH=SL=0");
          }
 
          if (psc != 0) {
@@ -658,7 +658,9 @@ ddc_get_table_vcp_value(
             ddc_excp->status_code == DDCRC_ALL_RESPONSES_NULL)
    {
       Error_Info * wrapped_exception = ddc_excp;
-      ddc_excp = errinfo_new_with_cause(DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__);
+      ddc_excp = errinfo_new_with_cause2(
+            DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__, "DDC NULL Message");
+
    }
 
    DBGTRC(debug, TRACE_GROUP,

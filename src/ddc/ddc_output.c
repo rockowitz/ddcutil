@@ -150,12 +150,12 @@ check_valid_operation_by_feature_id_and_dh(
  * Returns:
  *    status code
  */
-static Public_Status_Code
+static Error_Info *
 get_raw_value_for_feature_metadata(
       Display_Handle *           dh,
-      Display_Feature_Metadata *    frec,
+      Display_Feature_Metadata * frec,
       bool                       ignore_unsupported,
-      DDCA_Any_Vcp_Value ** pvalrec,
+      DDCA_Any_Vcp_Value **      pvalrec,
       FILE *                     msg_fh)
 {
    bool debug = false;
@@ -215,6 +215,8 @@ get_raw_value_for_feature_metadata(
       }
       psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+      ddc_excp = errinfo_new_with_cause2(
+                   DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "EIO");
    }
 
    else {
@@ -237,6 +239,8 @@ get_raw_value_for_feature_metadata(
          }
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
          psc = DDCRC_DETERMINED_UNSUPPORTED;
+         ddc_excp = errinfo_new_with_cause2(
+                     DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "DDC NULL Response");
          break;
 
       case DDCRC_READ_ALL_ZERO:
@@ -247,6 +251,8 @@ get_raw_value_for_feature_metadata(
          }
          psc = DDCRC_DETERMINED_UNSUPPORTED;
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
+         ddc_excp = errinfo_new_with_cause2(
+                     DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "MH=ML=SH=SL=0");
          break;
 
 #ifdef FUTURE
@@ -268,10 +274,18 @@ get_raw_value_for_feature_metadata(
          break;
 
       case DDCRC_REPORTED_UNSUPPORTED:
-      case DDCRC_DETERMINED_UNSUPPORTED:
          if (!ignore_unsupported) {
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                             feature_code, feature_name, "Unsupported feature code");
+         }
+         break;
+
+      case DDCRC_DETERMINED_UNSUPPORTED:
+         if (!ignore_unsupported) {
+            char text[100];
+            g_snprintf(text, 100, "Unsupported feature code (%s)", ddc_excp->detail);
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                            feature_code, feature_name, text);
          }
          break;
 
@@ -292,10 +306,11 @@ get_raw_value_for_feature_metadata(
    if (*pvalrec && (debug || IS_TRACING())) {
       dbgrpt_single_vcp_value(*pvalrec, 1);
    }
-   if (ddc_excp) {
-      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
-   }
-   return psc;
+   assert( (psc == 0 && !ddc_excp) || (psc != 0 && ddc_excp) );
+   //if (ddc_excp) {
+   //    ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+   // }
+   return ddc_excp;
 }
 
 #ifdef IN_PROGREESS
@@ -459,7 +474,7 @@ collect_raw_feature_set_values2_dfm(
       DDCA_Any_Vcp_Value *  pvalrec;
       // DDCA_Feature_Metadata * ddca_meta = dfm_to_ddca_feature_metadata(dfm);
 
-      Public_Status_Code cur_status_code =
+      Error_Info *  cur_ddc_excp =
             get_raw_value_for_feature_metadata(
                   dh,
                   dfm,    // ddca_meta,
@@ -467,6 +482,7 @@ collect_raw_feature_set_values2_dfm(
                   &pvalrec,
                    msg_fh);
       // todo: free ddca_meta
+      Public_Status_Code cur_status_code = ERRINFO_STATUS(cur_ddc_excp);
 
       if (cur_status_code == 0) {
          vcp_value_set_add(vset, pvalrec);
@@ -477,8 +493,15 @@ collect_raw_feature_set_values2_dfm(
               )
       {
          // no problem
+         if (cur_ddc_excp) {
+             ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+          }
+
       }
       else {
+         if (cur_ddc_excp) {
+             ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+          }
          master_status_code = cur_status_code;
          break;
       }
@@ -578,6 +601,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
    DBGTRC(debug, TRACE_GROUP, "Starting. suppress_unsupported=%s", sbool(suppress_unsupported));
 
    Public_Status_Code psc = 0;
+   Error_Info * ddc_excp;
    *formatted_value_loc = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -599,13 +623,14 @@ ddc_get_formatted_value_for_display_feature_metadata(
    // bool ignore_unsupported = !(output_level >= DDCA_OL_NORMAL && !suppress_unsupported);
    bool ignore_unsupported = suppress_unsupported;
 
-   psc = get_raw_value_for_feature_metadata(
+   ddc_excp = get_raw_value_for_feature_metadata(
             dh,
             dfm,    // extmeta,
             ignore_unsupported,
             &pvalrec,
             (output_level == DDCA_OL_TERSE) ? NULL : msg_fh);
             // msg_fh);
+   psc = ERRINFO_STATUS(ddc_excp);
    assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
    if (psc == 0) {
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
@@ -673,6 +698,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                             feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
             psc = DDCRC_INTERPRETATION_FAILED;
+            ddc_excp = errinfo_new(DDCRC_INTERPRETATION_FAILED, __func__);
             // TODO: retry with default output function
          }
 
@@ -704,6 +730,9 @@ ddc_get_formatted_value_for_display_feature_metadata(
    DBGTRC(debug, TRACE_GROUP,
           "Done.  Returning: %s, *formatted_value_loc=%p",
           psc_desc(psc), formatted_value_loc);
+
+   assert( (psc == 0 && !ddc_excp) || (psc != 0 && ddc_excp) );
+   ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
    return psc;
 }
 
