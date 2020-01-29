@@ -1,13 +1,13 @@
-// i2c_bus_selector.c
-
-// Generalized Bus_Info search
-//
-// Overkill for current use.
-// Was coded at the time when selecting display by criteria occurred at the i2c/ad/usb
-// level rather than in ddc_displays.c.
-// Still used by USB layer as a fallback to find the EDID by model etc.
-// if the EDID can't be gotten from USB services.
-
+/** @file i2c_bus_selector.c
+ *
+ * Generalized Bus_Info search
+ *
+ * Overkill for current use.
+ * Was coded at the time when selecting display by criteria occurred at the i2c/adn/usb
+ * level rather than in ddc_displays.c.
+ * Still used by USB layer as a fallback to find the EDID by model etc.
+ * if the EDID can't be gotten from USB services.
+ */
 // Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 

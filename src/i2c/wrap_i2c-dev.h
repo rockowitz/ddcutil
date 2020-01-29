@@ -1,30 +1,6 @@
-/* wrap_i2c-dev.h
+/** \file wrap_i2c-dev.h
  *
- * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-#ifndef WRAP_I2C_DEV_H_
-#define WRAP_I2C_DEV_H_
-
-/* Including file i2c-dev.h presents multiple issues.
+ * Including file i2c-dev.h presents multiple issues.
  * This header file addresses those issues in one place.
  *
  * Currently this file is included by i2c_base_io.c and i2c_do_io.c.
@@ -33,7 +9,11 @@
  * file because it is not part of the public interface of any
  * header file.
  */
+// Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef WRAP_I2C_DEV_H_
+#define WRAP_I2C_DEV_H_
 
 // On Fedora 23 and SUSE 13.2, there is no problem with NULL.
 // But on Fedora 22 and SUSE 13.1, we get an error that NULL is
@@ -55,6 +35,5 @@
 #ifndef I2C_FUNC_I2C
 #include <linux/i2c.h>
 #endif
-
 
 #endif /* WRAP_I2C_DEV_H_ */

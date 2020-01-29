@@ -1,9 +1,9 @@
-// i2c_bus_selector.h
-
-// Generalized bus_info finder, now used only within usb_edid.c to find
-// a fallback EDID
-
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+/** @file i2c_bus_selector.h
+  *
+  * Generalized bus_info finder, now used only within usb_edid.c to find
+  * a fallback EDID
+  */
+// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_SELECTOR_H_

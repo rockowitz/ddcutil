@@ -3,14 +3,8 @@
  *  Low level functions for writing to and reading from the I2C bus,
  *  using various mechanisms.
  */
-
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
- *  Low level functions for writing to and reading from the I2C bus,
- *  using various mechanisms.
- */
 
 #ifndef I2C_BASE_IO_H_
 #define I2C_BASE_IO_H_
