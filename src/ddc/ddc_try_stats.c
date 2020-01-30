@@ -1,31 +1,14 @@
-/* ddc_try_stats.c
+/** @file ddc_try_stats.c
  *
- * Maintains statistics on DDC retries.
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  Maintains statistics on DDC retries.
  */
+
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +23,6 @@
 #include "ddc/ddc_try_stats.h"
 
 #define MAX_STAT_NAME_LENGTH  31
-
 
 static char * TAG_VALUE = "STAT";
 
@@ -90,10 +72,12 @@ static inline Try_Data * unopaque(void * opaque_ptr) {
    return try_data;
 }
 
+
 int  try_data_get_max_tries(void * stats_rec) {
    Try_Data * try_data = unopaque(stats_rec);
    return try_data->max_tries;
 }
+
 
 void try_data_set_max_tries(void * stats_rec, int new_max_tries) {
    bool debug = false || debug_mutex;
@@ -109,6 +93,7 @@ void try_data_set_max_tries(void * stats_rec, int new_max_tries) {
    DBGMSF0(debug, "Done");
 }
 
+
 void try_data_reset(void * stats_rec) {
    bool debug = false || debug_mutex;
    DBGMSF0(debug, "Starting");
@@ -122,6 +107,7 @@ void try_data_reset(void * stats_rec) {
 
    DBGMSF0(debug, "Done");
 }
+
 
 static void record_successful_tries(void * stats_rec, int tryct){
    bool debug = false || debug_mutex;
@@ -137,6 +123,7 @@ static void record_successful_tries(void * stats_rec, int tryct){
    DBGMSF0(debug, "Done");
 }
 
+
 static void record_failed_max_tries(void * stats_rec) {
    bool debug = false || debug_mutex;
    DBGMSF0(debug, "Starting");
@@ -149,6 +136,7 @@ static void record_failed_max_tries(void * stats_rec) {
 
    DBGMSF0(debug, "Done");
 }
+
 
 static void record_failed_fatally(void * stats_rec) {
    bool debug = false || debug_mutex;
