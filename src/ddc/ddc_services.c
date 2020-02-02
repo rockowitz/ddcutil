@@ -22,6 +22,7 @@
 
 #include "dynvcp/dyn_feature_codes.h"
 
+#include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_do_io.h"
 
 #include "adl/adl_shim.h"
@@ -125,7 +126,7 @@ void ddc_report_max_tries(int depth) {
  */
 void init_ddc_services() {
    bool debug = false;
-   DBGMSF0(debug, "Executing");
+   DBGMSF(debug, "Executing");
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
@@ -134,6 +135,9 @@ void init_ddc_services() {
    init_adl_errors();
    adl_debug = debug;      // turn on adl initialization tracing
    adlshim_initialize();
+
+   // i2c
+   init_i2c_bus_core();
 
    // usb
 #ifdef USE_USB

@@ -36,6 +36,7 @@
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
@@ -590,11 +591,20 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    for (int tryctr = 0; tryctr < max_tries; tryctr++) {
       rc = invoke_i2c_writer(fd, 1, &byte_to_write);
       if (rc == 0) {
+#define SINGLE_BYTE_READ
+#ifdef SINGLE_BYTE_READ
+         int ndx = 0;
+         for (; ndx < 128 && rc == 0; ndx++) {
+            rc = invoke_i2c_reader(fd, 1, &rawedid->bytes[ndx] );
+         }
+         DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
+#else
          rc = invoke_i2c_reader(fd, 128, rawedid->bytes);
+#endif
          assert(rc <= 0);
          if (rc == 0) {
             rawedid->len = 128;
-            if (debug) {
+            if (debug || IS_TRACING() ) {
                DBGMSG("call_read returned:");
                dbgrpt_buffer(rawedid, 1);
                DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
@@ -1205,4 +1215,15 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
    return result;
 }
 #endif
+
+static void init_i2c_bus_core_func_name_table() {
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(i2c_get_raw_edid_by_fd);
+#undef ADD_FUNC
+}
+
+void init_i2c_bus_core() {
+   init_i2c_bus_core_func_name_table();
+}
+
 
