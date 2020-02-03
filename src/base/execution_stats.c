@@ -1,8 +1,8 @@
 /** \file execution_stats.c
- * Record execution statistics, mainly the count and elapsed time of system calls.
+ *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -53,7 +53,6 @@ typedef struct {
 } Status_Code_Counts;
 
 
-
 //
 // Global Variables
 //
@@ -71,7 +70,6 @@ static GMutex               global_stats_mutex;
 static bool                 debug_status_code_counts_mutex  = false;
 static bool                 debug_global_stats_mutex = false;
 static bool                 debug_sleep_stats_mutex = false;
-
 
 
 //
@@ -118,7 +116,8 @@ const char * io_event_name(IO_Event_Type event_type) {
    return io_event_stats[event_type].name;
 }
 
-// unused
+
+#ifdef UNUSED
 int max_event_name_length() {
    int result = 0;
    int ndx = 0;
@@ -129,6 +128,7 @@ int max_event_name_length() {
    }
    return result;
 }
+#endif
 
 
 static int total_io_event_count() {
@@ -155,15 +155,8 @@ uint64_t normalize_timestamp(uint64_t timestamp) {
 }
 
 
-/** Called immediately after an I2C IO call, this function updates
- * two sets of data:
- *
- * 1) Updates the total number of calls and elapsed time for
- * categories of calls.
- *
- * 2) Updates the timestamp and call type maintained for the
- * most recent I2C call.  This information is used to determine
- * the required time for the next sleep call.
+/** Called immediately after an I2C IO call, this function updates the total
+ *  number of calls and elapsed time for categories of calls.
  *
  *  @param  event_type        e.g. IE_WRITE
  *  @param  location          function name
@@ -191,11 +184,6 @@ void log_io_call(
 
    DBGMSF(debug, "Updated total nanosec = %"PRIu64", as millis=%"PRIu64,
                   io_event_stats[event_type].call_nanosec, io_event_stats[event_type].call_nanosec /(1000*1000) );
-
-   // unused
-   // last_io_event = event_type;
-
-   // last_io_timestamp = normalize_timestamp(end_time_nanos);
 }
 
 
