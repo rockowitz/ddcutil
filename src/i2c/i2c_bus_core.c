@@ -569,7 +569,7 @@ bye:
  * @retval  <0       error
  */
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID for file %d", fd);
 
    bool conservative = true;
