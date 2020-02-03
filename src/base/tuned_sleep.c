@@ -4,10 +4,12 @@
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+
+#include "util/debug_util.h"
 
 #include "base/parms.h"
 #include "base/execution_stats.h"
@@ -133,7 +135,7 @@ void tuned_sleep_with_tracex(
       const char *     msg)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   // DBGMSF(debug, "Starting. Sleep event type = %s", sleep_event_name(event_type));
 
    int sleep_time_millis = 0;    // should be a default
    switch(io_mode) {
@@ -156,10 +158,10 @@ void tuned_sleep_with_tracex(
             sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
             break;
       case SE_DDC_NULL:
-          sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-          break;
+           sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+           break;
       default:
-         sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+           sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
       }  // switch within DDC_IO_DEVI2C
       break;
 
@@ -196,8 +198,9 @@ void tuned_sleep_with_tracex(
    sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
    if (debug) {
    // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
-      DBGMSG("Sleep event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
+      DBGMSG("Before sleep. event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
              sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_time_millis);
+      // show_backtrace(2);
    }
 
    record_sleep_event(event_type);

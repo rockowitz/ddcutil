@@ -4,13 +4,15 @@
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TUNED_SLEEP_H_
 #define TUNED_SLEEP_H_
 
 #include <stdbool.h>
+
+#include "public/ddcutil_types.h"
 
 #include "base/sleep.h"
 #include "base/execution_stats.h"
