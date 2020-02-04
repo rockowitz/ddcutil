@@ -1,8 +1,8 @@
-/** \file i2c_do_io.h
+/** \file i2c_strategy_router.h
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_STRATEGY_ROUTER_H_

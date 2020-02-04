@@ -1,4 +1,4 @@
-/** \file i2c_do_io.c
+/** \file i2c_strategy_router.c
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
