@@ -178,7 +178,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
  *                   to take control even if address is in use by another driver
  *
  * @retval  0 if success
- * @retval <0 negative Linux errno, if ioctl call fails and CALLOPT_ERR_ABORT not set in callopts
+ * @retval <0 negative Linux errno, if ioctl call fails
  *
  * \remark
  * Errors which are recovered are counted here using COUNT_STATUS_CODE().
