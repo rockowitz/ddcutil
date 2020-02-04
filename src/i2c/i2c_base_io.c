@@ -3,10 +3,13 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+
+#include "ddcutil_types.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -24,7 +27,9 @@
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/feature_sets.h"
+#include "base/last_io_event.h"
 #include "base/linux_errno.h"
+#include "base/tuned_sleep.h"
 
 #include "i2c/wrap_i2c-dev.h"
 
@@ -75,26 +80,60 @@ Status_Errno_DDC  write_writer(int fd, int bytect, Byte * pbytes) {
  *
  * @retval 0                success
  * @retval DDCRC_DDC_DATA   incorrect number of bytes read
- * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
- * @retval -errno           negative Linux errno value
+ * @retval -errno           negative Linux errno value from read()
  */
 Status_Errno_DDC read_reader(int fd, int bytect, Byte * readbuf) {
-   bool debug = false;
-   int rc = read(fd, readbuf, bytect);
-   // per read() man page:
-   // if >= 0, number of bytes actually read
-   // if -1,   error occurred, errno is set
-   if (rc >= 0) {
-      if (rc == bytect)
-         rc = 0;
-      else
-         rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
+   bool debug = true;
+   bool single_byte_reads = false;   // make this a parm?
+   DBGMSF(debug, "Starting. bytect=%d, single_byte_reads=%s", bytect, sbool(single_byte_reads));
+
+   int rc = 0;
+   if (single_byte_reads) {
+      // for Acer and P2411h, reads bytes 1,3,5,7
+      for (int ndx=0; ndx < bytect && rc == 0; ndx++) {
+         // DBGMSF(debug, "Calling read() for 1 byte, ndx=%d", ndx);
+         RECORD_IO_EVENTX(
+            fd,
+            IE_READ,
+            ( rc = read(fd, readbuf+ndx, 1) )
+           );
+         // DBGMSF(debug, "Byte read: readbuf[%d] = 0x%02x", ndx, readbuf[ndx]);
+         // rc = read(fd, readbuf+ndx, 1);
+
+         if (rc >= 0) {
+            if (rc == 1) {
+               rc = 0;
+               // does not solve problem of every other byte read on some monitors
+               // TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_POST_READ, "After 1 byte read");
+            }
+            else
+               rc = DDCRC_DDC_DATA;
+         }
+      }
    }
-   else {    // rc < 0
+   else {
+      RECORD_IO_EVENTX(
+         fd,
+         IE_READ,
+         ( rc = read(fd, readbuf, bytect) )
+      );
+      // rc = read(fd, readbuf, bytect);
+      // per read() man page:
+      // if >= 0, number of bytes actually read
+      // if -1,   error occurred, errno is set
+      if (rc >= 0) {
+         if (rc == bytect)
+           rc = 0;
+         else
+            rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
+      }
+   }
+   if (rc < 0) {
       int errsv = errno;
       DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
+   DBGMSF(debug, "Returning: %s, readbuf: %s", ddcrc_desc_t(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -201,11 +240,12 @@ Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf) {
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
+   // !!! ERROR: function call will fail if for slave address other than x37, e.g. EDID on x50
    messages[0].addr  = 0x37;
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
-   // On Fedora, i2c_msg is defined in i2c.h, and it's --u8 * buf
+   // On Fedora, i2c_msg is defined in i2c.h, and it's __u8 * buf
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-sign"
    messages[0].buf   = (char *) readbuf;
@@ -221,6 +261,11 @@ Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf) {
    // if error:
    //    -1, errno is set
    int rc =  ioctl(fd, I2C_RDWR, &msgset);
+   RECORD_IO_EVENTX(
+      fd,
+      IE_READ,
+      ( rc = ioctl(fd, I2C_RDWR, &msgset))
+     );
    int errsv = errno;
    if (rc < 0) {
       if (debug) {

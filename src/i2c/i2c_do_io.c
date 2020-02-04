@@ -2,7 +2,7 @@
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -106,11 +106,12 @@ Status_Errno_DDC invoke_i2c_reader(
      DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
 
      Status_Errno_DDC rc;
-     RECORD_IO_EVENTX(
-        fd,
-        IE_READ,
-        ( rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf) )
-       );
+     // RECORD_IO_EVENTX(
+     //    fd,
+     //    IE_READ,
+     //    ( rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf) )
+     //   );
+     rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf);
      assert (rc <= 0);
 
      if (rc == 0) {
