@@ -80,11 +80,11 @@
 
 // Parms used only within testcase portion of code:
 
-#define DEFAULT_I2C_WRITE_MODE "write"
+// #define DEFAULT_I2C_WRITE_MODE "write"
 // #define DEFAULT_I2C_WRITE_MODE "ioctl_write"
 //#define DEFAULT_I2C_WRITE_MODE  "i2c_smbus_write_i2c_block_data"
 
-#define DEFAULT_I2C_READ_MODE  "read"
+// #define DEFAULT_I2C_READ_MODE  "read"
 // #define DEFAULT_I2C_READ_MODE  "ioctl_read"
 // i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
 // "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
