@@ -52,8 +52,11 @@
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno            negative Linux error number
  */
-Status_Errno_DDC  write_writer(int fd, int bytect, Byte * pbytes) {
-   bool debug = false;
+Status_Errno_DDC
+write_writer(int fd, int bytect, Byte * pbytes) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s", fd, bytect, pbytes, hexstring_t(pbytes, bytect));
+
    int rc = write(fd, pbytes, bytect);
    // per write() man page:
    // if >= 0, number of bytes actually written, must be <= bytect
@@ -69,6 +72,8 @@ Status_Errno_DDC  write_writer(int fd, int bytect, Byte * pbytes) {
       DBGMSF(debug, "write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
+
+   DBGMSF(debug, "Done. Returning: %s", ddcrc_desc_t(rc));
    return rc;
 }
 
@@ -168,8 +173,8 @@ Status_Errno_DDC read_reader(int fd, Byte slave_address, int bytect, Byte * read
  * @retval <0      negative Linux errno value
  */
 Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p", fd, bytect, pbytes);
+   bool debug = true;
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s", fd, bytect, pbytes, hexstring_t(pbytes, bytect));
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
@@ -234,10 +239,13 @@ Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
  * @retval 0         success
  * @retval <0        negative Linux errno value
  */
+
+// FAILING
+
 // static  // disable to allow name in back trace
 Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * readbuf) {
-   bool debug = false;
-   // DBGMSG("Starting");
+   bool debug = true;
+   DBGMSF(debug, "Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
@@ -282,13 +290,14 @@ Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * re
    }
    else if (rc < 0)
       rc = -errsv;
+   DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
    return rc;
 }
 
 
 Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+   bool debug = true;
+   DBGMSF(debug, "Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
    int rc = 0;
    bool read_bytewise = false;     // will become a parm
 

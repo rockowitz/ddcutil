@@ -27,6 +27,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
 I2C_IO_Strategy  i2c_file_io_strategy = {
+      I2C_IO_STRATEGY_FILEIO,
       write_writer,
       read_reader,
       "read_writer",
@@ -34,6 +35,7 @@ I2C_IO_Strategy  i2c_file_io_strategy = {
 };
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
+      I2C_IO_STRATEGY_IOCTL,
       ioctl_writer,
       ioctl_reader,
       "ioctl_writer",
@@ -41,13 +43,16 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
 };
 
 
-static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;  // default strategy
+static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;  // current strategy
 
 /** Sets an alternative I2C IO strategy.
  *
  * @param strategy_id  I2C IO strategy id
+ * @return old strategy id
  */
-void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
+I2C_IO_Strategy_Id
+i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
+   I2C_IO_Strategy_Id old = i2c_io_strategy->strategy_id;
    switch (strategy_id) {
    case (I2C_IO_STRATEGY_FILEIO):
          i2c_io_strategy = &i2c_file_io_strategy;
@@ -56,6 +61,7 @@ void i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
          i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;
    }
+   return old;
 }
 
 

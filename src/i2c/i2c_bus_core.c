@@ -586,10 +586,13 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 
    Byte byte_to_write = 0x00;
 
+   DBGMSG("Temporarily forcing io strategy to I2C_IO_STRATEGY_FILEIO");
+   I2C_IO_Strategy_Id old_strategy = i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);
    int max_tries = 3;
    for (int tryctr = 0; tryctr < max_tries; tryctr++) {
       rc = invoke_i2c_writer(fd, 1, &byte_to_write);
       if (rc == 0) {
+
 #define SINGLE_BYTE_READ
 #ifdef SINGLE_BYTE_READ
          int ndx = 0;
@@ -624,6 +627,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       if (tryctr < max_tries)
          DBGTRC(debug, TRACE_GROUP, "Retrying EDID read.  tryctr=%d, max_tries=%d", tryctr, max_tries);
    }
+   i2c_set_io_strategy(old_strategy);
 
 bye:
    if (rc < 0)
