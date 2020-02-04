@@ -234,14 +234,14 @@ Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
  * @retval 0         success
  * @retval <0        negative Linux errno value
  */
-Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
+// static  // disable to allow name in back trace
+Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * readbuf) {
    bool debug = false;
    // DBGMSG("Starting");
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
-   // !!! ERROR: function call will fail if for slave address other than x37, e.g. EDID on x50
    messages[0].addr  = slave_address;      // this is the slave address currently set
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
@@ -282,6 +282,27 @@ Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * rea
    }
    else if (rc < 0)
       rc = -errsv;
+   return rc;
+}
+
+
+Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   int rc = 0;
+   bool read_bytewise = false;     // will become a parm
+
+   if (read_bytewise) {
+      int ndx = 0;
+      for (; ndx < bytect && rc == 0; ndx++) {
+         rc = ioctl_reader1(fd, slave_address, 1, readbuf+ndx);
+      }
+   }
+   else {
+      rc = ioctl_reader1(fd, slave_address, bytect, readbuf);
+   }
+
+   DBGMSF(debug, "Done. Returning: %s", ddcrc_desc_t(rc));
    return rc;
 }
 
