@@ -386,7 +386,8 @@ DDCA_Status (*Write_Read_Raw_Function)(
  *   -errno if error in write
  *   DDCRC_READ_ALL_ZERO
  */
-static DDCA_Status ddc_i2c_write_read_raw(
+// static  // allow function to appear in backtrace
+DDCA_Status ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
          int              max_read_bytes,
@@ -522,7 +523,8 @@ static DDCA_Status ddc_adl_write_read_raw(
 }
 
 
-static DDCA_Status ddc_write_read_raw(
+// static  // allow function to appear in backtrace
+DDCA_Status ddc_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
       int              max_read_bytes,
@@ -530,7 +532,7 @@ static DDCA_Status ddc_write_read_raw(
       int *            p_rcvd_bytes_ct
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
@@ -595,7 +597,7 @@ ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      )
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
@@ -685,7 +687,7 @@ ddc_write_read_with_retry(
          DDC_Packet **    response_packet_ptr_loc
         )
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
           dh_repr_t(dh), bool_repr(all_zero_response_ok)  );
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
