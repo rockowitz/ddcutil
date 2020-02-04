@@ -39,14 +39,16 @@ Status_Errno_DDC invoke_i2c_writer(
 
 Status_Errno_DDC invoke_i2c_reader(
        int        fd,
+       Byte       slave_address,
        int        bytect,
        Byte *     readbuf);
 
-#ifdef TEST_THAT_DIDNT_WORK
+// #ifdef TEST_THAT_DIDNT_WORK
 Status_Errno_DDC invoke_single_byte_i2c_reader(
        int        fd,
+       Byte       slave_address,
        int        bytect,
        Byte *     readbuf);
-#endif
+// #endif
 
 #endif /* I2C_STRATEGY_ROUTER_H_ */

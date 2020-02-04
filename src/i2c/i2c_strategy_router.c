@@ -100,6 +100,7 @@ Status_Errno_DDC invoke_i2c_writer(
  */
 Status_Errno_DDC invoke_i2c_reader(
        int        fd,
+       Byte       slave_address,
        int        bytect,
        Byte *     readbuf)
 {
@@ -112,7 +113,7 @@ Status_Errno_DDC invoke_i2c_reader(
      //    IE_READ,
      //    ( rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf) )
      //   );
-     rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf);
+     rc = i2c_io_strategy->i2c_reader(fd, slave_address, bytect, readbuf);
      assert (rc <= 0);
 
      if (rc == 0) {
@@ -123,10 +124,11 @@ Status_Errno_DDC invoke_i2c_reader(
 }
 
 
-#ifdef TEST_THAT_DIDNT_WORK
+// #ifdef TEST_THAT_DIDNT_WORK
 // fails
 Status_Errno_DDC invoke_single_byte_i2c_reader(
       int        fd,
+      Byte       slave_address,
       int        bytect,
       Byte *     readbuf)
 {
@@ -135,7 +137,7 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
    Status_Errno_DDC psc = 0;
    int ndx = 0;
    for (;ndx < bytect; ndx++) {
-      psc = invoke_i2c_reader(fd, 1, readbuf+ndx);
+      psc = invoke_i2c_reader(fd, slave_address, 1, readbuf+ndx);
       if (psc != 0)
          break;
       // call_tuned_sleep_i2c(SE_POST_READ);
@@ -143,5 +145,5 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
    DBGMSF(debug, "Returning psc=%s", psc_desc(psc));
    return psc;
 }
-#endif
+// #endif
 

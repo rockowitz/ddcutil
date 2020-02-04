@@ -423,7 +423,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       //    rc = invoke_single_byte_i2c_reader(dh->fd, max_read_bytes, readbuf);
       // else
 
-      rc = invoke_i2c_reader(dh->fd, max_read_bytes, readbuf);
+      rc = invoke_i2c_reader(dh->fd, 0x37, max_read_bytes, readbuf);
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
       TUNED_SLEEP_I2C_WITH_TRACE(SE_POST_READ, NULL);

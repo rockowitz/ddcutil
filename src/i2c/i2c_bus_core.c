@@ -174,7 +174,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
  * @param  fd        Linux file descriptor for open /dev/i2c-n
  * @param  addr      slave address
  * @param  callopts  call option flags, controlling failure action\n
- *                   if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE\n
+ *                   if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
  *                   to take control even if address is in use by another driver
  *
  * @retval  0 if success
@@ -594,7 +594,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 #ifdef SINGLE_BYTE_READ
          int ndx = 0;
          for (; ndx < 128 && rc == 0; ndx++) {
-            rc = invoke_i2c_reader(fd, 1, &rawedid->bytes[ndx] );
+            rc = invoke_i2c_reader(fd, 0x50, 1, &rawedid->bytes[ndx] );
          }
          DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
 #else

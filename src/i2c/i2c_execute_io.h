@@ -15,12 +15,12 @@
 /** Function template for I2C write function */
 typedef Status_Errno_DDC (*I2C_Writer)(int fd, int bytect, Byte * bytes_to_write);
 /** Function template for I2C read function */
-typedef Status_Errno_DDC (*I2C_Reader)(int fd, int bytect, Byte * readbuf);
+typedef Status_Errno_DDC (*I2C_Reader)(int fd, Byte slave_addr, int bytect, Byte * readbuf);
 
 Status_Errno_DDC write_writer(int fd, int bytect, Byte * pbytes);
-Status_Errno_DDC read_reader (int fd, int bytect, Byte * readbuf);
+Status_Errno_DDC read_reader (int fd, Byte slave_address, int bytect, Byte * readbuf);
 Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes);
-Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf);
+Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf);
 
 // Don't work:
 Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fd, int bytect, Byte * bytes_to_write);

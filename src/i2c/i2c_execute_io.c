@@ -83,7 +83,7 @@ Status_Errno_DDC  write_writer(int fd, int bytect, Byte * pbytes) {
  * @retval DDCRC_DDC_DATA   incorrect number of bytes read
  * @retval -errno           negative Linux errno value from read()
  */
-Status_Errno_DDC read_reader(int fd, int bytect, Byte * readbuf) {
+Status_Errno_DDC read_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
    bool debug = true;
    bool single_byte_reads = false;   // make this a parm?
    DBGMSF(debug, "Starting. bytect=%d, single_byte_reads=%s", bytect, sbool(single_byte_reads));
@@ -234,7 +234,7 @@ Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
  * @retval 0         success
  * @retval <0        negative Linux errno value
  */
-Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf) {
+Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
    bool debug = false;
    // DBGMSG("Starting");
 
@@ -242,7 +242,7 @@ Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf) {
    struct i2c_rdwr_ioctl_data  msgset;
 
    // !!! ERROR: function call will fail if for slave address other than x37, e.g. EDID on x50
-   messages[0].addr  = 0x37;
+   messages[0].addr  = slave_address;      // this is the slave address currently set
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
