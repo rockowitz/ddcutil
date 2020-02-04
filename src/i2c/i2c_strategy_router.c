@@ -6,6 +6,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include "i2c_strategy_router.h"
+
 #include <assert.h>
 #include <stdio.h>
 /** \endcond */
@@ -19,7 +21,6 @@
 
 // #include "i2c/i2c_base_io.h"
 
-#include "i2c/i2c_do_io.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;

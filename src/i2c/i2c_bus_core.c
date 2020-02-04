@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-// #include <glib.h>
+#include <i2c/i2c_strategy_router.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -40,7 +40,6 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c/i2c_do_io.h"
 #include "i2c/wrap_i2c-dev.h"
 
 #include "i2c/i2c_bus_core.h"

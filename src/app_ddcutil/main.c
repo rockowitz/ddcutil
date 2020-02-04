@@ -14,6 +14,7 @@
 #include <dynvcp/dyn_dynamic_features.h>
 #include <dynvcp/dyn_parsed_capabilities.h>
 #include <errno.h>
+#include <i2c/i2c_strategy_router.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -48,8 +49,6 @@
 #include "dynvcp/dyn_dynamic_features.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_do_io.h"
-
 #include "adl/adl_shim.h"
 
 #include "usb/usb_displays.h"

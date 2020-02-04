@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <i2c/i2c_strategy_router.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,8 +38,6 @@
 #include "base/tuned_sleep.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_do_io.h"
-
 #include "adl/adl_shim.h"
 
 #ifdef USE_USB

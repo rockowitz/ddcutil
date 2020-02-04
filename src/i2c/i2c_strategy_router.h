@@ -5,8 +5,8 @@
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_DO_IO_H_
-#define I2C_DO_IO_H_
+#ifndef I2C_STRATEGY_ROUTER_H_
+#define I2C_STRATEGY_ROUTER_H_
 
 #include "util/coredefs.h"
 
@@ -49,4 +49,4 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
        Byte *     readbuf);
 #endif
 
-#endif /* I2C_DO_IO_H_ */
+#endif /* I2C_STRATEGY_ROUTER_H_ */

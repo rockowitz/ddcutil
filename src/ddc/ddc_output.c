@@ -14,6 +14,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "../i2c/i2c_strategy_router.h"
 #include "util/error_info.h"
 #include "util/report_util.h"
 /** \endcond */
@@ -26,8 +27,6 @@
 #include "base/sleep.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_do_io.h"
-
 #include "adl/adl_shim.h"
 
 #ifdef USE_USB
