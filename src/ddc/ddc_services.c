@@ -7,7 +7,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
-#include <i2c/i2c_strategy_router.h>
+#include <i2c/i2c_strategy_dispatcher.h>
 #include <stdio.h>
 /** \endcond */
 

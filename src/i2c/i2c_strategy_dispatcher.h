@@ -1,19 +1,19 @@
-/** \file i2c_strategy_router.h
+/** \file i2c_strategy_dispatcher.h
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_STRATEGY_ROUTER_H_
-#define I2C_STRATEGY_ROUTER_H_
+#ifndef I2C_STRATEGY_DISPATCHER_H_
+#define I2C_STRATEGY_DISPATCHER_H_
 
 #include "util/coredefs.h"
 
 #include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c_execute_io.h"
+#include "i2c_execute.h"
 
 // may need to move this definition to base
 /** I2C IO strategy ids */
@@ -56,4 +56,4 @@ invoke_single_byte_i2c_reader(
        Byte *     readbuf);
 // #endif
 
-#endif /* I2C_STRATEGY_ROUTER_H_ */
+#endif /* I2C_STRATEGY_DISPATCHER_H_ */

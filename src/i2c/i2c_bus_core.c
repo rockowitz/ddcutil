@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <i2c/i2c_strategy_router.h>
+#include <i2c/i2c_strategy_dispatcher.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>

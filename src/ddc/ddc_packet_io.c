@@ -16,7 +16,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c/i2c_strategy_router.h>
+#include <i2c/i2c_strategy_dispatcher.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

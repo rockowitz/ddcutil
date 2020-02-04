@@ -14,7 +14,7 @@
 #include <dynvcp/dyn_dynamic_features.h>
 #include <dynvcp/dyn_parsed_capabilities.h>
 #include <errno.h>
-#include <i2c/i2c_strategy_router.h>
+#include <i2c/i2c_strategy_dispatcher.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>

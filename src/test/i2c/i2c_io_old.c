@@ -36,7 +36,7 @@
 #include <errno.h>
 #include <execinfo.h>
 #include <fcntl.h>
-#include <i2c/i2c_execute_io.h>
+#include <i2c/i2c_execute.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

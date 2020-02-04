@@ -1,4 +1,4 @@
-/** \file i2c_execute_io.c
+/** \file i2c_execute.c
  *
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
@@ -7,7 +7,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
-
 #include "ddcutil_types.h"
 
 #include <assert.h>
@@ -33,8 +32,7 @@
 
 #include "i2c/wrap_i2c-dev.h"
 
-#include "i2c/i2c_execute_io.h"
-
+#include "i2c_execute.h"
 
 
 //

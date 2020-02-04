@@ -1,4 +1,4 @@
-/** \file i2c_strategy_router.c
+/** \file i2c_strategy_dispatcher.c
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
@@ -6,8 +6,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
-#include "i2c_strategy_router.h"
-
 #include <assert.h>
 #include <stdio.h>
 /** \endcond */
@@ -20,6 +18,8 @@
 #include "base/last_io_event.h"
 
 // #include "i2c/i2c_base_io.h"
+
+#include "i2c_strategy_dispatcher.h"
 
 
 // Trace class for this file
