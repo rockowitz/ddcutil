@@ -1,4 +1,4 @@
-/** \file i2c_base_io.c
+/** \file i2c_execute_io.c
  *
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
@@ -33,7 +33,8 @@
 
 #include "i2c/wrap_i2c-dev.h"
 
-#include "i2c/i2c_base_io.h"
+#include "i2c/i2c_execute_io.h"
+
 
 
 //

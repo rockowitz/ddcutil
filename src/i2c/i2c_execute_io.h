@@ -1,13 +1,13 @@
-/** @file i2c_base_io.h
+/** @file i2c_execute_io.h
  *
  *  Low level functions for writing to and reading from the I2C bus,
  *  using various mechanisms.
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef I2C_BASE_IO_H_
-#define I2C_BASE_IO_H_
+#ifndef I2C_EXECUTE_IO_H_
+#define I2C_EXECUTE_IO_H_
 
 #include "util/coredefs.h"
 #include "base/status_code_mgt.h"
@@ -26,4 +26,4 @@ Status_Errno_DDC ioctl_reader(int fd, int bytect, Byte * readbuf);
 Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fd, int bytect, Byte * bytes_to_write);
 Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fd, int bytect, Byte * readbuf);
 
-#endif /* I2C_BASE_IO_H_ */
+#endif /* I2C_EXECUTE_IO_H_ */

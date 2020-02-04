@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <execinfo.h>
 #include <fcntl.h>
+#include <i2c/i2c_execute_io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,8 +54,6 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
-
-#include "i2c/i2c_base_io.h"
 
 #include "test/i2c/i2c_io_old.h"
 

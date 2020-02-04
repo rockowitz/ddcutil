@@ -13,7 +13,7 @@
 #include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c/i2c_base_io.h"
+#include "i2c_execute_io.h"
 
 /** Describes one I2C IO strategy */
 typedef struct {

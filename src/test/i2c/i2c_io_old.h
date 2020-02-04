@@ -26,11 +26,11 @@
 
 #include <stdbool.h>
 
+#include "../../i2c/i2c_execute_io.h"
 #include "base/core.h"
 #include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
 
-#include "i2c/i2c_base_io.h"
 
 // was in common.h
 #define MAX_I2C_MESSAGE_SIZE   131    // 127 + 4;
