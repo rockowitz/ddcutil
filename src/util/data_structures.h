@@ -1,4 +1,4 @@
-/** @file data_structures.c
+/** @file data_structures.h
  *  General purpose data structures
  */
 
