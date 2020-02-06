@@ -16,36 +16,25 @@
 
 // n. the DDC spec lists timeout values in milliseconds
 
-/** Normal timeout value in DDC spec */
-#define DDC_TIMEOUT_MILLIS_DEFAULT                 50
+#define DDC_TIMEOUT_MILLIS_DEFAULT                 50  ///< Normal timeout in DDC spec
 
 #ifdef UNUSED
 /** Timeout between DDC Get Feature Request and Get Feature Reply */
 #define DDC_TIMEOUT_MILLIS_POST_GETVCP_WRITE       40  // per spec
 #endif
 
-/** Timeout following a DDC Set VCP Feature command, per DDC spec */
-#define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE       50
-
-/** Timeout following a DDC Save Command Settings command, per DDC spec */
+#define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE       50   ///< Following DDC Set VCP Feature command
 #define DDC_TIMEOUT_POST_SAVE_SETTINGS            200   ///< Following DDC Save Settings
 
 #ifdef UNUSED
 #define DDC_TIMEOUT_MILLIS_POST_CAPABILITIES_READ  50
 #endif
 
-// not part of spec
-/** Timeout between retries */
-#define DDC_TIMEOUT_MILLIS_RETRY                    200  ///< between retres
-
-/** Use default timeout */
-#define DDC_TIMEOUT_USE_DEFAULT                      -1
-
-/** No timeout */
-#define DDC_TIMEOUT_NONE                              0
-
-/** Timeout value used for dynamic tuned sleep in case of DDC Null Message response */
-#define DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT  100
+// Timeouts not part of DDC spec
+#define DDC_TIMEOUT_MILLIS_RETRY                    200  ///< Between retries
+#define DDC_TIMEOUT_USE_DEFAULT                      -1  ///< Use the default timeout
+#define DDC_TIMEOUT_NONE                              0  ///< No timeout
+#define DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT  100  ///< Used for dynamic tuned sleep in case of DDC Null Message response
 
 
 //
