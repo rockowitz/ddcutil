@@ -41,19 +41,25 @@
 
 /** Writes to i2c bus using write()
  *
- * @param  fd      Linux file descriptor
- * @param  bytect  number of bytes to write
- * @param  pbytes  pointer to bytes to write
+ * @param  fd             Linux file descriptor
+ * @param  slave_address  I2C slave address being written to (unused)
+ * @param  bytect         number of bytes to write
+ * @param  pbytes         pointer to bytes to write
  *
  * @retval 0                 success
  * @retval DDCRC_DDC_DATA   incorrect number of bytes read
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno            negative Linux error number
+ *
+ * @remark
+ * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
+ * The address has already been by #set_slave_address().
  */
 Status_Errno_DDC
-write_writer(int fd, int bytect, Byte * pbytes) {
+fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    bool debug = true;
-   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s", fd, bytect, pbytes, hexstring_t(pbytes, bytect));
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s",
+                 fd, bytect, pbytes, hexstring_t(pbytes, bytect));
 
    int rc = write(fd, pbytes, bytect);
    // per write() man page:
@@ -71,29 +77,42 @@ write_writer(int fd, int bytect, Byte * pbytes) {
       rc = -errsv;
    }
 
-   DBGMSF(debug, "Done. Returning: %s", ddcrc_desc_t(rc));
+   DBGMSF(debug, "Done. Returning: %s", psc_desc(rc));
    return rc;
 }
 
 
 /** Reads from I2C bus using read()
  *
- * @param  fd        Linux file descriptor
- * @param  bytect    number of bytes to read
- * @param  readbuf   read bytes into this buffer
+ * @param  fd            Linux file descriptor
+ * @param  slave_address I2C slave address being read from (unused)
+ * @param  read_bytewise if true, use single byte reads
+ * @param  bytect        number of bytes to read
+ * @param  readbuf       read bytes into this buffer
  *
  * @retval 0                success
  * @retval DDCRC_DDC_DATA   incorrect number of bytes read
  * @retval -errno           negative Linux errno value from read()
+ *
+ * @remark
+ * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
+ * The address has already been by #set_slave_address().
  */
-Status_Errno_DDC read_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
+Status_Errno_DDC
+fileio_reader(
+      int    fd,
+      Byte   slave_address,
+      bool   single_byte_reads,
+      int    bytect,
+      Byte * readbuf)
+{
    bool debug = true;
-   bool single_byte_reads = false;   // make this a parm?
-   DBGMSF(debug, "Starting. bytect=%d, single_byte_reads=%s", bytect, sbool(single_byte_reads));
+   DBGMSF(debug, "Starting. bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+                 bytect, slave_address, sbool(single_byte_reads));
 
    int rc = 0;
    if (single_byte_reads) {
-      // for Acer and P2411h, reads bytes 1,3,5,7
+      // for Acer and P2411h, reads bytes 1,3,5,7 ..
       for (int ndx=0; ndx < bytect && rc == 0; ndx++) {
          // DBGMSF(debug, "Calling read() for 1 byte, ndx=%d", ndx);
          RECORD_IO_EVENTX(
@@ -137,7 +156,7 @@ Status_Errno_DDC read_reader(int fd, Byte slave_address, int bytect, Byte * read
       DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
-   DBGMSF(debug, "Returning: %s, readbuf: %s", ddcrc_desc_t(rc), hexstring_t(readbuf, bytect));
+   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -163,38 +182,56 @@ Status_Errno_DDC read_reader(int fd, Byte slave_address, int bytect, Byte * read
 
 /** Writes to I2C bus using ioctl(I2C_RDWR)
  *
- * @param  fd      Linux file descriptor
- * @param  bytect  number of bytes to write
- * @param  pbytes  pointer to bytes to write
+ * @param  fd             Linux file descriptor
+ * @param  slave_address
+ * @param  bytect         number of bytes to write
+ * @param  pbytes         pointer to bytes to write
  *
  * @retval 0       success
  * @retval <0      negative Linux errno value
  */
-Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
+Status_Errno_DDC
+ioctl_writer(
+      int    fd,
+      Byte   slave_address,
+      int    bytect,
+      Byte * pbytes)
+{
    bool debug = true;
-   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s", fd, bytect, pbytes, hexstring_t(pbytes, bytect));
+   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s",
+                 fd, bytect, pbytes, hexstring_t(pbytes, bytect));
+
+#ifdef EXPLORING
+   int rc2 = ioctl(fd, I2C_SLAVE, 0x38);
+   if (rc2 < 0) {
+      int errsv = errno;
+      DBGMSG("ioctl(I2C_SLAVE) returned errno %s",  linux_errno_desc(errsv) );
+   }
+#endif
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
-   messages[0].addr  = 0x37;
+   messages[0].addr  = slave_address;    // was 0x37;
    messages[0].flags = 0;
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
-   // On Fedora, i2c_msg is defined in i2c.h, and it's --u8 * buf
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpointer-sign"
-   messages[0].buf   = (char *) pbytes;
-#pragma GCC diagnostic pop
+   // On Fedora, i2c_msg is defined in i2c.h, and it's __u8 * buf
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wpointer-sign"
+   messages[0].buf   =  pbytes;
+// #pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
    // ioctl works, but valgrind complains about uninitialized parm
-   // printf("(%s) messages=%p, messages[0]=%p, messages[0].buf=%p\n",
-   //        __func__, messages, &messages[0], messages[0].buf);
-   // printf("(%s) msgset=%p, msgset.msgs=%p, msgset.msgs[0]=%p, msgset.msgs[0].buf=%p\n",
-   //        __func__, &msgset, msgset.msgs, &msgset.msgs[0], msgset.msgs[0].buf);
+   // DBGMSG("messages=%p, messages[0]=%p, messages[0].buf=%p", messages, &messages[0], messages[0].buf);
+   // char * s = hexstring_t((unsigned char*)messages[0].buf, messages[0].len);
+   // DBGMSG("messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf -> %s",
+   //         messages[0].addr,          messages[0].flags,        messages[0].len,    s);
+   // DBGMSG("msgset=%p, msgset.nmsgs=%d, msgset.msgs[0]=%p",
+   //        &msgset, msgset.nmsgs, msgset.msgs[0]);
 
    // per ioctl() man page:
    // if success:
@@ -241,9 +278,14 @@ Status_Errno_DDC ioctl_writer(int fd, int bytect, Byte * pbytes) {
 // FAILING
 
 // static  // disable to allow name in back trace
-Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * readbuf) {
+Status_Errno_DDC
+ioctl_reader1(
+      int    fd,
+      Byte   slave_address,
+      int    bytect,
+      Byte * readbuf) {
    bool debug = true;
-   DBGMSF(debug, "Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
+   DBGMSF(debug, "A Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
 
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
@@ -253,13 +295,19 @@ Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * re
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
    // On Fedora, i2c_msg is defined in i2c.h, and it's __u8 * buf
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpointer-sign"
-   messages[0].buf   = (char *) readbuf;
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wpointer-sign"
+   messages[0].buf   = readbuf;
+// #pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
+
+   // DBGMSG("B msgset=%p, msgset.nmsgs=%d, msgset.msgs[0]=%p",
+   //         &msgset, msgset.nmsgs, msgset.msgs[0]);
+   // DBGMSG("C messages=%p, messages[0]=%p, messages[0].buf=%p", messages, &messages[0], messages[0].buf);
+   // DBGMSG("D messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf = %p",
+   //         messages[0].addr,          messages[0].flags,          messages[0].len,      messages[0].buf );
 
    // per ioctl() man page:
    // if success:
@@ -267,7 +315,7 @@ Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * re
    //    occasionally >0 is output parm
    // if error:
    //    -1, errno is set
-   int rc =  ioctl(fd, I2C_RDWR, &msgset);
+   int rc = 0; // ioctl(fd, I2C_RDWR, &msgset);
    RECORD_IO_EVENTX(
       fd,
       IE_READ,
@@ -282,22 +330,23 @@ Status_Errno_DDC ioctl_reader1(int fd, Byte slave_address, int bytect, Byte * re
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
    if (rc > 0) {
       // always see rc == 1
-      if (rc != 1)
+      if (rc != 1) {
          DBGMSG("ioctl rc = %d, bytect =%d", rc, bytect);
+      }
       rc = 0;
    }
    else if (rc < 0)
       rc = -errsv;
-   DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
+   // DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
+   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 
 
-Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * readbuf) {
+Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
    bool debug = true;
    DBGMSF(debug, "Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
    int rc = 0;
-   bool read_bytewise = false;     // will become a parm
 
    if (read_bytewise) {
       int ndx = 0;
@@ -309,7 +358,7 @@ Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, int bytect, Byte * rea
       rc = ioctl_reader1(fd, slave_address, bytect, readbuf);
    }
 
-   DBGMSF(debug, "Done. Returning: %s", ddcrc_desc_t(rc));
+   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 

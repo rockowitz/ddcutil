@@ -445,7 +445,6 @@ int main(int argc, char *argv[]) {
    init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-   // i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);   // ** temp for testing **
 
    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
 

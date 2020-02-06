@@ -28,10 +28,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 I2C_IO_Strategy  i2c_file_io_strategy = {
       I2C_IO_STRATEGY_FILEIO,
-      write_writer,
-      read_reader,
-      "read_writer",
-      "read_reader"
+      fileio_writer,
+      fileio_reader,
+      "fileio_writer",
+      "fileio_reader"
 };
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
@@ -75,6 +75,7 @@ i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
  */
 Status_Errno_DDC invoke_i2c_writer(
       int    fd,
+      Byte   slave_address,
       int    bytect,
       Byte * bytes_to_write)
 {
@@ -85,7 +86,7 @@ Status_Errno_DDC invoke_i2c_writer(
    Status_Errno_DDC rc;
    RECORD_IO_EVENT(
       IE_WRITE,
-      ( rc = i2c_io_strategy->i2c_writer(fd, bytect, bytes_to_write ) )
+      ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
      );
    // DBGMSF(debug, "writer() function returned %d", rc);
    assert (rc <= 0);
@@ -107,11 +108,13 @@ Status_Errno_DDC invoke_i2c_writer(
 Status_Errno_DDC invoke_i2c_reader(
        int        fd,
        Byte       slave_address,
+       bool       read_bytewise,
        int        bytect,
        Byte *     readbuf)
 {
      bool debug = false;
-     DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d", i2c_io_strategy->i2c_reader_name, bytect);
+     DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d, slave_address=%s, read_bytewise=%s",
+                   i2c_io_strategy->i2c_reader_name, bytect, slave_address, sbool(read_bytewise));
 
      Status_Errno_DDC rc;
      // RECORD_IO_EVENTX(
@@ -119,7 +122,7 @@ Status_Errno_DDC invoke_i2c_reader(
      //    IE_READ,
      //    ( rc = i2c_io_strategy->i2c_reader(fd, bytect, readbuf) )
      //   );
-     rc = i2c_io_strategy->i2c_reader(fd, slave_address, bytect, readbuf);
+     rc = i2c_io_strategy->i2c_reader(fd, slave_address, read_bytewise, bytect, readbuf);
      assert (rc <= 0);
 
      if (rc == 0) {
@@ -130,7 +133,7 @@ Status_Errno_DDC invoke_i2c_reader(
 }
 
 
-// #ifdef TEST_THAT_DIDNT_WORK
+#ifdef TEST_THAT_DIDNT_WORK
 // fails
 Status_Errno_DDC invoke_single_byte_i2c_reader(
       int        fd,
@@ -151,5 +154,5 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
    DBGMSF(debug, "Returning psc=%s", psc_desc(psc));
    return psc;
 }
-// #endif
+#endif
 

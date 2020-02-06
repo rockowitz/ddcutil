@@ -1,31 +1,11 @@
-/* parms.h
+
+/** \file parms.h
  *
- * Tunable parameters.
- *
- * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  System configuration and tuning
  */
 
-/** \file
- * System configuration and tuning
- */
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
 #define PARMS_H_
@@ -48,7 +28,7 @@
 #define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE       50
 
 /** Timeout following a DDC Save Command Settings command, per DDC spec */
-#define DDC_TIMEOUT_POST_SAVE_SETTINGS            200
+#define DDC_TIMEOUT_POST_SAVE_SETTINGS            200   ///< Following DDC Save Settings
 
 #ifdef UNUSED
 #define DDC_TIMEOUT_MILLIS_POST_CAPABILITIES_READ  50
@@ -56,7 +36,7 @@
 
 // not part of spec
 /** Timeout between retries */
-#define DDC_TIMEOUT_MILLIS_RETRY                    200
+#define DDC_TIMEOUT_MILLIS_RETRY                    200  ///< between retres
 
 /** Use default timeout */
 #define DDC_TIMEOUT_USE_DEFAULT                      -1
@@ -74,8 +54,17 @@
 
 // Parms used within production portion of code
 
-#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO
-// #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL
+// #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO
+#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL
+
+#define DEFAULT_I2C_READ_BYTEWISE false
+
+// Strategy    Bytewise
+// FILEIO      false       ok
+// FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response
+// FILEIO      false       ok
+// IOCTL       true        on P2411h and Acer, returns corrupte data
+
 
 
 // Parms used only within testcase portion of code:

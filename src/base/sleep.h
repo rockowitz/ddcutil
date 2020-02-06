@@ -27,7 +27,6 @@ void sleep_millis_with_tracex(
 #define SLEEP_MILLIS_WITH_TRACE(_millis, _msg) \
    sleep_millis_with_tracex(_millis, __func__, __LINE__, __FILE__, _msg)
 
-
 // Sleep statistics
 
 typedef struct {

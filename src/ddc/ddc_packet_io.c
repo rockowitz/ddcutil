@@ -389,6 +389,7 @@ DDCA_Status (*Write_Read_Raw_Function)(
 DDCA_Status ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
+         bool             read_bytewise,
          int              max_read_bytes,
          Byte *           readbuf,
          int *            pbytes_received
@@ -408,14 +409,18 @@ DDCA_Status ddc_i2c_write_read_raw(
    bool single_byte_reads = false;   // doesn't work
 #endif
 
+   Byte slave_addr = request_packet_ptr->raw_bytes->bytes[0];      // 0x6e
+   assert(slave_addr >> 1 == 0x37);
+
    Status_Errno_DDC rc =
          invoke_i2c_writer(
                            dh->fd,
+                           0x37,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
    DBGMSF(debug, "invoke_i2c_writer() returned %d\n", rc);
    if (rc == 0) {
-      TUNED_SLEEP_I2C_WITH_TRACE(SE_WRITE_TO_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_WRITE_TO_READ, NULL);
       // tuned_sleep_i2c_with_trace(SE_WRITE_TO_READ, __func__, NULL);
 
       // ALTERNATIVE_THAT_DIDNT_WORK:
@@ -423,10 +428,10 @@ DDCA_Status ddc_i2c_write_read_raw(
       //    rc = invoke_single_byte_i2c_reader(dh->fd, max_read_bytes, readbuf);
       // else
 
-      rc = invoke_i2c_reader(dh->fd, 0x37, max_read_bytes, readbuf);
+      rc = invoke_i2c_reader(dh->fd, 0x37, read_bytewise, max_read_bytes, readbuf);
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
-      TUNED_SLEEP_I2C_WITH_TRACE(SE_POST_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_POST_READ, NULL);
 
       if (rc == 0 && all_bytes_zero(readbuf, max_read_bytes)) {
          DDCMSG(debug, "All zero response detected in %s", __func__);
@@ -526,18 +531,23 @@ static DDCA_Status ddc_adl_write_read_raw(
 DDCA_Status ddc_write_read_raw(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
+      bool             read_bytewise,
       int              max_read_bytes,
       Byte *           readbuf,
       int *            p_rcvd_bytes_ct
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
-      DBGMSG0("request_packer_ptr->raw_bytes:");
-      dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
+      // DBGMSG0("request_packet_ptr->raw_bytes:");
+      // dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
+      char * s =  hexstring3_t(request_packet_ptr->raw_bytes->bytes,
+                              request_packet_ptr->raw_bytes->len, " ", 1, false );
+      DBGMSG("request_packet_ptr->raw_bytes: %s", s);
    }
+
    DDCA_Status psc;
 
    // This function should not be called for USB
@@ -547,6 +557,7 @@ DDCA_Status ddc_write_read_raw(
         psc =  ddc_i2c_write_read_raw(
               dh,
               request_packet_ptr,
+              read_bytewise,
               max_read_bytes,
               readbuf,
               p_rcvd_bytes_ct
@@ -590,6 +601,7 @@ Error_Info *
 ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
+      bool             read_bytewise,
       int              max_read_bytes,
       Byte             expected_response_type,
       Byte             expected_subtype,
@@ -607,6 +619,7 @@ ddc_write_read(
    psc =  ddc_write_read_raw(
             dh,
             request_packet_ptr,
+            read_bytewise,
             max_read_bytes,
             readbuf,
             &bytes_received
@@ -686,18 +699,19 @@ ddc_write_read_with_retry(
          DDC_Packet **    response_packet_ptr_loc
         )
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
           dh_repr_t(dh), bool_repr(all_zero_response_ok)  );
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
-   if (debug)
-      dbgrpt_display_ref(dh->dref, 1);
+   // if (debug)
+   //     dbgrpt_display_ref(dh->dref, 1);
 
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
 
    DDCA_Status  psc;
+   bool read_bytewise = DEFAULT_I2C_READ_BYTEWISE;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
@@ -714,12 +728,13 @@ ddc_write_read_with_retry(
         tryctr++)
    {
       DBGMSF(debug,
-           "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%d",
-           tryctr, max_write_read_exchange_tries, psc, retryable );
+           "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+           tryctr, max_write_read_exchange_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
                 request_packet_ptr,
+                read_bytewise,
                 max_read_bytes,
                 expected_response_type,
                 expected_subtype,
@@ -742,40 +757,47 @@ ddc_write_read_with_retry(
             // is the monitor using NULL response to indicate unsupported?
             // Acer monitor uses NULL response instead of setting the unsupported
             // flag in a valid response
+            switch (psc) {
+            case DDCRC_NULL_RESPONSE:
+                  {
+                     retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
+                     DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
+                     if (retryable) {
+                        if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
+                           f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                        set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
+                        // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
+                     }
+                  }
+                  break;
 
-            if (psc == DDCRC_NULL_RESPONSE) {
-               retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
-               DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
-               if (retryable) {
-                  if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
-                     f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-                  set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
-                  // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
-               }
-            }
-            // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
-            // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
-            // But also seen as a bad response
-            else if ( psc == DDCRC_READ_ALL_ZERO)
-               retryable = (all_zero_response_ok) ? false : true;
+            case (DDCRC_READ_ALL_ZERO):
+                 // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
+                 // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
+                 // But also seen as a bad response
+                 retryable = (all_zero_response_ok) ? false : true;
+                 break;
 
-            else if (psc == -EIO)
-                retryable = false;     // ??
+            case (-EIO):
+                 retryable = false;     // ??
+                 break;
 
-            else if (psc == -EBADF)
-               retryable = false;
+            case (-EBADF):
+                 retryable = false;
+                 break;
 
-            else if (psc == -ENXIO)    // no such device or address, i915 driver
-               retryable = false;
+            case (-ENXIO):    // no such device or address, i915 driver
+                 retryable = false;
+                 break;
 
-            else
-               retryable = true;     // for now
-
+            default:
+                 retryable = true;     // for now
 
             // try exponential backoff on all errors, not just SE_DDC_NULL
             // if (retryable)
             //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
-         }
+                  }
+         }  // DDCA_IO_I2C
 
          else {   // DDC_IO_ADL
             // TODO more detailed tests
@@ -791,8 +813,9 @@ ddc_write_read_with_retry(
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
    }
-   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s",
-         tryctr, psc, bool_repr(retryable));
+   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
+         tryctr, psc, bool_repr(retryable), sbool(read_bytewise));
+   // read_bytewise = !read_bytewise;
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {
          DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
@@ -856,6 +879,7 @@ ddc_i2c_write_only(
 
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
+                           0x37,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
    if (rc < 0)
@@ -865,7 +889,7 @@ ddc_i2c_write_only(
             ? SE_POST_SAVE_SETTINGS
             : SE_POST_WRITE;
    // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
-   TUNED_SLEEP_I2C_WITH_TRACE(sleep_type, NULL);
+   TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, sleep_type, NULL);
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(rc) );
    return rc;
 }

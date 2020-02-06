@@ -51,6 +51,7 @@ Error_Info * ddc_write_only_with_retry(
 Error_Info * ddc_write_read(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr,
+      bool             read_bytewise,
       int              max_read_bytes,
       Byte             expected_response_type,
       Byte             expected_subtype,

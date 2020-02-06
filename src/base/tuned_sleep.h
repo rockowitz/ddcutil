@@ -38,7 +38,9 @@ void tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type);
 #define TUNED_SLEEP_WITH_TRACE(_io_mode, _event_type, _msg) \
    tuned_sleep_with_tracex(_io_mode, _event_type, __func__, __LINE__, __FILE__, _msg)
 
+#ifdef UNUSED
 #define TUNED_SLEEP_I2C_WITH_TRACE(_event_type, _msg) \
    tuned_sleep_with_tracex(DDCA_IO_I2C, _event_type, __func__, __LINE__, __FILE__, _msg)
+#endif
 
 #endif /* TUNED_SLEEP_H_ */
