@@ -2,7 +2,7 @@
  *
  * I2C bus detection and inspection
  */
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -39,6 +39,7 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
+#include "base/tuned_sleep.h"
 
 #include "i2c/wrap_i2c-dev.h"
 
@@ -581,8 +582,9 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       goto bye;
    }
    // 10/23/15, try disabling sleep before write
-   if (conservative)
-      SLEEP_MILLIS_WITH_TRACE(DDC_TIMEOUT_MILLIS_DEFAULT, "Before write");
+   if (conservative) {
+      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_PRE_EDID, "Before write");
+   }
 
    Byte byte_to_write = 0x00;
 
@@ -594,6 +596,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    for (int tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
       DBGMSF(debug, "Trying EDID read, tryctr=%d, max_tries=%d, read_bytewise=%s",
                     tryctr, max_tries, sbool(read_bytewise));
+// #define USE_I2C_LAYER
 #ifdef USE_I2C_LAYER
       rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
       DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
@@ -615,6 +618,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
          rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 128, rawedid->bytes);
          DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
 #endif
+
 #else
       RECORD_IO_EVENTX(
           fd,

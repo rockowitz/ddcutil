@@ -126,9 +126,9 @@ int ddc_get_max_multi_part_write_tries() {
 * @param  request_subtype  VCP feature code for table read, ignore for capabilities
 * @param  all_zero_response_ok  if true, an all zero response is not regarded
 *         as an error
-* @param  accumulator    buffer in which to return result
+* @param  accumulator    buffer in which to return result (already allocated)
 *
-* @return status code
+* @return @Error_Info struct with error detail, NULL if no error
 */
 static Error_Info *
 try_multi_part_read(
@@ -152,7 +152,10 @@ try_multi_part_read(
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
    request_packet_ptr = create_ddc_multi_part_read_request_packet(
-                           request_type, request_subtype, 0, "try_multi_part_read");
+                           request_type,
+                           request_subtype,
+                           0,
+                           "try_multi_part_read");
    buffer_set_length(accumulator,0);
    int  cur_offset = 0;
    bool complete   = false;
@@ -190,7 +193,7 @@ try_multi_part_read(
       assert(!excp && psc == 0);
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
-         DBGMSG0("After try_write_read():");
+         DBGMSG("After try_write_read():");
          dbgrpt_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 
@@ -235,13 +238,13 @@ try_multi_part_read(
 
 
 /** Gets the DDC capabilities string for a monitor, performing retries if necessary.
+ *  Also used for VCP features of type Table.
 *
 *  @param  dh handle of open display
 *  @param  request_type
 *  @param  request_subtype  VCP function code for table read, ignore for capabilities
 *  @param  all_zero_response_ok   if true, zero response is not an error
-*  @param  pp_buffer  address at which to return newly allocated #Buffer in which
-*                   result is returned
+*  @param  buffer_loc  address at which to return newly allocated #Buffer in which result is returned
 *
 *  @retval  NULL    success
 *  @retval  #Ddc_Error containing status DDCRC_UNSUPPORTED does not support Capabilities Request
@@ -253,7 +256,7 @@ multi_part_read_with_retry(
       Byte             request_type,
       Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
       bool             all_zero_response_ok,
-      Buffer**         pp_buffer)
+      Buffer**         buffer_loc)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
@@ -341,7 +344,7 @@ multi_part_read_with_retry(
    // if counts for DDCRC_ALL_TRIES_ZERO?
    try_data_record_tries(multi_part_read_stats_rec, rc, tryctr);
 
-   *pp_buffer = accumulator;
+   *buffer_loc = accumulator;
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }

@@ -129,6 +129,7 @@ void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier
 void tuned_sleep_with_tracex(
       DDCA_IO_Mode     io_mode,
       Sleep_Event_Type event_type,
+      int              special_sleep_time_millis,
       const char *     func,
       int              lineno,
       const char *     filename,
@@ -136,57 +137,67 @@ void tuned_sleep_with_tracex(
 {
    bool debug = false;
    // DBGMSF(debug, "Starting. Sleep event type = %s", sleep_event_name(event_type));
+   assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
+           (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );
 
    int sleep_time_millis = 0;    // should be a default
-   switch(io_mode) {
 
-   case DDCA_IO_I2C:
-      switch(event_type) {
-      case (SE_WRITE_TO_READ):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_WRITE):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_OPEN):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_READ):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_SAVE_SETTINGS):
-            sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
-            break;
-      case SE_DDC_NULL:
-           sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-           break;
-      default:
-           sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-      }  // switch within DDC_IO_DEVI2C
-      break;
+   if (event_type == SE_SPECIAL)
+      sleep_time_millis = special_sleep_time_millis;
+   else {
 
-   case DDCA_IO_ADL:
-      switch(event_type) {
-      case (SE_WRITE_TO_READ):
+      switch(io_mode) {
+
+      case DDCA_IO_I2C:
+         switch(event_type) {
+         case (SE_WRITE_TO_READ):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_WRITE):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_OPEN):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_READ):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_SAVE_SETTINGS):
+               sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
+               break;
+         case SE_DDC_NULL:
+              sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+              break;
+         case SE_OTHER:
+              sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+         default:
+              sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+         }  // switch within DDC_IO_DEVI2C
+         break;
+
+      case DDCA_IO_ADL:
+         switch(event_type) {
+         case (SE_WRITE_TO_READ):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_WRITE):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_OPEN):
+               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               break;
+         case (SE_POST_SAVE_SETTINGS):
+               sleep_time_millis = 200;   // per DDC spec
+               break;
+         default:
             sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_WRITE):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_OPEN):
-            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-      case (SE_POST_SAVE_SETTINGS):
-            sleep_time_millis = 200;   // per DDC spec
-            break;
-      default:
-         sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+         }
+         break;
+
+      case DDCA_IO_USB:
+         PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
+         break;
       }
-      break;
-
-   case DDCA_IO_USB:
-      PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
-      break;
    }
 
    // TODO:
@@ -222,6 +233,7 @@ void tuned_sleep_with_tracex(
 // Convenience functions
 //
 
+#ifdef UNUSED
 /** Convenience function that determines the device type from the
  *  #Display_Handle before invoking all_tuned_sleep().
  *  @param dh         display handle of open device
@@ -233,3 +245,4 @@ void tuned_sleep_with_tracex(
 void tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
    tuned_sleep_with_tracex(dh->dref->io_path.io_mode, event_type, NULL, 0, NULL, NULL);
 }
+#endif

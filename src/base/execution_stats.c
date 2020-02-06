@@ -482,6 +482,9 @@ static const char * sleep_event_names[] = {
       "SE_POST_READ",
       "SE_DDC_NULL",
       "SE_POST_SAVE_SETTINGS",
+      "SE_PRE_EDID",
+      "SE_OTHER",
+      "SE_SPECIAL",
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 

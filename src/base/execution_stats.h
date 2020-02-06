@@ -1,31 +1,11 @@
-/* execution_stats.h
+/** \file execution_stats.h
  *
- * For recording the count and elapsed time of system calls.
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ * Record the count and elapsed time of system calls.
  */
 
-/** \file
- * Record execution statistics, namely the count and elapsed time of system calls.
- */
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #ifndef EXECUTION_STATS_H_
 #define EXECUTION_STATS_H_
@@ -105,7 +85,10 @@ typedef enum {
    SE_POST_WRITE,            ///< after I2C write without subsequent read
    SE_POST_READ,             ///< after I2C read
    SE_DDC_NULL,              ///< after DDC Null response
-   SE_POST_SAVE_SETTINGS     ///< after DDC Save Current Settings command
+   SE_POST_SAVE_SETTINGS,    ///< after DDC Save Current Settings command
+   SE_PRE_EDID,              ///< before reading EDID
+   SE_OTHER,
+   SE_SPECIAL                ///< explicit time specified
 } Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);
 

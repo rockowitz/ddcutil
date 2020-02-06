@@ -57,7 +57,7 @@
  */
 Status_Errno_DDC
 fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s",
                  fd, bytect, pbytes, hexstring_t(pbytes, bytect));
 
@@ -106,7 +106,7 @@ fileio_reader(
       int    bytect,
       Byte * readbuf)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
                  bytect, slave_address, sbool(single_byte_reads));
 
@@ -197,7 +197,7 @@ ioctl_writer(
       int    bytect,
       Byte * pbytes)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s",
                  fd, bytect, pbytes, hexstring_t(pbytes, bytect));
 
@@ -284,7 +284,7 @@ ioctl_reader1(
       Byte   slave_address,
       int    bytect,
       Byte * readbuf) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "A Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
 
    struct i2c_msg              messages[1];
@@ -344,7 +344,7 @@ ioctl_reader1(
 
 
 Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. slave_address=0x%02x, bytect=%d, readbuf=%p", slave_address, bytect, readbuf);
    int rc = 0;
 

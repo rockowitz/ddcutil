@@ -19,6 +19,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/sleep.h"
+#include "base/tuned_sleep.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -36,23 +37,19 @@
 // Capabilities Related Functions
 //
 
-/* Executes the VCP Get Capabilities command to obtain the
- * capabilities string.  The string is returned in null terminated
- * form in a Buffer struct.  It is the responsibility of the caller to
- * free this struct.
+/** Executes the VCP Get Capabilities command to obtain the
+ *  capabilities string.  The string is returned in null terminated
+ *  form in a Buffer struct.  It is the responsibility of the caller to
+ *  free this struct.
  *
- * Arguments:
- *    dh                    pointer to display handle
- *    ppCapabilitiesBuffer  address at which to return pointer to allocated Buffer
- *    retry_history         if non-null, collects retryable errors
- *
- * Returns:
- *   status code
+ * @param dh                       display handle
+ * @param capabilities_buffer_loc  address at which to return pointer to allocated Buffer
+ * @return                         status code
  */
 static Error_Info *
-get_capabilities_buffer(
+get_capabilities_into_buffer(
       Display_Handle * dh,
-      Buffer**         ppCapabilitiesBuffer)
+      Buffer**         capbilities_buffer_loc)
 {
    Public_Status_Code psc;
    Error_Info * ddc_excp = NULL;
@@ -62,14 +59,14 @@ get_capabilities_buffer(
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
                false,                      // !all_zero_response_ok
-               ppCapabilitiesBuffer);
-   Buffer * cap_buffer = *ppCapabilitiesBuffer;
+               capbilities_buffer_loc);
+   Buffer * cap_buffer = *capbilities_buffer_loc;
    // psc = (ddc_excp) ? ddc_excp->psc: 0;
    psc = ERRINFO_STATUS(ddc_excp);
    assert(psc <= 0);
    if (psc == 0) {
       // trim trailing blanks and nulls
-      int len = buffer_length(*ppCapabilitiesBuffer);
+      int len = buffer_length(*capbilities_buffer_loc);
       while ( len > 0 ) {
          Byte ch = cap_buffer->bytes[len-1];
          if (ch == ' ' || ch == '\0')
@@ -121,9 +118,10 @@ get_capabilities_string(
 #endif
       }
       else {
-         SLEEP_MILLIS_WITH_TRACE(200, "Before reading capabilities");
+         // SLEEP_MILLIS_WITH_TRACE(200, "Before reading capabilities");
+         SPECIAL_TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, 200, "Before reading capabilities");
          Buffer * pcaps_buffer;
-         ddc_excp = get_capabilities_buffer(dh, &pcaps_buffer);
+         ddc_excp = get_capabilities_into_buffer(dh, &pcaps_buffer);
          // psc = (ddc_excp) ? ddc_excp->psc : 0;
          psc = ERRINFO_STATUS(ddc_excp);
          if (psc == 0) {
