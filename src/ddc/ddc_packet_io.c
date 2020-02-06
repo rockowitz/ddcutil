@@ -608,7 +608,7 @@ ddc_write_read(
       DDC_Packet **    response_packet_ptr_loc
      )
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh) );
 
    Byte * readbuf = calloc(1, max_read_bytes);
@@ -877,9 +877,13 @@ ddc_i2c_write_only(
    if (debug)
       dbgrpt_packet(request_packet_ptr, 1);
 
+   // Byte slave_address = request_packet_ptr[0];
+   // assert(slave_address == 0x37);
+   Byte slave_address = 0x37;
+
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
-                           0x37,
+                           slave_address,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
    if (rc < 0)
