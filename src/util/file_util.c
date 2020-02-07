@@ -435,7 +435,7 @@ GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filte
  *               The caller is responsible for freeing this memory
  *
  * @retval 0      success
- * @retval -errno if error (see readlink() doc for possible error numbers
+ * @retval -errno if error (see readlink() doc for possible error numbers)
  */
 int filename_for_fd(int fd, char** p_fn) {
    char * result = calloc(1, PATH_MAX+1);
@@ -457,4 +457,22 @@ int filename_for_fd(int fd, char** p_fn) {
    //        __func__, fd, rc, *pfn, *pfn);
    return rc;
 }
+
+
+char * filename_for_fd_t(int fd) {
+   static GPrivate  key = G_PRIVATE_INIT(g_free);
+   char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX+1);
+
+   char * result = NULL;  // value to resturn
+
+   char * filename_loc;
+   int rc = filename_for_fd(fd, &filename_loc);
+   if (rc == 0) {
+      g_strlcpy(fn_buf, filename_loc, PATH_MAX+1);
+      free(filename_loc);
+      result = fn_buf;
+   }
+   return result;
+}
+
 

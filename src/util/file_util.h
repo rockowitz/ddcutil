@@ -57,5 +57,7 @@ typedef int (*Dirent_Filter)(const struct dirent *end);
 GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func);
 
 int filename_for_fd(int fd, char** p_fn);
+char * filename_for_fd_t(int fd);
+
 
 #endif /* FILE_UTIL_H_ */
