@@ -47,6 +47,8 @@
 #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO
 
 #define DEFAULT_I2C_READ_BYTEWISE false
+#define EDID_READ_USES_I2C_LAYER  true
+
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
