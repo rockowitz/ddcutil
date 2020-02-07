@@ -551,6 +551,98 @@ bye:
 // I2C Bus Inspection - EDID Retrieval
 //
 
+static Status_Errno_DDC
+i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
+{
+   bool debug = false;
+   DBGMSF(debug, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
+                 fd, filename_for_fd_t(fd), sbool(read_bytewise));
+
+   Byte byte_to_write = 0x00;
+   int rc = 0;
+   RECORD_IO_EVENTX(
+          fd,
+          IE_WRITE,
+          ( rc = write(fd, &byte_to_write, 1) )
+         );
+   if (rc < 0) {
+      rc = -errno;
+      DBGMSF(debug, "write() failed.  rc = %s", psc_desc(rc));
+   }
+   else {
+      rc = 0;
+      if (read_bytewise) {
+         int ndx = 0;
+         for (; ndx < 128 && rc == 0; ndx++) {
+            RECORD_IO_EVENTX(
+                fd,
+                IE_READ,
+                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
+               );
+            if (rc < 0)
+               rc = -errno;
+            else  {
+               assert(rc == 1);
+               rc = 0;
+            }
+          }
+          DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
+      }
+      else {
+         RECORD_IO_EVENTX(
+             fd,
+             IE_READ,
+             ( rc = read(fd, rawedid->bytes, 128) )
+            );
+         if (rc >= 0) {
+            assert(rc == 128);
+            rc = 0;
+         }
+         else {
+            rc = -errno;
+         }
+         DBGMSF(debug, "read() returned %s", psc_desc(rc) );
+      }
+   } // write succeded
+
+   DBGMSF(debug, "Returning: %s", psc_desc(rc));
+   return rc;
+}
+
+
+static Status_Errno_DDC
+i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
+{
+   bool debug = true;
+   DBGMSF(debug, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
+                 fd, filename_for_fd_t(fd), sbool(read_bytewise));
+
+   Byte byte_to_write = 0x00;
+   int rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
+   DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
+   if (rc == 0) {   // write succeeded
+      if (read_bytewise) {
+         int ndx = 0;
+         for (; ndx < 128 && rc == 0; ndx++) {
+            // DBGMSG("Before invoke_i2c_reader() call");
+            rc = invoke_i2c_reader(fd, 0x50, false, 1, &rawedid->bytes[ndx] );
+         }
+         DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
+      } // read_bytewise == true
+      else {
+         rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 128, rawedid->bytes);
+         DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
+
+      }
+      if (rc == 0) {
+         rawedid->len = 128;
+      }
+   }  // write succeeded
+   DBGMSF(debug, "Returning: %s", psc_desc(rc));
+   return rc;
+}
+
+
 /** Gets EDID bytes of a monitor on an open I2C device.
  *
  * @param  fd        file descriptor for open /dev/i2c-n
@@ -561,7 +653,8 @@ bye:
  */
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s", fd, filename_for_fd_t(fd));
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
+                              fd, filename_for_fd_t(fd));
 
    bool conservative = true;
 
@@ -577,11 +670,9 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_PRE_EDID, "Before write");
    }
 
-   Byte byte_to_write = 0x00;
    int max_tries = 4;  // 2 each read_bytewise == true/false
-   bool read_bytewise = DEFAULT_I2C_READ_BYTEWISE;
+   bool read_bytewise = EDID_READ_BYTEWISE;
    rc = -1;
-
    DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
                  (EDID_READ_USES_I2C_LAYER) ? "I2C layer" : "local io", sbool(read_bytewise));
 
@@ -589,97 +680,34 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       DBGMSF(debug, "Trying EDID read, tryctr=%d, max_tries=%d, read_bytewise=%s",
                     tryctr, max_tries, sbool(read_bytewise));
 
-#if EDID_READ_USES_I2C_LAYER
-      rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
-      DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
-      if (rc == -ENXIO || rc == -EIO) {
-         // DBGMSG("bye bye");
-         break;
-      }
-      else if (rc == 0) {   // write succeeded
-         if (read_bytewise) {
-            int ndx = 0;
-            for (; ndx < 128 && rc == 0; ndx++) {
-               DBGMSG("Befoer invoke_i2_reader() call");
-               rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 1, &rawedid->bytes[ndx] );
-            }
-            DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
-         } // read_bytewise == true
-
-         else {
-            rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 128, rawedid->bytes);
-            DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
-         }
-
-#else    // EDID_READ_USES_I2C_LAYER false
-      RECORD_IO_EVENTX(
-          fd,
-          IE_WRITE,
-          ( rc = write(fd, &byte_to_write, 1) )
-         );
-      if (rc < 0) {
-         rc = -errno;
-         DBGMSF(debug, "write() failed.  rc = %s", psc_desc(rc));
-         if (rc == -ENXIO || rc == -EIO) {
-            // DBGMSG("breaking");
-            break;
-         }
+      if (EDID_READ_USES_I2C_LAYER) {
+         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, read_bytewise);
       }
       else {
-         rc = 0;
-         if (read_bytewise) {
-            int ndx = 0;
-            for (; ndx < 128 && rc == 0; ndx++) {
-               RECORD_IO_EVENTX(
-                   fd,
-                   IE_READ,
-                   ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-                  );
-               if (rc < 0)
-                  rc = -errno;
-               else  {
-                  assert(rc == 1);
-                  rc = 0;
-               }
-             }
-             DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
+         rc = i2c_get_edid_bytes_directly(fd, rawedid, read_bytewise);
+      }
+      if (rc == -ENXIO || rc == -EIO) {
+         // DBGMSG("breaking");
+         break;
+      }
+      assert(rc <= 0);
+      if (rc == 0) {
+         rawedid->len = 128;
+         if (debug || IS_TRACING() ) {
+            DBGMSG("get bytes returned:");
+            dbgrpt_buffer(rawedid, 1);
+            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
-         else {
-            RECORD_IO_EVENTX(
-                fd,
-                IE_READ,
-                ( rc = read(fd, rawedid->bytes, 128) )
-               );
-            if (rc >= 0) {
-               assert(rc == 128);
-               rc = 0;
-            }
-            else {
-               rc = -errno;
-            }
-            DBGMSF(debug, "read() returned %s", psc_desc(rc) );
+         Byte checksum = edid_checksum(rawedid->bytes);
+         if (checksum != 0) {
+            // possible if successfully read bytes from i2c bus with no monitor
+            // attached - the bytes will be junk.
+            // e.g. nouveau driver, Quadro card, on blackrock
+            DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
+            rawedid->len = 0;
+            rc = DDCRC_INVALID_EDID;    // was DDCRC_EDID
          }
-#endif
-         assert(rc <= 0);
-
-         if (rc == 0) {
-            rawedid->len = 128;
-            if (debug || IS_TRACING() ) {
-               DBGMSG("read returned:");
-               dbgrpt_buffer(rawedid, 1);
-               DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
-            }
-            Byte checksum = edid_checksum(rawedid->bytes);
-            if (checksum != 0) {
-               // possible if successfully read bytes from i2c bus with no monitor
-               // attached - the bytes will be junk.
-               // e.g. nouveau driver, Quadro card, on blackrock
-               DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
-               rawedid->len = 0;
-               rc = DDCRC_INVALID_EDID;    // was DDCRC_EDID
-            }
-         }  // read succeeded
-      }     // write() succeeded
+      }  // get bytes succeeded
 
       // try the alternative
       // read_bytewise = !read_bytewise;

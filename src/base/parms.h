@@ -16,18 +16,18 @@
 
 // n. the DDC spec lists timeout values in milliseconds
 
-#define DDC_TIMEOUT_MILLIS_DEFAULT                 50  ///< Normal timeout in DDC spec
+#define DDC_TIMEOUT_MILLIS_DEFAULT                   50  ///< Normal timeout in DDC spec
 
 #ifdef UNUSED
 /** Timeout between DDC Get Feature Request and Get Feature Reply */
-#define DDC_TIMEOUT_MILLIS_POST_GETVCP_WRITE       40  // per spec
+#define DDC_TIMEOUT_MILLIS_POST_GETVCP_WRITE         40  // per spec
 #endif
 
-#define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE       50   ///< Following DDC Set VCP Feature command
-#define DDC_TIMEOUT_POST_SAVE_SETTINGS            200   ///< Following DDC Save Settings
+#define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE         50   ///< Following DDC Set VCP Feature command
+#define DDC_TIMEOUT_POST_SAVE_SETTINGS              200   ///< Following DDC Save Settings
 
 #ifdef UNUSED
-#define DDC_TIMEOUT_MILLIS_POST_CAPABILITIES_READ  50
+#define DDC_TIMEOUT_MILLIS_POST_CAPABILITIES_READ    50
 #endif
 
 // Timeouts not part of DDC spec
@@ -41,13 +41,13 @@
 // *** Choose method of low level IC2 communication
 //
 
-// Parms used within production portion of code
+// One of the following 2 defines must be enabled:
+// #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
+#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO   ///< Use read() and write()
+#define DEFAULT_I2C_READ_BYTEWISE false                   ///< Use single byte reads
 
-// #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL
-#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO
-
-#define DEFAULT_I2C_READ_BYTEWISE false
-#define EDID_READ_USES_I2C_LAYER  true
+#define EDID_READ_USES_I2C_LAYER  false
+#define EDID_READ_BYTEWISE  false
 
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
