@@ -91,16 +91,7 @@ int i2c_open_bus(int busno, Byte callopts) {
    int errsv = errno;
 
    if (fd < 0) {
-#ifdef OLD
-      if (callopts & CALLOPT_ERR_ABORT) {
-         TERMINATE_EXECUTION_ON_ERROR("Open failed for %s. errno=%s\n",
-                                      filename, linux_errno_desc(errsv));
-      }
-#endif
-     //  if (callopts & CALLOPT_ERR_MSG) {
-         f0printf(ferr(), "Open failed for %s: errno=%s\n",
-                        filename, linux_errno_desc(errsv));
-     // }
+      f0printf(ferr(), "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
       fd = -errsv;
    }
    else {
@@ -570,7 +561,7 @@ bye:
  */
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s", fd, filename_for_fd_t(fd));
 
    bool conservative = true;
 
@@ -587,39 +578,40 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
 
    Byte byte_to_write = 0x00;
-
-   // DBGMSG("Temporarily forcing io strategy to I2C_IO_STRATEGY_FILEIO");
-   // I2C_IO_Strategy_Id old_strategy = i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);
    int max_tries = 4;  // 2 each read_bytewise == true/false
    bool read_bytewise = DEFAULT_I2C_READ_BYTEWISE;
    rc = -1;
+
+   DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
+                 (EDID_READ_USES_I2C_LAYER) ? "I2C layer" : "local io", sbool(read_bytewise));
+
    for (int tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
       DBGMSF(debug, "Trying EDID read, tryctr=%d, max_tries=%d, read_bytewise=%s",
                     tryctr, max_tries, sbool(read_bytewise));
-// #define USE_I2C_LAYER
-#ifdef USE_I2C_LAYER
+
+#if EDID_READ_USES_I2C_LAYER
       rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
       DBGMSF(debug, "invoke_i2c_writer returned %s", psc_desc(rc));
       if (rc == -ENXIO || rc == -EIO) {
          // DBGMSG("bye bye");
          break;
       }
-      else if (rc == 0) {
+      else if (rc == 0) {   // write succeeded
+         if (read_bytewise) {
+            int ndx = 0;
+            for (; ndx < 128 && rc == 0; ndx++) {
+               DBGMSG("Befoer invoke_i2_reader() call");
+               rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 1, &rawedid->bytes[ndx] );
+            }
+            DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
+         } // read_bytewise == true
 
-// #define SINGLE_BYTE_READ
-#ifdef SINGLE_BYTE_READ
-         bool read_bytewise = false;
-         int ndx = 0;
-         for (; ndx < 128 && rc == 0; ndx++) {
-            rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 1, &rawedid->bytes[ndx] );
+         else {
+            rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 128, rawedid->bytes);
+            DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
          }
-         DBGTRC(debug, TRACE_GROUP, "Final single byte read returned %d, ndx=%d", rc, ndx);
-#else
-         rc = invoke_i2c_reader(fd, 0x50, read_bytewise, 128, rawedid->bytes);
-         DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
-#endif
 
-#else
+#else    // EDID_READ_USES_I2C_LAYER false
       RECORD_IO_EVENTX(
           fd,
           IE_WRITE,
@@ -686,13 +678,12 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
                rawedid->len = 0;
                rc = DDCRC_INVALID_EDID;    // was DDCRC_EDID
             }
-         }
+         }  // read succeeded
+      }     // write() succeeded
 
-      }  // write() succeeded
-
-      read_bytewise = !read_bytewise;
+      // try the alternative
+      // read_bytewise = !read_bytewise;
    }
-   // i2c_set_io_strategy(old_strategy);
 
 bye:
    if (rc < 0)
