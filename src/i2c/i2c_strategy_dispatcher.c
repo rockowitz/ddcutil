@@ -10,6 +10,7 @@
 #include <stdio.h>
 /** \endcond */
 
+#include "util/file_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -69,6 +70,7 @@ i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
  * currently active strategy.
  *
  * @param   fd              Linux file descriptor for open /dev/i2c bus
+ * @param   slave_address   slave address to write to
  * @param   bytect          number of bytes to write
  * @param   bytes_to_write  pointer to bytes to be written
  * @return  status code
@@ -80,15 +82,20 @@ Status_Errno_DDC invoke_i2c_writer(
       Byte * bytes_to_write)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "writer=%s, bytes_to_write=%s",
-                 i2c_io_strategy->i2c_writer_name, hexstring_t(bytes_to_write, bytect));
+   DBGTRC(debug, TRACE_GROUP,
+                 "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, bytes_to_write=%p -> %s",
+                 fd,
+                 filename_for_fd_t(fd),
+                 slave_address,
+                 bytect,
+                 bytes_to_write,
+                 hexstring_t(bytes_to_write, bytect));
 
    Status_Errno_DDC rc;
    RECORD_IO_EVENT(
       IE_WRITE,
       ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
      );
-   // DBGMSF(debug, "writer() function returned %d", rc);
    assert (rc <= 0);
    RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
@@ -113,8 +120,13 @@ Status_Errno_DDC invoke_i2c_reader(
        Byte *     readbuf)
 {
      bool debug = false;
-     DBGTRC(debug, TRACE_GROUP, "reader=%s, bytect=%d, slave_address=%s, read_bytewise=%s",
-                   i2c_io_strategy->i2c_reader_name, bytect, slave_address, sbool(read_bytewise));
+     DBGTRC(debug, TRACE_GROUP, "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, read_bytewise=%s, readbuf=%p",
+                   fd,
+                   filename_for_fd_t(fd),
+                   slave_address,
+                   bytect,
+                   sbool(read_bytewise),
+                   readbuf);
 
      Status_Errno_DDC rc;
      // RECORD_IO_EVENTX(
