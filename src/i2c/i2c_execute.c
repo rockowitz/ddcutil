@@ -20,6 +20,7 @@
 /** \endcond */
 
 #include "util/coredefs.h"
+#include "util/file_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
@@ -58,8 +59,8 @@
 Status_Errno_DDC
 fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fh=%d, bytect=%d, pbytes=%p -> %s",
-                 fd, bytect, pbytes, hexstring_t(pbytes, bytect));
+   DBGMSF(debug, "Starting. fh=%d, filename=%s, bytect=%d, pbytes=%p -> %s",
+                 fd, filename_for_fd_t(fd), bytect, pbytes, hexstring_t(pbytes, bytect));
 
    int rc = write(fd, pbytes, bytect);
    // per write() man page:
@@ -107,7 +108,8 @@ fileio_reader(
       Byte * readbuf)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+   DBGMSF(debug, "Starting. fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+                 fd, filename_for_fd_t(fd),
                  bytect, slave_address, sbool(single_byte_reads));
 
    int rc = 0;
