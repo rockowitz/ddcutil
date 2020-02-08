@@ -578,8 +578,63 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
-      ddc_ensure_displays_detected();
-      ddc_report_displays(/*include_invalid_displays=*/ true, 0);
+      if (parsed_cmd->i1 <= 0) {     // normal case
+         ddc_ensure_displays_detected();
+         ddc_report_displays(/*include_invalid_displays=*/ true, 0);
+      }
+      else {
+         typedef struct {
+            I2C_IO_Strategy_Id  i2c_io_strategy_id;
+            bool                i2c_read_bytewise;
+            bool                edid_uses_i2c_layer;
+            bool                edid_read_bytewise;
+         } Choice_Entry;
+
+         Choice_Entry choices[16] =
+         { {I2C_IO_STRATEGY_FILEIO,  false,  false, false},
+           {I2C_IO_STRATEGY_FILEIO,  false,  false, true},
+           {I2C_IO_STRATEGY_FILEIO,  false,  true,  false},
+           {I2C_IO_STRATEGY_FILEIO,  false,  true,  true},
+           {I2C_IO_STRATEGY_FILEIO,  true,   false, false},
+           {I2C_IO_STRATEGY_FILEIO,  true,   false, true},
+           {I2C_IO_STRATEGY_FILEIO,  true,   true,  false},
+           {I2C_IO_STRATEGY_FILEIO,  true,   true,  true},
+
+           {I2C_IO_STRATEGY_IOCTL,  false,  false, false},
+           {I2C_IO_STRATEGY_IOCTL,  false,  false, true},
+           {I2C_IO_STRATEGY_IOCTL,  false,  true,  false},
+           {I2C_IO_STRATEGY_IOCTL,  false,  true,  true},
+           {I2C_IO_STRATEGY_IOCTL,  true,   false, false},
+           {I2C_IO_STRATEGY_IOCTL,  true,   false, true},
+           {I2C_IO_STRATEGY_IOCTL,  true,   true,  false},
+           {I2C_IO_STRATEGY_IOCTL,  true,   true,  true},
+         };
+
+         for (int ndx=0; ndx<16; ndx++) {
+            Choice_Entry cur = choices[ndx];
+
+            rpt_nl();
+            rpt_vstring(0, "===========> IO STRATEGY %d:", ndx+1);
+             char * s = (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL";
+             int d = 1;
+             rpt_vstring(d, "i2c_io_strategy:          %s", s);
+             rpt_vstring(d, "i2c_read_bytewise:        %s", sbool(cur.i2c_read_bytewise));
+             rpt_vstring(d, "EDID read uses I2C layer: %s", sbool(cur.edid_uses_i2c_layer));
+             rpt_vstring(d, "EDID read bytewise:       %s", sbool(cur.edid_read_bytewise));
+
+             i2c_set_io_strategy      ( cur.i2c_io_strategy_id);
+             I2C_Read_Bytewise        = cur.i2c_read_bytewise;
+             EDID_Read_Uses_I2C_Layer = cur.edid_uses_i2c_layer;
+             EDID_Read_Bytewise       = cur.edid_read_bytewise;
+
+             rpt_nl();
+             // discard existing detected monitors
+             ddc_discard_detected_displays();
+             ddc_ensure_displays_detected();
+             // will include any USB or ADL displays, but that's ok
+             ddc_report_displays(/*include_invalid_displays=*/ true, 0);
+         }
+      }
       DBGTRC(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
