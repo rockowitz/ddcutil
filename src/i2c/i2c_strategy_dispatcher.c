@@ -22,6 +22,11 @@
 
 #include "i2c_strategy_dispatcher.h"
 
+I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
+bool I2C_Read_Bytewise               = DEFAULT_I2C_READ_BYTEWISE;
+bool EDID_Read_Uses_I2C_Layer        = EDID_READ_USES_I2C_LAYER;
+bool EDID_Read_Bytewise              = EDID_READ_BYTEWISE;
+
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
@@ -167,4 +172,7 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
    return psc;
 }
 #endif
+
+
+
 

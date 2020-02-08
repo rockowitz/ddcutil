@@ -15,7 +15,6 @@
 
 #include "i2c_execute.h"
 
-// may need to move this definition to base
 /** I2C IO strategy ids */
 typedef enum {
    I2C_IO_STRATEGY_FILEIO,    ///< use file write() and read()
@@ -33,6 +32,13 @@ typedef struct {
 
 I2C_IO_Strategy_Id
 i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
+
+// quick and dirty for use in testing framework
+// extern I2C_IO_Strategy Default_I2c_Strategy;
+extern bool I2C_Read_Bytewise;
+extern bool EDID_Read_Uses_I2C_Layer;
+extern bool EDID_Read_Bytewise;
+
 
 Status_Errno_DDC
 invoke_i2c_writer(
