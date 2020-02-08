@@ -711,7 +711,7 @@ ddc_write_read_with_retry(
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
 
    DDCA_Status  psc;
-   bool read_bytewise = DEFAULT_I2C_READ_BYTEWISE;
+   bool read_bytewise = I2C_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
