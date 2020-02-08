@@ -1060,6 +1060,11 @@ ddc_ensure_displays_detected() {
 
 }
 
+void ddc_discard_detected_displays() {
+   all_displays = NULL;
+   i2c_discard_buses();
+}
+
 
 /** Indicates whether displays have already been detected
  *
