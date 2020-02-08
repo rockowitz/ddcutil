@@ -84,6 +84,7 @@ int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
 
 // Bus inventory - detect and probe buses
 int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
+void i2c_discard_buses();
 I2C_Bus_Info * detect_single_bus(int busno);
 void i2c_free_bus_info(I2C_Bus_Info * bus_info);
 

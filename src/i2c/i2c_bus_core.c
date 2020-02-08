@@ -603,7 +603,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
          }
          DBGMSF(debug, "read() returned %s", psc_desc(rc) );
       }
-   } // write succeded
+   } // write succeeded
 
    DBGMSF(debug, "Returning: %s", psc_desc(rc));
    return rc;
@@ -613,7 +613,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
 static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), sbool(read_bytewise));
 
@@ -671,16 +671,16 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
 
    int max_tries = 4;  // 2 each read_bytewise == true/false
-   bool read_bytewise = EDID_READ_BYTEWISE;
+   bool read_bytewise = EDID_Read_Bytewise;
    rc = -1;
    DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
-                 (EDID_READ_USES_I2C_LAYER) ? "I2C layer" : "local io", sbool(read_bytewise));
+                 (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
 
    for (int tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
       DBGMSF(debug, "Trying EDID read, tryctr=%d, max_tries=%d, read_bytewise=%s",
                     tryctr, max_tries, sbool(read_bytewise));
 
-      if (EDID_READ_USES_I2C_LAYER) {
+      if (EDID_Read_Uses_I2C_Layer) {
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, read_bytewise);
       }
       else {
@@ -1116,6 +1116,9 @@ int i2c_detect_buses() {
    return result;
 }
 
+void i2c_discard_buses() {
+   i2c_buses= NULL;
+}
 
 I2C_Bus_Info * detect_single_bus(int busno) {
    bool debug = false;
