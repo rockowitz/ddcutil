@@ -704,7 +704,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       puts("");
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
-         puts("Copyright (C) 2015-2018 Sanford Rockowitz");
+         puts("Copyright (C) 2015-2020 Sanford Rockowitz");
          puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
          puts("This is free software: you are free to change and redistribute it.");
          puts("There is NO WARRANTY, to the extent permitted by law.");
