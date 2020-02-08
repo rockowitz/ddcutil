@@ -1,7 +1,7 @@
 #
 # ddcutil configure script 
 #
-# Copyright 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+# Copyright 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [0])
 m4_define([ddcutil_minor_version], [9])
-m4_define([ddcutil_micro_version], [8])
+m4_define([ddcutil_micro_version], [9])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
