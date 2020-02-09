@@ -1,7 +1,7 @@
 /** \file ddc_output.c
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -483,7 +483,7 @@ collect_raw_feature_set_values2_dfm(
       // todo: free ddca_meta
       Public_Status_Code cur_status_code = ERRINFO_STATUS(cur_ddc_excp);
 
-      if (cur_status_code == 0) {
+      if (!cur_ddc_excp) {   // changed from (cur_status_code == 0) to avoid coverity complaint re resource leak
          vcp_value_set_add(vset, pvalrec);
       }
       else if ( (cur_status_code == DDCRC_REPORTED_UNSUPPORTED ||
@@ -492,15 +492,10 @@ collect_raw_feature_set_values2_dfm(
               )
       {
          // no problem
-         if (cur_ddc_excp) {
-             ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
-          }
-
+         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
       }
       else {
-         if (cur_ddc_excp) {
-             ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
-          }
+         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
          master_status_code = cur_status_code;
          break;
       }
@@ -631,7 +626,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
             // msg_fh);
    psc = ERRINFO_STATUS(ddc_excp);
    assert( (psc==0 && (feature_type == pvalrec->value_type)) || (psc!=0 && !pvalrec) );
-   if (psc == 0) {
+   if (!ddc_excp) {      // changed from (psc == 0) to avoid avoid coverity complaint re resource leak
       // if (!is_table_feature && output_level >= OL_VERBOSE) {
       // if (!is_table_feature && debug) {
       if (output_level >= DDCA_OL_VERBOSE || debug) {
@@ -683,7 +678,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
          }
       }
 
-      else  {
+      else  {    // output_level >= DDCA_OL_NORMAL
          bool ok;
          char * formatted_data = NULL;
 
