@@ -170,6 +170,7 @@ void tuned_sleep_with_tracex(
               break;
          case SE_OTHER:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+              break;
          default:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
          }  // switch within DDC_IO_DEVI2C
