@@ -208,7 +208,7 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
          int busno = udev_i2c_device_summary_busno(summary);
          assert(busno >= 0);
          assert(busno <= 127);
-         if ( include_ignorable_devices || !is_ignorable_i2c_device(busno) )
+         if ( include_ignorable_devices || !sysfs_is_ignorable_i2c_device(busno) )
             bva_append(bva, busno);
       }
       free_udev_device_summaries(summaries);

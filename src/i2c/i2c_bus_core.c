@@ -555,7 +555,7 @@ static Status_Errno_DDC
 i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
 {
    bool debug = false;
-   DBGMSF(debug, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), sbool(read_bytewise));
 
    Byte byte_to_write = 0x00;
@@ -605,7 +605,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
       }
    } // write succeeded
 
-   DBGMSF(debug, "Returning: %s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
    return rc;
 }
 
@@ -614,7 +614,7 @@ static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
 {
    bool debug = false;
-   DBGMSF(debug, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), sbool(read_bytewise));
 
    Byte byte_to_write = 0x00;
@@ -638,7 +638,7 @@ i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
          rawedid->len = 128;
       }
    }  // write succeeded
-   DBGMSF(debug, "Returning: %s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
    return rc;
 }
 
@@ -815,16 +815,18 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
       // probing hangs on PowerMac if i2c device is SMU
       // but, bus_info has already been filtered for ignorable devices
-      assert( !is_ignorable_i2c_device(bus_info->busno) );
+      // Not necessariy so, maybe called for --bus n option
+// #ifdef OLD
+      assert( !sysfs_is_ignorable_i2c_device(bus_info->busno) );
+// #endif
 
-#ifdef OLD
-      // tests no longer needed, see comment on above assert()
+      // tests no longer needed, see comment on above assert()  <== WRONG seee above comment
       if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
          bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
-         if ( !is_ignorable_i2c_device(bus_info->busno) )
+         if ( !sysfs_is_ignorable_i2c_device(bus_info->busno) )
             bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
       }
-#endif
+
       bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
       bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
 
@@ -1120,7 +1122,7 @@ void i2c_discard_buses() {
    i2c_buses= NULL;
 }
 
-I2C_Bus_Info * detect_single_bus(int busno) {
+I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_I2C, "Starting.  busno = %d", busno);
    I2C_Bus_Info * businfo = NULL;
@@ -1318,6 +1320,12 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
 
 static void init_i2c_bus_core_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(i2c_open_bus);
+   ADD_FUNC(i2c_close_bus);
+   ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
+   ADD_FUNC(i2c_get_edid_bytes_directly);
+   ADD_FUNC(i2c_detect_buses);
+   ADD_FUNC(i2c_detect_single_bus);
    ADD_FUNC(i2c_get_raw_edid_by_fd);
 #undef ADD_FUNC
 }

@@ -265,7 +265,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  *  slow for SMBus devices and fills the system logs with errors
  */
 bool
-is_ignorable_i2c_device(int busno) {
+sysfs_is_ignorable_i2c_device(int busno) {
    bool result = false;
    char * name = get_i2c_device_sysfs_name(busno);
    char * driver = get_i2c_device_sysfs_driver(busno);

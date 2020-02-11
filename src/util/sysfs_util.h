@@ -74,7 +74,7 @@ get_i2c_device_sysfs_name(
 //      const char * driver);
 
 bool
-is_ignorable_i2c_device(
+sysfs_is_ignorable_i2c_device(
       int busno);
 
 #endif /* SYSFS_UTIL_H_ */

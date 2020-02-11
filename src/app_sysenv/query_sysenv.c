@@ -375,7 +375,7 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
    else {
       for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
          int busno = bva_get(i2c_device_numbers, ndx);
-         if (is_ignorable_i2c_device(busno)) {
+         if (sysfs_is_ignorable_i2c_device(busno)) {
             // calling i2cdetect for an SMBUs device fills dmesg with error messages
             rpt_nl();
             rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus or other ignorable device.  Skipping i2cdetect.", busno);
