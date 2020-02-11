@@ -816,9 +816,9 @@ static void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // probing hangs on PowerMac if i2c device is SMU
       // but, bus_info has already been filtered for ignorable devices
       // Not necessariy so, maybe called for --bus n option
-// #ifdef OLD
+#ifdef OLD   // will fail if called for probe --bus
       assert( !sysfs_is_ignorable_i2c_device(bus_info->busno) );
-// #endif
+#endif
 
       // tests no longer needed, see comment on above assert()  <== WRONG seee above comment
       if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
