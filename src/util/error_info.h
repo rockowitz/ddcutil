@@ -1,29 +1,17 @@
-/* error_info.h
+/** \f error_info.h
  *
- * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ *  Struct for reporting errors that collects causes
  *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ *  #Error_Info provides a pseudo-exception framework that can be integrated
+ *  with more traditional status codes.  Instead of returning a status code,
+ *  a C function returns a pointer to an #Error_Info instance in the case of
+ *  an error, or NULL if there is no error.  Information about the cause of an
+ *  error is retained for use by higher levels in the call stack.
  */
 
-/** \f
- *  Struct for reporting errors that collects causes
- */
+// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #ifndef ERROR_INFO_H_
 #define ERROR_INFO_H_
