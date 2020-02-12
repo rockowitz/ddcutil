@@ -1,4 +1,4 @@
-/** edid.c
+/** \file edid.c
  *
  *  Functions to interpret the EDID data structure, irrespective of how
  *  the bytes of the EDID are obtained.

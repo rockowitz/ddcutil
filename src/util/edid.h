@@ -4,7 +4,7 @@
  * the bytes of the EDID are obtained.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>    // normally included by stdlib.h, but explicitly require for Alpint Linux
 /** \endcond */
 
 #include "coredefs.h"
