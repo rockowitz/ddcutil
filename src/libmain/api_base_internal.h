@@ -3,7 +3,7 @@
  *  For use only by other api_... files
  */
 
-// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_BASE_INTERNAL_H_
@@ -11,7 +11,6 @@
 
 #include <stdbool.h>
 #include <assert.h>
-#include <sys/cdefs.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -24,8 +23,6 @@ typedef enum {
    DDCA_PRECOND_STDERR_RETURN = DDCA_PRECOND_STDERR | DDCA_PRECOND_RETURN,
    DDCA_PRECOND_RETURN_ONLY   = DDCA_PRECOND_RETURN
 } DDCA_Api_Precondition_Failure_Mode;
-
-
 
 
 extern bool library_initialized;
@@ -54,7 +51,6 @@ void __precond_abort ()
 #define PRECOND(expr) \
    if (!(expr)) return DDCRC_ARG;
 #endif
-
 
 #ifdef ALTA
 #define PRECOND_NORC(expr) PRECOND(expr)
@@ -101,8 +97,6 @@ void __precond_abort ()
          abort(); \
    }
 
-
-
 //
 // Precondition Failure Mode
 //
@@ -113,8 +107,5 @@ ddca_set_precondition_failure_mode(
 
 DDCA_Api_Precondition_Failure_Mode
 ddca_get_precondition_failure_mode();
-
-
-
 
 #endif /* API_BASE_INTERNAL_H_ */
