@@ -2,7 +2,7 @@
  *  String utility functions header file
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef STRINGUTIL_H_
@@ -23,7 +23,7 @@
 // General
 //
 
-inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
+static inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
 
 // A macro alternative to sbool()
 #define SBOOL(val) ( (val) ? "true" : "false" )
