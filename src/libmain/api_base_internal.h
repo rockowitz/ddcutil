@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 #include <assert.h>
+#include <sys/cdefs.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
