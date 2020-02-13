@@ -1,29 +1,10 @@
-/* failsim.c
- *
- * <copyright>
- * Copyright (C) 2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
 /** @file failsim.c
  * Functions that provide a simple failure simulation framework.
  */
+
+// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 /** \cond */
 #include <assert.h>
@@ -334,7 +315,7 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
 
    if (debug)
       printf("(%s) Starting.  rc_string=%s. Returning: %s, *evaluated_rc=%d\n",
-             __func__, rc_string, bool_repr(ok), *evaluated_rc);
+             __func__, rc_string, sbool(ok), *evaluated_rc);
    return ok;
 }
 
@@ -439,7 +420,7 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    // fsim_report_error_table(0);
 
    if (debug)
-      printf("(%s) Returnind: %s\n", __func__, bool_repr(ok));
+      printf("(%s) Returnind: %s\n", __func__, sbool(ok));
    return ok;
 }
 
@@ -473,7 +454,7 @@ bool fsim_load_control_file(char * fn) {
    // need free func
    g_ptr_array_free(lines, true);
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, bool_repr(result));
+      printf("(%s) Returning: %s\n", __func__, sbool(result));
    return result;
 }
 

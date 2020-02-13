@@ -2,7 +2,7 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -370,7 +370,7 @@ bool bbf_is_set(Byte_Bit_Flags bbflags, Byte val) {
    bool result = flags->byte[flagndx] & flagbit;
    // printf("(%s) bbflags=0x%s, val=0x%02x, returning: %d\n",
    //        __func__, hexstring( (unsigned char *)flags->byte,32), val, result);
-   // printf("(%s) val = 0x%02x, returning %s\n",  __func__, val, bool_repr(result));
+   // printf("(%s) val = 0x%02x, returning %s\n",  __func__, val, sbool(result));
    return result;
 }
 
@@ -729,7 +729,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
    }
 
    free(buf);
-   // printf("(%s) Returning %s\n", __func__, bool_repr(ok));
+   // printf("(%s) Returning %s\n", __func__, sbool(ok));
    return ok;
 }
 
@@ -1184,7 +1184,7 @@ char * vnt_interpret_flags(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. flags_val=0x%08x, bitname_table=%p, use_title=%s, sepstr=|%s|\n",
-             __func__, flags_val, (void*)bitname_table, bool_repr(use_title), sepstr);
+             __func__, flags_val, (void*)bitname_table, sbool(use_title), sepstr);
 
    GString * sbuf = g_string_sized_new(200);
    bool first = true;

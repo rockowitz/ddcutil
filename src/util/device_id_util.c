@@ -2,7 +2,7 @@
  * Lookup PCI and USB device ids
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -992,7 +992,6 @@ char * devid_hid_descriptor_country_code(ushort id) {
 }
 
 
-
 //
 // *** Initialization ***
 //
@@ -1021,7 +1020,7 @@ bool devid_ensure_initialized() {
       }
    }
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, bool_repr(ok));
+      printf("(%s) Returning: %s\n", __func__, sbool(ok));
    return ok;
 }
 
