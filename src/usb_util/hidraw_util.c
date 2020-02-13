@@ -336,7 +336,7 @@ bye:
    if (fd >= 0)    // really shouldn't be closing 0..2 stdin..stderr, but coverity complains
       close(fd);
    if (debug)
-      printf("(%s) devname=%s, returning %s\n", __func__, devname, bool_repr(is_monitor));
+      printf("(%s) devname=%s, returning %s\n", __func__, devname, sbool(is_monitor));
    return is_monitor;
 }
 
