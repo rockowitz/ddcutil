@@ -1,7 +1,7 @@
 /** @file hiddev_util.c
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -186,7 +186,7 @@ bool force_hiddev_monitor(int fd) {
 bye:
    if (debug)
       printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__,
-             dev_info.vendor, dev_info.product, bool_repr(result));
+             dev_info.vendor, dev_info.product, sbool(result));
    return result;
 }
 
@@ -235,7 +235,7 @@ bool is_hiddev_monitor(int fd) {
    //    result = force_hiddev_monitor(fd);
 
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, bool_repr(result));
+      printf("(%s) Returning: %s\n", __func__, sbool(result));
    return result;
 }
 
@@ -428,7 +428,7 @@ bool hiddev_is_field_edid(int fd, struct hiddev_report_info * rinfo, int field_i
       all_usages_edid = ( hiddev_get_identical_ucode(fd, &finfo, field_index) == 0x00800002 );
 
    if (debug)
-      printf("(%s) Returning: %s", __func__, bool_repr(all_usages_edid));
+      printf("(%s) Returning: %s", __func__, sbool(all_usages_edid));
    return all_usages_edid;
 }
 
@@ -488,7 +488,7 @@ test_field_ucode(
    bool debug = false;
    if (debug)
       printf("(%s) report_type=%d, report_id=%d, field index=%d, ucode=0x%08x, require_all_match=%s\n",
-             __func__, report_type, report_id, field_index, ucode, bool_repr(require_all_match));
+             __func__, report_type, report_id, field_index, ucode, sbool(require_all_match));
 
    struct hiddev_field_info * result = NULL;
    int rc;
@@ -573,7 +573,7 @@ hiddev_find_report(int fd, __u32 report_type, __u32 ucode, bool match_all_ucodes
    bool debug = false;
    if (debug)
       printf("(%s) Starting.  report_type=%d, ucode=0x%08x, match_all_ucodes=%s\n",
-            __func__, report_type, ucode, bool_repr(match_all_ucodes));
+            __func__, report_type, ucode, sbool(match_all_ucodes));
 
    struct hid_field_locator * result = NULL;
 

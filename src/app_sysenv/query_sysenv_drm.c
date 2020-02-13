@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -714,7 +714,7 @@ void probe_using_libdrm() {
    // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
    rpt_vstring(1, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
-                  bool_repr(drm_available));
+                  sbool(drm_available));
 
 #ifdef DOESNT_WORK
    // function drmOpenMinor() is static

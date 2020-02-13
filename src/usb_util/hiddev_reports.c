@@ -1,7 +1,7 @@
 /** @file hiddev_reports.c
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -739,7 +739,7 @@ void dbgrpt_hiddev_device_by_fd(int fd, int depth) {
    report_all_collections(fd,depth);
    puts("");
 
-   rpt_vstring(depth, "Identified as HID monitor: %s", bool_repr(is_hiddev_monitor(fd)) );
+   rpt_vstring(depth, "Identified as HID monitor: %s", sbool(is_hiddev_monitor(fd)) );
    // puts("");
 
 

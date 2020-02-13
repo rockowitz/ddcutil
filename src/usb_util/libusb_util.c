@@ -1,7 +1,7 @@
 /** @file libusb_util.c
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdio.h>
@@ -183,7 +183,7 @@ static bool possible_monitor_interface_descriptor(
          result = true;
    }
    if (debug)
-      printf("(%s) Returning %s\n", __func__, bool_repr(result));
+      printf("(%s) Returning %s\n", __func__, sbool(result));
    return result;
 }
 
@@ -219,7 +219,7 @@ static bool possible_monitor_interface(
    }
 
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, bool_repr(result));
+      printf("(%s) Returning: %s\n", __func__, sbool(result));
    return result;
 }
 
@@ -319,7 +319,7 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
 
 bye:
    if (debug)
-      printf("(%s) Returning: %s\n" , __func__, bool_repr(result));
+      printf("(%s) Returning: %s\n" , __func__, sbool(result));
    return result;
 }
 
@@ -337,7 +337,7 @@ alt_possible_monitor_dev(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. dev=%p, check_forced_monitor=%s\n",
-             __func__, dev, bool_repr(check_forced_monitor));
+             __func__, dev, sbool(check_forced_monitor));
 
    struct possible_monitor_device * new_node = NULL;
 
@@ -697,7 +697,7 @@ bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
 
 bye:
    if (debug)
-      printf("(%s) Done.  Returning %s\n", __func__, bool_repr(result));
+      printf("(%s) Done.  Returning %s\n", __func__, sbool(result));
    return result;
 }
 

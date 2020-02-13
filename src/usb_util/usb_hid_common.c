@@ -4,7 +4,7 @@
  *  packages such as libusb, hiddev
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -117,7 +117,7 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
    }
 
    if (debug)
-      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, bool_repr(result));
+      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, sbool(result));
    return result;
 }
 
@@ -166,7 +166,7 @@ bool deny_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
    }
 
    if (debug)
-      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, bool_repr(result));
+      printf("(%s) vid=0x%04x, pid=0x%04x, returning: %s\n", __func__, vid, pid, sbool(result));
    return result;
 }
 
