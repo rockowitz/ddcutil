@@ -12,7 +12,7 @@
  * identifiers are simply strings.
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -34,7 +34,7 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <execinfo.h>
+// #include <execinfo.h>
 #include <fcntl.h>
 #include <i2c/i2c_execute.h>
 #include <stdio.h>
