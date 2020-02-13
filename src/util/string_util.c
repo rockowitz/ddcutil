@@ -2,7 +2,7 @@
  *  String utility functions
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -844,9 +844,9 @@ bool str_to_int(const char * sval, int * p_ival, int base)
 
    if (debug) {
       if (ok)
-        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, bool_repr(ok), *p_ival);
+        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, sbool(ok), *p_ival);
       else
-        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
+        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, sbool(ok));
    }
    return ok;
 }
@@ -883,9 +883,9 @@ bool str_to_float(const char * sval, float * p_fval)
 
    if (debug) {
       if (ok)
-        printf("(%s) sval=%s, Returning: %s, *p_fval = %16.7f\n", __func__, sval, bool_repr(ok), *p_fval);
+        printf("(%s) sval=%s, Returning: %s, *p_fval = %16.7f\n", __func__, sval, sbool(ok), *p_fval);
       else
-        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, bool_repr(ok));
+        printf("(%s) sval=%s, Returning: %s\n", __func__, sval, sbool(ok));
    }
    return ok;
 }
@@ -1080,7 +1080,7 @@ char * hexstring2(
 {
    // if (len > 1)
    // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s, buffer=%p, bufsz=%d\n", __func__,
-   //       bytes, len, sepstr, bool_repr(uppercase), buffer, bufsz);
+   //       bytes, len, sepstr, sbool(uppercase), buffer, bufsz);
    int sepsize = 0;
    if (sepstr) {
       sepsize = strlen(sepstr);
@@ -1153,7 +1153,7 @@ char * hexstring3_t(
    static GPrivate  hexstring3_len_key = G_PRIVATE_INIT(g_free);
 
    // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
-   //       bytes, len, sepstr, bool_repr(uppercase));
+   //       bytes, len, sepstr, sbool(uppercase));
    if (hunk_size == 0)
       sepstr = NULL;
    else if (sepstr == NULL)
