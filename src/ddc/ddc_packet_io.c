@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2030 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -701,7 +701,7 @@ ddc_write_read_with_retry(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
-          dh_repr_t(dh), bool_repr(all_zero_response_ok)  );
+          dh_repr_t(dh), sbool(all_zero_response_ok)  );
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
@@ -761,7 +761,7 @@ ddc_write_read_with_retry(
             case DDCRC_NULL_RESPONSE:
                   {
                      retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
-                     DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", bool_repr(retryable));
+                     DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                      if (retryable) {
                         if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                            f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
@@ -814,7 +814,7 @@ ddc_write_read_with_retry(
       }    // rc < 0
    }
    DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
-         tryctr, psc, bool_repr(retryable), sbool(read_bytewise));
+         tryctr, psc, sbool(retryable), sbool(read_bytewise));
    // read_bytewise = !read_bytewise;
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {
@@ -828,7 +828,7 @@ ddc_write_read_with_retry(
 
    if (psc < 0) {
       // int last_try_index = tryctr-1;
-      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
+      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
 
       if (retryable)
          psc = DDCRC_RETRIES;
@@ -1009,7 +1009,7 @@ ddc_write_only_with_retry(
       //   tryctr == max_write_only_exchange_tries && !retryable
 
       // int last_try_index = tryctr-1;
-      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, bool_repr(retryable));
+      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
 
       if (retryable)
          psc = DDCRC_RETRIES;

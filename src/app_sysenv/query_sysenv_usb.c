@@ -2,7 +2,7 @@
  *  Probe the USB environment
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -53,7 +53,7 @@ static bool is_hid_monitor_rdesc(const char * fn) {
    if ( first_line && str_starts_with( first_line, "05 80"))
       result = true;
 
-   DBGMSF(debug, "fn=%s, returning: %s", fn, bool_repr(result));
+   DBGMSF(debug, "fn=%s, returning: %s", fn, sbool(result));
    return result;
 }
 

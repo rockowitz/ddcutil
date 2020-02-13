@@ -3,7 +3,7 @@
  * Check I2C devices using directly coded I2C calls
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -52,7 +52,7 @@ static bool is_i2c_device_rw(int busno) {
       result = false;
    }
 
-   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
 

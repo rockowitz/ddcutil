@@ -3,7 +3,7 @@
  *  Module checks
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -90,10 +90,10 @@ bool is_module_builtin(char * module_name) {
       builtin2 = (lines->len == 1);
    }
    g_ptr_array_free(lines, true);
-   // DBGMSG("builtin2=%s", bool_repr(builtin2));
+   // DBGMSG("builtin2=%s", sbool(builtin2));
    result = builtin2;
 
-   DBGMSF(debug, "module_name = %s, returning %s", module_name, bool_repr(result));
+   DBGMSF(debug, "module_name = %s, returning %s", module_name, sbool(result));
    return result;
 }
 
@@ -141,7 +141,7 @@ bool is_module_loadable(char * module_name, int depth) {
         closedir(d);
      }
 
-   DBGMSF(debug, "Done. Returning: %s", bool_repr(result));
+   DBGMSF(debug, "Done. Returning: %s", sbool(result));
    return result;
 }
 

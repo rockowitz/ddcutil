@@ -3,7 +3,7 @@
  *  Primary file for the DUMPVCP and LOADVCP commands
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -249,6 +249,6 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       ok = (psc == 0);
    }
 
-   DBGMSF(debug, "Returning: %s", bool_repr(ok));
+   DBGMSF(debug, "Returning: %s", sbool(ok));
    return ok;
 }

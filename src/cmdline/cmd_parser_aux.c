@@ -3,7 +3,7 @@
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -259,7 +259,7 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
         fsref->specific_feature = feature_hexid;
      }
    }
-   DBGMSF(debug, "Returning: %s", bool_repr(ok));
+   DBGMSF(debug, "Returning: %s", sbool(ok));
    if (ok && debug)
       dbgrpt_feature_set_ref(fsref, 0);
    return ok;

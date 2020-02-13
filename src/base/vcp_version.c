@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -104,7 +104,7 @@ bool vcp_version_le(DDCA_MCCS_Version_Spec v1, DDCA_MCCS_Version_Spec v2) {
    DBGMSF(debug, "v1=%d.%d <= v2=%d.%d returning: %s",
                  v1.major, v2.minor,
                  v2.major, v2.minor,
-                 bool_repr(result));
+                 sbool(result));
    return result;
 }
 

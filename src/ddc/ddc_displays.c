@@ -21,6 +21,7 @@
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 #include "util/udev_usb_util.h"
 #include "util/udev_util.h"
 /** \endcond */
@@ -487,9 +488,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
             if (dref->io_path.io_mode != DDCA_IO_USB) {
                rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
-                                  bool_repr(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+                                  sbool(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
                // rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
-               //                    bool_repr(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+               //                    sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
             }
          }
       }

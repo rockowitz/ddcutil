@@ -4,7 +4,7 @@
  * Capabilities.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -141,7 +141,7 @@ try_multi_part_read(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
           "Starting. request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
-          request_type, request_subtype, bool_repr(all_zero_response_ok), accumulator);
+          request_type, request_subtype, sbool(all_zero_response_ok), accumulator);
 
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -262,7 +262,7 @@ multi_part_read_with_retry(
    DBGTRC(debug, TRACE_GROUP,
           "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
-          request_type, request_subtype, bool_repr(all_zero_response_ok), max_multi_part_read_tries);
+          request_type, request_subtype, sbool(all_zero_response_ok), max_multi_part_read_tries);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;

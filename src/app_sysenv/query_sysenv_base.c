@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE   // for asprintf() in stdio.h
@@ -255,25 +255,25 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
    rpt_vstring(d1, "%-30s %s", "distributor_id", (accum->distributor_id) ? accum->distributor_id : "");
    rpt_vstring(d1, "%-30s %s", "Drivers detected:",          driver_names);
    rpt_vstring(d1, "%-30s %s", "/dev/i2c device numbers:",   dev_i2c_device_numbers_string);
-   rpt_vstring(d1, "%-30s %s", "sysfs_i2c_devices_exist:",   bool_repr(accum->sysfs_i2c_devices_exist));
+   rpt_vstring(d1, "%-30s %s", "sysfs_i2c_devices_exist:",   sbool(accum->sysfs_i2c_devices_exist));
    rpt_vstring(d1, "%-30s %s", "/sys/bus/i2c device numbers:", sys_bus_i2c_device_numbers_string);
-   rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",  bool_repr(accum->dev_i2c_devices_required));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     bool_repr(accum->module_i2c_dev_needed));
-   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_builtin:",    bool_repr(accum->module_i2c_dev_builtin));
-   rpt_vstring(d1, "%-30s %s", "loadable_i2c_dev_exists:",   bool_repr(accum->loadable_i2c_dev_exists));
-   rpt_vstring(d1, "%-30s %s", "i2c_dev_loaded_or_builtin:", bool_repr(accum->i2c_dev_loaded_or_builtin));
-   rpt_vstring(d1, "%-30s %s", "group_i2c_checked:",         bool_repr(accum->group_i2c_checked));
-   rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",          bool_repr(accum->group_i2c_exists));
+   rpt_vstring(d1, "%-30s %s", "dev_i2c_devices_required:",  sbool(accum->dev_i2c_devices_required));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_needed:",     sbool(accum->module_i2c_dev_needed));
+   rpt_vstring(d1, "%-30s %s", "module_i2c_dev_builtin:",    sbool(accum->module_i2c_dev_builtin));
+   rpt_vstring(d1, "%-30s %s", "loadable_i2c_dev_exists:",   sbool(accum->loadable_i2c_dev_exists));
+   rpt_vstring(d1, "%-30s %s", "i2c_dev_loaded_or_builtin:", sbool(accum->i2c_dev_loaded_or_builtin));
+   rpt_vstring(d1, "%-30s %s", "group_i2c_checked:",         sbool(accum->group_i2c_checked));
+   rpt_vstring(d1, "%-30s %s", "group_i2c_exists:",          sbool(accum->group_i2c_exists));
    rpt_vstring(d1, "%-30s %s", "dev_i2c_common_group_name:", accum->dev_i2c_common_group_name);
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", bool_repr(accum->all_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", bool_repr(accum->any_dev_i2c_has_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",   bool_repr(accum->all_dev_i2c_is_group_rw));
-   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",   bool_repr(accum->any_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_has_group_i2c:", sbool(accum->all_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_has_group_i2c:", sbool(accum->any_dev_i2c_has_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "all_dev_i2c_is_group_rw:",   sbool(accum->all_dev_i2c_is_group_rw));
+   rpt_vstring(d1, "%-30s %s", "any_dev_i2c_is_group_rw:",   sbool(accum->any_dev_i2c_is_group_rw));
    rpt_vstring(d1, "%-30s %s", "cur_uname:",                 accum->cur_uname);
    rpt_vstring(d1, "%-30s %d", "cur_uid:",                   accum->cur_uid);
-   rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",     bool_repr(accum->cur_user_in_group_i2c));
-   rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:",    bool_repr(accum->cur_user_any_devi2c_rw));
-   rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:",    bool_repr(accum->cur_user_all_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "cur_user_in_group_i2c:",     sbool(accum->cur_user_in_group_i2c));
+   rpt_vstring(d1, "%-30s %s", "cur_user_any_devi2c_rw:",    sbool(accum->cur_user_any_devi2c_rw));
+   rpt_vstring(d1, "%-30s %s", "cur_user_all_devi2c_rw:",    sbool(accum->cur_user_all_devi2c_rw));
 
    if (accum->dev_i2c_device_numbers)
       free(dev_i2c_device_numbers_string);
@@ -500,7 +500,7 @@ void filter_and_limit_g_ptr_array(
    bool debug = false;
    if (debug) {
       DBGMSG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-            line_array, line_array->len, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+            line_array, line_array->len, ntsa_length(filter_terms), sbool(ignore_case), limit);
       // (const char **) cast to conform to strjoin() signature
       char * s = strjoin( (const char **) filter_terms, -1, ", ");
       DBGMSG("Filter terms: %s", s);
@@ -560,7 +560,7 @@ int read_file_with_filter(
 {
    bool debug = false;
    DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-            line_array, fn, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+            line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
 
    g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
 
@@ -608,7 +608,7 @@ int execute_cmd_collect_with_filter(
 {
    bool debug = false;
    DBGMSF(debug, "cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-            cmd, ntsa_length(filter_terms), bool_repr(ignore_case), limit);
+            cmd, ntsa_length(filter_terms), sbool(ignore_case), limit);
 
    int rc = 0;
    GPtrArray *line_array = execute_shell_cmd_collect(cmd);

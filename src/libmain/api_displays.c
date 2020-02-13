@@ -389,7 +389,7 @@ ddca_open_display2(
    DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s", dref_repr_t(dref), bool_repr(wait));
+   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s", dref_repr_t(dref), sbool(wait));
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCRC_ARG;
    }

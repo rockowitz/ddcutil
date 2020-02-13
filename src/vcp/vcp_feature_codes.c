@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -15,7 +15,7 @@
 #include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/report_util.h"
-
+#include "util/string_util.h"
 /** \cond */
 
 #include "base/ddc_errno.h"
@@ -650,7 +650,7 @@ bool is_feature_supported_in_version(
    DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pvft_entry, vcp_version);
    result = (vflags && !(vflags&DDCA_DEPRECATED));
    DBGMSF(debug, "Feature = 0x%02x, vcp versinon=%d.%d, returning %s",
-                 pvft_entry->code, vcp_version.major, vcp_version.minor, bool_repr(result) );
+                 pvft_entry->code, vcp_version.major, vcp_version.minor, sbool(result) );
    return result;
 }
 
@@ -962,7 +962,7 @@ extract_version_feature_info_from_feature_table_entry(
 {
    bool debug = false;
    DBGMSF(debug, "vspec=%d.%d, version_sensitive=%s",
-                 vspec.major, vspec.minor, bool_repr(version_sensitive));
+                 vspec.major, vspec.minor, sbool(version_sensitive));
    assert(vfte);
    // DDCA_MCCS_Version_Id version_id = mccs_version_spec_to_id(vspec);
    // if (debug)
@@ -1020,8 +1020,8 @@ get_version_feature_info_by_version_id_dfm(
          feature_code,
          mccs_version_id,
          vcp_version_id_name(mccs_version_id),
-         bool_repr(with_default),
-         bool_repr(version_sensitive));
+         sbool(with_default),
+         sbool(version_sensitive));
 
    DDCA_MCCS_Version_Spec vspec = mccs_version_id_to_spec(mccs_version_id);
 
@@ -1053,8 +1053,8 @@ get_version_feature_info_by_vspec_dfm(
    DBGMSF(debug, "feature_code=0x%02x, mccs_version=%d.%d, with_default=%s, version_sensitive=%s",
          feature_code,
          vspec.major, vspec.minor,
-         bool_repr(with_default),
-         bool_repr(version_sensitive));
+         sbool(with_default),
+         sbool(version_sensitive));
 
    Display_Feature_Metadata * dfm = NULL;
 

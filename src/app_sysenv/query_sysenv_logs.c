@@ -3,7 +3,7 @@
  *  Query configuration files, logs, and output of logging commands.
  */
 
-// Copyright (C) 2017-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -44,7 +44,7 @@ static bool probe_log(
    bool debug = false;
    assert(log_fn);
    DBGMSF(debug, "Starting. log_fn=%s, filter_terms=%p, ignore_case=%s, limit=%d",
-                 log_fn, filter_terms, bool_repr(ignore_case), limit);
+                 log_fn, filter_terms, sbool(ignore_case), limit);
    bool file_found = false;
    int rc = 0;
    if ( !regular_file_exists(log_fn) ) {
@@ -130,7 +130,7 @@ static bool probe_log(
    g_ptr_array_free(found_lines, true);
 
 bye:
-   DBGMSF(debug, "rc=%d, file_found=%s", rc, bool_repr(file_found));
+   DBGMSF(debug, "rc=%d, file_found=%s", rc, sbool(file_found));
    rpt_nl();
    return file_found;
 }
@@ -147,7 +147,7 @@ static bool probe_cmd(
    bool debug = false;
    assert(cmd);
    DBGMSF(debug, "Starting. cmd=%s, filter_terms=%p, ignore_case=%s, limit=%d",
-                 cmd, filter_terms, bool_repr(ignore_case), limit);
+                 cmd, filter_terms, sbool(ignore_case), limit);
 
    rpt_vstring(depth, "Executing command: %s", cmd);
    if (limit < 0) {
@@ -178,7 +178,7 @@ static bool probe_cmd(
    }
 
    bool result = (rc >= 0);
-   DBGMSF(debug, "rc=%d, returning %s", rc, bool_repr(result));
+   DBGMSF(debug, "rc=%d, returning %s", rc, sbool(result));
    rpt_nl();
    return result;
 }
@@ -382,8 +382,8 @@ void probe_logs(Env_Accumulator * accum) {
    for (Value_Name_Title * entry = log_table; entry->title; entry++) {
       rpt_vstring(d2, "%-30s  %-7s   %-6s",
                       entry->title,
-                      bool_repr(logs_checked & entry->value),
-                      bool_repr(logs_found & entry->value));
+                      sbool(logs_checked & entry->value),
+                      sbool(logs_found & entry->value));
    }
    rpt_nl();
    if (log_terms != all_terms)

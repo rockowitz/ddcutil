@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -63,7 +63,7 @@ static void report_endian(int depth) {
    rpt_title("Byte order checks:", depth);
 
    bool is_bigendian = (*(uint16_t *)"\0\xff" < 0x100);
-   rpt_vstring(d1, "Is big endian (local test):       %s", bool_repr(is_bigendian));
+   rpt_vstring(d1, "Is big endian (local test):       %s", sbool(is_bigendian));
 
    rpt_vstring(d1, "WORDS_BIGENDIAN macro (autoconf): "
 #ifdef WORDS_BIGENDIAN
@@ -87,7 +87,7 @@ static void report_endian(int depth) {
 #ifdef REDUNDANT
    __u32 i = 1;
    bool is_bigendian2 =  ( (*(char*)&i) == 0 );
-   rpt_vstring(d1, "Is big endian (runtime test): %s", bool_repr(is_bigendian2));
+   rpt_vstring(d1, "Is big endian (runtime test): %s", sbool(is_bigendian2));
 #endif
 }
 

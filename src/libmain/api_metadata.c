@@ -12,6 +12,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -100,7 +101,7 @@ ddca_get_feature_list(
 {
    bool debug = false;
    DBGMSF(debug, "Starting. feature_subset_id=%d, vcp_version=%d.%d, include_table_features=%s, p_feature_list=%p",
-          feature_subset_id, vspec.major, vspec.minor, bool_repr(include_table_features), p_feature_list);
+          feature_subset_id, vspec.major, vspec.minor, sbool(include_table_features), p_feature_list);
 
    DDCA_Status ddcrc = 0;
    // Whether a feature is a table feature can vary by version, so can't
@@ -173,7 +174,7 @@ ddca_get_feature_list_by_dref(
          {
                bool debug = false;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
-                      feature_set_id, dref, dref_repr_t(dref), bool_repr(include_table_features), p_feature_list);
+                      feature_set_id, dref, dref_repr_t(dref), sbool(include_table_features), p_feature_list);
                assert(p_feature_list);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;

@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define GNU_SOURCE    // for syscall()
@@ -477,7 +477,7 @@ void add_traced_file(const char * filename) {
       g_ptr_array_add(traced_file_table, bname);
    else
       free(bname);
-   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, bool_repr(found));
+   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, sbool(found));
 }
 
 
@@ -488,7 +488,7 @@ void add_traced_file(const char * filename) {
  */
 bool is_traced_function(const char * funcname) {
    bool result = (traced_function_table && gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
-   // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, bool_repr(result2));
+   // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, sbool(result2));
    return result;
 }
 
@@ -503,7 +503,7 @@ bool is_traced_file(const char * filename) {
    if (filename) {
       char * bname = g_path_get_basename(filename);
       result = (traced_file_table && gaux_string_ptr_array_find(traced_file_table, bname) >= 0);
-      // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, bool_repr(result));
+      // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, sbool(result));
       free(bname);
    }
    return result;
@@ -727,7 +727,7 @@ void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Reporting DDC data errors: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              bool_repr(report_ddc_errors));
+                              sbool(report_ddc_errors));
 }
 
 

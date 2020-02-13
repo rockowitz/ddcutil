@@ -8,7 +8,7 @@
  * Still used by USB layer as a fallback to find the EDID by model etc.
  * if the EDID can't be gotten from USB services.
  */
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -138,7 +138,7 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
       result = true;
 
 bye:
-   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
 

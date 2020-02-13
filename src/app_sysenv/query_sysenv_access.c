@@ -3,7 +3,7 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -157,7 +157,7 @@ static char * get_username(Env_Accumulator * accum) {
    char * cmd = "echo $LOGNAME";
    printf("(%s) executing command: %s\n", __func__, cmd);
    bool ok = execute_shell_cmd_rpt(cmd, 0);
-   printf("(%s) execute_shell_cmd() returned %s\n", __func__, bool_repr(ok));
+   printf("(%s) execute_shell_cmd() returned %s\n", __func__, sbool(ok));
 
 #endif
    uid_t uid = getuid();
@@ -256,7 +256,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
                      accum->all_dev_i2c_has_group_i2c = false;
 
                   DBGMSF(debug, "file=%s, st_gid=%d, gr_name=%s, cur_file_grp_rw=%s",
-                        fnbuf, fs.st_gid, gr_name, bool_repr(cur_file_grp_rw));
+                        fnbuf, fs.st_gid, gr_name, sbool(cur_file_grp_rw));
 
                   if (fs.st_gid != 0) {    // root group is special case
                      if (cur_file_grp_rw)
@@ -299,7 +299,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
  */
 static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
    bool debug = false;
-   DBGMSF(debug, "Starting. verbose=%s", bool_repr(verbose));
+   DBGMSF(debug, "Starting. verbose=%s", sbool(verbose));
    // verbose = true;
 
    if (verbose) {

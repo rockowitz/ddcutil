@@ -2,7 +2,7 @@
  *  Virtual Control Panel access
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -18,6 +18,7 @@
 
 #include "util/error_info.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 #include "util/utilrpt.h"
 /** \endcond */
 
@@ -230,7 +231,7 @@ set_table_vcp_value(
  */
 bool ddc_set_verify_setvcp(bool onoff) {
    bool debug = false;
-   DBGMSF(debug, "Setting verify_setvcp = %s", bool_repr(onoff));
+   DBGMSF(debug, "Setting verify_setvcp = %s", sbool(onoff));
    Thread_Vcp_Settings * settings = get_thread_vcp_settings();
    bool old_value = settings->verify_setvcp;
    settings->verify_setvcp = onoff;
@@ -286,7 +287,7 @@ is_rereadable_feature(
       }
    }
 
-   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
 
@@ -313,7 +314,7 @@ single_vcp_value_equal(
                      (memcmp(vrec1->val.t.bytes, vrec2->val.t.bytes, vrec1->val.t.bytect) == 0 );
       }
    }
-   DBGMSF(debug, "Returning: %s", bool_repr(result));
+   DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
 

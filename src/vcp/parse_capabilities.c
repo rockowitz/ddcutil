@@ -2,7 +2,7 @@
  *  Parse the capabilities string returned by DDC, query the parsed data structure.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -67,7 +67,7 @@ Parsed_Capabilities * new_parsed_capabilities(
      )
 {
    bool debug = false;
-   DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", bool_repr(raw_cmds_segment_seen), commands);
+   DBGMSF(debug, "raw_cmds_segment_seen=%s, commands=%p", sbool(raw_cmds_segment_seen), commands);
 
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
    memcpy(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4);
@@ -497,7 +497,7 @@ Byte_Bit_Flags parsed_capabilities_feature_ids(
    assert(pcaps);
    bool debug = false;
    DBGMSF(debug, "Starting. readable_only=%s, feature count=%d",
-                 bool_repr(readable_only), pcaps->vcp_features->len);
+                 sbool(readable_only), pcaps->vcp_features->len);
 
    Byte_Bit_Flags flags = bbf_create();
    if (pcaps->vcp_features) {    // pathological case of 0 length capabilities string

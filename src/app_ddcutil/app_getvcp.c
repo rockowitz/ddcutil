@@ -1,7 +1,7 @@
 /** @file app_getvcp.c
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -169,7 +169,7 @@ app_show_single_vcp_value_by_feature_id_new_dfm(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Getting feature 0x%02x for %s, force=%s",
-                              feature_id, dh_repr(dh), bool_repr(force) );
+                              feature_id, dh_repr(dh), sbool(force) );
 
    Public_Status_Code         psc = 0;
 

@@ -2,7 +2,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -806,7 +806,7 @@ interpret_vcp_feature_response_std(
          DBGTRC(debug, TRACE_GROUP,
                 "vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
                 vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         DBGTRC(debug, TRACE_GROUP, "valid_response=%s", bool_repr(valid_response));
+         DBGTRC(debug, TRACE_GROUP, "valid_response=%s", sbool(valid_response));
 
          aux_data->valid_response   = true;
          aux_data->supported_opcode = true;

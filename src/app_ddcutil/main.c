@@ -26,6 +26,7 @@
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
 
@@ -224,7 +225,7 @@ void probe_display_by_dh(Display_Handle * dh)
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
    bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
-   f0printf(fout, "\nMay support table reads:   %s\n", bool_repr(table_reads_possible));
+   f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
@@ -471,12 +472,12 @@ int main(int argc, char *argv[]) {
       f0printf( fout, "%.*s%-*s%s\n",
                 0,"",
                 28, "Force I2C slave address:",
-                bool_repr(i2c_force_slave_addr_flag));
+                sbool(i2c_force_slave_addr_flag));
       f0printf( fout, "%.*s%-*s%s\n",
                 0,"",
                 28, "User defined features:",
                 (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
-                // bool_repr(enable_dynamic_features));
+                // sbool(enable_dynamic_features));
       f0puts("\n", fout);
    }
 
