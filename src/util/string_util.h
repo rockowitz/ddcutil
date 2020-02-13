@@ -23,14 +23,10 @@
 // General
 //
 
-// Returns "true" or "false":
-char * bool_repr(int value);
-
-// A macro alternative to bool_repr()
-#define SBOOL(val) ( (val) ? "true" : "false" )
-
-// Inline alternative to bool_repr()
 inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
+
+// A macro alternative to sbool()
+#define SBOOL(val) ( (val) ? "true" : "false" )
 
 
 #ifdef DEPRECATED

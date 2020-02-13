@@ -35,15 +35,16 @@
 // General
 //
 
+#ifdef NOT_INLINE
 /** Returns a character string representation of an integer as a boolean value.
  *
  * @param value value to represent
  * @return "true" or "false"
  */
-char * bool_repr(int value) {
-   char * answer = (value) ? "true" : "false";
-   return answer;
+char * sbool(int value) {
+   return (value) ? "true" : "false";
 }
+#endif
 
 
 //
