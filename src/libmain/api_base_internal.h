@@ -11,7 +11,6 @@
 
 #include <assert.h>
 #include <stdbool.h>
-// #include <sys/cdefs.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -29,54 +28,6 @@ typedef enum {
 extern bool library_initialized;
 
 extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
-
-// #ifdef USED_ONLY_BY_ALT
-void __precond_fail (const char *__assertion, const char *__file,
-            unsigned int __line, const char *__function)
-     __attribute__ ((__noreturn__, __leaf__, __nothrow__));
-//   __THROW __attribute__ ((__noreturn__));
-
-void __precond_abort ()
-     __attribute__ ((__noreturn__, __leaf__, __nothrow__));
-//   __THROW __attribute__ ((__noreturn__));
-// #endif
-
-#ifdef ALT1
-#define PRECOND(expr)  \
-      ((expr)                      \
-        ? __ASSERT_VOID_CAST (0)                \
-       : __precond_fail (#expr, __FILE__, __LINE__, __func__))
-#endif
-
-#ifdef ALT2
-#define PRECOND(expr) assert(expr)
-#endif
-
-#ifdef ALT3
-#define PRECOND(expr) \
-   if (!(expr)) return DDCRC_ARG;
-#endif
-
-#ifdef ALTA
-#define PRECOND_NORC(expr) PRECOND(expr)
-#endif
-
-#ifdef ALT4
-#define PRECOND(expr) \
-   if (!(expr)) { \
-      fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
-                      #expr, __func__, __LINE__, __FILE__); \
-      return DDCRC_ARG;  \
-   }
-
-
-#define PRECOND_NORC(expr) \
-      if (!(expr)) { \
-         fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
-                         #expr, __func__, __LINE__, __FILE__); \
-         return; \
-      }
-#endif
 
 #define PRECOND(expr) \
    if (!(expr)) { \

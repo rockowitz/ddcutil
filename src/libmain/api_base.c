@@ -33,6 +33,10 @@
 #include "libmain/api_base_internal.h"
 
 
+//
+// Precondition Failure
+//
+
 DDCA_Api_Precondition_Failure_Mode api_failure_mode = DDCA_PRECOND_STDERR_RETURN;
 
 DDCA_Api_Precondition_Failure_Mode
@@ -49,29 +53,6 @@ ddca_get_precondition_failure_mode()
 {
    return api_failure_mode;
 }
-
-
-// #ifdef USED_ONLY_BY_ALT
-
-// __THROW  __attribute__ ((__noreturn__))
-__attribute__ ((__noreturn__, __leaf__, __nothrow__))
-void __precond_fail (const char *__assertion, const char *__file,
-            unsigned int __line, const char *__function)
-{
-   fprintf(stderr, "Precondition failure in function %s at line %d of file %s: %s\n",
-                   __function, __line, __file, __assertion);
-   abort();
-}
-
-// __THROW __attribute__ ((__noreturn__))
-__attribute__ ((__noreturn__, __leaf__, __nothrow__))
-void __precond_abort()
-{
-   abort();
-}
-
-// #endif
-
 
 
 //
