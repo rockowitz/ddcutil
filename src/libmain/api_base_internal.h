@@ -9,9 +9,9 @@
 #ifndef API_BASE_INTERNAL_H_
 #define API_BASE_INTERNAL_H_
 
-#include <stdbool.h>
 #include <assert.h>
-#include <sys/cdefs.h>
+#include <stdbool.h>
+// #include <sys/cdefs.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -30,12 +30,16 @@ extern bool library_initialized;
 
 extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 
+// #ifdef USED_ONLY_BY_ALT
 void __precond_fail (const char *__assertion, const char *__file,
             unsigned int __line, const char *__function)
-     __THROW __attribute__ ((__noreturn__));
+     __attribute__ ((__noreturn__, __leaf__, __nothrow__));
+//   __THROW __attribute__ ((__noreturn__));
 
 void __precond_abort ()
-     __THROW __attribute__ ((__noreturn__));
+     __attribute__ ((__noreturn__, __leaf__, __nothrow__));
+//   __THROW __attribute__ ((__noreturn__));
+// #endif
 
 #ifdef ALT1
 #define PRECOND(expr)  \

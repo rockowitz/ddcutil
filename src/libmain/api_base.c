@@ -3,7 +3,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -51,9 +51,10 @@ ddca_get_precondition_failure_mode()
 }
 
 
+// #ifdef USED_ONLY_BY_ALT
 
-
-__THROW  __attribute__ ((__noreturn__))
+// __THROW  __attribute__ ((__noreturn__))
+__attribute__ ((__noreturn__, __leaf__, __nothrow__))
 void __precond_fail (const char *__assertion, const char *__file,
             unsigned int __line, const char *__function)
 {
@@ -62,12 +63,14 @@ void __precond_fail (const char *__assertion, const char *__file,
    abort();
 }
 
-__THROW  __attribute__ ((__noreturn__))
+// __THROW __attribute__ ((__noreturn__))
+__attribute__ ((__noreturn__, __leaf__, __nothrow__))
 void __precond_abort()
 {
    abort();
 }
 
+// #endif
 
 
 
