@@ -19,6 +19,7 @@
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/sleep.h"
+#include "base/tuned_sleep.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -94,6 +95,8 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
          dsa_report_stats(depth);
          rpt_nl();
       }
+      report_all_thread_sleep_settings(depth);
+      rpt_nl();
       report_io_call_stats(depth);
       rpt_nl();
       report_sleep_stats(depth);
