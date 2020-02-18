@@ -442,6 +442,7 @@ int main(int argc, char *argv[]) {
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
+   enable_sleep_suppression(parsed_cmd->flags & CMD_FLAG_F1);
 
    init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
@@ -521,6 +522,8 @@ int main(int argc, char *argv[]) {
 
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
+      if (parsed_cmd->sleep_multiplier > 1.0f)
+         enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);
    }
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
@@ -583,7 +586,7 @@ int main(int argc, char *argv[]) {
          ddc_ensure_displays_detected();
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
-      else {
+      else {  // temporary
          typedef struct {
             I2C_IO_Strategy_Id  i2c_io_strategy_id;
             bool                i2c_read_bytewise;
@@ -678,8 +681,10 @@ int main(int argc, char *argv[]) {
                loadvcp_ok = false;
          }
       }
-      if (loadvcp_ok)
+      if (loadvcp_ok) {
+         enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);
          loadvcp_ok = loadvcp_by_file(fn, dh);
+      }
 
       // if we opened the display, we close it
       if (dh)
@@ -778,6 +783,7 @@ int main(int argc, char *argv[]) {
          }
          else {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
+            enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
             probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
@@ -844,6 +850,7 @@ int main(int argc, char *argv[]) {
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
+            enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES

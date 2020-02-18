@@ -97,4 +97,11 @@ void record_sleep_event(Sleep_Event_Type event_type);
 
 void report_execution_stats(int depth);
 
+void enable_dynamic_sleep_adjustment(bool enabled);
+void set_error_stats_sleep_multiplier_factor(double factor);
+void record_ddcrw_status_code(int rc);
+void reset_ddcrw_status_code_counts();
+float get_ddcrw_sleep_adjustment();
+
+
 #endif /* EXECUTION_STATS_H_ */

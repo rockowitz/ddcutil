@@ -17,6 +17,8 @@
 #include "base/sleep.h"
 #include "base/execution_stats.h"
 
+void enable_sleep_suppression(bool enable);
+
 // Sleep time adjustments
 void   set_sleep_multiplier_ct(int multiplier);
 int    get_sleep_multiplier_ct();

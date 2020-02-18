@@ -643,6 +643,7 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
+   record_ddcrw_status_code(psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 

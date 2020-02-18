@@ -43,6 +43,7 @@ static double sleep_multiplier_factor = 1.0;
 void   set_sleep_multiplier_factor(double multiplier) {
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier_factor = multiplier;
+   set_error_stats_sleep_multiplier_factor(multiplier);
    // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
 }
 
@@ -98,6 +99,13 @@ void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
    settings->sleep_multiplier_ct = multiplier_ct;
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
+}
+
+
+static bool sleep_suppression_enabled = false;
+
+void enable_sleep_suppression(bool enable) {
+   sleep_suppression_enabled = enable;
 }
 
 
@@ -161,6 +169,10 @@ void tuned_sleep_with_tracex(
                break;
          case (SE_POST_READ):
                sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               if (sleep_suppression_enabled) {
+                  DBGMSF(debug, "Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
+                  return;  // TEMP
+               }
                break;
          case (SE_POST_SAVE_SETTINGS):
                sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
@@ -168,8 +180,21 @@ void tuned_sleep_with_tracex(
          case SE_DDC_NULL:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
               break;
+         case SE_PRE_EDID:
+              sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+              if (sleep_suppression_enabled) {
+              DBGMSF(debug, "Suppressing sleep, sleep event type = %s",
+                            sleep_event_name(event_type));
+              return;   // TEMP
+              }
+              break;
          case SE_OTHER:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+              if (sleep_suppression_enabled) {
+              DBGMSF(debug, "Suppressing sleep, sleep event type = %s",
+                            sleep_event_name(event_type));
+              return;
+              }
               break;
          default:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -205,13 +230,27 @@ void tuned_sleep_with_tracex(
    //   get error rate (total calls, total errors), current adjustment value
    //   adjust by time since last i2c event
 
+#ifdef NO
+   static float sleep_adjustment_factor = 1.0;
+   float next_sleep_adjustment_factor = get_ddcrw_sleep_adjustment();
+   if (next_sleep_adjustment_factor > sleep_adjustment_factor) {
+      sleep_adjustment_factor = next_sleep_adjustment_factor;
+      reset_ddcrw_status_code_counts();
+   }
+#endif
+
+   float sleep_adjustment_factor = get_ddcrw_sleep_adjustment();
+
+
+
+
    // crude, should be sensitive to event type?
    int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread
-   sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis;
+   sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis * sleep_adjustment_factor;
    if (debug) {
-   // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || debug) {
-      DBGMSG("Before sleep. event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_time_millis = %d",
-             sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_time_millis);
+   // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || sleep_adjustment_factor != 1.0 ||debug) {
+      DBGMSG("Before sleep. event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_adjustment_factor = %9.1f, sleep_time_millis = %d",
+             sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_adjustment_factor, sleep_time_millis);
       // show_backtrace(2);
    }
 
