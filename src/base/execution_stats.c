@@ -488,13 +488,27 @@ static const char * sleep_event_names[] = {
       "SE_DDC_NULL",
       "SE_POST_SAVE_SETTINGS",
       "SE_PRE_EDID",
+      "SE_PRE_MULTI_PART_READ",
+      "SE_MULTI_PART_READ_TO_WRITE",
       "SE_OTHER",
       "SE_SPECIAL",
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
+int max_sleep_event_name_size() {
+   int result = 0;
+   for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {
+      if (strlen(sleep_event_names[ndx]) > result)
+         result = strlen(sleep_event_names[ndx]);
+   }
+   return result;
+}
+
 /** Returns the name of sleep event type */
 const char * sleep_event_name(Sleep_Event_Type event_type) {
+   // ensure sleep_event_names stays in sync with Sync_Event_Type
+   const int sleep_event_type_count = SE_SPECIAL+1;   // relies on values in enum assigned from 0
+   assert( SLEEP_EVENT_ID_CT ==  sleep_event_type_count);
    return sleep_event_names[event_type];
 }
 
@@ -531,6 +545,7 @@ void record_sleep_event(Sleep_Event_Type event_type) {
  * @param depth logical indentation depth
  */
 void report_execution_stats(int depth) {
+   int sleep_name_field_size = max_sleep_event_name_size();
    int d1 = depth+1;
    rpt_title("IO and Sleep Events:", depth);
    rpt_vstring(d1, "Total IO events:      %5d", total_io_event_count());
@@ -539,7 +554,7 @@ void report_execution_stats(int depth) {
    rpt_nl();
    rpt_title("Sleep Event type      Count", d1);
    for (int id=0; id < SLEEP_EVENT_ID_CT; id++) {
-      rpt_vstring(d1, "%-21s  %4d", sleep_event_names[id], sleep_event_cts_by_id[id]);
+      rpt_vstring(d1, "%-*s  %4d", sleep_name_field_size, sleep_event_names[id], sleep_event_cts_by_id[id]);
    }
 }
 

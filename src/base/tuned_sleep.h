@@ -25,6 +25,9 @@ int    get_sleep_multiplier_ct();
 void   set_sleep_multiplier_factor(double multiplier);
 double get_sleep_multiplier_factor();
 
+void bump_sleep_multiplier_changed_ct();
+void report_all_thread_sleep_settings(int depth);
+
 // Perform tuned sleep
 void tuned_sleep_with_tracex(
       DDCA_IO_Mode     io_mode,

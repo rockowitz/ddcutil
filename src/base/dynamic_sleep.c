@@ -28,6 +28,8 @@
 #include "base/dynamic_sleep.h"
 
 
+
+
 static bool dynamic_sleep_adjustment_enabled = false;
 
 void dsa_enable(bool enabled) {
@@ -72,6 +74,8 @@ void dbgrpt_dsa_stats(Dynamic_Sleep_Adjustment_Stats * stats, int depth) {
    rpt_vstring(d1, "current_sleep_adjustment_factor:         %5.2f", stats->current_sleep_adjustment_factor);
 }
 
+
+// TODO: make per thread as in tuned_sleep.h
 
 Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);

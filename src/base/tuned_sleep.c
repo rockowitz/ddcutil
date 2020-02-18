@@ -8,8 +8,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <sys/types.h>
+
+// for syscall
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #include "util/debug_util.h"
+#include "util/report_util.h"
 
 #include "base/parms.h"
 #include "base/dynamic_sleep.h"
@@ -60,8 +67,28 @@ double get_sleep_multiplier_factor() {
 
 
 typedef struct {
+   pid_t  thread_id;
    int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
+   int    max_sleep_multiplier_ct;
+   int    sleep_multiplier_changed_ct;
 } Thread_Sleep_Settings;
+
+
+static GHashTable * thread_sleep_settings_hash = NULL;
+
+// static
+void register_thread_sleep_settings(Thread_Sleep_Settings * per_thread_settings) {
+   // NEED MUTEX
+   if (!thread_sleep_settings_hash) {
+      thread_sleep_settings_hash = g_hash_table_new(g_direct_hash, NULL);
+   }
+   assert(!g_hash_table_contains(thread_sleep_settings_hash,
+                                 GINT_TO_POINTER(per_thread_settings->thread_id)));
+   g_hash_table_insert(thread_sleep_settings_hash,
+                       GINT_TO_POINTER(per_thread_settings->thread_id),
+                       per_thread_settings);
+
+}
 
 
 static Thread_Sleep_Settings *  get_thread_sleep_settings() {
@@ -74,7 +101,9 @@ static Thread_Sleep_Settings *  get_thread_sleep_settings() {
 
    if (!settings) {
       settings = g_new0(Thread_Sleep_Settings, 1);
+      settings->thread_id = syscall(SYS_gettid);
       settings->sleep_multiplier_ct = 1;
+      settings->max_sleep_multiplier_ct = 1;
       g_private_set(&per_thread_key, settings);
    }
 
@@ -101,8 +130,52 @@ void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
    settings->sleep_multiplier_ct = multiplier_ct;
+   if (multiplier_ct > settings->max_sleep_multiplier_ct)
+      settings->max_sleep_multiplier_ct = multiplier_ct;
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
+
+void bump_sleep_multiplier_changed_ct() {
+   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
+   settings->sleep_multiplier_changed_ct++;
+}
+
+void report_thread_sleep_settings(Thread_Sleep_Settings * settings, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Per thread sleep stats for thread %d", settings->thread_id);
+   rpt_vstring(d1   , "Max sleep multiplier count:     %d", settings->max_sleep_multiplier_ct);
+   rpt_vstring(d1   , "Number of retry function calls that increased multiplier_count: %d",
+                         settings->sleep_multiplier_changed_ct);
+}
+
+
+// typedef GFunc
+void report_one_hash_settings(
+      gpointer key,
+      gpointer value,
+      gpointer user_data)
+{
+   // int thread_id = (int) key;
+   Thread_Sleep_Settings * settings = value;
+   int depth = GPOINTER_TO_INT(user_data);
+   report_thread_sleep_settings(settings, depth);
+   rpt_nl();
+}
+
+
+
+void report_all_thread_sleep_settings(int depth) {
+   if (!thread_sleep_settings_hash) {
+      rpt_vstring(depth, "No per thread DDC_NULL_MESSAGE sleep statistics found");
+   }
+   else {
+      rpt_vstring(depth, "Per thread DDC_NULL_MESSAGE sleep statistics:");
+      g_hash_table_foreach(
+            thread_sleep_settings_hash, report_one_hash_settings, GINT_TO_POINTER(depth+1));
+   }
+}
+
+
 
 
 static bool sleep_suppression_enabled = false;
@@ -193,12 +266,18 @@ void tuned_sleep_with_tracex(
               break;
          case SE_OTHER:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-              if (sleep_suppression_enabled) {
-              DBGMSF(debug, "Suppressing sleep, sleep event type = %s",
-                            sleep_event_name(event_type));
-              return;
-              }
+              // if (sleep_suppression_enabled) {
+              // DBGMSF(debug, "Suppressing sleep, sleep event type = %s",
+              //               sleep_event_name(event_type));
+              // return;
+              // }
               break;
+         case SE_PRE_MULTI_PART_READ:        // before reading capabilitis
+            sleep_time_millis = 200;
+            break;
+         case SE_MULTI_PART_READ_TO_WRITE:
+            sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            break;
          default:
               sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
          }  // switch within DDC_IO_DEVI2C
