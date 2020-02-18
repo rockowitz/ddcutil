@@ -89,9 +89,11 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
       rpt_nl();
       report_execution_stats(depth);
       rpt_nl();
-      // for now just report current thread
-      report_dynamic_sleep_adjustment_stats(depth);
-      rpt_nl();
+      if (dsa_is_enabled()) {
+         // for now just report current thread
+         dsa_report_stats(depth);
+         rpt_nl();
+      }
       report_io_call_stats(depth);
       rpt_nl();
       report_sleep_stats(depth);

@@ -11,10 +11,7 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <dynvcp/dyn_dynamic_features.h>
-#include <dynvcp/dyn_parsed_capabilities.h>
 #include <errno.h>
-#include <i2c/i2c_strategy_dispatcher.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -49,8 +46,10 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "dynvcp/dyn_dynamic_features.h"
+#include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #include "adl/adl_shim.h"
 
 #include "usb/usb_displays.h"
@@ -524,7 +523,7 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
       if (parsed_cmd->sleep_multiplier > 1.0f)
-         enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);
+         dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
    }
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
@@ -683,7 +682,7 @@ int main(int argc, char *argv[]) {
          }
       }
       if (loadvcp_ok) {
-         enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);
+         dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
          loadvcp_ok = loadvcp_by_file(fn, dh);
       }
 
@@ -784,7 +783,7 @@ int main(int argc, char *argv[]) {
          }
          else {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
-            enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
+            dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
             probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
@@ -851,7 +850,7 @@ int main(int argc, char *argv[]) {
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
-            enable_dynamic_sleep_adjustment(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
+            dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES

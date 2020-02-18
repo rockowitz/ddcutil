@@ -30,6 +30,7 @@
  * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
  */
 
+// sleep-multiplier value passed on command line
 static double sleep_multiplier_factor = 1.0;
 
 /** Sets the sleep multiplier factor.  This is a global value and is a floating
@@ -42,10 +43,11 @@ static double sleep_multiplier_factor = 1.0;
  *  Make thread specific?
  */
 void   set_sleep_multiplier_factor(double multiplier) {
+   bool debug = false;
+   DBGMSF(debug, "Setting sleep_multiplier_factor = %6.2f", multiplier);
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier_factor = multiplier;
    dsa_set_sleep_multiplier_factor(multiplier);
-   // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
 }
 
 /** Gets the current sleep multiplier factor.
@@ -240,10 +242,7 @@ void tuned_sleep_with_tracex(
    }
 #endif
 
-   float sleep_adjustment_factor = dsa_get_sleep_adjustment();
-
-
-
+   double sleep_adjustment_factor = dsa_get_sleep_adjustment();
 
    // crude, should be sensitive to event type?
    int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread

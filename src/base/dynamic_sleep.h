@@ -16,11 +16,12 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-void enable_dynamic_sleep_adjustment(bool enabled);
-void dsa_set_sleep_multiplier_factor(double factor);
-void dsa_record_ddcrw_status_code(int rc);
-void dsa_reset_counts();
-float dsa_get_sleep_adjustment();
-void report_dynamic_sleep_adjustment_stats(int depth);
+void   dsa_enable(bool enabled);
+bool   dsa_is_enabled();
+void   dsa_set_sleep_multiplier_factor(double factor);
+void   dsa_record_ddcrw_status_code(int rc);
+void   dsa_reset_counts();
+double dsa_get_sleep_adjustment();
+void   dsa_report_stats(int depth);
 
 #endif /* DYNAMIC_SLEEP_H_ */

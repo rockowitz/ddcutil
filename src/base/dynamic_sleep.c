@@ -30,8 +30,12 @@
 
 static bool dynamic_sleep_adjustment_enabled = false;
 
-void enable_dynamic_sleep_adjustment(bool enabled) {
+void dsa_enable(bool enabled) {
    dynamic_sleep_adjustment_enabled = enabled;
+}
+
+bool dsa_is_enabled() {
+   return dynamic_sleep_adjustment_enabled;
 }
 
 
@@ -69,13 +73,6 @@ void dbgrpt_dsa_stats(Dynamic_Sleep_Adjustment_Stats * stats, int depth) {
 }
 
 
-// TO DO: MAKE THREAD SAFE
-static int dsa_required_status_sample_size = 3;
-static float dsa_increment = .5;
-static float dsa_error_rate_threshold = .1;
-//static float max_sleep_adjustment_factor = 20.0f;
-
-
 Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
    Dynamic_Sleep_Adjustment_Stats * stats = (Dynamic_Sleep_Adjustment_Stats *) get_thread_fixed_buffer(&buf_key, sizeof(Dynamic_Sleep_Adjustment_Stats));
@@ -84,9 +81,9 @@ Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
    // dbgrpt_error_stats(stats, 2);
 
    if (!stats->initialized) {
-      stats->current_sleep_adjustment_factor = 1.0f;
+      stats->current_sleep_adjustment_factor = 1.0;
       stats->initialized = true;
-      stats->sleep_multiplier_factor = 1.0f;    // default
+      stats->sleep_multiplier_factor = 1.0;    // default
    }
 
    return stats;
@@ -94,15 +91,11 @@ Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
 
 
 void dsa_set_sleep_multiplier_factor(double factor) {
-   bool debug = true;
-   DBGMSF(debug, "factor=%d", factor);
+   bool debug = false;
+   DBGMSF(debug, "factor=%5.2f", factor);
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
    stats->sleep_multiplier_factor = factor;
 }
-
-
-
-
 
 
 void dsa_record_ddcrw_status_code(int rc) {
@@ -116,15 +109,16 @@ void dsa_record_ddcrw_status_code(int rc) {
    }
    else if (rc == DDCRC_DDC_DATA ||
             rc == DDCRC_READ_ALL_ZERO ||
-            rc == -ENXIO  // this is problematic - could indicate data error or actual response
+            rc == -ENXIO  || // this is problematic - could indicate data error or actual response
+            rc == -EIO    ||   // but that's ok - be pessimistic re error rates
+            rc == DDCRC_NULL_RESPONSE  // can be either a valid "No Value" response, or indicate a display error
            )
    {
-      // if (rc == -ENXIO)
-      //    DBGMSG("==============> ENXIO detected");
       stats->error_status_count++;
       stats->total_error++;
    }
    else {
+      DBGMSF(true, "other status code: %s", psc_desc(rc));
       stats->other_status_ct++;
    }
    DBGMSF(debug, "Done. ok_status_count=%d, error_status_count=%d", stats->ok_status_count, stats->error_status_count);
@@ -141,14 +135,18 @@ void dsa_reset_counts() {
 }
 
 
-float dsa_get_sleep_adjustment() {
+double dsa_get_sleep_adjustment() {
    bool debug = false;
    DBGMSF(debug, "dynamic_sleep_adjustment_enabled = %s", sbool(dynamic_sleep_adjustment_enabled));
    if (!dynamic_sleep_adjustment_enabled) {
-      float result = 1.0f;
+      double result = 1.0;
       DBGMSF(debug, "Returning %3.1f" ,result);
       return result;
    }
+
+   double dsa_error_rate_threshold = .1;
+   int    dsa_required_status_sample_size = 3;
+   double dsa_increment = .5;                      // a constant, for now
 
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
 
@@ -161,7 +159,7 @@ float dsa_get_sleep_adjustment() {
       else
          dsa_error_rate_threshold = .1;
 
-      float error_rate = (1.0f * stats->error_status_count) / (total_count);
+      double error_rate = (1.0 * stats->error_status_count) / (total_count);
       DBGMSF(debug, "ok_status_count=%d, error_status_count=%d, error_rate = %7.2f, error_rate_threshold= %7.2f",
             stats->ok_status_count, stats->error_status_count, error_rate, dsa_error_rate_threshold);
       if ( (1.0f * stats->error_status_count) / (total_count) > dsa_error_rate_threshold ) {
@@ -176,9 +174,8 @@ float dsa_get_sleep_adjustment() {
          }
          else {
             stats->max_adjustment_ct++;
-            DBGMSG("Max sleep adjustment factor reached.  Returning %9.1f", stats->current_sleep_adjustment_factor);
+            DBGMSF(debug, "Max sleep adjustment factor reached.  Returning %9.1f", stats->current_sleep_adjustment_factor);
          }
-
       }
       else {
          stats->non_adjustment_ct++;
@@ -192,7 +189,7 @@ float dsa_get_sleep_adjustment() {
 }
 
 
-void report_dynamic_sleep_adjustment_stats(int depth) {
+void dsa_report_stats(int depth) {
    int d1 = depth+1;
    rpt_title("Sleep adjustments on current thread: ", depth);
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
