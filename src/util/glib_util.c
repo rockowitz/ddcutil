@@ -344,7 +344,7 @@ get_thread_dynamic_buffer(
  *  \return pointer to thread specific buffer
  *
  *  \remark
- *  When the buffer is first allocated, byte 0 is set to '\0'
+ *  When the buffer is first allocated, all bytes are set to 0.
  */
 gchar *
 get_thread_fixed_buffer(
@@ -361,7 +361,6 @@ get_thread_fixed_buffer(
 
    if (!buf) {
       buf = g_new0(char, buffer_size);   //g_new0 initializes to 0
-      // buf[0] = '\0';     // (sort of) mark buffer as unused
       g_private_set(buf_key_ptr, buf);
    }
 
