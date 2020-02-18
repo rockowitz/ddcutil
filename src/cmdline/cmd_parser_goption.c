@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -177,6 +177,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef USE_USB
    gboolean enable_usb_flag = true;
 #endif
+   gboolean f1_flag        = false;
+   gboolean f2_flag        = false;
+   gboolean f3_flag        = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -272,6 +275,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
 //    {"myhelp",  '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
       {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work, "special", "non-negative number" },
+      {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
+      {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
+      {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
       {"failsim", '\0', 0,  G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
       // other
@@ -381,6 +387,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef USE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
+   SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
+   SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);
+   SET_CMDFLAG(CMD_FLAG_F3,                f3_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM

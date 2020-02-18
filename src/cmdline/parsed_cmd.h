@@ -57,6 +57,9 @@ typedef enum {
    CMD_FLAG_WO_ONLY           = 0x040000,
    CMD_FLAG_ENABLE_UDF        = 0x100000,
    CMD_FLAG_ENABLE_USB        = 0x200000,
+   CMD_FLAG_F1                = 0x400000,
+   CMD_FLAG_F2                = 0x800000,
+   CMD_FLAG_F3              = 0x01000000
 } Parsed_Cmd_Flags;
 
 
