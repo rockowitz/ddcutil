@@ -719,6 +719,7 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   bool sleep_multiplier_incremented = false;
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGMSF(debug, "retry_null_response = %s, ddcrc_null_response_max = %d",
           sbool(retry_null_response), ddcrc_null_response_max);
@@ -768,6 +769,7 @@ ddc_write_read_with_retry(
                         if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                            f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
                         set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
+                        sleep_multiplier_incremented = true;
                         // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                      }
                   }
@@ -824,7 +826,10 @@ ddc_write_read_with_retry(
       }
    }
 
-   set_sleep_multiplier_ct(1);   // in case we changed it
+   if (sleep_multiplier_incremented) {
+      set_sleep_multiplier_ct(1);   // in case we changed it
+      bump_sleep_multiplier_changed_ct();
+   }
 
    Error_Info * ddc_excp = NULL;
 
