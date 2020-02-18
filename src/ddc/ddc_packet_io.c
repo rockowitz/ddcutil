@@ -31,6 +31,7 @@
 
 #include "base/ddc_errno.h"
 #include "base/displays.h"
+#include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
 #include "base/rtti.h"
@@ -643,7 +644,7 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-   record_ddcrw_status_code(psc);
+   dsa_record_ddcrw_status_code(psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 

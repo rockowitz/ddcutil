@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -15,9 +15,10 @@
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
+#include "base/dynamic_sleep.h"
+#include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/sleep.h"
-#include "base/feature_metadata.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -87,6 +88,9 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
    if (stats & DDCA_STATS_CALLS) {
       rpt_nl();
       report_execution_stats(depth);
+      rpt_nl();
+      // for now just report current thread
+      report_dynamic_sleep_adjustment_stats(depth);
       rpt_nl();
       report_io_call_stats(depth);
       rpt_nl();

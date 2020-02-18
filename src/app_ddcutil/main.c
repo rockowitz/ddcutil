@@ -38,6 +38,7 @@
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
+#include "base/dynamic_sleep.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/sleep.h"

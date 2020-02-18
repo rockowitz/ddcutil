@@ -12,6 +12,7 @@
 #include "util/debug_util.h"
 
 #include "base/parms.h"
+#include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/sleep.h"
 
@@ -43,7 +44,7 @@ static double sleep_multiplier_factor = 1.0;
 void   set_sleep_multiplier_factor(double multiplier) {
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier_factor = multiplier;
-   set_error_stats_sleep_multiplier_factor(multiplier);
+   dsa_set_sleep_multiplier_factor(multiplier);
    // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
 }
 
@@ -232,14 +233,14 @@ void tuned_sleep_with_tracex(
 
 #ifdef NO
    static float sleep_adjustment_factor = 1.0;
-   float next_sleep_adjustment_factor = get_ddcrw_sleep_adjustment();
+   float next_sleep_adjustment_factor = dsa_get_sleep_adjustment();
    if (next_sleep_adjustment_factor > sleep_adjustment_factor) {
       sleep_adjustment_factor = next_sleep_adjustment_factor;
       reset_ddcrw_status_code_counts();
    }
 #endif
 
-   float sleep_adjustment_factor = get_ddcrw_sleep_adjustment();
+   float sleep_adjustment_factor = dsa_get_sleep_adjustment();
 
 
 
