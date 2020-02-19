@@ -20,6 +20,8 @@ typedef struct {
    int    total_ok;
    int    total_error;
    int    other_status_ct;
+   int    calls_since_last_check;
+   int    total_adjustment_checks;
    int    adjustment_ct;
    int    non_adjustment_ct;
    int    max_adjustment_ct;
