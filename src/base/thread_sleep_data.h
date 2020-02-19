@@ -33,8 +33,13 @@ typedef struct {
 } Thread_Sleep_Data;
 
 void set_global_sleep_multiplier_factor(double factor);
+double get_global_sleep_multiplier_factor();
 
 Thread_Sleep_Data *  get_thread_sleep_data(bool create_if_necessary);
+
+
+double tsd_get_sleep_multiplier_factor();
+void tsd_set_sleep_multiplier_factor(double factor);
 
 int  tsd_get_sleep_multiplier_ct();
 void tsd_set_sleep_multiplier_ct(int multiplier_ct);

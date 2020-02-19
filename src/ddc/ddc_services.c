@@ -15,11 +15,12 @@
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
-#include "base/dynamic_sleep.h"
+// #include "base/dynamic_sleep.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
+#include "base/thread_sleep_data.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -90,12 +91,14 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
       rpt_nl();
       report_execution_stats(depth);
       rpt_nl();
+#ifdef OLD
       if (dsa_is_enabled()) {
          // for now just report current thread
          dsa_report_stats(depth);
          rpt_nl();
       }
-      report_all_thread_sleep_settings(depth);
+#endif
+      report_all_thread_sleep_data(depth);
       rpt_nl();
       report_io_call_stats(depth);
       rpt_nl();

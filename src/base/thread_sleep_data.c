@@ -32,6 +32,10 @@ void set_global_sleep_multiplier_factor(double factor) {
    global_sleep_multiplier_factor = factor;
 }
 
+double get_global_sleep_multiplier_factor() {
+   return global_sleep_multiplier_factor;
+}
+
 
 void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    int d1 = depth+1;
@@ -153,6 +157,16 @@ Thread_Sleep_Data *  get_thread_sleep_data(bool create_if_necessary) {
    return data;
 }
 
+
+double tsd_get_sleep_multiplier_factor() {
+   Thread_Sleep_Data * data = get_thread_sleep_data(true);
+   return data->sleep_multiplier_factor;
+}
+
+void tsd_set_sleep_multiplier_factor(double factor) {
+   Thread_Sleep_Data * data = get_thread_sleep_data(true);
+   data->sleep_multiplier_factor = factor;
+}
 
 
 

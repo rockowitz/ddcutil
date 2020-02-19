@@ -41,6 +41,7 @@ bool dsa_is_enabled() {
    return dynamic_sleep_adjustment_enabled;
 }
 
+#ifdef OLD
 
 typedef struct {
    int    ok_status_count;
@@ -55,7 +56,6 @@ typedef struct {
    double sleep_multiplier_factor;   // as set by user
    bool   initialized;
 }  Dynamic_Sleep_Adjustment_Stats;
-
 
 
 
@@ -96,26 +96,26 @@ Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
 
 
 void dsa_set_sleep_multiplier_factor(double factor) {
-   get_global_sleep_multiplier_factor(factor);  // new way
+   set_global_sleep_multiplier_factor(factor);  // new way
 
    bool debug = false;
    DBGMSF(debug, "factor=%5.2f", factor);
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
    stats->sleep_multiplier_factor = factor;
 }
-
+#endif
 
 void dsa_record_ddcrw_status_code(int rc) {
    bool debug = false;
    DBGMSF(debug, "rc=%s", psc_desc(rc));
-   Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
+   // Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
    Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
 
    if (rc == DDCRC_OK) {
-      stats->ok_status_count++;
-      stats->total_ok++;
+      // stats->ok_status_count++;
+      // stats->total_ok++;
       tsd->ok_status_count++;
-      tsd->total_ok++:
+      tsd->total_ok++;
    }
    else if (rc == DDCRC_DDC_DATA ||
             rc == DDCRC_READ_ALL_ZERO ||
@@ -124,21 +124,23 @@ void dsa_record_ddcrw_status_code(int rc) {
             rc == DDCRC_NULL_RESPONSE  // can be either a valid "No Value" response, or indicate a display error
            )
    {
-      stats->error_status_count++;
-      stats->total_error++;
+      // stats->error_status_count++;
+      // stats->total_error++;
 
       tsd->error_status_count++;
       tsd->total_error++;
    }
    else {
       DBGMSF(true, "other status code: %s", psc_desc(rc));
-      stats->other_status_ct++;
+      // stats->other_status_ct++;
       tsd->other_status_ct++;
    }
-   DBGMSF(debug, "Done. ok_status_count=%d, error_status_count=%d", stats->ok_status_count, stats->error_status_count);
+   DBGMSF(debug, "Done. ok_status_count=%d, error_status_count=%d",
+                 tsd->ok_status_count, tsd->error_status_count);
 }
 
 
+#ifdef OLD
 void dsa_reset_counts() {
    bool debug = false;
    DBGMSF(debug, "Executing");
@@ -147,6 +149,17 @@ void dsa_reset_counts() {
    stats->ok_status_count = 0;
    stats->error_status_count = 0;
 }
+#endif
+
+void dsa_reset_counts() {
+   bool debug = false;
+   DBGMSF(debug, "Executing");
+   Thread_Sleep_Data * stats = get_thread_sleep_data(true);
+
+   stats->ok_status_count = 0;
+   stats->error_status_count = 0;
+}
+
 
 
 double dsa_get_sleep_adjustment() {
@@ -162,12 +175,12 @@ double dsa_get_sleep_adjustment() {
    int    dsa_required_status_sample_size = 3;
    double dsa_increment = .5;                      // a constant, for now
 
-   Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
+   // Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
    Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
 
-   int total_count0 = stats->ok_status_count + stats->error_status_count;
+   // int total_count0 = stats->ok_status_count + stats->error_status_count;
    int total_count = tsd->ok_status_count + tsd->error_status_count;
-   assert(total_count0 == total_count);
+   // assert(total_count0 == total_count);
 
    if ( (total_count) > dsa_required_status_sample_size) {
       if (total_count <= 4)
@@ -177,35 +190,36 @@ double dsa_get_sleep_adjustment() {
       else
          dsa_error_rate_threshold = .1;
 
-      double error_rate = (1.0 * stats->error_status_count) / (total_count);
+      double error_rate = (1.0 * tsd->error_status_count) / (total_count);
       DBGMSF(debug, "ok_status_count=%d, error_status_count=%d, error_rate = %7.2f, error_rate_threshold= %7.2f",
-            stats->ok_status_count, stats->error_status_count, error_rate, dsa_error_rate_threshold);
-      if ( (1.0f * stats->error_status_count) / (total_count) > dsa_error_rate_threshold ) {
-         float next_sleep_adjustment_factor = stats->current_sleep_adjustment_factor + dsa_increment;
-         stats->adjustment_ct++;
-         float max_sleep_adjustment_factor = 3.0f/stats->sleep_multiplier_factor;
+            tsd->ok_status_count, tsd->error_status_count, error_rate, dsa_error_rate_threshold);
+      if ( (1.0f * tsd->error_status_count) / (total_count) > dsa_error_rate_threshold ) {
+         float next_sleep_adjustment_factor = tsd->current_sleep_adjustment_factor + dsa_increment;
+         tsd->adjustment_ct++;
+         float max_sleep_adjustment_factor = 3.0f/tsd->sleep_multiplier_factor;
          if (next_sleep_adjustment_factor <= max_sleep_adjustment_factor) {
 
-            stats->current_sleep_adjustment_factor = next_sleep_adjustment_factor;
-            DBGMSF(debug, "Increasing sleep_adjustment_factor to %f", stats->current_sleep_adjustment_factor);
+            tsd->current_sleep_adjustment_factor = next_sleep_adjustment_factor;
+            DBGMSF(debug, "Increasing sleep_adjustment_factor to %f", tsd->current_sleep_adjustment_factor);
             dsa_reset_counts();
          }
          else {
-            stats->max_adjustment_ct++;
-            DBGMSF(debug, "Max sleep adjustment factor reached.  Returning %9.1f", stats->current_sleep_adjustment_factor);
+            tsd->max_adjustment_ct++;
+            DBGMSF(debug, "Max sleep adjustment factor reached.  Returning %9.1f", tsd->current_sleep_adjustment_factor);
          }
       }
       else {
-         stats->non_adjustment_ct++;
+         tsd->non_adjustment_ct++;
       }
    }
-   float result = stats->current_sleep_adjustment_factor;
+   float result = tsd->current_sleep_adjustment_factor;
 
    DBGMSF(debug, "ok_status_count=%d, error_status_count=%d, returning %9.1f",
-           stats->ok_status_count, stats->error_status_count, result);
+           tsd->ok_status_count, tsd->error_status_count, result);
    return result;
 }
 
+#ifdef OLD
 
 void dsa_report_stats(int depth) {
    int d1 = depth+1;
@@ -218,3 +232,5 @@ void dsa_report_stats(int depth) {
    rpt_vstring(d1, "Number of excess adjustments: %5d", stats->max_adjustment_ct);
    rpt_vstring(d1, "Final sleep adjustment:       %5.2f", stats->current_sleep_adjustment_factor);
 }
+
+#endif

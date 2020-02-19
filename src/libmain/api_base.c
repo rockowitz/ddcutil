@@ -17,6 +17,7 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/tuned_sleep.h"
+#include "base/thread_sleep_data.h"
 
 #include "adl/adl_shim.h"
 
@@ -474,13 +475,13 @@ ddca_is_verify_enabled() {
 void
 ddca_set_global_sleep_multiplier(double multiplier)
 {
-   set_sleep_multiplier_factor(multiplier);
+   set_global_sleep_multiplier_factor(multiplier);
 }
 
 double
 ddca_get_global_sleep_multiplier()
 {
-   return get_sleep_multiplier_factor();
+   return get_global_sleep_multiplier_factor();
 }
 
 

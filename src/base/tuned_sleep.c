@@ -22,6 +22,7 @@
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/sleep.h"
+#include "base/thread_sleep_data.h"
 
 
 //
@@ -36,10 +37,11 @@
  *
  * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
  */
-
+#ifdef OLD
 // sleep-multiplier value passed on command line
 static double sleep_multiplier_factor = 1.0;
-
+#endif
+#ifdef OLD
 /** Sets the sleep multiplier factor.  This is a global value and is a floating
  *  point number.
  *
@@ -54,7 +56,7 @@ void   set_sleep_multiplier_factor(double multiplier) {
    DBGMSF(debug, "Setting sleep_multiplier_factor = %6.2f", multiplier);
    assert(multiplier > 0 && multiplier < 100);
    sleep_multiplier_factor = multiplier;
-   dsa_set_sleep_multiplier_factor(multiplier);
+   tsd_set_sleep_multiplier_factor(multiplier);
 }
 
 /** Gets the current sleep multiplier factor.
@@ -64,8 +66,9 @@ void   set_sleep_multiplier_factor(double multiplier) {
 double get_sleep_multiplier_factor() {
    return sleep_multiplier_factor;
 }
+#endif
 
-
+#ifdef OLD
 typedef struct {
    pid_t  thread_id;
    int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
@@ -110,7 +113,9 @@ static Thread_Sleep_Settings *  get_thread_sleep_settings() {
    // printf("(%s) Returning: %p\n", __func__, settings);
    return settings;
 }
+#endif
 
+#ifdef OLD
 
 /** Gets the multiplier count for the current thread.
  *
@@ -139,7 +144,10 @@ void bump_sleep_multiplier_changed_ct() {
    Thread_Sleep_Settings * settings = get_thread_sleep_settings();
    settings->sleep_multiplier_changed_ct++;
 }
+#endif
 
+
+#ifdef OLD
 void report_thread_sleep_settings(Thread_Sleep_Settings * settings, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Per thread sleep stats for thread %d", settings->thread_id);
@@ -174,7 +182,7 @@ void report_all_thread_sleep_settings(int depth) {
             thread_sleep_settings_hash, report_one_thread_data_hash_table_entry, GINT_TO_POINTER(depth+1));
    }
 }
-
+#endif
 
 
 
@@ -323,8 +331,9 @@ void tuned_sleep_with_tracex(
 
    double sleep_adjustment_factor = dsa_get_sleep_adjustment();
 
+   double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();
    // crude, should be sensitive to event type?
-   int sleep_multiplier_ct = get_sleep_multiplier_ct();  // per thread
+   int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
    sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis * sleep_adjustment_factor;
    if (debug) {
    // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || sleep_adjustment_factor != 1.0 ||debug) {

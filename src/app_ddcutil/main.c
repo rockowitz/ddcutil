@@ -41,6 +41,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
+#include "base/thread_sleep_data.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
@@ -521,7 +522,7 @@ int main(int argc, char *argv[]) {
    ddc_set_async_threshold(threshold);
 
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
-      set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
+      tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
       if (parsed_cmd->sleep_multiplier > 1.0f)
          dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
    }
