@@ -99,7 +99,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
       }
 #endif
       report_all_thread_sleep_data(depth);
-      rpt_nl();
+      // rpt_nl();
       report_io_call_stats(depth);
       rpt_nl();
       report_sleep_stats(depth);
