@@ -174,42 +174,52 @@ double dsa_get_sleep_adjustment() {
    double dsa_error_rate_threshold = .1;
    int    dsa_required_status_sample_size = 3;
    double dsa_increment = .5;                      // a constant, for now
+   int adjustment_check_interval = 2;    //  move to Thread_Sleep_Data  ??
 
-   // Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
    Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
+   tsd->calls_since_last_check++;
 
-   // int total_count0 = stats->ok_status_count + stats->error_status_count;
-   int total_count = tsd->ok_status_count + tsd->error_status_count;
-   // assert(total_count0 == total_count);
+   if (tsd->calls_since_last_check > adjustment_check_interval) {
+      tsd->calls_since_last_check = 0;
+      tsd->total_adjustment_checks++;
 
-   if ( (total_count) > dsa_required_status_sample_size) {
-      if (total_count <= 4)
-         dsa_error_rate_threshold = .5;
-      else if (total_count <= 10)
-         dsa_error_rate_threshold = .3;
-      else
-         dsa_error_rate_threshold = .1;
+      int total_count = tsd->ok_status_count + tsd->error_status_count;
 
-      double error_rate = (1.0 * tsd->error_status_count) / (total_count);
-      DBGMSF(debug, "ok_status_count=%d, error_status_count=%d, error_rate = %7.2f, error_rate_threshold= %7.2f",
-            tsd->ok_status_count, tsd->error_status_count, error_rate, dsa_error_rate_threshold);
-      if ( (1.0f * tsd->error_status_count) / (total_count) > dsa_error_rate_threshold ) {
-         float next_sleep_adjustment_factor = tsd->current_sleep_adjustment_factor + dsa_increment;
-         tsd->adjustment_ct++;
-         float max_sleep_adjustment_factor = 3.0f/tsd->sleep_multiplier_factor;
-         if (next_sleep_adjustment_factor <= max_sleep_adjustment_factor) {
-
-            tsd->current_sleep_adjustment_factor = next_sleep_adjustment_factor;
-            DBGMSF(debug, "Increasing sleep_adjustment_factor to %f", tsd->current_sleep_adjustment_factor);
-            dsa_reset_counts();
+      if ( (total_count) > dsa_required_status_sample_size) {
+         if (total_count <= 4) {
+            dsa_error_rate_threshold = .5;
+            // adjustment_check_interval = 3;
+         }
+         else if (total_count <= 10) {
+            dsa_error_rate_threshold = .3;
+            // adjustment_check_interval = 4;
          }
          else {
-            tsd->max_adjustment_ct++;
-            DBGMSF(debug, "Max sleep adjustment factor reached.  Returning %9.1f", tsd->current_sleep_adjustment_factor);
+            dsa_error_rate_threshold = .1;
+            // adjustment_check_interval = 5;
          }
-      }
-      else {
-         tsd->non_adjustment_ct++;
+
+         double error_rate = (1.0 * tsd->error_status_count) / (total_count);
+         DBGMSF(debug, "ok_status_count=%d, error_status_count=%d, error_rate = %7.2f, error_rate_threshold= %7.2f",
+               tsd->ok_status_count, tsd->error_status_count, error_rate, dsa_error_rate_threshold);
+         if ( (1.0f * tsd->error_status_count) / (total_count) > dsa_error_rate_threshold ) {
+            float next_sleep_adjustment_factor = tsd->current_sleep_adjustment_factor + dsa_increment;
+            tsd->adjustment_ct++;
+            double max_sleep_adjustment_factor = 3.0/tsd->sleep_multiplier_factor;
+            if (next_sleep_adjustment_factor <= max_sleep_adjustment_factor) {
+
+               tsd->current_sleep_adjustment_factor = next_sleep_adjustment_factor;
+               DBGMSF(debug, "Increasing sleep_adjustment_factor to %f", tsd->current_sleep_adjustment_factor);
+               dsa_reset_counts();
+            }
+            else {
+               tsd->max_adjustment_ct++;
+               DBGMSF(debug, "Max sleep adjustment factor reached.  Returning %9.1f", tsd->current_sleep_adjustment_factor);
+            }
+         }
+         else {
+            tsd->non_adjustment_ct++;
+         }
       }
    }
    float result = tsd->current_sleep_adjustment_factor;
