@@ -24,168 +24,7 @@
 #include "base/sleep.h"
 #include "base/thread_sleep_data.h"
 
-
-//
-// Sleep time adjustment
-//
-
-/* Two multipliers are applied to the sleep time determined from the
- * io mode and event type.
- *
- * sleep_multiplier_factor: set globally, e.g. from arg passed on
- * command line.  Consider making thread specific.
- *
- * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
- */
-#ifdef OLD
-// sleep-multiplier value passed on command line
-static double sleep_multiplier_factor = 1.0;
-#endif
-#ifdef OLD
-/** Sets the sleep multiplier factor.  This is a global value and is a floating
- *  point number.
- *
- *  \param multiplier
- *
- *  \todo
- *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
- *  Make thread specific?
- */
-void   set_sleep_multiplier_factor(double multiplier) {
-   bool debug = false;
-   DBGMSF(debug, "Setting sleep_multiplier_factor = %6.2f", multiplier);
-   assert(multiplier > 0 && multiplier < 100);
-   sleep_multiplier_factor = multiplier;
-   tsd_set_sleep_multiplier_factor(multiplier);
-}
-
-/** Gets the current sleep multiplier factor.
- *
- *  \return sleep multiplier factor
- */
-double get_sleep_multiplier_factor() {
-   return sleep_multiplier_factor;
-}
-#endif
-
-#ifdef OLD
-typedef struct {
-   pid_t  thread_id;
-   int    sleep_multiplier_ct;   // thread specific since can be changed dynamically
-   int    max_sleep_multiplier_ct;
-   int    sleep_multiplier_changed_ct;
-} Thread_Sleep_Settings;
-
-
-static GHashTable * thread_sleep_settings_hash = NULL;
-
-// static
-void register_thread_sleep_settings(Thread_Sleep_Settings * per_thread_settings) {
-   // NEED MUTEX
-   if (!thread_sleep_settings_hash) {
-      thread_sleep_settings_hash = g_hash_table_new(g_direct_hash, NULL);
-   }
-   assert(!g_hash_table_contains(thread_sleep_settings_hash,
-                                 GINT_TO_POINTER(per_thread_settings->thread_id)));
-   g_hash_table_insert(thread_sleep_settings_hash,
-                       GINT_TO_POINTER(per_thread_settings->thread_id),
-                       per_thread_settings);
-
-}
-
-
-static Thread_Sleep_Settings *  get_thread_sleep_settings() {
-   static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
-
-   Thread_Sleep_Settings *settings = g_private_get(&per_thread_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
-
-   if (!settings) {
-      settings = g_new0(Thread_Sleep_Settings, 1);
-      settings->thread_id = syscall(SYS_gettid);
-      settings->sleep_multiplier_ct = 1;
-      settings->max_sleep_multiplier_ct = 1;
-      g_private_set(&per_thread_key, settings);
-   }
-
-   // printf("(%s) Returning: %p\n", __func__, settings);
-   return settings;
-}
-#endif
-
-#ifdef OLD
-
-/** Gets the multiplier count for the current thread.
- *
- *  \return multiplier count
- */
-int get_sleep_multiplier_ct() {
-   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
-   return settings->sleep_multiplier_ct;
-}
-
-
-/** Sets the multiplier count for the current thread.
- *
- *  \parsm multipler_ct  value to set
- */
-void   set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier_ct) {
-   assert(multiplier_ct > 0 && multiplier_ct < 100);
-   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
-   settings->sleep_multiplier_ct = multiplier_ct;
-   if (multiplier_ct > settings->max_sleep_multiplier_ct)
-      settings->max_sleep_multiplier_ct = multiplier_ct;
-   // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
-}
-
-void bump_sleep_multiplier_changed_ct() {
-   Thread_Sleep_Settings * settings = get_thread_sleep_settings();
-   settings->sleep_multiplier_changed_ct++;
-}
-#endif
-
-
-#ifdef OLD
-void report_thread_sleep_settings(Thread_Sleep_Settings * settings, int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "Per thread sleep stats for thread %d", settings->thread_id);
-   rpt_vstring(d1   , "Max sleep multiplier count:     %d", settings->max_sleep_multiplier_ct);
-   rpt_vstring(d1   , "Number of retry function calls that increased multiplier_count: %d",
-                         settings->sleep_multiplier_changed_ct);
-}
-
-
-// typedef GFunc
-void report_one_thread_data_hash_table_entry(
-      gpointer key,
-      gpointer value,
-      gpointer user_data)
-{
-   // int thread_id = (int) key;
-   Thread_Sleep_Settings * settings = value;
-   int depth = GPOINTER_TO_INT(user_data);
-   report_thread_sleep_settings(settings, depth);
-   rpt_nl();
-}
-
-
-
-void report_all_thread_sleep_settings(int depth) {
-   if (!thread_sleep_settings_hash) {
-      rpt_vstring(depth, "No per thread DDC_NULL_MESSAGE sleep statistics found");
-   }
-   else {
-      rpt_vstring(depth, "Per thread DDC_NULL_MESSAGE sleep statistics:");
-      g_hash_table_foreach(
-            thread_sleep_settings_hash, report_one_thread_data_hash_table_entry, GINT_TO_POINTER(depth+1));
-   }
-}
-#endif
-
-
-
+// Experimental suppression of sleeps after reads
 static bool sleep_suppression_enabled = false;
 
 void enable_sleep_suppression(bool enable) {
@@ -320,26 +159,20 @@ void tuned_sleep_with_tracex(
    //   get error rate (total calls, total errors), current adjustment value
    //   adjust by time since last i2c event
 
-#ifdef NO
-   static float sleep_adjustment_factor = 1.0;
-   float next_sleep_adjustment_factor = dsa_get_sleep_adjustment();
-   if (next_sleep_adjustment_factor > sleep_adjustment_factor) {
-      sleep_adjustment_factor = next_sleep_adjustment_factor;
-      reset_ddcrw_status_code_counts();
-   }
-#endif
 
    double sleep_adjustment_factor = dsa_get_sleep_adjustment();
 
    double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();
    // crude, should be sensitive to event type?
    int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
-   sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor * sleep_time_millis * sleep_adjustment_factor;
+   sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
+                       sleep_time_millis * sleep_adjustment_factor;
    if (debug) {
-   // if (sleep_multiplier_factor != 1.0 || sleep_multiplier_ct != 1 || sleep_adjustment_factor != 1.0 ||debug) {
-      DBGMSG("Before sleep. event type: %s, sleep_multiplier_ct = %d, sleep_multiplier_factor = %9.1f, sleep_adjustment_factor = %9.1f, sleep_time_millis = %d",
-             sleep_event_name(event_type), sleep_multiplier_ct, sleep_multiplier_factor, sleep_adjustment_factor, sleep_time_millis);
-      // show_backtrace(2);
+      DBGMSG("Before sleep. event type: %s, sleep_multiplier_ct = %d,"
+             " sleep_multiplier_factor = %9.1f, sleep_adjustment_factor = %9.1f,"
+             " sleep_time_millis = %d",
+             sleep_event_name(event_type), sleep_multiplier_ct,
+             sleep_multiplier_factor, sleep_adjustment_factor, sleep_time_millis);
    }
 
    record_sleep_event(event_type);
@@ -356,21 +189,3 @@ void tuned_sleep_with_tracex(
    DBGMSF(debug, "Done");
 }
 
-
-//
-// Convenience functions
-//
-
-#ifdef UNUSED
-/** Convenience function that determines the device type from the
- *  #Display_Handle before invoking all_tuned_sleep().
- *  @param dh         display handle of open device
- *  @param event_type sleep event type
- *
- *  \todp
- *  Extend with location parmss
- */
-void tuned_sleep_dh(Display_Handle* dh, Sleep_Event_Type event_type) {
-   tuned_sleep_with_tracex(dh->dref->io_path.io_mode, event_type, NULL, 0, NULL, NULL);
-}
-#endif

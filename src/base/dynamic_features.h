@@ -1,11 +1,11 @@
-// dynamic_features.h
-
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
-// SPDX-License-Identifier: GPL-2.0-or-later
-
-/** \file
+/** @file dynamic_features.h
+ *
  * Dynamic Feature Record definition, creation, destruction, and conversion
  */
+
+// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 
 #ifndef BASE_DYNAMIC_FEATURES_H_
 #define BASE_DYNAMIC_FEATURES_H_

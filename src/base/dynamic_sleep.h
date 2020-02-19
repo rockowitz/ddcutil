@@ -1,4 +1,7 @@
-// dynamic_sleep.h
+/** @file dynamic_sleep.h
+ *
+ *  Experimental dynamic sleep adjustment
+ */
 
 // Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -18,10 +21,7 @@
 
 void   dsa_enable(bool enabled);
 bool   dsa_is_enabled();
-void   dsa_set_sleep_multiplier_factor(double factor);
 void   dsa_record_ddcrw_status_code(int rc);
-void   dsa_reset_counts();
 double dsa_get_sleep_adjustment();
-void   dsa_report_stats(int depth);
 
 #endif /* DYNAMIC_SLEEP_H_ */

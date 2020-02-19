@@ -829,7 +829,7 @@ ddc_write_read_with_retry(
 
    if (sleep_multiplier_incremented) {
       tsd_set_sleep_multiplier_ct(1);   // in case we changed it
-      tsd_bump_sleep_multiplier_changed_ct();
+      tsd_bump_sleep_multiplier_changer_ct();
    }
 
    Error_Info * ddc_excp = NULL;

@@ -1,6 +1,12 @@
-// thread_sleep_data.c
+/** @file thread_sleep_data.c
+ *
+ *  Struct Thread_Sleep_Data maintains all per-thread sleep data.
+ *
+ *  Thie file contains the usual access and report functions, along with
+ *  small functions for managing various fields.
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -17,26 +23,38 @@
 #include "util/string_util.h"
 
 #include "base/parms.h"
-#include "base/dynamic_sleep.h"
-#include "base/execution_stats.h"
+#include "base/core.h"
 #include "base/sleep.h"
-#include "base/dynamic_sleep.h"   // ugh circular
-
 
 #include "base/thread_sleep_data.h"
 
+
+// used in report_dynamic_sleep_data(), avoid having this file call back into
+// dynamic_sleep.c, which creates a circular dependency
+static bool dynamic_sleep_enabled= false;
 
 // Master table of sleep data for all threads
 static GHashTable *  thread_sleep_data_hash = NULL;
 static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
 
+
 void set_global_sleep_multiplier_factor(double factor) {
+   bool debug = false;
+   DBGMSF(debug, "factor = %5.2f", factor);
    global_sleep_multiplier_factor = factor;
+   set_sleep_multiplier_factor_all(factor);
+
 }
+
 
 double get_global_sleep_multiplier_factor() {
    return global_sleep_multiplier_factor;
+}
+
+
+void tsd_enable_dynamic_sleep(bool enabled) {
+   dynamic_sleep_enabled = enabled;
 }
 
 
@@ -46,22 +64,24 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_bool("initialized",         NULL, data->initialized,        d1);
 
    // Dynamic sleep adjustment:
-   rpt_int("ok_status_count",      NULL, data->ok_status_count,    d1);
-   rpt_int("error_status_count",   NULL, data->error_status_count, d1);
-   rpt_int("other_status_ct",      NULL, data->other_status_ct,    d1);
-   rpt_int("total_ok",             NULL, data->total_ok,           d1);
-   rpt_int("total_error",          NULL, data->total_error,        d1);
+   rpt_int("current_ok_status_count",     NULL, data->current_ok_status_count,    d1);
+   rpt_int("current_error_status_count",  NULL, data->current_error_status_count, d1);
 
-   rpt_int("calls_since_last_check",
-                                   NULL, data->calls_since_last_check, d1);
-   rpt_int("total_adjustment_checks", NULL, data->total_adjustment_checks, d1);
-   rpt_int("adjustment_ct",        NULL, data->adjustment_ct,      d1);
-   rpt_int("max_adjustment_ct",    NULL, data->max_adjustment_ct,  d1);
-   rpt_int("non_adjustment_ct",    NULL, data->non_adjustment_ct,  d1);
+   rpt_int("total_ok_status_count",       NULL, data->total_ok_status_count,      d1);
+   rpt_int("total_error",                 NULL, data->total_error_status_count,   d1);
+   rpt_int("other_status_ct",             NULL, data->total_other_status_ct,      d1);
+   rpt_int("calls_since_last_check",      NULL, data->calls_since_last_check,     d1);
+   rpt_int("total_adjustment_checks",     NULL, data->total_adjustment_checks,    d1);
+   rpt_int("adjustment_ct",               NULL, data->adjustment_ct,              d1);
+   rpt_int("max_adjustment_ct",           NULL, data->max_adjustment_ct,          d1);
+   rpt_int("non_adjustment_ct",           NULL, data->non_adjustment_ct,          d1);
+   rpt_vstring(d1, "current_sleep_adjustmet_factor     %5.2f", data->current_sleep_adjustment_factor);
+   rpt_vstring(d1, "thread_adjustment_increment        %5.2f", data->thread_adjustment_increment);
+   rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
 
    // Sleep multiplier adjustment:
-   rpt_vstring(d1, "sleep-multiplier value:    %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d1, "current_sleep_adjustment_factor:         %5.2f", data->current_sleep_adjustment_factor);
+   rpt_vstring(d1, "sleep-multiplier value:           %5.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d1, "current_sleep_adjustment_factor:  %5.2f", data->current_sleep_adjustment_factor);
 }
 
 
@@ -71,11 +91,15 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_vstring(depth, "Per thread sleep data for thread %d", data->thread_id);
    rpt_label(depth, "General:");
    rpt_vstring(d1, "Sleep-multiplier option value: %5.2f", data->sleep_multiplier_factor);
-   if ( dsa_is_enabled() ) {
+   if ( dynamic_sleep_enabled ) {
       rpt_title("Dynamic Sleep Adjustment:  ", depth);
-      rpt_vstring(d1, "Total successful reads:       %5d",   data->total_ok);
-      rpt_vstring(d1, "Total reads with DDC error:   %5d",   data->total_error);
-      rpt_vstring(d1, "Total ignored status codes:   %5d",   data->other_status_ct);
+      rpt_vstring(d1, "Total successful reads:       %5d",   data->total_ok_status_count);
+      rpt_vstring(d1, "Total reads with DDC error:   %5d",   data->total_error_status_count);
+      rpt_vstring(d1, "Total ignored status codes:   %5d",   data->total_other_status_ct);
+      rpt_vstring(d1, "Current sleep adjustment factor %5.2f", data->current_sleep_adjustment_factor);
+      rpt_vstring(d1, "Thread adjustment increment     %5.2f", data->thread_adjustment_increment);
+      rpt_vstring(d1, "Adjustment check interval       %d",  data->adjustment_check_interval);
+
    }
    else {
       rpt_label(depth, "Sleep Adjustment:");
@@ -85,10 +109,10 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_vstring(d1, "Number of adjustments:        %5d",   data->adjustment_ct);
    rpt_vstring(d1, "Number of excess adjustments: %5d",   data->max_adjustment_ct);
 
-   rpt_vstring(d1, "Final sleep adjustment:       %5.2f", data->current_sleep_adjustment_factor);
+   rpt_vstring(d1,  "Final sleep adjustment:       %5.2f", data->current_sleep_adjustment_factor);
    rpt_label(depth, "Multiplier count (set by retries):");
-   rpt_vstring(d1, "Max sleep multiplier count:     %d", data->max_sleep_multiplier_ct);
-   rpt_vstring(d1, "Number of retry function calls that increased multiplier_count: %d",
+   rpt_vstring(d1,  "Max sleep multiplier count:     %d", data->max_sleep_multiplier_ct);
+   rpt_vstring(d1,  "Number of retry function calls that increased multiplier_count: %d",
                          data->sleep_multipler_changed_ct);
 }
 
@@ -100,9 +124,9 @@ void tsd_report_one_thread_data_hash_table_entry(
       gpointer user_data)
 {
    // int thread_id = (int) key;
-   Thread_Sleep_Data * settings = value;
+   Thread_Sleep_Data * data = value;
    int depth = GPOINTER_TO_INT(user_data);
-   report_thread_sleep_data(settings, depth);
+   report_thread_sleep_data(data, depth);
    rpt_nl();
 }
 
@@ -123,6 +147,8 @@ void report_all_thread_sleep_data(int depth) {
    }
    DBGMSF(debug, "Done");
 }
+
+
 
 
 // Registers a Thread_Sleep_Data instance in the master hash table for all threads
@@ -152,6 +178,8 @@ void init_thread_sleep_data(Thread_Sleep_Data * data) {
    data->current_sleep_adjustment_factor = 1.0;
    data->initialized = true;
    data->sleep_multiplier_factor = global_sleep_multiplier_factor;    // default
+   data->thread_adjustment_increment = .1;
+   data->adjustment_check_interval = 2;
 }
 
 
@@ -177,11 +205,27 @@ Thread_Sleep_Data *  get_thread_sleep_data(bool create_if_necessary) {
       g_private_set(&per_thread_key, data);
       register_thread_sleep_data(data);
    }
-
    DBGMSF(debug, "Returning: %p", data);
    return data;
 }
 
+
+//
+// Sleep time adjustment
+//
+
+/* Two multipliers are applied to the sleep time determined from the
+ * io mode and event type.
+ *
+ * sleep_multiplier_factor: set globally, e.g. from arg passed on
+ * command line.  Consider making thread specific.
+ *
+ * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
+ */
+
+
+
+// sleep_multiplier_factor is the --sleep-multiplier option value
 
 double tsd_get_sleep_multiplier_factor() {
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
@@ -189,11 +233,14 @@ double tsd_get_sleep_multiplier_factor() {
 }
 
 void tsd_set_sleep_multiplier_factor(double factor) {
+   bool debug = true;
+   DBGMSF(debug, "Executing. factor = %5.2f", factor);
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
    data->sleep_multiplier_factor = factor;
+   data->thread_adjustment_increment = factor;
 }
 
-
+// multiplier_count is set by functions performing retry
 
 /** Gets the multiplier count for the current thread.
  *
@@ -209,7 +256,7 @@ int tsd_get_sleep_multiplier_ct() {
  *
  *  \parsm multipler_ct  value to set
  */
-void   tsd_set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multiplier_ct) {
+void   tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
    data->sleep_multiplier_ct = multiplier_ct;
@@ -218,11 +265,27 @@ void   tsd_set_sleep_multiplier_ct(/* Sleep_Event_Type event_types,*/ int multip
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
-void tsd_bump_sleep_multiplier_changed_ct() {
-   Thread_Sleep_Data * data = get_thread_sleep_data(true);
-   data->sleep_multipler_changed_ct++;
+
+void set_sleep_multiplier_factor_all(double factor) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. factor = %5.2f", factor);
+   if (thread_sleep_data_hash) {
+      GHashTableIter iter;
+      gpointer key, value;
+      g_hash_table_iter_init (&iter,thread_sleep_data_hash);
+      while (g_hash_table_iter_next (&iter, &key, &value)) {
+         Thread_Sleep_Data * data = value;
+         DBGMSF(debug, "Thread id: %d", data->thread_id);
+         tsd_set_sleep_multiplier_factor(factor);
+      }
+   }
 }
 
 
 
+// Number of function executions that changed the multiplier
+void tsd_bump_sleep_multiplier_changer_ct() {
+   Thread_Sleep_Data * data = get_thread_sleep_data(true);
+   data->sleep_multipler_changed_ct++;
+}
 

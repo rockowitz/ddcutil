@@ -10,23 +10,13 @@
 #ifndef TUNED_SLEEP_H_
 #define TUNED_SLEEP_H_
 
+/** \cond */
 #include <stdbool.h>
-
 #include "public/ddcutil_types.h"
-
-#include "base/sleep.h"
-#include "base/execution_stats.h"
+/** \endcond */
+#include "base/execution_stats.h"   // for Sleep_Event_Type
 
 void enable_sleep_suppression(bool enable);
-
-// Sleep time adjustments
-void   set_sleep_multiplier_ct(int multiplier);
-int    get_sleep_multiplier_ct();
-void   set_sleep_multiplier_factor(double multiplier);
-double get_sleep_multiplier_factor();
-
-void bump_sleep_multiplier_changed_ct();
-void report_all_thread_sleep_settings(int depth);
 
 // Perform tuned sleep
 void tuned_sleep_with_tracex(
