@@ -656,7 +656,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
 
-   bool conservative = true;
+   bool conservative = false;
 
    assert(rawedid->buffer_size >= 128);
    Status_Errno_DDC rc;
