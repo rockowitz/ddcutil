@@ -24,6 +24,7 @@
 #include "base/parms.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
+#include "base/thread_sleep_data.h"
 
 #include "base/dynamic_sleep.h"
 
@@ -95,6 +96,8 @@ Dynamic_Sleep_Adjustment_Stats * dsa_get_stats_t() {
 
 
 void dsa_set_sleep_multiplier_factor(double factor) {
+   get_global_sleep_multiplier_factor(factor);  // new way
+
    bool debug = false;
    DBGMSF(debug, "factor=%5.2f", factor);
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
@@ -106,10 +109,13 @@ void dsa_record_ddcrw_status_code(int rc) {
    bool debug = false;
    DBGMSF(debug, "rc=%s", psc_desc(rc));
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
+   Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
 
    if (rc == DDCRC_OK) {
       stats->ok_status_count++;
       stats->total_ok++;
+      tsd->ok_status_count++;
+      tsd->total_ok++:
    }
    else if (rc == DDCRC_DDC_DATA ||
             rc == DDCRC_READ_ALL_ZERO ||
@@ -120,10 +126,14 @@ void dsa_record_ddcrw_status_code(int rc) {
    {
       stats->error_status_count++;
       stats->total_error++;
+
+      tsd->error_status_count++;
+      tsd->total_error++;
    }
    else {
       DBGMSF(true, "other status code: %s", psc_desc(rc));
       stats->other_status_ct++;
+      tsd->other_status_ct++;
    }
    DBGMSF(debug, "Done. ok_status_count=%d, error_status_count=%d", stats->ok_status_count, stats->error_status_count);
 }
@@ -153,8 +163,12 @@ double dsa_get_sleep_adjustment() {
    double dsa_increment = .5;                      // a constant, for now
 
    Dynamic_Sleep_Adjustment_Stats * stats = dsa_get_stats_t();
+   Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
 
-   int total_count = stats->ok_status_count + stats->error_status_count;
+   int total_count0 = stats->ok_status_count + stats->error_status_count;
+   int total_count = tsd->ok_status_count + tsd->error_status_count;
+   assert(total_count0 == total_count);
+
    if ( (total_count) > dsa_required_status_sample_size) {
       if (total_count <= 4)
          dsa_error_rate_threshold = .5;

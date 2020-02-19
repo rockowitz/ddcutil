@@ -1,6 +1,8 @@
 /** \file execution_stats.h
  *
  * Record the count and elapsed time of system calls.
+ *
+ * These stats are global, not per thread
  */
 
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -98,7 +100,5 @@ void reset_sleep_event_counts();
 void record_sleep_event(Sleep_Event_Type event_type);
 
 void report_execution_stats(int depth);
-
-
 
 #endif /* EXECUTION_STATS_H_ */

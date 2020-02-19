@@ -150,7 +150,7 @@ void report_thread_sleep_settings(Thread_Sleep_Settings * settings, int depth) {
 
 
 // typedef GFunc
-void report_one_hash_settings(
+void report_one_thread_data_hash_table_entry(
       gpointer key,
       gpointer value,
       gpointer user_data)
@@ -171,7 +171,7 @@ void report_all_thread_sleep_settings(int depth) {
    else {
       rpt_vstring(depth, "Per thread DDC_NULL_MESSAGE sleep statistics:");
       g_hash_table_foreach(
-            thread_sleep_settings_hash, report_one_hash_settings, GINT_TO_POINTER(depth+1));
+            thread_sleep_settings_hash, report_one_thread_data_hash_table_entry, GINT_TO_POINTER(depth+1));
    }
 }
 
