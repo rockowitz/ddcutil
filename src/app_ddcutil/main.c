@@ -443,7 +443,7 @@ int main(int argc, char *argv[]) {
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   enable_sleep_suppression(parsed_cmd->flags & CMD_FLAG_F1);
+   enable_sleep_suppression(!(parsed_cmd->flags & CMD_FLAG_F3));
 
    init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
