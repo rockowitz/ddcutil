@@ -19,6 +19,7 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
+void   global_dsa_enable(bool enabled);
 void   dsa_enable(bool enabled);
 bool   dsa_is_enabled();
 void   dsa_record_ddcrw_status_code(int rc);

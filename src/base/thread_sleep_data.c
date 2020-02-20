@@ -28,10 +28,10 @@
 
 #include "base/thread_sleep_data.h"
 
-
+// across all threads, used for Thread_Sleep_Data initialization
 // used in report_dynamic_sleep_data(), avoid having this file call back into
 // dynamic_sleep.c, which creates a circular dependency
-static bool dynamic_sleep_enabled= false;
+static bool global_dynamic_sleep_enabled= false;
 
 // Master table of sleep data for all threads
 static GHashTable *  thread_sleep_data_hash = NULL;
@@ -44,7 +44,6 @@ void set_global_sleep_multiplier_factor(double factor) {
    DBGMSF(debug, "factor = %5.2f", factor);
    global_sleep_multiplier_factor = factor;
    set_sleep_multiplier_factor_all(factor);
-
 }
 
 
@@ -52,9 +51,12 @@ double get_global_sleep_multiplier_factor() {
    return global_sleep_multiplier_factor;
 }
 
-
+// this thread only
 void tsd_enable_dynamic_sleep(bool enabled) {
-   dynamic_sleep_enabled = enabled;
+   bool debug = false;
+   DBGMSF(debug, "enabled = %s", sbool(enabled));
+   Thread_Sleep_Data * data = get_thread_sleep_data(true);
+   data->dynamic_sleep_enabled = enabled;
 }
 
 
@@ -62,6 +64,7 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Thread_Sleep_Data", data, depth);
    rpt_bool("initialized",         NULL, data->initialized,        d1);
+   rpt_bool("dynamic_sleep_enabled", NULL, data->dynamic_sleep_enabled, d1);
 
    // Dynamic sleep adjustment:
    rpt_int("current_ok_status_count",     NULL, data->current_ok_status_count,    d1);
@@ -88,31 +91,32 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
 void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
-   rpt_vstring(depth, "Per thread sleep data for thread %d", data->thread_id);
+   rpt_vstring(depth, "Per thread sleep data for thread %6d", data->thread_id);
    rpt_label(depth, "General:");
-   rpt_vstring(d1, "Sleep-multiplier option value: %5.2f", data->sleep_multiplier_factor);
-   if ( dynamic_sleep_enabled ) {
+   rpt_vstring(d1,    "Sleep-multiplier option value:   %5.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d1,    "Dynamic sleep enabled:           %5s",   sbool(data->dynamic_sleep_enabled));
+   if ( data->dynamic_sleep_enabled ) {
       rpt_title("Dynamic Sleep Adjustment:  ", depth);
-      rpt_vstring(d1, "Total successful reads:       %5d",   data->total_ok_status_count);
-      rpt_vstring(d1, "Total reads with DDC error:   %5d",   data->total_error_status_count);
-      rpt_vstring(d1, "Total ignored status codes:   %5d",   data->total_other_status_ct);
-      rpt_vstring(d1, "Current sleep adjustment factor %5.2f", data->current_sleep_adjustment_factor);
-      rpt_vstring(d1, "Thread adjustment increment     %5.2f", data->thread_adjustment_increment);
-      rpt_vstring(d1, "Adjustment check interval       %d",  data->adjustment_check_interval);
+      rpt_vstring(d1, "Total successful reads:          %5d",   data->total_ok_status_count);
+      rpt_vstring(d1, "Total reads with DDC error:      %5d",   data->total_error_status_count);
+      rpt_vstring(d1, "Total ignored status codes:      %5d",   data->total_other_status_ct);
+      rpt_vstring(d1, "Current sleep adjustment factor: %5.2f", data->current_sleep_adjustment_factor);
+      rpt_vstring(d1, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
+      rpt_vstring(d1, "Adjustment check interval        %5d",  data->adjustment_check_interval);
 
    }
    else {
       rpt_label(depth, "Sleep Adjustment:");
    }
-   rpt_vstring(d1, "Calls since last check:       %5d", data->calls_since_last_check);
-   rpt_vstring(d1, "Total adjustment checks:      %5d", data->total_adjustment_checks);
-   rpt_vstring(d1, "Number of adjustments:        %5d",   data->adjustment_ct);
-   rpt_vstring(d1, "Number of excess adjustments: %5d",   data->max_adjustment_ct);
+   rpt_vstring(d1,    "Calls since last check:          %5d", data->calls_since_last_check);
+   rpt_vstring(d1,    "Total adjustment checks:         %5d", data->total_adjustment_checks);
+   rpt_vstring(d1,    "Number of adjustments:           %5d",   data->adjustment_ct);
+   rpt_vstring(d1,    "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
 
-   rpt_vstring(d1,  "Final sleep adjustment:       %5.2f", data->current_sleep_adjustment_factor);
-   rpt_label(depth, "Multiplier count (set by retries):");
-   rpt_vstring(d1,  "Max sleep multiplier count:     %d", data->max_sleep_multiplier_ct);
-   rpt_vstring(d1,  "Number of retry function calls that increased multiplier_count: %d",
+   rpt_vstring(d1,    "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
+   rpt_label(depth,   "Multiplier count (set by retries):");
+   rpt_vstring(d1,    "Max sleep multiplier count:      %5d", data->max_sleep_multiplier_ct);
+   rpt_vstring(d1,    "Number of retry function calls that increased multiplier_count: %d",
                          data->sleep_multipler_changed_ct);
 }
 
@@ -172,13 +176,14 @@ void register_thread_sleep_data(Thread_Sleep_Data * per_thread_data) {
 
 // initialize a single instance
 void init_thread_sleep_data(Thread_Sleep_Data * data) {
+   data->dynamic_sleep_enabled = global_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = 1;
    data->max_sleep_multiplier_ct = 1;
 
    data->current_sleep_adjustment_factor = 1.0;
    data->initialized = true;
    data->sleep_multiplier_factor = global_sleep_multiplier_factor;    // default
-   data->thread_adjustment_increment = .1;
+   data->thread_adjustment_increment = global_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
 }
 
@@ -186,7 +191,7 @@ void init_thread_sleep_data(Thread_Sleep_Data * data) {
 // Retrieves Thead_Sleep_Data for the current thread
 // Creates and initializes a new instance if not found
 // static
-Thread_Sleep_Data *  get_thread_sleep_data(bool create_if_necessary) {
+Thread_Sleep_Data * get_thread_sleep_data(bool create_if_necessary) {
    bool debug = false;
    DBGMSF(debug, "Starting. create_if_necessary = %s", sbool(create_if_necessary));
    static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
@@ -223,8 +228,6 @@ Thread_Sleep_Data *  get_thread_sleep_data(bool create_if_necessary) {
  * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
  */
 
-
-
 // sleep_multiplier_factor is the --sleep-multiplier option value
 
 double tsd_get_sleep_multiplier_factor() {
@@ -232,15 +235,21 @@ double tsd_get_sleep_multiplier_factor() {
    return data->sleep_multiplier_factor;
 }
 
+
 void tsd_set_sleep_multiplier_factor(double factor) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Executing. factor = %5.2f", factor);
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
    data->sleep_multiplier_factor = factor;
    data->thread_adjustment_increment = factor;
 }
 
-// multiplier_count is set by functions performing retry
+
+//
+// Sleep Multiplier Count
+//
+// multiplier_count is set by functions performing retry,
+// so always per-thread
 
 /** Gets the multiplier count for the current thread.
  *
@@ -266,7 +275,10 @@ void   tsd_set_sleep_multiplier_ct(int multiplier_ct) {
 }
 
 
+// apply the sleep-multiplier to any existing threads
+// it will be set for new threads from global_sleep_multiplier_factor
 void set_sleep_multiplier_factor_all(double factor) {
+   // needs mutex
    bool debug = false;
    DBGMSF(debug, "Starting. factor = %5.2f", factor);
    if (thread_sleep_data_hash) {
@@ -277,6 +289,23 @@ void set_sleep_multiplier_factor_all(double factor) {
          Thread_Sleep_Data * data = value;
          DBGMSF(debug, "Thread id: %d", data->thread_id);
          tsd_set_sleep_multiplier_factor(factor);
+      }
+   }
+}
+
+void tsd_enable_dynamic_sleep_all(bool enable) {
+   // needs mutex
+   bool debug = false;
+   DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
+   global_dynamic_sleep_enabled = enable;  // for initializing new threads
+   if (thread_sleep_data_hash) {
+      GHashTableIter iter;
+      gpointer key, value;
+      g_hash_table_iter_init (&iter,thread_sleep_data_hash);
+      while (g_hash_table_iter_next (&iter, &key, &value)) {
+         Thread_Sleep_Data * data = value;
+         DBGMSF(debug, "Thread id: %d", data->thread_id);
+         tsd_enable_dynamic_sleep(enable);
       }
    }
 }

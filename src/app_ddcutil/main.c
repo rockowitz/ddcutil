@@ -524,7 +524,7 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       set_global_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
       if (parsed_cmd->sleep_multiplier > 1.0f)
-         dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
+         global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
    }
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
@@ -683,7 +683,7 @@ int main(int argc, char *argv[]) {
          }
       }
       if (loadvcp_ok) {
-         dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
+         global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
          loadvcp_ok = loadvcp_by_file(fn, dh);
       }
 
@@ -784,7 +784,7 @@ int main(int argc, char *argv[]) {
          }
          else {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
-            dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
+            global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
             probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
@@ -851,7 +851,7 @@ int main(int argc, char *argv[]) {
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
-            dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
+            global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES

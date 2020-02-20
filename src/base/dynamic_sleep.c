@@ -31,16 +31,26 @@
 
 #include "base/dynamic_sleep.h"
 
-static bool dynamic_sleep_adjustment_enabled = false;
+static bool global_dynamic_sleep_enabled = false;  // across all threads
 
 void dsa_enable(bool enabled) {
-   // DBGMSG("Executing.  enabled = %s", sbool(enabled));
-   dynamic_sleep_adjustment_enabled = enabled;
+   bool debug = false;
+   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
    tsd_enable_dynamic_sleep(enabled);
 }
 
+// Enable or disable dynamic sleep for all current threads and new threads
+void global_dsa_enable(bool enabled) {
+   bool debug = false;
+   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
+   global_dynamic_sleep_enabled = enabled;
+   tsd_enable_dynamic_sleep_all(enabled) ;
+}
+
+// Is dynamic sleep enabled on the current thread?
 bool dsa_is_enabled() {
-   return dynamic_sleep_adjustment_enabled;
+   Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
+   return tsd->dynamic_sleep_enabled;
 }
 
 
@@ -116,7 +126,9 @@ bool error_rate_is_high(Thread_Sleep_Data * tsd) {
                     error_rate, dsa_error_rate_threshold);
       result = (error_rate > dsa_error_rate_threshold);
    }
-   DBGMSF(debug, "total_count=%d, error_rate=%5.3f, returning ", current_total_count, error_rate, result);
+   // DBGMSF(debug, "%s", sbool(result));
+   DBGMSF(debug, "total_count=%d, error_rate=%4.2f, returning %s",
+                 current_total_count, error_rate, sbool(result));
    return result;
 }
 
@@ -125,8 +137,9 @@ bool error_rate_is_high(Thread_Sleep_Data * tsd) {
 
 double dsa_get_sleep_adjustment() {
    bool debug = false;
-   DBGMSF(debug, "dynamic_sleep_adjustment_enabled = %s", sbool(dynamic_sleep_adjustment_enabled));
-   if (!dynamic_sleep_adjustment_enabled) {
+   Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
+   DBGMSF(debug, "global_dynamic_sleep_enabled for current thread = %s", sbool(tsd->dynamic_sleep_enabled));
+   if (!tsd->dynamic_sleep_enabled) {
       double result = 1.0;
       DBGMSF(debug, "Returning %3.1f" ,result);
       return result;
@@ -135,7 +148,6 @@ double dsa_get_sleep_adjustment() {
    // double dsa_increment = .5;                      // a constant, for now
    // int adjustment_check_interval = 2;    //  move to Thread_Sleep_Data  ??
 
-   Thread_Sleep_Data * tsd = get_thread_sleep_data(true);
    tsd->calls_since_last_check++;
 
    if (tsd->calls_since_last_check > tsd->adjustment_check_interval) {
@@ -157,8 +169,8 @@ double dsa_get_sleep_adjustment() {
             tsd->current_sleep_adjustment_factor = next_sleep_adjustment_factor;
             tsd->thread_adjustment_increment = 2.0 * tsd->thread_adjustment_increment;
             tsd->adjustment_check_interval = 2 * tsd->adjustment_check_interval;
-            DBGMSF(debug, "Increasing sleep_adjustment_factor to %5.3f,"
-                          " thread_adjustment_increment to %5.3f",
+            DBGMSF(debug, "Increasing sleep_adjustment_factor to %5.2f,"
+                          " thread_adjustment_increment to %5.2f",
                           tsd->current_sleep_adjustment_factor,
                           tsd->thread_adjustment_increment);
          }
@@ -174,7 +186,7 @@ double dsa_get_sleep_adjustment() {
    }
    float result = tsd->current_sleep_adjustment_factor;
 
-   DBGMSF(debug, "current_ok_status_count=%d, current_error_status_count=%d, returning %9.1f",
+   DBGMSF(debug, "current_ok_status_count=%d, current_error_status_count=%d, returning %5.2f",
            tsd->current_ok_status_count, tsd->current_error_status_count, result);
    return result;
 }

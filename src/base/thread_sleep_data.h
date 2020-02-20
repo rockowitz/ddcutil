@@ -12,7 +12,9 @@
 
 typedef struct {
    bool   initialized;
+   bool   dynamic_sleep_enabled;
    pid_t  thread_id;
+
 
    // For Dynamic Sleep Adjustment
    int    current_ok_status_count;
@@ -40,6 +42,7 @@ typedef struct {
 void   set_global_sleep_multiplier_factor(double factor);
 double get_global_sleep_multiplier_factor();
 void   set_sleep_multiplier_factor_all(double factor);
+void   tsd_enable_dynamic_sleep_all(bool enable);
 
 void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports
 
