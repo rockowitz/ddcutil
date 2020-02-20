@@ -230,6 +230,31 @@ void report_io_call_stats(int depth) {
 }
 
 
+typedef struct {
+   int      count;
+   uint64_t nanos;
+} Non_Sleep_Call_Totals;
+
+Non_Sleep_Call_Totals
+get_non_sleep_call_totals () {
+   Non_Sleep_Call_Totals totals;
+   totals.count = 0;
+   totals.nanos = 0;
+    int ndx = 0;
+    // int max_name_length = max_event_name_length();
+
+    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
+       if (io_event_stats[ndx].call_count > 0) {
+          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
+
+          totals.count += curstat->call_count;
+          totals.nanos += curstat->call_nanosec;
+       }
+    }
+    return totals;
+ }
+
+
 //
 // Status Code Occurrence Tracking
 //
@@ -616,4 +641,22 @@ void report_elapsed_stats(int depth) {
          "Total elapsed milliseconds (nanoseconds):          %10"PRIu64"  (%13"PRIu64")",
          elapsed_nanos / (1000*1000),
          elapsed_nanos);
+}
+
+void report_elapsed_summary(int depth) {
+   uint64_t end_nanos = cur_realtime_nanosec();
+   uint64_t elapsed_nanos = end_nanos - program_start_timestamp;
+
+   Non_Sleep_Call_Totals non_sleep_totals =  get_non_sleep_call_totals ();
+   Sleep_Stats sleep_totals =  get_sleep_stats();;
+
+   rpt_vstring(depth,
+               "Total non sleep system call time: %10"PRIu64" milliseconds",
+               non_sleep_totals.nanos / (1000*1000) );
+   rpt_vstring(depth,
+               "Total sleep call time:            %10"PRIu64" milliseconds",
+               sleep_totals.actual_sleep_nanos / (1000*1000) );
+   rpt_vstring(depth,
+               "Elapsed time:                     %10"PRIu64" milliseconds",
+               elapsed_nanos / (1000*1000));
 }

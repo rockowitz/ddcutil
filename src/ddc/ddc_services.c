@@ -104,9 +104,13 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
       rpt_nl();
       report_sleep_stats(depth);
    }
-   if (stats & (DDCA_STATS_ELAPSED | DDCA_STATS_CALLS)) {
+   if (stats & ( DDCA_STATS_CALLS)) {
       rpt_nl();
       report_elapsed_stats(depth);
+   }
+   if (stats & (DDCA_STATS_ELAPSED)) {
+      rpt_nl();
+      report_elapsed_summary(depth);
    }
 }
 

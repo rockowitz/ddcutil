@@ -33,6 +33,7 @@ void reset_execution_stats();
 //  Global Stats
 
 void report_elapsed_stats(int depth);
+void report_elapsed_summary(int depth);
 
 
 // IO Event Tracking
