@@ -240,11 +240,12 @@ try_multi_part_read(
 /** Gets the DDC capabilities string for a monitor, performing retries if necessary.
  *  Also used for VCP features of type Table.
 *
-*  @param  dh handle of open display
+*  @param  dh                    handle of open display
 *  @param  request_type
-*  @param  request_subtype  VCP function code for table read, ignore for capabilities
-*  @param  all_zero_response_ok   if true, zero response is not an error
-*  @param  buffer_loc  address at which to return newly allocated #Buffer in which result is returned
+*  @param  request_subtype       VCP function code for table read, ignore for capabilities
+*  @param  all_zero_response_ok  if true, zero response is not an error
+*  @param  buffer_loc            address at which to return newly allocated #Buffer in which
+*                                result is returned
 *
 *  @retval  NULL    success
 *  @retval  #Ddc_Error containing status DDCRC_UNSUPPORTED does not support Capabilities Request
