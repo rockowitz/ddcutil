@@ -1341,7 +1341,7 @@ int f0puts(const char * msg, FILE * stream)
  * in which case no output is written.
  *
  * @param stream     if null do nothing
- * @param  format     format string
+ * @param format     format string
  *
  * @return  result of underlying vfprintf(), or 0 if stream is NULL
  */
