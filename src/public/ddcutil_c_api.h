@@ -234,10 +234,26 @@ ddca_is_verify_enabled(void);
 
 
 void
-ddca_set_global_sleep_multiplier(double multiplier);
+ddca_set_default_sleep_multiplier(double multiplier);
 
 double
+ddca_get_default_sleep_multiplier();
+
+__attribute__ ((deprecated ("use ddca_set_global_sleep_multiplier")))
+void
+ddca_set_global_sleep_multiplier(double multiplier);
+
+__attribute__ ((deprecated ("use ddca_get_default_sleep_multiplier")))
+double
 ddca_get_global_sleep_multiplier();
+
+
+
+void
+ddca_set_sleep_multiplier(double multiplier);
+
+double
+ddca_get_sleep_multiplier();
 
 
 //

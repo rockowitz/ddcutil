@@ -475,13 +475,44 @@ ddca_is_verify_enabled() {
 void
 ddca_set_global_sleep_multiplier(double multiplier)
 {
+   ddca_set_default_sleep_multiplier(multiplier);
+}
+
+void
+ddca_set_default_sleep_multiplier(double multiplier)
+{
    set_global_sleep_multiplier_factor(multiplier);
 }
 
 double
 ddca_get_global_sleep_multiplier()
 {
+   return ddca_get_default_sleep_multiplier();
+}
+
+double
+ddca_get_default_sleep_multiplier()
+{
    return get_global_sleep_multiplier_factor();
+}
+
+void
+ddca_set_sleep_multiplier(double multiplier)
+{
+   // bool debug = true;
+   // DBGMSF(debug, "Setting %5.2f", multiplier);
+   tsd_set_sleep_multiplier_factor(multiplier);
+   // DBGMSF(debug, "Done");
+}
+
+double
+ddca_get_sleep_multiplier()
+{
+   // bool debug = true;
+   // DBGMSF(debug, "Starting");
+   double result = tsd_get_sleep_multiplier_factor();
+   // DBGMSF(debug, "Returning %5.2f", result);
+   return result;
 }
 
 
@@ -541,6 +572,7 @@ ddca_trace_group_name_to_value(char * name) {
 void
 ddca_set_trace_options(DDCA_Trace_Options  options) {
    // global variables in core.c
+   // DBGMSG("options = 0x%02x", options);
    dbgtrc_show_time = options & DDCA_TRCOPT_TIMESTAMP;
    dbgtrc_show_thread_id = options & DDCA_TRCOPT_THREAD_ID;
 }
