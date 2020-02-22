@@ -43,7 +43,7 @@ void set_global_sleep_multiplier_factor(double factor) {
    bool debug = false;
    DBGMSF(debug, "factor = %5.2f", factor);
    global_sleep_multiplier_factor = factor;
-   set_sleep_multiplier_factor_all(factor);
+   // set_sleep_multiplier_factor_all(factor);   // only applies to new threads, do not change existing threads
 }
 
 
@@ -231,17 +231,24 @@ Thread_Sleep_Data * get_thread_sleep_data(bool create_if_necessary) {
 // sleep_multiplier_factor is the --sleep-multiplier option value
 
 double tsd_get_sleep_multiplier_factor() {
+   bool debug = false;
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
-   return data->sleep_multiplier_factor;
+   double result = data->sleep_multiplier_factor;
+   DBGMSF(debug, "Returning %5.2f", result );
+   return result;
 }
 
 
 void tsd_set_sleep_multiplier_factor(double factor) {
    bool debug = false;
+
+   // Need to guard with mutex!
+
    DBGMSF(debug, "Executing. factor = %5.2f", factor);
    Thread_Sleep_Data * data = get_thread_sleep_data(true);
    data->sleep_multiplier_factor = factor;
    data->thread_adjustment_increment = factor;
+   DBGMSF(debug, "Done");
 }
 
 
