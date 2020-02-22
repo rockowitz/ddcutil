@@ -279,7 +279,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
       {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
-      {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 4",    NULL},
+      {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"failsim", '\0', 0,  G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
       // other
