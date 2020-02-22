@@ -481,32 +481,31 @@ int main(int argc, char *argv[]) {
                 (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
                 // sbool(enable_dynamic_features));
       f0puts("\n", fout);
-   }
 
-   bool special_option_explained = false;
-   if (parsed_cmd->flags & CMD_FLAG_F1) {
-      f0printf(fout, "Special option --f1 enabled: Unused\n");
-      special_option_explained = true;
+      bool special_option_explained = false;
+      if (parsed_cmd->flags & CMD_FLAG_F1) {
+         f0printf(fout, "Special option --f1 enabled: Unused\n");
+         special_option_explained = true;
+      }
+      if (parsed_cmd->flags & CMD_FLAG_F2) {
+         f0printf(fout, "Special option --f2 enabled: Dynamic sleep adjustment\n");
+         special_option_explained = true;
+      }
+      if (parsed_cmd->flags & CMD_FLAG_F3)  {
+         f0printf(fout, "Special option --f3 enabled: Disable post-read sleep suppression\n");
+         special_option_explained = true;
+      }
+      if (parsed_cmd->flags & CMD_FLAG_F4) {
+         f0printf(fout, "Special option --f4 enabled: Read strategy tests\n");
+         special_option_explained = true;
+      }
+      if (parsed_cmd->i1 >= 0) {    // default is -1
+         f0printf(fout, "Special option --i1 = %d:     Unused\n");
+         special_option_explained = true;
+      }
+      if (special_option_explained)
+         f0puts("\n", fout);
    }
-   if (parsed_cmd->flags & CMD_FLAG_F2) {
-      f0printf(fout, "Special option --f2 enabled: Dynamic sleep adjustment\n");
-      special_option_explained = true;
-   }
-   if (parsed_cmd->flags & CMD_FLAG_F3)  {
-      f0printf(fout, "Special option --f3 enabled: Disable post-read sleep suppression\n");
-      special_option_explained = true;
-   }
-   if (parsed_cmd->flags & CMD_FLAG_F4) {
-      f0printf(fout, "Special option --f4 enabled: Read strategy tests\n");
-      special_option_explained = true;
-   }
-   if (parsed_cmd->i1 >= 0) {    // default is -1
-      f0printf(fout, "Special option --i1 = %d:     Unused\n");
-      special_option_explained = true;
-   }
-   if (special_option_explained)
-      f0puts("\n", fout);
-
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
 #ifdef USE_API
