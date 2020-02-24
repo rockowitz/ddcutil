@@ -295,7 +295,7 @@ void set_sleep_multiplier_factor_all(double factor) {
       while (g_hash_table_iter_next (&iter, &key, &value)) {
          Thread_Sleep_Data * data = value;
          DBGMSF(debug, "Thread id: %d", data->thread_id);
-         tsd_set_sleep_multiplier_factor(factor);
+         data->sleep_multiplier_factor = factor;
       }
    }
 }
