@@ -29,7 +29,7 @@ distclean-local:
 
 # Intermediate Libraries
 
-noinst_LTLIBRARIES = libutil.la
+noinst_LTLIBRARIES = libutil.la libutilaux.la
 
 libutil_la_SOURCES = \
 data_structures.c          \
@@ -53,19 +53,19 @@ udev_usb_util.c            \
 udev_util.c                \
 utilrpt.c
 
-# libutil_la_SOURCES += systemd_util.c
-
-
 if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c
 endif
 
+# libutil_la_SOURCES += systemd_util.c
+
+libutilaux_la_SOURCES = 
 if USE_LIBDRM_COND
-libutil_la_SOURCES += libdrm_util.c
+libutilaux_la_SOURCES += libdrm_util.c
 endif
 
 if USE_X11_COND
-libutil_la_SOURCES += x11_util.c
+libutilaux_la_SOURCES += x11_util.c
 endif
 
 

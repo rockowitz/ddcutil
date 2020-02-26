@@ -235,7 +235,8 @@ endif
 
 libapp_la_LIBADD = \
 app_sysenv/libappsysenv.la \
-cmdline/libcmdline.la 
+cmdline/libcmdline.la \
+util/libutilaux.la
 
 # libapp_la_LIBADD += \
 # app_common/libappcommon.la 
@@ -246,20 +247,25 @@ test/libtestcases.la
 endif
 
 
+if USE_X11_COND
+  libapp_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
+endif
+if USE_LIBDRM_COND
+  libapp_la_LIBADD += $(LIBDRM_LIBS) 
+endif
+
 # $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
-  $(LIBX11_LIBS) \
-  $(XRANDR_LIBS) \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
-  $(LIBUSB_LIBS) \
-  $(LIBDRM_LIBS)
-
-
+  $(LIBUSB_LIBS)
 
 # libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD = $(ZLIB_LIBS)
-libddcutil_la_LIBADD += libcommon.la
+
+libddcutil_la_LIBADD +=  libcommon.la 
+
+
 
 # libhack_la_LIBADD = $(ZLIB_LIBS)
 # libhack_la_LIBADD += libcommon.la  libddcutil.la
