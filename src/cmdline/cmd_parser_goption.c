@@ -543,7 +543,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
              // DBGMSG("token=|%s|", token);
              if (strlen(token) > 0 && !streq(token,".")) {
                 int ival;
-                int ct = sscanf(token, "%d", &ival);
+                int ct = sscanf(token, "%ud", &ival);
                 if (ct != 1) {
                    fprintf(stderr, "Invalid --maxtries value: %s\n", token);
                    ok = false;

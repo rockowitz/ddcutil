@@ -25,6 +25,7 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_retry_mgt.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
@@ -430,6 +431,9 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
       result = ddc_get_max_multi_part_read_tries();
       break;
    }
+   // new way using retry_mgt
+   int result2 = ddc_get_cur_thread_single_max_tries(retry_type);
+   assert(result == result2);
    return result;
 }
 
@@ -446,16 +450,19 @@ ddca_set_max_tries(
    else {
       switch(retry_type) {
       case (DDCA_WRITE_ONLY_TRIES):
-         ddc_set_max_write_only_exchange_tries(max_tries);
+         ddc_set_max_write_only_exchange_tries(max_tries);   // sets in Try_Data
          break;
       case (DDCA_WRITE_READ_TRIES):
-         ddc_set_max_write_read_exchange_tries(max_tries);
+         ddc_set_max_write_read_exchange_tries(max_tries);   // sets in Try_Data
          break;
       case (DDCA_MULTI_PART_TRIES):
-         ddc_set_max_multi_part_read_tries(max_tries);
+         ddc_set_max_multi_part_read_tries(max_tries);       // sets in Try_Data
          ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
          break;
       }
+
+      // new way, set in retry_mgt
+      ddc_set_cur_thread_single_max_tries(retry_type, max_tries);
    }
    return rc;
 }

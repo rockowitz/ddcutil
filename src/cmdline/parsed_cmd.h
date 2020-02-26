@@ -79,7 +79,7 @@ struct {
    gchar **            traced_files;
    gchar **            traced_functions;
    DDCA_Output_Level   output_level;
-   int                 max_tries[3];
+   uint16_t            max_tries[3];
    float               sleep_multiplier;
    uint32_t            flags;      // Parsed_Cmd_Flags
    int                 i1;         // available for temporary use

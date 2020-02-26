@@ -14,6 +14,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "public/ddcutil_types.h"
+
 #include "util/string_util.h"
 /** \endcond */
 
@@ -47,15 +49,17 @@ static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
 
 static int max_multi_part_write_tries = MAX_MULTI_EXCHANGE_TRIES;
 
-static void * multi_part_read_stats_rec = NULL;
-static void * multi_part_write_stats_rec = NULL;
+static Try_Data * multi_part_read_stats_rec = NULL;
+static Try_Data * multi_part_write_stats_rec = NULL;
 
 /** Resets the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
    if (multi_part_read_stats_rec)
       try_data_reset(multi_part_read_stats_rec);
    else
-      multi_part_read_stats_rec = try_data_create("multi-part read exchange", max_multi_part_read_tries);
+      multi_part_read_stats_rec = try_data_create(DDCA_MULTI_PART_TRIES,
+                                                 "multi-part read exchange",
+                                                 max_multi_part_read_tries);
 }
 
 
@@ -64,7 +68,9 @@ void ddc_reset_multi_part_write_stats() {
    if (multi_part_write_stats_rec)
       try_data_reset(multi_part_write_stats_rec);
    else
-      multi_part_write_stats_rec = try_data_create("multi-part write exchange", max_multi_part_write_tries);
+      multi_part_write_stats_rec = try_data_create(DDCA_MULTI_PART_TRIES,
+                                                   "multi-part write exchange",
+                                                   max_multi_part_write_tries);
 }
 
 

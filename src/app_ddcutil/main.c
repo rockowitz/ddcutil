@@ -60,6 +60,7 @@
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
+#include "ddc/ddc_retry_mgt.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
@@ -511,7 +512,7 @@ int main(int argc, char *argv[]) {
 #ifdef USE_API
       ddca_set_max_tries(DDCA_WRITE_ONLY_TRIES, parsed_cmd->max_tries[0]);
 #else
-      ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);
+      ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
 #endif
    }
 
@@ -519,7 +520,7 @@ int main(int argc, char *argv[]) {
 #ifdef USE_API
       ddca_set_max_tries(DDCA_WRITE_READ_TRIES, parsed_cmd->max_tries[1]);
 #else
-      ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);
+      ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
 #endif
    }
 
@@ -527,10 +528,14 @@ int main(int argc, char *argv[]) {
 #ifdef USE_API
       ddca_set_max_tries(DDCA_MULTI_PART_TRIES, parsed_cmd->max_tries[2]);
 #else
-      ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);
+      ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
       ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
 #endif
    }
+
+   // new way, sets in retry_mgt:
+   ddc_set_default_all_max_tries(parsed_cmd->max_tries);    // future threads
+   ddc_set_cur_thread_all_max_tries(parsed_cmd->max_tries);     // current thread
 
 #ifdef USE_USB
    // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {

@@ -294,15 +294,17 @@ static int max_write_only_exchange_tries =  MAX_WRITE_ONLY_EXCHANGE_TRIES;
 static int max_write_read_exchange_tries =  MAX_WRITE_READ_EXCHANGE_TRIES;
 
 
-static void * write_read_stats_rec = NULL;
-static void * write_only_stats_rec = NULL;
+static Try_Data * write_read_stats_rec = NULL;
+static Try_Data * write_only_stats_rec = NULL;
 
 
 void ddc_reset_write_read_stats() {
    if (write_read_stats_rec)
       try_data_reset(write_read_stats_rec);
    else
-      write_read_stats_rec = try_data_create("ddc write/read", max_write_read_exchange_tries);
+      write_read_stats_rec = try_data_create(DDCA_WRITE_READ_TRIES,
+                                             "ddc write/read",
+                                             max_write_read_exchange_tries);
 }
 
 
@@ -316,7 +318,9 @@ void ddc_reset_write_only_stats() {
    if (write_only_stats_rec)
       try_data_reset(write_only_stats_rec);
    else
-      write_only_stats_rec = try_data_create("ddc write only", max_write_only_exchange_tries);
+      write_only_stats_rec = try_data_create(DDCA_WRITE_ONLY_TRIES,
+                                             "ddc write only",
+                                             max_write_only_exchange_tries);
 }
 
 
@@ -329,6 +333,7 @@ void ddc_report_write_only_stats(int depth) {
 void ddc_set_max_write_only_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_only_exchange_tries = ct;
+   // setting lost if no tries so far?
    if (write_only_stats_rec)
       try_data_set_max_tries(write_only_stats_rec, ct);
 }
