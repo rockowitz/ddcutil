@@ -501,7 +501,7 @@ int main(int argc, char *argv[]) {
          special_option_explained = true;
       }
       if (parsed_cmd->i1 >= 0) {    // default is -1
-         f0printf(fout, "Special option --i1 = %d:     Unused\n");
+         f0printf(fout, "Special option --i1 = %d:     Unused\n", parsed_cmd->i1);
          special_option_explained = true;
       }
       if (special_option_explained)
