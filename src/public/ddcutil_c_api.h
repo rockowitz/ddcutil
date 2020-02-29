@@ -232,6 +232,7 @@ ddca_enable_verify(
 bool
 ddca_is_verify_enabled(void);
 
+
 /** Sets the sleep multiplier factor to be used for new threads.
  *
  *  \param  multiplier
