@@ -550,7 +550,8 @@ int main(int argc, char *argv[]) {
    ddc_set_async_threshold(threshold);
 
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
-      set_global_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
+      set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);          // for current thread
+      set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);  // for new threads
       if (parsed_cmd->sleep_multiplier > 1.0f)
          global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
    }
