@@ -23,6 +23,8 @@ void   lock_default_sleep_multiplier_factor();
 void   unlock_default_sleep_multiplier_factor();
 void   set_default_sleep_multiplier_factor(double multiplier);
 double get_default_sleep_multiplier_factor();
+void   set_sleep_multiplier_factor(double multiplier);
+double get_sleep_multiplier_factor();
 
 void   set_sleep_multiplier_ct(int multiplier);
 int    get_sleep_multiplier_ct();
