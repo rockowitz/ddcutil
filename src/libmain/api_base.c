@@ -479,16 +479,32 @@ ddca_is_verify_enabled() {
    return ddc_get_verify_setvcp();
 }
 
-void
-ddca_set_global_sleep_multiplier(double multiplier)
-{
-   ddca_set_default_sleep_multiplier(multiplier);
+#ifdef NOT_NEEDED
+void ddca_lock_default_sleep_multiplier() {
+   lock_default_sleep_multiplier();
 }
+
+void ddca_unlock_sleep_multiplier() {
+   unlock_default_sleep_multiplier();
+}
+#endif
 
 void
 ddca_set_default_sleep_multiplier(double multiplier)
 {
-   set_global_sleep_multiplier_factor(multiplier);
+   set_default_sleep_multiplier_factor(multiplier);
+}
+
+double
+ddca_get_default_sleep_multiplier()
+{
+   return get_default_sleep_multiplier_factor();
+}
+
+void
+ddca_set_global_sleep_multiplier(double multiplier)
+{
+   ddca_set_default_sleep_multiplier(multiplier);
 }
 
 double
@@ -497,18 +513,14 @@ ddca_get_global_sleep_multiplier()
    return ddca_get_default_sleep_multiplier();
 }
 
-double
-ddca_get_default_sleep_multiplier()
-{
-   return get_global_sleep_multiplier_factor();
-}
-
+// for current thread
 void
 ddca_set_sleep_multiplier(double multiplier)
 {
    // bool debug = true;
    // DBGMSF(debug, "Setting %5.2f", multiplier);
-   tsd_set_sleep_multiplier_factor(multiplier);
+   // tsd_set_sleep_multiplier_factor(multiplier);    // ??? which is it ??
+   set_sleep_multiplier_factor(multiplier);
    // DBGMSF(debug, "Done");
 }
 
@@ -517,7 +529,8 @@ ddca_get_sleep_multiplier()
 {
    // bool debug = true;
    // DBGMSF(debug, "Starting");
-   double result = tsd_get_sleep_multiplier_factor();
+   // double result = tsd_get_sleep_multiplier_factor();   // WHICH IS IT ???
+   double result = get_sleep_multiplier_factor();
    // DBGMSF(debug, "Returning %5.2f", result);
    return result;
 }
@@ -596,12 +609,15 @@ ddca_set_trace_options(DDCA_Trace_Options  options) {
 
 void
 ddca_reset_stats(void) {
+   DBGMSG("Executing");
    ddc_reset_stats_main();
 }
 
 // TODO: Functions that return stats in data structures
 void
 ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
+   DBGMSG("stats_types = %d, depth=%d", stats_types, depth);
+
    ddc_report_stats_main( stats_types,    // stats to show
                           depth);         // logical indentation depth
 }
