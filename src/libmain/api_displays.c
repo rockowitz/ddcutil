@@ -1,9 +1,14 @@
 // api_displays.c
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
+
+// for syscall
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #include <assert.h>
 #include <errno.h>
@@ -386,10 +391,12 @@ ddca_open_display2(
    assert(ddc_displays_already_detected());
    // ddc_ensure_displays_detected();
 
+   pid_t thread_id = syscall(SYS_gettid);
+
    DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s", dref_repr_t(dref), sbool(wait));
+   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s, on thread %d", dref_repr_t(dref), sbool(wait), thread_id);
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCRC_ARG;
    }
