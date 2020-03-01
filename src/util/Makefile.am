@@ -65,7 +65,7 @@ libutilaux_la_SOURCES += libdrm_util.c
 endif
 
 if USE_X11_COND
-libutilaux_la_SOURCES += x11_util.c
+libutil_la_SOURCES += x11_util.c
 endif
 
 

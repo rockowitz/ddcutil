@@ -248,7 +248,7 @@ endif
 
 
 if USE_X11_COND
-  libapp_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
+  libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
 endif
 if USE_LIBDRM_COND
   libapp_la_LIBADD += $(LIBDRM_LIBS) 
