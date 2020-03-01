@@ -73,9 +73,9 @@ int  try_data_get_max_tries(Try_Data * stats_rec) {
 
 
 void try_data_set_max_tries(Try_Data * stats_rec, int new_max_tries) {
-   bool debug = true;
+   bool debug = false;
    debug = debug || debug_mutex;
-   DBGMSF(debug, "Starting.  stats type: %s for %s, new_max_tries: %d",
+   DBGMSF(debug, "Starting. stats type: %s for %s, new_max_tries: %d",
                  ddc_retry_type_name(stats_rec->retry_type),
                  stats_rec->stat_name,
                  new_max_tries);
