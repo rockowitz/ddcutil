@@ -8,7 +8,6 @@
 
 // Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
  
 #include <assert.h>
 #include <sys/types.h>
@@ -39,12 +38,12 @@ static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
 
 // Do not call while already holding lock.  Behavior undefined
-void lock_thread_sleep_data() {
+void tsd_lock_all_thread_data() {
    g_mutex_lock(&thread_sleep_data_mutex);
 }
 
 // Do not call if not holding lock.  Behavior undefined.
-void unlock_thread_sleep_data() {
+void tsd_unlock_all_thread_data() {
    g_mutex_unlock(&thread_sleep_data_mutex);
 }
 

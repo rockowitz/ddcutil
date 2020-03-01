@@ -38,8 +38,8 @@ typedef struct {
 } Thread_Sleep_Data;
 
 
-void lock_thread_sleep_data();
-void unlock_thread_sleep_data();
+void tsd_lock_all_thread_data();
+void tsd_unlock_all_thread_data();
 
 // This is the --sleep-multiplier command line option
 // void   set_global_sleep_multiplier_factor(double factor);
