@@ -24,13 +24,13 @@ gchar * gaux_vasprintf(size_t reqd_buf_size, gchar * fmt, va_list ap);
 gchar * gaux_asprintf(gchar * fmt, ...);
 #endif
 
-gchar *
+void *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
       GPrivate * bufsz_key_ptr,
       guint16    required_size);
 
-gchar *
+void *
 get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
       guint16    required_size);

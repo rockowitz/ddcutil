@@ -290,7 +290,7 @@ gaux_ptr_array_from_null_terminated_array(
  *  \param  required_size  size of buffer to allocate
  *  \return pointer to thread specific buffer
  */
-gchar *
+void *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
       GPrivate * bufsz_key_ptr,
@@ -346,7 +346,7 @@ get_thread_dynamic_buffer(
  *  \remark
  *  When the buffer is first allocated, all bytes are set to 0.
  */
-gchar *
+void *
 get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
       guint16    buffer_size)
