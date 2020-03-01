@@ -550,12 +550,10 @@ int main(int argc, char *argv[]) {
    ddc_set_async_threshold(threshold);
 
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
-      // ??? WHICH ???
-      set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);    // tuned_sleep.c      // for current thread
-      // tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);
-      set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);  // for new threads
-      if (parsed_cmd->sleep_multiplier > 1.0f)
-         global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
+      tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
+      tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
+      if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_F2))
+         tsd_dsa_enable_globally(true);
    }
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
@@ -714,7 +712,7 @@ int main(int argc, char *argv[]) {
          }
       }
       if (loadvcp_ok) {
-         global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
+         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
          loadvcp_ok = loadvcp_by_file(fn, dh);
       }
 
@@ -806,6 +804,7 @@ int main(int argc, char *argv[]) {
       f0printf(fout, "Setting output level normal  Table features will be skipped...\n");
       set_output_level(DDCA_OL_NORMAL);
 
+      tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
       GPtrArray * all_displays = ddc_get_all_displays();
       for (int ndx=0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -815,7 +814,6 @@ int main(int argc, char *argv[]) {
          }
          else {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
-            global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
             probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
@@ -882,7 +880,8 @@ int main(int argc, char *argv[]) {
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
-            global_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);   // here or per command?
+            // here or per command?  cur thread only or globally?
+            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_F2);
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES
