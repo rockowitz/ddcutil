@@ -46,8 +46,13 @@ void tsd_unlock_all_thread_data();
 void   tsd_set_default_sleep_multiplier_factor(double multiplier);
 double tsd_get_default_sleep_multiplier_factor();
 
-void   tsd_enable_dynamic_sleep_all(bool enable);
+void   tsd_enable_dsa_all(bool enable);
 void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports
+
+void   tsd_dsa_enable_globally(bool enabled);
+void   tsd_dsa_enable(bool enabled);
+bool   tsd_dsa_is_enabled();
+void   tsd_set_dsa_enabled_default(bool enabled);
 
 Thread_Sleep_Data * tsd_get_thread_sleep_data();
 

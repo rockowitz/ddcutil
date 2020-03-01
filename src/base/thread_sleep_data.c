@@ -46,16 +46,12 @@ static       double default_sleep_multiplier_factor = 1.0;
 static const int    default_sleep_multiplier_count  = 1;
 
 
-// across all threads, used for Thread_Sleep_Data initialization
-// used in report_dynamic_sleep_data(), avoid having this file call back into
-// dynamic_sleep.c, which creates a circular dependency
-static bool dynamic_sleep_enabled_default= false;
+static bool dynamic_sleep_enabled_default= false;  // default for new threads
 
 // Master table of sleep data for all threads
 static GHashTable *  thread_sleep_data_hash = NULL;
 static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
-
 
 
 // Do not call while already holding lock.  Behavior undefined
@@ -504,8 +500,8 @@ void set_sleep_multiplier_factor_all(double factor) {
 #endif
 
 
-// Enable dynamic sleep on all theads
-void tsd_enable_dynamic_sleep_all(bool enable) {
+// Enable dynamic sleep on all existing threads
+void tsd_enable_dsa_all(bool enable) {
    // needs mutex
    bool debug = false;
    DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
@@ -517,10 +513,40 @@ void tsd_enable_dynamic_sleep_all(bool enable) {
       while (g_hash_table_iter_next (&iter, &key, &value)) {
          Thread_Sleep_Data * data = value;
          DBGMSF(debug, "Thread id: %d", data->thread_id);
-         tsd_enable_dynamic_sleep(enable);
+         data->dynamic_sleep_enabled = enable;
       }
    }
 }
+
+
+
+
+
+void tsd_dsa_enable(bool enabled) {
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   tsd->dynamic_sleep_enabled = enabled;
+}
+
+
+// Enable or disable dynamic sleep for all current threads and new threads
+void tsd_dsa_enable_globally(bool enabled) {
+   bool debug = false;
+   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
+   dynamic_sleep_enabled_default = enabled;
+   tsd_enable_dsa_all(enabled) ;
+}
+
+
+// Is dynamic sleep enabled on the current thread?
+bool tsd_dsa_is_enabled() {
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   return tsd->dynamic_sleep_enabled;
+}
+
+void tsd_set_dsa_enabled_default(bool enabled) {
+   dynamic_sleep_enabled_default = enabled;
+}
+
 
 
 // Number of function executions that changed the multiplier

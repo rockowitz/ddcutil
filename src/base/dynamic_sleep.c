@@ -31,27 +31,6 @@
 
 #include "base/dynamic_sleep.h"
 
-static bool global_dynamic_sleep_enabled = false;  // across all threads
-
-void dsa_enable(bool enabled) {
-   bool debug = false;
-   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   tsd_enable_dynamic_sleep(enabled);
-}
-
-// Enable or disable dynamic sleep for all current threads and new threads
-void global_dsa_enable(bool enabled) {
-   bool debug = false;
-   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   global_dynamic_sleep_enabled = enabled;
-   tsd_enable_dynamic_sleep_all(enabled) ;
-}
-
-// Is dynamic sleep enabled on the current thread?
-bool dsa_is_enabled() {
-   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
-   return tsd->dynamic_sleep_enabled;
-}
 
 
 void dsa_record_ddcrw_status_code(int rc) {
