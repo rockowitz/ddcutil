@@ -15,6 +15,11 @@ typedef struct {
    bool   dynamic_sleep_enabled;
    pid_t  thread_id;
 
+   // Standard sleep adjustment settings
+   double sleep_multiplier_factor;    // as set by user
+   int    sleep_multiplier_ct;        // set by retry logic
+   int    highest_sleep_multiplier_ct;    // high water mark
+   int    sleep_multipler_changed_ct; //
 
    // For Dynamic Sleep Adjustment
    int    current_ok_status_count;
@@ -29,22 +34,17 @@ typedef struct {
    int    max_adjustment_ct;
    double current_sleep_adjustment_factor;
    double thread_adjustment_increment;
-   int adjustment_check_interval;
+   int    adjustment_check_interval;
 
-   double sleep_multiplier_factor;    // as set by user
-   int    sleep_multiplier_ct;        // set by retry logic
-   int    max_sleep_multiplier_ct;    // high water mark
-   int    sleep_multipler_changed_ct; //
 } Thread_Sleep_Data;
 
 
 void tsd_lock_all_thread_data();
 void tsd_unlock_all_thread_data();
 
-// This is the --sleep-multiplier command line option
-// void   set_global_sleep_multiplier_factor(double factor);
-// double get_global_sleep_multiplier_factor();
-// void   set_sleep_multiplier_factor_all(double factor);
+// Sleep time adjustments
+void   tsd_set_default_sleep_multiplier_factor(double multiplier);
+double tsd_get_default_sleep_multiplier_factor();
 
 void   tsd_enable_dynamic_sleep_all(bool enable);
 void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports

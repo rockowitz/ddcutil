@@ -18,18 +18,6 @@
 
 void enable_sleep_suppression(bool enable);
 
-// Sleep time adjustments
-void   lock_default_sleep_multiplier_factor();
-void   unlock_default_sleep_multiplier_factor();
-void   set_default_sleep_multiplier_factor(double multiplier);
-double get_default_sleep_multiplier_factor();
-void   set_sleep_multiplier_factor(double multiplier);
-double get_sleep_multiplier_factor();
-
-void   set_sleep_multiplier_ct(int multiplier);
-int    get_sleep_multiplier_ct();
-
-
 // Perform tuned sleep
 void tuned_sleep_with_tracex(
       DDCA_IO_Mode     io_mode,

@@ -27,6 +27,25 @@
 
 #include "base/thread_sleep_data.h"
 
+//
+// Sleep time adjustment
+//
+
+/* Two multipliers are applied to the sleep time determined from the
+ * io mode and event type.
+ *
+ * sleep_multiplier_factor: set globally, e.g. from arg passed on
+ * command line.  Consider making thread specific.
+ *
+ * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
+ */
+
+// Defaults for new threads.  Default sleep multiplier factor can be adjusted,
+// Default sleep multiplier count cannot.
+static       double default_sleep_multiplier_factor = 1.0;
+static const int    default_sleep_multiplier_count  = 1;
+
+
 // across all threads, used for Thread_Sleep_Data initialization
 // used in report_dynamic_sleep_data(), avoid having this file call back into
 // dynamic_sleep.c, which creates a circular dependency
@@ -36,6 +55,8 @@ static bool dynamic_sleep_enabled_default= false;
 static GHashTable *  thread_sleep_data_hash = NULL;
 static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
+
+
 
 // Do not call while already holding lock.  Behavior undefined
 void tsd_lock_all_thread_data() {
@@ -88,10 +109,15 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_bool("initialized",                NULL, data->initialized,           d1);
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled, d1);
 
+   // Sleep multiplier adjustment:
+   rpt_vstring(d1, "sleep-multiplier value:           %5.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d1, "current_sleep_adjustment_factor:  %5.2f", data->current_sleep_adjustment_factor);
+   rpt_vstring(d1, "sleep_multiplier_changed_ct:      %d",    data->sleep_multipler_changed_ct);
+   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %d",    data->highest_sleep_multiplier_ct);
+
    // Dynamic sleep adjustment:
    rpt_int("current_ok_status_count",     NULL, data->current_ok_status_count,    d1);
    rpt_int("current_error_status_count",  NULL, data->current_error_status_count, d1);
-
    rpt_int("total_ok_status_count",       NULL, data->total_ok_status_count,      d1);
    rpt_int("total_error",                 NULL, data->total_error_status_count,   d1);
    rpt_int("other_status_ct",             NULL, data->total_other_status_ct,      d1);
@@ -103,10 +129,6 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_vstring(d1, "current_sleep_adjustmet_factor     %5.2f", data->current_sleep_adjustment_factor);
    rpt_vstring(d1, "thread_adjustment_increment        %5.2f", data->thread_adjustment_increment);
    rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
-
-   // Sleep multiplier adjustment:
-   rpt_vstring(d1, "sleep-multiplier value:           %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d1, "current_sleep_adjustment_factor:  %5.2f", data->current_sleep_adjustment_factor);
 }
 
 
@@ -122,6 +144,13 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_label(depth, "General:");
    rpt_vstring(d1,    "Sleep-multiplier option value:   %5.2f", data->sleep_multiplier_factor);
    rpt_vstring(d1,    "Dynamic sleep enabled:           %5s",   sbool(data->dynamic_sleep_enabled));
+
+   rpt_label(depth, "Standard Sleep Adjustment:");
+   rpt_label(depth,   "Multiplier count (set by retries):");
+   rpt_vstring(d1,    "Highest sleep multiplier count:  %5d", data->highest_sleep_multiplier_ct);
+   rpt_vstring(d1,    "Number of retry function calls that increased multiplier_count: %d",
+                         data->sleep_multipler_changed_ct);
+
    if ( data->dynamic_sleep_enabled ) {
       rpt_title("Dynamic Sleep Adjustment:  ", depth);
       rpt_vstring(d1, "Total successful reads:          %5d",   data->total_ok_status_count);
@@ -141,10 +170,7 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_vstring(d1,    "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
 
    rpt_vstring(d1,    "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
-   rpt_label(depth,   "Multiplier count (set by retries):");
-   rpt_vstring(d1,    "Max sleep multiplier count:      %5d", data->max_sleep_multiplier_ct);
-   rpt_vstring(d1,    "Number of retry function calls that increased multiplier_count: %d",
-                         data->sleep_multipler_changed_ct);
+
 }
 
 
@@ -261,11 +287,12 @@ void register_thread_sleep_data(Thread_Sleep_Data * per_thread_data) {
 }
 #endif
 
+
 // initialize a single instance
 static void init_thread_sleep_data(Thread_Sleep_Data * data) {
    data->dynamic_sleep_enabled = dynamic_sleep_enabled_default;
-   data->sleep_multiplier_ct = 1;
-   data->max_sleep_multiplier_ct = 1;
+   data->sleep_multiplier_ct = default_sleep_multiplier_count;
+   data->highest_sleep_multiplier_ct = 1;
 
    data->current_sleep_adjustment_factor = 1.0;
    data->initialized = true;
@@ -370,6 +397,33 @@ Thread_Sleep_Data * tsd_get_thread_sleep_data() {
  */
 
 
+/** Sets the default sleep multiplier factor, used for the creation of any new threads.
+ * This is a global value and is a floating point number.
+ *
+ *  \param multiplier
+ *
+ *  \remark Intended for use only during program initialization.  If used
+ *          more generally, get and set of default sleep multiplier needs to
+ *          be protected by a lock.
+ *  \todo
+ *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
+ */
+void tsd_set_default_sleep_multiplier_factor(double multiplier) {
+   assert(multiplier > 0 && multiplier < 100);
+   default_sleep_multiplier_factor = multiplier;
+   // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
+}
+
+/** Gets the default sleep multiplier factor.
+ *
+ *  \return sleep multiplier factor
+ */
+double tsd_get_default_sleep_multiplier_factor() {
+   return default_sleep_multiplier_factor;
+}
+
+
+
 /** Gets the sleep multiplier factor for the current thread.
  *
  *  \return sleep mulitiplier factor
@@ -422,10 +476,11 @@ void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_ct = multiplier_ct;
-   if (multiplier_ct > data->max_sleep_multiplier_ct)
-      data->max_sleep_multiplier_ct = multiplier_ct;
+   if (multiplier_ct > data->highest_sleep_multiplier_ct)
+      data->highest_sleep_multiplier_ct = multiplier_ct;
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
+
 
 
 #ifdef UNUSED
