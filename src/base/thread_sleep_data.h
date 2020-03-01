@@ -38,16 +38,18 @@ typedef struct {
 } Thread_Sleep_Data;
 
 
-// This is the --sleep-multiplier command line option
-void   set_global_sleep_multiplier_factor(double factor);
-double get_global_sleep_multiplier_factor();
-void   set_sleep_multiplier_factor_all(double factor);
-void   tsd_enable_dynamic_sleep_all(bool enable);
+void lock_thread_sleep_data();
+void unlock_thread_sleep_data();
 
+// This is the --sleep-multiplier command line option
+// void   set_global_sleep_multiplier_factor(double factor);
+// double get_global_sleep_multiplier_factor();
+// void   set_sleep_multiplier_factor_all(double factor);
+
+void   tsd_enable_dynamic_sleep_all(bool enable);
 void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports
 
-Thread_Sleep_Data *
-       get_thread_sleep_data(bool create_if_necessary);
+Thread_Sleep_Data * get_thread_sleep_data();
 
 //  Per thread sleep-multiplier
 double tsd_get_sleep_multiplier_factor();
@@ -61,5 +63,10 @@ void   tsd_bump_sleep_multiplier_changer_ct();
 void   dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth);
 void   report_thread_sleep_data(Thread_Sleep_Data * data, int depth);
 void   report_all_thread_sleep_data(int depth);
+
+// arg can point to a value or a struct
+typedef void (*Tsd_Func)(Thread_Sleep_Data * data, void * arg);
+
+void tsd_apply_all(Tsd_Func func, void * arg);
 
 #endif /* THREAD_SLEEP_DATA_H_ */
