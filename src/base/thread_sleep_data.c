@@ -70,7 +70,7 @@ double get_global_sleep_multiplier_factor() {
 void tsd_enable_dynamic_sleep(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "enabled = %s", sbool(enabled));
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->dynamic_sleep_enabled = enabled;
 }
 
@@ -326,7 +326,7 @@ Thread_Sleep_Data * get_thread_sleep_data0(bool create_if_necessary) {
  *  Valgrind complains of access errors for closed threads, even though the
  *  struct is on the heap and still readable.
  */
-Thread_Sleep_Data * get_thread_sleep_data() {
+Thread_Sleep_Data * tsd_get_thread_sleep_data() {
    bool debug = true;
    pid_t cur_thread_id = syscall(SYS_gettid);
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
@@ -376,7 +376,7 @@ Thread_Sleep_Data * get_thread_sleep_data() {
  */
 double tsd_get_sleep_multiplier_factor() {
    bool debug = false;
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    double result = data->sleep_multiplier_factor;
    DBGMSF(debug, "Returning %5.2f", result );
    return result;
@@ -393,7 +393,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
    // Need to guard with mutex!
 
    DBGMSF(debug, "Executing. factor = %5.2f", factor);
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
    data->thread_adjustment_increment = factor;
    DBGMSF(debug, "Done");
@@ -409,7 +409,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
  *  \return multiplier count
  */
 int tsd_get_sleep_multiplier_ct() {
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    return data->sleep_multiplier_ct;
 }
 
@@ -420,7 +420,7 @@ int tsd_get_sleep_multiplier_ct() {
  */
 void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_ct = multiplier_ct;
    if (multiplier_ct > data->max_sleep_multiplier_ct)
       data->max_sleep_multiplier_ct = multiplier_ct;
@@ -470,7 +470,7 @@ void tsd_enable_dynamic_sleep_all(bool enable) {
 
 // Number of function executions that changed the multiplier
 void tsd_bump_sleep_multiplier_changer_ct() {
-   Thread_Sleep_Data * data = get_thread_sleep_data();
+   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multipler_changed_ct++;
 }
 

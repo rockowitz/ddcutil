@@ -49,7 +49,7 @@ void tsd_unlock_all_thread_data();
 void   tsd_enable_dynamic_sleep_all(bool enable);
 void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports
 
-Thread_Sleep_Data * get_thread_sleep_data();
+Thread_Sleep_Data * tsd_get_thread_sleep_data();
 
 //  Per thread sleep-multiplier
 double tsd_get_sleep_multiplier_factor();
