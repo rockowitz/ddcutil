@@ -492,13 +492,13 @@ void ddca_unlock_sleep_multiplier() {
 void
 ddca_set_default_sleep_multiplier(double multiplier)
 {
-   set_default_sleep_multiplier_factor(multiplier);
+   tsd_set_default_sleep_multiplier_factor(multiplier);
 }
 
 double
 ddca_get_default_sleep_multiplier()
 {
-   return get_default_sleep_multiplier_factor();
+   return tsd_get_default_sleep_multiplier_factor();
 }
 
 void
@@ -519,8 +519,7 @@ ddca_set_sleep_multiplier(double multiplier)
 {
    // bool debug = true;
    // DBGMSF(debug, "Setting %5.2f", multiplier);
-   // tsd_set_sleep_multiplier_factor(multiplier);    // ??? which is it ??
-   set_sleep_multiplier_factor(multiplier);
+   tsd_set_sleep_multiplier_factor(multiplier);
    // DBGMSF(debug, "Done");
 }
 
@@ -529,8 +528,7 @@ ddca_get_sleep_multiplier()
 {
    // bool debug = true;
    // DBGMSF(debug, "Starting");
-   // double result = tsd_get_sleep_multiplier_factor();   // WHICH IS IT ???
-   double result = get_sleep_multiplier_factor();
+   double result = tsd_get_sleep_multiplier_factor();
    // DBGMSF(debug, "Returning %5.2f", result);
    return result;
 }
