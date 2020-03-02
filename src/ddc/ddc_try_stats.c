@@ -21,7 +21,6 @@
 #include "base/parms.h"
 
 #include "base/thread_sleep_data.h"
-#include "ddc/ddc_retry_mgt.h"
 #include "ddc/ddc_try_stats.h"
 
 static GMutex try_data_mutex;

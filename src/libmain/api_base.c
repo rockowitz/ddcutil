@@ -25,7 +25,6 @@
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_retry_mgt.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
