@@ -20,6 +20,7 @@
 #include "base/ddc_errno.h"
 #include "base/parms.h"
 
+#include "base/thread_sleep_data.h"
 #include "ddc/ddc_retry_mgt.h"
 #include "ddc/ddc_try_stats.h"
 
@@ -191,6 +192,7 @@ int try_data_get_total_attempts(Try_Data * stats_rec) {
  *  Why does this data structure need to be opaque?  (4/2017)
  */
 void try_data_report(Try_Data * stats_rec, int depth) {
+   // bool debug = true;
    int d1 = depth+1;
    // Try_Data * try_data = unopaque(stats_rec);
    rpt_nl();
@@ -204,9 +206,18 @@ void try_data_report(Try_Data * stats_rec, int depth) {
    else {
       int total_successful_attempts = 0;
       int max1 = stats_rec->max_tries;
-      int max2 = ddc_get_cur_thread_single_max_tries(stats_rec->retry_type);
-      assert(max1 == max2);
+
+      Global_Maxtries_Accumulator acc =
+             tsd_get_all_threads_maxtries_range(stats_rec->retry_type);
+
+
       rpt_vstring(d1, "Max tries allowed: %d", max1);
+      if (acc.min_lowest_maxtries == acc.max_highest_maxtries)
+         rpt_vstring(d1, "Max tries allowed: %d", acc.min_lowest_maxtries);
+
+      rpt_vstring(d1, "Max tries allowed range: %d..%d",
+                      acc.min_lowest_maxtries, acc.max_highest_maxtries);
+
       int upper_bound = MAX_MAX_TRIES+1;
       while (upper_bound > 1) {
          // DBGMSG("upper_bound=%d", upper_bound);

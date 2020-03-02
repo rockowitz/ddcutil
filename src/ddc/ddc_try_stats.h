@@ -3,7 +3,7 @@
  *  Maintains statistics on DDC retries.
  */
 
-// Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRY_STATS_H_
@@ -26,8 +26,6 @@ struct {
 } Try_Data;
 
 
-
-// Returns an opaque pointer to a Try_Data data structure
 Try_Data * try_data_create(DDCA_Retry_Type retry_type, char * stat_name, int max_tries);
 
 void try_data_reset(Try_Data * stats_rec);

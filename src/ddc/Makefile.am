@@ -36,7 +36,6 @@ ddc_services.c              \
 ddc_strategy.c              \
 ddc_vcp.c                   \
 ddc_vcp_version.c           \
-ddc_retry_mgt.c             \
 ddc_try_stats.c 
 
 if ENABLE_SHARED_LIB_COND

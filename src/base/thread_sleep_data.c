@@ -44,14 +44,18 @@
 // Default sleep multiplier count cannot.
 static       double default_sleep_multiplier_factor = 1.0;
 static const int    default_sleep_multiplier_count  = 1;
-
-
-static bool dynamic_sleep_enabled_default= false;  // default for new threads
+static       bool   default_dynamic_sleep_enabled   = false;
 
 // Master table of sleep data for all threads
 static GHashTable *  thread_sleep_data_hash = NULL;
 static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
+
+static uint16_t default_maxtries[] = {
+      MAX_WRITE_ONLY_EXCHANGE_TRIES,
+      MAX_WRITE_READ_EXCHANGE_TRIES,
+      MAX_MULTI_EXCHANGE_TRIES };
+
 
 
 // Do not call while already holding lock.  Behavior undefined
@@ -104,12 +108,19 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
    rpt_bool("initialized",                NULL, data->initialized,           d1);
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled, d1);
+   rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
 
    // Sleep multiplier adjustment:
-   rpt_vstring(d1, "sleep-multiplier value:           %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d1, "current_sleep_adjustment_factor:  %5.2f", data->current_sleep_adjustment_factor);
-   rpt_vstring(d1, "sleep_multiplier_changed_ct:      %d",    data->sleep_multipler_changed_ct);
-   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %d",    data->highest_sleep_multiplier_ct);
+#ifdef REF
+
+   int    sleep_multiplier_ct    ;         // can be changed by retry logic
+   int    highest_sleep_multiplier_value;  // high water mark
+   int    sleep_multipler_changer_ct;      // number of function calls that adjusted multiplier ct
+
+#endif
+   rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
+   rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
+   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_value);
 
    // Dynamic sleep adjustment:
    rpt_int("current_ok_status_count",     NULL, data->current_ok_status_count,    d1);
@@ -122,9 +133,11 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    rpt_int("adjustment_ct",               NULL, data->adjustment_ct,              d1);
    rpt_int("max_adjustment_ct",           NULL, data->max_adjustment_ct,          d1);
    rpt_int("non_adjustment_ct",           NULL, data->non_adjustment_ct,          d1);
-   rpt_vstring(d1, "current_sleep_adjustmet_factor     %5.2f", data->current_sleep_adjustment_factor);
-   rpt_vstring(d1, "thread_adjustment_increment        %5.2f", data->thread_adjustment_increment);
+   rpt_vstring(d1, "current_sleep_adjustmet_factor     %15.2f", data->current_sleep_adjustment_factor);
+   rpt_vstring(d1, "thread_adjustment_increment        %15.2f", data->thread_adjustment_increment);
    rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
+
+   // TODO: report maxtries
 }
 
 
@@ -136,16 +149,16 @@ void dbgrpt_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
 void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    int d1 = depth+1;
    // int d2 = depth+2;
-   rpt_vstring(depth, "Sleep data for thread %6d", data->thread_id);
-   rpt_label(depth, "General:");
-   rpt_vstring(d1,    "Sleep-multiplier option value:   %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d1,    "Dynamic sleep enabled:           %5s",   sbool(data->dynamic_sleep_enabled));
+   rpt_vstring(depth, "Sleep data for thread: %3d", data->thread_id);
+   rpt_label(depth,   "General:");
+   rpt_vstring(d1,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d1,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
 
-   rpt_label(depth, "Standard Sleep Adjustment:");
-   rpt_label(depth,   "Multiplier count (set by retries):");
-   rpt_vstring(d1,    "Highest sleep multiplier count:  %5d", data->highest_sleep_multiplier_ct);
-   rpt_vstring(d1,    "Number of retry function calls that increased multiplier_count: %d",
-                         data->sleep_multipler_changed_ct);
+   rpt_label(depth,   "Sleep multiplier adjustment:");
+   rpt_vstring(d1,    "Current adjustment:                %d", data->sleep_multiplier_ct);
+   rpt_vstring(d1,    "Highest adjustment:                %d", data->highest_sleep_multiplier_value);
+   rpt_label(  d1,    "Number of function calls");
+   rpt_vstring(d1,    "   that performed adjustment:      %d", data->sleep_multipler_changer_ct);
 
    if ( data->dynamic_sleep_enabled ) {
       rpt_title("Dynamic Sleep Adjustment:  ", depth);
@@ -154,19 +167,22 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
       rpt_vstring(d1, "Total ignored status codes:      %5d",   data->total_other_status_ct);
       rpt_vstring(d1, "Current sleep adjustment factor: %5.2f", data->current_sleep_adjustment_factor);
       rpt_vstring(d1, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
-      rpt_vstring(d1, "Adjustment check interval        %5d",  data->adjustment_check_interval);
+      rpt_vstring(d1, "Adjustment check interval        %5d",   data->adjustment_check_interval);
 
+      rpt_vstring(d1, "Calls since last check:          %5d",   data->calls_since_last_check);
+      rpt_vstring(d1, "Total adjustment checks:         %5d",   data->total_adjustment_checks);
+      rpt_vstring(d1, "Number of adjustments:           %5d",   data->adjustment_ct);
+      rpt_vstring(d1, "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
+      rpt_vstring(d1, "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
    }
-   else {
-      rpt_label(depth, "Sleep Adjustment:");
-   }
-   rpt_vstring(d1,    "Calls since last check:          %5d", data->calls_since_last_check);
-   rpt_vstring(d1,    "Total adjustment checks:         %5d", data->total_adjustment_checks);
-   rpt_vstring(d1,    "Number of adjustments:           %5d",   data->adjustment_ct);
-   rpt_vstring(d1,    "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
 
-   rpt_vstring(d1,    "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
-
+   rpt_label(depth,"Retry settings:");
+   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d",
+                    data->current_maxtries[0], data->current_maxtries[1], data->current_maxtries[2]);
+   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d",
+                    data->highest_maxtries[0], data->highest_maxtries[1], data->highest_maxtries[2]);
+   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d",
+                    data->lowest_maxtries[0], data->lowest_maxtries[1], data->lowest_maxtries[2]);
 }
 
 
@@ -286,15 +302,22 @@ void register_thread_sleep_data(Thread_Sleep_Data * per_thread_data) {
 
 // initialize a single instance
 static void init_thread_sleep_data(Thread_Sleep_Data * data) {
-   data->dynamic_sleep_enabled = dynamic_sleep_enabled_default;
+   data->dynamic_sleep_enabled = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
-   data->highest_sleep_multiplier_ct = 1;
+   data->highest_sleep_multiplier_value = 1;
 
    data->current_sleep_adjustment_factor = 1.0;
    data->initialized = true;
    data->sleep_multiplier_factor = global_sleep_multiplier_factor;    // default
    data->thread_adjustment_increment = global_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
+
+   for (int ndx=0; ndx < RETRY_TYPE_COUNT; ndx++) {
+      data->current_maxtries[ndx] = default_maxtries[ndx];
+      data->highest_maxtries[ndx] = default_maxtries[ndx];
+      data->lowest_maxtries[ndx]  = default_maxtries[ndx];
+   }
+
 }
 
 #ifdef OLD
@@ -350,7 +373,7 @@ Thread_Sleep_Data * get_thread_sleep_data0(bool create_if_necessary) {
  *  struct is on the heap and still readable.
  */
 Thread_Sleep_Data * tsd_get_thread_sleep_data() {
-   bool debug = true;
+   bool debug = false;
    pid_t cur_thread_id = syscall(SYS_gettid);
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    g_mutex_lock(&thread_sleep_data_mutex);
@@ -360,7 +383,7 @@ Thread_Sleep_Data * tsd_get_thread_sleep_data() {
    Thread_Sleep_Data * data = g_hash_table_lookup(thread_sleep_data_hash,
                                             GINT_TO_POINTER(cur_thread_id));
    if (!data) {
-      DBGMSG("Thread_Sleep_Data not found for thread %d", cur_thread_id);
+      // DBGMSG("Thread_Sleep_Data not found for thread %d", cur_thread_id);
       data = g_new0(Thread_Sleep_Data, 1);
       data->thread_id = cur_thread_id;
       init_thread_sleep_data(data);
@@ -368,8 +391,9 @@ Thread_Sleep_Data * tsd_get_thread_sleep_data() {
       g_hash_table_insert(thread_sleep_data_hash,
                           GINT_TO_POINTER(cur_thread_id),
                           data);
-      DBGMSF(debug, "Inserted Thead_Sleep_Data for thread id = %d", data->thread_id);
-      dbgrpt_thread_sleep_data(data, 1);
+      DBGMSF(debug, "Created Thead_Sleep_Data struct for thread id = %d", data->thread_id);
+      if (debug)
+        dbgrpt_thread_sleep_data(data, 1);
    }
    g_mutex_unlock(&thread_sleep_data_mutex);
    return data;
@@ -472,8 +496,8 @@ void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_ct = multiplier_ct;
-   if (multiplier_ct > data->highest_sleep_multiplier_ct)
-      data->highest_sleep_multiplier_ct = multiplier_ct;
+   if (multiplier_ct > data->highest_sleep_multiplier_value)
+      data->highest_sleep_multiplier_value = multiplier_ct;
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
@@ -505,7 +529,7 @@ void tsd_enable_dsa_all(bool enable) {
    // needs mutex
    bool debug = false;
    DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
-   dynamic_sleep_enabled_default = enable;  // for initializing new threads
+   default_dynamic_sleep_enabled = enable;  // for initializing new threads
    if (thread_sleep_data_hash) {
       GHashTableIter iter;
       gpointer key, value;
@@ -532,7 +556,7 @@ void tsd_dsa_enable(bool enabled) {
 void tsd_dsa_enable_globally(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   dynamic_sleep_enabled_default = enabled;
+   default_dynamic_sleep_enabled = enabled;
    tsd_enable_dsa_all(enabled) ;
 }
 
@@ -544,7 +568,7 @@ bool tsd_dsa_is_enabled() {
 }
 
 void tsd_set_dsa_enabled_default(bool enabled) {
-   dynamic_sleep_enabled_default = enabled;
+   default_dynamic_sleep_enabled = enabled;
 }
 
 
@@ -552,9 +576,20 @@ void tsd_set_dsa_enabled_default(bool enabled) {
 // Number of function executions that changed the multiplier
 void tsd_bump_sleep_multiplier_changer_ct() {
    Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
-   data->sleep_multipler_changed_ct++;
+   data->sleep_multipler_changer_ct++;
 }
 
+
+void minmax_visitor(Thread_Sleep_Data * data, void * accumulator) {
+   Global_Maxtries_Accumulator * acc = accumulator;
+   if (data->highest_maxtries[acc->retry_type] > acc->max_highest_maxtries)
+      acc->max_highest_maxtries = data->highest_maxtries[acc->retry_type];
+   if (data->lowest_maxtries[acc->retry_type] < acc->min_lowest_maxtries) {
+      DBGMSG("lowest maxtries = %d -> %d",
+             acc->min_lowest_maxtries, data->lowest_maxtries[acc->retry_type]);
+      acc->min_lowest_maxtries = data->lowest_maxtries[acc->retry_type];
+   }
+}
 
 void tsd_apply_all(Tsd_Func func, void * arg) {
    bool debug = false;
@@ -569,3 +604,122 @@ void tsd_apply_all(Tsd_Func func, void * arg) {
       }
    }
 }
+
+
+//
+// Maxtries
+//
+
+#ifdef UNUSED
+static char * retry_class_descriptions[] = {
+      "write only",
+      "write-read",
+      "multi-part",
+};
+#endif
+
+char * retry_class_names[] = {
+      "DDCA_WRITE_ONLY_TRIES",
+      "DDCA_WRITE_READ_TRIES",
+      "DDCA_MULTI_PART_TRIES"
+};
+
+const char * ddc_retry_type_name(DDCA_Retry_Type type_id) {
+   return retry_class_names[type_id];
+}
+
+#ifdef UNUSED
+const char * ddc_retry_type_description(DDCA_Retry_Type type_id) {
+   return retry_class_descriptions[type_id];
+}
+#endif
+
+
+
+void ddc_set_default_max_tries(DDCA_Retry_Type rcls, uint16_t new_maxtries) {
+   bool debug = false;
+   DBGMSF(debug, "Executing. rcls = %s, new_maxtries=%d", ddc_retry_type_name(rcls), new_maxtries);
+   g_mutex_lock(&thread_sleep_data_mutex);
+   default_maxtries[rcls] = new_maxtries;
+   g_mutex_unlock(&thread_sleep_data_mutex);
+}
+
+
+#ifdef UNFINISHED
+void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
+   bool debug = true;
+   DBGMSF(debug, "Executing. new_max_tries = [%d,%d,%d]",
+                 new_max_tries[0], new_max_tries[1], new_max_tries[2] );
+   g_mutex_lock(&thread_sleep_data_mutex);
+   Maxtries_Rec * mrec = get_thread_maxtries_rec();
+   for (DDCA_Retry_Type type_id = 0; type_id < RETRY_TYPE_COUNT; type_id++) {
+      if (new_max_tries[type_id] > 0)
+         mrec->maxtries[type_id] = new_max_tries[type_id];
+   }
+   g_mutex_unlock(&thread_sleep_data_mutex);
+}
+#endif
+
+
+void ddc_set_initial_thread_max_tries(DDCA_Retry_Type retry_class, uint16_t new_maxtries) {
+   bool debug = true;
+   DBGMSF(debug, "Executing. retry_class = %s, new_maxtries=%d",
+                 ddc_retry_type_name(retry_class), new_maxtries);
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   tsd->current_maxtries[retry_class] = new_maxtries;
+   tsd->highest_maxtries[retry_class] = new_maxtries;
+   tsd->lowest_maxtries[retry_class] = new_maxtries;
+}
+
+void ddc_reset_thread_max_tries(DDCA_Retry_Type retry_class, uint16_t new_maxtries) {
+   bool debug = true;
+   DBGMSF(debug, "Executing. retry_class = %s, new_max_tries=%d",
+                 ddc_retry_type_name(retry_class), new_maxtries);
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   tsd->current_maxtries[retry_class] = new_maxtries;
+   if (new_maxtries > tsd->highest_maxtries[retry_class])
+      tsd->highest_maxtries[retry_class] = new_maxtries;
+   if (new_maxtries < tsd->lowest_maxtries[retry_class])
+      tsd->lowest_maxtries[retry_class] = new_maxtries;
+}
+
+#ifdef UNFINISHED
+// sets all at once
+void ddc_set_thread_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
+   bool debug = true;
+   DBGMSF(debug, "Executing. new_max_tries = [%d,%d,%d]",
+                 new_max_tries[0], new_max_tries[1], new_max_tries[2] );
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   tsd->current_maxtries[retry_class] = new_max_tries;
+   for (DDCA_Retry_Type type_id = 0; type_id < RETRY_TYPE_COUNT; type_id++) {
+      if (new_max_tries[type_id] > 0)
+         tsd->current_maxtries[type_id] = new_max_tries[type_id];
+   }
+}
+#endif
+
+
+uint16_t ddc_get_thread_max_tries(DDCA_Retry_Type type_id) {
+   bool debug = true;
+   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   uint16_t result = tsd->current_maxtries[type_id];
+   DBGMSF(debug, "retry type=%s, returning %d", ddc_retry_type_name(type_id), result);
+   return result;
+}
+
+
+// void max_all_thread_highest_maxtries
+
+// n returns value on stack, not pointer
+Global_Maxtries_Accumulator tsd_get_all_threads_maxtries_range(DDCA_Retry_Type typeid) {
+
+   Global_Maxtries_Accumulator accumulator;
+   accumulator.retry_type = typeid;
+   accumulator.max_highest_maxtries = 0;
+   accumulator.min_lowest_maxtries = MAX_MAX_TRIES;
+
+   tsd_apply_all(&minmax_visitor, &accumulator);
+
+   return accumulator;
+}
+

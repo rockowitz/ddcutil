@@ -16,10 +16,11 @@ typedef struct {
    pid_t  thread_id;
 
    // Standard sleep adjustment settings
-   double sleep_multiplier_factor;    // as set by user
-   int    sleep_multiplier_ct;        // set by retry logic
-   int    highest_sleep_multiplier_ct;    // high water mark
-   int    sleep_multipler_changed_ct; //
+   double sleep_multiplier_factor;         // initially set by user
+
+   int    sleep_multiplier_ct    ;         // can be changed by retry logic
+   int    highest_sleep_multiplier_value;  // high water mark
+   int    sleep_multipler_changer_ct;      // number of function calls that adjusted multiplier ct
 
    // For Dynamic Sleep Adjustment
    int    current_ok_status_count;
@@ -36,7 +37,19 @@ typedef struct {
    double thread_adjustment_increment;
    int    adjustment_check_interval;
 
+   // Retry management
+   uint16_t current_maxtries[3];
+   uint16_t highest_maxtries[3];
+   uint16_t lowest_maxtries[3];
+
 } Thread_Sleep_Data;
+
+
+typedef struct {
+   DDCA_Retry_Type retry_type;
+   uint16_t        max_highest_maxtries;
+   uint16_t        min_lowest_maxtries;
+} Global_Maxtries_Accumulator;
 
 
 void tsd_lock_all_thread_data();
@@ -73,5 +86,25 @@ void   report_all_thread_sleep_data(int depth);
 typedef void (*Tsd_Func)(Thread_Sleep_Data * data, void * arg);
 
 void tsd_apply_all(Tsd_Func func, void * arg);
+
+
+// Retry management
+
+#define RETRY_TYPE_COUNT  3  // number of entries in DDCA_Retry_Type
+
+const char * ddc_retry_type_name(DDCA_Retry_Type stat_id);
+const char * ddc_retry_type_description(DDCA_Retry_Type retry_class);
+
+void     ddc_set_default_max_tries(DDCA_Retry_Type type_id, uint16_t new_max_tries);
+void     ddc_set_initial_thread_max_tries( DDCA_Retry_Type type_id, uint16_t new_max_tries);
+void     ddc_reset_thread_max_tries( DDCA_Retry_Type type_id, uint16_t new_max_tries);
+uint16_t ddc_get_thread_max_tries( DDCA_Retry_Type type_id);
+
+#ifdef FUTURE
+void     ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]);
+void     ddc_set_thread_all_max_tries( uint16_t new_max_tries[RETRY_TYPE_COUNT]);
+#endif
+
+Global_Maxtries_Accumulator tsd_get_all_threads_maxtries_range(DDCA_Retry_Type typeid);
 
 #endif /* THREAD_SLEEP_DATA_H_ */

@@ -507,6 +507,7 @@ int main(int argc, char *argv[]) {
       if (special_option_explained)
          f0puts("\n", fout);
    }
+
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
 #ifdef USE_API
@@ -533,9 +534,19 @@ int main(int argc, char *argv[]) {
 #endif
    }
 
-   // new way, sets in retry_mgt:
-   ddc_set_default_all_max_tries(parsed_cmd->max_tries);    // future threads
-   ddc_set_cur_thread_all_max_tries(parsed_cmd->max_tries);     // current thread
+   // TODO: Resolve: Try_Data has 4 retry types, Thread_Sleep_Data has 3
+
+   // new way, sets in thread_sleep_data:
+   // ddc_set_default_all_max_tries(parsed_cmd->max_tries);    // future threads
+   // ddc_set_thread_all_max_tries(parsed_cmd->max_tries);     // current thread
+
+   for (int retry_type_id = 0; retry_type_id < 3; retry_type_id++) {
+      if (parsed_cmd->max_tries[retry_type_id] > 0) {
+         ddc_set_default_max_tries(retry_type_id, parsed_cmd->max_tries[retry_type_id]);
+         ddc_set_initial_thread_max_tries( retry_type_id, parsed_cmd->max_tries[retry_type_id]);
+      }
+   }
+
 
 #ifdef USE_USB
    // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {
