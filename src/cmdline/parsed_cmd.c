@@ -102,7 +102,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       printf("   argument %d:  %s\n", ndx, parsed_cmd->args[ndx]);
    }
    char buf[20];
-   snprintf(buf,20, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1], parsed_cmd->max_tries[2] );
+   g_snprintf(buf,30, "%d,%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1],
+                                     parsed_cmd->max_tries[2], parsed_cmd->max_tries[3] );
    rpt_str("max_retries",        NULL, buf,                                                   d1);
 
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
