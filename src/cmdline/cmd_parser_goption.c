@@ -556,6 +556,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                    parsed_cmd->max_tries[ndx] = ival;
                 }
              }
+             // split max multipart exchange into read and write
+             parsed_cmd->max_tries[3] = parsed_cmd->max_tries[2];
           }
           assert(ndx == ntsal);
        }
@@ -563,7 +565,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
        DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0],
                                            parsed_cmd->max_tries[1],
-                                           parsed_cmd->max_tries[2]);
+                                           parsed_cmd->max_tries[2],
+                                           parsed_cmd->max_tries[3]);
        debug = saved_debug;
     }
 
