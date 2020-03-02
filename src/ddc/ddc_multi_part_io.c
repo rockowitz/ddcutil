@@ -45,46 +45,33 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 #define MAX_MAX_MULTI_EXCHANGE_TRIES  MAX_MAX_TRIES     /* from parms.h */
 
 /** \def Maximum number of capabilities exchange tries allowed. Can be adjusted. */
-static int max_multi_part_read_tries = MAX_MULTI_EXCHANGE_TRIES;
+static int max_multi_part_read_tries  = INITIAL_MAX_MULTI_EXCHANGE_TRIES;
+static int max_multi_part_write_tries = INITIAL_MAX_MULTI_EXCHANGE_TRIES;
 
-static int max_multi_part_write_tries = MAX_MULTI_EXCHANGE_TRIES;
-
-static Try_Data * multi_part_read_stats_rec = NULL;
-static Try_Data * multi_part_write_stats_rec = NULL;
+// static Try_Data * multi_part_read_stats_rec = NULL;
+// static Try_Data * multi_part_write_stats_rec = NULL;
 
 /** Resets the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
-   if (multi_part_read_stats_rec)
-      try_data_reset(multi_part_read_stats_rec);
-   else
-      multi_part_read_stats_rec = try_data_create(DDCA_MULTI_PART_TRIES,
-                                                 "multi-part read exchange",
-                                                 max_multi_part_read_tries);
-}
+   try_data_reset2(DDCA_MULTI_PART_READ_TRIES);
+ }
 
 
 /** Resets the statistics for multi-part writes */
 void ddc_reset_multi_part_write_stats() {
-   if (multi_part_write_stats_rec)
-      try_data_reset(multi_part_write_stats_rec);
-   else
-      multi_part_write_stats_rec = try_data_create(DDCA_MULTI_PART_TRIES,
-                                                   "multi-part write exchange",
-                                                   max_multi_part_write_tries);
+   try_data_reset2(DDCA_MULTI_PART_WRITE_TRIES);
 }
 
 
 /** Reports the statistics for multi-part reads */
 void ddc_report_multi_part_read_stats(int depth) {
-   assert(multi_part_read_stats_rec);
-   try_data_report(multi_part_read_stats_rec, depth);
+   try_data_report2(DDCA_MULTI_PART_READ_TRIES, depth);
 }
 
 
 /** Reports the statistics for multi-part writes */
 void ddc_report_multi_part_write_stats(int depth) {
-   assert(multi_part_write_stats_rec);
-   try_data_report(multi_part_write_stats_rec, depth);
+   try_data_report2(DDCA_MULTI_PART_WRITE_TRIES, depth);
 }
 
 
@@ -94,8 +81,7 @@ void ddc_report_multi_part_write_stats(int depth) {
 void ddc_set_max_multi_part_read_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    max_multi_part_read_tries = ct;
-   if (multi_part_read_stats_rec)
-         try_data_set_max_tries(multi_part_read_stats_rec, ct);
+   try_data_set_max_tries2(DDCA_MULTI_PART_READ_TRIES, ct);
 }
 
 /** Resets the maximum number of multi-part write exchange tries allowed.
@@ -104,8 +90,7 @@ void ddc_set_max_multi_part_read_tries(int ct) {
 void ddc_set_max_multi_part_write_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    max_multi_part_write_tries = ct;
-   if (multi_part_write_stats_rec)
-         try_data_set_max_tries(multi_part_write_stats_rec, ct);
+   try_data_set_max_tries2(DDCA_MULTI_PART_WRITE_TRIES, ct);
 }
 
 
@@ -113,7 +98,10 @@ void ddc_set_max_multi_part_write_tries(int ct) {
   * @return maximum number of tries
   */
 int ddc_get_max_multi_part_read_tries() {
-   return max_multi_part_read_tries;
+   int v1 = try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES);
+   int v2 = max_multi_part_read_tries;
+   assert(v1 == v2);
+   return v1;
 }
 
 
@@ -121,7 +109,10 @@ int ddc_get_max_multi_part_read_tries() {
   * @return maximum number of tries
   */
 int ddc_get_max_multi_part_write_tries() {
-   return max_multi_part_write_tries;
+   int v1 = try_data_get_max_tries2(DDCA_MULTI_PART_WRITE_TRIES);
+   int v2 = max_multi_part_write_tries;
+   assert(v1 == v2);
+   return v1;
 }
 
 
@@ -349,7 +340,7 @@ multi_part_read_with_retry(
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
-   try_data_record_tries(multi_part_read_stats_rec, rc, tryctr);
+   try_data_record_tries2(DDCA_MULTI_PART_READ_TRIES, rc, tryctr);
 
    *buffer_loc = accumulator;
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));

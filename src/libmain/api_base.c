@@ -426,8 +426,11 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    case (DDCA_WRITE_READ_TRIES):
       result = ddc_get_max_write_read_exchange_tries();
       break;
-   case (DDCA_MULTI_PART_TRIES):
+   case (DDCA_MULTI_PART_READ_TRIES):
       result = ddc_get_max_multi_part_read_tries();
+      break;
+   case (DDCA_MULTI_PART_WRITE_TRIES):
+      result = ddc_get_max_multi_part_write_tries();
       break;
    }
    // new way using retry_mgt
@@ -454,14 +457,15 @@ ddca_set_max_tries(
       case (DDCA_WRITE_READ_TRIES):
          ddc_set_max_write_read_exchange_tries(max_tries);   // sets in Try_Data
          break;
-      case (DDCA_MULTI_PART_TRIES):
+      case (DDCA_MULTI_PART_READ_TRIES):
          ddc_set_max_multi_part_read_tries(max_tries);       // sets in Try_Data
+      case (DDCA_MULTI_PART_WRITE_TRIES):
          ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
          break;
       }
 
       // new way, set in retry_mgt
-      ddc_reset_thread_max_tries(retry_type, max_tries);
+      ddc_set_thread_max_tries(retry_type, max_tries);
    }
    return rc;
 }

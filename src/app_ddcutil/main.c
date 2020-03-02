@@ -509,28 +509,16 @@ int main(int argc, char *argv[]) {
 
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
-#ifdef USE_API
-      ddca_set_max_tries(DDCA_WRITE_ONLY_TRIES, parsed_cmd->max_tries[0]);
-#else
       ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
-#endif
    }
 
    if (parsed_cmd->max_tries[1] > 0) {
-#ifdef USE_API
-      ddca_set_max_tries(DDCA_WRITE_READ_TRIES, parsed_cmd->max_tries[1]);
-#else
       ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
-#endif
    }
 
    if (parsed_cmd->max_tries[2] > 0) {
-#ifdef USE_API
-      ddca_set_max_tries(DDCA_MULTI_PART_TRIES, parsed_cmd->max_tries[2]);
-#else
       ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
       ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
-#endif
    }
 
    // TODO: Resolve: Try_Data has 4 retry types, Thread_Sleep_Data has 3

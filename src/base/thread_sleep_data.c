@@ -52,9 +52,11 @@ static GMutex        thread_sleep_data_mutex;
 static double        global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
 
 static uint16_t default_maxtries[] = {
-      MAX_WRITE_ONLY_EXCHANGE_TRIES,
-      MAX_WRITE_READ_EXCHANGE_TRIES,
-      MAX_MULTI_EXCHANGE_TRIES };
+      INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
+      INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES,
+      INITIAL_MAX_MULTI_EXCHANGE_TRIES,
+      INITIAL_MAX_MULTI_EXCHANGE_TRIES
+     };
 
 
 
@@ -177,12 +179,15 @@ void report_thread_sleep_data(Thread_Sleep_Data * data, int depth) {
    }
 
    rpt_label(depth,"Retry settings:");
-   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d",
-                    data->current_maxtries[0], data->current_maxtries[1], data->current_maxtries[2]);
-   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d",
-                    data->highest_maxtries[0], data->highest_maxtries[1], data->highest_maxtries[2]);
-   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d",
-                    data->lowest_maxtries[0], data->lowest_maxtries[1], data->lowest_maxtries[2]);
+   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
+                    data->current_maxtries[0], data->current_maxtries[1],
+                    data->current_maxtries[2], data->current_maxtries[3]);
+   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
+                    data->highest_maxtries[0], data->highest_maxtries[1],
+                    data->highest_maxtries[2], data->highest_maxtries[3]);
+   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
+                    data->lowest_maxtries[0], data->lowest_maxtries[1],
+                    data->lowest_maxtries[2], data->lowest_maxtries[3]);
 }
 
 
@@ -312,12 +317,11 @@ static void init_thread_sleep_data(Thread_Sleep_Data * data) {
    data->thread_adjustment_increment = global_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
 
-   for (int ndx=0; ndx < RETRY_TYPE_COUNT; ndx++) {
+   for (int ndx=0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
       data->current_maxtries[ndx] = default_maxtries[ndx];
       data->highest_maxtries[ndx] = default_maxtries[ndx];
       data->lowest_maxtries[ndx]  = default_maxtries[ndx];
    }
-
 }
 
 #ifdef OLD
@@ -610,29 +614,28 @@ void tsd_apply_all(Tsd_Func func, void * arg) {
 // Maxtries
 //
 
-#ifdef UNUSED
 static char * retry_class_descriptions[] = {
       "write only",
       "write-read",
-      "multi-part",
+      "multi-part read",
+      "multi-part write"
 };
-#endif
+
 
 char * retry_class_names[] = {
       "DDCA_WRITE_ONLY_TRIES",
       "DDCA_WRITE_READ_TRIES",
-      "DDCA_MULTI_PART_TRIES"
+      "DDCA_MULTI_PART_READ_TRIES",
+      "DDCA_MULTI_PART_WRITE_TRIES"
 };
 
 const char * ddc_retry_type_name(DDCA_Retry_Type type_id) {
    return retry_class_names[type_id];
 }
 
-#ifdef UNUSED
 const char * ddc_retry_type_description(DDCA_Retry_Type type_id) {
    return retry_class_descriptions[type_id];
 }
-#endif
 
 
 
@@ -661,26 +664,27 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 #endif
 
 
-void ddc_set_initial_thread_max_tries(DDCA_Retry_Type retry_class, uint16_t new_maxtries) {
+void ddc_set_initial_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    bool debug = true;
    DBGMSF(debug, "Executing. retry_class = %s, new_maxtries=%d",
-                 ddc_retry_type_name(retry_class), new_maxtries);
+                 ddc_retry_type_name(retry_type), new_maxtries);
    Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
-   tsd->current_maxtries[retry_class] = new_maxtries;
-   tsd->highest_maxtries[retry_class] = new_maxtries;
-   tsd->lowest_maxtries[retry_class] = new_maxtries;
+   tsd->current_maxtries[retry_type] = new_maxtries;
+   tsd->highest_maxtries[retry_type] = new_maxtries;
+   tsd->lowest_maxtries[retry_type] = new_maxtries;
 }
 
-void ddc_reset_thread_max_tries(DDCA_Retry_Type retry_class, uint16_t new_maxtries) {
+void ddc_set_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    bool debug = true;
    DBGMSF(debug, "Executing. retry_class = %s, new_max_tries=%d",
-                 ddc_retry_type_name(retry_class), new_maxtries);
+                 ddc_retry_type_name(retry_type), new_maxtries);
    Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
-   tsd->current_maxtries[retry_class] = new_maxtries;
-   if (new_maxtries > tsd->highest_maxtries[retry_class])
-      tsd->highest_maxtries[retry_class] = new_maxtries;
-   if (new_maxtries < tsd->lowest_maxtries[retry_class])
-      tsd->lowest_maxtries[retry_class] = new_maxtries;
+   tsd->current_maxtries[retry_type] = new_maxtries;
+
+   if (new_maxtries > tsd->highest_maxtries[retry_type])
+      tsd->highest_maxtries[retry_type] = new_maxtries;
+   if (new_maxtries < tsd->lowest_maxtries[retry_type])
+      tsd->lowest_maxtries[retry_type] = new_maxtries;
 }
 
 #ifdef UNFINISHED

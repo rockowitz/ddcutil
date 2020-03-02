@@ -35,6 +35,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
 
 #include "ddc/ddc_services.h"
@@ -124,16 +125,16 @@ void ddc_report_max_tries(int depth) {
    rpt_vstring(depth, "Operation Type                    Current  Default");
    rpt_vstring(depth, "Write only exchange tries:       %8d %8d",
                ddc_get_max_write_only_exchange_tries(),
-               MAX_WRITE_ONLY_EXCHANGE_TRIES);
+               INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES);
    rpt_vstring(depth, "Write read exchange tries:       %8d %8d",
                ddc_get_max_write_read_exchange_tries(),
-               MAX_WRITE_READ_EXCHANGE_TRIES);
+               INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES);
    rpt_vstring(depth, "Multi-part read exchange tries:  %8d %8d",
                ddc_get_max_multi_part_read_tries(),
-               MAX_MULTI_EXCHANGE_TRIES);
+               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
    rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
                ddc_get_max_multi_part_write_tries(),
-               MAX_MULTI_EXCHANGE_TRIES);
+               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
 }
 
 
@@ -160,13 +161,13 @@ void init_ddc_services() {
 #endif
 
    // ddc:
-   ddc_reset_ddc_stats();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_ddc_display_lock();
    init_ddc_displays();
    init_ddc_packet_io();
    init_ddc_multi_part_io();
+   init_ddc_try_data();
    init_ddc_vcp();
 
    // dbgrpt_func_name_table(1);

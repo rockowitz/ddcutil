@@ -38,9 +38,9 @@ typedef struct {
    int    adjustment_check_interval;
 
    // Retry management
-   uint16_t current_maxtries[3];
-   uint16_t highest_maxtries[3];
-   uint16_t lowest_maxtries[3];
+   uint16_t current_maxtries[4];
+   uint16_t highest_maxtries[4];
+   uint16_t lowest_maxtries[4];
 
 } Thread_Sleep_Data;
 
@@ -90,14 +90,14 @@ void tsd_apply_all(Tsd_Func func, void * arg);
 
 // Retry management
 
-#define RETRY_TYPE_COUNT  3  // number of entries in DDCA_Retry_Type
+// #define RETRY_TYPE_COUNT  4  // number of entries in DDCA_Retry_Type
 
 const char * ddc_retry_type_name(DDCA_Retry_Type stat_id);
 const char * ddc_retry_type_description(DDCA_Retry_Type retry_class);
 
 void     ddc_set_default_max_tries(DDCA_Retry_Type type_id, uint16_t new_max_tries);
 void     ddc_set_initial_thread_max_tries( DDCA_Retry_Type type_id, uint16_t new_max_tries);
-void     ddc_reset_thread_max_tries( DDCA_Retry_Type type_id, uint16_t new_max_tries);
+void     ddc_set_thread_max_tries( DDCA_Retry_Type type_id, uint16_t new_max_tries);
 uint16_t ddc_get_thread_max_tries( DDCA_Retry_Type type_id);
 
 #ifdef FUTURE
