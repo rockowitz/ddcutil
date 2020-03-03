@@ -19,7 +19,7 @@
 void init_ddc_try_data();
 
 int  try_data_get_max_tries2(     DDCA_Retry_Type retry_type);
-void try_data_set_max_tries2(     DDCA_Retry_Type retry_type, int new_maxtries);
+void try_data_set_maxtries2(     DDCA_Retry_Type retry_type, int new_maxtries);
 void try_data_reset2(             DDCA_Retry_Type retry_type);
 void try_data_record_tries2(      DDCA_Retry_Type retry_type, int rc, int tryct);
 int  try_data_get_total_attempts2(DDCA_Retry_Type retry_type);
