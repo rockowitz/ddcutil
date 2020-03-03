@@ -13,6 +13,8 @@
 
 #include "base/parms.h"
 
+#ifdef OLD
+
 #define MAX_STAT_NAME_LENGTH  31
 
 #define TRY_DATA_TAG "STAT"
@@ -26,17 +28,8 @@ struct {
 } Try_Data;
 
 Try_Data * get_try_data(DDCA_Retry_Type retry_type);
-
-#ifdef NOT_PUBLIC
-Try_Data * try_data_create(DDCA_Retry_Type retry_type, char * stat_name, int max_tries);
-
-int  try_data_get_max_tries(     Try_Data * stats_rec);
-void try_data_set_max_tries(     Try_Data * stats_rec,int new_max_tries);
-void try_data_reset(             Try_Data * stats_rec);
-void try_data_record_tries(      Try_Data * stats_rec, int rc, int tryct);
-int  try_data_get_total_attempts(Try_Data * stats_rec);
-void try_data_report(            Try_Data * stats_rec, int depth);
 #endif
+
 
 void init_ddc_try_data();
 
