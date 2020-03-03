@@ -434,7 +434,7 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
       break;
    }
    // new way using retry_mgt
-   int result2 = ddc_get_thread_max_tries(retry_type);
+   int result2 = trd_get_thread_max_tries(retry_type);
    assert(result == result2);
    return result;
 }
@@ -465,7 +465,7 @@ ddca_set_max_tries(
       }
 
       // new way, set in retry_mgt
-      ddc_set_thread_max_tries(retry_type, max_tries);
+      trd_set_thread_max_tries(retry_type, max_tries);
    }
    return rc;
 }

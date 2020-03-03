@@ -40,6 +40,7 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
+#include "base/thread_retry_data.h"
 #include "base/tuned_sleep.h"
 #include "base/thread_sleep_data.h"
 
@@ -529,8 +530,8 @@ int main(int argc, char *argv[]) {
 
    for (int retry_type_id = 0; retry_type_id < 3; retry_type_id++) {
       if (parsed_cmd->max_tries[retry_type_id] > 0) {
-         ddc_set_default_max_tries(retry_type_id, parsed_cmd->max_tries[retry_type_id]);
-         ddc_set_initial_thread_max_tries( retry_type_id, parsed_cmd->max_tries[retry_type_id]);
+         trd_set_default_max_tries(retry_type_id, parsed_cmd->max_tries[retry_type_id]);
+         trd_set_initial_thread_max_tries( retry_type_id, parsed_cmd->max_tries[retry_type_id]);
       }
    }
 

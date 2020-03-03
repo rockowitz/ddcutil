@@ -36,7 +36,7 @@
 void dsa_record_ddcrw_status_code(int rc) {
    bool debug = false;
    DBGMSF(debug, "rc=%s", psc_desc(rc));
-   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
 
    if (rc == DDCRC_OK) {
       tsd->current_ok_status_count++;
@@ -64,14 +64,14 @@ void dsa_record_ddcrw_status_code(int rc) {
 void dsa_reset_counts() {
    bool debug = false;
    DBGMSF(debug, "Executing");
-   Thread_Sleep_Data * data = tsd_get_thread_sleep_data();
+   Per_Thread_Data * data = tsd_get_thread_sleep_data();
 
    data->current_ok_status_count = 0;
    data->current_error_status_count = 0;
 }
 
 
-bool error_rate_is_high(Thread_Sleep_Data * tsd) {
+bool error_rate_is_high(Per_Thread_Data * tsd) {
    bool debug = false;
    bool result = false;
    DBGMSF(debug, "Starting");
@@ -116,7 +116,7 @@ bool error_rate_is_high(Thread_Sleep_Data * tsd) {
 
 double dsa_get_sleep_adjustment() {
    bool debug = false;
-   Thread_Sleep_Data * tsd = tsd_get_thread_sleep_data();
+   Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    DBGMSF(debug, "global_dynamic_sleep_enabled for current thread = %s", sbool(tsd->dynamic_sleep_enabled));
    if (!tsd->dynamic_sleep_enabled) {
       double result = 1.0;

@@ -46,8 +46,10 @@ feature_sets.c            \
 last_io_event.c           \
 linux_errno.c             \
 monitor_model_key.c       \
+per_thread_data.c         \
 rtti.c                    \
 sleep.c                   \
+thread_retry_data.c       \
 thread_sleep_data.c       \
 tuned_sleep.c             \
 status_code_mgt.c         \

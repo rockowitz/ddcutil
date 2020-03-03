@@ -20,7 +20,9 @@
 #include "base/ddc_errno.h"
 #include "base/parms.h"
 
+#include "base/per_thread_data.h"    // for retry_type_name()
 #include "base/thread_sleep_data.h"
+#include "base/thread_retry_data.h"
 #include "ddc/ddc_try_stats.h"
 
 static GMutex try_data_mutex;
@@ -44,7 +46,7 @@ struct {
 } Try_Data2;
 
 
-int default_maxtries[] = {
+static int default_maxtries[] = {
       INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
       INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES,
       INITIAL_MAX_MULTI_EXCHANGE_TRIES,
@@ -105,7 +107,7 @@ int  try_data_get_max_tries(Try_Data * stats_rec) {
    bool debug = true;
    // Try_Data * try_data = unopaque(stats_rec);
    int result =  stats_rec->max_tries;
-   DBGMSF(debug, "retry type=%s, returning %d", ddc_retry_type_name(stats_rec->retry_type), result);
+   DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(stats_rec->retry_type), result);
    return result;
 }
 
@@ -115,7 +117,7 @@ int  try_data_get_max_tries2(DDCA_Retry_Type retry_type) {
    Try_Data2 * stats_rec = try_data2[retry_type];
    // DBGMSG("stats_rec=%p", stats_rec);
    int result =  stats_rec->maxtries;
-   DBGMSF(debug, "retry type=%s, returning %d", ddc_retry_type_name(stats_rec->retry_type), result);
+   DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(stats_rec->retry_type), result);
    return result;
 }
 
@@ -125,7 +127,7 @@ void try_data_set_max_tries(Try_Data * stats_rec, int new_max_tries) {
    bool debug = false;
    debug = debug || debug_mutex;
    DBGMSF(debug, "Starting. stats type: %s for %s, new_max_tries: %d",
-                 ddc_retry_type_name(stats_rec->retry_type),
+                 retry_type_name(stats_rec->retry_type),
                  stats_rec->stat_name,
                  new_max_tries);
 
@@ -146,8 +148,8 @@ void try_data_set_max_tries2(DDCA_Retry_Type retry_type, int new_max_tries) {
    debug = debug || debug_mutex;
    Try_Data2 * stats_rec = try_data2[retry_type];
    DBGMSF(debug, "Starting. stats type: %s for %s, new_max_tries: %d",
-                 ddc_retry_type_name(stats_rec->retry_type),
-                 ddc_retry_type_description(stats_rec->retry_type),
+                 retry_type_name(stats_rec->retry_type),
+                 retry_type_description(stats_rec->retry_type),
                  new_max_tries);
 
    // Try_Data * try_data = unopaque(stats_rec);
@@ -170,7 +172,7 @@ void try_data_set_max_tries2(DDCA_Retry_Type retry_type, int new_max_tries) {
 void try_data_reset(Try_Data * stats_rec) {
    bool debug = true;
    debug = debug || debug_mutex;
-   DBGMSF(debug, "Starting, stats type: %s", ddc_retry_type_name(stats_rec->retry_type));
+   DBGMSF(debug, "Starting, stats type: %s", retry_type_name(stats_rec->retry_type));
 
    // Try_Data * try_data = unopaque(stats_rec);
 
@@ -186,7 +188,7 @@ void try_data_reset2(DDCA_Retry_Type retry_type) {
    bool debug = false;
    debug = debug || debug_mutex;
    Try_Data2 * stats_rec = try_data2[retry_type];
-   DBGMSF(debug, "Starting, stats type: %s", ddc_retry_type_name(retry_type));
+   DBGMSF(debug, "Starting, stats type: %s", retry_type_name(retry_type));
 
    g_mutex_lock(&try_data_mutex);
    int val = default_maxtries[retry_type];
@@ -384,7 +386,7 @@ void try_data_report(Try_Data * stats_rec, int depth) {
       int max1 = stats_rec->max_tries;
 
       Global_Maxtries_Accumulator acc =
-             tsd_get_all_threads_maxtries_range(stats_rec->retry_type);
+             trd_get_all_threads_maxtries_range(stats_rec->retry_type);
 
 
       rpt_vstring(d1, "Max tries allowed: %d", max1);
@@ -440,7 +442,7 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
    // Try_Data * try_data = unopaque(stats_rec);
    rpt_nl();
    Try_Data2 * stats_rec = try_data2[retry_type];
-   rpt_vstring(depth, "Retry statistics for %s", ddc_retry_type_description(retry_type));
+   rpt_vstring(depth, "Retry statistics for %s", retry_type_description(retry_type));
 
    // doesn't distinguish write vs read
    // rpt_vstring(depth, "Retry statistics for ddc %s exchange", ddc_retry_type_description(stats_rec->retry_type));
@@ -453,7 +455,7 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
 
       // TO REPLACE WITH LOCAL FUNCTION
       Global_Maxtries_Accumulator acc =
-             tsd_get_all_threads_maxtries_range(stats_rec->retry_type);
+             trd_get_all_threads_maxtries_range(stats_rec->retry_type);
 
 
       rpt_vstring(d1, "Max tries allowed: %d", max1);
