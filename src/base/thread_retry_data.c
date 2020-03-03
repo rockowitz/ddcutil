@@ -7,6 +7,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "util/report_util.h"
+#include "util/string_util.h"
+
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/per_thread_data.h"
@@ -50,6 +52,9 @@ int default_maxtries[] = {
 void init_thread_retry_data(Per_Thread_Data * data) {
 
    for (int ndx=0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
+      DBGMSG("thread_id %d, retry type: %d, setting current, lowest, highest maxtries to %d ",
+             data->thread_id, ndx, default_maxtries[ndx]);
+
       data->current_maxtries[ndx] = default_maxtries[ndx];
       data->highest_maxtries[ndx] = default_maxtries[ndx];
       data->lowest_maxtries[ndx]  = default_maxtries[ndx];
@@ -61,7 +66,9 @@ void init_thread_retry_data(Per_Thread_Data * data) {
 Per_Thread_Data * trd_get_thread_retry_data() {
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
    if (!ptd->thread_retry_data_defined) {
+      // DBGMSG("thread_retry_data_defined false");
       init_thread_retry_data(ptd);
+      // dbgrpt_per_thread_data(ptd, 2);
    }
    return ptd;
 }
@@ -94,28 +101,41 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 #endif
 
 
-void trd_set_initial_thread_max_tries(
-   DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
+void trd_set_initial_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    Per_Thread_Data * data = trd_get_thread_retry_data();
    bool debug = true;
-   DBGMSF(debug, "Executing. retry_class = %s, new_maxtries=%d",
-                 retry_type_name(retry_type), new_maxtries);
+   DBGMSF(debug, "Executing. thread: %d, retry_class = %s, new_maxtries=%d",
+                 data->thread_id, retry_type_name(retry_type), new_maxtries);
    data->current_maxtries[retry_type] = new_maxtries;
    data->highest_maxtries[retry_type] = new_maxtries;
    data->lowest_maxtries[retry_type]  = new_maxtries;
 }
 
 void trd_set_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
-   bool debug = true;
-   DBGMSF(debug, "Executing. retry_class = %s, new_max_tries=%d",
-                 retry_type_name(retry_type), new_maxtries);
+   bool debug = false;
    Per_Thread_Data * tsd = trd_get_thread_retry_data();
+   DBGMSF(debug, "Executing. thread_id=%d, retry_class = %s, new_max_tries=%d",
+                 tsd->thread_id, retry_type_name(retry_type), new_maxtries);
+
    tsd->current_maxtries[retry_type] = new_maxtries;
+
+   DBGMSF(debug, "thread id: %d, retry type: %d, per thread data: lowest maxtries: %d, highest maxtries: %d",
+         tsd->thread_id,
+         retry_type,
+         tsd->lowest_maxtries[retry_type],
+         tsd->highest_maxtries[retry_type]);
+
 
    if (new_maxtries > tsd->highest_maxtries[retry_type])
       tsd->highest_maxtries[retry_type] = new_maxtries;
    if (new_maxtries < tsd->lowest_maxtries[retry_type])
       tsd->lowest_maxtries[retry_type] = new_maxtries;
+
+   DBGMSF(debug, "After adjustment, per thread data: lowest maxtries: %d, highest maxtries: %d",
+         tsd->thread_id,
+         tsd->lowest_maxtries[retry_type],
+         tsd->highest_maxtries[retry_type]);
+
 }
 
 #ifdef UNFINISHED
@@ -135,7 +155,7 @@ void trd_set_thread_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 
 
 uint16_t trd_get_thread_max_tries(DDCA_Retry_Type type_id) {
-   bool debug = true;
+   bool debug = false;
    Per_Thread_Data * tsd = trd_get_thread_retry_data();
    uint16_t result = tsd->current_maxtries[type_id];
    DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(type_id), result);
@@ -145,7 +165,20 @@ uint16_t trd_get_thread_max_tries(DDCA_Retry_Type type_id) {
 
 
 void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
+   bool debug = true;
    Global_Maxtries_Accumulator * acc = accumulator;
+      DBGMSF(debug, "thread id: %d, retry data defined: %s, per thread data: lowest maxtries: %d, highest maxtries: %d",
+            data->thread_id,
+            sbool( data->thread_retry_data_defined ),
+            data->lowest_maxtries[acc->retry_type],
+            data->highest_maxtries[acc->retry_type]);
+      DBGMSF(debug, "initial accumulator: lowest maxtries: %d, highest maxtries: %d",
+            acc->min_lowest_maxtries,  acc->max_highest_maxtries);
+   if (!data->thread_retry_data_defined) {
+      DBGMSG("Delayed initialization:");
+      init_thread_retry_data(data);
+      dbgrpt_per_thread_data(data, 2);
+   }
    if (data->highest_maxtries[acc->retry_type] > acc->max_highest_maxtries)
       acc->max_highest_maxtries = data->highest_maxtries[acc->retry_type];
    if (data->lowest_maxtries[acc->retry_type] < acc->min_lowest_maxtries) {
@@ -153,6 +186,8 @@ void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
              acc->min_lowest_maxtries, data->lowest_maxtries[acc->retry_type]);
       acc->min_lowest_maxtries = data->lowest_maxtries[acc->retry_type];
    }
+   DBGMSF(debug, "final accumulator: lowest maxtries: %d, highest maxtries: %d",
+          acc->min_lowest_maxtries,  acc->max_highest_maxtries);
 }
 
 
@@ -162,8 +197,8 @@ void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
 Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type typeid) {
    Global_Maxtries_Accumulator accumulator;
    accumulator.retry_type = typeid;
-   accumulator.max_highest_maxtries = 0;
-   accumulator.min_lowest_maxtries = MAX_MAX_TRIES;
+   accumulator.max_highest_maxtries = 0;               // less than any valid value
+   accumulator.min_lowest_maxtries = MAX_MAX_TRIES+1;  // greater than any valid value
 
    ptd_apply_all(&trd_minmax_visitor, &accumulator);
 
@@ -171,7 +206,8 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
 }
 
 
-/** Output a report of a #Per_Thread_Data struct, intended for use in program output.
+/** Output a report of the retry data in a #Per_Thread_Data struct,
+ *  intended as part of humanly readable program output.
  *
  *  \param  data   pointer to #Per_Thread_Data struct
  *  \param  depth  logical indentation level
@@ -205,7 +241,7 @@ void wrap_report_thread_retry_data(Per_Thread_Data * data, void * arg) {
  *  \param depth  logical indentation depth
  */
 void report_all_thread_retry_data(int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    if (!per_thread_data_hash) {
       rpt_vstring(depth, "No thread retry data found");
