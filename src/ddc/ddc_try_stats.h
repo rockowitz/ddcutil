@@ -13,23 +13,6 @@
 
 #include "base/parms.h"
 
-#ifdef OLD
-
-#define MAX_STAT_NAME_LENGTH  31
-
-#define TRY_DATA_TAG "STAT"
-typedef
-struct {
-   char   tag[4];
-   DDCA_Retry_Type retry_type;
-   char   stat_name[MAX_STAT_NAME_LENGTH+1];
-   int    max_tries;
-   int    counters[MAX_MAX_TRIES+2];
-} Try_Data;
-
-Try_Data * get_try_data(DDCA_Retry_Type retry_type);
-#endif
-
 
 void init_ddc_try_data();
 
