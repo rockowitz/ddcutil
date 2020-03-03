@@ -50,9 +50,10 @@ int default_maxtries[] = {
 
 
 void init_thread_retry_data(Per_Thread_Data * data) {
+   bool debug = false;
 
    for (int ndx=0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
-      DBGMSG("thread_id %d, retry type: %d, setting current, lowest, highest maxtries to %d ",
+      DBGMSF(debug, "thread_id %d, retry type: %d, setting current, lowest, highest maxtries to %d ",
              data->thread_id, ndx, default_maxtries[ndx]);
 
       data->current_maxtries[ndx] = default_maxtries[ndx];
@@ -103,7 +104,7 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 
 void trd_set_initial_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    Per_Thread_Data * data = trd_get_thread_retry_data();
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Executing. thread: %d, retry_class = %s, new_maxtries=%d",
                  data->thread_id, retry_type_name(retry_type), new_maxtries);
    data->current_maxtries[retry_type] = new_maxtries;
@@ -163,9 +164,8 @@ uint16_t trd_get_thread_max_tries(DDCA_Retry_Type type_id) {
 }
 
 
-
 void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
-   bool debug = true;
+   bool debug = false;
    Global_Maxtries_Accumulator * acc = accumulator;
       DBGMSF(debug, "thread id: %d, retry data defined: %s, per thread data: lowest maxtries: %d, highest maxtries: %d",
             data->thread_id,
@@ -175,15 +175,15 @@ void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
       DBGMSF(debug, "initial accumulator: lowest maxtries: %d, highest maxtries: %d",
             acc->min_lowest_maxtries,  acc->max_highest_maxtries);
    if (!data->thread_retry_data_defined) {
-      DBGMSG("Delayed initialization:");
+      DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
       init_thread_retry_data(data);
       dbgrpt_per_thread_data(data, 2);
    }
    if (data->highest_maxtries[acc->retry_type] > acc->max_highest_maxtries)
       acc->max_highest_maxtries = data->highest_maxtries[acc->retry_type];
    if (data->lowest_maxtries[acc->retry_type] < acc->min_lowest_maxtries) {
-      DBGMSG("lowest maxtries = %d -> %d",
-             acc->min_lowest_maxtries, data->lowest_maxtries[acc->retry_type]);
+      // DBGMSF(debug, "lowest maxtries = %d -> %d",
+      //        acc->min_lowest_maxtries, data->lowest_maxtries[acc->retry_type]);
       acc->min_lowest_maxtries = data->lowest_maxtries[acc->retry_type];
    }
    DBGMSF(debug, "final accumulator: lowest maxtries: %d, highest maxtries: %d",
