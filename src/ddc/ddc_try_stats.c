@@ -58,15 +58,12 @@ Try_Data2* try_data2[4];
 /* Allocates and initializes a Try_Data data structure
  * 
  * Arguments: 
- *    stat_name   name of the statistic being recorded
+ *    retry_type  DDCA_Retry_Type for the the statistic being recorded
  *    max_tries   maximum number of tries 
  *
  * Returns: 
  *    opaque pointer to the allocated data structure
  */
-
-
-
 Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int max_tries) {
    assert(0 <= max_tries && max_tries <= MAX_MAX_TRIES);
    Try_Data2* try_data = calloc(1,sizeof(Try_Data2));
@@ -78,6 +75,8 @@ Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int max_tries) {
 }
 
 
+/** Performs file initialization at time of program startup.
+ */
 void init_ddc_try_data() {
    for (int retry_type = 0; retry_type < DDCA_RETRY_TYPE_COUNT; retry_type++) {
       try_data2[retry_type] = try_data_create2(retry_type, default_maxtries[retry_type] );
@@ -85,11 +84,7 @@ void init_ddc_try_data() {
 }
 
 
-
-
-
-
-int  try_data_get_max_tries2(DDCA_Retry_Type retry_type) {
+int try_data_get_max_tries2(DDCA_Retry_Type retry_type) {
    bool debug = false;
    // DBGMSG("retry_type=%d", retry_type);
    Try_Data2 * stats_rec = try_data2[retry_type];
@@ -98,11 +93,6 @@ int  try_data_get_max_tries2(DDCA_Retry_Type retry_type) {
    DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(stats_rec->retry_type), result);
    return result;
 }
-
-
-
-
-
 
 
 void try_data_set_max_tries2(DDCA_Retry_Type retry_type, int new_max_tries) {
@@ -130,7 +120,6 @@ void try_data_set_max_tries2(DDCA_Retry_Type retry_type, int new_max_tries) {
 }
 
 
-
 void try_data_reset2(DDCA_Retry_Type retry_type) {
    bool debug = false;
    debug = debug || debug_mutex;
@@ -152,10 +141,6 @@ void try_data_reset2(DDCA_Retry_Type retry_type) {
 }
 
 
-
-
-
-
 static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
    bool debug = false || debug_mutex;
    DBGMSF(debug, "Starting");
@@ -169,10 +154,6 @@ static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
 
    DBGMSF(debug, "Done");
 }
-
-
-
-
 
 
 static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
@@ -189,9 +170,6 @@ static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
 }
 
 
-
-
-
 static void record_failed_fatally2(DDCA_Retry_Type retry_type) {
    bool debug = false || debug_mutex;
     DBGMSF(debug, "Starting");
@@ -206,8 +184,6 @@ static void record_failed_fatally2(DDCA_Retry_Type retry_type) {
 
    DBGMSF(debug, "Done");
 }
-
-
 
 
 void try_data_record_tries2(DDCA_Retry_Type retry_type, int rc, int tryct) {
@@ -228,9 +204,6 @@ void try_data_record_tries2(DDCA_Retry_Type retry_type, int rc, int tryct) {
 }
 
 
-
-
-
 // used to test whether there's anything to report
 int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
    // Try_Data * try_data = unopaque(stats_rec);
@@ -242,9 +215,6 @@ int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
    }
    return total_attempts;
 }
-
-
-
 
 
 /** Reports a statistics record.

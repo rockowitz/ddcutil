@@ -1,6 +1,8 @@
 /** @file ddc_try_stats.h
  *
  *  Maintains statistics on DDC retries.
+ *
+ *  These statistics are global, not broken out by thread.
  */
 
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
