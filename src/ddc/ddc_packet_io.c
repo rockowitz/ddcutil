@@ -323,13 +323,13 @@ void ddc_report_write_only_stats(int depth) {
 void ddc_set_max_write_only_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_only_exchange_tries = ct;
-   try_data_set_max_tries2(DDCA_WRITE_ONLY_TRIES, ct);
+   try_data_set_maxtries2(DDCA_WRITE_ONLY_TRIES, ct);
 }
 
 
 int ddc_get_max_write_only_exchange_tries() {
    int v1 = max_write_only_exchange_tries;
-   int v2 = try_data_get_max_tries2(DDCA_WRITE_ONLY_TRIES);
+   int v2 = try_data_get_maxtries2(DDCA_WRITE_ONLY_TRIES);
    assert (v1 == v2);
    return v1;
 }
@@ -338,12 +338,18 @@ int ddc_get_max_write_only_exchange_tries() {
 void ddc_set_max_write_read_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_read_exchange_tries = ct;
-   try_data_set_max_tries2(DDCA_WRITE_READ_TRIES, ct);
+   try_data_set_maxtries2(DDCA_WRITE_READ_TRIES, ct);
 }
 
 int ddc_get_max_write_read_exchange_tries() {
+   bool debug = false;
+   // DBGMSF(debug, "------------------------------------");
    int v1 = max_write_read_exchange_tries;
-   int v2 = try_data_get_max_tries2(DDCA_WRITE_READ_TRIES);
+   int v2 = try_data_get_maxtries2(DDCA_WRITE_READ_TRIES);
+   DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
+   DBGMSF(debug, "try_data_get_max_tries2(DDCA_WRITE_READ_TRIES) returned %d", v2);
+   // if (v1 != v2)
+      // DBGMSG("=========================>> Values to not match!!!");
    assert (v1 == v2);
    return v1;
 }

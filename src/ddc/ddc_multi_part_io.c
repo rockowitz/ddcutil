@@ -79,9 +79,10 @@ void ddc_report_multi_part_write_stats(int depth) {
  *  @param ct new maximum number, must be <= #MAX_MAX_MULTI_EXCHANGE_TRIES
  */
 void ddc_set_max_multi_part_read_tries(int ct) {
+   // DBGMSG("ct = %d", ct);
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    max_multi_part_read_tries = ct;
-   try_data_set_max_tries2(DDCA_MULTI_PART_READ_TRIES, ct);
+   try_data_set_maxtries2(DDCA_MULTI_PART_READ_TRIES, ct);
 }
 
 /** Resets the maximum number of multi-part write exchange tries allowed.
@@ -90,7 +91,7 @@ void ddc_set_max_multi_part_read_tries(int ct) {
 void ddc_set_max_multi_part_write_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    max_multi_part_write_tries = ct;
-   try_data_set_max_tries2(DDCA_MULTI_PART_WRITE_TRIES, ct);
+   try_data_set_maxtries2(DDCA_MULTI_PART_WRITE_TRIES, ct);
 }
 
 
@@ -98,8 +99,14 @@ void ddc_set_max_multi_part_write_tries(int ct) {
   * @return maximum number of tries
   */
 int ddc_get_max_multi_part_read_tries() {
-   int v1 = try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES);
+   bool debug = false;
+   int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
    int v2 = max_multi_part_read_tries;
+   DBGMSF(debug, "try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES) = %d", v1);
+   DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
+   // if (v1 != v2){
+   //    DBGMSG("=============================> Values to not match!!!");
+   // }
    assert(v1 == v2);
    return v1;
 }
@@ -109,7 +116,7 @@ int ddc_get_max_multi_part_read_tries() {
   * @return maximum number of tries
   */
 int ddc_get_max_multi_part_write_tries() {
-   int v1 = try_data_get_max_tries2(DDCA_MULTI_PART_WRITE_TRIES);
+   int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
    int v2 = max_multi_part_write_tries;
    assert(v1 == v2);
    return v1;

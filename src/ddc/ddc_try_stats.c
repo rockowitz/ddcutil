@@ -59,16 +59,16 @@ Try_Data2* try_data2[4];
  * 
  * Arguments: 
  *    retry_type  DDCA_Retry_Type for the the statistic being recorded
- *    max_tries   maximum number of tries 
+ *    maxtries    maximum number of tries
  *
  * Returns: 
  *    opaque pointer to the allocated data structure
  */
-Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int max_tries) {
-   assert(0 <= max_tries && max_tries <= MAX_MAX_TRIES);
+Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int maxtries) {
+   assert(0 <= maxtries && maxtries <= MAX_MAX_TRIES);
    Try_Data2* try_data = calloc(1,sizeof(Try_Data2));
    try_data->retry_type = retry_type;
-   try_data->maxtries = max_tries;
+   try_data->maxtries = maxtries;
    try_data->highest_maxtries = 0;
    try_data->lowest_maxtries = MAX_MAX_TRIES+1;
    return try_data;
@@ -84,11 +84,9 @@ void init_ddc_try_data() {
 }
 
 
-int try_data_get_max_tries2(DDCA_Retry_Type retry_type) {
+int try_data_get_maxtries2(DDCA_Retry_Type retry_type) {
    bool debug = false;
-   // DBGMSG("retry_type=%d", retry_type);
    Try_Data2 * stats_rec = try_data2[retry_type];
-   // DBGMSG("stats_rec=%p", stats_rec);
    int result =  stats_rec->maxtries;
    DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(stats_rec->retry_type), result);
    return result;
@@ -99,7 +97,7 @@ void try_data_set_maxtries2(DDCA_Retry_Type retry_type, int new_maxtries) {
    bool debug = false;
    debug = debug || debug_mutex;
    Try_Data2 * stats_rec = try_data2[retry_type];
-   DBGMSF(debug, "Starting. stats type: %s for %s, new_max_tries: %d",
+   DBGMSF(debug, "Starting. stats type: %s for %s, new_maxtries: %d",
                  retry_type_name(stats_rec->retry_type),
                  retry_type_description(stats_rec->retry_type),
                  new_maxtries);
@@ -151,9 +149,7 @@ static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
                  retry_type, retry_type_name(retry_type), tryct);
    Try_Data2 * stats_rec = try_data2[retry_type];
    DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
-   fflush(stdout);
-
-   // assert(0 < tryct && tryct <= stats_rec->maxtries);
+   assert(0 < tryct && tryct <= stats_rec->maxtries);
 
    g_mutex_lock(&try_data_mutex);
    stats_rec->counters[tryct+1] += 1;
@@ -167,7 +163,6 @@ static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
    bool debug = false || debug_mutex;
    DBGMSF(debug, "Starting");
    Try_Data2 * stats_rec = try_data2[retry_type];
-   // Try_Data * try_data = unopaque(stats_rec);
 
    g_mutex_lock(&try_data_mutex);
    stats_rec->counters[1] += 1;
@@ -201,7 +196,6 @@ void try_data_record_tries2(DDCA_Retry_Type retry_type, int rc, int tryct) {
    if (rc == 0) {
       record_successful_tries2(retry_type, tryct);
    }
-   // else if (tryct == stats_rec->max_tries) {
    // fragile, but eliminates testing for max_tries:
    else if (rc == DDCRC_RETRIES || rc == DDCRC_ALL_TRIES_ZERO) {
       record_failed_max_tries2(retry_type);

@@ -436,7 +436,7 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
       break;
    }
 
-   int result3 = try_data_get_max_tries2(retry_type);
+   int result3 = try_data_get_maxtries2(retry_type);
    // new way using retry_mgt
    int result2 = trd_get_thread_max_tries(retry_type);
    assert(result == result2);
@@ -455,7 +455,7 @@ ddca_set_max_tries(
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = DDCRC_ARG;
    else {
-#ifdef OLD
+
       switch(retry_type) {
       case (DDCA_WRITE_ONLY_TRIES):
          ddc_set_max_write_only_exchange_tries(max_tries);   // sets in Try_Data
@@ -464,13 +464,13 @@ ddca_set_max_tries(
          ddc_set_max_write_read_exchange_tries(max_tries);   // sets in Try_Data
          break;
       case (DDCA_MULTI_PART_READ_TRIES):
-         ddc_set_max_multi_part_read_tries(max_tries);       // sets in Try_Data
+         ddc_set_max_multi_part_read_tries(max_tries);       // sets in Try_Data  , sets vars in ddc_muti_part.io
       case (DDCA_MULTI_PART_WRITE_TRIES):
          ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
          break;
       }
-#endif
-      try_data_set_max_tries2(retry_type, max_tries);
+
+      try_data_set_maxtries2(retry_type, max_tries);
 
       // new way, set in retry_mgt
       trd_set_thread_max_tries(retry_type, max_tries);
