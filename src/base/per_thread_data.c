@@ -67,15 +67,18 @@ Per_Thread_Data * ptd_get_per_thread_data() {
    Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash,
                                             GINT_TO_POINTER(cur_thread_id));
    if (!data) {
-      // DBGMSG("Per_Thread_Data not found for thread %d", cur_thread_id);
+      DBGMSF(debug, "==> Per_Thread_Data not found for thread %d", cur_thread_id);
       data = g_new0(Per_Thread_Data, 1);
       data->thread_id = cur_thread_id;
       init_per_thread_data(data);
+      DBGMSF(debug, "Initialized: %s. thread_sleep_data_defined: %s. thread_retry_data_defined; %s",
+           sbool(data->initialized),
+           sbool( data->thread_sleep_data_defined), sbool( data->thread_retry_data_defined));
 
       g_hash_table_insert(per_thread_data_hash,
                           GINT_TO_POINTER(cur_thread_id),
                           data);
-      DBGMSF(debug, "Created Thead_Sleep_Data struct for thread id = %d", data->thread_id);
+      DBGMSF(debug, "Created Per_Thread_Data struct for thread id = %d", data->thread_id);
       if (debug)
         dbgrpt_per_thread_data(data, 1);
    }
@@ -99,6 +102,9 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
    rpt_bool("initialized",                NULL, data->initialized,           d1);
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled, d1);
+
+   rpt_bool("sleep data initialized" ,    NULL, data->thread_sleep_data_defined, d1);
+
    rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
 
    // Sleep multiplier adjustment:
@@ -129,8 +135,18 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
 
    // TODO: report maxtries
-}
 
+   rpt_bool("retry data initialized"    , NULL, data->thread_retry_data_defined, d1);
+   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
+                    data->current_maxtries[0], data->current_maxtries[1],
+                    data->current_maxtries[2], data->current_maxtries[3]);
+   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
+                    data->highest_maxtries[0], data->highest_maxtries[1],
+                    data->highest_maxtries[2], data->highest_maxtries[3]);
+   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
+                    data->lowest_maxtries[0], data->lowest_maxtries[1],
+                    data->lowest_maxtries[2], data->lowest_maxtries[3]);
+}
 
 
 void ptd_apply_all(Ptd_Func func, void * arg) {
