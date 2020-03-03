@@ -155,20 +155,10 @@ tsd_report_one_thread_data_hash_table_entry(
 #endif
 
 
-// GCompareFunc function signature
-static gint compare_int_list_entries(
-      gconstpointer a,
-      gconstpointer b)
-{
-   int ia = GPOINTER_TO_INT(a);
-   int ib = GPOINTER_TO_INT(b);
-   gint result = 0;
-   if (ia < ib)
-      result = -1;
-   else if (ia > ib)
-      result = 1;
-   // DBGMSG("a=%p, ia=%d, b=%p, ib=%d, returning %d", a, ia, b, ib, result);
-   return result;
+void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
+   int depth = GPOINTER_TO_INT(arg);
+   rpt_vstring(depth, "Per_Thread_Data:");  // needed?
+   report_thread_sleep_data(data, depth);
 }
 
 
@@ -178,43 +168,14 @@ static gint compare_int_list_entries(
  *  \param depth  logical indentation depth
  */
 void report_all_thread_sleep_data(int depth) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting");
    if (!per_thread_data_hash) {
       rpt_vstring(depth, "No thread sleep data found");
       rpt_nl();
    }
    else {
-      DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
-      GList * keys = g_hash_table_get_keys (per_thread_data_hash);
-      GList * new_head = g_list_sort(keys, compare_int_list_entries); // not working
-      GList * l;
-#ifdef OLD
-      for (l = new_head; l != NULL; l = l->next) {
-         int key = GPOINTER_TO_INT(l->data);
-         DBGMSG("Key: %d", key);
-      }
-#endif
-
-      rpt_vstring(depth, "Per_Thread_Data:");
-      for (l = new_head; l != NULL; l = l->next) {
-         int key = GPOINTER_TO_INT(l->data);
-         DBGMSF(debug, "Key: %d", key);
-         Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash, l->data);
-         assert(data);
-         report_thread_sleep_data(data, depth+1);
-         rpt_nl();
-      }
-
-      g_list_free(new_head);   // would keys also work?
-
-#ifdef OLD
-      rpt_vstring(depth, "Thread Sleep Data:");
-      g_hash_table_foreach(
-            per_thread_data_hash,
-            tsd_report_one_thread_data_hash_table_entry,
-            GINT_TO_POINTER(depth+1));
-#endif
+      ptd_apply_all_sorted(&wrap_report_thread_sleep_data, GINT_TO_POINTER(depth) );
    }
    DBGMSF(debug, "Done");
 }
@@ -448,9 +409,6 @@ void tsd_enable_dsa_all(bool enable) {
 }
 
 
-
-
-
 void tsd_dsa_enable(bool enabled) {
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    tsd->dynamic_sleep_enabled = enabled;
@@ -483,9 +441,5 @@ void tsd_bump_sleep_multiplier_changer_ct() {
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multipler_changer_ct++;
 }
-
-
-
-
 
 

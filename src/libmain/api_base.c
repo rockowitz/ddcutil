@@ -12,12 +12,15 @@
 #include <errno.h>
 #include <string.h>
  
+#include "public/ddcutil_c_api.h"
+
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/parms.h"
-#include "base/tuned_sleep.h"
+#include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
+#include "base/tuned_sleep.h"
 
 #include "adl/adl_shim.h"
 
@@ -26,10 +29,9 @@
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_services.h"
+#include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
-
-#include "public/ddcutil_c_api.h"
 
 #include "libmain/api_base_internal.h"
 
@@ -433,9 +435,12 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
       result = ddc_get_max_multi_part_write_tries();
       break;
    }
+
+   int result3 = try_data_get_max_tries2(retry_type);
    // new way using retry_mgt
    int result2 = trd_get_thread_max_tries(retry_type);
    assert(result == result2);
+   assert(result == result3);
    return result;
 }
 
@@ -450,6 +455,7 @@ ddca_set_max_tries(
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = DDCRC_ARG;
    else {
+#ifdef OLD
       switch(retry_type) {
       case (DDCA_WRITE_ONLY_TRIES):
          ddc_set_max_write_only_exchange_tries(max_tries);   // sets in Try_Data
@@ -463,6 +469,8 @@ ddca_set_max_tries(
          ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
          break;
       }
+#endif
+      try_data_set_max_tries2(retry_type, max_tries);
 
       // new way, set in retry_mgt
       trd_set_thread_max_tries(retry_type, max_tries);

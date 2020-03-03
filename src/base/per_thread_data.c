@@ -148,3 +148,48 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
 }
 
 
+// GCompareFunc function signature
+static gint compare_int_list_entries(
+      gconstpointer a,
+      gconstpointer b)
+{
+   int ia = GPOINTER_TO_INT(a);
+   int ib = GPOINTER_TO_INT(b);
+   gint result = 0;
+   if (ia < ib)
+      result = -1;
+   else if (ia > ib)
+      result = 1;
+   // DBGMSG("a=%p, ia=%d, b=%p, ib=%d, returning %d", a, ia, b, ib, result);
+   return result;
+}
+
+
+/** Report all #Per_Thread_Data structs.  Note that this report includes
+ *  structs for threads that have been closed.
+ *
+ *  \param depth  logical indentation depth
+ */
+void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   if (per_thread_data_hash) {
+      DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
+      GList * keys = g_hash_table_get_keys (per_thread_data_hash);
+      GList * new_head = g_list_sort(keys, compare_int_list_entries); // not working
+      GList * l;
+      for (l = new_head; l != NULL; l = l->next) {
+         int key = GPOINTER_TO_INT(l->data);
+         DBGMSF(debug, "Key: %d", key);
+         Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash, l->data);
+         assert(data);
+
+         func(data, arg);
+      }
+      g_list_free(new_head);   // would keys also work?
+   }
+   DBGMSF(debug, "Done");
+}
+
+
+
