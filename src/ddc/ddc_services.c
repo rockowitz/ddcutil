@@ -20,6 +20,7 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
+#include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -108,6 +109,8 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
    if (stats & ( DDCA_STATS_CALLS)) {
       rpt_nl();
       report_elapsed_stats(depth);
+      rpt_nl();
+      report_all_thread_retry_data(depth);
    }
    if (stats & (DDCA_STATS_ELAPSED)) {
       rpt_nl();

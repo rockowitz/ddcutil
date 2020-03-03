@@ -42,5 +42,6 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
 
 void report_thread_retry_data(Per_Thread_Data * data, int depth);
 
+void report_all_thread_retry_data(int depth);
 
 #endif /* THREAD_RETRY_DATA_H_ */

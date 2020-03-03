@@ -192,6 +192,31 @@ void report_thread_retry_data(Per_Thread_Data * data, int depth) {
 }
 
 
+void wrap_report_thread_retry_data(Per_Thread_Data * data, void * arg) {
+   int depth = GPOINTER_TO_INT(arg);
+   rpt_vstring(depth, "Per_Thread_Data:");  // needed?
+   report_thread_retry_data(data, depth);
+}
+
+
+/** Report all #Per_Thread_Data structs.  Note that this report includes
+ *  structs for threads that have been closed.
+ *
+ *  \param depth  logical indentation depth
+ */
+void report_all_thread_retry_data(int depth) {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+   if (!per_thread_data_hash) {
+      rpt_vstring(depth, "No thread retry data found");
+   }
+   else {
+      ptd_apply_all_sorted(&wrap_report_thread_retry_data, GINT_TO_POINTER(depth) );
+   }
+   rpt_nl();
+   DBGMSF(debug, "Done");
+}
+
 
 
 
