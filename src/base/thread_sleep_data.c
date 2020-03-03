@@ -97,32 +97,32 @@ void tsd_enable_dynamic_sleep(bool enabled) {
  */
 void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    int d1 = depth+1;
-   // int d2 = depth+2;
+   int d2 = depth+2;
    rpt_vstring(depth, "Sleep data for thread: %3d", data->thread_id);
-   rpt_label(depth,   "General:");
-   rpt_vstring(d1,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d1,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
+   rpt_label(  d1,   "General:");
+   rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d2,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
 
-   rpt_label(depth,   "Sleep multiplier adjustment:");
-   rpt_vstring(d1,    "Current adjustment:                %d", data->sleep_multiplier_ct);
-   rpt_vstring(d1,    "Highest adjustment:                %d", data->highest_sleep_multiplier_value);
-   rpt_label(  d1,    "Number of function calls");
-   rpt_vstring(d1,    "   that performed adjustment:      %d", data->sleep_multipler_changer_ct);
+   rpt_label(  d1,   "Sleep multiplier adjustment:");
+   rpt_vstring(d2,    "Current adjustment:                %d", data->sleep_multiplier_ct);
+   rpt_vstring(d2,    "Highest adjustment:                %d", data->highest_sleep_multiplier_value);
+   rpt_label(  d2,    "Number of function calls");
+   rpt_vstring(d2,    "   that performed adjustment:      %d", data->sleep_multipler_changer_ct);
 
    if ( data->dynamic_sleep_enabled ) {
-      rpt_title("Dynamic Sleep Adjustment:  ", depth);
-      rpt_vstring(d1, "Total successful reads:          %5d",   data->total_ok_status_count);
-      rpt_vstring(d1, "Total reads with DDC error:      %5d",   data->total_error_status_count);
-      rpt_vstring(d1, "Total ignored status codes:      %5d",   data->total_other_status_ct);
-      rpt_vstring(d1, "Current sleep adjustment factor: %5.2f", data->current_sleep_adjustment_factor);
-      rpt_vstring(d1, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
-      rpt_vstring(d1, "Adjustment check interval        %5d",   data->adjustment_check_interval);
+      rpt_label(  d1, "Dynamic Sleep Adjustment:  ");
+      rpt_vstring(d2, "Total successful reads:          %5d",   data->total_ok_status_count);
+      rpt_vstring(d2, "Total reads with DDC error:      %5d",   data->total_error_status_count);
+      rpt_vstring(d2, "Total ignored status codes:      %5d",   data->total_other_status_ct);
+      rpt_vstring(d2, "Current sleep adjustment factor: %5.2f", data->current_sleep_adjustment_factor);
+      rpt_vstring(d2, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
+      rpt_vstring(d2, "Adjustment check interval        %5d",   data->adjustment_check_interval);
 
-      rpt_vstring(d1, "Calls since last check:          %5d",   data->calls_since_last_check);
-      rpt_vstring(d1, "Total adjustment checks:         %5d",   data->total_adjustment_checks);
-      rpt_vstring(d1, "Number of adjustments:           %5d",   data->adjustment_ct);
-      rpt_vstring(d1, "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
-      rpt_vstring(d1, "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
+      rpt_vstring(d2, "Calls since last check:          %5d",   data->calls_since_last_check);
+      rpt_vstring(d2, "Total adjustment checks:         %5d",   data->total_adjustment_checks);
+      rpt_vstring(d2, "Number of adjustments:           %5d",   data->adjustment_ct);
+      rpt_vstring(d2, "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
+      rpt_vstring(d2, "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
    }
 
 }
@@ -172,12 +172,12 @@ void report_all_thread_sleep_data(int depth) {
    DBGMSF(debug, "Starting");
    if (!per_thread_data_hash) {
       rpt_vstring(depth, "No thread sleep data found");
-      rpt_nl();
    }
    else {
       ptd_apply_all_sorted(&wrap_report_thread_sleep_data, GINT_TO_POINTER(depth) );
    }
    DBGMSF(debug, "Done");
+   rpt_nl();
 }
 
 
@@ -215,7 +215,7 @@ static void init_thread_sleep_data(Per_Thread_Data * data) {
    data->thread_adjustment_increment = global_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
 
-   data->thread_sleep_data_defined = true;
+   data->thread_sleep_data_defined = true;   // vs data->initialized
 }
 
 #ifdef OLD
@@ -260,7 +260,10 @@ Per_Thread_Data * get_thread_sleep_data0(bool create_if_necessary) {
 Per_Thread_Data * tsd_get_thread_sleep_data() {
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
    if (!ptd->thread_sleep_data_defined) {
+      // DBGMSG("thread_sleep_data_defined = false");
       init_thread_sleep_data(ptd);
+      // DBGMSG("After initialization: ");
+      // dbgrpt_per_thread_data(ptd, 4);
    }
    return ptd;
 }
