@@ -40,6 +40,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
+#include "base/per_thread_data.h"
 
 #include "i2c/wrap_i2c-dev.h"
 
@@ -96,6 +97,7 @@ int i2c_open_bus(int busno, Byte callopts) {
    }
    else {
       RECORD_IO_FINISH_NOW(fd, IE_OPEN);
+      ptd_append_thread_description( filename );
    }
 
    DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);

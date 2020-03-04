@@ -64,6 +64,8 @@ Per_Thread_Data * ptd_get_per_thread_data();
 
 // void ptd_register_thread_dref(Display_Ref * dref);
 void ptd_set_thread_description(const char * description);
+void ptd_append_thread_description(const char * addl_description);
+const char * ptd_get_thread_description();
 
 // Apply function to all Thread_Sleep_Data records
 // Template for function to apply

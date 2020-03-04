@@ -630,6 +630,16 @@ ddca_set_thread_description(const char * description) {
    ptd_set_thread_description( description );
 }
 
+void
+ddca_append_thread_description(const char * description) {
+   ptd_append_thread_description(description);
+}
+
+const char * get_thread_descripton() {
+   return ptd_get_thread_description();
+}
+
+
 
 void
 ddca_reset_stats(void) {

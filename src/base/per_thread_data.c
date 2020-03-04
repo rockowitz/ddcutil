@@ -3,10 +3,8 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <glib-2.0/glib.h>
-
-
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <sys/types.h>
 
 // for syscall
@@ -18,10 +16,10 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "base/parms.h"
 #include "base/core.h"
-#include "base/sleep.h"
 #include "base/displays.h"
+#include "base/parms.h"
+#include "base/sleep.h"
 
 #include "per_thread_data.h"
 
@@ -58,7 +56,7 @@ void init_per_thread_data(Per_Thread_Data * ptd) {
  *  struct is on the heap and still readable.
  */
 Per_Thread_Data * ptd_get_per_thread_data() {
-   bool debug = false;
+   bool debug = true;
    pid_t cur_thread_id = syscall(SYS_gettid);
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    g_mutex_lock(&per_thread_data_mutex);
@@ -100,8 +98,24 @@ void ptd_register_thread_dref(Display_Ref * dref) {
 void ptd_set_thread_description(const char * description) {
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
    // DBGMSG("thread: %d, description: %s", ptd->thread_id, description);
+   if (ptd->description)
+      free(ptd->description);
    ptd->description = strdup(description);
    // dbgrpt_per_thread_data(ptd, 4);
+}
+
+void ptd_append_thread_description(const char * addl_description) {
+   Per_Thread_Data *  ptd = ptd_get_per_thread_data();
+   if (ptd->description)
+      ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
+   else
+      ptd->description = strdup(addl_description);
+}
+
+
+const char * ptd_get_thread_description() {
+   Per_Thread_Data *  ptd = ptd_get_per_thread_data();
+   return ptd->description;
 }
 
 

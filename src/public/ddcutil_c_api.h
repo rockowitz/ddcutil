@@ -446,6 +446,11 @@ ddca_reset_stats(void);
 
 void
 ddca_set_thread_description(const char * description);
+void
+ddca_append_thread_description(const char * description);
+const char * get_thread_descripton();
+
+
 
 
 /** Show execution statistics.
