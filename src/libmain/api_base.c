@@ -635,7 +635,7 @@ ddca_append_thread_description(const char * description) {
    ptd_append_thread_description(description);
 }
 
-const char * get_thread_descripton() {
+const char * ptd_get_thread_descripton() {
    return ptd_get_thread_description();
 }
 

@@ -448,7 +448,7 @@ void
 ddca_set_thread_description(const char * description);
 void
 ddca_append_thread_description(const char * description);
-const char * get_thread_descripton();
+const char * ddca_get_thread_descripton();
 
 
 
