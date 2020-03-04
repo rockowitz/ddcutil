@@ -110,7 +110,8 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
       rpt_nl();
       report_elapsed_stats(depth);
       rpt_nl();
-      report_all_thread_retry_data(depth);
+      // seeing the maxtries settings for each
+      // report_all_thread_retry_data(depth);
    }
    if (stats & (DDCA_STATS_ELAPSED)) {
       rpt_nl();
