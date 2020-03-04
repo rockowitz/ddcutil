@@ -21,6 +21,7 @@
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
+#include "base/per_thread_data.h"
 
 #include "adl/adl_shim.h"
 
@@ -615,6 +616,20 @@ ddca_set_trace_options(DDCA_Trace_Options  options) {
 //
 
 // TODO: Add functions to access ddcutil's runtime error statistics
+
+
+#ifdef UNUSED
+void
+ddca_register_thread_dref(DDCA_Display_Ref dref) {
+   ptd_register_thread_dref( (Display_Ref *) dref);
+}
+#endif
+
+void
+ddca_set_thread_description(const char * description) {
+   ptd_set_thread_description( description );
+}
+
 
 void
 ddca_reset_stats(void) {

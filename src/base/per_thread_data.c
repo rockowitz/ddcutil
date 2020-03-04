@@ -21,6 +21,7 @@
 #include "base/parms.h"
 #include "base/core.h"
 #include "base/sleep.h"
+#include "base/displays.h"
 
 #include "per_thread_data.h"
 
@@ -87,6 +88,22 @@ Per_Thread_Data * ptd_get_per_thread_data() {
 }
 
 
+#ifdef UNUSED
+void ptd_register_thread_dref(Display_Ref * dref) {
+   Per_Thread_Data *  ptd = ptd_get_per_thread_data();
+   DBGMSG("thread: %d, display ref: %s", ptd->thread_id, dref_repr_t(dref));
+   ptd->dref = dref;
+   dbgrpt_per_thread_data(ptd, 4);
+}
+#endif
+
+void ptd_set_thread_description(const char * description) {
+   Per_Thread_Data *  ptd = ptd_get_per_thread_data();
+   // DBGMSG("thread: %d, description: %s", ptd->thread_id, description);
+   ptd->description = strdup(description);
+   // dbgrpt_per_thread_data(ptd, 4);
+}
+
 
 
 
@@ -101,6 +118,8 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
  //rpt_int( "sizeof(Per_Thread_Data)",  NULL, sizeof(Per_Thread_Data),   d1);
    rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
    rpt_bool("initialized",                NULL, data->initialized,           d1);
+//    rpt_vstring(d1,"dref:                  %s", dref_repr_t(data->dref) );
+   rpt_vstring(d1,"description                %s", data->description);
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled, d1);
 
    rpt_bool("sleep data initialized" ,    NULL, data->thread_sleep_data_defined, d1);

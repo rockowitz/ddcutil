@@ -100,6 +100,9 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    int d2 = depth+2;
    rpt_vstring(depth, "Sleep data for thread: %3d", data->thread_id);
    rpt_label(  d1,   "General:");
+   // if (data->dref)
+   //    rpt_vstring(d2,    "Display:                           %s", dref_repr_t(data->dref) );
+   rpt_vstring(d2,    "Description:                       %s", (data->description) ? data->description : "Not set");
    rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
    rpt_vstring(d2,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
 

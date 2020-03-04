@@ -13,6 +13,8 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
+#include "base/displays.h"
+
 extern GHashTable *  per_thread_data_hash;
 extern GMutex        per_thread_data_mutex;    // temp, replace by function calls
 
@@ -20,6 +22,8 @@ typedef struct {
    bool   initialized;
    bool   dynamic_sleep_enabled;
    pid_t  thread_id;
+   // Display_Ref * dref;
+   char * description;
 
    // Standard sleep adjustment settings
    bool   thread_sleep_data_defined;
@@ -58,6 +62,8 @@ void ptd_unlock_all_thread_data();
 
 Per_Thread_Data * ptd_get_per_thread_data();
 
+// void ptd_register_thread_dref(Display_Ref * dref);
+void ptd_set_thread_description(const char * description);
 
 // Apply function to all Thread_Sleep_Data records
 // Template for function to apply
@@ -66,6 +72,7 @@ typedef void (*Ptd_Func)(Per_Thread_Data * data, void * arg);
 void ptd_apply_all(Ptd_Func func, void * arg);
 void ptd_apply_all_sorted(Ptd_Func func, void * arg);
 
+void ptd_register_display_ref(Display_Ref * dref);
 
 void   dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
 

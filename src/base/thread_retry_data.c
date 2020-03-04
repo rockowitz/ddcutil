@@ -177,7 +177,8 @@ void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
    if (!data->thread_retry_data_defined) {
       DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
       init_thread_retry_data(data);
-      dbgrpt_per_thread_data(data, 2);
+      if (debug)
+         dbgrpt_per_thread_data(data, 2);
    }
    if (data->highest_maxtries[acc->retry_type] > acc->max_highest_maxtries)
       acc->max_highest_maxtries = data->highest_maxtries[acc->retry_type];
@@ -206,16 +207,27 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
 }
 
 
-/** Output a report of the retry data in a #Per_Thread_Data struct,
+/** Output a report of the maxtries data in a #Per_Thread_Data struct,
  *  intended as part of humanly readable program output.
  *
  *  \param  data   pointer to #Per_Thread_Data struct
  *  \param  depth  logical indentation level
  */
 void report_thread_retry_data(Per_Thread_Data * data, int depth) {
+   bool debug = false;
+   if (!data->thread_retry_data_defined) {
+       DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
+       init_thread_retry_data(data);
+       if (debug)
+          dbgrpt_per_thread_data(data, 2);
+    }
+
    int d1 = depth+1;
    // int d2 = depth+2;
    rpt_vstring(depth, "Retry data for thread: %3d", data->thread_id);
+   // if (data->dref)
+   //    rpt_vstring(d1, "Display:                           %s", dref_repr_t(data->dref) );
+   rpt_vstring(d1,    "Thread Description:                %s", (data->description) ? data->description : "Not set");
    rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
                     data->current_maxtries[0], data->current_maxtries[1],
                     data->current_maxtries[2], data->current_maxtries[3]);

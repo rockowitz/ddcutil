@@ -443,6 +443,11 @@ ddca_set_trace_options(DDCA_Trace_Options  options);
 void
 ddca_reset_stats(void);
 
+
+void
+ddca_set_thread_description(const char * description);
+
+
 /** Show execution statistics.
  *
  *  \param[in] stats  bitflags of statistics types to show
