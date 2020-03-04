@@ -6,6 +6,7 @@
 // Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
 /** \cond */
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
