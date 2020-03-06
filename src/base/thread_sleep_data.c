@@ -98,7 +98,7 @@ void tsd_enable_dynamic_sleep(bool enabled) {
 void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
-   rpt_vstring(depth, "Sleep data for thread: %3d", data->thread_id);
+   rpt_vstring(depth, "Thread %d sleep data:", data->thread_id);
    rpt_label(  d1,   "General:");
    // if (data->dref)
    //    rpt_vstring(d2,    "Display:                           %s", dref_repr_t(data->dref) );
@@ -160,7 +160,7 @@ tsd_report_one_thread_data_hash_table_entry(
 
 void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
-   rpt_vstring(depth, "Per_Thread_Data:");  // needed?
+   // rpt_vstring(depth, "Per_Thread_Data:");  // needed?
    report_thread_sleep_data(data, depth);
 }
 
@@ -177,7 +177,8 @@ void report_all_thread_sleep_data(int depth) {
       rpt_vstring(depth, "No thread sleep data found");
    }
    else {
-      ptd_apply_all_sorted(&wrap_report_thread_sleep_data, GINT_TO_POINTER(depth) );
+      rpt_label(depth, "Per thread sleep data");
+      ptd_apply_all_sorted(&wrap_report_thread_sleep_data, GINT_TO_POINTER(depth+1) );
    }
    DBGMSF(debug, "Done");
    rpt_nl();
