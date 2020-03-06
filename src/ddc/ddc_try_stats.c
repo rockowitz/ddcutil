@@ -195,13 +195,16 @@ void try_data_record_tries2(DDCA_Retry_Type retry_type, int rc, int tryct) {
    // TODO: eliminate function calls
    if (rc == 0) {
       record_successful_tries2(retry_type, tryct);
+      trd_record_cur_thread_successful_tries(retry_type, tryct);
    }
    // fragile, but eliminates testing for max_tries:
    else if (rc == DDCRC_RETRIES || rc == DDCRC_ALL_TRIES_ZERO) {
       record_failed_max_tries2(retry_type);
+      trd_record_cur_thread_failed_max_tries(retry_type);
    }
    else {
       record_failed_fatally2(retry_type);
+      trd_record_cur_thread_failed_fatally(retry_type);
    }
 }
 
