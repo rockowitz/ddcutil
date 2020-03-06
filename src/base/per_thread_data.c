@@ -56,7 +56,7 @@ void init_per_thread_data(Per_Thread_Data * ptd) {
  *  struct is on the heap and still readable.
  */
 Per_Thread_Data * ptd_get_per_thread_data() {
-   bool debug = true;
+   bool debug = false;
    pid_t cur_thread_id = syscall(SYS_gettid);
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    g_mutex_lock(&per_thread_data_mutex);

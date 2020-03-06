@@ -18,6 +18,15 @@
 extern GHashTable *  per_thread_data_hash;
 extern GMutex        per_thread_data_mutex;    // temp, replace by function calls
 
+
+typedef
+struct {
+   // DDCA_Retry_Type  stat_id;    // nice as a consistency check, but has to be initialized to non-zero value
+//   int          maxtries;
+   uint16_t       counters[MAX_MAX_TRIES+2];
+} Per_Thread_Try_Stats;
+
+
 typedef struct {
    bool   initialized;
    bool   dynamic_sleep_enabled;
@@ -54,6 +63,7 @@ typedef struct {
    uint16_t highest_maxtries[4];
    uint16_t lowest_maxtries[4];
 
+   Per_Thread_Try_Stats  try_stats[4];
 } Per_Thread_Data;
 
 
@@ -76,7 +86,7 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg);
 
 void ptd_register_display_ref(Display_Ref * dref);
 
-void   dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
+void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
 
 
 #endif /* PER_THREAD_DATA_H_ */
