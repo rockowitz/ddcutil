@@ -456,11 +456,13 @@ const char * ddca_get_thread_descripton();
 /** Show execution statistics.
  *
  *  \param[in] stats  bitflags of statistics types to show
+ *  \param[in] include_per_thread_data include per thread detail
  *  \param[in] depth  logical indentation depth
  */
 void
 ddca_show_stats(
       DDCA_Stats_Type stats,
+      bool            include_per_thread_data,
       int             depth);
 
 // TODO: Add functions to get stats

@@ -81,9 +81,12 @@ void ddc_reset_stats_main() {
  * \param stats bitflags indicating which statistics to report
  * \param depth logical indentation depth
  */
-void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
+void ddc_report_stats_main(DDCA_Stats_Type stats, bool report_by_thread, int depth) {
    if (stats & DDCA_STATS_TRIES) {
       ddc_report_ddc_stats(depth);
+      rpt_nl();
+      if (report_by_thread)
+         report_all_thread_maxtries_data(depth);
    }
    if (stats & DDCA_STATS_ERRORS) {
       rpt_nl(); ;
@@ -100,8 +103,13 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, int depth) {
          rpt_nl();
       }
 #endif
-      report_all_thread_sleep_data(depth);
+
       // rpt_nl();
+
+      if (report_by_thread) {
+         report_all_thread_sleep_data(depth);
+         rpt_nl();
+      }
       report_io_call_stats(depth);
       rpt_nl();
       report_sleep_stats(depth);

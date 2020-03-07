@@ -649,10 +649,11 @@ ddca_reset_stats(void) {
 
 // TODO: Functions that return stats in data structures
 void
-ddca_show_stats(DDCA_Stats_Type stats_types, int depth) {
+ddca_show_stats(DDCA_Stats_Type stats_types, bool by_thread, int depth) {
    DBGMSG("stats_types = %d, depth=%d", stats_types, depth);
 
    ddc_report_stats_main( stats_types,    // stats to show
+                          by_thread,
                           depth);         // logical indentation depth
 }
 

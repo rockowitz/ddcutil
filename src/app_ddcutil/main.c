@@ -109,7 +109,7 @@ void reset_stats() {
 
 static
 void report_stats(DDCA_Stats_Type stats) {
-   ddc_report_stats_main(stats, 0);
+   ddc_report_stats_main(stats, get_output_level() >= DDCA_OL_VERBOSE, 0);
 
    // Report the elapsed time in ddc_report_stats_main().
    // The start time used there is that at the time of stats initialization,
