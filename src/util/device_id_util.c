@@ -62,7 +62,6 @@ char * devid_find_file(Device_Id_Type id_type) {
    bool debug = false;
 
    char * known_pci_ids_dirs[] = {
-         "/usr/share/libosinfo/db",
          "/usr/share",
          "/usr/share/misc",
          "/usr/share/hwdata",
