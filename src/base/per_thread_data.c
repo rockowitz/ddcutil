@@ -20,6 +20,7 @@
 #include "base/displays.h"
 #include "base/parms.h"
 #include "base/sleep.h"
+#include "base/thread_retry_data.h"    // temp circular
 
 #include "per_thread_data.h"
 
@@ -119,6 +120,17 @@ const char * ptd_get_thread_description() {
 }
 
 
+char * int_array_to_string(uint16_t * start, int ct) {
+   int bufsz = ct*10;
+   char * buf = calloc(1, bufsz);
+   int next = 0;
+   for (int ctr =0; ctr < ct && next < bufsz; ctr++) {
+      g_snprintf(buf+next, bufsz-next,"%s%d", (next > 0) ? ", " : "", *(start+ctr) );
+      next = strlen(buf);
+   }
+   // DBGMSG("start=%p, ct=%d, returning %s", start, ct, buf);
+   return buf;
+}
 
 
 /** Output a debug report of a #Per_Thread_Data struct.
@@ -170,15 +182,25 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    // TODO: report maxtries
 
    rpt_bool("retry data initialized"    , NULL, data->thread_retry_data_defined, d1);
-   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
-                    data->current_maxtries[0], data->current_maxtries[1],
-                    data->current_maxtries[2], data->current_maxtries[3]);
+
    rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
                     data->highest_maxtries[0], data->highest_maxtries[1],
                     data->highest_maxtries[2], data->highest_maxtries[3]);
+   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
+                    data->current_maxtries[0], data->current_maxtries[1],
+                    data->current_maxtries[2], data->current_maxtries[3]);
    rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
                     data->lowest_maxtries[0], data->lowest_maxtries[1],
                     data->lowest_maxtries[2], data->lowest_maxtries[3]);
+
+   for (int retry_type = 0; retry_type < 4; retry_type++) {
+      int upper_bound = data->highest_maxtries[retry_type] + 1;
+      assert(upper_bound <= MAX_MAX_TRIES + 1);
+      char * buf = int_array_to_string( data->try_stats[retry_type].counters, upper_bound);
+      rpt_vstring(d1, "try_stats[%d=%-27s].counters = %s",
+                      retry_type, retry_type_name(retry_type), buf);
+      free(buf);
+   }
 }
 
 
@@ -241,4 +263,40 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
 }
 
 
+void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
+   int depth = GPOINTER_TO_INT(arg);
+   int d1 = depth+1;
 
+   rpt_vstring(depth, "Thread: %d", ptd->thread_id);
+   char * header = "Description: ";
+   int hdrlen = strlen(header);
+   if (!ptd->description)
+      rpt_vstring(d1, "%s", header);
+   else {
+      Null_Terminated_String_Array pieces =
+            strsplit_maxlength(ptd->description, 70, " ");
+      // DBGMSG("piecect: %d", ntsa_length(pieces));
+      int ntsa_ndx = 0;
+      while (true) {
+         char * s = pieces[ntsa_ndx++];
+         if (!s)
+            break;
+         // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
+         rpt_vstring(d1, "%-*s%s", hdrlen, header, s);
+         // printf("(%s) s = %p\n", __func__, s);
+         if (strlen(header) > 0)
+            header = "";
+      }
+   }
+
+   // rpt_vstring(depth, "Thread: %d. Description:%s",
+   //             ptd->thread_id, ptd->description);
+}
+
+
+void ptd_list_threads(int depth) {
+   int d1 = depth +1;
+   // rpt_label(depth, "Have data for threads:");
+   rpt_label(depth, "Report has per-thread data for threads:");
+   ptd_apply_all_sorted(ptd_thread_summary, GINT_TO_POINTER(d1));
+}

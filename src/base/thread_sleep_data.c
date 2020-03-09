@@ -171,7 +171,7 @@ void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
  *  \param depth  logical indentation depth
  */
 void report_all_thread_sleep_data(int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    if (!per_thread_data_hash) {
       rpt_vstring(depth, "No thread sleep data found");

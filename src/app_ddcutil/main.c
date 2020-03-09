@@ -510,16 +510,21 @@ int main(int argc, char *argv[]) {
 
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
-      ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
+      // ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
+      try_data_set_maxtries2(DDCA_WRITE_ONLY_TRIES, parsed_cmd->max_tries[0]);
    }
 
    if (parsed_cmd->max_tries[1] > 0) {
-      ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
+      // ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
+      try_data_set_maxtries2(DDCA_WRITE_READ_TRIES, parsed_cmd->max_tries[1]);
+
    }
 
    if (parsed_cmd->max_tries[2] > 0) {
-      ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
-      ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
+      // ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
+      // ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
+      try_data_set_maxtries2(DDCA_MULTI_PART_READ_TRIES, parsed_cmd->max_tries[2]);
+      try_data_set_maxtries2(DDCA_MULTI_PART_WRITE_TRIES, parsed_cmd->max_tries[2]);
    }
 
    // TODO: Resolve: Try_Data has 4 retry types, Thread_Sleep_Data has 3
@@ -773,8 +778,8 @@ int main(int argc, char *argv[]) {
       f0printf(fout, "Forcing --force-slave-address..\n");
       i2c_force_slave_addr_flag = true;
       f0printf(fout, "This command will take a while to run...\n\n");
-      ddc_set_max_write_read_exchange_tries(MAX_MAX_TRIES);
-      ddc_set_max_multi_part_read_tries(MAX_MAX_TRIES);
+      try_data_set_maxtries2(DDCA_MULTI_PART_READ_TRIES, MAX_MAX_TRIES);
+      try_data_set_maxtries2(DDCA_MULTI_PART_WRITE_TRIES, MAX_MAX_TRIES);
 
       ddc_ensure_displays_detected();    // *** ???
       DBGTRC(main_debug, TRACE_GROUP, "display detection complete");

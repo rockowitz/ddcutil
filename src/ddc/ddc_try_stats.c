@@ -1,12 +1,19 @@
 /** @file ddc_try_stats.c
  *
- *  Maintains statistics on DDC retries.
+ *  Maintains statistics on DDC retries, along with maxtries settings.
  */
 
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+
+// for syscall
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
@@ -15,18 +22,103 @@
 /** \endcond */
 
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/parms.h"
-
 #include "base/per_thread_data.h"    // for retry_type_name()
-#include "base/thread_sleep_data.h"
 #include "base/thread_retry_data.h"
+#include "base/thread_sleep_data.h"
+
 #include "ddc/ddc_try_stats.h"
 
+//
+// Locking
+//
+
 static GMutex try_data_mutex;
+static GPrivate this_thread_has_lock;
 static bool debug_mutex = false;
+
+
+
+
+
+/** If **try_data_mutex** is not already locked by the current thread,
+ *  lock it.
+ *
+ *  \remark
+ *  This function is necessary because the behavior if a GLib mutex is
+ *  relocked by the curren thread is undefined.
+ */
+
+// avoids locking if this thread already owns the lock, since behavior undefined
+static bool lock_if_unlocked() {
+   bool debug = false;
+   debug = debug || debug_mutex;
+   bool lock_performed = false;
+   bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
+   DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
+   if (!thread_has_lock) {
+      g_mutex_lock(&try_data_mutex);
+      lock_performed = true;
+      // should this be a depth counter rather than a boolean?
+      g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
+      if (debug) {
+         pid_t cur_thread_id = syscall(SYS_gettid);
+         DBGMSG("Locked by thread %d", cur_thread_id);
+      }
+   }
+   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
+   return lock_performed;
+}
+
+
+/** Unlocks the **try_data_mutex** set by a call to #lock_if_unlocked
+ *
+ *  \param  unlock_requested perform unlock
+ */
+static void unlock_if_needed(bool unlock_requested) {
+   bool debug = false;
+   debug = debug || debug_mutex;
+   DBGMSF(debug, "unlock_requested=%s", sbool(unlock_requested));
+
+   if (unlock_requested) {
+      // is it actually locked?
+      bool currently_locked = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
+      DBGMSF(debug, "currently_locked = %s", sbool(currently_locked));
+      if (currently_locked) {
+         g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
+         if (debug) {
+            pid_t cur_thread_id = syscall(SYS_gettid);
+            DBGMSF(debug, "Unlocked by thread %d", cur_thread_id);
+         }
+         g_mutex_unlock(&try_data_mutex);
+      }
+   }
+}
+
+
+/** Requests a lock on the **try data** data structure.
+ *  A lock is not performed if the current thread already holds the lock
+ *
+ *  \return  true if a lock was actually performed
+ */
+bool try_data_lock() {
+   return lock_if_unlocked();
+}
+
+
+/** Requests that the currently held lock on the **try_data** data structure
+ *  be released
+ *
+ *  \param release_requested  if true, attempt to unlock
+ */
+void try_data_unlock(bool release_requested) {
+   unlock_if_needed(release_requested);
+}
+
 
 // counters usage:
 //  0  number of failures because of fatal errors
@@ -34,37 +126,36 @@ static bool debug_mutex = false;
 //  n>1 number of successes after n-1 tries,
 //      e.g. if succeed after 1 try, recorded in counter 2
 
-
-
+// 1 instance for each retry type
 typedef
 struct {
    DDCA_Retry_Type retry_type;
-   int    maxtries;
-   int    counters[MAX_MAX_TRIES+2];
-   int    highest_maxtries;
-   int    lowest_maxtries;
+   uint16_t    maxtries;
+   uint16_t    counters[MAX_MAX_TRIES+2];
+   uint16_t    highest_maxtries;
+   uint16_t    lowest_maxtries;
 } Try_Data2;
 
 
-static int default_maxtries[] = {
+static uint16_t default_maxtries[] = {
       INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
       INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES,
       INITIAL_MAX_MULTI_EXCHANGE_TRIES,
       INITIAL_MAX_MULTI_EXCHANGE_TRIES };
 
-Try_Data2* try_data2[4];
+
+static Try_Data2 try_data[DDCA_RETRY_TYPE_COUNT];
 
 
+#ifdef OLD
 /* Allocates and initializes a Try_Data data structure
  * 
- * Arguments: 
- *    retry_type  DDCA_Retry_Type for the the statistic being recorded
- *    maxtries    maximum number of tries
+ * @param  retry_type  DDCA_Retry_Type for the the statistic being recorded
+ * #param  maxtries    maximum number of tries
  *
- * Returns: 
- *    opaque pointer to the allocated data structure
+ * @return pointer to newly allocated struct
  */
-Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int maxtries) {
+static Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, uint16_t maxtries) {
    assert(0 <= maxtries && maxtries <= MAX_MAX_TRIES);
    Try_Data2* try_data = calloc(1,sizeof(Try_Data2));
    try_data->retry_type = retry_type;
@@ -73,87 +164,120 @@ Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, int maxtries) {
    try_data->lowest_maxtries = MAX_MAX_TRIES+1;
    return try_data;
 }
+#endif
 
+
+void try_data_init_retry_type(DDCA_Retry_Type retry_type, uint16_t maxtries) {
+   try_data[retry_type].retry_type = retry_type;
+   try_data[retry_type].maxtries   = maxtries;
+   try_data[retry_type].highest_maxtries = maxtries;   //0;
+   try_data[retry_type].lowest_maxtries = maxtries;    // MAX_MAX_TRIES+1;
+}
 
 /** Performs file initialization at time of program startup.
  */
-void init_ddc_try_data() {
+void try_data_init() {
    for (int retry_type = 0; retry_type < DDCA_RETRY_TYPE_COUNT; retry_type++) {
-      try_data2[retry_type] = try_data_create2(retry_type, default_maxtries[retry_type] );
+      try_data_init_retry_type(retry_type, default_maxtries[retry_type]);
+      // try_data[retry_type] = try_data_create2(retry_type, default_maxtries[retry_type] );
    }
 }
 
 
-int try_data_get_maxtries2(DDCA_Retry_Type retry_type) {
+//
+// Maxtries
+//
+
+uint16_t try_data_get_maxtries2(DDCA_Retry_Type retry_type) {
    bool debug = false;
-   Try_Data2 * stats_rec = try_data2[retry_type];
-   int result =  stats_rec->maxtries;
-   DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(stats_rec->retry_type), result);
+   int result = try_data[retry_type].maxtries;
+   DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(retry_type), result);
    return result;
 }
 
 
-void try_data_set_maxtries2(DDCA_Retry_Type retry_type, int new_maxtries) {
+void try_data_set_maxtries2(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    bool debug = false;
-   debug = debug || debug_mutex;
-   Try_Data2 * stats_rec = try_data2[retry_type];
+
+   Try_Data2 * stats_rec = &try_data[retry_type];
    DBGMSF(debug, "Starting. stats type: %s for %s, new_maxtries: %d",
                  retry_type_name(stats_rec->retry_type),
                  retry_type_description(stats_rec->retry_type),
                  new_maxtries);
 
-   // Try_Data * try_data = unopaque(stats_rec);
    assert(new_maxtries >= 1 && new_maxtries <= MAX_MAX_TRIES);
 
-   g_mutex_lock(&try_data_mutex);
+   bool this_function_performed_lock = lock_if_unlocked();
+
    stats_rec->maxtries = new_maxtries;
    if (new_maxtries < stats_rec->lowest_maxtries)
       stats_rec->lowest_maxtries = new_maxtries;
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
-   g_mutex_unlock(&try_data_mutex);
+   unlock_if_needed(this_function_performed_lock);
 
    DBGMSF(debug, "Done");
 }
 
 
+//
+// Retry counters
+//
+
+/** Resets the counters to 0 for the specified #DDCA_Retry_Type, and resets
+ *  the hightest and lowest maxtries value seen to the current maxtries value.
+ *
+ *  @param retry type
+ */
 void try_data_reset2(DDCA_Retry_Type retry_type) {
    bool debug = false;
-   debug = debug || debug_mutex;
-   Try_Data2 * stats_rec = try_data2[retry_type];
-   DBGMSF(debug, "Starting, stats type: %s", retry_type_name(retry_type));
+   DBGMSF(debug, "Starting, retry type: %s", retry_type_name(retry_type));
 
-   g_mutex_lock(&try_data_mutex);
-   int val = default_maxtries[retry_type];
-   DBGMSF(debug, "Setting maxtries, highest_maxtries, lowest_maxtries = default_maxtries[%d] = %d",
-                 retry_type, val);
+   bool this_function_performed_lock = lock_if_unlocked();
 
-   stats_rec->maxtries         = val;
-   stats_rec->highest_maxtries = val;
-   stats_rec->lowest_maxtries =  val;
-#ifdef WRONG_BUT_USEFUL_ELSEWHERE
+   DBGMSF(debug, "Setting highest_maxtries, lowest_maxtries = current maxtries: %d",
+                 try_data[retry_type].maxtries);
+   // Reset does not change the current maxtries value, but it does reset the
+   // highest and lowest values seen to the current value.
+   uint16_t current_maxtries = try_data[retry_type].maxtries;
+   try_data[retry_type].highest_maxtries = current_maxtries;
+   try_data[retry_type].lowest_maxtries =  current_maxtries;
+
    for (int ndx=0; ndx < MAX_MAX_TRIES+1; ndx++)
-      try_data2[retry_type]->counters[ndx] = 0;
-#endif
-   g_mutex_unlock(&try_data_mutex);
+      try_data[retry_type].counters[ndx] = 0;
+
+   unlock_if_needed(this_function_performed_lock);
 
    DBGMSF(debug, "Done");
 }
 
+/** Resets the counters for all retry types
+ */
+void try_data_reset2_all() {
+   bool this_function_performed_lock = lock_if_unlocked();
 
+   for (int retry_type = 0; retry_type < DDCA_RETRY_TYPE_COUNT; retry_type++) {
+      try_data_reset2(retry_type);
+   }
+
+   unlock_if_needed(this_function_performed_lock);
+}
+
+
+#ifdef OLD
 static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
    bool debug = false || debug_mutex;
    // DBGMSG("=============================================");
    DBGMSF(debug, "Starting. retry_type=%d - %s, tryct=%d",
                  retry_type, retry_type_name(retry_type), tryct);
-   Try_Data2 * stats_rec = try_data2[retry_type];
+   Try_Data2 * stats_rec = try_data[retry_type];
    DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
    assert(0 < tryct && tryct <= stats_rec->maxtries);
 
-   g_mutex_lock(&try_data_mutex);
+   //g_mutex_lock(&try_data_mutex);
    stats_rec->counters[tryct+1] += 1;
-   g_mutex_unlock(&try_data_mutex);
+   // g_mutex_unlock(&try_data_mutex);
 
    DBGMSF(debug, "Done");
 }
@@ -162,11 +286,11 @@ static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
 static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
    bool debug = false || debug_mutex;
    DBGMSF(debug, "Starting");
-   Try_Data2 * stats_rec = try_data2[retry_type];
 
-   g_mutex_lock(&try_data_mutex);
+   Try_Data2 * stats_rec = try_data[retry_type];
+   // g_mutex_lock(&try_data_mutex);
    stats_rec->counters[1] += 1;
-   g_mutex_unlock(&try_data_mutex);
+   // g_mutex_unlock(&try_data_mutex);
 
    DBGMSF(debug, "Done");
 }
@@ -176,53 +300,68 @@ static void record_failed_fatally2(DDCA_Retry_Type retry_type) {
    bool debug = false || debug_mutex;
     DBGMSF(debug, "Starting");
 
-    Try_Data2 * stats_rec = try_data2[retry_type];
-
-   // Try_Data * try_data = unopaque(stats_rec);
-
-   g_mutex_lock(&try_data_mutex);
+   Try_Data2 * stats_rec = try_data[retry_type];
+   // g_mutex_lock(&try_data_mutex);
    stats_rec->counters[0] += 1;
-   g_mutex_unlock(&try_data_mutex);
+   // g_mutex_unlock(&try_data_mutex);
 
    DBGMSF(debug, "Done");
 }
+#endif
 
 
-void try_data_record_tries2(DDCA_Retry_Type retry_type, int rc, int tryct) {
+/** Records the status and retry count for a retryable transaction
+ *
+ *  @param  retry_type
+ *  @param  ddcrc status code
+ *  @param  tryct number of tries required for success, when rc == 0
+ *
+ *  @remark
+ *  Also calls #trd_record_cur_thread_ties() to record the transaction status
+ *  in the per-thread data structure.
+ */
+void try_data_record_tries2(DDCA_Retry_Type retry_type, DDCA_Status ddcrc, int tryct) {
    bool debug = false;
-   DBGMSF(debug, "retry_type = %d - %s,  rc=%d, tryct=%d",
-                 retry_type, retry_type_name(retry_type), rc, tryct);
-   // TODO: eliminate function calls
-   if (rc == 0) {
-      record_successful_tries2(retry_type, tryct);
-      trd_record_cur_thread_successful_tries(retry_type, tryct);
+   DBGMSF(debug, "retry_type = %d - %s,  ddcrc=%d, tryct=%d",
+                 retry_type, retry_type_name(retry_type), ddcrc, tryct);
+
+   trd_record_cur_thread_tries(retry_type, ddcrc, tryct);
+
+   Try_Data2 * stats_rec = &try_data[retry_type];
+   bool locked_by_this_func = lock_if_unlocked();
+   if (ddcrc == 0) {
+      DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
+      assert(0 < tryct && tryct <= stats_rec->maxtries);
+
+      stats_rec->counters[tryct+1] += 1;
    }
    // fragile, but eliminates testing for max_tries:
-   else if (rc == DDCRC_RETRIES || rc == DDCRC_ALL_TRIES_ZERO) {
-      record_failed_max_tries2(retry_type);
-      trd_record_cur_thread_failed_max_tries(retry_type);
+   else if (ddcrc == DDCRC_RETRIES || ddcrc == DDCRC_ALL_TRIES_ZERO) {
+      // failed for max tries exceeded
+      stats_rec->counters[1] += 1;
    }
    else {
-      record_failed_fatally2(retry_type);
-      trd_record_cur_thread_failed_fatally(retry_type);
+      // failed fatally
+      stats_rec->counters[0] += 1;
    }
+
+   unlock_if_needed(locked_by_this_func);
 }
 
-
+//
+// Reporting
+//
 // used to test whether there's anything to report
-int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
-   // Try_Data * try_data = unopaque(stats_rec);
-   Try_Data2 * stats_rec = try_data2[retry_type];
+static int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
    int total_attempts = 0;
    int ndx;
    for (ndx=0; ndx <= MAX_MAX_TRIES+1; ndx++) {
-      total_attempts += stats_rec->counters[ndx];
+      total_attempts += try_data[retry_type].counters[ndx];
    }
    return total_attempts;
 }
 
-
-/** Reports a statistics record.
+/** Reports try statistics for a specified #DDCA_Retry_Type
  *
  *  Output is written to the current FOUT destination.
  *
@@ -231,12 +370,13 @@ int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
  *
  */
 void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
-   // bool debug = true;
+   bool debug = false;
    int d1 = depth+1;
-   // Try_Data * try_data = unopaque(stats_rec);
    rpt_nl();
-   Try_Data2 * stats_rec = try_data2[retry_type];
+   Try_Data2 * stats_rec = &try_data[retry_type];
    rpt_vstring(depth, "Retry statistics for %s", retry_type_description(retry_type));
+
+   bool this_function_performed_lock = lock_if_unlocked();
 
    // doesn't distinguish write vs read
    // rpt_vstring(depth, "Retry statistics for ddc %s exchange", ddc_retry_type_description(stats_rec->retry_type));
@@ -247,10 +387,13 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
       int total_successful_attempts = 0;
       int max1 = stats_rec->maxtries;
 
-      // TO REPLACE WITH LOCAL FUNCTION
+      // Temporary for consistency check:
       Global_Maxtries_Accumulator acc =
-             trd_get_all_threads_maxtries_range(stats_rec->retry_type);
-
+             trd_get_all_threads_maxtries_range(retry_type);
+      DBGMSF(debug, "acc.max_highest_maxtries=%d, stats_rec->highest_maxtries = %d",
+                    acc.max_highest_maxtries, stats_rec->highest_maxtries);
+      assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
+      assert (acc.min_lowest_maxtries  == stats_rec->lowest_maxtries);
 
       rpt_vstring(d1, "Max tries allowed: %d", max1);
       if (acc.min_lowest_maxtries == acc.max_highest_maxtries)
@@ -285,5 +428,7 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
       rpt_vstring(d1, "Failed due to fatal error:        %3d", stats_rec->counters[0]);
       rpt_vstring(d1, "Total attempts:                   %3d", try_data_get_total_attempts2(retry_type));
    }
+
+   unlock_if_needed(this_function_performed_lock);
 }
 

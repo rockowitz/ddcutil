@@ -217,8 +217,8 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
  *  \param  data   pointer to #Per_Thread_Data struct
  *  \param  depth  logical indentation level
  */
-void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
-   bool debug = true;
+static void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
+   bool debug = false;
    if (!data->thread_retry_data_defined) {
        DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
        init_thread_retry_data(data);
@@ -244,7 +244,7 @@ void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
 }
 
 
-void wrap_report_thread_maxtries_data(Per_Thread_Data * data, void * arg) {
+static void wrap_report_thread_maxtries_data(Per_Thread_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    // rpt_vstring(depth, "Per_Thread_Data:");  // needed?
    rpt_vstring(depth, "Thread %d retry data:", data->thread_id);
@@ -261,7 +261,7 @@ void wrap_report_thread_maxtries_data(Per_Thread_Data * data, void * arg) {
  *  \param depth  logical indentation depth
  */
 void report_all_thread_maxtries_data(int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    rpt_label(depth, "Retry data by thread:");
    if (!per_thread_data_hash) {
@@ -281,9 +281,11 @@ void report_all_thread_maxtries_data(int depth) {
 
 void trd_reset_tries_by_data(Per_Thread_Data * data) {
    for (int ndx = 0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
-     uint16_t * counters = data->try_stats[ndx].counters;
+     // uint16_t * counters = data->try_stats[ndx].counters;
      for (int ctrndx = 0; ctrndx < MAX_MAX_TRIES+2; ctrndx++) {
-        counters[ctrndx] = 0;
+        // counters[ctrndx] = 0;
+        data->try_stats[ndx].counters[ctrndx] = 0;
+
      }
    }
 }
@@ -313,29 +315,40 @@ void trd_reset_all_threads_tries() {
    DBGMSF(debug, "Done");
 }
 
-void trd_record_cur_thread_successful_tries(DDCA_Retry_Type type_id, int tryct) {
+#ifdef NO
+static void trd_record_cur_thread_successful_tries(DDCA_Retry_Type type_id, int tryct) {
+   bool debug = false;
+   // DBGMSF(debug, "type_id=%d - %s, tryct=%d",
+   //               type_id, retry_type_name(type_id), tryct);
    Per_Thread_Data * data = trd_get_thread_retry_data();
-   Per_Thread_Try_Stats typedata = data->try_stats[type_id];
+
+   // Per_Thread_Try_Stats * typedata = &data->try_stats[type_id];
+   DBGMSF(debug, "type_id=%d - %s, tryct=%d, Per_Thread_Data: %p",
+                 type_id, retry_type_name(type_id), tryct, data);
    // assert(0 < tryct && tryct <= typedata.max_tries);   // max_tries commented out
-   typedata.counters[tryct+1] += 1;
+   // typedata->counters[tryct+1] += 1;
+   data->try_stats[type_id].counters[tryct+1]++;
+   DBGMSF(debug, "new counters value: %d", data->try_stats[type_id].counters[tryct+1]);
 }
 
-void trd_record_cur_thread_failed_max_tries(DDCA_Retry_Type type_id) {
+static void trd_record_cur_thread_failed_max_tries(DDCA_Retry_Type type_id) {
    Per_Thread_Data * data = trd_get_thread_retry_data();
-   Per_Thread_Try_Stats typedata = data->try_stats[type_id];
-   typedata.counters[1] += 1;
+   data->try_stats[type_id].counters[1]++;
+
 }
 
-void trd_record_cur_thread_failed_fatally(DDCA_Retry_Type type_id) {
+static void trd_record_cur_thread_failed_fatally(DDCA_Retry_Type type_id) {
    Per_Thread_Data * data = trd_get_thread_retry_data();
-   Per_Thread_Try_Stats typedata = data->try_stats[type_id];
-   typedata.counters[0] += 1;
+   data->try_stats[type_id].counters[0]++;
 }
-
+#endif
 
 void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
+   bool debug = false;
+   DBGMSF(debug, "Executing. type_id=%d=%s, rc=%d, tryct=%d",
+                 type_id, retry_type_name(type_id), rc, tryct);
    Per_Thread_Data * data = trd_get_thread_retry_data();
-   Per_Thread_Try_Stats typedata = data->try_stats[type_id];
+   // Per_Thread_Try_Stats* typedata = &data->try_stats[type_id];
    int index = 0;
    if (rc == 0) {
       index = tryct+1;
@@ -347,7 +360,8 @@ void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
    else {  // failed fatally
       index = 0;
    }
-   typedata.counters[index] +=1;
+   data->try_stats[type_id].counters[index]+= 1;
+   //typedata->counters[index] +=1;
 }
 
 
@@ -359,26 +373,29 @@ void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
 int get_thread_total_tries_for_all_types_by_data(Per_Thread_Data  * data) {
    int total_attempts = 0;
    for (int typendx = 0; typendx < DDCA_RETRY_TYPE_COUNT; typendx++) {
-      Per_Thread_Try_Stats typedata = data->try_stats[typendx];
-      for (int counter_ndx = 0; counter_ndx < MAX_MAX_TRIES + 2; counter_ndx++)
-         total_attempts += typedata.counters[counter_ndx];
+      // Per_Thread_Try_Stats * typedata = &data->try_stats[typendx];
+      for (int counter_ndx = 0; counter_ndx < MAX_MAX_TRIES + 2; counter_ndx++) {
+         // total_attempts += typedata->counters[counter_ndx];
+         total_attempts += data->try_stats[typendx].counters[counter_ndx];
+      }
    }
    return total_attempts;
 }
 
 
-/** Determines the index of the highest counter with a non-zero value.
+/** Determines the index of the highest try counter, i.e. other than 0 or 1,  with a non-zero value.
  *
  *  \ param upper bound
  */
 uint16_t index_of_highest_non_zero_counter(uint16_t* counters) {
-   int result = MAX_MAX_TRIES+1;
+   int result = 1;
    for (int kk = MAX_MAX_TRIES+1; kk > 1; kk--) {
       if (counters[kk] != 0) {
          result = kk;
          break;
       }
    }
+   // DBGMSG("Returning: %d", result);
    return result;
 }
 
@@ -394,34 +411,34 @@ uint16_t index_of_highest_non_zero_counter(uint16_t* counters) {
  *  \param  depth            logical indentation depth
  */
 void report_thread_try_typed_data_by_data(
-      DDCA_Retry_Type     try_type_id,
+      DDCA_Retry_Type     retry_type,
       bool                for_all_threads_total,
       Per_Thread_Data *   data,
       int                 depth)
 {
-   bool debug = true;
+   bool debug = false;
    int d1 = depth+1;
+   int d2 = depth+2;
    rpt_nl();
-   assert( ( (try_type_id == -1) &&  for_all_threads_total) ||
-           ((try_type_id != -1) && !for_all_threads_total) );
+   assert( ( (retry_type == -1) &&  for_all_threads_total) ||
+           ((retry_type != -1) && !for_all_threads_total) );
    if (for_all_threads_total) {  // reporting a synthesized summary record
-      rpt_vstring(depth, "Total %s retry statistics for all threads", retry_type_name(try_type_id) );
+      rpt_vstring(depth, "Total %s retry statistics for all threads", retry_type_name(retry_type) );
    }
    else {      // normal case, reporting one thread
       rpt_vstring(depth, "Thread %d %s retry statistics",
-                         data->thread_id, retry_type_name(try_type_id));
+                         data->thread_id, retry_type_name(retry_type));
    }
    int total_attempts =  get_thread_total_tries_for_all_types_by_data(data);
    if ( total_attempts == 0) {
       rpt_vstring(d1, "No tries attempted");
    }
    else {     //          Per_Thread_Try_Stats  try_stats[4];
-      Per_Thread_Try_Stats  typedata = data->try_stats[ try_type_id ];
+      Per_Thread_Try_Stats*  typedata =& data->try_stats[ retry_type ];
       int total_successful_attempts = 0;
 
-
-     int maxtries_lower_bound =  data->lowest_maxtries[try_type_id];
-     int maxtries_upper_bound =  data->highest_maxtries[try_type_id];
+     int maxtries_lower_bound =  data->lowest_maxtries[retry_type];
+     int maxtries_upper_bound =  data->highest_maxtries[retry_type];
 
       if (maxtries_lower_bound == maxtries_upper_bound)
          rpt_vstring(d1, "Max tries allowed: %d", maxtries_lower_bound);
@@ -435,23 +452,31 @@ void report_thread_try_typed_data_by_data(
       // if (typedata.max_tries+1 > last_index)
       int    last_index1 = MAX_MAX_TRIES + 1;
       int    last_index2 = maxtries_upper_bound + 1;
-      int    last_index3 =  index_of_highest_non_zero_counter(data->try_stats[try_type_id].counters);
+
+      int    last_index3 =  index_of_highest_non_zero_counter(data->try_stats[retry_type].counters);
+      // dbgrpt_per_thread_data(data, 2);
+      DBGMSF(debug, "MAX_MAX_TRIES+1:        %d", last_index1);
+      DBGMSF(debug, "maxtries upper bound    %d", last_index2);
+      DBGMSF(debug, "highest non-zero index: %d", last_index3);
       assert(last_index1 >= last_index2);
       assert(last_index2 >= last_index3);
-      DBGMSF(debug, "MAX_MAX_TRIES+1:        %d", last_index1);
-      DBGMSF(debug, "highest maxtries seen:  %d", last_index2);
-      DBGMSF(debug, "highest non-zero index: %d", last_index3);
 
-      // for now, worst case:
-      for (int ndx=2; ndx <= last_index1; ndx++) {
-         total_successful_attempts += typedata.counters[ndx];
-         // DBGMSG("ndx=%d", ndx);
-         rpt_vstring(d1, "   %2d:  %3d", ndx-1, typedata.counters[ndx]);
+      if (last_index3 <= 1)
+         rpt_label(d2, " None");
+      else {
+         for (int ndx=2; ndx <= last_index3; ndx++) {
+            total_successful_attempts += typedata->counters[ndx];
+            // DBGMSG("ndx=%d", ndx);
+            rpt_vstring(d2, "%2d:  %3d", ndx-1, typedata->counters[ndx]);
+         }
       }
-      rpt_vstring(d1, "Total:                            %3d", total_successful_attempts);
-      rpt_vstring(d1, "Failed due to max tries exceeded: %3d", typedata.counters[1]);
-      rpt_vstring(d1, "Failed due to fatal error:        %3d", typedata.counters[0]);
-      rpt_vstring(d1, "Total attempts:                   %3d", total_attempts);
+
+      int local_total = total_successful_attempts + typedata->counters[0] + typedata->counters[1];
+
+      rpt_vstring(d1, "Total successful:                 %3d", total_successful_attempts);
+      rpt_vstring(d1, "Failed due to max tries exceeded: %3d", typedata->counters[1]);
+      rpt_vstring(d1, "Failed due to fatal error:        %3d", typedata->counters[0]);
+      rpt_vstring(d1, "Total attempts:                   %3d", local_total);
       rpt_nl();
    }
 }

@@ -39,18 +39,20 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 // Retry management and statistics
 
+#ifdef OLD
 /** \def MAX_MAX_MULTI_EXCHANGE_TRIES
  * Maximum value to which maximum number of capabilities exchange tries can be set
  */
-#define MAX_MAX_MULTI_EXCHANGE_TRIES  MAX_MAX_TRIES     /* from parms.h */
 
 /** \def Maximum number of capabilities exchange tries allowed. Can be adjusted. */
 static int max_multi_part_read_tries  = INITIAL_MAX_MULTI_EXCHANGE_TRIES;
 static int max_multi_part_write_tries = INITIAL_MAX_MULTI_EXCHANGE_TRIES;
+#endif
 
 // static Try_Data * multi_part_read_stats_rec = NULL;
 // static Try_Data * multi_part_write_stats_rec = NULL;
 
+#ifdef OLD
 /** Resets the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
    try_data_reset2(DDCA_MULTI_PART_READ_TRIES);
@@ -61,6 +63,7 @@ void ddc_reset_multi_part_read_stats() {
 void ddc_reset_multi_part_write_stats() {
    try_data_reset2(DDCA_MULTI_PART_WRITE_TRIES);
 }
+#endif
 
 
 /** Reports the statistics for multi-part reads */
@@ -74,14 +77,14 @@ void ddc_report_multi_part_write_stats(int depth) {
    try_data_report2(DDCA_MULTI_PART_WRITE_TRIES, depth);
 }
 
-
+#ifdef OLD
 /** Resets the maximum number of multi-part read exchange tries allowed.
  *  @param ct new maximum number, must be <= #MAX_MAX_MULTI_EXCHANGE_TRIES
  */
 void ddc_set_max_multi_part_read_tries(int ct) {
    // DBGMSG("ct = %d", ct);
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
-   max_multi_part_read_tries = ct;
+   // max_multi_part_read_tries = ct;
    try_data_set_maxtries2(DDCA_MULTI_PART_READ_TRIES, ct);
 }
 
@@ -90,10 +93,10 @@ void ddc_set_max_multi_part_read_tries(int ct) {
  */
 void ddc_set_max_multi_part_write_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
-   max_multi_part_write_tries = ct;
+   // max_multi_part_write_tries = ct;
    try_data_set_maxtries2(DDCA_MULTI_PART_WRITE_TRIES, ct);
 }
-
+#endif
 
 /** Gets the current maximum number of multi-part read exchange tries allowed
   * @return maximum number of tries
@@ -101,13 +104,13 @@ void ddc_set_max_multi_part_write_tries(int ct) {
 int ddc_get_max_multi_part_read_tries() {
    bool debug = false;
    int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
-   int v2 = max_multi_part_read_tries;
+   // int v2 = max_multi_part_read_tries;
    DBGMSF(debug, "try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES) = %d", v1);
-   DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
+   // DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
    // if (v1 != v2){
    //    DBGMSG("=============================> Values to not match!!!");
    // }
-   assert(v1 == v2);
+   // assert(v1 == v2);
    return v1;
 }
 
@@ -117,8 +120,8 @@ int ddc_get_max_multi_part_read_tries() {
   */
 int ddc_get_max_multi_part_write_tries() {
    int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
-   int v2 = max_multi_part_write_tries;
-   assert(v1 == v2);
+   // int v2 = max_multi_part_write_tries;
+   // assert(v1 == v2);
    return v1;
 }
 
@@ -264,10 +267,12 @@ multi_part_read_with_retry(
       Buffer**         buffer_loc)
 {
    bool debug = false;
+   int max_multi_part_read_tries = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
    DBGTRC(debug, TRACE_GROUP,
           "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
           request_type, request_subtype, sbool(all_zero_response_ok), max_multi_part_read_tries);
+
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;
@@ -428,6 +433,7 @@ multi_part_write_with_retry(
      Byte             vcp_code,
      Buffer *         value_to_set)
 {
+   int max_multi_part_write_tries = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
    bool debug = false;
    if (IS_TRACING())
       puts("");

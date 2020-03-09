@@ -87,6 +87,7 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg);
 void ptd_register_display_ref(Display_Ref * dref);
 
 void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
+void ptd_list_threads(int depth);
 
 
 #endif /* PER_THREAD_DATA_H_ */

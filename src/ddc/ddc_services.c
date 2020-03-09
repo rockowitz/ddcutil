@@ -48,10 +48,13 @@
 
 /** Resets all DDC level statistics */
 void ddc_reset_ddc_stats() {
+   try_data_reset2_all();
+#ifdef OLD
    ddc_reset_write_only_stats();
    ddc_reset_write_read_stats();
    ddc_reset_multi_part_read_stats();
    ddc_reset_multi_part_write_stats();
+#endif
 }
 
 
@@ -81,11 +84,17 @@ void ddc_reset_stats_main() {
  * \param stats bitflags indicating which statistics to report
  * \param depth logical indentation depth
  */
-void ddc_report_stats_main(DDCA_Stats_Type stats, bool report_by_thread, int depth) {
+void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats, int depth) {
+   // DBGMSG("include_per_thread_stats: %s", sbool(include_per_thread_stats));
+   // int d1 = depth+1;
+   rpt_nl();
+   rpt_label(depth, "EXECUTION STATISTICS");
+   rpt_nl();
+
    if (stats & DDCA_STATS_TRIES) {
       ddc_report_ddc_stats(depth);
       rpt_nl();
-      if (report_by_thread)
+      if (include_per_thread_stats)
          report_all_thread_maxtries_data(depth);
    }
    if (stats & DDCA_STATS_ERRORS) {
@@ -106,7 +115,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool report_by_thread, int dep
 
       // rpt_nl();
 
-      if (report_by_thread) {
+      if (include_per_thread_stats) {
          report_all_thread_sleep_data(depth);
          rpt_nl();
       }
@@ -124,6 +133,11 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool report_by_thread, int dep
    if (stats & (DDCA_STATS_ELAPSED)) {
       rpt_nl();
       report_elapsed_summary(depth);
+      rpt_nl();
+   }
+   if (include_per_thread_stats) {
+      ptd_list_threads(depth);
+      rpt_nl();
    }
 }
 
@@ -173,13 +187,14 @@ void init_ddc_services() {
 #endif
 
    // ddc:
+   try_data_init();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_ddc_display_lock();
    init_ddc_displays();
    init_ddc_packet_io();
    init_ddc_multi_part_io();
-   init_ddc_try_data();
+   try_data_init();
    init_ddc_vcp();
 
    // dbgrpt_func_name_table(1);
