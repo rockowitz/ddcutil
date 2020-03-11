@@ -23,14 +23,14 @@
 // Maxtries
 //
 
-static char * retry_class_descriptions[] = {
+static char * retry_type_descriptions[] = {
       "write only",
       "write-read",
       "multi-part read",
       "multi-part write"
 };
 
-char * retry_class_names[] = {
+static char * retry_type_names[] = {
       "DDCA_WRITE_ONLY_TRIES",
       "DDCA_WRITE_READ_TRIES",
       "DDCA_MULTI_PART_READ_TRIES",
@@ -38,13 +38,17 @@ char * retry_class_names[] = {
 };
 
 const char * retry_type_name(DDCA_Retry_Type type_id) {
-   return retry_class_names[type_id];
+   return retry_type_names[type_id];
 }
 
 const char * retry_type_description(DDCA_Retry_Type type_id) {
-   return retry_class_descriptions[type_id];
+   return retry_type_descriptions[type_id];
 }
 
+
+// Initial values are ddcutil default values, then can be changed
+// to different user default values
+// But distinction not maxtries values do not vary by thread.!
 // duplicate of default_maxtries = ddc_try_stats.c, unify
 int default_maxtries[] = {
       INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
@@ -53,12 +57,16 @@ int default_maxtries[] = {
       INITIAL_MAX_MULTI_EXCHANGE_TRIES };
 
 
+/** Initializes the retry data section of struct #Per_Thread_Data
+ *
+ *  \param  data
+ */
 void init_thread_retry_data(Per_Thread_Data * data) {
    bool debug = false;
 
    for (int ndx=0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
       DBGMSF(debug, "thread_id %d, retry type: %d, setting current, lowest, highest maxtries to %d ",
-             data->thread_id, ndx, default_maxtries[ndx]);
+                    data->thread_id, ndx, default_maxtries[ndx]);
 
       data->current_maxtries[ndx] = default_maxtries[ndx];
       data->highest_maxtries[ndx] = default_maxtries[ndx];
@@ -68,25 +76,31 @@ void init_thread_retry_data(Per_Thread_Data * data) {
 }
 
 
+// Just a pass through to ptd_get_thread_retry_Data()
 Per_Thread_Data * trd_get_thread_retry_data() {
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
+   assert(ptd->thread_retry_data_defined);
+#ifdef OLD
    if (!ptd->thread_retry_data_defined) {
       // DBGMSG("thread_retry_data_defined false");
       init_thread_retry_data(ptd);
       // dbgrpt_per_thread_data(ptd, 2);
    }
+#endif
    return ptd;
 }
 
 
-
-
+/** Sets the maxtries values for new threads.
+ *
+ */
 void trd_set_default_max_tries(DDCA_Retry_Type rcls, uint16_t new_maxtries) {
    bool debug = false;
    DBGMSF(debug, "Executing. rcls = %s, new_maxtries=%d", retry_type_name(rcls), new_maxtries);
-   g_mutex_lock(&per_thread_data_mutex);
+   cross_thread_operation_block();    // needed?
+   // bool this_function_locked = ptd_lock_if_unlocked();
    default_maxtries[rcls] = new_maxtries;
-   g_mutex_unlock(&per_thread_data_mutex);
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 
@@ -107,17 +121,23 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 
 
 void trd_set_initial_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
-   Per_Thread_Data * data = trd_get_thread_retry_data();
    bool debug = false;
+   cross_thread_operation_block();
+   // bool this_function_locked = ptd_lock_if_unlocked();
+   Per_Thread_Data * data = trd_get_thread_retry_data();
    DBGMSF(debug, "Executing. thread: %d, retry_class = %s, new_maxtries=%d",
                  data->thread_id, retry_type_name(retry_type), new_maxtries);
    data->current_maxtries[retry_type] = new_maxtries;
    data->highest_maxtries[retry_type] = new_maxtries;
    data->lowest_maxtries[retry_type]  = new_maxtries;
+   // ptd_unlock_if_needed(this_function_locked);
 }
+
 
 void trd_set_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries) {
    bool debug = false;
+   cross_thread_operation_start();
+   // bool this_function_locked = ptd_lock_if_unlocked();
    Per_Thread_Data * tsd = trd_get_thread_retry_data();
    DBGMSF(debug, "Executing. thread_id=%d, retry_class = %s, new_max_tries=%d",
                  tsd->thread_id, retry_type_name(retry_type), new_maxtries);
@@ -130,7 +150,6 @@ void trd_set_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries)
          tsd->lowest_maxtries[retry_type],
          tsd->highest_maxtries[retry_type]);
 
-
    if (new_maxtries > tsd->highest_maxtries[retry_type])
       tsd->highest_maxtries[retry_type] = new_maxtries;
    if (new_maxtries < tsd->lowest_maxtries[retry_type])
@@ -141,6 +160,7 @@ void trd_set_thread_max_tries(DDCA_Retry_Type retry_type, uint16_t new_maxtries)
          tsd->lowest_maxtries[retry_type],
          tsd->highest_maxtries[retry_type]);
 
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 #ifdef UNFINISHED
@@ -161,14 +181,17 @@ void trd_set_thread_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 
 uint16_t trd_get_thread_max_tries(DDCA_Retry_Type type_id) {
    bool debug = false;
-   Per_Thread_Data * tsd = trd_get_thread_retry_data();
-   uint16_t result = tsd->current_maxtries[type_id];
+   cross_thread_operation_block();
+   // bool this_function_locked = ptd_lock_if_unlocked();
+   Per_Thread_Data * trd = trd_get_thread_retry_data();
+   uint16_t result = trd->current_maxtries[type_id];
+   // ptd_unlock_if_needed(this_function_locked);
    DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(type_id), result);
    return result;
 }
 
 
-void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
+static void trd_minmax_visitor(Per_Thread_Data * data, void * accumulator) {
    bool debug = false;
    Global_Maxtries_Accumulator * acc = accumulator;
       DBGMSF(debug, "thread id: %d, retry data defined: %s, per thread data: lowest maxtries: %d, highest maxtries: %d",
@@ -205,7 +228,7 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
    accumulator.max_highest_maxtries = 0;               // less than any valid value
    accumulator.min_lowest_maxtries = MAX_MAX_TRIES+1;  // greater than any valid value
 
-   ptd_apply_all(&trd_minmax_visitor, &accumulator);
+   ptd_apply_all(&trd_minmax_visitor, &accumulator);   // ptd_apply_all() will lock
 
    return accumulator;
 }
@@ -218,20 +241,26 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
  *  \param  depth  logical indentation level
  */
 static void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
-   bool debug = false;
+   assert(data->thread_retry_data_defined);
+#ifdef OLD
    if (!data->thread_retry_data_defined) {
+      bool debug = false;
        DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
        init_thread_retry_data(data);
        if (debug)
           dbgrpt_per_thread_data(data, 2);
     }
+#endif
+
+   cross_thread_operation_block();
+   //bool this_function_locked = ptd_lock_if_unlocked();
 
    int d1 = depth+1;
    // int d2 = depth+2;
    // rpt_vstring(depth, "Retry data for thread: %3d", data->thread_id);
    // if (data->dref)
    //    rpt_vstring(d1, "Display:                           %s", dref_repr_t(data->dref) );
-   rpt_vstring(d1,    "Thread Description:                %s", (data->description) ? data->description : "Not set");
+   rpt_vstring(d1, "Thread Description:                %s", (data->description) ? data->description : "Not set");
    rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
                     data->current_maxtries[0], data->current_maxtries[1],
                     data->current_maxtries[2], data->current_maxtries[3]);
@@ -241,6 +270,8 @@ static void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
                     data->lowest_maxtries[0], data->lowest_maxtries[1],
                     data->lowest_maxtries[2], data->lowest_maxtries[3]);
+
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 
@@ -264,13 +295,16 @@ void report_all_thread_maxtries_data(int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    rpt_label(depth, "Retry data by thread:");
-   if (!per_thread_data_hash) {
-      rpt_vstring(depth+1, "No thread retry data found");
-   }
-   else {
+   assert(per_thread_data_hash);
+   cross_thread_operation_block();
+      // bool this_function_locked = ptd_lock_if_unlocked();
       ptd_apply_all_sorted(&wrap_report_thread_maxtries_data, GINT_TO_POINTER(depth+1) );
-   }
+      // ptd_unlock_if_needed(this_function_locked);
    rpt_nl();
+   rpt_label(depth, "per thread data structure locks: ");
+   dbgrpt_per_thread_data_locks(depth+1);
+   rpt_nl();
+
    DBGMSF(debug, "Done");
 }
 
@@ -278,27 +312,32 @@ void report_all_thread_maxtries_data(int depth) {
 // Try Stats
 //
 
-
-void trd_reset_tries_by_data(Per_Thread_Data * data) {
+// n. caller always locks
+static void trd_reset_tries_by_data(Per_Thread_Data * data) {
+   cross_thread_operation_block();
+   // bool this_function_locked = ptd_lock_if_unlocked();
    for (int ndx = 0; ndx < DDCA_RETRY_TYPE_COUNT; ndx++) {
-     // uint16_t * counters = data->try_stats[ndx].counters;
      for (int ctrndx = 0; ctrndx < MAX_MAX_TRIES+2; ctrndx++) {
         // counters[ctrndx] = 0;
         data->try_stats[ndx].counters[ctrndx] = 0;
 
      }
    }
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 // reset counts for current thread
 void trd_reset_cur_thread_tries() {
+   // bool this_function_locked = ptd_lock_if_unlocked();
+   cross_thread_operation_block();
    Per_Thread_Data * data = trd_get_thread_retry_data();
    trd_reset_tries_by_data(data);
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 
 // GFunc signature
-void trd_wrap_reset_tries_by_data(Per_Thread_Data * data, void * arg) {
+static void trd_wrap_reset_tries_by_data(Per_Thread_Data * data, void * arg) {
    trd_reset_tries_by_data(data);
 }
 
@@ -310,7 +349,7 @@ void trd_reset_all_threads_tries() {
    DBGMSF(debug, "Starting. ");
 
    if (per_thread_data_hash) {
-      ptd_apply_all_sorted(&trd_wrap_reset_tries_by_data, NULL );
+      ptd_apply_all_sorted(&trd_wrap_reset_tries_by_data, NULL );   // handles locking
    }
    DBGMSF(debug, "Done");
 }
@@ -347,6 +386,9 @@ void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
    bool debug = false;
    DBGMSF(debug, "Executing. type_id=%d=%s, rc=%d, tryct=%d",
                  type_id, retry_type_name(type_id), rc, tryct);
+
+   cross_thread_operation_block();
+   // bool this_function_locked = ptd_lock_if_unlocked();
    Per_Thread_Data * data = trd_get_thread_retry_data();
    // Per_Thread_Try_Stats* typedata = &data->try_stats[type_id];
    int index = 0;
@@ -362,6 +404,7 @@ void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
    }
    data->try_stats[type_id].counters[index]+= 1;
    //typedata->counters[index] +=1;
+   // ptd_unlock_if_needed(this_function_locked);
 }
 
 
@@ -371,6 +414,9 @@ void trd_record_cur_thread_tries(DDCA_Retry_Type type_id, int rc, int tryct) {
  * \param  return total attempts for all exchange types
  */
 int get_thread_total_tries_for_all_types_by_data(Per_Thread_Data  * data) {
+   cross_thread_operation_block();
+   // bool this_function_locked = ptd_lock_if_unlocked();
+
    int total_attempts = 0;
    for (int typendx = 0; typendx < DDCA_RETRY_TYPE_COUNT; typendx++) {
       // Per_Thread_Try_Stats * typedata = &data->try_stats[typendx];
@@ -379,6 +425,8 @@ int get_thread_total_tries_for_all_types_by_data(Per_Thread_Data  * data) {
          total_attempts += data->try_stats[typendx].counters[counter_ndx];
       }
    }
+   // ptd_unlock_if_needed(this_function_locked);
+
    return total_attempts;
 }
 
@@ -422,6 +470,7 @@ void report_thread_try_typed_data_by_data(
    rpt_nl();
    assert( ( (retry_type == -1) &&  for_all_threads_total) ||
            ((retry_type != -1) && !for_all_threads_total) );
+   // bool this_function_locked = ptd_lock_if_unlocked();
    if (for_all_threads_total) {  // reporting a synthesized summary record
       rpt_vstring(depth, "Total %s retry statistics for all threads", retry_type_name(retry_type) );
    }
@@ -470,6 +519,7 @@ void report_thread_try_typed_data_by_data(
             rpt_vstring(d2, "%2d:  %3d", ndx-1, typedata->counters[ndx]);
          }
       }
+      // ptd_unlock_if_needed(this_function_locked);
 
       int local_total = total_successful_attempts + typedata->counters[0] + typedata->counters[1];
 

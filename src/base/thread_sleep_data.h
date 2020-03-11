@@ -13,6 +13,9 @@
 
 #include "base/per_thread_data.h"
 
+
+void init_thread_sleep_data(Per_Thread_Data * data);
+
 Per_Thread_Data * tsd_get_thread_sleep_data();
 
 // Experimental Dynamic Sleep Adjustment

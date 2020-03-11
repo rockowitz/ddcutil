@@ -25,6 +25,7 @@ typedef struct {
 const char * retry_type_name(DDCA_Retry_Type stat_id);
 const char * retry_type_description(DDCA_Retry_Type retry_class);
 
+void init_thread_retry_data(Per_Thread_Data * data);
 
 // These functions manage retry counts on a per-thread basis
 
@@ -43,7 +44,6 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(DDCA_Retry_Type t
 void report_all_thread_maxtries_data(int depth);
 
 // Try Stats
-void trd_reset_tries_by_data(Per_Thread_Data * data);
 void trd_reset_cur_thread_tries();
 void trd_reset_all_threads_tries();
 // void trd_record_cur_thread_successful_tries(DDCA_Retry_Type type_id, int tryct);
