@@ -509,7 +509,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
          }
          if (!accum->group_i2c_exists) {
             rpt_label  (d1, "Issue:");
-            rpt_label  (d2, "Group i2c does exist.");
+            rpt_label  (d2, "Group i2c does not exist.");
             rpt_label  (d1, "Suggestion:");
             rpt_label  (d2, "Create group i2c. To create group i2c, use command:");
             rpt_label  (d3, "sudo groupadd --system i2c");
