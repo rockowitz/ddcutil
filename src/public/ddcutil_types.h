@@ -109,6 +109,7 @@ typedef enum{
    DDCA_MULTI_PART_WRITE_TRIES  /**< Maximum multi-part write operation tries */
 } DDCA_Retry_Type;
 #define DDCA_RETRY_TYPE_COUNT 4
+typedef uint16_t DDCA_Retry_Count_Type;
 
 //
 // Message Control
