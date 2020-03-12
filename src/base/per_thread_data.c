@@ -60,11 +60,8 @@ static pid_t   cross_thread_operation_owner;
 //   Alt, perhaps clearer, refer to them as multi-thread data instances.
 
 /**
- *  \param read_only only reads #Per_Thread_Data structs does not
- *                   modify
  */
-// n. read_only parm not yet
-bool ptd_cross_thread_operation_start(bool read_only) {
+bool ptd_cross_thread_operation_start() {
    // Only 1 cross thread action can be active at one time.
    // All per_thread actions must wait
 
