@@ -101,9 +101,9 @@ void ddc_set_max_multi_part_write_tries(int ct) {
 /** Gets the current maximum number of multi-part read exchange tries allowed
   * @return maximum number of tries
   */
-int ddc_get_max_multi_part_read_tries() {
+DDCA_Retry_Count_Type ddc_get_max_multi_part_read_tries() {
    bool debug = false;
-   int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
+   DDCA_Retry_Count_Type v1 = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
    // int v2 = max_multi_part_read_tries;
    DBGMSF(debug, "try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES) = %d", v1);
    // DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
@@ -118,8 +118,8 @@ int ddc_get_max_multi_part_read_tries() {
 /** Gets the current maximum number of multi-part write exchange tries allowed
   * @return maximum number of tries
   */
-int ddc_get_max_multi_part_write_tries() {
-   int v1 = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
+DDCA_Retry_Count_Type ddc_get_max_multi_part_write_tries() {
+   DDCA_Retry_Count_Type v1 = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
    // int v2 = max_multi_part_write_tries;
    // assert(v1 == v2);
    return v1;
@@ -267,7 +267,7 @@ multi_part_read_with_retry(
       Buffer**         buffer_loc)
 {
    bool debug = false;
-   int max_multi_part_read_tries = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
+   DDCA_Retry_Count_Type max_multi_part_read_tries = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
    DBGTRC(debug, TRACE_GROUP,
           "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
@@ -433,7 +433,7 @@ multi_part_write_with_retry(
      Byte             vcp_code,
      Buffer *         value_to_set)
 {
-   int max_multi_part_write_tries = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
+   DDCA_Retry_Count_Type max_multi_part_write_tries = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
    bool debug = false;
    if (IS_TRACING())
       puts("");

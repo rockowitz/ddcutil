@@ -31,10 +31,10 @@ void ddc_report_multi_part_write_stats(int depth);
 
 // Retry management
 // void ddc_set_max_multi_part_read_tries(int ct);
-int  ddc_get_max_multi_part_read_tries();
+DDCA_Retry_Count_Type ddc_get_max_multi_part_read_tries();
 
 // void ddc_set_max_multi_part_write_tries(int ct);
-int  ddc_get_max_multi_part_write_tries();
+DDCA_Retry_Count_Type  ddc_get_max_multi_part_write_tries();
 
 
 Error_Info *
