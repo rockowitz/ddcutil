@@ -18,8 +18,9 @@
 void     try_data_init();
 bool     try_data_lock();
 void     try_data_unlock(bool this_function_owns_lock);
-uint16_t try_data_get_maxtries2(DDCA_Retry_Type retry_type);
-void     try_data_set_maxtries2(DDCA_Retry_Type retry_type, uint16_t new_maxtries);
+DDCA_Retry_Count_Type
+         try_data_get_maxtries2(DDCA_Retry_Type retry_type);
+void     try_data_set_maxtries2(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type new_maxtries);
 void     try_data_reset2(       DDCA_Retry_Type retry_type);
 void     try_data_reset2_all();
 void     try_data_record_tries2(DDCA_Retry_Type retry_type, DDCA_Status rc, int tryct);
