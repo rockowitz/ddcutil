@@ -28,7 +28,6 @@
 
 // Master table of sleep data for all threads
 GHashTable *    per_thread_data_hash = NULL;
-GMutex          per_thread_data_mutex;
 static GPrivate this_thread_has_lock;
 static GPrivate lock_depth; // GINT_TO_POINTER(0);
 static bool     debug_mutex = false;
@@ -46,12 +45,28 @@ static bool    cross_thread_operation_active = false;
 static GMutex  cross_thread_operation_mutex;
 static pid_t   cross_thread_operation_owner;
 
-bool cross_thread_operation_start() {
-   // Only 1 cross thread action can be active at one time,
-   // and all per_thread actions should wait
+// The locking strategy relies on the fact that in practice conflicts
+// will be rare, and critical sections short.
+// Operations that occur on the
+// are blocked only using a spin-lock.
 
-   // TODO copy and modify ptd_lock_if_unlocked,
-   // do not want to acquire lock if the thread already has it
+// The groups of operations:
+// - Operations that operate on the single Per_Thread_Data instance
+//   associated with the currently executing thread.
+// - Operations that operate on a single Per_Thread_Data instance,
+//   but possibly not from the thread associated with the Per_Thread_Data instance.
+// - Operations that operate on multiple Per_Thread_Data instances.
+//   These are referred to as cross thread operations.
+//   Alt, perhaps clearer, refer to them as multi-thread data instances.
+
+/**
+ *  \param read_only only reads #Per_Thread_Data structs does not
+ *                   modify
+ */
+// n. read_only parm not yet
+bool ptd_cross_thread_operation_start(bool read_only) {
+   // Only 1 cross thread action can be active at one time.
+   // All per_thread actions must wait
 
    bool debug = false;
    debug = debug || debug_mutex;
@@ -72,13 +87,10 @@ bool cross_thread_operation_start() {
       lock_performed = true;
       cross_thread_operation_active = true;
 
-          // unnecessary - already in mutex
-         // __sync_fetch_and_add(&ptd_lock_count, 1);
       ptd_lock_count++;
 
       // should this be a depth counter rather than a boolean?
       g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
-
 
       pid_t cur_thread_id = syscall(SYS_gettid);
       cross_thread_operation_owner = cur_thread_id;
@@ -91,9 +103,10 @@ bool cross_thread_operation_start() {
 }
 
 
-void cross_thread_operation_end() {
+void ptd_cross_thread_operation_end() {
    int thread_lock_depth = GPOINTER_TO_INT(g_private_get(&lock_depth));
    g_private_set(&lock_depth, GINT_TO_POINTER(thread_lock_depth-1));
+   assert(thread_lock_depth >= 1);
 
    if (thread_lock_depth == 1) {
    // if (unlock_requested) {
@@ -101,12 +114,21 @@ void cross_thread_operation_end() {
       cross_thread_operation_owner = 0;
       g_private_set(&this_thread_has_lock, false);
       ptd_unlock_count++;
+      assert(ptd_lock_count == ptd_unlock_count);
       g_mutex_unlock(&cross_thread_operation_mutex);
+   }
+   else {
+      assert( ptd_lock_count > ptd_unlock_count );
    }
 }
 
 
-void cross_thread_operation_block() {
+/** Block execution of for single Per_Thread_Data operations
+ *  when an operation involving multiple Per_Thead_Data instances
+ *  is active.
+ */
+
+void ptd_cross_thread_operation_block() {
    if (cross_thread_operation_active && syscall(SYS_gettid) != cross_thread_operation_owner) {
       __sync_fetch_and_add(&cross_thread_operation_blocked_count, 1);
       do {
@@ -116,87 +138,16 @@ void cross_thread_operation_block() {
 }
 
 
+/** Initialize per_thread_data.c at program startup */
+void init_thread_data_module() {
+   per_thread_data_hash = g_hash_table_new(g_direct_hash, NULL);
+   DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
+}
+
+
 //
 // Locking
 //
-
-#ifdef OLD
-
-/** If **per_thread_data_mutex** is not already locked by the current thread,
- *  lock it.
- *
- *  \remark
- *  This function is necessary because if a GLib mutex is
- *  re-locked by the current thread then the behavior is undefined.
- */
-bool ptd_lock_if_unlocked() {
-   bool debug = false;
-   debug = debug || debug_mutex;
-   bool lock_performed = false;
-   bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
-   DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
-   if (!thread_has_lock) {
-      g_mutex_lock(&per_thread_data_mutex);
-      lock_performed = true;
-      // should this be a depth counter rather than a boolean?
-      __sync_fetch_and_add(&ptd_lock_count, 1);
-      // ptd_lock_count++;
-      g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
-      if (debug) {
-         pid_t cur_thread_id = syscall(SYS_gettid);
-         DBGMSG("Locked by thread %d", cur_thread_id);
-      }
-   }
-   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
-   return lock_performed;
-}
-
-
-/** Unlocks the **per_thread_data_mutex** set by a call to #lock_if_unlocked
- *
- *  \param  unlock_requested perform unlock
- */
-void ptd_unlock_if_needed(bool unlock_requested) {
-   bool debug = false;
-   debug = debug || debug_mutex;
-   DBGMSF(debug, "unlock_requested=%s", sbool(unlock_requested));
-
-   if (unlock_requested) {
-      // is it actually locked?
-      bool currently_locked = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
-      DBGMSF(debug, "currently_locked = %s", sbool(currently_locked));
-      if (currently_locked) {
-         g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
-         ptd_unlock_count++;
-         if (debug) {
-            pid_t cur_thread_id = syscall(SYS_gettid);
-            DBGMSF(debug, "Unlocked by thread %d", cur_thread_id);
-         }
-         g_mutex_unlock(&per_thread_data_mutex);
-      }
-   }
-}
-
-
-/** Requests a lock on the per-thread data structure.
- *  A lock is not performed if the current thread already holds the lock
- *
- *  \return  true if a lock was actually performed
- */
-bool ptd_lock() {
-   return ptd_lock_if_unlocked();
-}
-
-
-/** Requests that the currently held lock on the **try_data** data structure
- *  be released
- *
- *  \param release_requested  if true, attempt to unlock
- */
-void ptd_unlock(bool release_requested) {
-   ptd_unlock_if_needed(release_requested);
-}
-#endif
 
 static void init_per_thread_data(Per_Thread_Data * ptd) {
    init_thread_sleep_data(ptd);
@@ -242,50 +193,34 @@ Per_Thread_Data * ptd_get_per_thread_data() {
                           data);
       DBGMSF(debug, "Created Per_Thread_Data struct for thread id = %d", data->thread_id);
       DBGMSF(debug, "per_thread_data_hash size=%d", g_hash_table_size(per_thread_data_hash));
-      if (debug)
-        dbgrpt_per_thread_data(data, 1);
+      // if (debug)
+      //   dbgrpt_per_thread_data(data, 1);
    }
    // ptd_unlock_if_needed(this_function_owns_lock);
    return data;
 }
 
 
-#ifdef UNUSED
-void ptd_register_thread_dref(Display_Ref * dref) {
-   Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   DBGMSG("thread: %d, display ref: %s", ptd->thread_id, dref_repr_t(dref));
-   ptd->dref = dref;
-   dbgrpt_per_thread_data(ptd, 4);
-}
-#endif
-
+// Thread description operations always operate on the Per_Thread_Data
+// instance for the currently executing thread.
 
 void ptd_set_thread_description(const char * description) {
-   cross_thread_operation_block();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
-
+   ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
    // DBGMSG("thread: %d, description: %s", ptd->thread_id, description);
    if (ptd->description)
       free(ptd->description);
    ptd->description = strdup(description);
-   // dbgrpt_per_thread_data(ptd, 4);
-
-   // ptd_unlock_if_needed(this_function_owns_lock);
 }
 
 
 void ptd_append_thread_description(const char * addl_description) {
    cross_thread_operation_block();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
-
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
    if (ptd->description)
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
    else
       ptd->description = strdup(addl_description);
-
-   // ptd_unlock_if_needed(this_function_owns_lock);
 }
 
 
@@ -293,17 +228,15 @@ const char * ptd_get_thread_description_t() {
    static GPrivate  x_key = G_PRIVATE_INIT(g_free);
    static GPrivate  x_len_key = G_PRIVATE_INIT(g_free);
 
-   cross_thread_operation_block();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
+   ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   // ptd_unlock_if_needed(this_function_owns_lock);
    char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(ptd->description)+1);
    strcpy(buf,ptd->description);
    return buf;
 }
 
 
-char * int_array_to_string(uint16_t * start, int ct) {
+static char * int_array_to_string(uint16_t * start, int ct) {
    int bufsz = ct*10;
    char * buf = calloc(1, bufsz);
    int next = 0;
@@ -320,11 +253,10 @@ char * int_array_to_string(uint16_t * start, int ct) {
  *
  *  \param  data   pointer to #Per_Thread_Data struct
  *  \param  depth  logical indentation level
+ *
+ *  // relies on caller for possible blocking
  */
 void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
-   cross_thread_operation_block();  // or cross_thread_operation_start()?
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
-
    int d1 = depth+1;
    rpt_structure_loc("Per_Thread_Data", data, depth);
  //rpt_int( "sizeof(Per_Thread_Data)",  NULL, sizeof(Per_Thread_Data),   d1);
@@ -339,13 +271,6 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
 
    // Sleep multiplier adjustment:
-#ifdef REF
-
-   int    sleep_multiplier_ct    ;         // can be changed by retry logic
-   int    highest_sleep_multiplier_value;  // high water mark
-   int    sleep_multipler_changer_ct;      // number of function calls that adjusted multiplier ct
-
-#endif
    rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
    rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
    rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_value);
@@ -365,8 +290,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d1, "thread_adjustment_increment        %15.2f", data->thread_adjustment_increment);
    rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
 
-   // TODO: report maxtries
-
+   // Maxtries history
    rpt_bool("retry data initialized"    , NULL, data->thread_retry_data_defined, d1);
 
    rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
@@ -387,13 +311,19 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
                       retry_type, retry_type_name(retry_type), buf);
       free(buf);
    }
-   // ptd_unlock_if_needed(this_function_owns_lock);
 }
 
 
+/** Applies a specified function with signature GFunc to all
+ *  #Per_Thread_Data instances.
+/*
+ *  \param  func  function to apply
+ *  \parm   arg   an arbitray argument passed as a pointer
+ *
+ *  This is a multi-instance operation.
+ */
 void ptd_apply_all(Ptd_Func func, void * arg) {
-   cross_thread_operation_start();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
+   ptd_cross_thread_operation_start();
    bool debug = false;
    assert(per_thread_data_hash);    // allocated by init_thread_data_module()
 
@@ -406,12 +336,11 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
          func(data, arg);
       }
 
-   cross_thread_operation_end();
-   // ptd_unlock_if_needed(this_function_owns_lock);
+   ptd_cross_thread_operation_end();
 }
 
-
-// GCompareFunc function signature
+/** Integer comparison function with signature GCompareFunc
+ */
 static gint compare_int_list_entries(
       gconstpointer a,
       gconstpointer b)
@@ -428,44 +357,56 @@ static gint compare_int_list_entries(
 }
 
 
-/** Report all #Per_Thread_Data structs.  Note that this report includes
- *  structs for threads that have been closed.
+/** Apply a given function to all #Per_Thread_Data structs, ordered by thread id.
+ *  Note that this report includes structs for threads that have been closed.
  *
- *  \param depth  logical indentation depth
+ *  \param func function to apply
+ *  \param arg pointer or integer value
+ *
+ *  This is a multi-instance operation.
  */
 void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
    bool debug = true;
    DBGMSF(debug, "Starting");
-   cross_thread_operation_start();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
+   ptd_cross_thread_operation_start();
    assert(per_thread_data_hash);
 
-      DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
-      GList * keys = g_hash_table_get_keys (per_thread_data_hash);
-      GList * new_head = g_list_sort(keys, compare_int_list_entries); // not working
-      GList * l;
-      for (l = new_head; l != NULL; l = l->next) {
-         int key = GPOINTER_TO_INT(l->data);
-         DBGMSF(debug, "Key: %d", key);
-         Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash, l->data);
-         assert(data);
+   DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
+   GList * keys = g_hash_table_get_keys (per_thread_data_hash);
+   GList * new_head = g_list_sort(keys, compare_int_list_entries); // not working
+   GList * l;
+   for (l = new_head; l != NULL; l = l->next) {
+      int key = GPOINTER_TO_INT(l->data);
+      DBGMSF(debug, "Key: %d", key);
+      Per_Thread_Data * data = g_hash_table_lookup(per_thread_data_hash, l->data);
+      assert(data);
 
-         func(data, arg);
-      }
-      g_list_free(new_head);   // would keys also work?
+      func(data, arg);
+   }
+   g_list_free(new_head);   // would keys also work?
 
-   cross_thread_operation_end();
-   // ptd_unlock_if_needed(this_function_owns_lock);
+   ptd_cross_thread_operation_end();
    DBGMSF(debug, "Done");
 }
 
 
+/** Emits a brief summary of a #Per_Thread_Data instance,
+ *  showing the thread id number and description.
+ *
+ *  ptd   pointer to #Per_Thread_Data instance
+ *  arg   logical indentation i                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+ *
+ *  /note
+ *  This function has a GFunc signature
+ *  /note called only by multi-thread-data functions that
+ *  hold lock
+ */
 void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    int d1 = depth+1;
-   cross_thread_operation_block();
-   // bool this_function_owns_lock = ptd_lock_if_unlocked();
+   ptd_cross_thread_operation_block();
 
+   // simple but ugly
    // rpt_vstring(depth, "Thread: %d. Description:%s",
    //             ptd->thread_id, ptd->description);
 
@@ -488,11 +429,14 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
             header = "";
       }
    }
-
-   // ptd_unlock_if_needed(this_function_owns_lock);
 }
 
 
+/** Emits a brief summary (thread id and description) for each
+ * #Per_Thread_Data instance.
+ *
+ *  \param  depth   logical indentation depth
+ */
 void ptd_list_threads(int depth) {
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
 
@@ -508,11 +452,5 @@ void ptd_list_threads(int depth) {
 // }
 
 
-
-/** Initialize per-thread data at program startup */
-void init_thread_data_module() {
-   per_thread_data_hash = g_hash_table_new(g_direct_hash, NULL);
-   DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
-}
 
 

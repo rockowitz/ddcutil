@@ -24,9 +24,9 @@ extern GMutex        per_thread_data_mutex;    // temp, replace by function call
 
 void init_thread_data_module();     // module initialization
 
-extern int      ptd_lock_count;
-extern int      ptd_unlock_count;
-extern int cross_thread_operation_blocked_count;
+extern int  ptd_lock_count;
+extern int  ptd_unlock_count;
+extern int  cross_thread_operation_blocked_count;
 
 typedef
 struct {
@@ -68,26 +68,16 @@ typedef struct {
 
    // Retry management
    bool thread_retry_data_defined;
-   uint16_t current_maxtries[4];
-   uint16_t highest_maxtries[4];
-   uint16_t lowest_maxtries[4];
+   DDCA_Retry_Count_Type current_maxtries[4];
+   DDCA_Retry_Count_Type highest_maxtries[4];
+   DDCA_Retry_Count_Type lowest_maxtries[4];
 
    Per_Thread_Try_Stats  try_stats[4];
 } Per_Thread_Data;
 
-
-#ifdef OLD
-// exposed for thread_retry_data.c, thread_sleep_data.c
-bool ptd_lock_if_unlocked();
-void ptd_unlock_if_needed(bool unlock_requested);
-
-bool ptd_lock();
-void ptd_unlock(bool release_requested);
-#endif
-
-bool cross_thread_operation_start();
-void cross_thread_operation_end();
-void cross_thread_operation_block();
+bool ptd_cross_thread_operation_start();
+void ptd_cross_thread_operation_end();
+void ptd_cross_thread_operation_block();
 
 
 Per_Thread_Data * ptd_get_per_thread_data();

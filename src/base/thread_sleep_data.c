@@ -60,7 +60,7 @@ static       double global_sleep_multiplier_factor = 1.0;   // as set by --sleep
  *  \param  depth  logical indentation level
  */
 void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_vstring(depth, "Thread %d sleep data:", data->thread_id);
@@ -253,7 +253,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
 
 
 void reset_thread_sleep_data(Per_Thread_Data * data) {
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    data->highest_sleep_multiplier_value = data->sleep_multiplier_ct;
    data->sleep_multipler_changer_ct = 0;
    data->total_ok_status_count = 0;
@@ -354,7 +354,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
    // Need to guard with mutex!
 
    DBGMSF(debug, "Executing. factor = %5.2f", factor);
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
    data->thread_adjustment_increment = factor;
@@ -401,19 +401,19 @@ int tsd_get_sleep_multiplier_ct() {
  */
 void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    assert(multiplier_ct > 0 && multiplier_ct < 100);
-   cross_thread_operation_start();
+   ptd_cross_thread_operation_start();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_ct = multiplier_ct;
    if (multiplier_ct > data->highest_sleep_multiplier_value)
       data->highest_sleep_multiplier_value = multiplier_ct;
-   cross_thread_operation_end();
+   ptd_cross_thread_operation_end();
    // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
 }
 
 
 // Number of function executions that changed the multiplier
 void tsd_bump_sleep_multiplier_changer_ct() {
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multipler_changer_ct++;
 }
@@ -451,11 +451,11 @@ void set_sleep_multiplier_factor_all(double factor) {
 void tsd_enable_dynamic_sleep(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "enabled = %s", sbool(enabled));
-   cross_thread_operation_start();
+   ptd_cross_thread_operation_start();
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->dynamic_sleep_enabled = enabled;
-   cross_thread_operation_end();
+   ptd_cross_thread_operation_end();
    // ptd_unlock_if_needed(this_function_owns_lock);
 }
 
@@ -463,7 +463,7 @@ void tsd_enable_dynamic_sleep(bool enabled) {
 // Enable dynamic sleep on all existing threads
 void tsd_enable_dsa_all(bool enable) {
    // needs mutex
-   cross_thread_operation_start();
+   ptd_cross_thread_operation_start();
    bool debug = false;
    DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
    default_dynamic_sleep_enabled = enable;  // for initializing new threads
@@ -477,12 +477,12 @@ void tsd_enable_dsa_all(bool enable) {
          data->dynamic_sleep_enabled = enable;
       }
    }
-   cross_thread_operation_end();
+   ptd_cross_thread_operation_end();
 }
 
 
 void tsd_dsa_enable(bool enabled) {
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    tsd->dynamic_sleep_enabled = enabled;
 }
@@ -492,19 +492,19 @@ void tsd_dsa_enable(bool enabled) {
 void tsd_dsa_enable_globally(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   cross_thread_operation_start();
+   ptd_cross_thread_operation_start();
    default_dynamic_sleep_enabled = enabled;
    tsd_enable_dsa_all(enabled) ;
-   cross_thread_operation_end();
+   ptd_cross_thread_operation_end();
 }
 
 
 // Is dynamic sleep enabled on the current thread?
 bool tsd_dsa_is_enabled() {
-   cross_thread_operation_start();     // needed
+   ptd_cross_thread_operation_start();     // needed
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    bool result = tsd->dynamic_sleep_enabled;
-   cross_thread_operation_end();
+   ptd_cross_thread_operation_end();
    return result;
 }
 
