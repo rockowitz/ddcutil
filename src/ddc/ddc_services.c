@@ -22,6 +22,7 @@
 #include "base/tuned_sleep.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
+#include "base/per_thread_data.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -139,6 +140,9 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats,
       ptd_list_threads(depth);
       rpt_nl();
    }
+
+   dbgrpt_per_thread_data_locks(depth+1);
+
 }
 
 
@@ -169,6 +173,9 @@ void ddc_report_max_tries(int depth) {
 void init_ddc_services() {
    bool debug = false;
    DBGMSF(debug, "Executing");
+
+   // base:
+   init_thread_data_module();
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
