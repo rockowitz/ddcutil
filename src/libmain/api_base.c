@@ -631,16 +631,21 @@ ddca_register_thread_dref(DDCA_Display_Ref dref) {
 #endif
 
 void
-ddca_set_thread_description(const char * description) {
+ddca_set_thread_description(
+      const char * description)
+{
    ptd_set_thread_description( description );
 }
 
 void
-ddca_append_thread_description(const char * description) {
+ddca_append_thread_description(
+      const char * description)
+{
    ptd_append_thread_description(description);
 }
 
-const char * ptd_get_thread_descripton() {
+const char *
+ddca_get_thread_descripton() {
    return ptd_get_thread_description_t();
 }
 
@@ -648,14 +653,18 @@ const char * ptd_get_thread_descripton() {
 
 void
 ddca_reset_stats(void) {
-   DBGMSG("Executing");
+   // DBGMSG("Executing");
    ddc_reset_stats_main();
 }
 
 // TODO: Functions that return stats in data structures
 void
-ddca_show_stats(DDCA_Stats_Type stats_types, bool by_thread, int depth) {
-   DBGMSG("stats_types = %d, depth=%d", stats_types, depth);
+ddca_show_stats(
+      DDCA_Stats_Type stats_types,
+      bool            by_thread,
+      int             depth)
+{
+   // DBGMSG("stats_types = %d, depth=%d", stats_types, depth);
 
    ddc_report_stats_main( stats_types,    // stats to show
                           by_thread,
