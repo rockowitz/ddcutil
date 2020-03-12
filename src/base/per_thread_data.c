@@ -212,7 +212,7 @@ void ptd_set_thread_description(const char * description) {
 
 
 void ptd_append_thread_description(const char * addl_description) {
-   cross_thread_operation_block();
+   ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
    if (ptd->description)
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
@@ -313,7 +313,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
 
 /** Applies a specified function with signature GFunc to all
  *  #Per_Thread_Data instances.
-/*
+ *
  *  \param  func  function to apply
  *  \parm   arg   an arbitray argument passed as a pointer
  *

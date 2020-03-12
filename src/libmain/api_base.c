@@ -439,9 +439,9 @@ ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    }
 #endif
 
-   int result3 = try_data_get_maxtries2(retry_type);
+   DDCA_Retry_Count_Type result3 = try_data_get_maxtries2(retry_type);
    // new way using retry_mgt
-   int result2 = trd_get_thread_max_tries(retry_type);
+   DDCA_Retry_Count_Type result2 = trd_get_thread_max_tries(retry_type);
    // assert(result == result2);
    assert(result2 == result3);
    return result2;
@@ -641,7 +641,7 @@ ddca_append_thread_description(const char * description) {
 }
 
 const char * ptd_get_thread_descripton() {
-   return ptd_get_thread_description();
+   return ptd_get_thread_description_t();
 }
 
 
