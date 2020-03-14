@@ -76,7 +76,7 @@ Public_Status_Code log_status_code(Public_Status_Code rc, const char * caller_na
 Public_Status_Code log_retryable_status_code(Public_Status_Code rc, const char * caller_name);
 #define COUNT_STATUS_CODE(rc) log_status_code(rc,__func__)
 #define COUNT_RETRYABLE_STATUS_CODE(rc) log_retryable_status_code(rc,__func__)
-void show_all_status_counts();
+void report_all_status_counts(int depth);
 
 
 

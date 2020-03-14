@@ -389,7 +389,7 @@ int compare( const void* a, const void* b)
 
 
 static
-void show_specific_status_counts(Status_Code_Counts * pcounts) {
+void report_specific_status_counts(Status_Code_Counts * pcounts, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
@@ -412,38 +412,26 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
       }
    }
    int summed_ct = 0;
-   // fprintf(stdout, "DDC packet error status codes with non-zero counts:  %s\n",
-   fprintf(stdout, "%s:  %s\n",
-           title,
-           (keyct == 0) ? "None" : "");
+   rpt_vstring(depth, "%s:  %s\n", title, (keyct == 0) ? "None" : "");
    if (keyct > 0) {
       qsort(keysp, keyct, sizeof(gpointer), compare);    // sort keys
-      fprintf(stdout, "Count   Status Code                          Description\n");
+      rpt_vstring(depth, "Count   Status Code                          Description");
       int ndx;
       for (ndx=0; ndx<keyct; ndx++) {
          gpointer keyp = keysp[ndx];
-         long key = GPOINTER_TO_INT(keyp);                  // Public_Status_Code
-         // DBGMSF(debug, "key:  %d   %p", key, keyp);
-         // wrong hunch about bug
-         // if (key == 0) {
-         //    DBGMSG("=====> Invalid status code key = %d", key);
-         //    break;
-         // }
+         long key = GPOINTER_TO_INT(keyp);                  // DDCA_Status_Code
          assert( GINT_TO_POINTER(key) == keyp);
 
          int ct  = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,keyp));
          summed_ct += ct;
-         // fprintf(stdout, "%4d    %6d\n", ct, key);
-
          Status_Code_Info * desc = find_status_code_info(key);
-
          // or consider flags in Status_Code_Info with this information
          char * aux_msg = "";
          if (ddcrc_is_derived_status_code(key))
             aux_msg = " (derived)";
          else if (ddcrc_is_not_error(key))
             aux_msg = " (not an error)";
-         fprintf(stdout, "%5d   %-28s (%5ld) %s %s\n",
+        rpt_vstring(depth, "%5d   %-28s (%5ld) %s %s",
               ct,
               (desc) ? desc->name : "",
               key,
@@ -452,22 +440,22 @@ void show_specific_status_counts(Status_Code_Counts * pcounts) {
              );
       }
    }
-   printf("Total errors: %d\n", pcounts->total_status_counts);
+   rpt_vstring(depth, "Total errors: %d", pcounts->total_status_counts);
    assert(summed_ct == pcounts->total_status_counts);
    g_free(keysp);
-   // fprintf(stdout,"\n");
    DBGMSF(debug, "Done");
 }
 
 
 /** Master function to display status counts
  */
-void show_all_status_counts() {
-   show_specific_status_counts(primary_error_code_counts);
+void report_all_status_counts(int depth) {
+   report_specific_status_counts(primary_error_code_counts, 0);
    // show_specific_status_counts(secondary_status_code_counts);    // not used
 
    rpt_nl();
-   show_specific_status_counts(retryable_error_code_counts);
+   report_specific_status_counts(retryable_error_code_counts, 0);
+   rpt_nl();
 }
 
 
@@ -659,4 +647,5 @@ void report_elapsed_summary(int depth) {
    rpt_vstring(depth,
                "Elapsed time:                     %10"PRIu64" milliseconds",
                elapsed_nanos / (1000*1000));
+   rpt_nl();
 }
