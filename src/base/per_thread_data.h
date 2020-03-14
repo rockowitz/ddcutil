@@ -97,4 +97,6 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
 void ptd_list_threads(int depth);
 
 void dbgrpt_per_thread_data_locks(int depth);
+
+void report_all_thread_status_counts(int depth);
 #endif /* PER_THREAD_DATA_H_ */

@@ -214,13 +214,13 @@ void ptd_set_thread_description(const char * description) {
 void ptd_append_thread_description(const char * addl_description) {
    ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   DBGMSG("ptd->description = %s, addl_descripton = %s", ptd->description, addl_description);
+   // DBGMSG("ptd->description = %s, addl_descripton = %s", ptd->description, addl_description);
    if (!ptd->description)
       ptd->description = strdup(addl_description);
    else if (str_contains(ptd->description, addl_description) < 0)
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
 
-   DBGMSG("Finale ptd->description = %s", ptd->description);
+   // DBGMSG("Final ptd->description = %s", ptd->description);
 }
 
 
@@ -413,14 +413,18 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
    // rpt_vstring(depth, "Thread: %d. Description:%s",
    //             ptd->thread_id, ptd->description);
 
-   rpt_vstring(depth, "Thread: %d", ptd->thread_id);
-   char * header = "Description: ";
+   // rpt_vstring(depth, "Thread: %d", ptd->thread_id);
+   // char * header = "Description: ";
+
+   char header[100];
+   g_snprintf(header, 100, "Thread %d: ", ptd->thread_id);
+
    int hdrlen = strlen(header);
    if (!ptd->description)
       rpt_vstring(d1, "%s", header);
    else {
       Null_Terminated_String_Array pieces =
-            strsplit_maxlength(ptd->description, 70, " ");
+            strsplit_maxlength(ptd->description, 60, " ");
       int ntsa_ndx = 0;
       while (true) {
          char * s = pieces[ntsa_ndx++];
@@ -429,7 +433,8 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
          rpt_vstring(d1, "%-*s%s", hdrlen, header, s);
          // printf("(%s) s = %p\n", __func__, s);
          if (strlen(header) > 0)
-            header = "";
+            strcpy(header, "");
+            // header = "";
       }
    }
 }
@@ -447,13 +452,15 @@ void ptd_list_threads(int depth) {
    // rpt_label(depth, "Have data for threads:");
    rpt_label(depth, "Report has per-thread data for threads:");
    ptd_apply_all_sorted(ptd_thread_summary, GINT_TO_POINTER(d1));
-
+   rpt_nl();
 }
 
-// nothing to change
-// void per_thread_data_reset() {
-// }
 
-
-
+void report_all_thread_status_counts(int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   rpt_label(depth, "No per-thread status code statistics");
+   rpt_nl();
+   DBGMSF(debug, "Done");
+}
 
