@@ -29,8 +29,8 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+#include "base/linux_errno.h"
 /** \endcond */
-
 
 #include "ddc/ddc_watch_displays.h"
 
@@ -325,6 +325,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+
    DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
    pid_t cur_pid = getpid();
    pid_t cur_tid = syscall(SYS_gettid);
@@ -346,6 +347,9 @@ gpointer watch_displays_using_udev(gpointer data) {
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
+
+      // Doesn't work to detect client crash, main thread and process remains for some time.
+#ifdef DOESNT_WORK
       bool pid_found = check_thread_or_process(cur_pid);
       if (!pid_found) {
          DBGMSG("Process %d not found", cur_pid);
@@ -356,6 +360,7 @@ gpointer watch_displays_using_udev(gpointer data) {
          g_thread_exit(GINT_TO_POINTER(-1));
          break;
       }
+#endif
 
 
       DBGMSF(debug, "Blocking until there is data");
@@ -405,9 +410,12 @@ gpointer watch_displays_using_udev(gpointer data) {
 
       }
       else {
-         DBGMSG("No Device from udev_monitor_receive_device(). An error occurred.");
+         // Failure indicates main thread has died.  Kill this one too.
+         int errsv=errno;
+         DBGMSG("No Device from udev_monitor_receive_device(). An error occurred. errno=%d=%s",
+                 errsv, linux_errno_name(errsv));
          g_thread_exit(GINT_TO_POINTER(-1));
-         break;
+         // break;
       }
 
       // printf(".");
