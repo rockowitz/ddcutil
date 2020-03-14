@@ -1,13 +1,17 @@
 /** \file ddc_watch_displays.h - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_WATCH_DISPLAYS_H_
 #define DDC_WATCH_DISPLAYS_H_
 
 /** \cond */
+// for syscall
+#define _GNU_SOURCE
+#include <unistd.h>
+
 #include <glib-2.0/glib.h>
 
 #include "util/error_info.h"
@@ -30,6 +34,8 @@ typedef void (*Display_Change_Handler)(
 typedef struct {
    char                   marker[4];
    Display_Change_Handler display_change_handler;
+   pid_t                  main_process_id;
+   pid_t                  main_thread_id;
 } Watch_Displays_Data;
 
 

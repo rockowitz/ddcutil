@@ -5,6 +5,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+// for syscall
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <assert.h>
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
@@ -43,6 +50,20 @@ const char * displays_change_type_name(Displays_Change_Type change_type) {
    }
    return result;
 }
+
+
+bool check_thread_or_process(pid_t id) {
+   struct stat buf;
+   char procfn[20];
+   snprintf(procfn, 20, "/proc/%d", id);
+   int rc = stat(procfn, &buf);
+   bool result = (rc == 0);
+   DBGMSG("File: %s, returning %s", procfn, sbool(result));
+   if (!result)
+      DBGMSG("!!! Returning: %s", sbool(result));
+   return result;
+}
+
 
 
 GPtrArray *  get_sysfs_drm_displays() {
@@ -304,6 +325,10 @@ gpointer watch_displays_using_udev(gpointer data) {
 
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+   DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
+   pid_t cur_pid = getpid();
+   pid_t cur_tid = syscall(SYS_gettid);
+   DBGMSG("Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
    struct udev* udev;
    udev = udev_new();
@@ -321,6 +346,18 @@ gpointer watch_displays_using_udev(gpointer data) {
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
+      bool pid_found = check_thread_or_process(cur_pid);
+      if (!pid_found) {
+         DBGMSG("Process %d not found", cur_pid);
+      }
+      bool tid_found = check_thread_or_process(cur_tid);
+      if (!pid_found || !tid_found) {
+         DBGMSG("Thread %d not found", cur_tid);
+         g_thread_exit(GINT_TO_POINTER(-1));
+         break;
+      }
+
+
       DBGMSF(debug, "Blocking until there is data");
       // by default, is non-blocking as of lubudev 171, use fcntl() to make file descriptor blocking
       struct udev_device* dev = udev_monitor_receive_device(mon);
@@ -364,9 +401,13 @@ gpointer watch_displays_using_udev(gpointer data) {
          prev_displays = check_displays(prev_displays, data);
 
          udev_device_unref(dev);
+
+
       }
       else {
          DBGMSG("No Device from udev_monitor_receive_device(). An error occurred.");
+         g_thread_exit(GINT_TO_POINTER(-1));
+         break;
       }
 
       // printf(".");
@@ -404,10 +445,12 @@ ddc_start_watch_displays()
    Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
    memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
    data->display_change_handler = dummy_display_change_handler;
+   data->main_process_id = getpid();
+   data->main_thread_id = syscall(SYS_gettid);
 
    // GThread * th =
    g_thread_new(
-         "watch_displays",
+         "watch_displays",             // optional thread name
          watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
          data);
    return ddc_excp;
