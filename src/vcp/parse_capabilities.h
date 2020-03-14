@@ -25,6 +25,7 @@ typedef struct {
    bool                    raw_cmds_segment_seen;
    bool                    raw_vcp_features_seen;
    bool                    raw_value_synthesized;
+   bool                    invalid;
    Byte_Value_Array        commands;             // each stored byte is command id
    GPtrArray *             vcp_features;         // entries are Capabilities_Feature_Record *
    DDCA_MCCS_Version_Spec  parsed_mccs_version;  // parsed mccs_version_string, DDCA_VSPEC_UNKNOWN if parsing fails

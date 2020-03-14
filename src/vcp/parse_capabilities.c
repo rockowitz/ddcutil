@@ -84,6 +84,7 @@ Parsed_Capabilities * new_parsed_capabilities(
       int rc = sscanf(mccs_ver, "%d.%d", &vmajor, &vminor);
       if (rc != 2) {
          DBGMSG("Unable to parse mccs_ver, value=\"%s\", rc=%d\n", mccs_ver, rc);
+         pcaps->invalid = true;
       }
       else {
          parsed_vcp_version.major = vmajor;
@@ -272,11 +273,10 @@ static char * find_closing_paren(
 }
 
 
-/* Parse the value of the vcp segment.
+/** Parse the value of a vcp segment..
  *
- * Arguments:
- *    start
- *    len
+ *  @param  start  offset to start of segment
+ *  @param  len    length of segment
  *
  * Returns:
  *    GPtrArray of Capabilities_Feature_Record *

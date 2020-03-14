@@ -552,7 +552,7 @@ void dyn_report_parsed_capabilities(
 
    if (pcaps->vcp_features) {
 
-#ifdef CAPABILITIES_TEST_CASES
+#ifdef X72_CAPABILITIES_TEST_CASES
       // for testing feature x72 gamma
       char * vstring = NULL;
       Capabilities_Feature_Record * cfr = NULL;

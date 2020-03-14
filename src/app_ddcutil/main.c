@@ -130,7 +130,7 @@ void report_stats(DDCA_Stats_Type stats) {
 //       these actions should be separated
 Parsed_Capabilities *
 perform_get_capabilities_by_display_handle(Display_Handle * dh) {
-   FILE * fout = stdout;
+   // FILE * fout = stdout;
    FILE * ferr = stderr;
    bool debug = false;
    Parsed_Capabilities * pcap = NULL;
@@ -161,6 +161,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
       assert(capabilities_string);
       // pcap is always set, but may be damaged if there was a parsing error
       pcap = parse_capabilities_string(capabilities_string);
+#ifdef OUT
       DDCA_Output_Level output_level = get_output_level();
       if (output_level <= DDCA_OL_TERSE) {
          f0printf(fout,
@@ -179,9 +180,36 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
                0);
          // free_parsed_capabilities(pcap);
       }
+#endif
    }
    DBGMSF(debug, "Returning: %p", pcap);
    return pcap;
+}
+
+
+void perform_show_parsed_capabilities(char * capabilities_string, Display_Handle * dh, Parsed_Capabilities * pcap) {
+   assert(pcap);
+   FILE * fout = stdout;
+   DDCA_Output_Level output_level = get_output_level();
+        if (output_level <= DDCA_OL_TERSE) {
+           f0printf(fout,
+                    "%s capabilities string: %s\n",
+                         (dh->dref->io_path.io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
+                    capabilities_string);
+        }
+        else {
+           if ( dh->dref->io_path.io_mode == DDCA_IO_USB)
+              pcap->raw_value_synthesized = true;
+
+           // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
+           dyn_report_parsed_capabilities(
+                 pcap,
+                 dh,
+                 NULL,
+                 0);
+           // free_parsed_capabilities(pcap);
+        }
+
 }
 
 
@@ -222,7 +250,12 @@ void probe_display_by_dh(Display_Handle * dh)
    // reports capabilities, and if successful returns Parsed_Capabilities
    DDCA_Output_Level saved_ol = get_output_level();
    set_output_level(DDCA_OL_VERBOSE);
-   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+
+   Parsed_Capabilities * pcaps =  perform_get_capabilities_by_display_handle(dh);
+   if (pcaps) {
+      perform_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
+   }
+
    set_output_level(saved_ol);
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
@@ -905,6 +938,9 @@ int main(int argc, char *argv[]) {
                   check_dynamic_features(dref);
 
                   Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+                  if (pcaps) {
+                     perform_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
+                  }
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
                   if (pcaps)
                      free_parsed_capabilities(pcaps);
