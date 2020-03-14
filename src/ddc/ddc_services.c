@@ -87,10 +87,18 @@ void ddc_reset_stats_main() {
 void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats, int depth) {
    // DBGMSG("include_per_thread_stats: %s", sbool(include_per_thread_stats));
    // int d1 = depth+1;
-   rpt_nl();
+   // rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
 
+   // hack to try only showing per thread stats when flag is set
+   // bool saved_include_per_thread = include_per_thread_stats;
+   if (include_per_thread_stats == false) {
+
+   if (include_per_thread_stats) {
+      ptd_list_threads(depth);
+      // rpt_nl();
+   }
    if (stats & DDCA_STATS_TRIES) {
       ddc_report_ddc_stats(depth);
       rpt_nl();
@@ -99,7 +107,9 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats,
    }
    if (stats & DDCA_STATS_ERRORS) {
       rpt_nl(); ;
-      show_all_status_counts();   // error code counts
+      report_all_status_counts(depth);   // error code counts
+      if (include_per_thread_stats)
+         report_all_thread_status_counts(depth);
    }
    if (stats & DDCA_STATS_CALLS) {
       rpt_nl();
@@ -135,14 +145,30 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats,
       report_elapsed_summary(depth);
       rpt_nl();
    }
-   if (include_per_thread_stats) {
-      ptd_list_threads(depth);
-      rpt_nl();
-   }
 
-   // Reports locks held by per_thread_data() to confirm that locking has
-   // trivial affect on performance.
-   //dbgrpt_per_thread_data_locks(depth+1);
+   }
+   else  { // include per_thread_stats = true
+       ptd_list_threads(depth);
+       if (stats & DDCA_STATS_TRIES) {
+           report_all_thread_maxtries_data(depth);
+       }
+       if (stats & DDCA_STATS_ERRORS) {
+          report_all_thread_status_counts(depth);
+          rpt_nl();
+       }
+       if (stats & DDCA_STATS_CALLS) {
+              report_all_thread_sleep_data(depth);
+       }
+       if (stats & (DDCA_STATS_ELAPSED)) {
+          // need a report_all_thread_elapsed_summary()
+          report_elapsed_summary(depth);     // temp?
+          //   rpt_nl();
+       }
+
+       // Reports locks held by per_thread_data() to confirm that locking has
+       // trivial affect on performance.
+       //dbgrpt_per_thread_data_locks(depth+1);
+   }
 }
 
 
@@ -165,6 +191,7 @@ void ddc_report_max_tries(int depth) {
    rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
                ddc_get_max_multi_part_write_tries(),
                INITIAL_MAX_MULTI_EXCHANGE_TRIES);
+   rpt_nl();
 }
 
 
