@@ -318,7 +318,7 @@ void report_all_thread_maxtries_data(int depth) {
    // rpt_nl();
    // rpt_label(depth, "per thread data structure locks: ");
    // dbgrpt_per_thread_data_locks(depth+1);
-   // rpt_nl();
+   rpt_nl();
 
    DBGMSF(debug, "Done");
 }
