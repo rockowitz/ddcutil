@@ -333,6 +333,9 @@ ddca_start_capture(
  *
  *  @note
  *  If output is not currently being captured, returns a 0 length string.
+ *  @note
+ *  The returned string is valid until the next call to this function
+ *  on the current thread.  It should not be freed by the caller.
  *
  *  @note  Writes messages to actual **stderr** in case of error.
  *  @since 0.9.0
