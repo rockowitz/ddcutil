@@ -201,7 +201,7 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
    GPtrArray * cur_displays = get_sysfs_drm_displays();
    if ( !displays_eq(prev_displays, cur_displays) ) {
-      if ( debug || IS_TRACING() ) {
+      if ( debug || IS_TRACING() || true ) {
          DBGMSG("Displays changed!");
          DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
@@ -459,7 +459,8 @@ ddc_start_watch_displays()
    // GThread * th =
    g_thread_new(
          "watch_displays",             // optional thread name
-         watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
+      //  watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
+         watch_displays_using_poll,
          data);
    return ddc_excp;
 }
