@@ -154,7 +154,7 @@ typedef enum {
 
 
 typedef enum {
-   DDCA_TRCOPT_TIMESTAMP = 0x00,
+   DDCA_TRCOPT_TIMESTAMP = 0x01,
    DDCA_TRCOPT_THREAD_ID = 0x02,
 } DDCA_Trace_Options;
 
