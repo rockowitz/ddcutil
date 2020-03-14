@@ -136,23 +136,20 @@ void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
  *  \param depth  logical indentation depth
  */
 void report_all_thread_sleep_data(int depth) {
-   int d1 = depth+1;
+   // int d1 = depth+1;
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert(per_thread_data_hash);
    rpt_label(depth, "Per thread sleep data");
-   rpt_vstring(d1, "ptd lock count:                  %d", ptd_lock_count);
-   rpt_vstring(d1, "ptd_unlock_count:                %d", ptd_unlock_count);
-   rpt_vstring(d1, "cross thread operations blocked: %d", cross_thread_operation_blocked_count);
+   // For debugging per-thread locks
+   // rpt_vstring(d1, "ptd lock count:                  %d", ptd_lock_count);
+   // rpt_vstring(d1, "ptd_unlock_count:                %d", ptd_unlock_count);
+   // rpt_vstring(d1, "cross thread operations blocked: %d", cross_thread_operation_blocked_count);
 
    ptd_apply_all_sorted(&wrap_report_thread_sleep_data, GINT_TO_POINTER(depth+1) );
    DBGMSF(debug, "Done");
    rpt_nl();
 }
-
-
-
-
 
 
 #ifdef OLD
