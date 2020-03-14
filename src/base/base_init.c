@@ -2,7 +2,7 @@
  * Master base services initialization
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "util/error_info.h"
@@ -12,6 +12,7 @@
 #include "displays.h"
 #include "execution_stats.h"
 #include "linux_errno.h"
+#include "per_thread_data.h"
 #include "sleep.h"
 
 #include "base_init.h"
@@ -26,5 +27,6 @@ void init_base_services() {
    init_execution_stats();
    init_status_code_mgt();
    // init_linux_errno();
+   init_thread_data_module();
    init_displays();
 }

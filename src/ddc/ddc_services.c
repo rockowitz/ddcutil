@@ -22,7 +22,6 @@
 #include "base/tuned_sleep.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
-#include "base/per_thread_data.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -141,8 +140,9 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats,
       rpt_nl();
    }
 
-   dbgrpt_per_thread_data_locks(depth+1);
-
+   // Reports locks held by per_thread_data() to confirm that locking has
+   // trivial affect on performance.
+   //dbgrpt_per_thread_data_locks(depth+1);
 }
 
 
@@ -174,9 +174,6 @@ void init_ddc_services() {
    bool debug = false;
    DBGMSF(debug, "Executing");
 
-   // base:
-   init_thread_data_module();
-
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
@@ -201,7 +198,6 @@ void init_ddc_services() {
    init_ddc_displays();
    init_ddc_packet_io();
    init_ddc_multi_part_io();
-   try_data_init();
    init_ddc_vcp();
 
    // dbgrpt_func_name_table(1);
