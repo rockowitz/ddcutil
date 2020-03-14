@@ -111,7 +111,7 @@ bool str_starts_with(const char * value_to_test, const char * prefix) {
  *
  * @param  value_to_test  value to examine
  * @param  suffix         substring to check for
- * @return true/flase
+ * @return true/false
  *
  * @remark Consider using lib function g_str_suffix() ?? instead
  */
@@ -128,6 +128,21 @@ bool str_ends_with(const char * value_to_test, const char * suffix) {
    }
    if (debug)
       printf("(%s) returning: %d\n", __func__, result);
+   return result;
+}
+
+int str_contains(const char * value_to_test, const char * segment) {
+   int result = -1;
+   if (value_to_test && segment) {
+      int seglen = strlen(segment);
+      int laststart = strlen(value_to_test) - seglen;
+      for (int ndx = 0; ndx < laststart; ndx++) {
+         if (str_starts_with(value_to_test+ndx, segment)) {
+            result = ndx;
+            break;
+         }
+      }
+   }
    return result;
 }
 
