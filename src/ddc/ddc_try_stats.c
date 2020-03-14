@@ -380,7 +380,9 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
 
    // doesn't distinguish write vs read
    // rpt_vstring(depth, "Retry statistics for ddc %s exchange", ddc_retry_type_description(stats_rec->retry_type));
-   if (try_data_get_total_attempts2(retry_type) == 0) {
+   int total_attempts = try_data_get_total_attempts2(retry_type);
+
+   if (total_attempts == 0) {
       rpt_vstring(d1, "No tries attempted");
    }
    else {
@@ -404,12 +406,11 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
 
       int upper_bound = MAX_MAX_TRIES+1;
       while (upper_bound > 1) {
-         // DBGMSG("upper_bound=%d", upper_bound);
          if (stats_rec->counters[upper_bound] != 0)
             break;
          upper_bound--;
       }
-      // DBGMSG("Final upper bound: %d", upper_bound);
+
       // n upper_bound = 1 if no successful attempts
       char * s = (upper_bound == 1) ? " None" : "";
       rpt_vstring(d1, "Successful attempts by number of tries required:%s", s);
@@ -426,7 +427,7 @@ void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
       rpt_vstring(d1, "Total successful attempts:        %3d", total_successful_attempts);
       rpt_vstring(d1, "Failed due to max tries exceeded: %3d", stats_rec->counters[1]);
       rpt_vstring(d1, "Failed due to fatal error:        %3d", stats_rec->counters[0]);
-      rpt_vstring(d1, "Total attempts:                   %3d", try_data_get_total_attempts2(retry_type));
+      rpt_vstring(d1, "Total attempts:                   %3d", total_attempts);
    }
 
    unlock_if_needed(this_function_performed_lock);
