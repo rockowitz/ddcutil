@@ -38,7 +38,7 @@ static bool     debug_mutex = false;
 void dbgrpt_per_thread_data_locks(int depth) {
    rpt_vstring(depth, "ptd_lock_count:                        %-4d", ptd_lock_count);
    rpt_vstring(depth, "ptd_unlock_count:                      %-4d", ptd_unlock_count);
-   rpt_vstring(depth, " cross_thread_operation_blocked_count: %-4d", cross_thread_operation_blocked_count);
+   rpt_vstring(depth, "cross_thread_operation_blocked_count:  %-4d", cross_thread_operation_blocked_count);
 }
 
 static bool    cross_thread_operation_active = false;
@@ -138,7 +138,7 @@ void ptd_cross_thread_operation_block() {
 /** Initialize per_thread_data.c at program startup */
 void init_thread_data_module() {
    per_thread_data_hash = g_hash_table_new(g_direct_hash, NULL);
-   DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
+   // DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
 }
 
 
@@ -165,7 +165,7 @@ static void init_per_thread_data(Per_Thread_Data * ptd) {
  *  struct is on the heap and still readable.
  */
 Per_Thread_Data * ptd_get_per_thread_data() {
-   bool debug = true;
+   bool debug = false;
    pid_t cur_thread_id = syscall(SYS_gettid);
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
@@ -214,10 +214,13 @@ void ptd_set_thread_description(const char * description) {
 void ptd_append_thread_description(const char * addl_description) {
    ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   if (ptd->description)
-      ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
-   else
+   DBGMSG("ptd->description = %s, addl_descripton = %s", ptd->description, addl_description);
+   if (!ptd->description)
       ptd->description = strdup(addl_description);
+   else if (str_contains(ptd->description, addl_description) < 0)
+      ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
+
+   DBGMSG("Finale ptd->description = %s", ptd->description);
 }
 
 
@@ -227,13 +230,16 @@ const char * ptd_get_thread_description_t() {
 
    ptd_cross_thread_operation_block();
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
-   char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(ptd->description)+1);
-   strcpy(buf,ptd->description);
+   char * buf = NULL;
+   if (ptd->description) {
+      char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(ptd->description)+1);
+      strcpy(buf,ptd->description);
+   }
    return buf;
 }
 
 
-static char * int_array_to_string(uint16_t * start, int ct) {
+char * int_array_to_string(uint16_t * start, int ct) {
    int bufsz = ct*10;
    char * buf = calloc(1, bufsz);
    int next = 0;
@@ -363,7 +369,7 @@ static gint compare_int_list_entries(
  *  This is a multi-instance operation.
  */
 void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    ptd_cross_thread_operation_start();
    assert(per_thread_data_hash);

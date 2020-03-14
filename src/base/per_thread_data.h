@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
+#include "base/parms.h"
 #include "base/displays.h"
 
 extern GHashTable *  per_thread_data_hash;
@@ -79,6 +80,7 @@ bool ptd_cross_thread_operation_start();
 void ptd_cross_thread_operation_end();
 void ptd_cross_thread_operation_block();
 
+char * int_array_to_string(uint16_t * start, int ct);
 
 Per_Thread_Data * ptd_get_per_thread_data();
 
