@@ -55,26 +55,26 @@ static int max_multi_part_write_tries = INITIAL_MAX_MULTI_EXCHANGE_TRIES;
 #ifdef OLD
 /** Resets the statistics for multi-part reads */
 void ddc_reset_multi_part_read_stats() {
-   try_data_reset2(DDCA_MULTI_PART_READ_TRIES);
+   try_data_reset2(MULTI_PART_READ_OP);
  }
 
 
 /** Resets the statistics for multi-part writes */
 void ddc_reset_multi_part_write_stats() {
-   try_data_reset2(DDCA_MULTI_PART_WRITE_TRIES);
+   try_data_reset2(MULTI_PART_WRITE_OP);
 }
 #endif
 
 
 /** Reports the statistics for multi-part reads */
 void ddc_report_multi_part_read_stats(int depth) {
-   try_data_report2(DDCA_MULTI_PART_READ_TRIES, depth);
+   try_data_report2(MULTI_PART_READ_OP, depth);
 }
 
 
 /** Reports the statistics for multi-part writes */
 void ddc_report_multi_part_write_stats(int depth) {
-   try_data_report2(DDCA_MULTI_PART_WRITE_TRIES, depth);
+   try_data_report2(MULTI_PART_WRITE_OP, depth);
 }
 
 #ifdef OLD
@@ -85,7 +85,7 @@ void ddc_set_max_multi_part_read_tries(int ct) {
    // DBGMSG("ct = %d", ct);
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    // max_multi_part_read_tries = ct;
-   try_data_set_maxtries2(DDCA_MULTI_PART_READ_TRIES, ct);
+   try_data_set_maxtries2(MULTI_PART_READ_OP, ct);
 }
 
 /** Resets the maximum number of multi-part write exchange tries allowed.
@@ -94,18 +94,18 @@ void ddc_set_max_multi_part_read_tries(int ct) {
 void ddc_set_max_multi_part_write_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_MULTI_EXCHANGE_TRIES);
    // max_multi_part_write_tries = ct;
-   try_data_set_maxtries2(DDCA_MULTI_PART_WRITE_TRIES, ct);
+   try_data_set_maxtries2(MULTI_PART_WRITE_OP, ct);
 }
 #endif
 
 /** Gets the current maximum number of multi-part read exchange tries allowed
   * @return maximum number of tries
   */
-DDCA_Retry_Count_Type ddc_get_max_multi_part_read_tries() {
+Retry_Op_Value ddc_get_max_multi_part_read_tries() {
    bool debug = false;
-   DDCA_Retry_Count_Type v1 = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
+   Retry_Op_Value v1 = try_data_get_maxtries2(MULTI_PART_READ_OP);
    // int v2 = max_multi_part_read_tries;
-   DBGMSF(debug, "try_data_get_max_tries2(DDCA_MULTI_PART_READ_TRIES) = %d", v1);
+   DBGMSF(debug, "try_data_get_max_tries2(MULTI_PART_READ_OP) = %d", v1);
    // DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
    // if (v1 != v2){
    //    DBGMSG("=============================> Values to not match!!!");
@@ -118,8 +118,8 @@ DDCA_Retry_Count_Type ddc_get_max_multi_part_read_tries() {
 /** Gets the current maximum number of multi-part write exchange tries allowed
   * @return maximum number of tries
   */
-DDCA_Retry_Count_Type ddc_get_max_multi_part_write_tries() {
-   DDCA_Retry_Count_Type v1 = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
+Retry_Op_Value ddc_get_max_multi_part_write_tries() {
+   Retry_Op_Value v1 = try_data_get_maxtries2(MULTI_PART_WRITE_OP);
    // int v2 = max_multi_part_write_tries;
    // assert(v1 == v2);
    return v1;
@@ -267,7 +267,7 @@ multi_part_read_with_retry(
       Buffer**         buffer_loc)
 {
    bool debug = false;
-   DDCA_Retry_Count_Type max_multi_part_read_tries = try_data_get_maxtries2(DDCA_MULTI_PART_READ_TRIES);
+   Retry_Op_Value max_multi_part_read_tries = try_data_get_maxtries2(MULTI_PART_READ_OP);
    DBGTRC(debug, TRACE_GROUP,
           "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
@@ -352,7 +352,7 @@ multi_part_read_with_retry(
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
-   try_data_record_tries2(DDCA_MULTI_PART_READ_TRIES, rc, tryctr);
+   try_data_record_tries2(MULTI_PART_READ_OP, rc, tryctr);
 
    *buffer_loc = accumulator;
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
@@ -433,7 +433,7 @@ multi_part_write_with_retry(
      Byte             vcp_code,
      Buffer *         value_to_set)
 {
-   DDCA_Retry_Count_Type max_multi_part_write_tries = try_data_get_maxtries2(DDCA_MULTI_PART_WRITE_TRIES);
+   Retry_Op_Value max_multi_part_write_tries = try_data_get_maxtries2(MULTI_PART_WRITE_OP);
    bool debug = false;
    if (IS_TRACING())
       puts("");

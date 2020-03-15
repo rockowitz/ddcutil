@@ -33,6 +33,19 @@
 #include "util/error_info.h"
 
 
+// temp location
+//! I2C retry limit types
+typedef enum{
+   WRITE_ONLY_TRIES_OP,       /**< Maximum write-only operation tries */
+   WRITE_READ_TRIES_OP,       /**< Maximum read-write operation tries */
+   MULTI_PART_READ_OP,  /**< Maximum multi-part read operation tries */
+   MULTI_PART_WRITE_OP  /**< Maximum multi-part write operation tries */
+} Retry_Operation;
+#define RETRY_OP_COUNT 4
+typedef uint16_t Retry_Op_Value;
+
+
+
 //
 // Common macros
 //

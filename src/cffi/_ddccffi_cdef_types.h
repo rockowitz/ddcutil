@@ -42,10 +42,10 @@ typedef enum{
 } DDCA_Timeout_Type;
 
 typedef enum{
-   DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
-   DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
+   WRITE_ONLY_TRIES_OP,     /**< Maximum write-only operation tries */
+   WRITE_READ_TRIES_OPE,     /**< Maximum read-write operation tries */
    DDCA_MULTI_PART_TRIES      /**< Maximum multi-part operation tries */
-} DDCA_Retry_Type;
+} Retry_Operation;
 
 
 // Message Control

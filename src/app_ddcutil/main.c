@@ -566,7 +566,7 @@ int main(int argc, char *argv[]) {
    // ddc_set_default_all_max_tries(parsed_cmd->max_tries);    // future threads
    // ddc_set_thread_all_max_tries(parsed_cmd->max_tries);     // current thread
 
-   for (int retry_type_id = 0; retry_type_id < DDCA_RETRY_TYPE_COUNT; retry_type_id++) {
+   for (int retry_type_id = 0; retry_type_id < RETRY_OP_COUNT; retry_type_id++) {
       if (parsed_cmd->max_tries[retry_type_id] > 0) {
          trd_set_default_max_tries(retry_type_id, parsed_cmd->max_tries[retry_type_id]);
          trd_set_initial_thread_max_tries( retry_type_id, parsed_cmd->max_tries[retry_type_id]);

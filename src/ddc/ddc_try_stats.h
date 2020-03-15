@@ -18,12 +18,12 @@
 void     try_data_init();
 bool     try_data_lock();
 void     try_data_unlock(bool this_function_owns_lock);
-DDCA_Retry_Count_Type
-         try_data_get_maxtries2(DDCA_Retry_Type retry_type);
-void     try_data_set_maxtries2(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type new_maxtries);
-void     try_data_reset2(       DDCA_Retry_Type retry_type);
+Retry_Op_Value
+         try_data_get_maxtries2(Retry_Operation retry_type);
+void     try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtries);
+void     try_data_reset2(       Retry_Operation retry_type);
 void     try_data_reset2_all();
-void     try_data_record_tries2(DDCA_Retry_Type retry_type, DDCA_Status rc, int tryct);
-void     try_data_report2(      DDCA_Retry_Type retry_type, int depth);
+void     try_data_record_tries2(Retry_Operation retry_type, DDCA_Status rc, int tryct);
+void     try_data_report2(      Retry_Operation retry_type, int depth);
 
 #endif /* TRY_STATS_H_ */

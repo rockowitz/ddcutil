@@ -31,7 +31,7 @@ extern int  cross_thread_operation_blocked_count;
 
 typedef
 struct {
-   // DDCA_Retry_Type  stat_id;    // nice as a consistency check, but has to be initialized to non-zero value
+   // Retry_Operation  stat_id;    // nice as a consistency check, but has to be initialized to non-zero value
 //   int          maxtries;
    uint16_t       counters[MAX_MAX_TRIES+2];
 } Per_Thread_Try_Stats;
@@ -69,9 +69,9 @@ typedef struct {
 
    // Retry management
    bool thread_retry_data_defined;
-   DDCA_Retry_Count_Type current_maxtries[4];
-   DDCA_Retry_Count_Type highest_maxtries[4];
-   DDCA_Retry_Count_Type lowest_maxtries[4];
+   Retry_Op_Value current_maxtries[4];
+   Retry_Op_Value highest_maxtries[4];
+   Retry_Op_Value lowest_maxtries[4];
 
    Per_Thread_Try_Stats  try_stats[4];
 } Per_Thread_Data;

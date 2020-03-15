@@ -129,33 +129,33 @@ void try_data_unlock(bool release_requested) {
 // 1 instance for each retry type
 typedef
 struct {
-   DDCA_Retry_Type retry_type;
-   DDCA_Retry_Count_Type    maxtries;
-   DDCA_Retry_Count_Type    counters[MAX_MAX_TRIES+2];
-   DDCA_Retry_Count_Type    highest_maxtries;
-   DDCA_Retry_Count_Type    lowest_maxtries;
+   Retry_Operation retry_type;
+   Retry_Op_Value    maxtries;
+   Retry_Op_Value    counters[MAX_MAX_TRIES+2];
+   Retry_Op_Value    highest_maxtries;
+   Retry_Op_Value    lowest_maxtries;
 } Try_Data2;
 
 
-static DDCA_Retry_Count_Type default_maxtries[] = {
+static Retry_Op_Value default_maxtries[] = {
       INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
       INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES,
       INITIAL_MAX_MULTI_EXCHANGE_TRIES,
       INITIAL_MAX_MULTI_EXCHANGE_TRIES };
 
 
-static Try_Data2 try_data[DDCA_RETRY_TYPE_COUNT];
+static Try_Data2 try_data[RETRY_OP_COUNT];
 
 
 #ifdef OLD
 /* Allocates and initializes a Try_Data data structure
  * 
- * @param  retry_type  DDCA_Retry_Type for the the statistic being recorded
+ * @param  retry_type  Retry_Operation for the the statistic being recorded
  * #param  maxtries    maximum number of tries
  *
  * @return pointer to newly allocated struct
  */
-static Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type maxtries) {
+static Try_Data2 * try_data_create2(Retry_Operation retry_type, Retry_Op_Value maxtries) {
    assert(0 <= maxtries && maxtries <= MAX_MAX_TRIES);
    Try_Data2* try_data = calloc(1,sizeof(Try_Data2));
    try_data->retry_type = retry_type;
@@ -167,7 +167,7 @@ static Try_Data2 * try_data_create2(DDCA_Retry_Type retry_type, DDCA_Retry_Count
 #endif
 
 
-void try_data_init_retry_type(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type maxtries) {
+void try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries) {
    try_data[retry_type].retry_type = retry_type;
    try_data[retry_type].maxtries   = maxtries;
    try_data[retry_type].highest_maxtries = maxtries;   //0;
@@ -177,7 +177,7 @@ void try_data_init_retry_type(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type 
 /** Performs file initialization at time of program startup.
  */
 void try_data_init() {
-   for (int retry_type = 0; retry_type < DDCA_RETRY_TYPE_COUNT; retry_type++) {
+   for (int retry_type = 0; retry_type < RETRY_OP_COUNT; retry_type++) {
       try_data_init_retry_type(retry_type, default_maxtries[retry_type]);
       // try_data[retry_type] = try_data_create2(retry_type, default_maxtries[retry_type] );
    }
@@ -188,7 +188,7 @@ void try_data_init() {
 // Maxtries
 //
 
-DDCA_Retry_Count_Type try_data_get_maxtries2(DDCA_Retry_Type retry_type) {
+Retry_Op_Value try_data_get_maxtries2(Retry_Operation retry_type) {
    bool debug = false;
    int result = try_data[retry_type].maxtries;
    DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(retry_type), result);
@@ -196,7 +196,7 @@ DDCA_Retry_Count_Type try_data_get_maxtries2(DDCA_Retry_Type retry_type) {
 }
 
 
-void try_data_set_maxtries2(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type new_maxtries) {
+void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtries) {
    bool debug = false;
 
    Try_Data2 * stats_rec = &try_data[retry_type];
@@ -225,12 +225,12 @@ void try_data_set_maxtries2(DDCA_Retry_Type retry_type, DDCA_Retry_Count_Type ne
 // Retry counters
 //
 
-/** Resets the counters to 0 for the specified #DDCA_Retry_Type, and resets
+/** Resets the counters to 0 for the specified #Retry_Operation, and resets
  *  the hightest and lowest maxtries value seen to the current maxtries value.
  *
  *  @param retry type
  */
-void try_data_reset2(DDCA_Retry_Type retry_type) {
+void try_data_reset2(Retry_Operation retry_type) {
    bool debug = false;
    DBGMSF(debug, "Starting, retry type: %s", retry_type_name(retry_type));
 
@@ -240,7 +240,7 @@ void try_data_reset2(DDCA_Retry_Type retry_type) {
                  try_data[retry_type].maxtries);
    // Reset does not change the current maxtries value, but it does reset the
    // highest and lowest values seen to the current value.
-   DDCA_Retry_Count_Type current_maxtries = try_data[retry_type].maxtries;
+   Retry_Op_Value current_maxtries = try_data[retry_type].maxtries;
    try_data[retry_type].highest_maxtries = current_maxtries;
    try_data[retry_type].lowest_maxtries =  current_maxtries;
 
@@ -257,7 +257,7 @@ void try_data_reset2(DDCA_Retry_Type retry_type) {
 void try_data_reset2_all() {
    bool this_function_performed_lock = lock_if_unlocked();
 
-   for (int retry_type = 0; retry_type < DDCA_RETRY_TYPE_COUNT; retry_type++) {
+   for (int retry_type = 0; retry_type < RETRY_OP_COUNT; retry_type++) {
       try_data_reset2(retry_type);
    }
 
@@ -266,7 +266,7 @@ void try_data_reset2_all() {
 
 
 #ifdef OLD
-static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
+static void record_successful_tries2(Retry_Operation retry_type, int tryct){
    bool debug = false || debug_mutex;
    // DBGMSG("=============================================");
    DBGMSF(debug, "Starting. retry_type=%d - %s, tryct=%d",
@@ -283,7 +283,7 @@ static void record_successful_tries2(DDCA_Retry_Type retry_type, int tryct){
 }
 
 
-static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
+static void record_failed_max_tries2(Retry_Operation retry_type) {
    bool debug = false || debug_mutex;
    DBGMSF(debug, "Starting");
 
@@ -296,7 +296,7 @@ static void record_failed_max_tries2(DDCA_Retry_Type retry_type) {
 }
 
 
-static void record_failed_fatally2(DDCA_Retry_Type retry_type) {
+static void record_failed_fatally2(Retry_Operation retry_type) {
    bool debug = false || debug_mutex;
     DBGMSF(debug, "Starting");
 
@@ -320,7 +320,7 @@ static void record_failed_fatally2(DDCA_Retry_Type retry_type) {
  *  Also calls #trd_record_cur_thread_ties() to record the transaction status
  *  in the per-thread data structure.
  */
-void try_data_record_tries2(DDCA_Retry_Type retry_type, DDCA_Status ddcrc, int tryct) {
+void try_data_record_tries2(Retry_Operation retry_type, DDCA_Status ddcrc, int tryct) {
    bool debug = false;
    DBGMSF(debug, "retry_type = %d - %s,  ddcrc=%d, tryct=%d",
                  retry_type, retry_type_name(retry_type), ddcrc, tryct);
@@ -352,7 +352,7 @@ void try_data_record_tries2(DDCA_Retry_Type retry_type, DDCA_Status ddcrc, int t
 // Reporting
 //
 // used to test whether there's anything to report
-static int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
+static int try_data_get_total_attempts2(Retry_Operation retry_type) {
    int total_attempts = 0;
    int ndx;
    for (ndx=0; ndx <= MAX_MAX_TRIES+1; ndx++) {
@@ -361,7 +361,7 @@ static int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
    return total_attempts;
 }
 
-/** Reports try statistics for a specified #DDCA_Retry_Type
+/** Reports try statistics for a specified #Retry_Operation
  *
  *  Output is written to the current FOUT destination.
  *
@@ -369,7 +369,7 @@ static int try_data_get_total_attempts2(DDCA_Retry_Type retry_type) {
  *  \param depth        logical indentation depth
  *
  */
-void try_data_report2(DDCA_Retry_Type retry_type, int depth) {
+void try_data_report2(Retry_Operation retry_type, int depth) {
    bool debug = false;
    int d1 = depth+1;
    rpt_nl();

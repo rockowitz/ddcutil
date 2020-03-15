@@ -301,23 +301,23 @@ static int max_write_read_exchange_tries =  INITIAL_MAX_WRITE_READ_EXCHANGE_TRIE
 
 #ifdef OUT
 void ddc_reset_write_read_stats() {
-   try_data_reset2(DDCA_WRITE_READ_TRIES);
+   try_data_reset2(WRITE_READ_TRIES_OPE);
 }
 
 void ddc_reset_write_only_stats() {
-   try_data_reset2(DDCA_WRITE_ONLY_TRIES);
+   try_data_reset2(WRITE_ONLY_TRIES_OP);
 }
 
 #endif
 
 
 void ddc_report_write_read_stats(int depth) {
-   try_data_report2(DDCA_WRITE_READ_TRIES, depth);
+   try_data_report2(WRITE_READ_TRIES_OP, depth);
 }
 
 
 void ddc_report_write_only_stats(int depth) {
-   try_data_report2(DDCA_WRITE_ONLY_TRIES, depth);
+   try_data_report2(WRITE_ONLY_TRIES_OP, depth);
 }
 
 
@@ -325,14 +325,14 @@ void ddc_report_write_only_stats(int depth) {
 void ddc_set_max_write_only_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_only_exchange_tries = ct;
-   try_data_set_maxtries2(DDCA_WRITE_ONLY_TRIES, ct);
+   try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, ct);
 }
 #endif
 
 
-DDCA_Retry_Count_Type ddc_get_max_write_only_exchange_tries() {
+Retry_Op_Value ddc_get_max_write_only_exchange_tries() {
    // int v1 = max_write_only_exchange_tries;
-   DDCA_Retry_Count_Type v2 = try_data_get_maxtries2(DDCA_WRITE_ONLY_TRIES);
+   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
    // assert (v1 == v2);
    return v2;
 }
@@ -341,17 +341,17 @@ DDCA_Retry_Count_Type ddc_get_max_write_only_exchange_tries() {
 void ddc_set_max_write_read_exchange_tries(int ct) {
    assert(ct > 0 && ct <= MAX_MAX_TRIES);
    max_write_read_exchange_tries = ct;
-   try_data_set_maxtries2(DDCA_WRITE_READ_TRIES, ct);
+   try_data_set_maxtries2(WRITE_READ_TRIES_OPE, ct);
 }
 #endif
 
-DDCA_Retry_Count_Type ddc_get_max_write_read_exchange_tries() {
+Retry_Op_Value ddc_get_max_write_read_exchange_tries() {
    bool debug = false;
    // DBGMSF(debug, "------------------------------------");
    // int v1 = max_write_read_exchange_tries;
-   DDCA_Retry_Count_Type v2 = try_data_get_maxtries2(DDCA_WRITE_READ_TRIES);
+   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
-   DBGMSF(debug, "try_data_get_max_tries2(DDCA_WRITE_READ_TRIES) returned %d", v2);
+   DBGMSF(debug, "try_data_get_max_tries2(WRITE_READ_TRIES_OPE) returned %d", v2);
    // if (v1 != v2)
       // DBGMSG("=========================>> Values to not match!!!");
    // assert (v1 == v2);
@@ -865,7 +865,7 @@ ddc_write_read_with_retry(
       }
    }
 
-   try_data_record_tries2(DDCA_WRITE_READ_TRIES, psc, tryctr);
+   try_data_record_tries2(WRITE_READ_TRIES_OP, psc, tryctr);
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
@@ -1045,7 +1045,7 @@ ddc_write_only_with_retry(
       }
    }
 
-   try_data_record_tries2(DDCA_WRITE_ONLY_TRIES, psc, tryctr);
+   try_data_record_tries2(WRITE_ONLY_TRIES_OP, psc, tryctr);
 
    DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;

@@ -13,9 +13,9 @@ char * ddca_rc_name(DDCA_Status status_code);
 char * ddca_rc_desc(DDCA_Status status_code);
 
 // Global Settings
-int ddca_get_max_tries(DDCA_Retry_Type retry_type);
+int ddca_get_max_tries(Retry_Operation retry_type);
 DDCA_Status ddca_set_max_tries(
-               DDCA_Retry_Type retry_type,
+               Retry_Operation retry_type,
                 int             max_tries);
 void ddca_enable_verify(bool onoff);
 bool ddca_is_verify_enabled(void);

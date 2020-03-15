@@ -103,13 +103,11 @@ typedef enum{
 
 //! I2C retry limit types
 typedef enum{
-   DDCA_WRITE_ONLY_TRIES,       /**< Maximum write-only operation tries */
-   DDCA_WRITE_READ_TRIES,       /**< Maximum read-write operation tries */
-   DDCA_MULTI_PART_READ_TRIES,  /**< Maximum multi-part read operation tries */
-   DDCA_MULTI_PART_WRITE_TRIES  /**< Maximum multi-part write operation tries */
+   DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
+   DDCA_WRITE_READ_TRIES,     /**< Maximum read-write operation tries */
+   DDCA_MULTI_PART_TRIES      /**< Maximum multi-part operation tries */
 } DDCA_Retry_Type;
-#define DDCA_RETRY_TYPE_COUNT 4
-typedef uint16_t DDCA_Retry_Count_Type;
+
 
 //
 // Message Control

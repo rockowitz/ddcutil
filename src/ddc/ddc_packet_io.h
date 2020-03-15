@@ -30,10 +30,10 @@ Status_Errno ddc_close_display(Display_Handle * dh);
 
 // Retry management
 void ddc_set_max_write_only_exchange_tries(int ct);
-DDCA_Retry_Count_Type
+Retry_Op_Value
      ddc_get_max_write_only_exchange_tries();
-void ddc_set_max_write_read_exchange_tries(DDCA_Retry_Count_Type ct);
-DDCA_Retry_Count_Type  ddc_get_max_write_read_exchange_tries();
+void ddc_set_max_write_read_exchange_tries(Retry_Op_Value ct);
+Retry_Op_Value  ddc_get_max_write_read_exchange_tries();
 
 // Retry statistics
 void ddc_reset_write_only_stats();
