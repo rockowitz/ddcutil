@@ -483,12 +483,12 @@ ddca_set_max_tries(
       try_data_set_maxtries2(retry_type, max_tries);
       // for DDCA_MULTI_PART_TRIES, set both  MULTI_PART_WRITE_OP and MULTI_PART_READ_OP
       if (retry_type == DDCA_MULTI_PART_TRIES)
-         try_data_set_maxtries2(MULTI_PART_WRITE_OP);
+         try_data_set_maxtries2(MULTI_PART_WRITE_OP, max_tries);
 
       // new way, set in retry_mgt
       trd_set_thread_max_tries(retry_type, max_tries);
       if (retry_type == DDCA_MULTI_PART_TRIES)
-           trd_set_thread_max_tries(MULTI_PART_WRITE_OP);
+           trd_set_thread_max_tries(MULTI_PART_WRITE_OP, max_tries);
    }
    return rc;
 }
