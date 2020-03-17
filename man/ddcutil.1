@@ -19,8 +19,6 @@
 ddcutil \- Query and change monitor settings
 .SH SYNOPSIS
 .B ddcutil
-.RB [ "--adl" | "-a " 
-.IR "adapter-index.display-index" ]
 .RB [ "--async" ]
 .RB [ "--bus|-b"
 .IR busno ]
@@ -205,9 +203,6 @@ logical display number (starting from 1)
 .I bus-number
 I2C bus number
 .TQ
-.BI "-a,--adl " "adapterIndex.displayIndex"
-ADL adapter and display indexes
-.TQ
 .BR "--hiddev "
 .I device number
 hiddev device number
@@ -313,21 +308,8 @@ adjust the \fBIdentifier\fP value in the file to correspond to the value in the 
 
 For further discussion of Nvidia driver settings, see http://www.ddcutil.com/nvidia. 
 
-.SH AMD PRORIETARY DRIVER
-
-AMD's proprietary video driver \fBfglrx\fP does not expose the I2C bus.  Instead, it provides access to the bus through the
-AMD Display Library, aka \fBADL\fP. 
-Owing to copyright restrictions, the ADL header files are not distributed with the \fBddcutil\fP source.  Additional steps are 
-required to build \fBddcutil\fP with \fBfglrx\fP support.
-
-To see if your copy of \fBddcutil\fP was built with \fBfglrx\fP support, issue the command:
 .br
 .B ddcutil --version
-
-ADL identifies monitors using an adapter-number/display-number pair.  To select a monitor using these numbers, specify the 
-\fB--adl\fP option with a period separating the adapter-number and display-number, e.g.
-.br
-.B --adl 0.1
 
 
 .SH VIRTUAL MACHINES
