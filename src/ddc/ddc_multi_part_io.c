@@ -9,6 +9,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -321,6 +322,11 @@ multi_part_read_with_retry(
          // rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
          // COUNT_STATUS_CODE(rc);   // double counting?
       }
+      else if (rc == -EBADF) {
+         DBGMSG("EBADF");
+         can_retry = false;
+      }
+
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
