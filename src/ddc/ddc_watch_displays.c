@@ -237,6 +237,7 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 }
 
 
+// How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
    bool debug = false;
@@ -326,10 +327,10 @@ gpointer watch_displays_using_udev(gpointer data) {
    Watch_Displays_Data * wdd = data;
    assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
-   DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
-   pid_t cur_pid = getpid();
-   pid_t cur_tid = syscall(SYS_gettid);
-   DBGMSG("Our process id: %d, our thread id: %d", cur_pid, cur_tid);
+   // DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
+   // pid_t cur_pid = getpid();
+   // pid_t cur_tid = syscall(SYS_gettid);
+   // DBGMSG("Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
    struct udev* udev;
    udev = udev_new();
@@ -460,7 +461,7 @@ ddc_start_watch_displays()
    g_thread_new(
          "watch_displays",             // optional thread name
       //  watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
-         watch_displays_using_poll,
+         watch_displays_using_udev,
          data);
    return ddc_excp;
 }
