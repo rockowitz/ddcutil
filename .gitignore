@@ -179,4 +179,5 @@ Makefile.am_with*
 sample_probe
 run_sed
 fix_retry
+pound_ddc
 
