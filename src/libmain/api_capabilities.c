@@ -52,6 +52,7 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
+   DBGMSF(debug, "Starting. dda_dh=%s", dh_repr((Display_Handle *) ddca_dh ));
    free_thread_error_detail();
    // assert(pcaps_loc);
    PRECOND(pcaps_loc);
@@ -69,9 +70,11 @@ ddca_get_capabilities_string(
             *pcaps_loc = strdup(p_cap_string);
             DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
          }
+         DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
          assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
       }
    );
+
 }
 
 
