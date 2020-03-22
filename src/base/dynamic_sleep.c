@@ -53,7 +53,7 @@ void dsa_record_ddcrw_status_code(int rc) {
       tsd->total_error_status_count++;
    }
    else {
-      DBGMSF(true, "other status code: %s", psc_desc(rc));
+      DBGMSF(debug, "other status code: %s", psc_desc(rc));
       tsd->total_other_status_ct++;
    }
    DBGMSF(debug, "Done. current_ok_status_count=%d, current_error_status_count=%d",
