@@ -62,7 +62,7 @@ void ddc_reset_ddc_stats() {
  * \param depth logical indentation depth
  */
 void ddc_report_ddc_stats(int depth) {
-   rpt_nl();
+   // rpt_nl();
    // retry related stats
    ddc_report_max_tries(0);
    ddc_report_write_only_stats(0);
@@ -81,73 +81,60 @@ void ddc_reset_stats_main() {
 
 /** Master function for reporting statistics.
  *
- * \param stats bitflags indicating which statistics to report
- * \param depth logical indentation depth
+ * \param stats                  bitflags indicating which statistics to report
+ * \param show_per_thread_stats  include per thread execution stats
+ * \param depth logical          indentation depth
  */
-void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats, int depth) {
-   // DBGMSG("include_per_thread_stats: %s", sbool(include_per_thread_stats));
+void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, int depth) {
+   // DBGMSG("show_per_thread_stats: %s", sbool(show_per_thread_stats));
    // int d1 = depth+1;
    rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
 
-   // hack to try only showing per thread stats when flag is set
-   // bool saved_include_per_thread = include_per_thread_stats;
-   if (include_per_thread_stats == false) {
-
-   if (include_per_thread_stats) {
-      ptd_list_threads(depth);
-      // rpt_nl();
-   }
-   if (stats & DDCA_STATS_TRIES) {
-      ddc_report_ddc_stats(depth);
-      rpt_nl();
-      if (include_per_thread_stats)
-         report_all_thread_maxtries_data(depth);
-   }
-   if (stats & DDCA_STATS_ERRORS) {
-      rpt_nl(); ;
-      report_all_status_counts(depth);   // error code counts
-      if (include_per_thread_stats)
-         report_all_thread_status_counts(depth);
-   }
-   if (stats & DDCA_STATS_CALLS) {
-      rpt_nl();
-      report_execution_stats(depth);
-      rpt_nl();
-#ifdef OLD
-      if (dsa_is_enabled()) {
-         // for now just report current thread
-         dsa_report_stats(depth);
+   // if (show_per_thread_stats == false) {
+      if (stats & DDCA_STATS_TRIES) {
+         ddc_report_ddc_stats(depth);
          rpt_nl();
       }
-#endif
+      if (stats & DDCA_STATS_ERRORS) {
+         rpt_nl(); ;
+         report_all_status_counts(depth);   // error code counts
+      }
+      if (stats & DDCA_STATS_CALLS) {
+         rpt_nl();
+         report_execution_stats(depth);
+         rpt_nl();
+   #ifdef OLD
+         if (dsa_is_enabled()) {
+            // for now just report current thread
+            dsa_report_stats(depth);
+            rpt_nl();
+         }
+   #endif
 
-      // rpt_nl();
-
-      if (include_per_thread_stats) {
-         report_all_thread_sleep_data(depth);
+         report_io_call_stats(depth);
+         rpt_nl();
+         report_sleep_stats(depth);
+      }
+      if (stats & ( DDCA_STATS_CALLS)) {
+         rpt_nl();
+         report_elapsed_stats(depth);
+         rpt_nl();
+         // seeing the maxtries settings for each
+         // report_all_thread_retry_data(depth);
+      }
+      if (stats & (DDCA_STATS_ELAPSED)) {
+         rpt_nl();
+         report_elapsed_summary(depth);
          rpt_nl();
       }
-      report_io_call_stats(depth);
+   // }
+   // else  {
+   if (show_per_thread_stats) {
+      rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
       rpt_nl();
-      report_sleep_stats(depth);
-   }
-   if (stats & ( DDCA_STATS_CALLS)) {
-      rpt_nl();
-      report_elapsed_stats(depth);
-      rpt_nl();
-      // seeing the maxtries settings for each
-      // report_all_thread_retry_data(depth);
-   }
-   if (stats & (DDCA_STATS_ELAPSED)) {
-      rpt_nl();
-      report_elapsed_summary(depth);
-      rpt_nl();
-   }
-
-   }
-   else  { // include per_thread_stats = true
+      // include per_thread_stats = true
        ptd_list_threads(depth);
        if (stats & DDCA_STATS_TRIES) {
            report_all_thread_maxtries_data(depth);
@@ -157,7 +144,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats,
           rpt_nl();
        }
        if (stats & DDCA_STATS_CALLS) {
-              report_all_thread_sleep_data(depth);
+          report_all_thread_sleep_data(depth);
        }
        if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()

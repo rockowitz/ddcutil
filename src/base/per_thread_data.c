@@ -461,7 +461,7 @@ void ptd_list_threads(int depth) {
 void report_all_thread_status_counts(int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   rpt_label(depth, "No per-thread status code statistics");
+   rpt_label(depth, "No per-thread status code statistics are collected");
    rpt_nl();
    DBGMSF(debug, "Done");
 }
