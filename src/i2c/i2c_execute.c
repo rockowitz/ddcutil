@@ -9,6 +9,10 @@
 /** \cond */
 #include "ddcutil_types.h"
 
+// #define _GNU_SOURCE
+// #include <signal.h>
+#include <poll.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -145,7 +149,7 @@ fileio_reader(
       }
    }
    else {
-// #ifdef EXPERIMENTAL
+#ifdef EXPERIMENTAL
       // bool read_with_timeout = true;
       if (read_with_timeout) {
          fd_set rfds;
@@ -160,6 +164,7 @@ fileio_reader(
          tv.tv_usec = 0;
 
          // uint64_t start_time = cur_realtime_nanosec();
+         // wrong: fd might not be highest file descriptor if async operations
          RECORD_IO_EVENTX(
                fd,
                IE_OTHER,
@@ -189,6 +194,36 @@ fileio_reader(
          }
       }
       // DBGMSG("Calling read()");
+#endif
+// #ifdef USE_POLL
+      if (read_with_timeout) {
+         struct pollfd pfds[1];
+         pfds[0].fd = fd;
+         pfds[0].events = POLLIN;
+
+         int pollrc;
+         int timeout_msec = 100;
+         RECORD_IO_EVENTX(
+               fd,
+               IE_OTHER,
+               (      pollrc = poll(pfds, 1, timeout_msec) )
+         );
+
+         int errsv = errno;
+         if (pollrc < 0)  { //  i.e. -1
+            DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
+            rc = -errsv;
+            return rc;
+         }
+         else if (pollrc == 0) {
+            DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+            rc = -ETIMEDOUT;
+            return rc;
+         }
+         else {
+            assert( pfds[0].revents & POLLIN );
+         }
+      }
 // #endif
 
       RECORD_IO_EVENTX(
