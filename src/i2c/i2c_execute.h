@@ -33,6 +33,9 @@ Status_Errno_DDC fileio_writer(
       int    bytect,
       Byte * pbytes);
 
+
+void set_fileio_reader_use_timeout(bool yesno);
+
 Status_Errno_DDC
 fileio_reader (
       int    fd,

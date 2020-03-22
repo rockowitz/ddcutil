@@ -83,6 +83,14 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
 }
 
 
+static bool read_with_timeout = false;
+
+void set_fileio_reader_use_timeout(bool yesno) {
+   // DBGMSG("Setting  %s", sbool(yesno));
+   read_with_timeout = yesno;
+}
+
+
 /** Reads from I2C bus using read()
  *
  * @param  fd            Linux file descriptor
@@ -137,8 +145,8 @@ fileio_reader(
       }
    }
    else {
-#ifdef DOESNT_WORK
-      bool read_with_timeout = true;
+// #ifdef EXPERIMENTAL
+      // bool read_with_timeout = true;
       if (read_with_timeout) {
          fd_set rfds;
          struct timeval tv;
@@ -151,17 +159,17 @@ fileio_reader(
          tv.tv_sec = seconds;
          tv.tv_usec = 0;
 
-         uint64_t start_time = cur_realtime_nanosec();
+         // uint64_t start_time = cur_realtime_nanosec();
          RECORD_IO_EVENTX(
                fd,
                IE_OTHER,
-               (     retval = select(1, &rfds, NULL, NULL, &tv) )
+               (     retval = select(fd+1, &rfds, NULL, NULL, &tv) )
          );
          int errsv = errno;
-         uint64_t end_time = cur_realtime_nanosec();
-         uint64_t elapsed_nanos = end_time - start_time;
-         DBGMSG("select() returned %d after %"PRIu64" nanosec, %"PRIu64" millisec, remaining tv %ld,%ld",
-               retval, elapsed_nanos, elapsed_nanos/(1000*1000), tv.tv_sec, tv.tv_usec);
+         // uint64_t end_time = cur_realtime_nanosec();
+         // uint64_t elapsed_nanos = end_time - start_time;
+         // DBGMSG("select() returned %d after %"PRIu64" nanosec, %"PRIu64" millisec, remaining tv %ld,%ld",
+         //       retval, elapsed_nanos, elapsed_nanos/(1000*1000), tv.tv_sec, tv.tv_usec);
          if (retval == -1) {
             DBGMSG("select() returned %d, errno=%d", retval, errsv);
             rc = -errsv;
@@ -170,18 +178,18 @@ fileio_reader(
          else if (retval) {
             assert (retval == 1);
             assert ( FD_ISSET(fd,&rfds) );
-            DBGMSG("select() returned 1, proceeding to read()");
+         //    DBGMSG("select() returned 1, proceeding to read()");
          }
          else {
-
-            DBGMSG("%d seconds timeout fired. retval=%d, errno=%d", seconds, retval, errsv);
+            DBGMSG("%d seconds timeout fired. retval=%d, errno=%d, remaining tv %ld,%ld",
+                  seconds, retval, errsv, tv.tv_sec, tv.tv_usec);
             assert(retval == 0);
             rc = -ETIMEDOUT;
             return rc;
          }
       }
-      DBGMSG("Calling read()");
-#endif
+      // DBGMSG("Calling read()");
+// #endif
 
       RECORD_IO_EVENTX(
          fd,

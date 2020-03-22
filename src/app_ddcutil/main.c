@@ -518,7 +518,7 @@ int main(int argc, char *argv[]) {
 
       bool special_option_explained = false;
       if (parsed_cmd->flags & CMD_FLAG_F1) {
-         f0printf(fout, "Special option --f1 enabled: Unused\n");
+         f0printf(fout, "Special option --f1 enabled: Timeout on i2c-dev read()\n");
          special_option_explained = true;
       }
       if (parsed_cmd->flags & CMD_FLAG_F2) {
@@ -591,6 +591,12 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_F2))
          tsd_dsa_enable_globally(true);
    }
+
+   // experimental timeout of i2c read()
+   if (parsed_cmd->flags & CMD_FLAG_F1) {
+      set_fileio_reader_use_timeout(true);
+   }
+
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
