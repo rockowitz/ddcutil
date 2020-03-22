@@ -431,11 +431,13 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
          if (!s)
             break;
          rpt_vstring(d1, "%-*s%s", hdrlen, header, s);
-         // printf("(%s) s = %p\n", __func__, s);
-         if (strlen(header) > 0)
+         if (strlen(header) > 0) {
+            // *header = '\0';    // better, test it next time working with this function
             strcpy(header, "");
             // header = "";
+         }
       }
+      ntsa_free(pieces, true);
    }
 }
 
