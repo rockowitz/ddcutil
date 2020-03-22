@@ -87,7 +87,7 @@ void ddc_reset_stats_main() {
 void ddc_report_stats_main(DDCA_Stats_Type stats, bool include_per_thread_stats, int depth) {
    // DBGMSG("include_per_thread_stats: %s", sbool(include_per_thread_stats));
    // int d1 = depth+1;
-   // rpt_nl();
+   rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
 
