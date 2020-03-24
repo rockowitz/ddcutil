@@ -593,7 +593,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       float multiplier = 0.0f;
       bool arg_ok = str_to_float(sleep_multiplier_work, &multiplier);
       if (arg_ok) {
-         if (multiplier <= 0.0f)
+         if (multiplier <= 0.0f || multiplier >= 100.0)
             arg_ok = false;
       }
 
