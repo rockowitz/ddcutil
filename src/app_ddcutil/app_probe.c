@@ -1,65 +1,28 @@
-// app_probe.c
+/** \file app_probe.c
+  * Implement PROBE command
+  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
- 
-
-// TO REDUCE
-
-
-
 
 #include "public/ddcutil_types.h"
 
 #include "util/report_util.h"
 
-
-#include "base/adl_errors.h"
-#include "base/base_init.h"
 #include "base/core.h"
-#include "base/ddc_errno.h"
-#include "base/ddc_packets.h"
 #include "base/displays.h"
-#include "base/dynamic_sleep.h"
-#include "base/linux_errno.h"
-#include "base/parms.h"
-#include "base/sleep.h"
-#include "base/status_code_mgt.h"
-#include "base/thread_retry_data.h"
-#include "base/tuned_sleep.h"
-#include "base/thread_sleep_data.h"
 
 #include "vcp/parse_capabilities.h"
-#include "vcp/vcp_feature_codes.h"
-
-#include "dynvcp/dyn_dynamic_features.h"
-#include "dynvcp/dyn_parsed_capabilities.h"
-
-#include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_strategy_dispatcher.h"
-#include "adl/adl_shim.h"
-
-#include "usb/usb_displays.h"
 
 #include "ddc/ddc_displays.h"
-#include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
-#include "ddc/ddc_services.h"
-#include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
-#include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
-#include "cmdline/cmd_parser.h"
-#include "cmdline/parsed_cmd.h"
-
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_capabilities.h"
-
-
 
 #include "app_ddcutil/app_probe.h"
 
