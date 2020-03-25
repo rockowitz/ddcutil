@@ -10,7 +10,7 @@
 
 #include "base/displays.h"
 
-void probe_display_by_dh(Display_Handle * dh);
-void probe_display_by_dref(Display_Ref * dref);
+void app_probe_display_by_dref(Display_Ref * dref);
+void app_probe_display_by_dh(Display_Handle * dh);
 
 #endif /* APP_PROBE_H_ */

@@ -13,11 +13,11 @@
 #include "vcp/parse_capabilities.h"
 
 Parsed_Capabilities *
-perform_get_capabilities_by_display_handle(
+app_get_capabilities_by_display_handle(
       Display_Handle * dh);
 
 void
-perform_show_parsed_capabilities(
+app_show_parsed_capabilities(
       char *                capabilities_string,
       Display_Handle *      dh,
       Parsed_Capabilities * pcap);

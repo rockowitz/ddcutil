@@ -564,7 +564,7 @@ int main(int argc, char *argv[]) {
          }
          else {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
-            probe_display_by_dref(dref);
+            app_probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
             report_stats(DDCA_STATS_ALL);
          }
@@ -650,9 +650,9 @@ int main(int argc, char *argv[]) {
                {
                   check_dynamic_features(dref);
 
-                  Parsed_Capabilities * pcaps = perform_get_capabilities_by_display_handle(dh);
+                  Parsed_Capabilities * pcaps = app_get_capabilities_by_display_handle(dh);
                   if (pcaps) {
-                     perform_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
+                     app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
                   }
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
                   if (pcaps)
@@ -769,7 +769,7 @@ int main(int argc, char *argv[]) {
             case CMDID_PROBE:
                check_dynamic_features(dref);
 
-               probe_display_by_dh(dh);
+               app_probe_display_by_dh(dh);
                main_rc = EXIT_SUCCESS;
                break;
 

@@ -39,7 +39,7 @@
 
 
 Parsed_Capabilities *
-perform_get_capabilities_by_display_handle(Display_Handle * dh) {
+app_get_capabilities_by_display_handle(Display_Handle * dh) {
    // FILE * fout = stdout;
    FILE * ferr = stderr;
    bool debug = false;
@@ -97,7 +97,7 @@ perform_get_capabilities_by_display_handle(Display_Handle * dh) {
 }
 
 
-void perform_show_parsed_capabilities(char * capabilities_string, Display_Handle * dh, Parsed_Capabilities * pcap) {
+void app_show_parsed_capabilities(char * capabilities_string, Display_Handle * dh, Parsed_Capabilities * pcap) {
    assert(pcap);
    FILE * fout = stdout;
    DDCA_Output_Level output_level = get_output_level();

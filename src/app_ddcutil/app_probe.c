@@ -26,7 +26,7 @@
 
 #include "app_ddcutil/app_probe.h"
 
-void probe_display_by_dh(Display_Handle * dh)
+void app_probe_display_by_dh(Display_Handle * dh)
 {
    FILE * fout = stdout;
    bool debug = false;
@@ -64,9 +64,9 @@ void probe_display_by_dh(Display_Handle * dh)
    DDCA_Output_Level saved_ol = get_output_level();
    set_output_level(DDCA_OL_VERBOSE);
 
-   Parsed_Capabilities * pcaps =  perform_get_capabilities_by_display_handle(dh);
+   Parsed_Capabilities * pcaps =  app_get_capabilities_by_display_handle(dh);
    if (pcaps) {
-      perform_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
+      app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
    }
 
    set_output_level(saved_ol);
@@ -218,7 +218,7 @@ void probe_display_by_dh(Display_Handle * dh)
 }
 
 
-void probe_display_by_dref(Display_Ref * dref) {
+void app_probe_display_by_dref(Display_Ref * dref) {
    FILE * fout = stdout;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
@@ -227,7 +227,7 @@ void probe_display_by_dref(Display_Ref * dref) {
                      dref_short_name_t(dref), psc_desc(psc) );
    }
    else {
-      probe_display_by_dh(dh);
+      app_probe_display_by_dh(dh);
       ddc_close_display(dh);
    }
 }
