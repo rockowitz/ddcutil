@@ -236,7 +236,7 @@ void probe_display_by_dh(Display_Handle * dh)
          FLAG_NAME(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED),
          FLAG_NAME(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED),
          FLAG_NAME(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED) );
-         f0printf(fout, "\nUnsupported feature indicator: %s\n", interpreted);
+         f0printf(fout, "\nHow display reports unsupported feature: %s\n", interpreted);
 #undef FLAG_NAME
 
    f0printf(fout, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
