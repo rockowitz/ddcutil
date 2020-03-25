@@ -78,6 +78,7 @@ endif
 #
 ddcutil_SOURCES = \
 app_ddcutil/main.c \
+app_ddcutil/app_capabilities.c \
 app_ddcutil/app_dynamic_features.c \
 app_ddcutil/app_vcp_info.c \
 app_ddcutil/app_dumpload.c \
