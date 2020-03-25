@@ -18,8 +18,8 @@ perform_get_capabilities_by_display_handle(
 
 void
 perform_show_parsed_capabilities(
-      char * capabilities_string,
-      Display_Handle * dh,
+      char *                capabilities_string,
+      Display_Handle *      dh,
       Parsed_Capabilities * pcap);
 
 #endif /* APP_CAPABILITIES_H_ */
