@@ -81,7 +81,6 @@ app_ddcutil/main.c \
 app_ddcutil/app_capabilities.c \
 app_ddcutil/app_probe.c \
 app_ddcutil/app_dynamic_features.c \
-app_ddcutil/app_vcp_info.c \
 app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c
