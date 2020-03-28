@@ -3,7 +3,7 @@
  *  Maintain user-defined (aka dynamic) feature definitions
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -16,8 +16,8 @@
 #include <wordexp.h>
 #include <unistd.h>
 
-#include "ddcutil_types.h"
-#include "ddcutil_status_codes.h"
+#include "public/ddcutil_types.h"
+#include "public/ddcutil_status_codes.h"
 
 #include "util/error_info.h"
 #include "util/edid.h"
@@ -29,6 +29,9 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/dynamic_features.h"
+#ifdef USE_YANL
+#include "base/dynamic_features_yaml.h"
+#endif
 #include "base/monitor_model_key.h"
 
 #include "dyn_dynamic_features.h"
@@ -236,12 +239,13 @@ read_feature_definition_file(
 #endif
 
 
+
 /** Search the file system for a feature definition file specified by
  *  a #DDCA_Monitor_Model_Key, and create a #Dynamic_Features_Rec for
  *  the result.
  *
- *  @param  mmk  monitor specifier
- *  @param  dfr_loc where to return the created #Dynamic_Features_Rec
+ *  @param  mmk         monitor specifier
+ *  @param  dfr_loc     where to return the created #Dynamic_Features_Rec
  *  @return #Error_Info struct describing errors.
  *
  *  @remark
@@ -256,6 +260,7 @@ dfr_load_by_mmk(
       Dynamic_Features_Rec ** dfr_loc)
 {
    bool debug = false;
+   DBGMSF(debug, "mmk = %s", monitor_model_string(&mmk));
 
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
@@ -268,7 +273,19 @@ dfr_load_by_mmk(
    if (fqfn) {
       GPtrArray * lines = g_ptr_array_new();
       errs = file_getlines_errinfo(fqfn, lines); // read file into lines
+      // DDCA_Output_Level ol = get_output_level();
+      // if (ol >= DDCA_OL_VERBOSE) {
+      //    fprintf(fout(), "Using feature definition file: %s\n", fqfn);
+      // }
       if (!errs) {
+#ifdef USE_YAML_LOAD
+         errs = create_monitor_dynamic_features_yaml(
+             mmk.mfg_id,
+             mmk.model_name,
+             mmk.product_code,
+             fqfn,
+             &dfr);
+#else
          errs = create_monitor_dynamic_features(
              mmk.mfg_id,
              mmk.model_name,
@@ -276,6 +293,8 @@ dfr_load_by_mmk(
              lines,
              fqfn,
              &dfr);
+  //        }
+#endif
          assert( (errs && !dfr) || (!errs && dfr));
       }
       free(fqfn);
