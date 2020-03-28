@@ -493,6 +493,8 @@ dnl disabled because systemd_util.c no longer needed:
 dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
 
 
+PKG_CHECK_MODULES(YAML, yaml-0.1)
+
 ###
 ### Optional library tests 
 ###
