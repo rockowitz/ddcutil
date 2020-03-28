@@ -74,6 +74,11 @@ get_dynamic_feature_metadata(
       Dynamic_Features_Rec *  dfr,
       uint8_t                 feature_code);
 
+// satisfies glib signature
+void
+free_feature_metadata(
+      gpointer data);    // i.e. DDCA_Feature_Metadata *
+
 
 void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
