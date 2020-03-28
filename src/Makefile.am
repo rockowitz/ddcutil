@@ -259,7 +259,8 @@ endif
 libcommon_la_LIBADD += \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
-  $(LIBUSB_LIBS)
+  $(LIBUSB_LIBS) \
+  $(YAML_LIBS)
 
 # libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD = $(ZLIB_LIBS)
