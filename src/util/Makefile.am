@@ -41,7 +41,6 @@ file_util.c                \
 glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \
-libyaml_dbgutil.c             \
 multi_level_map.c          \
 output_sink.c              \
 report_util.c              \
@@ -68,6 +67,11 @@ endif
 if USE_X11_COND
 libutil_la_SOURCES += x11_util.c
 endif
+
+if ENABLE_YAML_COND
+libutil_la_SOURCES += libyaml_dbgutil.c
+endif
+
 
 
 dist-hook:

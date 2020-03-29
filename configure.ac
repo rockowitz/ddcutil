@@ -343,6 +343,20 @@ AS_IF([test "x$enable_doxygen" = "xyes"],
 
 ### Private options
 
+dnl *** configure option: --enable-yaml
+AC_ARG_ENABLE([yaml],
+              [ AS_HELP_STRING( [--enable-yaml=@<:@no/yes@:>@], [Enable YAML for external file parsing @<:@default=no@:>@] )],
+              [enable_yaml=${enableval}],
+              [enable_yaml=no] )
+AM_CONDITIONAL([ENABLE_YAML_COND], [test "x$enable_yaml" = "xyes"] )
+AS_IF([test "x$enable_yaml" = "xyes"],
+      AC_DEFINE( [ENABLE_YAML], [1], [Enable YAML for parsing.]) 
+      AC_MSG_NOTICE( [yaml... enabled]  )
+      ,
+      AC_MSG_NOTICE( [yaml... disabled] )
+     )
+
+
 dnl *** configure option: --enable-testcases
 AC_ARG_ENABLE([testcases],
               [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
@@ -493,7 +507,6 @@ dnl disabled because systemd_util.c no longer needed:
 dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
 
 
-PKG_CHECK_MODULES(YAML, yaml-0.1)
 
 ###
 ### Optional library tests 
@@ -546,6 +559,36 @@ AS_IF( [test 0$DBG -ne 0],
        ]) 
 
 
+
+### libyaml 
+dnl PKG_CHECK_MODULES(YAML, yaml-0.1)
+
+AS_IF([test "x$enable_yaml" = "xyes"],
+         [ PKG_CHECK_MODULES(YAML, yaml-0.1, 
+             [libyaml_found=yes], 
+             [libyaml_found=no
+              AC_MSG_WARN( [yaml-0.1  not found. Forcing --disable-yaml])
+              enable_yaml=no
+             ]
+           ) 
+         ],
+         [ AC_MSG_NOTICE( [yaml disabled, not checking for libyaml] ) ]
+     )
+
+AM_CONDITIONAL([ENABLE_YAML_COND], [test "x$enable_yaml" = "xyes"] )
+AS_IF([test "x$enable_yaml" = "xyes"],
+        AC_DEFINE([ENABLE_YAML], [1], [Use yaml])
+        AC_MSG_NOTICE( [yaml... enabled]  )
+      ,
+        AC_MSG_NOTICE( [yaml... disabled] )
+     )
+
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [YAML_CFLAGS:    $YAML_CFLAGS] )
+          AC_MSG_NOTICE( [YAML_LIBS:      $YAML_LIBS] )
+       ]) 
+
 ### X11 
 
 dnl PKG_CHECK_MODULES(XRANDR, xrandr)
@@ -575,6 +618,37 @@ AS_IF( [test 0$DBG -ne 0],
           AC_MSG_NOTICE( [LIBX11_LIBS:      $LIBX11_LIBS] )
        ]) 
 
+
+
+
+### X11 
+
+dnl PKG_CHECK_MODULES(XRANDR, xrandr)
+dnl PKG_CHECK_MODULES(X11,    x11)
+
+AS_IF([test "x$enable_x11" = "xyes"],
+         [ PKG_CHECK_MODULES(LIBX11, x11)
+         ]) 
+
+AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
+AS_IF([test "x$enable_x11" = "xyes"],
+        AC_DEFINE([USE_X11], [1], [Use X11])
+        AC_MSG_NOTICE( [x11... enabled]  )
+      ,
+        AC_MSG_NOTICE( [x11... disabled] )
+     )
+
+AS_IF([test "x$enable_x11" = "xyes"],
+         [ PKG_CHECK_MODULES(XRANDR, xrandr)  
+         ])
+
+
+dnl Note cflags and libs, but don't need to use in makefiles 
+AS_IF( [test 0$DBG -ne 0], 
+       [
+          AC_MSG_NOTICE( [LIBX11_CFLAGS:    $LIBX11_CFLAGS] )
+          AC_MSG_NOTICE( [LIBX11_LIBS:      $LIBX11_LIBS] )
+       ]) 
 
 
 
@@ -1068,6 +1142,7 @@ AC_MSG_RESULT([
 	enable_failsim:         ${enable_failsim}
 	enable_use_api:         ${enable_use_api}
 	include_testcases:      ${include_testcases}
+	enable_yaml:            ${enable_yaml}
 
 	compiler:               ${CC}
 	CFLAGS:                 ${CFLAGS}
