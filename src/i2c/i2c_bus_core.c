@@ -788,19 +788,19 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
    return businfo;
 }
 
+
 bool i2c_detect_x37(int fd) {
    bool debug = true;
    bool result = false;
 
-   // Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
-   // but this function should not be called for eDP displays
+   // Quirks
+   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
+   //   avoided by never calling this function for an eDP screen
+   // - Dell P2715Q does not respond to single byte read, but does respond to
+   //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
    if (rc == 0)  {
-      // 7/2018: changed from invoke_i2c_reader() to invoke_i2c_writer()
-      //         Dell P2715Q does not always respond to read of single byte
-
       // regard either a successful write() or a read() as indication slave address is valid
-
       Byte    writebuf = {0x00};
       rc = write(fd, &writebuf, 1);
       DBGTRC(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_desc(rc));
@@ -894,119 +894,6 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
-
-
-#ifdef OLD
-// static
-void i2c_check_bus_old(I2C_Bus_Info * bus_info) {
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
-
-   assert(bus_info);
-   assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
-
-   int fd = 0; // Linux file descriptor
-
-   if (!(bus_info->flags & I2C_BUS_PROBED)) {
-      DBGMSF(debug, "Probing");
-      bus_info->flags |= I2C_BUS_PROBED;
-
-      if ( is_edp_device(bus_info->busno) ) {
-         DBGMSF(debug, "eDP device detected");
-         bus_info->flags |= I2C_BUS_EDP;
-         // goto bye;
-      }
-
-      // probing hangs on PowerMac if i2c device is SMU
-      // but, bus_info has already been filtered for ignorable devices
-      // Not necessariy so, maybe called for --bus n option
-#ifdef OLD   // will fail if called for probe --bus
-      assert( !sysfs_is_ignorable_i2c_device(bus_info->busno) );
-#endif
-
-      // tests no longer needed, see comment on above assert()  <== WRONG seee above comment
-      if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
-         bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
-         if ( !sysfs_is_ignorable_i2c_device(bus_info->busno) )
-            bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
-      }
-
-      bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
-      bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
-
-      if (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED &&
-          bus_info->flags & I2C_BUS_HAS_VALID_NAME )
-      {
-         fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);  // returns if failure
-
-         if (fd >= 0) {
-            DBGMSF(debug, "Opened bus /dev/i2c-%d", bus_info->busno);
-            bus_info->flags |= I2C_BUS_ACCESSIBLE;
-
-            bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
-            // DBGMSF(debug, "i2c_get_functionality_flags_by_fd() returned %lu", bus_info->functionality);
-
-#ifdef DETECT_SLAVE_ADDRS
-            Byte ddc_addr_flags = 0x00;
-            Status_Errno_DDC psc = i2c_detect_ddc_addrs_by_fd(fd, &ddc_addr_flags);
-            if (psc != 0) {
-               DBGMSF(debug, "detect_ddc_addrs_by_fd() returned %d", psc);
-               f0printf(ferr(), "Failure detecting bus addresses for /dev/i2c-%d: status code=%s\n",
-                              bus_info->busno, psc_desc(psc));
-               goto bye;
-            }
-            bus_info->flags |= ddc_addr_flags;
-
-            if (bus_info->flags & I2C_BUS_ADDR_0X50) {
-               // Have seen case of nouveau driver with Quadro card where
-               // there's a bus that has no monitor but responds to the X50 probe
-               // of detect_ddc_addrs_by_fd() and then returns a garbage EDID
-               // when the bytes are read in i2c_get_parsed_edid_by_fd()
-               // TODO: handle case of i2c_get_parsed_edid_by_fd() returning NULL
-               // but should never fail if detect_ddc_addrs_by_fd() succeeds
-               psc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
-               if (psc != 0) {
-                  DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
-                  f0printf(ferr(), "Failure getting EDID for /dev/i2c-%d: status code=%s\n",
-                                 bus_info->busno, psc_desc(psc));
-                  goto bye;
-               }
-               // bus_info->flags |= I2C_BUS_EDID_CHECKED;
-            }
-   #ifdef NO
-            // test is being made in ddc_displays.c
-            if (bus_info->flags & I2C_BUS_ADDR_0X37) {
-               // have seen case where laptop display reports addr 37 active, but
-               // it doesn't respond to DDC
-               // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
-               // TODO: sanity check for DDC goes here
-               // or make this check at a higher level, since I2c doesn't understand DDC
-
-            }
-   #endif
-#else
-            Public_Status_Code psc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
-            DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", psc);
-            if (psc == 0)
-               bus_info->flags |= I2C_BUS_ADDR_0X50;
-            else
-               goto bye;     // not logically necessary, avoids iftesting label bye
-#endif
-         }
-      }
-   }
-
-bye:
-   if (fd >= 0)
-      i2c_close_bus(fd, bus_info->busno,  CALLOPT_ERR_MSG);
-
-   // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
-   if (debug || IS_TRACING() ) {
-      DBGMSG("Done. flags=0x%04x, bus info:", bus_info->flags );
-      i2c_dbgrpt_bus_info(bus_info, 2);
-   }
-}
-#endif
 
 
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
