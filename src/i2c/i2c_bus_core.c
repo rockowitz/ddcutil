@@ -351,6 +351,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 }
 #endif
 
+
 //
 // I2C Bus Inspection - EDID Retrieval
 //
@@ -592,7 +593,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 
 bool i2c_detect_x37(int fd) {
-   bool debug = true;
+   bool debug = false;
    bool result = false;
 
    // Quirks
@@ -800,13 +801,15 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
-      rpt_vstring(depth+1, "I2C address 0x50 (EDID) present: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
-      rpt_vstring(depth+1, "Is eDP device:                   %-5s", sbool(businfo->flags & I2C_BUS_EDP));
+      rpt_vstring(depth+1, "I2C address 0x50 (EDID) responsive: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth+1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
+      if (!(businfo->flags & I2C_BUS_EDP))
+      rpt_vstring(depth+1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(depth+1, "%s: %s", fn, sysattr_name);
+      rpt_vstring(depth+1, "%s:   |%s|", fn, sysattr_name);
       free(sysattr_name);
    }
 
