@@ -788,6 +788,58 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
    return businfo;
 }
 
+bool i2c_detect_x37(int fd) {
+   bool debug = true;
+   bool result = false;
+
+   // Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
+   // but this function should not be called for eDP displays
+   Status_Errno_DDC rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
+   if (rc == 0)  {
+      // 7/2018: changed from invoke_i2c_reader() to invoke_i2c_writer()
+      //         Dell P2715Q does not always respond to read of single byte
+
+      // regard either a successful write() or a read() as indication slave address is valid
+
+      Byte    writebuf = {0x00};
+      rc = write(fd, &writebuf, 1);
+      DBGTRC(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_desc(rc));
+      if (rc == 1)
+         result = true;
+
+      Byte    readbuf[4];  //  4 byte buffer
+      rc = read(fd, readbuf, 4);
+      DBGTRC(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_desc(rc));
+      // test doesn't work, buffer contains random bytes (but same random bytes for every
+      // display in a single call to i2cdetect)
+      // Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
+      // if (rc == 4) {
+      //    DBGMSG("read x37 returned: 0x%08x", readbuf);
+      //    result = (memcmp( readbuf, ddc_null_msg, 4) == 0);
+      // }
+      if (rc >= 0)
+         result = true;
+   }
+
+   DBGMSF(debug, "Returning %s", SBOOL(result));
+   return result;
+}
+
+
+// Factored out of i2c_check_bus().  Not needed, since i2c_check_bus() is called
+// only when the bus name is valid
+void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
+  assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
+
+  if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
+      bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
+      if ( !sysfs_is_ignorable_i2c_device(bus_info->busno) )
+         bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
+   }
+
+   bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
+}
+
 
 /** Inspects an I2C bus.
  *
@@ -796,7 +848,57 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
  *
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
-static void i2c_check_bus(I2C_Bus_Info * bus_info) {
+void i2c_check_bus(I2C_Bus_Info * bus_info) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
+
+   assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
+
+   // void i2c_bus_check_valid_name(bus_info);  // unnecessary
+   assert( (bus_info->flags & I2C_BUS_EXISTS) &&
+           (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) &&
+           (bus_info->flags & I2C_BUS_HAS_VALID_NAME)
+         );
+
+   if (!(bus_info->flags & I2C_BUS_PROBED)) {
+      DBGMSF(debug, "Probing");
+      bus_info->flags |= I2C_BUS_PROBED;
+      int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
+      if (fd >= 0) {
+          DBGMSF(debug, "Opened bus /dev/i2c-%d", bus_info->busno);
+          bus_info->flags |= I2C_BUS_ACCESSIBLE;
+
+          bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
+
+          DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
+          DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", ddcrc);
+          if (ddcrc == 0) {
+             bus_info->flags |= I2C_BUS_ADDR_0X50;
+
+             if ( is_edp_device(bus_info->busno) ) {
+                DBGMSF(debug, "eDP device detected");
+                bus_info->flags |= I2C_BUS_EDP;
+             }
+             else {
+                if ( i2c_detect_x37(fd) )
+                   bus_info->flags |= I2C_BUS_ADDR_0X37;
+             }
+          }
+          i2c_close_bus(fd, bus_info->busno,  CALLOPT_ERR_MSG);
+      }
+   }   // probing complete
+
+   // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
+   if (debug || IS_TRACING() ) {
+      DBGMSG("Done. flags=0x%04x, bus info:", bus_info->flags );
+      i2c_dbgrpt_bus_info(bus_info, 2);
+   }
+}
+
+
+#ifdef OLD
+// static
+void i2c_check_bus_old(I2C_Bus_Info * bus_info) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
@@ -904,6 +1006,7 @@ bye:
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
+#endif
 
 
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
@@ -968,8 +1071,8 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(bus_info->flags & I2C_BUS_HAS_VALID_NAME));
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(depth, "Address 0x30 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
 #endif
+      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
@@ -1131,7 +1234,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
 
    if (i2c_device_exists(busno) ) {
       businfo = i2c_new_bus_info(busno);
-      businfo->flags = I2C_BUS_EXISTS;
+      businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
       i2c_check_bus(businfo);
       if (debug)
          i2c_dbgrpt_bus_info(businfo, 0);
