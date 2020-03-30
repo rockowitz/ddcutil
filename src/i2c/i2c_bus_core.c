@@ -1110,6 +1110,7 @@ int i2c_detect_buses() {
    return result;
 }
 
+
 void i2c_discard_buses() {
    i2c_buses= NULL;
 }
