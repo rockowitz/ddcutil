@@ -69,7 +69,6 @@ Value_Name_Table functionality_flag_table = {
 };
 
 
-
 /** Gets the I2C functionality flags for an open I2C bus,
  *  specified by its file descriptor.
  *
@@ -77,7 +76,6 @@ Value_Name_Table functionality_flag_table = {
  *  @return functionality flags
  */
 unsigned long i2c_get_functionality_flags_by_fd(int fd) {
-
    unsigned long funcs;
    int rc = ioctl(fd, I2C_FUNCS, &funcs);
    if (rc < 0) {
@@ -85,7 +83,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
       fprintf(stderr, "(%s) Error in ioctl(I2C_FUNCS), errno=%d\n", __func__, errno);
       funcs = 0;
    }
-
    // printf("(%s) Functionality for file descriptor %d: %lu, 0x%0lx\n", __func__, fd, funcs, funcs);
    return funcs;
 }
@@ -97,11 +94,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
  * @return string representation of flags
  */
 char * i2c_interpret_functionality_flags(unsigned long functionality) {
-   // HACK ALERT: There are 2 entries for bit I2C_FUNC_I2C in functionality_table,
-   // one for function name ioctl_read and another for function name ioctl_write
-   // These are at indexes 0 and 1.   For our purposes here we only want to check
-   // each bit once, so we start at index 1 instead of 0.
-   // return vnt_interpret_flags(functionality, functionality_table2+1, false, ", ");
    return vnt_interpret_flags(functionality, functionality_flag_table, false, ", ");
 }
 
@@ -115,11 +107,7 @@ char * i2c_interpret_functionality_flags(unsigned long functionality) {
  *  @param  depth          logical indentation depth
  */
 void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
-   // bool debug = false;
-   // DBGMSF(debug, "Starting.  functionality=0x%lx, maxline=%d", functionality, maxline);
-
    char * buf0 = i2c_interpret_functionality_flags(functionality);
-   // DBGMSF(debug, "buf0=|%s|", buf0);
 
    char * header = "Functionality: ";
    int hdrlen = strlen(header);
@@ -134,12 +122,8 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
       rpt_vstring(depth, "%-*s%s", hdrlen, header, s);
       if (strlen(header) > 0)
          header = "";
-
    }
    free(buf0);
    ntsa_free(ntsa, /* free_strings */ true);
-
-   // DBGMSF(debug, "Done");
 }
-
 
