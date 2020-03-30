@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "util/edid.h"
+#include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"

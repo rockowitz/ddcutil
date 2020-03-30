@@ -1,33 +1,17 @@
-/* i2c_util.h
+/** \file i2c_util.h
  *
- * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+ * I2C utility functions
  */
 
-/** \f 
-*   I2C Utility Functions
-*/
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_UTIL_H_
 #define I2C_UTIL_H_
 
 int i2c_name_to_busno(char * name);
+
+char * i2c_interpret_functionality_flags(unsigned long functionality);
+void   i2c_report_functionality_flags(long functionality, int maxline, int depth);
 
 #endif /* I2C_UTIL_H_ */

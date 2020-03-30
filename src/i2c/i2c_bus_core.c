@@ -23,6 +23,7 @@
 #include "util/failsim.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
+#include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/edid.h"
 #include "util/string_util.h"
@@ -246,35 +247,6 @@ retry:
 //
 
 
-// Separate table for interpreting functionality flags.
-
-Value_Name_Table functionality_flag_table = {
-      VN(I2C_FUNC_I2C                    ),   //0x00000001
-      VN(I2C_FUNC_10BIT_ADDR             ),   //0x00000002
-      VN(I2C_FUNC_PROTOCOL_MANGLING      ),   //0x00000004 /* I2C_M_IGNORE_NAK etc. */
-      VN(I2C_FUNC_SMBUS_PEC              ),   //0x00000008
-   // VN(I2C_FUNC_NOSTART                ),   //0x00000010 /* I2C_M_NOSTART */  // i2c-tools 4.0
-   // VN(I2C_FUNC_SLAVE                  ),   //0x00000020                      // i2c-tools 4.0
-      {0x00000010, "I2C_FUNC_NOSTART", NULL  },
-      {0x00000020, "I2C_FUNC_SLAVE",   NULL    },
-      VN(I2C_FUNC_SMBUS_BLOCK_PROC_CALL  ),   //0x00008000 /* SMBus 2.0 */
-      VN(I2C_FUNC_SMBUS_QUICK            ),   //0x00010000
-      VN(I2C_FUNC_SMBUS_READ_BYTE        ),   //0x00020000
-      VN(I2C_FUNC_SMBUS_WRITE_BYTE       ),   //0x00040000
-      VN(I2C_FUNC_SMBUS_READ_BYTE_DATA   ),   //0x00080000
-      VN(I2C_FUNC_SMBUS_WRITE_BYTE_DATA  ),   //0x00100000
-      VN(I2C_FUNC_SMBUS_READ_WORD_DATA   ),   //0x00200000
-      VN(I2C_FUNC_SMBUS_WRITE_WORD_DATA  ),   //0x00400000
-      VN(I2C_FUNC_SMBUS_PROC_CALL        ),   //0x00800000
-      VN(I2C_FUNC_SMBUS_READ_BLOCK_DATA  ),   //0x01000000
-      VN(I2C_FUNC_SMBUS_WRITE_BLOCK_DATA ),   //0x02000000
-      VN(I2C_FUNC_SMBUS_READ_I2C_BLOCK   ),   //0x04000000 /* I2C-like block xfer  */
-      VN(I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  ),   //0x08000000 /* w/ 1-byte reg. addr. */
-   // VN(I2C_FUNC_SMBUS_HOST_NOTIFY      ),   //0x10000000               // i2c-tools 4.0
-      {0x10000000, "I2C_FUNC_SMBUS_HOST_NOTIFY", NULL},
-      VN_END
-};
-
 
 /** Gets the I2C functionality flags for an open I2C bus,
  *  specified by its file descriptor.
@@ -300,59 +272,6 @@ unsigned long i2c_get_functionality_flags_by_fd(int fd) {
    return funcs;
 }
 
-
-/** Returns a string representation of functionality flags.
- *
- * @param functionality  long int of flags
- * @return string representation of flags
- */
-char * i2c_interpret_functionality_flags(unsigned long functionality) {
-   // HACK ALERT: There are 2 entries for bit I2C_FUNC_I2C in functionality_table,
-   // one for function name ioctl_read and another for function name ioctl_write
-   // These are at indexes 0 and 1.   For our purposes here we only want to check
-   // each bit once, so we start at index 1 instead of 0.
-   // return vnt_interpret_flags(functionality, functionality_table2+1, false, ", ");
-   return vnt_interpret_flags(functionality, functionality_flag_table, false, ", ");
-}
-
-
-/** Reports functionality flags.
- *
- *  The output is multiline.
- *
- *  @param  functionality  flags to report
- *  @param  maxline        maximum length of 1 line
- *  @param  depth          logical indentation depth
- */
-void i2c_report_functionality_flags(long functionality, int maxline, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting.  functionality=0x%lx, maxline=%d", functionality, maxline);
-
-   char * buf0 = i2c_interpret_functionality_flags(functionality);
-   DBGMSF(debug, "buf0=|%s|", buf0);
-
-   char * header = "Functionality: ";
-   int hdrlen = strlen(header);
-   int maxpiece = maxline - ( rpt_get_indent(depth) + hdrlen);
-
-   Null_Terminated_String_Array ntsa = strsplit_maxlength( buf0, maxpiece, " ");
-   int ntsa_ndx = 0;
-   while (true) {
-      char * s = ntsa[ntsa_ndx++];
-      if (!s)
-         break;
-      // printf("(%s) header=|%s|, s=|%s|\n", __func__, header, s);
-      rpt_vstring(depth, "%-*s%s", hdrlen, header, s);
-      // printf("(%s) s = %p\n", __func__, s);
-      if (strlen(header) > 0)
-         header = "";
-
-   }
-   free(buf0);
-   ntsa_free(ntsa, /* free_strings */ true);
-
-   DBGMSF(debug, "Done");
-}
 
 
 //
