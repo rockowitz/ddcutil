@@ -243,41 +243,8 @@ retry:
 
 
 //
-// I2C Bus Inspection - Functionality Flags
-//
-
-
-
-/** Gets the I2C functionality flags for an open I2C bus,
- *  specified by its file descriptor.
- *
- *  @param fd  Linux file descriptor
- *  @return functionality flags
- */
-unsigned long i2c_get_functionality_flags_by_fd(int fd) {
-   bool debug = false;
-   DBGMSF(debug, "Starting.");
-
-   unsigned long funcs;
-   int rc;
-
-   RECORD_IO_EVENT(IE_OTHER, ( rc = ioctl(fd, I2C_FUNCS, &funcs) ) );
-   // int errsv = errno;
-   if (rc < 0) {
-      REPORT_IOCTL_ERROR("I2C_FUNCS", errno);
-      funcs = 0;
-   }
-
-   DBGMSF(debug, "Functionality for file descriptor %d: %lu, 0x%0lx", fd, funcs, funcs);
-   return funcs;
-}
-
-
-
-//
 // I2C Bus Inspection - Slave Addresses
 //
-
 
 /** Checks whether a /dev/i2c-n device represents an dDP device,
  *  i.e. a laptop display.

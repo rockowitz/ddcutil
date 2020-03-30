@@ -6,7 +6,10 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <errno.h>
+#include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#include <sys/ioctl.h>
 
 #include "data_structures.h"
 #include "report_util.h"
@@ -64,6 +67,28 @@ Value_Name_Table functionality_flag_table = {
       {0x10000000, "I2C_FUNC_SMBUS_HOST_NOTIFY", NULL},
       VN_END
 };
+
+
+
+/** Gets the I2C functionality flags for an open I2C bus,
+ *  specified by its file descriptor.
+ *
+ *  @param fd  Linux file descriptor
+ *  @return functionality flags
+ */
+unsigned long i2c_get_functionality_flags_by_fd(int fd) {
+
+   unsigned long funcs;
+   int rc = ioctl(fd, I2C_FUNCS, &funcs);
+   if (rc < 0) {
+      // should be impossible
+      fprintf(stderr, "(%s) Error in ioctl(I2C_FUNCS), errno=%d\n", __func__, errno);
+      funcs = 0;
+   }
+
+   // printf("(%s) Functionality for file descriptor %d: %lu, 0x%0lx\n", __func__, fd, funcs, funcs);
+   return funcs;
+}
 
 
 /** Returns a string representation of functionality flags.
