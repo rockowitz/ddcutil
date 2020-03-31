@@ -809,7 +809,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(depth+1, "%s:   |%s|", fn, sysattr_name);
+      rpt_vstring(depth+1, "%s:   %s", fn, sysattr_name);
       free(sysattr_name);
    }
 
