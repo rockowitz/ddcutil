@@ -524,6 +524,70 @@ default_status_code_desc(int rc) {
 }
 
 
+
+GString *
+errinfo_cause_array_summary_gs(
+      struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
+      int                   error_ct,
+      GString *             gs)     ///<  number of causal errors
+{
+      bool first = true;
+
+      int ndx = 0;
+      while (ndx < error_ct) {
+         int this_psc = errors[ndx]->status_code;
+         int cur_ct = 1;
+
+         for (int i = ndx+1; i < error_ct; i++) {
+            if (errors[i]->status_code != this_psc)
+               break;
+            cur_ct++;
+         }
+
+         if (first)
+            first = false;
+         else
+            g_string_append(gs, ", ");
+         if (errinfo_name_func)
+            g_string_append(gs, errinfo_name_func(this_psc));
+         else {
+            char buf[20];
+            snprintf(buf, 20, "%d",this_psc);
+            buf[19] = '\0';
+            g_string_append(gs, buf);
+         }
+         if (cur_ct > 1)
+            g_string_append_printf(gs, "(%d)", cur_ct);
+         ndx += cur_ct;
+      }
+
+   return gs;
+}
+
+
+/** Returns a comma separated string of the status code names of the
+ *  causes in an array of #Error_Info.
+ *  Multiple consecutive identical names are replaced with a
+ *  single name and a parenthesized instance count.
+ *
+ *  \param  erec  pointer to array of #Error_Info instances
+ *  \return comma separated string, caller is responsible for freeing
+ */
+char *
+errinfo_cause_array_summary(
+      struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
+      int                   error_ct)
+{
+   GString * gs = g_string_new(NULL);
+   errinfo_cause_array_summary_gs(errors, error_ct, gs);
+   char * result = gs->str;
+   g_string_free(gs, false);
+
+   // DBGMSF(debug, "Done.  Returning: |%s|", result);
+   return result;
+}
+
+
 /** Returns a comma separated string of the status code names in the
  *  causes of the specified #Error_Info.
  *  Multiple consecutive identical names are replaced with a
@@ -535,8 +599,25 @@ default_status_code_desc(int rc) {
 char *
 errinfo_causes_string(Error_Info * erec) {
    // bool debug = false;
-   // DBGMSF(debug, "history=%p, history->ct=%d", history, history->ct);
 
+   GString * gs = g_string_new(NULL);
+
+   if (erec) {
+      assert(memcmp(erec->marker, ERROR_INFO_MARKER, 4) == 0);
+
+      errinfo_cause_array_summary_gs(erec->causes, erec->cause_ct, gs);
+   }
+   char * result = gs->str;
+   g_string_free(gs, false);
+
+   // DBGMSF(debug, "Done.  Returning: |%s|", result);
+   return result;
+
+
+
+
+
+#ifdef OLD
    GString * gs = g_string_new(NULL);
 
    if (erec) {
@@ -578,6 +659,7 @@ errinfo_causes_string(Error_Info * erec) {
 
    // DBGMSF(debug, "Done.  Returning: |%s|", result);
    return result;
+#endif
 }
 
 
