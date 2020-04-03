@@ -372,20 +372,21 @@ bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace outp
 
 static
 Value_Name_Title_Table trace_group_table = {
-      VNT(DDCA_TRC_BASE, "BASE"),
-      VNT(DDCA_TRC_I2C, "I2C"),
+      VNT(DDCA_TRC_BASE,  "BASE"),
+      VNT(DDCA_TRC_I2C,   "I2C"),
 #ifdef HAVE_ADL
       VNT(TRC_ADL, "ADL"),
 #endif
-      VNT(DDCA_TRC_DDC, "DDC"),
-      VNT(DDCA_TRC_USB, "USB"),
-      VNT(DDCA_TRC_TOP, "TOP"),
-      VNT(DDCA_TRC_ENV, "ENV"),
-      VNT(DDCA_TRC_API, "API"),
-      VNT(DDCA_TRC_UDF, "UDF"),
-      VNT(DDCA_TRC_VCP, "VCP"),
+      VNT(DDCA_TRC_DDC,   "DDC"),
+      VNT(DDCA_TRC_USB,   "USB"),
+      VNT(DDCA_TRC_TOP,   "TOP"),
+      VNT(DDCA_TRC_ENV,   "ENV"),
+      VNT(DDCA_TRC_API,   "API"),
+      VNT(DDCA_TRC_UDF,   "UDF"),
+      VNT(DDCA_TRC_VCP,   "VCP"),
       VNT(DDCA_TRC_DDCIO, "DDCIO"),
       VNT(DDCA_TRC_SLEEP, "SLEEP"),
+      VNT(DDCA_TRC_RETRY, "RETRY"),
       VNT_END
 };
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
