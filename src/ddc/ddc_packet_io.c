@@ -740,7 +740,7 @@ ddc_write_read_with_retry(
         tryctr++)
    {
       DBGMSF(debug,
-           "Start of try loop, tryctr=%d, max_write_read_echange_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+           "Start of try loop, tryctr=%d, max_write_read_exchange_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
            tryctr, max_write_read_exchange_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
@@ -751,6 +751,12 @@ ddc_write_read_with_retry(
                 expected_response_type,
                 expected_subtype,
                 response_packet_ptr_loc);
+
+      // TESTCASES:
+      // if (tryctr < 2)
+      // cur_excp = errinfo_new(DDCRC_NULL_RESPONSE, "dummy");
+      // cur_excp = errinfo_new(-EIO, "dummy");
+
       psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
 
@@ -772,7 +778,7 @@ ddc_write_read_with_retry(
             switch (psc) {
             case DDCRC_NULL_RESPONSE:
                   {
-                     retryable = (ddcrc_null_response_ct++ < ddcrc_null_response_max);
+                     retryable = (++ddcrc_null_response_ct < ddcrc_null_response_max);
                      DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                      if (retryable) {
                         if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
@@ -792,7 +798,7 @@ ddc_write_read_with_retry(
                  break;
 
             case (-EIO):
-                 retryable = false;     // ??
+                 // retryable = false;     // ??
                  break;
 
             case (-EBADF):
@@ -825,16 +831,29 @@ ddc_write_read_with_retry(
          if (psc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
       }    // rc < 0
+      // DBGMSG("Bottom of try loop. psc=%d, tryctr=%d, retryable=%s", psc, tryctr, sbool(retryable));
    }
    DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
          tryctr, psc, sbool(retryable), sbool(read_bytewise));
+
+   int errct = (psc == 0) ? tryctr-1 : tryctr;
+   // DBGMSG("psc=%d, tryctr=%d, errct=%d", psc, tryctr, errct);
+
    // read_bytewise = !read_bytewise;
+#ifdef OLD
    if (debug) {
       for (int ndx = 0; ndx < tryctr; ndx++) {
+         DBGMSG("try_errors[ndx] = %p", try_errors[ndx]);
          DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
       }
    }
-
+#endif
+   // DBGMSG("try_errors = %p, &try_errors=%p", try_errors, &try_errors);
+   if (psc == 0 && errct > 0) {
+      char * s = errinfo_array_summary(try_errors, errct);
+      DBGMSG("Succeeded after %d errors: %s", errct, s);
+      free(s);
+   }
    if (sleep_multiplier_incremented) {
       tsd_set_sleep_multiplier_ct(1);   // in case we changed it
       tsd_bump_sleep_multiplier_changer_ct();
