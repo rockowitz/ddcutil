@@ -526,7 +526,7 @@ default_status_code_desc(int rc) {
 
 
 GString *
-errinfo_cause_array_summary_gs(
+errinfo_array_summary_gs(
       struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
       int                   error_ct,
       GString *             gs)     ///<  number of causal errors
@@ -535,6 +535,7 @@ errinfo_cause_array_summary_gs(
 
       int ndx = 0;
       while (ndx < error_ct) {
+         // printf("(%s) this error = %p\n", __func__, errors[ndx]);
          int this_psc = errors[ndx]->status_code;
          int cur_ct = 1;
 
@@ -574,12 +575,13 @@ errinfo_cause_array_summary_gs(
  *  \return comma separated string, caller is responsible for freeing
  */
 char *
-errinfo_cause_array_summary(
+errinfo_array_summary(
       struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
       int                   error_ct)
 {
    GString * gs = g_string_new(NULL);
-   errinfo_cause_array_summary_gs(errors, error_ct, gs);
+   // printf("(%s) errors=%p\n", __func__, errors);
+   errinfo_array_summary_gs(errors, error_ct, gs);
    char * result = gs->str;
    g_string_free(gs, false);
 
@@ -605,7 +607,7 @@ errinfo_causes_string(Error_Info * erec) {
    if (erec) {
       assert(memcmp(erec->marker, ERROR_INFO_MARKER, 4) == 0);
 
-      errinfo_cause_array_summary_gs(erec->causes, erec->cause_ct, gs);
+      errinfo_array_summary_gs(erec->causes, erec->cause_ct, gs);
    }
    char * result = gs->str;
    g_string_free(gs, false);

@@ -131,7 +131,7 @@ void errinfo_set_detail3(
       const char *  detail_fmt,
       ...);
 
-char * errinfo_cause_array_summary(
+char * errinfo_array_summary(
       Error_Info **  errors,
       int            error_ct);
 
