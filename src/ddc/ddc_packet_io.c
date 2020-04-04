@@ -761,7 +761,8 @@ ddc_write_read_with_retry(
       try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DBGMSG("%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
+         DBGTRC(debug, TRACE_GROUP || DDCA_TRC_RETRY,
+                "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                 dh_repr_t(dh),
                 ddcrc_null_response_ct);
       }
@@ -851,7 +852,7 @@ ddc_write_read_with_retry(
    // DBGMSG("try_errors = %p, &try_errors=%p", try_errors, &try_errors);
    if (psc == 0 && errct > 0) {
       char * s = errinfo_array_summary(try_errors, errct);
-      DBGMSG("Succeeded after %d errors: %s", errct, s);
+      DBGTRC(debug, TRACE_GROUP || DDCA_TRC_RETRY, "Succeeded after %d errors: %s", errct, s);
       free(s);
    }
    if (sleep_multiplier_incremented) {
