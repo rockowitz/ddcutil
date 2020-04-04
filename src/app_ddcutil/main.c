@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
       dbgtrc_show_thread_id = true;                      // extern in core.h
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
-   set_trace_levels(parsed_cmd->traced_groups | DDCA_TRC_RETRY);
+   set_trace_levels(parsed_cmd->traced_groups);
    if (parsed_cmd->traced_functions) {
       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
          add_traced_function(parsed_cmd->traced_functions[ndx]);
