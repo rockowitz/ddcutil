@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKET_IO_H_
@@ -19,23 +19,19 @@
 #include "base/displays.h"
 
 
-// bool all_zero(Byte * bytes, int bytec);
-
 DDCA_Status ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
       Display_Handle** dh_loc);
 Status_Errno ddc_close_display(Display_Handle * dh);
 
-
-// Retry management
-void ddc_set_max_write_only_exchange_tries(int ct);
+// void ddc_set_max_write_only_exchange_tries(Retry_Op_Value ct);
 Retry_Op_Value
      ddc_get_max_write_only_exchange_tries();
-void ddc_set_max_write_read_exchange_tries(Retry_Op_Value ct);
-Retry_Op_Value  ddc_get_max_write_read_exchange_tries();
+// void ddc_set_max_write_read_exchange_tries(Retry_Op_Value ct);
+Retry_Op_Value
+     ddc_get_max_write_read_exchange_tries();
 
-// Retry statistics
 void ddc_reset_write_only_stats();
 void ddc_report_write_only_stats(int depth);
 void ddc_reset_write_read_stats();

@@ -292,8 +292,8 @@ ddc_close_display(Display_Handle * dh) {
 //
 
 // constants in parms.h:
-static int max_write_only_exchange_tries =  INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES;
-static int max_write_read_exchange_tries =  INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES;
+// static int max_write_only_exchange_tries =  INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES;
+// static int max_write_read_exchange_tries =  INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES;
 
 
 // static Try_Data * write_read_stats_rec = NULL;
@@ -350,8 +350,8 @@ Retry_Op_Value ddc_get_max_write_read_exchange_tries() {
    // DBGMSF(debug, "------------------------------------");
    // int v1 = max_write_read_exchange_tries;
    Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
-   DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
-   DBGMSF(debug, "try_data_get_max_tries2(WRITE_READ_TRIES_OPE) returned %d", v2);
+   // DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
+   DBGMSF(debug, "try_data_get_max_tries2(WRITE_READ_TRIES_OP) returned %d", v2);
    // if (v1 != v2)
       // DBGMSG("=========================>> Values to not match!!!");
    // assert (v1 == v2);
@@ -734,14 +734,16 @@ ddc_write_read_with_retry(
           sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES];
 
-   assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
+   // assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
+   int max_tries = ddc_get_max_write_read_exchange_tries();
+   assert(max_tries >= 0);
    for (tryctr=0, psc=-999, retryable=true;
-        tryctr < max_write_read_exchange_tries && psc < 0 && retryable;
+        tryctr < max_tries && psc < 0 && retryable;
         tryctr++)
    {
       DBGMSF(debug,
-           "Start of try loop, tryctr=%d, max_write_read_exchange_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
-           tryctr, max_write_read_exchange_tries, psc, sbool(retryable), sbool(read_bytewise) );
+           "Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+           tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
@@ -850,10 +852,13 @@ ddc_write_read_with_retry(
    }
 #endif
    // DBGMSG("try_errors = %p, &try_errors=%p", try_errors, &try_errors);
-   if (psc == 0 && errct > 0) {
-      char * s = errinfo_array_summary(try_errors, errct);
-      DBGTRC(debug, TRACE_GROUP | DDCA_TRC_RETRY, "Succeeded after %d errors: %s", errct, s);
-      free(s);
+   if (errct > 0) {
+         char * s0 = (psc == 0) ? "Succeeded" : "Failed";
+         char * s1 = (errct == 1) ? "" : "s";
+         char * s = errinfo_array_summary(try_errors, errct);
+         DBGTRC(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s after %d error%s: %s", s0, errct, s1, s);
+         free(s);
+
    }
    if (sleep_multiplier_incremented) {
       tsd_set_sleep_multiplier_ct(1);   // in case we changed it
@@ -868,7 +873,7 @@ ddc_write_read_with_retry(
 
       if (retryable)
          psc = DDCRC_RETRIES;
-      else if (ddcrc_read_all_zero_ct == max_write_read_exchange_tries)
+      else if (ddcrc_read_all_zero_ct == max_tries)
          psc = DDCRC_ALL_TRIES_ZERO;
       else if (ddcrc_null_response_ct > ddcrc_null_response_max)
          psc = DDCRC_ALL_RESPONSES_NULL;
@@ -1001,14 +1006,15 @@ ddc_write_only_with_retry(
    bool               retryable;
    Error_Info *       try_errors[MAX_MAX_TRIES];
 
-   assert(max_write_only_exchange_tries > 0);
+   int max_tries = ddc_get_max_write_only_exchange_tries();
+   assert(max_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
-       tryctr < max_write_only_exchange_tries && psc < 0 && retryable;
+       tryctr < max_tries && psc < 0 && retryable;
        tryctr++)
    {
       DBGMSF(debug,
-             "Start of try loop, tryctr=%d, max_write_only_exchange_tries=%d, rc=%d, retryable=%d",
-             tryctr, max_write_only_exchange_tries, psc, retryable );
+             "Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%d",
+             tryctr, max_tries, psc, retryable );
 
       Error_Info * cur_excp = ddc_write_only(dh, request_packet_ptr);
       psc = (cur_excp) ? cur_excp->status_code : 0;
@@ -1040,9 +1046,9 @@ ddc_write_only_with_retry(
       // now:
       //   tryctr = number of tries
       //   tryctr-1 = index of last try
-      //   tryctr == max_write_only_exchange_tries &&  retryable
-      //   tryctr <  max_write_only_exchange_tries && !retryable
-      //   tryctr == max_write_only_exchange_tries && !retryable
+      //   tryctr == max_tries &&  retryable
+      //   tryctr <  max_tries && !retryable
+      //   tryctr == max_tries && !retryable
 
       // int last_try_index = tryctr-1;
       DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
