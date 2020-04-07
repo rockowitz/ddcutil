@@ -32,7 +32,7 @@ static char * retry_type_descriptions[] = {
 
 static char * retry_type_names[] = {
       "WRITE_ONLY_TRIES_OP",
-      "WRITE_READ_TRIES_OPE",
+      "WRITE_READ_TRIES_OP",
       "MULTI_PART_READ_OP",
       "MULTI_PART_WRITE_OP"
 };
