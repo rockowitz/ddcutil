@@ -403,7 +403,7 @@ multi_part_write_with_retry(
 }
 
 
-static void init_ddc_multi_part_io_func_name_table() {
+static inline void init_ddc_multi_part_io_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(try_multi_part_read);
    ADD_FUNC(multi_part_read_with_retry);
