@@ -25,18 +25,6 @@ DDCA_Status ddc_open_display(
       Display_Handle** dh_loc);
 Status_Errno ddc_close_display(Display_Handle * dh);
 
-// void ddc_set_max_write_only_exchange_tries(Retry_Op_Value ct);
-Retry_Op_Value
-     ddc_get_max_write_only_exchange_tries();
-// void ddc_set_max_write_read_exchange_tries(Retry_Op_Value ct);
-Retry_Op_Value
-     ddc_get_max_write_read_exchange_tries();
-
-void ddc_reset_write_only_stats();
-void ddc_report_write_only_stats(int depth);
-void ddc_reset_write_read_stats();
-void ddc_report_write_read_stats(int depth);
-
 Error_Info * ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);

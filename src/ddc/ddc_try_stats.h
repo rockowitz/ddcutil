@@ -15,6 +15,36 @@
 
 #include "base/parms.h"
 
+// from ddc_packet_io.h
+// void ddc_set_max_write_only_exchange_tries(Retry_Op_Value ct);
+Retry_Op_Value
+     ddc_get_max_write_only_exchange_tries();
+// void ddc_set_max_write_read_exchange_tries(Retry_Op_Value ct);
+Retry_Op_Value
+     ddc_get_max_write_read_exchange_tries();
+
+void ddc_report_write_only_stats(int depth);
+void ddc_report_write_read_stats(int depth);
+
+// Statistics - from ddc_multi_part_io.c:
+#ifdef OLD
+void ddc_reset_multi_part_read_stats();
+void ddc_reset_multi_part_write_stats();
+#endif
+void ddc_report_multi_part_read_stats(int depth);
+void ddc_report_multi_part_write_stats(int depth);
+
+void ddc_report_ddc_stats(int depth);
+
+// Retry management
+// void ddc_set_max_multi_part_read_tries(int ct);
+Retry_Op_Value ddc_get_max_multi_part_read_tries();
+
+// void ddc_set_max_multi_part_write_tries(int ct);
+Retry_Op_Value  ddc_get_max_multi_part_write_tries();
+
+
+
 void     try_data_init();
 bool     try_data_lock();
 void     try_data_unlock(bool this_function_owns_lock);

@@ -287,77 +287,6 @@ ddc_close_display(Display_Handle * dh) {
 }
 
 
-//
-// Retry Management and Statistics
-//
-
-// constants in parms.h:
-// static int max_write_only_exchange_tries =  INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES;
-// static int max_write_read_exchange_tries =  INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES;
-
-
-// static Try_Data * write_read_stats_rec = NULL;
-// static Try_Data * write_only_stats_rec = NULL;
-
-#ifdef OUT
-void ddc_reset_write_read_stats() {
-   try_data_reset2(WRITE_READ_TRIES_OPE);
-}
-
-void ddc_reset_write_only_stats() {
-   try_data_reset2(WRITE_ONLY_TRIES_OP);
-}
-
-#endif
-
-
-void ddc_report_write_read_stats(int depth) {
-   try_data_report2(WRITE_READ_TRIES_OP, depth);
-}
-
-
-void ddc_report_write_only_stats(int depth) {
-   try_data_report2(WRITE_ONLY_TRIES_OP, depth);
-}
-
-
-#ifdef OLD
-void ddc_set_max_write_only_exchange_tries(int ct) {
-   assert(ct > 0 && ct <= MAX_MAX_TRIES);
-   max_write_only_exchange_tries = ct;
-   try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, ct);
-}
-#endif
-
-
-Retry_Op_Value ddc_get_max_write_only_exchange_tries() {
-   // int v1 = max_write_only_exchange_tries;
-   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
-   // assert (v1 == v2);
-   return v2;
-}
-
-#ifdef OLD
-void ddc_set_max_write_read_exchange_tries(int ct) {
-   assert(ct > 0 && ct <= MAX_MAX_TRIES);
-   max_write_read_exchange_tries = ct;
-   try_data_set_maxtries2(WRITE_READ_TRIES_OPE, ct);
-}
-#endif
-
-Retry_Op_Value ddc_get_max_write_read_exchange_tries() {
-   bool debug = false;
-   // DBGMSF(debug, "------------------------------------");
-   // int v1 = max_write_read_exchange_tries;
-   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
-   // DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
-   DBGMSF(debug, "try_data_get_max_tries2(WRITE_READ_TRIES_OP) returned %d", v2);
-   // if (v1 != v2)
-      // DBGMSG("=========================>> Values to not match!!!");
-   // assert (v1 == v2);
-   return v2;
-}
-
 
 
 // work in progress
@@ -1084,6 +1013,8 @@ init_ddc_packet_io_func_name_table() {
    ADD_FUNC(ddc_write_read_raw);
    ADD_FUNC(ddc_write_read);
    ADD_FUNC(ddc_write_read_with_retry);
+   ADD_FUNC(ddc_write_only);
+   ADD_FUNC(ddc_write_only_with_retry);
 #undef ADD_FUNC
 }
 

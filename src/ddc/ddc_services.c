@@ -46,35 +46,16 @@
 // Statistics
 //
 
-/** Resets all DDC level statistics */
-void ddc_reset_ddc_stats() {
-   try_data_reset2_all();
-#ifdef OLD
-   ddc_reset_write_only_stats();
-   ddc_reset_write_read_stats();
-   ddc_reset_multi_part_read_stats();
-   ddc_reset_multi_part_write_stats();
-#endif
-}
-
-
-/** Reports all DDC level statistics
- * \param depth logical indentation depth
- */
-void ddc_report_ddc_stats(int depth) {
-   // rpt_nl();
-   // retry related stats
-   ddc_report_max_tries(0);
-   ddc_report_write_only_stats(0);
-   ddc_report_write_read_stats(0);
-   ddc_report_multi_part_read_stats(0);
-   ddc_report_multi_part_write_stats(0);
-}
+// /** Resets all DDC level statistics */
+// void ddc_reset_ddc_stats() {
+//    try_data_reset2_all();
+// }
 
 
 /** Resets all statistics */
 void ddc_reset_stats_main() {
-   ddc_reset_ddc_stats();
+   // ddc_reset_ddc_stats();
+   try_data_reset2_all();
    reset_execution_stats();
 }
 
@@ -156,29 +137,6 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
        // trivial affect on performance.
        //dbgrpt_per_thread_data_locks(depth+1);
    }
-}
-
-
-/** Reports the current max try settings.
- *
- *  \param depth logical indentation depth
- */
-void ddc_report_max_tries(int depth) {
-   rpt_vstring(depth, "Maximum Try Settings:");
-   rpt_vstring(depth, "Operation Type                    Current  Default");
-   rpt_vstring(depth, "Write only exchange tries:       %8d %8d",
-               ddc_get_max_write_only_exchange_tries(),
-               INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Write read exchange tries:       %8d %8d",
-               ddc_get_max_write_read_exchange_tries(),
-               INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part read exchange tries:  %8d %8d",
-               ddc_get_max_multi_part_read_tries(),
-               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
-               ddc_get_max_multi_part_write_tries(),
-               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
-   rpt_nl();
 }
 
 

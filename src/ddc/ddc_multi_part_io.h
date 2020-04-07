@@ -21,22 +21,6 @@
 #include "base/status_code_mgt.h"
 
 
-// Statistics
-#ifdef OLD
-void ddc_reset_multi_part_read_stats();
-void ddc_reset_multi_part_write_stats();
-#endif
-void ddc_report_multi_part_read_stats(int depth);
-void ddc_report_multi_part_write_stats(int depth);
-
-// Retry management
-// void ddc_set_max_multi_part_read_tries(int ct);
-Retry_Op_Value ddc_get_max_multi_part_read_tries();
-
-// void ddc_set_max_multi_part_write_tries(int ct);
-Retry_Op_Value  ddc_get_max_multi_part_write_tries();
-
-
 Error_Info *
 multi_part_read_with_retry(
    Display_Handle * dh,

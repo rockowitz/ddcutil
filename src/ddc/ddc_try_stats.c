@@ -222,6 +222,127 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
 
 
 //
+// Retry Management and Statistics - moved from ddc_packet_io.c
+//
+
+
+void ddc_report_write_read_stats(int depth) {
+   try_data_report2(WRITE_READ_TRIES_OP, depth);
+}
+
+
+void ddc_report_write_only_stats(int depth) {
+   try_data_report2(WRITE_ONLY_TRIES_OP, depth);
+}
+
+
+Retry_Op_Value ddc_get_max_write_only_exchange_tries() {
+   // int v1 = max_write_only_exchange_tries;
+   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
+   // assert (v1 == v2);
+   return v2;
+}
+
+
+Retry_Op_Value ddc_get_max_write_read_exchange_tries() {
+   bool debug = false;
+   // DBGMSF(debug, "------------------------------------");
+   // int v1 = max_write_read_exchange_tries;
+   Retry_Op_Value v2 = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
+   // DBGMSF(debug, "max_write_read_exchange_tries = %d", max_write_read_exchange_tries);
+   DBGMSF(debug, "try_data_get_max_tries2(WRITE_READ_TRIES_OP) returned %d", v2);
+   // if (v1 != v2)
+      // DBGMSG("=========================>> Values to not match!!!");
+   // assert (v1 == v2);
+   return v2;
+}
+
+
+
+
+/** Reports the statistics for multi-part reads */
+void ddc_report_multi_part_read_stats(int depth) {
+   try_data_report2(MULTI_PART_READ_OP, depth);
+}
+
+
+/** Reports the statistics for multi-part writes */
+void ddc_report_multi_part_write_stats(int depth) {
+   try_data_report2(MULTI_PART_WRITE_OP, depth);
+}
+
+
+
+
+/** Gets the current maximum number of multi-part read exchange tries allowed
+  * @return maximum number of tries
+  */
+Retry_Op_Value ddc_get_max_multi_part_read_tries() {
+   bool debug = false;
+   Retry_Op_Value v1 = try_data_get_maxtries2(MULTI_PART_READ_OP);
+   // int v2 = max_multi_part_read_tries;
+   DBGMSF(debug, "try_data_get_max_tries2(MULTI_PART_READ_OP) = %d", v1);
+   // DBGMSF(debug, "max_multi_part_read_tries = %d", max_multi_part_read_tries);
+   // if (v1 != v2){
+   //    DBGMSG("=============================> Values to not match!!!");
+   // }
+   // assert(v1 == v2);
+   return v1;
+}
+
+
+/** Gets the current maximum number of multi-part write exchange tries allowed
+  * @return maximum number of tries
+  */
+Retry_Op_Value ddc_get_max_multi_part_write_tries() {
+   Retry_Op_Value v1 = try_data_get_maxtries2(MULTI_PART_WRITE_OP);
+   // int v2 = max_multi_part_write_tries;
+   // assert(v1 == v2);
+   return v1;
+}
+
+
+
+// from ddc_services.c
+/** Reports the current max try settings.
+ *
+ *  \param depth logical indentation depth
+ */
+void ddc_report_max_tries(int depth) {
+   rpt_vstring(depth, "Maximum Try Settings:");
+   rpt_vstring(depth, "Operation Type                    Current  Default");
+   rpt_vstring(depth, "Write only exchange tries:       %8d %8d",
+               ddc_get_max_write_only_exchange_tries(),
+               INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Write read exchange tries:       %8d %8d",
+               ddc_get_max_write_read_exchange_tries(),
+               INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Multi-part read exchange tries:  %8d %8d",
+               ddc_get_max_multi_part_read_tries(),
+               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
+               ddc_get_max_multi_part_write_tries(),
+               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
+   rpt_nl();
+}
+
+
+
+/** Reports all DDC level statistics
+ * \param depth logical indentation depth
+ */
+void ddc_report_ddc_stats(int depth) {
+   // rpt_nl();
+   // retry related stats
+   ddc_report_max_tries(0);
+   ddc_report_write_only_stats(0);
+   ddc_report_write_read_stats(0);
+   ddc_report_multi_part_read_stats(0);
+   ddc_report_multi_part_write_stats(0);
+}
+
+
+//
 // Retry counters
 //
 
