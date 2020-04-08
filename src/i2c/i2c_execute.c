@@ -149,52 +149,7 @@ fileio_reader(
       }
    }
    else {
-#ifdef EXPERIMENTAL
-      // bool read_with_timeout = true;
-      if (read_with_timeout) {
-         fd_set rfds;
-         struct timeval tv;
-         int retval;
-         FD_ZERO(&rfds);
-         FD_SET(fd, &rfds);
-         // DBGMSG("Just checking... FD_ISSET(%d) = %d", fd, FD_ISSET(fd, &rfds)); // returns 1 as expected
 
-         int seconds = 2;
-         tv.tv_sec = seconds;
-         tv.tv_usec = 0;
-
-         // uint64_t start_time = cur_realtime_nanosec();
-         // wrong: fd might not be highest file descriptor if async operations
-         RECORD_IO_EVENTX(
-               fd,
-               IE_OTHER,
-               (     retval = select(fd+1, &rfds, NULL, NULL, &tv) )
-         );
-         int errsv = errno;
-         // uint64_t end_time = cur_realtime_nanosec();
-         // uint64_t elapsed_nanos = end_time - start_time;
-         // DBGMSG("select() returned %d after %"PRIu64" nanosec, %"PRIu64" millisec, remaining tv %ld,%ld",
-         //       retval, elapsed_nanos, elapsed_nanos/(1000*1000), tv.tv_sec, tv.tv_usec);
-         if (retval == -1) {
-            DBGMSG("select() returned %d, errno=%d", retval, errsv);
-            rc = -errsv;
-            return rc;
-         }
-         else if (retval) {
-            assert (retval == 1);
-            assert ( FD_ISSET(fd,&rfds) );
-         //    DBGMSG("select() returned 1, proceeding to read()");
-         }
-         else {
-            DBGMSG("%d seconds timeout fired. retval=%d, errno=%d, remaining tv %ld,%ld",
-                  seconds, retval, errsv, tv.tv_sec, tv.tv_usec);
-            assert(retval == 0);
-            rc = -ETIMEDOUT;
-            return rc;
-         }
-      }
-      // DBGMSG("Calling read()");
-#endif
 // #ifdef USE_POLL
       if (read_with_timeout) {
          struct pollfd pfds[1];
