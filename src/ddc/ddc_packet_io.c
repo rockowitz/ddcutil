@@ -664,7 +664,7 @@ ddc_write_read_with_retry(
    Error_Info * try_errors[MAX_MAX_TRIES];
 
    // assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
-   int max_tries = ddc_get_max_write_read_exchange_tries();
+   int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    assert(max_tries >= 0);
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_tries && psc < 0 && retryable;
@@ -935,7 +935,7 @@ ddc_write_only_with_retry(
    bool               retryable;
    Error_Info *       try_errors[MAX_MAX_TRIES];
 
-   int max_tries = ddc_get_max_write_only_exchange_tries();
+   int max_tries = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
    assert(max_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
        tryctr < max_tries && psc < 0 && retryable;
