@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
 
    // experimental timeout of i2c read()
    if (parsed_cmd->flags & CMD_FLAG_F1) {
-      set_fileio_reader_use_timeout(true);
+      set_i2c_fileio_use_timeout(true);
    }
 
 

@@ -40,9 +40,18 @@
 #include "i2c_execute.h"
 
 
-//
-// Basic functions for reading and writing to I2C bus.
-//
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
+
+static bool read_with_timeout  = false;
+static bool write_with_timeout = true;
+
+void set_i2c_fileio_use_timeout(bool yesno) {
+   // DBGMSG("Setting  %s", sbool(yesno));
+   read_with_timeout  = yesno;
+   write_with_timeout = yesno;
+}
+
 
 /** Writes to i2c bus using write()
  *
@@ -63,10 +72,43 @@
 Status_Errno_DDC
 fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
+   int rc = 0;
 
-   int rc = write(fd, pbytes, bytect);
+   // #ifdef USE_POLL
+   if (write_with_timeout) {
+      struct pollfd pfds[1];
+      pfds[0].fd = fd;
+      pfds[0].events = POLLOUT;
+
+      int pollrc;
+      int timeout_msec = 100;
+      RECORD_IO_EVENTX(
+            fd,
+            IE_OTHER,
+            (      pollrc = poll(pfds, 1, timeout_msec) )
+      );
+
+      int errsv = errno;
+      if (pollrc < 0)  { //  i.e. -1
+         DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
+         rc = -errsv;
+         return rc;
+      }
+      else if (pollrc == 0) {
+         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+         rc = -ETIMEDOUT;
+         return rc;
+      }
+      else {
+         // DBGMSG("poll() returned normally");
+         assert( pfds[0].revents & POLLOUT );
+      }
+   }
+   // #endif
+
+   rc = write(fd, pbytes, bytect);
    // per write() man page:
    // if >= 0, number of bytes actually written, must be <= bytect
    // if -1,   error occurred, errno is set
@@ -82,16 +124,8 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
       rc = -errsv;
    }
 
-   DBGMSF(debug, "Done. Returning: %s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(rc));
    return rc;
-}
-
-
-static bool read_with_timeout = false;
-
-void set_fileio_reader_use_timeout(bool yesno) {
-   // DBGMSG("Setting  %s", sbool(yesno));
-   read_with_timeout = yesno;
 }
 
 
@@ -120,7 +154,7 @@ fileio_reader(
       Byte * readbuf)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
                  fd, filename_for_fd_t(fd),
                  bytect, slave_address, sbool(single_byte_reads));
 
@@ -186,10 +220,9 @@ fileio_reader(
          IE_READ,
          ( rc = read(fd, readbuf, bytect) )
       );
-      // rc = read(fd, readbuf, bytect);
       // per read() man page:
-      // if >= 0, number of bytes actually read
-      // if -1,   error occurred, errno is set
+      // if rc >= 0, number of bytes actually read
+      // if rc ==-1, error occurred, errno is set
       if (rc >= 0) {
          if (rc == bytect)
            rc = 0;
@@ -202,7 +235,7 @@ fileio_reader(
       DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
-   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -244,7 +277,7 @@ ioctl_writer(
       Byte * pbytes)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
 #ifdef EXPLORING
@@ -306,7 +339,7 @@ ioctl_writer(
       rc = -errsv;
    }
 
-   DBGMSF(debug, "Returning %d", rc);
+   DBGTRC(debug, TRACE_GROUP, "Returning %d", rc);
    return rc;
 }
 
@@ -331,7 +364,7 @@ ioctl_reader1(
       int    bytect,
       Byte * readbuf) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
 
    struct i2c_msg              messages[1];
@@ -385,14 +418,14 @@ ioctl_reader1(
    else if (rc < 0)
       rc = -errsv;
    // DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
-   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 
 
 Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
    int rc = 0;
 
@@ -406,7 +439,7 @@ Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, in
       rc = ioctl_reader1(fd, slave_address, bytect, readbuf);
    }
 
-   DBGMSF(debug, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
 

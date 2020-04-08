@@ -34,7 +34,7 @@ Status_Errno_DDC fileio_writer(
       Byte * pbytes);
 
 
-void set_fileio_reader_use_timeout(bool yesno);
+void set_i2c_fileio_use_timeout(bool yesno);
 
 Status_Errno_DDC
 fileio_reader (
