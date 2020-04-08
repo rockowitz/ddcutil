@@ -11,8 +11,11 @@
 #ifndef TRY_STATS_H_
 #define TRY_STATS_H_
 
+#include <stdbool.h>
+
 #include "ddcutil_types.h"
 
+#include "base/core.h"
 #include "base/parms.h"
 
 void     try_data_init();
