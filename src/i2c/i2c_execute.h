@@ -27,14 +27,16 @@ typedef Status_Errno_DDC (*I2C_Reader)(
       int    bytect,
       Byte * readbuf);
 
+
+void
+set_i2c_fileio_use_timeout(
+      bool yesno);
+
 Status_Errno_DDC fileio_writer(
       int    fd,
       Byte   slave_address,
       int    bytect,
       Byte * pbytes);
-
-
-void set_i2c_fileio_use_timeout(bool yesno);
 
 Status_Errno_DDC
 fileio_reader (
@@ -58,9 +60,5 @@ ioctl_reader(
       bool   read_bytewise,
       int    bytect,
       Byte * readbuf);
-
-// Don't work:
-Status_Errno_DDC i2c_smbus_write_i2c_block_data_writer(int fd, int bytect, Byte * bytes_to_write);
-Status_Errno_DDC i2c_smbus_read_i2c_block_data_reader(int fd, int bytect, Byte * readbuf);
 
 #endif /* I2C_EXECUTE_H_ */
