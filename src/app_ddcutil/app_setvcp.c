@@ -265,7 +265,7 @@ app_set_vcp_value(
 {
    FILE * ferr = stderr;
    bool debug = false;
-   DBGMSF(debug,"Starting");
+   DBGMSF(debug,"Starting. feature=%s, new_value=%s, force=%s", feature, new_value, sbool(force));
    assert(new_value && strlen(new_value) > 0);
 
    DDCA_Status                ddcrc = 0;
@@ -411,7 +411,7 @@ app_set_vcp_value(
 bye:
    dfm_free(dfm);  // handles dfm == NULL
 
-   DBGMSF(debug, "Returning: %s", errinfo_summary(ddc_excp));
+   DBGMSF(debug, "Done.     Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
