@@ -806,22 +806,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
-#ifdef OLD
-            if (parsed_cmd->argct == 3) {
-               if (streq(parsed_cmd->args[1],"+") || streq(parsed_cmd->args[1], "-")) {
-                  char * a1 = parsed_cmd->args[1];
-                  char * a2 = parsed_cmd->args[2];
-                  char * newarg1 = calloc(1, 1 + strlen(a2) + 1);
-                  strcpy(newarg1, a1);
-                  strcat(newarg1, a2);
-                  parsed_cmd->args[1] = newarg1;
-                  parsed_cmd->argct = 2;
-                  free(a1);
-                  free(a2);
-               }
-            }
-#endif
-
             for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
                // DBGMSG("argpos=%d, argct=%d", argpos, parsed_cmd->argct);
                if ( (argpos+1) == parsed_cmd->argct) {
@@ -829,7 +813,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                   ok = false;
                   break;
                }
-
                char * a1 = parsed_cmd->args[argpos+1];
                if ( streq(a1,"+") || streq(a1,"-") ) {
                   if ( (argpos+2) == parsed_cmd->argct) {
@@ -853,25 +836,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                }
             }
          }
-
-         // validate options vs commands
-
-#ifdef OLD
-         // unnecessary - validate_output_levels() handles this
-         switch (parsed_cmd->cmd_id) {
-         case (CMDID_PROBE):
-               if (parsed_cmd->output_level == DDCA_OL_TERSE) {
-                  // don't want to deal with how to report errors, write-only features
-                  fprintf(stderr, "probe command: option --terse unsupported");
-                  ok = false;
-               }
-               break;
-
-         default:
-            break;
-         }
-#endif
-
       }  // recognized command
    }
 
