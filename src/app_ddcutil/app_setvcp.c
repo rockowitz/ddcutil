@@ -3,7 +3,7 @@
  *  Implement the SETVCP command
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <string.h>
 /** \endcond */
+
+#include "public/ddcutil_types.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -265,7 +267,7 @@ app_set_vcp_value(
 {
    FILE * ferr = stderr;
    bool debug = false;
-   DBGMSF(debug,"Starting. feature=%s, new_value=%s, force=%s", feature, new_value, sbool(force));
+   DBGTRC(debug,DDCA_TRC_TOP, "Starting. feature=%s, new_value=%s, force=%s", feature, new_value, sbool(force));
    assert(new_value && strlen(new_value) > 0);
 
    DDCA_Status                ddcrc = 0;
@@ -411,7 +413,7 @@ app_set_vcp_value(
 bye:
    dfm_free(dfm);  // handles dfm == NULL
 
-   DBGMSF(debug, "Done.     Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC(debug, DDCA_TRC_TOP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
