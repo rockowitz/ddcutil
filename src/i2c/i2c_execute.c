@@ -9,13 +9,10 @@
 /** \cond */
 #include "ddcutil_types.h"
 
-// #define _GNU_SOURCE
-// #include <signal.h>
-#include <poll.h>
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +27,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
-#include "base/feature_sets.h"
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
 #include "base/tuned_sleep.h"
