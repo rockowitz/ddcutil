@@ -806,6 +806,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          }
 
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
+#ifdef OLD
             if (parsed_cmd->argct == 3) {
                if (streq(parsed_cmd->args[1],"+") || streq(parsed_cmd->args[1], "-")) {
                   char * a1 = parsed_cmd->args[1];
@@ -817,6 +818,38 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                   parsed_cmd->argct = 2;
                   free(a1);
                   free(a2);
+               }
+            }
+#endif
+
+            for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
+               // DBGMSG("argpos=%d, argct=%d", argpos, parsed_cmd->argct);
+               if ( (argpos+1) == parsed_cmd->argct) {
+                  fprintf(stderr, "Missing feature value\n");
+                  ok = false;
+                  break;
+               }
+
+               char * a1 = parsed_cmd->args[argpos+1];
+               if ( streq(a1,"+") || streq(a1,"-") ) {
+                  if ( (argpos+2) == parsed_cmd->argct) {
+                       fprintf(stderr, "Missing relative feature value\n");
+                       ok = false;
+                       break;
+                  }
+                  char * a2 = parsed_cmd->args[argpos+2];
+                  char * newval = calloc(1, 1 + strlen(a2) + 1);
+                  strcpy(newval, a1);
+                  strcat(newval, a2);
+                  free(a1);
+                  free(a2);
+                  parsed_cmd->args[argpos+1] = newval;
+                  int ndx = 0;
+                  for (ndx = argpos+2; ndx < (parsed_cmd->argct - 1); ndx++) {
+                     parsed_cmd->args[ndx] = parsed_cmd->args[ndx+1];
+                  }
+                  parsed_cmd->args[parsed_cmd->argct - 1] = NULL;
+                  parsed_cmd->argct--;
                }
             }
          }
@@ -852,8 +885,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    //    free(trace_classes);   // trying to avoid valgrind error re g_option_context_parse() - doesn't solve it
    // }
 
-   if (debug)
+   if (debug) {
+      DBGMSG("ok=%s", sbool(ok));
       dbgrpt_parsed_cmd(parsed_cmd, 0);
+   }
 
    if (!ok) {
       free_parsed_cmd(parsed_cmd);
