@@ -17,6 +17,7 @@
 
 #include "util/debug_util.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 
 #include "base/parms.h"
 #include "base/dynamic_sleep.h"
@@ -67,7 +68,8 @@ void enable_sleep_suppression(bool enable) {
  * \param msg         text to append to trace message
  */
 void tuned_sleep_with_tracex(
-      DDCA_IO_Mode     io_mode,
+      // DDCA_IO_Mode     io_mode,
+      Display_Handle * dh,
       Sleep_Event_Type event_type,
       int              special_sleep_time_millis,
       const char *     func,
@@ -75,12 +77,15 @@ void tuned_sleep_with_tracex(
       const char *     filename,
       const char *     msg)
 {
-   bool debug = false;
-   // DBGMSF(debug, "Starting. Sleep event type = %s", sleep_event_name(event_type));
+   bool debug = true;
+   DBGMSF(debug, "Starting. Sleep event type = %s, dh=%s", sleep_event_name(event_type), dh_repr_t(dh));
    assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
            (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );
 
+   DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
+
    int spec_sleep_time_millis = 0;    // should be a default
+   bool deferrable_sleep = false;
 
    if (event_type == SE_SPECIAL)
       spec_sleep_time_millis = special_sleep_time_millis;
@@ -91,23 +96,27 @@ void tuned_sleep_with_tracex(
       case DDCA_IO_I2C:
          switch(event_type) {
          case (SE_WRITE_TO_READ):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
                break;
-         case (SE_POST_WRITE):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+         case (SE_POST_WRITE):  // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
+               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+               deferrable_sleep = true;
                break;
-         case (SE_POST_OPEN):
+         case (SE_POST_OPEN):   // needed?
                spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               deferrable_sleep = true;   // ??
                break;
          case (SE_POST_READ):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+               deferrable_sleep = true;
+               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
                if (sleep_suppression_enabled) {
                   DBGMSF(debug, "Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
                   return;  // TEMP
                }
                break;
          case (SE_POST_SAVE_SETTINGS):
-               spec_sleep_time_millis = DDC_TIMEOUT_POST_SAVE_SETTINGS;   // per DDC spec
+               deferrable_sleep = true;
+               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS;   // per DDC spec
                break;
          case SE_DDC_NULL:
               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
@@ -131,8 +140,15 @@ void tuned_sleep_with_tracex(
          case SE_PRE_MULTI_PART_READ:        // before reading capabilitis
             spec_sleep_time_millis = 200;
             break;
-         case SE_MULTI_PART_READ_TO_WRITE:
+         case SE_MULTI_PART_READ_TO_WRITE:   // unused
             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            break;
+         case SE_BETWEEN_CAP_TABLE_SEGMENTS:
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
+            break;
+         case SE_POST_CAP_TABLE_COMMAND:
+            deferrable_sleep = true;
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
             break;
          default:
               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
@@ -164,10 +180,12 @@ void tuned_sleep_with_tracex(
       }
    }
 
+
+   DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));   // avoid unused-but-set-variable warning
+
    // TODO:
    //   get error rate (total calls, total errors), current adjustment value
    //   adjust by time since last i2c event
-
 
    double dynamic_sleep_adjustment_factor = dsa_get_sleep_adjustment();
 
@@ -196,8 +214,30 @@ void tuned_sleep_with_tracex(
    else
       g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
+   if (deferrable_sleep) {
+      uint64_t new_deferred_time = cur_realtime_nanosec() + (1000 *1000) * (int) adjusted_sleep_time_millis;
+      if (new_deferred_time > dh->dref->next_i2c_io_after)
+         dh->dref->next_i2c_io_after = new_deferred_time;
+   }
+   // else {    // FUTURE
    sleep_millis_with_tracex(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
+   // }
 
    DBGMSF(debug, "Done");
 }
+
+
+void deferred_sleep(Display_Handle * dh, const char * func, int lineno, const char * filename) {
+   bool debug = true;
+   uint64_t curtime = cur_realtime_nanosec();
+   DBGMSF(debug, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
+                 curtime, dh->dref->next_i2c_io_after);
+   if (dh->dref->next_i2c_io_after > curtime) {
+      int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
+      DBGMSF(debug, "sleep_time=%d", sleep_time);
+      sleep_millis_with_tracex(sleep_time, func, lineno, filename, "deferred");
+   }
+}
+
+
 
