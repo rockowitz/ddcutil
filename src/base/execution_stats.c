@@ -492,7 +492,8 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
 // Sleep Strategy
 //
 
-// names for Sleep_Event enum values
+
+// Names for Sleep_Event enum values
 static const char * sleep_event_names[] = {
       "SE_WRITE_TO_READ",
       "SE_POST_OPEN",
@@ -503,6 +504,8 @@ static const char * sleep_event_names[] = {
       "SE_PRE_EDID",
       "SE_PRE_MULTI_PART_READ",
       "SE_MULTI_PART_READ_TO_WRITE",
+      "SE_BETWEEN_CAP_TABLE_SEGMENTS",
+      "SE_POST_CAP_TABLE_COMMAND",
       "SE_OTHER",
       "SE_SPECIAL",
      };

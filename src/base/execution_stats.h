@@ -90,8 +90,10 @@ typedef enum {
    SE_DDC_NULL,              ///< after DDC Null response
    SE_POST_SAVE_SETTINGS,    ///< after DDC Save Current Settings command
    SE_PRE_EDID,              ///< before reading EDID
-   SE_PRE_MULTI_PART_READ,      ///< before reading capabilitis
+   SE_PRE_MULTI_PART_READ,      ///< before reading capabilities
    SE_MULTI_PART_READ_TO_WRITE, ///< within segments of multi-part read
+   SE_BETWEEN_CAP_TABLE_SEGMENTS,  ///< between segments of Capabilities or a Table command
+   SE_POST_CAP_TABLE_COMMAND,
    SE_OTHER,
    SE_SPECIAL                ///< explicit time specified
 } Sleep_Event_Type;
