@@ -2,14 +2,14 @@
  * Display Specification
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
 #define DISPLAYS_H_
 
 /** \cond **/
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #include "util/coredefs.h"
@@ -195,6 +195,7 @@ typedef struct _display_ref {
    void *                   detail;    // I2C_Bus_Info, ADL_Display_Detail, or Usb_Monitor_Info
    Display_Async_Rec *      async_rec;
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
+   uint64_t                 next_i2c_io_after;     // nanosec
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
