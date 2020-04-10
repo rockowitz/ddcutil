@@ -18,13 +18,12 @@
 
 #define DDC_TIMEOUT_MILLIS_DEFAULT                   50  ///< Normal timeout in DDC spec
 
-#ifdef UNUSED
-/** Timeout between DDC Get Feature Request and Get Feature Reply */
-#define DDC_TIMEOUT_MILLIS_POST_GETVCP_WRITE         40  // per spec
-#endif
-
+#define DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ 40   ///< Between DDC Get Feature Request and Get Feature Reply
 #define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE         50   ///< Following DDC Set VCP Feature command
-#define DDC_TIMEOUT_POST_SAVE_SETTINGS              200   ///< Following DDC Save Settings
+#define DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS              200   ///< Following DDC Save Settings
+#define DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND              50   ///< spec ambiguous
+#define DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS      50
+#define DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND           50   ///< needed? spec ambiguous
 
 #ifdef UNUSED
 #define DDC_TIMEOUT_MILLIS_POST_CAPABILITIES_READ    50
