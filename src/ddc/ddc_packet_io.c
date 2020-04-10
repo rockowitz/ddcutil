@@ -209,7 +209,7 @@ ddc_open_display(
 
    if (ddcrc == 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
-         TUNED_SLEEP_WITH_TRACE(dref->io_path.io_mode, SE_POST_OPEN, NULL);
+         TUNED_SLEEP_WITH_TRACE(dh, SE_POST_OPEN, NULL);
       dref->flags |= DREF_OPEN;
    }
    else {
@@ -359,7 +359,7 @@ DDCA_Status ddc_i2c_write_read_raw(
                            get_packet_start(request_packet_ptr)+1 );
    DBGMSF(debug, "invoke_i2c_writer() returned %d\n", rc);
    if (rc == 0) {
-      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_WRITE_TO_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, NULL);
       // tuned_sleep_i2c_with_trace(SE_WRITE_TO_READ, __func__, NULL);
 
       // ALTERNATIVE_THAT_DIDNT_WORK:
@@ -370,7 +370,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       rc = invoke_i2c_reader(dh->fd, 0x37, read_bytewise, max_read_bytes, readbuf);
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
-      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_POST_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, NULL);
 
       if (rc == 0 && all_bytes_zero(readbuf, max_read_bytes)) {
          DDCMSG(debug, "All zero response detected in %s", __func__);
@@ -433,7 +433,7 @@ static DDCA_Status ddc_adl_write_read_raw(
    }
    else {
       // tuned_sleep(DDCA_IO_ADL, SE_WRITE_TO_READ);
-      TUNED_SLEEP_WITH_TRACE(DDCA_IO_ADL, SE_WRITE_TO_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, NULL);
       psc = adlshim_ddc_read_only(
             dh,
             readbuf,
@@ -838,11 +838,12 @@ ddc_write_read_with_retry(
  */
 static Status_Errno_DDC
 ddc_i2c_write_only(
-         int           fh,
+         Display_Handle * dh,
          DDC_Packet *  request_packet_ptr
         )
 {
    bool debug = false;
+   int fh = dh->fd;
    DBGTRC0(debug, TRACE_GROUP, "Starting.");
    if (debug)
       dbgrpt_packet(request_packet_ptr, 1);
@@ -863,7 +864,7 @@ ddc_i2c_write_only(
             ? SE_POST_SAVE_SETTINGS
             : SE_POST_WRITE;
    // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
-   TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, sleep_type, NULL);
+   TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
    DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(rc) );
    return rc;
 }
@@ -886,7 +887,7 @@ ddc_write_only(
    DDCA_Status psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
    if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
-      psc = ddc_i2c_write_only(dh->fd, request_packet_ptr);
+      psc = ddc_i2c_write_only(dh, request_packet_ptr);
    }
    else {
       psc = adlshim_ddc_write_only(
