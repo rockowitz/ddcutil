@@ -26,6 +26,7 @@ void   tsd_dsa_enable_globally(bool enabled);
 void   tsd_dsa_enable(bool enabled);
 bool   tsd_dsa_is_enabled();
 void   tsd_set_dsa_enabled_default(bool enabled);
+bool   tsd_get_dsa_enabled_default();
 
 //
 // Sleep time adjustments

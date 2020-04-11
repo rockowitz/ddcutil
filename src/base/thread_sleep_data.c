@@ -509,3 +509,7 @@ void tsd_set_dsa_enabled_default(bool enabled) {
    default_dynamic_sleep_enabled = enabled;
 }
 
+bool tsd_get_dsa_enabled_default() {
+   return default_dynamic_sleep_enabled;
+}
+
