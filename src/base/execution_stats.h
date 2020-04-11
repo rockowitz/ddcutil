@@ -91,8 +91,8 @@ typedef enum {
    SE_POST_SAVE_SETTINGS,    ///< after DDC Save Current Settings command
    SE_PRE_EDID,              ///< before reading EDID
    SE_PRE_MULTI_PART_READ,      ///< before reading capabilities
-   SE_MULTI_PART_READ_TO_WRITE, ///< within segments of multi-part read
-   SE_BETWEEN_CAP_TABLE_SEGMENTS,  ///< between segments of Capabilities or a Table command
+   SE_MULTI_PART_WRITE_TO_READ, ///< within segments of multi-part read
+   SE_AFTER_EACH_CAP_TABLE_SEGMENT,  ///< between segments of Capabilities or a Table command
    SE_POST_CAP_TABLE_COMMAND,
    SE_OTHER,
    SE_SPECIAL                ///< explicit time specified
