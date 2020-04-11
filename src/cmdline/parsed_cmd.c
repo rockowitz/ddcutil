@@ -131,11 +131,22 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
 
    rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
+#ifdef REF
+   CMD_FLAG_TIMEOUT_I2C_IO    = 0x400000,
+   CMD_FLAG_REDUCE_SLEEPS  = 0x800000,
+#endif
+   rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,        d1);
+   rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,         d1);
+   rpt_bool("defer sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,         d1);
+   rpt_bool("dynamic_sleep_adjustment:", NULL, parsed_cmd->flags & CMD_FLAG_DSA,         d1);
+
    rpt_int("i1",                 NULL, parsed_cmd->i1,                            d1);
    rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
    rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
    rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);
    rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
+   rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
+   rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
 }
 
 
