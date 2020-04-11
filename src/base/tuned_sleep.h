@@ -18,6 +18,9 @@
 #include "base/execution_stats.h"   // for Sleep_Event_Type
 
 void enable_sleep_suppression(bool enable);
+void enable_deferred_sleep(bool enable);
+bool is_deferred_sleep_enabled();
+bool is_sleep_suppression_enabled();
 
 // Perform tuned sleep
 void tuned_sleep_with_tracex(
@@ -44,8 +47,9 @@ void tuned_sleep_with_tracex(
    tuned_sleep_with_tracex(_dh, _event_type, __func__, __LINE__, __FILE__, _msg)
 #endif
 
-void deferred_sleep(Display_Handle * dh, const char * func, int lineno, const char * filename);
-#define DEFERRED_SLEEP(_dh) \ deferred_sleep(_dh, __func__, __LINE__, __FILE__)
+void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, const char * filename);
+#define CHECK_DEFERRED_SLEEP(_dh) \
+   check_deferred_sleep(_dh, __func__, __LINE__, __FILE__)
 
 
 
