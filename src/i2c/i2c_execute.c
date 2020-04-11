@@ -48,6 +48,10 @@ void set_i2c_fileio_use_timeout(bool yesno) {
    write_with_timeout = yesno;
 }
 
+bool get_i2c_fileio_use_timeout() {
+   return read_with_timeout;
+}
+
 
 /** Writes to i2c bus using write()
  *
