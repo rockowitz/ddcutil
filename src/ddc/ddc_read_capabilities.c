@@ -54,7 +54,6 @@ get_capabilities_into_buffer(
    Public_Status_Code psc;
    Error_Info * ddc_excp = NULL;
 
-   // SLEEP_MILLIS_WITH_TRACE(200, "Before reading capabilities");
    TUNED_SLEEP_WITH_TRACE(dh, SE_PRE_MULTI_PART_READ, "Before reading capabilities");
 
    ddc_excp = multi_part_read_with_retry(
