@@ -351,6 +351,7 @@ DDCA_Status ddc_i2c_write_read_raw(
    Byte slave_addr = request_packet_ptr->raw_bytes->bytes[0];      // 0x6e
    assert(slave_addr >> 1 == 0x37);
 
+   CHECK_DEFERRED_SLEEP(dh);
    Status_Errno_DDC rc =
          invoke_i2c_writer(
                            dh->fd,
@@ -367,6 +368,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       //    rc = invoke_single_byte_i2c_reader(dh->fd, max_read_bytes, readbuf);
       // else
 
+      CHECK_DEFERRED_SLEEP(dh);
       rc = invoke_i2c_reader(dh->fd, 0x37, read_bytewise, max_read_bytes, readbuf);
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
@@ -852,6 +854,7 @@ ddc_i2c_write_only(
    // assert(slave_address == 0x37);
    Byte slave_address = 0x37;
 
+   CHECK_DEFERRED_SLEEP(dh);
    Status_Errno_DDC rc =
          invoke_i2c_writer(fh,
                            slave_address,
