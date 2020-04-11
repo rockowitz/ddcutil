@@ -182,4 +182,6 @@ run_sed
 fix_retry
 pound_ddc
 /*.sh
+/*.py
+
 
