@@ -740,7 +740,7 @@ ddc_write_read_with_retry(
                  break;
 
             case (-ENXIO):    // no such device or address, i915 driver
-                 retryable = false;
+                 retryable = false;  // have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
                  break;
 
             default:
