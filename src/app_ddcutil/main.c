@@ -127,6 +127,51 @@ void report_stats(DDCA_Stats_Type stats) {
 }
 
 
+void report_performance_options(int depth) {
+   if (get_output_level() >= DDCA_OL_VERBOSE) {
+      int d1 = depth+1;
+      rpt_label(depth, "Performance and Retry Options:");
+      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
+      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
+      bool dsa_enabled =  tsd_get_dsa_enabled_default();
+      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
+      if ( dsa_enabled )
+        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
+      rpt_nl();
+   }
+}
+
+void report_special_options(FILE * fout, Parsed_Cmd * parsed_cmd) {
+
+    bool special_option_explained = false;
+    if (parsed_cmd->flags & CMD_FLAG_F1) {
+       f0printf(fout, "Special option --f1 enabled: Timeout on i2c-dev read()\n");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F2) {
+       f0printf(fout, "Special option --f2 enabled: Dynamic sleep adjustment\n");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F3)  {
+       f0printf(fout, "Special option --f3 enabled: Disable post-read sleep suppression\n");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F4) {
+       f0printf(fout, "Special option --f4 enabled: Read strategy tests\n");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F5) {
+       f0printf(fout, "Special option --f5 enabled: Deferred sleep\n");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->i1 >= 0) {    // default is -1
+       f0printf(fout, "Special option --i1 = %d:     Unused\n", parsed_cmd->i1);
+       special_option_explained = true;
+    }
+    if (special_option_explained)
+       f0puts("\n", fout);
+    }
+
 
 //
 // Mainline
@@ -185,7 +230,8 @@ int main(int argc, char *argv[]) {
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   enable_sleep_suppression(!(parsed_cmd->flags & CMD_FLAG_F3));
+   enable_sleep_suppression( (parsed_cmd->flags & CMD_FLAG_F3) || (parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS) );
+   enable_deferred_sleep(parsed_cmd->flags & CMD_FLAG_F5 || parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    init_ddc_services();  // n. initializes start timestamp
    // overrides setting in init_ddc_services():
@@ -211,43 +257,6 @@ int main(int argc, char *argv[]) {
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
 
-   if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-      show_reporting();
-      f0printf( fout, "%.*s%-*s%s\n",
-                0,"",
-                28, "Force I2C slave address:",
-                sbool(i2c_force_slave_addr_flag));
-      f0printf( fout, "%.*s%-*s%s\n",
-                0,"",
-                28, "User defined features:",
-                (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
-                // sbool(enable_dynamic_features));
-      f0puts("\n", fout);
-
-      bool special_option_explained = false;
-      if (parsed_cmd->flags & CMD_FLAG_F1) {
-         f0printf(fout, "Special option --f1 enabled: Timeout on i2c-dev read()\n");
-         special_option_explained = true;
-      }
-      if (parsed_cmd->flags & CMD_FLAG_F2) {
-         f0printf(fout, "Special option --f2 enabled: Dynamic sleep adjustment\n");
-         special_option_explained = true;
-      }
-      if (parsed_cmd->flags & CMD_FLAG_F3)  {
-         f0printf(fout, "Special option --f3 enabled: Disable post-read sleep suppression\n");
-         special_option_explained = true;
-      }
-      if (parsed_cmd->flags & CMD_FLAG_F4) {
-         f0printf(fout, "Special option --f4 enabled: Read strategy tests\n");
-         special_option_explained = true;
-      }
-      if (parsed_cmd->i1 >= 0) {    // default is -1
-         f0printf(fout, "Special option --i1 = %d:     Unused\n", parsed_cmd->i1);
-         special_option_explained = true;
-      }
-      if (special_option_explained)
-         f0puts("\n", fout);
-   }
 
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
@@ -296,14 +305,35 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
       tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
-      if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_F2))
+      if (parsed_cmd->sleep_multiplier > 1.0f &&
+         ( (parsed_cmd->flags & CMD_FLAG_F2) || parsed_cmd->flags & CMD_FLAG_DSA) )
+      {
          tsd_dsa_enable_globally(true);
+      }
    }
 
    // experimental timeout of i2c read()
-   if (parsed_cmd->flags & CMD_FLAG_F1) {
+   if (parsed_cmd->flags & CMD_FLAG_F1 || parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
       set_i2c_fileio_use_timeout(true);
    }
+
+   if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
+        show_reporting();
+        f0printf( fout, "%.*s%-*s%s\n",
+                  0,"",
+                  28, "Force I2C slave address:",
+                  sbool(i2c_force_slave_addr_flag));
+        f0printf( fout, "%.*s%-*s%s\n",
+                  0,"",
+                  28, "User defined features:",
+                  (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
+                  // sbool(enable_dynamic_features));
+        f0puts("\n", fout);
+
+        report_performance_options(0);
+
+        report_special_options(fout, parsed_cmd);
+     }
 
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;

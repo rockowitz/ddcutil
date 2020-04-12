@@ -177,10 +177,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef USE_USB
    gboolean enable_usb_flag = true;
 #endif
+   gboolean timeout_i2c_io_flag = false;
+   gboolean reduce_sleeps_flag  = false;
+   gboolean deferred_sleep_flag = false;
+   gboolean dsa_flag       = false;
    gboolean f1_flag        = false;
    gboolean f2_flag        = false;
    gboolean f3_flag        = false;
    gboolean f4_flag        = false;
+   gboolean f5_flag        = false;
+   gboolean f6_flag        = false;
+   gboolean debug_parse_flag = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -245,7 +252,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show retry statistics",    "stats type"},
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
@@ -258,8 +265,22 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
+
+      // performance and retry
       {"sleep-multiplier", '\0', 0,
                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
+      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
+//    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
+//                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
+      {"less-sleeps",'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
+//    {"reduce-sleeps",'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
+//    {"no-reduce-sleeps",'\0',G_OPTION_FLAG_REVERSE,
+//                               G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps (default)",  NULL},
+      {"lazy-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+//    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
+
 
       // debugging
       {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
@@ -280,6 +301,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
       {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
+      {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
+      {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
+      {"debug-parse", '\0', 0,  G_OPTION_ARG_NONE,  &debug_parse_flag,"Report parsed command",    NULL},
       {"failsim", '\0', 0,  G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
 
       // other
@@ -389,10 +413,16 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef USE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
+   SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
+   SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
+   SET_CMDFLAG(CMD_FLAG_DSA,               dsa_flag);
+   SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
    SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);
    SET_CMDFLAG(CMD_FLAG_F3,                f3_flag);
    SET_CMDFLAG(CMD_FLAG_F4,                f4_flag);
+   SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
+   SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
@@ -849,7 +879,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    //    free(trace_classes);   // trying to avoid valgrind error re g_option_context_parse() - doesn't solve it
    // }
 
-   if (debug) {
+   if (debug || debug_parse_flag) {
       DBGMSG("ok=%s", sbool(ok));
       dbgrpt_parsed_cmd(parsed_cmd, 0);
    }
