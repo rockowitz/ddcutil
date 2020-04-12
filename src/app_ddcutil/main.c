@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
    enable_sleep_suppression( (parsed_cmd->flags & CMD_FLAG_F3) || (parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS) );
    enable_deferred_sleep(parsed_cmd->flags & CMD_FLAG_F5 || parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
-   init_ddc_services();  // n. initializes start timestamp
+   init_ddc_services();   // n. initializes start timestamp
    // overrides setting in init_ddc_services():
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
