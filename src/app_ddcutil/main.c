@@ -91,22 +91,96 @@
 #endif
 
 
-// Default race class for this file
+// Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 
 //
-// Initialization and Statistics
+// Report core settings and command line options
+//
+
+static
+void report_performance_options(int depth) {
+      int d1 = depth+1;
+      rpt_label(depth, "Performance and Retry Options:");
+      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
+      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
+      bool dsa_enabled =  tsd_get_dsa_enabled_default();
+      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
+      if ( dsa_enabled )
+        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
+      rpt_nl();
+}
+
+
+static
+void report_utility_options(Parsed_Cmd * parsed_cmd, int depth) {
+
+    bool special_option_explained = false;
+    if (parsed_cmd->flags & CMD_FLAG_F1) {
+       rpt_vstring(depth, "Utility option --f1 enabled: Timeout on i2c-dev read()");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F2) {
+       rpt_vstring(depth, "Utility option --f2 enabled: Dynamic sleep adjustment");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F3)  {
+       rpt_vstring(depth, "Utility option --f3 enabled: Disable post-read sleep suppression");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F4) {
+       rpt_vstring(depth, "Utility option --f4 enabled: Read strategy tests");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->flags & CMD_FLAG_F5) {
+       rpt_vstring(depth, "Utility option --f5 enabled: Deferred sleep");
+       special_option_explained = true;
+    }
+    if (parsed_cmd->i1 >= 0) {    // default is -1
+       rpt_vstring(depth, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
+       special_option_explained = true;
+    }
+    if (special_option_explained) {
+       rpt_nl();
+       // f0puts("\n", fout);
+    }
+ }
+
+
+static
+void report_settings(Parsed_Cmd * parsed_cmd, int depth) {
+
+    show_reporting();  // uses fout()
+
+    rpt_vstring( depth, "%.*s%-*s%s",
+              0,"",
+              28, "Force I2C slave address:",
+              sbool(i2c_force_slave_addr_flag));
+    rpt_vstring( depth, "%.*s%-*s%s",
+              0,"",
+              28, "User defined features:",
+              (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
+              // sbool(enable_dynamic_features));
+    rpt_nl();
+    // f0puts("\n", output_dest);
+
+    report_performance_options(depth);
+
+    report_utility_options(parsed_cmd, depth);
+}
+
+
+//
+// Initialize and Report Statistics
 //
 
 // static long start_time_nanos;
-
 
 static
 void reset_stats() {
    ddc_reset_stats_main();
 }
-
 
 
 static
@@ -125,52 +199,6 @@ void report_stats(DDCA_Stats_Type stats) {
    //       elapsed_nanos / (1000*1000),
    //       elapsed_nanos);
 }
-
-
-void report_performance_options(int depth) {
-   if (get_output_level() >= DDCA_OL_VERBOSE) {
-      int d1 = depth+1;
-      rpt_label(depth, "Performance and Retry Options:");
-      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
-      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
-      bool dsa_enabled =  tsd_get_dsa_enabled_default();
-      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
-      if ( dsa_enabled )
-        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
-      rpt_nl();
-   }
-}
-
-void report_special_options(FILE * fout, Parsed_Cmd * parsed_cmd) {
-
-    bool special_option_explained = false;
-    if (parsed_cmd->flags & CMD_FLAG_F1) {
-       f0printf(fout, "Special option --f1 enabled: Timeout on i2c-dev read()\n");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F2) {
-       f0printf(fout, "Special option --f2 enabled: Dynamic sleep adjustment\n");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F3)  {
-       f0printf(fout, "Special option --f3 enabled: Disable post-read sleep suppression\n");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F4) {
-       f0printf(fout, "Special option --f4 enabled: Read strategy tests\n");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F5) {
-       f0printf(fout, "Special option --f5 enabled: Deferred sleep\n");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->i1 >= 0) {    // default is -1
-       f0printf(fout, "Special option --i1 = %d:     Unused\n", parsed_cmd->i1);
-       special_option_explained = true;
-    }
-    if (special_option_explained)
-       f0puts("\n", fout);
-    }
 
 
 //
@@ -318,23 +346,8 @@ int main(int argc, char *argv[]) {
    }
 
    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-        show_reporting();
-        f0printf( fout, "%.*s%-*s%s\n",
-                  0,"",
-                  28, "Force I2C slave address:",
-                  sbool(i2c_force_slave_addr_flag));
-        f0printf( fout, "%.*s%-*s%s\n",
-                  0,"",
-                  28, "User defined features:",
-                  (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
-                  // sbool(enable_dynamic_features));
-        f0puts("\n", fout);
-
-        report_performance_options(0);
-
-        report_special_options(fout, parsed_cmd);
-     }
-
+      report_settings(parsed_cmd, 0);
+   }
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
