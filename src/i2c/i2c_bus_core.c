@@ -101,7 +101,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       ptd_append_thread_description(filename);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Done.     busno=%d, Returning file descriptor: %d", busno, fd);
    return fd;
 }
 
@@ -118,8 +118,8 @@ int i2c_open_bus(int busno, Byte callopts) {
 Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
-          "Starting. fd=%d, busno=%d, callopts=%s",
-          fd, busno,  interpret_call_options_t(callopts));
+          "Starting. busno=%d, fd=%d, callopts=%s",
+          busno,  fd, interpret_call_options_t(callopts));
 
    Status_Errno result = 0;
    int rc = 0;
@@ -159,7 +159,7 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC(debug, TRACE_GROUP, "Returning: %d", result);
+   DBGTRC(debug, TRACE_GROUP, "Done.     fd=%d, busno=%d, Returning: %s", busno, fd, psc_desc(result));
    return result;
 }
 
