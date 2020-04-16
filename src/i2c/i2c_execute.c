@@ -87,7 +87,7 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
       RECORD_IO_EVENTX(
             fd,
             IE_OTHER,
-            (      pollrc = poll(pfds, 1, timeout_msec) )
+            ( pollrc = poll(pfds, 1, timeout_msec) )
       );
 
       int errsv = errno;
@@ -198,22 +198,25 @@ fileio_reader(
          RECORD_IO_EVENTX(
                fd,
                IE_OTHER,
-               (      pollrc = poll(pfds, 1, timeout_msec) )
+               ( pollrc = poll(pfds, 1, timeout_msec) )
          );
 
          int errsv = errno;
          if (pollrc < 0)  { //  i.e. -1
             DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
             rc = -errsv;
-            return rc;
+            goto bye;
          }
          else if (pollrc == 0) {
             DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
             rc = -ETIMEDOUT;
-            return rc;
+            goto bye;
          }
          else {
-            assert( pfds[0].revents & POLLIN );
+            if ( !(pfds[0].revents & POLLIN) ) {
+               DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+               // just continue, read() will fail and we'll return that status code
+            }
          }
       }
 // #endif
@@ -238,6 +241,8 @@ fileio_reader(
       DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
       rc = -errsv;
    }
+
+bye:
    DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
 }
