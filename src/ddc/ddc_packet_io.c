@@ -240,10 +240,8 @@ bye:
 Status_Errno
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
-   if (debug) {
-      DBGMSG0("Starting.");
-      dbgrpt_display_handle(dh, __func__, 1);
-   }
+   DBGMSF(debug, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
+              dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Status_Errno rc = 0;
 
    switch(dh->dref->io_path.io_mode) {
@@ -252,7 +250,7 @@ ddc_close_display(Display_Handle * dh) {
          rc = i2c_close_bus(dh->fd, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
          if (rc != 0) {
             assert(rc < 0);
-            DBGMSG("i2c_close_bus returned %d", rc);
+            DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
             COUNT_STATUS_CODE(rc);
          }
          dh->fd = -1;    // indicate invalid, in case we try to continue using dh
@@ -283,6 +281,7 @@ ddc_close_display(Display_Handle * dh) {
    unlock_distinct_display(display_id);
 
    free_display_handle(dh);
+   DBGMSF(debug, "Done.     Returning: %s", psc_desc(rc));
    return rc;
 }
 
@@ -736,6 +735,7 @@ ddc_write_read_with_retry(
                  break;
 
             case (-EBADF):
+                 // DBGMSG("EBADF");
                  retryable = false;
                  break;
 
