@@ -417,10 +417,12 @@ ddca_open_display2(
 
 DDCA_Status
 ddca_close_display(DDCA_Display_Handle ddca_dh) {
+   bool debug = false;
    free_thread_error_detail();
    assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
+   DBGMSF(debug, "Starting. dh = %s", dh_repr_t(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          rc = DDCRC_ARG;
@@ -430,6 +432,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
          rc = ddc_close_display(dh);
       }
    }
+   DBGMSF(debug, "Done.     Returning %s", psc_desc(rc));
    return rc;
 }
 
