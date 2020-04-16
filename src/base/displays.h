@@ -56,6 +56,7 @@ void init_displays();
 
 char *  io_mode_name(DDCA_IO_Mode val);
 bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
+char * dpath_short_name_t(DDCA_IO_Path * dpath);
 char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
 
 
