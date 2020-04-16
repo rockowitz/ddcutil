@@ -119,7 +119,5 @@ void app_show_parsed_capabilities(char * capabilities_string, Display_Handle * d
                  0);
            // free_parsed_capabilities(pcap);
         }
-
 }
-
 
