@@ -1,7 +1,7 @@
 /* @file ddc_display_lock.h
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAY_LOCK_H_
@@ -27,7 +27,7 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref);
 
 DDCA_Status lock_distinct_display(Distinct_Display_Ref id, Distinct_Display_Flags flags);
 
-void unlock_distinct_display(Distinct_Display_Ref id);
+DDCA_Status unlock_distinct_display(Distinct_Display_Ref id);
 
 void dbgrpt_distinct_display_descriptors(int depth);
 

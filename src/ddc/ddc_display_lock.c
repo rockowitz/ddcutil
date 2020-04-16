@@ -109,6 +109,17 @@ void init_ddc_display_lock(void) {
    display_descriptors= g_ptr_array_new();
 }
 
+// must be called when lock not held by current thread, o.w. deadlock
+char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
+   static GPrivate  repr_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&repr_key, 100);
+   g_mutex_lock(&descriptors_mutex);
+   Distinct_Display_Desc * ref = (Distinct_Display_Desc *) id;
+   assert(memcmp(ref->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   g_snprintf(buf, 100, "Distinct_Display_Ref[%s]", dpath_repr_t(&ref->io_path));
+   g_mutex_unlock(&descriptors_mutex);
+   return buf;
+}
 
 Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
    bool debug = false;
@@ -139,7 +150,8 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
    }
 
    g_mutex_unlock(&descriptors_mutex);
-   DBGMSF(debug, "Done.  Returning: %p", result);
+
+   DBGMSF(debug, "Done.  Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
    return result;
 }
 
@@ -160,7 +172,8 @@ lock_distinct_display(
 {
    DDCA_Status ddcrc = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting. id=%p", id);
+   DBGMSF(debug, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    assert(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
@@ -187,28 +200,32 @@ lock_distinct_display(
          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGMSF(debug, "Done.  Returning: %s", psc_desc(ddcrc));
+   DBGMSF(debug, "Done.     id=%p -> %s, Returning: %s",
+                 id,distinct_display_ref_repr_t(id),  psc_desc(ddcrc));
    return ddcrc;
 }
 
 
-void unlock_distinct_display(Distinct_Display_Ref id) {
+DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
    bool debug = false;
-   DBGMSF(debug, "Starting. id=%p", id);
+   DBGMSF(debug, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DDCA_Status ddcrc = 0;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    assert(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
    if (ddesc->display_mutex_thread != g_thread_self()) {
       DBGMSG("Attempting to unlock display lock owned by different thread");
-      // set status code?
+      ddcrc = DDCRC_LOCKED;
    }
    else {
       ddesc->display_mutex_thread = NULL;
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGMSF(debug, "Done." );
+   DBGMSF(debug, "Done.     id=%p -> %s, Returning %s",
+                 id, distinct_display_ref_repr_t(id), psc_desc(ddcrc));
+   return ddcrc;
 }
 
 
