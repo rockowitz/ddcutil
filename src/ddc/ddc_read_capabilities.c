@@ -51,6 +51,8 @@ get_capabilities_into_buffer(
       Display_Handle * dh,
       Buffer**         capbilities_buffer_loc)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc;
    Error_Info * ddc_excp = NULL;
 
@@ -80,6 +82,7 @@ get_capabilities_into_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
+   DBGMSF(debug, "Done.     dh=%s, Returning: %s", dh_repr_t(dh), errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -141,6 +144,8 @@ get_capabilities_string(
 Error_Info *
 get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
    assert(dref);
+   bool debug = true;
+   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -149,12 +154,20 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
       psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (psc == 0) {
          ddc_excp = get_capabilities_string(dh, &dref->capabilities_string);
-         ddc_close_display(dh);
+         int rc = ERRINFO_STATUS(ddc_excp);
+         if (rc == -EBADF) {
+            DBGMSF(debug, "EBADF, skipping ddc_close_display()");
+         }
+         else
+            ddc_close_display(dh);
       }
       else
          ddc_excp = errinfo_new(psc, __func__);
    }
    *pcaps = dref->capabilities_string;
+   DBGMSF(debug, "Done.    Returning: %p", ddc_excp);
+   DBGMSF(debug, "Done.     dref = %s, error_info = %s, capabilities: %s", dref_repr_t(dref),
+          errinfo_summary(ddc_excp), *pcaps);
    return ddc_excp;
 }
 
