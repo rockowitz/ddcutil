@@ -52,10 +52,11 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dda_dh=%s", dh_repr((Display_Handle *) ddca_dh ));
+   DBGMSF(debug, "Starting. ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ));
    free_thread_error_detail();
    // assert(pcaps_loc);
    PRECOND(pcaps_loc);
+   *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
       {
@@ -68,12 +69,15 @@ ddca_get_capabilities_string(
             // make copy to ensure caller does not muck around in ddcutil's
             // internal data structures
             *pcaps_loc = strdup(p_cap_string);
-            DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
+            // DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
          }
-         DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
+        //  DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
          assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
+         DBGMSF(debug, "Done.     ddca_dh=%s, *pcaps_loc=%p, Returning: %s",
+                        dh_repr((Display_Handle *) ddca_dh ), *pcaps_loc, ddca_rc_desc(psc));
       }
    );
+
 
 }
 
