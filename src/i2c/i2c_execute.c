@@ -40,7 +40,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 static bool read_with_timeout  = false;
-static bool write_with_timeout = true;
+static bool write_with_timeout = false;
 
 void set_i2c_fileio_use_timeout(bool yesno) {
    // DBGMSG("Setting  %s", sbool(yesno));
@@ -101,9 +101,11 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
          rc = -ETIMEDOUT;
          return rc;
       }
+
       else {
          // DBGMSG("poll() returned normally");
-         assert( pfds[0].revents & POLLOUT );
+         DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+         // assert( pfds[0].revents & POLLOUT );
       }
    }
    // #endif
