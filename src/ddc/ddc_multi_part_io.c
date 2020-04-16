@@ -235,7 +235,7 @@ multi_part_read_with_retry(
          // COUNT_STATUS_CODE(rc);   // double counting?
       }
       else if (rc == -EBADF) {
-         DBGMSG("EBADF");
+         // DBGMSG("EBADF");
          can_retry = false;
       }
 
