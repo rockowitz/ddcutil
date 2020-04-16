@@ -94,14 +94,13 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
       if (pollrc < 0)  { //  i.e. -1
          DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
          rc = -errsv;
-         return rc;
+         goto bye;
       }
       else if (pollrc == 0) {
          DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
          rc = -ETIMEDOUT;
-         return rc;
+         goto bye;
       }
-
       else {
          if ( !( pfds[0].revents & POLLOUT) ) {
             DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
@@ -127,6 +126,7 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
       rc = -errsv;
    }
 
+bye:
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(rc));
    return rc;
 }
