@@ -103,9 +103,10 @@ fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
       }
 
       else {
-         // DBGMSG("poll() returned normally");
-         DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
-         // assert( pfds[0].revents & POLLOUT );
+         if ( !( pfds[0].revents & POLLOUT) ) {
+            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+            // just continue, write() will fail and we'll return that status code
+         }
       }
    }
    // #endif
