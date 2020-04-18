@@ -208,7 +208,10 @@ Byte * bva_bytes(Byte_Value_Array bva) {
  *  @return string representation of data, caller must free
  */
 char * bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep) {
+   assert(bva);
    GByteArray* ga = (GByteArray*) bva;
+   if (!sep)
+      sep = "";
    int len = ga->len;
    Byte * bytes = ga->data;
    int sepsz = (sep) ? strlen(sep) : 0;
