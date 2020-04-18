@@ -49,6 +49,8 @@
 #define DDCRC_LOCKED                 (-(RCRANGE_DDC_START+25) ) ///< resource locked
 #define DDCRC_ALREADY_OPEN           (-(RCRANGE_DDC_START+26) ) ///< already open in current thread
 #define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+27) ) ///< invalid data
+// #define DDCRC_CAP_FATAL              (-(RCRANGE_DDC_START+28) ) ///< invalid, unusable capabilities string"
+// #define DDCRC_CAP_WARNING            (-(RCRANGE_DDC_START+29) ) ///< capabilities string has errors but is beautiful
 
 // TODO: consider replacing DDCRC_INVALID_EDID by a more generic DDCRC_BAD_DATA,
 //       or DDC_INVALID_DATA, could be used for e.g. invalid capabilities string
