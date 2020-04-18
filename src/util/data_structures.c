@@ -720,7 +720,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
          hexok = hhc_to_byte_in_buf(buf, &byteVal);
       }
       if (!hexok) {
-         printf("(%s) Invalid hex value in list: %s\n", __func__, nexttok);
+         // printf("(%s) Invalid hex value in list: %s\n", __func__, nexttok);
          ok = false;
       }
       // printf("(%s) byteVal=0x%02x  \n", __func__, byteVal );
