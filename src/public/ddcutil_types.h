@@ -489,6 +489,8 @@ struct {
    uint8_t *                            cmd_codes;       /**< array of command codes */
    int                                  vcp_code_ct;     /**< number of features in vcp() field */
    DDCA_Cap_Vcp *                       vcp_codes;       /**< array of pointers to structs describing each vcp code */
+   int                                  msg_ct;
+   char **                              messages;
 } DDCA_Capabilities;
 
 
