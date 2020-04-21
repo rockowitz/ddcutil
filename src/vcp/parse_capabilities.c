@@ -82,7 +82,7 @@ void dbgrpt_parsed_capabilities(Parsed_Capabilities * pcaps, int depth) {
        else {
           rpt_label(d1, "Messages:");
           for (int ndx = 0; ndx < pcaps->messages->len; ndx++)
-             rpt_vstring(d2, "%s", g_ptr_array_index(pcaps->messages, ndx));
+             rpt_vstring(d2, "%s", (char *) g_ptr_array_index(pcaps->messages, ndx));
        }
    }
 }
@@ -730,7 +730,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages)
    // DBGMSG("start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
    // DBGMSG("name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
    //                                                 segment->name_len, segment->name_start);
-   REQUIRE(*pos = '(', "Missing parenthesized value", pos);
+   REQUIRE(*pos == '(', "Missing parenthesized value", pos);
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
    REQUIRE(pos < end,
