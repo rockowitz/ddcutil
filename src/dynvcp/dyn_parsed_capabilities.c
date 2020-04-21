@@ -328,7 +328,10 @@ report_capabilities_feature(
       rpt_vstring(d1, "Values (unparsed): %s", vfr->value_string);
    }
 
-#ifdef OLD_BVA
+#define BVA
+#define BBF
+
+#ifdef BVA
    // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
    // if (vfr->values)
    //    report_id_array(vfr->values, "Feature values:");
@@ -345,16 +348,16 @@ report_capabilities_feature(
       int ct = bva_length(vfr->values);
       if (feature_values) {  // did we find descriptions for the features?
          if (ol >= DDCA_OL_VERBOSE)
-            f0printf(FOUT, "    Values (  parsed):\n");
+            rpt_label(d1, "Values (  parsed):");
          else
-            f0printf(FOUT, "    Values:\n");
+            rpt_label(d1 , "Values:");
          int ndx = 0;
          for (; ndx < ct; ndx++) {
             Byte hval = bva_get(vfr->values, ndx);
             char *  value_name = sl_value_table_lookup(feature_values, hval);
             if (!value_name)
                value_name = "Unrecognized value";
-            f0printf(FOUT, "       %02x: %s\n", hval, value_name);
+            rpt_vstring(d2, "%02x: %s", hval, value_name);
          }
       }
       else {          // no interpretation available, just show the values
@@ -371,9 +374,9 @@ report_capabilities_feature(
          }
          *(pos-1) = '\0';
          if (ol >= DDCA_OL_VERBOSE)
-            f0printf(FOUT, "    Values (  parsed): %s (interpretation unavailable)\n", buf0);
+            rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf0);
          else
-            f0printf(FOUT, "    Values: %s (interpretation unavailable)\n", buf0);
+            rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf0);
       }
    }
 
@@ -382,7 +385,7 @@ report_capabilities_feature(
       free(buf0);
 #endif
 
-// #ifdef NEW_BBF
+#ifdef BBF
 
    DBGMSF(debug, "vfr->bbflags=%p", vfr->bbflags);
    if (vfr->bbflags) {
@@ -441,7 +444,7 @@ report_capabilities_feature(
          free(buf1);
       }
    }
-// #endif
+#endif
 
    DBGMSF(debug, "Done.");
 }
@@ -508,6 +511,8 @@ void dyn_report_parsed_capabilities(
       Display_Ref *            dref,
       int                      depth)
 {
+   int d1 = depth+1;
+   int d2 = depth+2;
    bool debug = false;
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. dh-%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
@@ -526,9 +531,20 @@ void dyn_report_parsed_capabilities(
                       (pcaps->raw_value_synthesized) ? "Synthesized unparsed" : "Unparsed",
                       pcaps->raw_value);
    }
+   rpt_vstring(d0, "Model: %s", (pcaps->model) ? pcaps->model : "Not specified");
+
    bool damaged = false;
-   rpt_vstring(d0, "MCCS version: %s",
-                   (pcaps->mccs_version_string) ? pcaps->mccs_version_string : "not present");
+   assert( ( pcaps->mccs_version_string && !vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNQUERIED) ) ||
+           (!pcaps->mccs_version_string &&  vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNQUERIED) ) );
+   if (pcaps->mccs_version_string) {
+      char * s = "";
+      if (vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNKNOWN))
+         s = " (invalid)";
+      rpt_vstring(d0, "MCCS version: %s", pcaps->mccs_version_string, s);
+   }
+   else {
+      rpt_vstring(d0, "MCCS version: Not specified");
+   }
 
    if (pcaps->commands)
       report_commands(pcaps->commands, d0);
@@ -586,7 +602,21 @@ void dyn_report_parsed_capabilities(
       if (pcaps->raw_vcp_features_seen)
          damaged = true;
    }
-   if (damaged)
+
+   if (damaged)   { // should use pcaps->caps_validity
+      rpt_nl();
       rpt_label(d0, "Capabilities string not completely parsed");
+
+      if (pcaps->messages && pcaps->messages->len > 0) {
+         rpt_label(d1, "Errors:");
+         for (int ndx = 0; ndx < pcaps->messages->len; ndx++) {
+            char * s = g_ptr_array_index(pcaps->messages, ndx);
+            rpt_label(d2, s);
+         }
+      }
+   }
+
+
+
 }
 
