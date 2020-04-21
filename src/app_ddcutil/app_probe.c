@@ -72,7 +72,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    set_output_level(saved_ol);
 
    // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
-   bool table_reads_possible = parsed_capabilities_may_support_table_commands(pcaps);
+   bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
    f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
 
    // *** VCP Feature Scan ***
@@ -85,7 +85,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    if (pcaps) {
       f0printf(fout, "\n\nComparing declared capabilities to observed features...\n");
       Byte_Bit_Flags features_declared =
-            parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
+            get_parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
       char * s0 = bbf_to_string(features_declared, NULL, 0);
       f0printf(fout, "\nReadable features declared in capabilities string: %s\n", s0);
       free(s0);
