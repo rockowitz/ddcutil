@@ -101,23 +101,23 @@ void app_show_parsed_capabilities(char * capabilities_string, Display_Handle * d
    assert(pcap);
    FILE * fout = stdout;
    DDCA_Output_Level output_level = get_output_level();
-        if (output_level <= DDCA_OL_TERSE) {
-           f0printf(fout,
-                    "%s capabilities string: %s\n",
-                         (dh->dref->io_path.io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
-                    capabilities_string);
-        }
-        else {
-           if ( dh->dref->io_path.io_mode == DDCA_IO_USB)
-              pcap->raw_value_synthesized = true;
+   if (output_level <= DDCA_OL_TERSE) {
+      f0printf(fout,
+               "%s capabilities string: %s\n",
+                    (dh->dref->io_path.io_mode == DDCA_IO_USB) ? "Synthesized unparsed" : "Unparsed",
+               capabilities_string);
+   }
+   else {
+      if ( dh->dref->io_path.io_mode == DDCA_IO_USB)
+         pcap->raw_value_synthesized = true;
 
-           // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
-           dyn_report_parsed_capabilities(
-                 pcap,
-                 dh,
-                 NULL,
-                 0);
-           // free_parsed_capabilities(pcap);
-        }
+      // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
+      dyn_report_parsed_capabilities(
+           pcap,
+           dh,
+           NULL,
+           0);
+      // free_parsed_capabilities(pcap);
+   }
 }
 
