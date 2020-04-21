@@ -214,7 +214,7 @@ char * bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep) {
       sep = "";
    int len = ga->len;
    Byte * bytes = ga->data;
-   int sepsz = (sep) ? strlen(sep) : 0;
+   int sepsz = strlen(sep);
    int alloc_sz = len * (3+sepsz) + 1;  // slightly large, but simpler to compute
    char * buf = calloc(1, alloc_sz);
    for (int ndx = 0; ndx < len; ndx++) {
