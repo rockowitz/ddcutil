@@ -100,8 +100,8 @@ format_relative_gamma(Byte relative_gamma)
  *
  *  \remark
  *  The bytes parm needs to be Byte_Value_Arrary, not a Bit_Bytes_Flag
- *  because the former returns the bytes in the order specified, whereas
- *  the latter effectively sorts them.
+ *  because the former returns the bytes in the order specified in the
+ *  capabilities string, whereas the latter effectively sorts them.
  */
 static void
 report_gamma_capabilities(
@@ -328,55 +328,60 @@ report_capabilities_feature(
       rpt_vstring(d1, "Values (unparsed): %s", vfr->value_string);
    }
 
-#define BVA
-#define BBF
+   // only BVA variant works because of feature x72 (gamma)
 
-#ifdef BVA
+#ifdef CFR_BVA
    // hex_dump((Byte*) vfr, sizeof(VCP_Feature_Record));
    // if (vfr->values)
    //    report_id_array(vfr->values, "Feature values:");
    char * buf0 = NULL;
    DBGMSF(debug, "vfr->values=%p", vfr->values);
    if (vfr->values) {
-      // Get the descriptions of the documented values for the feature
-      DDCA_Feature_Value_Entry * feature_values =
-            find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
-
-      DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
-                    (feature_values) ? "" : "NOT ",
-                    vfr->feature_id);
-      int ct = bva_length(vfr->values);
-      if (feature_values) {  // did we find descriptions for the features?
-         if (ol >= DDCA_OL_VERBOSE)
-            rpt_label(d1, "Values (  parsed):");
-         else
-            rpt_label(d1 , "Values:");
-         int ndx = 0;
-         for (; ndx < ct; ndx++) {
-            Byte hval = bva_get(vfr->values, ndx);
-            char *  value_name = sl_value_table_lookup(feature_values, hval);
-            if (!value_name)
-               value_name = "Unrecognized value";
-            rpt_vstring(d2, "%02x: %s", hval, value_name);
-         }
+      if (vfr->feature_id == 0x72) { // special handling for feature x72 (gamma)
+         report_gamma_capabilities(vfr->values, d1);
       }
-      else {          // no interpretation available, just show the values
-         int required_size = 3 * ct;
-         buf0 = malloc(required_size);
-         char * bufend = buf0+required_size;
+      else {
+         // Get the descriptions of the documented values for the feature
+         DDCA_Feature_Value_Entry * feature_values =
+               find_feature_values_for_capabilities(vfr->feature_id, vcp_version);
 
-         char * pos = buf0;
-         int ndx = 0;
-         for (; ndx < ct; ndx++) {
-            Byte hval = bva_get(vfr->values, ndx);
-            snprintf(pos, bufend-pos, "%02X ", hval);
-            pos = pos+3;
+         DBGMSF(debug, "Feature values %sfound for feature 0x%02x",
+                       (feature_values) ? "" : "NOT ",
+                       vfr->feature_id);
+         int ct = bva_length(vfr->values);
+
+         if (feature_values) {  // did we find descriptions for the features?
+            if (ol >= DDCA_OL_VERBOSE)
+               rpt_label(d1, "Values (  parsed):");
+            else
+               rpt_label(d1 , "Values:");
+            int ndx = 0;
+            for (; ndx < ct; ndx++) {
+               Byte hval = bva_get(vfr->values, ndx);
+               char *  value_name = sl_value_table_lookup(feature_values, hval);
+               if (!value_name)
+                  value_name = "Unrecognized value";
+               rpt_vstring(d2, "%02x: %s", hval, value_name);
+            }
          }
-         *(pos-1) = '\0';
-         if (ol >= DDCA_OL_VERBOSE)
-            rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf0);
-         else
-            rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf0);
+         else {          // no interpretation available, just show the values
+            int required_size = 3 * ct;
+            buf0 = malloc(required_size);
+            char * bufend = buf0+required_size;
+
+            char * pos = buf0;
+            int ndx = 0;
+            for (; ndx < ct; ndx++) {
+               Byte hval = bva_get(vfr->values, ndx);
+               snprintf(pos, bufend-pos, "%02X ", hval);
+               pos = pos+3;
+            }
+            *(pos-1) = '\0';
+            if (ol >= DDCA_OL_VERBOSE)
+               rpt_vstring(d1, "Values (  parsed): %s (interpretation unavailable)", buf0);
+            else
+               rpt_vstring(d1, "Values: %s (interpretation unavailable)", buf0);
+         }
       }
    }
 
@@ -385,10 +390,12 @@ report_capabilities_feature(
       free(buf0);
 #endif
 
-#ifdef BBF
+#ifdef CFR_BBF
 
+   // WRONG: report_gamma_capabilities requires value bytes in order given in the
+   // capabilities string, no way to get that from BitByteFlags
    DBGMSF(debug, "vfr->bbflags=%p", vfr->bbflags);
-   if (vfr->bbflags) {
+   if (vfr->bbflags) {    // WRONG TEST, NOT A POINTER
 
       // Get the descriptions of the documented values for the feature
       DDCA_Feature_Value_Entry * feature_values = NULL;
@@ -420,6 +427,8 @@ report_capabilities_feature(
             dynamic_disclaimer = " (from user defined feature definition)";
 
          if (vfr->feature_id == 0x72) {    // special handling for gamma
+            // WRONG: report_gamma_capabilities requires value bytes in order given in the
+            // capabilities string, no way to get that from BitByteFlags
             report_gamma_capabilities(vfr->values, d2);
          }
          else {
@@ -613,8 +622,6 @@ void dyn_report_parsed_capabilities(
          }
       }
    }
-
-
-
 }
+
 

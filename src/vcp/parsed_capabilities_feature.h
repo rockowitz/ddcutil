@@ -17,7 +17,7 @@
 
 // define both for testing
 #define CFR_BVA     // Use Byte_Value_Array for values
-#define CFR_BBF     // Use Byte_Bit_Flags for values
+#undef  CFR_BBF     // Use Byte_Bit_Flags for values
 
 #define CAPABILITIES_FEATURE_MARKER "VCPF"
 /** Parsed description of a VCP Feature in a capabilities string. */
@@ -25,7 +25,9 @@ typedef struct {
      char              marker[4];     ///<  always "VCPF"
      Byte              feature_id;    ///<  VCP feature code
      Byte_Value_Array  values;        ///<  need unsorted values for feature x72 gamma
-     Byte_Bit_Flags    bbflags;       //    alternative, but sorts values, screws up gamma
+#ifdef CFR_BBF
+     Byte_Bit_Flags    bbflags;       //    alternative, but sorts values, screws up x72 gamma
+#endif
      char *            value_string;  ///<  value substring from capabilities string
      bool              valid_values;  ///<  string is valid
 } Capabilities_Feature_Record;

@@ -133,18 +133,20 @@ ddca_parse_capabilities_string(
 
             // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
             // TODO: get values from Byte_Bit_Flags cur_cfr->bbflags
-#ifdef OLD_BVA
+#ifdef CFR_BVA
             Byte_Value_Array bva = cur_cfr->values;
             if (bva) {
                cur_cap_vcp->value_ct = bva_length(bva);
                cur_cap_vcp->values = bva_bytes(bva);     // makes copy of bytes
             }
 #endif
+#ifdef CFR_BBF
             if (cur_cfr->bbflags) {
                cur_cap_vcp->value_ct = bbf_count_set(cur_cfr->bbflags);
                cur_cap_vcp->values   = calloc(1, cur_cap_vcp->value_ct);
                bbf_to_bytes(cur_cfr->bbflags, cur_cap_vcp->values, cur_cap_vcp->value_ct);
             }
+#endif
          }
       }
 
