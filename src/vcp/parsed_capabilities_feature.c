@@ -5,7 +5,7 @@
  * but were extracted for clarity.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -17,6 +17,7 @@
 
 #include "util/data_structures.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 /** \endcond */
 
 #include "vcp/vcp_feature_codes.h"
@@ -27,18 +28,21 @@
 // Trace class for this file
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
+
 /** Given a feature code and the unparenthesized value string extracted
  *  from a capabilities string, parses the value string and creates
  *  a #Capabilities_Feature_Record.
  *
  *  \param  feature_id
- *  \param  value_string_start start of value string, may be NULL
+ *  \param  value_string_start start of value string, NULL if no values string
  *  \param  value_string_len   length of value string
+ *  \return newly allocated #Capabilities_Feature_Record
  */
-Capabilities_Feature_Record * new_capabilities_feature(
-      Byte   feature_id,
-      char * value_string_start,
-      int    value_string_len)
+Capabilities_Feature_Record * parse_capabilities_feature(
+      Byte        feature_id,
+      char *      value_string_start,
+      int         value_string_len,
+      GPtrArray * error_messages)
 {
    bool debug = false;
    if (debug) {
@@ -46,7 +50,7 @@ Capabilities_Feature_Record * new_capabilities_feature(
       if (value_string_start)
          DBGMSG("value string: |%.*s|", value_string_len, value_string_start);
       else
-         DBGMSG0("value_string_start = NULL");
+         DBGMSG("value_string_start = NULL");
    }
 
    Capabilities_Feature_Record * vfr =
@@ -60,54 +64,52 @@ Capabilities_Feature_Record * new_capabilities_feature(
       memcpy(vfr->value_string, value_string_start, value_string_len);
       vfr->value_string[value_string_len] = '\0';
 
-// #ifdef OLD_BVA
+#if !defined(CFR_BVA) && !defined(CFR_BBF)     // sanity check
+      assert(false);
+#endif
+
+#ifdef CFR_BVA
       Byte_Value_Array bva_values = bva_create();
       bool ok1 = store_bytehex_list(value_string_start, value_string_len, bva_values, bva_appender);
       if (!ok1) {
-         SEVEREMSG(
-                 "Error processing VCP feature value list into bva_values: %.*s\n",
-                 value_string_len, value_string_start);
+         char * s = g_strdup_printf("Invalid VCP value in list for feature x%02x: %.*s",
+                    feature_id, value_string_len, value_string_start);
+         g_ptr_array_add(error_messages, s);
       }
-// #endif
+      if (debug) {
+         DBGMSG("store_bytehex_list for bva returned %s", sbool(ok1));
+         bva_report(vfr->values, "Feature values (array):");
+      }
+      vfr->valid_values = ok1;
+      vfr->values = bva_values;
+#endif
+
+#ifdef CFR_BBF
       Byte_Bit_Flags bbf_values = bbf_create();
       bool ok2 = store_bytehex_list(value_string_start, value_string_len, bbf_values, bbf_appender);
       if (!ok2) {
-          SEVEREMSG("Error processing VCP feature value list into bbf_values: %.*s\n",
-                     value_string_len, value_string_start);
+          char * s = g_strdup_printf("Invalid VCP value in list for feature x%02x: %.*s",
+                     feature_id, value_string_len, value_string_start);
+          g_ptr_array_add(error_messages, s);
        }
-      if (debug) {
-// #ifdef OLD_BVA
-          DBGMSG("store_bytehex_list for bva returned %d", ok1);
-// #endif
-          DBGMSG("store_bytehex_list for bbf returned %d", ok2);
-          //DBGMSG("Comparing Byte_value_Array vs ByteBitFlags");
-      }
 
-#ifdef OLD_WAY
-      bool compok =  bva_bbf_same_values(bva_values, bbf_values);
-      if (compok) {
-         if (debug)
-            DBGMSG("Byte_Value_Array and ByteBitFlags equivalent");
-      }
-      else {
-         DBGMSG("Byte_Value_Array and ByteBitFlags DO NOT MATCH");
-         bva_report(bva_values, "Byte_Value_Array contents:");
-         char buf[768];
-         DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values, buf, 768));
-      }
-#endif
-
- // #ifdef OLD_BVA
-      vfr->values = bva_values;
-      if (debug)
-         bva_report(vfr->values, "Feature values (array):");
-// #endif
-      vfr->bbflags = bbf_values;
       if (debug) {
+         DBGMSG("store_bytehex_list for bbf returned %s", sbool(ok2));
          char buf[768];
          DBGMSG("ByteBitFlags as list: %s", bbf_to_string(bbf_values,buf,768));
       }
-   }
+      vfr->bbflags = bbf_values;  // if not testing exactly 1 of CFR_BBF and CFR_BVA will be set
+      vfr->valid_values = ok2;
+#endif
+
+#if defined(CFR_BVA) && defined(CFR_BBF)
+      if (ok1 && ok2) {
+         DBGMSF(debug, "Comparing Byte_value_Array vs ByteBitFlags");
+         assert(bva_bbf_same_values(bva_values, bbf_values));
+      }
+#endif
+
+   }   // value_string_start not NULL
 
    return vfr;
 }
@@ -118,7 +120,7 @@ Capabilities_Feature_Record * new_capabilities_feature(
  * \param pfeat  pointer to #Capabilities_Feature_Record to free.\n
  *               If null, do nothing
  */
-void free_capabilities_feature(
+void free_capabilities_feature_record(
       Capabilities_Feature_Record * pfeat)
 {
    // DBGMSG("Starting. pfeat=%p", pfeat);
@@ -128,15 +130,13 @@ void free_capabilities_feature(
       if (pfeat->value_string)
          free(pfeat->value_string);
 
-// #ifdef OLD_BVA
-      // TODO: prune one implementation
       if (pfeat->values)
          bva_free(pfeat->values);
-// #endif
 
+#ifdef BBF
       if (pfeat->bbflags)
          bbf_free(pfeat->bbflags);
-
+#endif
       pfeat->marker[3] = 'x';
 
       free(pfeat);
