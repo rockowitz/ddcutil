@@ -188,9 +188,7 @@ ddca_free_parsed_capabilities(
          free(cur_vcp->values);
       }
 
-      for (char * m = pcaps->messages[0]; m; m++)
-         free(m);
-
+      ntsa_free(pcaps->messages, true);
       pcaps->marker[3] = 'x';
       free(pcaps);
    }
