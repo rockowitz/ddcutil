@@ -182,8 +182,8 @@ ddca_free_parsed_capabilities(
       for (int ndx = 0; ndx < pcaps->vcp_code_ct; ndx++) {
          DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[ndx];
          assert(memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
-         free(cur_vcp->values);
          cur_vcp->marker[3] = 'x';
+         free(cur_vcp->values);
       }
 
       for (char * m = pcaps->messages[0]; m; m++)
