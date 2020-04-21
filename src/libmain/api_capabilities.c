@@ -66,7 +66,7 @@ ddca_get_capabilities_string(
          save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
          errinfo_free(ddc_excp);
          if (psc == 0) {
-            // make copy to ensure caller does not muck around in ddcutil's
+            // make copy to prevent caller from mucking around in ddcutil's
             // internal data structures
             *pcaps_loc = strdup(p_cap_string);
             // DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
@@ -77,8 +77,6 @@ ddca_get_capabilities_string(
                         dh_repr((Display_Handle *) ddca_dh ), *pcaps_loc, ddca_rc_desc(psc));
       }
    );
-
-
 }
 
 
@@ -92,22 +90,23 @@ ddca_parse_capabilities_string(
    // assert(parsed_capabilities_loc);
    free_thread_error_detail();
    PRECOND(parsed_capabilities_loc);
-   DDCA_Status psc = DDCRC_OTHER;       // DDCL_BAD_DATA?
-   DBGMSF(debug, "psc initialized to %s", psc_desc(psc));
+   DDCA_Status ddcrc = DDCRC_BAD_DATA;
+   DBGMSF(debug, "ddcrc initialized to %s", psc_desc(ddcrc));
    DDCA_Capabilities * result = NULL;
 
    // need to control messages?
    Parsed_Capabilities * pcaps = parse_capabilities_string(capabilities_string);
    if (pcaps) {
       if (debug) {
-         DBGMSG("Parsing succeeded. ");
-         dyn_report_parsed_capabilities(pcaps, NULL, NULL, 0);
+         DBGMSG("Parsing succeeded: ");
+         dyn_report_parsed_capabilities(pcaps, NULL, NULL, 2);
          DBGMSG("Convert to DDCA_Capabilities...");
       }
       result = calloc(1, sizeof(DDCA_Capabilities));
       memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
       result->unparsed_string= strdup(capabilities_string);     // needed?
       result->version_spec = pcaps->parsed_mccs_version;
+      DBGMSF(debug, "version: %d.%d", result->version_spec.major,  result->version_spec.minor);
       Byte_Value_Array bva = pcaps->commands;
       if (bva) {
          result->cmd_ct = bva_length(bva);
@@ -148,14 +147,25 @@ ddca_parse_capabilities_string(
             }
          }
       }
-      psc = 0;
+
+      // DBGMSG("pcaps->messages = %p", pcaps->messages);
+      // if (pcaps->messages) {
+      //    DBGMSG("pcaps->messages->len = %d", pcaps->messages->len);
+      // }
+
+      if (pcaps->messages && pcaps->messages->len > 0) {
+         result->msg_ct = pcaps->messages->len;
+         result->messages = g_ptr_array_to_ntsa(pcaps->messages, /*duplicate=*/ true);
+      }
+
+      ddcrc = 0;
       free_parsed_capabilities(pcaps);
    }
 
    *parsed_capabilities_loc = result;
-   DBGMSF(debug, "Done. Returning: %d", psc);
-   assert( (psc==0 && *parsed_capabilities_loc) || (psc!=0 && !*parsed_capabilities_loc));
-   return psc;
+   DBGMSF(debug, "Done.    *parsed_capabilities_loc=%p, Returning: %d", *parsed_capabilities_loc, ddcrc);
+   assert( (ddcrc==0 && *parsed_capabilities_loc) || (ddcrc!=0 && !*parsed_capabilities_loc));
+   return ddcrc;
 }
 
 
@@ -175,6 +185,9 @@ ddca_free_parsed_capabilities(
          free(cur_vcp->values);
          cur_vcp->marker[3] = 'x';
       }
+
+      for (char * m = pcaps->messages[0]; m; m++)
+         free(m);
 
       pcaps->marker[3] = 'x';
       free(pcaps);
@@ -219,7 +232,14 @@ ddca_report_parsed_capabilities_by_dref(
    if (ol >= DDCA_OL_VERBOSE)
       rpt_vstring(d0, "Unparsed string: %s", p_caps->unparsed_string);
 
-   rpt_vstring(d0, "VCP version:     %d.%d", p_caps->version_spec.major, p_caps->version_spec.minor);
+   char * s = NULL;
+   if (vcp_version_eq(p_caps->version_spec, DDCA_VSPEC_UNQUERIED))
+      s = "Not present";
+   else if (vcp_version_eq(p_caps->version_spec, DDCA_VSPEC_UNKNOWN))
+      s = "Invalid value";
+   else
+      s = format_vspec(p_caps->version_spec);
+   rpt_vstring(d0, "VCP version: %s", s);
    if (ol >= DDCA_OL_VERBOSE) {
       rpt_label  (d0, "Command codes: ");
       for (int cmd_ndx = 0; cmd_ndx < p_caps->cmd_ct; cmd_ndx++) {
@@ -262,6 +282,19 @@ ddca_report_parsed_capabilities_by_dref(
          }
       }
       dfm_free(dfm);
+   } // one feature code
+
+   if (p_caps->messages && *p_caps->messages) {
+      rpt_nl();
+      rpt_label(d0, "Parsing errors:");
+      char ** m = p_caps->messages;
+      while (*m) {
+         rpt_label(d1, *m);
+         m++;
+      }
+   }
+   else {
+      DBGMSF(debug, "No error messages");
    }
 
 bye:
