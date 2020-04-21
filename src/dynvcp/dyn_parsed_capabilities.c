@@ -537,10 +537,8 @@ void dyn_report_parsed_capabilities(
    assert( ( pcaps->mccs_version_string && !vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNQUERIED) ) ||
            (!pcaps->mccs_version_string &&  vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNQUERIED) ) );
    if (pcaps->mccs_version_string) {
-      char * s = "";
-      if (vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNKNOWN))
-         s = " (invalid)";
-      rpt_vstring(d0, "MCCS version: %s", pcaps->mccs_version_string, s);
+      char * s = (vcp_version_eq(pcaps->parsed_mccs_version, DDCA_VSPEC_UNKNOWN)) ? " (invalid)" : "";
+      rpt_vstring(d0, "MCCS version: %s%s", pcaps->mccs_version_string, s);
    }
    else {
       rpt_vstring(d0, "MCCS version: Not specified");
