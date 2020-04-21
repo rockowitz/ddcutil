@@ -218,7 +218,7 @@ char * bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep) {
    int alloc_sz = len * (3+sepsz) + 1;  // slightly large, but simpler to compute
    char * buf = calloc(1, alloc_sz);
    for (int ndx = 0; ndx < len; ndx++) {
-      char * cursep = (ndx > 0 && sep) ? sep : "";
+      char * cursep = (ndx > 0) ? sep : "";
       if (as_hex)
          snprintf(buf + strlen(buf), alloc_sz-strlen(buf), "%s%02x", cursep, bytes[ndx]);
       else
