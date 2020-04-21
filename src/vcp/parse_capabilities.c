@@ -415,8 +415,10 @@ Vcp_Feature_Segment * next_vcp_feature_segment(char * start, int len, GPtrArray 
        }
    }
  out:
-   if (segment->code_len == 0 || !segment->valid)
+   if (segment->code_len == 0 || !segment->valid) {
       free(segment);
+      segment = NULL;
+   }
 
    return segment;
 }
