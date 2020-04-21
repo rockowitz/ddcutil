@@ -68,9 +68,9 @@ if USE_X11_COND
 libutil_la_SOURCES += x11_util.c
 endif
 
-if ENABLE_YAML_COND
-libutil_la_SOURCES += libyaml_dbgutil.c
-endif
+# if ENABLE_YAML_COND
+#  libutil_la_SOURCES += libyaml_dbgutil.c
+# endif
 
 
 

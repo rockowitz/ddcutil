@@ -254,9 +254,9 @@ endif
 if USE_LIBDRM_COND
   libapp_la_LIBADD += $(LIBDRM_LIBS) 
 endif
-if ENABLE_YAML_COND
-  libcommon_la_LIBADD += $(YAML_LIBS)
-endif 
+# if ENABLE_YAML_COND
+#   libcommon_la_LIBADD += $(YAML_LIBS)
+# endif 
 
 # $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
