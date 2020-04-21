@@ -318,30 +318,22 @@ struct {
 Parsed_Capabilities_Validity
 parse_single_feature(
       Vcp_Feature_Segment * segment,
-      GPtrArray * vcp_array,
-      GPtrArray * messages)
+      GPtrArray * vcp_array,    // accumulates Capabilities_Feature_Record
+      GPtrArray * messages)     // accumulates error messages
 {
-   bool debug = false;
-   // DBGMSG("segment->code_start = %p", segment->code_start);
-   // DBGMSG("segment->code_len = %d", segment->code_len);
+   bool debug = true;
    assert(segment->code_start);
    if (debug) {
-      // DBGMSG("code: %.*s",  segment->code_len, segment->code_start);
-
-      // DBGMSG("segment->values_start = %p", segment->values_start);
-      /// DBGMSG("segment->values_len = %d", segment->values_len);
-      if (segment->values_start)
-          DBGMSG("values: %.*s", segment->values_len, segment->values_start);
-      else
-         DBGMSG("values: NULL");
-
-      DBGMSG("segment->remainder_start = %p", segment->remainder_start);
-      DBGMSG("segment->remainder_len = %d", segment->remainder_len);
-       if (segment->remainder_start)
-          DBGMSG("remainder: %.*s", segment->remainder_len, segment->remainder_start);
-      else
-         DBGMSG("values: NULL");
-         DBGMSG("segment->valid     = %s", sbool(segment->valid) );
+      DBGMSG("segment_->code_len=%d. segment->code_start = %p -> |%.*s|",
+            segment->code_len, segment->code_start,
+            segment->code_len, segment->code_start);
+      DBGMSG("segment_->values_len=%d. segment->values_start = %p -> |%.*s|",
+            segment->values_len, segment->values_start,
+            segment->values_len, segment->values_start);
+      DBGMSG("segment_->remainder_len=%d. segment->remainder_start = %p -> |%.*s|",
+            segment->remainder_len, segment->remainder_start,
+            segment->remainder_len, segment->remainder_start);
+      DBGMSG("segment->valid     = %s", sbool(segment->valid) );
    }
 
    Parsed_Capabilities_Validity result = CAPABILITIES_VALID;
