@@ -243,38 +243,42 @@ ddc_close_display(Display_Handle * dh) {
    DBGMSF(debug, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
               dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Status_Errno rc = 0;
-
-   switch(dh->dref->io_path.io_mode) {
-   case DDCA_IO_I2C:
-      {
-         rc = i2c_close_bus(dh->fd, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
-         if (rc != 0) {
-            assert(rc < 0);
-            DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
-            COUNT_STATUS_CODE(rc);
+   if (dh->fd == -1) {
+      rc = DDCRC_INVALID_OPERATION;    // or DDCRC_ARG?
+   }
+   else {
+      switch(dh->dref->io_path.io_mode) {
+      case DDCA_IO_I2C:
+         {
+            rc = i2c_close_bus(dh->fd, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
+            if (rc != 0) {
+               assert(rc < 0);
+               DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               COUNT_STATUS_CODE(rc);
+            }
+            dh->fd = -1;    // indicate invalid, in case we try to continue using dh
+            break;
          }
-         dh->fd = -1;    // indicate invalid, in case we try to continue using dh
-         break;
-      }
-   case DDCA_IO_ADL:
-      break;           // nothing to do
+      case DDCA_IO_ADL:
+         break;           // nothing to do
 
-   case DDCA_IO_USB:
+      case DDCA_IO_USB:
 #ifdef USE_USB
-      {
-         rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
-         if (rc != 0) {
-            assert(rc < 0);
-            DBGMSG("usb_close_device returned %d", rc);
-            COUNT_STATUS_CODE(rc);
+         {
+            rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
+            if (rc != 0) {
+               assert(rc < 0);
+               DBGMSG("usb_close_device returned %d", rc);
+               COUNT_STATUS_CODE(rc);
+            }
+            dh->fd = -1;
+            break;
          }
-         dh->fd = -1;
-         break;
-      }
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+         PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
-   } //switch
+      } //switch
+   }
 
    dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
