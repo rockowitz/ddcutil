@@ -204,10 +204,11 @@ dnl AC_SUBST(DEBIAN_DISTRIBUTION)
 AC_MSG_NOTICE( [Checking configure command options...] )
 
 dnl *** configure option: --with-adl-headers
-AC_ARG_WITH([adl-headers],
-            [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
-            [adl_header_dir=$withval],
-            [adl_header_dir=[]])
+dnl AC_ARG_WITH([adl-headers],
+dnl             [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
+dnl             [adl_header_dir=$withval],
+dnl             [adl_header_dir=[]])
+adl_header_dir=""
 AC_MSG_NOTICE([adl_header_dir = $adl_header_dir])
 AS_IF( [test -n "$adl_header_dir"],
          AC_DEFINE( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.])
