@@ -168,10 +168,10 @@ get_feature_metadata(
 
 
 /** Look for feature definition file in the current directory and
- *  on the XDG search path.
+ *  in the $HOME/.config/ddcutil directory.
  *
  *  \param simple_fn  simple filename, without ".mccs" suffix
- *  \return fully qualified name of file found, NULL if not found (caller must free)
+ *  \return fully qualified name of file found (caller must free), NULL if not found
  *
  *  \remark
  *  Consider generalizing, moving to file_util.c
@@ -187,9 +187,12 @@ find_feature_def_file(
 
    char * paths[] = {
          ".",      // current directory
-         "~/.local/share/ddcutil",
-         "/usr/local/share/ddcutil",
-         "/usr/share/ddcutil"
+         "~/.config/ddcutil"
+
+    //     "~/.local/share/ddcutil",
+    //     "/usr/local/share/ddcutil",
+    //     "/usr/share/ddcutil"
+
    };
    int paths_ct = ARRAY_SIZE(paths);
 
