@@ -173,7 +173,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean rw_only_flag   = false;
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
-   gboolean enable_udf_flag = false;
+   gboolean enable_udf_flag = true;
 #ifdef USE_USB
    gboolean enable_usb_flag = true;
 #endif
