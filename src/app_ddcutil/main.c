@@ -634,7 +634,8 @@ int main(int argc, char *argv[]) {
       // n. useful even if not much speed up, since avoids cluttering stats
       // with all the failures during detect
       Display_Ref * dref = NULL;
-      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && (parsed_cmd->flags & CMD_FLAG_NODETECT)) {
+      // if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && (parsed_cmd->flags & CMD_FLAG_NODETECT)) {
+      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
          int busno = parsed_cmd->pdid->busno;
          // is this really a monitor?
          I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
