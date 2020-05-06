@@ -137,6 +137,10 @@ void report_utility_options(Parsed_Cmd * parsed_cmd, int depth) {
        rpt_vstring(depth, "Utility option --f5 enabled: Deferred sleep");
        special_option_explained = true;
     }
+    if (parsed_cmd->flags & CMD_FLAG_F6) {
+       rpt_vstring(depth, "Utility option --f6 enabled: Force I2C bus");
+       special_option_explained = true;
+    }
     if (parsed_cmd->i1 >= 0) {    // default is -1
        rpt_vstring(depth, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
        special_option_explained = true;
@@ -273,6 +277,19 @@ int main(int argc, char *argv[]) {
       fprintf(stdout, "but this copy of ddcutil was built without fglrx support.");
    }
 #endif
+
+   // HACK FOR TESTING
+   if (parsed_cmd->flags & CMD_FLAG_F6) {
+      fprintf(stdout, "Setting i2c_force_bus\n");
+      if ( !(parsed_cmd->pdid) || parsed_cmd->pdid->id_type != DISP_ID_BUSNO) {
+         fprintf(stdout, "bus number required, use --busno\n");
+         return 1;
+      }
+      i2c_force_bus = true;
+   }
+
+
+
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
