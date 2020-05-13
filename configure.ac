@@ -187,13 +187,6 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
-dnl for debian/changelog - should do it some other way
-dnl no longer used
-dnl DEBIAN_RELEASE=1
-dnl DEBIAN_DISTRIBUTION=xenial
-dnl AC_SUBST(DEBIAN_RELEASE)
-dnl AC_SUBST(DEBIAN_DISTRIBUTION)
-
 
 ### 
 ### Recognize command options for configure script
