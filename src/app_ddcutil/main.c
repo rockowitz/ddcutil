@@ -262,8 +262,8 @@ int main(int argc, char *argv[]) {
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   enable_sleep_suppression( (parsed_cmd->flags & CMD_FLAG_F3) || (parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS) );
-   enable_deferred_sleep(parsed_cmd->flags & CMD_FLAG_F5 || parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
+   enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
+   enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    init_ddc_services();   // n. initializes start timestamp
    // overrides setting in init_ddc_services():
@@ -287,9 +287,6 @@ int main(int argc, char *argv[]) {
       }
       i2c_force_bus = true;
    }
-
-
-
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
@@ -350,15 +347,14 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
       tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
-      if (parsed_cmd->sleep_multiplier > 1.0f &&
-         ( (parsed_cmd->flags & CMD_FLAG_F2) || parsed_cmd->flags & CMD_FLAG_DSA) )
+      if (parsed_cmd->sleep_multiplier > 1.0f && parsed_cmd->flags & CMD_FLAG_DSA )
       {
          tsd_dsa_enable_globally(true);
       }
    }
 
    // experimental timeout of i2c read()
-   if (parsed_cmd->flags & CMD_FLAG_F1 || parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
+   if (parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
       set_i2c_fileio_use_timeout(true);
    }
 
@@ -522,7 +518,7 @@ int main(int argc, char *argv[]) {
          }
       }
       if (loadvcp_ok) {
-         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_F2);
+         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
          loadvcp_ok = loadvcp_by_file(fn, dh);
       }
 
@@ -614,7 +610,7 @@ int main(int argc, char *argv[]) {
       f0printf(fout, "Setting output level normal  Table features will be skipped...\n");
       set_output_level(DDCA_OL_NORMAL);
 
-      tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_F2);   // should this apply to INTERROGATE?
+      tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
       GPtrArray * all_displays = ddc_get_all_displays();
       for (int ndx=0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -692,7 +688,7 @@ int main(int argc, char *argv[]) {
 
          if (dh) {
             // here or per command?  cur thread only or globally?
-            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_F2);
+            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES
