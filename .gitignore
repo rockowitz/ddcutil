@@ -175,6 +175,7 @@ run_mod_copyright
 src/**/am--include-marker
 src/**/#
 new/
+old/
 ddcutil.pc.in0
 Makefile.am_with*
 sample_probe
