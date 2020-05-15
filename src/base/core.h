@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -38,8 +38,8 @@
 typedef enum{
    WRITE_ONLY_TRIES_OP,       /**< Maximum write-only operation tries */
    WRITE_READ_TRIES_OP,       /**< Maximum read-write operation tries */
-   MULTI_PART_READ_OP,  /**< Maximum multi-part read operation tries */
-   MULTI_PART_WRITE_OP  /**< Maximum multi-part write operation tries */
+   MULTI_PART_READ_OP,        /**< Maximum multi-part read operation tries */
+   MULTI_PART_WRITE_OP        /**< Maximum multi-part write operation tries */
 } Retry_Operation;
 #define RETRY_OP_COUNT 4
 typedef uint16_t Retry_Op_Value;
@@ -52,6 +52,9 @@ typedef uint16_t Retry_Op_Value;
 
 #define ASSERT_MARKER(_struct_ptr, _marker_value) \
    assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
+
+#define ASSERT_IFF(_cond1, _cond2) \
+   assert( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
 
 
 //
