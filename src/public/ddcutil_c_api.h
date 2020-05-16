@@ -1248,6 +1248,7 @@ void
 ddca_feature_list_clear(
       DDCA_Feature_List* vcplist);
 
+
 /** Adds a feature code to a #DDCA_Feature_List
  *
  *  @param[in]  vcplist   pointer to feature list
@@ -1287,7 +1288,7 @@ ddca_feature_list_contains(
 DDCA_Feature_List
 ddca_feature_list_or(
       DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List * vcplist2);
+      DDCA_Feature_List* vcplist2);
 
 /** Creates the intersection of 2 feature lists.
  *
@@ -1303,7 +1304,7 @@ ddca_feature_list_or(
 DDCA_Feature_List
 ddca_feature_list_and(
       DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List * vcplist2);
+      DDCA_Feature_List* vcplist2);
 
 /** Returns a feature list consisting of all the features in the
  *  first list that are not in the second.
