@@ -66,25 +66,28 @@ ddca_feature_list_id_name(
    char * result = NULL;
    switch (feature_subset_id) {
    case DDCA_SUBSET_KNOWN:
-      result = "VCP_SUBSET_KNOWN";
+      result = "DDCA_SUBSET_KNOWN";
       break;
    case DDCA_SUBSET_COLOR:
-      result = "VCP_SUBSET_COLOR";
+      result = "DDCA_SUBSET_COLOR";
       break;
    case DDCA_SUBSET_PROFILE:
-      result = "VCP_SUBSET_PROFILE";
+      result = "DDCA_SUBSET_PROFILE";
       break;
    case DDCA_SUBSET_MFG:
-      result = "VCP_SUBSET_MFG";
+      result = "DDCA_SUBSET_MFG";
       break;
    case DDCA_SUBSET_UNSET:
-      result = "VCP_SUBSET_NONE";
+      result = "DDCA_SUBSET_NONE";
       break;
    case DDCA_SUBSET_CAPABILITIES:
-      result = "VCP_SUBSET_CAPABILITIES";      // ???
+      result = "DDCA_SUBSET_CAPABILITIES";      // ???
       break;
    case DDCA_SUBSET_SCAN:
-      result = "VCP_SUBSET_SCAN";
+      result = "DDCA_SUBSET_SCAN";
+      break;
+   case DDCA_SUBSET_CUSTOM:
+      result = "DDCA_SUBSET_CUSTOM";      // or VCP_SUBSET_NONE?
       break;
    }
    return result;
@@ -205,8 +208,15 @@ ddca_get_feature_list_by_dref(
                   subset = VCP_SUBSET_NONE;
                   // Currently handled in ddcui
                   DBGMSG("DDCA_SUBSET_CAPABILITIES -> VCP_SUBSET_NONE");
+                  break;
                case DDCA_SUBSET_SCAN:
                   subset = VCP_SUBSET_SCAN;
+                  break;
+               case DDCA_SUBSET_CUSTOM:
+                  subset = VCP_SUBSET_NONE;
+                  // handled in ddcui
+                  DBGMSG("DDCA_SUBSET_CUSTOM -> VCP_SUBSET_NONE");
+                  break;
                }
                Feature_Set_Flags flags = 0x00;
                if (!include_table_features)
@@ -303,8 +313,8 @@ ddca_feature_list_count(
 const char *
 ddca_feature_list_string(
       DDCA_Feature_List * feature_list,
-      char * value_prefix,
-      char * sepstr)
+      const char * value_prefix,
+      const char * sepstr)
 {
    return feature_list_string(feature_list, value_prefix, sepstr);
 }
