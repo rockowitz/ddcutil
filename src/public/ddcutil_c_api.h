@@ -1056,7 +1056,7 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    meta_loc);    MsgBoxQueue*               _msgboxQueue = nullptr;
+      DDCA_Feature_Metadata **    meta_loc);
 
 /**
  * Gets metadata for a VCP feature.
