@@ -579,7 +579,7 @@ ddca_report_displays(
  * @param[in]  dispno  display number
  * @param[out] did_loc    where to return display identifier handle
  * @retval     0
- *
+ *    MsgBoxQueue*               _msgboxQueue = nullptr;
  * \ingroup api_display_spec
  * */
 DDCA_Status
@@ -1056,7 +1056,7 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
       bool                        create_default_if_not_found,
-      DDCA_Feature_Metadata **    meta_loc);
+      DDCA_Feature_Metadata **    meta_loc);    MsgBoxQueue*               _msgboxQueue = nullptr;
 
 /**
  * Gets metadata for a VCP feature.
