@@ -1,7 +1,7 @@
 /** @file feature_lists.h
  */
 
-// Copyright (C) 2018=2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018=2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -18,12 +18,12 @@ feature_list_clear(
 
 void
 feature_list_add(
-      DDCA_Feature_List * vcplist,
+      DDCA_Feature_List* vcplist,
       uint8_t vcp_code);
 
 bool
 feature_list_contains(
-      DDCA_Feature_List * vcplist,
+      DDCA_Feature_List* vcplist,
       uint8_t vcp_code);
 
 DDCA_Feature_List
@@ -45,13 +45,13 @@ feature_list_and_not(
 
 int
 feature_list_count(
-      DDCA_Feature_List * feature_list);
+      DDCA_Feature_List* feature_list);
 
 char *
 feature_list_string(
-      DDCA_Feature_List * feature_list,
-      char *              value_prefix,
-      char *              sepstr);
+      DDCA_Feature_List* feature_list,
+      const char *       value_prefix,
+      const char *       sepstr);
 
 
 #endif /* FEATURE_LISTS_H_ */

@@ -147,8 +147,8 @@ int feature_list_count(
 char *
 feature_list_string(
       DDCA_Feature_List * feature_list,
-      char * value_prefix,
-      char * sepstr)
+      const char * value_prefix,
+      const char * sepstr)
 {
    // DBGMSG("Starting. feature_list=%p, value_prefix=|%s|, sepstr=|%s|",
    //        feature_list, value_prefix, sepstr);
