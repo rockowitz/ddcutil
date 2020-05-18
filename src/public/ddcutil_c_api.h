@@ -1236,12 +1236,14 @@ ddca_get_feature_list_by_dref(
       DDCA_Feature_Subset_Id  feature_set_id,
       DDCA_Display_Ref        dref,
       bool                    include_table_features,
-      DDCA_Feature_List*      p_feature_list);
+      DDCA_Feature_List*      feature_list_loc);
 
 /** Empties a #DDCA_Feature_List
  *
  *  @param[in]  vcplist pointer to feature list
  *
+ *  @remark
+ *  Alternatively, just set vcplist = DDCA_EMPTY_FEATURE_LIST
  *  @since 0.9.0
  */
 void
@@ -1274,12 +1276,27 @@ ddca_feature_list_contains(
       DDCA_Feature_List* vcplist,
       uint8_t vcp_code);
 
+/** Tests if 2 feature lists are equal.
+ *
+ *  @param[in] vcplist1   pointer to first feature list
+ *  @param[in] vcplist2   pointer to second feature list
+ *  @return true if they contain the same features, false if not
+ *
+ *  @remark
+ *  The input feature lists are not modified.
+ *  @since 0.9.9
+ */
+bool
+ddca_feature_list_eq(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List* vcplist2);
+
 /** Creates a union of 2 feature lists.
  *
  *  @param[in] vcplist1   pointer to first feature list
  *  @param[in] vcplist2   pointer to second feature list
  *  @return feature list in which a feature is set if it is in either
- *          or the 2 input feature lists
+ *          of the 2 input feature lists
  *
  *  @remark
  *  The input feature lists are not modified.

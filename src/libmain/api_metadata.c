@@ -170,15 +170,15 @@ ddca_get_feature_list_by_dref(
       DDCA_Feature_Subset_Id  feature_set_id,
       DDCA_Display_Ref        ddca_dref,
       bool                    include_table_features,
-      DDCA_Feature_List*      p_feature_list)
+      DDCA_Feature_List*      feature_list_loc)
 {
    WITH_DR(
          ddca_dref,
          {
                bool debug = false;
                DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
-                      feature_set_id, dref, dref_repr_t(dref), sbool(include_table_features), p_feature_list);
-               assert(p_feature_list);
+                      feature_set_id, dref, dref_repr_t(dref), sbool(include_table_features), feature_list_loc);
+               assert(feature_list_loc);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
                DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
@@ -226,17 +226,26 @@ ddca_get_feature_list_by_dref(
 
                // TODO: function variant that takes result location as a parm, avoid memcpy
                DDCA_Feature_List result = feature_list_from_dyn_feature_set(fset);
-               memcpy(p_feature_list, &result, 32);
+               memcpy(feature_list_loc, &result, 32);
                dyn_free_feature_set(fset);
 
             // bye:
                DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
                if (debug) {
-                  DBGMSG("Feature list: %s", feature_list_string(p_feature_list, "", ","));
+                  DBGMSG("Feature list: %s", feature_list_string(feature_list_loc, "", ","));
                   // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
                }
          }
       );
+}
+
+
+bool
+ddca_feature_list_eq(
+      DDCA_Feature_List* vcplist1,
+      DDCA_Feature_List* vcplist2)
+{
+   return memcmp(vcplist1, vcplist2, sizeof(DDCA_Feature_List)) == 0;
 }
 
 
