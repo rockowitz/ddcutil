@@ -1255,17 +1255,21 @@ ddca_feature_list_clear(
  *
  *  @param[in]  vcplist   pointer to feature list
  *  @param[in]  vcp_code  VCP feature code
+ *  #return     modified feature list
+ *
+ *  @remark
+ *  The feature list is modified in place and also returned.
  *
  *  @since 0.9.0
  */
-void
+DDCA_Feature_List
 ddca_feature_list_add(
       DDCA_Feature_List* vcplist,
       uint8_t vcp_code);
 
 /** Tests if a #DDCA_Feature_List contains a VCP feature code
  *
- *  @param[in]  vcplist   pointer to feature list
+ *  @param[in]  vcplist   feature list
  *  @param[in]  vcp_code  VCP feature code
  *  @return     true/false
  *
@@ -1273,13 +1277,13 @@ ddca_feature_list_add(
  */
 bool
 ddca_feature_list_contains(
-      DDCA_Feature_List* vcplist,
+      DDCA_Feature_List vcplist,
       uint8_t vcp_code);
 
 /** Tests if 2 feature lists are equal.
  *
- *  @param[in] vcplist1   pointer to first feature list
- *  @param[in] vcplist2   pointer to second feature list
+ *  @param[in] vcplist1   first feature list
+ *  @param[in] vcplist2   second feature list
  *  @return true if they contain the same features, false if not
  *
  *  @remark
@@ -1288,13 +1292,13 @@ ddca_feature_list_contains(
  */
 bool
 ddca_feature_list_eq(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2);
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2);
 
 /** Creates a union of 2 feature lists.
  *
- *  @param[in] vcplist1   pointer to first feature list
- *  @param[in] vcplist2   pointer to second feature list
+ *  @param[in] vcplist1   first feature list
+ *  @param[in] vcplist2   second feature list
  *  @return feature list in which a feature is set if it is in either
  *          of the 2 input feature lists
  *
@@ -1304,13 +1308,13 @@ ddca_feature_list_eq(
  */
 DDCA_Feature_List
 ddca_feature_list_or(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2);
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2);
 
 /** Creates the intersection of 2 feature lists.
  *
- *  @param[in] vcplist1   pointer to first feature list
- *  @param[in] vcplist2   pointer to second feature list
+ *  @param[in] vcplist1   first feature list
+ *  @param[in] vcplist2   second feature list
  *  @return feature list in which a feature is set if it is in both
  *          of the 2 input feature lists
  *
@@ -1320,14 +1324,14 @@ ddca_feature_list_or(
  */
 DDCA_Feature_List
 ddca_feature_list_and(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2);
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2);
 
 /** Returns a feature list consisting of all the features in the
  *  first list that are not in the second.
  *
- *  @param[in] vcplist1   pointer to first feature list
- *  @param[in] vcplist2   pointer to second feature list
+ *  @param[in] vcplist1   first feature list
+ *  @param[in] vcplist2   second feature list
  *  @return feature list in which a feature is set if it is in **vcplist1** but
  *          not **vcplist2**
  *
@@ -1337,24 +1341,24 @@ ddca_feature_list_and(
  */
 DDCA_Feature_List
 ddca_feature_list_and_not(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2);
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2);
 
 /** Returns the number of features in a feature list
  *
- *  @param[in] feature_list   pointer to feature list
+ *  @param[in] feature_list   feature list
  *  @return  number of features, 0 if feature_list == NULL
  *
  *  @since 0.9.0
  */
 int
 ddca_feature_list_count(
-      DDCA_Feature_List * feature_list);
+      DDCA_Feature_List feature_list);
 
 /** Returns a string representation of a feature list as a
  *  sequence of 2 character hex values.
  *
- *  @param[in] feature_list   pointer to feature list
+ *  @param[in] feature_list   feature list
  *  @param[in] value_prefix   precede each value with this string, e.g. "0x"
  *                            if NULL, then no preceding string
  *  @param[in] sepstr         separator string between pair of values, e.g. ", "
@@ -1368,7 +1372,7 @@ ddca_feature_list_count(
  */
 const char *
 ddca_feature_list_string(
-      DDCA_Feature_List * feature_list,
+      DDCA_Feature_List feature_list,
       const char * value_prefix,
       const char * sepstr);
 

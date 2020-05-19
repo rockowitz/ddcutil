@@ -49,13 +49,15 @@ void ddca_feature_list_clear(DDCA_Feature_List* vcplist) {
 }
 
 
-void ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
+DDCA_Feature_List
+ddca_feature_list_add(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    feature_list_add(vcplist, vcp_code);
+   return *vcplist;
 }
 
 
-bool ddca_feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
-   return feature_list_contains(vcplist, vcp_code);
+bool ddca_feature_list_contains(DDCA_Feature_List vcplist, uint8_t vcp_code) {
+   return feature_list_contains(&vcplist, vcp_code);
 }
 
 
@@ -242,37 +244,37 @@ ddca_get_feature_list_by_dref(
 
 bool
 ddca_feature_list_eq(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2)
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2)
 {
-   return memcmp(vcplist1, vcplist2, sizeof(DDCA_Feature_List)) == 0;
+   return memcmp(&vcplist1, &vcplist2, sizeof(DDCA_Feature_List)) == 0;
 }
 
 
 DDCA_Feature_List
 ddca_feature_list_or(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2)
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2)
 {
-   return feature_list_or(vcplist1, vcplist2);
+   return feature_list_or(&vcplist1, &vcplist2);
 }
 
 
 DDCA_Feature_List
 ddca_feature_list_and(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2)
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2)
 {
-   return feature_list_and(vcplist1, vcplist2);
+   return feature_list_and(&vcplist1, &vcplist2);
 }
 
 
 DDCA_Feature_List
 ddca_feature_list_and_not(
-      DDCA_Feature_List* vcplist1,
-      DDCA_Feature_List* vcplist2)
+      DDCA_Feature_List vcplist1,
+      DDCA_Feature_List vcplist2)
 {
-   return feature_list_and_not(vcplist1, vcplist2);
+   return feature_list_and_not(&vcplist1, &vcplist2);
 }
 
 
@@ -313,19 +315,19 @@ void ddca_feature_list_to_codes(
 
 int
 ddca_feature_list_count(
-      DDCA_Feature_List * feature_list)
+      DDCA_Feature_List feature_list)
 {
-   return feature_list_count(feature_list);
+   return feature_list_count(&feature_list);
 }
 
 
 const char *
 ddca_feature_list_string(
-      DDCA_Feature_List * feature_list,
+      DDCA_Feature_List feature_list,
       const char * value_prefix,
       const char * sepstr)
 {
-   return feature_list_string(feature_list, value_prefix, sepstr);
+   return feature_list_string(&feature_list, value_prefix, sepstr);
 }
 
 
