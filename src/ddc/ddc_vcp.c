@@ -293,6 +293,30 @@ is_rereadable_feature(
 
 
 static bool
+is_unreadable_sl_value(
+      Display_Handle *      dh,      // defined for symmetry, not currently used
+      DDCA_Vcp_Feature_Code opcode,
+      Byte                  sl_value)
+{
+   bool debug = false;
+   DBGMSF(debug, "dh=%s, opcode=0x%02x, sl_value=0x%02x", dh_repr_t(dh), opcode, sl_value);
+
+   bool result = false;
+   switch(opcode)
+   {
+   case 0xd6:
+      if (sl_value == 5)        // turn off display
+         result = true;
+      break;
+   default:
+      break;
+   }
+   DBGMSF(debug, "Done.     Returning: %s", sbool(result));
+   return result;
+}
+
+
+static bool
 single_vcp_value_equal(
       DDCA_Any_Vcp_Value * vrec1,
       DDCA_Any_Vcp_Value * vrec2)
@@ -365,7 +389,12 @@ ddc_set_vcp_value(
    }
 
    if (!ddc_excp && ddc_get_verify_setvcp()) {
-      if (is_rereadable_feature(dh, vrec->opcode) ) {
+      if ( is_rereadable_feature(dh, vrec->opcode) &&
+           ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
+             !is_unreadable_sl_value(dh, vrec->opcode, vrec->val.c_nc.sl)
+           )
+         )
+      {
          f0printf(verbose_msg_dest, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          DDCA_Any_Vcp_Value * newval = NULL;
          ddc_excp = ddc_get_vcp_value(
@@ -401,7 +430,12 @@ ddc_set_vcp_value(
          }
       }
       else {
-         f0printf(verbose_msg_dest, "Feature 0x%02x does not support verification\n", vrec->opcode);
+         if (!is_rereadable_feature(dh, vrec->opcode) )
+            f0printf(verbose_msg_dest, "Feature 0x%02x does not support verification\n", vrec->opcode);
+         else
+            f0printf(verbose_msg_dest, "Feature 0x%02x, value 0x%02x does not support verification\n",
+                                       vrec->opcode,
+                                       vrec->val.c_nc.sl);
       }
    }
 
