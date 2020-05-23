@@ -262,7 +262,8 @@ is_rereadable_feature(
    DDCA_Vcp_Feature_Code unrereadable_features[] = {
          0x02,        // new control value
          0x03,        // soft controls
-         0x60,        // input source ???
+         0x60,        // input source - for some monitors it is meaningful to read the new 
+                      //                value, others won't respond if set to a different input
    };
 
    bool result = true;
@@ -294,7 +295,6 @@ is_rereadable_feature(
 
 static bool
 is_unreadable_sl_value(
-      Display_Handle *      dh,      // defined for symmetry, not currently used
       DDCA_Vcp_Feature_Code opcode,
       Byte                  sl_value)
 {
@@ -305,7 +305,7 @@ is_unreadable_sl_value(
    switch(opcode)
    {
    case 0xd6:
-      if (sl_value == 5)        // turn off display
+      if (sl_value == 5)        // turn off display, trying to read from it will fail
          result = true;
       break;
    default:
@@ -341,7 +341,6 @@ single_vcp_value_equal(
    DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
-
 
 
 // TODO: Consider wrapping set_vcp_value() in set_vcp_value_with_retry(), which would
