@@ -28,22 +28,29 @@
 // Experimental suppression of sleeps after reads
 static bool sleep_suppression_enabled = false;
 
-void enable_sleep_suppression(bool enable) {
+bool enable_sleep_suppression(bool enable) {
+   bool old = sleep_suppression_enabled;
    sleep_suppression_enabled = enable;
+   return old;
 }
+
+bool is_sleep_suppression_enabled() {
+   return sleep_suppression_enabled;
+}
+
 
 static bool deferred_sleep_enabled = false;
 
-void enable_deferred_sleep(bool enable) {
+bool enable_deferred_sleep(bool enable) {
+   bool old = deferred_sleep_enabled;
    deferred_sleep_enabled = enable;
+   return old;
 }
 
 bool is_deferred_sleep_enabled() {
    return deferred_sleep_enabled;
 }
-bool is_sleep_suppression_enabled() {
-   return sleep_suppression_enabled;
-}
+
 
 
 
