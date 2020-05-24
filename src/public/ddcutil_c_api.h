@@ -435,6 +435,17 @@ ddca_trace_group_name_to_value(char * name);
 void
 ddca_set_trace_options(DDCA_Trace_Options  options);
 
+//
+// Performance Options
+//
+
+
+bool
+ddca_enable_sleep_suppression(bool newval); ;
+
+bool
+ddca_is_sleep_suppression_enabled();
+
 
 //
 // Statistics and Diagnostics

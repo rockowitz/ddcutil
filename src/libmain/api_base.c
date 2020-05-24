@@ -515,6 +515,20 @@ void ddca_unlock_sleep_multiplier() {
 }
 #endif
 
+
+bool
+ddca_enable_sleep_suppression(bool newval) {
+   bool old = is_sleep_suppression_enabled();
+   enable_sleep_suppression(newval);
+   return old;
+}
+
+bool
+ddca_is_sleep_suppression_enabled() {
+   return is_sleep_suppression_enabled();
+}
+
+
 void
 ddca_set_default_sleep_multiplier(double multiplier)
 {
