@@ -299,7 +299,7 @@ is_unreadable_sl_value(
       Byte                  sl_value)
 {
    bool debug = false;
-   DBGMSF(debug, "dh=%s, opcode=0x%02x, sl_value=0x%02x", dh_repr_t(dh), opcode, sl_value);
+   DBGMSF(debug, "opcode=0x%02x, sl_value=0x%02x", opcode, sl_value);
 
    bool result = false;
    switch(opcode)
@@ -390,7 +390,7 @@ ddc_set_vcp_value(
    if (!ddc_excp && ddc_get_verify_setvcp()) {
       if ( is_rereadable_feature(dh, vrec->opcode) &&
            ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
-             !is_unreadable_sl_value(dh, vrec->opcode, vrec->val.c_nc.sl)
+             !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl)
            )
          )
       {
