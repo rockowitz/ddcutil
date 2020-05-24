@@ -579,7 +579,6 @@ ddca_report_displays(
  * @param[in]  dispno  display number
  * @param[out] did_loc    where to return display identifier handle
  * @retval     0
- *    MsgBoxQueue*               _msgboxQueue = nullptr;
  * \ingroup api_display_spec
  * */
 DDCA_Status
