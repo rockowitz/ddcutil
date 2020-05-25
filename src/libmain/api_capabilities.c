@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -80,6 +80,49 @@ ddca_get_capabilities_string(
 }
 
 
+void
+dbgrpt_ddca_cap_vcp(DDCA_Cap_Vcp * cap, int depth) {
+   rpt_structure_loc("DDCA_Cap_Vcp", cap, depth);
+   int d1 = depth+1;
+   int d2 = depth+2;
+   rpt_vstring(d1, "feature code:    0x%02x", cap->feature_code);
+   rpt_vstring(d1, "value_ct:        %d", cap->value_ct);
+   if (cap->value_ct > 0) {
+      rpt_label(d1, "Values: ");
+
+      for (int ndx = 0; ndx < cap->value_ct; ndx++) {
+         rpt_vstring(d2, "Value:   0x%02x", cap->values[ndx]);
+      }
+   }
+}
+
+
+void
+dbgrpt_ddca_capabilities(DDCA_Capabilities * p_caps, int depth) {
+   rpt_structure_loc("DDCA_Capabilities", p_caps, depth);
+   int d1 = depth+1;
+   int d2 = depth+2;
+   rpt_vstring(d1, "Unparsed string: %s", p_caps->unparsed_string);
+   rpt_vstring(d1, "Version spec:    %d.%d", p_caps->version_spec.major, p_caps->version_spec.minor);
+   rpt_label(d1, "Command codes:");
+   for (int ndx = 0; ndx < p_caps->cmd_ct; ndx++) {
+      rpt_vstring(d2, "0x%02x", p_caps->cmd_codes[ndx]);
+   }
+   rpt_vstring(d1, "Feature code count: %d", p_caps->vcp_code_ct);
+   for (int ndx = 0; ndx < p_caps->vcp_code_ct; ndx++) {
+      DDCA_Cap_Vcp * cur = &p_caps->vcp_codes[ndx];
+      dbgrpt_ddca_cap_vcp(cur, d2);
+   }
+   rpt_vstring(d1, "msg_ct:       %d", p_caps->msg_ct);
+   if (p_caps->msg_ct > 0) {
+      rpt_label(d1, "messages: ");
+      for (int ndx = 0; ndx < p_caps->msg_ct; ndx++) {
+         rpt_vstring(d2, "Message:   %s", p_caps->messages[ndx]);
+      }
+   }
+}
+
+
 DDCA_Status
 ddca_parse_capabilities_string(
       char *                   capabilities_string,
@@ -104,7 +147,7 @@ ddca_parse_capabilities_string(
       }
       result = calloc(1, sizeof(DDCA_Capabilities));
       memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
-      result->unparsed_string= strdup(capabilities_string);     // needed?
+      result->unparsed_string = strdup(capabilities_string);     // needed?
       result->version_spec = pcaps->parsed_mccs_version;
       DBGMSF(debug, "version: %d.%d", result->version_spec.major,  result->version_spec.minor);
       Byte_Value_Array bva = pcaps->commands;
@@ -113,23 +156,23 @@ ddca_parse_capabilities_string(
          result->cmd_codes = malloc(result->cmd_ct);
          memcpy(result->cmd_codes, bva_bytes(bva), result->cmd_ct);
       }
-
       // n. needen't set vcp_code_ct if !pcaps, calloc() has done it
       if (pcaps->vcp_features) {
          result->vcp_code_ct = pcaps->vcp_features->len;
          result->vcp_codes = calloc(result->vcp_code_ct, sizeof(DDCA_Cap_Vcp));
-         // DBGMSF(debug, "allocate %d bytes at %p", result->vcp_code_ct * sizeof(DDCA_Cap_Vcp), result->vcp_codes);
+         DBGMSF(debug, "allocate %d bytes at %p", result->vcp_code_ct * sizeof(DDCA_Cap_Vcp), result->vcp_codes);
          for (int ndx = 0; ndx < result->vcp_code_ct; ndx++) {
             DDCA_Cap_Vcp * cur_cap_vcp = &result->vcp_codes[ndx];
-            // DBGMSF(debug, "cur_cap_vcp = %p", &result->vcp_codes[ndx]);
+            DBGMSF(debug, "cur_cap_vcp = %p", &result->vcp_codes[ndx]);
             memcpy(cur_cap_vcp->marker, DDCA_CAP_VCP_MARKER, 4);
             Capabilities_Feature_Record * cur_cfr = g_ptr_array_index(pcaps->vcp_features, ndx);
-            // DBGMSF(debug, "Capabilities_Feature_Record * cur_cfr = %p", cur_cfr);
+            DBGMSF(debug, "Capabilities_Feature_Record * cur_cfr = %p", cur_cfr);
             assert(memcmp(cur_cfr->marker, CAPABILITIES_FEATURE_MARKER, 4) == 0);
-            // if (debug)
+            if (debug)
+               dbgrpt_capabilities_feature_record(cur_cfr, 2);
             //    show_capabilities_feature(cur_cfr, result->version_spec);
             cur_cap_vcp->feature_code = cur_cfr->feature_id;
-            // DBGMSF(debug, "cur_cfr = %p, feature_code - 0x%02x", cur_cfr, cur_cfr->feature_id);
+            DBGMSF(debug, "cur_cfr = %p, feature_code - 0x%02x", cur_cfr, cur_cfr->feature_id);
 
             // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
             // TODO: get values from Byte_Bit_Flags cur_cfr->bbflags
@@ -137,7 +180,8 @@ ddca_parse_capabilities_string(
             Byte_Value_Array bva = cur_cfr->values;
             if (bva) {
                cur_cap_vcp->value_ct = bva_length(bva);
-               cur_cap_vcp->values = bva_bytes(bva);     // makes copy of bytes
+               cur_cap_vcp->values = calloc( cur_cap_vcp->value_ct, sizeof(Byte));
+               memcpy(cur_cap_vcp->values, bva_bytes(bva), cur_cap_vcp->value_ct);
             }
 #endif
 #ifdef CFR_BBF
@@ -166,6 +210,9 @@ ddca_parse_capabilities_string(
 
    *parsed_capabilities_loc = result;
    DBGMSF(debug, "Done.    *parsed_capabilities_loc=%p, Returning: %d", *parsed_capabilities_loc, ddcrc);
+   if (debug && *parsed_capabilities_loc)
+      dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
+   ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    assert( (ddcrc==0 && *parsed_capabilities_loc) || (ddcrc!=0 && !*parsed_capabilities_loc));
    return ddcrc;
 }
