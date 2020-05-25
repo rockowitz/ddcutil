@@ -41,4 +41,7 @@ Capabilities_Feature_Record * parse_capabilities_feature(
 void free_capabilities_feature_record(
       Capabilities_Feature_Record * vfr);
 
+void dbgrpt_capabilities_feature_record(
+      Capabilities_Feature_Record * vfr, int depth);
+
 #endif /* PARSED_CAPABILITIES_FEATURE_H */

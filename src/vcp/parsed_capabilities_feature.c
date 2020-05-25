@@ -29,6 +29,22 @@
 // static TraceGroup TRACE_GROUP = TRC_DDC;   // currently unused, commented out to avoid warning
 
 
+void dbgrpt_capabilities_feature_record(
+      Capabilities_Feature_Record * vfr, int depth)
+{
+   int d1 = depth+1;
+   rpt_structure_loc("Capabilities_Feature_Record", vfr, depth);
+   rpt_vstring(d1, "marker:       %.4s", vfr->marker);
+   rpt_vstring(d1, "feature_ide:  0x%02x", vfr->feature_id);
+   if (vfr->values)
+      rpt_vstring(d1, "values:       %s", bva_as_string(vfr->values, true, " ") );
+   else
+      rpt_vstring(d1, "values:       None");
+   rpt_vstring(d1, "value_string: %s", vfr->value_string);
+   rpt_vstring(d1, "valid_values: %s", sbool(vfr->valid_values));
+}
+
+
 /** Given a feature code and the unparenthesized value string extracted
  *  from a capabilities string, parses the value string and creates
  *  a #Capabilities_Feature_Record.
