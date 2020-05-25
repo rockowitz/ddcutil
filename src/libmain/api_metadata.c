@@ -178,8 +178,12 @@ ddca_get_feature_list_by_dref(
          ddca_dref,
          {
                bool debug = false;
-               DBGMSF(debug, "Starting. feature_subset_id=%d, dref=%p=%s, include_table_features=%s, p_feature_list=%p",
-                      feature_set_id, dref, dref_repr_t(dref), sbool(include_table_features), feature_list_loc);
+               DBGMSF(debug, "Starting. feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
+                             "include_table_features=%s, feature_list_loc=%p",
+                      feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+                      dref, dref_repr_t(dref),
+                      sbool(include_table_features),
+                      feature_list_loc);
                assert(feature_list_loc);
 
                DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
@@ -220,6 +224,7 @@ ddca_get_feature_list_by_dref(
                   DBGMSG("DDCA_SUBSET_CUSTOM -> VCP_SUBSET_NONE");
                   break;
                }
+               DBGMSF(debug, "subset=%d=%s", subset, feature_subset_name( subset));
                Feature_Set_Flags flags = 0x00;
                if (!include_table_features)
                   flags |= FSF_NOTABLE;
@@ -232,9 +237,11 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
 
             // bye:
-               DBGMSF(debug, "Done. Returning: %s", psc_desc(psc));
+               DBGMSF(debug, "Done. feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
+                     feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+                     subset, feature_subset_name(subset), psc_desc(psc));
                if (debug) {
-                  DBGMSG("Feature list: %s", feature_list_string(feature_list_loc, "", ","));
+                  DBGMSG(    "      Feature list: %s", feature_list_string(feature_list_loc, "", ","));
                   // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
                }
          }
