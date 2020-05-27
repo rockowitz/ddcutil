@@ -494,8 +494,9 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    rpt_vstring(d1, "%s", pentry->desc);
    valid_version_names_r(valid_versions(pentry), workbuf, sizeof(workbuf));
    rpt_vstring(d1, "MCCS versions: %s", workbuf);
-   rpt_vstring(d1, "MCCS specification groups: %s",
-                   spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
+   if (output_level >= DDCA_OL_VERBOSE)
+      rpt_vstring(d1, "MCCS specification groups: %s",
+                      spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
    char * subset_names = feature_subset_names(pentry->vcp_subsets);
    rpt_vstring(d1, "ddcutil feature subsets: %s", subset_names);
    free(subset_names);
