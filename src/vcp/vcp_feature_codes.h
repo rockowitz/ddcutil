@@ -93,6 +93,13 @@ typedef enum {
 // #define MCCS_V30          0x08
 // #define MCCS_V22          0x10
 
+char *
+vcp_interpret_global_feature_flags(
+      DDCA_Global_Feature_Flags flags,
+      char *                    buf,
+      int                       bufsz);
+
+
 
 #ifdef MOVED_TO_FEATURE_METADATA
 typedef
@@ -157,6 +164,13 @@ struct {
 
 void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth);
 
+char *
+spec_group_names_r(
+      VCP_Feature_Table_Entry * pentry,
+      char *                    buf,
+      int                       bufsz);
+
+
 //
 // Functions that return or destroy a VCP_Feature_Table_Entry
 //
@@ -165,8 +179,6 @@ void
 free_synthetic_vcp_entry(
       VCP_Feature_Table_Entry * vfte);
 
-VCP_Feature_Table_Entry *
-vcp_get_feature_table_entry(int ndx);
 
 #ifdef UNUSED
 VCP_Feature_Table_Entry *
@@ -310,13 +322,6 @@ find_feature_values_for_capabilities(
 // Report Functions
 //
 
-void
-report_vcp_feature_table_entry(
-      VCP_Feature_Table_Entry * vfte,
-      int                       depth);
-
-void
-vcp_list_feature_codes(FILE * fh);
 
 //
 // Miscellaneous Functions
@@ -332,20 +337,10 @@ vcp_format_feature_detail(
 
 int
 vcp_get_feature_code_count();
+VCP_Feature_Table_Entry *  vcp_get_feature_table_entry(int ndx);
 
 void
 init_vcp_feature_codes();
 
-char *
-vcp_interpret_version_feature_flags(
-      DDCA_Version_Feature_Flags flags,
-      char *                     buf,
-      int                        bufsz);
-
-char *
-vcp_interpret_global_feature_flags(
-      DDCA_Global_Feature_Flags flags,
-      char *                    buf,
-      int                       bufsz);
 
 #endif /* VCP_FEATURE_CODES_H_ */

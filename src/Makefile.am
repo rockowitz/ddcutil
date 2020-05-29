@@ -83,7 +83,8 @@ app_ddcutil/app_probe.c \
 app_ddcutil/app_dynamic_features.c \
 app_ddcutil/app_dumpload.c \
 app_ddcutil/app_setvcp.c \
-app_ddcutil/app_getvcp.c
+app_ddcutil/app_getvcp.c \
+app_ddcutil/app_vcpinfo.c
 
 # it's a hack for using API calls in standalone executable
 if USE_API_COND

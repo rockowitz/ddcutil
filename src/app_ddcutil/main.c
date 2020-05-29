@@ -76,6 +76,7 @@
 #include "app_ddcutil/app_probe.h"
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
+#include "app_ddcutil/app_vcpinfo.h"
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
@@ -366,7 +367,7 @@ int main(int argc, char *argv[]) {
    DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
-      vcp_list_feature_codes(stdout);
+      app_listvcp(stdout);
       main_rc = EXIT_SUCCESS;
    }
 
@@ -383,26 +384,10 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
          flags |= FSF_WO_ONLY;
 
-      VCP_Feature_Set * fset = create_feature_set_from_feature_set_ref(
-                                parsed_cmd->fref,
-                                parsed_cmd->mccs_vspec,
-                                flags);
-      if (!fset) {
-         vcpinfo_ok = false;
-      }
-      else {
-         if (parsed_cmd->output_level <= DDCA_OL_TERSE)
-            report_feature_set(fset, 0);
-         else {
-            int ct =  get_feature_set_size(fset);
-            int ndx = 0;
-            for (;ndx < ct; ndx++) {
-               VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
-               report_vcp_feature_table_entry(pentry, 0);
-            }
-         }
-         free_vcp_feature_set(fset);
-      }
+
+
+      vcpinfo_ok = app_vcpinfo(parsed_cmd->fref, parsed_cmd->mccs_vspec, flags);
+
 
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }

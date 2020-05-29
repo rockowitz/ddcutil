@@ -15,6 +15,8 @@
 #include "base/core.h"
 #include "base/feature_sets.h"
 
+#include "vcp/vcp_feature_codes.h"
+
 // define both for testing
 #define CFR_BVA     // Use Byte_Value_Array for values
 #undef  CFR_BBF     // Use Byte_Bit_Flags for values
