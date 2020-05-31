@@ -1,6 +1,6 @@
 // app_vcpinfo.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -27,7 +27,7 @@
  *
  * Returns:   buf
  */
-char *
+static char *
 vcp_interpret_version_feature_flags(
       DDCA_Version_Feature_Flags  flags,
       char*                       buf,
