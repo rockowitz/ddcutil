@@ -2465,7 +2465,7 @@ static DDCA_Feature_Value_Entry xcc_osd_language_values[] = {
           {0x13, "Danish"},
           {0x14, "Dutch"},
           {0x15, "Estonian"},
-          {0x16, "Finish"},
+          {0x16, "Finnish"},
           {0x17, "Greek"},
           {0x18, "Hebrew"},
           {0x19, "Hindi"},
