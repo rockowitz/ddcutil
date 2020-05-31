@@ -389,8 +389,16 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
              trd_get_all_threads_maxtries_range(retry_type);
       DBGMSF(debug, "acc.max_highest_maxtries=%d, stats_rec->highest_maxtries = %d",
                     acc.max_highest_maxtries, stats_rec->highest_maxtries);
-      assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
-      assert (acc.min_lowest_maxtries  == stats_rec->lowest_maxtries);
+      // assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
+      // assert (acc.min_lowest_maxtries  == stats_rec->lowest_maxtries);
+      if (acc.max_highest_maxtries != stats_rec->highest_maxtries) {
+         DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->hightest_restries(%d)",
+                acc.max_highest_maxtries,stats_rec->highest_maxtries);
+      }
+      if (acc.min_lowest_maxtries != stats_rec->lowest_maxtries) {
+            DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->hightest_restries(%d)",
+                   acc.min_lowest_maxtries,stats_rec->lowest_maxtries);
+      }
 
       rpt_vstring(d1, "Max tries allowed: %d", max1);
       if (acc.min_lowest_maxtries == acc.max_highest_maxtries)
