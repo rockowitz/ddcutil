@@ -538,8 +538,8 @@ uint32_t extended_usage(uint16_t usage_page, uint32_t usage, int usage_bsize) {
    if (usage_bsize == 3 || usage_bsize == 4)  // allow it to be indicator (3) or actual number of bytes
       result = usage;
    else if (usage_bsize == 1 || usage_bsize == 2) {
-      // assert( (usage & 0xff00) == 0);
-      if ( (usage & 0xff00) != 0) {
+      // assert( (usage & 0xffff0000) == 0);
+      if ( (usage & 0xffff0000) != 0) {
          printf("(%s) usage_bsize=%d but usage = 0x%08x.  As fixup, ignoring high order bytes\n",
                 __func__, usage_bsize, usage);
          result = usage_page << 16 | (usage &0x00ff);
