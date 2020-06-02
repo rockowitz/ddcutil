@@ -79,8 +79,19 @@ static int is_hiddev(const struct dirent *ent) {
  * Returns:   GPtrArray of device device names.
  */
 GPtrArray * get_hiddev_device_names_using_filesys() {
+   bool debug = true;
+   if (debug) printf("(%s) Starting...\n", __func__);
+
    const char *hidraw_paths[] = { "/dev/", "/dev/usb/", NULL };
-   return get_filenames_by_filter(hidraw_paths, is_hiddev);
+   GPtrArray * dev_names = get_filenames_by_filter(hidraw_paths, is_hiddev);
+
+   if (debug) {
+      printf("(%s) Done.     Found %d hiddev devices:\n", __func__, dev_names->len);
+      for (int ndx = 0; ndx < dev_names->len; ndx++) {
+         printf("              %s\n", (char *) g_ptr_array_index(dev_names,ndx));
+      }
+   }
+   return dev_names;
 }
 
 
@@ -94,7 +105,7 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
  */
 GPtrArray *
 get_hiddev_device_names_using_udev() {
-   bool debug = false;
+   bool debug = true;
    if (debug) printf("(%s) Starting...\n", __func__);
 
    GPtrArray * dev_names = g_ptr_array_sized_new(10);
@@ -141,6 +152,12 @@ get_hiddev_device_names_using_udev() {
     udev_unref(udev);
 
 bye:
+   if (debug) {
+      printf("(%s) Done.     Found %d hiddev devices:\n", __func__, dev_names->len);
+      for (int ndx = 0; ndx < dev_names->len; ndx++) {
+         printf("              %s\n", (char *) g_ptr_array_index(dev_names,ndx));
+      }
+   }
    return dev_names;
 }
 
@@ -153,9 +170,11 @@ bye:
  * Allows for easily switching between alternative implementations.
  */
 GPtrArray * get_hiddev_device_names() {
-
-   return get_hiddev_device_names_using_udev();
-   // return get_hiddev_device_names_using_filesys();
+   // temp, call both for testing
+   GPtrArray * result1 = get_hiddev_device_names_using_udev();
+   g_ptr_array_free(result1, true);
+   GPtrArray * result2 = get_hiddev_device_names_using_filesys();
+   return result2;
 }
 
 
