@@ -1,14 +1,14 @@
 /** @file usb_displays.c
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <linux/hiddev.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
