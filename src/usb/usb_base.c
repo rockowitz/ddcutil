@@ -4,7 +4,7 @@
  * hiddev ioctl() calls.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -41,9 +41,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
  *
  * Arguments:
  *   hiddev_devname
- *   readonly         if true, open read only
- *                    if false, open for reading and writing
- *   emit_error_msg   if true, output message if error
+ *   calloptions      checks CALLOPT_RDONLY, CALLOPT_ERR_MSG
  *
  * Returns:
  *   file descriptor ( >= 0) if success
