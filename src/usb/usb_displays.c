@@ -382,9 +382,10 @@ GPtrArray * get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGTRC(debug, TRACE_GROUP, "Examining device: %s", hiddev_fn);
 
-      if (!is_possible_monitor_by_hiddev_name(hiddev_fn))
-         break;
-
+      if (!is_possible_monitor_by_hiddev_name(hiddev_fn)) {
+         DBGTRC(debug, TRACE_GROUP, "Not a possible monitor: %s", hiddev_fn);
+         continue;
+      }
 
       // will need better message handling for API
       Byte calloptions = CALLOPT_RDONLY;
@@ -408,7 +409,8 @@ GPtrArray * get_usb_monitor_list() {
             free_usb_detailed_device_summary(devsum);
          }
       }
-      else if (fd > 1) {     // fd == 0 should never occur
+      else {     // fd == 0 should never occur
+         assert(fd != 0);
          DBGTRC(debug, TRACE_GROUP, "open succeeded");
          // DBGTRC(debug, TRACE_GROUP, "Open succeeded");
          // Declare variables here and initialize them to NULL so that code at label close: works
@@ -471,6 +473,7 @@ GPtrArray * get_usb_monitor_list() {
             free(cgname);
          // TODO, free device summary
          usb_close_device(fd, hiddev_fn, CALLOPT_NONE); // return error if failure
+         DBGTRC(debug, TRACE_GROUP, "Closed");
       }  // monitor opened
    } // loop over device names
 
@@ -479,7 +482,7 @@ GPtrArray * get_usb_monitor_list() {
 
    if ( debug || IS_TRACING() ) {
       DBGMSG("Returning  %d monitors ", usb_monitors->len);
-      // report_usb_monitors(usb_monitors,1);
+      report_usb_monitors(usb_monitors,1);
    }
 
    return usb_monitors;
