@@ -279,6 +279,14 @@ static void query_usb_monitors() {
    execute_shell_cmd_rpt("ls -l /dev/hidraw*", 2);
    rpt_nl();
 
+   rpt_vstring(1, "Searching /sys for hiddev* entries...");
+   execute_shell_cmd_rpt("find /sys -name \"hiddev*\"", 2);
+   rpt_nl();
+
+   rpt_vstring(1, "Searching /sys for hidraw* entries...");
+   execute_shell_cmd_rpt("find /sys -name \"hidraw*\"", 2);
+   rpt_nl();
+
    if (output_level >= DDCA_OL_VERBOSE) {
       char * subsys_name = "usbmisc";
       rpt_nl();
