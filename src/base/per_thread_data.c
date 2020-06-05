@@ -321,7 +321,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
  *  #Per_Thread_Data instances.
  *
  *  \param  func  function to apply
- *  \parm   arg   an arbitray argument passed as a pointer
+ *  \parm   arg   an arbitrary argument passed as a pointer
  *
  *  This is a multi-instance operation.
  */
