@@ -177,7 +177,7 @@ hiddev_get_device_info(
   }
 
   assert(rc <= 0);
-  DBGMSF("Done.     Returning: %s", psc_desc(rc));
+  DBGMSF(debug, "Done.     Returning: %s", psc_desc(rc));
   return rc;
 }
 
