@@ -33,6 +33,7 @@ void     trd_set_default_max_tries(Retry_Operation type_id, uint16_t new_maxtrie
 void     trd_set_initial_thread_max_tries( Retry_Operation type_id, uint16_t new_maxtries);
 void     trd_set_thread_max_tries( Retry_Operation type_id, uint16_t new_maxtries);
 uint16_t trd_get_thread_max_tries( Retry_Operation type_id);
+void     trd_set_all_maxtries(Retry_Operation rcls, uint16_t maxtries);
 
 #ifdef FUTURE
 void     ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]);

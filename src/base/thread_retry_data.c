@@ -84,6 +84,7 @@ Per_Thread_Data * trd_get_thread_retry_data() {
 }
 
 
+
 /** Sets the maxtries value to be used for a given retry type when creating
  * new #Per_Thread_Data instances.
  *
@@ -95,6 +96,59 @@ void trd_set_default_max_tries(Retry_Operation rcls, uint16_t maxtries) {
    DBGMSF(debug, "Executing. rcls = %s, new_maxtries=%d", retry_type_name(rcls), maxtries);
 
    default_maxtries[rcls] = maxtries;
+}
+
+
+#define GLOBAL_MAXTRIES_MARKER "GLMX"
+typedef
+struct {
+   char marker[4];
+   Retry_Operation rcls;
+   uint16_t        maxtries;
+} Global_Maxtries_Args;
+
+// satisfies GFunc
+void global_maxtries_func(
+      Per_Thread_Data *   ptd,
+      gpointer  user_data)
+{
+   bool debug = false;
+
+   Global_Maxtries_Args * args = user_data;
+   assert(memcmp(args->marker, GLOBAL_MAXTRIES_MARKER, 4) == 0);
+   DBGMSF(debug, "thread = %d, rcls = %s, maxtries: %d",
+                  ptd->thread_id, retry_type_name(args->rcls), args->maxtries);
+
+  if (ptd->lowest_maxtries[args->rcls] > args->maxtries)
+     ptd->lowest_maxtries[args->rcls] = args->maxtries;
+  if (ptd->highest_maxtries[args->rcls] < args->maxtries)
+     ptd->highest_maxtries[args->rcls] = args->maxtries;
+}
+
+
+/**
+ *  For a given retry_type, sets
+ *  - the the default maxtries value for new threads
+ *  - the maxtries value for each existing thread
+ *
+ *   \pararm      retry_type
+ *   \param       new_maxtries
+ */
+void trd_set_all_maxtries(Retry_Operation rcls, uint16_t maxtries) {
+   bool debug = false;
+   DBGMSF(debug, "Executing. rcls = %s, new_maxtries=%d", retry_type_name(rcls), maxtries);
+
+   default_maxtries[rcls] = maxtries;
+   // done by caller
+   // if  (rcls == MULTI_PART_READ_OP)
+   //    default_maxtries[MULTI_PART_WRITE_OP] = maxtries;
+
+   Global_Maxtries_Args args;
+   memcpy(args.marker, GLOBAL_MAXTRIES_MARKER, 4);
+   args.rcls = rcls;
+   args.maxtries = maxtries;
+
+   ptd_apply_all(global_maxtries_func, &args);
 }
 
 
@@ -114,8 +168,8 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 #endif
 
 
-/** Sets the maxtries value for a specified retry type and the current thread.
- *  The highest_maxtries and lowest_maxtries values are set the same value.
+/** Sets the initial maxtries value for a specified retry type and the current thread.
+ *  The highest_maxtries and lowest_maxtries values are set to the same value.
  *
  *  \param retry_type
  *  \param new_maxtries  value to set
@@ -140,8 +194,8 @@ void trd_set_initial_thread_max_tries(Retry_Operation retry_type, uint16_t new_m
  *  \param new_maxtries  value to set
  */
 void trd_set_thread_max_tries(
-      Retry_Operation       retry_type,
-      Retry_Op_Value new_maxtries)
+      Retry_Operation  retry_type,
+      Retry_Op_Value   new_maxtries)
 {
    bool debug = false;
    ptd_cross_thread_operation_block();
