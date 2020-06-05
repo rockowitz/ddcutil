@@ -164,21 +164,20 @@ hiddev_get_device_info(
       struct hiddev_devinfo *  dev_info,
       Byte                     calloptions)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting.");
    assert(dev_info);
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
    if (rc != 0) {
       int errsv = errno;
-      if (calloptions & CALLOPT_ERR_MSG)
+      if ( (calloptions & CALLOPT_ERR_MSG) || debug)
          REPORT_IOCTL_ERROR("HIDIOCGDEVINFO", errsv);
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
       rc = -errsv;
   }
 
   assert(rc <= 0);
+  DBGMSF("Done.     Returning: %s", psc_desc(rc));
   return rc;
 }
 
