@@ -1,7 +1,7 @@
 /** @file hiddev_util.h
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -72,6 +72,8 @@ bool force_hiddev_monitor(int fd);
 
 bool is_hiddev_monitor(int fd);
 
+GPtrArray * get_hiddev_device_names_using_udev();
+GPtrArray * get_hiddev_device_names_using_filesys();
 GPtrArray * get_hiddev_device_names();
 
 char * get_hiddev_name(int fd);

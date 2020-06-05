@@ -79,7 +79,7 @@ static int is_hiddev(const struct dirent *ent) {
  * Returns:   GPtrArray of device device names.
  */
 GPtrArray * get_hiddev_device_names_using_filesys() {
-   bool debug = true;
+   bool debug = false;
    if (debug) printf("(%s) Starting...\n", __func__);
 
    const char *hidraw_paths[] = { "/dev/", "/dev/usb/", NULL };
@@ -105,7 +105,7 @@ GPtrArray * get_hiddev_device_names_using_filesys() {
  */
 GPtrArray *
 get_hiddev_device_names_using_udev() {
-   bool debug = true;
+   bool debug = false;
    if (debug) printf("(%s) Starting...\n", __func__);
 
    GPtrArray * dev_names = g_ptr_array_sized_new(10);
@@ -171,10 +171,10 @@ bye:
  */
 GPtrArray * get_hiddev_device_names() {
    // temp, call both for testing
-   GPtrArray * result1 = get_hiddev_device_names_using_udev();
-   g_ptr_array_free(result1, true);
-   GPtrArray * result2 = get_hiddev_device_names_using_filesys();
-   return result2;
+   GPtrArray * result = get_hiddev_device_names_using_udev();
+   // g_ptr_array_free(result1, true);
+   // GPtrArray * result2 = get_hiddev_device_names_using_filesys();
+   return result;
 }
 
 
