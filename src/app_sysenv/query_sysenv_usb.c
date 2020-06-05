@@ -148,8 +148,23 @@ static void probe_hiddev(int depth) {
    int d1 = depth+1;
    int rc;
 
+   rpt_label(depth, "hiddev device names found in file system:");
+   GPtrArray * hiddev_devices = get_hiddev_device_names_using_filesys();
+   for (int ndx = 0; ndx < hiddev_devices->len; ndx++) {
+      rpt_vstring(d1, "%s", (char *) g_ptr_array_index(hiddev_devices,ndx));
+   }
+   g_ptr_array_free(hiddev_devices, true);
+
+   rpt_label(depth, "hiddev device names found in udev:");
+   hiddev_devices = get_hiddev_device_names_using_udev();
+   for (int ndx = 0; ndx < hiddev_devices->len; ndx++) {
+      rpt_vstring(d1, "%s", (char *) g_ptr_array_index(hiddev_devices,ndx));
+   }
+
+   rpt_vstring(depth, "Examining hiddev devices reported by udev...");
+
    // rpt_vstring(0, "Checking for USB HID devices using hiddev...");
-   GPtrArray * hiddev_devices = get_hiddev_device_names();
+   // GPtrArray * hiddev_devices = get_hiddev_device_names();
    rpt_vstring(depth, "Found %d USB HID devices.", hiddev_devices->len);
    for (int devndx=0; devndx<hiddev_devices->len; devndx++) {
       rpt_nl();
@@ -165,7 +180,7 @@ static void probe_hiddev(int depth) {
              rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
              Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn, true);
              if (devsum) {
-                rpt_vstring(d1, "Detiled device summary for testing: ");
+                rpt_vstring(d1, "Detailed device summary for testing: ");
                 report_usb_detailed_device_summary(devsum, d1+1);
 
                 rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
@@ -299,6 +314,7 @@ static void query_usb_monitors() {
       probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ true, 1);
    }
 
+#ifdef DISABLE
    if (output_level >= DDCA_OL_VERBOSE) {
       // currently an overwhelming amount of information - need to display
       // only possible HID connected monitors
@@ -321,6 +337,7 @@ static void query_usb_monitors() {
        // vendor specific range on the Apple Cinema display
        // probe_hidapi(1);
    }
+#endif
 
    rpt_nl();
    rpt_vstring(0, "Checking for USB HID devices using hiddev...");
