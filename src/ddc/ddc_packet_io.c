@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2030 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
