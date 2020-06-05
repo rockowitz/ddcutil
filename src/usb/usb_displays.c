@@ -439,6 +439,7 @@ GPtrArray * get_usb_monitor_list() {
             goto close;
          }
 
+         DBGTRC(debug, TRACE_GROUP, "Collecting USB reports...");
          vcp_reports = collect_vcp_reports(fd);
 
          moninfo = calloc(1,sizeof(Usb_Monitor_Info));
