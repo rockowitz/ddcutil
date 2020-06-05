@@ -207,6 +207,8 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
+   trd_set_all_maxtries(retry_type, new_maxtries);
+
    unlock_if_needed(this_function_performed_lock);
 
    DBGMSF(debug, "Done");
@@ -392,11 +394,11 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
       // assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
       // assert (acc.min_lowest_maxtries  == stats_rec->lowest_maxtries);
       if (acc.max_highest_maxtries != stats_rec->highest_maxtries) {
-         DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->hightest_restries(%d)",
+         DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->highest_retries(%d)",
                 acc.max_highest_maxtries,stats_rec->highest_maxtries);
       }
       if (acc.min_lowest_maxtries != stats_rec->lowest_maxtries) {
-            DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->hightest_restries(%d)",
+            DBGMSG("acc.max_lowest_maxtries(%d) != stats_rec->lowest_restries(%d)",
                    acc.min_lowest_maxtries,stats_rec->lowest_maxtries);
       }
 
