@@ -389,7 +389,7 @@ GPtrArray * get_usb_monitor_list() {
 
       // will need better message handling for API
       Byte calloptions = CALLOPT_RDONLY;
-      if (ol >= DDCA_OL_VERBOSE)
+      // if (ol >= DDCA_OL_VERBOSE)  // always give the user a clue as to why detection failed
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
       if (fd < 0) {
