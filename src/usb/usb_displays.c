@@ -392,21 +392,24 @@ GPtrArray * get_usb_monitor_list() {
       if (ol >= DDCA_OL_VERBOSE)
          calloptions |= CALLOPT_ERR_MSG;
       int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
-      if (fd < 0 && ol >= DDCA_OL_VERBOSE) {
-         Usb_Detailed_Device_Summary * devsum =
-               lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
-         if (devsum) {
+      if (fd < 0) {
+         if (ol >= DDCA_OL_VERBOSE) {
             DBGTRC(debug, TRACE_GROUP, "Open failed");
-            // report_usb_detailed_device_summary(devsum, 4);
+            Usb_Detailed_Device_Summary * devsum =
+               lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
+            if (devsum) {
 
-            f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
+               // report_usb_detailed_device_summary(devsum, 4);
+
+               f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
                            devsum->busnum_s,
                            devsum->devnum_s,
                            devsum->vendor_id,
                            devsum->product_id,
                            devsum->vendor_name,
                            devsum->product_name);
-            free_usb_detailed_device_summary(devsum);
+               free_usb_detailed_device_summary(devsum);
+            }
          }
       }
       else {     // fd == 0 should never occur
