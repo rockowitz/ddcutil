@@ -260,6 +260,7 @@ static void probe_hiddev(int depth) {
 
 
              }
+             free(cgname);
          }
          close(fd);
       }
