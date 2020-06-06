@@ -180,8 +180,8 @@ static void probe_hiddev(int depth) {
              rpt_vstring(depth, "Unable to open device %s: %s", curfn, strerror(errno));
              Usb_Detailed_Device_Summary * devsum = lookup_udev_usb_device_by_devname(curfn, true);
              if (devsum) {
-                rpt_vstring(d1, "Detailed device summary for testing: ");
-                report_usb_detailed_device_summary(devsum, d1+1);
+                // rpt_vstring(d1, "Detailed device summary for testing: ");
+                // report_usb_detailed_device_summary(devsum, d1+1);
 
                 rpt_vstring(d1, "USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
                                 devsum->busnum_s,
@@ -214,15 +214,14 @@ static void probe_hiddev(int depth) {
                 bool b0 = is_hiddev_monitor(fd);
                 if (b0)
                    rpt_vstring(d1, "Identifies as a USB HID monitor");
-                else
+                else {
                    rpt_vstring(d1, "Not a USB HID monitor");
+                   b0 = force_hiddev_monitor(fd);
+                   if (b0)
+                      rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.\n");
+                }
 
                 if (get_output_level() >= DDCA_OL_VERBOSE) {
-                   if (!b0) {
-                      b0 = force_hiddev_monitor(fd);
-                      if (b0)
-                         rpt_vstring(d1, "Device vid/pid matches exception list.  Forcing report for device.\n");
-                   }
                    if (b0) {
                       char * simple_devname = strstr(curfn, "hiddev");
                       Udev_Usb_Devinfo * dinfo = get_udev_usb_devinfo("usbmisc", simple_devname);
@@ -239,8 +238,28 @@ static void probe_hiddev(int depth) {
                       dbgrpt_hiddev_device_by_fd(fd, d1);
                    }
                 }
+                if (b0) {
+                   Buffer * edid_buffer = hiddev_get_edid(fd);
+                   if (edid_buffer) {
+                      Parsed_Edid * parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
+                      if (!parsed_edid) {
+                         rpt_label(d1, "get_hiddev_edid() returned invalid EDID");
+                         // if debug or verbose, dump the bad edid  ??
+                         // if (debug || get_output_level() >= OL_VERBOSE) {
+                         // }
+                      }
+                      else {
+                         report_parsed_edid(parsed_edid, /*verbose*/ true, d1);
+                         free_parsed_edid(parsed_edid);
+                      }
+                   }
+                   else {
+                      rpt_label(d1, "Unable to read EDID using hiddev");
+                   }
+                }
+
+
              }
-             free(cgname);
          }
          close(fd);
       }
