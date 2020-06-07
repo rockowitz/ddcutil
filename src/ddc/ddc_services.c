@@ -15,7 +15,6 @@
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
-// #include "base/dynamic_sleep.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/sleep.h"
@@ -73,69 +72,68 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
 
-   // if (show_per_thread_stats == false) {
-      if (stats & DDCA_STATS_TRIES) {
-         ddc_report_ddc_stats(depth);
-         rpt_nl();
-      }
-      if (stats & DDCA_STATS_ERRORS) {
-         rpt_nl(); ;
-         report_all_status_counts(depth);   // error code counts
-      }
-      if (stats & DDCA_STATS_CALLS) {
-         rpt_nl();
-         report_execution_stats(depth);
-         rpt_nl();
-   #ifdef OLD
-         if (dsa_is_enabled()) {
-            // for now just report current thread
-            dsa_report_stats(depth);
-            rpt_nl();
-         }
-   #endif
+   if (stats & DDCA_STATS_TRIES) {
+      ddc_report_ddc_stats(depth);
+      rpt_nl();
 
-         report_io_call_stats(depth);
+      // Consistency check:
+      // report_all_thread_retry_data(depth);
+   }
+
+   if (stats & DDCA_STATS_ERRORS) {
+      report_all_status_counts(depth);   // error code counts
+      rpt_nl();
+   }
+
+   if (stats & DDCA_STATS_CALLS) {
+      report_execution_stats(depth);
+      rpt_nl();
+
+#ifdef OLD
+      if (dsa_is_enabled()) {
+         // for now just report current thread
+         dsa_report_stats(depth);
          rpt_nl();
-         report_sleep_stats(depth);
       }
-      if (stats & ( DDCA_STATS_CALLS)) {
-         rpt_nl();
-         report_elapsed_stats(depth);
-         rpt_nl();
-         // seeing the maxtries settings for each
-         // report_all_thread_retry_data(depth);
-      }
-      if (stats & (DDCA_STATS_ELAPSED)) {
-         rpt_nl();
-         report_elapsed_summary(depth);
-         rpt_nl();
-      }
-   // }
-   // else  {
+#endif
+
+      report_io_call_stats(depth);
+      rpt_nl();
+      report_sleep_stats(depth);
+      rpt_nl();
+      report_elapsed_stats(depth);
+      rpt_nl();
+   }
+
+   if (stats & (DDCA_STATS_ELAPSED)) {
+      report_elapsed_summary(depth);
+      rpt_nl();
+   }
+
+
    if (show_per_thread_stats) {
       rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
       rpt_nl();
-      // include per_thread_stats = true
-       ptd_list_threads(depth);
+      ptd_list_threads(depth);
        if (stats & DDCA_STATS_TRIES) {
            report_all_thread_maxtries_data(depth);
-       }
-       if (stats & DDCA_STATS_ERRORS) {
+      }
+      if (stats & DDCA_STATS_ERRORS) {
           report_all_thread_status_counts(depth);
           rpt_nl();
-       }
-       if (stats & DDCA_STATS_CALLS) {
+      }
+      if (stats & DDCA_STATS_CALLS) {
           report_all_thread_sleep_data(depth);
-       }
-       if (stats & (DDCA_STATS_ELAPSED)) {
+      }
+      if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
           report_elapsed_summary(depth);     // temp?
           //   rpt_nl();
-       }
+      }
 
-       // Reports locks held by per_thread_data() to confirm that locking has
-       // trivial affect on performance.
-       //dbgrpt_per_thread_data_locks(depth+1);
+      // Reports locks held by per_thread_data() to confirm that locking has
+      // trivial affect on performance.
+      //dbgrpt_per_thread_data_locks(depth+1);
    }
 }
 
