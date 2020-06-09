@@ -16,14 +16,13 @@ ddcutil_DATA = $(resfiles)
 
 if ENABLE_SHARED_LIB_COND
    # where FindDDCUtil.cmake will installed: 
-   # cmakedir = $(datadir)/cmake/Modules
-   # cmakedir = $(libdir)/cmake/Modules
    cmakedir = $(libdir)/cmake/ddcutil
       
-   # where FindDDCUtil.cmake is found: 
-   cmake_DATA = usr/share/cmake/Modules/FindDDCUtil.cmake
+   # where make install finds FindDDCUtil.cmake:
+   cmake_DATA = cmake/ddcutil/FindDDCUtil.cmake
 
-   EXTRA_DIST += usr/share/cmake/Modules/FindDDCUtil.cmake
+   # include FindDDCUtil.cmake in tarball:
+   EXTRA_DIST += cmake/ddcutil/FindDDCUtil.cmake
 endif
 
 
@@ -42,12 +41,6 @@ install-data-local:
 	@echo "cmakedir:       ${cmakedir}"
 	@echo "DESTDIR:        ${DESTDIR}"
 
-# alternative to using cmakedir/cmake_DATA:
-# @echo "looking in usr/share/cmake/Modules for file to copy:"
-# ls usr/share/cmake/Modules
-# mkdir -p ${DESTDIR}${datadir}/cmake/Modules
-# cp -p usr/share/cmake/Modules/FindDDCUtil.cmake ${DESTDIR}${datadir}/cmake/Modules
-# @echo "(data/Makefile) ==>  Done: install-data-local"
 
 # @xxx@ names are not defined, names with $() are 
 # executes after install-data
