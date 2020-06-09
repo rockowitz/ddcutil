@@ -16,8 +16,9 @@ ddcutil_DATA = $(resfiles)
 
 if ENABLE_SHARED_LIB_COND
    # where FindDDCUtil.cmake will installed: 
-   cmakedir = $(datadir)/cmake/Modules
+   # cmakedir = $(datadir)/cmake/Modules
    # cmakedir = $(libdir)/cmake/Modules
+   cmakedir = $(libdir)/cmake/ddcutil
       
    # where FindDDCUtil.cmake is found: 
    cmake_DATA = usr/share/cmake/Modules/FindDDCUtil.cmake
