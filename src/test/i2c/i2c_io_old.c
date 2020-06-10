@@ -142,7 +142,7 @@ Public_Status_Code call_i2c_writer(
    Public_Status_Code rc;
 
    RECORD_IO_EVENT(IE_WRITE,
-      ( rc = writer(fh, bytect, bytes_to_write ) )
+      ( rc = writer(fh, 0x37, bytect, bytes_to_write ) )
      );
    if (debug)
       printf("(%s) writer() function returned %d\n",
@@ -180,7 +180,7 @@ Public_Status_Code call_i2c_reader(
 
    RECORD_IO_EVENT(
       IE_READ,
-      ( rc = reader(fh, bytect, readbuf) )
+      ( rc = reader(fh, 0x37, /*read_bytewise*/ false, bytect, readbuf) )
      );
    if (debug)
       printf("(%s) reader() function returned %d\n",

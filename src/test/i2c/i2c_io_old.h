@@ -26,7 +26,7 @@
 
 #include <stdbool.h>
 
-#include "../../i2c/i2c_execute_io.h"
+#include "../../i2c/i2c_execute.h"
 #include "base/core.h"
 #include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
@@ -34,6 +34,15 @@
 
 // was in common.h
 #define MAX_I2C_MESSAGE_SIZE   131    // 127 + 4;
+
+// was in parms.h
+#define DEFAULT_I2C_WRITE_MODE "write"
+// #define DEFAULT_I2C_WRITE_MODE "ioctl_write"
+//#define DEFAULT_I2C_WRITE_MODE  "i2c_smbus_write_i2c_block_data"
+
+#define DEFAULT_I2C_READ_MODE  "read"
+// #define DEFAULT_I2C_READ_MODE  "ioctl_read"
+
 
 void set_i2c_write_mode(char* mode);
 
