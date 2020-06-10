@@ -7,7 +7,8 @@
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -705,7 +706,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages)
 
 #define REQUIRE(_condition, _msg, _position)  \
    if (!(_condition)) { \
-      g_ptr_array_add(messages, g_strdup_printf("%s at offset %ld", _msg, _position-global_start) ); \
+      g_ptr_array_add(messages, g_strdup_printf("%s at offset %jd", _msg, (intmax_t)( _position-global_start)) ); \
       segment->name_start = segment->value_start = segment->remainder_start = NULL; \
       segment->name_len   = segment->value_len   = segment->remainder_len   = 0; \
       goto bye; \
