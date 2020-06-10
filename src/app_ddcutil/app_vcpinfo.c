@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "public/ddcutil_types.h"
 

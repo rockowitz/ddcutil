@@ -9,6 +9,7 @@
 #include "public/ddcutil_status_codes.h"
 
 #include <assert.h>
+#include <string.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"

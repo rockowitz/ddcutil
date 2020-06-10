@@ -11,6 +11,7 @@
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <string.h>
 
 #include "util/debug_util.h"
 #include "util/report_util.h"
