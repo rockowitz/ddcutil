@@ -3,7 +3,7 @@
  * Demonstrate feature list functions.
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -65,7 +65,7 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
    // alternatively, use convenience function ddca_feature_list_string(), see below
    printf("\nFeatures in feature set PROFILE:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
-      if (ddca_feature_list_contains(&vcplist1, ndx))
+      if (ddca_feature_list_contains(vcplist1, ndx))
          printf(" %02x", ndx);
    }
    puts("");
@@ -83,17 +83,17 @@ void demo_feature_lists_for_dref(DDCA_Display_Ref dref) {
 
    printf("\nFeatures in feature set COLOR:\n   ");
    for (int ndx = 0; ndx < 256; ndx++) {
-      if (ddca_feature_list_contains(&vcplist2, ndx))
+      if (ddca_feature_list_contains(vcplist2, ndx))
          printf(" %02x", ndx);
    }
    puts("");
 
    // We only would need to get read the features that have not yet been read
-   DDCA_Feature_List vcplist3 = ddca_feature_list_and_not(&vcplist2, &vcplist1);
+   DDCA_Feature_List vcplist3 = ddca_feature_list_and_not(vcplist2, vcplist1);
 
    printf("\nFeatures in feature set COLOR but not in PROFILE:\n   ");
    // a convenience function:
-   const char * s = ddca_feature_list_string(&vcplist3, /*prefix=*/ "", /*sepstr=*/ " ");
+   const char * s = ddca_feature_list_string(vcplist3, /*prefix=*/ "", /*sepstr=*/ " ");
    printf("%s\n", s);
 }
 

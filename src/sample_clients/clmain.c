@@ -3,7 +3,7 @@
  * Framework for test code
  *
  * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -91,6 +91,6 @@ int main(int argc, char** argv) {
          DDC_ERRMSG("ddca_close_display", rc);
    }
 
-   ddca_show_stats(DDCA_STATS_ALL, 0);
+   ddca_show_stats(DDCA_STATS_ALL, /*by_thread=*/false, 0);
    return 0;
 }
