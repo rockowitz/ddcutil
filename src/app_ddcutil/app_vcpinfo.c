@@ -112,8 +112,8 @@ app_listvcp(FILE * fh) {
  * \remark
  * Move back to vcp_feature_codes.c?
  */
-static
-Byte valid_versions(
+static Byte
+valid_versions(
       VCP_Feature_Table_Entry * pentry)
 {
    Byte result = 0x00;
@@ -160,7 +160,8 @@ Byte valid_versions(
  *
  * Note: MCCS 1.0 is not reported
  */
-static char * valid_version_names_r(
+static char *
+valid_version_names_r(
       Byte valid_version_flags,
       char *             version_name_buf,
       int                bufsz)
@@ -190,7 +191,11 @@ static char * valid_version_names_r(
 }
 
 
-static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
+static void
+report_sl_values(
+      DDCA_Feature_Value_Entry * sl_values,
+      int                           depth)
+{
    while (sl_values->value_name != NULL) {
       rpt_vstring(depth, "0x%02x: %s", sl_values->value_code, sl_values->value_name);
       sl_values++;
@@ -198,7 +203,8 @@ static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
 }
 
 
-static char * interpret_ddca_version_feature_flags_readwrite(
+static char *
+interpret_ddca_version_feature_flags_readwrite(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = NULL;
@@ -216,7 +222,8 @@ static char * interpret_ddca_version_feature_flags_readwrite(
 }
 
 
-static char * interpret_ddca_version_feature_flags_type(
+static char *
+interpret_ddca_version_feature_flags_type(
       DDCA_Version_Feature_Flags feature_flags)
 {
    char * result = NULL;
@@ -244,8 +251,8 @@ static char * interpret_ddca_version_feature_flags_type(
 }
 
 
-static
-char * interpret_feature_flags_r(
+static char *
+interpret_feature_flags_r(
       DDCA_Version_Feature_Flags vflags,
       char *                     workbuf,
       int                        bufsz)
@@ -275,7 +282,8 @@ char * interpret_feature_flags_r(
 
 
 // report function specifically for use by report_vcp_feature_table_entry()
-static void report_feature_table_entry_flags(
+static void
+report_feature_table_entry_flags(
         VCP_Feature_Table_Entry * pentry,
         DDCA_MCCS_Version_Spec    vcp_version,
         int                       depth)
@@ -298,7 +306,11 @@ static void report_feature_table_entry_flags(
  *  \remark
  *  More properly in vcp_feature_codes.c?
  */
-void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth) {
+void
+report_vcp_feature_table_entry(
+      VCP_Feature_Table_Entry * pentry,
+      int                       depth)
+{
    char workbuf[200];
 
    int d1 = depth+1;
