@@ -190,81 +190,12 @@ static char * valid_version_names_r(
 }
 
 
-#ifdef OLD
-char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
-   *buf = '\0';
-   if (pentry->vcp_subsets & VCP_SUBSET_PROFILE)
-      str_comma_cat_r("PROFILE", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_COLOR)
-      str_comma_cat_r("COLOR", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_LUT)
-      str_comma_cat_r("LUT", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_CRT)
-      str_comma_cat_r("CRT", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_TV)
-      str_comma_cat_r("TV", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_AUDIO)
-      str_comma_cat_r("AUDIO", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_WINDOW)
-      str_comma_cat_r("WINDOW", buf, bufsz);
-   if (pentry->vcp_subsets & VCP_SUBSET_DPVL)
-      str_comma_cat_r("DPVL", buf, bufsz);
-   return buf;
-}
-#endif
-
-#ifdef OLD
-static char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
-   *buf = '\0';
-
-   int kk = 0;
-   for(;kk < vcp_subset_count; kk++) {
-      Vcp_Subset_Desc cur_desc = vcp_subset_desc[kk];
-      if (pentry->vcp_subsets & cur_desc.subset_id)
-         str_comma_cat_r(cur_desc.public_name, buf, bufsz);
-   }
-
-   return buf;
-}
-#endif
-
-#ifdef OLD
-static char * subset_names_r(VCP_Feature_Table_Entry * pentry, char * buf, int bufsz) {
-   *buf = '\0';
-
-   int kk = 0;
-   for(;kk < vcp_subset_count; kk++) {
-      Value_Name_Title cur_desc = vcp_subset_table[kk];
-      if (pentry->vcp_subsets & cur_desc.value)
-         str_comma_cat_r(cur_desc.title, buf, bufsz);
-   }
-
-   return buf;
-}
-#endif
-
-
 static void report_sl_values(DDCA_Feature_Value_Entry * sl_values, int depth) {
    while (sl_values->value_name != NULL) {
       rpt_vstring(depth, "0x%02x: %s", sl_values->value_code, sl_values->value_name);
       sl_values++;
    }
 }
-
-#ifdef UNUSED
-static void report_sl_values_table(DDCA_Feature_Value_Entry * sl_values, int depth) {
-   if (sl_values) {
-      rpt_vstring(depth, "Values:");
-      while (sl_values->value_name != NULL) {
-         rpt_vstring(depth+1, "0x%02x: %s", sl_values->value_code, sl_values->value_name);
-         sl_values++;
-      }
-   }
-   else {
-      rpt_vstring(depth, "Values:  none");
-   }
-}
-#endif
 
 
 static char * interpret_ddca_version_feature_flags_readwrite(
@@ -312,19 +243,9 @@ static char * interpret_ddca_version_feature_flags_type(
    return result;
 }
 
-#ifdef OLD  // use vcp_interpret_global_feature_flags
-static char * interpret_ddca_global_feature_flags(
-      DDCA_Version_Feature_Flags feature_flags)
-{
-   char * result = "";
-   if (feature_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
-      result = "Synthetic";
-   return result;
-}
-#endif
 
-
-static char * interpret_feature_flags_r(
+static
+char * interpret_feature_flags_r(
       DDCA_Version_Feature_Flags vflags,
       char *                     workbuf,
       int                        bufsz)
@@ -395,10 +316,6 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
    char * subset_names = feature_subset_names(pentry->vcp_subsets);
    rpt_vstring(d1, "ddcutil feature subsets: %s", subset_names);
    free(subset_names);
-#ifdef OLD
-   rpt_vstring(d1, "ddcutil feature subsets: %s",
-                   subset_names_r(pentry, workbuf, sizeof(workbuf)));
-#endif
    if (has_version_specific_features(pentry)) {
       // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
       report_feature_table_entry_flags(pentry, DDCA_VSPEC_V20, d1);
