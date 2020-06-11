@@ -1,4 +1,7 @@
-// app_vcpinfo.c
+/** \file app_vcpinfo.c
+ *
+ *  vcpinfo and (deprecated) listvcp commands
+ */
 
 // Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -17,15 +20,12 @@
 #include "app_ddcutil/app_vcpinfo.h"
 
 
-
-
-/* Creates humanly readable interpretation of VCP feature flags.
- * The result is returned in a buffer supplied by the caller.
+/** Creates humanly readable interpretation of VCP feature flags.
+ *  The result is returned in a buffer supplied by the caller.
  *
- * Arguments:
- *    flags
- *    buf
- *    buflen
+ *  \param  flags   version specific feature flags
+ *  \param  buf     pointer to buffer
+ *  \param  buflen  buffer size
  *
  * Returns:   buf
  */
@@ -71,15 +71,12 @@ vcp_interpret_version_feature_flags(
 }
 
 
-
-
-
-/* Implements command LISTVCP
+/** Mainline for deprecated command LISTVCP
  *
- * Arguments:
- *   fh      where to write output
+ *  \param fh  where to write output
  */
-void app_listvcp(FILE * fh) {
+void
+app_listvcp(FILE * fh) {
    fprintf(fh, "Recognized VCP feature codes:\n");
    char buf[200];
    char buf2[234];
@@ -106,15 +103,19 @@ void app_listvcp(FILE * fh) {
 }
 
 
-/* Returns a byte of flags indicating those MCCS versions for which the
- * specified VCP feature is defined.
+/** Returns a byte of flags indicating those MCCS versions for which the
+ *  specified VCP feature is defined.
  *
- * Arguments:
- *   pentry      pointer to VCP_Feature_Table_Entry for VCP feature
+ *  \param  pentry pointer to VCP_Feature_Table_Entry for VCP feature
+ *  \return byte of flags
  *
- * Returns:      byte of flags
+ * \remark
+ * Move back to vcp_feature_codes.c?
  */
-static Byte valid_versions(VCP_Feature_Table_Entry * pentry) {
+static
+Byte valid_versions(
+      VCP_Feature_Table_Entry * pentry)
+{
    Byte result = 0x00;
 
    if (pentry->v20_flags)
@@ -367,12 +368,14 @@ static void report_feature_table_entry_flags(
 }
 
 
-/* Emits a report on a VCP_Feature_Table_Entry.  This function is used by the
- * VCPINFO command.  The report is written to the current report destination.
+/** Emits a report on a VCP_Feature_Table_Entry.  This function is used by the
+ *  VCPINFO command.  The report is written to the current report destination.
  *
- * Arguments:
- *    pentry   pointer to feature table entry
- *    depth    logical indentation depth
+ *  \param   pentry   pointer to feature table entry
+ *  \param   depth    logical indentation depth
+ *
+ *  \remark
+ *  More properly in vcp_feature_codes.c?
  */
 void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth) {
    char workbuf[200];
@@ -415,6 +418,13 @@ void report_vcp_feature_table_entry(VCP_Feature_Table_Entry * pentry, int depth)
 }
 
 
+/** Mainline for VCPINFO command
+ *
+ *  \param  fref        feature set reference
+ *  \param  mccs_vspec  VCP version spec
+ *  \param  fsflags     feature set flags
+ *  \return false if no features shown, true otherwise
+ */
 bool
 app_vcpinfo(
       Feature_Set_Ref * fref,
@@ -445,5 +455,3 @@ app_vcpinfo(
      }
    return vcpinfo_ok;
 }
-
-
