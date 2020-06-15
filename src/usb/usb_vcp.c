@@ -3,7 +3,7 @@
  * Get and set VCP feature codes for USB connected monitors.
  */
 
-// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -428,8 +428,6 @@ usb_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   // Trace_Group tg = TRACE_GROUP;  if (debug) tg = 0xFF;
-   // TRCMSGTG(tg, "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
    DBGTRC(debug, TRACE_GROUP,
              "Reading feature 0x%02x, dh=%p, dh->dref=%p", feature_code, dh, dh->dref);
 
@@ -443,8 +441,6 @@ usb_get_nontable_vcp_value(
    // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
-   // DBGMSF(debug, "wolf 2. dh=%p, dh->dref=%p", dh, dh->dref);
-   // Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dh->dref);
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(moninfo);
 
