@@ -2,7 +2,7 @@
  * Access displays, whether DDC, ADL, or USB
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -240,7 +240,6 @@ bye:
       dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       dh->dref->vcp_version = DDCA_VSPEC_V22;   // good enuf for test
-      communication_working = true;
    }
 
    DBGTRC(debug, TRACE_GROUP, "dh=%s, Returning: %s",
