@@ -3,7 +3,7 @@
  * Functions to execute shell commands
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -51,9 +51,8 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
     else {
        char * a_line = NULL;
        size_t len = 0;
-       ssize_t read;
        bool first_line = true;
-       while ( (read=getline(&a_line, &len, fp)) != -1) {
+       while ( getline(&a_line, &len, fp) >= 0) {
           if (strlen(a_line) > 0) {
              // printf("(%s) a_line: |%s|\n", __func__, a_line);
              int ch = a_line[strlen(a_line)-1];
@@ -146,9 +145,8 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
     else {
        char * a_line = NULL;
        size_t len = 0;
-       ssize_t read;
        bool first_line = true;
-       while ( (read=getline(&a_line, &len, fp)) != -1) {
+       while ( getline(&a_line, &len, fp) >= 0) {
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
           if (first_line) {
