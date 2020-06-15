@@ -88,7 +88,6 @@ usb_get_usage_value_by_report_type_and_ucode(
       else {
          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", -rc);
          // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-         // gsc = modulate_rc(-errsv, RR_ERRNO);
          psc = rc;
       }
 
@@ -96,7 +95,6 @@ usb_get_usage_value_by_report_type_and_ucode(
          DBGMSG0("After hid_get_usage_value():");
          dbgrpt_hiddev_usage_ref(&uref, 1);
       }
-      // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
       goto bye;
    }
    *curval = uref.value;
@@ -109,14 +107,11 @@ usb_get_usage_value_by_report_type_and_ucode(
    finfo.report_id   = uref.report_id;
    finfo.field_index = uref.field_index;    // ?
 
-   rc = ioctl(fd, HIDIOCGFIELDINFO, &finfo);  // Fills in usage value
-   if (rc != 0) {
+   if (ioctl(fd, HIDIOCGFIELDINFO, &finfo) < 0) {  // Fills in usage value
       int errsv = errno;
       REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", errsv);
       // occasionally see -1, errno = 22 invalid argument - for Battery System Page: Run Time to Empty
-      // gsc = modulate_rc(-errsv, RR_ERRNO);
       psc = -errsv;
-      // printf("(%s) errsv=%d, gsc=%d\n", __func__, errsv, gsc);
       goto bye;
    }
 
@@ -173,7 +168,6 @@ set_control_value(int fd,
    DBGMSF(debug,
          "Starting. fd=%d, report_type=%d, report_id=%d, field_ndx=%d, usage_ndx=%d, value=%d",
          fd, report_type, report_type, field_ndx, usage_ndx, value);
-   int rc;
    Status_Errno result = 0;
 
    struct hiddev_report_info rinfo = {
@@ -191,12 +185,12 @@ set_control_value(int fd,
       DBGMSG0("Before HIDIOCSUSAGE");
       dbgrpt_hiddev_usage_ref(&uref, 1);
    }
-   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+   if (ioctl(fd, HIDIOCSUSAGE, &uref) < 0) {
       result = -errno;
       REPORT_IOCTL_ERROR("HIDIOCSUSAGE", errno);
       goto bye;
    }
-   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
+   if (ioctl(fd, HIDIOCSREPORT, &rinfo) < 0) {
       result = -errno;
       REPORT_IOCTL_ERROR("HIDIOCGUSAGE", errno);
       goto bye;
@@ -232,7 +226,6 @@ set_usage_value_by_report_type_and_ucode(
    bool debug = false;
    DBGMSF(debug, "Starting. fd=%d, report_type=%d, usage_code=0x%08x, value=%d",
                  fd, report_type, usage_code, value);
-   int rc;
    Public_Status_Code psc = 0;
 
    struct hiddev_usage_ref uref = {
@@ -245,7 +238,7 @@ set_usage_value_by_report_type_and_ucode(
       DBGMSG0("Before HIDIOCSUSAGE");
       dbgrpt_hiddev_usage_ref(&uref, 1);
    }
-   if ((rc=ioctl(fd, HIDIOCSUSAGE, &uref)) < 0) {
+   if (ioctl(fd, HIDIOCSUSAGE, &uref) < 0) {
       psc = -errno;
       REPORT_IOCTL_ERROR("HIDIOCSUSAGE", errno);
       goto bye;
@@ -270,7 +263,7 @@ set_usage_value_by_report_type_and_ucode(
          .report_id   = uref.report_id
    };
 
-   if ((rc=ioctl(fd, HIDIOCSREPORT, &rinfo)) < 0) {
+   if (ioctl(fd, HIDIOCSREPORT, &rinfo) < 0) {
       psc = -errno;
       REPORT_IOCTL_ERROR("HIDIOCSREPORT", errno);
       goto bye;
