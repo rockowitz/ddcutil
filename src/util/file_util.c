@@ -52,10 +52,9 @@ int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
       // if line == NULL && len == 0, then getline allocates buffer for line
       char * line = NULL;
       size_t len = 0;
-      ssize_t read;
       int     linectr = 0;
       errno = 0;
-      while ((read = getline(&line, &len, fp)) != -1) {
+      while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
          g_ptr_array_add(line_array, line);
@@ -195,10 +194,9 @@ file_get_last_lines(
       // if line == NULL && len == 0, then getline allocates buffer for line
       char * line = NULL;
       size_t len = 0;
-      ssize_t read;
       int     linectr = 0;
       errno = 0;
-      while ((read = getline(&line, &len, fp)) != -1) {
+      while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
          clb_add(clb, line);
