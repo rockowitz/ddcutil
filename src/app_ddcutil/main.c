@@ -720,8 +720,8 @@ int main(int argc, char *argv[]) {
                   if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
                      flags |= FSF_RO_ONLY;
 
-                  // this is nonsense, get do getvcp on a WO feature
-                  // should be caught by parser
+                  // this is nonsense, getvcp on a WO feature should be
+                  // caught by parser
                   if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
                      flags |= FSF_WO_ONLY;
                      DBGMSG("Invalid: GETVCP for WO features");
