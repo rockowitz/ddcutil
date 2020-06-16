@@ -1,7 +1,7 @@
 /* \file ddc_output.h
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-202- Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_OUTPUT_H_
@@ -69,4 +69,6 @@ ddc_show_vcp_values(
       Feature_Set_Flags   flags,
       Byte_Bit_Flags      features_seen);
 
+
+void init_ddc_output();
 #endif /* DDC_OUTPUT_H_ */

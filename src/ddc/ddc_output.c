@@ -24,6 +24,7 @@
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -157,13 +158,14 @@ get_raw_value_for_feature_metadata(
       DDCA_Any_Vcp_Value **      pvalrec,
       FILE *                     msg_fh)
 {
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
-
+   assert(frec);
    assert(dh);
    assert(dh->dref);
 
-   Public_Status_Code psc = 0;
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. frec=%p");
+
+   // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
    // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
@@ -178,6 +180,7 @@ get_raw_value_for_feature_metadata(
    DDCA_Any_Vcp_Value * valrec = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
+     Public_Status_Code
      psc = usb_get_vcp_value(
               dh,
               feature_code,
@@ -195,13 +198,14 @@ get_raw_value_for_feature_metadata(
               feature_code,
               feature_type,
               &valrec);
-      psc = ERRINFO_STATUS(ddc_excp);
+      // psc = ERRINFO_STATUS(ddc_excp);
    }
-   assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
+   ASSERT_IFF( ddc_excp, !valrec);
+   // assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 
    // For now, only regard -EIO as unsupported feature for the
    // single model on which this has been observed
-   if (psc ==  -EIO &&
+   if (ERRINFO_STATUS(ddc_excp) ==  -EIO &&
        dh->dref->io_path.io_mode == DDCA_IO_I2C &&
        streq(dh->dref->pedid->mfg_id, "DEL")    &&
        streq(dh->dref->pedid->model_name, "AW3418DW") )
@@ -212,14 +216,15 @@ get_raw_value_for_feature_metadata(
          f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                         feature_code, feature_name, "Unsupported feature code (EIO)");
       }
-      psc = DDCRC_DETERMINED_UNSUPPORTED;
+      // psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
       ddc_excp = errinfo_new_with_cause2(
                    DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "EIO");
    }
 
    else {
-      switch(psc) {
+      Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
+      switch( psc ) {
       case 0:
          break;
 
@@ -237,7 +242,7 @@ get_raw_value_for_feature_metadata(
                            feature_code, feature_name, "Unsupported feature code (Null response)");
          }
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-         psc = DDCRC_DETERMINED_UNSUPPORTED;
+         // psc = DDCRC_DETERMINED_UNSUPPORTED;
          ddc_excp = errinfo_new_with_cause2(
                      DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "DDC NULL Response");
          break;
@@ -248,7 +253,7 @@ get_raw_value_for_feature_metadata(
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                            feature_code, feature_name, "Unsupported feature code (All zero response)");
          }
-         psc = DDCRC_DETERMINED_UNSUPPORTED;
+         // psc = DDCRC_DETERMINED_UNSUPPORTED;
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
          ddc_excp = errinfo_new_with_cause2(
                      DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "MH=ML=SH=SL=0");
@@ -289,28 +294,30 @@ get_raw_value_for_feature_metadata(
          break;
 
       default:
-      {
-         char buf[200];
-         snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
-         f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                          feature_code, feature_name, buf);
+         {
+            char buf[200];
+            snprintf(buf, 200, "Invalid response. status code=%d, %s", psc, dh_repr_t(dh));
+            f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
+                             feature_code, feature_name, buf);
+         }
       }
-      }
-
    }
 
    *pvalrec = valrec;
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *pvalrec=%p", psc_desc(psc), *pvalrec);
-   assert( (psc == 0 && *pvalrec) || (psc != 0 && !*pvalrec) );
-   if (*pvalrec && (debug || IS_TRACING())) {
-      dbgrpt_single_vcp_value(*pvalrec, 1);
+   ASSERT_IFF(!ddc_excp, *pvalrec);;
+
+   if (debug || IS_TRACING()) {
+      if (ddc_excp) {
+         DBGMSG("Done.     Returning %s", errinfo_summary(ddc_excp));
+      }
+      else {
+         DBGMSG("Done.     Returning NULL, *pvalrec -> ");
+         dbgrpt_single_vcp_value(*pvalrec, 3);
+      }
    }
-   assert( (psc == 0 && !ddc_excp) || (psc != 0 && ddc_excp) );
-   //if (ddc_excp) {
-   //    ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
-   // }
    return ddc_excp;
 }
+
 
 #ifdef IN_PROGREESS
 Public_Status_Code
@@ -722,10 +729,10 @@ ddc_get_formatted_value_for_display_feature_metadata(
       free_single_vcp_value(pvalrec);
 
    DBGTRC(debug, TRACE_GROUP,
-          "Done.  Returning: %s, *formatted_value_loc=%p",
+          "Done.      Returning: %s, *formatted_value_loc=%p",
           psc_desc(psc), formatted_value_loc);
 
-   assert( (psc == 0 && !ddc_excp) || (psc != 0 && ddc_excp) );
+   ASSERT_IFF(psc == 0, !ddc_excp);
    ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
    return psc;
 }
@@ -907,3 +914,15 @@ ddc_show_vcp_values(
    DBGTRC(debug, TRACE_GROUP, "Done. Returning %s", psc_desc(psc));
    return psc;
 }
+
+static void init_ddc_output_func_name_table() {
+#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(get_raw_value_for_feature_metadata);
+   ADD_FUNC(ddc_get_formatted_value_for_display_feature_metadata);
+#undef ADD_FUNC
+}
+
+void init_ddc_output() {
+   init_ddc_output_func_name_table();
+}
+
