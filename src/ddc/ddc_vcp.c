@@ -531,7 +531,7 @@ ddc_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
 
    Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
@@ -627,13 +627,12 @@ ddc_get_nontable_vcp_value(
    assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
    if (debug || IS_TRACING() ) {
       if (excp) {
-         DBGMSG("Error reading feature x%02x.  Returning exception: %s", feature_code, errinfo_summary(excp));
+         DBGMSG("Done.     Error reading feature x%02x.  Returning exception: %s", feature_code, errinfo_summary(excp));
          // errinfo_report(excp, 1);
-         DBGMSG("Done");
       }
       else {
-         DBGMSG("Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
-         DBGMSG("  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
+         DBGMSG("Done.     Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
+         DBGMSG("          mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
                 parsed_response->mh, parsed_response->ml,
                 parsed_response->sh, parsed_response->sl,
                 (parsed_response->mh<<8) | parsed_response->ml,
@@ -644,6 +643,7 @@ ddc_get_nontable_vcp_value(
 
    return excp;
 }
+
 
 /** Gets the value of a table feature in a newly allocated Buffer struct.
  *  It is the responsibility of the caller to free the Buffer.
@@ -803,14 +803,16 @@ ddc_get_vcp_value(
    } // non USB
 
    *valrec_loc = valrec;
+   ASSERT_IFF(psc == 0,*valrec_loc);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(psc) );
-   assert( (psc == 0 && valrec) || (psc != 0 && !valrec) );
-
-   if (psc == 0 && ( debug || IS_TRACING_GROUP(TRACE_GROUP)))
-      dbgrpt_single_vcp_value(valrec,1);
-   assert( (psc == 0 && *valrec_loc) || (psc != 0 && !*valrec_loc) );
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
+   if (debug || IS_TRACING() ) {
+      if (psc == 0)  {
+         DBGMSG("Done.     Returning: %s, *valrec ->", errinfo_summary(ddc_excp));
+         dbgrpt_single_vcp_value(valrec,3);
+      }
+      else
+         DBGMSG("Done.     Returning: %s", errinfo_summary(ddc_excp));
+   }
    return ddc_excp;
 }
 
