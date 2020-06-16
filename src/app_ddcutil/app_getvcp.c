@@ -306,7 +306,7 @@ app_show_feature_set_values_by_display_handle(
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
       psc = app_show_single_vcp_value_by_feature_id_new_dfm(
-            dh, fsref->specific_feature, flags&FSF_FORCE);
+            dh, fsref->specific_feature, true);
    }
    else {
       psc = app_show_vcp_subset_values_by_display_handle(
