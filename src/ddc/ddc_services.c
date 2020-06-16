@@ -17,6 +17,7 @@
 #include "base/base_init.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
 #include "base/thread_retry_data.h"
@@ -34,6 +35,7 @@
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
@@ -166,9 +168,10 @@ void init_ddc_services() {
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_ddc_display_lock();
    init_ddc_displays();
+   init_ddc_output();
    init_ddc_packet_io();
    init_ddc_multi_part_io();
    init_ddc_vcp();
 
-   // dbgrpt_func_name_table(1);
+   // dbgrpt_rtti_func_name_table(1);
 }
