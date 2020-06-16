@@ -593,19 +593,22 @@ ddc_write_read(
 
    // already done:
    // if (rc != 0)
-   //    COUNT_STATUS_CODE(rc);
-
-   // If a DDC status code, has already been counted when set.  what about RR_ADL?
-   // if (psc < 0  && get_modulation(psc) != RR_DDC)
    //    COUNT_STATUS_CODE(psc);
 
+   // Convert status code to Error_Info *
    Error_Info * excp = NULL;
    if (psc < 0)
       excp = errinfo_new(psc, __func__);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(excp)  );
-   if (psc == 0 && (IS_TRACING() || debug) )
-      dbgrpt_packet(*response_packet_ptr_loc, 1);
+   if (debug || IS_TRACING()) {
+      if (excp) {
+         DBGMSG("Done.     Returning: %s", errinfo_summary(excp)  );
+      }
+      else {
+         DBGMSG("Done.     Returning: NULL, *response_packet_ptr_loc ->");
+         dbgrpt_packet(*response_packet_ptr_loc, 3);
+      }
+   }
 
    return excp;
 }
