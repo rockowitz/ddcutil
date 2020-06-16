@@ -115,9 +115,12 @@ void app_probe_display_by_dh(Display_Handle * dh)
                   rpt_vstring(1, "VCP_Feature_Table_Entry feature name: %s", feature_name);
                   rpt_vstring(1, "Display_Feature_Metadata feature name: %s",
                                  dfm->feature_name);
+                  f0printf(fout, "   Feature x%02x - %s, (alt.) %s\n", code, feature_name, dfm->feature_name);
                }
-               // assert( streq(feature_name, ifm->external_metadata->feature_name));
-               f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
+               else {
+                  // assert( streq(feature_name, ifm->external_metadata->feature_name));
+                  f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
+               }
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
                   free_synthetic_vcp_entry(vfte);
                }
