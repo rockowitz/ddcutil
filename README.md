@@ -1,14 +1,17 @@
 ddcutil
 =======
 
-ddcutil is a program for querying and changing monitor settings, such as 
-brightness and color levels.   
+ddcutil is a Linux program for querying and changing monitor settings, such as 
+brightness and color levels.
 
-ddcutil uses DDC/CI to communicate with monitors implementing MCCS 
-(Monitor Control Command Set) over I2C.  Normally, the video driver for the
-monitor exposes the I2C channel as devices named /dev/i2c-n.  There is also
-support for monitors (such as Apple Cinema and Eizo ColorEdge) that implement 
-MCCS using a USB connection and conform to the VESA USB Monitor Control Class Specification. 
+Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), 
+which implements features defined in the Montor Control Command Set (MCCS).
+Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the
+Display Data Channel/Command Interface Standard (DDC/CI).
+
+Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP,
+as described in the USB Monitor Control Class Specification.
+ddcutil can communicate with these monitors over USB instead of I2C. 
 
 A particular use case for ddcutil is as part of color profile management. 
 Monitor calibration is relative to the monitor color settings currently in effect, 
@@ -23,9 +26,11 @@ In particular, for information on building ddcutil, see www.ddcutil.com/building
 Once ddcutil is installed, online help is also available.  
 Use the --help option or see the man page:
 ~~~:
-ddcutil --help
-man 1 ddcutil
+$ ddcutil --help
+$ man 1 ddcutil
 ~~~
+
+References to the relevant specifictions can be found at www.ddcutil.com/bibliography. 
 
 ### Installation Diagnostics
 
