@@ -1,29 +1,28 @@
 ddcutil
 =======
 
-ddcutil is a Linux program for querying and changing monitor settings, such as 
+**ddcutil** is a Linux program for querying and changing monitor settings, such as 
 brightness and color levels.
 
 Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), 
 which implements features defined in the Montor Control Command Set (MCCS).
-Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the
-Display Data Channel/Command Interface Standard (DDC/CI).
+Typically, **ddcutil** communicates with the monitor's VCP over an I2C bus, as per 
+the Display Data Channel/Command Interface Standard (DDC/CI).
 
-Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP,
-as described in the USB Monitor Control Class Specification.
-ddcutil can communicate with these monitors over USB instead of I2C. 
+Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB
+interface to the VCP, as described in the USB Monitor Control Class Specification.
+**ddcutil** can communicate with these monitors over USB instead of I2C. 
 
-A particular use case for ddcutil is as part of color profile management. 
+A particular use case for **ddcutil** is as part of color profile management. 
 Monitor calibration is relative to the monitor color settings currently in effect, 
-e.g. red gain.  ddcutil allows color related settings to be saved at the time 
+e.g. red gain.  **ddcutil** allows color related settings to be saved at the time 
 a monitor is calibrated, and then restored when the calibration is applied.
 
-For detailed instructions on building and using ddcutil, see the website: 
-www.ddcutil.com. 
+For detailed information about **ddcutil**, see the project website: www.ddcutil.com. 
 
-In particular, for information on building ddcutil, see www.ddcutil.com/building. 
+In particular, for instructions on building **ddcutil**, see www.ddcutil.com/building. 
 
-Once ddcutil is installed, online help is also available.  
+Once **ddcutil** is installed, online help is also available.
 Use the --help option or see the man page:
 ~~~:
 $ ddcutil --help
@@ -34,7 +33,7 @@ References to the relevant specifictions can be found at www.ddcutil.com/bibliog
 
 ### Installation Diagnostics
 
-If ddcutil is successfully built but execution fails, command `ddcutil environment` 
+If **ddcutil** is successfully built but execution fails, command `ddcutil environment` 
 probes the I2C environment and may provide clues as to the problem.
 
 ### User Support
