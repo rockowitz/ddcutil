@@ -18,7 +18,7 @@ Monitor calibration is relative to the monitor color settings currently in effec
 e.g. red gain.  **ddcutil** allows color related settings to be saved at the time 
 a monitor is calibrated, and then restored when the calibration is applied.
 
-The tarball or github project builds both command line (**ddcutil**) and shared
+The tarball/github project builds both command line (**ddcutil**) and shared
 library (**libddcutil**) executables. The command line executable does not depend on
 the shared library.
 
