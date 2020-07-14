@@ -64,16 +64,30 @@ void app_probe_display_by_dh(Display_Handle * dh)
    DDCA_Output_Level saved_ol = get_output_level();
    set_output_level(DDCA_OL_VERBOSE);
 
+#ifdef OLD
    Parsed_Capabilities * pcaps =  app_get_capabilities_by_display_handle(dh);
    if (pcaps) {
       app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
    }
+#endif
+   char * capabilities_string;
+   DDCA_Status ddcrc;
+   Parsed_Capabilities * pcaps = NULL;
+
+
+   ddcrc = app_get_capabilities_string(dh, &capabilities_string);
+   if (ddcrc == 0) {
+         // pcaps is always set, but may be damaged if there was a parsing error
+         pcaps = parse_capabilities_string(capabilities_string);
+         app_show_parsed_capabilities2(dh, pcaps);
+
+         // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
+         bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
+         f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
+   }
 
    set_output_level(saved_ol);
 
-   // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
-   bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
-   f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
