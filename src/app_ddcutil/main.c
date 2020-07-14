@@ -692,6 +692,8 @@ int main(int argc, char *argv[]) {
                {
                   check_dynamic_features(dref);
 
+                  DDCA_Status ddcrc = app_capabilities(dh);
+#ifdef OLD
                   Parsed_Capabilities * pcaps = app_get_capabilities_by_display_handle(dh);
                   if (pcaps) {
                      app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
@@ -699,6 +701,8 @@ int main(int argc, char *argv[]) {
                   main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
                   if (pcaps)
                      free_parsed_capabilities(pcaps);
+#endif
+                  main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                   break;
                }
 

@@ -12,6 +12,11 @@
 #include "base/displays.h"
 #include "vcp/parse_capabilities.h"
 
+
+DDCA_Status app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc);
+void app_show_parsed_capabilities2(Display_Handle * dh, Parsed_Capabilities * pcap);
+DDCA_Status app_capabilities(Display_Handle * dh);
+
 Parsed_Capabilities *
 app_get_capabilities_by_display_handle(
       Display_Handle * dh);
