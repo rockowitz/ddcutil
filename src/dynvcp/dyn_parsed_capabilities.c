@@ -520,6 +520,7 @@ void dyn_report_parsed_capabilities(
       Display_Ref *            dref,
       int                      depth)
 {
+   int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
    bool debug = false;
@@ -532,14 +533,22 @@ void dyn_report_parsed_capabilities(
    if (dh)
       dref = dh->dref;
 
-   int d0 = depth;
-   // int d1 = d0+1;
+   bool has_error_messages = pcaps->messages && pcaps->messages->len > 0;
    DDCA_Output_Level output_level = get_output_level();
-   if (output_level >= DDCA_OL_VERBOSE) {
+   if (output_level >= DDCA_OL_VERBOSE || has_error_messages) {
       rpt_vstring(d0, "%s capabilities string: %s",
                       (pcaps->raw_value_synthesized) ? "Synthesized unparsed" : "Unparsed",
                       pcaps->raw_value);
    }
+
+   if (has_error_messages) {
+      rpt_label(d0, "Errors parsing capabilities string:");
+      for (int ndx = 0; ndx < pcaps->messages->len; ndx++) {
+         rpt_label(d1, g_ptr_array_index(pcaps->messages, ndx));
+      }
+   }
+
+
    rpt_vstring(d0, "Model: %s", (pcaps->model) ? pcaps->model : "Not specified");
 
    bool damaged = false;
