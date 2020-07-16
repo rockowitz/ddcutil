@@ -503,7 +503,7 @@ parse_vcp_segment(
          // find matching )
          char * value_end = find_closing_paren(pos, end);
          if (value_end == end) {
-            g_ptr_array_add(messages, "Value parse terminated without closing parenthesis" );
+            g_ptr_array_add(messages, strdup("Value parse terminated without closing parenthesis") );
             // TODO: recover from error, this is bad data from the monitor
             result = CAPABILITIES_INVALID;
             goto bye;  // Error is fatal
@@ -778,6 +778,11 @@ Parsed_Capabilities * parse_capabilities(
       // hex_dump((Byte*)buf_start, buf_len);
       DBGMSF(debug, "Starting. buf_len=%d, buf_start->|%.*s|", buf_len, buf_len, buf_start);
    }
+   
+   // right trim white space
+   while ( buf_len > 0 && *(buf_start+buf_len-1) == ' ') {
+      buf_len--;
+   }
 
    char * capabilities_string_start = buf_start;
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
@@ -799,8 +804,12 @@ Parsed_Capabilities * parse_capabilities(
    // DBGMSG("Initial buf_len=%d, buf_start=%p -> |%.*s|", buf_len, buf_start, buf_len, buf_start);
    // Apple Cinema display violates spec, does not surround capabilities string with parens
    if (buf_start[0] == '(') {
-      // for now, don't try to fix bad string
-      assert(buf_start[buf_len-1] == ')' );
+      if (buf_start[buf_len-1] != ')') {
+            g_ptr_array_add(pcaps->messages,
+                            strdup("Capabilities string lacks closing parenthesis"));
+            pcaps->caps_validity = CAPABILITIES_INVALID;
+            goto bye;
+      }
 
       // trim starting and ending parens
       buf_start = buf_start+1;
@@ -881,10 +890,12 @@ Parsed_Capabilities * parse_capabilities(
       free(seg); // allocated by next_capabilities_segment()
    }
 
+bye:
    if (debug) {
       dbgrpt_parsed_capabilities(pcaps, 0);  // handles NULL
       DBGMSF(debug, "Done.     Returning %p", pcaps);
    }
+
    return pcaps;
 }
 
