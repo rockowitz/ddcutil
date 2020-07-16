@@ -28,6 +28,7 @@
 #include "vcp/parse_capabilities.h"
 
 #undef CAPABILITIES_TESTS
+// #define CAPABILITIES_TESTS
 
 #ifdef CAPABILITIES_TESTS
 // not made static to avoid warning about unused variable
@@ -37,6 +38,12 @@ char* test_cap_strings[] = {
       "vcp(0203(10 00)0405080B0C101214(05 07 08 0B) 16181A5260(3033 04)6C6E70"
       "87ACAEB6C0C6C8C9D6(01 04)DFE4E5E6E7E8E9EAEBED(00 10 20 40)EE(00 01)"
       "FE(01 02 03)FF)mswhql(1)mccs_ver(2.1))",
+      // Asus PB287
+      "(prot(monitor) type(LCD)model LCDPB287 cmds(01 02 03 07 0C F3) "
+      "vcp(02 04 05 08 0B 0C 10 12 14(05 06 08 0B) 16 18 1A 60(11 12 0F) "
+      "62 6C 6E 70 8D(01 02) A8 AC AE B6 C6 C8 C9 D6(01 04) DF) "
+      "mccs_ver(2.1)asset_eep(32)mpu(01)mswhql(1))",
+
 };
 #endif
 
@@ -684,11 +691,11 @@ struct {
  *             BUT NOT THE LOCATIONS IT ADDRESSES
  */
 static Capabilities_Segment *
-next_capabilities_segment(char * start, int len, GPtrArray* messages)
+next_capabilities_segment(char * start, int len, GPtrArray* messages, char * capabilities_staring_start)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. len=%d, start=%p -> |%.*s|", len, start, len, start);
-   const char * global_start = start;
+   const char * global_start = capabilities_staring_start; // was: start;
    char * end = start+len;
    Capabilities_Segment * segment = calloc(1, sizeof(Capabilities_Segment));
    // n. Apple Cinema Display precedes segment name with blank
@@ -706,7 +713,8 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages)
 
 #define REQUIRE(_condition, _msg, _position)  \
    if (!(_condition)) { \
-      g_ptr_array_add(messages, g_strdup_printf("%s at offset %jd", _msg, (intmax_t)( _position-global_start)) ); \
+      g_ptr_array_add(messages, g_strdup_printf("%s at offset %jd", \
+                      _msg, (intmax_t)( _position-global_start)) ); \
       segment->name_start = segment->value_start = segment->remainder_start = NULL; \
       segment->name_len   = segment->value_len   = segment->remainder_len   = 0; \
       goto bye; \
@@ -715,17 +723,25 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages)
    REQUIRE( *trimmed_start != '(' , "Missing segment name", pos);
    segment->name_start = trimmed_start;
    while (pos < end && *pos != '(' && *pos != ' ') {pos++;}  // name stops with either left paren or space
-   REQUIRE( pos < end, "Nothing follows segment name", pos);
+   REQUIRE( pos < end,
+         "Nothing follows segment name",
+         pos);
    segment->name_len = pos-trimmed_start;
    while ( pos < end && *pos == ' ' ) { pos++; }   // blanks following segment name
-   REQUIRE( pos < end, "Nothing follows segment name (2)", pos);
-   assert(*pos == '(');
-   // DBGMSG("pos=%p, trimmed_start=%p", pos, trimmed_start);
+   REQUIRE( pos < end,
+         g_strdup_printf("Nothing follows segment name (2) %.*s",
+                         segment->name_len, segment->name_start),
+         pos);
+   // assert(*pos == '(');
+   DBGMSG("pos=%p, trimmed_start=%p", pos, trimmed_start);
    segment->name_len = pos - trimmed_start;
-   // DBGMSG("start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
-   // DBGMSG("name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
-   //                                                 segment->name_len, segment->name_start);
-   REQUIRE(*pos == '(', "Missing parenthesized value", pos);
+   DBGMSG("start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
+   DBGMSG("name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
+                                                   segment->name_len, segment->name_start);
+   REQUIRE(*pos == '(',
+         g_strdup_printf("Missing parenthesized value for segment %.*s",
+                         segment->name_len, segment->name_start),
+         pos);
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
    REQUIRE(pos < end,
@@ -766,6 +782,7 @@ Parsed_Capabilities * parse_capabilities(
       DBGMSF(debug, "Starting. buf_len=%d, buf_start->|%.*s|", buf_len, buf_len, buf_start);
    }
 
+   char * capabilities_string_start = buf_start;
    Parsed_Capabilities* pcaps = calloc(1, sizeof(Parsed_Capabilities));
    memcpy(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4);
 
@@ -785,7 +802,7 @@ Parsed_Capabilities * parse_capabilities(
    // DBGMSG("Initial buf_len=%d, buf_start=%p -> |%.*s|", buf_len, buf_start, buf_len, buf_start);
    // Apple Cinema display violates spec, does not surround capabilities string with parens
    if (buf_start[0] == '(') {
-      // for now, don't try to fix bad stringS
+      // for now, don't try to fix bad string
       assert(buf_start[buf_len-1] == ')' );
 
       // trim starting and ending parens
@@ -795,7 +812,8 @@ Parsed_Capabilities * parse_capabilities(
    // DBGMSG("Adjusted buf_len=%d, buf_start=%p -> |%.*s|", buf_len, buf_start, buf_len, buf_start);
 
    while (buf_len > 0) {
-      Capabilities_Segment * seg = next_capabilities_segment(buf_start, buf_len, pcaps->messages);
+      Capabilities_Segment * seg =
+         next_capabilities_segment(buf_start, buf_len, pcaps->messages, capabilities_string_start);
       if (seg->name_start == NULL)  {
          // error condition encountered
          pcaps->caps_validity = CAPABILITIES_INVALID;
@@ -909,7 +927,7 @@ Parsed_Capabilities* parse_capabilities_string(
 #ifdef CAPABILITIES_TESTS
    // Uncomment to enable test
    DBGMSG("Substituting test capabilities string");
-   caps = test_cap_strings[0];
+   caps = test_cap_strings[1];
 #endif
 
    return parse_capabilities(caps, strlen(caps));
@@ -990,6 +1008,7 @@ bool parsed_capabilities_supports_table_commands(Parsed_Capabilities * pcaps) {
 // Tests
 //
 
+#ifdef OLD
 void test_segment(char * text) {
    char * start = text;
    int len   = strlen(text);
@@ -1003,6 +1022,7 @@ void test_segments() {
    test_segment("vcp(10 20)abc");
    test_segment("vcp(10 20 30( asdf ))x");
 }
+#endif
 
 
 void test_parse_caps() {
