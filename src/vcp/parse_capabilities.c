@@ -154,6 +154,8 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
          g_ptr_array_remove_index(pcaps->vcp_features, ndx);
       }
       g_ptr_array_free(pcaps->vcp_features, true);
+      if (pcaps->messages)
+         g_ptr_array_free(pcaps->messages, true);
    }
 
    pcaps->marker[3] = 'x';
@@ -225,8 +227,6 @@ update_validity(
 }
 
 
-
-
 //
 // Parsing
 //
@@ -290,9 +290,7 @@ static Byte_Value_Array parse_cmds_segment(
 // vcp segment
 //
 
-
-
-
+#ifdef UNUSED_OLD
 typedef
 struct {
    char * values_start;
@@ -300,10 +298,12 @@ struct {
    char * remainder_start;
    int    remainder_len;
 } Vcp_Feature_Values_Segment;
+#endif
 
-
+#ifdef FUTURE
 void parse_vcp_values(char * start, int len, GPtrArray* messages) {
 }
+#endif
 
 
 //
@@ -322,7 +322,7 @@ struct {
 } Vcp_Feature_Segment;
 
 
-
+#ifdef UNUSED_OLD
 Parsed_Capabilities_Validity
 parse_single_feature(
       Vcp_Feature_Segment * segment,
@@ -382,8 +382,6 @@ parse_single_feature(
 }
 
 
-
-
 Vcp_Feature_Segment * next_vcp_feature_segment(char * start, int len, GPtrArray * messages) {
    if (!start)
       return NULL;
@@ -430,8 +428,7 @@ Vcp_Feature_Segment * next_vcp_feature_segment(char * start, int len, GPtrArray 
 
    return segment;
 }
-
-
+#endif
 
 
 /** Parse the value of a vcp() segment..
