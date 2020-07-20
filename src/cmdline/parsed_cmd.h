@@ -74,6 +74,7 @@ typedef enum {
 typedef
 struct {
    char                marker[4];      // always PCMD
+   char *              raw_command;
    Cmd_Id_Type         cmd_id;
    int                 argct;
    char *              args[MAX_ARGS];

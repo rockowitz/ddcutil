@@ -62,7 +62,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_structure_loc("Parsed_Cmd", parsed_cmd, depth);
-   rpt_int_as_hex( "cmd_id", NULL,  parsed_cmd->cmd_id,               d1);
+   rpt_str("raw_command",       NULL, parsed_cmd->raw_command,        d1);
+   rpt_int_as_hex( "cmd_id",    NULL, parsed_cmd->cmd_id,             d1);
 
    rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
    if (parsed_cmd->pdid)
@@ -104,6 +105,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    char buf[20];
    g_snprintf(buf,30, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1],
                                      parsed_cmd->max_tries[2] );
+   rpt_str("raw_command",        NULL, parsed_cmd->raw_command,                               d1);
    rpt_str("max_retries",        NULL, buf,                                                   d1);
 
    rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
