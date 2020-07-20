@@ -152,9 +152,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       }
    }
 
+
+
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
    // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
    // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
+
+   gchar * original_command = g_strjoinv(" ",argv);
+   // DBGMSG("original command: %s", original_command);
+   parsed_cmd->raw_command = strdup(original_command);
 
 // gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
