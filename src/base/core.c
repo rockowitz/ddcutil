@@ -821,11 +821,6 @@ bool dbgtrc(
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
 
-
-      // *** TEMP ***
-      // dbgtrc_show_time = true;
-      // dbgtrc_show_thread_id = true;
-
       char  elapsed_prefix[15] = "";
       if (dbgtrc_show_time)
          g_snprintf(elapsed_prefix, 15, "[%s]", formatted_elapsed_time());
