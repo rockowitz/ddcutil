@@ -246,6 +246,16 @@ int main(int argc, char *argv[]) {
          add_traced_file(parsed_cmd->traced_files[ndx]);
    }
 
+   time_t cur_time = time(NULL);
+   char * cur_time_s = asctime(localtime(&cur_time));
+   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
+        cur_time_s[strlen(cur_time_s)-1] = 0;
+   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
+          TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
+          "Starting ddcutil execution, %s",
+          cur_time_s);
+
+
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -842,5 +852,16 @@ int main(int argc, char *argv[]) {
 
 bye:
    DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
+
+   cur_time = time(NULL);
+   cur_time_s = asctime(localtime(&cur_time));
+   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
+      cur_time_s[strlen(cur_time_s)-1] = 0;
+   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
+           TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
+           "ddcutil execution complete, %s",
+           cur_time_s);
+
+
    return main_rc;
 }
