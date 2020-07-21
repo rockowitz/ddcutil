@@ -820,7 +820,6 @@ bool dbgtrc(
       va_start(args, format);
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
-      // int    bufsz = strlen(buffer) + 1;
 
 
       // *** TEMP ***
@@ -837,15 +836,8 @@ bool dbgtrc(
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 
-
-      int    buf2sz =  15+15+4 + strlen(funcname) + strlen(buffer) + 10;
-      char * buf2  = calloc(buf2sz, sizeof(char));
-      g_snprintf(buf2, buf2sz, "%s%s(%-30s) %s\n",
-                               thread_prefix,
-                               elapsed_prefix,
-                               funcname, buffer);
-      assert( strlen(buf2) < buf2sz);
-
+      char * buf2 = g_strdup_printf("%s%s(%-30s) %s\n",
+                                    thread_prefix, elapsed_prefix, funcname, buffer);
 
       f0puts(buf2, fout());    // no automatic terminating null
       fflush(fout());
