@@ -857,11 +857,10 @@ bye:
    cur_time_s = asctime(localtime(&cur_time));
    if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
       cur_time_s[strlen(cur_time_s)-1] = 0;
-   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
+   DBGTRC(parsed_cmd && (parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files),
            TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
            "ddcutil execution complete, %s",
            cur_time_s);
-
 
    return main_rc;
 }
