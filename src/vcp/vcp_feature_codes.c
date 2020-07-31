@@ -757,6 +757,20 @@ get_table_feature_detail_function(
 
 // Functions that apply formatting
 
+/** Obtains the formatting function from a feature table entry
+ *  based on the VCP version of the monitor, then applies that
+ *  function to a non-table value to return that value as a
+ *  string.
+ *
+ *  @param  vfte        feature table entry
+ *  @param  vcp_version VCP version of monitor
+ *  @param  code_info   non-table feature value
+ *  @param  buffer      address of buffer in which to return formatted value
+ *  @param  bufsz       buffer string
+ *
+ *  @return true if successful, false if not
+ */
+
 bool
 vcp_format_nontable_feature_detail(
         VCP_Feature_Table_Entry *  vfte,
