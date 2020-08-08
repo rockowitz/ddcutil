@@ -756,7 +756,7 @@ int main(int argc, char *argv[]) {
 
             case CMDID_SETVCP:
                if (parsed_cmd->argct % 2 != 0) {
-                  f0printf(fout, "SETVCP command requires even number of arguments\n");
+                  f0printf(fout, "Invalid number of arguments\n");
                   main_rc = EXIT_FAILURE;
                }
                else {
