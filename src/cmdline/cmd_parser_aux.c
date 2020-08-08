@@ -444,6 +444,6 @@ char * maxtries_option_help =
       "    maximum write-only exchange count\n"
       "    maximum write-read exchange count\n"
       "    maximum multi-part-read exchange count\n"
-      "  A value of \"\" or \".\" leaves the default value unchanged\n"
+      "  A value of \"0\" or \".\" leaves the default value unchanged\n"
       "  e.g. --retries \",.,15\" changes only the maximum multi-part-read exchange count"
       ;

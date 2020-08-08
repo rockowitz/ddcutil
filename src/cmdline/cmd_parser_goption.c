@@ -589,6 +589,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                    fprintf(stderr, "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
                    ok = false;
                 }
+                else if (ival < 0) {
+                   fprintf(stderr, "negative --maxtries value: %d\n", ival);
+                   ok = false;
+                }
+
                 else {
                    parsed_cmd->max_tries[ndx] = ival;
                 }
