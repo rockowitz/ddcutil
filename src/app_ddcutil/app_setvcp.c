@@ -28,18 +28,12 @@
 #include "app_setvcp.h"
 
 
-//
-//  Set VCP value
-//
-
-/* Converts a VCP feature value from string form to internal form.
+/** Converts a VCP feature value from string form to internal form.
  *
- * Arguments:
- *    string_value
- *    parsed_value    location where to return result
+ *  \param   string_value
+ *  \param   parsed_value    location where to return result
  *
- * Returns:
- *    true if conversion successful, false if not
+ *  \return  true if conversion successful, false if not
  */
 bool
 parse_vcp_value(
@@ -100,8 +94,6 @@ parse_vcp_value(
  *   \return NULL if success, Error_Info if error
  */
 // TODO: consider moving value parsing to command parser
-
-
 Error_Info *
 app_set_vcp_value(
       Display_Handle * dh,
