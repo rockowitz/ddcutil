@@ -4,7 +4,7 @@ ddcutil
 **ddcutil** is a Linux program for querying and changing monitor settings, such as 
 brightness and color levels.
 
-Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), 
+Most monitors, other than laptop displays, have a Virtual Control Panel (VCP), 
 which implements features defined in the Montor Control Command Set (MCCS).
 Typically, **ddcutil** communicates with the monitor's VCP over an I2C bus, as per 
 the Display Data Channel/Command Interface Standard (DDC/CI).
