@@ -398,7 +398,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
                 acc.max_highest_maxtries,stats_rec->highest_maxtries);
       }
       if (acc.min_lowest_maxtries != stats_rec->lowest_maxtries) {
-            DBGMSG("acc.max_lowest_maxtries(%d) != stats_rec->lowest_restries(%d)",
+            DBGMSG("acc.max_lowest_maxtries(%d) != stats_rec->lowest_maxtries(%d)",
                    acc.min_lowest_maxtries,stats_rec->lowest_maxtries);
       }
 

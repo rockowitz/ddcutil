@@ -18,6 +18,7 @@
 #include "base/core.h"
 #include "base/parms.h"
 
+void     try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries);
 void     try_data_init();
 bool     try_data_lock();
 void     try_data_unlock(bool this_function_owns_lock);
