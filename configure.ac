@@ -230,6 +230,26 @@ AS_IF([test "x$enable_lib" = "xyes"],
      )
 
 
+dnl TODO: simplify as per later options
+dnl *** configure option: --enable-envcmds
+AC_ARG_ENABLE([envcmds],
+              [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
+              [enable_envcmds=${enableval}],
+              [enable_envcmds=yes] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AS_IF([test "x$enable_envcmds" = "xyes"],
+      AC_MSG_NOTICE( [envcmds... enabled] )
+      AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
+      AC_SUBST(ENABLE_ENVCMDS_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [envcmds... disabled] )
+      AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
+     )
+
+
+
 dnl Were we building SWIG support for more than Python, there would need to be 2 configuration option, 
 dnl one to control SWIG and one to enable the Python bindings.   
 dnl Since that day is far off, we have just 1 option to enable SWIG for Python
@@ -401,7 +421,6 @@ AS_IF( [test "x$enable_failsim" = "xyes"],
          AC_MSG_NOTICE( [failsim..... disabled] )
      )
 
-
 dnl *** configure option: --enable-force-suse
 AC_ARG_ENABLE([force-suse],
               [ AS_HELP_STRING( [--enable-force-suse=@<:@no/yes@:>@], [Force SUSE target directories@<:@default=no@:>@] )],
@@ -414,7 +433,6 @@ AS_IF( [test "x$enable_force_suse" = "xyes"],
       ,
          AC_MSG_NOTICE( [force-suse..... disabled] )
      )
-
 
 dnl *** configure option: --enable-internal-api-use
 AC_ARG_ENABLE([use-api],
@@ -526,6 +544,8 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
+dnl TODO: disable if enable-envcmds is false
+
 AS_IF([test "x$enable_drm" = "xyes"],
          [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, 
              [libdrm_found=yes], 
@@ -587,6 +607,10 @@ dnl        ])
 
 dnl PKG_CHECK_MODULES(XRANDR, xrandr)
 dnl PKG_CHECK_MODULES(X11,    x11)
+
+dnl Duplicate of next section?
+
+dnl TODO: disable if enable-envcmds is false?
 
 AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
@@ -901,7 +925,7 @@ AS_IF( [ test "x$enable_swig" = "xyes" || test "x$enable_cython" = "xyes" || tes
       AS_IF( [test "x$enable_some_python" = "xyes"], [
          AC_MSG_NOTICE( [Calling ax_pkg_swig...] )
 
-         dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so don't expose the possibility of overriding
+         dnl ax_pkg_swig respects SWIG_LIB, but overrides SWIG, so do not expose the possibility of overriding
          dnl AC_ARG_VAR(SWIG, [swig executable])
          dnl AC_ARG_VAR(SWIG_LIB, [linker flags for swig])
          dnl AC_MSG_NOTICE( [Before ax_pkg_swig:] )
@@ -1125,6 +1149,7 @@ AC_MSG_RESULT([
 
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
+	enable_envcmds          ${enable_envcmds}
 	enable_swig:            ${enable_swig}
 	enable_cython:          ${enable_cython}
 	enable_cffi:            ${enable_cffi}
