@@ -236,9 +236,13 @@ endif
 
 
 libapp_la_LIBADD = \
-app_sysenv/libappsysenv.la \
 cmdline/libcmdline.la \
 util/libutilaux.la
+
+if ENABLE_ENVCMDS_COND
+libapp_la_LIBADD  += \
+app_sysenv/libappsysenv.la 
+endif
 
 # libapp_la_LIBADD += \
 # app_common/libappcommon.la 

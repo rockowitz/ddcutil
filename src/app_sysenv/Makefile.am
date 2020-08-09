@@ -1,8 +1,9 @@
+if ENABLE_ENVCMDS_COND
+
 AM_CPPFLAGS =        \
   $(GLIB_CFLAGS)     \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
-
 
 if USE_LIBDRM_COND
 AM_CPPFLAGS += \
@@ -46,3 +47,4 @@ libappsysenv_la_SOURCES += \
    query_sysenv_drm.c
 endif
 
+endif
