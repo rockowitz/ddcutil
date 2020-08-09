@@ -39,9 +39,11 @@ static Cmd_Desc cmdinfo[] = {
 #endif
    {CMDID_LOADVCP,      "loadvcp",        3,  1,       1},
    {CMDID_DUMPVCP,      "dumpvcp",        3,  0,       1},
+#ifdef ENABLE_ENVCMDS
    {CMDID_INTERROGATE,  "interrogate",    3,  0,       0},
    {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
+#endif
    {CMDID_VCPINFO,      "vcpinfo",        5,  0,       1},
    {CMDID_READCHANGES,  "watch",          3,  0,       0},
 #ifdef USE_USB
@@ -319,12 +321,16 @@ char * commands_list_help =
        "   testcase <testcase-number>\n"
        "   listtests\n"
 #endif
+#ifdef ENABLE_ENVCMDS
        "   environment                             Probe execution environment\n"
 #ifdef USE_USB
        "   usbenv                                  Probe for USB connected monitors\n"
 #endif
+#endif
        "   probe                                   Probe monitor abilities\n"
+#ifdef ENABLE_ENVCMDS
        "   interrogate                             Report everything possible\n"
+#endif
 #ifdef USE_USB
        "   chkusbmon                               Check if USB device is monitor (for UDEV)\n"
 #endif

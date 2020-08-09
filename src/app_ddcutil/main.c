@@ -182,10 +182,12 @@ void report_settings(Parsed_Cmd * parsed_cmd, int depth) {
 
 // static long start_time_nanos;
 
+#ifdef ENABLE_ENVCMDS
 static
 void reset_stats() {
    ddc_reset_stats_main();
 }
+#endif
 
 
 static
@@ -528,6 +530,7 @@ int main(int argc, char *argv[]) {
       main_rc = (loadvcp_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+#ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
@@ -554,6 +557,7 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_FAILURE;
 #endif
    }
+#endif
 
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
 #ifdef USE_USB
@@ -567,6 +571,7 @@ int main(int argc, char *argv[]) {
 #endif
    }
 
+#ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
       DBGTRC(main_debug, TRACE_GROUP, "Processing command INTERROGATE...");
       dup2(1,2);   // redirect stderr to stdout
@@ -629,6 +634,7 @@ int main(int argc, char *argv[]) {
 
       main_rc = EXIT_SUCCESS;
    }
+#endif
 
    // *** Commands that require Display Identifier ***
    else {
@@ -848,7 +854,11 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   if (parsed_cmd->stats_types != DDCA_STATS_NONE && parsed_cmd->cmd_id != CMDID_INTERROGATE) {
+   if (parsed_cmd->stats_types != DDCA_STATS_NONE
+#ifdef ENABLE_ENVCMDS
+         && parsed_cmd->cmd_id != CMDID_INTERROGATE
+#endif
+      ) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }

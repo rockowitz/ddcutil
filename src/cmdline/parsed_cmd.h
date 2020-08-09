@@ -28,9 +28,11 @@ typedef enum {
    CMDID_LISTTESTS     =   0x0040,
    CMDID_LOADVCP       =   0x0080,
    CMDID_DUMPVCP       =   0x0100,
+#ifdef ENABLE_ENVCMDS
    CMDID_INTERROGATE   =   0x0200,
    CMDID_ENVIRONMENT   =   0x0400,
    CMDID_USBENV        =   0x0800,
+#endif
    CMDID_VCPINFO       =   0x1000,
    CMDID_READCHANGES   =   0x2000,
    CMDID_CHKUSBMON     =   0x4000,
