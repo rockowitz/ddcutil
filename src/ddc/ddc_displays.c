@@ -22,8 +22,10 @@
 #include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#ifdef ENABLE_UDEV
 #include "util/udev_usb_util.h"
 #include "util/udev_util.h"
+#endif
 /** \endcond */
 
 #include "base/adl_errors.h"
@@ -690,6 +692,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
    }
 
+#ifdef ENABLE_UDEV
    if (criteria->hiddev >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
@@ -727,6 +730,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       if ( dref->io_path.path.hiddev_devno != criteria->hiddev )
          goto bye;
    }
+#endif
 
    if (criteria->mfg_id && (strlen(criteria->mfg_id) > 0) &&
          !streq(dref->pedid->mfg_id, criteria->mfg_id) )

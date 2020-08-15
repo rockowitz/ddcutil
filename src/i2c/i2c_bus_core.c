@@ -900,7 +900,7 @@ int i2c_device_count() {
 // Bus inventory
 //
 
-#ifndef ENABLE_UDEV
+#ifndef USE_UDEV
 // TODO: move to util, also used in query_sysenv_access.c
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
