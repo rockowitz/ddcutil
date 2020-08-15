@@ -29,7 +29,9 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
+#ifdef USE_UDEV
 #include "util/udev_i2c_util.h"
+#endif
 #include "util/utilrpt.h"
 
 #include "base/core.h"
@@ -898,12 +900,37 @@ int i2c_device_count() {
 // Bus inventory
 //
 
+#ifndef ENABLE_UDEV
+// TODO: move to util, also used in query_sysenv_access.c
+/** Gets a list of all /dev/i2c devices by checking the file system
+ *  if devices named /dev/i2c-N exist.
+ *
+ *  @return Byte_Value_Array containing the valid bus numbers
+ */
+static Byte_Value_Array get_i2c_devices_by_existence_test() {
+   Byte_Value_Array bva = bva_create();
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_device_exists(busno)) {
+         // if (!is_ignorable_i2c_device(busno))
+         bva_append(bva, busno);
+      }
+   }
+   return bva;
+}
+#endif
+
+
+
 int i2c_detect_buses() {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_I2C, "Starting.  i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
       // only returns buses with valid name (arg=false)
+#ifdef USE_UDEV
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
+#else
+      Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test(false);
+#endif
       // TODO: set free function
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
