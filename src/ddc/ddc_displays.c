@@ -692,7 +692,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
    }
 
-#ifdef ENABLE_UDEV
+#ifdef USE_USB
    if (criteria->hiddev >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;
