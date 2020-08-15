@@ -248,6 +248,45 @@ AS_IF([test "x$enable_envcmds" = "xyes"],
       AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
      )
 
+dnl TODO: simplify as per later options
+dnl *** configure option: --enable-udev
+AC_ARG_ENABLE([udev],
+              [ AS_HELP_STRING([--enable-udev=@<:@yes/no@:>@], [Use UDEV@<:@default=yes@:>@] )],
+              [enable_udev=${enableval}],
+              [enable_udev=yes] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AS_IF([test "x$enable_udev" = "xyes"],
+      AC_MSG_NOTICE( [udev... enabled] )
+      AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
+      AC_SUBST(ENABLE_UDEV_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [udev... disabled] )
+      AC_SUBST(ENABLE_UDEV_FLAG, 0)
+     )
+
+
+dnl TODO: simplify as per later options
+dnl *** configure option: --enable-targetbsd
+AC_ARG_ENABLE([targetbsd],
+              [ AS_HELP_STRING([--enable-targetbsd=@<:@no/yes@:>@], [Build for BSD@<:@default=no@:>@] )],
+              [enable_targetbsd=${enableval}],
+              [enable_targetbsd=no] )
+dnl Set flag for automake.am:
+AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AS_IF([test "x$enable_targetbsd" = "xyes"],
+      AC_MSG_NOTICE( [targetbsd... enabled] )
+      AC_DEFINE( [TARGET_BSD], [1], [If defined, target BSD.])
+      AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [targetbsd... disabled] )
+      AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
+     )
+
+
+
 
 
 dnl Were we building SWIG support for more than Python, there would need to be 2 configuration option, 
@@ -519,6 +558,31 @@ dnl disabled because systemd_util.c no longer needed:
 dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
 
 
+###
+### Force features
+###
+
+### targetbsd
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_envcmds" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-envcmds] )
+	     enable_envcmds=no
+       ]
+	) 
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_udev" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-udev] )
+	     enable_udev=no
+       ]
+	) 
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_usb" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-usb] )
+	     enable_usb=no
+       ]
+	) 
+
+
 
 ###
 ### Optional library tests 
@@ -545,6 +609,18 @@ AS_IF( [test 0$DBG -ne 0],
 ### libdrm 
 
 dnl TODO: disable if enable-envcmds is false
+AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
+       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
+	     enable_drm=no
+       ]
+	) 
+
+AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
+       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
+	     enable_x11=no
+       ]
+	) 
+
 
 AS_IF([test "x$enable_drm" = "xyes"],
          [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, 
@@ -611,6 +687,8 @@ dnl PKG_CHECK_MODULES(X11,    x11)
 dnl Duplicate of next section?
 
 dnl TODO: disable if enable-envcmds is false?
+
+dnl Force disable of options if environment commands disabled
 
 AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
@@ -1149,7 +1227,9 @@ AC_MSG_RESULT([
 
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
+	enable_targetbsd:       ${enable_targetbsd}
 	enable_envcmds          ${enable_envcmds}
+	enable_udev             ${enable_udev}
 	enable_swig:            ${enable_swig}
 	enable_cython:          ${enable_cython}
 	enable_cffi:            ${enable_cffi}
