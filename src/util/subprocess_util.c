@@ -14,6 +14,8 @@
 #include <string.h>
 /** \endcond */
 
+#include "config.h"
+
 #include "glib_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -245,5 +247,9 @@ int test_command_executability(char * cmd) {
    // 2 on i2cdetect - not sudo
    // 1 on i2cdetect - sudo, but some error
 
+#ifdef TARGET_BSD
+   return (rc & 0xff00) >> 8;
+#else
    return WEXITSTATUS(rc);
+#endif
 }
