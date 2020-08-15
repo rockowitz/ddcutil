@@ -48,10 +48,14 @@ string_util.c              \
 sysfs_util.c               \
 subprocess_util.c          \
 timestamp.c                \
+utilrpt.c
+
+if ENABLE_UDEV_COND
+libutil_la_SOURCES +=      \
 udev_i2c_util.c            \
 udev_usb_util.c            \
-udev_util.c                \
-utilrpt.c
+udev_util.c               
+endif
 
 if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c
