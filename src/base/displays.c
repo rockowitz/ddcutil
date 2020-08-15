@@ -1076,10 +1076,14 @@ char * dh_repr_t(Display_Handle * dh) {
                     dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
            break;
        case DDCA_IO_USB:
+#ifdef ENABLE_USB
            snprintf(buf, bufsz,
                     "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                     dh->dref->usb_bus, dh->dref->usb_device,
                     usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
+#else
+           PROGRAM_LOGIC_ERROR("io_path.io_mode == DDCA_IO_USB");
+#endif
            break;
        }
        buf[bufsz-1] = '\0';
@@ -1136,7 +1140,7 @@ Video_Card_Info * create_video_card_info() {
    return card_info;
 }
 
-
+#ifdef USE_USB
 /** Given a hiddev device name, e.g. /dev/usb/hiddev3,
  *  extract its number, e.g. 3.
  *
@@ -1176,7 +1180,7 @@ char * hiddev_number_to_name(int hiddev_number) {
    // DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
-
+#endif
 
 
 
