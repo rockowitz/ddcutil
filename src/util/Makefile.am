@@ -34,7 +34,6 @@ noinst_LTLIBRARIES = libutil.la libutilaux.la
 libutil_la_SOURCES = \
 data_structures.c          \
 debug_util.c               \
-device_id_util.c           \
 edid.c                     \
 error_info.c               \
 file_util.c                \
@@ -49,6 +48,13 @@ sysfs_util.c               \
 subprocess_util.c          \
 timestamp.c                \
 utilrpt.c
+
+
+# actuall required in multiple places, but good enough for now
+if ENABLE_USB_COND
+libutil_la_SOURCES +=      \
+device_id_util.c
+endif
 
 if ENABLE_UDEV_COND
 libutil_la_SOURCES +=      \
