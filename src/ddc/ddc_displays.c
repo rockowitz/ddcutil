@@ -11,11 +11,11 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib-2.0/glib.h>    // glib-2.0/ to make eclipse happy
+#include <glib-2.0/glib.h>
 #include <string.h>
 #include <time.h>
 
-#include "../i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #include "util/debug_util.h"
 #include "util/edid.h"
 #include "util/error_info.h"
