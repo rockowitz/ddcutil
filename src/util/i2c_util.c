@@ -6,9 +6,16 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <errno.h>
+#ifdef TARGET_BSD
+#include "../bsd/i2c-dev.h"
+#include "../bsd/i2c.h"
+#else
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
