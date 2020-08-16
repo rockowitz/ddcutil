@@ -82,9 +82,9 @@
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
-#ifdef ENABLE_ENVCMDS
+// #ifdef ENABLE_ENVCMDS    // unnecessary, forced by configure
 #include "app_sysenv/query_sysenv_usb.h"
-#endif
+// #endif
 #endif
 
 #ifdef INCLUDE_TESTCASES
