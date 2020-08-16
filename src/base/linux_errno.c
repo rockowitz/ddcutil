@@ -70,7 +70,7 @@ void init_linux_errno() {
 //
 
 // Because macro EDENTRY ignores the description value supplied and sets
-// the description field to NULL, find_eerno_description(), called by
+// the description field to NULL, find_errno_description(), called by
 // linux_errno_desc(), will lookup the description using strerror().
 #define EDENTRY(id,desc) {id, #id, NULL}
 
@@ -78,38 +78,141 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(0,        "success"),
       EDENTRY(EPERM,    "Operation not permitted"),
       EDENTRY(ENOENT,   "No such file or directory"),
-      EDENTRY(ESRCH,    "No such process"),     //  3
-      EDENTRY(EINTR,    "Interrupted system call"),             //  4
-      EDENTRY(EIO,      "I/O error"),                           //  5
-      EDENTRY(ENXIO,    "No such device or address"),           // 6
+      EDENTRY(ESRCH,    "No such process"),                      //  3
+      EDENTRY(EINTR,    "Interrupted system call"),              //  4
+      EDENTRY(EIO,      "I/O error"),                            //  5
+      EDENTRY(ENXIO,    "No such device or address"),            // 6
       EDENTRY(E2BIG,    "Argument list too long"),
       EDENTRY(ENOEXEC,  "Exec format error"),
       EDENTRY(EBADF,    "Bad file number"),                      //  9
-      EDENTRY(ECHILD,   "No child processes"),
-      EDENTRY(EAGAIN,   "Try again"),
-      EDENTRY(ENOMEM,   "Out of memory"),
+      EDENTRY(ECHILD,   "No child processes"),                   // 10
+#ifdef TARGET_BSD
+      EDENTRY(EDEADLK,  "Deadlock"),         // was EAGAIN       // 11
+#else
+      EDENTRY(EAGAIN,   "Try again"),                            // 11
+#endif
+      EDENTRY(ENOMEM,   "Out of memory"),                        // 12
       EDENTRY(EACCES,   "Permission denied"),                    // 13
       EDENTRY(EFAULT,   "Bad address"),                          // 14
-      EDENTRY(ENOTBLK,  "Block device required"),
-      EDENTRY(EBUSY,    "Device or resource busy"),
-      EDENTRY(EEXIST,   "File exists"),
-      EDENTRY(EXDEV,    "Cross-device link"),
-      EDENTRY(ENODEV,   "No such device"),
-      EDENTRY(ENOTDIR,  "Not a directory"),
-      EDENTRY(EISDIR,   "Is a directory"),
+      EDENTRY(ENOTBLK,  "Block device required"),                // 15
+      EDENTRY(EBUSY,    "Device or resource busy"),              // 16
+      EDENTRY(EEXIST,   "File exists"),                          // 17
+      EDENTRY(EXDEV,    "Cross-device link"),                    // 18
+      EDENTRY(ENODEV,   "No such device"),                       // 19
+      EDENTRY(ENOTDIR,  "Not a directory"),                      // 21
+      EDENTRY(EISDIR,   "Is a directory"),                       // 22
       EDENTRY(EINVAL,   "Invalid argument"),                      // 22
-      EDENTRY(ENFILE,   "File table overflow"),
-      EDENTRY(EMFILE,   "Too many open files"),
-      EDENTRY(ENOTTY,   "Not a typewriter"),
-      EDENTRY(ETXTBSY,  "Text file busy"),
-      EDENTRY(EFBIG,    "File too large"),
-      EDENTRY(ENOSPC,   "No space left on device"),
-      EDENTRY(ESPIPE,   "Illegal seek"),
-      EDENTRY(EROFS,    "Read-only file system"),
+      EDENTRY(ENFILE,   "File table overflow"),                   // 23
+      EDENTRY(EMFILE,   "Too many open files"),                   // 24
+      EDENTRY(ENOTTY,   "Not a typewriter"),                      // 25
+      EDENTRY(ETXTBSY,  "Text file busy"),                        // 26
+      EDENTRY(EFBIG,    "File too large"),                        // 27
+      EDENTRY(ENOSPC,   "No space left on device"),               //28
+      EDENTRY(ESPIPE,   "Illegal seek"),                         // 29
+      EDENTRY(EROFS,    "Read-only file system"),                // 30
       EDENTRY(EMLINK,   "Too many links"),                       // 31
       EDENTRY(EPIPE,    "Broken pipe"),                          // 32
+      // math software:
       EDENTRY(EDOM,     "Math argument out of domain of func"),  // 33
       EDENTRY(ERANGE,   "Math result not representable"),        // 34
+
+#ifdef TARGET_BSD
+      // non-blocking and interrupt i/o
+      EDENTRY(EAGAIN,         "Resource temporarily unavailable"),     // 35
+#ifndef _POSIX_SOURCE
+      EDENTRY(EWOULDBLOCK,    "Operation would block"),             // 35 defined as EAGAIN
+      EDENTRY(EINPROGRESS,    "Operation now in progress"),         // 36
+      EDENTRY(EALREADY,       "Operation already in progress"),        // 37
+
+      // ipc/network software -- argument errors
+      EDENTRY(ENOTSOCK,       "Socket operation on non-socket"),      //38
+      EDENTRY(EDESTADDRREQ,   "Destination address required"),
+      EDENTYY(EMSGSIZE,       "Message to long").
+      EDENTRY(EPROTOTYPE,     "Protocol wrong type for socket"),
+      EDENTRY(ENOPROTOOPT,    "Protocol not available"),
+      EDENTRY(EPROTONOSUPPORT,"Protocol not supported").
+      EDENTRY(ESOCKTNOSUPPORT,"Socket type not supported"),          // 44
+      EDENTRY(EOPNOTSUPP,     "Operation not supported"),           // 45   also ENOTSUP
+      EDENTRY(EPFNOSUPPORT,   "Protocol family not supported"),      46
+      EDENTRY(EAFNOSUPPORT,   "Address family not supported by protocol family"),  // 47
+      EDENTRY(EADDRINUSE,     "Address already in use"),                    // 48
+      EDENTRY(EADDRNOTAVAIL,  "Can't assign requested address"),            //49
+
+      // ipc/network software -- operational errors
+       EDENTRY(ENETDOWN,      "Network is down"),     // 50
+       EDENTRY(ENETUNREACH,   "Network is unreachable"),   // 51
+       EDENTRY(ENETRESET ,    "Network dropped connection on reset"),   //52
+       EDENTRY(ECONNABORTED,  "Software caused connection abort"),  //53
+       EDENTRY(ECONNRESET,    "Connection reset by peer"),   // 54
+       EDENTRY(ENOBUFS,       "No buffer space available"),  // 55
+       EDENTRY(EISCONN,       "Socket is already connected"),    // 56
+       EDENTRY(ENOTCONN,      "Socket is not connected"),        // 57
+       EDENTRY(ESHUTDOWN ,    "Can't send after socket shutdown"),  //58
+       EDENTRY(ETOOMANYREFS,  "Too many references: can't splice"), //59
+       EDENTRY(ETIMEDOUT ,    "Operation timed out"),    // 60
+       EDENTRY(ECONNREFUSED,  "Connection refused"),  //61
+
+       EDENTRY(ELOOP,         "Too many levels of symbolic links"),   //62
+#endif /* _POSIX_SOURCE */
+
+     EDENTRY(ENAMETOOLONG ,   "File name too long"),     // 63
+
+#ifndef _POSIX_SOURCE
+     EDENTRY(EHOSTDOWN,       "Host is down"),     //64
+     EDENTRY(EHOSTUNREACH,    "No route to host"),     // 65
+#endif /* _POSIX_SOURCE */
+
+     EDENTRY(ENOTEMPTY,       "Directory not empty"),     //  66
+
+/* quotas & mush */
+#ifndef _POSIX_SOURCE
+     EDENTRY(EPROCLIM,        "Too many processes"),     //  67
+     EDENTRY(EUSERS,          "Too many users"),     // 68
+     EDENTRY(EDQUOT,          "Disc quota exceeded"),     //    69
+
+/* Network File System */
+     EDENTRY(ESTALE,          "Stale NFS file handle"),     //  70
+     EDENTRY(EREMOTE,         "Too many levels of remote in path"),     //   71
+     EDENTRY(EBADRPC,         "RPC struct is bad"),     //72
+     EDENTRY(ERPCMISMATCH,    "RPC version wrong"),     //  73
+     EDENTRY(EPROGUNAVAIL,    "RPC prog. not avail"),     //  74
+     EDENTRY(EPROGMISMATCH,   "Program version wrong"),     //   75
+     EDENTRY(EPROCUNAVAIL ,   "Bad procedure for program"),     //76
+#endif /* _POSIX_SOURCE */
+     EDENTRY(ENOLCK,          "No locks available"),     //   77
+     EDENTRY(ENOSYS,          "Function not implemented"),     //    78
+
+#ifndef _POSIX_SOURCE
+     EDENTRY(EFTYPE,          "Inappropriate file type or format"),     //   79
+     EDENTRY(EAUTH,           "Authentication error"),     //   80
+     EDENTRY(ENEEDAUTH,       "Need authenticator"),     //   81
+     EDENTRY(EIDRM ,          "Identifier removed"),     //   82
+     EDENTRY(ENOMSG,          "No message of desired type"),     //  83
+     EDENTRY(EOVERFLOW,       "Value too large to be stored in data type"),     //  84
+     EDENTRY(ECANCELED,       "Operation canceled"),     //  85
+     EDENTRY(EILSEQ ,         "Illegal byte sequence"),     // 86
+     EDENTRY(ENOATTR,         "Attribute not found"),     // 87
+
+     EDENTRY(EDOOFUS ,        "Programming error"),     //     88
+#endif /* _POSIX_SOURCE */
+
+
+     EDENTRY(EBADMSG ,        "Bad message"),     // 89
+     EDENTRY(EMULTIHOP,       "Multihop attempted"),     // 90
+     EDENTRY(ENOLINK ,        "Link has been severed"),     // 91
+     EDENTRY(EPROTO,          "Protocol error"),     //    92
+
+#ifndef _POSIX_SOURCE
+     EDENTRY(ENOTCAPABLE,     "Capabilities insufficient"),     // 93
+     EDENTRY(ECAPMODE,        "Not permitted in capability mode"),     //  94
+     EDENTRY(ENOTRECOVERABLE ,"State not recoverable"),     // 95
+     EDENTRY(EOWNERDEAD ,     "Previous owner died"),     //  96
+     EDENTRY(EINTEGRITY,      "Integrity check failed"),     //  97
+#endif /* _POSIX_SOURCE */
+
+
+#else
+
       // break in seq
       EDENTRY(EPROTO,   "Protocol error"),                       // 71
 
@@ -143,7 +246,6 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EALREADY,          "Operation already in progress"),                // 114
       EDENTRY(EINPROGRESS,       "Operation now in progress"),                    // 115
       EDENTRY(ESTALE,            "Stale file handle"),                            // 116
-#ifndef TARGET_BSD
       EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 117
 
       EDENTRY(ENOTNAM          , "Not a XENIX named type file"),                  // 118
