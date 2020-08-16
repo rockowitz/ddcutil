@@ -9,7 +9,7 @@
 #include <glib-2.0/glib.h>
 #include <sys/types.h>
 
-
+#ifdef OLD
 #ifdef TARGET_BSD
 #include <pthread_np.h>
 #else
@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <string.h>
+#endif
 #endif
 
 #include "util/debug_util.h"
@@ -98,11 +99,7 @@ bool ptd_cross_thread_operation_start() {
       // should this be a depth counter rather than a boolean?
       g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
 
-#ifdef TARGET_BSD
-      int cur_thread_id = pthread_getthreadid_np();
-#else
-      pid_t cur_thread_id = syscall(SYS_gettid);
-#endif
+      intmax_t cur_thread_id = get_thread_id();
       cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "Locked by thread %d", cur_thread_id);
       sleep_millis(10);   // give all per-thread functions time to finish
@@ -139,11 +136,7 @@ void ptd_cross_thread_operation_end() {
  */
 
 void ptd_cross_thread_operation_block() {
-#ifdef TARGET_BSD
-   int cur_threadid = pthread_getthreadid_np();
-#else 
-   pid_t cur_threadid = syscall(SYS_gettid);
-#endif
+   intmax_t cur_threadid = get_thread_id();
    if (cross_thread_operation_active && cur_threadid != cross_thread_operation_owner) {
       __sync_fetch_and_add(&cross_thread_operation_blocked_count, 1);
       do {
@@ -184,11 +177,7 @@ static void init_per_thread_data(Per_Thread_Data * ptd) {
  */
 Per_Thread_Data * ptd_get_per_thread_data() {
    bool debug = false;
-#ifdef TARGET_BSD
-   int cur_thread_id = pthread_getthreadid_np();
-#else
-   pid_t cur_thread_id = syscall(SYS_gettid);
-#endif
+   intmax_t cur_thread_id = get_thread_id();
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
    assert(per_thread_data_hash);    // allocated by init_thread_data_module()
