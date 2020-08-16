@@ -794,17 +794,6 @@ void severemsg(
 }
 
 
-intmax_t get_thread_id() {
-#ifdef TARGET_BSD
-      int tid = pthread_getthreadid_np();
-#else
-         pid_t tid = syscall(SYS_gettid);
-#endif
-   return tid;
-}
-
-
-
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
@@ -1091,5 +1080,21 @@ void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
    settings->error_detail = error_detail;
 
    DBGMSF(debug, "Done");
+}
+
+
+/** Gets the id number of the current thread
+ *
+ *  @ return  thread number
+ */
+
+intmax_t get_thread_id()
+{
+#ifdef TARGET_BSD
+   int tid = pthread_getthreadid_np();
+#else
+   pid_t tid = syscall(SYS_gettid);
+#endif
+   return tid;
 }
 
