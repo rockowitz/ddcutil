@@ -8,13 +8,6 @@
 
 /** \cond */
 
-#ifdef OLD
-// for syscall
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#endif
-
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
