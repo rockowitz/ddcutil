@@ -19,8 +19,13 @@
 #ifndef BASE_CORE_H_
 #define BASE_CORE_H_
 
+#include "config.h"
+
 /** \cond */
+#ifdef TARGET_BSD
+#else
 #include <linux/limits.h>
+#endif
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -312,4 +317,5 @@ void free_thread_error_detail();
 DDCA_Error_Detail * get_thread_error_detail();
 void save_thread_error_detail(DDCA_Error_Detail * error_detail);
 
+ intmax_t get_thread_id();
 #endif /* BASE_CORE_H_ */

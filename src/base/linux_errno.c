@@ -25,6 +25,8 @@
  * Linux errno descriptions
  */
 
+#include "config.h"
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
@@ -141,6 +143,7 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EALREADY,          "Operation already in progress"),                // 114
       EDENTRY(EINPROGRESS,       "Operation now in progress"),                    // 115
       EDENTRY(ESTALE,            "Stale file handle"),                            // 116
+#ifndef TARGET_BSD
       EDENTRY(EUCLEAN,           "Structure needs cleaning"),                     // 117
 
       EDENTRY(ENOTNAM          , "Not a XENIX named type file"),                  // 118
@@ -148,6 +151,7 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EISNAM           , "Is a named type file"),                         // 120
       EDENTRY(EREMOTEIO        , "Remote I/O error"),                             // 121
       EDENTRY(EDQUOT           , "Quota exceeded"),                               // 122
+#endif
 };
 #undef EDENTRY
 static const int errno_desc_ct = sizeof(errno_desc)/sizeof(Status_Code_Info);

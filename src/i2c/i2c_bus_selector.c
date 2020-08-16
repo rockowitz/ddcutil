@@ -128,7 +128,7 @@ bool bus_info_matches_selector(I2C_Bus_Info * bus_info, I2C_Bus_Selector * sel) 
       some_test_passed = true;
    }
    if (sel->edidbytes) {
-      if ((!edid) || !memcmp(sel->edidbytes, edid->bytes, 128) != 0  ) {
+      if ((!edid) || (memcmp(sel->edidbytes, edid->bytes, 128) != 0)  ) {
          result = false;
          goto bye;
       }

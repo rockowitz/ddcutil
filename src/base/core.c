@@ -16,6 +16,8 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #define GNU_SOURCE    // for syscall()
 
 //* \cond */
@@ -26,8 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef TARGET_BSD
+#include <pthread_np.h>
+#else
 #include <sys/types.h>
 #include <sys/syscall.h>
+#endif
 #include <unistd.h>
 /** \endcond */
 
@@ -788,6 +794,17 @@ void severemsg(
 }
 
 
+intmax_t get_thread_id() {
+#ifdef TARGET_BSD
+      int tid = pthread_getthreadid_np();
+#else
+         pid_t tid = syscall(SYS_gettid);
+#endif
+   return tid;
+}
+
+
+
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
@@ -827,7 +844,11 @@ bool dbgtrc(
 
       char thread_prefix[15] = "";
       if (dbgtrc_show_thread_id) {
+#ifdef TARGET_BSD
+      int tid = pthread_getthreadid_np();
+#else
          pid_t tid = syscall(SYS_gettid);
+#endif
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 

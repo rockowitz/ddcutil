@@ -23,6 +23,11 @@
 
 #include "debug_util.h"
 
+// HACK
+#ifdef TARGET_BSD
+#undef HAVE_EXECINFO_H
+#endif
+
 #ifdef HAVE_EXECINFO_H
 /* Extracts the function name and offset from a backtrace line
  *

@@ -7,9 +7,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
-#define DDC_DDC_DISPLAYS_H_
+#define DDC_DISPLAYS_H_
 
 #include "public/ddcutil_types.h"
+
+#include "config.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -17,8 +19,9 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "adl/adl_shim.h"
-
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
+#endif
 
 void ddc_set_async_threshold(int threshold);
 

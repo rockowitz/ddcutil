@@ -3,15 +3,23 @@
 // Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <sys/types.h>
+
+
+#ifdef TARGET_BSD
+#include <pthread_np.h>
+#else
 
 // for syscall
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <string.h>
+#endif
 
 #include "util/debug_util.h"
 #include "util/report_util.h"
@@ -90,7 +98,11 @@ bool ptd_cross_thread_operation_start() {
       // should this be a depth counter rather than a boolean?
       g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
 
+#ifdef TARGET_BSD
+      int cur_thread_id = pthread_getthreadid_np();
+#else
       pid_t cur_thread_id = syscall(SYS_gettid);
+#endif
       cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "Locked by thread %d", cur_thread_id);
       sleep_millis(10);   // give all per-thread functions time to finish
@@ -127,7 +139,12 @@ void ptd_cross_thread_operation_end() {
  */
 
 void ptd_cross_thread_operation_block() {
-   if (cross_thread_operation_active && syscall(SYS_gettid) != cross_thread_operation_owner) {
+#ifdef TARGET_BSD
+   int cur_threadid = pthread_getthreadid_np();
+#else 
+   pid_t cur_threadid = syscall(SYS_gettid);
+#endif
+   if (cross_thread_operation_active && cur_threadid != cross_thread_operation_owner) {
       __sync_fetch_and_add(&cross_thread_operation_blocked_count, 1);
       do {
          sleep_millis(10);
@@ -167,7 +184,11 @@ static void init_per_thread_data(Per_Thread_Data * ptd) {
  */
 Per_Thread_Data * ptd_get_per_thread_data() {
    bool debug = false;
+#ifdef TARGET_BSD
+   int cur_thread_id = pthread_getthreadid_np();
+#else
    pid_t cur_thread_id = syscall(SYS_gettid);
+#endif
    // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_thread_id);
    // bool this_function_owns_lock = ptd_lock_if_unlocked();
    assert(per_thread_data_hash);    // allocated by init_thread_data_module()

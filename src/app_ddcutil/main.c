@@ -54,7 +54,9 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "adl/adl_shim.h"
 
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
@@ -80,7 +82,9 @@
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
+#ifdef ENABLE_ENVCMDS
 #include "app_sysenv/query_sysenv_usb.h"
+#endif
 #endif
 
 #ifdef INCLUDE_TESTCASES

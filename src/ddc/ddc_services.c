@@ -6,6 +6,8 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 /** \cond */
 #include <i2c/i2c_strategy_dispatcher.h>
 #include <stdio.h>
@@ -29,8 +31,9 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
-
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#endif
 
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"

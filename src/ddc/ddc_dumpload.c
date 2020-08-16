@@ -6,12 +6,17 @@
 // Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 /** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
+#ifdef TARGET_BSD
+#else
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
+#endif
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>

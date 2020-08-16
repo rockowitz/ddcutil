@@ -3629,7 +3629,6 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       .v20_flags= DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name="Window control on/off",
       .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
-      .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
    },
    {  .code=0x9a,
       .vcp_spec_groups = VCP_SPEC_IMAGE | VCP_SPEC_WINDOW,   // 2.0: WINDOW, 3.0, 2.2: IMAGE

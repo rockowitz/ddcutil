@@ -5,10 +5,12 @@
 
 #include "config.h"
 
+#ifdef OLD
 // for syscall
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <sys/syscall.h>
+#endif
 
 #include <assert.h>
 #include <errno.h>
@@ -16,6 +18,8 @@
 
 #include "util/report_util.h"
 #include "util/string_util.h"
+
+#include "base/core.h"
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
@@ -391,7 +395,8 @@ ddca_open_display2(
    assert(ddc_displays_already_detected());
    // ddc_ensure_displays_detected();
 
-   pid_t thread_id = syscall(SYS_gettid);
+   // pid_t thread_id = syscall(SYS_gettid);
+   pid_t thread_id = get_thread_id(); 
 
    DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error

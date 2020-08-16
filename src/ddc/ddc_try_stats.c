@@ -8,11 +8,12 @@
 
 /** \cond */
 
+#ifdef OLD
 // for syscall
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <sys/syscall.h>
-
+#endif
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
@@ -63,7 +64,8 @@ bool lock_if_unlocked() {
       // should this be a depth counter rather than a boolean?
       g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
       if (debug) {
-         pid_t cur_thread_id = syscall(SYS_gettid);
+         // pid_t cur_thread_id = syscall(SYS_gettid);
+         intmax_t cur_thread_id = get_thread_id();
          DBGMSG("Locked by thread %d", cur_thread_id);
       }
    }
@@ -88,7 +90,8 @@ void unlock_if_needed(bool unlock_requested) {
       if (currently_locked) {
          g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
          if (debug) {
-            pid_t cur_thread_id = syscall(SYS_gettid);
+            // pid_t cur_thread_id = syscall(SYS_gettid);
+            intmax_t cur_thread_id = get_thread_id();
             DBGMSF(debug, "Unlocked by thread %d", cur_thread_id);
          }
          g_mutex_unlock(&try_data_mutex);

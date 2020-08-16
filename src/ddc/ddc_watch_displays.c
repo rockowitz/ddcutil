@@ -4,6 +4,8 @@
 // Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 /** \cond */
 // for syscall
 #define _GNU_SOURCE
@@ -17,7 +19,9 @@
 #include <glib-2.0/glib.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef ENABLE_UDEV
 #include <libudev.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -256,7 +260,7 @@ gpointer watch_displays_using_poll(gpointer data) {
    }
 }
 
-
+#ifdef ENABLE_UDEV
 void show_udev_list_entries(
       struct udev_list_entry * entries,
       char * title)
@@ -270,8 +274,9 @@ void show_udev_list_entries(
 
    }
 }
+#endif
 
-
+#ifdef ENABLE_UDEV
 void show_sysattr_list_entries(
       struct udev_device *       dev,
       struct udev_list_entry * head)
@@ -309,7 +314,7 @@ void show_sysattr_list_entries(
       }
    }
 }
-
+#endif
 
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
@@ -319,7 +324,7 @@ void set_fd_blocking(int fd) {
    assert(rc != -1);
 }
 
-
+#ifdef ENABLE_UDEV
 gpointer watch_displays_using_udev(gpointer data) {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -425,7 +430,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 
     return NULL;
 }
-
+#endif
 
 void dummy_display_change_handler(
         Displays_Change_Type changes,
@@ -455,13 +460,17 @@ ddc_start_watch_displays()
    memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
    data->display_change_handler = dummy_display_change_handler;
    data->main_process_id = getpid();
-   data->main_thread_id = syscall(SYS_gettid);
+   // data->main_thread_id = syscall(SYS_gettid);
+   data->main_thread_id = get_thread_id();
 
    // GThread * th =
    g_thread_new(
          "watch_displays",             // optional thread name
-      //  watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
-         watch_displays_using_udev,
+#if ENABLE_UDEV
+        watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
+#else
+         watch_displays_using_poll,
+#endif  
          data);
    return ddc_excp;
 }

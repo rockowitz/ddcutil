@@ -935,7 +935,7 @@ int i2c_detect_buses() {
 #ifdef USE_UDEV
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
 #else
-      Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test(false);
+      Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
 #endif
       // TODO: set free function
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
