@@ -230,61 +230,45 @@ AS_IF([test "x$enable_lib" = "xyes"],
      )
 
 
-dnl TODO: simplify as per later options
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
               [enable_envcmds=${enableval}],
               [enable_envcmds=yes] )
-dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
-dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
-AS_IF([test "x$enable_envcmds" = "xyes"],
-      AC_MSG_NOTICE( [envcmds... enabled] )
-      AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
-      AC_SUBST(ENABLE_ENVCMDS_FLAG, 1) 
-     ,
-      AC_MSG_NOTICE( [envcmds... disabled] )
-      AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
-     )
 
-dnl TODO: simplify as per later options
+
 dnl *** configure option: --enable-udev
 AC_ARG_ENABLE([udev],
               [ AS_HELP_STRING([--enable-udev=@<:@yes/no@:>@], [Use UDEV@<:@default=yes@:>@] )],
               [enable_udev=${enableval}],
               [enable_udev=yes] )
-dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
-dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
-AS_IF([test "x$enable_udev" = "xyes"],
-      AC_MSG_NOTICE( [udev... enabled] )
-      AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
-      AC_SUBST(ENABLE_UDEV_FLAG, 1) 
-     ,
-      AC_MSG_NOTICE( [udev... disabled] )
-      AC_SUBST(ENABLE_UDEV_FLAG, 0)
-     )
 
 
-dnl TODO: simplify as per later options
 dnl *** configure option: --enable-targetbsd
 AC_ARG_ENABLE([targetbsd],
               [ AS_HELP_STRING([--enable-targetbsd=@<:@no/yes@:>@], [Build for BSD@<:@default=no@:>@] )],
               [enable_targetbsd=${enableval}],
               [enable_targetbsd=no] )
-dnl Set flag for automake.am:
-AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
-dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
-AS_IF([test "x$enable_targetbsd" = "xyes"],
-      AC_MSG_NOTICE( [targetbsd... enabled] )
-      AC_DEFINE( [TARGET_BSD], [1], [If defined, target BSD.])
-      AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
-     ,
-      AC_MSG_NOTICE( [targetbsd... disabled] )
-      AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
-     )
 
+
+dnl *** configure option: --enable-usb
+AC_ARG_ENABLE([usb],
+              [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
+              [enable_usb=${enableval}],
+              [enable_usb=yes] )
+
+dnl *** configure option: --enable-drm
+AC_ARG_ENABLE([drm],
+              [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
+              [enable_drm=${enableval}],
+              [enable_drm=yes] )
+
+
+dnl *** configure option: --enable-x11
+AC_ARG_ENABLE([x11],
+              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
+              [enable_x11=${enableval}],
+              [enable_x11=yes] )
 
 
 
@@ -331,6 +315,11 @@ AS_IF([test "x$enable_cffi" = "xyes"],
       AC_MSG_NOTICE( [cffi... disabled] )
      )
 
+AS_IF([test "x$enable_drm" = "xyes"],
+        AC_MSG_NOTICE( [drm... enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [drm... disabled] )
+     )
 
 dnl TODO: Review
 dnl copied from tschoonj configure.ac snippet: https://gist.github.com/tschoonj/6441999
@@ -342,43 +331,8 @@ dnl #in order to avoid this, invoke configure with the --enable-python-integrati
 dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
 
 
-dnl *** configure option: --enable-usb
-AC_ARG_ENABLE([usb],
-              [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
-              [enable_usb=${enableval}],
-              [enable_usb=yes] )
-AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
-dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
-AS_IF([test "x$enable_usb" = "xyes"],
-        AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
-        AC_SUBST(  ENABLE_USB_FLAG, [1] )
-        AC_MSG_NOTICE( [usb... enabled]  )
-      ,
-        AC_SUBST( ENABLE_USB_FLAG, [0] )
-        AC_MSG_NOTICE( [usb... disabled] )
-     )
 
-dnl *** configure option: --enable-drm
-AC_ARG_ENABLE([drm],
-              [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
-              [enable_drm=${enableval}],
-              [enable_drm=yes] )
-AS_IF([test "x$enable_drm" = "xyes"],
-        AC_MSG_NOTICE( [drm... enabled (provisional) ]  )
-      ,
-        AC_MSG_NOTICE( [drm... disabled] )
-     )
 
-dnl *** configure option: --enable-x11
-AC_ARG_ENABLE([x11],
-              [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
-              [enable_x11=${enableval}],
-              [enable_x11=yes] )
-AS_IF([test "x$enable_x11" = "xyes"],
-        AC_MSG_NOTICE( [x11... enabled]  )
-      ,
-        AC_MSG_NOTICE( [x11... disabled] )
-     )
 
 
 dnl *** configure option: --enable-doxygen
@@ -392,6 +346,99 @@ AS_IF([test "x$enable_doxygen" = "xyes"],
       ,
         AC_MSG_NOTICE( [doxygen... disabled] )
      )
+###
+### Resolve choices for public options
+###
+
+dnl --enable-targetbsd => --disable-envcmds, --disable-usb, --disable-udev
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_envcmds" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-envcmds] )
+        enable_envcmds=no
+       ]
+   ) 
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_udev" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-udev] )
+        enable_udev=no
+       ]
+   ) 
+
+AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_usb" = "xyes" ],
+       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-usb] )
+        enable_usb=no
+       ]
+   ) 
+
+# --disable-envcmds => --disable-drm, --disable-x11
+
+AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
+       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
+        enable_drm=no
+       ]
+   ) 
+
+AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
+       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
+        enable_x11=no
+       ]
+   ) 
+
+
+###
+### Report resolved options and set conditionals, substitution, and defined
+###
+
+AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
+AS_IF([test "x$enable_targetbsd" = "xyes"],
+      AC_MSG_NOTICE( [targetbsd... enabled] )
+      AC_DEFINE( [TARGET_BSD], [1], [If defined, target BSD.])
+      AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [targetbsd... disabled] )
+      AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
+     )
+
+
+AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AS_IF([test "x$enable_envcmds" = "xyes"],
+      AC_MSG_NOTICE( [envcmds... enabled] )
+      AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
+      AC_SUBST(ENABLE_ENVCMDS_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [envcmds... disabled] )
+      AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
+     )
+
+AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
+dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AS_IF([test "x$enable_udev" = "xyes"],
+      AC_MSG_NOTICE( [udev... enabled] )
+      AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
+      AC_SUBST(ENABLE_UDEV_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [udev... disabled] )
+      AC_SUBST(ENABLE_UDEV_FLAG, 0)
+     )
+
+AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
+dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
+AS_IF([test "x$enable_usb" = "xyes"],
+        AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
+        AC_SUBST(  ENABLE_USB_FLAG, [1] )
+        AC_MSG_NOTICE( [usb... enabled]  )
+      ,
+        AC_SUBST( ENABLE_USB_FLAG, [0] )
+        AC_MSG_NOTICE( [usb... disabled] )
+     )
+
+AS_IF([test "x$enable_x11" = "xyes"],
+        AC_MSG_NOTICE( [x11... enabled]  )
+      ,
+        AC_MSG_NOTICE( [x11... disabled] )
+     )
+
 
 
 ### Private options
@@ -558,29 +605,6 @@ dnl disabled because systemd_util.c no longer needed:
 dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
 
 
-###
-### Force features
-###
-
-### targetbsd
-
-AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_envcmds" = "xyes" ],
-       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-envcmds] )
-	     enable_envcmds=no
-       ]
-	) 
-
-AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_udev" = "xyes" ],
-       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-udev] )
-	     enable_udev=no
-       ]
-	) 
-
-AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_usb" = "xyes" ],
-       [ AC_MSG_NOTICE( [--enable-targetbsd forces --disable-usb] )
-	     enable_usb=no
-       ]
-	) 
 
 
 
@@ -608,18 +632,6 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-dnl TODO: disable if enable-envcmds is false
-AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
-       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-drm] )
-	     enable_drm=no
-       ]
-	) 
-
-AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
-       [ AC_MSG_NOTICE( [--disable-envcmds forces --disable-x11] )
-	     enable_x11=no
-       ]
-	) 
 
 
 AS_IF([test "x$enable_drm" = "xyes"],
