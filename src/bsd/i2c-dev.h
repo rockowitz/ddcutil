@@ -24,8 +24,7 @@
 #ifndef _LINUX_I2C_DEV_H
 #define _LINUX_I2C_DEV_H
 
-// #include <linux/types.h>
-#include "linux_types.h"
+#include "linux_types.h"   // private copy of Linux <linux/types.h>
 
 
 /* /dev/i2c-X ioctl commands.  The ioctl's parameter is always an

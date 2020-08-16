@@ -28,8 +28,7 @@
 #ifndef _LINUX_I2C_H
 #define _LINUX_I2C_H
 
-//#include <linux/types.h>
-#include "linux_types.h"
+#include "linux_types.h"    // private version of Linux <linux/types.h>
 
 /**
  * struct i2c_msg - an I2C transaction segment beginning with START
