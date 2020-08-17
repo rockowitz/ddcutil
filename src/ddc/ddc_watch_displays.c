@@ -1,19 +1,12 @@
 /** \file ddc_watch_displays.c - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
 /** \cond */
-// for syscall
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <assert.h>
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
@@ -24,6 +17,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "util/error_info.h"
@@ -89,7 +83,11 @@ GPtrArray *  get_sysfs_drm_displays() {
    g_ptr_array_set_free_func(connected_displays, free);
 
    // rpt_vstring(depth,"Examining /sys/class/drm...");
+#ifdef TARGET_BSD
+   dname = "/compat/linux/sys/class/drm";
+#else
    dname = "/sys/class/drm";
+#endif
    dir1 = opendir(dname);
    if (!dir1) {
       rpt_vstring(d1, "drm not defined in sysfs. Unable to open directory %s: %s\n",
@@ -147,31 +145,12 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
    assert(second);
    // to consider: only allocate result if there's actually a difference
    GPtrArray * result = g_ptr_array_new_with_free_func(free);
-   int ndx1 = 0;
-   int ndx2 = 0;
-   while(true) {
-      if (ndx1 == first->len)
-         break;
-      if (ndx2 == second->len) {
-         char * cur1 = g_ptr_array_index(first, ndx1);
-         g_ptr_array_add(result, strdup(cur1));
-         ndx1++;
-      }
-      else {
-         char * cur1 = g_ptr_array_index(first, ndx1);
-         char * cur2 = g_ptr_array_index(second, ndx2);
-         int comp = strcmp(cur1,cur2);
-         if (comp < 0) {
-            g_ptr_array_add(result, strdup(cur1));
-            ndx1++;
-         }
-         else if (comp == 0) {
-            ndx1++;
-            ndx2++;
-         }
-         else {  // comp > 0
-            ndx2++;
-         }
+   guint found_index;
+   for (int ndx = 0; ndx < first->len; ndx++) {
+      gpointer cur = g_ptr_array_index(first, ndx);
+      bool found = g_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+      if (found) {
+         g_ptr_array_add(result, strdup(cur));
       }
    }
    return result;
@@ -182,12 +161,18 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
    assert(first);
    assert(second);
    bool result = false;
+   // assumes each entry in first and second is unique
    if (first->len == second->len) {
-      for (int ndx = 0; ndx < first->len; ndx++) {
-         if ( !streq(g_ptr_array_index(first, ndx), g_ptr_array_index(second, ndx)) )
-               break;
-      }
       result = true;
+      for (int ndx = 0; ndx < first->len; ndx++) {
+         guint found_index;
+         gpointer cur = g_ptr_array_index(first, ndx);
+         bool found = g_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+         if (!found) {
+            result = false;
+            break;
+         }
+      }
    }
    return result;
 }
@@ -260,6 +245,7 @@ gpointer watch_displays_using_poll(gpointer data) {
    }
 }
 
+
 #ifdef ENABLE_UDEV
 void show_udev_list_entries(
       struct udev_list_entry * entries,
@@ -274,9 +260,8 @@ void show_udev_list_entries(
 
    }
 }
-#endif
 
-#ifdef ENABLE_UDEV
+
 void show_sysattr_list_entries(
       struct udev_device *       dev,
       struct udev_list_entry * head)
@@ -316,6 +301,7 @@ void show_sysattr_list_entries(
 }
 #endif
 
+
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
    assert (flags != -1);
@@ -334,7 +320,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 
    // DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
    // pid_t cur_pid = getpid();
-   // pid_t cur_tid = syscall(SYS_gettid);
+   // pid_t cur_tid = get_thread_id();
    // DBGMSG("Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
    struct udev* udev;
@@ -367,7 +353,6 @@ gpointer watch_displays_using_udev(gpointer data) {
          break;
       }
 #endif
-
 
       DBGMSF(debug, "Blocking until there is data");
       // by default, is non-blocking as of lubudev 171, use fcntl() to make file descriptor blocking
@@ -431,6 +416,7 @@ gpointer watch_displays_using_udev(gpointer data) {
     return NULL;
 }
 #endif
+
 
 void dummy_display_change_handler(
         Displays_Change_Type changes,
