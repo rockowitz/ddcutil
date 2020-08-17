@@ -130,7 +130,7 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EMSGSIZE,       "Message too long"),
       EDENTRY(EPROTOTYPE,     "Protocol wrong type for socket"),
       EDENTRY(ENOPROTOOPT,    "Protocol not available"),
-      EDENTRY(EPROTONOSUPPORT,"Protocol not supported").
+      EDENTRY(EPROTONOSUPPORT,"Protocol not supported"),
       EDENTRY(ESOCKTNOSUPPORT,"Socket type not supported"),          // 44
       EDENTRY(EOPNOTSUPP,     "Operation not supported"),           // 45   also ENOTSUP
       EDENTRY(EPFNOSUPPORT,   "Protocol family not supported"),      46
