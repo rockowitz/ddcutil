@@ -630,7 +630,7 @@ ddca_get_display_info_list2(
       DDCA_Display_Info_List**  dlist_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API||DDCA_TRC_DDC, "Starting");
+   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, "Starting");
    free_thread_error_detail();
    // assert(dlist_loc);
    PRECOND(dlist_loc);
@@ -720,7 +720,7 @@ ddca_get_display_info_list2(
       }
    }
 
-   if (debug || IS_TRACING_GROUP( DDCA_TRC_API||DDCA_TRC_DDC )) {
+   if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Done. Returning %p", result_list);
       dbgrpt_display_info_list(result_list, 2);
    }
