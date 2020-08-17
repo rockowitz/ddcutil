@@ -127,7 +127,7 @@ static Status_Code_Info errno_desc[] = {
       // ipc/network software -- argument errors
       EDENTRY(ENOTSOCK,       "Socket operation on non-socket"),      //38
       EDENTRY(EDESTADDRREQ,   "Destination address required"),
-      EDENTRY(EMSGSIZE,       "Message too long").
+      EDENTRY(EMSGSIZE,       "Message too long"),
       EDENTRY(EPROTOTYPE,     "Protocol wrong type for socket"),
       EDENTRY(ENOPROTOOPT,    "Protocol not available"),
       EDENTRY(EPROTONOSUPPORT,"Protocol not supported").
