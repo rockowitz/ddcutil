@@ -5,13 +5,6 @@
 
 #include "config.h"
 
-#ifdef OLD
-// for syscall
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#endif
-
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -58,8 +51,6 @@ bool
 ddca_ddca_is_usb_display_detection_enabled() {
    return ddc_is_usb_display_detection_enabled();
 }
-
-
 
 
 //
