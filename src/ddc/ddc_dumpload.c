@@ -13,10 +13,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-#ifdef TARGET_BSD
-#else
-// #include <linux/limits.h>    // PATH_MAX, NAME_MAX
-#endif
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
