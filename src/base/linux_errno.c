@@ -107,36 +107,36 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(ENOTTY,   "Not a typewriter"),                      // 25
       EDENTRY(ETXTBSY,  "Text file busy"),                        // 26
       EDENTRY(EFBIG,    "File too large"),                        // 27
-      EDENTRY(ENOSPC,   "No space left on device"),               //28
-      EDENTRY(ESPIPE,   "Illegal seek"),                         // 29
-      EDENTRY(EROFS,    "Read-only file system"),                // 30
-      EDENTRY(EMLINK,   "Too many links"),                       // 31
-      EDENTRY(EPIPE,    "Broken pipe"),                          // 32
+      EDENTRY(ENOSPC,   "No space left on device"),                //28
+      EDENTRY(ESPIPE,   "Illegal seek"),                          // 29
+      EDENTRY(EROFS,    "Read-only file system"),                 // 30
+      EDENTRY(EMLINK,   "Too many links"),                        // 31
+      EDENTRY(EPIPE,    "Broken pipe"),                           // 32
       // math software:
-      EDENTRY(EDOM,     "Math argument out of domain of func"),  // 33
-      EDENTRY(ERANGE,   "Math result not representable"),        // 34
+      EDENTRY(EDOM,     "Math argument out of domain of func"),   // 33
+      EDENTRY(ERANGE,   "Math result not representable"),         // 34
 
 #ifdef TARGET_BSD
       // non-blocking and interrupt i/o
-      EDENTRY(EAGAIN,         "Resource temporarily unavailable"),     // 35
+      EDENTRY(EAGAIN,         "Resource temporarily unavailable"),   // 35
 #ifndef _POSIX_SOURCE
-      EDENTRY(EWOULDBLOCK,    "Operation would block"),             // 35 defined as EAGAIN
-      EDENTRY(EINPROGRESS,    "Operation now in progress"),         // 36
-      EDENTRY(EALREADY,       "Operation already in progress"),        // 37
+      EDENTRY(EWOULDBLOCK,    "Operation would block"),              // 35 defined as EAGAIN
+      EDENTRY(EINPROGRESS,    "Operation now in progress"),          // 36
+      EDENTRY(EALREADY,       "Operation already in progress"),      // 37
 
       // ipc/network software -- argument errors
-      EDENTRY(ENOTSOCK,       "Socket operation on non-socket"),      //38
-      EDENTRY(EDESTADDRREQ,   "Destination address required"),
-      EDENTRY(EMSGSIZE,       "Message too long"),
-      EDENTRY(EPROTOTYPE,     "Protocol wrong type for socket"),
-      EDENTRY(ENOPROTOOPT,    "Protocol not available"),
-      EDENTRY(EPROTONOSUPPORT,"Protocol not supported"),
+      EDENTRY(ENOTSOCK,       "Socket operation on non-socket"),     // 38
+      EDENTRY(EDESTADDRREQ,   "Destination address required"),       // 39
+      EDENTRY(EMSGSIZE,       "Message too long"),                   // 40
+      EDENTRY(EPROTOTYPE,     "Protocol wrong type for socket"),     // 41
+      EDENTRY(ENOPROTOOPT,    "Protocol not available"),             // 42
+      EDENTRY(EPROTONOSUPPORT,"Protocol not supported"),             // 43
       EDENTRY(ESOCKTNOSUPPORT,"Socket type not supported"),          // 44
-      EDENTRY(EOPNOTSUPP,     "Operation not supported"),           // 45   also ENOTSUP
-      EDENTRY(EPFNOSUPPORT,   "Protocol family not supported"),      46
+      EDENTRY(EOPNOTSUPP,     "Operation not supported"),            // 45   also ENOTSUP
+      EDENTRY(EPFNOSUPPORT,   "Protocol family not supported"),      // 46
       EDENTRY(EAFNOSUPPORT,   "Address family not supported by protocol family"),  // 47
-      EDENTRY(EADDRINUSE,     "Address already in use"),                    // 48
-      EDENTRY(EADDRNOTAVAIL,  "Can't assign requested address"),            //49
+      EDENTRY(EADDRINUSE,     "Address already in use"),             // 48
+      EDENTRY(EADDRNOTAVAIL,  "Can't assign requested address"),     // 49
 
       // ipc/network software -- operational errors
        EDENTRY(ENETDOWN,      "Network is down"),     // 50
