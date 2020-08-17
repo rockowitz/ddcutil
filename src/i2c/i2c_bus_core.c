@@ -48,7 +48,7 @@
 #include "base/per_thread_data.h"
 
 #ifdef TARGET_BSD
-#include "../bsd/i2c-dev.h"
+#include "bsd/i2c-dev.h"
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
