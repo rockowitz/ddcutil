@@ -421,29 +421,11 @@ ddca_max_max_tries(void) {
 
 int
 ddca_get_max_tries(DDCA_Retry_Type retry_type) {
-#ifdef OLD
-   int result = 0;
-   switch(retry_type) {
-      case (WRITE_ONLY_TRIES_OP):
-         result = ddc_get_max_write_only_exchange_tries();
-      break;
-   case (WRITE_READ_TRIES_OPE):
-      result = ddc_get_max_write_read_exchange_tries();
-      break;
-   case (MULTI_PART_READ_OP):
-      result = ddc_get_max_multi_part_read_tries();
-      break;
-   case (MULTI_PART_WRITE_OP):
-      result = ddc_get_max_multi_part_write_tries();
-      break;
-   }
-#endif
-
-
-
-   Retry_Op_Value result3 = try_data_get_maxtries2(retry_type);
+   // stats for multi part writes and reads are separate, but the
+   // max tries for both are identical
+   Retry_Op_Value result3 = try_data_get_maxtries2((Retry_Operation) retry_type);
    // new way using retry_mgt
-   Retry_Op_Value result2 = trd_get_thread_max_tries(retry_type);
+   Retry_Op_Value result2 = trd_get_thread_max_tries((Retry_Operation) retry_type);
    // assert(result == result2);
    assert(result2 == result3);
    return result2;
@@ -460,33 +442,13 @@ ddca_set_max_tries(
    if (max_tries < 1 || max_tries > MAX_MAX_TRIES)
       rc = DDCRC_ARG;
    else {
-
-#ifdef OLD
-      switch(retry_type) {
-      case (WRITE_ONLY_TRIES_OP):
-         ddc_set_max_write_only_exchange_tries(max_tries);   // sets in Try_Data
-
-         break;
-      case (WRITE_READ_TRIES_OPE):
-         ddc_set_max_write_read_exchange_tries(max_tries);   // sets in Try_Data
-         break;
-      case (MULTI_PART_READ_OP):
-         ddc_set_max_multi_part_read_tries(max_tries);       // sets in Try_Data  , sets vars in ddc_muti_part.io
-      case (MULTI_PART_WRITE_OP):
-         ddc_set_max_multi_part_write_tries(max_tries);      // TODO: Separate constant
-         break;
-      }
-#endif
-
-
-
-      try_data_set_maxtries2(retry_type, max_tries);
+      try_data_set_maxtries2((Retry_Operation) retry_type, max_tries);
       // for DDCA_MULTI_PART_TRIES, set both  MULTI_PART_WRITE_OP and MULTI_PART_READ_OP
       if (retry_type == DDCA_MULTI_PART_TRIES)
          try_data_set_maxtries2(MULTI_PART_WRITE_OP, max_tries);
 
       // new way, set in retry_mgt
-      trd_set_thread_max_tries(retry_type, max_tries);
+      trd_set_thread_max_tries((Retry_Operation) retry_type, max_tries);
       if (retry_type == DDCA_MULTI_PART_TRIES)
            trd_set_thread_max_tries(MULTI_PART_WRITE_OP, max_tries);
    }
