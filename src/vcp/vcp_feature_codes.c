@@ -3628,6 +3628,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
             "from the desktop.",
       .v20_flags= DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name="Window control on/off",
+      .v22_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
       .v30_flags = DDCA_DEPRECATED | DDCA_RW | DDCA_SIMPLE_NC,
    },
    {  .code=0x9a,
