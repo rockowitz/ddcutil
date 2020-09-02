@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.1
+Name=ddcutil
+GenericName=Monitor Settings
+Comment=Control monitor settings
+Keywords=DDC/CI;MCCS
+Exec=ddcutil
+TryExec=ddcutil
+Icon=ddcutil
+Terminal=true
+NoDisplay=true
+Type=Application
+Categories=System;Utility;Settings;HardwareSettings

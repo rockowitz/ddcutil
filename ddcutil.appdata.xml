@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2020 Sanford Rockowitz rockowitz@minsoft.com> -->
+<component>
+  <id type="desktop">ddcutil.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>ddcutil</name>
+  <project_license>GPL-2.0-or-later</project_license>
+  <summary>Linux program to control monitor settings</summary>
+   <url type="homepage">http://www.ddcutil.com/</url> 
+
+  <description>
+<p>ddcutil is an open-source Linux program for querying and changing monitor settings, such as brightness and color levels.
+
+Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), which implements features defined in the Montor Control Command Set (MCCS). Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the Display Data Channel/Command Interface Standard (DDC/CI). </p>
+<p>
+Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP, as described in the USB Monitor Control Class Specification. ddcutil can communicate with these monitors over using USB.</p>                                                                                       
+<p>
+A particular use case for ddcutil is as part of color profile management. Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain. ddcutil allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.</p>
+</description>
+
+
+  <screenshots>
+    <screenshot type="default">
+      <image> https://www.ddcutil.com/images/ddcutil_screenshot1.jpg</image>
+      <!-- <image>image height="708" width="1000">https://raw.githubusercontent.com/ddcutilproject/ddcutil/master/doc/en/images/ andt2.png</image> -->
+      <caption>Get all settings for a monitor</caption>
+    </screenshot>
+  </screenshots>
+
+  <update_contact>rockowitz2@minsoft.com></update_contact>
+  <url type="homepage">https://www.ddcutil.com</url>
+  <url type="bugtracker">https://github.com/rockowitz/ddcutil/issues</url>
+  <url type="faq">https://www.ddcutil.com/faq</url>
+  <developer_name>Sanford Rockowitz</developer_name>
+  <releases>
+    <release version="0.9.9" date="2019-12-09"/>
+    <release version="0.9.8" date="2019-12-06"/>
+    <release version="0.9.7" date="2019-09-04"/>
+    <release version="0.9.6" date="2019-08-25"/>
+  </releases>
+<!--
+  <icon type="remote" width="64" height="64">https://www.ddcutil.com/images/ddcutil-64.png</icon>
+  <icon type="url"    width="64" height="64">https://www.ddcutil.com/images/ddcutil-64.png</icon>
+-->
+</component>
