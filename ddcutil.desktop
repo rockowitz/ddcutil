@@ -10,4 +10,4 @@ Icon=ddcutil
 Terminal=true
 NoDisplay=true
 Type=Application
-Categories=System;Utility;Settings;HardwareSettings
+Categories=Settings;HardwareSettings;ConsoleOnly
