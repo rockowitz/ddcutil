@@ -1,43 +1,170 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2020 Sanford Rockowitz rockowitz@minsoft.com> -->
-<component>
-  <id type="desktop">ddcutil.desktop</id>
+<component type="console-application">   <!-- gnome-software does not display if console-application -->
+
   <metadata_license>CC0-1.0</metadata_license>
+
+  <!-- if ddcutil, com.ddcutil.ddcutil, the .desktop file name must matcch -->  
+  <!-- 11, eliminate type desktop, COPR accepts, but gnome-software doesn't show -->
+  <!-- 12, ddcutil.desktop -> com.ddcutil.ddcutil: COPR accepts, gnome-sotware doesn't show -->
+  <id>com.ddcutil.ddcutil</id>  
+  <!-- 26: rename ddcutil -> ddcutilx to verity that COPR doesn't change -
+       verified, changed back -->
   <name>ddcutil</name>
   <project_license>GPL-2.0-or-later</project_license>
   <summary>Command line program to control monitor settings</summary>
-   <url type="homepage">http://www.ddcutil.com/</url> 
-
   <description>
-<p>ddcutil is a command line program for querying and changing monitor settings, such as brightness and color levels.
+    <p>ddcutil is a command line program for querying and changing monitor settings, such as brightness color levels, and power one hours.
 
-Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), which implements features defined in the Montor Control Command Set (MCCS) specification. Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the Display Data Channel/Command Interface Standard (DDC/CI). </p>
-<p>
-Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP, as described in the USB Monitor Control Class Specification. ddcutil can communicate with these monitors over using USB.</p>                                                                                       
-<p>
-A particular use case for ddcutil is as part of color profile management. Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain. ddcutil allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.</p>
-</description>
-<screenshots>
-  <screenshot type="default">
-    <image> https://www.ddcutil.com/images/ddcutil_screenshot1.jpg</image>
-     <!-- <image>image height="708" width="1000">https://raw.githubusercontent.com/ddcutilproject/ddcutil/master/doc/en/images/ andt2.png</image> -->
-    <caption>Get all settings for a monitor</caption>
-  </screenshot>
-</screenshots>
+    Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), which implements features defined in the Montor Control Command Set (MCCS) specification. Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the Display Data Channel/Command Interface Standard (DDC/CI). </p>
+    <p>Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP, as described in the USB Monitor Control Class Specification. ddcutil can communicate with these monitors using USB.</p>                                                                                       
+    <p>The corresponding desktop application is ddcui.</p>
+    <p>A particular use case for ddcutil is as part of color profile management. Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain. ddcutil allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.</p>
+  </description>
+  <!-- provides appears to be unchanged by COPR -->
+  <provides>
+    <binary>ddcutil</binary>
+  </provides>
 
-<update_contact>rockowitz2@minsoft.com></update_contact>
-<url type="homepage">https://www.ddcutil.com</url>
-<url type="bugtracker">https://github.com/rockowitz/ddcutil/issues</url>
-<url type="faq">https://www.ddcutil.com/faq</url>
-<developer_name>Sanford Rockowitz</developer_name>
-<releases>
-  <release version="0.9.9" date="2019-12-09"/>
-  <release version="0.9.8" date="2019-12-06"/>
-  <release version="0.9.7" date="2019-09-04"/>
-  <release version="0.9.6" date="2019-08-25"/>
+  <!--screenshots unchanged by COPR -->
+  <screenshots>
+    <screenshot type="default">
+      <image> https://www.ddcutil.com/images/ddcutil_screenshot1.jpg</image>
+       <!-- <image>image height="708" width="1000">https://raw.githubusercontent.com/ddcutilproject/ddcutil/master/doc/en/images/ andt2.png</image> -->
+      <caption>Get all settings for a monitor</caption>
+    </screenshot>
+  </screenshots>
+
+  <!-- with no icons here, appstream.xml emitted by COPR  contains 64 and 128 bit icons of type "cached" -->
+
+
+  <!-- icon tag is invalid if component type = desktop-application" -->
+  <!--  <icon type="url">https://www.ddcutil.com/images/ddcutil-48px.png</icon> -->  <!-- COPR build does not find -->
+  <!-- 14: enable stock icon -->
+  <!-- 14:  appstreamcli: no errors 
+       COPR emits the stock icon, also <icon>ddcutil</icon>
+       appstream-builder: WARNING: AppData problem: tag-invalid : stock icon is not valid [xfburn] 
+       gnome-software: does not show ddcutil
+  -->
+  <!-- 15: comment out stock icon, i.e. no there are no icons
+       appstreamcli validate: no errors 
+       appstream-builder: no warnings
+       file emitted by copr: no vetoes, 
+              has kudos HiDpiIcon
+              but not ModernToolkit - why is this different from ddcui?
+           has generated 64 and 128 bit cached icons 
+       gnome-software does not find
+ -->
+  <!-- 16: comment out Exec and TryExec in ddcutil.desktop 
+           n. desktop file apparently the source of the icon "ddcutil"
+       appstrem-builder - no errors no warnings
+                       xml file reported has  <icon type="cached" height="64" width="64">com.ddcutil.ddcutil.png</icon>
+       appstream.xml generated by COPR has 64 and 128 bit icons, same name as appsrteram-builder
+       gnome-software doesn't show ddcutil
+-->
+
+<!-- 17: add <icon>ddcutil</icon> with no type, comment out launchable
+         appstreamcli error: type-property-required icon (ddcutil)
+-->
+<!-- 18: replace icon "ddcutil" with icon type="url" www.ddcutil.com/images
+         appstreamcli validate: E: com.ddcutil.ddcutil:70: metainfo-invalid-icon-type url
+
+-->
+<!-- 19: change icon type to remote 
+         appstreamcli: no errors
+         COPR:  <veto>Failed to find icon: Failed to find icon ddcutil-48px.png</veto>
+                <veto>Has no Icon</veto>
+-->
+<!-- 20: change ddcutil-test setting to Enable internet access during build 
+         COPR output: 
+<vetos>
+      <veto>Failed to find icon: Failed to find icon www.ddcutil.com/.../ddcutil-48px.png</veto>
+      <veto>Has no Icon</veto>
+    </vetos>
+-->
+<!-- 21: try another possibly stock icon: eog 
+         appstreamcli: ok
+         COPR generated appdata: icon unchanged from eog, ddcutil icon not generated
+-->
+<!-- 22: back to no icon, comment out launchable 
+         appstreamcli validate ok
+         COPR: failed.xml:  
+                 <vetos>
+                     <veto>Has no Icon</veto>
+                 </vetos>
+-->
+<!-- 23: re-enable lauchable 
+     appstreamcli validate ok
+     COPR: kudos HiDpiIcon
+           refers to 64 and 128 bit cached icons com.ddcutil.ddcutil.png
+           appstream-builder : ok, but only has 64 bit icon 
+           gnome-software: only ddcui
+
+   -->
+
+ <!-- 24: try icon generated by metainfo generator -
+          appstreaamcli validate ok
+          COPR outputs: 
+ <icon type="stock">ddcutil</icon>
+    <icon>ddcutil</icon>
+
+    appstream-builder: 
+ Adding tag-invalid 'stock icon is not valid [ddcutil]'
+ WARNING: AppData problem: tag-invalid : stock icon is not valid [ddcutil]
+    gnome-software:  only ddcui
+        
+
+-->
+      <!-- <icon type="stock">ddcutil</icon> -->
+       
+  
+
+  <!-- <icon type="stock">eog</icon> -->
+  <!-- <icon type="remote">https://www.ddcutil.com/images/ddcutil-48px.png</icon>  -->
+  <!-- <icon>ddcutil</icon> -->
+  <!-- <icon type="stock">xfburn</icon> -->   <!-- stock icon works: -->
+  <!-- <icon type="local">/usr/share/pixmaps/monitor.png</icon> -->  <!-- works, then no, COPR cannot find, also complains about type local -->
+
+  <!-- 13: comment out launchable: neither appstreamcli verity or appstream-builder show errors, 
+       COPR appstream-failed shows veto: Has no Icon
+       14: re-enable launchable, also enable stock icon
+           appstreamcli validate shows no errors
+  -->
+
+
+  <!-- launchable appears to be unchanged by COPR -->
+   <launchable type="desktop-id">ddcutil.desktop</launchable> 
+
+  <!-- tags that COPR copies unchanged: update_contact, url, developer_name -->
+  <update_contact>rockowitz@minsoft.com></update_contact>
+  <url type="homepage">https://www.ddcutil.com</url>
+  <url type="bugtracker">https://github.com/rockowitz/ddcutil/issues</url>
+  <url type="faq">https://www.ddcutil.com/faq</url>
+
+  <developer_name>Sanford Rockowitz</developer_name>
+  <!-- 12: COPR replaces <releases> with its own list, with tags version and timestamp, no date -->
+  <releases>
+     <release version="0.9.9" date="2019-12-09"/>
+     <release version="0.9.8" date="2019-12-06"/>
+     <release version="0.9.7" date="2019-09-04"/>
+     <release version="0.9.6" date="2019-08-25"/>
   </releases>
-<!--
+
+  <!-- 25: The following stock icons found in org.kde.kdialog.metainfo.xml which is of type console-application 
+           n. neighter of these icons exist for theme hicolor, but do for other themes
+           appstreamcli validate: ok
+           appstream-util validate-relax: ok
+           COPR: generated appstream.xml contains both <icon> elements, 
+                 also the generated <icon>ddcutil</icon>
+           appstream-builder: no errors or warnigns 
+           just noticed: COPR creates a <categories> element out of the  ddcuti.desktop categories entry
+-->
+  <icon type="stock">utilities-terminal</icon>
+  <icon type="stock">system-run</icon>
+
+
+  <!--
   <icon type="remote" width="64" height="64">https://www.ddcutil.com/images/ddcutil-64.png</icon>
   <icon type="url"    width="64" height="64">https://www.ddcutil.com/images/ddcutil-64.png</icon>
--->
+  -->
 </component>
