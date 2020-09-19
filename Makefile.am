@@ -11,7 +11,9 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 
-EXTRA_DIST =  README.md NEWS.md ddcutil.desktop  ddcutil.appdata.xml
+EXTRA_DIST =  README.md NEWS.md 
+EXTRA_DIST += ddcutil.desktop  
+EXTRA_DIST += ddcutil.appdata.xml
 # temporarily just distribute the svg icon
 # EXTRA_DIST += icons/ddcutil.svg
 
@@ -42,7 +44,10 @@ nobase_dist_icons_DATA = \
    icons/hicolor/48x48/apps/ddcutil.png \
    icons/hicolor/128x128/apps/ddcutil.png 
 
-
+# GNOME Classic looks only in pixmaps
+pixmapsdir=$(datadir)
+nobase_dist_pixmaps_DATA = \
+   pixmaps/ddcutil.png
 
 # doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
 
