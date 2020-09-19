@@ -4,10 +4,12 @@ Name=ddcutil
 GenericName=Monitor Settings
 Comment=Control monitor settings
 Keywords=DDC/CI;MCCS
-Exec=ddcutil
-TryExec=ddcutil
+# 16: commment out Exec, TryExec
+# Exec=ddcutil
+# TryExec=ddcutil
 Icon=ddcutil
 Terminal=true
+# Don't display program in menus:
 NoDisplay=true
 Type=Application
 Categories=Settings;HardwareSettings;ConsoleOnly
