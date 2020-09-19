@@ -730,10 +730,10 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
                          segment->name_len, segment->name_start),
          pos);
    // assert(*pos == '(');
-   DBGMSG("pos=%p, trimmed_start=%p", pos, trimmed_start);
+   DBGMSF(debug, "pos=%p, trimmed_start=%p", pos, trimmed_start);
    segment->name_len = pos - trimmed_start;
-   DBGMSG("start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
-   DBGMSG("name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
+   DBGMSF(debug, "start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
+   DBGMSF(debug, "name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
                                                    segment->name_len, segment->name_start);
    REQUIRE(*pos == '(',
          g_strdup_printf("Missing parenthesized value for segment %.*s",
