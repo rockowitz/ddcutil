@@ -167,7 +167,13 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
 // *** Utility Functions ***
 //
 
-
+/* Point to the first non-space character in a string.
+ *
+ * \param  s   pointer to string
+ * \parsm  len length of string
+ * \return pointer to first non-space character of string,
+ *         end of string if not found
+ */
 char * ltrim(char * s, int len) {
    while (len > 0 && *s == ' ') {
       len--;
@@ -177,18 +183,14 @@ char * ltrim(char * s, int len) {
 }
 
 
-
-/* Finds the matching closing parenthesis for the
- * current open parenthesis.
+/** Finds the matching closing parenthesis for the
+ *  current open parenthesis.
  *
- * Arguments:
- *   start    first character to examine (must be '(')
- *   end      points to end of string, i.e. the byte
- *            after the last character to examine
- *
- * Returns:
- *   pointer to closing parenthesis
- *   or end if closing parenthesis not found
+ *  \param start    first character to examine (must be '(')
+ *  \param end      points to end of string, i.e. the byte
+ *                  after the last character to examine
+ *  \return pointer pointer to closing parenthesis,
+ *          end if closing parenthesis not found
  */
 
 static char * find_closing_paren(
@@ -231,12 +233,10 @@ update_validity(
 // Parsing
 //
 
-/* Capabilities string format.
-
-   Parenthesized expression
-   containing sequence of "segments"
-   each segment consists of a segment name, followed by a parenthesized value
-
+/* Capabilities string format:
+     Parenthesized expression
+     containing sequence of "segments"
+     each segment consists of a segment name, followed by a parenthesized value
  */
 
 
@@ -260,7 +260,7 @@ update_validity(
  *  \remark
  *  On every monitor tested, the values are separated by spaces.
  *  However, per the Access Bus spec, Section 7, values need not be separated by spaces,
-*   e.g. 010203 is valid
+ *  e.g. 010203 is valid
  */
 static Byte_Value_Array parse_cmds_segment(
       char *      start,
@@ -677,15 +677,13 @@ struct {
 // void dbgrpt_capabilities_segment(Capabilities_Segment * segment, int depth) {
 
 
-
-/* Extract the next top level segment of the capabilities string.
+/** Extract the next top level segment of the capabilities string.
  *
- * Arguments:     start   current position in the capabilities string
- *                len     length of remainder of capabilities string
- *
- * Returns:    pointer to newly allocated Capabilities_Segment describing the segment
- *             It is the responsibility of the caller to free the returned struct,
- *             BUT NOT THE LOCATIONS IT ADDRESSES
+ *  \param  start   current position in the capabilities string
+ *  \param  len     length of remainder of capabilities string
+ *  \return pointer to newly allocated Capabilities_Segment describing the segment
+ *          It is the responsibility of the caller to free the returned struct,
+ *          BUT NOT THE LOCATIONS IT ADDRESSES
  */
 static Capabilities_Segment *
 next_capabilities_segment(char * start, int len, GPtrArray* messages, char * capabilities_staring_start)
@@ -720,9 +718,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    REQUIRE( *trimmed_start != '(' , "Missing segment name", pos);
    segment->name_start = trimmed_start;
    while (pos < end && *pos != '(' && *pos != ' ') {pos++;}  // name stops with either left paren or space
-   REQUIRE( pos < end,
-         "Nothing follows segment name",
-         pos);
+   REQUIRE( pos < end, "Nothing follows segment name", pos);
    segment->name_len = pos-trimmed_start;
    while ( pos < end && *pos == ' ' ) { pos++; }   // blanks following segment name
    REQUIRE( pos < end,
@@ -736,9 +732,9 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    DBGMSF(debug, "name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
                                                    segment->name_len, segment->name_start);
    REQUIRE(*pos == '(',
-         g_strdup_printf("Missing parenthesized value for segment %.*s",
-                         segment->name_len, segment->name_start),
-         pos);
+           g_strdup_printf("Missing parenthesized value for segment %.*s",
+                           segment->name_len, segment->name_start),
+           pos);
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
    REQUIRE(pos < end,
