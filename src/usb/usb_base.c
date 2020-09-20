@@ -28,9 +28,8 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
-// In keeping with the style of Linux USB code, this module prefers
+// In keeping with the style of Linux USB code, this file prefers
 // "struct xxx {}" to "typedef {} xxx"
-
 
 
 //
@@ -69,11 +68,6 @@ int usb_open_hiddev_device(
 
    if (file < 0) {
       int errsv = errno;
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         TERMINATE_EXECUTION_ON_ERROR(
-               "Open failed for %s: errno=%s", hiddev_devname, linux_errno_desc(errsv));
-#endif
       if (calloptions & CALLOPT_ERR_MSG)
          f0printf(ferr(), "Open failed for %s: errno=%s\n", hiddev_devname, linux_errno_desc(errsv));
       file = -errsv;
@@ -86,13 +80,9 @@ int usb_open_hiddev_device(
       int rc = ioctl(file, HIDIOCINITREPORT);
       if (rc < 0) {
          int errsv = errno;
-         // call should never fail.  always wrote an error message
+         // call should never fail.  always write an error message
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", errsv);
          close(file);
-#ifdef OLD
-         if (calloptions & CALLOPT_ERR_ABORT)
-            DDC_ABORT(errsv);
-#endif
          file = -errsv;
       }
    }
@@ -140,10 +130,6 @@ usb_close_device(
          snprintf(workbuf, 300,
                   "USB device close failed. errno=%s",
                   linux_errno_desc(errsv));
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         TERMINATE_EXECUTION_ON_ERROR(workbuf);
-#endif
       if (calloptions & CALLOPT_ERR_MSG)
          fprintf(stderr, "%s\n", workbuf);
 
@@ -192,12 +178,6 @@ hiddev_get_report_info(int fd, struct hiddev_report_info * rinfo, Byte calloptio
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGREPORTINFO", errsv);
-
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
-
       rc = -errsv;
   }
 
@@ -214,10 +194,6 @@ hiddev_get_field_info(int fd, struct hiddev_field_info * finfo, Byte calloptions
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGFIELDINFO", errsv);
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
    }
    assert(rc == 0);
    if (finfo->field_index != saved_field_index && (calloptions & CALLOPT_WARN_FINDEX)) {
@@ -238,11 +214,6 @@ hiddev_get_usage_code(int fd, struct hiddev_usage_ref * uref, Byte calloptions)
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGUCODE", errsv);
-
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
       rc = -errsv;
    }
    return rc;
@@ -257,10 +228,6 @@ hiddev_get_usage_value(int fd, struct hiddev_usage_ref * uref, Byte calloptions)
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGUSAGE", errsv);
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
       rc = -errsv;
    }
    return rc;
@@ -275,11 +242,6 @@ hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions)
       int errsv = errno;
       if (calloptions & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR("HIDIOCGREPORT", errsv);
-
-#ifdef OLD
-      if (calloptions & CALLOPT_ERR_ABORT)
-         DDC_ABORT(errsv);
-#endif
       rc = -errsv;
    }
    return rc;
