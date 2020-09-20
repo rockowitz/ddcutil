@@ -77,7 +77,8 @@ static GPtrArray * usb_monitors = NULL;    // array of Usb_Monitor_Info
  *
  * Returns:   nothing
  */
-static void report_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
+static void
+dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
    const int d1 = depth+1;
    rpt_structure_loc("Usb_Monitor_Vcp_Rec", vcprec, depth);
    rpt_vstring(d1, "%-20s:    %-4.4s", "marker",       vcprec->marker);
@@ -101,7 +102,8 @@ static void report_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) 
  *
  * Returns:       nothing
  */
-void dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
+void
+dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
    const int d1 = depth+1;
    const int d2 = depth+2;
    rpt_structure_loc("Usb_Monitor_Info", moninfo, d1);
@@ -116,7 +118,7 @@ void dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
       if (monrecs) {
          rpt_vstring(d1, "vcp feature code 0x%02x has %d records:", feature_code, monrecs->len);
          for (int ndx=0; ndx<monrecs->len; ndx++) {
-            report_usb_monitor_vcp_rec( g_ptr_array_index(monrecs, ndx), d2);
+            dbgrpt_usb_monitor_vcp_rec( g_ptr_array_index(monrecs, ndx), d2);
          }
       }
    }
@@ -132,7 +134,8 @@ void dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
  * Returns:      nothing
  */
 // static
-void report_usb_monitors(GPtrArray * monitors, int depth) {
+void
+report_usb_monitors(GPtrArray * monitors, int depth) {
    const int d1 = depth+1;
 
    rpt_vstring(depth, "GPtrArray of %d Usb_Monitor_Info at %p", monitors->len, monitors);
@@ -150,7 +153,8 @@ void report_usb_monitors(GPtrArray * monitors, int depth) {
  *
  * Returns:  array of Usb_Monitor_Vcp_Rec for each usage
  */
-GPtrArray * collect_vcp_reports(int fd) {
+GPtrArray *
+collect_vcp_reports(int fd) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
    GPtrArray * vcp_reports = g_ptr_array_new();
@@ -252,7 +256,8 @@ GPtrArray * collect_vcp_reports(int fd) {
  *
  *  It is the responsibility of the caller to free the returned string.
  */
-static char * usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
+static char *
+usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
    assert(moninfo);
    char buf[1000];
    strcpy(buf,"(vcp(");
@@ -325,7 +330,8 @@ avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
  *  @return   true/false
  */
 
-bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
+bool
+is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.  hiddev_name = %s", hiddev_name);
 
@@ -364,7 +370,8 @@ bool is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
  *
  *  The result is cached in global variable usb_monitors
  */
-GPtrArray * get_usb_monitor_list() {
+GPtrArray *
+get_usb_monitor_list() {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting...");
    DDCA_Output_Level ol = get_output_level();
@@ -498,7 +505,8 @@ GPtrArray * get_usb_monitor_list() {
 // Functions to find Usb_Monitor_Info for a display
 //
 
-static Usb_Monitor_Info * usb_find_monitor_by_busnum_devnum(int busnum, int devnum) {
+static Usb_Monitor_Info *
+usb_find_monitor_by_busnum_devnum(int busnum, int devnum) {
    bool debug = false;
    DBGMSF(debug, "Starting. busnum=%d, devnum=%d", busnum, devnum);
    assert(usb_monitors);
@@ -518,7 +526,8 @@ static Usb_Monitor_Info * usb_find_monitor_by_busnum_devnum(int busnum, int devn
 }
 
 
-static Usb_Monitor_Info * usb_find_monitor_by_display_ref(Display_Ref * dref) {
+static Usb_Monitor_Info *
+usb_find_monitor_by_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGMSF(debug, "Starting. dref = %s", dref_repr_t(dref));
    assert(dref->io_path.io_mode == DDCA_IO_USB);
@@ -528,7 +537,8 @@ static Usb_Monitor_Info * usb_find_monitor_by_display_ref(Display_Ref * dref) {
 }
 
 
-Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh) {
+Usb_Monitor_Info *
+usb_find_monitor_by_display_handle(Display_Handle * dh) {
    // printf("(%s) Starting. dh=%p\n", __func__, dh);
    bool debug = false;
    DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
@@ -601,9 +611,8 @@ Display_Info_List usb_get_valid_displays() {
 
 //  *** Functions to return a Display_Ref for a USB monitor ***
 
-
-
-bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
+bool
+usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    bool result = true;
    if (!usb_find_monitor_by_display_ref(dref)) {
       result = false;
@@ -614,7 +623,8 @@ bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 }
 
 
-void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
+void
+usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
@@ -658,18 +668,22 @@ void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
 // (for hiding Usb_Monitor_Info from higher software levels)
 //
 
-Parsed_Edid * usb_get_parsed_edid_by_display_ref(Display_Ref * dref) {
+Parsed_Edid *
+usb_get_parsed_edid_by_display_ref(Display_Ref * dref) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
    return moninfo->edid;
 }
 
-Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
+
+Parsed_Edid *
+usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    return moninfo->edid;
 }
 
 
-char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
+char *
+usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
    assert(dh);
    return usb_synthesize_capabilities_string(moninfo);
@@ -695,7 +709,8 @@ char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
  * Note that messages will not appear when this function runs as part
  * of normal udev execution.  They are intended to aid in debugging.
  */
-bool check_usb_monitor( char * device_name ) {
+bool
+check_usb_monitor( char * device_name ) {
    assert(device_name);
    bool debug = false;
    DDCA_Output_Level ol = get_output_level();
@@ -728,7 +743,8 @@ bool check_usb_monitor( char * device_name ) {
  }
 
 
-void init_usb_displays() {
+void
+init_usb_displays() {
    rtti_func_name_table_add(get_usb_monitor_list, "get_usb_monitor_list");
    rtti_func_name_table_add(avoid_device_by_usb_interfaces_property_string,
                             "avoid_device_by_usb_interfaces_property_string");
