@@ -29,15 +29,11 @@ bool check_usb_monitor( char * device_name );
 Display_Info_List usb_get_valid_displays();
 #endif
 
-bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
-
-void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
-
+bool          usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
+void          usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
 Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
-
-char * usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
-
+char *        usb_get_capabilities_string_by_display_handle(Display_Handle * dh);
 
 // struct defs here for sharing with usb_vcp
 
@@ -58,7 +54,6 @@ typedef struct usb_monitor_vcp_rec {
    struct hiddev_usage_ref   * uref;
 } Usb_Monitor_Vcp_Rec;
 
-
 /* Describes a USB connected monitor.  */
 #define USB_MONITOR_INFO_MARKER "UMNF"
 typedef struct usb_monitor_info {
@@ -70,14 +65,11 @@ typedef struct usb_monitor_info {
    GPtrArray *              vcp_codes[256];   // array of Usb_Monitor_Vcp_Rec *
 } Usb_Monitor_Info;
 
-void dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth);
-
-Usb_Monitor_Info * usb_find_monitor_by_display_handle(Display_Handle * dh);
-
-bool is_possible_monitor_by_hiddev_name(const char * hiddev_name);
-
+void        dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth);
+Usb_Monitor_Info *
+            usb_find_monitor_by_display_handle(Display_Handle * dh);
+bool        is_possible_monitor_by_hiddev_name(const char * hiddev_name);
 GPtrArray * get_usb_monitor_list();
-
-void init_usb_displays();
+void        init_usb_displays();
 
 #endif /* USB_DISPLAYS_H_ */
