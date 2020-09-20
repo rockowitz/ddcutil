@@ -1041,8 +1041,6 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh);
 /**
  * Gets metadata for a VCP feature.
  *
- * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
- *
  * @param[in]  vspec            VCP version
  * @param[in]  feature_code     VCP feature code
  * @param[in]  create_default_if_not_found
@@ -1055,9 +1053,12 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh);
  *  It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
  *
  * @remark
+ * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
+ * @remark
  * Only takes into account VCP version.  Useful for reporting display agnostic
  * feature information.  For display sensitive feature information, i.e. taking
- * into account the specific monitor model, use #ddca_get_feature_metdata_by_dref().
+ * into account the specific monitor model, use #ddca_get_feature_metdata_by_dref()
+ * or #ddca_get_feature_metadata_by_dh().
  *
  * @since 0.9.3
  */
@@ -1083,6 +1084,13 @@ ddca_get_feature_metadata_by_vspec(
  *                              !create_default_if_not_found
  *
  * It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
+ *
+ * @remark
+ * This function first checks if there is a user supplied feature definition
+ * for the monitor.  If not, it looks up feature metadata based on the
+ * VCP version of the monitor.
+ * @remark
+ * Note that feature characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  * @since 0.9.3
  */
 DDCA_Status
@@ -1095,8 +1103,6 @@ ddca_get_feature_metadata_by_dref(
 /**
  * Gets metadata for a VCP feature.
  *
- * Note that VCP characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
- *
  * @param[in]  ddca_dh          display handle
  * @param[in]  feature_code     VCP feature code
  * @param[in]  create_default_if_not_found
@@ -1107,6 +1113,13 @@ ddca_get_feature_metadata_by_dref(
  *                              !create_default_if_not_found
  *
  * It is the responsibility of the caller to free the returned DDCA_Feature_Metadata instance.
+ *
+ * @remark
+ * This function first checks if there is a user supplied feature definition
+ * for the monitor.  If not, it looks up feature metadata based on the
+ * VCP version of the monitor.
+ * @remark
+ * Note that feature characteristics (C vs NC, RW vs RO, etc) can vary by MCCS version.
  * @since 0.9.3
  */
 DDCA_Status
