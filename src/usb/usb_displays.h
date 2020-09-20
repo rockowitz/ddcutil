@@ -1,14 +1,14 @@
 /** @file usb_displays.h
  */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef USB_DISPLAYS_H_
 #define USB_DISPLAYS_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <linux/hiddev.h>     // for __u32
 /** \endcond */
 
@@ -32,12 +32,6 @@ Display_Info_List usb_get_valid_displays();
 bool usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg);
 
 void usb_show_active_display_by_display_ref(Display_Ref * dref, int depth);
-
-#ifdef PRE_DISPLAY_REV
-Display_Ref * usb_find_display_by_mfg_model_sn(const char * mfg_id, const char * model, const char * sn);
-Display_Ref * usb_find_display_by_edid(const Byte * edidbytes);
-Display_Ref * usb_find_display_by_busnum_devnum(int busnum, int devnum);
-#endif
 
 Parsed_Edid * usb_get_parsed_edid_by_display_ref(   Display_Ref    * dref);
 Parsed_Edid * usb_get_parsed_edid_by_display_handle(Display_Handle * dh);
