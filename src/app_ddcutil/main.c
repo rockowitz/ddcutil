@@ -832,8 +832,8 @@ int main(int argc, char *argv[]) {
             case CMDID_READCHANGES:
                // DBGMSG("Case CMDID_READCHANGES");
                // report_parsed_cmd(parsed_cmd,0);
-               app_read_changes_forever(dh);
-               main_rc = EXIT_SUCCESS;
+               app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
+               main_rc = EXIT_FAILURE;
                break;
 
             case CMDID_PROBE:
@@ -866,7 +866,7 @@ int main(int argc, char *argv[]) {
       report_stats(parsed_cmd->stats_types);
       // report_timestamp_history();  // debugging function
    }
-   free_parsed_cmd(parsed_cmd);
+
 
 bye:
    DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
@@ -879,6 +879,7 @@ bye:
            TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
            "ddcutil execution complete, %s",
            cur_time_s);
-
+   if (parsed_cmd)
+      free_parsed_cmd(parsed_cmd);
    return main_rc;
 }

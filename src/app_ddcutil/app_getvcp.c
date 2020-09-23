@@ -325,77 +325,71 @@ app_show_feature_set_values_by_display_handle(
 // Watch for changed VCP values
 //
 
-void reset_vcp_x02(Display_Handle * dh) {
+// Depending on monitor, writing 1 to feature x02 may throw the user
+// out of the on-stream display.  Use carefully.
+
+static void
+reset_vcp_x02(Display_Handle * dh) {
+   bool debug = false;
    Error_Info * ddc_excp = ddc_set_nontable_vcp_value(dh, 0x02, 0x01);
    if (ddc_excp) {
       DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", errinfo_summary(ddc_excp) );
       errinfo_free(ddc_excp);
    }
    else
-      DBGMSG("reset feature x02 (new control value) successful");
-}
-
-bool new_control_values_exist(Display_Handle * dh) {
-   bool debug = false;
-   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
-   // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
-   bool result = false;
-    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(
-             dh,
-             0x02,
-             &p_nontable_response);
-    if (ddc_excp) {
-       DBGMSG("get_nontable_vcp_value() returned %s", errinfo_summary(ddc_excp) );
-       errinfo_free(ddc_excp);
-    }
-
-    else if (p_nontable_response->sl == 0x01) {
-       DBGMSF(debug, "No new control values found");
-       free(p_nontable_response);
-    }
-    else {
-       DBGMSG("New control values exist. x02 value: 0x%02x", p_nontable_response->sl);
-       free(p_nontable_response);
-       p_nontable_response = NULL;
-       result = true;
-    }
-    return result;
+      DBGMSF(debug, "reset feature x02 (new control value) successful");
 }
 
 
-/** Gets the ID of the next changed feature from VCP feature x52,
- *  then reads and displays the value of that feature.
+/** Gets the ID of the next changed feature from VCP feature x52. If the feature
+ *  code is other than x00, reads and displays the value of that feature.
  *
  *  \param   dh  #Display_Handle
- *  \return  id of changed feature, 0x00 if none
+ *  \param   p_changed_feature   return feature id read from feature x52
+ *  \return  error reading feature x52
+ *
+ *  \remark
+ *  The return value reflects only x52 errors, not any errors reading
+ *  the feature id that is displayed
  */
+static Error_Info *
+show_changed_feature(Display_Handle * dh, Byte * p_changed_feature) {
+   bool debug = false;
+   Parsed_Nontable_Vcp_Response * nontable_response_loc = NULL;
+   Error_Info * result = NULL;
+   Error_Info * x52_error = ddc_get_nontable_vcp_value(dh, 0x52, &nontable_response_loc);
+   DBGMSF(debug, "ddc_get_nontable_vcp_value( x52 ) returned %s", errinfo_summary(x52_error));
+   if (x52_error) {
+      if (x52_error->status_code == DDCRC_REPORTED_UNSUPPORTED ||
+          x52_error->status_code == DDCRC_DETERMINED_UNSUPPORTED)
+      {
+         // printf("Feature x02 (New Control Value) reports new control values exist, but feature x52 (Active Control) unsupported\n");
+         result = errinfo_new2(x52_error->status_code, __func__,
+               "Feature x02 (New Control Value) reports that changed VCP feature values exist, but feature x52 (Active Control) is unsupported");
+         errinfo_free(x52_error);
+      }
+      else {
+         // DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", errinfo_summary(x52_error) );
+         result = errinfo_new_with_cause2(
+                  x52_error->status_code, x52_error, __func__, "Error reading feature x02");
+      }
+   }
 
-Byte show_changed_feature(Display_Handle * dh) {
-   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
-   Byte changed_feature = 0x00;
-   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(
-              dh,
-              0x52,
-              &p_nontable_response);
-  // psc = (ddc_excp) ? ddc_excp->psc : 0;
-  if (ddc_excp) {
-     DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", errinfo_summary(ddc_excp) );
-     errinfo_free(ddc_excp);
+  else {  // getvcp x52 succeeded
+     *p_changed_feature = nontable_response_loc->sl;
+     free(nontable_response_loc);
+     DBGMSF(debug, "getvcp(x52) returned value 0x%02x", *p_changed_feature);
+     if (*p_changed_feature)
+        app_show_single_vcp_value_by_feature_id_new_dfm(dh, *p_changed_feature, false);
   }
-  else {
-     changed_feature = p_nontable_response->sl;
-     free(p_nontable_response);
-     if (changed_feature)
-        app_show_single_vcp_value_by_feature_id_new_dfm(dh, changed_feature, false);
-  }
-  return changed_feature;
+  return result;
 }
 
 
 /* Checks for VCP feature changes by:
  *   - reading feature x02 to check if changes exist,
  *   - querying feature x52 for the id of a changed feature
- *   - reading the value of the changed feature.
+ *   - reading and showing the value of the changed feature.
  *
  * If the VCP version is 2.1 or less a single feature is
  * read from x52.  For VCP version 3.0 and 2.2, x52 is a
@@ -403,19 +397,17 @@ Byte show_changed_feature(Display_Handle * dh) {
  *
  * Finally, 1 is written to feature x02 as a reset.
  *
- * Arguments:
- *    dh      display handle
+ * \param  dh    #Display_Handle
+ * \param  force_no_fifo never treat feature x52 as a FIFO
+ * \param  changes_reported set true if any changes were detected
+ * \return error report, NULL if none
  */
-void
-app_read_changes(Display_Handle * dh) {
+static Error_Info *
+app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported) {
    bool debug = false;
    DBGMSF(debug, "Starting");
    int MAX_CHANGES = 20;
-
-   // read 02h
-   // xff: no user controls
-   // x01: no new control values
-   // x02: new control values exist
+   *changes_reported = false;
 
    /* Per the 3.0 and 2.2 specs, feature x52 is a FIFO to be read until value x00 indicates empty
     * What apparently happens on 2.1 (U3011) is that each time feature x02 is reset with value x01
@@ -424,33 +416,96 @@ app_read_changes(Display_Handle * dh) {
     */
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
 
-   if (new_control_values_exist(dh)) {
-      if ( vcp_version_le(vspec, DDCA_VSPEC_V21) ) {
-         show_changed_feature(dh);
+   // Read feature x02 to determine if any features have changed
+   //   xff: no user controls
+   //   x01: no new control values
+   //   x02: new control values exist
+   Parsed_Nontable_Vcp_Response * p_nontable_response = NULL;
+
+   Error_Info * result = NULL;
+   Error_Info * x02_error = ddc_get_nontable_vcp_value(dh,0x02,&p_nontable_response);
+   if (x02_error) {
+      DBGMSG("get_nontable_vcp_value() for feature 0x02 returned error %s", errinfo_summary(x02_error) );
+      // errinfo_free(ddc_excp);
+      result = errinfo_new_with_cause2(x02_error->status_code, x02_error, __func__,
+                                       "Error reading feature x02");
+   }
+   else {
+      Byte x02_value = p_nontable_response->sl;
+      DBGMSF(debug, "get_nontable_vcp_value() for feature 0x02 returned value 0x%02x", x02_value );
+      free(p_nontable_response);
+
+      if (x02_value == 0xff) {
+         DBGMSF(debug, "No user controls exist");
+         result = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__,
+                        "Feature x02 (New Control Value) reports No User Controls");
       }
-      else {  // x52 is a FIFO
-         int ctr = 0;
-         for (;ctr < MAX_CHANGES; ctr++) {
-            Byte cur_feature = show_changed_feature(dh);
-            if (cur_feature == 0x00) {
-               DBGMSG("No more changed features found");
-               break;
+
+      else if (x02_value == 0x01) {
+         DBGMSF(debug, "No new control values found");
+         result = NULL;
+      }
+
+      else if (x02_value != 0x02){
+         DBGMSF(debug, "x02 value = 0x%02x", x02_value);
+         result = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__,
+               "Feature x02 (New Control Value) reports unexpected value 0x%02", x02_value);
+      }
+
+      else {
+         DBGMSF(debug, "New control values exist. x02 value: 0x%02x", x02_value);
+         Byte changed_feature_id;
+
+         if ( vcp_version_le(vspec, DDCA_VSPEC_V21)  || force_no_fifo) {
+            Error_Info * x52_error = show_changed_feature(dh, &changed_feature_id);
+            // MCCS spec requires that feature x02 be reset, otherwise it remains at x02
+            // and the same value is read again
+            // But on some displays it also turns off the OSD: HPZ22i
+            // For other displays it does not turn off the OSD, so the user can make
+            // additional changes:  Dell U3011
+            reset_vcp_x02(dh);
+            result = x52_error;
+            if (!x52_error)
+               *changes_reported = true;
+         }
+
+         else {  // x52 is a FIFO
+            int ctr = 0;
+            for (;ctr < MAX_CHANGES; ctr++) {
+               Byte changed_feature_id;
+               Error_Info * x52_error = show_changed_feature(dh, &changed_feature_id);
+               if (x52_error) {
+                  result = x52_error;
+                  goto bye;
+               }
+               *changes_reported = true;
+               if (changed_feature_id == 0x00) {
+                  DBGMSG("No more changed features found");
+                  reset_vcp_x02(dh);
+                  result =  NULL;
+                  break;
+               }
+            }
+            if (ctr == MAX_CHANGES) {
+               DBGMSG("Reached loop guard value MAX_CHANGES (%d)", MAX_CHANGES);
+               reset_vcp_x02(dh);
+               result = NULL;
             }
          }
-         if (ctr == MAX_CHANGES) {
-            DBGMSG("Reached loop guard value MAX_CHANGES (%d)", MAX_CHANGES);
-         }
       }
-      reset_vcp_x02(dh);
    }
+
+ bye:
+   return result;
 }
 
 
 #ifdef USE_USB
-void
+static void
 app_read_changes_usb(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    // bool new_values_found = false;
 
@@ -487,17 +542,16 @@ app_read_changes_usb(Display_Handle * dh) {
 #endif
 
 
-
 /* Infinite loop watching for VCP feature changes reported by the display.
  *
- * Arguments:
- *    dh        display handle
+ * \param  dh  #Display_Handle
+ * \param  force_no_fifo if true, do not regard feature x52 aa a FIFO queue,
+ *                       even if VCP code is >= 2.2
  *
- * Returns:
- *    does not return - halts with program termination
+ * Returns only if an error occurs, otherwise runs forever
  */
 void
-app_read_changes_forever(Display_Handle * dh) {
+app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
    bool debug = false;
 
    printf("Watching for VCP feature changes on display %s\n", dh_repr(dh));
@@ -505,14 +559,28 @@ app_read_changes_forever(Display_Handle * dh) {
    // show version here instead of in called function to declutter debug output:
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
    DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
+   reset_vcp_x02(dh);
    while(true) {
+      bool changes_reported = false;
 #ifdef USE_USB
       if (dh->dref->io_path.io_mode == DDCA_IO_USB)
          app_read_changes_usb(dh);
       else
 #endif
-         app_read_changes(dh);
+      {
+         Error_Info * erec = app_read_changes(dh, force_no_fifo, &changes_reported);
+         if (erec) {
+            if (debug)
+               DBGMSG("Fatal error reading changes: %s", errinfo_summary(erec));
 
-      sleep_millis( 2500);
+            printf("%s\n", erec->detail);
+            errinfo_free(erec);
+            printf("Terminating WATCH\n");
+            return;
+         }
+      }
+
+      if (!changes_reported)
+         sleep_millis( 2500);
    }
 }
