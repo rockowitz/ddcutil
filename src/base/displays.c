@@ -618,7 +618,6 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
 // *** Display_Ref ***
 
-
 static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
@@ -629,7 +628,6 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
 
    return dref;
 }
-
 
 
 // PROBLEM: bus display ref getting created some other way
@@ -674,7 +672,7 @@ Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
 
 
 #ifdef USE_USB
-/** Creates a #Display_Ref for IO mode #DDCA_IO_ADL
+/** Creates a #Display_Ref for IO mode #DDCA_IO_USB
  *
  * @param  usb_bus USB bus number
  * @param  usb_device USB device number
