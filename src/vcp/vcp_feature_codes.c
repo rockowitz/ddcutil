@@ -463,6 +463,46 @@ get_version_sensitive_sl_values(
 }
 
 
+DDCA_Feature_Value_Entry *
+get_highest_version_sl_values(
+       VCP_Feature_Table_Entry *  vfte)
+{
+   bool debug = false;
+
+   DDCA_MCCS_Version_Id version_found = DDCA_MCCS_VNONE;
+
+   DDCA_Feature_Value_Entry * result = vfte->v22_sl_values;
+   if (result)
+      version_found = DDCA_MCCS_V22;
+   else {
+      result = vfte->v30_sl_values;
+      if (result)
+         version_found = DDCA_MCCS_V30;
+
+      else {
+         result = vfte->v21_sl_values;
+         if (result)
+            version_found = DDCA_MCCS_V21;
+         else {
+            result = vfte->default_sl_values;
+            if (result)
+               version_found = DDCA_MCCS_V20;
+         }
+      }
+   }
+
+   if (debug) {
+      if (result)
+         DBGMSG("Feature = 0x%02x, Returning sl value list for version %s",
+                vfte->code, format_vcp_version_id(version_found));
+      else
+         DBGMSG("Feature = 0x%02x, No SL value table found", vfte->code);
+   }
+   return result;
+}
+
+
+
 /** Returns the version specific feature name from a feature table entry.
  *
  *  @param  vfte          feature table entry
@@ -601,7 +641,8 @@ extract_version_feature_info_from_feature_table_entry(
 
    dfm->feature_flags |= vfte->vcp_global_flags;
    DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
-         ? get_version_sensitive_sl_values(vfte, vspec)
+         //   ? get_version_sensitive_sl_values(vfte, vspec)
+         ? get_highest_version_sl_values(vfte)
          : get_version_specific_sl_values(vfte, vspec);
    dfm->sl_values = (sl_values) ? copy_sl_value_table(sl_values) : NULL;
 

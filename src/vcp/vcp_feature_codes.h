@@ -260,6 +260,10 @@ get_version_sensitive_sl_values(
       VCP_Feature_Table_Entry * vfte,
       DDCA_MCCS_Version_Spec    vcp_version);
 
+DDCA_Feature_Value_Entry *
+get_highest_version_sl_values(
+       VCP_Feature_Table_Entry* vfte);
+
 char *
 get_version_sensitive_feature_name(
       VCP_Feature_Table_Entry * vfte,
