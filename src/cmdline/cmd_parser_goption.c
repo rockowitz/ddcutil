@@ -192,6 +192,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean f5_flag        = false;
    gboolean f6_flag        = false;
    gboolean debug_parse_flag = false;
+   gboolean x52_no_fifo_flag = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -232,7 +233,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 //                             G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
       {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
-
 #endif
       // output control
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
@@ -254,6 +254,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"rw",      '\0', 0, G_OPTION_ARG_NONE,     &rw_only_flag,     "Include only RW features",         NULL},
       {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
       {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
+      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
 
       // tuning
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -430,6 +431,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_F4,                f4_flag);
    SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
+   SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM

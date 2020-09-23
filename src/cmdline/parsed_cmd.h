@@ -1,7 +1,7 @@
 /** @file parsed_cmd.h
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
@@ -68,7 +68,8 @@ typedef enum {
    CMD_FLAG_F5              = 0x10000000,
    CMD_FLAG_F6              = 0x20000000,
    CMD_FLAG_DSA             = 0x40000000,
-   CMD_FLAG_DEFER_SLEEPS    = 0x80000000
+   CMD_FLAG_DEFER_SLEEPS    = 0x80000000,
+   CMD_FLAG_X52_NO_FIFO   = 0x0100000000,
 } Parsed_Cmd_Flags;
 
 
@@ -90,7 +91,7 @@ struct {
    DDCA_Output_Level   output_level;
    uint16_t            max_tries[3];
    float               sleep_multiplier;
-   uint32_t            flags;      // Parsed_Cmd_Flags
+   uint64_t            flags;      // Parsed_Cmd_Flags
    int                 i1;         // available for temporary use
 
    // which?

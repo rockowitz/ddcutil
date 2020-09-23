@@ -149,6 +149,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
    rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
    rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
+
+   rpt_bool("x52 not fifo",      NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,  d1);
 }
 
 
