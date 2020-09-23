@@ -131,6 +131,11 @@ bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
    return (v1.major == v2.major) && (v1.minor == v2.minor);
 }
 
+bool vcp_version_lt(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2){
+   return vcp_version_gt(v2, v1);
+}
+
+
 
 // use    if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED))
 #ifdef DEPRECATED

@@ -48,6 +48,7 @@ typedef enum {
 
 
 bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
+bool vcp_version_lt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
 bool vcp_version_gt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec min);
 bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2);
 
