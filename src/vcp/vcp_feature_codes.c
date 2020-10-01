@@ -641,8 +641,8 @@ extract_version_feature_info_from_feature_table_entry(
 
    dfm->feature_flags |= vfte->vcp_global_flags;
    DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
-         //   ? get_version_sensitive_sl_values(vfte, vspec)
-         ? get_highest_version_sl_values(vfte)
+         ? get_version_sensitive_sl_values(vfte, vspec)
+         // ? get_highest_version_sl_values(vfte)
          : get_version_specific_sl_values(vfte, vspec);
    dfm->sl_values = (sl_values) ? copy_sl_value_table(sl_values) : NULL;
 
