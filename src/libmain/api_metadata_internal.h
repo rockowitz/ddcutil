@@ -1,9 +1,8 @@
 // api_metadata.h
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
 
 #ifndef API_METADATA_INTERNAL_H_
 #define API_METADATA_INTERNAL_H_
@@ -21,12 +20,13 @@ ddca_get_simple_sl_value_table_by_vspec(
       DDCA_Feature_Value_Entry** value_table_loc);
 #endif
 
+#ifdef UNUSED
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
       DDCA_Feature_Value_Entry *  feature_value_table,
       uint8_t                     feature_value,
       char**                      value_name_loc);
-
+#endif
 
 // Feature Lists
 
@@ -51,7 +51,7 @@ ddca_get_feature_list(
 #endif
 
 
-
+#ifdef UNUSED
 // NEVER PUBLISHED
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -75,12 +75,12 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
       const DDCA_Monitor_Model_Key * p_mmid,
       uint8_t                feature_value,
       char**                 feature_name_loc);
+#endif
 
 
 
 
-
-
+#ifdef UNUSED
 // UNPUBLISHED, USED INTERNALLY
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -102,7 +102,7 @@ ddca_get_simple_sl_value_table_by_vspec(
       DDCA_MCCS_Version_Spec     vspec,
       const DDCA_Monitor_Model_Key *   p_mmid,   // currently ignored
       DDCA_Feature_Value_Entry** value_table_loc);
-
+#endif
 
 
 
@@ -121,7 +121,7 @@ DDCA_Status ddca_is_feature_supported(
 #endif
 
 
-
+#ifdef UNUSED
 // UNPUBLISHED
 /** Gets the value id/name table of the allowed values for a simple NC feature.
  *
@@ -140,7 +140,7 @@ ddca_get_simple_sl_value_table_by_dref(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_Display_Ref           dref,
       DDCA_Feature_Value_Entry** value_table_loc);
-
+#endif
 
 
 
@@ -149,6 +149,7 @@ ddca_get_simple_sl_value_table_by_dref(
 
 // Granular functions for metadata
 
+#ifdef UNUSED
 // NEVER PUBLISHED
 // used in ddcui
 // returns pointer into permanent internal data structure, caller should not free
@@ -167,12 +168,12 @@ ddca_feature_name_by_vspec(
       DDCA_Vcp_Feature_Code    feature_code,
       DDCA_MCCS_Version_Spec   vspec,
       DDCA_Monitor_Model_Key * p_mmid);
-
+#endif
 
 
 // DEPRECATED IN 0.9.0
 
-
+#ifdef UNUSED
 // /** \deprecated */
 __attribute__ ((deprecated))
 DDCA_Status
@@ -181,7 +182,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       DDCA_Vcp_Feature_Code  feature_code,
       uint8_t                feature_value,
       char**                 feature_name_loc);
-
+#endif
 
 
 

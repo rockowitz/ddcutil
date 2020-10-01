@@ -1,6 +1,6 @@
 // api_metadata.c
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -645,6 +645,7 @@ ddca_get_feature_name_by_dref(
 // Display Inquiry
 //
 
+#ifdef UNUSED
 // unpublished
 DDCA_Status
 ddca_get_simple_sl_value_table_by_vspec(
@@ -697,8 +698,10 @@ bye:
    assert ( (rc==0 && *value_table_loc) || (rc!=0 && !*value_table_loc) );
    return rc;
 }
+#endif
 
 
+#ifdef UNUSED
 // for now, just gets SL value table based on the vspec of the display ref,
 // eventually handle dynamically assigned monitor specs
 DDCA_Status
@@ -716,8 +719,10 @@ ddca_get_simple_sl_value_table_by_dref(
       }
    )
 }
+#endif
 
 
+#ifdef UNUSED
 DDCA_Status
 ddca_get_simple_sl_value_table(
       DDCA_Vcp_Feature_Code      feature_code,
@@ -761,8 +766,10 @@ ddca_get_simple_nc_feature_value_name_by_table(
    assert ( (rc==0 && *value_name_loc) || (rc!=0 && !*value_name_loc) );
    return rc;
 }
+#endif
 
 
+#ifdef UNUSED
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_vspec(
       DDCA_Vcp_Feature_Code    feature_code,
@@ -785,8 +792,9 @@ ddca_get_simple_nc_feature_value_name_by_vspec(
    assert ( (rc==0 && *feature_name_loc) || (rc!=0 && !*feature_name_loc) );
    return rc;
 }
+#endif
 
-
+#ifdef UNUSED
 // deprecated
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_display(
@@ -803,6 +811,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       }
    );
 }
+#endif
 
 void
 ddca_dbgrpt_feature_metadata(
