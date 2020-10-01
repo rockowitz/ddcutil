@@ -677,8 +677,8 @@ ddca_get_simple_sl_value_table_by_vspec(
         rc = DDCRC_INVALID_OPERATION;
      }
      else  {
-        // DDCA_Feature_Value_Entry * table = get_version_sensitive_sl_values(pentry, vspec);
-        DDCA_Feature_Value_Entry * table = get_highest_version_sl_values(pentry);
+        DDCA_Feature_Value_Entry * table = get_version_sensitive_sl_values(pentry, vspec);
+        // DDCA_Feature_Value_Entry * table = get_highest_version_sl_values(pentry);
         DDCA_Feature_Value_Entry * table2 = (DDCA_Feature_Value_Entry*) table;    // identical definitions
         *value_table_loc = table2;
         rc = 0;
