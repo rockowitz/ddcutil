@@ -442,6 +442,25 @@ ddca_get_feature_flags_by_version_id(
 }
 #endif
 
+#ifdef NO
+DDCA_Status
+ddca_get_highest_version_sl_values(
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Feature_Value_Entry ** sl_table_loc)
+{
+   DDCA_Status rc = DDCRC_NOT_FOUND;
+   DDCA_Feature_Value_Entry * result = NULL;
+   VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid(feature_code);
+   if (vfte) {
+      result = get_highest_version_sl_values(vfte);
+      rc = DDCRC_OK;
+   }
+   *sl_table_loc = result;
+   return rc;
+}
+#endif
+
+
 
 DDCA_Status
 ddca_get_feature_metadata_by_vspec(
