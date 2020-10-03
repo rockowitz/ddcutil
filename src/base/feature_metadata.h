@@ -78,7 +78,7 @@ bool (*Format_Normal_Feature_Detail_Function3) (
 // Feature value table functions
 
 void
-dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth);
+dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, char * title, int depth);
 
 DDCA_Feature_Value_Entry *
 copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable);
@@ -120,6 +120,7 @@ struct {
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
+   DDCA_Feature_Value_Entry *              latest_sl_values;
    DDCA_Feature_Flags                      feature_flags;
    Format_Normal_Feature_Detail_Function   nontable_formatter;
    Format_Normal_Feature_Detail_Function2  nontable_formatter_sl;

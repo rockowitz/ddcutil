@@ -102,19 +102,25 @@ sl_value_table_size(DDCA_Feature_Value_Entry * table) {
 /** Emit a debugging report of a feature value table.
  *
  *  @param table  pointer to first #DDCA_Feature_Value_Entry in table
+ *  @param title  name of table
  *  @param depth  logical indentation depth
  */
 void
-dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, int depth) {
+dbgrpt_sl_value_table(DDCA_Feature_Value_Entry * table, char * title, int depth) {
    int d1 = depth+1;
-   rpt_vstring(depth, "Feature value table at %p", table);
    if (table) {
-      rpt_vstring(depth, "Members: ");
-      DDCA_Feature_Value_Entry * cur = table;
-      while (cur->value_name) {
-         rpt_vstring(d1, "0x%02x -> %s", cur->value_code, cur->value_name);
-         cur++;
+      rpt_vstring(depth, "%s table at %p", title, table);
+      if (table) {
+         rpt_vstring(depth, "Members: ");
+         DDCA_Feature_Value_Entry * cur = table;
+         while (cur->value_name) {
+            rpt_vstring(d1, "0x%02x -> %s", cur->value_code, cur->value_name);
+            cur++;
+         }
       }
+   }
+   else {
+      rpt_vstring(depth, "%s table:   NULL", title);
    }
 }
 
@@ -181,8 +187,18 @@ free_sl_value_table(DDCA_Feature_Value_Entry * table) {
    if (table) {
       DDCA_Feature_Value_Entry * cur = table;
       while(true) {
-         if (cur->value_name)
+#ifdef OUT
+         if (debug) {
+            DBGMSG("cur=%p", cur);
+            DBGMSG("cur->value_code = 0x%02x", cur->value_code);
+            DBGMSG("cur->value_name = %p", cur->value_name);
+            DBGMSG("cur->value_name -> %s", cur->value_name);
+         }
+#endif
+         if (cur->value_name) {
+            DBGMSF(debug, "Freeing: %p", cur->value_name);
             free(cur->value_name);
+         }
          else
             break;
          cur++;
@@ -247,7 +263,8 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Description:       %s",     md->feature_desc);
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
-   dbgrpt_sl_value_table(md->sl_values, d1);
+   dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
+   dbgrpt_sl_value_table(md->latest_sl_values, "Latest feature values", d1);
 }
 
 
@@ -259,12 +276,16 @@ dbgrpt_ddca_feature_metadata(
  */
 void
 free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
+   bool debug = false;
+   DBGMSF(debug, "Executing. metadata = %p", metadata);
+   dbgrpt_ddca_feature_metadata(metadata, 2);
    if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
       assert(!(metadata->feature_flags & DDCA_PERSISTENT_METADATA));
       if (!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) {
          free(metadata->feature_name);
          free(metadata->feature_desc);
          free_sl_value_table(metadata->sl_values);
+         free_sl_value_table(metadata->latest_sl_values);
       }
       metadata->marker[3] = 'x';
    }
@@ -298,10 +319,8 @@ dbgrpt_display_feature_metadata(
       rpt_vstring(d1, "feature_desc:    %s", meta->feature_desc);
       char * s = interpret_feature_flags_t(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
-      if (meta->sl_values)
-         dbgrpt_sl_value_table(meta->sl_values, d1);
-      else
-         rpt_vstring(d1, "sl_values:                    NULL");
+      dbgrpt_sl_value_table(meta->sl_values, "Feature values", d1);
+      dbgrpt_sl_value_table(meta->latest_sl_values, "Latest feature values", d1);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
                       rtti_get_func_name_by_addr(meta->nontable_formatter)) ;
@@ -326,12 +345,17 @@ void
 dfm_free(
       Display_Feature_Metadata * meta)
 {
+   bool debug = false;
+   DBGMSF(debug, "Executing. meta=%p", meta);
+   if (debug)
+      dbgrpt_display_feature_metadata(meta, 2);
    if (meta) {
       assert(memcmp(meta->marker, DISPLAY_FEATURE_METADATA_MARKER, 4) == 0);
       meta->marker[3] = 'x';
       free(meta->feature_name);
       free(meta->feature_desc);
       free_sl_value_table(meta->sl_values);
+      free_sl_value_table(meta->latest_sl_values);
       free(meta);
    }
 }
@@ -400,6 +424,7 @@ dfm_to_ddca_feature_metadata(
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
    ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);
    // ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
+   ddca_meta->latest_sl_values = copy_sl_value_table(dfm->latest_sl_values);
 
    DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
    return ddca_meta;
@@ -432,6 +457,7 @@ dfm_from_ddca_feature_metadata(
    dfm->table_formatter = NULL;
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
    dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);      // OR DUPLICATE?
+   dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
    return dfm;
 }
 
