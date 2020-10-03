@@ -644,7 +644,8 @@ extract_version_feature_info_from_feature_table_entry(
          ? get_version_sensitive_sl_values(vfte, vspec)
          // ? get_highest_version_sl_values(vfte)
          : get_version_specific_sl_values(vfte, vspec);
-   dfm->sl_values = (sl_values) ? copy_sl_value_table(sl_values) : NULL;
+   dfm->sl_values = copy_sl_value_table(sl_values);
+   dfm->latest_sl_values = copy_sl_value_table(get_highest_version_sl_values(vfte));
 
    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
@@ -4337,43 +4338,28 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
    rpt_vstring(d1, "v20_flags:         0x%04x - %s",
                    pfte->v20_flags,
                    interpret_feature_flags_t(pfte->v20_flags));
-
 //   rpt_vstring(d1, "v21_flags:         0x%04x - %s",
 //                   pfte->v21_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v21_flags, buf, bufsz));
    rpt_vstring(d1, "v21_flags:         0x%04x - %s",
                    pfte->v21_flags,
                    interpret_feature_flags_t(pfte->v21_flags));
-
 //   rpt_vstring(d1, "v30_flags:         0x%04x - %s",
 //                   pfte->v30_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v30_flags, buf, bufsz));
    rpt_vstring(d1, "v30_flags:         0x%04x - %s",
                    pfte->v30_flags,
                    interpret_feature_flags_t(pfte->v30_flags));
-
 //   rpt_vstring(d1, "v22_flags:         0x%04x - %s",
 //                   pfte->v22_flags,
 //                   vcp_interpret_version_feature_flags(pfte->v22_flags, buf, bufsz));
    rpt_vstring(d1, "v22_flags:         0x%04x - %s",
                    pfte->v22_flags,
                    interpret_feature_flags_t(pfte->v22_flags));
-
-   rpt_vstring(d1, "default_sl_values: %p", pfte->default_sl_values);
-   if (pfte->default_sl_values)
-      dbgrpt_sl_value_table(pfte->default_sl_values, d1+1);
-
-   rpt_vstring(d1, "v21_sl_values: %p", pfte->v21_sl_values);
-   if (pfte->v21_sl_values)
-      dbgrpt_sl_value_table(pfte->v21_sl_values, d1+1);
-
-   rpt_vstring(d1, "v30_values: %p", pfte->v30_sl_values);
-   if (pfte->v30_sl_values)
-      dbgrpt_sl_value_table(pfte->v30_sl_values, d1+1);
-
-   rpt_vstring(d1, "v22_sl_values: %p", pfte->v22_sl_values);
-   if (pfte->v22_sl_values)
-      dbgrpt_sl_value_table(pfte->v22_sl_values, d1+1);
+   dbgrpt_sl_value_table(pfte->default_sl_values, "default_sl_values", d1);
+   dbgrpt_sl_value_table(pfte->v21_sl_values, "v21_sl_values", d1);
+   dbgrpt_sl_value_table(pfte->v30_sl_values, "v30_sl_values", d1);
+   dbgrpt_sl_value_table(pfte->v22_sl_values, "v22_sl_values", d1);
 }
 
 

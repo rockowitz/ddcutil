@@ -249,7 +249,6 @@ get_version_sensitive_feature_flags(
       VCP_Feature_Table_Entry *  vfte,
       DDCA_MCCS_Version_Spec     vcp_version);
 
-
 DDCA_Feature_Value_Entry *
 get_version_specific_sl_values(
       VCP_Feature_Table_Entry * vfte,
