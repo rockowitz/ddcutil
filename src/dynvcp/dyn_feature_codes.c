@@ -194,7 +194,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
  *         (Dynamic_Features_Record) or in the internal feature definitions
  *
  * @remark
- * Ensures user supplied featues have been loaded by calling #dfr_load_by_mmk()
+ * Ensures user supplied features have been loaded by calling #dfr_load_by_mmk()
  */
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
@@ -202,7 +202,6 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
      DDCA_Monitor_Model_Key   mmk,
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default)
-
 {
     bool debug = false;
     DBGMSF(debug, "Starting. feature_code=0x%02x, mmk=%s, vspec=%d.%d, with_default=%s",
