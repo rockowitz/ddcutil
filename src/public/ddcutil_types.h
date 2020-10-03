@@ -459,6 +459,7 @@ struct {
    DDCA_MCCS_Version_Spec                vcp_version;    /**< MCCS version    */
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Entry *            sl_values;      /**< valid when DDCA_SIMPLE_NC set */
+   DDCA_Feature_Value_Entry *            latest_sl_values;
    char *                                feature_name;   /**< feature name */
    char *                                feature_desc;   /**< feature description */
    // possibly add pointers to formatting functions
