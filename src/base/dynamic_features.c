@@ -137,8 +137,6 @@ void dbgrpt_dynamic_features_rec(
 }
 
 
-
-
 /** Thread safe function that returns a string representation of a #Dynamic_Features_Rec
  *  suitable for diagnostic messages. The returned value is valid until the
  *  next call to this function on the current thread.
@@ -157,8 +155,6 @@ char * dfr_repr_t(Dynamic_Features_Rec * dfr) {
       g_snprintf(buf, 100, "NULL");
    return buf;
 }
-
-
 
 
 DDCA_Feature_Metadata *
@@ -259,10 +255,10 @@ dfr_free(
    DBGMSF(debug, "Done");
 }
 
+
 //
 // Functions private to create_monitor_dynamic_featuers()
 //
-
 
 static
 void
@@ -300,9 +296,7 @@ add_error(
    add_error(errors, filename, _linectr, __func__, _fmt, ##__VA_ARGS__)
 
 
-
-static
-bool
+static bool
 attr_keyword(
       DDCA_Feature_Metadata * cur_feature_metadata,
       char *                  keyword)
@@ -335,8 +329,7 @@ attr_keyword(
 }
 
 
-static
-void
+static void
 switch_bits(
       DDCA_Feature_Flags * pflags,
       uint16_t             old_bit,
@@ -347,8 +340,7 @@ switch_bits(
 }
 
 
-static
-void
+static void
 finalize_feature(
       Dynamic_Features_Rec *  frec,
       DDCA_Feature_Metadata * cur_feature_metadata,
@@ -366,6 +358,7 @@ finalize_feature(
       g_array_append_val(cur_feature_values, last_entry);
 
       cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
+      cur_feature_metadata->latest_sl_values = copy_sl_value_table(cur_feature_metadata->sl_values);
       // g_array_free(cur_feature_values, false);
       // cur_feature_values = NULL;
    }
