@@ -1,29 +1,11 @@
-/* sysfs_util.h
- *
- * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file 
+/** \file sysfs_util.h
  * Functions for reading /sys file system
  */
+
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+
 
 #ifndef SYSFS_UTIL_H_
 #define SYSFS_UTIL_H_
@@ -59,6 +41,13 @@ read_binary_sysfs_attr(
       const char * attrname,
       int          est_size,
       bool         verbose);
+
+
+char *
+get_rpath_basename(char * path);
+
+char *
+get_i2c_device_sysfs_driver(int busno);
 
 bool
 is_module_loaded_using_sysfs(

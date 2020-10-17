@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //* \cond */
@@ -171,6 +171,23 @@ get_i2c_device_sysfs_name(int busno) {
 }
 
 
+char * get_rpath_basename(char * path) {
+   char * result = NULL;
+   char resolved_path[PATH_MAX];
+   char * rpath = realpath(path, resolved_path);
+   // printf("(%s) rpath=|%s|\n", __func__, rpath);
+   if (rpath) {
+
+      // printf("realpath returned %s\n", rpath);
+      // printf("%s --> %s\n",workfn, resolved_path);
+      result = g_path_get_basename(rpath);
+   }
+   // printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
+   return result;
+}
+
+
+
 /** Gets the driver name of an I2C device,
  *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
  *
@@ -181,30 +198,17 @@ get_i2c_device_sysfs_name(int busno) {
  *  \remark
  *  Caller is responsible for freeing returned value
  */
-static char *
+char *
 get_i2c_device_sysfs_driver(int busno) {
    char * driver_name = NULL;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
-
-   char resolved_path[PATH_MAX];
-   char * rpath = realpath(workbuf, resolved_path);
-   // printf("(%s) rpath=|%s|\n", __func__, rpath);
-   if (!rpath) {
-      int errsv = errno;
-      if (errsv == ENOENT) {
-         // Path does not exist for amdgpu driver, nouveau on kernel 4.0 (SuSe Lean 42), perhaps others
-      }
-      else {
-         printf("(%s) realpath(%s) returned NULL, errno=%d", __func__, workbuf, errsv);
-      }
+   driver_name = get_rpath_basename(workbuf);
+   if (!driver_name) {
+      snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device/driver/module", busno);
+      driver_name = get_rpath_basename(workbuf);
    }
-   else {
-      // printf("realpath returned %s\n", rpath);
-      // printf("%s --> %s\n",workfn, resolved_path);
-      driver_name = g_path_get_basename(rpath);
-   }
-   // printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
+   printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
    return driver_name;
 }
 
