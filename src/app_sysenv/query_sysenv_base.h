@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_BASE_H_
@@ -91,6 +91,14 @@ void dir_foreach(
       Dir_Foreach_Func     func,
       void *               accumulator,
       int                  depth);
+
+void dir_ordered_foreach(
+        char *                dirname,
+        Filename_Filter_Func  fn_filter,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth);
 
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
