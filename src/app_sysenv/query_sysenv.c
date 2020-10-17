@@ -605,7 +605,6 @@ void query_sysenv() {
    rpt_nl();
    query_card_and_driver_using_sysfs(accumulator);
 
-
    rpt_nl();
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
@@ -721,5 +720,8 @@ void query_sysenv() {
    final_analysis(accumulator, 0);
 
    env_accumulator_free(accumulator);     // make Coverity happy
+
+
+   dump_sysfs_i2c();   // TEMP LOCATION
 }
 
