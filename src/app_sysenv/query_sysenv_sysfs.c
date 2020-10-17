@@ -3,17 +3,18 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
 /** \cond */
-// #define _GNU_SOURCE   // for basename
+// #define _GNU_SOURCE   // for asprintf
 
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <libgen.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
@@ -625,7 +626,6 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
 }
 
 
-
 int indirect_strcmp(const void * a, const void * b) {
    char * alpha = *(char **) a;
    char * beta  = *(char **) b;
@@ -835,6 +835,613 @@ void query_drm_using_sysfs()
 
    rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 1);
    execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
+}
+
+
+static inline char *
+read_sysfs_attr0(
+      const char * fq_attrname,
+      bool         verbose)
+{
+   return file_get_first_line(fq_attrname, verbose);
+}
+
+
+typedef bool (*Fn_Filter)(const char * fn, const char * val);
+
+char * get_single_subdir_name(char * dirname, Fn_Filter filter, char * val) {
+   bool debug = false;
+   int d1 = 1;
+   DIR* dir2 = opendir(dirname);
+   char * result = NULL;
+   if (!dir2) {
+      rpt_vstring(d1, "Unexpected error. Unable to open sysfs directory %s: %s\n",
+                      dirname, strerror(errno));
+     }
+     else {
+        struct dirent *dent2;
+        while ((dent2 = readdir(dir2)) != NULL) {
+           DBGMSF(debug, "%s", dent2->d_name);
+           if (!str_starts_with(dent2->d_name, ".")) {
+              if (!filter || filter(dent2->d_name, val)) {
+                 result = strdup(dent2->d_name);
+                 break;
+              }
+           }
+        }
+        closedir(dir2);
+     }
+   DBGMSF(debug, "directory: %s, first subdir: %s", dirname, result);
+   return result;
+}
+
+
+
+
+// Expecting:
+
+//      device/ddc/i2c-dev/i2c-n   name of directory, associated i2c
+//      device/ddc/i2c-dev/i2c-n/name  e.g. AMDGPU i2c bit bus x90
+//      device/drm_dp_aux0
+//      device/drm_dp_auxN/dev  = 237:M
+//      device/name (null)
+//   /sys/bus/i2c/devices/i2c-N/device   basename startswith card
+//   /sys/bus/i2c/devices/i2c-N/i2c-dev/i2c-N   directory name
+//   /sys/bus/i2c/devices/i2c-N/name  = cardN-connector-name
+//   /sys/bus/i2c/devices/i2c-N/device
+//   /sys/bus/i2c/devices/i2c-N/device/ddc/i2c-dev/i2c-M  name of associated i2c
+//   /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN/
+
+//   /sys/bus/i2c/devices/i2c-N/device/ddc
+
+
+
+void rpt_attr_output(
+      int depth,
+      const char * node,
+      const char * op,
+      const char * value)
+{
+   int offset = 60;
+   rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
+}
+
+
+void assemble_sysfs_path(
+      char * buffer,
+      int    bufsz,
+      const char * part1,
+      const char * part2,
+      const char * part3,
+      const char * part4)
+{
+   if (part1 && part2 && part3 && part4)
+      g_snprintf(buffer, bufsz, "%s/%s/%s/%s", part1, part2, part3, part4);
+   else if (part1 && part2 && part3)
+         g_snprintf(buffer, bufsz, "%s/%s/%s", part1, part2, part3);
+   else if (part1 && part2)
+         g_snprintf(buffer, bufsz, "%s/%s", part1, part2);
+   else {
+      assert(part1);
+      g_snprintf(buffer, bufsz, "%s", part1);
+   }
+}
+
+
+bool rpt_attr_text(
+      int          depth,
+      const char * dir_devices_i2cN,
+      const char * attribute,
+      char **      value_loc)
+{
+   bool found = false;
+   if (value_loc)
+      *value_loc = NULL;
+   char pb1[PATH_MAX];
+   g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, attribute);
+   char * val = read_sysfs_attr0(pb1, false);
+   if (val) {
+      found = true;
+      rpt_attr_output(depth, pb1, "=", val);
+      // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
+      if (value_loc)
+         *value_loc = val;
+      else
+         free(val);
+   }
+   else
+      rpt_attr_output(depth, pb1, ": ", "Not Found");
+   return found;
+}
+
+
+bool
+rpt_subdir_attr_text(
+      int          depth,
+      const char * dir_devices_i2cN,
+      const char * subdir_prefix,
+      const char * subdir,
+      const char * subdir_suffix,
+      char **      value_loc)
+{
+   bool found = false;
+   if (value_loc)
+      *value_loc = NULL;
+   char pb2[PATH_MAX];
+   assemble_sysfs_path(pb2, PATH_MAX, dir_devices_i2cN, subdir_prefix, subdir, subdir_suffix);
+
+   char * val = read_sysfs_attr0(pb2, true);
+   if (val) {
+      rpt_attr_output(depth, pb2, "=", val);
+      // rpt_vstring(depth, "%-*s =  %s", offset, pb2, val);
+      if (value_loc)
+         *value_loc = val;
+      else
+         free(val);
+   }
+   else
+      rpt_attr_output(depth, pb2, ": ", "Not Found");
+   return found;
+}
+
+
+bool
+rpt_attr_realpath(
+      int          depth,
+      const char * part1,
+      const char * part2,
+      const char * part3,
+      const char * part4,
+      char **      value_loc)
+{
+   if (value_loc)
+      *value_loc = NULL;
+   char pb1[PATH_MAX];
+   assemble_sysfs_path(pb1, PATH_MAX, part1, part2, part3, part4);
+   char * result = realpath(pb1, NULL);
+   bool found = (result);
+   if (result) {
+      rpt_attr_output(depth, pb1, "->", result);
+      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, result);
+      if (value_loc)
+         *value_loc = result;
+      else
+         free(result);
+   }
+   else {
+      rpt_attr_output(depth, pb1, "->", "Invalid path");
+      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
+   }
+   return found;
+}
+
+
+bool
+rpt_attr_realpath_basename(
+      int          depth,
+      const char * part1,
+      const char * part2,
+      const char * part3,
+      const char * part4,
+      char **      value_loc)
+{
+   bool found = false;
+   if (value_loc)
+      *value_loc = NULL;
+   char pb1[PATH_MAX];
+   char pb2[PATH_MAX];
+   assemble_sysfs_path(pb1, PATH_MAX, part1, part2, part3, part4);
+   char * rpath = realpath(pb1, pb2);  // without assignment, get warning that return value unused
+   if (rpath) {
+      char * bpath = basename(rpath);
+      if (bpath) {
+         found = true;
+         rpt_attr_output(depth, pb1, "->", bpath);
+         // rpt_vstring(depth, "%-*s -> %s", offset, pb1, bpath);
+         if (value_loc)
+            *value_loc = strdup(bpath);
+      }
+   }
+   if (!found) {
+      rpt_attr_output(depth, pb1, "->", "Invalid path");
+      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
+   }
+   return found;
+}
+
+
+bool rpt_attr_single_subdir(
+      int          depth,
+      const char * dir_devices_i2cN,
+      const char * filename,
+      char **      value_loc)
+{
+   char pb1[PATH_MAX];
+   g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, filename);
+   char * subdir_name = get_single_subdir_name(pb1, NULL, NULL);
+   bool found = (subdir_name);
+   if (subdir_name) {
+      char buf[PATH_MAX+100];
+      g_snprintf(buf, PATH_MAX+100, "Found subdirectory = %s", subdir_name);
+      rpt_attr_output(depth, pb1, ":", buf);
+      // rpt_vstring(depth, "%-*s :  Found subdirectory = %s", offset, pb1, subdir_name);
+      if (value_loc)
+         *value_loc = subdir_name;
+      else
+         free(subdir_name);
+   }
+   else {
+      rpt_attr_output(depth, pb1, ":", "No subdirectory found");
+      // rpt_vstring(depth, "%-*s :  No subdirectory found", offset, pb1);
+   }
+   return found;
+}
+
+
+void one_bus_i2c_device(int busno, void * accumulator, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d", busno);
+
+   int d1 = depth+1;
+   // int d2 = depth+2;
+   // int d3 = depth+3;
+   char pb1[PATH_MAX];
+   char pb2[PATH_MAX];
+
+   int offset = 60;
+
+   char * dir_devices_i2cN = g_strdup_printf("/sys/bus/i2c/devices/i2c-%d", busno);
+   char * real_device_dir = realpath(dir_devices_i2cN, pb2);
+   rpt_vstring(depth, "Examining %s -> %s", dir_devices_i2cN, real_device_dir);
+
+#ifdef OLD
+   g_snprintf(pb1, PATH_MAX, "%s/device", dir_devices_i2cN);
+   rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+#endif
+
+   rpt_attr_realpath(d1, dir_devices_i2cN, "device", NULL, NULL, NULL);
+   rpt_attr_text(    d1, dir_devices_i2cN, "name",   NULL);
+
+#ifdef OLD
+   g_snprintf(pb1, PATH_MAX, "%s/name", dir_devices_i2cN);
+   char * val = read_sysfs_attr0(pb1, true);
+   rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+   free(val);
+#endif
+
+   char * device_class = NULL;
+   // bool found = false;
+   if ( rpt_attr_text(d1, dir_devices_i2cN, "device/class", &device_class) ) {
+
+#ifdef OLD
+   g_snprintf(pb1, PATH_MAX, "%s/device/class", dir_devices_i2cN);
+   char * device_class = read_sysfs_attr0(pb1,  /*verbose=*/false);
+   if (device_class) {
+       // DBGMSG("class = %s", device_class);
+      rpt_vstring(d1, "%-*s =  %s", offset,  pb1, device_class);
+#endif
+
+      if ( str_starts_with(device_class, "0x03") ){   // TODO: replace test
+
+         rpt_attr_text(d1, dir_devices_i2cN, "device/boot_vga", NULL);
+#ifdef OLD
+         g_snprintf(pb1, PATH_MAX, "%s/device/boot_vga", dir_devices_i2cN);
+         char * value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s =  %s", offset, pb1, value);
+         free(value);
+#endif
+
+         rpt_attr_realpath_basename( d1, dir_devices_i2cN, "device/driver", NULL, NULL, NULL);
+         rpt_attr_realpath_basename( d1, dir_devices_i2cN, "device/driver/module", NULL, NULL, NULL);
+#ifdef OLD
+         g_snprintf(pb1, PATH_MAX, "%s/device/driver", dir_devices_i2cN);
+         char * fq_driver_path =  realpath(pb1, NULL);
+         rpt_vstring(d1, "%-*s -> %s",  offset, pb1, basename(fq_driver_path) );
+         free(fq_driver_path);
+
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/driver/module", dir_devices_i2cN);
+         fq_driver_path =  realpath(pb1, NULL);
+         rpt_vstring(d1, "%-*s -> %s",  offset, pb1, basename(fq_driver_path) );
+         free(fq_driver_path);
+#endif
+         rpt_attr_text(d1, dir_devices_i2cN, "device/enable",           NULL);
+         rpt_attr_text(d1, dir_devices_i2cN, "device/modalias",         NULL);
+         rpt_attr_text(d1, dir_devices_i2cN, "device/vendor",           NULL);
+         rpt_attr_text(d1, dir_devices_i2cN, "device/device",           NULL);
+         rpt_attr_text(d1, dir_devices_i2cN, "device/subsystem_vendor", NULL);
+         rpt_attr_text(d1, dir_devices_i2cN, "device/subsystem_device", NULL);
+
+#ifdef OLD
+         g_snprintf(pb1, PATH_MAX, "%s/device/enable", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/modalias", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/vendor", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/device", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/subsystem_vendor", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+
+         g_snprintf(pb1, PATH_MAX, "%s/device/subsystem_device", dir_devices_i2cN);
+         value = read_sysfs_attr0(pb1, /*verbose=*/false);
+         rpt_vstring(d1, "%-*s :  %s", offset, pb1, value);
+         free(value);
+#endif
+
+         char * i2c_dev_subdir = NULL;
+         rpt_attr_single_subdir(d1, dir_devices_i2cN, "i2c-dev", &i2c_dev_subdir);
+#ifdef OLD
+         g_snprintf(pb1, PATH_MAX, "%s/i2c-dev", dir_devices_i2cN);
+         char * i2c_dev_subdir = get_single_subdir_name(pb1, NULL, NULL);
+         if (i2c_dev_subdir)
+            rpt_vstring(d1, "%-*s :  Found subdirectory = %s", offset, pb1, i2c_dev_subdir);
+         else
+            rpt_vstring(d1, "%-*s :  No subdirectory found", offset, pb1);
+#endif
+         if (i2c_dev_subdir) {
+            rpt_subdir_attr_text(d1, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "dev",       NULL);
+            rpt_subdir_attr_text(d1, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "name",      NULL);
+            rpt_attr_realpath(   d1, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "device",    NULL);
+            rpt_attr_realpath(   d1, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "subsystem", NULL);
+
+
+#ifdef old
+            g_snprintf(pb2, PATH_MAX, "%s/i2c-dev/%s/dev", dir_devices_i2cN, i2c_dev_subdir);
+            value = read_sysfs_attr0(pb2, true);
+            rpt_vstring(d1, "%-*s :  %s", offset, pb2, value);
+
+            g_snprintf(pb2, PATH_MAX, "%s/i2c-dev/%s/name", dir_devices_i2cN, i2c_dev_subdir);
+            value = read_sysfs_attr0(pb2, true);
+            rpt_vstring(d1, "%-*s :  %s", offset, pb2, value);
+
+            g_snprintf(pb1, PATH_MAX, "%s/i2c-dev/%s/device", dir_devices_i2cN, i2c_dev_subdir);
+            rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+            g_snprintf(pb1, PATH_MAX, "%s/i2c-dev/%s/subsystem", dir_devices_i2cN, i2c_dev_subdir);
+            rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+#endif
+         }
+      }
+    }
+    else {   // device/class not found
+       char * s = NULL;
+       g_snprintf(pb1, PATH_MAX, "%s/device/class", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s :  Not found.  May be display port", offset, pb1);
+
+       // sys/bus/i2c/devices/i2c-N
+       //       device (link)   ../../cardX-DP-X
+       //       i2c-dev (dir)
+       //       name
+       //       subsystem (link, use basename)
+
+#ifdef ALREADY_SHOWN
+       g_snprintf(pb1, PATH_MAX, "%s/device", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/name", dir_devices_i2cN);
+       char * val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s:  %s", offset, pb1, val);
+       free(val);
+#endif
+
+       g_snprintf(pb1, PATH_MAX, "%s/subsystem", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       // /sys/bus/i2c/devices/i2c-N/device:
+       //       ddc (link)
+       //       device (link)
+       //       drm_dp_auxM (dir)
+       //       edid
+       //       i2c-N (dir)
+       //       status
+       //       subsysten (link)
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+        g_snprintf(pb1, PATH_MAX, "%s/device/device", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/device", dir_devices_i2cN);
+       g_snprintf(pb1, PATH_MAX, "%s/device/edid", dir_devices_i2cN);
+       GByteArray * edid = read_binary_file(pb1, 256, true);
+       rpt_vstring(d1, "%-*s :  %sfound", offset, pb1, (edid) ? "" : "NOT ");
+       g_byte_array_free(edid, true);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/status", dir_devices_i2cN);
+       char * val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+       free(val);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/subsystem", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       // /sys/bus/i2c/devices/i2c-N/device/ddc:
+       //      device (link)
+       //      i2c-dev (dir)
+       //      name
+       //      subsystem (link)
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/device", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/name", dir_devices_i2cN);
+       val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+       free(val);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/subsystem", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/device", dir_devices_i2cN);
+       rpt_vstring(d1, "%-*s :  Skipping linked directory", offset, pb1);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev", dir_devices_i2cN);
+       char * i2c_dev_subdir = get_single_subdir_name(pb1, NULL, NULL);
+       rpt_vstring(d1, "%-*s :  subdirectory = %s", offset, pb1, i2c_dev_subdir);
+
+       // /sys/bus/i2c/devices/i2c-N/device/ddc/i2c-dev/i2c-M
+       //       dev
+       //       device (link)
+       //       name
+       //       subsystem (link)
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev/%s/dev", dir_devices_i2cN, i2c_dev_subdir);
+       val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+       free(val);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev/%s/device", dir_devices_i2cN, i2c_dev_subdir);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev/%s/name", dir_devices_i2cN, i2c_dev_subdir);
+       val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+       free(val);
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev/%s/subsystem", dir_devices_i2cN, i2c_dev_subdir);
+       rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/i2c-dev/%s/name", dir_devices_i2cN, i2c_dev_subdir);
+       val = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+       free(val);
+
+       //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN
+
+       g_snprintf(pb1, PATH_MAX, "%s/device", dir_devices_i2cN);
+       char * drm_dp_aux_subdir = get_single_subdir_name(pb1, str_starts_with, "drm_dp_aux");
+       if (drm_dp_aux_subdir) {
+          g_snprintf(pb2, PATH_MAX, "%s/%s", pb1, drm_dp_aux_subdir);
+          rpt_vstring(d1, "%-*s :  Found", offset, pb2);
+       }
+       else {
+          g_snprintf(pb2, PATH_MAX, "%s/drm_dp_aux*", pb1);
+          rpt_vstring(d1, "%-*s :  Not found", offset, pb2);
+       }
+       free(s);
+
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/ddc/device/driver", dir_devices_i2cN);
+       // TODO: check that directory exists
+       char * fq_driver_path =  realpath(pb1, NULL);
+       rpt_vstring(d1, "%-*s -> %s",  offset, pb1, basename(fq_driver_path) );
+       free(fq_driver_path);
+
+
+       g_snprintf(pb1, PATH_MAX, "%s/device/enabled", dir_devices_i2cN);
+       char * enabled = read_sysfs_attr0(pb1, true);
+       rpt_vstring(d1, "%-*s =  %s", offset, pb1, "enabled", enabled);
+       free(enabled);
+
+       if (drm_dp_aux_subdir) {
+          g_snprintf(pb1, PATH_MAX, "%s/device/%s/dev", dir_devices_i2cN, drm_dp_aux_subdir);
+          val = read_sysfs_attr0(pb1, true);
+          rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+          free(val);
+
+          g_snprintf(pb1, PATH_MAX, "%s/device/%s/device", dir_devices_i2cN, drm_dp_aux_subdir);
+          rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+
+          g_snprintf(pb1, PATH_MAX, "%s/device/%s/name", dir_devices_i2cN, drm_dp_aux_subdir);
+          val = read_sysfs_attr0(pb1, true);
+          rpt_vstring(d1, "%-*s =  %s", offset, pb1, val);
+          free(val);
+
+          g_snprintf(pb1, PATH_MAX, "%s/device/%s/device/subsystem", dir_devices_i2cN, drm_dp_aux_subdir);
+          rpt_vstring(d1, "%-*s -> %s", offset, pb1, realpath(pb1, pb2));
+       }
+    }
+}
+
+
+
+
+int i2c_compare(const void * v1, const void * v2) {
+   char ** s1 = (char**) v1;
+   char ** s2 = (char**) v2;
+   int result = 0;
+   int i1 = i2c_name_to_busno(*s1);
+   int i2 = i2c_name_to_busno(*s2);
+   if (i1 >= 0 && i2 >= 0) {
+      if (i1 < i2)
+         result = -1;
+      else if (i1 == i2)
+         result = 0;
+      else
+         result = 1;
+   }
+   else if (i1 >= 0)
+      result = -1;
+   else if (i2 >= 0)
+      result = 1;
+   else
+      result = strcmp(*s1, *s2);
+   return result;
+}
+
+
+void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
+   rpt_nl();
+   int busno = i2c_name_to_busno(fn);
+   if (busno < 0)
+      rpt_vstring(1, "Unexpected I2C device name: %s", fn);
+   else {
+      one_bus_i2c_device(busno, NULL, 1);
+   }
+}
+
+
+void dump_sysfs_i2c() {
+   rpt_nl();
+   rpt_label(0, "Dumping sysfs i2c entries");
+
+   rpt_label(0, "Top level i2c related nodes...");
+   rpt_nl();
+
+   char * cmds[] = {
+   "ls -l /sys/dev/char/89:*",
+   "ls -l /sys/dev/char/237:*",
+   "ls -l /sys/bus/i2c/devices",
+   "ls -l /sys/devices/pci*",
+   "ls -l /sys/class/i2c*",
+   NULL
+   };
+
+   int ndx = 0;
+   while ( cmds[ndx] ) {
+      rpt_vstring(1, "%s ...", cmds[ndx]);
+      execute_shell_cmd_rpt(cmds[ndx], 2);
+      ndx++;
+      rpt_nl();
+   }
+
+   rpt_label(0, "Detail for /sys/bus/i2c/devices");
+   dir_ordered_foreach(
+         "/sys/bus/i2c/devices",
+         NULL,                 // fn_filter
+         i2c_compare,
+         each_i2c_device_new,
+         NULL,                 // accumulator
+         0);                   // depth
 }
 
 
