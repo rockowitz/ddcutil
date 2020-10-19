@@ -711,6 +711,8 @@ void query_sysenv() {
       device_xref_report(0);
 
       probe_modules_d(0);
+
+      dump_sysfs_i2c();
    }
 
    rpt_nl();
@@ -721,7 +723,6 @@ void query_sysenv() {
 
    env_accumulator_free(accumulator);     // make Coverity happy
 
-
-   dump_sysfs_i2c();   // TEMP LOCATION
+   // dump_sysfs_i2c();   // TEMP LOCATION FOR TESTING - does not require --verbose
 }
 
