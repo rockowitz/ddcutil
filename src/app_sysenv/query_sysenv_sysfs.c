@@ -1522,22 +1522,22 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
    char * device_class = NULL;
    if ( RPT2_ATTR_TEXT(d1, &device_class, dir_devices_i2cN, "device/class") ) {
       if ( str_starts_with(device_class, "0x03") ){   // TODO: replace test
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/boot_vga");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/boot_vga");
          RPT2_ATTR_REALPATH_BASENAME( d1, NULL, dir_devices_i2cN, "device/driver");
          RPT2_ATTR_REALPATH_BASENAME( d1, NULL, dir_devices_i2cN, "device/driver/module");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/enable");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/modalias");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/vendor");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/device");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/subsystem_vendor");
-         RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/subsystem_device");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/enable");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/modalias");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/vendor");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/device");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/subsystem_vendor");
+         RPT2_ATTR_TEXT(       d1, NULL, dir_devices_i2cN, "device/subsystem_device");
          char * i2c_dev_subdir = NULL;
          RPT2_ATTR_SINGLE_SUBDIR(d1, &i2c_dev_subdir,  NULL, NULL, dir_devices_i2cN, "i2c-dev");
          if (i2c_dev_subdir) {
-            RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "dev");
-            RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "name");
-            RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "device");
-            RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "subsystem");
+            RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "dev");
+            RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "name");
+            RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "device");
+            RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "subsystem");
          }
       }
     }
@@ -1566,7 +1566,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc");
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/device");
 
-       RPT2_ATTR_EDID(d1, NULL, dir_devices_i2cN, "device/edid");
+       RPT2_ATTR_EDID(    d1, NULL, dir_devices_i2cN, "device/edid");
 #ifdef OLD
        GByteArray * edid = NULL;
        rpt_attr_binary(d1, dir_devices_i2cN, "device/edid", &edid);
