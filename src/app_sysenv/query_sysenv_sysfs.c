@@ -906,7 +906,7 @@ void rpt_attr_output(
    rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
 }
 
-
+#ifdef OLD
 void assemble_sysfs_path(
       char * buffer,
       int    bufsz,
@@ -926,6 +926,8 @@ void assemble_sysfs_path(
       g_snprintf(buffer, bufsz, "%s", part1);
    }
 }
+#endif
+
 
 
 char *
@@ -1111,7 +1113,7 @@ rpt_subdir_attr_text(
 }
 #endif
 
-
+#ifdef OLD
 void
 rpt_subdir_attr_msg(
       int          depth,
@@ -1125,6 +1127,7 @@ rpt_subdir_attr_msg(
    assemble_sysfs_path(pb2, PATH_MAX, dir_devices_i2cN, subdir_prefix, subdir, subdir_suffix);
    rpt_attr_output(depth, pb2, ":", msg);
 }
+#endif
 
 
 
