@@ -838,6 +838,21 @@ void query_drm_using_sysfs()
 }
 
 
+//
+// Functions for probing /sys
+//
+
+void rpt_attr_output(
+      int depth,
+      const char * node,
+      const char * op,
+      const char * value)
+{
+   int offset = 60;
+   rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
+}
+
+
 static inline char *
 read_sysfs_attr0(
       const char * fq_attrname,
@@ -874,60 +889,6 @@ char * get_single_subdir_name(char * dirname, Fn_Filter filter, char * val) {
    DBGMSF(debug, "directory: %s, first subdir: %s", dirname, result);
    return result;
 }
-
-
-
-
-// Expecting:
-
-//      device/ddc/i2c-dev/i2c-n   name of directory, associated i2c
-//      device/ddc/i2c-dev/i2c-n/name  e.g. AMDGPU i2c bit bus x90
-//      device/drm_dp_aux0
-//      device/drm_dp_auxN/dev  = 237:M
-//      device/name (null)
-//   /sys/bus/i2c/devices/i2c-N/device   basename startswith card
-//   /sys/bus/i2c/devices/i2c-N/i2c-dev/i2c-N   directory name
-//   /sys/bus/i2c/devices/i2c-N/name  = cardN-connector-name
-//   /sys/bus/i2c/devices/i2c-N/device
-//   /sys/bus/i2c/devices/i2c-N/device/ddc/i2c-dev/i2c-M  name of associated i2c
-//   /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN/
-
-//   /sys/bus/i2c/devices/i2c-N/device/ddc
-
-
-
-void rpt_attr_output(
-      int depth,
-      const char * node,
-      const char * op,
-      const char * value)
-{
-   int offset = 60;
-   rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
-}
-
-#ifdef OLD
-void assemble_sysfs_path(
-      char * buffer,
-      int    bufsz,
-      const char * part1,
-      const char * part2,
-      const char * part3,
-      const char * part4)
-{
-   if (part1 && part2 && part3 && part4)
-      g_snprintf(buffer, bufsz, "%s/%s/%s/%s", part1, part2, part3, part4);
-   else if (part1 && part2 && part3)
-         g_snprintf(buffer, bufsz, "%s/%s/%s", part1, part2, part3);
-   else if (part1 && part2)
-         g_snprintf(buffer, bufsz, "%s/%s", part1, part2);
-   else {
-      assert(part1);
-      g_snprintf(buffer, bufsz, "%s", part1);
-   }
-}
-#endif
-
 
 
 char *
@@ -991,62 +952,6 @@ rpt2_attr_text(
 #define RPT2_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
    rpt2_attr_text(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-#ifdef OLD
-bool rpt_attr_text(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * attribute,
-      char **      value_loc)
-{
-   bool found = false;
-   if (value_loc)
-      *value_loc = NULL;
-   char pb1[PATH_MAX];
-   g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, attribute);
-   char * val = read_sysfs_attr0(pb1, false);
-   if (val) {
-      found = true;
-      rpt_attr_output(depth, pb1, "=", val);
-      // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
-      if (value_loc)
-         *value_loc = val;
-      else
-         free(val);
-   }
-   else
-      rpt_attr_output(depth, pb1, ": ", "Not Found");
-   return found;
-}
-#endif
-
-
-#ifdef OLD
-bool rpt_attr_binary(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * attribute,
-      GByteArray ** value_loc)
-{
-   bool found = false;
-   if (value_loc)
-      *value_loc = NULL;
-   char pb1[PATH_MAX];
-   g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, attribute);
-   GByteArray * bytes = read_binary_file(pb1, 256, true);
-   if (bytes && bytes->len > 0) {
-      found = true;
-      rpt_attr_output(depth, pb1, ":", "Found");
-      // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
-      if (value_loc)
-         *value_loc = bytes;
-      else
-         g_byte_array_free(bytes, true);
-   }
-   else
-      rpt_attr_output(depth, pb1, ": ", "Not Found");
-   return found;
-}
-#endif
 
 bool rpt2_attr_binary(
       int          depth,
@@ -1078,88 +983,6 @@ bool rpt2_attr_binary(
       rpt_attr_output(depth, pb1, ": ", "Not Found");
    return found;
 }
-
-
-
-
-#ifdef OLD
-bool
-rpt_subdir_attr_text(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * subdir_prefix,
-      const char * subdir,
-      const char * subdir_suffix,
-      char **      value_loc)
-{
-   bool found = false;
-   if (value_loc)
-      *value_loc = NULL;
-   char pb2[PATH_MAX];
-   assemble_sysfs_path(pb2, PATH_MAX, dir_devices_i2cN, subdir_prefix, subdir, subdir_suffix);
-
-   char * val = read_sysfs_attr0(pb2, true);
-   if (val) {
-      rpt_attr_output(depth, pb2, "=", val);
-      // rpt_vstring(depth, "%-*s =  %s", offset, pb2, val);
-      if (value_loc)
-         *value_loc = val;
-      else
-         free(val);
-   }
-   else
-      rpt_attr_output(depth, pb2, ": ", "Not Found");
-   return found;
-}
-#endif
-
-#ifdef OLD
-void
-rpt_subdir_attr_msg(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * subdir_prefix,
-      const char * subdir,
-      const char * subdir_suffix,
-      const char * msg)
-{
-   char pb2[PATH_MAX];
-   assemble_sysfs_path(pb2, PATH_MAX, dir_devices_i2cN, subdir_prefix, subdir, subdir_suffix);
-   rpt_attr_output(depth, pb2, ":", msg);
-}
-#endif
-
-
-
-#ifdef OLD
-bool rpt_attr_edid(
-       int          depth,
-       const char * dir_devices_i2cN,
-       const char * attribute,     // always "edid"
-       GByteArray ** value_loc)
- {
-    bool found = false;
-    if (value_loc)
-       *value_loc = NULL;
-    GByteArray * edid = NULL;
-    found = rpt_attr_binary(depth, dir_devices_i2cN, attribute, &edid);
-    if (edid) {
-       assert(found);
-       rpt_hex_dump(edid->data, edid->len, depth+4);
-       g_byte_array_free(edid, true);
-
-       if (*value_loc)
-          *value_loc = edid;
-       else {
-          g_byte_array_free(edid, true);
-          *value_loc = NULL;
-       }
-    }
-
-    return found;
- }
-#endif
-
 
 
 bool rpt2_attr_edid(
@@ -1196,56 +1019,6 @@ bool rpt2_attr_edid(
 #define RPT2_ATTR_EDID(depth, value_loc, fn_segment, ...) \
    rpt2_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-
-#ifdef OLD
-bool
-rpt_attr_realpath(
-      int          depth,
-      const char * part1,
-      const char * part2,
-      const char * part3,
-      const char * part4,
-      char **      value_loc)
-{
-   if (value_loc)
-      *value_loc = NULL;
-   char pb1[PATH_MAX];
-   assemble_sysfs_path(pb1, PATH_MAX, part1, part2, part3, part4);
-   char * result = realpath(pb1, NULL);
-   bool found = (result);
-   if (result) {
-      rpt_attr_output(depth, pb1, "->", result);
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, result);
-      if (value_loc)
-         *value_loc = result;
-      else
-         free(result);
-   }
-   else {
-      rpt_attr_output(depth, pb1, "->", "Invalid path");
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
-   }
-   return found;
-}
-#endif
-
-#ifdef TEMP
-bool
-rpt2_attr_text(
-      int          depth,
-      char **      value_loc,
-      char *       fn_segment,
-      ...)
-{
-   DBGMSG("Starting. fn_segment=%s", fn_segment);
-   bool found = false;
-   if (value_loc)
-      *value_loc = NULL;
-   char pb1[PATH_MAX];
-
-
-
-#endif
 
 bool
 rpt2_attr_realpath(
@@ -1285,43 +1058,6 @@ rpt2_attr_realpath(
    rpt2_attr_realpath(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 
-
-
-#ifdef OLD
-bool
-rpt_attr_realpath_basename(
-      int          depth,
-      const char * part1,
-      const char * part2,
-      const char * part3,
-      const char * part4,
-      char **      value_loc)
-{
-   bool found = false;
-   if (value_loc)
-      *value_loc = NULL;
-   char pb1[PATH_MAX];
-   char pb2[PATH_MAX];
-   assemble_sysfs_path(pb1, PATH_MAX, part1, part2, part3, part4);
-   char * rpath = realpath(pb1, pb2);  // without assignment, get warning that return value unused
-   if (rpath) {
-      char * bpath = basename(rpath);
-      if (bpath) {
-         found = true;
-         rpt_attr_output(depth, pb1, "->", bpath);
-         // rpt_vstring(depth, "%-*s -> %s", offset, pb1, bpath);
-         if (value_loc)
-            *value_loc = strdup(bpath);
-      }
-   }
-   if (!found) {
-      rpt_attr_output(depth, pb1, "->", "Invalid path");
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
-   }
-   return found;
-}
-#endif
-
 bool
 rpt2_attr_realpath_basename(
       int          depth,
@@ -1359,42 +1095,6 @@ rpt2_attr_realpath_basename(
 
 #define RPT2_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath_basename(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
-
-
-
-
-
-#ifdef OLD
-bool rpt_attr_single_subdir(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * filename,
-      Fn_Filter    predicate_function,
-      char *       predicate_value,
-      char **      value_loc)
-{
-   char pb1[PATH_MAX];
-   g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, filename);
-   char * subdir_name = get_single_subdir_name(pb1, predicate_function, predicate_value);
-   bool found = false;
-   if (subdir_name) {
-      char buf[PATH_MAX+100];
-      g_snprintf(buf, PATH_MAX+100, "Found subdirectory = %s", subdir_name);
-      rpt_attr_output(depth, pb1, ":", buf);
-      // rpt_vstring(depth, "%-*s :  Found subdirectory = %s", offset, pb1, subdir_name);
-      if (value_loc)
-         *value_loc = subdir_name;
-      else
-         free(subdir_name);
-   }
-   else {
-      char buf[PATH_MAX+100];
-      g_snprintf(buf, PATH_MAX+100, "No %s subdirectory found", predicate_value);
-      rpt_attr_output(depth, pb1, ":", buf);
-   }
-   return found;
-}
-#endif
 
 
 bool rpt2_attr_single_subdir(
@@ -1437,7 +1137,6 @@ bool rpt2_attr_single_subdir(
    rpt2_attr_single_subdir(depth, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
 
-
 bool rpt2_attr_note_subdir(
       int          depth,
       char **      value_loc,
@@ -1467,46 +1166,6 @@ bool rpt2_attr_note_subdir(
 
 #define RPT2_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
    rpt2_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
-
-
-
-
-
-#ifdef COMPILER_COMPLAINS_UNUSED
-bool rpt_attr_single_subdirX(
-      int          depth,
-      const char * dir_devices_i2cN,
-      const char * part2,
-      const char * part3,
-      const char * part4,
-      Fn_Filter    predicate_function,
-      char *       predicate_value,
-      char **      value_loc)
-{
-   char pb1[PATH_MAX];
-   assemble_sysfs_path(pb1, PATH_MAX, dir_devices_i2cN, part2, part3, part4);
-
-   char * subdir_name = get_single_subdir_name(pb1, predicate_function, predicate_value);
-   bool found = false;
-   if (subdir_name) {
-      char buf[PATH_MAX+100];
-      g_snprintf(buf, PATH_MAX+100, "Found subdirectory = %s", subdir_name);
-      rpt_attr_output(depth, pb1, ":", buf);
-      // rpt_vstring(depth, "%-*s :  Found subdirectory = %s", offset, pb1, subdir_name);
-      if (value_loc)
-         *value_loc = subdir_name;
-      else
-         free(subdir_name);
-   }
-   else {
-      rpt_attr_output(depth, pb1, ":", "No subdirectory found");
-      // rpt_vstring(depth, "%-*s :  No subdirectory found", offset, pb1);
-   }
-   return found;
-}
-#endif
-
-
 
 
 void one_bus_i2c_device(int busno, void * accumulator, int depth) {
@@ -1545,48 +1204,14 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
       }
     }
     else {   // device/class not found
-       // char * s = NULL;
        g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, "device/class");
        rpt_attr_output(d1, pb1, ":", "May be display port");
-
-       // sys/bus/i2c/devices/i2c-N
-       //       device (link)   ../../cardX-DP-X
-       //       i2c-dev (dir)
-       //       name
-       //       subsystem (link, use basename)
-
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "subsystem");
-
-       // /sys/bus/i2c/devices/i2c-N/device:
-       //       ddc (link)
-       //       device (link)
-       //       drm_dp_auxM (dir)
-       //       edid
-       //       i2c-N (dir)
-       //       status
-       //       subsysten (link)
-
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc");
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/device");
-
        RPT2_ATTR_EDID(    d1, NULL, dir_devices_i2cN, "device/edid");
-#ifdef OLD
-       GByteArray * edid = NULL;
-       rpt_attr_binary(d1, dir_devices_i2cN, "device/edid", &edid);
-       if (edid) {
-          rpt_hex_dump(edid->data, edid->len, d1+4);
-          g_byte_array_free(edid, true);
-       }
-#endif
-
        RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/status");
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/subsystem");
-
-       // /sys/bus/i2c/devices/i2c-N/device/ddc:
-       //      device (link)
-       //      i2c-dev (dir)
-       //      name
-       //      subsystem (link)
 
        char * realpath = NULL;
        RPT2_ATTR_REALPATH(d1, &realpath, dir_devices_i2cN, "device/device");
@@ -1607,10 +1232,10 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
        //       name
        //       subsystem (link)
 
-       RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "dev");
-       RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "device");
-       RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
-       RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
+       RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "dev");
+       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "device");
+       RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
+       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
 
        //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN
 
@@ -1620,10 +1245,10 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
        RPT2_ATTR_TEXT(             d1, NULL, dir_devices_i2cN, "device/enabled");
 
        if (drm_dp_aux_subdir) {
-          RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "dev");
-          RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device");
-          RPT2_ATTR_TEXT(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "name");
-          RPT2_ATTR_REALPATH(   d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device/subsystem");
+          RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "dev");
+          RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device");
+          RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "name");
+          RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device/subsystem");
        }
     }
 }
@@ -1670,10 +1295,7 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
    rpt_nl();
-
    int d1 = depth+1;
-
-   // char pb1[PATH_MAX];
 
    char * drm_cardX_dir = g_strdup_printf("/sys/class/drm/%s", fn);
    char * real_cardX_dir = realpath(drm_cardX_dir, NULL);
@@ -1692,7 +1314,6 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
    RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "status");
    RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "subsystem");
 
-
    // messages subdirectories of card0/DP-1
    // e.g. /sys/class/drm/card0-DP-1/drm_dp_aux0
    //      does not exist for non-DP
@@ -1708,14 +1329,16 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
    // e.g. /sys/class/drm/card0-DP-1/i2c-13
    // does not exist for non-DP
 
-   rpt_nl();
+
    DBGMSF(debug, "Wolf 13");
    if (i2cN_subdir) {
+      rpt_nl();
       RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir, "device");
       RPT2_ATTR_NOTE_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev");
       RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, i2cN_subdir, "name");
       RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir, "subsystem");
 
+      rpt_nl();
       // e.g. /sys/class/drm-card0-DP-1/i2c-13/i2c-dev
       RPT2_ATTR_NOTE_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir);   // or can subdir name vary?
 
@@ -1782,8 +1405,6 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
 }
 
 
-
-
 bool drm_filter(char * name) {
    return str_starts_with(name, "card") && strlen(name) > 5;
 }
@@ -1833,5 +1454,4 @@ void dump_sysfs_i2c() {
          0);                   // depth
 
 }
-
 
