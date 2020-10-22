@@ -330,7 +330,7 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
 
 /** Returns the name for video class ids.
  *
- *  Hardcoded because device_ids_util.c does not maintain the class
+ *  Hardcoded because device_ids_util.c does not process the class
  *  information that is maintained in file pci.ids.
  *
  *  \param class_id
@@ -390,9 +390,8 @@ void each_video_pci_device(
 
    char cur_dir_name[PATH_MAX];
    sprintf(cur_dir_name, "%s/%s", dirname, fn);
-   // DBGMSF(debug, "cur_dir_name: %s", cur_dir_name);
    char * device_class = read_sysfs_attr(cur_dir_name, "class", /*verbose=*/true);
-   // DBGMSF(debug, "device_class: %s", device_class);
+   // DBGMSF(debug, "cur_dir_name=%s, device_class: %s", cur_dir_name, device_class);
    if (!device_class) {
       rpt_vstring(depth, "Unexpected for %s: class not found", cur_dir_name);
       goto bye;
@@ -848,7 +847,7 @@ void rpt_attr_output(
       const char * op,
       const char * value)
 {
-   int offset = 60;
+   int offset = 65;
    rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
 }
 
@@ -898,17 +897,14 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
-   // DBGMSG("Starting. fn_segment=%s", fn_segment);
-   strcpy(buffer, fn_segment);
+   g_strlcpy(buffer, fn_segment, bufsz);
    while(true) {
       char * segment = va_arg(ap, char*);
-      // printf("(%s) segment = |%s|\n", __func__, segment);
       if (!segment)
          break;
-      strcat(buffer, "/");
-      strcat(buffer, segment);
+      g_strlcat(buffer, "/", bufsz);
+      g_strlcat(buffer, segment, bufsz);
    }
-   // DBGMSG("Done. buffer =|%s|", buffer);
    return buffer;
 }
 
@@ -1124,6 +1120,7 @@ bool rpt2_attr_single_subdir(
          *value_loc = subdir_name;
       else
          free(subdir_name);
+      found = true;
    }
    else {
       char buf[PATH_MAX+100];
@@ -1153,8 +1150,7 @@ bool rpt2_attr_note_subdir(
    if (value_loc)
       *value_loc = NULL;
 
-   // TODO: test that dir exists
-   bool found = true;
+   bool found = directory_exists(pb1);
 
    if (found)
       rpt_attr_output(depth, pb1, ":", "Subdirectory");
@@ -1167,6 +1163,32 @@ bool rpt2_attr_note_subdir(
 #define RPT2_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
    rpt2_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
 
+
+int i2c_compare(const void * v1, const void * v2) {
+   char ** s1 = (char**) v1;
+   char ** s2 = (char**) v2;
+   int result = 0;
+   int i1 = i2c_name_to_busno(*s1);
+   int i2 = i2c_name_to_busno(*s2);
+   if (i1 >= 0 && i2 >= 0) {
+      if (i1 < i2)
+         result = -1;
+      else if (i1 == i2)
+         result = 0;
+      else
+         result = 1;
+   }
+   else if (i1 >= 0)
+      result = -1;
+   else if (i2 >= 0)
+      result = 1;
+   else
+      result = strcmp(*s1, *s2);
+   return result;
+}
+
+
+// *** Detail for /sys/bus/i2c/devices (Initial Version)  ***
 
 void one_bus_i2c_device(int busno, void * accumulator, int depth) {
    bool debug = false;
@@ -1254,30 +1276,6 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
 }
 
 
-int i2c_compare(const void * v1, const void * v2) {
-   char ** s1 = (char**) v1;
-   char ** s2 = (char**) v2;
-   int result = 0;
-   int i1 = i2c_name_to_busno(*s1);
-   int i2 = i2c_name_to_busno(*s2);
-   if (i1 >= 0 && i2 >= 0) {
-      if (i1 < i2)
-         result = -1;
-      else if (i1 == i2)
-         result = 0;
-      else
-         result = 1;
-   }
-   else if (i1 >= 0)
-      result = -1;
-   else if (i2 >= 0)
-      result = 1;
-   else
-      result = strcmp(*s1, *s2);
-   return result;
-}
-
-
 void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
@@ -1290,6 +1288,8 @@ void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int dept
    }
 }
 
+
+// *** Detail for /sys/class/drm (initial version) ***
 
 void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
    bool debug = false;
@@ -1349,58 +1349,6 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
       RPT2_ATTR_REALPATH(    d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir, "subsystem");
    }
 
-#ifdef IGNORE_LINKED_DIRECTORIES
-   // message linked subdirectories on card0-DP1
-
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc/device");
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc/subsystem");
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "ddc/name");
-   char * ddc_i2c_dev_subdir = NULL;
-   RPT2_ATTR_SINGLE_SUBDIR(d1, &ddc_i2c_dev_subdir, NULL, NULL, drm_cardX_dir, "ddc/i2c-dev");
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "ddc/i2c-dev", ddc_i2c_dev_subdir, "dev");
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "ddc/i2c-dev", ddc_i2c_dev_subdir, "name");
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc/i2c-dev/device");
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc/i2c-dev/subsystem");
-
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "device/dev");
-
-#ifdef NO_FN
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device", fn, NULL);
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device", fn, "ddc");
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device", fn, "device");
-   RPT2_ATTR_EDID(         d1, NULL, drm_cardX_dir, "device", fn, "edid");
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "device", fn, "enabled");
-
-   rpt_subdir_attr_msg(    d1, drm_cardX_dir, "device", fn, NULL, "Ignoring drm_dp_auxN subdirectory");
-#endif
-
-#endif
-
-#ifdef IGNORE_LINKED_DIRECTORIES
-   DBGMSG("Wolf 1");
-   char * i2cN_subdir2 = NULL;
-   RPT2_ATTR_SINGLE_SUBDIR(d1, &i2cN_subdir2, str_starts_with, "i2c-", drm_cardX_dir, "device", fn);
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir2, "device");
-   if (i2cN_subdir2 && i2cN_subdir) {
-      RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, i2cN_subdir2, "i2c-dev", i2cN_subdir, "dev");
-      RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir2, "i2c-dev", i2cN_subdir, "device");
-      RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, i2cN_subdir2, "i2c-dev", i2cN_subdir, "name");
-      RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir2, "i2c-dev", i2cN_subdir, "subsystem");
-   }
-#endif
-
-#ifdef IGNORE_LINKED
-   DBGMSG("Wolf 2");
-   RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, "device", fn, "status");
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device", fn, "subsystem");
-
-   // rpt_attr_single_subdir(    d1, drm_cardX_dir, "device", fn, i2cN_subdir,
-   // rpt_attr_edid    (     d1, drm_cardX_dir, "device", fn, "edid", NULL);
-
-
-   RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device/device", NULL, NULL);
-#endif
-
    free(real_cardX_dir);
 }
 
@@ -1409,6 +1357,214 @@ bool drm_filter(char * name) {
    return str_starts_with(name, "card") && strlen(name) > 5;
 }
 
+
+
+bool predicate_cardN(char * val) {
+   return str_starts_with(val, "card");
+}
+
+#ifdef MAYBE_UNNEEDED
+void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accumulator, int depth) {
+   char fqfn[PATH_MAX];
+   g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
+   DBGMSG("dirname=%s, filename=%s, fqfn=%s", dirname, filename, fqfn);
+#endif
+
+void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accumulator, int depth) {
+   char dirname_fn[PATH_MAX];
+   g_snprintf(dirname_fn, PATH_MAX, "%s/%s", dirname, filename);
+   // DBGMSG("dirname=%s, filename=%s, dirname_fn=%s", dirname, filename, dirname_fn);
+   int d0 = depth;
+   // int d1 = depth+1;
+   // int d2 = depth+2;
+
+   RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, "ddc");
+   RPT2_ATTR_EDID(     d0, NULL, dirname_fn, "edid");
+   RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, "enabled");
+   RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, "status");
+   RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, "subsystem");
+
+   // for DP, also:
+   //    drm_dp_auxN
+   //    i2c-N
+
+   char * dir_drm_dp_aux = NULL;
+   RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_drm_dp_aux, str_starts_with, "drm_dp_aux", dirname_fn);
+   if (dir_drm_dp_aux) {
+      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_drm_dp_aux, "dev");
+      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_drm_dp_aux, "name");
+      RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_drm_dp_aux, "subsystem");
+   }
+   char * dir_i2cN = NULL;
+   RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_i2cN, str_starts_with, "i2c-",dirname_fn);
+   if (dir_i2cN) {
+      char pb1[PATH_MAX];
+      g_snprintf(pb1, PATH_MAX, "%s/%s", dirname_fn, dir_i2cN);
+      // sysfs_dir_i2c_dev(fqfn, dir_i2cN, accumulator, d0);
+      char * dir_i2cN_i2cdev_i2cN = NULL;
+      RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_i2cN_i2cdev_i2cN, str_starts_with, "i2c-", dirname_fn, dir_i2cN, "i2c-dev");
+      if (dir_i2cN_i2cdev_i2cN) {
+         RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "dev");
+         RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "name");
+         RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "subsystem");
+      }
+      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "name");
+      RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
+   }
+
+}
+
+
+/**  Process all /sys/bus/pci/devices/<pci-device>/cardN directories
+ *
+ *  These directories exist for DisplayPort connectors
+ *
+ *  Note the realpath for these directories is one of
+ *          /sys/bus/devices/NNNN:NN:NN.N/cardN
+ *          /sys/bus/devices/NNNN:NN:NN.N/NNNN:NN:nn.N/cardN
+ *  Include subdirectory i2c-dev/i2c-N
+ *
+ *  @param dirname      name of device directory
+ *  @param filename     i2c-N
+ *  @param accumulator
+ *  @param depth        logical indentation depth
+ */
+
+void sysfs_dir_cardN(char * dirname, char * filename, void * accumulator, int depth) {
+   char fqfn[PATH_MAX];
+   g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
+
+   dir_foreach(fqfn, predicate_cardN, sysfs_dir_cardN_cardNconnector, accumulator, depth);
+}
+
+
+/**  Process /sys/bus/pci/devices/<pci-device>/i2c-N directory
+ *
+ *  These directories exist for non-DP connectors
+ *
+ *  Note the realpath for these directories is one of
+ *          /sys/bus/devices/NNNN:NN:NN.N/i2c-N
+ *          /sys/bus/devices/NNNN:NN:NN.N/NNNN:NN:nn.N/i2c-N
+ *  Include subdirectory i2c-dev/i2c-N
+ *
+ *  @param dirname      name of device directory
+ *  @param filename     i2c-N
+ *  @param accumulator
+ *  @param depth        logical indentation depth
+ */
+void sysfs_dir_i2cN(char * dirname, char * filename, void * accumulator, int depth) {
+   char fqfn[PATH_MAX];
+   g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
+   int d0 = depth;
+
+   RPT2_ATTR_TEXT(    d0,  NULL,     fqfn, "name");
+   RPT2_ATTR_REALPATH(d0,  NULL,     fqfn, "subsystem");
+   char * i2c_dev_fn = NULL;
+   RPT2_ATTR_SINGLE_SUBDIR(d0, &i2c_dev_fn, streq, "i2c-dev", fqfn);
+   if (i2c_dev_fn) {
+      char * i2cN = NULL;
+      RPT2_ATTR_SINGLE_SUBDIR(d0, &i2cN,NULL, NULL, fqfn, "i2c-dev");
+      RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "dev");
+      RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "name");
+      RPT2_ATTR_REALPATH(     d0, NULL, fqfn, "i2c-dev", i2cN, "subsystem");
+   }
+}
+
+
+bool startswith_i2c(char * value) {
+   return str_starts_with(value, "i2c-");
+}
+
+
+bool class_display_device_predicate(char * value) {
+   return str_starts_with(value, "0x03");
+}
+
+
+/**  Process a single /sys/bus/pci/devices/<pci-device>
+ *
+ *   Returns immediately if class is not a display device
+ *
+ *   Note the realpath for these directories is one of
+ *          /sys/bus/devices/NNNN:NN:NN.N
+ *          /sys/bus/devices/NNNN:NN:NN.N/NNNN:NN:nn.N
+ */
+void one_pci_device(char * dirname, char * filename, void * accumulator, int depth) {
+   int d0 = depth;
+   int d1 = depth+1;
+
+   char dir_fn[PATH_MAX];
+   g_snprintf(dir_fn, PATH_MAX, "%s/%s", dirname, filename);
+
+   char * device_class = read_sysfs_attr(dir_fn, "class", false);
+   if (!device_class)
+      return;
+   unsigned class_id = h2uint(device_class);
+   // DBGMSF(debug, "class_id: 0x%08x", class_id);
+   //   if (str_starts_with(device_class, "0x03")) {
+   if (class_id >> 16 != 0x03 &&     // Display controller
+       class_id >> 16 != 0x0a)       // Docking station
+   {
+       return;
+   }
+   free(device_class);
+
+   char rpath[PATH_MAX];
+   // without assignment, get warning that return value of realpath() is not used
+   // causes compilation failures since all warnings treated as errors
+   _Pragma("GCC diagnostic push")
+   _Pragma("GCC diagnostic ignored \"-Wunused-result\"")
+   realpath(dir_fn, rpath);
+   _Pragma("GCC diagnostic pop")
+
+   // DBGMSG("dirname=%s, filename=%s, pb1=%s, rpath=%s", dirname, filename, pb1, rpath);
+   rpt_nl();
+   rpt_vstring(d0, "Examining %s/%s -> %s", dirname, filename, rpath);
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "class");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "boot_vga");
+    RPT2_ATTR_REALPATH_BASENAME(d1, NULL, dirname, filename, "driver");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "enable");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "modalias");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "vendor");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "device");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "subsystem_vendor");
+    RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "subsystem_device");
+    RPT2_ATTR_REALPATH(d1, NULL, dirname, filename, "subsystem");
+
+    // Process drm subdirectory
+    char * drm_fn = NULL;
+    bool has_drm_dir = RPT2_ATTR_SINGLE_SUBDIR(d1, &drm_fn, streq, "drm", dir_fn);
+    if (has_drm_dir) {
+       char dir_fn_drm[PATH_MAX];
+       g_snprintf(dir_fn_drm, PATH_MAX, "%s/%s", dir_fn, "drm");
+       dir_ordered_foreach(
+             dir_fn_drm,
+             predicate_cardN,   // only subdirectories named drm/cardN
+             gaux_ptr_scomp,    // GCompareFunc
+             sysfs_dir_cardN,
+             accumulator,
+             d1);
+    }
+
+    // Process i2c-N subdirectories:
+    dir_ordered_foreach(
+          dir_fn,
+          startswith_i2c,       // only subdirectories named i2c-N
+          i2c_compare,          // order by i2c device number, handles names not of form "i2c-N"
+          sysfs_dir_i2cN,
+          accumulator,
+          d1);
+}
+
+#ifdef UNUSED
+bool startswith_pci(char * value) {
+   return str_starts_with(value, "pci");
+}
+#endif
+
+
+/** Master function for dumping /sys directory
+ */
 
 void dump_sysfs_i2c() {
    rpt_nl();
@@ -1420,9 +1576,16 @@ void dump_sysfs_i2c() {
    char * cmds[] = {
    "ls -l /sys/dev/char/89:*",
    "ls -l /sys/dev/char/237:*",
+   "ls -l /sys/dev/char/239:*",
    "ls -l /sys/bus/i2c/devices",
+   "ls -l /sys/bus/pci/devices",
+   "ls -l /sys/bus/pci_express/devices",
+   "ls -l /sys/bus/platform/devices",
+   "ls -l /sys/bus/platform/devices",   // not symbolic links
    "ls -l /sys/devices/pci*",
-   "ls -l /sys/class/i2c*",
+   "ls -l /sys/class/drm*",             // drm, drm_dp_aux_dev
+   "ls -l /sys/class/i2c*",             // i2c, i2c-adapter, i2c-dev
+   "ls -l /sys/class/pci*",             // pci_bus, pci_epc
    NULL
    };
 
@@ -1434,7 +1597,9 @@ void dump_sysfs_i2c() {
       rpt_nl();
    }
 
-   rpt_label(0, "Detail for /sys/bus/i2c/devices");
+#ifdef OLD
+   rpt_nl();
+   rpt_label(0, "*** Detail for /sys/bus/i2c/devices (Initial Version) ***");
    dir_ordered_foreach(
          "/sys/bus/i2c/devices",
          NULL,                 // fn_filter
@@ -1442,9 +1607,10 @@ void dump_sysfs_i2c() {
          each_i2c_device_new,
          NULL,                 // accumulator
          0);                   // depth
+#endif
 
    rpt_nl();
-   rpt_label(0, "Detail for /sys/class/drm");
+   rpt_label(0, "*** Detail for /sys/class/drm  (Initial Version) ***");
    dir_ordered_foreach(
          "/sys/class/drm",
          drm_filter                ,
@@ -1453,5 +1619,23 @@ void dump_sysfs_i2c() {
          NULL,                 // accumulator
          0);                   // depth
 
+   GPtrArray *  video_devices =   execute_shell_cmd_collect(
+         "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
+   rpt_nl();
+   rpt_vstring(0, "Display devices: (class 0x03nnnn");
+   for (int ndx = 0; ndx < video_devices->len; ndx++) {
+      char * dirname = g_ptr_array_index(video_devices, ndx);
+      rpt_vstring(2, "%s", dirname);
+   }
+
+   rpt_nl();
+   rpt_vstring(0, "*** Reporting video devices ***");
+   rpt_vstring(0, "using dir_foreach");
+   dir_foreach(
+            "/sys/bus/pci/devices",
+            NULL,
+            one_pci_device,
+            NULL,
+            0);
 }
 
