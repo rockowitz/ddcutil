@@ -696,10 +696,21 @@ ddc_get_formatted_value_for_display_feature_metadata(
                  &formatted_data);
          // DBGMSG("vcp_format_feature_detail set formatted_data=|%s|", formatted_data);
          if (!ok) {
+            char msg[100];
+            if (pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
+               g_snprintf(
+                     msg, 100,
+                     "!!! UNABLE TO FORMAT OUTPUT. mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
+                     pvalrec->val.c_nc.mh,  pvalrec->val.c_nc.ml,
+                     pvalrec->val.c_nc.sh,  pvalrec->val.c_nc.sl);
+            }
+            else {
+               strcpy(msg,  "!!! UNABLE TO FORMAT OUTPUT");
+            }
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
-                            feature_code, feature_name, "!!! UNABLE TO FORMAT OUTPUT");
+                            feature_code, feature_name, msg);
             psc = DDCRC_INTERPRETATION_FAILED;
-            ddc_excp = errinfo_new(DDCRC_INTERPRETATION_FAILED, __func__);
+            ddc_excp = errinfo_new2(DDCRC_INTERPRETATION_FAILED, __func__, msg);
             // TODO: retry with default output function
          }
 
