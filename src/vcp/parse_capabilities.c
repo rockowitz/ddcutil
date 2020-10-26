@@ -242,8 +242,8 @@ static Byte_Value_Array parse_cmds_segment(
 
    Byte_Value_Array cmd_ids = bva_create();
    bool ok = store_bytehex_list(start, len, cmd_ids, bva_appender);
+   // ok = false;   // force failure for testing
    if (!ok) {
-      // f0printf(ferr(), "Error processing commands list: %.*s\n", len, start);
       char * s = g_strdup_printf("Error processing commands list: %.*s", len, start);
       g_ptr_array_add(messages, s);
    }
@@ -251,6 +251,7 @@ static Byte_Value_Array parse_cmds_segment(
       bva_free(cmd_ids);
       cmd_ids = NULL;
    }
+
    DBGMSF(debug, "Done.     Returning %p", cmd_ids);
    return cmd_ids;
 }
