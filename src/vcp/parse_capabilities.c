@@ -96,36 +96,6 @@ void dbgrpt_parsed_capabilities(Parsed_Capabilities * pcaps, int depth) {
 }
 
 
-#ifdef OLD
-/** Parses a VCP version string.
- *
- *  \param version_string
- *  \return a version specifier, DDCA_VSPEC_UNKNOWN if invalid
- */
-
-DDCA_MCCS_Version_Spec parse_vcp_version(char * version_string) {
-   bool debug = true;
-  DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNQUERIED;    // {0.0};
-   if (version_string) {
-      int vmajor;
-      int vminor;
-      // sscanf expecting integers, easiest to convert afterwards
-      int rc = sscanf(version_string, "%d.%d", &vmajor, &vminor);
-      if (rc != 2)
-         result = DDCA_VSPEC_UNKNOWN;
-      else {
-         result.major = vmajor;
-         result.minor = vminor;
-      }
-   }
-   DBGMSF(debug, "version_string = %s, Returning %d.%d",
-           version_string, result.major, result.minor);
-   return result;
-}
-#endif
-
-
-
 /** Frees a Parsed_Capabilities record
  *
  * @param pcaps  pointer to #Parsed_Capabilities struct
@@ -290,16 +260,6 @@ static Byte_Value_Array parse_cmds_segment(
 // vcp segment
 //
 
-#ifdef UNUSED_OLD
-typedef
-struct {
-   char * values_start;
-   int    values_len;
-   char * remainder_start;
-   int    remainder_len;
-} Vcp_Feature_Values_Segment;
-#endif
-
 #ifdef FUTURE
 void parse_vcp_values(char * start, int len, GPtrArray* messages) {
 }
@@ -320,115 +280,6 @@ struct {
    int    remainder_len;
    bool   valid;
 } Vcp_Feature_Segment;
-
-
-#ifdef UNUSED_OLD
-Parsed_Capabilities_Validity
-parse_single_feature(
-      Vcp_Feature_Segment * segment,
-      GPtrArray * vcp_array,    // accumulates Capabilities_Feature_Record
-      GPtrArray * messages)     // accumulates error messages
-{
-   bool debug = true;
-   assert(segment->code_start);
-   if (debug) {
-      DBGMSG("segment_->code_len=%d. segment->code_start = %p -> |%.*s|",
-            segment->code_len, segment->code_start,
-            segment->code_len, segment->code_start);
-      DBGMSG("segment_->values_len=%d. segment->values_start = %p -> |%.*s|",
-            segment->values_len, segment->values_start,
-            segment->values_len, segment->values_start);
-      DBGMSG("segment_->remainder_len=%d. segment->remainder_start = %p -> |%.*s|",
-            segment->remainder_len, segment->remainder_start,
-            segment->remainder_len, segment->remainder_start);
-      DBGMSG("segment->valid     = %s", sbool(segment->valid) );
-   }
-
-   Parsed_Capabilities_Validity result = CAPABILITIES_VALID;
-   segment->valid = true;
-   Byte cur_feature_id;
-   bool feature_code_ok = false;
-   if (segment->code_len == 2) {
-      // cur_feature_id = hhc_to_byte(st);   // what if invalid hex?
-      feature_code_ok = hhc_to_byte_in_buf(segment->code_start, &cur_feature_id);
-      if (feature_code_ok) {
-         DBGMSF(debug,"code = 0x%02x", cur_feature_id);
-        // valid_feature = true;
-        // value_start = NULL;
-        // value_len   = 0;
-      }
-   }
-   if (!feature_code_ok) {
-      char * s = g_strdup_printf("Feature %.*s (Invalid code)",segment->code_len, segment->code_start);
-      g_ptr_array_add(messages, s);
-      // DBGMSG("%s",s);
-      // f0printf(ferr(), "Feature: %.*s (invalid code)\n", 1, st);
-      segment->valid = false;
-      result = CAPABILITIES_INVALID;
-   }
-   else {
-      Capabilities_Feature_Record * vfr =
-               parse_capabilities_feature(cur_feature_id, segment->values_start, segment->values_len, messages);
-         // if (debug) {
-         //    DDCA_MCCS_Version_Spec dummy_version = {0,0};
-         //    report_capabilities_feature(vfr, dummy_version, 1);
-         // }
-         if (!vfr->valid_values && result == CAPABILITIES_VALID)
-            result = CAPABILITIES_USABLE;
-         g_ptr_array_add(vcp_array, vfr);
-   }
-
-   return result;
-}
-
-
-Vcp_Feature_Segment * next_vcp_feature_segment(char * start, int len, GPtrArray * messages) {
-   if (!start)
-      return NULL;
-   Vcp_Feature_Segment * segment = calloc(1, sizeof(Vcp_Feature_Segment));
-   segment->valid = true;
-   // rely on all other fields = NULL, 0
-
-   char * end = start + len;
-   char * pos = start;
-   while (*pos == ' ') pos++;
-   segment->code_start = pos;
-   while (pos < end && *pos != ' ' && *pos != '(') pos++;
-   segment->code_len = pos - segment->code_start;
-   if (pos < end) {
-       if (*pos == '(') {
-          segment->values_start = pos+1;
-          while (pos < end && *pos != ')') pos++;
-          if (pos == end) {
-             char * s = g_strdup_printf(
-                                "Incomplete value string for feature %.*s",
-                                segment->code_len, segment->code_start);
-             g_ptr_array_add(messages, s);
-             DBGMSG(s);
-             segment->valid = false;
-             goto out;
-          }
-          // found closing paren
-          segment->values_len = (pos - segment->values_start) - 1;
-          segment->remainder_start = pos+1;
-          segment->remainder_len = end - segment->remainder_start;
-       }
-       else {
-          segment->values_start = NULL;
-          segment->values_len = 0;
-          segment->remainder_start = pos;
-          segment->remainder_len = end - pos;
-       }
-   }
- out:
-   if (segment->code_len == 0 || !segment->valid) {
-      free(segment);
-      segment = NULL;
-   }
-
-   return segment;
-}
-#endif
 
 
 /** Parse the value of a vcp() segment..
@@ -848,18 +699,10 @@ Parsed_Capabilities * parse_capabilities(
                parse_vcp_segment(seg->value_start, seg->value_len, pcaps->vcp_features, pcaps->messages);
 
          pcaps->caps_validity = update_validity(pcaps->caps_validity, vcp_segment_validity);
-
-#ifdef OLD
-         if (pcaps->caps_validity == CAPABILITIES_INVALID || vcp_segment_validity == CAPABILITIES_INVALID)
-            pcaps->caps_validity = CAPABILITIES_INVALID;
-         else if (pcaps->caps_validity == CAPABILITIES_VALID && vcp_segment_validity == CAPABILITIES_VALID)
-            pcaps->caps_validity = CAPABILITIES_VALID;
-         else
-            pcaps->caps_validity = CAPABILITIES_USABLE;
-#endif
       }
 
-      else if (memcmp(seg->name_start, "mccs_ver" /* was "mccs_version_string" WHY? */, seg->name_len) == 0) {
+      else if (memcmp(seg->name_start, "mccs_ver" /* was "mccs_version_string" WHY? */, seg->name_len) == 0)
+      {
          pcaps->mccs_version_string = chars_to_string(seg->value_start, seg->value_len);
          DDCA_MCCS_Version_Spec vspec = parse_vspec(pcaps->mccs_version_string);
          // n. will be DDCA_VSPEC_UNQUERIED if no value string, DDCA_VSPEC_UNKNOWN if invalid
@@ -894,29 +737,6 @@ bye:
 
    return pcaps;
 }
-
-
-#ifdef UNUSED
-/** Parses a capabilities string passed in a #Buffer object.
- *
- *  @param  capabilities   pointer to #Buffer
- *
- *  @return pointer to newly allocated #Parsed_Capabilities structure
- */
-Parsed_Capabilities* parse_capabilities_buffer(
-      Buffer * capabilities)
-{
-   // dump_buffer(capabilities);
-   int len = capabilities->len - 1;
-   while (capabilities->bytes[len] == '\0')  {
-      // strip trailings 0's - 2 seen
-      // printf("%d\n", len);
-      len--;
-   }
-   len++;
-   return parse_capabilities((char *)capabilities->bytes, len);
-}
-#endif
 
 
 /** Parses a capabilities string
