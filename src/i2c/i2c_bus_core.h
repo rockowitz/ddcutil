@@ -77,6 +77,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
 // Simple bus detection, no side effects
 bool i2c_device_exists(int busno);
 int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
+Byte_Value_Array get_i2c_devices_by_existence_test();
 
 // Bus inventory - detect and probe buses
 int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses

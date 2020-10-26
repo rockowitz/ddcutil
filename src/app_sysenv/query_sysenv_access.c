@@ -44,22 +44,6 @@ bool redundant_i2c_device_identification_checks = false;
 // Consolidate them here.  (IN PROGRESS)
 //
 
-/** Gets a list of all /dev/i2c devices by checking the file system
- *  if devices named /dev/i2c-N exist.
- *
- *  @return Byte_Value_Array containing the valid bus numbers
- */
-static Byte_Value_Array get_i2c_devices_by_existence_test() {
-   Byte_Value_Array bva = bva_create();
-   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
-      if (i2c_device_exists(busno)) {
-         // if (!is_ignorable_i2c_device(busno))
-         bva_append(bva, busno);
-      }
-   }
-   return bva;
-}
-
 
 /** Gets a list of all /dev/i2c-n devices by screen-scraping the output
  *  of "ls /dev/i2c*".

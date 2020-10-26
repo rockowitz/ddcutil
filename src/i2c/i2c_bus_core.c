@@ -906,14 +906,12 @@ int i2c_device_count() {
 // Bus inventory
 //
 
-#ifndef USE_UDEV
-// TODO: move to util, also used in query_sysenv_access.c
 /** Gets a list of all /dev/i2c devices by checking the file system
  *  if devices named /dev/i2c-N exist.
  *
  *  @return Byte_Value_Array containing the valid bus numbers
  */
-static Byte_Value_Array get_i2c_devices_by_existence_test() {
+Byte_Value_Array get_i2c_devices_by_existence_test() {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
@@ -923,8 +921,6 @@ static Byte_Value_Array get_i2c_devices_by_existence_test() {
    }
    return bva;
 }
-#endif
-
 
 
 int i2c_detect_buses() {
