@@ -1280,6 +1280,7 @@ void dump_sysfs_i2c() {
          0);                   // depth
 #endif
 
+#ifdef TMI
    GPtrArray *  video_devices =   execute_shell_cmd_collect(
          "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
    rpt_nl();
@@ -1289,6 +1290,7 @@ void dump_sysfs_i2c() {
       char * dirname = g_ptr_array_index(video_devices, ndx);
       rpt_vstring(2, "%s", dirname);
    }
+#endif
 
    rpt_nl();
    rpt_vstring(0, "*** Reporting video devices ***");
