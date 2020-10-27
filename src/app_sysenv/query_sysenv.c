@@ -470,6 +470,7 @@ void final_analysis(Env_Accumulator * accum, int depth) {
    }
 
    // TODO: Also compare dev_i2c_devices vs sys_bus_i2c_devices ?
+   assert(accum->dev_i2c_device_numbers);    // already set
    if (bva_length(accum->dev_i2c_device_numbers) == 0 &&
        accum->module_i2c_dev_needed &&
        !accum->i2c_dev_loaded_or_builtin)
