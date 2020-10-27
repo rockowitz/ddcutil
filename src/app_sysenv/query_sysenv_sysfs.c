@@ -847,7 +847,7 @@ void rpt_attr_output(
       const char * op,
       const char * value)
 {
-   int offset = 65;
+   int offset = 70;
    rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
 }
 
@@ -1188,6 +1188,7 @@ int i2c_compare(const void * v1, const void * v2) {
 }
 
 
+#ifdef OLD
 // *** Detail for /sys/bus/i2c/devices (Initial Version)  ***
 
 void one_bus_i2c_device(int busno, void * accumulator, int depth) {
@@ -1288,7 +1289,6 @@ void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int dept
    }
 }
 
-
 // *** Detail for /sys/class/drm (initial version) ***
 
 void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
@@ -1351,6 +1351,7 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
 
    free(real_cardX_dir);
 }
+#endif
 
 
 bool drm_filter(char * name) {
@@ -1378,6 +1379,7 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
    // int d1 = depth+1;
    // int d2 = depth+2;
 
+   RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, "device");
    RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, "ddc");
    RPT2_ATTR_EDID(     d0, NULL, dirname_fn, "edid");
    RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, "enabled");
@@ -1391,9 +1393,10 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
    char * dir_drm_dp_aux = NULL;
    RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_drm_dp_aux, str_starts_with, "drm_dp_aux", dirname_fn);
    if (dir_drm_dp_aux) {
-      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_drm_dp_aux, "dev");
-      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_drm_dp_aux, "name");
-      RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_drm_dp_aux, "subsystem");
+      RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_drm_dp_aux, "device");
+      RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_drm_dp_aux, "dev");
+      RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_drm_dp_aux, "name");
+      RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_drm_dp_aux, "subsystem");
    }
    char * dir_i2cN = NULL;
    RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_i2cN, str_starts_with, "i2c-",dirname_fn);
@@ -1404,11 +1407,13 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
       char * dir_i2cN_i2cdev_i2cN = NULL;
       RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_i2cN_i2cdev_i2cN, str_starts_with, "i2c-", dirname_fn, dir_i2cN, "i2c-dev");
       if (dir_i2cN_i2cdev_i2cN) {
-         RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "dev");
-         RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "name");
+         RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "device");
+         RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "dev");
+         RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "name");
          RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "subsystem");
       }
-      RPT2_ATTR_TEXT(d0, NULL, dirname_fn, dir_i2cN, "name");
+      RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "device");
+      RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, dir_i2cN, "name");
       RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
    }
 
@@ -1457,6 +1462,7 @@ void sysfs_dir_i2cN(char * dirname, char * filename, void * accumulator, int dep
    g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
    int d0 = depth;
 
+   RPT2_ATTR_REALPATH(d0,  NULL,     fqfn, "device");
    RPT2_ATTR_TEXT(    d0,  NULL,     fqfn, "name");
    RPT2_ATTR_REALPATH(d0,  NULL,     fqfn, "subsystem");
    char * i2c_dev_fn = NULL;
@@ -1464,6 +1470,7 @@ void sysfs_dir_i2cN(char * dirname, char * filename, void * accumulator, int dep
    if (i2c_dev_fn) {
       char * i2cN = NULL;
       RPT2_ATTR_SINGLE_SUBDIR(d0, &i2cN,NULL, NULL, fqfn, "i2c-dev");
+      RPT2_ATTR_REALPATH(     d0, NULL, fqfn, "i2c-dev", i2cN, "device");
       RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "dev");
       RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "name");
       RPT2_ATTR_REALPATH(     d0, NULL, fqfn, "i2c-dev", i2cN, "subsystem");
@@ -1519,7 +1526,8 @@ void one_pci_device(char * dirname, char * filename, void * accumulator, int dep
 
    // DBGMSG("dirname=%s, filename=%s, pb1=%s, rpath=%s", dirname, filename, pb1, rpath);
    rpt_nl();
-   rpt_vstring(d0, "Examining %s/%s -> %s", dirname, filename, rpath);
+    rpt_vstring(       d0, "Examining %s/%s -> %s", dirname, filename, rpath);
+    RPT2_ATTR_REALPATH(d1, NULL, dirname, filename, "device");
     RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "class");
     RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "boot_vga");
     RPT2_ATTR_REALPATH_BASENAME(d1, NULL, dirname, filename, "driver");
@@ -1580,7 +1588,6 @@ void dump_sysfs_i2c() {
    "ls -l /sys/bus/i2c/devices",
    "ls -l /sys/bus/pci/devices",
    "ls -l /sys/bus/pci_express/devices",
-   "ls -l /sys/bus/platform/devices",
    "ls -l /sys/bus/platform/devices",   // not symbolic links
    "ls -l /sys/devices/pci*",
    "ls -l /sys/class/drm*",             // drm, drm_dp_aux_dev
@@ -1607,7 +1614,6 @@ void dump_sysfs_i2c() {
          each_i2c_device_new,
          NULL,                 // accumulator
          0);                   // depth
-#endif
 
    rpt_nl();
    rpt_label(0, "*** Detail for /sys/class/drm  (Initial Version) ***");
@@ -1618,11 +1624,13 @@ void dump_sysfs_i2c() {
          each_drm_device,    //
          NULL,                 // accumulator
          0);                   // depth
+#endif
 
    GPtrArray *  video_devices =   execute_shell_cmd_collect(
          "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
    rpt_nl();
-   rpt_vstring(0, "Display devices: (class 0x03nnnn");
+
+   rpt_vstring(0, "Display devices: (class 0x03nnnn)");
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * dirname = g_ptr_array_index(video_devices, ndx);
       rpt_vstring(2, "%s", dirname);
@@ -1630,7 +1638,7 @@ void dump_sysfs_i2c() {
 
    rpt_nl();
    rpt_vstring(0, "*** Reporting video devices ***");
-   rpt_vstring(0, "using dir_foreach");
+   // rpt_vstring(0, "using dir_foreach");
    dir_foreach(
             "/sys/bus/pci/devices",
             NULL,
