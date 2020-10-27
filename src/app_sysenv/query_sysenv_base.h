@@ -17,6 +17,16 @@
 /** \endcond */
 
 
+// if defined, some tests with long elapsed times are skipped to shorten time of test runs
+// #define SYSENV_QUICK_TEST_RUN
+
+// #define SYSENV_TEST_IDENTICAL_EDIDS
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+// For testing situation where 2 displays have the same EDID, e.g. LG displays
+extern Byte * first_edid;
+#endif
+
+
 char ** get_known_video_driver_module_names();
 char ** get_prefix_match_names();
 char ** get_other_driver_module_names();
@@ -119,15 +129,5 @@ int execute_cmd_collect_with_filter(
       bool         ignore_case,
       int          limit,
       GPtrArray ** result_loc);
-
-
-// if defined, some tests with long elapsed times are skipped to shorten time of test runs
-// #define SYSENV_QUICK_TEST_RUN
-
-// #define SYSENV_TEST_IDENTICAL_EDIDS
-#ifdef SYSENV_TEST_IDENTICAL_EDIDS
-// For testing situation where 2 displays have the same EDID, e.g. LG displays
-extern Byte * first_edid;
-#endif
 
 #endif /* QUERY_SYSENV_BASE_H_ */
