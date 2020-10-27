@@ -590,8 +590,10 @@ void each_i2c_device(
    int busno = i2c_name_to_busno(fn);
    if (busno >= 0)
       bva_append(accum->sys_bus_i2c_device_numbers, busno);
-   else
-      DBGMSG("Unexpected /sys/bus/i2c/devices file name: %s", fn);
+   else {
+      rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
+      // DBGMSG("Unexpected /sys/bus/i2c/devices file name: %s", fn);
+   }
 
    accum->sysfs_i2c_devices_exist = true;
 }
