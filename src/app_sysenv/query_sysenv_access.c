@@ -123,40 +123,19 @@ Byte_Value_Array identify_i2c_devices() {
 }
 
 
-/** Gets the username of the logged on user.
+/** Reports the username and id of the logged on user. Saves the id and a
+ *  copy of the name the #Env_Accumulator structure passed.
  *
- *  \return user name
- *
- *  The caller is responsible for freeing the returned string.
+ *  \param  accumuator collects user name and userid
  */
-static char * get_username(Env_Accumulator * accum) {
-#ifdef OLD
-   rc = getlogin_r(username, sizeof(username));
-   printf("(%s) getlogin_r() returned %d, strlen(username)=%zd\n", __func__,
-          rc, strlen(username));
-   if (rc == 0)
-      printf("(%s) username = |%s|\n", __func__, username);
-   // printf("\nLogged on user:  %s\n", username);
-   printf("(%s) getlogin() returned |%s|\n", __func__, getlogin());
-   char * cmd = "echo $LOGNAME";
-   printf("(%s) executing command: %s\n", __func__, cmd);
-   bool ok = execute_shell_cmd_rpt(cmd, 0);
-   printf("(%s) execute_shell_cmd() returned %s\n", __func__, sbool(ok));
-
-#endif
+static void
+get_username(Env_Accumulator * accum) {
    uid_t uid = getuid();
-   // uid_t euid = geteuid();
-   // printf("(%s) uid=%u, euid=%u\n", __func__, uid, euid);
-   // gets logged on user name, user id, group id
    struct passwd *  pwd = getpwuid(uid);
    rpt_vstring(0,"Current user: %s (%u)", pwd->pw_name, uid);
    rpt_nl();
-   char * uname = strdup(pwd->pw_name);
-
-   accum->cur_uname = uname;
+   accum->cur_uname = strdup(pwd->pw_name);
    accum->cur_uid = uid;
-
-   return uname;
 }
 
 
@@ -177,6 +156,7 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
    DBGMSF(debug, "Starting");
 
    // bool all_i2c_rw = false;
+   assert(accum->dev_i2c_device_numbers);    // already set
    int busct = bva_length(accum->dev_i2c_device_numbers);
    int busct0 = i2c_device_count();   // simple count, no side effects, consider replacing with local code
    assert(busct == busct0);
@@ -436,29 +416,13 @@ void check_i2c_devices(Env_Accumulator * accum) {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
-   // Env_Accumulator values already set
-   assert(accum->dev_i2c_device_numbers);
-
-#ifdef UNNEEDED
-   // defaults now set properly in Env_Environment allocation
-   accum->dev_i2c_devices_required = true;
-   accum->group_i2c_checked = false;
-   accum->group_i2c_exists = false;
-   accum->cur_user_in_group_i2c = false;
-   accum->cur_user_any_devi2c_rw = false;
-   accum->cur_user_all_devi2c_rw = true;  // i.e. none fail the test
-   accum->any_dev_i2c_has_group_i2c = false;
-   accum->all_dev_i2c_has_group_i2c = true;
-   accum->any_dev_i2c_is_group_rw = false;
-   accum->all_dev_i2c_is_group_rw = true;
-#endif
-
-   Driver_Name_Node * driver_list = accum->driver_list;
    get_username(accum);
 
    rpt_vstring(0,"Checking /dev/i2c-* devices...");
    DDCA_Output_Level output_level = get_output_level();
 
+#ifdef ADL
+   Driver_Name_Node * driver_list = accum->driver_list;
    bool just_fglrx = only_fglrx(driver_list);
    if (just_fglrx){
       accum->dev_i2c_devices_required = false;
@@ -470,12 +434,19 @@ void check_i2c_devices(Env_Accumulator * accum) {
          return;
       rpt_vstring(0, "/dev/i2c device detail is purely informational.");
    }
+#endif
 
    rpt_nl();
    rpt_multiline(0,
+#ifdef ADL
           "Unless the system is using the AMD proprietary driver fglrx, devices /dev/i2c-*",
           "must exist and the logged on user must have read/write permission for those",
           "devices (or at least those devices associated with monitors).",
+#else
+          "Devices /dev/i2c-* must exist and the logged on user must have read/write "
+          "permission for those devices (or at least those devices associated ",
+          "with monitors).",
+#endif
           "",
           "Typically, this access is enabled by:",
           "  - setting the group for /dev/i2c-* to i2c",
