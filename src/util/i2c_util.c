@@ -44,6 +44,40 @@ int i2c_name_to_busno(char * name) {
 }
 
 
+/** Compare strings i2c-X by bus number, handling unusual case where "X" is
+ *  a string other than a number.  Non-numeric values sort before numeric
+ *  values.
+ *
+ *  \param   v1   pointer to first string to compare
+ *  \param   v2   pointer to second string to compare
+ *  \return  -1  if v1 sorts before v2,
+ *            0  v1 equals v2
+ *            1  v1 sorts after v2
+ */
+int i2c_compare(const void * v1, const void * v2) {
+   char ** s1 = (char**) v1;
+   char ** s2 = (char**) v2;
+   int result = 0;
+   int i1 = i2c_name_to_busno(*s1);
+   int i2 = i2c_name_to_busno(*s2);
+   if (i1 >= 0 && i2 >= 0) {
+      if (i1 < i2)
+         result = -1;
+      else if (i1 == i2)
+         result = 0;
+      else
+         result = 1;
+   }
+   else if (i1 >= 0)
+      result = -1;
+   else if (i2 >= 0)
+      result = 1;
+   else
+      result = strcmp(*s1, *s2);
+   return result;
+}
+
+
 //
 // Functionality flags
 //

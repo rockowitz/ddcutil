@@ -1164,28 +1164,7 @@ bool rpt2_attr_note_subdir(
    rpt2_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
 
 
-int i2c_compare(const void * v1, const void * v2) {
-   char ** s1 = (char**) v1;
-   char ** s2 = (char**) v2;
-   int result = 0;
-   int i1 = i2c_name_to_busno(*s1);
-   int i2 = i2c_name_to_busno(*s2);
-   if (i1 >= 0 && i2 >= 0) {
-      if (i1 < i2)
-         result = -1;
-      else if (i1 == i2)
-         result = 0;
-      else
-         result = 1;
-   }
-   else if (i1 >= 0)
-      result = -1;
-   else if (i2 >= 0)
-      result = 1;
-   else
-      result = strcmp(*s1, *s2);
-   return result;
-}
+
 
 
 #ifdef OLD
