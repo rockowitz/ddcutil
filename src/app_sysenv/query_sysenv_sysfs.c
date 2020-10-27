@@ -616,7 +616,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
       char * dname = "/sys/bus/i2c/devices";
       accumulator->sysfs_i2c_devices_exist = false;
       // each entry in /sys/bus/i2c/devices is a symbolic link
-      dir_foreach(dname, NULL, each_i2c_device, accumulator, 1);
+      dir_ordered_foreach(dname, NULL, i2c_compare, each_i2c_device, accumulator, 1);
       if (!accumulator->sysfs_i2c_devices_exist)
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
