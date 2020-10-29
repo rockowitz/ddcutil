@@ -804,10 +804,10 @@ typedef struct {
    char *  drm_dp_aux_dev;
    char *  i2c_dev_name;
    char *  i2c_dev_dev;
-} Additional_Display_Port_Info;
+} Addl_Display_Port_Info;
 
 
-void free_additional_display_port_info(Additional_Display_Port_Info * info) {
+void free_addl_display_port_info(Addl_Display_Port_Info * info) {
    if (info) {
       free(info->pci_device_path);
       free(info->connector);
@@ -822,11 +822,11 @@ void free_additional_display_port_info(Additional_Display_Port_Info * info) {
 }
 
 
-Additional_Display_Port_Info *
-get_additional_display_port_info(int busno, int depth) {
+Addl_Display_Port_Info *
+get_addl_display_port_info(int busno, int depth) {
    bool debug = false;
    DBGMSF(debug, "busno=%d. depth=%d", busno, depth);
-   Additional_Display_Port_Info * result = NULL;
+   Addl_Display_Port_Info * result = NULL;
    int d1 = (depth < 0) ? -1 : depth+1;
 
    char i2c_N[20];
@@ -843,7 +843,7 @@ get_additional_display_port_info(int busno, int depth) {
    RPT2_ATTR_SINGLE_SUBDIR(d1, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", connector_path);
    RPT2_ATTR_REALPATH_BASENAME(d1, &ddc_path_fn, connector_path, "ddc");
 
-   result = calloc(1, sizeof(Additional_Display_Port_Info));
+   result = calloc(1, sizeof(Addl_Display_Port_Info));
    result->busno = busno;
    result->pci_device_path = pci_device_path;
 
@@ -868,14 +868,14 @@ get_additional_display_port_info(int busno, int depth) {
 }
 
 
-void report_additional_display_port_info(int busno, int depth) {
+void report_addl_display_port_info(int busno, int depth) {
    bool debug = false;
    int d1 = depth+1;
    int d2 = depth+2;
    rpt_vstring(depth, "Additional info for /sys/bus/i2c/devices/i2c-%d...", busno);
 
-   Additional_Display_Port_Info * dp_info =
-         get_additional_display_port_info(busno, (debug) ? d2 : -1 );
+   Addl_Display_Port_Info * dp_info =
+         get_addl_display_port_info(busno, (debug) ? d2 : -1 );
    if (dp_info) {
       rpt_vstring(d1, "Real path:           %s", dp_info->pci_device_path);
       rpt_vstring(d1, "name:                %s", dp_info->device_name);
@@ -892,10 +892,9 @@ void report_additional_display_port_info(int busno, int depth) {
       else {
          rpt_vstring(d1, "Not a DisplayPort connection");
       }
-      free_additional_display_port_info(dp_info);
+      free_addl_display_port_info(dp_info);
    }
 }
-
 
 
 /** Reports a single active display.
@@ -933,7 +932,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "%s:   %s", fn, sysattr_name);
       free(sysattr_name);
 
-      report_additional_display_port_info(businfo->busno, depth+1);
+      report_addl_display_port_info(businfo->busno, depth+1);
    }
 
    if (businfo->edid) {
