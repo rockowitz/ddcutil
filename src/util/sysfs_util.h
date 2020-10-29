@@ -94,6 +94,9 @@ rpt2_attr_text(
 #define RPT2_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
    rpt2_attr_text(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
+#define GET_ATTR_TEXT(value_loc, fn_segment, ...) \
+   rpt2_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
 bool rpt2_attr_binary(
       int          depth,
       GByteArray ** value_loc,
@@ -109,6 +112,9 @@ bool rpt2_attr_edid(
 #define RPT2_ATTR_EDID(depth, value_loc, fn_segment, ...) \
    rpt2_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
+#define GET_ATTR_EDID(depth, value_loc, fn_segment, ...) \
+   rpt2_attr_edid(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
 
 bool
 rpt2_attr_realpath(
@@ -121,6 +127,9 @@ rpt2_attr_realpath(
 #define RPT2_ATTR_REALPATH(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
+#define GET_ATTR_REALPATH(value_loc, fn_segment, ...) \
+   rpt2_attr_realpath(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
 
 bool
 rpt2_attr_realpath_basename(
@@ -131,6 +140,10 @@ rpt2_attr_realpath_basename(
 
 #define RPT2_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath_basename(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
+#define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
+   rpt2_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
 
 
 bool rpt2_attr_single_subdir(
@@ -143,6 +156,9 @@ bool rpt2_attr_single_subdir(
 
 #define RPT2_ATTR_SINGLE_SUBDIR(depth, value_loc, predicate_func, predicate_val, fn_segment, ...) \
    rpt2_attr_single_subdir(depth, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
+
+#define GET_ATTR_SINGLE_SUBDIR(value_loc, predicate_func, predicate_val, fn_segment, ...) \
+   rpt2_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
 
 bool rpt2_attr_note_subdir(

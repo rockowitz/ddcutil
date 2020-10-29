@@ -297,7 +297,8 @@ void rpt_attr_output(
       const char * value)
 {
    int offset = 70;
-   rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
+   if (depth >= 0)
+      rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
 }
 
 
@@ -381,15 +382,14 @@ rpt2_attr_text(
    if (val) {
       found = true;
       rpt_attr_output(depth, pb1, "=", val);
-      // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
       if (value_loc)
          *value_loc = val;
       else
          free(val);
   }
-  else
+  else {
      rpt_attr_output(depth, pb1, ": ", "Not Found");
-
+  }
   // DBGMSG("Done");
   return found;
 }
@@ -447,7 +447,8 @@ bool rpt2_attr_edid(
     found = rpt2_attr_binary(depth, &edid, pb1, NULL);
     if (edid) {
        assert(found);
-       rpt_hex_dump(edid->data, edid->len, depth+4);
+       if (depth >= 0)
+          rpt_hex_dump(edid->data, edid->len, depth+4);
        if (value_loc)
           *value_loc = edid;
        else {
@@ -480,7 +481,6 @@ rpt2_attr_realpath(
    bool found = (result);
    if (result) {
       rpt_attr_output(depth, pb1, "->", result);
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, result);
       if (value_loc)
          *value_loc = result;
       else
@@ -488,7 +488,6 @@ rpt2_attr_realpath(
    }
    else {
       rpt_attr_output(depth, pb1, "->", "Invalid path");
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
    }
    return found;
 }
@@ -517,14 +516,12 @@ rpt2_attr_realpath_basename(
       if (bpath) {
          found = true;
          rpt_attr_output(depth, pb1, "->", bpath);
-         // rpt_vstring(depth, "%-*s -> %s", offset, pb1, bpath);
          if (value_loc)
             *value_loc = strdup(bpath);
       }
    }
    if (!found) {
       rpt_attr_output(depth, pb1, "->", "Invalid path");
-      // rpt_vstring(depth, "%-*s -> %s", offset, pb1, "Invalid path");
    }
    return found;
 }
@@ -552,7 +549,6 @@ bool rpt2_attr_single_subdir(
       char buf[PATH_MAX+100];
       g_snprintf(buf, PATH_MAX+100, "Found subdirectory = %s", subdir_name);
       rpt_attr_output(depth, pb1, ":", buf);
-      // rpt_vstring(depth, "%-*s :  Found subdirectory = %s", offset, pb1, subdir_name);
       if (value_loc)
          *value_loc = subdir_name;
       else
