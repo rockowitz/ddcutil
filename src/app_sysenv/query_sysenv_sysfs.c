@@ -588,8 +588,9 @@ void each_i2c_device(
    free(dev_name);
 
    int busno = i2c_name_to_busno(fn);
-   if (busno >= 0)
+   if (busno >= 0) {
       bva_append(accum->sys_bus_i2c_device_numbers, busno);
+   }
    else {
       rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
       // DBGMSG("Unexpected /sys/bus/i2c/devices file name: %s", fn);
@@ -597,6 +598,8 @@ void each_i2c_device(
 
    accum->sysfs_i2c_devices_exist = true;
 }
+
+
 
 
 /** Examines /sys/bus/i2c/devices
@@ -1240,6 +1243,7 @@ void dump_sysfs_i2c() {
    char * cmds[] = {
    "ls -l /sys/dev/char/89:*",
    "ls -l /sys/dev/char/237:*",
+   "ls -l /sys/dev/char/238:*",
    "ls -l /sys/dev/char/239:*",
    "ls -l /sys/bus/i2c/devices",
    "ls -l /sys/bus/pci/devices",
