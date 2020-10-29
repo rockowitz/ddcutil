@@ -180,7 +180,7 @@ ddc_set_nontable_vcp_value(
  *  \param  bytes         pointer to table bytes
  *  \param  bytect        number of bytes
  *  \return NULL  if success
- *          DDCL_UNIMPLEMENTED if io mode is USB
+ *          DDCRC_UNIMPLEMENTED if io mode is USB
  *          #Error_Info from #multi_part_write_with_retry() otherwise
  */
 Error_Info *
