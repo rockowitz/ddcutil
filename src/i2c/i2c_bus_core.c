@@ -1013,7 +1013,7 @@ void report_addl_display_port_info(int busno, int depth) {
    bool debug = false;
    int d1 = (depth < 0) ? depth : depth + 1;
    int d2 = (depth < 0) ? depth : depth + 2;
-   rpt_vstring(depth, "Additional info for /sys/bus/i2c/devices/i2c-%d...", busno);
+   rpt_vstring(depth, "Extended information for /sys/bus/i2c/devices/i2c-%d...", busno);
 
    Addl_Display_Port_Info * dp_info =
          get_addl_display_port_info(busno, (debug) ? d2 : -1 );
