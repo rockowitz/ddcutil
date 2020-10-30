@@ -81,16 +81,16 @@ char * get_single_subdir_name(
 
 char *
 assemble_sysfs_path2(
-      char *        buffer,
-      int           bufsz,
-      const char *  fn_segment,
-      va_list       ap);
+      char *       buffer,
+      int          bufsz,
+      const char * fn_segment,
+      va_list      ap);
 
 bool
 rpt2_attr_text(
-      int           depth,
-      char **       value_loc,
-      const char *  fn_segment,
+      int          depth,
+      char **      value_loc,
+      const char * fn_segment,
       ...);
 
 #define RPT2_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
@@ -106,10 +106,10 @@ bool rpt2_attr_binary(
       ...);
 
 bool rpt2_attr_edid(
-       int           depth,
-       GByteArray ** value_loc,
-       const char *  fn_segment,
-       ...);
+      int           depth,
+      GByteArray ** value_loc,
+      const char *  fn_segment,
+      ...);
 
 #define RPT2_ATTR_EDID(depth, value_loc, fn_segment, ...) \
    rpt2_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
