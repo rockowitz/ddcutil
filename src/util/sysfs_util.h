@@ -65,7 +65,8 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
-void rpt_attr_output(
+void
+rpt_attr_output(
       int          depth,
       const char * node,
       const char * op,
@@ -74,7 +75,8 @@ void rpt_attr_output(
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
-char * get_single_subdir_name(
+char *
+get_single_subdir_name(
       const char * dirname,
       Fn_Filter    filter,
       const char * val);
@@ -99,13 +101,15 @@ rpt2_attr_text(
 #define GET_ATTR_TEXT(value_loc, fn_segment, ...) \
    rpt2_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-bool rpt2_attr_binary(
+bool
+rpt2_attr_binary(
       int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
       ...);
 
-bool rpt2_attr_edid(
+bool
+rpt2_attr_edid(
       int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
@@ -143,7 +147,8 @@ rpt2_attr_realpath_basename(
 #define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-bool rpt2_attr_single_subdir(
+bool
+rpt2_attr_single_subdir(
       int          depth,
       char **      value_loc,
       Fn_Filter    predicate_function,
@@ -157,7 +162,8 @@ bool rpt2_attr_single_subdir(
 #define GET_ATTR_SINGLE_SUBDIR(value_loc, predicate_func, predicate_val, fn_segment, ...) \
    rpt2_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
-bool rpt2_attr_note_subdir(
+bool
+rpt2_attr_note_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
