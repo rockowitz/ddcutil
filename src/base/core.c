@@ -343,6 +343,8 @@ char * output_level_name(DDCA_Output_Level val) {
       case DDCA_OL_VERBOSE:
          result = "Verbose";
          break;
+      case DDCA_OL_VV:
+         result = "Very Vebose";
       // default unnecessary, case exhausts enum
    }
    // printf("(%s) val=%d 0x%02x, returning: %s\n", __func__, val, val, result);

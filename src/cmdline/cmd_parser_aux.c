@@ -281,19 +281,19 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
    // Byte default_output_level = OL_NORMAL;
    switch(parsed_cmd->cmd_id) {
       case (CMDID_DETECT):
-         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
          break;
       case (CMDID_GETVCP):
-         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
          break;
       case (CMDID_PROBE):
          // don't want to deal with how to report errors, handle write-only features
          // of machine readable output triggered by --terse
-         valid_output_levels =                 DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
+         valid_output_levels =                 DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
          break;
       default:
          // default_output_level = OL_NORMAL;
-         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE;
+         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
    }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
       printf("Output level invalid for command %s: %s\n",
