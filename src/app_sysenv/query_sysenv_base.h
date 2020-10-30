@@ -18,7 +18,7 @@
 
 
 // if defined, some tests with long elapsed times are skipped to shorten time of test runs
-#define SYSENV_QUICK_TEST_RUN
+// #define SYSENV_QUICK_TEST_RUN
 
 // #define SYSENV_TEST_IDENTICAL_EDIDS
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
