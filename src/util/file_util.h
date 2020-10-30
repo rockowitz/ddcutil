@@ -17,50 +17,75 @@
 
 #include "error_info.h"
 
-int file_getlines(const char * fn, GPtrArray* line_array, bool verbose);
-Error_Info * file_getlines_errinfo(const char *  filename, GPtrArray *   lines);
-char * file_get_first_line(const char * fn, bool verbose);
+int file_getlines(
+      const char *  fn,
+      GPtrArray*    line_array,
+      bool          verbose);
 
-int
-file_get_last_lines(
-      const char * fn,
-      int          maxlines,
-      GPtrArray**  line_array_loc,
-      bool         verbose);
+Error_Info * file_getlines_errinfo(
+      const char *  filename,
+      GPtrArray *   lines);
 
-GByteArray * read_binary_file(char * fn, int est_size, bool verbose);
+char * file_get_first_line(
+      const char *  fn,
+      bool          verbose);
 
-bool regular_file_exists(const char * fqfn);
-bool directory_exists(const char * fqfn);
+int file_get_last_lines(
+      const char *  fn,
+      int           maxlines,
+      GPtrArray**   line_array_loc,
+      bool          verbose);
 
-/** Filter function for get_filenames_by_filter() */
-typedef int (*Dirent_Filter)(const struct dirent *end);
-GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func);
+GByteArray * read_binary_file(
+      char *        fn,
+      int           est_size,
+      bool          verbose);
 
-int filename_for_fd(int fd, char** p_fn);
-char * filename_for_fd_t(int fd);
+bool regular_file_exists(
+      const char *  fqfn);
+
+bool directory_exists(
+      const char *  fqfn);
+
+/** Signature of Filter function for get_filenames_by_filter() */
+typedef int (*Dirent_Filter)(
+      const struct dirent *end);
+
+GPtrArray * get_filenames_by_filter(
+      const char *  dirnames[],
+      Dirent_Filter filter_func);
+
+int filename_for_fd(
+      int           fd,
+      char**        p_fn);
+
+char * filename_for_fd_t(
+      int           fd);
 
 /** Signature of filename filter function passed to #dir_foreach(). */
-typedef bool (*Filename_Filter_Func)(char * simple_fn);
+typedef bool (*Filename_Filter_Func)(
+      char *        simple_fn);
 
 /** Signature of function called by #dir_foreach to process each file. */
-typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
+typedef void (*Dir_Foreach_Func)(
+      char *        dirname,
+      char *        fn,
+      void *        accumulator,
+      int           depth);
 
 void dir_foreach(
-      char *               dirname,
-      Filename_Filter_Func fn_filter,
-      Dir_Foreach_Func     func,
-      void *               accumulator,
-      int                  depth);
+      char *                dirname,
+      Filename_Filter_Func  fn_filter,
+      Dir_Foreach_Func      func,
+      void *                accumulator,
+      int                   depth);
 
 void dir_ordered_foreach(
-        char *                dirname,
-        Filename_Filter_Func  fn_filter,
-        GCompareFunc          compare_func,
-        Dir_Foreach_Func      func,
-        void *                accumulator,
-        int                   depth);
-
-
+      char *                dirname,
+      Filename_Filter_Func  fn_filter,
+      GCompareFunc          compare_func,
+      Dir_Foreach_Func      func,
+      void *                accumulator,
+      int                   depth);
 
 #endif /* FILE_UTIL_H_ */
