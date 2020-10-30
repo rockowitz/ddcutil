@@ -28,7 +28,6 @@
 
 #include "query_sysenv_base.h"
 
-
 static char * known_video_driver_modules[] = {
       "amdgpu",
       "fbdev",
@@ -110,7 +109,7 @@ char ** get_all_driver_module_strings() {
  *  \param title title message
  *  \param depth logical indentation depth
  */
-void sysenv_rpt_file_first_line(char * fn, char * title, int depth) {
+void sysenv_rpt_file_first_line(const char * fn, const char * title, int depth) {
    int d1 = depth+1;
    if (title)
       rpt_title(title, depth);
@@ -134,7 +133,7 @@ void sysenv_rpt_file_first_line(char * fn, char * title, int depth) {
  *  \param verbose  if ***true***, issue message if error
  *  \param depth    logical indentation depth
  */
-bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth) {
+bool sysenv_show_one_file(const char * dir_name, const char * simple_fn, bool verbose, int depth) {
    bool result = false;
    char fqfn[PATH_MAX+2];
    // strcpy(fqfn,dir_name);
@@ -297,7 +296,7 @@ void env_accumulator_report(Env_Accumulator * accum, int depth) {
 Driver_Name_Node *
 driver_name_list_find_exact(
       Driver_Name_Node * head,
-      char *             driver_name)
+      const char *             driver_name)
 {
    Driver_Name_Node * cur_node = head;
    while (cur_node && !streq(cur_node->driver_name, driver_name))
@@ -316,7 +315,7 @@ driver_name_list_find_exact(
 Driver_Name_Node *
 driver_name_list_find_prefix(
       Driver_Name_Node * head,
-      char *             driver_prefix)
+      const char *             driver_prefix)
 {
    Driver_Name_Node * curnode = head;
    while (curnode  && !str_starts_with(curnode->driver_name, driver_prefix) )
@@ -333,7 +332,7 @@ driver_name_list_find_prefix(
  *  \param headptr pointer to address of head of the list
  *  \param driver_name name to add
  */
-void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name) {
+void driver_name_list_add(Driver_Name_Node ** headptr, const char * driver_name) {
    // printf("(%s) Adding driver |%s|\n", __func__, driver_name);
    if (!driver_name_list_find_exact(*headptr, driver_name)) {
       Driver_Name_Node * newnode = calloc(1, sizeof(Driver_Name_Node));
@@ -518,7 +517,7 @@ void filter_and_limit_g_ptr_array(
  */
 int read_file_with_filter(
       GPtrArray * line_array,
-      char *      fn,
+      const char *      fn,
       char **     filter_terms,
       bool        ignore_case,
       int         limit)
@@ -565,7 +564,7 @@ int read_file_with_filter(
  *          if < 0,  -errno
  */
 int execute_cmd_collect_with_filter(
-      char *       cmd,
+      const char *       cmd,
       char **      filter_terms,
       bool         ignore_case,
       int          limit,

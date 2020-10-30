@@ -288,9 +288,9 @@ char * file_get_first_line(const char * fn, bool verbose) {
  */
 GByteArray *
 read_binary_file(
-      char * fn,
-      int    est_size,
-      bool   verbose)
+      const char * fn,
+      int          est_size,
+      bool         verbose)
 {
    assert(fn);
 
@@ -470,7 +470,7 @@ char * filename_for_fd_t(int fd) {
  *  \param   depth       logical indentation depth
  */
 void dir_foreach(
-      char *               dirname,
+      const char *               dirname,
       Filename_Filter_Func fn_filter,
       Dir_Foreach_Func     func,
       void *               accumulator,
@@ -497,7 +497,7 @@ void dir_foreach(
 
 
 void dir_ordered_foreach(
-        char *                dirname,
+        const char *                dirname,
         Filename_Filter_Func  fn_filter,
         GCompareFunc          compare_func,
         Dir_Foreach_Func      func,

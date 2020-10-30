@@ -32,7 +32,7 @@
  *  \param  name  string to convert
  *  \return extracted number, -1 if conversion fails
  */
-int i2c_name_to_busno(char * name) {
+int i2c_name_to_busno(const char * name) {
    int result = -1;
    if (name && str_starts_with(name, "i2c-")) {
       int ival;

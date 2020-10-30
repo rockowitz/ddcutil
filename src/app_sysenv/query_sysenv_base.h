@@ -16,7 +16,6 @@
 #include "util/data_structures.h"
 /** \endcond */
 
-
 // if defined, some tests with long elapsed times are skipped to shorten time of test runs
 // #define SYSENV_QUICK_TEST_RUN
 
@@ -32,8 +31,8 @@ char ** get_prefix_match_names();
 char ** get_other_driver_module_names();
 char ** get_all_driver_module_strings();
 
-void sysenv_rpt_file_first_line(char * fn, char * title, int depth);
-bool sysenv_show_one_file(char * dir_name, char * simple_fn, bool verbose, int depth);
+void sysenv_rpt_file_first_line(const char * fn, const char * title, int depth);
+bool sysenv_show_one_file(const char * dir_name, const char * simple_fn, bool verbose, int depth);
 void sysenv_rpt_current_time(const char * title, int depth);
 
 /** Linked list of names of detected drivers */
@@ -42,9 +41,9 @@ typedef struct driver_name_node {
    struct driver_name_node * next;
 } Driver_Name_Node;
 
-Driver_Name_Node * driver_name_list_find_exact( Driver_Name_Node * head, char * driver_name);
-Driver_Name_Node * driver_name_list_find_prefix(Driver_Name_Node * head, char * driver_prefix);
-void driver_name_list_add(Driver_Name_Node ** headptr, char * driver_name);
+Driver_Name_Node * driver_name_list_find_exact( Driver_Name_Node * head, const char * driver_name);
+Driver_Name_Node * driver_name_list_find_prefix(Driver_Name_Node * head, const char * driver_prefix);
+void driver_name_list_add(Driver_Name_Node ** headptr, const char * driver_name);
 void driver_name_list_free(Driver_Name_Node * driver_list);
 char * driver_name_list_string(Driver_Name_Node * head);
 bool only_fglrx(Driver_Name_Node * driver_list);
@@ -95,14 +94,14 @@ void filter_and_limit_g_ptr_array(
       int         limit);
 
 int read_file_with_filter(
-      GPtrArray * line_array,
-      char *      fn,
-      char **     filter_terms,
-      bool        ignore_case,
-      int         limit);
+      GPtrArray *  line_array,
+      const char * fn,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit);
 
 int execute_cmd_collect_with_filter(
-      char *       cmd,
+      const char * cmd,
       char **      filter_terms,
       bool         ignore_case,
       int          limit,

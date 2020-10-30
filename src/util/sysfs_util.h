@@ -5,8 +5,6 @@
 // Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
-
 #ifndef SYSFS_UTIL_H_
 #define SYSFS_UTIL_H_
 
@@ -42,12 +40,13 @@ read_binary_sysfs_attr(
       int          est_size,
       bool         verbose);
 
+char *
+get_rpath_basename(
+      const char * path);
 
 char *
-get_rpath_basename(char * path);
-
-char *
-get_i2c_device_sysfs_driver(int busno);
+get_i2c_device_sysfs_driver(
+      int          busno);
 
 bool
 is_module_loaded_using_sysfs(
@@ -67,7 +66,7 @@ sysfs_is_ignorable_i2c_device(
       int busno);
 
 void rpt_attr_output(
-      int depth,
+      int          depth,
       const char * node,
       const char * op,
       const char * value);
@@ -75,7 +74,10 @@ void rpt_attr_output(
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
-char * get_single_subdir_name(char * dirname, Fn_Filter filter, char * val);
+char * get_single_subdir_name(
+      const char * dirname,
+      Fn_Filter    filter,
+      const char * val);
 
 char *
 assemble_sysfs_path2(
@@ -86,9 +88,9 @@ assemble_sysfs_path2(
 
 bool
 rpt2_attr_text(
-      int          depth,
-      char **      value_loc,
-      char *       fn_segment,
+      int           depth,
+      char **       value_loc,
+      const char *  fn_segment,
       ...);
 
 #define RPT2_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
@@ -98,7 +100,7 @@ rpt2_attr_text(
    rpt2_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool rpt2_attr_binary(
-      int          depth,
+      int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
       ...);
@@ -106,7 +108,7 @@ bool rpt2_attr_binary(
 bool rpt2_attr_edid(
        int           depth,
        GByteArray ** value_loc,
-       char *        fn_segment,
+       const char *  fn_segment,
        ...);
 
 #define RPT2_ATTR_EDID(depth, value_loc, fn_segment, ...) \
@@ -115,21 +117,18 @@ bool rpt2_attr_edid(
 #define GET_ATTR_EDID(depth, value_loc, fn_segment, ...) \
    rpt2_attr_edid(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-
 bool
 rpt2_attr_realpath(
       int          depth,
       char **      value_loc,
-      char *       fn_segment,
+      const char * fn_segment,
       ...);
-
 
 #define RPT2_ATTR_REALPATH(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_REALPATH(value_loc, fn_segment, ...) \
    rpt2_attr_realpath(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
-
 
 bool
 rpt2_attr_realpath_basename(
@@ -143,8 +142,6 @@ rpt2_attr_realpath_basename(
 
 #define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
-
-
 
 bool rpt2_attr_single_subdir(
       int          depth,
@@ -160,7 +157,6 @@ bool rpt2_attr_single_subdir(
 #define GET_ATTR_SINGLE_SUBDIR(value_loc, predicate_func, predicate_val, fn_segment, ...) \
    rpt2_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
-
 bool rpt2_attr_note_subdir(
       int          depth,
       char **      value_loc,
@@ -169,8 +165,5 @@ bool rpt2_attr_note_subdir(
 
 #define RPT2_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
    rpt2_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
-
-
-
 
 #endif /* SYSFS_UTIL_H_ */

@@ -33,7 +33,7 @@
  * @return   true           command succeeded
  *           false          failed, e.g. command not found
  */
-bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
+bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
@@ -113,7 +113,7 @@ bool execute_shell_cmd_rpt(char * shell_cmd, int depth) {
  * @return  true           command succeeded
  *          false          failed, e.g. command not found
  */
-bool execute_shell_cmd(char * shell_cmd) {
+bool execute_shell_cmd(const char * shell_cmd) {
    return execute_shell_cmd_rpt(shell_cmd, -1);
 }
 
@@ -125,7 +125,7 @@ bool execute_shell_cmd(char * shell_cmd) {
  *  @return :GPtrArray of response lines if command succeeded
  *           NULL                        if command failed, e.g. command not found
  */
-GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
+GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
    bool debug = false;
    GPtrArray * result = g_ptr_array_new();
    g_ptr_array_set_free_func(result, g_free);
@@ -189,7 +189,7 @@ GPtrArray * execute_shell_cmd_collect(char * shell_cmd) {
  *  @remark
  *  Caller is responsible for freeing the returned string.
  */
-char * execute_shell_cmd_one_line_result(char * shell_cmd) {
+char * execute_shell_cmd_one_line_result(const char * shell_cmd) {
    char * result = NULL;
    GPtrArray * response = execute_shell_cmd_collect(shell_cmd);
    if (response) {
@@ -209,7 +209,7 @@ char * execute_shell_cmd_one_line_result(char * shell_cmd) {
  *  TODO: Check that actually executable,
  *        e.g. could be in /sbin and not running privileged
  */
-bool is_command_in_path(char * cmd) {
+bool is_command_in_path(const char * cmd) {
    bool result = false;
    char shell_cmd[100];
    snprintf(shell_cmd, sizeof(shell_cmd), "which %s", cmd);
@@ -231,7 +231,7 @@ bool is_command_in_path(char * cmd) {
  *  \retval   2    command requires sudo
  *  \retval   1    command executed, but with some error
  */
-int test_command_executability(char * cmd) {
+int test_command_executability(const char * cmd) {
    assert(cmd);
    char * full_cmd = calloc(1, strlen(cmd) + 20);
    strcpy(full_cmd, cmd);

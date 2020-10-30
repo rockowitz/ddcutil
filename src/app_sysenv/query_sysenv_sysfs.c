@@ -263,7 +263,12 @@ void report_modalias(char * cur_dir_name, int depth) {
  *  \param accumulator  accumulator struct
  *  \param depth        logical indentation depth
  */
-void each_video_device_i2c(char * dirname, char * fn, void * accumulator, int depth) {
+void each_video_device_i2c(
+      const char * dirname,
+      const char * fn,
+      void *       accumulator,
+      int          depth)
+{
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
 
@@ -374,8 +379,8 @@ static char * video_device_class_name(unsigned class_id) {
  *  Adds detected driver to list of detected drivers
  */
 void each_video_pci_device(
-      char * dirname,
-      char * fn,
+      const char * dirname,
+      const char * fn,
       void * accumulator,
       int    depth)
 {
@@ -491,7 +496,12 @@ bye:
  *  \remark
  *  Adds detected driver to list of detected drivers
  */
-void each_arm_driver(char * dirname, char * fn, void * accumulator, int depth) {
+void each_arm_driver(
+      const char *  dirname,
+      const char *  fn,
+      void *        accumulator,
+      int           depth)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s, accumulator=%p", dirname, fn, accumulator);
 
@@ -499,7 +509,7 @@ void each_arm_driver(char * dirname, char * fn, void * accumulator, int depth) {
    assert(accumulator && memcmp(accum->marker, ENV_ACCUMULATOR_MARKER, 4) == 0);
 
    if (streq(fn, "vc4_v3d")) {
-      char * driver_name = fn;
+      const char * driver_name = fn;
       rpt_vstring(depth, "Driver name:    %s", driver_name);
       driver_name_list_add(&accum->driver_list, driver_name);
    }
@@ -570,8 +580,8 @@ void query_loaded_modules_using_sysfs() {
  *  Adds current bus number to **accumulator->sys_bus_i2c_device_numbers
  */
 void each_i2c_device(
-      char * dirname,     // always /sys/bus/i2c/devices
-      char * fn,          // i2c-0, i2c-1, ...
+      const char * dirname,     // always /sys/bus/i2c/devices
+      const char * fn,          // i2c-0, i2c-1, ...
       void * accumulator,
       int    depth)
 {
@@ -1019,7 +1029,7 @@ bool drm_filter(char * name) {
 
 
 
-bool predicate_cardN(char * val) {
+bool predicate_cardN(const char * val) {
    return str_starts_with(val, "card");
 }
 
@@ -1030,7 +1040,12 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
    DBGMSG("dirname=%s, filename=%s, fqfn=%s", dirname, filename, fqfn);
 #endif
 
-void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accumulator, int depth) {
+void sysfs_dir_cardN_cardNconnector(
+      const char * dirname,
+      const char * filename,
+      void *       accumulator,
+      int          depth)
+{
    char dirname_fn[PATH_MAX];
    g_snprintf(dirname_fn, PATH_MAX, "%s/%s", dirname, filename);
    // DBGMSG("dirname=%s, filename=%s, dirname_fn=%s", dirname, filename, dirname_fn);
@@ -1075,7 +1090,6 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
       RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, dir_i2cN, "name");
       RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
    }
-
 }
 
 
@@ -1094,7 +1108,12 @@ void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accu
  *  @param depth        logical indentation depth
  */
 
-void sysfs_dir_cardN(char * dirname, char * filename, void * accumulator, int depth) {
+void sysfs_dir_cardN(
+      const char * dirname,
+      const char * filename,
+      void *       accumulator,
+      int          depth)
+{
    char fqfn[PATH_MAX];
    g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
 
@@ -1116,7 +1135,12 @@ void sysfs_dir_cardN(char * dirname, char * filename, void * accumulator, int de
  *  @param accumulator
  *  @param depth        logical indentation depth
  */
-void sysfs_dir_i2cN(char * dirname, char * filename, void * accumulator, int depth) {
+void sysfs_dir_i2cN(
+      const char * dirname,
+      const char * filename,
+      void *       accumulator,
+      int          depth)
+{
    char fqfn[PATH_MAX];
    g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
    int d0 = depth;
@@ -1137,7 +1161,7 @@ void sysfs_dir_i2cN(char * dirname, char * filename, void * accumulator, int dep
 }
 
 
-bool startswith_i2c(char * value) {
+bool startswith_i2c(const char * value) {
    return str_starts_with(value, "i2c-");
 }
 
@@ -1155,7 +1179,12 @@ bool class_display_device_predicate(char * value) {
  *          /sys/bus/devices/NNNN:NN:NN.N
  *          /sys/bus/devices/NNNN:NN:NN.N/NNNN:NN:nn.N
  */
-void one_pci_device(char * dirname, char * filename, void * accumulator, int depth) {
+void one_pci_device(
+      const char * dirname,
+      const char * filename,
+      void *       accumulator,
+      int          depth)
+{
    int d0 = depth;
    int d1 = depth+1;
 

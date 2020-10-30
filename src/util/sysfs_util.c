@@ -173,7 +173,7 @@ get_i2c_device_sysfs_name(int busno) {
 }
 
 
-char * get_rpath_basename(char * path) {
+char * get_rpath_basename(const char * path) {
    char * result = NULL;
    char resolved_path[PATH_MAX];
    char * rpath = realpath(path, resolved_path);
@@ -313,7 +313,11 @@ read_sysfs_attr0(
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
-char * get_single_subdir_name(char * dirname, Fn_Filter filter, char * val) {
+char * get_single_subdir_name(
+      const char * dirname,
+      Fn_Filter    filter,
+      const char * val)
+{
    // bool debug = false;
    int d1 = 1;
    DIR* dir2 = opendir(dirname);
@@ -363,7 +367,7 @@ bool
 rpt2_attr_text(
       int          depth,
       char **      value_loc,
-      char *       fn_segment,
+      const char * fn_segment,
       ...)
 {
    // DBGMSG("Starting. fn_segment=%s", fn_segment);
@@ -430,7 +434,7 @@ bool rpt2_attr_binary(
 bool rpt2_attr_edid(
        int           depth,
        GByteArray ** value_loc,
-       char *        fn_segment,
+       const char *        fn_segment,
        ...)
  {
     char pb1[PATH_MAX];
@@ -464,7 +468,7 @@ bool
 rpt2_attr_realpath(
       int          depth,
       char **      value_loc,
-      char *       fn_segment,
+      const char *       fn_segment,
       ...)
 {
    if (value_loc)

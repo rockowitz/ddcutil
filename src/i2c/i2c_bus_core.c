@@ -879,14 +879,14 @@ void read_drm_dp_card_connector_node(char * connector_path, Addl_Display_Port_In
 }
 
 
-bool starts_with_card(char * val) {
+bool starts_with_card(const char * val) {
    return str_starts_with(val, "card");
 }
 
 
 void one_drm_connector(
-      char * dirname,
-      char * connector,
+      const char * dirname,
+      const char * connector,
       void * accumulator,
       int    depth)
 {
@@ -919,8 +919,8 @@ void one_drm_connector(
 
 // Dir_Foreach_Func
 void one_drm_card(
-      char * dirname,     //
-      char * fn,          // card0, card1 ...
+      const char * dirname,     //
+      const char * fn,          // card0, card1 ...
       void * info,
       int    depth)
 {

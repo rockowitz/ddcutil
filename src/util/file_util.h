@@ -5,7 +5,6 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 #ifndef FILE_UTIL_H_
 #define FILE_UTIL_H_
 
@@ -37,7 +36,7 @@ int file_get_last_lines(
       bool          verbose);
 
 GByteArray * read_binary_file(
-      char *        fn,
+      const char *  fn,
       int           est_size,
       bool          verbose);
 
@@ -57,31 +56,31 @@ GPtrArray * get_filenames_by_filter(
 
 int filename_for_fd(
       int           fd,
-      char**        p_fn);
+      char**        fn_loc);
 
 char * filename_for_fd_t(
       int           fd);
 
 /** Signature of filename filter function passed to #dir_foreach(). */
 typedef bool (*Filename_Filter_Func)(
-      char *        simple_fn);
+      const char *  simple_fn);
 
 /** Signature of function called by #dir_foreach to process each file. */
 typedef void (*Dir_Foreach_Func)(
-      char *        dirname,
-      char *        fn,
+      const char *  dirname,
+      const char *  fn,
       void *        accumulator,
       int           depth);
 
 void dir_foreach(
-      char *                dirname,
+      const char *          dirname,
       Filename_Filter_Func  fn_filter,
       Dir_Foreach_Func      func,
       void *                accumulator,
       int                   depth);
 
 void dir_ordered_foreach(
-      char *                dirname,
+      const char *          dirname,
       Filename_Filter_Func  fn_filter,
       GCompareFunc          compare_func,
       Dir_Foreach_Func      func,
