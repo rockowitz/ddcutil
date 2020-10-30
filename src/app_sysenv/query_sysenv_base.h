@@ -18,7 +18,7 @@
 
 
 // if defined, some tests with long elapsed times are skipped to shorten time of test runs
-// #define SYSENV_QUICK_TEST_RUN
+#define SYSENV_QUICK_TEST_RUN
 
 // #define SYSENV_TEST_IDENTICAL_EDIDS
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
@@ -87,28 +87,6 @@ typedef struct {
 Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
 void env_accumulator_report(Env_Accumulator * accum, int depth);
-
-
-/** Signature of filename filter function passed to #dir_foreach(). */
-typedef bool (*Filename_Filter_Func)(char * simple_fn);
-
-/** Signature of function called by #dir_foreach to process each file. */
-typedef void (*Dir_Foreach_Func)(char * dirname, char * fn, void * accumulator, int depth);
-
-void dir_foreach(
-      char *               dirname,
-      Filename_Filter_Func fn_filter,
-      Dir_Foreach_Func     func,
-      void *               accumulator,
-      int                  depth);
-
-void dir_ordered_foreach(
-        char *                dirname,
-        Filename_Filter_Func  fn_filter,
-        GCompareFunc          compare_func,
-        Dir_Foreach_Func      func,
-        void *                accumulator,
-        int                   depth);
 
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
