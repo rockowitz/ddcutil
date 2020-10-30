@@ -811,10 +811,10 @@ typedef struct {
    char *  ddc_name;
    char *  ddc_i2c_dev_name;
    char *  ddc_i2c_dev_dev;
-} Addl_Display_Port_Info;
+} I2C_Sys_Info;
 
 
-void free_addl_display_port_info(Addl_Display_Port_Info * info) {
+void free_i2c_sys_info(I2C_Sys_Info * info) {
    if (info) {
       free(info->pci_device_path);
       free(info->drm_connector_path);
@@ -835,12 +835,12 @@ void free_addl_display_port_info(Addl_Display_Port_Info * info) {
 }
 
 
-//  same wither displayport, non-displayport video, non-video
+//  same whether displayport, non-displayport video, non-video
 //    /sys/bus/i2c/devices/i2c-N
 //    /sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/drm/card0/card0-DP-1/i2c-N
 
-
-void read_i2cN_device_node(char * device_path, Addl_Display_Port_Info * info, int depth) {
+static void
+read_i2cN_device_node(char * device_path, I2C_Sys_Info * info, int depth) {
    assert(device_path);
    assert(info);
    bool debug = false;
@@ -853,7 +853,8 @@ void read_i2cN_device_node(char * device_path, Addl_Display_Port_Info * info, in
 }
 
 
-void read_drm_dp_card_connector_node(char * connector_path, Addl_Display_Port_Info * info, int depth) {
+static void
+read_drm_dp_card_connector_node(char * connector_path, I2C_Sys_Info * info, int depth) {
    bool debug = false;
    DBGMSF(debug, "connector_path=%s", connector_path);
    int d0 = depth;
@@ -879,21 +880,22 @@ void read_drm_dp_card_connector_node(char * connector_path, Addl_Display_Port_In
 }
 
 
-bool starts_with_card(const char * val) {
+static bool starts_with_card(const char * val) {
    return str_starts_with(val, "card");
 }
 
 
-void one_drm_connector(
+static void
+one_drm_connector(
       const char * dirname,
-      const char * connector,
-      void * accumulator,
-      int    depth)
+      const char * connector,              // e.g card0-DP-1
+      void *       accumulator,
+      int          depth)
 {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, connector=%s", dirname, connector);
    int d1 = (depth < 0) ? depth : depth + 1;
-   Addl_Display_Port_Info * info = accumulator;
+   I2C_Sys_Info * info = accumulator;
    if (info->connector) {
       DBGMSF(debug, "Connector already found, skipping");
       return;
@@ -918,11 +920,12 @@ void one_drm_connector(
 
 
 // Dir_Foreach_Func
-void one_drm_card(
+static void
+one_drm_card(
       const char * dirname,     //
       const char * fn,          // card0, card1 ...
-      void * info,
-      int    depth)
+      void *       info,
+      int          depth)
 {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
@@ -932,7 +935,13 @@ void one_drm_card(
 }
 
 
-void read_pci_something_node(char * nodepath, int busno, Addl_Display_Port_Info * info, int depth) {
+static void
+read_pci_something_node(
+      char *         nodepath,
+      int            busno,
+      I2C_Sys_Info * info,
+      int            depth)
+{
    bool debug = false;
    DBGMSF(debug, "nodepath=%s, busno=%d", nodepath, busno);
    int d0 = depth;
@@ -958,11 +967,11 @@ void read_pci_something_node(char * nodepath, int busno, Addl_Display_Port_Info 
 }
 
 
-Addl_Display_Port_Info *
-get_addl_display_port_info(int busno, int depth) {
+I2C_Sys_Info *
+get_i2c_sys_info(int busno, int depth) {
    bool debug = false;
    DBGMSF(debug, "busno=%d. depth=%d", busno, depth);
-   Addl_Display_Port_Info * result = NULL;
+   I2C_Sys_Info * result = NULL;
   // depth = -1;
    int d1 = (depth < 0) ? -1 : depth+1;
 
@@ -978,7 +987,7 @@ get_addl_display_port_info(int busno, int depth) {
    g_snprintf(i2c_device_path, 50, "/sys/bus/i2c/devices/i2c-%d", busno);
 
    if (directory_exists(i2c_device_path)) {
-      result = calloc(1, sizeof(Addl_Display_Port_Info));
+      result = calloc(1, sizeof(I2C_Sys_Info));
       result->busno = busno;
       RPT2_ATTR_REALPATH(d1, &pci_i2c_device_path, i2c_device_path);
       result->pci_device_path = pci_i2c_device_path;
@@ -1009,14 +1018,14 @@ get_addl_display_port_info(int busno, int depth) {
 }
 
 
-void report_addl_display_port_info(int busno, int depth) {
+void report_i2c_sys_info(int busno, int depth) {
    bool debug = false;
    int d1 = (depth < 0) ? depth : depth + 1;
    int d2 = (depth < 0) ? depth : depth + 2;
    rpt_vstring(depth, "Extended information for /sys/bus/i2c/devices/i2c-%d...", busno);
 
-   Addl_Display_Port_Info * dp_info =
-         get_addl_display_port_info(busno, (debug) ? d2 : -1 );
+   I2C_Sys_Info * dp_info =
+         get_i2c_sys_info(busno, (debug) ? d2 : -1 );
    if (dp_info) {
       rpt_vstring(d1, "PCI device path:     %s", dp_info->pci_device_path);
       rpt_vstring(d1, "name:                %s", dp_info->device_name);
@@ -1038,7 +1047,7 @@ void report_addl_display_port_info(int busno, int depth) {
       else {
          rpt_vstring(d1, "Not a DisplayPort connection");
       }
-      free_addl_display_port_info(dp_info);
+      free_i2c_sys_info(dp_info);
    }
 }
 
@@ -1079,7 +1088,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       free(sysattr_name);
 
       if (output_level >= DDCA_OL_VV)
-         report_addl_display_port_info(businfo->busno, depth+1);
+         report_i2c_sys_info(businfo->busno, depth+1);
    }
 
    if (businfo->edid) {
