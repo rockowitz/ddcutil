@@ -65,7 +65,11 @@ void free_i2c_sys_info(I2C_Sys_Info * info) {
 //    /sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/drm/card0/card0-DP-1/i2c-N
 
 static void
-read_i2cN_device_node(char * device_path, I2C_Sys_Info * info, int depth) {
+read_i2cN_device_node(
+      const char *   device_path,
+      I2C_Sys_Info * info,
+      int            depth)
+{
    assert(device_path);
    assert(info);
    bool debug = false;
@@ -79,7 +83,11 @@ read_i2cN_device_node(char * device_path, I2C_Sys_Info * info, int depth) {
 
 
 static void
-read_drm_dp_card_connector_node(char * connector_path, I2C_Sys_Info * info, int depth) {
+read_drm_dp_card_connector_node(
+      const char *   connector_path,
+      I2C_Sys_Info * info,
+      int            depth)
+{
    bool debug = false;
    DBGMSF(debug, "connector_path=%s", connector_path);
    int d0 = depth;
@@ -163,7 +171,7 @@ one_drm_card(
 
 static void
 read_pci_something_node(
-      char *         nodepath,
+      const char *   nodepath,
       int            busno,
       I2C_Sys_Info * info,
       int            depth)
@@ -194,7 +202,10 @@ read_pci_something_node(
 
 
 I2C_Sys_Info *
-get_i2c_sys_info(int busno, int depth) {
+get_i2c_sys_info(
+      int busno,
+      int depth)
+{
    bool debug = false;
    DBGMSF(debug, "busno=%d. depth=%d", busno, depth);
    I2C_Sys_Info * result = NULL;
@@ -250,30 +261,30 @@ void report_i2c_sys_info(int busno, int depth) {
    int d2 = (depth < 0) ? depth : depth + 2;
    rpt_vstring(depth, "Extended information for /sys/bus/i2c/devices/i2c-%d...", busno);
 
-   I2C_Sys_Info * dp_info =
+   I2C_Sys_Info * info =
          get_i2c_sys_info(busno, (debug) ? d2 : -1 );
-   if (dp_info) {
-      rpt_vstring(d1, "PCI device path:     %s", dp_info->pci_device_path);
-      rpt_vstring(d1, "name:                %s", dp_info->device_name);
-      rpt_vstring(d1, "i2c-dev/i2c-%d/dev:   %s", busno, dp_info->i2c_dev_dev);
-      rpt_vstring(d1, "i2c-dev/i2c-%d/name:  %s", busno, dp_info->i2c_dev_name);
-      rpt_vstring(d1, "Connector:           %s", dp_info->connector);
-      rpt_vstring(d1, "Driver:              %s", dp_info->driver);
+   if (info) {
+      rpt_vstring(d1, "PCI device path:     %s", info->pci_device_path);
+      rpt_vstring(d1, "name:                %s", info->device_name);
+      rpt_vstring(d1, "i2c-dev/i2c-%d/dev:   %s", busno, info->i2c_dev_dev);
+      rpt_vstring(d1, "i2c-dev/i2c-%d/name:  %s", busno, info->i2c_dev_name);
+      rpt_vstring(d1, "Connector:           %s", info->connector);
+      rpt_vstring(d1, "Driver:              %s", info->driver);
 
-      if (dp_info->is_display_port) {
+      if (info->is_display_port) {
          rpt_vstring(d1, "DisplayPort only attributes:");
-         rpt_vstring(d2, "ddc path:                %s", dp_info->ddc_path);
+         rpt_vstring(d2, "ddc path:                %s", info->ddc_path);
       // rpt_vstring(d2, "Linked ddc filename:     %s", dp_info->linked_ddc_filename);
-         rpt_vstring(d2, "ddc name:                %s", dp_info->ddc_name);
-         rpt_vstring(d2, "ddc i2c-dev/%s/dev:   %s", dp_info->linked_ddc_filename, dp_info->ddc_i2c_dev_dev);
-         rpt_vstring(d2, "ddc i2c-dev/%s/name:  %s", dp_info->linked_ddc_filename, dp_info->ddc_i2c_dev_name);
-         rpt_vstring(d2, "DP Aux channel dev:      %s", dp_info->drm_dp_aux_dev);
-         rpt_vstring(d2, "DP Aux channel name:     %s", dp_info->drm_dp_aux_name);
+         rpt_vstring(d2, "ddc name:                %s", info->ddc_name);
+         rpt_vstring(d2, "ddc i2c-dev/%s/dev:   %s", info->linked_ddc_filename, info->ddc_i2c_dev_dev);
+         rpt_vstring(d2, "ddc i2c-dev/%s/name:  %s", info->linked_ddc_filename, info->ddc_i2c_dev_name);
+         rpt_vstring(d2, "DP Aux channel dev:      %s", info->drm_dp_aux_dev);
+         rpt_vstring(d2, "DP Aux channel name:     %s", info->drm_dp_aux_name);
       }
       else {
          rpt_vstring(d1, "Not a DisplayPort connection");
       }
-      free_i2c_sys_info(dp_info);
+      free_i2c_sys_info(info);
    }
 }
 
