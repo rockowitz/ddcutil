@@ -830,8 +830,11 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "%s:   %s", fn, sysattr_name);
       free(sysattr_name);
 
-      if (output_level >= DDCA_OL_VV)
-         report_i2c_sys_info(businfo->busno, depth+1);
+      if (output_level >= DDCA_OL_VV) {
+         I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
+         report_i2c_sys_info(info, depth);
+         free_i2c_sys_info(info);
+      }
    }
 
    if (businfo->edid) {
