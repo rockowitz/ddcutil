@@ -31,6 +31,8 @@
 #include "base/linux_errno.h"
 /** \endcond */
 
+#include "i2c/i2c_sysfs.h"
+
 #include "query_sysenv_base.h"
 #include "query_sysenv_xref.h"
 
@@ -1028,17 +1030,10 @@ bool drm_filter(char * name) {
 }
 
 
-
 bool predicate_cardN(const char * val) {
    return str_starts_with(val, "card");
 }
 
-#ifdef MAYBE_UNNEEDED
-void sysfs_dir_cardN_cardNconnector(char * dirname, char * filename, void * accumulator, int depth) {
-   char fqfn[PATH_MAX];
-   g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
-   DBGMSG("dirname=%s, filename=%s, fqfn=%s", dirname, filename, fqfn);
-#endif
 
 void sysfs_dir_cardN_cardNconnector(
       const char * dirname,
@@ -1173,11 +1168,17 @@ bool class_display_device_predicate(char * value) {
 
 /**  Process a single /sys/bus/pci/devices/<pci-device>
  *
- *   Returns immediately if class is not a display device
+ *   Returns immediately if class is not a display device or docking station
+ *
+ *   PPPP:BB:DD:F
+ *      PPPP     PCI domain
+ *      BB       bus number
+ *      DD       device number
+ *      F        device function
  *
  *   Note the realpath for these directories is one of
- *          /sys/bus/devices/NNNN:NN:NN.N
- *          /sys/bus/devices/NNNN:NN:NN.N/NNNN:NN:nn.N
+ *          /sys/bus/devices/PPPP:BB:DD.F
+ *          /sys/bus/devices/NNNN:NN:NN.N/PPPP:BB:DD:F
  */
 void one_pci_device(
       const char * dirname,
@@ -1330,11 +1331,15 @@ void dump_sysfs_i2c() {
    rpt_nl();
    rpt_vstring(0, "*** Reporting video devices ***");
    // rpt_vstring(0, "using dir_foreach");
+   // general probe
    dir_foreach(
             "/sys/bus/pci/devices",
             NULL,
             one_pci_device,
             NULL,
             0);
+
+   // report as in detect --vv
+   dbgrpt_sys_bus_i2c(0);
 }
 
