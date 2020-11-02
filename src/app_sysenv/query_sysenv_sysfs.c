@@ -1338,8 +1338,5 @@ void dump_sysfs_i2c() {
             one_pci_device,
             NULL,
             0);
-
-   // report as in detect --vv
-   dbgrpt_sys_bus_i2c(0);
 }
 

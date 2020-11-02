@@ -36,6 +36,8 @@
 #include "base/core.h"
 #include "base/linux_errno.h"
 
+#include "i2c/i2c_sysfs.h"
+
 #ifdef HAVE_ADL
 #include "adl/adl_shim.h"
 #endif
@@ -714,6 +716,11 @@ void query_sysenv() {
       probe_modules_d(0);
 
       dump_sysfs_i2c();
+
+      rpt_nl();
+      // CONSIDER: make conditional on ambiguous EDID, MST
+      // show reports as in command detect --vv
+      dbgrpt_sys_bus_i2c(0);
    }
 
    rpt_nl();
@@ -723,7 +730,5 @@ void query_sysenv() {
    final_analysis(accumulator, 0);
 
    env_accumulator_free(accumulator);     // make Coverity happy
-
-   // dump_sysfs_i2c();   // TEMP LOCATION FOR TESTING - does not require --verbose
 }
 
