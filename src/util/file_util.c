@@ -36,7 +36,12 @@
  *
  *  The caller is responsible for freeing the lines added to line_array.
  */
-int file_getlines(const char * fn,  GPtrArray* line_array, bool verbose) {
+int
+file_getlines(
+      const char * fn,
+      GPtrArray*   line_array,
+      bool         verbose)
+{
    bool debug = false;
    if (debug)
       printf("(%s) Starting. fn=%s  \n", __func__, fn );
@@ -250,7 +255,11 @@ file_get_last_lines(
  *  @retval non-NULL pointer to line read (caller responsible for freeing)
  *  @retval NULL     if error or no lines in file
  */
-char * file_get_first_line(const char * fn, bool verbose) {
+char *
+file_get_first_line(
+      const char * fn,
+      bool         verbose)
+{
    FILE * fp = fopen(fn, "r");
    char * single_line = NULL;
    if (!fp) {
@@ -379,7 +388,11 @@ bool directory_exists(const char * fqfn) {
  *
  * Adapted from usbmonctl
  */
-GPtrArray * get_filenames_by_filter(const char * dirnames[], Dirent_Filter filter_func) {
+GPtrArray *
+get_filenames_by_filter(
+      const char *  dirnames[],
+      Dirent_Filter filter_func)
+{
    // const char *hiddev_paths[] = { "/dev/", "/dev/usb/", NULL };
    bool debug = false;
    GPtrArray * devnames =  g_ptr_array_new();
@@ -470,7 +483,7 @@ char * filename_for_fd_t(int fd) {
  *  \param   depth       logical indentation depth
  */
 void dir_foreach(
-      const char *               dirname,
+      const char *         dirname,
       Filename_Filter_Func fn_filter,
       Dir_Foreach_Func     func,
       void *               accumulator,
@@ -497,7 +510,7 @@ void dir_foreach(
 
 
 void dir_ordered_foreach(
-        const char *                dirname,
+        const char *          dirname,
         Filename_Filter_Func  fn_filter,
         GCompareFunc          compare_func,
         Dir_Foreach_Func      func,
