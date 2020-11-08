@@ -127,7 +127,7 @@ int i2c_open_bus(int busno, Byte callopts) {
  * @param  callopts  call option flags, controlling failure action
  *
  * @retval 0  success
- * @retval <0 negative Linux errno value close*( fails and CALLOPT_ERR_ABORT not set in callopts
+ * @retval <0 negative Linux errno value if close
  */
 Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    bool debug = false;
@@ -163,10 +163,6 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
          snprintf(workbuf, 80,
                   "Bus device close failed. errno=%s",
                   linux_errno_desc(errsv));
-#ifdef OLD
-      if (callopts & CALLOPT_ERR_ABORT)
-         TERMINATE_EXECUTION_ON_ERROR(workbuf);
-#endif
       if (callopts & CALLOPT_ERR_MSG)
          f0printf(ferr(), "%s\n", workbuf);
 
@@ -228,12 +224,6 @@ retry:
    if (rc < 0) {
       if ( callopts & CALLOPT_ERR_MSG)
          REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errno);
-#ifdef OLD
-         report_ioctl_error(errsv, __func__, __LINE__-13, __FILE__,
-                            /*fatal=*/ callopts&CALLOPT_ERR_ABORT);
-      else if (callopts & CALLOPT_ERR_ABORT)
-         DDC_ABORT(DDCL_INTERNAL_ERROR);
-#endif
 
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
@@ -325,7 +315,7 @@ bool * i2c_detect_all_slave_addrs_by_fd(int fd) {
 
    for (addr = 3; addr < I2C_SLAVE_ADDR_MAX; addr++) {
       int rc;
-      i2c_set_addr(fd, addr, CALLOPT_ERR_ABORT || CALLOPT_ERR_MSG);
+      i2c_set_addr(fd, addr, CALLOPT_ERR_MSG);
       rc = invoke_i2c_reader(fd, 1, &byte_to_write);
       if (rc >= 0)
          addrmap[addr] = true;
@@ -357,7 +347,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 
    if (file >= 0) {
       addrmap = i2c_detect_all_slave_addrs_by_fd(file);
-      i2c_close_bus(file, busno, CALLOPT_ERR_ABORT);
+      i2c_close_bus(file, busno, CALLOPT_NONE);
    }
 
    DBGMSF(debug, "Returning %p", addrmap);
