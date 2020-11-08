@@ -250,7 +250,7 @@ ddc_close_display(Display_Handle * dh) {
       switch(dh->dref->io_path.io_mode) {
       case DDCA_IO_I2C:
          {
-            rc = i2c_close_bus(dh->fd, dh->dref->io_path.path.i2c_busno,  CALLOPT_NONE);    // return error if failure
+            rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
             if (rc != 0) {
                assert(rc < 0);
                DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );

@@ -123,17 +123,16 @@ int i2c_open_bus(int busno, Byte callopts) {
 /** Closes an open I2C bus device.
  *
  * @param  fd        Linux file descriptor
- * @param  busno     bus number (for error messages), if -1, ignore
  * @param  callopts  call option flags, controlling failure action
  *
  * @retval 0  success
  * @retval <0 negative Linux errno value if close
  */
-Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
+Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
-          "Starting. busno=%d, fd=%d, callopts=%s",
-          busno,  fd, interpret_call_options_t(callopts));
+          "Starting. fd=%d - %s, callopts=%s",
+          fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
 
    Status_Errno result = 0;
    int rc = 0;
@@ -678,7 +677,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                    bus_info->flags |= I2C_BUS_ADDR_0X37;
              }
           }
-          i2c_close_bus(fd, bus_info->busno,  CALLOPT_ERR_MSG);
+          i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
    }   // probing complete
 
