@@ -516,8 +516,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
 /** Reports all displays found.
  *
- * Output is written to the current report destination using
- * report functions.
+ * Output is written to the current report destination using report functions.
  *
  * @param   include_invalid_displays  if false, report only valid displays\n
  *                                    if true,  report all displays
@@ -542,8 +541,11 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
          rpt_title("",0);
       }
    }
-   if (display_ct == 0)
+   if (display_ct == 0) {
       rpt_vstring(depth, "No %sdisplays found", (!include_invalid_displays) ? "active " : "");
+      if ( get_output_level() >= DDCA_OL_VERBOSE )
+         rpt_label(depth, "Use command \"ddcutil environment\" for possible reasons.");
+   }
 
    DBGMSF(debug, "Done.  Returning: %d", display_ct);
    return display_ct;
