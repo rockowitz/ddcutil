@@ -513,17 +513,6 @@ bye:
    if (rc < 0)
       rawedid->len = 0;
 
-#ifdef NO
-   if (debug || IS_TRACING()) {
-      if (rc == 0) {
-         DBGMSG("Returning %s.  edidbuf contents:", psc_desc(rc));
-         buffer_dump(rawedid);
-      }
-      else {
-         DBGMSG("Returning %s", psc_desc(rc));
-      }
-   }
-#endif
    DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(rc));
    return rc;
 }
@@ -705,26 +694,6 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
 //
 // Bus Reports
 //
-
-// Why are there 2 functions?  Consolidate?
-// only difference is that i2c_debugreport_bus_info() shows EDID
-
-#ifdef UNUSED
-void i2c_dbgreport_bus_info_flags(I2C_Bus_Info * bus_info, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting.  bus_info=%p");
-   rpt_vstring(depth, "Bus /dev/i2c-%d found:    %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
-   rpt_vstring(depth, "Bus /dev/i2c-%d probed:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
-   if ( bus_info->flags & I2C_BUS_PROBED ) {
-      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
-      rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
-   }
-   i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
-   DBGMSF(false, "Done");
-}
-#endif
-
 
 /** Reports on a single I2C bus.
  *
@@ -1126,6 +1095,7 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
 }
 #endif
 
+
 static void init_i2c_bus_core_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(i2c_open_bus);
@@ -1138,8 +1108,8 @@ static void init_i2c_bus_core_func_name_table() {
 #undef ADD_FUNC
 }
 
+
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
 }
-
 
