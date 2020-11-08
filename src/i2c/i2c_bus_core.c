@@ -138,15 +138,6 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
    Status_Errno result = 0;
    int rc = 0;
 
-#ifdef ALTERNATIVE
-   // get file name from descriptor instead of requiring busno parm
-   char * i2c_fn;
-   rc = filename_for_fd(fd, &i2c_fn);
-   assert(rc == 0);
-   DBGMSG("i2c_fn = %s", i2c_fn);
-   free(i2c_fn);
-#endif
-
    RECORD_IO_EVENTX(fd, IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
    int errsv = errno;
@@ -154,22 +145,14 @@ Status_Errno i2c_close_bus(int fd, int busno, Call_Options callopts) {
       // EBADF (9)  fd isn't a valid open file descriptor
       // EINTR (4)  close() interrupted by a signal
       // EIO   (5)  I/O error
-      char workbuf[80];
-      if (busno >= 0)
-         snprintf(workbuf, 80,
-                  "Close failed for bus /dev/i2c-%d. errno=%s",
-                  busno, linux_errno_desc(errsv));
-      else
-         snprintf(workbuf, 80,
-                  "Bus device close failed. errno=%s",
-                  linux_errno_desc(errsv));
       if (callopts & CALLOPT_ERR_MSG)
-         f0printf(ferr(), "%s\n", workbuf);
-
+         f0printf(ferr(), "Close failed for %s, errno=%s\n",
+                          filename_for_fd_t(fd), linux_errno_desc(errsv));
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC(debug, TRACE_GROUP, "Done.     fd=%d, busno=%d, Returning: %s", busno, fd, psc_desc(result));
+   DBGTRC(debug, TRACE_GROUP, "Done.     fd=%d, filename=%s, Returning: %s",
+                              fd, filename_for_fd_t(fd), psc_desc(result));
    return result;
 }
 
