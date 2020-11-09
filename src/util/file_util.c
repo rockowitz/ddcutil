@@ -1,14 +1,16 @@
 /** \file file_util.c
- *  File related utility functions
+ *  File utility functions
  */
 
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 /** \cond */
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,9 +23,6 @@
 
 #include "file_util.h"
 
-/** @file file_util.c
- * File utility functions
- */
 
 /** Reads the lines of a text file into a GPtrArray.
  *
@@ -125,7 +124,8 @@ typedef struct {
 } Circular_Line_Buffer;
 
 
-Circular_Line_Buffer * clb_new(int size) {
+Circular_Line_Buffer *
+clb_new(int size) {
    Circular_Line_Buffer * clb = calloc(1, sizeof(Circular_Line_Buffer));
    clb->lines = calloc(size, sizeof(char*));
    clb->size = size;
@@ -134,7 +134,8 @@ Circular_Line_Buffer * clb_new(int size) {
 }
 
 
-void clb_add(Circular_Line_Buffer * clb, char * line) {
+void
+clb_add(Circular_Line_Buffer * clb, char * line) {
     int nextpos = clb->ct % clb->size;
     // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, clb->ct, nextpos, line);
     if (clb->lines[nextpos])
@@ -144,7 +145,8 @@ void clb_add(Circular_Line_Buffer * clb, char * line) {
 }
 
 
-GPtrArray * clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
+GPtrArray *
+clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
    // printf("(%s) clb->size=%d, clb->ct=%d\n", __func__, clb->size, clb->ct);
    GPtrArray * pa = g_ptr_array_sized_new(clb->ct);
 
@@ -200,7 +202,7 @@ file_get_last_lines(
       // if line == NULL && len == 0, then getline allocates buffer for line
       char * line = NULL;
       size_t len = 0;
-      int     linectr = 0;
+      int    linectr = 0;
       errno = 0;
       while (getline(&line, &len, fp) >= 0) {
          linectr++;
@@ -347,9 +349,10 @@ bye:
 /** Checks if a regular file exists.
  *
  * @param fqfn fully qualified file name
- * @return true/false
+ * @return     true/false
  */
-bool regular_file_exists(const char * fqfn) {
+bool
+regular_file_exists(const char * fqfn) {
    bool result = false;
    struct stat stat_buf;
    int rc = stat(fqfn, &stat_buf);
@@ -363,9 +366,10 @@ bool regular_file_exists(const char * fqfn) {
 /** Checks if a directory exists.
  *
  * @param fqfn fully qualified directory name
- * @return true/false
+ * @return     true/false
  */
-bool directory_exists(const char * fqfn) {
+bool
+directory_exists(const char * fqfn) {
    bool result = false;
    struct stat stat_buf;
    int rc = stat(fqfn, &stat_buf);
@@ -434,7 +438,8 @@ get_filenames_by_filter(
  * @retval 0      success
  * @retval -errno if error (see readlink() doc for possible error numbers)
  */
-int filename_for_fd(int fd, char** p_fn) {
+int
+filename_for_fd(int fd, char** p_fn) {
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
@@ -456,11 +461,20 @@ int filename_for_fd(int fd, char** p_fn) {
 }
 
 
-char * filename_for_fd_t(int fd) {
+/** Gets the file name for a file descriptor.
+ *
+ *  The value returned is valid until the next call to this function
+ *  in the current thread.
+ *
+ * @param  fd    file descriptor
+ * @return       file name, NULL if error
+ */
+char *
+filename_for_fd_t(int fd) {
    static GPrivate  key = G_PRIVATE_INIT(g_free);
    char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX+1);
 
-   char * result = NULL;  // value to resturn
+   char * result = NULL;  // value to return
 
    char * filename_loc;
    int rc = filename_for_fd(fd, &filename_loc);
@@ -482,7 +496,8 @@ char * filename_for_fd_t(int fd) {
  *  \param   accumulator pointer to a data structure passed
  *  \param   depth       logical indentation depth
  */
-void dir_foreach(
+void
+dir_foreach(
       const char *         dirname,
       Filename_Filter_Func fn_filter,
       Dir_Foreach_Func     func,
@@ -509,7 +524,18 @@ void dir_foreach(
 }
 
 
-void dir_ordered_foreach(
+/** Iterates over a directory in an ordered manner.
+ *
+ *  \param   dirname      directory name
+ *  \param   fn_filter    tests the name of a file in a directory to see if should
+ *                        be processed.  If NULL, all files are processed.
+ *  \param   compare_func qsort style function to compare filenames
+ *  \param   func         function to be called for each filename in the directory
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ */
+void
+dir_ordered_foreach(
         const char *          dirname,
         Filename_Filter_Func  fn_filter,
         GCompareFunc          compare_func,
@@ -546,6 +572,4 @@ void dir_ordered_foreach(
       }
    }
 }
-
-
 
