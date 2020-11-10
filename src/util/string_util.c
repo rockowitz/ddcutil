@@ -777,6 +777,24 @@ char * chars_to_string(const char * start, int len)
 }
 
 
+/** qsort() style string comparison function
+ *
+ *  @param a pointer to a pointer to a string
+ *  @param b pointer to a pointer to a string
+ *  @return -1 if the first string sorts before the second
+ *           0 if the strings are identical
+ *           1 if the first string sorts after the second
+ *
+ *  @remark
+ *  Satisfies GCompareFunc
+ */
+int indirect_strcmp(const void * a, const void * b) {
+   char * alpha = *(char **) a;
+   char * beta  = *(char **) b;
+   return strcmp(alpha, beta);
+}
+
+
 /** Appends a value to a string in a buffer.
  *
  * @param buf     pointer to character buffer

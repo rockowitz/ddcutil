@@ -612,8 +612,6 @@ void each_i2c_device(
 }
 
 
-
-
 /** Examines /sys/bus/i2c/devices
  *
  *  \param accumulator  collects environment information
@@ -638,13 +636,6 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
    }
-}
-
-
-int indirect_strcmp(const void * a, const void * b) {
-   char * alpha = *(char **) a;
-   char * beta  = *(char **) b;
-   return strcmp(alpha, beta);
 }
 
 
