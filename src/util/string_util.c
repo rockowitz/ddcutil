@@ -509,7 +509,10 @@ strsplit_maxlength(
 /** Frees a null terminated array of strings.
  *
  *  @param string_array null terminated array of pointers to strings
- *  @param free_strings if try, each string in the array is freed as well
+ *  @param free_strings if set, each string in the array is freed as well
+ *
+ *  @remark
+ *  g_strfreev(string_array) equivalent to ntsa_free(string_array, true)
  */
 void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
    if (string_array) {
@@ -525,8 +528,11 @@ void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
 
 /** Returns the number of strings in a null terminated array of strings.
  *
- * @param  string_array null terminated array of pointers to strings
- * @return number of strings in the array
+ *  @param  string_array null terminated array of pointers to strings
+ *  @return number of strings in the array
+ *
+ *  @remark
+ *  Equivalent to g_strv_length()
  */
 int ntsa_length(Null_Terminated_String_Array string_array) {
    assert(string_array);
