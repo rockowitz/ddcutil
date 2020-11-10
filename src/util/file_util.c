@@ -121,43 +121,43 @@ typedef struct {
    char **  lines;
    int      size;
    int      ct;
-} Circular_Line_Buffer;
+} Circular_String_Buffer;
 
 
-Circular_Line_Buffer *
-clb_new(int size) {
-   Circular_Line_Buffer * clb = calloc(1, sizeof(Circular_Line_Buffer));
-   clb->lines = calloc(size, sizeof(char*));
-   clb->size = size;
-   clb->ct = 0;
-   return clb;
+Circular_String_Buffer *
+csb_new(int size) {
+   Circular_String_Buffer * csb = calloc(1, sizeof(Circular_String_Buffer));
+   csb->lines = calloc(size, sizeof(char*));
+   csb->size = size;
+   csb->ct = 0;
+   return csb;
 }
 
 
 void
-clb_add(Circular_Line_Buffer * clb, char * line) {
-    int nextpos = clb->ct % clb->size;
-    // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, clb->ct, nextpos, line);
-    if (clb->lines[nextpos])
-       free(clb->lines[nextpos]);
-    clb->lines[nextpos] = line;
-    clb->ct++;
+csb_add(Circular_String_Buffer * csb, char * line) {
+    int nextpos = csb->ct % csb->size;
+    // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, csb->ct, nextpos, line);
+    if (csb->lines[nextpos])
+       free(csb->lines[nextpos]);
+    csb->lines[nextpos] = line;
+    csb->ct++;
 }
 
 
 GPtrArray *
-clb_to_g_ptr_array(Circular_Line_Buffer * clb) {
-   // printf("(%s) clb->size=%d, clb->ct=%d\n", __func__, clb->size, clb->ct);
-   GPtrArray * pa = g_ptr_array_sized_new(clb->ct);
+csb_to_g_ptr_array(Circular_String_Buffer * csb) {
+   // printf("(%s) csb->size=%d, csb->ct=%d\n", __func__, csb->size, csb->ct);
+   GPtrArray * pa = g_ptr_array_sized_new(csb->ct);
 
    int first = 0;
-   if (clb->ct > clb->size)
-      first = clb->ct % clb->size;
+   if (csb->ct > csb->size)
+      first = csb->ct % csb->size;
    // printf("(%s) first=%d\n", __func__, first);
 
-   for (int ndx = 0; ndx < clb->ct; ndx++) {
-      int pos = (first + ndx) % clb->size;
-      char * s = clb->lines[pos];
+   for (int ndx = 0; ndx < csb->ct; ndx++) {
+      int pos = (first + ndx) % csb->size;
+      char * s = csb->lines[pos];
       // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
 
       g_ptr_array_add(pa, s);
@@ -198,16 +198,17 @@ file_get_last_lines(
          fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
    }
    else {
-      Circular_Line_Buffer* clb = clb_new(maxlines);
+      Circular_String_Buffer* csb = csb_new(maxlines);
       // if line == NULL && len == 0, then getline allocates buffer for line
       char * line = NULL;
       size_t len = 0;
       int    linectr = 0;
       errno = 0;
+      // line == NULL and len == 0 => getline() allocates buffer, caller must free
       while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
-         clb_add(clb, line);
+         csb_add(csb, line);
 
          // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
          line = NULL;  // reset for next getline() call
@@ -225,8 +226,8 @@ file_get_last_lines(
       if (rc > maxlines)
          rc = maxlines;
 
-      *line_array_loc = clb_to_g_ptr_array(clb);
-      free(clb);
+      *line_array_loc = csb_to_g_ptr_array(csb);
+      free(csb);
 //      if (debug) {
 //         GPtrArray * la = *line_array_loc;
 //         printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
