@@ -529,7 +529,7 @@ dir_foreach(
  *  \param   dirname      directory name
  *  \param   fn_filter    tests the name of a file in a directory to see if should
  *                        be processed.  If NULL, all files are processed.
- *  \param   compare_func qsort style function to compare filenames
+ *  \param   compare_func qsort style function to compare filenames. If NULL perform string comparison
  *  \param   func         function to be called for each filename in the directory
  *  \param   accumulator  pointer to a data structure passed
  *  \param   depth        logical indentation depth
@@ -557,7 +557,6 @@ dir_ordered_foreach(
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
             if (!fn_filter || fn_filter(dent->d_name)) {
                g_ptr_array_add(simple_filenames, strdup(dent->d_name));
-
             }
          }
       }
@@ -565,6 +564,8 @@ dir_ordered_foreach(
 
       if (compare_func)
          g_ptr_array_sort(simple_filenames, compare_func);
+      else
+         g_ptr_array_sort(simple_filenames, indirect_strcmp);
 
       for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
          char * fn = g_ptr_array_index(simple_filenames, ndx);
