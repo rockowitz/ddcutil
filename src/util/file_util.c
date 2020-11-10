@@ -124,6 +124,11 @@ typedef struct {
 } Circular_String_Buffer;
 
 
+/** Allocates a new #Circular_String_Buffer
+ *
+ *  @param  size  buffer size (number of entries)
+ *  @return newly allocated #Circular_String_Buffer
+ */
 Circular_String_Buffer *
 csb_new(int size) {
    Circular_String_Buffer * csb = calloc(1, sizeof(Circular_String_Buffer));
@@ -134,17 +139,34 @@ csb_new(int size) {
 }
 
 
+/** Appends a string to a #Circular_String_Buffer.
+ *
+ *  \param   csb   #Circular_String_Buffer
+ *  \param   line  string to append
+ *  \param   copy  if true, a copy of the string is appended to the buffer
+ *                 if false, the string itself is appended
+ */
 void
-csb_add(Circular_String_Buffer * csb, char * line) {
+csb_add(Circular_String_Buffer * csb, char * line, bool copy) {
     int nextpos = csb->ct % csb->size;
     // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, csb->ct, nextpos, line);
     if (csb->lines[nextpos])
        free(csb->lines[nextpos]);
-    csb->lines[nextpos] = line;
+    if (copy)
+       csb->lines[nextpos] = g_strdup(line);
+    else
+       csb->lines[nextpos] = line;
     csb->ct++;
 }
 
 
+/** All the strings in a #Circular_String_Buffer are moved to  a newly
+ *  allocated GPtrArray. The count of lines in the now empty #Circular_String_Buffer
+ *  is set to 0.
+ *
+ *   \param csb #Circular_String_Buffer to convert
+ *   \return    newly allocated #GPtrArray
+ */
 GPtrArray *
 csb_to_g_ptr_array(Circular_String_Buffer * csb) {
    // printf("(%s) csb->size=%d, csb->ct=%d\n", __func__, csb->size, csb->ct);
@@ -162,7 +184,7 @@ csb_to_g_ptr_array(Circular_String_Buffer * csb) {
 
       g_ptr_array_add(pa, s);
    }
-
+   csb->ct = 0;
    return pa;
 }
 
@@ -208,7 +230,7 @@ file_get_last_lines(
       while (getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
-         csb_add(csb, line);
+         csb_add(csb, line, /*copy=*/ true);
 
          // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
          line = NULL;  // reset for next getline() call
