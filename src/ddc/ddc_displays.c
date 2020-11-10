@@ -899,11 +899,11 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    if (debug) {
       if (result) {
-         DBGMSG0("Done.  Returning: ");
+         DBGMSG("Done.  Returning: ");
          ddc_dbgrpt_display_ref(result, 1);
       }
       else
-         DBGMSG0("Done.  Returning NULL");
+         DBGMSG("Done.  Returning NULL");
    }
 
    return result;
