@@ -2,13 +2,14 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
 /** \cond */
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 /** \endcond */
@@ -182,5 +183,26 @@ char * vnt_interpret_flags(
       Value_Name_Title_Table  bitname_table,
       bool                    use_title,
       char *                  sepstr);
+
+
+//
+// Circular String Buffer
+//
+
+typedef struct {
+   char **  lines;
+   int      size;
+   int      ct;
+} Circular_String_Buffer;
+
+
+/** Allocates a new #Circular_String_Buffer
+ *
+ *  @param  size  buffer size (number of entries)
+ *  @return newly allocated #Circular_String_Buffer
+ */
+Circular_String_Buffer * csb_new(int size);
+void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
+GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
 
 #endif /* DATA_STRUCTURES_H */
