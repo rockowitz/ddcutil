@@ -545,7 +545,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
    if (display_ct == 0) {
       rpt_vstring(depth, "No %sdisplays found.", (!include_invalid_displays) ? "active " : "");
       if ( get_output_level() >= DDCA_OL_NORMAL )
-         rpt_label(depth, "Use command \"ddcutil environment\" for possible reasons.");
+         rpt_label(depth, "Run \"ddcutil environment\" for possible reasons.");
    }
 
    DBGMSF(debug, "Done.  Returning: %d", display_ct);
