@@ -541,7 +541,6 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
          rpt_title("",0);
       }
    }
-   display_ct = 0;
    if (display_ct == 0) {
       rpt_vstring(depth, "No %sdisplays found.", (!include_invalid_displays) ? "active " : "");
       if ( get_output_level() >= DDCA_OL_NORMAL )
