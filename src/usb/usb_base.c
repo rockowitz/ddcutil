@@ -151,7 +151,7 @@ hiddev_get_device_info(
       Byte                     calloptions)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
    assert(dev_info);
 
    int rc = ioctl(fd, HIDIOCGDEVINFO, dev_info);
@@ -163,7 +163,7 @@ hiddev_get_device_info(
   }
 
   assert(rc <= 0);
-  DBGMSF(debug, "Done.     Returning: %s", psc_desc(rc));
+  DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", psc_desc(rc));
   return rc;
 }
 
