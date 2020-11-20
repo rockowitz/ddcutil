@@ -2683,7 +2683,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
    },
    {  .code=0x04,                        // Defined in 2.0, identical in 3.0
       .vcp_spec_groups = VCP_SPEC_PRESET,
-      .desc = "Restore all factor presets including brightness/contrast, "
+      .desc = "Restore all factory presets including brightness/contrast, "
               "geometry, color, and TV defaults.",
       .vcp_subsets = VCP_SUBSET_COLOR,                // but note WO
       .v20_flags =  DDCA_WO | DDCA_WO_NC,
