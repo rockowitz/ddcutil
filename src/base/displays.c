@@ -18,8 +18,10 @@
 #include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
+#ifdef ENABLE_UDEV
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
+#endif
 /** \endcond */
 
 #include "public/ddcutil_types.h"
