@@ -331,6 +331,10 @@ char * lsub(const char * s, int ct) {
  *
  * The returned string has been malloc'd.  It is the responsibility of
  * the caller to free it.
+ *
+ * @remark
+ * If ct < 0, i.e. pieces is null terminated, at most the first 9999 strings in
+ * the pieces array are joined.
  */
 char * strjoin( const char ** pieces, const int ct0, const char * sepstr) {
    // printf("(%s) ct0=%d, sepstr=|%s|\n", __func__, ct0, sepstr);
@@ -349,6 +353,7 @@ char * strjoin( const char ** pieces, const int ct0, const char * sepstr) {
 
    // printf("(%s) ct=%d, total_length=%d\n", __func__, ct, total_length);
    char * result = malloc(total_length);
+   result[0] = '\0';
    char * end = result;
    for (ndx=0; ndx<ct; ndx++) {
       if (ndx > 0 && seplen > 0) {
@@ -616,7 +621,6 @@ int ntsa_findx(
    }
    // printf("(%s) Returning: %d\n", __func__, result);
    return result;
-
 }
 
 
