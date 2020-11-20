@@ -350,6 +350,7 @@ AS_IF([test "x$enable_doxygen" = "xyes"],
 ### Resolve choices for public options
 ###
 
+AC_MSG_NOTICE( [Resolving options...] ) 
 dnl --enable-targetbsd => --disable-envcmds, --disable-usb, --disable-udev
 
 AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_envcmds" = "xyes" ],
@@ -590,21 +591,23 @@ dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.32) 
 required_packages="$required_packages glib-2.0 >= 2.32"
 
-PKG_CHECK_MODULES(UDEV,   libudev, 
-     [libudev_found=1],  
-     [libudev_found=0
-      AC_MSG_NOTICE( [The package providing libudev.h varies by Linux distribution and release.] )
-      AC_MSG_NOTICE( [It may be a udev specific package, e.g. libudev-dev, libudev-devel] )
-      AC_MSG_NOTICE( [or it may be part of systemd, e.g systemd-devel] )
-      AC_MSG_ERROR( [libudev not found] )
-     ] )
+
+AS_IF([test "x$enable_udev" = "xyes"],
+   PKG_CHECK_MODULES(UDEV,   libudev, 
+       [libudev_found=1],  
+       [libudev_found=0
+       AC_MSG_NOTICE( [The package providing libudev.h varies by Linux distribution and release.] )
+       AC_MSG_NOTICE( [It may be a udev specific package, e.g. libudev-dev, libudev-devel] )
+       AC_MSG_NOTICE( [or it may be part of systemd, e.g systemd-devel] )
+       AC_MSG_ERROR( [libudev not found] )
+       ] )
+   ,
+   )
 required_packages="$required_packages xrandr x11"
 dnl how to handle libudev?   punt for now
 
 dnl disabled because systemd_util.c no longer needed:
 dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
-
-
 
 
 
