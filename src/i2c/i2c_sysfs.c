@@ -421,7 +421,7 @@ void report_one_bus_i2c(
    }
 
    rpt_nl();
-   rpt_vstring(depth, "Examining device /sus/bus/i2c/devices/i2c-%d...", busno);
+   rpt_vstring(depth, "Examining device /sys/bus/i2c/devices/i2c-%d...", busno);
    int d1 = (debug) ? -1 : depth+1;
    I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
    report_i2c_sys_info(info, depth+1);

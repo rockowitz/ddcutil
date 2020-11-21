@@ -165,7 +165,7 @@ ddc_open_display(
                   // How is this even possible?
                   // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
                   //          close(fd) fails
-                  DBGMSG("No EDID for device on bus /dev/i2c-%d", dref->io_path.path.i2c_busno);
+                  DBGMSG("No EDID for device on bus /dev/"I2C"-%d", dref->io_path.path.i2c_busno);
                   close(fd);
                   ddcrc = DDCRC_EDID;
                   free_display_handle(dh);

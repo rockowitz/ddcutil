@@ -382,7 +382,7 @@ char * monitor_selection_option_help =
        "  The monitor to be communicated with can be specified using the following options:\n"
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
-       "  --bus <bus number>, for /dev/i2c-<bus number>\n"
+       "  --bus <bus number>, for /dev/"I2C"-<bus number>\n"
 #ifdef HAVE_ADL
        "  --adl <adapter_number>.<display_number>, for monitors connected to an AMD video card\n"
        "          running AMD's proprietary video driver (ADL is an acronym for AMD Display Library)\n"
@@ -414,7 +414,7 @@ char * tracing_comma_separated_option_help =
 char * tracing_multiple_call_option_help =
        "Trace by trace class:\n"
        "  The argument to --trace is a trace class.  Specify the --trace option multiple\n"
-       "  times to activate multiple trace classes, e.g. \"--trace i2c --trace ddc\"\n"
+       "  times to activate multiple trace classes, e.g. \"--trace "I2C" --trace ddc\"\n"
        "  Valid trace classes are:  BASE, I2C, ADL, DDC, DDCIO, VCP, TOP, ENV, API, UDF, SLEEP, RETRY, ALL.\n"
        "  Trace class names are not case sensitive.\n"
        "  (Some trace classes are more useful than others.)\n"

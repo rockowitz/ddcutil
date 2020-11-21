@@ -96,7 +96,7 @@ int i2c_open_bus(int busno, Byte callopts) {
    char filename[20];
    int  fd;             // Linux file descriptor
 
-   snprintf(filename, 19, "/dev/i2c-%d", busno);
+   snprintf(filename, 19, "/dev/"I2C"-%d", busno);
    RECORD_IO_EVENT(
          IE_OPEN,
          ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
@@ -247,7 +247,7 @@ static bool is_edp_device(int busno) {
    bool result = false;
 
    char cmd[100];
-   snprintf(cmd, 100, "ls -d /sys/class/drm/card*/card*/i2c-%d", busno);
+   snprintf(cmd, 100, "ls -d /sys/class/drm/card*/card*/"I2C"-%d", busno);
    // DBGMSG("cmd: %s", cmd);
 
    GPtrArray * lines = execute_shell_cmd_collect(cmd);
@@ -746,7 +746,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
 // used by detect, interrogate commands, C API
 void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    DDCA_Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "I2C bus:             /dev/i2c-%d", businfo->busno);
+   rpt_vstring(depth, "I2C bus:             /dev/"I2C"-%d", businfo->busno);
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
@@ -771,11 +771,13 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "%s:   %s", fn, sysattr_name);
       free(sysattr_name);
 
+#ifndef TARGET_BSD
       if (output_level >= DDCA_OL_VV) {
          I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
          report_i2c_sys_info(info, depth);
          free_i2c_sys_info(info);
       }
+#endif
    }
 
    if (businfo->edid) {
@@ -807,7 +809,7 @@ bool i2c_device_exists(int busno) {
    char namebuf[20];
    struct stat statbuf;
    int  rc = 0;
-   sprintf(namebuf, "/dev/i2c-%d", busno);
+   sprintf(namebuf, "/dev/"I2C"-%d", busno);
    errno = 0;
    rc = stat(namebuf, &statbuf);
    errsv = errno;
@@ -884,7 +886,7 @@ int i2c_detect_buses() {
          i2c_check_bus(businfo);
          // if (debug || IS_TRACING() )
          //    i2c_dbgrpt_bus_info(businfo, 0);
-         DBGMSF(debug, "Valid bus: /dev/i2c-%d", busno);
+         DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);
       }
       bva_free(i2c_bus_bva);
