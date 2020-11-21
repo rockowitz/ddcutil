@@ -16,12 +16,10 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c/i2c_strategy_dispatcher.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "public/ddcutil_types.h"
@@ -42,6 +40,7 @@
 #include "base/thread_sleep_data.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #include "adl/adl_shim.h"
 
 #ifdef USE_USB
