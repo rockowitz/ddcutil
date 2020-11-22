@@ -184,7 +184,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean enable_usb_flag = false;
 #endif
    gboolean timeout_i2c_io_flag = false;
-   gboolean reduce_sleeps_flag  = false;
+   gboolean reduce_sleeps_flag  = true;
    gboolean deferred_sleep_flag = false;
    gboolean dsa_flag       = false;
    gboolean f1_flag        = false;
@@ -286,8 +286,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
 //                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
-      {"less-sleep" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
-      {"sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
+      {"less-sleep" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
+      {"sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
+
+      {"enable-sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
+
+      {"disable-sleep-less",'\0',G_OPTION_FLAG_REVERSE,
+                                     G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps",  NULL},
+
+
 //    {"reduce-sleeps",'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
 //    {"no-reduce-sleeps",'\0',G_OPTION_FLAG_REVERSE,
 //                               G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps (default)",  NULL},
