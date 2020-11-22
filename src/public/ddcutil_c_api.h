@@ -617,21 +617,6 @@ ddca_create_busno_display_identifier(
       int                      busno,
       DDCA_Display_Identifier* did_loc);
 
-/** \deprecated ADL no longer supported
-  * Creates a display identifier using an ADL (adapter index, display index) pair
- * @param[in]  iAdapterIndex ADL adapter index
- * @param[in]  iDisplayIndex ADL display index
- * @param[out] did_loc          where to return display identifier handle
- * @return     status code
- *
- * \ingroup api_display_spec
- */
-DDCA_Status
-ddca_create_adlno_display_identifier(
-      int                      iAdapterIndex,
-      int                      iDisplayIndex,
-      DDCA_Display_Identifier* did_loc);
-
 /** Creates a display identifier using some combination of the manufacturer id,
  * model name string and serial number string.  At least 1 of the 3 must be specified.
  * @param[in]  mfg_id    3 letter manufacturer id

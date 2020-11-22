@@ -88,22 +88,6 @@ ddca_create_busno_display_identifier(
 
 
 DDCA_Status
-ddca_create_adlno_display_identifier(
-      int                      iAdapterIndex,
-      int                      iDisplayIndex,
-      DDCA_Display_Identifier* did_loc)
-{
-   // assert(did_loc);
-   free_thread_error_detail();
-   PRECOND(did_loc);
-   Display_Identifier* did = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);
-   *did_loc = did;
-   assert(*did_loc);
-   return 0;
-}
-
-
-DDCA_Status
 ddca_create_mfg_model_sn_display_identifier(
       const char*              mfg_id,
       const char*              model_name,
