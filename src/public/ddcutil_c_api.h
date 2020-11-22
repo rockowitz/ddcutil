@@ -39,7 +39,7 @@ extern "C" {
  * for the ddcutil command line program.
  *
  * The operation of these functions can be tweaked in two ways.
- * - The "depth" parameter is a logical indentation depth.  This allows
+ * - The "depth" parameter is a logical indentation depth. This enables
  *   reports that invoke other reports to indent the subreports
  *   sensibly.  At the level of the ddcutil_c_api(), one unit of
  *   logical indentation depth translates to 3 spaces.
@@ -110,7 +110,7 @@ ddca_build_options(void);
 
  /** Frees a detailed error information record
   *
-  *  @param  ddca_erec  error information to free
+  *  @param[in]  ddca_erec  error information to free
   *
   *  @since 0.9.0
   */
@@ -120,8 +120,8 @@ ddca_build_options(void);
 
  /** Issues a detailed report of a #DDCA_Error_Detail instance.
   *
-  *  @param ddca_erec  error information record
-  *  @param depth      logical indentation depth
+  *  @param[in] ddca_erec  error information record
+  *  @param[in] depth      logical indentation depth
   */
  void
  ddca_report_error_detail(
@@ -235,7 +235,7 @@ ddca_is_verify_enabled(void);
 
 /** Sets the sleep multiplier factor to be used for new threads.
  *
- *  \param  multiplier
+ *  \param[in]  multiplier
  *
  *  \remark
  *  This function is intended for use only during program initialization,
@@ -270,7 +270,7 @@ ddca_get_global_sleep_multiplier();
 
 /** Sets the sleep multiplier factor for the current thread.
  *
- *  @param multiplier
+ *  @param[in] multiplier
  */
 void
 ddca_set_sleep_multiplier(double multiplier);
@@ -278,7 +278,7 @@ ddca_set_sleep_multiplier(double multiplier);
 
 /** Gets the sleep multiplier for the current thread
  *
- *  @return sleep multiplier
+ *  @return[in] sleep multiplier
  */
 double
 ddca_get_sleep_multiplier();
@@ -395,7 +395,7 @@ ddca_is_report_ddc_errors_enabled(void);
 
 /** Turn on tracing for a specific function.
  *
- *  \param  funcname   function name
+ *  \param[in]  funcname   function name
  *
  *  \remark
  *  The function must include trace calls.
@@ -406,8 +406,8 @@ ddca_add_traced_function(
 
 /** Turn on all tracing in a specific source file.
  *
- *  \param filename  simple file name, with or without the ".c" extension,
- *                   e.g. vcp_feature_set.c, vcp_feature_set
+ *  \param[in] filename  simple file name, with or without the ".c" extension,
+ *                        e.g. vcp_feature_set.c, vcp_feature_set
  */
 void
 ddca_add_traced_file(
@@ -415,30 +415,33 @@ ddca_add_traced_file(
 
 /* Specify one or more trace groups.
  *
- *  \param trace_flags  bitfield indicating groups to trace
+ *  \param[in] trace_flags  bitfield indicating groups to trace
  */
 void
 ddca_set_trace_groups(
       DDCA_Trace_Group trace_flags);
 
-
 /** Given a trace group name, returns its identifier.
  *  Case is ignored.
  *
- *  \param   name trace group name
- *  \return  trace group identifier
- *  \retval  TRC_NEVER unrecognized name
+ *  \param[in] name trace group name
+ *  \return    trace group identifier
+ *  \retval    TRC_NEVER unrecognized name
  */
 DDCA_Trace_Group
 ddca_trace_group_name_to_value(char * name);
 
+/** Sets tracing options
+ *
+ *  \param[in] options  enum that can be used as bit flags
+ */
 void
 ddca_set_trace_options(DDCA_Trace_Options  options);
+
 
 //
 // Performance Options
 //
-
 
 bool
 ddca_enable_sleep_suppression(bool newval); ;
@@ -457,15 +460,20 @@ ddca_is_sleep_suppression_enabled();
 void
 ddca_reset_stats(void);
 
-
+/** Assigns a description to the the current thread.
+ *
+ *  \param[in] description
+ */
 void
 ddca_set_thread_description(const char * description);
+
+/** Appends text to the current thread description.
+ *
+ *  \param[in] description]
+ */
 void
 ddca_append_thread_description(const char * description);
 const char * ddca_get_thread_descripton();
-
-
-
 
 /** Show execution statistics.
  *
@@ -483,7 +491,7 @@ ddca_show_stats(
 
 /** Enable display of internal exception reports (Error_Info).
  *
- *  @param  enable   true/false
+ *  @param[in] enable  true/false
  *  @return prior value
  */
 bool
@@ -499,10 +507,10 @@ ddca_enable_error_info(
  *
  *  Must be called before any API call that triggers display detection.
  *
- *  @param onoff
- *  @retval  DDCRC_OK                success
- *  @retval  DDCRC_INVALID_OPERATION display detection has already occurred
- *  @retval  DDCRC_UNIMPLEMENTED     ddcutil not built with USB monitor support
+ *  @param[in] onoff
+ *  @retval    DDCRC_OK                success
+ *  @retval    DDCRC_INVALID_OPERATION display detection has already occurred
+ *  @retval    DDCRC_UNIMPLEMENTED     ddcutil not built with USB monitor support
  *
  *  @remark
  *  The default is to check USB devices.
@@ -609,7 +617,8 @@ ddca_create_busno_display_identifier(
       int                      busno,
       DDCA_Display_Identifier* did_loc);
 
-/** Creates a display identifier using an ADL (adapter index, display index) pair
+/** \deprecated ADL no longer supported
+  * Creates a display identifier using an ADL (adapter index, display index) pair
  * @param[in]  iAdapterIndex ADL adapter index
  * @param[in]  iDisplayIndex ADL display index
  * @param[out] did_loc          where to return display identifier handle
@@ -754,7 +763,7 @@ ddca_get_display_ref(
  *
  * Use this function to safely release a #DDCA_Display_Ref.
  * If the display reference was dynamically created, it is freed.
- * If the display references was permanently allocated (normal case), does nothing.
+ * If the display reference was permanently allocated (normal case), does nothing.
  * @param[in] dref  display reference to free
  * @retval DDCRC_OK     success, or dref == NULL
  * @retval DDCRC_ARG    dref does not point to a valid display reference
@@ -839,7 +848,7 @@ ddca_dh_repr(
 // CHANGE NAME?
 /** Returns the display reference for display handle.
  *
- *  @param  ddca_dh   display handle
+ *  @param[in] ddca_dh   display handle
  *  @return #DDCA_Display_Ref of the handle,
  *          NULL if invalid display handle
  *
@@ -887,8 +896,8 @@ ddca_parse_capabilities_string(
 
 /** Frees a DDCA_Capabilities struct
  *
- *  @param[in]  parsed_capabilities  pointer to struct to free.
- *                                   Does nothing if NULL.
+ *  @param[in] parsed_capabilities  pointer to struct to free,
+ *                                  does nothing if NULL.
  */
 void
 ddca_free_parsed_capabilities(
@@ -960,7 +969,7 @@ ddca_report_parsed_capabilities(
 /** Returns the VCP feature codes defined in a
  *  parsed capabilities record as a #DDCA_Feature_LIst
  *
- *  @param  parsed_caps  parsed capabilities
+ *  @param[in] parsed_caps  parsed capabilities
  *  @return bitfield of feature ids
  *  @since 0.9.0
  */
@@ -1191,8 +1200,8 @@ ddca_get_simple_nc_feature_value_name_by_table(
 
 /** Outputs a debugging report of the \DDCA_Feature_Metadata data structure.
  *
- *  @param md    pointer to \DDCA_Feature_Metadata instance
- *  @param depth logical indentation depth
+ *  @param[in] md    pointer to \DDCA_Feature_Metadata instance
+ *  @param[in] depth logical indentation depth
  */
 void
 ddca_dbgrpt_feature_metadata(
@@ -1208,8 +1217,8 @@ ddca_dbgrpt_feature_metadata(
  *
  * Output is written using report functions
  *
- * \param dref       pointer to display reference
- * \param depth      logical indentation depth
+ * \param[in] dref       pointer to display reference
+ * \param[in] depth      logical indentation depth
  * \retval DDCRC_ARG invalid display ref
  * \retval 0         success
  *
@@ -1235,7 +1244,7 @@ extern const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST;
 
 /** Returns feature list symbolic name (for debug messages)
  *
- *  @param feature_set_id
+ *  @param[in] feature_set_id
  *  @return symbolic name (do not free)
  */
 const char *
@@ -1447,8 +1456,8 @@ ddca_free_any_vcp_value(
 
 /** Produces a debugging report of a #DDCA_Any_Vcp_Value instance.
  *  The report is written to the current FOUT device.
- *  @param  valrec  instance to report
- *  @param  depth   logical indentation depth
+ *  @param[in]  valrec  instance to report
+ *  @param[in]  depth   logical indentation depth
  *  @since 0.9.0
  */
 void
