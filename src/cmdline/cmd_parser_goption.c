@@ -184,7 +184,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean enable_usb_flag = false;
 #endif
    gboolean timeout_i2c_io_flag = false;
-   gboolean reduce_sleeps_flag  = true;
+   gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
    gboolean deferred_sleep_flag = false;
    gboolean dsa_flag       = false;
    gboolean f1_flag        = false;

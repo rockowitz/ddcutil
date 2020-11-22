@@ -26,7 +26,7 @@
 #include "base/thread_sleep_data.h"
 
 // Experimental suppression of sleeps after reads
-static bool sleep_suppression_enabled = false;
+static bool sleep_suppression_enabled = DEFAULT_SLEEP_LESS;
 
 bool enable_sleep_suppression(bool enable) {
    bool old = sleep_suppression_enabled;

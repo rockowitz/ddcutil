@@ -104,9 +104,11 @@
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
 
-/** Parallelize display checks during initialization if at least this  number of displays */
+/** Parallelize display checks during initialization if at least this number of displays */
 // on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
 #define DISPLAY_CHECK_ASYNC_THRESHOLD   3
 #define DISPLAY_CHECK_ASYNC_NEVER    0xff
+
+#define DEFAULT_SLEEP_LESS true
 
 #endif /* PARMS_H_ */
