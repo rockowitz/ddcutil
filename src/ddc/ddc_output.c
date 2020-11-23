@@ -926,6 +926,7 @@ ddc_show_vcp_values(
    return psc;
 }
 
+
 static void init_ddc_output_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(get_raw_value_for_feature_metadata);
