@@ -109,6 +109,7 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
 
    free(pcaps->raw_value);
    free(pcaps->mccs_version_string);
+   free(pcaps->model);
 
    if (pcaps->commands)
       bva_free(pcaps->commands);
