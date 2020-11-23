@@ -30,3 +30,7 @@ void init_base_services() {
    init_thread_data_module();
    init_displays();
 }
+
+void release_base_services() {
+   release_thread_data_module();
+}
