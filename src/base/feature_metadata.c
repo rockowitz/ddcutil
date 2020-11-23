@@ -443,6 +443,8 @@ Display_Feature_Metadata *
 dfm_from_ddca_feature_metadata(
       DDCA_Feature_Metadata * ddca_meta)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    assert(ddca_meta);
    assert(memcmp(ddca_meta->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
 
@@ -458,6 +460,7 @@ dfm_from_ddca_feature_metadata(
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
    dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);      // OR DUPLICATE?
    dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
+   DBGMSF(debug, "Done. dfm=%p");
    return dfm;
 }
 
