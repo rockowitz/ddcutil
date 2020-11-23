@@ -164,6 +164,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->pdid)
       free_display_identifier(parsed_cmd->pdid);
 
+   free(parsed_cmd->raw_command);
    free(parsed_cmd->failsim_control_fn);
    free(parsed_cmd->fref);
    ntsa_free(parsed_cmd->traced_files, true);
