@@ -283,6 +283,9 @@ dyn_create_single_feature_set_by_hexid2(
       DDCA_Display_Ref       display_ref,
       bool                  force)
 {
+   bool debug = false;
+   DBGMSF(debug, "feature_code=0x%02x, display_ref=%s, force=%s",
+                 feature_code, dref_repr_t(display_ref), sbool(force));
    Display_Ref * dref = (Display_Ref *) display_ref;
    assert( dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 
@@ -318,6 +321,7 @@ dyn_create_single_feature_set_by_hexid2(
       // result = NULL  ??
    }
 
+   DBGMSF(debug, "Done. Returning %p", result);
    return result;
 }
 
