@@ -130,9 +130,8 @@ void ptd_cross_thread_operation_end() {
 }
 
 
-/** Block execution of for single Per_Thread_Data operations
- *  when an operation involving multiple Per_Thead_Data instances
- *  is active.
+/** Block execution of single Per_Thread_Data operations when an operation
+ *  involving multiple Per_Thead_Data instances is active.
  */
 
 void ptd_cross_thread_operation_block() {
@@ -146,12 +145,27 @@ void ptd_cross_thread_operation_block() {
 }
 
 
+// GDestroyNotify: void (*GDestroyNotify) (gpointer data);
+
+void per_thread_data_destroy(void * data) {
+   if (data) {
+      Per_Thread_Data * ptd = data;
+      free(ptd->description);
+      free(ptd);
+   }
+}
+
 /** Initialize per_thread_data.c at program startup */
 void init_thread_data_module() {
-   per_thread_data_hash = g_hash_table_new(g_direct_hash, NULL);
+   per_thread_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_thread_data_destroy);
    // DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
 }
 
+void release_thread_data_module() {
+   if (per_thread_data_hash) {
+      g_hash_table_destroy(per_thread_data_hash);
+   }
+}
 
 //
 // Locking
@@ -228,8 +242,11 @@ void ptd_append_thread_description(const char * addl_description) {
    // DBGMSG("ptd->description = %s, addl_descripton = %s", ptd->description, addl_description);
    if (!ptd->description)
       ptd->description = strdup(addl_description);
-   else if (str_contains(ptd->description, addl_description) < 0)
+   else if (str_contains(ptd->description, addl_description) < 0) {
+      char * s = ptd->description;
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
+      free(s);
+   }
 
    // DBGMSG("Final ptd->description = %s", ptd->description);
 }
