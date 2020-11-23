@@ -881,5 +881,6 @@ bye:
            cur_time_s);
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
+   release_base_services();
    return main_rc;
 }
