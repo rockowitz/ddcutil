@@ -36,6 +36,26 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
+static bool terminate_watch_thread = false;
+
+#define WATCH_DISPLAYS_DATA_MARKER "WDDM"
+typedef struct {
+   char                   marker[4];
+   Display_Change_Handler display_change_handler;
+   pid_t                  main_process_id;
+   pid_t                  main_thread_id;
+} Watch_Displays_Data;
+
+static
+void free_watch_displays_data(Watch_Displays_Data * wdd) {
+   if (wdd) {
+      assert( memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+      wdd->marker[3] = 'x';
+      free(wdd);
+   }
+}
+
+
 
 const char * displays_change_type_name(Displays_Change_Type change_type) {
    char * result = NULL;
@@ -61,7 +81,6 @@ bool check_thread_or_process(pid_t id) {
       DBGMSG("!!! Returning: %s", sbool(result));
    return result;
 }
-
 
 
 GPtrArray *  get_sysfs_drm_displays() {
@@ -231,12 +250,20 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 gpointer watch_displays_using_poll(gpointer data) {
    bool debug = false;
    DBGMSG("Starting");
+   Watch_Displays_Data * wdd = data;
+   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
    GPtrArray * prev_displays = get_sysfs_drm_displays();
    DBGTRC(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
+      if (terminate_watch_thread) {
+         DBGTRC(true, TRACE_GROUP, "Terminating");
+         free_watch_displays_data(wdd);
+         g_thread_exit(0);
+      }
+
       prev_displays = check_displays(prev_displays, data);
 
       usleep(3000*1000);
@@ -340,7 +367,14 @@ gpointer watch_displays_using_udev(gpointer data) {
 
    while (true) {
 
+      if (terminate_watch_thread) {
+         DBGTRC(true, TRACE_GROUP, "Terminating");
+         free_watch_displays_data(wdd);
+         g_thread_exit(0);
+      }
+
       // Doesn't work to detect client crash, main thread and process remains for some time.
+      // 11/2020: is this even needed since terminate_watch_thread check added?
 #ifdef DOESNT_WORK
       bool pid_found = check_thread_or_process(cur_pid);
       if (!pid_found) {
@@ -355,7 +389,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 #endif
 
       DBGMSF(debug, "Blocking until there is data");
-      // by default, is non-blocking as of lubudev 171, use fcntl() to make file descriptor blocking
+      // by default, is non-blocking as of libudev 171, use fcntl() to make file descriptor blocking
       struct udev_device* dev = udev_monitor_receive_device(mon);
       if (dev) {
          if (debug) {
@@ -460,4 +494,19 @@ ddc_start_watch_displays()
          data);
    return ddc_excp;
 }
+
+
+void
+ddc_stop_watch_displays()
+{
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting. " );
+
+   terminate_watch_thread = true;  // signal watch thread to terminate
+
+   DBGTRC(debug, TRACE_GROUP, "Done");
+   return;
+}
+
+
 

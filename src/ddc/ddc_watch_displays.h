@@ -30,21 +30,14 @@ typedef void (*Display_Change_Handler)(
                  GPtrArray *          removed,
                  GPtrArray *          added);
 
-#define WATCH_DISPLAYS_DATA_MARKER "WDDM"
-typedef struct {
-   char                   marker[4];
-   Display_Change_Handler display_change_handler;
-   pid_t                  main_process_id;
-   pid_t                  main_thread_id;
-} Watch_Displays_Data;
-
-
-Error_Info * ddc_start_watch_displays();
-
 void dummy_display_change_handler(
         Displays_Change_Type change_type,
         GPtrArray *          removed,
         GPtrArray *          added);
+
+
+Error_Info * ddc_start_watch_displays();
+void         ddc_stop_watch_displays();
 
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */
