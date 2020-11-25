@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>    // normally included by stdlib.h, but explicitly require for Alpint Linux
+#include <sys/types.h>    // normally included by stdlib.h, but explicitly required for Alpine Linux
 /** \endcond */
 
 #include "coredefs.h"
@@ -69,7 +69,7 @@ struct {
    ushort       bx;                      ///< blue  x coordinate
    ushort       by;                      ///< blue  y coordinate
    Byte         video_input_definition;  /// EDID byte 20 (x14)
-   // bool         is_digital_input;      // from byte 20 (x14), but 7
+   // bool         is_digital_input;      // from byte 20 (x14), bit 7
    Byte         supported_features;      ///< EDID byte 24 (x18) supported features bitmap
    uint8_t      extension_flag;          ///< number of optional extension blocks
    char         edid_source[EDID_SOURCE_FIELD_SIZE];  ///< describes source of EDID
