@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -297,7 +297,6 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
 }
 
 
-
 /** Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *
@@ -319,22 +318,20 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
    // verbose = true;
    if (edid) {
       rpt_vstring(depth,"EDID synopsis:");
-
-      rpt_vstring(d1,"Mfg id:           %s",          edid->mfg_id);
-      rpt_vstring(d1,"Model:            %s",          edid->model_name);
-      rpt_vstring(d1,"Serial number:    %s",          edid->serial_ascii);
-      char * title = (edid->is_model_year) ? "Model year" : "Manufacture year";
-      rpt_vstring(d1,"%-16s: %d", title, edid->year);
-      rpt_vstring(d1,"EDID version:     %d.%d", edid->edid_version_major, edid->edid_version_minor);
+      rpt_vstring(d1,"Mfg id:               %s",          edid->mfg_id);
+      rpt_vstring(d1,"Model:                %s",          edid->model_name);
+   // rpt_vstring(d1,"Product code:         0x%04x (%u)",      edid->product_code, edid->product_code);
+      rpt_vstring(d1,"Product code:         %u",          edid->product_code);
+      rpt_vstring(d1,"Serial number:        %s",          edid->serial_ascii);
+      // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
+      // useful for differentiating displays that share a generic ASCII "serial number"
+      rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
+      char * title = (edid->is_model_year) ? "Model year:" : "Manufacture year:";
+      rpt_vstring(d1,"%-20s  %d", title, edid->year);
+      rpt_vstring(d1,"EDID version:         %d.%d", edid->edid_version_major, edid->edid_version_minor);
 
       if (verbose) {
-      // rpt_vstring(d1,"Product code:     0x%04x (%u)",      edid->product_code, edid->product_code);
-         rpt_vstring(d1,"Product code:     %u",          edid->product_code);
-         // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
-         // useful for differentiating displays using a generic ASCII serial number
-         rpt_vstring(d1,"Binary sn:        %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
-         rpt_vstring(d1,"Extra descriptor: %s",          edid->extra_descriptor_string);
-
+         rpt_vstring(d1,"Extra descriptor:        %s",          edid->extra_descriptor_string);
          char explbuf[100];
          explbuf[0] = '\0';
          if (edid->video_input_definition & 0x80) {
@@ -367,7 +364,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
          else {
             strcpy(explbuf, "Analog Input");
          }
-         rpt_vstring(d1,"Video input definition: 0x%02x - %s", edid->video_input_definition, explbuf);
+         rpt_vstring(d1,"Video input definition:    0x%02x - %s", edid->video_input_definition, explbuf);
       // rpt_vstring(d1,"Video input:      %s",          (edid->is_digital_input) ? "Digital" : "Analog");
          // end, video_input_definition interpretation
 
@@ -394,7 +391,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
                rpt_vstring(d2, "Digital display type: RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2");
                break;
             default:
-               // should be PROGRAM_LOGIC_ERROR, but that would violdate layering
+               // should be PROGRAM_LOGIC_ERROR, but that would violate layering
                rpt_vstring(d2, "Invalid digital display type: 0x%02x", display_type);
             }
          }
