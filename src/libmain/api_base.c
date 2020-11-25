@@ -173,6 +173,28 @@ _ddca_init(void) {
 }
 
 
+/** Cleanup at library termination
+ *
+ *  - Terminates thread that watches for display addition or removal.
+ *  - Releases heap memory to avoid error reports from memory analyzers.
+ */
+void __attribute__ ((destructor))
+_ddca_terminate(void) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   if (library_initialized) {
+      release_base_services();
+      ddc_stop_watch_displays();
+      library_initialized = false;
+      DBGMSF(debug, "library termination executed");
+   }
+   else {
+      DBGMSF(debug, "library was already terminated");   // should be impossible
+   }
+}
+
+
+
 //
 // Error Detail
 //
