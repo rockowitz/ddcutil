@@ -31,36 +31,9 @@
 
 
 // Variables used by callback functions
-static char *            adlwork       = NULL;
 static char *            usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
-static int               iAdapterIndex = -1;
-static int               iDisplayIndex = -1;
 static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
-
-
-// not currently used
-// Callback function for processing an --adl argument
-gboolean adl_arg_func(const gchar* option_name,
-                      const gchar* value,
-                      gpointer     data,
-                      GError**     error)
-{
-   bool debug = false;
-   DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
-
-   adlwork = strdup(value);   // alt way
-   bool ok = parse_dot_separated_arg(value, &iAdapterIndex, &iDisplayIndex);
-   if (ok) {
-      DBGMSG("parsed adl = %d.%d", iAdapterIndex, iDisplayIndex);
-   }
-   if (!ok) {
-      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "bad adl" );
-   }
-
-   return ok;
-}
-
 
 // Callback function for processing --terse, --verbose and synonyms
 gboolean output_arg_func(const gchar* option_name,
@@ -221,10 +194,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
       {"hiddev", '\0',  0, G_OPTION_ARG_INT,      &hidwork,          "hiddev device number",        "number" },
-#ifdef HAVE_ADL
-//    {"adl",     'a',  0, G_OPTION_ARG_CALLBACK, adl_arg_func,      "ADL adapter and display indexes", "adapterIndex.displayIndex"},
-      {"adl",     'a',  0, G_OPTION_ARG_STRING,   &adlwork,          "ADL adapter and display indexes", "adapterIndex.displayIndex"},
-#endif
       {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers",  "busnum.devicenum"},
       {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",   "mfg_id"},
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
@@ -460,35 +429,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
 #undef SET_CMDFLAG
 
-
    // Create display identifier
    //
    // n. at this point parsed_cmd->pdid == NULL
-
-   if (adlwork) {
-#ifdef HAVE_ADL
-      if (debug)
-         DBGMSG("adlwork = |%s|", adlwork);
-      int iAdapterIndex;
-      int iDisplayIndex;
-      bool adlok = parse_dot_separated_arg(adlwork, &iAdapterIndex, &iDisplayIndex);
-      if (!adlok) {
-          fprintf(stderr, "Invalid ADL argument: %s\n", adlwork );
-          ok = false;
-          // DBGMSG("After ADL parse, ok=%d", ok);
-      }
-      else {
-         // parsedCmd->dref = createAdlDisplayRef(iAdapterIndex, iDisplayIndex);
-         // free(parsed_cmd->pdid);
-         parsed_cmd->pdid = create_adlno_display_identifier(iAdapterIndex, iDisplayIndex);  // new way
-      }
-      explicit_display_spec_ct++;
-#else
-      fprintf(stderr, "ddcutil not built with support for AMD proprietary driver.  --adl option invalid.\n");
-      ok = false;
-#endif
-   }
-
 
    if (usbwork) {
 #ifdef USE_USB
