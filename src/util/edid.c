@@ -410,7 +410,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
                rpt_vstring(d2, "Undefined analog display type");
                break;
             default:
-               // should be PROGRAM_LOGIC_ERROR, but that would violdate layering
+               // should be PROGRAM_LOGIC_ERROR, but that would violate layering
                rpt_vstring(d2, "Invalid analog display type: 0x%02x", display_type);
             }
          }
