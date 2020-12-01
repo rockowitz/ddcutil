@@ -376,8 +376,8 @@ void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
    int d2 = (depth < 0) ? depth : depth + 2;
    rpt_vstring(depth, "Extended information for /sys/bus/i2c/devices/i2c-%d...", info->busno);
 
-   char * busno_pad = (info->busno < 10) ? " " : "";
    if (info) {
+      char * busno_pad = (info->busno < 10) ? " " : "";
       rpt_vstring(d1, "PCI device path:     %s", info->pci_device_path);
       rpt_vstring(d1, "name:                %s", info->device_name);
       rpt_vstring(d1, "i2c-dev/i2c-%d/dev: %s %s",
