@@ -620,9 +620,6 @@ ddca_set_trace_options(DDCA_Trace_Options  options) {
 }
 
 
-
-
-
 //
 // Statistics
 //
@@ -656,8 +653,6 @@ ddca_get_thread_descripton() {
    return ptd_get_thread_description_t();
 }
 
-
-
 void
 ddca_reset_stats(void) {
    // DBGMSG("Executing");
@@ -671,11 +666,8 @@ ddca_show_stats(
       bool            by_thread,
       int             depth)
 {
-   // DBGMSG("stats_types = %d, depth=%d", stats_types, depth);
-
-   ddc_report_stats_main( stats_types,    // stats to show
-                          by_thread,
-                          depth);         // logical indentation depth
+   if (stats_types)
+      ddc_report_stats_main( stats_types, by_thread, depth);
 }
 
 
