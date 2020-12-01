@@ -206,6 +206,9 @@ endif
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
+# hack in asan
+# ddcutil_CFLAGS += -fsanitize=address
+# ddcutil_LD_PRELOAD = -lasan
 
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
@@ -290,6 +293,9 @@ libddcutil_la_LDFLAGS += -export-symbols-regex '(^DDCA_|^ddc[ags]_[^_])'
 libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
 # libddcutil_la_LDFLAGS += -init _ddca_init
 libddcutil_la_LDFLAGS += -pie
+
+# hack: 
+libddcutil_la_LDFLAGS += -fsanatize=address
 
 # doesn't prevent creation of .la 
 # try disabling to create libddcutil.a - doesnt do it
