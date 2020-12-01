@@ -534,6 +534,21 @@ AS_IF( [test "x$enable_use_api" = "xyes"],
          AC_MSG_NOTICE( [use-api..... disabled] )
      )
 
+dnl *** configure option: --enable-asan
+AC_ARG_ENABLE([asan],
+              [ AS_HELP_STRING( [--enable-asan=@<:@no/yes@:>@], [Build for asan (address sanitizer)@<:@default=no@:>@] )],
+              [enable_asan=${enableval}],
+              [enable_asan=no] )
+AM_CONDITIONAL([ASAN_COND], [test "x$enable_asan" = "xyes"] )
+AS_IF( [test "x$enable_asan" = "xyes"],
+         AC_DEFINE( [WITH_ASAN], [1], [If defined, building for Asan instrumentation.])
+         AC_MSG_NOTICE( [asan..... enabled] )
+      ,
+         AC_MSG_NOTICE( [asan..... disabled] )
+     )
+
+
+
 dnl Note to self: use autoheader to regenerate config.h.in whenever new defines added 
 
 
@@ -1255,6 +1270,7 @@ AC_MSG_RESULT([
 	enable_doxygen:         ${enable_doxygen}
 	enable_failsim:         ${enable_failsim}
 	enable_use_api:         ${enable_use_api}
+	enable_asan:            ${enable_asan}
 	include_testcases:      ${include_testcases}
 
 	compiler:               ${CC}
