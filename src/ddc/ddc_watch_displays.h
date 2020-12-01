@@ -14,7 +14,8 @@
 
 #include <glib-2.0/glib.h>
 
-#include "util/error_info.h"
+#include "ddcutil_status_codes.h"
+
 /** \endcond */
 
 typedef enum {Changed_None    = 0,
@@ -35,9 +36,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added);
 
-
-Error_Info * ddc_start_watch_displays();
-void         ddc_stop_watch_displays();
-
+DDCA_Status ddc_start_watch_displays();
+DDCA_Status ddc_stop_watch_displays();
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */

@@ -7,6 +7,7 @@
 #include "config.h"
 
 /** \cond */
+#define _GNU_SOURCE     // for syscall in unistd.h
 #include <assert.h>
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
@@ -18,15 +19,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
+// #include <unistd.h>
 
-#include "util/error_info.h"
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+#include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 /** \endcond */
 
@@ -37,6 +38,8 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 static bool terminate_watch_thread = false;
+static GThread * watch_thread = NULL;
+static GMutex    watch_thread_mutex;
 
 #define WATCH_DISPLAYS_DATA_MARKER "WDDM"
 typedef struct {
@@ -168,7 +171,7 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
    for (int ndx = 0; ndx < first->len; ndx++) {
       gpointer cur = g_ptr_array_index(first, ndx);
       bool found = g_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
-      if (found) {
+      if (!found) {
          g_ptr_array_add(result, strdup(cur));
       }
    }
@@ -198,7 +201,7 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
 
 
 GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Watch_Displays_Data * wdd = data;
@@ -214,32 +217,33 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
          DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
       }
-   }
 
-   GPtrArray * removed = displays_minus(prev_displays, cur_displays);
-   if (removed->len > 0) {
-      DBGTRC(debug, TRACE_GROUP,
-             "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
-      change_type = Changed_Removed;
-   }
+      GPtrArray * removed = displays_minus(prev_displays, cur_displays);
+      if (removed->len > 0) {
+         DBGTRC(debug, TRACE_GROUP,
+                "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+         change_type = Changed_Removed;
+      }
 
-   GPtrArray * added = displays_minus(cur_displays, prev_displays);
-   if (added->len > 0) {
-      DBGTRC(debug, TRACE_GROUP,
-             "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
-      change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
-   }
+      GPtrArray * added = displays_minus(cur_displays, prev_displays);
+      if (added->len > 0) {
+         DBGTRC(debug, TRACE_GROUP,
+                "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
+         change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
+      }
 
-   if (change_type != Changed_None) {
+   //    if (change_type != Changed_None) {
       // assert( change_type != Changed_Both);
       if (wdd && wdd->display_change_handler) {
          wdd->display_change_handler( change_type, removed, added);
       }
+      // }
+      g_ptr_array_free(removed,       true);
+      g_ptr_array_free(added,         true);
    }
 
    g_ptr_array_free(prev_displays, true);
-   g_ptr_array_free(removed,       true);
-   g_ptr_array_free(added,         true);
+
 
    return cur_displays;
 }
@@ -248,8 +252,8 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 // How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
-   bool debug = false;
-   DBGMSG("Starting");
+   bool debug = true;
+   DBGMSF(debug, "Starting");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
@@ -284,7 +288,6 @@ void show_udev_list_entries(
       const char * name  = udev_list_entry_get_name(cur);
       const char * value = udev_list_entry_get_value(cur);
       printf("      %s  -> %s\n", name, value);
-
    }
 }
 
@@ -367,6 +370,9 @@ gpointer watch_displays_using_udev(gpointer data) {
 
    while (true) {
 
+      // Doesn't work to kill thread, udev_monitor_receive_device() is blocking
+      // leave in so that code checkers are fooled into thinking that
+      // free_watch_displays_data() is called at program termination
       if (terminate_watch_thread) {
          DBGTRC(true, TRACE_GROUP, "Terminating");
          free_watch_displays_data(wdd);
@@ -468,45 +474,80 @@ void dummy_display_change_handler(
 }
 
 
-Error_Info *
+/** Starts thread that watches for addition or removal of displays
+ *
+ *  \retval  DDCRC_OK
+ *  \retval  DDCRC_INVALID_OPERATION  thread already running
+ */
+DDCA_Status
 ddc_start_watch_displays()
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. " );
+   DDCA_Status ddcrc = DDCRC_OK;
+   g_mutex_lock(&watch_thread_mutex);
 
-   Error_Info * ddc_excp = NULL;
-
-   Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-   memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-   data->display_change_handler = dummy_display_change_handler;
-   data->main_process_id = getpid();
-   // data->main_thread_id = syscall(SYS_gettid);
-   data->main_thread_id = get_thread_id();
-
-   // GThread * th =
-   g_thread_new(
-         "watch_displays",             // optional thread name
+   if (watch_thread)
+      ddcrc = DDCRC_INVALID_OPERATION;
+   else {
+      terminate_watch_thread = false;
+      Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
+      memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+      data->display_change_handler = dummy_display_change_handler;
+      data->main_process_id = getpid();
+      // data->main_thread_id = syscall(SYS_gettid);
+      data->main_thread_id = get_thread_id();
+      watch_thread = g_thread_new(
+                       "watch_displays",             // optional thread name
 #if ENABLE_UDEV
-        watch_displays_using_udev,    // watch_display_using_poll or watch_displays_using_udev
+                       watch_displays_using_udev,
 #else
-         watch_displays_using_poll,
-#endif  
-         data);
-   return ddc_excp;
+                       watch_displays_using_poll,
+#endif
+                       data);
+   }
+
+   g_mutex_unlock(&watch_thread_mutex);
+   DBGTRC(debug, TRACE_GROUP, "Done. watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   return ddcrc;
 }
 
 
-void
+// only makes sense if polling!
+// locks udev_monitor_receive_device() blocks
+
+/** Halts thread that watches for addition or removal of displays.
+ *
+ *  Does not return until the watch thread exits.
+ *
+ *  \retval  DDCRC_OK
+ *  \retval  DDCRC_INVALID_OPERATION  no watch thread running
+ */
+DDCA_Status
 ddc_stop_watch_displays()
 {
    bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting. " );
+   DDCA_Status ddcrc = DDCRC_OK;
+   g_mutex_lock(&watch_thread_mutex);
 
-   terminate_watch_thread = true;  // signal watch thread to terminate
+   // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
+   if (watch_thread) {
+      terminate_watch_thread = true;  // signal watch thread to terminate
+#ifndef ENABLE_UDEV
+      // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
+      // so termiate flag doesn't get checked
+      // no big deal, ddc_stop_watch_displays() is only called at program termination to
+      // release resources for tidyness
+      g_thread_join(watch_thread);
+#endif
+      watch_thread = NULL;
+   }
+   else
+      ddcrc = DDCRC_INVALID_OPERATION;
 
-   DBGTRC(debug, TRACE_GROUP, "Done");
-   return;
+   g_mutex_unlock(&watch_thread_mutex);
+   DBGTRC(debug, TRACE_GROUP, "Done. watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   return ddcrc;
 }
-
-
 
