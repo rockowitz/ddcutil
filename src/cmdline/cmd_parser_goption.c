@@ -159,6 +159,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean timeout_i2c_io_flag = false;
    gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
    gboolean deferred_sleep_flag = false;
+   gboolean per_thread_stats_flag = false;
    gboolean dsa_flag       = false;
    gboolean f1_flag        = false;
    gboolean f2_flag        = false;
@@ -236,6 +237,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
+      {"per-thread-stats",
+                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
@@ -415,6 +418,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
+   SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM

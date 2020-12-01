@@ -137,10 +137,12 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    CMD_FLAG_TIMEOUT_I2C_IO    = 0x400000,
    CMD_FLAG_REDUCE_SLEEPS  = 0x800000,
 #endif
-   rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,        d1);
-   rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,         d1);
-   rpt_bool("defer sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,         d1);
-   rpt_bool("dynamic_sleep_adjustment:", NULL, parsed_cmd->flags & CMD_FLAG_DSA,         d1);
+   rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
+   rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
+   rpt_bool("defer sleeps:",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
+   rpt_bool("dynamic_sleep_adjustment:", NULL, parsed_cmd->flags & CMD_FLAG_DSA,             d1);
+   rpt_bool("per_thread_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS,        d1);
+   rpt_bool("x52 not fifo",      NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
 
    rpt_int("i1",                 NULL, parsed_cmd->i1,                            d1);
    rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
@@ -149,8 +151,6 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
    rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
    rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
-
-   rpt_bool("x52 not fifo",      NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,  d1);
 }
 
 

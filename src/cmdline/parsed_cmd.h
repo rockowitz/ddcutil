@@ -70,6 +70,8 @@ typedef enum {
    CMD_FLAG_DSA             = 0x40000000,
    CMD_FLAG_DEFER_SLEEPS    = 0x80000000,
    CMD_FLAG_X52_NO_FIFO   = 0x0100000000,
+   CMD_FLAG_PER_THREAD_STATS
+                          = 0x0200000000,
 } Parsed_Cmd_Flags;
 
 
