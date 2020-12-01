@@ -16,10 +16,12 @@
 #ifndef TARGET_BSD
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #endif
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -130,7 +132,10 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
                                time_millis,
                                simple_fn_buf,
                                sizeof(simple_fn_buf));
-         snprintf(fqfn, PATH_MAX, "/home/%s/%s/%s", getlogin(), USER_VCP_DATA_DIR, simple_fn_buf);
+         struct passwd * pw = getpwuid(getuid());
+         const char * homedir = pw->pw_dir;
+
+         snprintf(fqfn, PATH_MAX, "%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
          // DBGMSG("fqfn=%s   ", fqfn );
          filename = fqfn;
          // control with MsgLevel?
