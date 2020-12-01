@@ -36,8 +36,11 @@ void dbgrpt_capabilities_feature_record(
    rpt_structure_loc("Capabilities_Feature_Record", vfr, depth);
    rpt_vstring(d1, "marker:       %.4s", vfr->marker);
    rpt_vstring(d1, "feature_ide:  0x%02x", vfr->feature_id);
-   if (vfr->values)
-      rpt_vstring(d1, "values:       %s", bva_as_string(vfr->values, true, " ") );
+   if (vfr->values) {
+      char * s =  bva_as_string(vfr->values, true, " ");
+      rpt_vstring(d1, "values:       %s", s);
+      free(s);
+   }
    else
       rpt_vstring(d1, "values:       None");
    rpt_vstring(d1, "value_string: %s", vfr->value_string);
