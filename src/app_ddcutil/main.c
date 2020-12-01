@@ -193,7 +193,7 @@ void reset_stats() {
 }
 #endif
 
-
+#ifdef OLD
 static
 void report_stats(DDCA_Stats_Type stats) {
    ddc_report_stats_main(stats, get_output_level() >= DDCA_OL_VERBOSE, 0);
@@ -210,7 +210,7 @@ void report_stats(DDCA_Stats_Type stats) {
    //       elapsed_nanos / (1000*1000),
    //       elapsed_nanos);
 }
-
+#endif
 
 //
 // Mainline
@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
       // query_usbenv();
 #endif
       f0printf(fout, "\nStatistics for environment exploration:\n");
-      report_stats(DDCA_STATS_ALL);
+      ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
       reset_stats();
 
       f0printf(fout, "\n*** Detected Displays ***\n");
@@ -612,7 +612,7 @@ int main(int argc, char *argv[]) {
                                  0);      // logical depth
       // printf("Detected: %d displays\n", display_ct);   // not needed
       f0printf(fout, "\nStatistics for display detection:\n");
-      report_stats(DDCA_STATS_ALL);
+      ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
       reset_stats();
 
       f0printf(fout, "Setting output level normal  Table features will be skipped...\n");
@@ -630,7 +630,7 @@ int main(int argc, char *argv[]) {
             f0printf(fout, "\nProbing display %d\n", dref->dispno);
             app_probe_display_by_dref(dref);
             f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
-            report_stats(DDCA_STATS_ALL);
+            ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
          }
          reset_stats();
       }
@@ -863,7 +863,7 @@ int main(int argc, char *argv[]) {
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
       ) {
-      report_stats(parsed_cmd->stats_types);
+      ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
       // report_timestamp_history();  // debugging function
    }
 
