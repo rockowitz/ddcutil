@@ -182,7 +182,7 @@ free_feature_metadata(
    DBGMSF(debug, "Starting. DDCA_Feature_Metadata * data = %p", data);
 
    DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
-   assert(memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
+   assert(info && memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    // compare vs ddca_free_metadata_contents()
 
    if (debug)
