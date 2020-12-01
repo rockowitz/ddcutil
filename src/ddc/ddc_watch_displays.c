@@ -201,7 +201,7 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
 
 
 GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
 
    Watch_Displays_Data * wdd = data;
@@ -252,7 +252,7 @@ GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 // How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
@@ -463,7 +463,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "changes = %s", displays_change_type_name(changes));
    if (removed && removed->len > 0) {
       DBGMSF(debug, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
@@ -482,7 +482,7 @@ void dummy_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays()
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. " );
    DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
@@ -526,7 +526,7 @@ ddc_start_watch_displays()
 DDCA_Status
 ddc_stop_watch_displays()
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. " );
    DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
