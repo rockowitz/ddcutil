@@ -278,8 +278,8 @@ void
 free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
    bool debug = false;
    DBGMSF(debug, "Executing. metadata = %p", metadata);
-   dbgrpt_ddca_feature_metadata(metadata, 2);
    if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
+      dbgrpt_ddca_feature_metadata(metadata, 2);
       assert(!(metadata->feature_flags & DDCA_PERSISTENT_METADATA));
       if (!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) {
          free(metadata->feature_name);
