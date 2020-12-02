@@ -185,23 +185,6 @@ AC_SUBST(LT_AGE)
 
 AC_MSG_NOTICE( [Checking configure command options...] )
 
-dnl *** configure option: --with-adl-headers
-dnl AC_ARG_WITH([adl-headers],
-dnl             [ AS_HELP_STRING([--with-adl-headers=DIR], [Directory containing ADL header files]) ],
-dnl             [adl_header_dir=$withval],
-dnl             [adl_header_dir=[]])
-adl_header_dir=""
-AC_MSG_NOTICE([adl_header_dir = $adl_header_dir])
-AS_IF( [test -n "$adl_header_dir"],
-         AC_DEFINE( [HAVE_ADL], [1], [If defined, ADL headers are present.  Build with ADL support.])
-         AC_MSG_NOTICE( [adl... enabled]  )
-        ,
-         AC_MSG_NOTICE( [adl... disabled] )
-     )
-AM_CONDITIONAL([HAVE_ADL_COND], [test -n "$adl_header_dir"] )
-AC_SUBST([ADL_HEADER_DIR], [$adl_header_dir])
-
-
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
               [ AS_HELP_STRING([--enable-lib=@<:@yes/no@:>@], [Build shared library and clients@<:@default=yes@:>@] )],
@@ -1232,7 +1215,6 @@ AC_MSG_RESULT([
 	pkgconfigdir:           ${pkgconfigdir}
 	required_packages:      ${required_packages}
 
-	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
 	enable_targetbsd:       ${enable_targetbsd}
 	enable_envcmds          ${enable_envcmds}
