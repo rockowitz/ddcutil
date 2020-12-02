@@ -681,7 +681,9 @@ Parsed_Capabilities * parse_capabilities(
                     seg->name_len,  seg->name_start,  seg->value_len, seg->value_start );
 
       // cmds segment
-      if (memcmp(seg->name_start, "cmds", seg->name_len) == 0) {
+      if (seg->name_len == 4 &&  // avoid buffer overflow
+          memcmp(seg->name_start, "cmds", seg->name_len) == 0)
+      {
          pcaps->raw_cmds_segment_seen = true;
          pcaps->commands = parse_cmds_segment(seg->value_start, seg->value_len, pcaps->messages);
          pcaps->raw_cmds_segment_valid = (pcaps->commands);   // ??
@@ -692,8 +694,10 @@ Parsed_Capabilities * parse_capabilities(
       }
 
       // vcp segment
-      else if (memcmp(seg->name_start, "vcp", seg->name_len) == 0 ||
-               memcmp(seg->name_start, "VCP", seg->name_len) == 0      // hack for Apple Cinema Display
+      else if (seg->name_len == 3 &&
+                (memcmp(seg->name_start, "vcp", seg->name_len) == 0 ||
+                 memcmp(seg->name_start, "VCP", seg->name_len) == 0      // hack for Apple Cinema Display
+                )
               )
       {
          pcaps->raw_vcp_features_seen = true;
@@ -703,7 +707,10 @@ Parsed_Capabilities * parse_capabilities(
          pcaps->caps_validity = update_validity(pcaps->caps_validity, vcp_segment_validity);
       }
 
-      else if (memcmp(seg->name_start, "mccs_ver" /* was "mccs_version_string" WHY? */, seg->name_len) == 0)
+      else if (seg->name_len == 8 &&
+               memcmp(seg->name_start,
+                      "mccs_ver" /* was "mccs_version_string" WHY? */,
+                      seg->name_len) == 0)
       {
          pcaps->mccs_version_string = chars_to_string(seg->value_start, seg->value_len);
          DDCA_MCCS_Version_Spec vspec = parse_vspec(pcaps->mccs_version_string);
@@ -718,7 +725,9 @@ Parsed_Capabilities * parse_capabilities(
          }
       }
 
-      else if (memcmp(seg->name_start, "model", seg->name_len) == 0 ) {
+      else if ( seg->name_len == 5 &&
+                memcmp(seg->name_start, "model", seg->name_len) == 0 )
+      {
          DBGMSF(debug, "model: |%.*s|", seg->value_len, seg->value_start);
          pcaps->model = chars_to_string(seg->value_start, seg->value_len);
          // DBGMSF(debug, "pcaps->model = |%s|", pcaps->model);
