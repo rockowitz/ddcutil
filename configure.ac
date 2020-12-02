@@ -192,7 +192,9 @@ AC_SUBST(LT_AGE)
 ### Recognize command options for configure script
 ### 
 
+###
 ### Documented options
+###
 
 AC_MSG_NOTICE( [Checking configure command options...] )
 
@@ -222,27 +224,34 @@ dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_lib" = "xyes"],
-      AC_MSG_NOTICE( [lib... enabled] )
+      AC_MSG_NOTICE( [lib...        enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [lib... disabled] )
+      AC_MSG_NOTICE( [lib...        disabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
      )
-
 
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
               [enable_envcmds=${enableval}],
               [enable_envcmds=yes] )
-
+dnl AS_IF([test "x$enable_envcmds" = "xyes"],
+dnl         AC_MSG_NOTICE( [envcmds...    enabled (provisional) ]  )
+dnl       ,
+dnl         AC_MSG_NOTICE( [envcmds...    disabled] )
+dnl      )
 
 dnl *** configure option: --enable-udev
 AC_ARG_ENABLE([udev],
               [ AS_HELP_STRING([--enable-udev=@<:@yes/no@:>@], [Use UDEV@<:@default=yes@:>@] )],
               [enable_udev=${enableval}],
               [enable_udev=yes] )
-
+dnl AS_IF([test "x$enable_udev" = "xyes"],
+dnl         AC_MSG_NOTICE( [udev...       enabled (provisional) ]  )
+dnl       ,
+dnl         AC_MSG_NOTICE( [udev...       disabled] )
+dnl      )
 
 dnl *** configure option: --enable-targetbsd
 AC_ARG_ENABLE([targetbsd],
@@ -250,28 +259,54 @@ AC_ARG_ENABLE([targetbsd],
               [enable_targetbsd=${enableval}],
               [enable_targetbsd=no] )
 
-
 dnl *** configure option: --enable-usb
 AC_ARG_ENABLE([usb],
               [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
               [enable_usb=${enableval}],
               [enable_usb=yes] )
+AS_IF([test "x$enable_usb" = "xyes"],
+        AC_MSG_NOTICE( [usb...        enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [usb...        disabled] )
+     )
 
 dnl *** configure option: --enable-drm
 AC_ARG_ENABLE([drm],
               [ AS_HELP_STRING( [--enable-drm=@<:@yes/no@:>@], [Use DRM in diagnostics@<:@default=yes@:>@] )],
               [enable_drm=${enableval}],
               [enable_drm=yes] )
-
-
+AS_IF([test "x$enable_drm" = "xyes"],
+        AC_MSG_NOTICE( [drm...        enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [drm...        disabled] )
+     )
+             
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
               [enable_x11=${enableval}],
               [enable_x11=yes] )
+dnl AS_IF([test "x$enable_x11" = "xyes"],
+dnl       AC_MSG_NOTICE( [x11...      enabled (provisional)]  ),
+dnl       AC_MSG_NOTICE( [x11...      disabled] )
+dnl      )              
+
+dnl *** configure option: --enable-doxygen
+AC_ARG_ENABLE([doxygen],
+              [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
+              [enable_doxygen=${enableval}],
+              [enable_doxygen=no] )
+AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" = "xyes"] )
+AS_IF([test "x$enable_doxygen" = "xyes"],
+        AC_MSG_NOTICE( [doxygen...    enabled]  )
+      ,
+        AC_MSG_NOTICE( [doxygen...    disabled] )
+     )
 
 
-
+dnl ***
+dnl *** Alternatives for Python bindings
+dnl ***
 
 dnl Were we building SWIG support for more than Python, there would need to be 2 configuration option, 
 dnl one to control SWIG and one to enable the Python bindings.   
@@ -282,43 +317,35 @@ AC_ARG_ENABLE([swig],
               [ AS_HELP_STRING( [--enable-swig=@<:@no/yes@:>@], [Build SWIG interface@<:@default=no@:>@] )],
               [enable_swig=${enableval}],
               [enable_swig=no] )
-dnl Set flag for automake.am:
+dnl Set flag for Makefile.am:
 AM_CONDITIONAL([ENABLE_SWIG_COND], [test "x$enable_swig" = "xyes"] )
 AS_IF([test "x$enable_swig" = "xyes"],
-      AC_MSG_NOTICE( [swig... enabled]  ),
-      AC_MSG_NOTICE( [swig... disabled] )
+      AC_MSG_NOTICE( [swig...       enabled]  ),
+      AC_MSG_NOTICE( [swig...       disabled] )
      )
-
 
 dnl *** configure option: --enable-cython
 AC_ARG_ENABLE([cython],
               [ AS_HELP_STRING( [--enable-cython=@<:@no/yes@:>@], [Build cython interface@<:@default=no@:>@] )],
               [enable_cython=${enableval}],
               [enable_cython=no] )
-dnl Set flag for automake.am:
+dnl Set flag for Makefile.am:
 AM_CONDITIONAL([ENABLE_CYTHON_COND], [test "x$enable_cython" = "xyes"] )
 AS_IF([test "x$enable_cython" = "xyes"],
-      AC_MSG_NOTICE( [cython... enabled]  ),
-      AC_MSG_NOTICE( [cython... disabled] )
+      AC_MSG_NOTICE( [cython...     enabled]  ),
+      AC_MSG_NOTICE( [cython...     disabled] )
      )
-
 
 dnl *** configure option: --enable-cffi
 AC_ARG_ENABLE([cffi],
               [ AS_HELP_STRING( [--enable-cffi=@<:@no/yes@:>@], [Build cffi interface@<:@default=no@:>@] )],
               [enable_cffi=${enableval}],
               [enable_cffi=no] )
-dnl Set flag for automake.am:
+dnl Set flag for Makefile.am:
 AM_CONDITIONAL([ENABLE_CFFO_COND], [test "x$enable_cffi" = "xyes"] )
 AS_IF([test "x$enable_cffi" = "xyes"],
-      AC_MSG_NOTICE( [cffi... enabled]  ),
-      AC_MSG_NOTICE( [cffi... disabled] )
-     )
-
-AS_IF([test "x$enable_drm" = "xyes"],
-        AC_MSG_NOTICE( [drm... enabled (provisional) ]  )
-      ,
-        AC_MSG_NOTICE( [drm... disabled] )
+      AC_MSG_NOTICE( [cffi...       enabled]  ),
+      AC_MSG_NOTICE( [cffi...       disabled] )
      )
 
 dnl TODO: Review
@@ -331,21 +358,6 @@ dnl #in order to avoid this, invoke configure with the --enable-python-integrati
 dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
 
 
-
-
-
-
-dnl *** configure option: --enable-doxygen
-AC_ARG_ENABLE([doxygen],
-              [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
-              [enable_doxygen=${enableval}],
-              [enable_doxygen=no] )
-AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" = "xyes"] )
-AS_IF([test "x$enable_doxygen" = "xyes"],
-        AC_MSG_NOTICE( [doxygen... enabled]  )
-      ,
-        AC_MSG_NOTICE( [doxygen... disabled] )
-     )
 ###
 ### Resolve choices for public options
 ###
@@ -387,39 +399,38 @@ AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
 
 
 ###
-### Report resolved options and set conditionals, substitution, and defined
+### Report resolved options and set conditionals, substitutions, and defines
 ###
 
 AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
 AS_IF([test "x$enable_targetbsd" = "xyes"],
-      AC_MSG_NOTICE( [targetbsd... enabled] )
+      AC_MSG_NOTICE( [targetbsd...  enabled] )
       AC_DEFINE( [TARGET_BSD], [1], [If defined, target BSD.])
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [targetbsd... disabled] )
+      AC_MSG_NOTICE( [targetbsd...  disabled] )
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
      )
-
 
 AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_envcmds" = "xyes"],
-      AC_MSG_NOTICE( [envcmds... enabled] )
+      AC_MSG_NOTICE( [envcmds...    enabled] )
       AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
       AC_SUBST(ENABLE_ENVCMDS_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [envcmds... disabled] )
+      AC_MSG_NOTICE( [envcmds...    disabled] )
       AC_SUBST(ENABLE_ENVCMDS_FLAG, 0)
      )
 
 AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_udev" = "xyes"],
-      AC_MSG_NOTICE( [udev... enabled] )
+      AC_MSG_NOTICE( [udev...       enabled] )
       AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
       AC_SUBST(ENABLE_UDEV_FLAG, 1) 
      ,
-      AC_MSG_NOTICE( [udev... disabled] )
+      AC_MSG_NOTICE( [udev...       disabled] )
       AC_SUBST(ENABLE_UDEV_FLAG, 0)
      )
 
@@ -428,18 +439,17 @@ dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
 AS_IF([test "x$enable_usb" = "xyes"],
         AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
         AC_SUBST(  ENABLE_USB_FLAG, [1] )
-        AC_MSG_NOTICE( [usb... enabled]  )
+        AC_MSG_NOTICE( [usb...        enabled]  )
       ,
         AC_SUBST( ENABLE_USB_FLAG, [0] )
-        AC_MSG_NOTICE( [usb... disabled] )
+        AC_MSG_NOTICE( [usb...        disabled] )
      )
 
 AS_IF([test "x$enable_x11" = "xyes"],
-        AC_MSG_NOTICE( [x11... enabled]  )
+        AC_MSG_NOTICE( [x11...        enabled]  )
       ,
-        AC_MSG_NOTICE( [x11... disabled] )
+        AC_MSG_NOTICE( [x11...        disabled] )
      )
-
 
 
 ### Private options
@@ -466,9 +476,9 @@ AC_ARG_ENABLE([testcases],
 AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" = "xyes"] )
 AS_IF([test "x$include_testcases" = "xyes"],
       AC_DEFINE( [INCLUDE_TESTCASES], [1], [If defined, build with test cases.]) 
-      AC_MSG_NOTICE( [testcases... enabled]  )
+      AC_MSG_NOTICE( [testcases...  enabled]  )
       ,
-      AC_MSG_NOTICE( [testcases... disabled] )
+      AC_MSG_NOTICE( [testcases...  disabled] )
      )
 
 dnl *** configure option: --enable-callgraph
@@ -478,8 +488,8 @@ AC_ARG_ENABLE([callgraph],
               [enable_callgraph=no] )
 AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" = "xyes"] )
 AS_IF([test "x$enable_callgraph" = "xyes"],
-      AC_MSG_NOTICE( [callgraph... enabled]  ),
-      AC_MSG_NOTICE( [callgraph... disabled] )
+      AC_MSG_NOTICE( [callgraph...  enabled]  ),
+      AC_MSG_NOTICE( [callgraph...  disabled] )
      )
 
 dnl GObject implementation has been mothballed.  
@@ -491,8 +501,8 @@ AC_ARG_ENABLE([gobject-api],
               [enable_gobject=no] )
 AM_CONDITIONAL([ENABLE_GOBJECT_COND], [test "x$enable_gobject" = "xyes"] )
 AS_IF([test "x$enable_gobject" = "xyes"],
-      AC_MSG_NOTICE( [gobject-api... enabled]  ),
-      AC_MSG_NOTICE( [gobject-api... disabled] )
+      AC_MSG_NOTICE( [gobject-api...enabled]  ),
+      AC_MSG_NOTICE( [gobject-api...disabled] )
      )
 
 dnl *** configure option: --enable-failsim
@@ -503,9 +513,9 @@ AC_ARG_ENABLE([failsim],
 AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" = "xyes"] )
 AS_IF( [test "x$enable_failsim" = "xyes"],
          AC_DEFINE( [ENABLE_FAILSIM], [1], [If defined, enable failsim.])
-         AC_MSG_NOTICE( [failsim..... enabled] )
+         AC_MSG_NOTICE( [failsim.....  enabled] )
       ,
-         AC_MSG_NOTICE( [failsim..... disabled] )
+         AC_MSG_NOTICE( [failsim.....  disabled] )
      )
 
 dnl *** configure option: --enable-force-suse
@@ -516,9 +526,9 @@ AC_ARG_ENABLE([force-suse],
 AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" = "xyes"] )
 AS_IF( [test "x$enable_force_suse" = "xyes"],
          AC_DEFINE( [ENABLE_FORCE_SUSE], [1], [If defined, force SUSE target directories.])
-         AC_MSG_NOTICE( [force-suse..... enabled] )
+         AC_MSG_NOTICE( [force-suse....enabled] )
       ,
-         AC_MSG_NOTICE( [force-suse..... disabled] )
+         AC_MSG_NOTICE( [force-suse....disabled] )
      )
 
 dnl *** configure option: --enable-internal-api-use
@@ -529,9 +539,9 @@ AC_ARG_ENABLE([use-api],
 AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" = "xyes"] )
 AS_IF( [test "x$enable_use_api" = "xyes"],
          AC_DEFINE( [USE_API], [1], [If defined, use ddcutil APIs internally.])
-         AC_MSG_NOTICE( [use-api..... enabled] )
+         AC_MSG_NOTICE( [use-api.....  enabled] )
       ,
-         AC_MSG_NOTICE( [use-api..... disabled] )
+         AC_MSG_NOTICE( [use-api.....  disabled] )
      )
 
 dnl *** configure option: --enable-asan
@@ -542,15 +552,13 @@ AC_ARG_ENABLE([asan],
 AM_CONDITIONAL([ASAN_COND], [test "x$enable_asan" = "xyes"] )
 AS_IF( [test "x$enable_asan" = "xyes"],
          AC_DEFINE( [WITH_ASAN], [1], [If defined, building for Asan instrumentation.])
-         AC_MSG_NOTICE( [asan..... enabled] )
+         AC_MSG_NOTICE( [asan..........enabled] )
       ,
-         AC_MSG_NOTICE( [asan..... disabled] )
+         AC_MSG_NOTICE( [asan..........disabled] )
      )
 
 
-
 dnl Note to self: use autoheader to regenerate config.h.in whenever new defines added 
-
 
 
 ###
@@ -607,23 +615,20 @@ PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.32)
 required_packages="$required_packages glib-2.0 >= 2.32"
 
 
-AS_IF([test "x$enable_udev" = "xyes"],
-   PKG_CHECK_MODULES(UDEV,   libudev, 
-       [libudev_found=1],  
-       [libudev_found=0
-       AC_MSG_NOTICE( [The package providing libudev.h varies by Linux distribution and release.] )
-       AC_MSG_NOTICE( [It may be a udev specific package, e.g. libudev-dev, libudev-devel] )
-       AC_MSG_NOTICE( [or it may be part of systemd, e.g systemd-devel] )
-       AC_MSG_ERROR( [libudev not found] )
+AS_IF( [test "x$enable_udev" = "xyes"],
+  [   PKG_CHECK_MODULES(UDEV,   libudev, 
+       [ libudev_found=1],  
+       [ libudev_found=0
+           AC_MSG_NOTICE( [The package providing libudev.h varies by Linux distribution and release.] )
+           AC_MSG_NOTICE( [It may be a udev specific package, e.g. libudev-dev, libudev-devel] )
+           AC_MSG_NOTICE( [or it may be part of systemd, e.g systemd-devel] )
+           AC_MSG_ERROR( [libudev not found] )
        ] )
-   ,
-   )
+       ]
+     ,
+     )
 required_packages="$required_packages xrandr x11"
 dnl how to handle libudev?   punt for now
-
-dnl disabled because systemd_util.c no longer needed:
-dnl PKG_CHECK_MODULES(SYSTEMD, libsystemd)
-
 
 
 ###
@@ -650,8 +655,6 @@ AS_IF( [test 0$DBG -ne 0],
 
 ### libdrm 
 
-
-
 AS_IF([test "x$enable_drm" = "xyes"],
          [ PKG_CHECK_MODULES(LIBDRM, libdrm >= 2.4.67, 
              [libdrm_found=yes], 
@@ -667,9 +670,9 @@ AS_IF([test "x$enable_drm" = "xyes"],
 AM_CONDITIONAL([USE_LIBDRM_COND], [test "x$enable_drm" = "xyes"] )
 AS_IF([test "x$enable_drm" = "xyes"],
         AC_DEFINE([USE_LIBDRM], [1], [Use libdrm])
-        AC_MSG_NOTICE( [drm... enabled]  )
+        AC_MSG_NOTICE( [drm...        enabled]  )
       ,
-        AC_MSG_NOTICE( [drm... disabled] )
+        AC_MSG_NOTICE( [drm...        disabled] )
      )
 
 AS_IF( [test 0$DBG -ne 0], 
@@ -720,32 +723,6 @@ dnl TODO: disable if enable-envcmds is false?
 
 dnl Force disable of options if environment commands disabled
 
-AS_IF([test "x$enable_x11" = "xyes"],
-         [ PKG_CHECK_MODULES(LIBX11, x11)
-         ]) 
-
-AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
-AS_IF([test "x$enable_x11" = "xyes"],
-        AC_DEFINE([USE_X11], [1], [Use X11])
-        AC_MSG_NOTICE( [x11... enabled]  )
-      ,
-        AC_MSG_NOTICE( [x11... disabled] )
-     )
-
-AS_IF([test "x$enable_x11" = "xyes"],
-         [ PKG_CHECK_MODULES(XRANDR, xrandr)  
-         ])
-
-
-dnl Note cflags and libs, but don't need to use in makefiles 
-AS_IF( [test 0$DBG -ne 0], 
-       [
-          AC_MSG_NOTICE( [LIBX11_CFLAGS:    $LIBX11_CFLAGS] )
-          AC_MSG_NOTICE( [LIBX11_LIBS:      $LIBX11_LIBS] )
-       ]) 
-
-
-
 
 ### X11 
 
@@ -754,19 +731,20 @@ dnl PKG_CHECK_MODULES(X11,    x11)
 
 AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
+           PKG_CHECK_MODULES(XRANDR, xrandr)
          ]) 
 
 AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
 AS_IF([test "x$enable_x11" = "xyes"],
         AC_DEFINE([USE_X11], [1], [Use X11])
-        AC_MSG_NOTICE( [x11... enabled]  )
+        AC_MSG_NOTICE( [x11...        enabled]  )
       ,
-        AC_MSG_NOTICE( [x11... disabled] )
+        AC_MSG_NOTICE( [x11...        disabled] )
      )
 
-AS_IF([test "x$enable_x11" = "xyes"],
-         [ PKG_CHECK_MODULES(XRANDR, xrandr)  
-         ])
+dnl AS_IF([test "x$enable_x11" = "xyes"],
+dnl          [ PKG_CHECK_MODULES(XRANDR, xrandr)  
+dnl         ])
 
 
 dnl Note cflags and libs, but don't need to use in makefiles 
@@ -1184,6 +1162,17 @@ dnl temporary crude flag:
 AM_CONDITIONAL([ENABLE_CYTHON],[test x$enable_cython = xyes])
 AM_CONDITIONAL([ENABLE_CFFI],  [test x$enable_cffi   = xyes])
 
+
+
+
+AS_IF( [test "x$enable_asan" = "xyes"], [
+   required_packages="asan $required_packages"
+   # has no effect on $CFLAGS
+   CFLAGS="$CFLAGS -fsanitize=address"
+   CFLAGS="$CFLAGS -fsanitize-address-use-after-scope -fno-omit-frame-pointer"
+   ])
+
+
 dnl AC_MSG_NOTICE([======================== required_packages:   $required_packages])
 AC_SUBST(REQUIRED_PACKAGES,$required_packages)
 
@@ -1254,6 +1243,7 @@ AC_MSG_RESULT([
 	mandir:               	${mandir}
 	includedir:		${includedir}
 	pkgconfigdir:           ${pkgconfigdir}
+	required_packages:      ${required_packages}
 
 	adl_header_dir:         ${adl_header_dir}
 	enable_lib:             ${enable_lib}
