@@ -183,11 +183,6 @@ $(LIBUSB_CFLAGS) \
 -I$(srcdir)      \
 -I$(srcdir)/public
 
-# if HAVE_ADL_COND
-# AM_CPPFLAGS +=               \
-# -I@ADL_HEADER_DIR@  
-# endif
-
 
 #
 # Compiler flags
