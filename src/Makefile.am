@@ -203,6 +203,15 @@ if ENABLE_CALLGRAPH_COND
   AM_CFLAGS += -fdump-rtl-expand
 endif
 
+if ASAN_COND
+  # -fsanitize=address required for both compile and link,  what about other -f options?
+  AM_CFLAGS += -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -g
+  # does this go here or as and environment variable at runtime?
+  # for -fsanitize-address-use-after-scope 
+  ASAN_OPTIONS =  strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+  ASAN_OPTIONS += verbosity=1
+endif
+
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
@@ -294,8 +303,11 @@ libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@'
 # libddcutil_la_LDFLAGS += -init _ddca_init
 libddcutil_la_LDFLAGS += -pie
 
-# hack: 
-libddcutil_la_LDFLAGS += -fsanatize=address
+if ASAN_COND
+   libddcutil_la_LDFLAGS += -fsanitize=address
+   # needed? 
+   libddcutil_la_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
+endif
 
 # doesn't prevent creation of .la 
 # try disabling to create libddcutil.a - doesnt do it
@@ -303,6 +315,9 @@ libddcutil_la_LDFLAGS += --disable-static
 
 
 # libhack_la_LDFLAGS = $(libddcutil_la_LDFLAGS)
+
+
+
 
 #
 # Link the executables
@@ -322,6 +337,13 @@ ddcutil_LDFLAGS =
 ddcutil_LDFLAGS += -pie
 # -export-dynamic needed for failsim
 ddcutil_LDFLAGS += -export-dynamic 
+
+if ASAN_COND
+   ddcutil_LDFLAGS += -fsanitize=address
+   # needed? 
+   ddcutil_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
+endif
+
 
 # laclient_LDADD                = libddcutil.la 
 # demo_global_settings_LDADD    = libddcutil.la
