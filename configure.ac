@@ -185,6 +185,10 @@ AC_SUBST(LT_AGE)
 
 AC_MSG_NOTICE( [Checking configure command options...] )
 
+dnl # residual setting so that Makefile.am files don't break
+adl_header_dir=""
+AM_CONDITIONAL([HAVE_ADL_COND], [test -n "$adl_header_dir"] )
+
 dnl *** configure option: --enable-lib
 AC_ARG_ENABLE([lib],
               [ AS_HELP_STRING([--enable-lib=@<:@yes/no@:>@], [Build shared library and clients@<:@default=yes@:>@] )],
