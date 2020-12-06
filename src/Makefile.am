@@ -63,15 +63,13 @@ noinst_LTLIBRARIES = libcommon.la
 noinst_LTLIBRARIES += libapp.la
 
 
-#
-# Public Shared Libraries
+# Public Shared Library
 #
 
 if ENABLE_SHARED_LIB_COND
 lib_LTLIBRARIES = libddcutil.la
 # noinst_LTLIBRARIES += libhack.la
 endif
-
 
 #
 # Files only in ddcutil executable
@@ -105,9 +103,6 @@ libddcutil_la_SOURCES = \
    libmain/api_metadata.c \
    libmain/api_feature_access.c \
    libmain/api_capabilities.c 
-
-# libhack_la_SOURCES = \
-# libmain/ddcutil_c_api.c  
 
 # Despite what the Autotools book says, all-local is executed aftar all, not before 
 # So this ensures that the NEXT execution of all will compile build_info.c 
@@ -166,15 +161,11 @@ dist-hook:
 	rm -rf $(distdir)/swig/__pycache__
 	rm -f ${distdir}/public/ddcutil_macros.h
 
-# Header files
-# trying to get i2c-dev.h from /usr/include/linux causes errors
-
 
 #
 # C Pre-Processor Flags
 #
 
-#  $(SYSTEMD_CFLAGS) removed, libsystemd not currently needed
 # GLIB_CFLAGS contains output of pkgconfig --cflags glib-2.0
 AM_CPPFLAGS=     \
 $(GLIB_CFLAGS)   \
@@ -192,6 +183,7 @@ $(LIBUSB_CFLAGS) \
 AM_CFLAGS = -Wall
 # AM_CFLAGS += -Wpedantic
 # AM_CFLAGS += -Werror=implicit-function-declaration
+AM_CFLAGS += -Wimplicit-function-declaration
 
 
 if ENABLE_CALLGRAPH_COND
@@ -210,9 +202,6 @@ endif
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
 ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
-# hack in asan
-# ddcutil_CFLAGS += -fsanitize=address
-# ddcutil_LD_PRELOAD = -lasan
 
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
@@ -241,7 +230,6 @@ libcommon_la_LIBADD += \
   usb/libusb.la
 endif
 
-
 libapp_la_LIBADD = \
 cmdline/libcmdline.la \
 util/libutilaux.la
@@ -251,14 +239,10 @@ libapp_la_LIBADD  += \
 app_sysenv/libappsysenv.la 
 endif
 
-# libapp_la_LIBADD += \
-# app_common/libappcommon.la 
-
 if INCLUDE_TESTCASES_COND
 libapp_la_LIBADD  += \
 test/libtestcases.la
 endif
-
 
 if USE_X11_COND
   libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
@@ -270,7 +254,6 @@ endif
 #   libcommon_la_LIBADD += $(YAML_LIBS)
 # endif 
 
-# $(SYSTEMD_LIBS) removed from list, libsystemd not currently used
 libcommon_la_LIBADD += \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
@@ -281,21 +264,12 @@ libddcutil_la_LIBADD = $(ZLIB_LIBS)
 
 libddcutil_la_LIBADD +=  libcommon.la 
 
-
-
-# libhack_la_LIBADD = $(ZLIB_LIBS)
-# libhack_la_LIBADD += libcommon.la  libddcutil.la
-
-
 libddcutil_la_LDFLAGS = 
-# -export-dynamic not required for failsim: 
-# if ENABLE_FAILSIM_COND
+# Note -export-dynamic not required for failsim, don't need to append 
 # libddcutil_la_LDFLAGS += -export-dynamic
-# else
+
 libddcutil_la_LDFLAGS += -export-symbols-regex '(^DDCA_|^ddc[ags]_[^_])'
-# endif
 libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
-# libddcutil_la_LDFLAGS += -init _ddca_init
 libddcutil_la_LDFLAGS += -pie
 
 if ASAN_COND
@@ -307,11 +281,6 @@ endif
 # doesn't prevent creation of .la 
 # try disabling to create libddcutil.a - doesnt do it
 libddcutil_la_LDFLAGS += --disable-static
-
-
-# libhack_la_LDFLAGS = $(libddcutil_la_LDFLAGS)
-
-
 
 
 #
@@ -326,7 +295,6 @@ ddcutil_LDADD =   \
    libcommon.la 
 
 
-
 #needed?
 ddcutil_LDFLAGS =  
 ddcutil_LDFLAGS += -pie
@@ -338,19 +306,6 @@ if ASAN_COND
    # needed? 
    ddcutil_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
 endif
-
-
-# laclient_LDADD                = libddcutil.la 
-# demo_global_settings_LDADD    = libddcutil.la
-# demo_vcpinfo_LDADD            = libddcutil.la
-# demo_get_set_vcp_LDADD        = libddcutil.la
-# demo_display_selection_LDADD  = libddcutil.la
-
-# laclient_LDFLAGS                = -pie
-# demo_global_settings_LDFLAGS    = -pie
-# demo_vcpinfo_LDFLAGS            = -pie
-# demo_get_set_vcp_LDFLAGS        = -pie
-# demo_display_selection_LDFLAGS  = -pie
 
 # debug-install-hook:
 #  	ls -ld $(DESTDIR)$(libdir)
