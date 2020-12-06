@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -51,7 +52,7 @@
 // Filename creation
 
 // TODO: generalize, get default dir following XDG settings
-#define USER_VCP_DATA_DIR ".local/share/icc"
+#define USER_VCP_DATA_DIR ".local/share/ddcutil"
 
 
 /** Uses the identifiers in an EDID and a timestamp to create a VCP filename.
@@ -93,10 +94,62 @@ char * create_simple_vcp_fn_by_display_handle(
           char *           buf,
           int              bufsz)
 {
-   // Parsed_Edid* edid = ddc_get_parsed_edid_by_display_handle(dh);
    Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
    return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
+}
+
+
+// based on answer by Jens Harms to https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+Status_Errno_DDC
+rek_mkdir(char *path, FILE * ferr) {
+   bool debug = false;
+   DBGMSF(debug, "Starting, path=%s", path);
+    if (directory_exists(path)) {
+       return 0;
+    }
+    char *sep = strrchr(path, '/');
+    Status_Errno_DDC result = 0;
+    if (sep) {
+      *sep = 0;
+      result = rek_mkdir(path, ferr);  // create parent dir
+      *sep = '/';
+   }
+   if (result == 0) {
+      if ( mkdir(path, 0777) < 0) {
+         DBGMSF(debug, "Creating path %s", path);
+         result = -errno;
+         f0printf(ferr, "Unable to create '%s', %s\n", path);
+      }
+   }
+   DBGMSF(debug, "Done. returning %d");
+   return result;
+}
+
+
+Status_Errno_DDC
+fopen_mkdir(const char *path, const char *mode, FILE * ferr, FILE ** fp_loc) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. path=%s, mode=%s, fp_loc=%p", path, mode, fp_loc);
+   Status_Errno_DDC rc = 0;
+   *fp_loc = NULL;
+   char *sep = strrchr(path, '/');
+   if (sep) {
+      char *path0 = strdup(path);
+      path0[ sep - path ] = 0;
+      rc = rek_mkdir(path0, ferr);
+      free(path0);
+   }
+   if (!rc) {
+      *fp_loc = fopen(path,mode);
+      if (!*fp_loc) {
+         rc = -errno;
+         f0printf(ferr, "Unable to open %s for writing: %s, %s\n", path, strerror(errno));
+      }
+   }
+   ASSERT_IFF(rc == 0, *fp_loc);
+   DBGMSF(debug, "Returning %d", rc);
+   return rc;
 }
 
 
@@ -110,23 +163,35 @@ char * create_simple_vcp_fn_by_display_handle(
  * Returns:
  *    status code
  */
-Public_Status_Code
-dumpvcp_as_file(Display_Handle * dh, char * filename) {
+Status_Errno_DDC
+dumpvcp_as_file(Display_Handle * dh, const char * fn) {
+
+   bool debug = false;
+   DBGMSF(debug, "Starting. fn=%s", fn);
+   char * filename = (fn) ? strdup(fn) : NULL;
+
    FILE * fout = stdout;
    FILE * ferr = stderr;
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-   char               fqfn[PATH_MAX] = {0};
-
-   Public_Status_Code psc = 0;
+   Status_Errno_DDC ddcrc = 0;
+   char fqfn[PATH_MAX] = {0};
    Dumpload_Data * data = NULL;
-   psc = dumpvcp_as_dumpload_data(dh, &data);
-   if (psc == 0) {
+   ddcrc = dumpvcp_as_dumpload_data(dh, &data);
+   if (ddcrc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
 
-      if (!filename) {
-         time_t time_millis = data->timestamp_millis;
+      FILE * output_fp = NULL;
+
+      if (filename) {
+         output_fp = fopen(filename, "w+");
+         if (!output_fp) {
+            ddcrc = -errno;
+            f0printf(ferr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
+         }
+      }
+      else {
          char simple_fn_buf[NAME_MAX+1];
+
+         time_t time_millis = data->timestamp_millis;
          create_simple_vcp_fn_by_display_handle(
                                dh,
                                time_millis,
@@ -140,14 +205,18 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
          filename = fqfn;
          // control with MsgLevel?
          f0printf(fout, "Writing file: %s\n", filename);
+         ddcrc = fopen_mkdir(filename, "w+", ferr, &output_fp);
+         ASSERT_IFF(output_fp, ddcrc == 0);
+         if (ddcrc != 0) {
+            f0printf(ferr, "Unable to create '%s', %s\n", filename, strerror(-ddcrc));
+         }
       }
       free_dumpload_data(data);
 
-      FILE * output_fp = fopen(filename, "w+");
       if (!output_fp) {
          int errsv = errno;
          f0printf(ferr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
-         psc = -errsv;
+         ddcrc = -errsv;
       }
       else {
          int ct = strings->len;
@@ -160,12 +229,14 @@ dumpvcp_as_file(Display_Handle * dh, char * filename) {
       }
       g_ptr_array_free(strings, true);
    }
-   return psc;
+   if (fn)
+      free(filename);
+   return ddcrc;
 }
 
 
 //
-// Loadvcp
+// LOADVCP
 //
 
 /* Read a file into a newly allocated Dumpload_Data struct.
@@ -220,7 +291,7 @@ Dumpload_Data * read_vcp_file(const char * fn) {
  *
  * Returns:  true if load succeeded, false if not
  */
-// TODO: convert to Public_Status_Code
+// TODO: convert to Status_Errno_DDC
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    FILE * fout = stdout;
    // FILE * ferr = stderr;
@@ -230,7 +301,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= DDCA_OL_VERBOSE);
    bool ok = false;
-   Public_Status_Code psc = 0;
+   Status_Errno_DDC ddcrc = 0;
    Error_Info * ddc_excp = NULL;
 
    Dumpload_Data * pdata = read_vcp_file(fn);
@@ -250,12 +321,11 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
       }
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       if (ddc_excp) {
-         psc = ddc_excp->status_code;
-         // errinfo_free(ddc_excp);
+         ddcrc = ddc_excp->status_code;
          ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
       }
       free_dumpload_data(pdata);
-      ok = (psc == 0);
+      ok = (ddcrc == 0);
    }
 
    DBGMSF(debug, "Returning: %s", sbool(ok));
