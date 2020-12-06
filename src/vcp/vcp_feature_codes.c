@@ -167,9 +167,9 @@ char * get_feature_name_by_id_and_vcp_version(Byte feature_id, DDCA_MCCS_Version
          result = get_non_version_specific_feature_name(vcp_entry);    // fallback
    }
    else if (0xe0 <= feature_id && feature_id <= 0xff)
-      result = "manufacturer specific feature";
+      result = "Manufacturer specific feature";
    else
-      result = "unrecognized feature";
+      result = "Unrecognized feature";
 
    DBGMSF(debug, "feature_id=0x%02x, vspec=%d.%d, returning: %s",
                  feature_id, vspec.major, vspec.minor, result);
