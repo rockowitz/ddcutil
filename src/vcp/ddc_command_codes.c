@@ -100,6 +100,6 @@ char * ddc_cmd_code_name(Byte command_id) {
    if (cmd_entry)
       result = cmd_entry->name;
    else
-      result ="unrecognized command";
+      result ="Unrecognized operation code";
    return result;
 }
