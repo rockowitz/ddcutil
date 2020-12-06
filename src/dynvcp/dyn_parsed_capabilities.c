@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -474,7 +474,7 @@ report_commands(Byte_Value_Array cmd_ids, int depth)
    int ndx = 0;
    for (; ndx < ct; ndx++) {
       Byte hval = bva_get(cmd_ids, ndx);
-      rpt_vstring(depth+1, "Command: %02x (%s)", hval, ddc_cmd_code_name(hval));
+      rpt_vstring(depth+1, "Op Code: %02X (%s)", hval, ddc_cmd_code_name(hval));
    }
 }
 
