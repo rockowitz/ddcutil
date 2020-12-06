@@ -541,11 +541,11 @@ loadvcp_by_string(
 
 
 //
-// Dumpvcp
+// DUMPVCP
 //
 
 //
-// Support for dumpvcp command and returning profile info as string in API
+// Support for the DUMPVCP command and for returning profile info in the API
 //
 
 /** Formats a timestamp in a way usable in a filename, specifically:
@@ -809,7 +809,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 }
 
 
-/** Returns the output of the DUMPVCP command a single string.
+/** Returns the output of the DUMPVCP command in a single string.
  *  Each field is separated by a semicolon.
  *
  *  The caller is responsible for freeing the returned string.
