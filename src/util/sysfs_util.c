@@ -289,16 +289,28 @@ sysfs_is_ignorable_i2c_device(int busno) {
 // Functions for probing /sys
 //
 
+static bool rpt2_silent = true;
 
-void rpt_attr_output(
+bool
+set_rpt_sysfs_attr_silent(bool onoff) {
+   bool old = rpt2_silent;
+   rpt2_silent = onoff;
+   return old;
+}
+
+
+static void
+rpt_attr_output(
       int depth,
       const char * node,
       const char * op,
       const char * value)
 {
-   int offset = 70;
-   if (depth >= 0)
-      rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
+   if (!rpt2_silent) {
+      int offset = 70;
+      if (depth >= 0)
+         rpt_vstring(depth, "%-*s%-2s %s", offset, node, op, value);
+   }
 }
 
 
@@ -313,7 +325,8 @@ read_sysfs_attr0(
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
-char * get_single_subdir_name(
+static char *
+get_single_subdir_name(
       const char * dirname,
       Fn_Filter    filter,
       const char * val)
@@ -344,7 +357,7 @@ char * get_single_subdir_name(
 }
 
 
-char *
+static char *
 assemble_sysfs_path2(
       char *        buffer,
       int           bufsz,

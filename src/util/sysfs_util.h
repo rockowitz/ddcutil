@@ -65,13 +65,17 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
+
+bool
+set_rpt_sysfs_attr_silent(bool silent);
+
+#ifdef STATIC   // should be static functions, only used within this file
 void
 rpt_attr_output(
       int          depth,
       const char * node,
       const char * op,
       const char * value);
-
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
@@ -87,6 +91,8 @@ assemble_sysfs_path2(
       int          bufsz,
       const char * fn_segment,
       va_list      ap);
+
+#endif
 
 bool
 rpt2_attr_text(
