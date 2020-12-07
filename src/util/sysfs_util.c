@@ -548,7 +548,7 @@ bool rpt2_attr_single_subdir(
       int          depth,
       char **      value_loc,
       Fn_Filter    predicate_function,
-      char *       predicate_value,
+      const char * predicate_value,
       const char * fn_segment,
       ...)
 {
