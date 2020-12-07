@@ -69,31 +69,6 @@ sysfs_is_ignorable_i2c_device(
 bool
 set_rpt_sysfs_attr_silent(bool silent);
 
-#ifdef STATIC   // should be static functions, only used within this file
-void
-rpt_attr_output(
-      int          depth,
-      const char * node,
-      const char * op,
-      const char * value);
-
-typedef bool (*Fn_Filter)(const char * fn, const char * val);
-
-char *
-get_single_subdir_name(
-      const char * dirname,
-      Fn_Filter    filter,
-      const char * val);
-
-char *
-assemble_sysfs_path2(
-      char *       buffer,
-      int          bufsz,
-      const char * fn_segment,
-      va_list      ap);
-
-#endif
-
 bool
 rpt2_attr_text(
       int          depth,
@@ -152,6 +127,8 @@ rpt2_attr_realpath_basename(
 
 #define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt2_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+
+typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
 bool
 rpt2_attr_single_subdir(
