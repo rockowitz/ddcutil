@@ -574,9 +574,15 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
                DBGMSG("Fatal error reading changes: %s", errinfo_summary(erec));
 
             printf("%s\n", erec->detail);
+            DDCA_Status rc = erec->status_code;
             errinfo_free(erec);
-            printf("Terminating WATCH\n");
-            return;
+            if (rc == DDCRC_NULL_RESPONSE) {
+               printf("Continuing WATCH execution\n");
+            }
+            else {
+               printf("Terminating WATCH\n");
+               return;
+            }
          }
       }
 
