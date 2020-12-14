@@ -22,6 +22,7 @@
 #include "util/data_structures.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -104,8 +105,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 // Report core settings and command line options
 //
 
-static
-void report_performance_options(int depth) {
+static void
+report_performance_options(int depth)
+{
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
@@ -118,9 +120,9 @@ void report_performance_options(int depth) {
 }
 
 
-static
-void report_utility_options(Parsed_Cmd * parsed_cmd, int depth) {
-
+static void
+report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
+{
     bool special_option_explained = false;
     if (parsed_cmd->flags & CMD_FLAG_F1) {
        rpt_vstring(depth, "Utility option --f1 enabled: Timeout on i2c-dev read()");
@@ -157,9 +159,9 @@ void report_utility_options(Parsed_Cmd * parsed_cmd, int depth) {
  }
 
 
-static
-void report_settings(Parsed_Cmd * parsed_cmd, int depth) {
-
+static void
+report_settings(Parsed_Cmd * parsed_cmd, int depth)
+{
     show_reporting();  // uses fout()
 
     rpt_vstring( depth, "%.*s%-*s%s",
@@ -187,8 +189,7 @@ void report_settings(Parsed_Cmd * parsed_cmd, int depth) {
 // static long start_time_nanos;
 
 #ifdef ENABLE_ENVCMDS
-static
-void reset_stats() {
+static void reset_stats() {
    ddc_reset_stats_main();
 }
 #endif
@@ -212,6 +213,20 @@ void report_stats(DDCA_Stats_Type stats) {
 }
 #endif
 
+
+static bool
+validate_environment()
+{
+   bool ok = true;
+   int depth = 0;
+   if (!is_module_builtin("i2c-dev") && !is_module_loaded_using_sysfs("i2c_dev")) {
+      rpt_vstring(depth, "ddcutil requires module i2c_dev.");
+      ok = false;
+   }
+   return ok;
+}
+
+
 //
 // Mainline
 //
@@ -228,6 +243,9 @@ int main(int argc, char *argv[]) {
    FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
+
+   if (!validate_environment())
+      return EXIT_FAILURE;
 
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    init_base_services();  // so tracing related modules are initialized
@@ -287,13 +305,6 @@ int main(int argc, char *argv[]) {
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
-
-#ifndef HAVE_ADL
-   if ( is_module_loaded_using_sysfs("fglrx") ) {
-      fprintf(stdout, "WARNING: AMD proprietary video driver fglrx is loaded,");
-      fprintf(stdout, "but this copy of ddcutil was built without fglrx support.");
-   }
-#endif
 
    // HACK FOR TESTING
    if (parsed_cmd->flags & CMD_FLAG_F6) {
