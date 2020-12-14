@@ -23,6 +23,11 @@
 
 #include "sysfs_util.h"
 
+#ifdef ENABLE_TARGETBSD
+#define SYS compat/linux/sys
+#else
+#define SYS sys
+#endif
 
 /** Reads a /sys attribute file, which is 1 line of text
  *
@@ -132,7 +137,7 @@ is_module_loaded_using_sysfs(
    char   module_fn[100];
    bool   found = false;
 
-   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
+   snprintf(module_fn, sizeof(module_fn), "/SYS/module/%s", module_name);
    int rc = stat(module_fn, &statbuf);
    if (rc < 0) {
       // will be ENOENT (2) if file not found
@@ -154,7 +159,7 @@ is_module_loaded_using_sysfs(
 // proliferation are included here.
 
 /** Gets the sysfs name of an I2C device,
- *  i.e. the value of /sys/bus/in2c/devices/i2c-n/name
+ *  i.e. the value of /sys/bus/i2c/devices/i2c-n/name
  *
  *  \param  busno   I2C bus number
  *  \return newly allocated string containing attribute value,

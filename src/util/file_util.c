@@ -526,3 +526,113 @@ dir_ordered_foreach(
    }
 }
 
+
+/** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
+ *  those lines containing at least one on a list of terms.  After filtering, the set
+ *  of returned lines may be further reduced to either the first or last n number of
+ *  lines.
+ *
+ *  \param  line_array #GPtrArray in which to return the lines read
+ *  \param  fn         file name
+ *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
+ *  \param  ignore_case   ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *  \return if >= 0, number of lines before filtering and limit applied
+ *          if < 0,  -errno
+ *
+ *  \remark
+ *  This function was created because using grep in conjunction with pipes was
+ *  producing obscure shell errors.
+ */
+int read_file_with_filter(
+      GPtrArray * line_array,
+      const char *      fn,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
+   // bool debug = false;
+   // DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+   //          line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+
+   g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
+
+   int rc = file_getlines(fn, line_array, /*verbose*/ true);
+   // DBGMSF(debug, "file_getlines() returned %d", rc);
+
+   if (rc > 0) {
+      filter_and_limit_g_ptr_array(
+         line_array,
+         filter_terms,
+         ignore_case,
+         limit);
+   }
+   else { // rc == 0
+      // DBGMSF0(debug, "Empty file");
+   }
+
+   // DBGMSF(debug, "Returning: %d", rc);
+   return rc;
+}
+
+
+
+/** Deletes lines from a #GPtrArray of text lines. If filter terms
+ *  are specified, lines not satisfying any of the search terms are
+ *  deleted.  Then, if **limit** is specified, at most the limit
+ *  number of lines are left.
+ *
+ *  \param line_array   GPtrArray of null-terminated strings
+ *  \param filter_terms null-terminated string array of terms
+ *  \param ignore_case  if true, ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *
+ *  \remark
+ *  Consider allowing filter_terms to be regular expressions.
+ */
+void filter_and_limit_g_ptr_array(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit)
+{
+//   bool debug = false;
+//   if (debug) {
+//      DBGMSG("line_array=%p, line_array->len=%d, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
+//            line_array, line_array->len, ntsa_length(filter_terms), sbool(ignore_case), limit);
+//      // (const char **) cast to conform to strjoin() signature
+//      char * s = strjoin( (const char **) filter_terms, -1, ", ");
+//      DBGMSG("Filter terms: %s", s);
+//      free(s);
+//   };
+#ifdef TOO_MUCH
+   if (debug) {
+      if (filter_terms) {
+         printf("(%s) filter_terms:\n", __func__);
+         ntsa_show(filter_terms);
+      }
+   }
+#endif
+   // inefficient, just make it work for now
+   for (int ndx = (line_array->len)-1 ; ndx >= 0; ndx--) {
+      char * s = g_ptr_array_index(line_array, ndx);
+      assert(s);
+      // DBGMSF(debug, "s=|%s|", s);
+      bool keep = true;
+      if (filter_terms)
+         keep = apply_filter_terms(s, filter_terms, ignore_case);
+      if (!keep) {
+         g_ptr_array_remove_index(line_array, ndx);
+      }
+   }
+   gaux_ptr_array_truncate(line_array, limit);
+
+   // DBGMSF(debug, "Done. line_array->len=%d", line_array->len);
+}
+
+
+

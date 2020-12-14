@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sys/utsname.h>
 
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -28,6 +29,7 @@
 #include "query_sysenv_modules.h"
 
 
+#ifdef MOVED_TO_LINUX_UTIL
 
 /* Checks if a module is built in to the kernel.
  *
@@ -96,7 +98,7 @@ bool is_module_builtin(char * module_name) {
    DBGMSF(debug, "module_name = %s, returning %s", module_name, sbool(result));
    return result;
 }
-
+#endif
 
 /* Checks if a loadable module exists
  *

@@ -87,4 +87,19 @@ void dir_ordered_foreach(
       void *                accumulator,
       int                   depth);
 
+
+void filter_and_limit_g_ptr_array(
+      GPtrArray * line_array,
+      char **     filter_terms,
+      bool        ignore_case,
+      int         limit);
+
+
+int read_file_with_filter(
+      GPtrArray *  line_array,
+      const char * fn,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit);
+
 #endif /* FILE_UTIL_H_ */

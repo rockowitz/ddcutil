@@ -40,6 +40,7 @@ file_util.c                \
 glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \
+linux_util.c               \
 multi_level_map.c          \
 output_sink.c              \
 report_util.c              \

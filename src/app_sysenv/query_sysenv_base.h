@@ -87,18 +87,7 @@ Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
 void env_accumulator_report(Env_Accumulator * accum, int depth);
 
-void filter_and_limit_g_ptr_array(
-      GPtrArray * line_array,
-      char **     filter_terms,
-      bool        ignore_case,
-      int         limit);
 
-int read_file_with_filter(
-      GPtrArray *  line_array,
-      const char * fn,
-      char **      filter_terms,
-      bool         ignore_case,
-      int          limit);
 
 int execute_cmd_collect_with_filter(
       const char * cmd,
