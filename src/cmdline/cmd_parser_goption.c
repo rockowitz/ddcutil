@@ -190,7 +190,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
-   //  monitor selection options
+      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
+
+      //  Monitor selection options
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
       {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
@@ -203,13 +205,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 #ifdef USE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  "Detect USB devices", NULL},
-      {"disable-usb", '\0', G_OPTION_FLAG_REVERSE,
+      {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
 
       {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
 #endif
-      // output control
+      // Output control
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
@@ -220,7 +222,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
 
-      // feature selection filters
+      // Feature selection filters
       {"show-unsupported",
                   'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
       {"notable", '\0', G_OPTION_FLAG_HIDDEN,
@@ -231,14 +233,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"rw",      '\0', 0, G_OPTION_ARG_NONE,     &rw_only_flag,     "Include only RW features",         NULL},
       {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
       {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
-      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
 
-      // tuning
-      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
-      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
-      {"per-thread-stats",
-                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
+      // Behavior options
+      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
+      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
+//    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
+//                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
+
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
@@ -251,58 +252,54 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
+      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
 
-      // performance and retry
+      // Performance and retry
+      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
+      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
+      {"per-thread-stats",
+                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
       {"sleep-multiplier", '\0', 0,
                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
-      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
-//    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
-//                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
+
+
       {"less-sleep" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
       {"sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
-
       {"enable-sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
-
       {"disable-sleep-less",'\0',G_OPTION_FLAG_REVERSE,
                                      G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps",  NULL},
-
-
 //    {"reduce-sleeps",'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
 //    {"no-reduce-sleeps",'\0',G_OPTION_FLAG_REVERSE,
 //                               G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps (default)",  NULL},
-      {"lazy-sleep", '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+
+      {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+
       {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
 
+      // Debugging
+      {"excp",       '\0', 0, G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
+      {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
+//    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
+      {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_functions,      "Trace functions","function name" },
+      {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,      "Trace files",    "file name" },
+      {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
+      {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
+      {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
+      {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
 
-      // debugging
-      {"excp",    '\0', 0, G_OPTION_ARG_NONE,     &report_freed_excp_flag,  "Report freed exceptions", NULL},
-      {"trace",   '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes, "Trace classes",         "trace class name" },
-//    {"trace",   '\0', 0, G_OPTION_ARG_STRING,   &tracework,        "Trace classes",          "comma separated list" },
-      {"trcfunc", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_functions, "Trace functions",     "function name" },
-      {"trcfile", '\0',0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,    "Trace files",     "file name" },
-
-      {"timestamp",'\0',  0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
-      {"ts",      '\0',   0, G_OPTION_ARG_NONE,   &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
-      {"thread-id",'\0',  0, G_OPTION_ARG_NONE,   &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
-      {"tid",     '\0',   0, G_OPTION_ARG_NONE,   &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
-
-//    {"myusage", '\0', 0, G_OPTION_ARG_NONE,     &myusage_flag,     "Show usage", NULL},
-//    {"myhelp",  '\0', 0,  G_OPTION_ARG_NONE,     &myhelp_flag,      "Show usage", NULL},
-      {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work, "special", "non-negative number" },
+      // Generic options to aid development
+      {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work,         "special", "non-negative number" },
       {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
       {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
       {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
       {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
-      {"debug-parse", '\0', 0,  G_OPTION_ARG_NONE,  &debug_parse_flag,"Report parsed command",    NULL},
-      {"failsim", '\0', 0,  G_OPTION_ARG_FILENAME, &failsim_fn_work, "Enable simulation", "control file name"},
-
-      // other
-      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show version information", NULL},
-      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
 
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
