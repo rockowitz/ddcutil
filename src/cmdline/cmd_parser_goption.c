@@ -190,7 +190,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
    GOptionEntry option_entries[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
-      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
 
       //  Monitor selection options
       {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
@@ -291,6 +290,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
+
+      // Program information
+      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
+
 
       // Generic options to aid development
       {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work,         "special", "non-negative number" },
