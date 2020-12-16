@@ -742,7 +742,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // else if (explicit_display_spec_ct == 0)
    //   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
-
    if (rest_ct == 0) {
       fprintf(stderr, "No command specified\n");
       ok = false;
@@ -851,8 +850,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             }
          }
 
-
-         // old way
+#ifdef OLD
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
             for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
                // DBGMSG("argpos=%d, argct=%d", argpos, parsed_cmd->argct);
@@ -884,7 +882,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                }
             }
          }
-
+#endif
 
       }  // recognized command
    }
