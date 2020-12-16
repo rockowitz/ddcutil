@@ -35,11 +35,13 @@ static char *            usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
 
+
 // Callback function for processing --terse, --verbose and synonyms
-gboolean output_arg_func(const gchar* option_name,
-                         const gchar* value,
-                         gpointer     data,
-                         GError**     error)
+static gboolean
+output_arg_func(const gchar* option_name,
+                const gchar* value,
+                gpointer     data,
+                GError**     error)
 {
    bool debug = false;
    DBGMSF(debug, "option_name=|%s|, value|%s|, data=%p", option_name, value, data);
@@ -63,10 +65,11 @@ gboolean output_arg_func(const gchar* option_name,
 
 
 // Callback function for processing --stats
-gboolean stats_arg_func(const    gchar* option_name,
-                        const    gchar* value,
-                        gpointer data,
-                        GError** error)
+static gboolean
+stats_arg_func(const    gchar* option_name,
+               const    gchar* value,
+               gpointer data,
+               GError** error)
 {
    bool debug = false;
    DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
@@ -106,13 +109,10 @@ gboolean stats_arg_func(const    gchar* option_name,
 
 /* Primary parsing function
  *
- * Arguments:
- *    argc      number of command line arguments
- *    argv      array of pointers to command line arguments
- *
- * Returns:
- *    pointer to a Parsed_Cmd struct if parsing successful
- *    NULL if execution should be terminated
+ * \param   argc  number of command line arguments
+ * \param   argv  array of pointers to command line arguments
+ * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
+ *          NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
    bool debug = true;
