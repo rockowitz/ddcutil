@@ -115,7 +115,7 @@ gboolean stats_arg_func(const    gchar* option_name,
  *    NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[]) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting" );
    validate_cmdinfo();   // assertions
 
@@ -587,9 +587,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
           ok = false;
       }
       else {
-         // which?
          parsed_cmd->mccs_vspec = vspec;
-         parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
+         // parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
       }
    }
 
@@ -810,6 +809,50 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
             parsed_cmd->flags &= ~CMD_FLAG_WO_ONLY;
          }
 
+         // new way
+         if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
+            // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
+            int argpos = 0;
+            while(argpos < parsed_cmd->argct) {
+               Parsed_Setvcp_Args psv;
+               bool feature_code_ok = any_one_byte_hex_string_to_byte_in_buf(
+                             parsed_cmd->args[argpos],
+                             &psv.feature_code);
+               if (!feature_code_ok) {
+                  fprintf(stderr, "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
+                  ok = false;
+                  break;
+               }
+
+               argpos++;
+               if (argpos >= parsed_cmd->argct) {
+                  fprintf(stderr, "Missing feature value\n");
+                  ok = false;
+                  break;
+               }
+               psv.feature_value_type = VALUE_TYPE_ABSOLUTE;
+               if ( streq(parsed_cmd->args[argpos], "+") || streq(parsed_cmd->args[argpos], "-") )
+               {
+                  if ( streq(parsed_cmd->args[argpos], "+") )
+                     psv.feature_value_type = VALUE_TYPE_RELATIVE_PLUS;
+                  else
+                     psv.feature_value_type = VALUE_TYPE_RELATIVE_MINUS;
+                  argpos++;
+                  if (argpos >= parsed_cmd->argct) {
+                     fprintf(stderr, "Missing feature value\n");
+                     ok = false;
+                     break;
+                  }
+               }
+
+               psv.feature_value = strdup(parsed_cmd->args[argpos]);
+               g_array_append_val(parsed_cmd->setvcp_values, psv);
+               argpos++;
+            }
+         }
+
+
+         // old way
          if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
             for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
                // DBGMSG("argpos=%d, argct=%d", argpos, parsed_cmd->argct);
@@ -841,6 +884,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
                }
             }
          }
+
+
       }  // recognized command
    }
 
