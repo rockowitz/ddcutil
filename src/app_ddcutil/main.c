@@ -786,9 +786,11 @@ int main(int argc, char *argv[]) {
                }
                else {
                   main_rc = EXIT_SUCCESS;
-                  int argNdx;
+
                   // Public_Status_Code rc = 0;
                   Error_Info * ddc_excp;
+#ifdef OLD
+                  int argNdx;
                   for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
                      ddc_excp = app_set_vcp_value(
                              dh,
@@ -801,6 +803,25 @@ int main(int argc, char *argv[]) {
                         break;
                      }
                   }
+#else
+                  for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
+                     Parsed_Setvcp_Args * cur =  &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
+                     ddc_excp = app_set_vcp_value(
+                           dh,
+                           cur->feature_code,
+                           cur->feature_value_type,
+                           cur->feature_value,
+                           parsed_cmd->flags & CMD_FLAG_FORCE);
+                     if (ddc_excp) {
+                        f0printf(ferr(), "%s\n", ddc_excp->detail);
+                        if (ddc_excp->status_code == DDCRC_RETRIES)
+                           f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+                        ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
+                        main_rc = EXIT_FAILURE;   // ???
+                        break;
+                     }
+                  }
+#endif
                }
                break;
 
