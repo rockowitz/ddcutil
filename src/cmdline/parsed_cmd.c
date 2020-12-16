@@ -1,7 +1,7 @@
 /** @file parsed_cmd.c
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -38,10 +38,21 @@ Value_Name_Table cmd_flag_table = {
 #endif
 
 
-/* Allocates new Parsed_Cmd data structure, sets default values.
+/** Called by g_array_free()
+ *  Conforms to GDestroyNotify():
  *
- * Returns:
- *    initialized ParsedCmd
+ *  \param data  pointer to Parsed_Setup_Value to clear
+ */
+static void destroy_parsed_setvcp_value(gpointer data) {
+   Parsed_Setvcp_Args * psv = (Parsed_Setvcp_Args *) data;
+   free(psv->feature_value);
+   memset(psv, 0, sizeof(Parsed_Setvcp_Args));
+}
+
+
+/** Allocates and initializes a #Parsed_Cmd data structure
+ *
+ *  \return  pointer to initialized #Parsed_Cmd
  */
 Parsed_Cmd *  new_parsed_cmd() {
    // DBGMSG("Starting. file=%s", __FILE__);
@@ -53,11 +64,27 @@ Parsed_Cmd *  new_parsed_cmd() {
    parsed_cmd->i1 = -1;    // if set, values should be >= 0
    // parsed_cmd->nodetect = true;
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
+   parsed_cmd->setvcp_values = g_array_new(false,         // not null-terminated
+                                           true,          // clear to 0's
+                                           sizeof(Parsed_Setvcp_Args));
+   g_array_set_clear_func(parsed_cmd->setvcp_values, destroy_parsed_setvcp_value);
    return parsed_cmd;
 }
 
 
-// Debugging function
+const char * setvcp_value_type_name(Setvcp_Value_Type value_type)
+{
+   char * names[] = {"VALUE_TYPE_ABSOLUTE",
+                     "VALUE_TYPE_RELAIIVE_PLUS",
+                     "VALUE_TYPE_RELATIVE_MINUS"};
+   return names[value_type];
+}
+
+
+/** Dumps the #Parsed_Command data structure
+ *  \param  parsed_cmd  pointer to instance
+ *  \param  depth       logical indentation depth
+ */
 void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
@@ -124,7 +151,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
    rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
    rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);
-   rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id),      d1);
+// rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id),      d1);
 
 #ifdef FUTURE
    char * interpreted_flags = vnt_interpret_flags(parsed_cmd->flags, cmd_flag_table, false, ", ");
@@ -133,18 +160,21 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
 
    rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
-#ifdef REF
-   CMD_FLAG_TIMEOUT_I2C_IO    = 0x400000,
-   CMD_FLAG_REDUCE_SLEEPS  = 0x800000,
-#endif
    rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
    rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
    rpt_bool("defer sleeps:",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
    rpt_bool("dynamic_sleep_adjustment:", NULL, parsed_cmd->flags & CMD_FLAG_DSA,             d1);
    rpt_bool("per_thread_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS,        d1);
-   rpt_bool("x52 not fifo",      NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
-
-   rpt_int("i1",                 NULL, parsed_cmd->i1,                            d1);
+   rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
+   rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
+   for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
+      Parsed_Setvcp_Args * elem = &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
+      rpt_vstring(d2, "feature_code: 0x%02x, relative: %s, value: %s",
+                      elem->feature_code,
+                      setvcp_value_type_name(elem->feature_value_type),
+                      elem->feature_value);
+   }
+   rpt_int( "i1",                NULL, parsed_cmd->i1,                            d1);
    rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
    rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
    rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);
@@ -154,6 +184,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 }
 
 
+/** Frees a #Parsed_Cmd data structure
+ *  \param parsed_cmd pointer to instance to free
+ */
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
@@ -163,12 +196,12 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
       free(parsed_cmd->args[ndx]);
    if (parsed_cmd->pdid)
       free_display_identifier(parsed_cmd->pdid);
-
    free(parsed_cmd->raw_command);
    free(parsed_cmd->failsim_control_fn);
    free(parsed_cmd->fref);
    ntsa_free(parsed_cmd->traced_files, true);
    ntsa_free(parsed_cmd->traced_functions, true);
+   g_array_free(parsed_cmd->setvcp_values, true);
 
    parsed_cmd->marker[3] = 'x';
    free(parsed_cmd);
