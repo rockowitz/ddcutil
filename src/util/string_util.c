@@ -983,6 +983,9 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result)
  *  the value to begin with "0x" or "x", or end with "h".  The allowed
  *  prefix or suffix is case-insensitive.
  *
+ *  Note that if the string need not be prefixed with "0X" or suffixed with "h"
+ *  to be regarded as a hex value.
+ *
  *  @param  s         pointer to hex string
  *  @param  result    pointer to byte in which result will be returned
  *  @retval **true**  successful conversion,
