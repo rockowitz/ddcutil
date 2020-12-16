@@ -99,7 +99,7 @@ These commands address special situations.
 .TP
 .BI "dumpvcp " filename
 Save color profile related VCP feature values in a file.
-If no file name is specified, one is generated and the file is saved <describe location>
+If no file name is specified, one is generated and the file is saved in $HOME/.local/share/ddcutil>
 .TP 
 .BI "loadvcp " filename
 Set VCP feature values from a file.  The monitor to which the values will be applied is determined by the monitor identification stored in the file. 
@@ -154,7 +154,6 @@ Scan all possible feature codes 0x00..0xff, except those known the be write-only
 .PP
 Feature group names can be abbreviated to the first 3 characters.  Case is ignored. e.g. "COL", "pro".
 
-
 .I new-value
 .sp
 Normally, this is a decimal number in the range 0..255, or a hexadecimal number in the range x00..xff.
@@ -162,15 +161,14 @@ More generally, this is actually a two byte value, i.e. x00..xffff, and a few fe
 extended range.
 
 
-
 .\" .TP inserts a line before its output, .TQ does not 
 
 
 .SH OPTIONS
-Options for monitor selection.  If none are of these options are specified, the default is the first detected monitor.
+Options for monitor selection.  If none are specified, the default is the first detected monitor.
 Options \fB--mfg\fP, \fB--model\fP and \fB--sn\fP can be specified together.
 .TQ
-.BR -d , "--display "
+.BR "-d , --dis , --display " , 
 .I display-number 
 logical display number (starting from 1)
 .TQ
@@ -198,14 +196,7 @@ serial number.  (This is the "serial ascii" field from the EDID, not the binary 
 256 hex character representation of the 128 byte EDID.  Needless to say, this is intended for program use.
 
 .PP
-
-Options to control the amount and form of output.
-.TQ
-.B "-t, --terse, --brief"
-Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
-.TQ
-.B -v, --verbose
-Show extended detail
+Feature selection filters
 .TQ
 .B "-U, --show-unsupported"
 Normally, \fBgetvcp\fP does not report unsupported features when querying a feature-group.  This option forces output. 
@@ -215,9 +206,48 @@ Normally, \fBgetvcp\fP does not report Table type features when querying a featu
 .TQ
 .B "--rw, --ro, --wo"
 Limit \fBgetvcp\fP or \fBvcpinfo\fP output to read-write, read-only, or (for \fBvcpinfo\fP) write-only features.
+
+.PP
+Options that control the amount and form of output.
 .TQ
-.B "--mccs " "MCCS version"
+.B "-t, --terse, --brief"
+Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable form.
+.TQ
+.B -v, --verbose
+Show extended detail
+
+.PP
+Options that modify behavior
+.TQ
+.BI "--mccs " "MCCS version"
 Tailor \fBvcpinfo\fP output to a particular MCCS version, e.g. 2.1
+.TQ
+.B "--enable-usb, --disable-usb"
+Enable or disable support for monitors that implement USB commuincation with the Virtual Control Panel.
+The default is 
+.B "--disable-usb"
+.TQ
+.B "--force-slave-address"
+Take control of slave addresses on the I2C bus even they are in use.
+.TQ
+.B "--verify | --noverify"
+Verify or do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. \fB--noverify\fP is the default.
+.TQ
+.B "--async"
+If there are multiple monitors, initial checks are performed in multiple threads, improving performance.
+
+.PP
+Options to tune execution:
+.TQ
+.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-tries)"
+Adjust the number of retries.  A value of "." or "0" leaves the setting for a retry type unchanged.
+.TQ
+.BI "--sleep-multiplier " "decimal number"
+Adjust the length of waits listed in the DDC/CI specification by this number to determine the actual 
+wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
+with poor DDC implementations may work better with sleep-multiplier values greater than 1.0. 
+
+
 .PP
 Options for diagnostic output.
 .TQ
@@ -233,19 +263,32 @@ to manage retries in case of failure.  This option reports retry counts and vari
 Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
 
 .PP
-Options to tune execution:
+Debugging options. 
 .TQ
-.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-tries)"
-Adjust the number of retries
+.BI "--trace "  "trace group name"
+Enable tracing for functions in the specified trace group.  For a list of trace group names, use the 
+\fI--help\fP option. This option can be specified more than once. 
 .TQ
-.B "--force-slave-address"
-Take control of slave addresses on the I2C bus even they are in use.
+.BI "--trcfunc " "function name"
+Trace the specified function, which must have been enabled for tracing.
+This option can be specified more than once. 
 .TQ
-.B "--verify | --noverify"
-Verify or do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. \fI--noverify\fP is the default.
+.BI "--trcfile " "file name"
+Trace all functions in a source file that are enabled for tracing.  The argument is a simple file name, 
+with or without the ".c" suffix, e.g. "i2c_bus_core", "i2c_bus_core.c".
+This option can be specified more than once.
 .TQ
-.B "--async"
-If there are multiple monitors, initial checks are performed in multiple threads, improving performance.
+.B --timestamp, --ts
+Preface trace messages with the time since program start.
+.BR --thread-id , --tid
+Preface trace messages with the thread number.
+.TQ
+.B excp
+Report freed exceptions
+
+
+
+
 .PP
 Options for program information.
 .TQ
