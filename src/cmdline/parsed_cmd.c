@@ -38,6 +38,16 @@ Value_Name_Table cmd_flag_table = {
 #endif
 
 
+/** Returns the symbolic name for a Setvcp_Value_Type value */
+const char * setvcp_value_type_name(Setvcp_Value_Type value_type)
+{
+   char * names[] = {"VALUE_TYPE_ABSOLUTE",
+                     "VALUE_TYPE_RELAIIVE_PLUS",
+                     "VALUE_TYPE_RELATIVE_MINUS"};
+   return names[value_type];
+}
+
+
 /** Called by g_array_free()
  *  Conforms to GDestroyNotify():
  *
@@ -48,7 +58,6 @@ static void destroy_parsed_setvcp_value(gpointer data) {
    free(psv->feature_value);
    memset(psv, 0, sizeof(Parsed_Setvcp_Args));
 }
-
 
 /** Allocates and initializes a #Parsed_Cmd data structure
  *
@@ -72,12 +81,28 @@ Parsed_Cmd *  new_parsed_cmd() {
 }
 
 
-const char * setvcp_value_type_name(Setvcp_Value_Type value_type)
-{
-   char * names[] = {"VALUE_TYPE_ABSOLUTE",
-                     "VALUE_TYPE_RELAIIVE_PLUS",
-                     "VALUE_TYPE_RELATIVE_MINUS"};
-   return names[value_type];
+/** Frees a #Parsed_Cmd data structure
+ *  \param parsed_cmd pointer to instance to free
+ */
+void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
+   assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
+   int ndx = 0;
+   for (; ndx < parsed_cmd->argct; ndx++)
+      free(parsed_cmd->args[ndx]);
+   if (parsed_cmd->pdid)
+      free_display_identifier(parsed_cmd->pdid);
+   free(parsed_cmd->raw_command);
+   free(parsed_cmd->failsim_control_fn);
+   free(parsed_cmd->fref);
+   ntsa_free(parsed_cmd->traced_files, true);
+   ntsa_free(parsed_cmd->traced_functions, true);
+   g_array_free(parsed_cmd->setvcp_values, true);
+
+   parsed_cmd->marker[3] = 'x';
+   free(parsed_cmd);
+   DBGMSF(debug, "Done");
 }
 
 
@@ -181,29 +206,4 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
    rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
    rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
-}
-
-
-/** Frees a #Parsed_Cmd data structure
- *  \param parsed_cmd pointer to instance to free
- */
-void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
-   bool debug = false;
-   DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
-   assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
-   int ndx = 0;
-   for (; ndx < parsed_cmd->argct; ndx++)
-      free(parsed_cmd->args[ndx]);
-   if (parsed_cmd->pdid)
-      free_display_identifier(parsed_cmd->pdid);
-   free(parsed_cmd->raw_command);
-   free(parsed_cmd->failsim_control_fn);
-   free(parsed_cmd->fref);
-   ntsa_free(parsed_cmd->traced_files, true);
-   ntsa_free(parsed_cmd->traced_functions, true);
-   g_array_free(parsed_cmd->setvcp_values, true);
-
-   parsed_cmd->marker[3] = 'x';
-   free(parsed_cmd);
-   DBGMSF(debug, "Done");
 }
