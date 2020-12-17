@@ -18,14 +18,12 @@
 #include "base/status_code_mgt.h"
 #include "base/last_io_event.h"
 
-// #include "i2c/i2c_base_io.h"
-
 #include "i2c_strategy_dispatcher.h"
 
-I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
+// I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
 bool I2C_Read_Bytewise               = DEFAULT_I2C_READ_BYTEWISE;
-bool EDID_Read_Uses_I2C_Layer        = EDID_READ_USES_I2C_LAYER;
-bool EDID_Read_Bytewise              = EDID_READ_BYTEWISE;
+bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
+bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 
 
 // Trace class for this file
@@ -110,12 +108,14 @@ Status_Errno_DDC invoke_i2c_writer(
 
 
 /** Reads from the I2C bus, using the function specified in the
- * currently active strategy.
+ *  currently active strategy.
  *
- * @param   fd              Linux file descriptor for open /dev/i2c bus
- * @param   bytect          number of bytes to read
- * @param   readbuf         location where bytes will be read to
- * @return  status code
+ *  @param   fd              Linux file descriptor for open /dev/i2c bus
+ *  @param   slave_address   I2C slave address to read from
+ *  @param   read_bytewise   if true, read one byte at a time
+ *  @param   bytect          number of bytes to read
+ *  @param   readbuf         location where bytes will be read to
+ *  @return  status code
  */
 Status_Errno_DDC invoke_i2c_reader(
        int        fd,
@@ -125,7 +125,8 @@ Status_Errno_DDC invoke_i2c_reader(
        Byte *     readbuf)
 {
      bool debug = false;
-     DBGTRC(debug, TRACE_GROUP, "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, read_bytewise=%s, readbuf=%p",
+     DBGTRC(debug, TRACE_GROUP,
+                   "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, read_bytewise=%s, readbuf=%p",
                    fd,
                    filename_for_fd_t(fd),
                    slave_address,

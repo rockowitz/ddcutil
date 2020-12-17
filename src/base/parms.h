@@ -42,20 +42,17 @@
 
 // One of the following 2 defines must be enabled:
 // #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
-#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_FILEIO   ///< Use read() and write()
+#define DEFAULT_I2C_IO_STRATEGY   I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
 #define DEFAULT_I2C_READ_BYTEWISE false                   ///< Use single byte reads
 
-#define EDID_READ_USES_I2C_LAYER  false
-#define EDID_READ_BYTEWISE  false
-
+#define DEFAULT_EDID_READ_USES_I2C_LAYER  false
+#define DEFAULT_EDID_READ_BYTEWISE        false
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
 // FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response EDID ok, getvcp fails
-// FILEIO      false       ok                                                 All ok
-// IOCTL       true        on P2411h and Acer, returns corrupte data,         EDID ok, getvcp fails
-
-
+// IOCTL       false       ok                                                 All ok
+// IOCTL       true        on P2411h and Acer, returns corrupt data           EDID ok, getvcp fails
 
 // Parms used only within testcase portion of code:
 
