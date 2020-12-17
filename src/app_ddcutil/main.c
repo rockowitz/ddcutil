@@ -120,43 +120,27 @@ report_performance_options(int depth)
 }
 
 
+#define REPORT_FLAG_OPTION(_flagno, _action) \
+      rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
+                  (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", \
+                        _action)
 static void
 report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
 {
-    bool special_option_explained = false;
-    if (parsed_cmd->flags & CMD_FLAG_F1) {
-       rpt_vstring(depth, "Utility option --f1 enabled: Timeout on i2c-dev read()");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F2) {
-       rpt_vstring(depth, "Utility option --f2 enabled: Dynamic sleep adjustment");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F3)  {
-       rpt_vstring(depth, "Utility option --f3 enabled: Disable post-read sleep suppression");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F4) {
-       rpt_vstring(depth, "Utility option --f4 enabled: Read strategy tests");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F5) {
-       rpt_vstring(depth, "Utility option --f5 enabled: Deferred sleep");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->flags & CMD_FLAG_F6) {
-       rpt_vstring(depth, "Utility option --f6 enabled: Force I2C bus");
-       special_option_explained = true;
-    }
-    if (parsed_cmd->i1 >= 0) {    // default is -1
-       rpt_vstring(depth, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
-       special_option_explained = true;
-    }
-    if (special_option_explained) {
-       rpt_nl();
-       // f0puts("\n", fout);
-    }
+   if (parsed_cmd->output_level >= DDCA_OL_VV) {
+      rpt_label(depth, "Utility Options:");
+      REPORT_FLAG_OPTION(1, "Unused");
+      REPORT_FLAG_OPTION(2, "Unused");
+      REPORT_FLAG_OPTION(3, "Unused");
+      REPORT_FLAG_OPTION(4, "Read strategy tests");
+      REPORT_FLAG_OPTION(5, "Unused");
+      REPORT_FLAG_OPTION(6, "Force I2c bus");
+
+      rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
+      rpt_nl();
+   }
  }
+#undef REPORT_FLAG_OPTION
 
 
 static void
