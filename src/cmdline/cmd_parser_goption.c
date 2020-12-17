@@ -201,25 +201,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
       {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
       {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
-#ifdef USE_USB
-      {"enable-usb", '\0', G_OPTION_FLAG_NONE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Detect USB devices", NULL},
-      {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
-
-      {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
-#endif
-      // Output control
-      {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
-      {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
-      {"terse",   't',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-      {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-      {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
 
       // Feature selection filters
       {"show-unsupported",
@@ -233,7 +214,36 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
       {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
 
+
+      // Output control
+      {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
+      {"terse",   't',  G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+      {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+      {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+
+      // Diagnostic output
+      {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
+      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
+      {"per-thread-stats",
+                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
+
+
+
       // Behavior options
+#ifdef USE_USB
+      {"enable-usb", '\0', G_OPTION_FLAG_NONE,
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Detect USB devices", NULL},
+      {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
+
+      {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
+#endif
       {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
       {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
@@ -255,13 +265,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
       // Performance and retry
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
-      {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
-                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
-      {"per-thread-stats",
-                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
       {"sleep-multiplier", '\0', 0,
                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
-
 
       {"less-sleep" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
       {"sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
