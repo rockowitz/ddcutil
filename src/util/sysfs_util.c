@@ -137,7 +137,7 @@ is_module_loaded_using_sysfs(
    char   module_fn[100];
    bool   found = false;
 
-   snprintf(module_fn, sizeof(module_fn), "/SYS/module/%s", module_name);
+   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
    int rc = stat(module_fn, &statbuf);
    if (rc < 0) {
       // will be ENOENT (2) if file not found
