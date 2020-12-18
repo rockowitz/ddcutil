@@ -6,10 +6,7 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 /** \cond */
-// #define _GNU_SOURCE   // for asprintf
-
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
@@ -25,6 +22,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 
 #include "base/core.h"

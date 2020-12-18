@@ -31,6 +31,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 #ifdef USE_UDEV
 #include "util/udev_i2c_util.h"

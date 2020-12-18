@@ -8,6 +8,8 @@
 #ifndef SYSFS_UTIL_H_
 #define SYSFS_UTIL_H_
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
@@ -43,28 +45,6 @@ read_binary_sysfs_attr(
 char *
 get_rpath_basename(
       const char * path);
-
-char *
-get_i2c_device_sysfs_driver(
-      int          busno);
-
-bool
-is_module_loaded_using_sysfs(
-      const char * module_name);
-
-char *
-get_i2c_device_sysfs_name(
-      int busno);
-
-//bool
-//ignorable_i2c_device_sysfs_name(
-//      const char * name,
-//      const char * driver);
-
-bool
-sysfs_is_ignorable_i2c_device(
-      int busno);
-
 
 bool
 set_rpt_sysfs_attr_silent(bool silent);

@@ -2,12 +2,12 @@
   *  I2C specific udev utilities
   */
 
-// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +15,7 @@
 
 #include "report_util.h"
 #include "string_util.h"
+#include "sysfs_i2c_util.h"
 #include "sysfs_util.h"
 #include "udev_util.h"
 
@@ -26,17 +27,6 @@
 //
 // Create, report, query, and destroy a list of summaries of UDEV I2C devices
 //
-
-#ifdef REFERENCE
-#define UDEV_DEVICE_SUMMARY_MARKER "UDSM"
-typedef struct udev_device_summary {
-   char   marker[4];
-   const char * sysname;
-   const char * devpath;
-   const char * sysattr_name;
-} Udev_Device_Summary;
-#endif
-
 
 /* Extract the i2c bus number from a device summary.
  *

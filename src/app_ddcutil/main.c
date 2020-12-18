@@ -25,6 +25,7 @@
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
 
@@ -202,11 +203,13 @@ static bool
 validate_environment()
 {
    bool ok = true;
+#ifdef TARGET_LINUX
    int depth = 0;
    if (!is_module_builtin("i2c-dev") && !is_module_loaded_using_sysfs("i2c_dev")) {
       rpt_vstring(depth, "ddcutil requires module i2c_dev.");
       ok = false;
    }
+#endif
    return ok;
 }
 

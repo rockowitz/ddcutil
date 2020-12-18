@@ -6,7 +6,6 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 /** \cond */
 #include <config.h>
 
@@ -21,6 +20,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 #ifdef PROBE_USING_SYSTEMD
 #include "util/systemd_util.h"

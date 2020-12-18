@@ -15,6 +15,7 @@
 #include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
@@ -56,7 +57,6 @@ static bool is_i2c_device_rw(int busno) {
    DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
-
 
 
 // Auxiliary function for raw_scan_i2c_devices()

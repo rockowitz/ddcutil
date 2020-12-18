@@ -379,11 +379,12 @@ AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_x11" = "xyes" ],
 AM_CONDITIONAL([ENABLE_TARGETBSD_COND], [test "x$enable_targetbsd" = "xyes"] )
 AS_IF([test "x$enable_targetbsd" = "xyes"],
       AC_MSG_NOTICE( [targetbsd...  enabled] )
-      AC_DEFINE( [TARGET_BSD], [1], [If defined, target BSD.])
+      AC_DEFINE( [TARGET_BSD], [1], [If defined, building for BSD.])
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 1) 
      ,
       AC_MSG_NOTICE( [targetbsd...  disabled] )
       AC_SUBST(ENABLE_TARGETBSD_FLAG, 0)
+      AC_DEFINE( [TARGET_LINUX], [1], [If defined, building for Linux.])
      )
 
 AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )

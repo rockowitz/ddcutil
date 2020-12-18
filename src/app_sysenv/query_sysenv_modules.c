@@ -6,11 +6,9 @@
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
 /** \cond */
 #include <config.h>
 
-// #define _GNU_SOURCE 1       // for function group_member
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -20,6 +18,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
 
@@ -28,77 +27,6 @@
 
 #include "query_sysenv_modules.h"
 
-
-#ifdef MOVED_TO_LINUX_UTIL
-
-/* Checks if a module is built in to the kernel.
- *
- * Arguments:
- *   module_name    simple module name, as it appears in the file system, e.g. i2c-dev
- *
- * Returns:         true/false
- */
-bool is_module_builtin(char * module_name) {
-   bool debug = false;
-   bool result = false;
-
-   struct utsname utsbuf;
-   int rc = uname(&utsbuf);
-   assert(rc == 0);
-
-   char modules_builtin_fn[100];
-   snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
-
-#ifdef OLD
-   // TODO: replace shell command with API read and scan of file,
-   //       can use code from query_sysenv_logs.c
-
-   char cmdbuf[200];
-
-   snprintf(cmdbuf, 200, "grep -H %s.ko %s", module_name, modules_builtin_fn);
-   // DBGMSG("cmdbuf = |%s|", cmdbuf);
-
-   GPtrArray * response = execute_shell_cmd_collect(cmdbuf);
-   // internal rc =  0 if found, 256 if not found
-   // returns 0 lines if not found
-   // NULL response if command error
-
-   // DBGMSG("execute_shell_cmd_collect() returned %d lines", response->len);
-   // for (int ndx = 0; ndx < response->len; ndx++) {
-   //    puts(g_ptr_array_index(response, ndx));
-   // }
-
-   result = (response && response->len > 0);
-   g_ptr_array_free(response, true);
-#endif
-
-   // new way
-   char ko_name[40];
-   snprintf(ko_name, 40, "%s.ko", module_name);
-
-   bool builtin2 = false;
-   GPtrArray * lines = g_ptr_array_new_full(400, g_free);
-   char * terms[2];
-   terms[0] = ko_name;
-   terms[1] = NULL;
-   int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, terms, false, 0);
-   if (unfiltered_ct < 0) {
-      int errsv = errno;
-      fprintf(stderr, "Error reading file %s: %s\n", modules_builtin_fn, linux_errno_desc(errsv));
-      fprintf(stderr, "Assuming module %s is not built in to kernsl\n", module_name);
-   }
-   else {
-      // DBGMSG("lines->len=%d", lines->len);
-      builtin2 = (lines->len == 1);
-   }
-   g_ptr_array_free(lines, true);
-   // DBGMSG("builtin2=%s", sbool(builtin2));
-   result = builtin2;
-
-   DBGMSF(debug, "module_name = %s, returning %s", module_name, sbool(result));
-   return result;
-}
-#endif
 
 /* Checks if a loadable module exists
  *

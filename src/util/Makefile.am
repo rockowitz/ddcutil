@@ -50,8 +50,14 @@ subprocess_util.c          \
 timestamp.c                \
 utilrpt.c
 
+if !ENABLE_TARGETBSD_COND
+libutil_la_SOURCES +=      \
+sysfs_i2c_util.c
+endif
 
-# actuall required in multiple places, but good enough for now
+
+
+# actually required in multiple places, but good enough for now
 if ENABLE_USB_COND
 libutil_la_SOURCES +=      \
 device_id_util.c
