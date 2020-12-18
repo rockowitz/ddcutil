@@ -207,7 +207,7 @@ set_rpt_sysfs_attr_silent(bool onoff) {
 }
 
 
-static void
+void
 rpt_attr_output(
       int depth,
       const char * node,

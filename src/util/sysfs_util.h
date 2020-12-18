@@ -49,6 +49,13 @@ get_rpath_basename(
 bool
 set_rpt_sysfs_attr_silent(bool silent);
 
+void
+rpt_attr_output(
+      int depth,
+      const char * node,
+      const char * op,
+      const char * value);
+
 bool
 rpt2_attr_text(
       int          depth,
