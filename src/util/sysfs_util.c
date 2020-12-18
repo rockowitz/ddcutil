@@ -24,9 +24,9 @@
 #include "sysfs_util.h"
 
 #ifdef ENABLE_TARGETBSD
-#define SYS compat/linux/sys
+#define SYS "/compat/linux/sys"
 #else
-#define SYS sys
+#define SYS "/sys"
 #endif
 
 /** Reads a /sys attribute file, which is 1 line of text
@@ -209,10 +209,10 @@ char *
 get_i2c_device_sysfs_driver(int busno) {
    char * driver_name = NULL;
    char workbuf[100];
-   snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
+   snprintf(workbuf, 100, SYS"/bus/i2c/devices/i2c-%d/device/driver/module", busno);
    driver_name = get_rpath_basename(workbuf);
    if (!driver_name) {
-      snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device/driver/module", busno);
+      snprintf(workbuf, 100, SYS"/bus/i2c/devices/i2c-%d/device/device/device/driver/module", busno);
       driver_name = get_rpath_basename(workbuf);
    }
    printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
