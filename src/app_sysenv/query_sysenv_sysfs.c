@@ -848,7 +848,6 @@ void query_drm_using_sysfs()
 
 
 
-#ifdef OLD
 // *** Detail for /sys/bus/i2c/devices (Initial Version)  ***
 
 void one_bus_i2c_device(int busno, void * accumulator, int depth) {
@@ -937,7 +936,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
 }
 
 
-void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int depth) {
+void each_i2c_device_new(const char * dirname, const char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
    rpt_nl();
@@ -951,7 +950,7 @@ void each_i2c_device_new(char * dirname, char * fn, void * accumulator, int dept
 
 // *** Detail for /sys/class/drm (initial version) ***
 
-void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
+void each_drm_device(const char * dirname, const char * fn, void * accumulator, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
    rpt_nl();
@@ -1011,10 +1010,9 @@ void each_drm_device(char * dirname, char * fn, void * accumulator, int depth) {
 
    free(real_cardX_dir);
 }
-#endif
 
 
-bool drm_filter(char * name) {
+bool drm_filter(const char * name) {
    return str_starts_with(name, "card") && strlen(name) > 5;
 }
 
@@ -1283,7 +1281,6 @@ void dump_sysfs_i2c() {
       rpt_nl();
    }
 
-#ifdef OLD
    rpt_nl();
    rpt_label(0, "*** Detail for /sys/bus/i2c/devices (Initial Version) ***");
    dir_ordered_foreach(
@@ -1303,7 +1300,6 @@ void dump_sysfs_i2c() {
          each_drm_device,    //
          NULL,                 // accumulator
          0);                   // depth
-#endif
 
 #ifdef TMI
    GPtrArray *  video_devices =   execute_shell_cmd_collect(
