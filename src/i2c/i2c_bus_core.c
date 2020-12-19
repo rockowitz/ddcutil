@@ -362,6 +362,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
       DBGMSF(debug, "write() failed.  rc = %s", psc_desc(rc));
    }
    else {
+      DBGTRC(debug, TRACE_GROUP, "write() succeeded");
       rc = 0;
       if (read_bytewise) {
          int ndx = 0;
