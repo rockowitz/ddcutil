@@ -130,7 +130,7 @@ report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
 {
    if (parsed_cmd->output_level >= DDCA_OL_VV) {
       rpt_label(depth, "Utility Options:");
-      REPORT_FLAG_OPTION(1, "Unused");
+      REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
       REPORT_FLAG_OPTION(2, "Unused");
       REPORT_FLAG_OPTION(3, "Unused");
       REPORT_FLAG_OPTION(4, "Read strategy tests");
@@ -292,6 +292,11 @@ int main(int argc, char *argv[]) {
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
 
    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
+
+   if (parsed_cmd->flags & CMD_FLAG_F1) {
+      fprintf(stdout, "EDID reads will use normal I2C calls\n");
+      EDID_Read_Uses_I2C_Layer = true;
+   }
 
    // HACK FOR TESTING
    if (parsed_cmd->flags & CMD_FLAG_F6) {
