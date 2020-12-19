@@ -1,14 +1,76 @@
 // sysfs_i2c_util.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
+#include "file_util.h"
 #include "string_util.h"
-
 #include "sysfs_util.h"
+
 #include "sysfs_i2c_util.h"
+
+
+/** Looks in the /sys file system to check if a module is loaded.
+ *
+ * \param  module_name    module name
+ * \return true if the module is loaded, false if not
+ */
+bool
+is_module_loaded_using_sysfs(
+      const char * module_name)
+{
+   bool debug = false;
+
+   struct stat statbuf;
+   char   module_fn[100];
+   bool   found = false;
+
+   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
+   int rc = stat(module_fn, &statbuf);
+   if (rc < 0) {
+      // will be ENOENT (2) if file not found
+      found = false;
+   }
+   else {
+      // if (S_ISDIR(statbuf.st_mode))   // pointless
+         found = true;
+   }
+
+   if (debug)
+      printf("(%s) module_name = %s, returning %d", __func__, module_name, found);
+   return found;
+}
+
+
+// The following functions are not really generic sysfs utilities, and more
+// properly belong in a file in subdirectory base, but to avoid yet more file
+// proliferation are included here.
+
+/** Gets the sysfs name of an I2C device,
+ *  i.e. the value of /sys/bus/i2c/devices/i2c-n/name
+ *
+ *  \param  busno   I2C bus number
+ *  \return newly allocated string containing attribute value,
+ *          NULL if not found
+ *
+ *  \remark
+ *  Caller is responsible for freeing returned value
+ */
+char *
+get_i2c_device_sysfs_name(
+      int busno)
+{
+   char workbuf[50];
+   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
+   char * name = file_get_first_line(workbuf, /*verbose */ false);
+   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
+   return name;
+}
+
 
 
 /** Gets the driver name of an I2C device,

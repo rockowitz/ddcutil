@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <libgen.h>
 #include <limits.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,11 +22,6 @@
 
 #include "sysfs_util.h"
 
-#ifdef ENABLE_TARGETBSD
-#define SYS "/compat/linux/sys"
-#else
-#define SYS "/sys"
-#endif
 
 /** Reads a /sys attribute file, which is 1 line of text
  *
@@ -121,66 +115,12 @@ read_binary_sysfs_attr(
    return read_binary_file(fn, est_size, verbose);
 }
 
-#ifndef ENABLE_TARGETBSD
-/** Looks in the /sys file system to check if a module is loaded.
- *
- * \param  module_name    module name
- * \return true if the module is loaded, false if not
- */
-bool
-is_module_loaded_using_sysfs(
-      const char * module_name)
-{
-   bool debug = false;
 
-   struct stat statbuf;
-   char   module_fn[100];
-   bool   found = false;
 
-   snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
-   int rc = stat(module_fn, &statbuf);
-   if (rc < 0) {
-      // will be ENOENT (2) if file not found
-      found = false;
-   }
-   else {
-      // if (S_ISDIR(statbuf.st_mode))   // pointless
-         found = true;
-   }
-
-   if (debug)
-      printf("(%s) module_name = %s, returning %d", __func__, module_name, found);
-   return found;
-}
-#endif
-
-#ifndef TARGET_BSD
-// The following functions are not really generic sysfs utilities, and more
-// properly belong in a file in subdirectory base, but to avoid yet more file
-// proliferation are included here.
-
-/** Gets the sysfs name of an I2C device,
- *  i.e. the value of /sys/bus/i2c/devices/i2c-n/name
- *
- *  \param  busno   I2C bus number
- *  \return newly allocated string containing attribute value,
- *          NULL if not found
- *
- *  \remark
- *  Caller is responsible for freeing returned value
- */
 char *
-get_i2c_device_sysfs_name(int busno) {
-   char workbuf[50];
-   snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
-   char * name = file_get_first_line(workbuf, /*verbose */ false);
-   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
-   return name;
-}
-#endif
-
-
-char * get_rpath_basename(const char * path) {
+get_rpath_basename(
+      const char * path)
+{
    char * result = NULL;
    char resolved_path[PATH_MAX];
    char * rpath = realpath(path, resolved_path);
@@ -197,10 +137,12 @@ char * get_rpath_basename(const char * path) {
 // Functions for probing /sys
 //
 
-static bool rpt2_silent = true;
+static bool rpt2_silent = false;
 
 bool
-set_rpt_sysfs_attr_silent(bool onoff) {
+set_rpt_sysfs_attr_silent(
+      bool onoff)
+{
    bool old = rpt2_silent;
    rpt2_silent = onoff;
    return old;
@@ -320,8 +262,9 @@ rpt2_attr_text(
 }
 
 
-bool rpt2_attr_binary(
-      int          depth,
+bool
+rpt2_attr_binary(
+      int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
       ...)
@@ -352,10 +295,11 @@ bool rpt2_attr_binary(
 }
 
 
-bool rpt2_attr_edid(
+bool
+rpt2_attr_edid(
        int           depth,
        GByteArray ** value_loc,
-       const char *        fn_segment,
+       const char *  fn_segment,
        ...)
  {
     char pb1[PATH_MAX];
@@ -389,7 +333,7 @@ bool
 rpt2_attr_realpath(
       int          depth,
       char **      value_loc,
-      const char *       fn_segment,
+      const char * fn_segment,
       ...)
 {
    if (value_loc)
@@ -452,7 +396,8 @@ rpt2_attr_realpath_basename(
 }
 
 
-bool rpt2_attr_single_subdir(
+bool
+rpt2_attr_single_subdir(
       int          depth,
       char **      value_loc,
       Fn_Filter    predicate_function,
@@ -489,7 +434,8 @@ bool rpt2_attr_single_subdir(
 }
 
 
-bool rpt2_attr_note_subdir(
+bool
+rpt2_attr_note_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
@@ -514,8 +460,4 @@ bool rpt2_attr_note_subdir(
 
    return found;
 }
-
-
-
-
 
