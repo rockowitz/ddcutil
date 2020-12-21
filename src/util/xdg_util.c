@@ -22,7 +22,7 @@
 
 char * all_xdg_data_dirs()
 {
-   bool debug = true;
+   bool debug = false;
    char * home = getenv("HOME");
    char * xdg_data_home = getenv("XDG_DATA_HOME");
    if (xdg_data_home)
@@ -50,7 +50,7 @@ void xdg_dirs_iter_init(char * dir_list, Iter_State * state) {
 }
 
 char * xdg_dirs_iter_next(Iter_State * state) {
-   bool debug = true;
+   bool debug = false;
    if (state->iter_start >= state->iter_end)
       return NULL;
    char * p = state->iter_start;
@@ -72,7 +72,7 @@ char * find_xdg_data_file(
       const char * application,
       const char * simple_fn)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. application = %s, simple_fn=%s\n", __func__, application, simple_fn);
    Iter_State iter_state;
