@@ -40,6 +40,7 @@
 #include "base/dynamic_sleep.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/thread_retry_data.h"
@@ -236,6 +237,7 @@ int main(int argc, char *argv[]) {
 
    // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
    init_base_services();  // so tracing related modules are initialized
+   rtti_func_name_table_add(main, "main");
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
@@ -407,10 +409,7 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
          flags |= FSF_WO_ONLY;
 
-
-
       vcpinfo_ok = app_vcpinfo(parsed_cmd->fref, parsed_cmd->mccs_vspec, flags);
-
 
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
@@ -673,6 +672,11 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
+            if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
+               DBGTRC(main_debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
+                                  parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
+               dref->vcp_version = parsed_cmd->mccs_vspec;
+            }
             if (!initial_checks_by_dref(dref)) {
                f0printf(fout, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
@@ -718,17 +722,7 @@ int main(int argc, char *argv[]) {
             case CMDID_CAPABILITIES:
                {
                   check_dynamic_features(dref);
-
                   DDCA_Status ddcrc = app_capabilities(dh);
-#ifdef OLD
-                  Parsed_Capabilities * pcaps = app_get_capabilities_by_display_handle(dh);
-                  if (pcaps) {
-                     app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
-                  }
-                  main_rc = (pcaps) ? EXIT_SUCCESS : EXIT_FAILURE;
-                  if (pcaps)
-                     free_parsed_capabilities(pcaps);
-#endif
                   main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                   break;
                }
@@ -844,7 +838,6 @@ int main(int argc, char *argv[]) {
             case CMDID_DUMPVCP:
                {
                   check_dynamic_features(dref);
-
                   Public_Status_Code psc =
                         dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                                ? parsed_cmd->args[0]
@@ -862,7 +855,6 @@ int main(int argc, char *argv[]) {
 
             case CMDID_PROBE:
                check_dynamic_features(dref);
-
                app_probe_display_by_dh(dh);
                main_rc = EXIT_SUCCESS;
                break;
