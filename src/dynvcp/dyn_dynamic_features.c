@@ -24,6 +24,7 @@
 #include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/file_util.h"
+#include "util/xdg_util.h"
 /** \endcond */
 
 #include "base/core.h"
@@ -167,6 +168,21 @@ get_feature_metadata(
 #endif
 
 
+char *
+find_feature_def_file(
+      const char * simple_fn)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting.  simple_fn=|%s|", simple_fn);
+   char buf[PATH_MAX];
+   g_snprintf(buf, PATH_MAX, "%s.mccs", simple_fn);
+   char * result = find_xdg_data_file("ddcutil", buf);
+   DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
+   return result;
+}
+
+
+
 /** Look for feature definition file in the current directory and
  *  in the $HOME/.config/ddcutil directory.
  *
@@ -176,9 +192,9 @@ get_feature_metadata(
  *  \remark
  *  Consider generalizing, moving to file_util.c
  */
-static
+// static
 char *
-find_feature_def_file(
+find_feature_def_file0(
       const char * simple_fn)
 {
    bool debug = false;
