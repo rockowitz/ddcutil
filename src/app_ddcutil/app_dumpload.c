@@ -128,7 +128,8 @@ rek_mkdir(char *path, FILE * ferr) {
 
 
 Status_Errno_DDC
-fopen_mkdir(const char *path, const char *mode, FILE * ferr, FILE ** fp_loc) {
+fopen_mkdir(const char *path, const char *mode, FILE * ferr, FILE ** fp_loc)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. path=%s, mode=%s, fp_loc=%p", path, mode, fp_loc);
    Status_Errno_DDC rc = 0;
@@ -153,19 +154,16 @@ fopen_mkdir(const char *path, const char *mode, FILE * ferr, FILE ** fp_loc) {
 }
 
 
-/* Executes the DUMPVCP command, writing the output to a file.
+/** Executes the DUMPVCP command, writing the output to a file.
  *
- * Arguments:
- *    dh        display handle
- *    filename  name of file to write to,
- *              if NULL, the file name is generated
- *
- * Returns:
- *    status code
+ *  \param  dh        display handle
+ *  \param  filename  name of file to write to,
+ *                    if NULL, the file name is generated
+ *  \return status code
  */
 Status_Errno_DDC
-dumpvcp_as_file(Display_Handle * dh, const char * fn) {
-
+dumpvcp_as_file(Display_Handle * dh, const char * fn)
+{
    bool debug = false;
    DBGMSF(debug, "Starting. fn=%s", fn);
    char * filename = (fn) ? strdup(fn) : NULL;
@@ -239,13 +237,15 @@ dumpvcp_as_file(Display_Handle * dh, const char * fn) {
 // LOADVCP
 //
 
-/* Read a file into a newly allocated Dumpload_Data struct.
+/** Reads a file into a newly allocated Dumpload_Data struct.
  *
- * \param  fn  file name
- * \return pointer to newly allocated #Dumpload_Data struct.
- *         Caller is responsible for freeing
+ *  \param  fn  file name
+ *  \return pointer to newly allocated #Dumpload_Data struct.
+ *          Caller is responsible for freeing
  */
-Dumpload_Data * read_vcp_file(const char * fn) {
+Dumpload_Data *
+read_vcp_file(const char * fn)
+{
    FILE * ferr = stderr;
    bool debug = false;
    DBGMSF(debug, "Starting. fn=%s  ", fn );
@@ -285,11 +285,9 @@ Dumpload_Data * read_vcp_file(const char * fn) {
 /* Apply the VCP settings stored in a file to the monitor
  * indicated in that file.
  *
- * Arguments:
- *    fn          file name
- *    dh          handle for open display
- *
- * Returns:  true if load succeeded, false if not
+ * \param   fn          file name
+ * \param   dh          handle for open display
+ * \return  true if load succeeded, false if not
  */
 // TODO: convert to Status_Errno_DDC
 bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
