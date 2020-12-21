@@ -135,7 +135,7 @@ read_drm_dp_card_connector_node(
       I2C_Sys_Info * info,
       int            depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "connector_path=%s", connector_path);
    int d0 = depth;
    if (debug && d0 < 0)
