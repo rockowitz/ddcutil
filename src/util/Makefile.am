@@ -48,7 +48,8 @@ string_util.c              \
 sysfs_util.c               \
 subprocess_util.c          \
 timestamp.c                \
-utilrpt.c
+utilrpt.c                  \
+xdg_util.c
 
 if !ENABLE_TARGETBSD_COND
 libutil_la_SOURCES +=      \
