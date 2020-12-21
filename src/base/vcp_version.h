@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_VERSION_H_
@@ -44,8 +44,6 @@ typedef enum {
 #define DDCA_MCCS_VUNK  DDCA_MCCS_VNONE    /**< For use on responses, indicates version unknown   */
 
 ///@}
-
-
 
 bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
 bool vcp_version_lt(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
