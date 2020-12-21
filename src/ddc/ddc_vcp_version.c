@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -31,22 +31,18 @@
 
 #include "ddc/ddc_vcp_version.h"
 
-
 //
 // Functions for VCP (MCCS) version
 //
 
-/* Gets the VCP version.
+/** Gets the VCP version.
  *
- * Because the VCP version is used repeatedly for interpreting other
- * VCP feature values, it is cached.
+ *  Because the VCP version is used repeatedly for interpreting other
+ *  VCP feature values, it is cached.
  *
- * Arguments:
- *    dh     display handle
- *
- * Returns:
- *    Version_Spec struct containing version, contains 0.0 if version
- *    could not be retrieved (pre MCCS v2)
+ *  \param  dh     display handle
+ *  \return #Version_Spec struct containing version, contains 0.0 if version
+ *          could not be retrieved (pre MCCS v2)
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    assert(dh);
@@ -121,17 +117,14 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
 }
 
 
-/* Gets the VCP version.
+/** Gets the VCP version.
  *
- * Because the VCP version is used repeatedly for interpreting other
- * VCP feature values, it is cached.
+ *  Because the VCP version is used repeatedly for interpreting other
+ *  VCP feature values, it is cached.
  *
- * Arguments:
- *    dref     display reference
- *
- * Returns:
- *    Version_Spec struct containing version, contains 0.0 if version
- *    could not be retrieved (pre MCCS v2)
+ *  \param   dref     display reference
+ *  \return  #Version_Spec struct containing version, contains 0.0 if version
+ *           could not be retrieved (pre MCCS v2)
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    assert(dref);
