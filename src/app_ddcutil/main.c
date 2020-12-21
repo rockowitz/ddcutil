@@ -672,11 +672,6 @@ int main(int argc, char *argv[]) {
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
-            if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
-               DBGTRC(main_debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
-                                  parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
-               dref->vcp_version = parsed_cmd->mccs_vspec;
-            }
             if (!initial_checks_by_dref(dref)) {
                f0printf(fout, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
@@ -710,10 +705,17 @@ int main(int argc, char *argv[]) {
                 parsed_cmd->cmd_id == CMDID_READCHANGES
                )
             {
-               DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
-               if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
-                  f0printf(fout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
-                        "Output may not be accurate.\n");
+               if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
+                  DBGTRC(main_debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
+                                     parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
+                  dref->vcp_version = parsed_cmd->mccs_vspec;
+               }
+               else {
+                  DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+                  if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
+                     f0printf(fout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
+                           "Output may not be accurate.\n");
+                  }
                }
             }
 
