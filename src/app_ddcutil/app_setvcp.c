@@ -107,7 +107,7 @@ app_set_vcp_value(
       bool             force)
 {
    FILE * ferr = stderr;
-   bool debug = true;
+   bool debug = false;
 #ifdef OLD
    DBGTRC(debug,DDCA_TRC_TOP, "Starting. feature=%s, new_value=%s, force=%s", feature, new_value, sbool(force));
 #else
