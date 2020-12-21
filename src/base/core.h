@@ -276,6 +276,14 @@ if (_flag) { \
    } \
 }
 
+#define DBGTRC_RET_STRUCT(_flag, _trace_group, _structname, _dbgfunc, _structptr) \
+if ( (_flag) || (is_tracing(_trace_group, __FILE__, __func__)) ) { \
+   dbgtrc( 0xff, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
+   if (_structptr) { \
+      _dbgfunc(_structptr, 1); \
+   } \
+}
+
 
 //
 // Error handling
