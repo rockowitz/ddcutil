@@ -144,7 +144,7 @@ get_capabilities_string(
 Error_Info *
 get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
    assert(dref);
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
 
    Public_Status_Code psc = 0;
