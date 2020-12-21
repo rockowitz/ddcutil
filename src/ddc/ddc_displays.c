@@ -231,8 +231,6 @@ bye:
          dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
       }
    }
-
-
    if (!communication_working && i2c_force_bus) {
       dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
       communication_working = true;
