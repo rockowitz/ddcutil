@@ -84,7 +84,8 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
      bool                     with_default)
 {
     bool debug = false;
-    DBGMSF(debug, "Starting. feature_code=0x%02x, dfr=%p, vspec=%d.%d, with_default=%s",
+    DBGTRC(debug, TRACE_GROUP,
+                  "Starting. feature_code=0x%02x, dfr=%p, vspec=%d.%d, with_default=%s",
                   feature_code, dfr, vspec.major, vspec.minor, sbool(with_default));
 
     Display_Feature_Metadata * result = NULL;
@@ -176,7 +177,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
          }
     }
 
-    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
+    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
     return result;
 }
 
@@ -204,7 +205,8 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
      bool                     with_default)
 {
     bool debug = false;
-    DBGMSF(debug, "Starting. feature_code=0x%02x, mmk=%s, vspec=%d.%d, with_default=%s",
+    DBGTRC(debug, TRACE_GROUP,
+                  "Starting. feature_code=0x%02x, mmk=%s, vspec=%d.%d, with_default=%s",
                   feature_code, mmk_repr(mmk), vspec.major, vspec.minor, sbool(with_default));
 
     Dynamic_Features_Rec * dfr = NULL;
@@ -221,7 +223,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
     if (dfr)
        dfr_free(dfr);
 
-    if (debug) {
+    if (debug || IS_TRACING()) {
        DBGMSG("Returning Display_Feature_Metadata at %p", result);
        if (result)
           dbgrpt_display_feature_metadata(result, 1);
@@ -249,9 +251,11 @@ dyn_get_feature_metadata_by_dref_dfm(
       bool                  with_default)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. feature_code=0x%02x, dref=%s, with_default=%s",
+   if (debug  || IS_TRACING()) {
+      DBGMSG("Starting. feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
-   DBGMSF(debug, "dref->dfr=%p", dref->dfr);
+      DBGMSG("dref->dfr=%p", dref->dfr);
+   }
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
 
@@ -260,7 +264,7 @@ dyn_get_feature_metadata_by_dref_dfm(
    if (result)
       result->display_ref = dref;
 
-   DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
+   DBG_RET_STRUCT(debug || IS_TRACING(), Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
    return result;
 }
 
@@ -283,18 +287,19 @@ dyn_get_feature_metadata_by_dh_dfm(
       bool                  with_default)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. id=0x%02x, dh=%s, with_default=%s",
+   DBGTRC(debug, TRACE_GROUP,
+                 "Starting. id=0x%02x, dh=%s, with_default=%s",
                  id, dh_repr_t(dh), sbool(with_default) );
 
    // ensure dh->dref->vcp_version set without incurring additional open/close
    get_vcp_version_by_display_handle(dh);
    Display_Feature_Metadata * result = dyn_get_feature_metadata_by_dref_dfm(id, dh->dref, with_default);
 
-   DBGMSF(debug, "Done. Returning: %p", result);
-   if (debug)
+   if (debug || IS_TRACING()) {
+      DBGMSG("Done. Returning: %p", result);
       dbgrpt_display_feature_metadata(result, 2);
+   }
    return result;
-
 }
 
 
@@ -449,9 +454,13 @@ dyn_get_feature_name(
 
 
 void init_dyn_feature_codes() {
-   rtti_func_name_table_add(dyn_format_nontable_feature_detail_dfm, "dyn_format_nontable_feature_detail_dfm");
-   rtti_func_name_table_add(dyn_format_feature_detail_dfm,          "dyn_format_feature_detail_dfm");
-   rtti_func_name_table_add(dyn_format_feature_detail_sl_lookup,    "dyn_format_feature_detail_sl_lookup");
+   RTTI_ADD_FUNC(dyn_format_nontable_feature_detail_dfm);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dfr_and_vspec_dfm);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_mmk_and_vspec_dfm);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dref_dfm);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dh_dfm);
+   RTTI_ADD_FUNC(dyn_format_feature_detail_dfm);
+   RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup);
    // dbgrpt_func_name_table(0);
 }
 
