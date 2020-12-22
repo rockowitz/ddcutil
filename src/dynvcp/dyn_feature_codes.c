@@ -255,6 +255,7 @@ dyn_get_feature_metadata_by_dref_dfm(
       DBGMSG("Starting. feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
       DBGMSG("dref->dfr=%p", dref->dfr);
+      DBGMSG("DREF_OPEN: %s", sbool(dref->flags & DREF_OPEN));
    }
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
@@ -292,8 +293,13 @@ dyn_get_feature_metadata_by_dh_dfm(
                  id, dh_repr_t(dh), sbool(with_default) );
 
    // ensure dh->dref->vcp_version set without incurring additional open/close
+   DDCA_MCCS_Version_Spec vspec =
    get_vcp_version_by_display_handle(dh);
-   Display_Feature_Metadata * result = dyn_get_feature_metadata_by_dref_dfm(id, dh->dref, with_default);
+   // Display_Feature_Metadata * result = dyn_get_feature_metadata_by_dref_dfm(id, dh->dref, with_default);
+   Display_Feature_Metadata * result =
+         dyn_get_feature_metadata_by_dfr_and_vspec_dfm(id, dh->dref->dfr, vspec, with_default);
+   if (result)
+      result->display_ref = dh->dref;    // needed?
 
    if (debug || IS_TRACING()) {
       DBGMSG("Done. Returning: %p", result);
@@ -440,7 +446,8 @@ dyn_get_feature_name(
             result = dfr_metadata->feature_name;
       }
       if (!result) {
-         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;   // TODO use function call in case not set
+         DDCA_MCCS_Version_Spec //  vspec = dref->vcp_version;   // TODO use function call in case not set
+         vspec = get_vcp_version_by_display_ref(dref);
          result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
       }
    }
