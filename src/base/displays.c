@@ -625,6 +625,8 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
    dref->vcp_version = DDCA_VSPEC_UNQUERIED;
+   dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
+   dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
 
    dref->async_rec  = get_display_async_rec(io_path);    // keep?
 
@@ -832,18 +834,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
    rpt_vstring(d1, "vcp_version:  %s", format_vspec(dref->vcp_version) );
-#ifdef OLD
-   rpt_vstring(d1, "flags:        0x%02x", dref->flags);
-   rpt_vstring(d2, "DDC communication checked:                  %s", sbool(dref->flags & DREF_DDC_COMMUNICATION_CHECKED) );
-   if (dref->flags & DREF_DDC_COMMUNICATION_CHECKED)
-   rpt_vstring(d2, "DDC communication working:                  %s", sbool(dref->flags & DREF_DDC_COMMUNICATION_WORKING) );
-   rpt_vstring(d2, "DDC NULL response usage checked:            %s", sbool(dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED) );
-   if (dref->flags & DREF_DDC_NULL_RESPONSE_CHECKED)
-   rpt_vstring(d2, "DDC NULL response may indicate unsupported: %s", sbool(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-   rpt_vstring(d2, "DDC normal all byte 0 response may indicate unsupported: %s", sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
-   rpt_vstring(d2, "DDC does not indicate unsupported:          %s", sbool(dref->flags & DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED));
-   rpt_vstring(d2, "Display Ref is open:                        %s", sbool(dref->flags & DREF_OPEN));
-#endif
+   rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
    dbgrpt_dref_flags(dref->flags, d1);
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
 
