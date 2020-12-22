@@ -381,14 +381,15 @@ dfr_check_by_dref(
       Display_Ref * dref)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref));
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, enable_dynamic_features=%s",
+                 dref_repr_t(dref), sbool(enable_dynamic_features));
 
    Error_Info * errs = NULL;
    if (!enable_dynamic_features)    // global variable
       goto bye;
 
    if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
-      // DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
+      DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
       dref->dfr = NULL;
 
       Dynamic_Features_Rec * dfr = NULL;
