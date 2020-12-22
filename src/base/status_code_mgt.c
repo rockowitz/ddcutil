@@ -262,7 +262,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
       pinfo = finder_func(rawrc);
    }
    if (debug) {
-      printf("(%s) Done.  Returning %p", __func__, pinfo);
+      printf("(%s) Done.  Returning %p\n", __func__, pinfo);
       if (pinfo)
          report_status_code_info(pinfo);
    }
