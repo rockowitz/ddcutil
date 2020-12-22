@@ -653,7 +653,9 @@ ddca_get_display_info_list2(
             curinfo->usb_device = dref->usb_device;
          }
 
-         DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+         DDCA_MCCS_Version_Spec vspec =
+               //  dref->vcp_version;
+               get_vcp_version_by_display_ref(dref);
 #ifdef OLD
          DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
 #endif
@@ -797,9 +799,12 @@ dbgrpt_display_info(
    int d1 = depth+1;
 
    rpt_vstring(d1, "dref:                %p - %s", dinfo->dref, dref_repr_t(dinfo->dref));
-   if (dinfo->dref)   // paranoid, should never be NULL
-   rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
+   if (dinfo->dref) {  // paranoid, should never be NULL
+      rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
                                                   format_vspec(((Display_Ref*)dinfo->dref)->vcp_version));
+      rpt_vstring(d1, "VCP Version (dref xdf):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version_xdf,
+                                                  format_vspec(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
+   }
 }
 
 
