@@ -379,8 +379,10 @@ ddca_report_parsed_capabilities_by_dh(
    // Ensure dh->dref->vcp_version is not unqueried,
    // ddca_report_parsed_capabilities_by_dref() will fail trying to lock the already open device
    get_vcp_version_by_display_handle(dh);
-   DBGMSF(debug, "After get_vcp_version_by_display_handle(), dh->dref->vcp_version=%s",
-                 format_vspec(dh->dref->vcp_version) );
+   DBGMSF(debug, "After get_vcp_version_by_display_handle(), "
+                 "dh->dref->vcp_version=%s, dh->dref->vcp_version_df=%s",
+                 format_vspec(dh->dref->vcp_version),
+                 format_vspec(dh->dref->vcp_version_xdf));
 
    ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
 
