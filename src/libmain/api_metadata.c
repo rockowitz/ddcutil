@@ -186,7 +186,8 @@ ddca_get_feature_list_by_dref(
                       feature_list_loc);
                assert(feature_list_loc);
 
-               DDCA_MCCS_Version_Spec vspec = dref->vcp_version;
+               DDCA_MCCS_Version_Spec vspec = // dref->vcp_version;
+                                             get_vcp_version_by_display_ref(dref);
                DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
                // redundant:
                // assert( !vcp_version_eq( vspec, DDCA_VSPEC_UNQUERIED) );
@@ -652,7 +653,9 @@ ddca_get_feature_name_by_dref(
    WITH_DR(ddca_dref,
          {
                //*name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
-               *name_loc = get_feature_name_by_id_and_vcp_version(feature_code, dref->vcp_version);
+               *name_loc = get_feature_name_by_id_and_vcp_version(feature_code,
+                     get_vcp_version_by_display_ref(dref)    //dref->vcp_version
+                     );
                if (!*name_loc)
                   psc = DDCRC_ARG;
          }
