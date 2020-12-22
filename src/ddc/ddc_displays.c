@@ -227,8 +227,8 @@ bye:
    // Unfortunately, introduces ddc_open_display(), with possible error states,
    // into other functions, e.g. ddca_get_feature_list_by_dref()
    if (communication_working) {
-      if ( vcp_version_eq(dh->dref->vcp_version, DDCA_VSPEC_UNQUERIED)) {
-         dh->dref->vcp_version = get_vcp_version_by_display_handle(dh);
+      if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+         set_vcp_version_by_display_handle(dh);
       }
    }
    if (!communication_working && i2c_force_bus) {
@@ -239,7 +239,7 @@ bye:
       dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
       dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-      dh->dref->vcp_version = DDCA_VSPEC_V22;   // good enuf for test
+      dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
    }
 
    DBGTRC(debug, TRACE_GROUP, "dh=%s, Returning: %s",
@@ -1073,11 +1073,10 @@ ddc_ensure_displays_detected() {
    if (!all_displays) {
       i2c_detect_buses();
       all_displays = ddc_detect_all_displays();
-
    }
    DBGMSF(debug, "all_displays has %d displays", all_displays->len);
-
 }
+
 
 void ddc_discard_detected_displays() {
    all_displays = NULL;
