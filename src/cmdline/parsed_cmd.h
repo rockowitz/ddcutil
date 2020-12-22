@@ -111,6 +111,7 @@ struct {
    int                    i1;         // available for temporary use
 } Parsed_Cmd;
 
+const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();
 void          free_parsed_cmd(Parsed_Cmd * parsed_cmd);

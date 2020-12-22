@@ -24,6 +24,37 @@
 // Parsed_Cmd data structure
 //
 
+// Must be kept in sync with Cmd_Id_Type
+Value_Name_Table cmd_id_table = {
+      VNT(CMDID_NONE          , "none"),
+      VNT(CMDID_DETECT        , "detect"),
+      VNT(CMDID_CAPABILITIES  , "capabilities"),
+      VNT(CMDID_GETVCP        , "getvcp"),
+      VNT(CMDID_SETVCP        , "setvcp"),
+      VNT(CMDID_LISTVCP       , "listvcp"),
+      VNT(CMDID_TESTCASE      , "testcase"),
+      VNT(CMDID_LISTTESTS     , "listtests"),
+      VNT(CMDID_LOADVCP       , "loadvcp"),
+      VNT(CMDID_DUMPVCP       , "dumpvcp"),
+   #ifdef ENABLE_ENVCMDS
+      VNT(CMDID_INTERROGATE   , "interrogate"),
+      VNT(CMDID_ENVIRONMENT   , "environment"),
+      VNT(CMDID_USBENV        , "usbenvironment"),
+   #endif
+      VNT(CMDID_VCPINFO       ,  "vcpinfo"),
+      VNT(CMDID_READCHANGES   ,  "watch"),
+      VNT(CMDID_CHKUSBMON     ,  "chkusbmon"),
+      VNT(CMDID_PROBE         ,  "probe"),
+      VNT(CMDID_SAVE_SETTINGS ,  "save settings"),
+      VNT_END
+};
+
+
+/** Returns the symbolic name for a Cmd_Id_Type value */
+const char *  cmdid_name(Cmd_Id_Type id) {
+   return vnt_name(cmd_id_table, id);
+}
+
 #ifdef FUTURE
 Value_Name_Table cmd_flag_table = {
       VNT(CMD_FLAG_DDCDATA,          "report DDC errors"),
