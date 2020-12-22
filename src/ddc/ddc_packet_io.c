@@ -126,8 +126,10 @@ ddc_open_display(
       goto bye;
    }
 
+   ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
+
    if (dref->flags & DREF_OPEN) {
-      assert(ddcrc == DDCRC_ALREADY_OPEN);   // from lock_distinct_display()
+      // assert(ddcrc == DDCRC_ALREADY_OPEN);   // from lock_distinct_display()
       ddcrc = DDCRC_ALREADY_OPEN;
       goto bye;
    }
@@ -142,7 +144,7 @@ ddc_open_display(
             ddcrc = fd;
          }
          else {
-            DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
+            // DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
             ddcrc =  i2c_set_addr(fd, 0x37, callopts);
             if (ddcrc != 0) {
                assert(ddcrc < 0);
@@ -241,6 +243,7 @@ ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
               dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
+   Display_Ref * dref = dh->dref;
    Status_Errno rc = 0;
    if (dh->fd == -1) {
       rc = DDCRC_INVALID_OPERATION;    // or DDCRC_ARG?
@@ -284,7 +287,7 @@ ddc_close_display(Display_Handle * dh) {
    unlock_distinct_display(display_id);
 
    free_display_handle(dh);
-   DBGMSF(debug, "Done.     Returning: %s", psc_desc(rc));
+   DBGMSF(debug, "Done. dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
    return rc;
 }
 
