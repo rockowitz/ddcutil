@@ -740,8 +740,8 @@ ddc_get_formatted_value_for_display_feature_metadata(
       free_single_vcp_value(pvalrec);
 
    DBGTRC(debug, TRACE_GROUP,
-          "Done.      Returning: %s, *formatted_value_loc=%p",
-          psc_desc(psc), formatted_value_loc);
+          "Done.      Returning: %s, *formatted_value_loc=%p -> %s",
+          psc_desc(psc), *formatted_value_loc, *formatted_value_loc);
 
    ASSERT_IFF(psc == 0, !ddc_excp);
    ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
