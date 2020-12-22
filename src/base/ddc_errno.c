@@ -56,10 +56,12 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_VERIFY                   , "VCP read after write failed"),
       EDENTRY(DDCRC_NOT_FOUND                , "not found"),
       EDENTRY(DDCRC_LOCKED                   , "display locked"),
+      EDENTRY(DDCRC_ALREADY_OPEN             , "already open in current thread"),
       EDENTRY(DDCRC_BAD_DATA                 , "invalid data"),
    // EDENTRY(DDCRC_CAP_FATAL                , "incorrect, unusable capabilities string"),
    // EDENTRY(DDCRC_CAP_WARNING              , "errors in capabilities string, but usable")
     };
+
 #undef EDENTRY
 static int ddcrc_desc_ct = sizeof(ddcrc_info)/sizeof(Status_Code_Info);
 
