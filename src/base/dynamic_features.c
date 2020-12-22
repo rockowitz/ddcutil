@@ -223,6 +223,7 @@ dfr_new(
    frec->mfg_id       = strdup(mfg_id);
    frec->model_name   = strdup(model_name);
    frec->product_code = product_code;
+   frec->vspec        = DDCA_VSPEC_UNKNOWN;   // redundant, since set by calloc(), but be explicit
    if (filename)
       frec->filename  = strdup(filename);
    return frec;
