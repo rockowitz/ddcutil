@@ -79,7 +79,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    if (ddcrc == 0) {
          // pcaps is always set, but may be damaged if there was a parsing error
          pcaps = parse_capabilities_string(capabilities_string);
-         app_show_parsed_capabilities2(dh, pcaps);
+         app_show_parsed_capabilities(dh, pcaps);
 
          // how to pass this information down into app_show_vcp_subset_values_by_dh()?
          bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
