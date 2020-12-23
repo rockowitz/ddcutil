@@ -100,7 +100,8 @@ char * create_simple_vcp_fn_by_dh(
 }
 
 
-// based on answer by Jens Harms to https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+// based on answer by Jens Harms to
+// https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
 Status_Errno_DDC
 rek_mkdir(char *path, FILE * ferr) {
    bool debug = false;
@@ -116,8 +117,8 @@ rek_mkdir(char *path, FILE * ferr) {
       *sep = '/';
    }
    if (result == 0) {
+      DBGMSF(debug, "Creating path %s", path);
       if ( mkdir(path, 0777) < 0) {
-         DBGMSF(debug, "Creating path %s", path);
          result = -errno;
          f0printf(ferr, "Unable to create '%s', %s\n", path);
       }
