@@ -172,30 +172,32 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
    assert(dref);
-   bool debug = true;
-   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version =  %d.%d",
-                 dref, dref->vcp_version.major, dref->vcp_version.minor);
-   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version_xdf =  %d.%d",
-                 dref, dref->vcp_version_xdf.major, dref->vcp_version_xdf.minor);
-   DBGMSF(debug, "Starting. dref=%p, dref->vcp_version_cmdline =  %d.%d",
-                 dref, dref->vcp_version_cmdline.major, dref->vcp_version_cmdline.minor);
+   bool debug = false;
+   DBGMSF(debug, "Starting. dref=%s, dref->vcp_version =  %d.%d",
+                 dref_repr_t(dref), dref->vcp_version.major, dref->vcp_version.minor);
+   DBGMSF(debug, "          dref->vcp_version_xdf =  %d.%d",
+                 dref->vcp_version_xdf.major, dref->vcp_version_xdf.minor);
+   DBGMSF(debug, "     dref->vcp_version_cmdline =  %d.%d",
+                       dref->vcp_version_cmdline.major, dref->vcp_version_cmdline.minor);
+   if (dref->dfr)
+   DBGMSF(debug, "dref->dfr - ", dref->dfr->vspec.major, dref->dfr->vspec.minor);
+   else
+   DBGMSF(debug, "dref->dfr is null");
 
    // ddc_open_display() should not fail
    assert(dref->flags & DREF_DDC_COMMUNICATION_WORKING);
 
-   if (vcp_version_eq(dref->vcp_version, DDCA_VSPEC_UNQUERIED)) {
-      Display_Handle * dh = NULL;
-      // no need to check return code since aborting if error
-      // should never fail, since open already succeeded - but what if locked?
-      Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-      assert(psc == 0);
-      // dref->vcp_version = 
-      get_vcp_version_by_display_handle(dh);
-      ddc_close_display(dh);
-   }
+   Display_Handle * dh = NULL;
+   // no need to check return code since aborting if error
+   // should never fail, since open already succeeded - but what if locked?
+   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+   assert(psc == 0);
+   // dref->vcp_version =
+   DDCA_MCCS_Version_Spec result = get_vcp_version_by_display_handle(dh);
+   ddc_close_display(dh);
 
-   assert( !vcp_version_eq(dref->vcp_version, DDCA_VSPEC_UNQUERIED) );
-   DBGMSF(debug, "Returning: %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
-   return dref->vcp_version;
+   assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );
+   DBGMSF(debug, "Returning: %d.%d (%s)", result.major, result.minor, format_vspec(result));
+   return result;
 }
 
