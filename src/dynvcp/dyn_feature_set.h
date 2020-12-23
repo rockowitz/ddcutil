@@ -38,7 +38,7 @@ void dbgrpt_dyn_feature_set(Dyn_Feature_Set * fset, bool verbose, int depth);
 char * dynfs_repr_t(Dyn_Feature_Set * fset);
 
 Dyn_Feature_Set *
-dyn_create_feature_set2_dfm(
+dyn_create_feature_set2(
       VCP_Feature_Subset     subset,
       DDCA_Display_Ref       dref,
       Feature_Set_Flags      flags);
@@ -56,7 +56,7 @@ dyn_create_single_feature_set_by_hexid2(
 // get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
 
 Display_Feature_Metadata *
-dyn_get_feature_set_entry2_dfm(
+dyn_get_feature_set_entry2(
       Dyn_Feature_Set * feature_set,
       unsigned          index);
 

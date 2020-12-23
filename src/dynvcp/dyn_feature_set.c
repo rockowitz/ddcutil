@@ -154,7 +154,7 @@ dyn_create_feature_set0(
 
 
 Dyn_Feature_Set *
-dyn_create_feature_set2_dfm(
+dyn_create_feature_set2(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       display_ref,
       Feature_Set_Flags      feature_set_flags)
@@ -332,7 +332,7 @@ dyn_create_single_feature_set_by_hexid2(
 
 
 Display_Feature_Metadata *
-dyn_get_feature_set_entry2_dfm(
+dyn_get_feature_set_entry2(
       Dyn_Feature_Set * feature_set,
       unsigned          index)
 {
@@ -372,7 +372,7 @@ dyn_create_feature_set_from_feature_set_ref2(
       result = dyn_create_single_feature_set_by_hexid2(fsref->specific_feature, dref, flags & FSF_FORCE);
    }
    else {
-      result = dyn_create_feature_set2_dfm(fsref->subset, dref, flags);
+      result = dyn_create_feature_set2(fsref->subset, dref, flags);
    }
 
    if (debug || IS_TRACING()) {
