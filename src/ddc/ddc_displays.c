@@ -439,11 +439,11 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
       break;
    case DDCA_IO_ADL:
-      adlshim_report_active_display_by_display_ref(dref, d1);
+      adlshim_report_active_display_by_dref(dref, d1);
       break;
    case DDCA_IO_USB:
 #ifdef USE_USB
-      usb_show_active_display_by_display_ref(dref, d1);
+      usb_show_active_display_by_dref(dref, d1);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
@@ -476,7 +476,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
       }
       else {
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);
          if ( vspec.major   == 0)
             rpt_vstring(d1, "VCP version:         Detection failed");

@@ -579,7 +579,7 @@ void dyn_report_parsed_capabilities(
       if (dh)
          vspec = get_vcp_version_by_display_handle(dh);
       else if (dref)
-         vspec = get_vcp_version_by_display_ref(dref);
+         vspec = get_vcp_version_by_dref(dref);
    }
 
    if (pcaps->vcp_features) {

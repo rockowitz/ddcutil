@@ -527,7 +527,7 @@ usb_find_monitor_by_busnum_devnum(int busnum, int devnum) {
 
 
 static Usb_Monitor_Info *
-usb_find_monitor_by_display_ref(Display_Ref * dref) {
+usb_find_monitor_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGMSF(debug, "Starting. dref = %s", dref_repr_t(dref));
    assert(dref->io_path.io_mode == DDCA_IO_USB);
@@ -552,8 +552,8 @@ usb_find_monitor_by_display_handle(Display_Handle * dh) {
 
 
 #ifdef APPARENTLY_UNUSED
-char * get_hiddev_devname_by_display_ref(Display_Ref * dref) {
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
+char * get_hiddev_devname_by_dref(Display_Ref * dref) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
    char * result = moninfo->hiddev_device_name;
    DBGMSG("dref=%s, returning: %s", dref_short_name(dref), result);
    return result;
@@ -614,7 +614,7 @@ Display_Info_List usb_get_valid_displays() {
 bool
 usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    bool result = true;
-   if (!usb_find_monitor_by_display_ref(dref)) {
+   if (!usb_find_monitor_by_dref(dref)) {
       result = false;
       if (emit_error_msg)
          fprintf(stderr, "Invalid Display_Ref\n");
@@ -624,11 +624,11 @@ usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
 
 
 void
-usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
+usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
 
 #ifdef OLD
    if (output_level == DDCA_OL_TERSE || output_level == OL_PROGRAM)
@@ -669,8 +669,8 @@ usb_show_active_display_by_display_ref(Display_Ref * dref, int depth) {
 //
 
 Parsed_Edid *
-usb_get_parsed_edid_by_display_ref(Display_Ref * dref) {
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_ref(dref);
+usb_get_parsed_edid_by_dref(Display_Ref * dref) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
    return moninfo->edid;
 }
 

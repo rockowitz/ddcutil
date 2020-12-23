@@ -100,7 +100,7 @@ adlshim_get_parsed_edid_by_display_handle(
  * @retval NULL
  */
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_ref(
+adlshim_get_parsed_edid_by_dref(
       Display_Ref * dref)
 {
    return NULL;
@@ -109,7 +109,7 @@ adlshim_get_parsed_edid_by_display_ref(
 
 /** Mock implemention.  Does nothing. */
 void
-adlshim_report_active_display_by_display_ref(
+adlshim_report_active_display_by_dref(
       Display_Ref * dref,
       int depth) {
 }

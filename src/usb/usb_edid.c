@@ -311,7 +311,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
                                     NULL,              // mfg_id
                                     model_sn->model,
                                     model_sn->sn);
-            parsed_edid = adlshim_get_parsed_edid_by_display_ref(dref);
+            parsed_edid = adlshim_get_parsed_edid_by_dref(dref);
 #endif
             DDCA_Adlno adlno = adlshim_find_adlno_by_mfg_model_sn(
                                     NULL,              // mfg_id

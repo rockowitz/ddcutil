@@ -258,7 +258,7 @@ dyn_get_feature_metadata_by_dref(
       DBGMSG("DREF_OPEN: %s", sbool(dref->flags & DREF_OPEN));
    }
 
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_ref(dref);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
 
    Display_Feature_Metadata * result =
          dyn_get_feature_metadata_by_dfr_and_vspec_dfm(feature_code, dref->dfr, vspec, with_default);
@@ -447,7 +447,7 @@ dyn_get_feature_name(
       }
       if (!result) {
          DDCA_MCCS_Version_Spec //  vspec = dref->vcp_version;   // TODO use function call in case not set
-         vspec = get_vcp_version_by_display_ref(dref);
+         vspec = get_vcp_version_by_dref(dref);
          result = get_feature_name_by_id_and_vcp_version(feature_code, vspec);
       }
    }

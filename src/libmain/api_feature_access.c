@@ -495,7 +495,7 @@ ddca_format_any_vcp_value_by_dref(
                }
                psc = ddca_format_any_vcp_value(
                          feature_code,
-                         get_vcp_version_by_display_ref(dref),
+                         get_vcp_version_by_dref(dref),
                          // dref->vcp_version,
                          dref->mmid,
                          valrec,
@@ -559,7 +559,7 @@ ddca_format_non_table_vcp_value_by_dref(
                psc = ddca_format_non_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
-                         get_vcp_version_by_display_ref(dref),
+                         get_vcp_version_by_dref(dref),
                          dref->mmid,
                          valrec,
                          formatted_value_loc);
@@ -601,7 +601,7 @@ ddca_format_table_vcp_value_by_dref(
                return ddca_format_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
-                         get_vcp_version_by_display_ref(dref),
+                         get_vcp_version_by_dref(dref),
                          dref->mmid,
                          table_value,
                          formatted_value_loc);

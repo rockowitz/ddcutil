@@ -655,7 +655,7 @@ ddca_get_display_info_list2(
 
          DDCA_MCCS_Version_Spec vspec =
                //  dref->vcp_version;
-               get_vcp_version_by_display_ref(dref);
+               get_vcp_version_by_dref(dref);
 #ifdef OLD
          DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
 #endif
@@ -665,7 +665,7 @@ ddca_get_display_info_list2(
             // vcp version is unqueried to improve performance of the command line version
             // mccs_version_spec_to_id has assert error if unqueried
             if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
-               vspec = get_vcp_version_by_display_ref(dref);
+               vspec = get_vcp_version_by_dref(dref);
             }
 #ifdef OLD
             version_id = mccs_version_spec_to_id(vspec);
@@ -863,7 +863,7 @@ ddca_get_edid_by_dref(
       goto bye;
    }
 
-   // Parsed_Edid*  edid = ddc_get_parsed_edid_by_display_ref(dref);
+   // Parsed_Edid*  edid = ddc_get_parsed_edid_by_dref(dref);
    Parsed_Edid * edid = dref->pedid;
    assert(edid);
    *p_bytes = edid->bytes;

@@ -214,7 +214,7 @@ dyn_create_feature_set2(
           create_feature_set(
              subset_id,
              // dref->vcp_version,
-             get_vcp_version_by_display_ref(dref),
+             get_vcp_version_by_dref(dref),
              feature_set_flags);
        int ct = get_feature_set_size(vcp_feature_set);
        for (int ndx = 0; ndx < ct; ndx++) {
@@ -244,7 +244,7 @@ dyn_create_feature_set2(
           create_feature_set(
              subset_id,
              // dref->vcp_version,
-             get_vcp_version_by_display_ref(dref),
+             get_vcp_version_by_dref(dref),
              feature_set_flags);
        int ct = get_feature_set_size(vcp_feature_set);
        for (int ndx = 0; ndx < ct; ndx++) {
@@ -314,7 +314,7 @@ dyn_create_single_feature_set_by_hexid2(
        if (vcp_entry)
           dfm = dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
                    vcp_entry,
-                   get_vcp_version_by_display_ref(dref) );
+                   get_vcp_version_by_dref(dref) );
                    // dref->vcp_version);
    }
 

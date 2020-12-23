@@ -102,7 +102,7 @@ adlshim_get_parsed_edid_by_display_handle(
 
 
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_ref(
+adlshim_get_parsed_edid_by_dref(
       Display_Ref * dref)
 {
    assert(dref && dref->io_path.io_mode == DDCA_IO_ADL);
@@ -117,7 +117,7 @@ void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, 
 #endif
 
 
-void adlshim_report_active_display_by_display_ref(Display_Ref * dref, int depth) {
+void adlshim_report_active_display_by_dref(Display_Ref * dref, int depth) {
    assert(dref && dref->io_path.io_mode == DDCA_IO_ADL);
    return adl_report_active_display_by_adlno(
              dref->io_path.path.adlno.iAdapterIndex,

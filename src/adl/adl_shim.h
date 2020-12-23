@@ -64,7 +64,7 @@ adlshim_get_parsed_edid_by_display_handle(
       Display_Handle * dh);
 
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_ref(
+adlshim_get_parsed_edid_by_dref(
       Display_Ref * dref);
 
 // void adl_show_active_display(ADL_Display_Rec * pdisp, int depth);
@@ -72,7 +72,7 @@ adlshim_get_parsed_edid_by_display_ref(
 // void adlshim_show_active_display_by_adlno(int iAdapterIndex, int iDisplayIndex, int depth);
 
 void
-adlshim_report_active_display_by_display_ref(
+adlshim_report_active_display_by_dref(
       Display_Ref * dref,
       int           depth);
 

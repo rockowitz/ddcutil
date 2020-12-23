@@ -249,7 +249,7 @@ app_show_vcp_subset_values_by_display_handle(
  * Returns:
  *    nothing
  */
-void app_show_vcp_subset_values_by_display_ref(
+void app_show_vcp_subset_values_by_dref(
         Display_Ref *       dref,
         VCP_Feature_Subset  subset_id,
         bool                show_unsupported)

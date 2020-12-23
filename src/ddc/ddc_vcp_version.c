@@ -170,7 +170,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
  *  \return  #Version_Spec struct containing version, contains 0.0 if version
  *           could not be retrieved (pre MCCS v2)
  */
-DDCA_MCCS_Version_Spec get_vcp_version_by_display_ref(Display_Ref * dref) {
+DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    assert(dref);
    bool debug = false;
    DBGMSF(debug, "Starting. dref=%s, dref->vcp_version =  %d.%d",

@@ -190,7 +190,7 @@ ddc_open_display(
          assert(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
-         //    dref->usb_hiddev_name = get_hiddev_devname_by_display_ref(dref);
+         //    dref->usb_hiddev_name = get_hiddev_devname_by_dref(dref);
          // }
          int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {

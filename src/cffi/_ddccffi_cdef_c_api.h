@@ -254,7 +254,7 @@ ddca_free_feature_info(
 //  Miscellaneous Monitor Specific Functions
 
 DDCA_Status
-ddca_get_edid_by_display_ref(
+ddca_get_edid_by_dref(
       DDCA_Display_Ref ddca_dref,
       uint8_t **       pbytes);   // pointer into ddcutil data structures, do not free
 
