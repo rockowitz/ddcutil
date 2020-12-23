@@ -29,7 +29,7 @@
  */
 int query_proc_modules_for_video() {
    bool debug = false;
-   DBGMSF0(debug, "Starting.");
+   DBGMSF(debug, "Starting.");
 
    int d1 = 1;
    int rc = 0;
@@ -76,7 +76,7 @@ int query_proc_modules_for_video() {
       }
    }
    g_ptr_array_free(garray, true);
-   DBGMSF0(debug, "Done.");
+   DBGMSF(debug, "Done.");
    return rc;
 }
 

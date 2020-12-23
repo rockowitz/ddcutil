@@ -626,7 +626,7 @@ usb_set_nontable_vcp_value(
          psc = DDCRC_REPORTED_UNSUPPORTED;
       }
       else {
-         DBGMSF0(debug, "setting value");
+         DBGMSF(debug, "setting value");
          // for testing purposes, try using each entry
          // for reading, usage 0 returns correct value, usage 1 returns 0
          // is usage 1 for writing?

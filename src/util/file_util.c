@@ -570,7 +570,7 @@ int read_file_with_filter(
          limit);
    }
    else { // rc == 0
-      // DBGMSF0(debug, "Empty file");
+      // DBGMSF(debug, "Empty file");
    }
 
    // DBGMSF(debug, "Returning: %d", rc);

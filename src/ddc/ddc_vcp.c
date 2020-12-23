@@ -368,7 +368,7 @@ ddc_set_vcp_value(
       DDCA_Any_Vcp_Value ** newval_loc)
 {
    bool debug = false;
-   DBGMSF0(debug, "Starting. ");
+   DBGMSF(debug, "Starting. ");
    FILE * verbose_msg_dest = fout();
    if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
       verbose_msg_dest = NULL;
@@ -736,7 +736,7 @@ ddc_get_vcp_value(
    // why are we coming here for USB?
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
-      DBGMSF0(debug, "USB case");
+      DBGMSF(debug, "USB case");
 
       switch (call_type) {
 

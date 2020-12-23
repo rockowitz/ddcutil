@@ -72,7 +72,7 @@ static void probe_uhid(int depth) {
    int d2 = depth+2;
 
    bool debug = false;
-   DBGMSF0(debug, "Starting");
+   DBGMSF(debug, "Starting");
 
    struct dirent * ep;
    char * dirname = "/sys/kernel/debug/hid/";
@@ -133,7 +133,7 @@ static void probe_uhid(int depth) {
       closedir(dp);
    }
 
-   DBGMSF0(debug, "Done");
+   DBGMSF(debug, "Done");
 }
 
 

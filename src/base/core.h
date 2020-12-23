@@ -241,8 +241,10 @@ bool dbgtrc(
 
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+#ifdef OLD
 #define DBGMSF0(debug_flag, text) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, text); }  while(0)
+#endif
 
 
 #define TRCMSG(            format, ...) \

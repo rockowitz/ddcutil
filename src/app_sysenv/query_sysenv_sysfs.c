@@ -296,9 +296,9 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
    DBGMSF(debug, "sysfs_device_dir: %s", sysfs_device_dir);
    int d1 = depth+1;
 
-   DBGMSF0(debug, "Reading device ids from individual attribute files...");
+   DBGMSF(debug, "Reading device ids from individual attribute files...");
    Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
-   DBGMSF0(debug, "Reading device ids by parsing modalias attribute...");
+   DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
    Device_Ids dev_ids2 = read_device_ids2(sysfs_device_dir);
    assert(dev_ids.vendor_id == dev_ids2.vendor_id);
    assert(dev_ids.device_id == dev_ids2.device_id);
@@ -513,7 +513,7 @@ void each_arm_driver(
       rpt_vstring(depth, "Driver name:    %s", driver_name);
       driver_name_list_add(&accum->driver_list, driver_name);
    }
-   DBGMSF0(debug, "Done");
+   DBGMSF(debug, "Done");
 }
 
 
