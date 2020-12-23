@@ -236,8 +236,6 @@ bool dbgtrc(
 // #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #define DBGMSG(            format, ...) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-// workaround: if -Wpedantic, ISO C does not allow variadic macro calls that have no variable arguments
-#define DBGMSG0(           text) dbgtrc(0xff, __func__, __LINE__, __FILE__, text)
 
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
