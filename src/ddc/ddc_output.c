@@ -469,7 +469,7 @@ collect_raw_feature_set_values2_dfm(
    DBGMSF(debug, "Starting.");
 
    Public_Status_Code master_status_code = 0;
-   int features_ct = dyn_get_feature_set_size2_dfm(feature_set);
+   int features_ct = dyn_get_feature_set_size2(feature_set);
    // needed when called from C API, o.w. get get NULL response for first feature
    // DBGMSG("Inserting sleep() before first call to get_raw_value_for_feature_table_entry()");
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "initial");
@@ -778,7 +778,7 @@ show_feature_set_values2_dfm(
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
    bool prefix_value_with_feature_code = true;    // TO FIX
    FILE * msg_fh = outf;                        // TO FIX
-   int features_ct = dyn_get_feature_set_size2_dfm(feature_set);
+   int features_ct = dyn_get_feature_set_size2(feature_set);
    DBGMSF(debug, "features_ct=%d", features_ct);
    int ndx;
    for (ndx=0; ndx< features_ct; ndx++) {

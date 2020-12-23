@@ -345,7 +345,7 @@ dyn_get_feature_set_entry2(
 
 
 int
-dyn_get_feature_set_size2_dfm(
+dyn_get_feature_set_size2(
       Dyn_Feature_Set * feature_set)
 {
    // show_backtrace(2);

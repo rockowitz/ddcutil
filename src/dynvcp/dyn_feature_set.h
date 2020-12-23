@@ -64,7 +64,7 @@ dyn_get_feature_set_entry2(
 // get_feature_set_size(VCP_Feature_Set feature_set);
 
 int
-dyn_get_feature_set_size2_dfm(
+dyn_get_feature_set_size2(
       Dyn_Feature_Set * feature_set);
 
 // VCP_Feature_Subset
