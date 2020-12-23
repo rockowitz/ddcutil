@@ -2,7 +2,7 @@
  *
  *  Maintain dynamic feature records
  */
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_DYNAMIC_FEATURES_H_
