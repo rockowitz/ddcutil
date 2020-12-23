@@ -427,7 +427,7 @@ ddca_format_any_vcp_value(
       goto bye;
    }
 
-   dfm = dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+   dfm = dyn_get_feature_metadata_by_mmk_and_vspec(
             feature_code, *mmid, vspec, /*with_default=*/ true);
    if (!dfm) {
       ddcrc = DDCRC_ARG;
@@ -458,7 +458,7 @@ ddca_format_any_vcp_value(
        ddcrc = DDCRC_ARG;
        goto bye;
    }
-   bool ok = dyn_format_feature_detail_dfm(dfm, vspec, anyval,formatted_value_loc);
+   bool ok = dyn_format_feature_detail(dfm, vspec, anyval,formatted_value_loc);
    if (!ok) {
        ddcrc = DDCRC_ARG;    // ??
        assert(!*formatted_value_loc);

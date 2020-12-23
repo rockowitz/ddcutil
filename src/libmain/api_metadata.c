@@ -519,7 +519,7 @@ ddca_get_feature_metadata_by_dref(
 
                DDCA_Feature_Metadata * external_metadata = NULL;
                Display_Feature_Metadata * internal_metadata =
-                  dyn_get_feature_metadata_by_dref_dfm(feature_code, dref, create_default_if_not_found);
+                  dyn_get_feature_metadata_by_dref(feature_code, dref, create_default_if_not_found);
                if (!internal_metadata) {
                   psc = DDCRC_NOT_FOUND;
                }
@@ -561,7 +561,7 @@ ddca_get_feature_metadata_by_dh(
 
                DDCA_Feature_Metadata * external_metadata = NULL;
                Display_Feature_Metadata * internal_metadata =
-                  dyn_get_feature_metadata_by_dh_dfm(feature_code, dh, create_default_if_not_found);
+                  dyn_get_feature_metadata_by_dh(feature_code, dh, create_default_if_not_found);
                if (!internal_metadata) {
                   psc = DDCRC_NOT_FOUND;
                }

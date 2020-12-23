@@ -174,7 +174,7 @@ app_show_single_vcp_value_by_feature_id_new_dfm(
    Public_Status_Code         psc = 0;
 
    Display_Feature_Metadata * dfm =
-   dyn_get_feature_metadata_by_dh_dfm(
+   dyn_get_feature_metadata_by_dh(
          feature_id,
          dh,
          force || feature_id >= 0xe0    // with_default

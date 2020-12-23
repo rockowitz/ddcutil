@@ -689,7 +689,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
          bool ok;
          char * formatted_data = NULL;
 
-         ok = dyn_format_feature_detail_dfm(
+         ok = dyn_format_feature_detail(
                  dfm,
                  vspec,
                  pvalrec,

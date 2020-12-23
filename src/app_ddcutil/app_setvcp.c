@@ -136,7 +136,7 @@ app_set_vcp_value(
    }
 #endif
 
-   dfm = dyn_get_feature_metadata_by_dh_dfm(feature_code,dh, (force || feature_code >= 0xe0) );
+   dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, (force || feature_code >= 0xe0) );
    if (!dfm) {
       f0printf(ferr, "Unrecognized VCP feature code: 0x%02x\n", feature_code);
       ddc_excp = errinfo_new2(DDCRC_UNKNOWN_FEATURE, __func__,

@@ -21,26 +21,26 @@
 
 
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
      DDCA_Monitor_Model_Key   mmk,
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default);
 
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_dref_dfm(
+dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code       id,
       Display_Ref *               dref,
       bool                        with_default);
 
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_dh_dfm(
+dyn_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code       id,
       Display_Handle *            dh,
       bool                        with_default);
 
 bool
-dyn_format_nontable_feature_detail_dfm(
+dyn_format_nontable_feature_detail(
         Display_Feature_Metadata * dfm,
         // DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
@@ -48,7 +48,7 @@ dyn_format_nontable_feature_detail_dfm(
         int                        bufsz);
 
 bool
-dyn_format_table_feature_detail_dfm(
+dyn_format_table_feature_detail(
        Display_Feature_Metadata *  dfm,
        // DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
@@ -56,7 +56,7 @@ dyn_format_table_feature_detail_dfm(
      );
 
 bool
-dyn_format_feature_detail_dfm(
+dyn_format_feature_detail(
        Display_Feature_Metadata * dfm,
        DDCA_MCCS_Version_Spec    vcp_version,
        DDCA_Any_Vcp_Value *      valrec,

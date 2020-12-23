@@ -302,7 +302,7 @@ ddca_report_parsed_capabilities_by_dref(
       assert( memcmp(cur_vcp->marker, DDCA_CAP_VCP_MARKER, 4) == 0);
 
       Display_Feature_Metadata * dfm =
-         dyn_get_feature_metadata_by_dref_dfm(
+         dyn_get_feature_metadata_by_dref(
                cur_vcp->feature_code,
                ddca_dref,
                true);    // create_default_if_not_found);

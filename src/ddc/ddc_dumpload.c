@@ -238,7 +238,7 @@ create_dumpload_data_from_g_ptr_array(
                            data->mfg_id, data->model, data->product_code);
 
                      Display_Feature_Metadata * dfm =
-                                              dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+                                              dyn_get_feature_metadata_by_mmk_and_vspec(
                                                    feature_id,
                                                    mmk,
                                                    data->vcp_version,

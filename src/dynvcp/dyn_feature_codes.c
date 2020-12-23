@@ -198,7 +198,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
  * Ensures user supplied features have been loaded by calling #dfr_load_by_mmk()
  */
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
+dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
      DDCA_Monitor_Model_Key   mmk,
      DDCA_MCCS_Version_Spec   vspec,
@@ -245,7 +245,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec_dfm(
  *         (Dynamic_Features_Record) or in the internal feature definitions
  */
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_dref_dfm(
+dyn_get_feature_metadata_by_dref(
       DDCA_Vcp_Feature_Code feature_code,
       Display_Ref *         dref,
       bool                  with_default)
@@ -282,7 +282,7 @@ dyn_get_feature_metadata_by_dref_dfm(
  *         (Dynamic_Features_Record) or in the internal feature definitions
  */
 Display_Feature_Metadata *
-dyn_get_feature_metadata_by_dh_dfm(
+dyn_get_feature_metadata_by_dh(
       DDCA_Vcp_Feature_Code id,
       Display_Handle *      dh,
       bool                  with_default)
@@ -312,7 +312,7 @@ dyn_get_feature_metadata_by_dh_dfm(
 // Functions that apply formatting
 
 bool
-dyn_format_nontable_feature_detail_dfm(
+dyn_format_nontable_feature_detail(
         Display_Feature_Metadata * dfm,
         // DDCA_MCCS_Version_Spec     vcp_version,
         Nontable_Vcp_Value *       code_info,
@@ -350,7 +350,7 @@ dyn_format_nontable_feature_detail_dfm(
 
 
 bool
-dyn_format_table_feature_detail_dfm(
+dyn_format_table_feature_detail(
        Display_Feature_Metadata *  dfm,
        // DDCA_MCCS_Version_Spec     vcp_version,
        Buffer *                   accumulated_value,
@@ -381,7 +381,7 @@ dyn_format_table_feature_detail_dfm(
  */
 
 bool
-dyn_format_feature_detail_dfm(
+dyn_format_feature_detail(
        Display_Feature_Metadata * dfm,
        DDCA_MCCS_Version_Spec    vcp_version,
        DDCA_Any_Vcp_Value *      valrec,
@@ -402,7 +402,7 @@ dyn_format_feature_detail_dfm(
       DBGTRC(debug, TRACE_GROUP, "DDCA_NON_TABLE_VCP_VALUE");
       Nontable_Vcp_Value* nontable_value = single_vcp_value_to_nontable_vcp_value(valrec);
       char workbuf[200];
-      ok = dyn_format_nontable_feature_detail_dfm(
+      ok = dyn_format_nontable_feature_detail(
               dfm,
               // vcp_version,
               nontable_value,
@@ -415,7 +415,7 @@ dyn_format_feature_detail_dfm(
    }
    else {        // TABLE_VCP_CALL
       DBGTRC(debug, TRACE_GROUP, "DDCA_TABLE_VCP_VALUE");
-      ok = dyn_format_table_feature_detail_dfm(
+      ok = dyn_format_table_feature_detail(
             dfm,
             // cp_version,
             buffer_new_with_value(valrec->val.t.bytes, valrec->val.t.bytect, __func__),
@@ -461,12 +461,12 @@ dyn_get_feature_name(
 
 
 void init_dyn_feature_codes() {
-   RTTI_ADD_FUNC(dyn_format_nontable_feature_detail_dfm);
+   RTTI_ADD_FUNC(dyn_format_nontable_feature_detail);
    RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dfr_and_vspec_dfm);
-   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_mmk_and_vspec_dfm);
-   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dref_dfm);
-   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dh_dfm);
-   RTTI_ADD_FUNC(dyn_format_feature_detail_dfm);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_mmk_and_vspec);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dref);
+   RTTI_ADD_FUNC(dyn_get_feature_metadata_by_dh);
+   RTTI_ADD_FUNC(dyn_format_feature_detail);
    RTTI_ADD_FUNC(dyn_format_feature_detail_sl_lookup);
    // dbgrpt_func_name_table(0);
 }

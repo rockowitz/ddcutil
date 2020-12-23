@@ -221,7 +221,7 @@ dyn_create_feature_set2_dfm(
            VCP_Feature_Table_Entry * vfte = get_feature_set_entry(vcp_feature_set, ndx);
            DDCA_Vcp_Feature_Code feature_code = vfte->code;
            Display_Feature_Metadata * dfm =
-                 dyn_get_feature_metadata_by_dref_dfm(
+                 dyn_get_feature_metadata_by_dref(
                        feature_code,
                        dref,
                        true);    // with_default
@@ -251,7 +251,7 @@ dyn_create_feature_set2_dfm(
           VCP_Feature_Table_Entry * vfte = get_feature_set_entry(vcp_feature_set, ndx);
           DDCA_Vcp_Feature_Code feature_code = vfte->code;
           Display_Feature_Metadata * dfm =
-                dyn_get_feature_metadata_by_dref_dfm(
+                dyn_get_feature_metadata_by_dref(
                       feature_code,
                       dref,
                       true);    // with_default

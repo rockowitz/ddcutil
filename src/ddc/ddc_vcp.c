@@ -276,7 +276,7 @@ is_rereadable_feature(
    }
 
    if (result) {
-      Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh_dfm(
+      Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh(
             opcode,
             dh,
             false    //                  with_default

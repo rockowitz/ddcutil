@@ -120,7 +120,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                Display_Feature_Metadata * dfm =
-                     dyn_get_feature_metadata_by_dh_dfm(
+                     dyn_get_feature_metadata_by_dh(
                         code,
                          dh,
                          true);   //  with_default
@@ -152,7 +152,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
 
                Display_Feature_Metadata * dfm =
-                     dyn_get_feature_metadata_by_dh_dfm(
+                     dyn_get_feature_metadata_by_dh(
                         code,
                          dh,
                          true);   //  with_default
