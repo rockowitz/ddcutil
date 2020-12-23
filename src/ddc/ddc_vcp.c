@@ -682,7 +682,7 @@ ddc_get_table_vcp_value(
    if (psc == 0) {
       *pp_table_bytes = paccumulator;
       if (output_level >= DDCA_OL_VERBOSE) {
-         DBGMSG0("Bytes returned on table read:");
+         DBGMSG("Bytes returned on table read:");
          dbgrpt_buffer(paccumulator, 1);
       }
    }

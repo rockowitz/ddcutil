@@ -92,7 +92,7 @@ bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
       else {
          // pathological case, should be impossible but user report
          // re X260 laptop and Ultradock indicates possible (see note in ddc_open_display()
-         DBGMSG0("Null EDID");
+         DBGMSG("Null EDID");
       }
    }
 #endif

@@ -487,7 +487,7 @@ DDCA_Status ddc_write_read_raw(
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
-      // DBGMSG0("request_packet_ptr->raw_bytes:");
+      // DBGMSG("request_packet_ptr->raw_bytes:");
       // dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
       char * s =  hexstring3_t(request_packet_ptr->raw_bytes->bytes,
                               request_packet_ptr->raw_bytes->len, " ", 1, false );

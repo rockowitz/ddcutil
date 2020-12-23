@@ -92,7 +92,7 @@ usb_get_usage_value_by_report_type_and_ucode(
       }
 
       if (debug) {
-         DBGMSG0("After hid_get_usage_value():");
+         DBGMSG("After hid_get_usage_value():");
          dbgrpt_hiddev_usage_ref(&uref, 1);
       }
       goto bye;
@@ -182,7 +182,7 @@ set_control_value(int fd,
       .value       = value,
    };
    if (debug) {
-      DBGMSG0("Before HIDIOCSUSAGE");
+      DBGMSG("Before HIDIOCSUSAGE");
       dbgrpt_hiddev_usage_ref(&uref, 1);
    }
    if (ioctl(fd, HIDIOCSUSAGE, &uref) < 0) {
@@ -235,7 +235,7 @@ set_usage_value_by_report_type_and_ucode(
       .value       = value,
    };
    if (debug) {
-      DBGMSG0("Before HIDIOCSUSAGE");
+      DBGMSG("Before HIDIOCSUSAGE");
       dbgrpt_hiddev_usage_ref(&uref, 1);
    }
    if (ioctl(fd, HIDIOCSUSAGE, &uref) < 0) {
