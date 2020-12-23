@@ -66,7 +66,7 @@ app_show_single_vcp_value_by_feature_table_entry(
    DBGTRC(debug, TRACE_GROUP,
          "Starting. Getting feature 0x%02x for %s", entry->code, dh_repr(dh) );
 
-   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
    Public_Status_Code     psc        = 0;
    DDCA_Vcp_Feature_Code  feature_id = entry->code;
 
@@ -124,7 +124,7 @@ app_show_single_vcp_value_by_dfm(
 
    // DDCA_Feature_Metadata * extmeta = dfm_to_ddca_feature_metadata(meta);
 
-   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
    DDCA_Status            ddcrc      = 0;
    DDCA_Vcp_Feature_Code  feature_id = dfm->feature_code;
 
@@ -209,7 +209,7 @@ app_show_single_vcp_value_by_feature_id_new_dfm(
  *    status code       from show_vcp_values()
  */
 Public_Status_Code
-app_show_vcp_subset_values_by_display_handle(
+app_show_vcp_subset_values_by_dh(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
         Feature_Set_Flags   flags,
@@ -288,10 +288,10 @@ void app_show_vcp_subset_values_by_dref(
  *
  * Returns:
  *    status code       from app_show_single_vcp_value_by_feature_id() or
- *                           app_show_subset_values_by_display_handle()
+ *                           app_show_subset_values_by_dh()
  */
 Public_Status_Code
-app_show_feature_set_values_by_display_handle(
+app_show_feature_set_values_by_dh(
       Display_Handle *     dh,
       Feature_Set_Ref *    fsref,
       Feature_Set_Flags    flags)
@@ -309,7 +309,7 @@ app_show_feature_set_values_by_display_handle(
             dh, fsref->specific_feature, true);
    }
    else {
-      psc = app_show_vcp_subset_values_by_display_handle(
+      psc = app_show_vcp_subset_values_by_dh(
             dh,
             fsref->subset,
             flags,
@@ -333,7 +333,7 @@ reset_vcp_x02(Display_Handle * dh) {
    bool debug = false;
    Error_Info * ddc_excp = ddc_set_nontable_vcp_value(dh, 0x02, 0x01);
    if (ddc_excp) {
-      DBGMSG("set_nontable_vcp_value_by_display_handle() returned %s", errinfo_summary(ddc_excp) );
+      DBGMSG("set_nontable_vcp_value_by_dh() returned %s", errinfo_summary(ddc_excp) );
       errinfo_free(ddc_excp);
    }
    else
@@ -415,7 +415,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
     * of changes is flushed
     */
 
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    // DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
 
    // Read feature x02 to determine if any features have changed
@@ -557,7 +557,7 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
    printf("Watching for VCP feature changes on display %s\n", dh_repr(dh));
    printf("Type ^C to exit...\n");
    // show version here instead of in called function to declutter debug output:
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    DBGMSF(debug, "VCP version: %d.%d", vspec.major, vspec.minor);
    reset_vcp_x02(dh);
    while(true) {

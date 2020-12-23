@@ -117,7 +117,7 @@ get_capabilities_string(
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
          // newly created string, can just  reference
-         dh->dref->capabilities_string = usb_get_capabilities_string_by_display_handle(dh);
+         dh->dref->capabilities_string = usb_get_capabilities_string_by_dh(dh);
 #else
          PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif

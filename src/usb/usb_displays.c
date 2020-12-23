@@ -538,7 +538,7 @@ usb_find_monitor_by_dref(Display_Ref * dref) {
 
 
 Usb_Monitor_Info *
-usb_find_monitor_by_display_handle(Display_Handle * dh) {
+usb_find_monitor_by_dh(Display_Handle * dh) {
    // printf("(%s) Starting. dh=%p\n", __func__, dh);
    bool debug = false;
    DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
@@ -676,15 +676,15 @@ usb_get_parsed_edid_by_dref(Display_Ref * dref) {
 
 
 Parsed_Edid *
-usb_get_parsed_edid_by_display_handle(Display_Handle * dh) {
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+usb_get_parsed_edid_by_dh(Display_Handle * dh) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
    return moninfo->edid;
 }
 
 
 char *
-usb_get_capabilities_string_by_display_handle(Display_Handle * dh) {
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+usb_get_capabilities_string_by_dh(Display_Handle * dh) {
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
    assert(dh);
    return usb_synthesize_capabilities_string(moninfo);
 }

@@ -577,7 +577,7 @@ void dyn_report_parsed_capabilities(
    // if (true) {
    if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) || vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
       if (dh)
-         vspec = get_vcp_version_by_display_handle(dh);
+         vspec = get_vcp_version_by_dh(dh);
       else if (dref)
          vspec = get_vcp_version_by_dref(dref);
    }

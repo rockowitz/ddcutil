@@ -219,7 +219,7 @@ void ensure_vcp_version_set(Display_Handle * dh)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
       f0printf(stdout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
             "Output may not be accurate.\n");
@@ -790,7 +790,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef OUT
                else {
-                  DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+                  DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
                   if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
                      f0printf(fout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
                            "Output may not be accurate.\n");
@@ -841,7 +841,7 @@ int main(int argc, char *argv[]) {
                   // DBGMSG("flags: 0x%04x - %s", flags, s0);
                   // free(s0);
 
-                  Public_Status_Code psc = app_show_feature_set_values_by_display_handle(
+                  Public_Status_Code psc = app_show_feature_set_values_by_dh(
                         dh,
                         parsed_cmd->fref,
                         flags

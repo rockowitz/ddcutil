@@ -228,7 +228,7 @@ bye:
    // into other functions, e.g. ddca_get_feature_list_by_dref()
    if (communication_working) {
       if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
-         set_vcp_version_xdf_by_display_handle(dh);
+         set_vcp_version_xdf_by_dh(dh);
       }
    }
    if (!communication_working && i2c_force_bus) {

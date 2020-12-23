@@ -180,7 +180,7 @@ ddc_open_display(
 
    case DDCA_IO_ADL:
       dh = create_adl_display_handle_from_display_ref(dref);  // n. sets dh->dref = dref
-      dref->pedid = adlshim_get_parsed_edid_by_display_handle(dh);
+      dref->pedid = adlshim_get_parsed_edid_by_dh(dh);
       break;
 
    case DDCA_IO_USB:
@@ -198,7 +198,7 @@ ddc_open_display(
          }
          else {
             dh = create_usb_display_handle_from_display_ref(fd, dref);
-            dref->pedid = usb_get_parsed_edid_by_display_handle(dh);
+            dref->pedid = usb_get_parsed_edid_by_dh(dh);
          }
       }
 #else

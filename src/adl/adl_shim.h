@@ -60,7 +60,7 @@ adlshim_get_parsed_edid_by_adlno(
       int iDisplayIndex);
 
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_handle(
+adlshim_get_parsed_edid_by_dh(
       Display_Handle * dh);
 
 Parsed_Edid*

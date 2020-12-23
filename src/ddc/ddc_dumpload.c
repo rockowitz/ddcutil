@@ -593,7 +593,7 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
    char buf[400];
    int bufsz = sizeof(buf)/sizeof(char);
 
-   Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   Parsed_Edid * edid = ddc_get_parsed_edid_by_dh(dh);
    snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
    g_ptr_array_add(vals, strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
@@ -708,10 +708,10 @@ dumpvcp_as_dumpload_data(
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
 
-   dumped_data->vcp_version = get_vcp_version_by_display_handle(dh);  // use function to ensure set
+   dumped_data->vcp_version = get_vcp_version_by_dh(dh);  // use function to ensure set
 
    // identification information from edid:
-   // Parsed_Edid * edid = ddc_get_parsed_edid_by_display_handle(dh);
+   // Parsed_Edid * edid = ddc_get_parsed_edid_by_dh(dh);
    Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
 

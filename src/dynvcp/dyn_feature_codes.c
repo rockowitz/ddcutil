@@ -294,7 +294,7 @@ dyn_get_feature_metadata_by_dh(
 
    // ensure dh->dref->vcp_version set without incurring additional open/close
    DDCA_MCCS_Version_Spec vspec =
-   get_vcp_version_by_display_handle(dh);
+   get_vcp_version_by_dh(dh);
    // Display_Feature_Metadata * result = dyn_get_feature_metadata_by_dref_dfm(id, dh->dref, with_default);
    Display_Feature_Metadata * result =
          dyn_get_feature_metadata_by_dfr_and_vspec_dfm(id, dh->dref->dfr, vspec, with_default);

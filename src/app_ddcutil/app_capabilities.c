@@ -85,7 +85,7 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
 
 
 Parsed_Capabilities *
-app_get_capabilities_by_display_handle(Display_Handle * dh)
+app_get_capabilities_by_dh(Display_Handle * dh)
 {
    // FILE * fout = stdout;
    FILE * ferr = stderr;

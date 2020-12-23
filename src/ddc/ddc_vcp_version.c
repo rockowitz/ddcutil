@@ -37,7 +37,7 @@
 
 
 DDCA_MCCS_Version_Spec
-set_vcp_version_xdf_by_display_handle(Display_Handle * dh)
+set_vcp_version_xdf_by_dh(Display_Handle * dh)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
@@ -110,7 +110,7 @@ set_vcp_version_xdf_by_display_handle(Display_Handle * dh)
  *  \return #Version_Spec struct containing version, contains 0.0 if version
  *          could not be retrieved (pre MCCS v2)
  */
-DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
+DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
    assert(dh);
    bool debug = false;
    DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNKNOWN;
@@ -149,7 +149,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
             dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
          }
 
-         result = set_vcp_version_xdf_by_display_handle(dh);
+         result = set_vcp_version_xdf_by_dh(dh);
          assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
       }
       else
@@ -193,7 +193,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    assert(psc == 0);
    // dref->vcp_version =
-   DDCA_MCCS_Version_Spec result = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec result = get_vcp_version_by_dh(dh);
    ddc_close_display(dh);
 
    assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );

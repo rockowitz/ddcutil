@@ -89,7 +89,7 @@ adlshim_get_parsed_edid_by_adlno(
  * @retval NULL
  */
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_handle(
+adlshim_get_parsed_edid_by_dh(
       Display_Handle * dh)
 {
    return NULL;

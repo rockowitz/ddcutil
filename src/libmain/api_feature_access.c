@@ -182,7 +182,7 @@ get_value_type(
    DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
 
    DDCA_Status ddcrc = DDCRC_NOT_FOUND;
-   DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_display_handle(ddca_dh);
+   DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_dh(ddca_dh);
    VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
    if (pentry) {
       DDCA_Version_Feature_Flags flags = get_version_sensitive_feature_flags(pentry, vspec);
@@ -344,7 +344,7 @@ ddca_get_formatted_vcp_value(
    WITH_DH(ddca_dh,
          {
                *formatted_value_loc = NULL;
-               DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_display_handle(dh);
+               DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
                // DDCA_MCCS_Version_Id   version_id = mccs_version_spec_to_id(vspec);
 
                VCP_Feature_Table_Entry * pentry = vcp_find_feature_by_hexid(feature_code);
@@ -897,12 +897,12 @@ ddca_get_profile_related_values(
    WITH_DH(ddca_dh,
       {
          bool debug = false;
-         DBGMSF(debug, "Before dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
+         DBGMSF(debug, "Before dumpvcp_to_string_by_dh(), pprofile_values_string=%p,"
                        " *profile_values_string_loc=%p",
                profile_values_string_loc, *profile_values_string_loc);
          assert(profile_values_string_loc);
          psc = dumpvcp_as_string(dh, profile_values_string_loc);
-         DBGMSF(debug, "After dumpvcp_to_string_by_display_handle(), pprofile_values_string=%p,"
+         DBGMSF(debug, "After dumpvcp_to_string_by_dh(), pprofile_values_string=%p,"
                        " *profile_values_string_loc=%p",
                profile_values_string_loc, *profile_values_string_loc);
          DBGMSF(debug, "*profile_values_string_loc = |%s|", *profile_values_string_loc);

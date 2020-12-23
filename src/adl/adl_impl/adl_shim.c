@@ -91,7 +91,7 @@ adlshim_get_parsed_edid_by_adlno(int iAdapterIndex, int iDisplayIndex) {
 
 
 Parsed_Edid*
-adlshim_get_parsed_edid_by_display_handle(
+adlshim_get_parsed_edid_by_dh(
       Display_Handle * dh)
 {
    assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);

@@ -88,7 +88,7 @@ char * create_simple_vcp_fn_by_edid(
 }
 
 
-char * create_simple_vcp_fn_by_display_handle(
+char * create_simple_vcp_fn_by_dh(
           Display_Handle * dh,
           time_t           time_millis,
           char *           buf,
@@ -190,7 +190,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * fn)
          char simple_fn_buf[NAME_MAX+1];
 
          time_t time_millis = data->timestamp_millis;
-         create_simple_vcp_fn_by_display_handle(
+         create_simple_vcp_fn_by_dh(
                                dh,
                                time_millis,
                                simple_fn_buf,

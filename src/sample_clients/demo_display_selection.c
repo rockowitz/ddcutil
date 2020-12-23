@@ -45,7 +45,7 @@ DDCA_Display_Ref display_selection_using_display_detection(bool include_invalid_
    int displayct = ddca_report_displays(include_invalid_displays, 2);
    printf("   ddca_report_active_displays() found %d displays\n", displayct);
 
-   printf("\n   Calling ddca_report_display_by_display_ref() for each dlist entry...\n");
+   printf("\n   Calling ddca_report_display_by_dref() for each dlist entry...\n");
    for (int ndx = 0; ndx < dlist->ct; ndx++) {
       DDCA_Display_Ref dref = dlist->info[ndx].dref;
       // printf("(%s) dref=%p\n", __func__, dref);

@@ -441,7 +441,7 @@ usb_get_nontable_vcp_value(
    // Output_Level output_level = get_output_level();
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
 
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
    assert(moninfo);
 
    __s32 maxval = 0;    // initialization logically unnecessary, but avoids clang scan warning
@@ -602,7 +602,7 @@ usb_set_nontable_vcp_value(
 
    Public_Status_Code psc =  DDCRC_REPORTED_UNSUPPORTED;  // = 0;
    assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
-   Usb_Monitor_Info * moninfo = usb_find_monitor_by_display_handle(dh);
+   Usb_Monitor_Info * moninfo = usb_find_monitor_by_dh(dh);
    assert(moninfo);
 
    bool use_alt = true;

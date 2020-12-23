@@ -459,7 +459,7 @@ ddca_get_mccs_version_by_dh(
    }
    else {
       // need to call function, may not yet be set
-      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+      DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
       p_spec->major = vspec.major;
       p_spec->minor = vspec.minor;
       rc = 0;

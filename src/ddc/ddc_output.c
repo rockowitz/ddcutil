@@ -77,13 +77,13 @@ const char* FMT_CODE_NAME_DETAIL_W_NL  = "VCP code 0x%02x (%-30s): %s\n";
  *    false if not
  */
 bool
-is_table_feature_by_display_handle(
+is_table_feature_by_dh(
       VCP_Feature_Table_Entry *  frec,
       Display_Handle *           dh)
 {
    // bool debug = false;
    bool result = false;
-   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    DDCA_Version_Feature_Flags feature_flags = get_version_sensitive_feature_flags(frec, vcp_version);
    assert(feature_flags);
    result = (feature_flags & DDCA_TABLE);
@@ -124,7 +124,7 @@ check_valid_operation_by_feature_id_and_dh(
    if (!frec)
       result = DDCRC_UNKNOWN_FEATURE;
    else {
-      DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+      DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
       result = check_valid_operation_by_feature_rec_and_version(frec, vcp_version, operation_flags);
    }
    return result;
@@ -168,12 +168,12 @@ get_raw_value_for_feature_metadata(
    // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    // char * feature_name = get_version_sensitive_feature_name(frec, vspec);
    char * feature_name = frec->feature_name;
 
    Byte feature_code = frec->feature_code;
-   // bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
+   // bool is_table_feature = is_table_feature_by_dh(frec, dh);
    bool is_table_feature = frec->feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
@@ -337,12 +337,12 @@ get_raw_value_for_feature_metadata_dfm(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
-   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    // char * feature_name = get_version_sensitive_feature_name(frec, vspec);
    char * feature_name = frec->feature_name;
 
    Byte feature_code = frec->feature_code;
-   // bool is_table_feature = is_table_feature_by_display_handle(frec, dh);
+   // bool is_table_feature = is_table_feature_by_dh(frec, dh);
    bool is_table_feature = frec->feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
@@ -541,7 +541,7 @@ ddc_collect_raw_subset_values(
 
    Public_Status_Code psc = 0;
 
-   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
    Feature_Set_Flags flags = FSF_NOTABLE;
@@ -605,7 +605,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
    Error_Info * ddc_excp;
    *formatted_value_loc = NULL;
 
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    // DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
@@ -775,7 +775,7 @@ show_feature_set_values2_dfm(
        show_unsupported = true;
    bool suppress_unsupported = !show_unsupported;
 
-   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    bool prefix_value_with_feature_code = true;    // TO FIX
    FILE * msg_fh = outf;                        // TO FIX
    int features_ct = dyn_get_feature_set_size2(feature_set);
@@ -897,7 +897,7 @@ ddc_show_vcp_values(
 
    Public_Status_Code psc = 0;
 
-   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_display_handle(dh);
+   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
    Dyn_Feature_Set* feature_set = dyn_create_feature_set2(

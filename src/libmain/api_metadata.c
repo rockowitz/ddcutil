@@ -826,7 +826,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       char**                 feature_name_loc)
 {
    WITH_DH(ddca_dh,  {
-         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+         DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
          DDCA_Monitor_Model_Key * p_mmid = dh->dref->mmid;
          return ddca_get_simple_nc_feature_value_name_by_vspec(
                    feature_code, vspec, p_mmid, feature_value, feature_name_loc);

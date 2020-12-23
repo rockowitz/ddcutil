@@ -18,7 +18,7 @@ void app_show_parsed_capabilities2(Display_Handle * dh, Parsed_Capabilities * pc
 DDCA_Status app_capabilities(Display_Handle * dh);
 
 Parsed_Capabilities *
-app_get_capabilities_by_display_handle(
+app_get_capabilities_by_dh(
       Display_Handle * dh);
 
 void

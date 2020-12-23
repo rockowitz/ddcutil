@@ -54,7 +54,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
 
    f0printf(fout, "\nCapabilities for display on %s\n", dref_short_name_t(dh->dref));
 
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
    // not needed, message causes confusing messages if get_vcp_version fails but get_capabilities succeeds
    // if (vspec.major < 2) {
    //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
@@ -65,7 +65,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    set_output_level(DDCA_OL_VERBOSE);
 
 #ifdef OLD
-   Parsed_Capabilities * pcaps =  app_get_capabilities_by_display_handle(dh);
+   Parsed_Capabilities * pcaps =  app_get_capabilities_by_dh(dh);
    if (pcaps) {
       app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
    }
@@ -81,7 +81,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
          pcaps = parse_capabilities_string(capabilities_string);
          app_show_parsed_capabilities2(dh, pcaps);
 
-         // how to pass this information down into app_show_vcp_subset_values_by_display_handle()?
+         // how to pass this information down into app_show_vcp_subset_values_by_dh()?
          bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
          f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
    }
@@ -93,7 +93,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
    f0printf(fout, "\nScanning all VCP feature codes for display %s\n", dh_repr(dh) );
    Byte_Bit_Flags features_seen = bbf_create();
-   app_show_vcp_subset_values_by_display_handle(
+   app_show_vcp_subset_values_by_dh(
          dh, VCP_SUBSET_SCAN, FSF_SHOW_UNSUPPORTED, features_seen);
 
    if (pcaps) {
