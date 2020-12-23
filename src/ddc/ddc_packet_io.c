@@ -855,7 +855,7 @@ ddc_i2c_write_only(
 {
    bool debug = false;
    int fh = dh->fd;
-   DBGTRC0(debug, TRACE_GROUP, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (debug)
       dbgrpt_packet(request_packet_ptr, 1);
 
@@ -894,7 +894,7 @@ ddc_write_only(
       DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
-   DBGTRC0(debug, TRACE_GROUP, "Starting.");
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
 
    DDCA_Status psc = 0;
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
@@ -939,7 +939,7 @@ ddc_write_only_with_retry(
       DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
-   DBGTRC0(debug, TRACE_GROUP, "Starting." );
+   DBGTRC(debug, TRACE_GROUP, "Starting." );
 
    assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
 

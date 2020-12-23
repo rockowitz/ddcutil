@@ -496,7 +496,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
 
 bye:
-   DBGTRC0(debug, TRACE_GROUP, "Done");
+   DBGTRC(debug, TRACE_GROUP, "Done");
    rpt_nl();
    return;
 }
