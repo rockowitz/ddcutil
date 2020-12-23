@@ -214,61 +214,41 @@ validate_environment()
    return ok;
 }
 
-
-//
-// Mainline
-//
-
-/** **ddcutil** program mainline.
-  *
-  * @param argc   number of command line arguments
-  * @param argv   pointer to array of argument strings
-  *
-  * @retval  EXIT_SUCCESS normal exit
-  * @retval  EXIT_FAILURE an error occurred
-  */
-int main(int argc, char *argv[]) {
-   FILE * fout = stdout;
-   bool main_debug = false;
-   int main_rc = EXIT_FAILURE;
-
-   if (!validate_environment())
-      return EXIT_FAILURE;
-
-   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
-   init_base_services();  // so tracing related modules are initialized
-   rtti_func_name_table_add(main, "main");
-   Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
-   if (!parsed_cmd) {
-      goto bye;      // main_rc == EXIT_FAILURE
+// static
+void ensure_vcp_version_set(Display_Handle * dh)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
+   if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
+      f0printf(stdout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
+            "Output may not be accurate.\n");
    }
+   DBGMSF(debug, "Done");
+}
 
-   // configure tracing
+
+// Initialization functions called only once but factored out of main() to clarify mainline
+
+void init_tracing(Parsed_Cmd * parsed_cmd)
+{
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
-      dbgtrc_show_time = true;                           // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
-      dbgtrc_show_thread_id = true;                      // extern in core.h
-   report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
-   set_trace_levels(parsed_cmd->traced_groups);
-   if (parsed_cmd->traced_functions) {
-      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
-         add_traced_function(parsed_cmd->traced_functions[ndx]);
-   }
-   if (parsed_cmd->traced_files) {
-      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
-         add_traced_file(parsed_cmd->traced_files[ndx]);
-   }
+       dbgtrc_show_time = true;                           // extern in core.h
+    if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
+       dbgtrc_show_thread_id = true;                      // extern in core.h
+    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
+    set_trace_levels(parsed_cmd->traced_groups);
+    if (parsed_cmd->traced_functions) {
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
+          add_traced_function(parsed_cmd->traced_functions[ndx]);
+    }
+    if (parsed_cmd->traced_files) {
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
+          add_traced_file(parsed_cmd->traced_files[ndx]);
+    }
+}
 
-   time_t cur_time = time(NULL);
-   char * cur_time_s = asctime(localtime(&cur_time));
-   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
-        cur_time_s[strlen(cur_time_s)-1] = 0;
-   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
-          TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
-          "Starting ddcutil execution, %s",
-          cur_time_s);
-
-
+bool init_failsim(Parsed_Cmd * parsed_cmd) {
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -278,23 +258,17 @@ int main(int argc, char *argv[]) {
       if (!ok) {
          fprintf(stderr, "Error loading failure simulation control file %s.\n",
                          parsed_cmd->failsim_control_fn);
-         goto bye;      // main_rc == EXIT_FAILURE
+         return false;
+
       }
       fsim_report_error_table(0);
    }
 #endif
+   return true;
+}
 
-   // global variable in dyn_dynamic_features:
-   enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
-   enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
-
-   init_ddc_services();   // n. initializes start timestamp
-   // overrides setting in init_ddc_services():
-   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-
-   ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
-
+bool init_utility_options(Parsed_Cmd* parsed_cmd)
+{
    if (parsed_cmd->flags & CMD_FLAG_F1) {
       fprintf(stdout, "EDID reads will use normal I2C calls\n");
       EDID_Read_Uses_I2C_Layer = true;
@@ -305,23 +279,15 @@ int main(int argc, char *argv[]) {
       fprintf(stdout, "Setting i2c_force_bus\n");
       if ( !(parsed_cmd->pdid) || parsed_cmd->pdid->id_type != DISP_ID_BUSNO) {
          fprintf(stdout, "bus number required, use --busno\n");
-         return 1;
+         return false;
       }
       i2c_force_bus = true;
    }
+   return true;
+}
 
-   Call_Options callopts = CALLOPT_NONE;
-   i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
-   if (parsed_cmd->flags & CMD_FLAG_FORCE)
-      callopts |= CALLOPT_FORCE;
-
-   set_output_level(parsed_cmd->output_level);
-   enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
-   // TMI:
-   // if (show_recoverable_errors)
-   //    parsed_cmd->stats = true;
-
-
+void init_max_tries(Parsed_Cmd * parsed_cmd)
+{
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
       // ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
@@ -356,14 +322,12 @@ int main(int argc, char *argv[]) {
       trd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
       trd_set_initial_thread_max_tries(3, parsed_cmd->max_tries[2]);
    }
+}
 
-
-#ifdef USE_USB
-   // if ( !(parsed_cmd->flags & CMD_FLAG_ENABLE_USB)) {
-      DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
-      assert (rc == DDCRC_OK);
-   // }
-#endif
+void init_performance_options(Parsed_Cmd * parsed_cmd)
+{
+   enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
+   enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
    if (parsed_cmd->flags & CMD_FLAG_ASYNC)
@@ -373,7 +337,7 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
       tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
-      if (parsed_cmd->sleep_multiplier > 1.0f && parsed_cmd->flags & CMD_FLAG_DSA )
+      if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
       {
          tsd_dsa_enable_globally(true);
       }
@@ -383,24 +347,239 @@ int main(int argc, char *argv[]) {
    if (parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
       set_i2c_fileio_use_timeout(true);
    }
+}
 
-   if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-      report_settings(parsed_cmd, 0);
+
+bool initialize(Parsed_Cmd * parsed_cmd) {
+   bool ok = false;
+
+   if (!validate_environment())
+      goto bye;
+
+
+
+
+    if (!init_failsim(parsed_cmd))
+       goto bye;      // main_rc == EXIT_FAILURE
+
+    // global variable in dyn_dynamic_features:
+    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
+
+
+    init_ddc_services();   // n. initializes start timestamp
+    // overrides setting in init_ddc_services():
+    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
+
+    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
+
+    if (!init_utility_options(parsed_cmd))
+       goto bye;
+
+
+
+
+    set_output_level(parsed_cmd->output_level);
+    enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
+    // TMI:
+    // if (show_recoverable_errors)
+    //    parsed_cmd->stats = true;
+
+    init_max_tries(parsed_cmd);
+
+ #ifdef USE_USB
+       DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
+       assert (rc == DDCRC_OK);
+ #endif
+
+    init_performance_options(parsed_cmd);
+
+
+    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
+       report_settings(parsed_cmd, 0);
+    }
+
+   ok = true;
+
+bye:
+   return ok;
+}
+
+
+void test_display_detection_variants() {
+
+   typedef struct {
+      I2C_IO_Strategy_Id  i2c_io_strategy_id;
+      bool                i2c_read_bytewise;
+      bool                edid_uses_i2c_layer;
+      bool                edid_read_bytewise;
+   } Choice_Entry;
+
+   Choice_Entry choices[16] =
+   { {I2C_IO_STRATEGY_FILEIO,  false,    false,    false},
+     {I2C_IO_STRATEGY_FILEIO,  false,    false,    true},
+     {I2C_IO_STRATEGY_FILEIO,  false,    true,     false},
+     {I2C_IO_STRATEGY_FILEIO,  false,    true,     true},
+     {I2C_IO_STRATEGY_FILEIO,  true,     false,    false},
+     {I2C_IO_STRATEGY_FILEIO,  true,     false,    true},
+     {I2C_IO_STRATEGY_FILEIO,  true,     true,     false},
+     {I2C_IO_STRATEGY_FILEIO,  true,     true,     true},
+
+     {I2C_IO_STRATEGY_IOCTL,  false,     false,    false},
+     {I2C_IO_STRATEGY_IOCTL,  false,     false,    true},
+     {I2C_IO_STRATEGY_IOCTL,  false,     true,     false},
+     {I2C_IO_STRATEGY_IOCTL,  false,     true,     true},
+     {I2C_IO_STRATEGY_IOCTL,  true,      false,    false},
+     {I2C_IO_STRATEGY_IOCTL,  true,      false,    true},
+     {I2C_IO_STRATEGY_IOCTL,  true,      true,     false},
+     {I2C_IO_STRATEGY_IOCTL,  true,      true,     true},
+   };
+
+   for (int ndx=0; ndx<16; ndx++) {
+      Choice_Entry cur = choices[ndx];
+
+      rpt_nl();
+      rpt_vstring(0, "===========> IO STRATEGY %d:", ndx+1);
+       char * s = (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL";
+       int d = 1;
+       rpt_vstring(d, "i2c_io_strategy:          %s", s);
+       rpt_vstring(d, "i2c_read_bytewise:        %s", sbool(cur.i2c_read_bytewise));
+       rpt_vstring(d, "EDID read uses I2C layer: %s", sbool(cur.edid_uses_i2c_layer));
+       rpt_vstring(d, "EDID read bytewise:       %s", sbool(cur.edid_read_bytewise));
+
+       i2c_set_io_strategy(       cur.i2c_io_strategy_id);
+       I2C_Read_Bytewise        = cur.i2c_read_bytewise;
+       EDID_Read_Uses_I2C_Layer = cur.edid_uses_i2c_layer;
+       EDID_Read_Bytewise       = cur.edid_read_bytewise;
+
+       rpt_nl();
+       // discard existing detected monitors
+       ddc_discard_detected_displays();
+       ddc_ensure_displays_detected();
+       // will include any USB or ADL displays, but that's ok
+       ddc_report_displays(/*include_invalid_displays=*/ true, 0);
    }
+}
+
+#ifdef ENABLE_ENVCMDS
+void interrogate(Parsed_Cmd * parsed_cmd, bool main_debug) {
+   DBGTRC(main_debug, TRACE_GROUP, "Processing command INTERROGATE...");
+   dup2(1,2);   // redirect stderr to stdout
+   // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
+   f0printf(fout(), "Setting output level verbose...\n");
+   set_output_level(DDCA_OL_VERBOSE);
+   f0printf(fout(), "Setting maximum retries...\n");
+   f0printf(fout(), "Forcing --stats...\n");
+   parsed_cmd->stats_types = DDCA_STATS_ALL;
+   f0printf(fout(), "Forcing --force-slave-address..\n");
+   i2c_force_slave_addr_flag = true;
+   f0printf(fout(), "This command will take a while to run...\n\n");
+   try_data_set_maxtries2(MULTI_PART_READ_OP, MAX_MAX_TRIES);
+   try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
+
+   ddc_ensure_displays_detected();    // *** ???
+   DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
+
+   query_sysenv();
+#ifdef USE_USB
+   // 7/2017: disable, USB attached monitors are rare, and this just
+   // clutters the output
+   f0printf(fout(), "\nSkipping USB environment exploration.\n");
+   f0printf(fout(), "Issue command \"ddcutil usbenvironment --verbose\" if there are any USB attached monitors.\n");
+   // query_usbenv();
+#endif
+   f0printf(fout(), "\nStatistics for environment exploration:\n");
+   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+   reset_stats();
+
+   f0printf(fout(), "\n*** Detected Displays ***\n");
+   /* int display_ct =  */ ddc_report_displays(
+                              true,   // include_invalid_displays
+                              0);      // logical depth
+   // printf("Detected: %d displays\n", display_ct);   // not needed
+   f0printf(fout(), "\nStatistics for display detection:\n");
+   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+   reset_stats();
+
+   f0printf(fout(), "Setting output level normal  Table features will be skipped...\n");
+   set_output_level(DDCA_OL_NORMAL);
+
+   tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
+   GPtrArray * all_displays = ddc_get_all_displays();
+   for (int ndx=0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+      if (dref->dispno < 0) {
+         f0printf(fout(), "\nSkipping invalid display on %s\n", dref_short_name_t(dref));
+      }
+      else {
+         f0printf(fout(), "\nProbing display %d\n", dref->dispno);
+         app_probe_display_by_dref(dref);
+         f0printf(fout(), "\nStatistics for probe of display %d:\n", dref->dispno);
+         ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+      }
+      reset_stats();
+   }
+   f0printf(fout(), "\nDisplay scanning complete.\n");
+
+}
+#endif
+
+
+//
+// Mainline
+//
+
+/** **ddcutil** program mainline.
+  *
+  * @param argc   number of command line arguments
+  * @param argv   pointer to array of argument strings
+  *
+  * @retval  EXIT_SUCCESS normal exit
+  * @retval  EXIT_FAILURE an error occurred
+  */
+int main(int argc, char *argv[]) {
+   FILE * fout = stdout;
+   bool main_debug = false;
+   int main_rc = EXIT_FAILURE;
+
+   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
+    init_base_services();  // so tracing related modules are initialized
+    rtti_func_name_table_add(main, "main");
+    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
+    if (!parsed_cmd) {
+       goto bye;      // main_rc == EXIT_FAILURE
+    }
+
+    init_tracing(parsed_cmd);
+
+    time_t cur_time = time(NULL);
+    char * cur_time_s = asctime(localtime(&cur_time));
+    if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
+         cur_time_s[strlen(cur_time_s)-1] = 0;
+    DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
+           TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
+           "Starting ddcutil execution, %s",
+           cur_time_s);
+
+
+
+   if (!initialize(parsed_cmd))
+      goto bye;
+
+   Call_Options callopts = CALLOPT_NONE;
+   i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
+   if (parsed_cmd->flags & CMD_FLAG_FORCE)
+      callopts |= CALLOPT_FORCE;
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
-   if (parsed_cmd->cmd_id == CMDID_LISTVCP) {
+   if (parsed_cmd->cmd_id == CMDID_LISTVCP) {    // vestigial
       app_listvcp(stdout);
       main_rc = EXIT_SUCCESS;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      bool vcpinfo_ok = true;
-
-      // DDCA_MCCS_Version_Spec vcp_version_any = {0,0};
-
       Feature_Set_Flags flags = 0;
       if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
          flags |= FSF_RW_ONLY;
@@ -409,8 +588,7 @@ int main(int argc, char *argv[]) {
       if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
          flags |= FSF_WO_ONLY;
 
-      vcpinfo_ok = app_vcpinfo(parsed_cmd->fref, parsed_cmd->mccs_vspec, flags);
-
+      bool vcpinfo_ok = app_vcpinfo(parsed_cmd->fref, parsed_cmd->mccs_vspec, flags);
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
@@ -425,63 +603,14 @@ int main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
-      if (!(parsed_cmd->flags & CMD_FLAG_F4)) {  // normal case
+      if ( parsed_cmd->flags & CMD_FLAG_F4) {
+         test_display_detection_variants();
+      }
+      else {     // normal case
          ddc_ensure_displays_detected();
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
-      else {  // temporary
-         typedef struct {
-            I2C_IO_Strategy_Id  i2c_io_strategy_id;
-            bool                i2c_read_bytewise;
-            bool                edid_uses_i2c_layer;
-            bool                edid_read_bytewise;
-         } Choice_Entry;
 
-         Choice_Entry choices[16] =
-         { {I2C_IO_STRATEGY_FILEIO,  false,    false,    false},
-           {I2C_IO_STRATEGY_FILEIO,  false,    false,    true},
-           {I2C_IO_STRATEGY_FILEIO,  false,    true,     false},
-           {I2C_IO_STRATEGY_FILEIO,  false,    true,     true},
-           {I2C_IO_STRATEGY_FILEIO,  true,     false,    false},
-           {I2C_IO_STRATEGY_FILEIO,  true,     false,    true},
-           {I2C_IO_STRATEGY_FILEIO,  true,     true,     false},
-           {I2C_IO_STRATEGY_FILEIO,  true,     true,     true},
-
-           {I2C_IO_STRATEGY_IOCTL,  false,     false,    false},
-           {I2C_IO_STRATEGY_IOCTL,  false,     false,    true},
-           {I2C_IO_STRATEGY_IOCTL,  false,     true,     false},
-           {I2C_IO_STRATEGY_IOCTL,  false,     true,     true},
-           {I2C_IO_STRATEGY_IOCTL,  true,      false,    false},
-           {I2C_IO_STRATEGY_IOCTL,  true,      false,    true},
-           {I2C_IO_STRATEGY_IOCTL,  true,      true,     false},
-           {I2C_IO_STRATEGY_IOCTL,  true,      true,     true},
-         };
-
-         for (int ndx=0; ndx<16; ndx++) {
-            Choice_Entry cur = choices[ndx];
-
-            rpt_nl();
-            rpt_vstring(0, "===========> IO STRATEGY %d:", ndx+1);
-             char * s = (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL";
-             int d = 1;
-             rpt_vstring(d, "i2c_io_strategy:          %s", s);
-             rpt_vstring(d, "i2c_read_bytewise:        %s", sbool(cur.i2c_read_bytewise));
-             rpt_vstring(d, "EDID read uses I2C layer: %s", sbool(cur.edid_uses_i2c_layer));
-             rpt_vstring(d, "EDID read bytewise:       %s", sbool(cur.edid_read_bytewise));
-
-             i2c_set_io_strategy(       cur.i2c_io_strategy_id);
-             I2C_Read_Bytewise        = cur.i2c_read_bytewise;
-             EDID_Read_Uses_I2C_Layer = cur.edid_uses_i2c_layer;
-             EDID_Read_Bytewise       = cur.edid_read_bytewise;
-
-             rpt_nl();
-             // discard existing detected monitors
-             ddc_discard_detected_displays();
-             ddc_ensure_displays_detected();
-             // will include any USB or ADL displays, but that's ok
-             ddc_report_displays(/*include_invalid_displays=*/ true, 0);
-         }
-      }
       DBGTRC(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
@@ -579,65 +708,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      DBGTRC(main_debug, TRACE_GROUP, "Processing command INTERROGATE...");
-      dup2(1,2);   // redirect stderr to stdout
-      // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
-      f0printf(fout, "Setting output level verbose...\n");
-      set_output_level(DDCA_OL_VERBOSE);
-      f0printf(fout, "Setting maximum retries...\n");
-      f0printf(fout, "Forcing --stats...\n");
-      parsed_cmd->stats_types = DDCA_STATS_ALL;
-      f0printf(fout, "Forcing --force-slave-address..\n");
-      i2c_force_slave_addr_flag = true;
-      f0printf(fout, "This command will take a while to run...\n\n");
-      try_data_set_maxtries2(MULTI_PART_READ_OP, MAX_MAX_TRIES);
-      try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
-
-      ddc_ensure_displays_detected();    // *** ???
-      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
-
-      query_sysenv();
-#ifdef USE_USB
-      // 7/2017: disable, USB attached monitors are rare, and this just
-      // clutters the output
-      f0printf(fout, "\nSkipping USB environment exploration.\n");
-      f0printf(fout, "Issue command \"ddcutil usbenvironment --verbose\" if there are any USB attached monitors.\n");
-      // query_usbenv();
-#endif
-      f0printf(fout, "\nStatistics for environment exploration:\n");
-      ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
-      reset_stats();
-
-      f0printf(fout, "\n*** Detected Displays ***\n");
-      /* int display_ct =  */ ddc_report_displays(
-                                 true,   // include_invalid_displays
-                                 0);      // logical depth
-      // printf("Detected: %d displays\n", display_ct);   // not needed
-      f0printf(fout, "\nStatistics for display detection:\n");
-      ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
-      reset_stats();
-
-      f0printf(fout, "Setting output level normal  Table features will be skipped...\n");
-      set_output_level(DDCA_OL_NORMAL);
-
-      tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
-      GPtrArray * all_displays = ddc_get_all_displays();
-      for (int ndx=0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
-         if (dref->dispno < 0) {
-            f0printf(fout, "\nSkipping invalid display on %s\n", dref_short_name_t(dref));
-         }
-         else {
-            f0printf(fout, "\nProbing display %d\n", dref->dispno);
-            app_probe_display_by_dref(dref);
-            f0printf(fout, "\nStatistics for probe of display %d:\n", dref->dispno);
-            ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
-         }
-         reset_stats();
-      }
-      f0printf(fout, "\nDisplay scanning complete.\n");
-
+      interrogate(parsed_cmd, main_debug);
       main_rc = EXIT_SUCCESS;
    }
 #endif
@@ -684,32 +755,40 @@ int main(int argc, char *argv[]) {
          else {
             f0printf(fout, "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
          }
-      }
+      }  // DISP_ID_BUSNO
       else {
          DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
          DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
          dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, callopts);
-      }
+      }  // !DISP_ID_BUSNO
 
       if (dref) {
          Display_Handle * dh = NULL;
          callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
+         DBGMSF(main_debug, "mainline - display detection complete, about to call ddc_open_display() for dref" );
          ddc_open_display(dref, callopts, &dh);
 
          if (dh) {
             // here or per command?  cur thread only or globally?
             tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+
+#ifdef OUT
             if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
                 parsed_cmd->cmd_id == CMDID_GETVCP       ||
                 parsed_cmd->cmd_id == CMDID_READCHANGES
                )
             {
+#endif
+
                if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
                   DBGTRC(main_debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
                                      parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
-                  dref->vcp_version = parsed_cmd->mccs_vspec;
+                  // dref->vcp_version = parsed_cmd->mccs_vspec;
+                  dref->vcp_version_cmdline = parsed_cmd->mccs_vspec;
                }
+
+#ifdef OUT
                else {
                   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_display_handle(dh);
                   if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
@@ -718,12 +797,15 @@ int main(int argc, char *argv[]) {
                   }
                }
             }
+#endif
 
+            DBGTRC(main_debug, TRACE_GROUP, "%s", cmdid_name(parsed_cmd->cmd_id));
             switch(parsed_cmd->cmd_id) {
 
             case CMDID_CAPABILITIES:
                {
                   check_dynamic_features(dref);
+                  ensure_vcp_version_set(dh);
                   DDCA_Status ddcrc = app_capabilities(dh);
                   main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                   break;
@@ -732,6 +814,7 @@ int main(int argc, char *argv[]) {
             case CMDID_GETVCP:
                {
                   check_dynamic_features(dref);
+                  ensure_vcp_version_set(dh);
 
                   Feature_Set_Flags flags = 0x00;
 
@@ -773,25 +856,14 @@ int main(int argc, char *argv[]) {
                   main_rc = EXIT_FAILURE;
                }
                else {
+                  check_dynamic_features(dref);
+                  ensure_vcp_version_set(dh);
+
                   main_rc = EXIT_SUCCESS;
 
                   // Public_Status_Code rc = 0;
                   Error_Info * ddc_excp;
-#ifdef OLD
-                  int argNdx;
-                  for (argNdx=0; argNdx < parsed_cmd->argct; argNdx+= 2) {
-                     ddc_excp = app_set_vcp_value(
-                             dh,
-                             parsed_cmd->args[argNdx],
-                             parsed_cmd->args[argNdx+1],
-                             parsed_cmd->flags & CMD_FLAG_FORCE);
-                     if (ddc_excp) {
-                        ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
-                        main_rc = EXIT_FAILURE;   // ???
-                        break;
-                     }
-                  }
-#else
+
                   for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
                      Parsed_Setvcp_Args * cur =  &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
                      ddc_excp = app_set_vcp_value(
@@ -809,7 +881,6 @@ int main(int argc, char *argv[]) {
                         break;
                      }
                   }
-#endif
                }
                break;
 
@@ -839,7 +910,10 @@ int main(int argc, char *argv[]) {
 
             case CMDID_DUMPVCP:
                {
+                  // MCCS vspec can affect whether a feature is NC or TABLE
                   check_dynamic_features(dref);
+                  ensure_vcp_version_set(dh);
+
                   Public_Status_Code psc =
                         dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                                ? parsed_cmd->args[0]
@@ -849,6 +923,9 @@ int main(int argc, char *argv[]) {
                }
 
             case CMDID_READCHANGES:
+               check_dynamic_features(dref);
+               ensure_vcp_version_set(dh);
+
                // DBGMSG("Case CMDID_READCHANGES");
                // report_parsed_cmd(parsed_cmd,0);
                app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
@@ -857,6 +934,8 @@ int main(int argc, char *argv[]) {
 
             case CMDID_PROBE:
                check_dynamic_features(dref);
+               ensure_vcp_version_set(dh);
+
                app_probe_display_by_dh(dh);
                main_rc = EXIT_SUCCESS;
                break;
