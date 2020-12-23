@@ -806,6 +806,7 @@ int main(int argc, char *argv[]) {
                {
                   check_dynamic_features(dref);
                   ensure_vcp_version_set(dh);
+
                   DDCA_Status ddcrc = app_capabilities(dh);
                   main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
                   break;
@@ -816,9 +817,8 @@ int main(int argc, char *argv[]) {
                   check_dynamic_features(dref);
                   ensure_vcp_version_set(dh);
 
-                  Feature_Set_Flags flags = 0x00;
-
                   // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
+                  Feature_Set_Flags flags = 0x00;
                   if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
                      flags |= FSF_SHOW_UNSUPPORTED;
                   if (parsed_cmd->flags & CMD_FLAG_FORCE)
@@ -851,19 +851,12 @@ int main(int argc, char *argv[]) {
                break;
 
             case CMDID_SETVCP:
-               if (parsed_cmd->argct % 2 != 0) {
-                  f0printf(fout, "Invalid number of arguments\n");
-                  main_rc = EXIT_FAILURE;
-               }
-               else {
+               {
                   check_dynamic_features(dref);
                   ensure_vcp_version_set(dh);
 
                   main_rc = EXIT_SUCCESS;
-
-                  // Public_Status_Code rc = 0;
-                  Error_Info * ddc_excp;
-
+                  Error_Info * ddc_excp = NULL;
                   for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
                      Parsed_Setvcp_Args * cur =  &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
                      ddc_excp = app_set_vcp_value(
@@ -877,7 +870,7 @@ int main(int argc, char *argv[]) {
                         if (ddc_excp->status_code == DDCRC_RETRIES)
                            f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
                         ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
-                        main_rc = EXIT_FAILURE;   // ???
+                        main_rc = EXIT_FAILURE;
                         break;
                      }
                   }
@@ -926,8 +919,6 @@ int main(int argc, char *argv[]) {
                check_dynamic_features(dref);
                ensure_vcp_version_set(dh);
 
-               // DBGMSG("Case CMDID_READCHANGES");
-               // report_parsed_cmd(parsed_cmd,0);
                app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
                main_rc = EXIT_FAILURE;
                break;
