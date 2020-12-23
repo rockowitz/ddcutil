@@ -143,7 +143,6 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_display_handle(Display_Handle * dh) {
    }
 
    else {
-      DBGMSG("WOLF 33");
       if (vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
          if (debug) {
             DBGMSG("vcp_version_xdf not set == DDCA_VSPEC_UNQUERIED");
