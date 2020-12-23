@@ -231,7 +231,6 @@ bool dbgtrc(
 #define SEVEREMSG(          format, ...) \
    severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-
 // cannot map to dbgtrc, writes to stderr, not stdout
 // #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
@@ -258,10 +257,6 @@ bool dbgtrc(
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
-#define DBGTRC0(debug_flag, trace_group, format) \
-    dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format)
-
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
