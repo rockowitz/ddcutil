@@ -102,16 +102,13 @@ app_show_single_vcp_value_by_feature_table_entry(
 #endif
 
 
-/* Shows a single VCP value specified by its #Display_Feature_Metadata
+/**  Shows a single VCP value specified by its #Display_Feature_Metadata
  *
- * Arguments:
- *    dh          handle of open display
- *    meta        feature metadata
- *
- * Returns:
- *    status code 0 = normal
- *                DDCRC_INVALID_OPERATION - feature is deprecated or write-only
- *                from get_formatted_value_for_feature_table_entry()
+ *   \param  dh           handle of open display
+ *   \param  meta         feature metadata
+ *   \return status code  0 = normal
+ *                        DDCRC_INVALID_OPERATION - feature is deprecated or write-only
+ *                        from get_formatted_value_for_feature_table_entry()
  */
 DDCA_Status
 app_show_single_vcp_value_by_dfm(
@@ -161,8 +158,24 @@ app_show_single_vcp_value_by_dfm(
 }
 
 
+/**  Shows a single VCP value specified by its feature code
+ *
+ *   \param  dh           handle of open display
+ *   \param  feature_id   feature code
+ *   \param  force        generate default metadata if unknown feature id
+ *   \return 0 - success
+ *           DDCRC_UNKNOWN_FEATURE unrecognized feature id and **force** not specified
+ *           from #app_show_single_vcp_value_by_dfm()
+ *
+ *   Looks up the #Display_Feature_Metadata record for the feature id and calls
+ *   #app_show_single_vcp_value_by_dfm() to display the value.
+ *   Generates a dummy #Display_Feature_Metadata record for features in the
+ *   reserved manufacturer range (xE0..xFF).
+ *   if #force is specified, also generates a dummy metadata record for
+ *   unrecognized features.
+ */
 Public_Status_Code
-app_show_single_vcp_value_by_feature_id_new_dfm(
+app_show_single_vcp_value_by_feature_id(
       Display_Handle *      dh,
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force)
@@ -179,9 +192,6 @@ app_show_single_vcp_value_by_feature_id_new_dfm(
          dh,
          force || feature_id >= 0xe0    // with_default
          );
-
-   // VCP_Feature_Table_Entry *  entry = NULL;
-
 
    if (!dfm) {
       printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
@@ -279,16 +289,13 @@ void app_show_vcp_subset_values_by_dref(
 #endif
 
 
-/* Shows the VCP values for all features indicated by a Feature_Set_Ref
+/**  Shows the VCP values for all features indicated by a #Feature_Set_Ref
  *
- * Arguments:
- *    dh                display handle
- *    fsref             feature set reference
- *    flags             option flags
- *
- * Returns:
- *    status code       from app_show_single_vcp_value_by_feature_id() or
- *                           app_show_subset_values_by_dh()
+ *   \param  dh      display handle
+ *   \param  fsref   feature set reference
+ *   \param  flags   option flags
+ *   \return status code from #app_show_single_vcp_value_by_feature_id_new_dfm() or
+ *                            #app_show_subset_values_by_dh()
  */
 Public_Status_Code
 app_show_feature_set_values_by_dh(
@@ -305,7 +312,7 @@ app_show_feature_set_values_by_dh(
 
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-      psc = app_show_single_vcp_value_by_feature_id_new_dfm(
+      psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, true);
    }
    else {
@@ -380,7 +387,7 @@ show_changed_feature(Display_Handle * dh, Byte * p_changed_feature) {
      free(nontable_response_loc);
      DBGMSF(debug, "getvcp(x52) returned value 0x%02x", *p_changed_feature);
      if (*p_changed_feature)
-        app_show_single_vcp_value_by_feature_id_new_dfm(dh, *p_changed_feature, false);
+        app_show_single_vcp_value_by_feature_id(dh, *p_changed_feature, false);
   }
   return result;
 }
