@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdio.h>
 /** \endcond */
 
 #include "error_info.h"
@@ -87,13 +88,11 @@ void dir_ordered_foreach(
       void *                accumulator,
       int                   depth);
 
-
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
       bool        ignore_case,
       int         limit);
-
 
 int read_file_with_filter(
       GPtrArray *  line_array,
@@ -101,5 +100,17 @@ int read_file_with_filter(
       char **      filter_terms,
       bool         ignore_case,
       int          limit);
+
+int
+rek_mkdir(
+      const char * path,
+      FILE *       ferr);
+
+int
+fopen_mkdir(
+      const char * path,
+      const char * mode,
+      FILE *       ferr,
+      FILE **      fp_loc);
 
 #endif /* FILE_UTIL_H_ */

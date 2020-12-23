@@ -100,60 +100,6 @@ char * create_simple_vcp_fn_by_dh(
 }
 
 
-// based on answer by Jens Harms to
-// https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
-Status_Errno_DDC
-rek_mkdir(char *path, FILE * ferr) {
-   bool debug = false;
-   DBGMSF(debug, "Starting, path=%s", path);
-    if (directory_exists(path)) {
-       return 0;
-    }
-    char *sep = strrchr(path, '/');
-    Status_Errno_DDC result = 0;
-    if (sep) {
-      *sep = 0;
-      result = rek_mkdir(path, ferr);  // create parent dir
-      *sep = '/';
-   }
-   if (result == 0) {
-      DBGMSF(debug, "Creating path %s", path);
-      if ( mkdir(path, 0777) < 0) {
-         result = -errno;
-         f0printf(ferr, "Unable to create '%s', %s\n", path);
-      }
-   }
-   DBGMSF(debug, "Done. returning %d");
-   return result;
-}
-
-
-Status_Errno_DDC
-fopen_mkdir(const char *path, const char *mode, FILE * ferr, FILE ** fp_loc)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. path=%s, mode=%s, fp_loc=%p", path, mode, fp_loc);
-   Status_Errno_DDC rc = 0;
-   *fp_loc = NULL;
-   char *sep = strrchr(path, '/');
-   if (sep) {
-      char *path0 = strdup(path);
-      path0[ sep - path ] = 0;
-      rc = rek_mkdir(path0, ferr);
-      free(path0);
-   }
-   if (!rc) {
-      *fp_loc = fopen(path,mode);
-      if (!*fp_loc) {
-         rc = -errno;
-         f0printf(ferr, "Unable to open %s for writing: %s, %s\n", path, strerror(errno));
-      }
-   }
-   ASSERT_IFF(rc == 0, *fp_loc);
-   DBGMSF(debug, "Returning %d", rc);
-   return rc;
-}
-
 
 /** Executes the DUMPVCP command, writing the output to a file.
  *

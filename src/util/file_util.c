@@ -635,4 +635,70 @@ void filter_and_limit_g_ptr_array(
 }
 
 
+// based on answer by Jens Harms to
+// https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+int rek_mkdir(
+      const char *path,
+      FILE *      ferr)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting, path=%s\n", __func__, path);
+
+   int result = 0;
+   if (!directory_exists(path)) {
+      char *sep = strrchr(path, '/');
+      if (sep) {
+         *sep = 0;
+         result = rek_mkdir(path, ferr);  // create parent dir
+         *sep = '/';
+      }
+      if (result == 0) {
+         if (debug)
+            printf("(%s) Creating path %s\n", __func__, path);
+         if ( mkdir(path, 0777) < 0) {
+            result = -errno;
+            f0printf(ferr, "Unable to create '%s', %s\n", path);
+         }
+      }
+   }
+
+   if (debug)
+      printf("(%s) Done. returning %d\n", __func__, result);
+   return result;
+}
+
+
+int fopen_mkdir(
+      const char *path,
+      const char *mode,
+      FILE       *ferr,
+      FILE      **fp_loc)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. path=%s, mode=%s, fp_loc=%p\n", __func__, path, mode, fp_loc);
+
+   int rc = 0;
+   *fp_loc = NULL;
+   char *sep = strrchr(path, '/');
+   if (sep) {
+      char *path0 = strdup(path);
+      path0[ sep - path ] = 0;
+      rc = rek_mkdir(path0, ferr);
+      free(path0);
+   }
+   if (!rc) {
+      *fp_loc = fopen(path,mode);
+      if (!*fp_loc) {
+         rc = -errno;
+         f0printf(ferr, "Unable to open %s for writing: %s, %s\n", path, strerror(errno));
+      }
+   }
+   assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
+
+   if (debug)
+       printf("(%s) Done. returning %d\n", __func__, rc);
+   return rc;
+}
 
