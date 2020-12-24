@@ -635,8 +635,17 @@ void filter_and_limit_g_ptr_array(
 }
 
 
-// based on answer by Jens Harms to
-// https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+/** Given a directory, if the directory does not already exist,
+ *  creates the directory along with any required parent directories.
+ *
+ *  \param  path
+ *  \ferr   if non-null, destination for error messages
+ *  \return 0 if success, -errno if error
+ *
+ *  \remark
+ *  Based on answer by Jens Harms to
+ *  https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+ */
 int rek_mkdir(
       const char *path,
       FILE *      ferr)
@@ -669,6 +678,14 @@ int rek_mkdir(
 }
 
 
+/** Opens a file for writing, creating parent directories if necessary.
+ *
+ *  \param  path
+ *  \param  mode
+ *  \param  ferr   if non-null, destination for error messages
+ *  \param  fp_loc address at which a pointer to the open file is returned
+ *  \return 0 if successful, -errno if error
+ */
 int fopen_mkdir(
       const char *path,
       const char *mode,
@@ -692,7 +709,7 @@ int fopen_mkdir(
       *fp_loc = fopen(path,mode);
       if (!*fp_loc) {
          rc = -errno;
-         f0printf(ferr, "Unable to open %s for writing: %s, %s\n", path, strerror(errno));
+         f0printf(ferr, "Unable to open %s with mode %s: %s, %s\n", mode, path, strerror(errno));
       }
    }
    assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
