@@ -462,47 +462,50 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
  *  The returned pointer is valid until the #Display_Identifier is freed.
  */
 char * did_repr(Display_Identifier * pdid) {
-   if (!pdid->repr) {
-      char * did_type_name = display_id_type_name(pdid->id_type);
-      switch (pdid->id_type) {
-      case(DISP_ID_BUSNO):
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, bus=/dev/i2c-%d]", did_type_name, pdid->busno);
-            break;
-      case(DISP_ID_ADL):
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, adlno=%d.%d]", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
-            break;
-      case(DISP_ID_MONSER):
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, mfg=%s, model=%s, sn=%s]",
-                     did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
-            break;
-      case(DISP_ID_EDID):
-      {
-            char * hs = hexstring(pdid->edidbytes, 128);
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, edid=%8s...%8s]", did_type_name, hs, hs+248);
-            free(hs);
-            break;
-      }
-      case(DISP_ID_DISPNO):
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, dispno=%d]", did_type_name, pdid->dispno);
-            break;
-      case DISP_ID_USB:
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);;
-            break;
-      case DISP_ID_HIDDEV:
-            pdid->repr = g_strdup_printf(
-                     "Display Id[type=%s, hiddev_devno=%d]", did_type_name, pdid->hiddev_devno);
-            break;
+   char * result = NULL;
+   if (pdid) {
+      if (!pdid->repr) {
+         char * did_type_name = display_id_type_name(pdid->id_type);
+         switch (pdid->id_type) {
+         case(DISP_ID_BUSNO):
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, bus=/dev/i2c-%d]", did_type_name, pdid->busno);
+               break;
+         case(DISP_ID_ADL):
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, adlno=%d.%d]", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
+               break;
+         case(DISP_ID_MONSER):
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, mfg=%s, model=%s, sn=%s]",
+                        did_type_name, pdid->mfg_id, pdid->model_name, pdid->serial_ascii);
+               break;
+         case(DISP_ID_EDID):
+         {
+               char * hs = hexstring(pdid->edidbytes, 128);
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, edid=%8s...%8s]", did_type_name, hs, hs+248);
+               free(hs);
+               break;
+         }
+         case(DISP_ID_DISPNO):
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, dispno=%d]", did_type_name, pdid->dispno);
+               break;
+         case DISP_ID_USB:
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, usb bus:device=%d.%d]", did_type_name, pdid->usb_bus, pdid->usb_device);;
+               break;
+         case DISP_ID_HIDDEV:
+               pdid->repr = g_strdup_printf(
+                        "Display Id[type=%s, hiddev_devno=%d]", did_type_name, pdid->hiddev_devno);
+               break;
 
-      } // switch
-
+         } // switch
+      } // !pdid->repr
+      result = pdid->repr;
    }
-   return pdid->repr;
+   return result;
 }
 
 
@@ -941,7 +944,7 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref 
    return dh;
 }
 
-
+#ifdef OLD
 /** Creates a #Display_Handle for an ADL #Display_Ref.
  *
  *  \param  dref pointer to #Display_Ref
@@ -963,7 +966,7 @@ Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) 
                  dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
    return dh;
 }
-
+#endif
 
 #ifdef USE_USB
 /** Creates a #Display_Handle for a USB #Display_Ref.
