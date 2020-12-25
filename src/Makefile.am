@@ -84,6 +84,10 @@ app_ddcutil/app_setvcp.c \
 app_ddcutil/app_getvcp.c \
 app_ddcutil/app_vcpinfo.c
 
+if INCLUDE_TESTCASES_COND
+ddcutil_SOURCES += app_testcase.c
+endif
+
 # it's a hack for using API calls in standalone executable
 if USE_API_COND
 ddcutil_SOURCES += \
