@@ -27,4 +27,8 @@ app_set_vcp_value(
         char *           new_value,
         bool             force);
 
+bool app_setvcp(
+      Parsed_Cmd * parsed_cmd,
+      Display_Handle * dh);
+
 #endif /* APP_SETVCP_H_ */
