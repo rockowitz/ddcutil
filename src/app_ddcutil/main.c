@@ -877,9 +877,6 @@ int main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
       DBGTRC(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
-      // ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      // DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
-
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
