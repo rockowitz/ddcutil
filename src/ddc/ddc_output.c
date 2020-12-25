@@ -460,13 +460,13 @@ get_raw_value_for_feature_metadata_dfm(
 Public_Status_Code
 collect_raw_feature_set_values2_dfm(
       Display_Handle *      dh,
-      Dyn_Feature_Set*       feature_set,
+      Dyn_Feature_Set*      feature_set,
       Vcp_Value_Set         vset,
       bool                  ignore_unsupported,  // if false, is error if unsupported
       FILE *                msg_fh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGMSF(debug, "Starting. dh=%s, msg_fh=%p", dh_repr_t(dh), msg_fh);
 
    Public_Status_Code master_status_code = 0;
    int features_ct = dyn_get_feature_set_size2(feature_set);
@@ -508,6 +508,7 @@ collect_raw_feature_set_values2_dfm(
       }
    }
 
+   DBGMSF(debug, "Done.  Returning: %s", psc_desc(master_status_code));
    return master_status_code;
 }
 
@@ -533,7 +534,8 @@ ddc_collect_raw_subset_values(
         FILE *              msg_fh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%d  dh=%s", subset, dh_repr(dh) );
+   DBGMSF(debug, "Starting.  subset=%s  dh=%s, msg_fn=%p",
+                 feature_subset_name(subset), dh_repr(dh), msg_fh );
 
    assert(subset == VCP_SUBSET_PROFILE);  // currently the only use of this function,
                                           // will need to reconsider handling of Feature_Set_Flags if other
