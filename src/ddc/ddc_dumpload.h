@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -63,20 +63,21 @@ loadvcp_by_string(
 
 Error_Info *
 create_dumpload_data_from_g_ptr_array(
-      GPtrArray * garray,
+      GPtrArray *      garray,
       Dumpload_Data ** dumpload_data_loc);
 
 GPtrArray *
-convert_dumpload_data_to_string_array(Dumpload_Data * data);
+convert_dumpload_data_to_string_array(
+      Dumpload_Data *  data);
 
 Public_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
-      Dumpload_Data**  pdumpload_data);
+      Dumpload_Data**  dumpload_data_loc);
 
 Public_Status_Code
 dumpvcp_as_string(
       Display_Handle * dh,
-      char**           result);
+      char**           result_loc);
 
 #endif /* DDC_DUMPLOAD_H_ */

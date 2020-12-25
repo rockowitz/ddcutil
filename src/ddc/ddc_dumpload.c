@@ -687,33 +687,35 @@ collect_profile_related_values(
 
 /** Primary function for the DUMPVCP command.
  *
- * Writes DUMPVCP data to the in-core Dumpload_Data structure
+ *  Writes DUMPVCP data to the in-core Dumpload_Data structure
  *
- * \param   dh              display handle for connected display
- * \param   pdumpload_data  address at which to return pointer to newly allocated
- *                    Dumpload_Data struct.  It is the responsibility of the
- *                    caller to free this data structure.
- * \return status code
+ *  \param   dh                 display handle for connected display
+ *  \param   dumpload_data_loc  address at which to return pointer to newly allocated
+ *                             Dumpload_Data struct.  It is the responsibility of the
+ *                             caller to free this data structure.
+ *  \return status code
  */
 Public_Status_Code
 dumpvcp_as_dumpload_data(
       Display_Handle * dh,
-      Dumpload_Data** pdumpload_data)
+      Dumpload_Data** dumpload_data_loc)
 {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+   bool debug = true;
+   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
 
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
 
+   DBGMSF(debug, "Befoere get_vcp_version_by_dh()");
    dumped_data->vcp_version = get_vcp_version_by_dh(dh);  // use function to ensure set
 
    // identification information from edid:
    // Parsed_Edid * edid = ddc_get_parsed_edid_by_dh(dh);
    Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
+   DBGMSF(debug, "Have EDID");
 
    dumped_data->product_code = edid->product_code;
    memcpy(dumped_data->mfg_id, edid->mfg_id, sizeof(dumped_data->mfg_id));
@@ -742,10 +744,11 @@ dumpvcp_as_dumpload_data(
    if (psc != 0 && dumped_data)
       free(dumped_data);
    else
-      *pdumpload_data = dumped_data;
+      *dumpload_data_loc = dumped_data;
+
    if (debug) {
-      DBGMSG("Returning: %s, *pdumpload_data=%p", psc_desc(psc), *pdumpload_data);
-      dbgrpt_dumpload_data(*pdumpload_data, 1);
+      DBGMSG("Returning: %s, *pdumpload_data=%p", psc_desc(psc), *dumpload_data_loc);
+      dbgrpt_dumpload_data(*dumpload_data_loc, 1);
    }
    return psc;
 }
@@ -814,27 +817,26 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
  *
  *  The caller is responsible for freeing the returned string.
  *
- *  \param  dh       display handle of open monitor
- *  \param  pstring  location at which to return string
+ *  \param  dh          display handle of open monitor
+ *  \param  result_loc  location at which to return string
  *  \return status code
  */
-// n. called from ddct_public.c
-// move to glib_util.c?
+// n. called from api_feature_access.c
 Public_Status_Code
-dumpvcp_as_string(Display_Handle * dh, char ** pstring) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
+   bool debug = true;
+   DBGMSF(debug, "Starting, dh=%s", dh_repr_t(dh));
 
    Public_Status_Code psc    = 0;
    Dumpload_Data *    data   = NULL;
-   *pstring = NULL;
+   *result_loc = NULL;
 
    psc = dumpvcp_as_dumpload_data(dh, &data);
    if (psc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
-      *pstring = join_string_g_ptr_array(strings, ";");
+      *result_loc = join_string_g_ptr_array(strings, ";");
       free_dumpload_data(data);
    }
-   DBGMSF(debug, "Returning: %s, *pstring=|%s|", psc_desc(psc), *pstring);
+   DBGMSF(debug, "Returning: %s, *result_loc=|%s|", psc_desc(psc), *result_loc);
    return psc;
 }
