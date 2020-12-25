@@ -796,15 +796,13 @@ int main(int argc, char *argv[]) {
    // FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
-
    init_base_services();  // so tracing related modules are initialized
-   init_rtti();
    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
-
    init_tracing(parsed_cmd);
+   init_rtti();
 
    time_t cur_time = time(NULL);
    char * cur_time_s = asctime(localtime(&cur_time));
@@ -832,15 +830,7 @@ int main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_VCPINFO) {
-      Feature_Set_Flags flags = 0;
-      if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
-         flags |= FSF_RW_ONLY;
-      if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
-         flags |= FSF_RO_ONLY;
-      if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
-         flags |= FSF_WO_ONLY;
-
-      bool vcpinfo_ok = app_vcpinfo(parsed_cmd->fref, parsed_cmd->mccs_vspec, flags);
+      bool vcpinfo_ok = app_vcpinfo(parsed_cmd);
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
@@ -862,7 +852,6 @@ int main(int argc, char *argv[]) {
          ddc_ensure_displays_detected();
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
-
       DBGTRC(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
@@ -879,8 +868,6 @@ int main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
-      // ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      // DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
       query_sysenv();
       main_rc = EXIT_SUCCESS;
    }

@@ -42,6 +42,8 @@
 #include "adl/adl_shim.h"
 #endif
 
+#include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
+
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
 #include "query_sysenv_dmidecode.h"
@@ -594,6 +596,7 @@ void query_sysenv() {
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
+   ddc_ensure_displays_detected();
    device_xref_init();
 
    Env_Accumulator * accumulator = env_accumulator_new();

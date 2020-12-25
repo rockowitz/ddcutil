@@ -9,21 +9,16 @@
 #ifndef APP_VCPINFO_H_
 #define APP_VCPINFO_H_
 
-#include <config.h>
+#include <stdbool.h>
 
-#include "ddcutil_types.h"
 
-#include "vcp/vcp_feature_codes.h"
-#include "vcp/vcp_feature_set.h"
+#include "cmdline/parsed_cmd.h"
 
 void
 app_listvcp(
       FILE * fh);
 
 bool
-app_vcpinfo(
-      Feature_Set_Ref *       fref,
-      DDCA_MCCS_Version_Spec  vspec,
-      Feature_Set_Flags       fsflags);
+app_vcpinfo(Parsed_Cmd * parsed_cmd);
 
 #endif /* APP_VCPINFO_H_ */

@@ -6,6 +6,8 @@
 // Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -275,7 +277,6 @@ interpret_feature_flags_r(
         strcat(workbuf, ", ");
         strcat(workbuf, s);
      }
-
    }
    return workbuf;
 }
@@ -349,38 +350,41 @@ report_vcp_feature_table_entry(
 
 /** Mainline for VCPINFO command
  *
- *  \param  fref        feature set reference
- *  \param  mccs_vspec  VCP version spec
- *  \param  fsflags     feature set flags
+ *  \param  parsed_cmd  parsed command line
  *  \return false if no features shown, true otherwise
  */
 bool
-app_vcpinfo(
-      Feature_Set_Ref * fref,
-      DDCA_MCCS_Version_Spec mccs_vspec,
-      Feature_Set_Flags fsflags)
+app_vcpinfo(Parsed_Cmd * parsed_cmd)
 {
    bool vcpinfo_ok = true;
 
+   Feature_Set_Flags fsflags = 0;
+   if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
+      fsflags |= FSF_RW_ONLY;
+   if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
+      fsflags |= FSF_RO_ONLY;
+   if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
+      fsflags |= FSF_WO_ONLY;
+
    VCP_Feature_Set * fset = create_feature_set_from_feature_set_ref(
-                               fref,
-                               mccs_vspec,
+                               parsed_cmd->fref,
+                               parsed_cmd->mccs_vspec,
                                fsflags);
-     if (!fset) {
-        vcpinfo_ok = false;
-     }
-     else {
-        if ( get_output_level() <= DDCA_OL_TERSE)
-           report_feature_set(fset, 0);
-        else {
-           int ct =  get_feature_set_size(fset);
-           int ndx = 0;
-           for (;ndx < ct; ndx++) {
-              VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
-              report_vcp_feature_table_entry(pentry, 0);
-           }
-        }
-        free_vcp_feature_set(fset);
-     }
+   if (!fset) {
+      vcpinfo_ok = false;
+   }
+   else {
+      if ( get_output_level() <= DDCA_OL_TERSE)
+         report_feature_set(fset, 0);
+      else {
+         int ct =  get_feature_set_size(fset);
+         int ndx = 0;
+         for (;ndx < ct; ndx++) {
+            VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
+            report_vcp_feature_table_entry(pentry, 0);
+         }
+      }
+      free_vcp_feature_set(fset);
+   }
    return vcpinfo_ok;
 }
