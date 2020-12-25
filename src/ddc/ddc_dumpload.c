@@ -700,7 +700,7 @@ dumpvcp_as_dumpload_data(
       Display_Handle * dh,
       Dumpload_Data** dumpload_data_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
    Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
@@ -824,7 +824,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 // n. called from api_feature_access.c
 Public_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting, dh=%s", dh_repr_t(dh));
 
    Public_Status_Code psc    = 0;
