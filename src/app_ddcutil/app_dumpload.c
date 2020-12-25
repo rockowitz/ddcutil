@@ -112,7 +112,7 @@ Status_Errno_DDC
 dumpvcp_as_file(Display_Handle * dh, const char * fn)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. fn=%s", fn);
+   DBGMSF(debug, "Starting. dh=%s, fn=%s", dh_repr_t(dh), fn);
    char * filename = (fn) ? strdup(fn) : NULL;
 
    FILE * fout = stdout;
@@ -276,3 +276,37 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
    DBGMSF(debug, "Returning: %s", sbool(ok));
    return ok;
 }
+
+#ifdef UNUSED
+bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. fn = |%s|, pdid = %s", fn, did_repr(pdid));
+
+   bool loadvcp_ok = true;
+   Display_Handle * dh   = NULL;
+   Display_Ref * dref = NULL;
+   if (pdid) {
+       dref = get_display_ref_for_display_identifier(pdid, CALLOPT_ERR_MSG);
+       if (!dref)
+          loadvcp_ok = false;
+       else {
+          ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh
+          if (!dh)
+             loadvcp_ok = false;
+       }
+   }
+
+   if (loadvcp_ok)
+      loadvcp_ok = loadvcp_by_file(fn, dh);
+
+   // if we opened the display, close it
+   if (dh)
+      ddc_close_display(dh);
+   if (dref)
+      free_display_ref(dref);
+
+   DBGMSF(debug, "Done. Returning %s", sbool(loadvcp_ok));
+   return loadvcp_ok;
+}
+#endif
+
