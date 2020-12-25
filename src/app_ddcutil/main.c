@@ -82,6 +82,9 @@
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/app_vcpinfo.h"
+#ifdef INCLUDE_TESTCASES
+#include "app_ddcutil/app_testcases.h"
+#endif
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
@@ -90,9 +93,6 @@
 // #endif
 #endif
 
-#ifdef INCLUDE_TESTCASES
-#include "test/testcases.h"
-#endif
 
 #ifdef USE_API
 #include "public/ddcutil_c_api.h"
@@ -102,25 +102,11 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
+static void init_rtti();
 
 //
 // Report core settings and command line options
 //
-
-static void
-report_performance_options(int depth)
-{
-      int d1 = depth+1;
-      rpt_label(depth, "Performance and Retry Options:");
-      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
-      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
-      bool dsa_enabled =  tsd_get_dsa_enabled_default();
-      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
-      if ( dsa_enabled )
-        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
-      rpt_nl();
-}
-
 
 #define REPORT_FLAG_OPTION(_flagno, _action) \
       rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
@@ -146,7 +132,22 @@ report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
 
 
 static void
-report_settings(Parsed_Cmd * parsed_cmd, int depth)
+report_performance_options(int depth)
+{
+      int d1 = depth+1;
+      rpt_label(depth, "Performance and Retry Options:");
+      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
+      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
+      bool dsa_enabled =  tsd_get_dsa_enabled_default();
+      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
+      if ( dsa_enabled )
+        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
+      rpt_nl();
+}
+
+
+static void
+report_all_options(Parsed_Cmd * parsed_cmd, int depth)
 {
     show_reporting();  // uses fout()
 
@@ -169,33 +170,14 @@ report_settings(Parsed_Cmd * parsed_cmd, int depth)
 
 
 //
-// Initialize and Report Statistics
+//
+// Initialization functions called only once but factored out of main() to clarify mainline
 //
 
-// static long start_time_nanos;
-
 #ifdef ENABLE_ENVCMDS
-static void reset_stats() {
+static void
+reset_stats() {
    ddc_reset_stats_main();
-}
-#endif
-
-#ifdef OLD
-static
-void report_stats(DDCA_Stats_Type stats) {
-   ddc_report_stats_main(stats, get_output_level() >= DDCA_OL_VERBOSE, 0);
-
-   // Report the elapsed time in ddc_report_stats_main().
-   // The start time used there is that at the time of stats initialization,
-   // which is slightly later than start_time_nanos, but the difference is
-   // less than a tenth of a millisecond.  Using that start time allows for
-   // elapsed time to be used from library functions.
-
-   // puts("");
-   // long elapsed_nanos = cur_realtime_nanosec() - start_time_nanos;
-   // printf("Elapsed milliseconds (nanoseconds):             %10ld  (%10ld)\n",
-   //       elapsed_nanos / (1000*1000),
-   //       elapsed_nanos);
 }
 #endif
 
@@ -214,23 +196,9 @@ validate_environment()
    return ok;
 }
 
-// static
-void ensure_vcp_version_set(Display_Handle * dh)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
-   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
-   if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
-      f0printf(stdout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
-            "Output may not be accurate.\n");
-   }
-   DBGMSF(debug, "Done");
-}
 
-
-// Initialization functions called only once but factored out of main() to clarify mainline
-
-void init_tracing(Parsed_Cmd * parsed_cmd)
+static void
+init_tracing(Parsed_Cmd * parsed_cmd)
 {
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                           // extern in core.h
@@ -286,6 +254,7 @@ bool init_utility_options(Parsed_Cmd* parsed_cmd)
    return true;
 }
 
+
 void init_max_tries(Parsed_Cmd * parsed_cmd)
 {
    // n. MAX_MAX_TRIES checked during command line parsing
@@ -324,6 +293,7 @@ void init_max_tries(Parsed_Cmd * parsed_cmd)
    }
 }
 
+
 void init_performance_options(Parsed_Cmd * parsed_cmd)
 {
    enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
@@ -350,21 +320,23 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
 }
 
 
-bool initialize(Parsed_Cmd * parsed_cmd) {
+/** Master initialization function
+ *
+ *   \param  parsed_cmd  parsed command line
+ *   \return ok if successful, false if error
+ */
+static bool
+master_initializer(Parsed_Cmd * parsed_cmd) {
    bool ok = false;
 
    if (!validate_environment())
       goto bye;
-
-
-
 
     if (!init_failsim(parsed_cmd))
        goto bye;      // main_rc == EXIT_FAILURE
 
     // global variable in dyn_dynamic_features:
     enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-
 
     init_ddc_services();   // n. initializes start timestamp
     // overrides setting in init_ddc_services():
@@ -374,9 +346,6 @@ bool initialize(Parsed_Cmd * parsed_cmd) {
 
     if (!init_utility_options(parsed_cmd))
        goto bye;
-
-
-
 
     set_output_level(parsed_cmd->output_level);
     enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
@@ -393,9 +362,8 @@ bool initialize(Parsed_Cmd * parsed_cmd) {
 
     init_performance_options(parsed_cmd);
 
-
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-       report_settings(parsed_cmd, 0);
+       report_all_options(parsed_cmd, 0);
     }
 
    ok = true;
@@ -405,6 +373,10 @@ bye:
 }
 
 
+/** Tests for display detection variants.
+ *
+ *  Controlled by utility option --f4
+ */
 void test_display_detection_variants() {
 
    typedef struct {
@@ -460,9 +432,21 @@ void test_display_detection_variants() {
    }
 }
 
+
 #ifdef ENABLE_ENVCMDS
-void interrogate(Parsed_Cmd * parsed_cmd, bool main_debug) {
-   DBGTRC(main_debug, TRACE_GROUP, "Processing command INTERROGATE...");
+
+/** Execute the INTERROGATE command
+ *
+ *  \param parsed_cmd  parsed command line
+ *
+ *  \remark
+ *  This command is in main.c instead of in a separate app_XXX.c file
+ *  because it executes multiple commands.
+ */
+void interrogate(Parsed_Cmd * parsed_cmd)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Processing command INTERROGATE...");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
    f0printf(fout(), "Setting output level verbose...\n");
@@ -477,7 +461,7 @@ void interrogate(Parsed_Cmd * parsed_cmd, bool main_debug) {
    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
 
    ddc_ensure_displays_detected();    // *** ???
-   DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
+   DBGTRC(debug, TRACE_GROUP, "display detection complete");
 
    query_sysenv();
 #ifdef USE_USB
@@ -520,8 +504,24 @@ void interrogate(Parsed_Cmd * parsed_cmd, bool main_debug) {
       reset_stats();
    }
    f0printf(fout(), "\nDisplay scanning complete.\n");
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
 #endif
+
+
+
+static
+void ensure_vcp_version_set(Display_Handle * dh)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
+   if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
+      f0printf(stdout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
+            "Output may not be accurate.\n");
+   }
+   DBGMSF(debug, "Done");
+}
 
 
 typedef enum {
@@ -542,6 +542,16 @@ const char * displayid_requirement_name(Displayid_Requirement id) {
 }
 
 
+/** Returns a display reference for the display specified on the command line,
+ *  or, if a display is not optional for the command, a reference to the
+ *  default display (--display 1).
+ *
+ *  \param  parsed_cmd  parsed command line
+ *  \param  displayid_required how to handle no display specified on command line
+ *  \param  dref_loc  where to return display reference
+ *  \retval DDCRC_OK
+ *  \retval DDCRC_INVALID_DISPLAY
+ */
 Status_Errno_DDC
 find_dref(
       Parsed_Cmd * parsed_cmd,
@@ -582,10 +592,10 @@ find_dref(
             dref = NULL;
             final_result = DDCRC_INVALID_DISPLAY;
          }
-         // else
-               // check_dynamic_features(dref);    // the hook wrong location
-         // DBGMSG("Synthetic Display_Ref");
-         final_result = DDCRC_OK;
+         else {
+            DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
+            final_result = DDCRC_OK;
+         }
       }
       else {
          f0printf(fout(), "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
@@ -616,9 +626,19 @@ find_dref(
 }
 
 
+/** Execute commands that either require a display or for which a display is optional.
+ *  If a display is required, it has been opened and its display handle is passed
+ *  as an argument.
+ *
+ *  \param parsed_cmd  parsed command line
+ *  \param dh          display handle, if NULL no display was specified on the
+ *                     command line and the command does not require a display
+ *  \retval EXIT_SUCCESS
+ *  \retval EXIT_FAILURE
+ */
 int
 execute_cmd_with_optional_display_handle(
-      Parsed_Cmd *      parsed_cmd,
+      Parsed_Cmd *     parsed_cmd,
       Display_Handle * dh)
 {
    bool debug = false;
@@ -664,35 +684,7 @@ execute_cmd_with_optional_display_handle(
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
-         // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
-         Feature_Set_Flags flags = 0x00;
-         if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
-            flags |= FSF_SHOW_UNSUPPORTED;
-         if (parsed_cmd->flags & CMD_FLAG_FORCE)
-            flags |= FSF_FORCE;
-         if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
-            flags |= FSF_NOTABLE;
-         if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
-            flags |= FSF_RW_ONLY;
-         if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
-            flags |= FSF_RO_ONLY;
-
-         // this is nonsense, getvcp on a WO feature should be
-         // caught by parser
-         if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
-            flags |= FSF_WO_ONLY;
-            DBGMSG("Invalid: GETVCP for WO features");
-            assert(false);
-         }
-         // char * s0 = feature_set_flag_names(flags);
-         // DBGMSG("flags: 0x%04x - %s", flags, s0);
-         // free(s0);
-
-         Public_Status_Code psc = app_show_feature_set_values_by_dh(
-               dh,
-               parsed_cmd->fref,
-               flags
-               );
+         Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
          main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       break;
@@ -802,30 +794,29 @@ execute_cmd_with_optional_display_handle(
   * @retval  EXIT_FAILURE an error occurred
   */
 int main(int argc, char *argv[]) {
-   FILE * fout = stdout;
+   // FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
 
-   // set_trace_levels(TRC_ADL);   // uncomment to enable tracing during initialization
-    init_base_services();  // so tracing related modules are initialized
-    rtti_func_name_table_add(main, "main");
-    Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
-    if (!parsed_cmd) {
-       goto bye;      // main_rc == EXIT_FAILURE
-    }
+   init_base_services();  // so tracing related modules are initialized
+   init_rtti();
+   Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
+   if (!parsed_cmd) {
+      goto bye;      // main_rc == EXIT_FAILURE
+   }
 
-    init_tracing(parsed_cmd);
+   init_tracing(parsed_cmd);
 
-    time_t cur_time = time(NULL);
-    char * cur_time_s = asctime(localtime(&cur_time));
-    if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
-         cur_time_s[strlen(cur_time_s)-1] = 0;
-    DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
-           TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
-           "Starting ddcutil execution, %s",
-           cur_time_s);
+   time_t cur_time = time(NULL);
+   char * cur_time_s = asctime(localtime(&cur_time));
+   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
+        cur_time_s[strlen(cur_time_s)-1] = 0;
+   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
+          TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
+          "Starting ddcutil execution, %s",
+          cur_time_s);
 
-   if (!initialize(parsed_cmd))
+   if (!master_initializer(parsed_cmd))
       goto bye;
 
    Call_Options callopts = CALLOPT_NONE;
@@ -879,33 +870,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
-      int testnum;
-      bool ok = true;
-      int ct = sscanf(parsed_cmd->args[0], "%d", &testnum);
-      if (ct != 1) {
-         f0printf(fout, "Invalid test number: %s\n", parsed_cmd->args[0]);
-         ok = false;
-      }
-      else {
-         ddc_ensure_displays_detected();
-         main_rc = EXIT_SUCCESS;
-         // Why is ddc_save_current_settings() call here?
-         Error_Info * ddc_excp = ddc_save_current_settings(dh);
-         if (ddc_excp)  {
-            f0printf(fout(), "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
-            if (ddc_excp->status_code == DDCRC_RETRIES)
-               f0printf(fout(), "    Try errors: %s", errinfo_causes_string(ddc_excp) );
-            errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
-            errinfo_free(ddc_excp);
-            // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
-            main_rc = EXIT_FAILURE;
-         }
-
-
-         if (!parsed_cmd->pdid)
-            parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-         ok = execute_testcase(testnum, parsed_cmd->pdid);
-      }
+      bool ok = app_testcases(Parsed_Command parsed_cmd);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 #endif
@@ -952,7 +917,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      interrogate(parsed_cmd, main_debug);
+      interrogate(parsed_cmd);
       main_rc = EXIT_SUCCESS;
    }
 #endif
@@ -1019,4 +984,12 @@ bye:
       free_parsed_cmd(parsed_cmd);
    release_base_services();
    return main_rc;
+}
+
+
+static void init_rtti() {
+   RTTI_ADD_FUNC(main);
+   RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
+   RTTI_ADD_FUNC(find_dref);
+   RTTI_ADD_FUNC(interrogate);
 }
