@@ -125,16 +125,14 @@ ddc_open_display(
       ddcrc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
       goto bye;
    }
-
+   // DBGMSF(debug, "lockrc = %s, DREF_OPEN = %s", psc_desc(lockrc), sbool(dref->flags&DREF_OPEN));
    ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
 
    if (dref->flags & DREF_OPEN) {
-      // assert(ddcrc == DDCRC_ALREADY_OPEN);   // from lock_distinct_display()
       ddcrc = DDCRC_ALREADY_OPEN;
       goto bye;
    }
 
-   assert(ddcrc == 0);
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
@@ -179,8 +177,11 @@ ddc_open_display(
       break;
 
    case DDCA_IO_ADL:
+      PROGRAM_LOGIC_ERROR("Case DDCA_IO_ADL");
+#ifdef OLD
       dh = create_adl_display_handle_from_display_ref(dref);  // n. sets dh->dref = dref
       dref->pedid = adlshim_get_parsed_edid_by_dh(dh);
+#endif
       break;
 
    case DDCA_IO_USB:
