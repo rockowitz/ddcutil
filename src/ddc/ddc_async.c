@@ -32,7 +32,7 @@ typedef struct {
 
 // function to be run in thread
 gpointer threaded_get_vcp_value(gpointer data) {
-      bool debug = true;
+      bool debug = false;
 
       Async_Getvcp_Data * parms = data;
       assert(memcmp(parms->marker, ASYNC_GETVCP_DATA_MARKER, 4) == 0 );
