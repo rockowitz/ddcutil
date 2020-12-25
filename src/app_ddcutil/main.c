@@ -109,9 +109,8 @@ static void init_rtti();
 //
 
 #define REPORT_FLAG_OPTION(_flagno, _action) \
-      rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
-                  (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", \
-                        _action)
+rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
+     (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", _action)
 static void
 report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
 {
