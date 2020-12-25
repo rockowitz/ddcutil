@@ -271,19 +271,17 @@ static void probe_hiddev(int depth) {
 }
 
 
-/* Report information about USB connected monitors
- *
- * Arguments:    none
- *
- * Returns:      nothing
- */
-static void query_usb_monitors() {
-   rpt_nl();
-   rpt_vstring(0, "Checking for USB connected monitors...");
-
+/** Master function to query USB aspects of the system environment
+  */
+void query_usbenv() {
    DDCA_Output_Level output_level = get_output_level();
 
+   rpt_label(0, "The following tests probe for monitors that use USB for VCP communication...");
    rpt_nl();
+
+   rpt_vstring(0, "Checking for USB connected monitors...");
+   rpt_nl();
+
    rpt_vstring(1, "Using lsusb to summarize USB devices...");
    execute_shell_cmd_rpt("lsusb|sort", 2);
    rpt_nl();
@@ -371,13 +369,3 @@ static void query_usb_monitors() {
    rpt_vstring(0, "Checking for USB connected monitors complete");
 }
 
-
-/* Master function to query USB aspects of the system environment
- *
- * Arguments:    none
- *
- * Returns:      nothing
- */
-void query_usbenv() {
-   query_usb_monitors();
-}
