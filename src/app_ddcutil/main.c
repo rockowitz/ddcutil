@@ -889,6 +889,7 @@ int main(int argc, char *argv[]) {
       else {
          ddc_ensure_displays_detected();
          main_rc = EXIT_SUCCESS;
+         // Why is ddc_save_current_settings() call here?
          Error_Info * ddc_excp = ddc_save_current_settings(dh);
          if (ddc_excp)  {
             f0printf(fout(), "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
