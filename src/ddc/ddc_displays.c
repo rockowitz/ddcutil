@@ -648,6 +648,8 @@ typedef struct {
  */
 static Display_Criteria *
 new_display_criteria() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
    Display_Criteria * criteria = calloc(1, sizeof(Display_Criteria));
    criteria->dispno = -1;
    criteria->i2c_busno  = -1;
@@ -656,6 +658,7 @@ new_display_criteria() {
    criteria->hiddev = -1;
    criteria->usb_busno = -1;
    criteria->usb_devno = -1;
+   DBGMSF(debug, "Done. Returning: %p", criteria);
    return criteria;
 }
 
@@ -851,7 +854,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 Display_Ref *
 ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF(debug, "Starting. did=%s", did_repr(did));
    if (debug)
       dbgrpt_display_identifier(did, 1);
 
