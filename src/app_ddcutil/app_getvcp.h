@@ -15,6 +15,7 @@
 #include "base/displays.h"
 #include "base/feature_sets.h"
 #include "base/status_code_mgt.h"
+#include "cmdline/parsed_cmd.h"
 
 Public_Status_Code
 app_show_vcp_subset_values_by_dh(
@@ -26,8 +27,7 @@ app_show_vcp_subset_values_by_dh(
 Public_Status_Code
 app_show_feature_set_values_by_dh(
       Display_Handle *      dh,
-      Feature_Set_Ref *     fsref,
-      Feature_Set_Flags     flags);
+      Parsed_Cmd *          parsed_cmd);
 
 void
 app_read_changes_forever(

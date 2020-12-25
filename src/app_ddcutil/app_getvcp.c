@@ -28,6 +28,8 @@
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 
+#include "cmdline/parsed_cmd.h"
+
 #include "vcp/vcp_feature_codes.h"
 
 #include "dynvcp/dyn_feature_codes.h"
@@ -300,15 +302,40 @@ void app_show_vcp_subset_values_by_dref(
 Public_Status_Code
 app_show_feature_set_values_by_dh(
       Display_Handle *     dh,
-      Feature_Set_Ref *    fsref,
-      Feature_Set_Flags    flags)
+      Parsed_Cmd *         parsed_cmd)
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names_t(flags);
-      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(fsref), s0);
-      // dbgrpt_feature_set_ref(fsref,1);
+      char * s0 = feature_set_flag_names_t(parsed_cmd->flags);
+      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(parsed_cmd->fref), s0);
+      // dbgrpt_feature_set_ref(parsed_cmd->fref,1);
    }
+
+   Feature_Set_Ref *    fsref = parsed_cmd->fref;
+
+   // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
+   Feature_Set_Flags flags = 0x00;
+   if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
+      flags |= FSF_SHOW_UNSUPPORTED;
+   if (parsed_cmd->flags & CMD_FLAG_FORCE)
+      flags |= FSF_FORCE;
+   if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
+      flags |= FSF_NOTABLE;
+   if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
+      flags |= FSF_RW_ONLY;
+   if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
+      flags |= FSF_RO_ONLY;
+
+   // this is nonsense, getvcp on a WO feature should be
+   // caught by parser
+   if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
+      flags |= FSF_WO_ONLY;
+      DBGMSG("Invalid: GETVCP for WO features");
+      assert(false);
+   }
+   // char * s0 = feature_set_flag_names(flags);
+   // DBGMSG("flags: 0x%04x - %s", flags, s0);
+   // free(s0);
 
    Public_Status_Code psc = 0;
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
