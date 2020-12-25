@@ -520,9 +520,273 @@ void interrogate(Parsed_Cmd * parsed_cmd, bool main_debug) {
       reset_stats();
    }
    f0printf(fout(), "\nDisplay scanning complete.\n");
-
 }
 #endif
+
+
+typedef enum {
+   DISPLAY_ID_REQUIRED,
+   DISPLAY_ID_USE_DEFAULT,
+   DISPLAY_ID_OPTIONAL
+} Displayid_Requirement;
+
+
+const char * displayid_requirement_name(Displayid_Requirement id) {
+   char * result = NULL;
+   switch (id) {
+   case DISPLAY_ID_REQUIRED:    result = "DISPLAY_ID_REQUIRED";     break;
+   case DISPLAY_ID_USE_DEFAULT: result = "DISPLAY_ID_USE_DEFAULT";  break;
+   case DISPLAY_ID_OPTIONAL:    result = "DISPLAY_ID_OPTIONAL";     break;
+   }
+   return result;
+}
+
+
+Status_Errno_DDC
+find_dref(
+      Parsed_Cmd * parsed_cmd,
+      Displayid_Requirement displayid_required,
+      Display_Ref ** dref_loc)
+{
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "did: %s, set_default_display: %s",
+                                    did_repr(parsed_cmd->pdid),
+                                    displayid_requirement_name(displayid_required));
+   FILE * outf = fout();
+
+   Status_Errno_DDC final_result = DDCRC_OK;
+
+   Display_Ref * dref = NULL;
+   Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
+   if (parsed_cmd->flags & CMD_FLAG_FORCE)
+      callopts |= CALLOPT_FORCE;
+
+   Display_Identifier * did_work = parsed_cmd->pdid;
+   if (did_work && did_work->id_type == DISP_ID_BUSNO) {
+      // special handling for --busno
+      int busno = did_work->busno;
+      // is this really a monitor?
+      I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
+      if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
+         dref = create_bus_display_ref(busno);
+         dref->dispno = -1;     // should use some other value for unassigned vs invalid
+         dref->pedid = businfo->edid;    // needed?
+         // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
+         dref->detail = businfo;
+         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+         dref->flags |= DREF_DDC_IS_MONITOR;
+         dref->flags |= DREF_TRANSIENT;
+         if (!initial_checks_by_dref(dref)) {
+            f0printf(outf, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+            free_display_ref(dref);
+            dref = NULL;
+            final_result = DDCRC_INVALID_DISPLAY;
+         }
+         // else
+               // check_dynamic_features(dref);    // the hook wrong location
+         // DBGMSG("Synthetic Display_Ref");
+         final_result = DDCRC_OK;
+      }
+      else {
+         f0printf(fout(), "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
+         final_result = DDCRC_INVALID_DISPLAY;
+      }
+   }       // DISP_ID_BUSNO
+   else {
+      if (!did_work && displayid_required == DISPLAY_ID_OPTIONAL) {
+         dref = NULL;
+         final_result = DDCRC_OK;
+      }
+      else {
+         if (!did_work)
+            did_work = create_dispno_display_identifier(1);   // default monitor
+         // assert(did_work);
+         DBGTRC(debug, TRACE_GROUP, "Detecting displays...");
+         ddc_ensure_displays_detected();
+         DBGTRC(debug, TRACE_GROUP, "display detection complete");
+         dref = get_display_ref_for_display_identifier(did_work, callopts);
+         final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
+      }
+   }  // !DISP_ID_BUSNO
+
+   *dref_loc = dref;
+   DBGTRC(debug, TRACE_GROUP,
+                 "Done. *dref_loc = %p, returning %s", *dref_loc, psc_desc(final_result));
+   return final_result;
+}
+
+
+int
+execute_cmd_with_optional_display_handle(
+      Parsed_Cmd *      parsed_cmd,
+      Display_Handle * dh)
+{
+   bool debug = false;
+   int main_rc =EXIT_SUCCESS;
+
+   if (dh) {
+      if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
+         DBGTRC(debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
+                            parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
+         dh->dref->vcp_version_cmdline = parsed_cmd->mccs_vspec;
+      }
+   }
+
+   DBGTRC(debug, TRACE_GROUP, "%s", cmdid_name(parsed_cmd->cmd_id));
+   switch(parsed_cmd->cmd_id) {
+
+   case CMDID_LOADVCP:
+      {
+         // check_dynamic_features();
+         // ensure_vcp_version_set();
+
+         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
+         // loadvcp will search monitors to find the one matching the
+         // identifiers in the record
+         ddc_ensure_displays_detected();
+         bool loadvcp_ok = loadvcp_by_file(parsed_cmd->args[0], dh);
+         main_rc = (loadvcp_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+         break;
+      }
+
+   case CMDID_CAPABILITIES:
+      {
+         check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
+
+         DDCA_Status ddcrc = app_capabilities(dh);
+         main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         break;
+      }
+
+   case CMDID_GETVCP:
+      {
+         check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
+
+         // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
+         Feature_Set_Flags flags = 0x00;
+         if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
+            flags |= FSF_SHOW_UNSUPPORTED;
+         if (parsed_cmd->flags & CMD_FLAG_FORCE)
+            flags |= FSF_FORCE;
+         if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
+            flags |= FSF_NOTABLE;
+         if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
+            flags |= FSF_RW_ONLY;
+         if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
+            flags |= FSF_RO_ONLY;
+
+         // this is nonsense, getvcp on a WO feature should be
+         // caught by parser
+         if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
+            flags |= FSF_WO_ONLY;
+            DBGMSG("Invalid: GETVCP for WO features");
+            assert(false);
+         }
+         // char * s0 = feature_set_flag_names(flags);
+         // DBGMSG("flags: 0x%04x - %s", flags, s0);
+         // free(s0);
+
+         Public_Status_Code psc = app_show_feature_set_values_by_dh(
+               dh,
+               parsed_cmd->fref,
+               flags
+               );
+         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+      }
+      break;
+
+   case CMDID_SETVCP:
+      {
+         check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
+
+         main_rc = EXIT_SUCCESS;
+         Error_Info * ddc_excp = NULL;
+         for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
+            Parsed_Setvcp_Args * cur =
+                  &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
+            ddc_excp = app_set_vcp_value(
+                  dh,
+                  cur->feature_code,
+                  cur->feature_value_type,
+                  cur->feature_value,
+                  parsed_cmd->flags & CMD_FLAG_FORCE);
+            if (ddc_excp) {
+               f0printf(ferr(), "%s\n", ddc_excp->detail);
+               if (ddc_excp->status_code == DDCRC_RETRIES)
+                  f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
+               ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
+               main_rc = EXIT_FAILURE;
+               break;
+            }
+         }
+      }
+      break;
+
+   case CMDID_SAVE_SETTINGS:
+      if (parsed_cmd->argct != 0) {
+         f0printf(fout(), "SCS command takes no arguments\n");
+         main_rc = EXIT_FAILURE;
+      }
+      else if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+         f0printf(fout(), "SCS command is not supported for USB devices\n");
+         main_rc = EXIT_FAILURE;
+      }
+      else {
+         main_rc = EXIT_SUCCESS;
+         Error_Info * ddc_excp = ddc_save_current_settings(dh);
+         if (ddc_excp)  {
+            f0printf(fout(), "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
+            if (ddc_excp->status_code == DDCRC_RETRIES)
+               f0printf(fout(), "    Try errors: %s", errinfo_causes_string(ddc_excp) );
+            errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
+            errinfo_free(ddc_excp);
+            // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
+            main_rc = EXIT_FAILURE;
+         }
+      }
+      break;
+
+   case CMDID_DUMPVCP:
+      {
+         DBGMSF(debug, "case CMDID_DUMPVCP");
+         // MCCS vspec can affect whether a feature is NC or TABLE
+         check_dynamic_features(dh->dref);
+         ensure_vcp_version_set(dh);
+
+         Public_Status_Code psc =
+               dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
+                                      ? parsed_cmd->args[0]
+                                      : NULL );
+         main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
+         break;
+      }
+
+   case CMDID_READCHANGES:
+      check_dynamic_features(dh->dref);
+      ensure_vcp_version_set(dh);
+
+      app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
+      main_rc = EXIT_FAILURE;
+      break;
+
+   case CMDID_PROBE:
+      check_dynamic_features(dh->dref);
+      ensure_vcp_version_set(dh);
+
+      app_probe_display_by_dh(dh);
+      main_rc = EXIT_SUCCESS;
+      break;
+
+   default:
+      main_rc = EXIT_FAILURE;
+      break;
+   }    // switch
+
+   return main_rc;
+}
 
 
 //
@@ -560,8 +824,6 @@ int main(int argc, char *argv[]) {
            TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
            "Starting ddcutil execution, %s",
            cur_time_s);
-
-
 
    if (!initialize(parsed_cmd))
       goto bye;
@@ -626,6 +888,18 @@ int main(int argc, char *argv[]) {
       }
       else {
          ddc_ensure_displays_detected();
+         main_rc = EXIT_SUCCESS;
+         Error_Info * ddc_excp = ddc_save_current_settings(dh);
+         if (ddc_excp)  {
+            f0printf(fout(), "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
+            if (ddc_excp->status_code == DDCRC_RETRIES)
+               f0printf(fout(), "    Try errors: %s", errinfo_causes_string(ddc_excp) );
+            errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
+            errinfo_free(ddc_excp);
+            // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
+            main_rc = EXIT_FAILURE;
+         }
+
 
          if (!parsed_cmd->pdid)
             parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
@@ -635,56 +909,25 @@ int main(int argc, char *argv[]) {
    }
 #endif
 
-   else if (parsed_cmd->cmd_id == CMDID_LOADVCP) {
-      ddc_ensure_displays_detected();
-
-      char * fn = strdup( parsed_cmd->args[0] );
-      // DBGMSG("Processing command loadvcp.  fn=%s", fn );
-      Display_Handle * dh   = NULL;
-      bool loadvcp_ok = true;
-      if (parsed_cmd->pdid) {
-         Display_Ref * dref = get_display_ref_for_display_identifier(
-                                 parsed_cmd->pdid, callopts | CALLOPT_ERR_MSG);
-         if (!dref)
-            loadvcp_ok = false;
-         else {
-            ddc_open_display(dref, callopts | CALLOPT_ERR_MSG, &dh);  // rc == 0 iff dh, removed CALLOPT_ERR_ABORT
-            if (!dh)
-               loadvcp_ok = false;
-         }
-      }
-      if (loadvcp_ok) {
-         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
-         loadvcp_ok = loadvcp_by_file(fn, dh);
-      }
-
-      // if we opened the display, we close it
-      if (dh)
-         ddc_close_display(dh);
-      free(fn);
-      main_rc = (loadvcp_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
-   }
 
 #ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
-      ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
-
-      f0printf(fout, "The following tests probe the runtime environment using multiple overlapping methods.\n");
+      // ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
+      // DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
       query_sysenv();
       main_rc = EXIT_SUCCESS;
    }
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
+      main_rc = EXIT_SUCCESS;
       DBGTRC(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
-      ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
-      DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
-      f0printf(fout, "The following tests probe for USB connected monitors.\n");
-      // DBGMSG("Exploring USB runtime environment...\n");
+      // ddc_ensure_displays_detected();   // *** NEEDED HERE ??? ***
+      // DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
+
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
@@ -713,236 +956,39 @@ int main(int argc, char *argv[]) {
    }
 #endif
 
-   // *** Commands that require Display Identifier ***
+   // *** Commands that may require Display Identifier ***
    else {
-      DBGTRC(main_debug, TRACE_GROUP, "display identifier supplied");
-      if (!parsed_cmd->pdid)
-         parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
-      // assert(parsed_cmd->pdid);
-      // returns NULL if not a valid display:
-      Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
-      if (parsed_cmd->flags & CMD_FLAG_FORCE)
-         callopts |= CALLOPT_FORCE;
-
-      // If --nodetect and --bus options were specified,skip scan for all devices.
-      // --nodetect option not needed, just do it
-      // n. useful even if not much speed up, since avoids cluttering stats
-      // with all the failures during detect
       Display_Ref * dref = NULL;
-      // if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO && (parsed_cmd->flags & CMD_FLAG_NODETECT)) {
-      if (parsed_cmd->pdid->id_type == DISP_ID_BUSNO) {
-         int busno = parsed_cmd->pdid->busno;
-         // is this really a monitor?
-         I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
-         if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
-            dref = create_bus_display_ref(busno);
-            dref->dispno = -1;     // should use some other value for unassigned vs invalid
-            dref->pedid = businfo->edid;    // needed?
-            // dref->pedid = i2c_get_parsed_edid_by_busno(parsed_cmd->pdid->busno);
-            dref->detail = businfo;
-            dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-            dref->flags |= DREF_DDC_IS_MONITOR;
-            dref->flags |= DREF_TRANSIENT;
-            if (!initial_checks_by_dref(dref)) {
-               f0printf(fout, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
-               free_display_ref(dref);
-               dref = NULL;
-            }
-            // else
-               // check_dynamic_features(dref);    // the hook wrong location
-            // DBGMSG("Synthetic Display_Ref");
-         }
-         else {
-            f0printf(fout, "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
-         }
-      }  // DISP_ID_BUSNO
-      else {
-         DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
-         ddc_ensure_displays_detected();
-         DBGTRC(main_debug, TRACE_GROUP, "display detection complete");
-         dref = get_display_ref_for_display_identifier(parsed_cmd->pdid, callopts);
-      }  // !DISP_ID_BUSNO
-
-      if (dref) {
-         Display_Handle * dh = NULL;
-         callopts |=  CALLOPT_ERR_MSG;    // removed CALLOPT_ERR_ABORT
-         DBGMSF(main_debug, "mainline - display detection complete, about to call ddc_open_display() for dref" );
-         ddc_open_display(dref, callopts, &dh);
-
-         if (dh) {
-            // here or per command?  cur thread only or globally?
-            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
-
-#ifdef OUT
-            if (// parsed_cmd->cmd_id == CMDID_CAPABILITIES ||
-                parsed_cmd->cmd_id == CMDID_GETVCP       ||
-                parsed_cmd->cmd_id == CMDID_READCHANGES
-               )
-            {
-#endif
-
-               if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
-                  DBGTRC(main_debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
-                                     parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
-                  // dref->vcp_version = parsed_cmd->mccs_vspec;
-                  dref->vcp_version_cmdline = parsed_cmd->mccs_vspec;
-               }
-
-#ifdef OUT
-               else {
-                  DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
-                  if (vspec.major < 2 && get_output_level() >= DDCA_OL_NORMAL) {
-                     f0printf(fout, "VCP (aka MCCS) version for display is undetected or less than 2.0. "
-                           "Output may not be accurate.\n");
-                  }
-               }
-            }
-#endif
-
-            DBGTRC(main_debug, TRACE_GROUP, "%s", cmdid_name(parsed_cmd->cmd_id));
-            switch(parsed_cmd->cmd_id) {
-
-            case CMDID_CAPABILITIES:
-               {
-                  check_dynamic_features(dref);
-                  ensure_vcp_version_set(dh);
-
-                  DDCA_Status ddcrc = app_capabilities(dh);
-                  main_rc = (ddcrc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-                  break;
-               }
-
-            case CMDID_GETVCP:
-               {
-                  check_dynamic_features(dref);
-                  ensure_vcp_version_set(dh);
-
-                  // DBGMSG("parsed_cmd->flags: 0x%04x", parsed_cmd->flags);
-                  Feature_Set_Flags flags = 0x00;
-                  if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
-                     flags |= FSF_SHOW_UNSUPPORTED;
-                  if (parsed_cmd->flags & CMD_FLAG_FORCE)
-                     flags |= FSF_FORCE;
-                  if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
-                     flags |= FSF_NOTABLE;
-                  if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
-                     flags |= FSF_RW_ONLY;
-                  if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
-                     flags |= FSF_RO_ONLY;
-
-                  // this is nonsense, getvcp on a WO feature should be
-                  // caught by parser
-                  if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
-                     flags |= FSF_WO_ONLY;
-                     DBGMSG("Invalid: GETVCP for WO features");
-                     assert(false);
-                  }
-                  // char * s0 = feature_set_flag_names(flags);
-                  // DBGMSG("flags: 0x%04x - %s", flags, s0);
-                  // free(s0);
-
-                  Public_Status_Code psc = app_show_feature_set_values_by_dh(
-                        dh,
-                        parsed_cmd->fref,
-                        flags
-                        );
-                  main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-               }
-               break;
-
-            case CMDID_SETVCP:
-               {
-                  check_dynamic_features(dref);
-                  ensure_vcp_version_set(dh);
-
-                  main_rc = EXIT_SUCCESS;
-                  Error_Info * ddc_excp = NULL;
-                  for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
-                     Parsed_Setvcp_Args * cur =  &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
-                     ddc_excp = app_set_vcp_value(
-                           dh,
-                           cur->feature_code,
-                           cur->feature_value_type,
-                           cur->feature_value,
-                           parsed_cmd->flags & CMD_FLAG_FORCE);
-                     if (ddc_excp) {
-                        f0printf(ferr(), "%s\n", ddc_excp->detail);
-                        if (ddc_excp->status_code == DDCRC_RETRIES)
-                           f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-                        ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
-                        main_rc = EXIT_FAILURE;
-                        break;
-                     }
-                  }
-               }
-               break;
-
-            case CMDID_SAVE_SETTINGS:
-               if (parsed_cmd->argct != 0) {
-                  f0printf(fout, "SCS command takes no arguments\n");
-                  main_rc = EXIT_FAILURE;
-               }
-               else if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-                  f0printf(fout, "SCS command not supported for USB devices\n");
-                  main_rc = EXIT_FAILURE;
-               }
-               else {
-                  main_rc = EXIT_SUCCESS;
-                  Error_Info * ddc_excp = ddc_save_current_settings(dh);
-                  if (ddc_excp)  {
-                     f0printf(fout, "Save current settings failed. rc=%s\n", psc_desc(ddc_excp->status_code));
-                     if (ddc_excp->status_code == DDCRC_RETRIES)
-                        f0printf(fout, "    Try errors: %s", errinfo_causes_string(ddc_excp) );
-                     errinfo_report(ddc_excp, 0);   // ** ALTERNATIVE **/
-                     errinfo_free(ddc_excp);
-                     // ERRINFO_FREE_WITH_REPORT(ddc_excp, report_exceptions);
-                     main_rc = EXIT_FAILURE;
-                  }
-               }
-               break;
-
-            case CMDID_DUMPVCP:
-               {
-                  // MCCS vspec can affect whether a feature is NC or TABLE
-                  check_dynamic_features(dref);
-                  ensure_vcp_version_set(dh);
-
-                  Public_Status_Code psc =
-                        dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
-                                               ? parsed_cmd->args[0]
-                                               : NULL );
-                  main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
-                  break;
-               }
-
-            case CMDID_READCHANGES:
-               check_dynamic_features(dref);
-               ensure_vcp_version_set(dh);
-
-               app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
-               main_rc = EXIT_FAILURE;
-               break;
-
-            case CMDID_PROBE:
-               check_dynamic_features(dref);
-               ensure_vcp_version_set(dh);
-
-               app_probe_display_by_dh(dh);
-               main_rc = EXIT_SUCCESS;
-               break;
-
-            default:
-               main_rc = EXIT_FAILURE;
-               break;
-            }
-
-            ddc_close_display(dh);
-         }
-         if (dref->flags & DREF_TRANSIENT)
-            free_display_ref(dref);
-      }   // if (dref)
-      else {
+      Status_Errno_DDC  rc =
+      find_dref(parsed_cmd,
+               (parsed_cmd->cmd_id == CMDID_LOADVCP) ? DISPLAY_ID_OPTIONAL : DISPLAY_ID_REQUIRED,
+               &dref);
+      if (rc != DDCRC_OK) {
          main_rc = EXIT_FAILURE;
+      }
+      else {
+         Display_Handle * dh = NULL;
+         if (dref) {
+            DBGMSF(main_debug,
+                   "mainline - display detection complete, about to call ddc_open_display() for dref" );
+            Status_Errno_DDC ddcrc = ddc_open_display(dref, callopts |CALLOPT_ERR_MSG, &dh);
+            ASSERT_IFF( (ddcrc==0), dh);
+            if (!dh) {
+               f0printf(ferr(), "Error %s opening display ref %s", psc_desc(ddcrc), dref_repr_t(dref));
+               main_rc = EXIT_FAILURE;
+            }
+         }  // dref
+
+         if (main_rc == EXIT_SUCCESS) {
+            // affects all current threads and new threads
+            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+            main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
+         }
+
+         if (dh)
+               ddc_close_display(dh);
+         if (dref && (dref->flags & DREF_TRANSIENT))
+            free_display_ref(dref);
       }
    }
 
@@ -950,7 +996,8 @@ int main(int argc, char *argv[]) {
 #ifdef ENABLE_ENVCMDS
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
-      ) {
+      )
+   {
       ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
       // report_timestamp_history();  // debugging function
    }
