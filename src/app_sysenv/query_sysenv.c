@@ -591,6 +591,9 @@ void final_analysis(Env_Accumulator * accum, int depth) {
  * Returns:      nothing
  */
 void query_sysenv() {
+   rpt_label(0,
+       "The following tests probe the runtime environment using multiple overlapping methods.");
+
    device_xref_init();
 
    Env_Accumulator * accumulator = env_accumulator_new();
