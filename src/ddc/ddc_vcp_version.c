@@ -101,6 +101,49 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
 }
 
 
+DDCA_MCCS_Version_Spec get_saved_vcp_version(
+      Display_Ref * dref)
+{
+   bool debug = false;
+   DDCA_MCCS_Version_Spec result = DDCA_VSPEC_UNKNOWN;
+   // TMI
+   if (debug) {
+      DBGMSG("Starting. ds=%s", dref_repr_t(dref) );
+      DBGMSG("          dref->vcp_version =  %d.%d (%s)",
+             dref->vcp_version.major,         dref->vcp_version.minor,         format_vspec(dref->vcp_version) );
+      DBGMSG("          dref->vcp_version_xdf = %d.%d (%s) ",
+             dref->vcp_version_xdf.major,     dref->vcp_version_xdf.minor,     format_vspec(dref->vcp_version_xdf) );
+      DBGMSG("          dref->vcp_version_cmdline = %d.%d (%s)",
+             dref->vcp_version_cmdline.major, dref->vcp_version_cmdline.minor, format_vspec(dref->vcp_version_cmdline) );
+      if (dref->dfr) {
+      DBGMSG("          dref->dfr->vspec = %d.%d (%s) ",
+             dref->dfr->vspec.major,          dref->dfr->vspec.minor,          format_vspec(dref->dfr->vspec) );
+      }
+      else {
+      DBGMSG("          dref->dfr == NULL");
+      }
+   }
+
+   if (vcp_version_is_valid(dref->vcp_version_cmdline, false)) {
+       result = dref->vcp_version_cmdline;
+       DBGMSF(debug, "Using vcp_version_cmdline = %s", format_vspec(result));
+    }
+
+    else if (dref->dfr && vcp_version_is_valid(dref->dfr->vspec, false)) {
+        result = dref->dfr->vspec;
+        DBGMSF(debug, "Using dfr->vspec = %s", format_vspec(result));
+    }
+
+    else {
+       result = dref->vcp_version_xdf;
+       DBGMSF(debug, "returning dref->vcp_version_xdf = %s", format_vspec(result));
+    }
+
+    DBGMSF(debug, "Returning: %d.%d (%s)", result.major, result.minor, format_vspec(result));
+    return result;
+ }
+
+
 /** Gets the VCP version.
  *
  *  Because the VCP version is used repeatedly for interpreting other
@@ -132,28 +175,10 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
       }
    }
 
-   if (vcp_version_is_valid(dh->dref->vcp_version_cmdline, false)) {
-      result = dh->dref->vcp_version_cmdline;
-      DBGMSF(debug, "Using vcp_version_cmdline = %s", format_vspec(result));
-   }
-
-   else if (dh->dref->dfr && vcp_version_is_valid(dh->dref->dfr->vspec, false)) {
-       result = dh->dref->dfr->vspec;
-       DBGMSF(debug, "Using dfr->vspec = %s", format_vspec(result));
-   }
-
-   else {
-      if (vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
-         if (debug) {
-            DBGMSG("vcp_version_xdf not set == DDCA_VSPEC_UNQUERIED");
-            dbgrpt_display_handle(dh, /*msg=*/ NULL, 1);
-         }
-
-         result = set_vcp_version_xdf_by_dh(dh);
-         assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
-      }
-      else
-         result = dh->dref->vcp_version_xdf;
+   result = get_saved_vcp_version(dh->dref);
+   if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
+      result = set_vcp_version_xdf_by_dh(dh);
+      assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
    }
 
    DBGMSF(debug, "Returning: %d.%d (%s)", result.major, result.minor, format_vspec(result));
@@ -180,21 +205,22 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    DBGMSF(debug, "     dref->vcp_version_cmdline =  %d.%d",
                        dref->vcp_version_cmdline.major, dref->vcp_version_cmdline.minor);
    if (dref->dfr)
-   DBGMSF(debug, "dref->dfr - ", dref->dfr->vspec.major, dref->dfr->vspec.minor);
+   DBGMSF(debug, "     dref->dfr - ", dref->dfr->vspec.major, dref->dfr->vspec.minor);
    else
-   DBGMSF(debug, "dref->dfr is null");
+   DBGMSF(debug, "     dref->dfr is null");
 
    // ddc_open_display() should not fail
    assert(dref->flags & DREF_DDC_COMMUNICATION_WORKING);
 
-   Display_Handle * dh = NULL;
-   // no need to check return code since aborting if error
-   // should never fail, since open already succeeded - but what if locked?
-   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-   assert(psc == 0);
-   // dref->vcp_version =
-   DDCA_MCCS_Version_Spec result = get_vcp_version_by_dh(dh);
-   ddc_close_display(dh);
+   DDCA_MCCS_Version_Spec result = get_saved_vcp_version(dref);
+   if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
+      Display_Handle * dh = NULL;
+      Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+      assert(psc == 0);
+      result = set_vcp_version_xdf_by_dh(dh);
+      assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
+      ddc_close_display(dh);
+   }
 
    assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );
    DBGMSF(debug, "Returning: %d.%d (%s)", result.major, result.minor, format_vspec(result));
