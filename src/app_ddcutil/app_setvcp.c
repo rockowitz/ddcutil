@@ -97,44 +97,24 @@ parse_vcp_value(
 Error_Info *
 app_set_vcp_value(
       Display_Handle * dh,
-#ifdef OLD
-      char *           feature,
-#else
       Byte             feature_code,
       Setvcp_Value_Type value_type,
-#endif
       char *           new_value,
       bool             force)
 {
    FILE * ferr = stderr;
    bool debug = false;
-#ifdef OLD
-   DBGTRC(debug,DDCA_TRC_TOP, "Starting. feature=%s, new_value=%s, force=%s", feature, new_value, sbool(force));
-#else
    DBGTRC(debug,DDCA_TRC_TOP, "Starting. feature=0x%02x, new_value=%s, value_type=%s, force=%s",
                 feature_code, new_value, setvcp_value_type_name(value_type), sbool(force));
 
-#endif
    assert(new_value && strlen(new_value) > 0);
 
    DDCA_Status                ddcrc = 0;
    Error_Info *               ddc_excp = NULL;
    long                       longtemp;
-#ifdef OLD
-   Byte                       feature_code;
-#endif
    Display_Feature_Metadata * dfm = NULL;
    bool                       good_value = false;
    DDCA_Any_Vcp_Value         vrec;
-
-#ifdef OLD
-   bool ok = any_one_byte_hex_string_to_byte_in_buf(feature, &feature_code);
-   if (!ok) {
-      f0printf(ferr, "Invalid VCP feature code: %s\n", feature);
-      ddc_excp = errinfo_new2(DDCRC_ARG, __func__, "Invalid VCP feature code: %s\n", feature);
-      goto bye;
-   }
-#endif
 
    dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, (force || feature_code >= 0xe0) );
    if (!dfm) {
@@ -151,22 +131,8 @@ app_set_vcp_value(
       goto bye;
    }
 
-#ifdef OLD
-   // Check for relative values
-   char value_prefix = ' ';
-   if (new_value[0] == '+' || new_value[0] == '-') {
-      assert(strlen(new_value) > 1);
-      value_prefix = new_value[0];
-      new_value = new_value+1;
-   }
-#endif
-
    if (dfm->feature_flags & DDCA_TABLE) {
-#ifdef OLD
-      if (value_prefix != ' ') {
-#else
       if (value_type != VALUE_TYPE_ABSOLUTE) {
-#endif
          f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
          ddc_excp = errinfo_new2(DDCRC_INVALID_OPERATION, __func__,
                                  "Relative VCP values valid only for Continuous VCP features");
@@ -196,11 +162,7 @@ app_set_vcp_value(
          goto bye;
       }
 
-#ifdef OLD
-      if ( value_prefix != ' ') {
-#else
       if (value_type != VALUE_TYPE_ABSOLUTE) {
-#endif
          if ( !(dfm->feature_flags & DDCA_CONT) ) {
             f0printf(ferr, "Relative VCP values valid only for Continuous VCP features\n");
             // char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
@@ -230,21 +192,13 @@ app_set_vcp_value(
             goto bye;
          }
 
-#ifdef OLD
-         if ( value_prefix == '+') {
-#else
          if ( value_type == VALUE_TYPE_RELATIVE_PLUS) {
-#endif
             longtemp = parsed_response->cur_value + longtemp;
             if (longtemp > parsed_response->max_value)
                longtemp = parsed_response->max_value;
          }
          else {
-#ifdef OLD
-            assert( value_prefix == '-');
-#else
             assert( value_type == VALUE_TYPE_RELATIVE_MINUS);
-#endif
             longtemp = parsed_response->cur_value - longtemp;
             if (longtemp < 0)
                longtemp = 0;
