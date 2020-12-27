@@ -3,10 +3,8 @@
  *  Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#define _GNU_SOURCE      // for asprintf()
 
 /** \cond */
 #include <assert.h>
@@ -21,11 +19,10 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/core.h"
 #include "base/feature_metadata.h"
-
-#include "core.h"
-#include "monitor_model_key.h"
-#include "vcp_version.h"
+#include "base/monitor_model_key.h"
+#include "base/vcp_version.h"
 
 #include "dynamic_features.h"
 
@@ -468,7 +465,7 @@ create_monitor_dynamic_features(
                   ADD_ERROR(linectr, "Unexpected model name \"%s\"", t1.rest);
                }
             }
-            else if (streq(t1.word, "MCCS_VERSION")) {
+            else if (streq(t1.word, "MCCS_VERSION") || streq(t1.word, "VCP_VERSION") ) {
                // mccs_version_seen = true;   // not required for now
                // default as set by calloc() is 0.0, which is DDCA_VSPEC_UNKNOWN
                // returns DDCA_VSPEC_UKNOWN if invalid
