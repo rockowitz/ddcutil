@@ -62,47 +62,6 @@ Tokenized first_word(char * s) {
    return result;
 }
 
-
-// TODO: modify parse_vcp_value() in app_setvcp.c to use this function.
-//       Move this function to a more general location.
-
-/** Converts a string containing a (possible) hex value to canonical form.
- *
- *  If the value starts with "x" or "X", or ends with "h" or "H", it is
- *  modified to start with "0x".
- *  Otherwise, the returned value is identical to the input value.
- *
- *  @param string_value  value to convert
- *  @return canonicalized value (caller is responsible for freeing)
- *
- *  @remark
- *  Consider converting to a function that uses a thread-specific buffer, making
- *  the returned value valid until the next call to this function on the current
- *  thread.  Would relieve the caller of responsibility for freeing the value.
- */
-
-char * canonicalize_possible_hex_value(char * string_value) {
-   assert(string_value);
-
-   int bufsz = strlen(string_value) + 1 + 1;  // 1 for possible increased length, 1 for terminating null
-   char * buf = calloc(1, bufsz);
-   if (*string_value == 'X' || *string_value == 'x' ) {
-      // increases string size by 1
-      snprintf(buf, bufsz, "0x%s", string_value+1);
-   }
-   else if (*(string_value + strlen(string_value)-1) == 'H' ||
-            *(string_value + strlen(string_value)-1) == 'h' )
-   {
-      // increases string size by 1
-      int newlen = strlen(string_value)-1;
-      snprintf(buf, bufsz, "0x%.*s", newlen, string_value);
-   }
-   else
-      strcpy(buf, string_value);
-   // DBGMSG("string_value=|%s|, returning |%s|", string_value, buf);
-   return buf;
-}
-
 // End of generic functions
 
 

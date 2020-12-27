@@ -34,6 +34,9 @@
  *  \param   parsed_value    location where to return result
  *
  *  \return  true if conversion successful, false if not
+ *
+ *  \todo
+ *  Consider using canonicalize_possible_hex_value()
  */
 bool
 parse_vcp_value(

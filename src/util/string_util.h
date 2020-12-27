@@ -110,6 +110,7 @@ bool str_to_float(const char * sval, float * p_fval);
 // Hex value conversion.
 //
 
+char * canonicalize_possible_hex_value(char * string_value);
 bool hhs_to_byte_in_buf(const char * s,  Byte * result);    // converts null terminated string into buffer
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result);
 bool hhc_to_byte_in_buf(const char * hh, Byte * result);    // converts 2 characters at hh into buffer
