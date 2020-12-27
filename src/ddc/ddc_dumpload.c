@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -708,7 +708,7 @@ dumpvcp_as_dumpload_data(
    // timestamp:
    dumped_data->timestamp_millis = time(NULL);
 
-   DBGMSF(debug, "Befoere get_vcp_version_by_dh()");
+   DBGMSF(debug, "Before get_vcp_version_by_dh()");
    dumped_data->vcp_version = get_vcp_version_by_dh(dh);  // use function to ensure set
 
    // identification information from edid:
