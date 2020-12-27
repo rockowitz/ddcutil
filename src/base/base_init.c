@@ -1,5 +1,5 @@
 /** @file base_init.c
- * Master base services initialization
+ *  Initialize and release base services.
  */
 
 // Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
