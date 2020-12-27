@@ -50,7 +50,7 @@
 #include "vcp/parse_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
 
-#include "dynvcp/dyn_dynamic_features.h"
+#include "dynvcp/dyn_feature_records.h"
 #include "dynvcp/dyn_parsed_capabilities.h"
 
 #include "i2c/i2c_bus_core.h"

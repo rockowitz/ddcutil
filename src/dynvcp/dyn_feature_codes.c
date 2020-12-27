@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2020Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -22,7 +22,7 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-#include "dynvcp/dyn_dynamic_features.h"
+#include "dynvcp/dyn_feature_records.h"
 
 #include "dynvcp/dyn_feature_codes.h"
 

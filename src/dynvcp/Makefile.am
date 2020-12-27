@@ -27,4 +27,4 @@ libdynvcp_la_SOURCES =      \
 dyn_feature_set.c           \
 dyn_parsed_capabilities.c   \
 dyn_feature_codes.c         \
-dyn_dynamic_features.c
+dyn_feature_records.c

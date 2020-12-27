@@ -1,6 +1,6 @@
 /** @file app_dynamic_features.c */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -19,7 +19,7 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
-#include "dynvcp/dyn_dynamic_features.h"
+#include "dynvcp/dyn_feature_records.h"
 
 #include "app_dynamic_features.h"
 
