@@ -11,7 +11,6 @@
 
 #include <stdbool.h>
 
-
 #include "cmdline/parsed_cmd.h"
 
 void
