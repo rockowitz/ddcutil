@@ -16,7 +16,6 @@
 
 #include "base/displays.h"
 
-
 extern bool enable_dynamic_features;
 
 Error_Info *
@@ -25,6 +24,8 @@ dfr_load_by_mmk(
       Dynamic_Features_Rec ** dfr_loc);
 
 Error_Info * dfr_check_by_dref(Display_Ref * dref);
+#ifdef UNUSED
 Error_Info * dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk);
+#endif
 
 #endif /* DYN_FEATURE_RECORDS_H_ */
