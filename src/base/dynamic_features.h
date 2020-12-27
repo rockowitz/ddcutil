@@ -17,16 +17,13 @@
 
 #include "ddcutil_types.h"
 
-// #include "util/edid.h"
 #include "util/error_info.h"
 
-// #include "monitor_model_key.h"
 
 typedef enum {
    DFR_FLAGS_NONE      = 0,
    DFR_FLAGS_NOT_FOUND = 1
 } DFR_Flags;
-
 
 #define DYNAMIC_FEATURES_REC_MARKER "DFRC"
 typedef struct {
@@ -39,7 +36,6 @@ typedef struct {
    DFR_Flags                  flags;
    GHashTable *               features;     // hash table of DDCA_Feature_Metadata
 } Dynamic_Features_Rec;
-
 
 // value valid until next call:
 char *
@@ -57,8 +53,6 @@ void
 dfr_free(
       Dynamic_Features_Rec *  frec);
 
-
-
 Error_Info *
 create_monitor_dynamic_features(
       const char *            mfg_id,
@@ -67,7 +61,6 @@ create_monitor_dynamic_features(
       GPtrArray *             lines,
       const char *            filename,     // may be NULL
       Dynamic_Features_Rec ** dynamic_features_loc);
-
 
 DDCA_Feature_Metadata *
 get_dynamic_feature_metadata(
@@ -79,10 +72,8 @@ void
 free_feature_metadata(
       gpointer data);    // i.e. DDCA_Feature_Metadata *
 
-
 void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
       int                     depth);
-
 
 #endif /* BASE_DYNAMIC_FEATURES_H_ */
