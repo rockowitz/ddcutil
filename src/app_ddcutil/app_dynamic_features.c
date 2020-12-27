@@ -19,7 +19,7 @@
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
 
-#include "dynvcp/dyn_feature_records.h"
+#include "dynvcp/dyn_feature_files.h"
 
 #include "app_dynamic_features.h"
 

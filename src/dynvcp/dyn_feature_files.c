@@ -1,4 +1,4 @@
-/** @file dyn_feature_records.c
+/** @file dyn_feature_files.c
  *
  *  Maintain user-defined (aka dynamic) feature definitions
  */
@@ -35,7 +35,7 @@
 #endif
 #include "base/monitor_model_key.h"
 
-#include "dyn_feature_records.h"
+#include "dyn_feature_files.h"
 
 
 // Default trace class for this file

@@ -22,9 +22,8 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-#include "dynvcp/dyn_feature_records.h"
-
 #include "dynvcp/dyn_feature_codes.h"
+#include "dynvcp/dyn_feature_files.h"
 
 
 // Trace class for this file

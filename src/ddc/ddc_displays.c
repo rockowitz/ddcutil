@@ -49,7 +49,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include "dynvcp/dyn_feature_records.h"
+#include "dynvcp/dyn_feature_files.h"
 
 #include "public/ddcutil_types.h"
 

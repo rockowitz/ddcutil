@@ -25,7 +25,7 @@
 #include "ddc/ddc_vcp_version.h"
 
 #include "dynvcp/dyn_feature_codes.h"
-#include "dynvcp/dyn_feature_records.h"
+#include "dynvcp/dyn_feature_files.h"
 #include "dynvcp/dyn_feature_set.h"
 
 #include "private/ddcutil_c_api_private.h"
