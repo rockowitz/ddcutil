@@ -112,10 +112,10 @@ static void init_rtti();
 rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
      (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", _action)
 static void
-report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
+report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
-   if (parsed_cmd->output_level >= DDCA_OL_VV) {
-      rpt_label(depth, "Utility Options:");
+
+      rpt_label(depth, "Experimental Options:");
       REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
       REPORT_FLAG_OPTION(2, "Unused");
       REPORT_FLAG_OPTION(3, "Unused");
@@ -125,7 +125,7 @@ report_utility_options(Parsed_Cmd * parsed_cmd, int depth)
 
       rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
       rpt_nl();
-   }
+
  }
 #undef REPORT_FLAG_OPTION
 
@@ -164,7 +164,8 @@ report_all_options(Parsed_Cmd * parsed_cmd, int depth)
 
     report_performance_options(depth);
 
-    report_utility_options(parsed_cmd, depth);
+    if (parsed_cmd->output_level >= DDCA_OL_VV)
+       report_experimental_options(parsed_cmd, depth);
 }
 
 
