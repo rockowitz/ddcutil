@@ -689,11 +689,9 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
  */
 static void load_id_file(Device_Id_Type id_type){
    bool debug = false;
-
    if (debug)
       printf("(%s) id_type=%d\n", __func__, id_type);
 
-   // char * id_fn = simple_device_fn[id_type];
    char * device_id_fqfn = devid_find_file(id_type);
    if (device_id_fqfn) {
       // char device_id_fqfn[MAX_PATH];
@@ -712,9 +710,30 @@ static void load_id_file(Device_Id_Type id_type){
       g_ptr_array_free(all_lines, true);
       free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found
+   else {
+      if (debug)
+         printf("(%s) File not found, creating dummy mlm", __func__);
+      if (id_type == ID_TYPE_PCI) {
+         MLM_Level pci_id_levels[] = {
+               {"vendor",   10000, 0},
+               {"device",      20, 0},
+               {"subsystem",    5, 0}
+         };
+          pci_vendors_mlm = mlm_create("PCI Devices", 3, pci_id_levels);
+      }
+      else {
+         MLM_Level usb_id_levels[] = {
+               {"vendor", 5000, 0},
+               {"product",  20, 0},
+               {"interface", 10, 0}
+         };
+         usb_vendors_mlm = mlm_create("USB Devices", 3, usb_id_levels);
+      }
+   }
 
    if (debug)
-      printf("(%s) Done\n", __func__);
+      printf("(%s) Done. pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
+             __func__, pci_vendors_mlm, usb_vendors_mlm);
    return;
 }
 
@@ -1001,13 +1020,13 @@ char * devid_hid_descriptor_country_code(ushort id) {
 bool devid_ensure_initialized() {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting\n", __func__);
+      printf("(%s) Starting. pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
+             __func__, pci_vendors_mlm, usb_vendors_mlm);
    bool ok = (pci_vendors_mlm && usb_vendors_mlm);
 
    if (!ok) {
       if (debug)
-         printf("(%s) Loading.  pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
-                __func__,  pci_vendors_mlm, usb_vendors_mlm);
+         printf("(%s) Loading.\n", __func__);
       load_id_file(ID_TYPE_PCI);
       load_id_file(ID_TYPE_USB);
       ok = true;
