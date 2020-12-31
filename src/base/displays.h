@@ -187,7 +187,7 @@ typedef struct _display_ref {
    int                      usb_bus;
    int                      usb_device;
    char *                   usb_hiddev_name;
-   DDCA_MCCS_Version_Spec   vcp_version;
+   DDCA_MCCS_Version_Spec   vcp_version_old;
    DDCA_MCCS_Version_Spec   vcp_version_xdf;
    DDCA_MCCS_Version_Spec   vcp_version_cmdline;
    Dref_Flags               flags;
