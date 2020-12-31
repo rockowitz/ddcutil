@@ -108,7 +108,7 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Opening display %s, callopts=%s",
+   DBGTRC(debug, TRACE_GROUP, "Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
    assert(dh_loc);
 
@@ -187,7 +187,7 @@ ddc_open_display(
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         DBGMSF(debug, "Opening USB device: %s", dref->usb_hiddev_name);
+         DBGTRC(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
          assert(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
@@ -226,7 +226,7 @@ bye:
    assert(ddcrc <= 0);
    assert( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGMSF(debug, "Done.  Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
    return ddcrc;
 }
 
@@ -242,7 +242,7 @@ bye:
 Status_Errno
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
               dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Display_Ref * dref = dh->dref;
    Status_Errno rc = 0;
@@ -288,7 +288,7 @@ ddc_close_display(Display_Handle * dh) {
    unlock_distinct_display(display_id);
 
    free_display_handle(dh);
-   DBGMSF(debug, "Done. dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done. dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
    return rc;
 }
 
