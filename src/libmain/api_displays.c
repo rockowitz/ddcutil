@@ -390,7 +390,8 @@ ddca_open_display2(
         *dh_loc = dh;
    }
    assert( (rc==0 && *dh_loc) || (rc!=0 && !*dh_loc));
-   DBGTRC(debug, DDCA_TRC_API,  "Returning rc=%s, dh_loc=%p", psc_desc(rc), dh_loc);
+   DBGTRC(debug, DDCA_TRC_API,  "Returning rc=%s, dh_loc=%p -> %s",
+                                psc_desc(rc), dh_loc, dh_repr_t(*dh_loc));
    return rc;
 }
 
@@ -402,7 +403,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   DBGMSF(debug, "Starting. dh = %s", dh_repr_t(dh));
+   DBGTRC(debug, DDCA_TRC_API, "Starting. dh = %s", dh_repr_t(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          rc = DDCRC_ARG;
@@ -412,7 +413,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
          rc = ddc_close_display(dh);
       }
    }
-   DBGMSF(debug, "Done.     Returning %s", psc_desc(rc));
+   DBGTRC(debug, DDCA_TRC_API, "Done.     Returning %s", psc_desc(rc));
    return rc;
 }
 
@@ -653,43 +654,16 @@ ddca_get_display_info_list2(
             curinfo->usb_device = dref->usb_device;
          }
 
-         DDCA_MCCS_Version_Spec vspec =
-               //  dref->vcp_version;
-               get_vcp_version_by_dref(dref);
-#ifdef OLD
-         DDCA_MCCS_Version_Id version_id = DDCA_MCCS_VNONE;
-#endif
+         DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
          if (dref->dispno != -1) {
-            // DBGMSF(debug, "dref->vcp_version (1) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
-            // hack:
-            // vcp version is unqueried to improve performance of the command line version
-            // mccs_version_spec_to_id has assert error if unqueried
-            if (vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED)) {
-               vspec = get_vcp_version_by_dref(dref);
-            }
-#ifdef OLD
-            version_id = mccs_version_spec_to_id(vspec);
-#endif
-            // DBGMSF(debug, "dref->vcp_version (2) = %d.%d", dref->vcp_version.major, dref->vcp_version.minor);
+            vspec = get_vcp_version_by_dref(dref);
          }
-
          memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
          g_strlcpy(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
          g_strlcpy(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
          g_strlcpy(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
          curinfo->product_code  = dref->pedid->product_code;
-#ifdef OLD
-         curinfo->edid_bytes    = dref->pedid->bytes;
-         // or should these be memcpy'd instead of just pointers, can edid go away?
-         curinfo->mfg_id         = dref->pedid->mfg_id;
-         curinfo->model_name     = dref->pedid->model_name;
-         curinfo->sn             = dref->pedid->serial_ascii;
-         curinfo->product_code   = dref->pedid->product_code;
-#endif
          curinfo->vcp_version    = vspec;
-#ifdef OLD
-         curinfo->vcp_version_id = version_id;
-#endif
          curinfo->dref           = dref;
 
 #ifdef MMID
@@ -798,12 +772,10 @@ dbgrpt_display_info(
    ddca_report_display_info(dinfo, depth);
    int d1 = depth+1;
 
-   rpt_vstring(d1, "dref:                %p - %s", dinfo->dref, dref_repr_t(dinfo->dref));
+   rpt_vstring(d1, "dref:                %s", dref_repr_t(dinfo->dref));
    if (dinfo->dref) {  // paranoid, should never be NULL
-      rpt_vstring(d1, "VCP Version (dref):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version,
-                                                  format_vspec(((Display_Ref*)dinfo->dref)->vcp_version));
-      rpt_vstring(d1, "VCP Version (dref xdf):  %p=%s", &((Display_Ref*)dinfo->dref)->vcp_version_xdf,
-                                                  format_vspec(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
+      rpt_vstring(d1, "VCP Version (dref):  %s",    format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_old));
+      rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
    }
 }
 
