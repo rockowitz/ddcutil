@@ -53,7 +53,6 @@ Mulitplexing.
  */
 
 
-
 // Describes a status code range
 typedef struct {
    Retcode_Range_Id            id;
@@ -175,8 +174,6 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
 }
 
 
-
-
 /** Shifts a status code from the specified modulation range to the base range
  *
  *  @param  rc        status code to demodulate
@@ -186,7 +183,7 @@ int modulate_rc(int rc, Retcode_Range_Id range_id){
  *
  * @remark
  * It is an error to pass an unmodulated status code as an
- * argument to this funtion.
+ * argument to this function.
  */
 int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    // TODO: check that rc is in the specified modulation range
@@ -201,6 +198,7 @@ int demodulate_rc(int rc, Retcode_Range_Id range_id) {
    }
    return rc;
 }
+
 
 /** Determines the modulation range for a status code.
  *
@@ -269,7 +267,6 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 
    return pinfo;
 }
-
 
 
 #define GSC_WORKBUF_SIZE 300
