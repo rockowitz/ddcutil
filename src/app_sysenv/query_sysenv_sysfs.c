@@ -288,7 +288,7 @@ void each_video_device_i2c(
  *  vendor/device etc from modalias extracted into individual attributes.
  *  Other device subdirectories do not necessarily have these attributes.
  *
- *  \param sysfs_device_dir   always /sys/bus/pck/devices/nnnn:nn:nn.n
+ *  \param sysfs_device_dir   always /sys/bus/pci/devices/nnnn:nn:nn.n
  *  \param depth              logical indentation depth
  */
 void report_device_identification(char * sysfs_device_dir, int depth) {
