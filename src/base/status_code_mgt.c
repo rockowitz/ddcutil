@@ -211,7 +211,7 @@ int demodulate_rc(int rc, Retcode_Range_Id range_id) {
 Retcode_Range_Id get_modulation(Public_Status_Code rc) {
    int ndx = 0;
    int abs_rc = abs(rc);
-   Retcode_Range_Id range_id;
+   Retcode_Range_Id range_id = RR_ERRNO;
    for (;ndx < retcode_range_ct; ndx++) {
       if (abs_rc >= retcode_range_table[ndx].base && abs_rc <= retcode_range_table[ndx].max) {
          range_id = retcode_range_table[ndx].id;
