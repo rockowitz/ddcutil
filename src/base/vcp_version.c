@@ -174,6 +174,22 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    return private_buffer;
 }
 
+char * format_vspec_verbose(DDCA_MCCS_Version_Spec vspec) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. vspec=%d.%d", vspec.major, vspec.minor);
+   static GPrivate  format_vspec_verbose_key = G_PRIVATE_INIT(g_free);
+   char * private_buffer = get_thread_fixed_buffer(&format_vspec_verbose_key, 30);
+
+   if ( vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED) )
+      g_snprintf(private_buffer, 30, "Unqueried (%d.%d)", vspec.major, vspec.minor);
+   else if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) )
+      g_snprintf(private_buffer, 30, "Unknown (%d.%d)", vspec.major, vspec.minor);
+   else
+      g_snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
+   DBGMSF(debug, "Returning: |%s|", private_buffer);
+   return private_buffer;
+}
+
 
 Value_Name_Title_Table version_id_table = {
       VNT(DDCA_MCCS_V10,   "1.0"),

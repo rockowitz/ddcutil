@@ -53,6 +53,7 @@ bool vcp_version_eq(DDCA_MCCS_Version_Spec v1,  DDCA_MCCS_Version_Spec v2);
 bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown);
 
 char * format_vspec(DDCA_MCCS_Version_Spec vspec);
+char * format_vspec_verbose(DDCA_MCCS_Version_Spec vspec);
 DDCA_MCCS_Version_Spec parse_vspec(char * s);
 
 char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id);
