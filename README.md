@@ -50,10 +50,10 @@ When posting questions regarding **ddcutil** configuration, please execute the f
 capture its output in a file, and submit the output as an attachement.
 
 ~~~
-$ ddcutil interrogate 2>&1
+$ ddcutil interrogate 
 ~~~
 
-For further information about technical support, see http://www.ddcutil.com/support.
+For further information about technical support, see https://www.ddcutil.com/tech_support.
 
 ## Author
 
