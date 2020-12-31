@@ -59,7 +59,7 @@ For complete documentation, use the \fI--help\fP option or see the web site
 
 
 .SH RESTRICTIONS
-\fBddcutil\fP does not support with laptop monitors, which do not implement DDC/CI.
+\fBddcutil\fP does not support laptop monitors, which do not implement DDC/CI.
 
 
 .PP
@@ -99,7 +99,7 @@ These commands address special situations.
 .TP
 .BI "dumpvcp " filename
 Save color profile related VCP feature values in a file.
-If no file name is specified, one is generated and the file is saved in $HOME/.local/share/ddcutil>
+If no file name is specified, one is generated and the file is saved in $HOME/.local/share/ddcutil,
 .TP 
 .BI "loadvcp " filename
 Set VCP feature values from a file.  The monitor to which the values will be applied is determined by the monitor identification stored in the file. 
@@ -220,12 +220,18 @@ Show extended detail
 Options that modify behavior
 .TQ
 .BI "--mccs " "MCCS version"
-Tailor \fBvcpinfo\fP output to a particular MCCS version, e.g. 2.1
+Tailor command input and 
+output to a particular MCCS version, e.g. 2.1
 .TQ
 .B "--enable-usb, --disable-usb"
 Enable or disable support for monitors that implement USB commuincation with the Virtual Control Panel.
 The default is 
 .B "--disable-usb"
+.TQ
+.B "--enable-udf, --disable-udf"
+Enable or disable support for user supplied feature definitions.
+The default is
+.B "--disable-udf"
 .TQ
 .B "--force-slave-address"
 Take control of slave addresses on the I2C bus even they are in use.
