@@ -41,6 +41,8 @@
 // TODO: Move most functions into directory src/base
 //
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_API;
+
 const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST = {{0}};
 
 
@@ -178,7 +180,7 @@ ddca_get_feature_list_by_dref(
          ddca_dref,
          {
                bool debug = false;
-               DBGMSF(debug, "Starting. feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
+               DBGTRC(debug, TRACE_GROUP, "Starting. feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
                              "include_table_features=%s, feature_list_loc=%p",
                       feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
                       dref, dref_repr_t(dref),
@@ -188,7 +190,7 @@ ddca_get_feature_list_by_dref(
 
                DDCA_MCCS_Version_Spec vspec = // dref->vcp_version;
                                              get_vcp_version_by_dref(dref);
-               DBGMSF(debug, "vspec=%p=%s=%d.%d", &dref->vcp_version, format_vspec(dref->vcp_version), dref->vcp_version.major, dref->vcp_version.minor);
+               DBGMSF(debug, "vspec=%%", format_vspec_verbose(vspec) );
                // redundant:
                // assert( !vcp_version_eq( vspec, DDCA_VSPEC_UNQUERIED) );
                // Whether a feature is a table feature can vary by version, so can't
@@ -238,13 +240,12 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
 
             // bye:
-               DBGMSF(debug, "Done. feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
+               DBGTRC(debug, TRACE_GROUP, "Done. feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
                      feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
                      subset, feature_subset_name(subset), psc_desc(psc));
-               if (debug) {
-                  DBGMSG(    "      Feature list: %s", feature_list_string(feature_list_loc, "", ","));
+               DBGTRC(debug, TRACE_GROUP,
+                      "      Feature list: %s", feature_list_string(feature_list_loc, "", ","));
                   // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
-               }
          }
       );
 }
@@ -471,8 +472,8 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Feature_Metadata **    info_loc) //
 {
    bool debug = false;
-   DBGMSF(debug, "feature_code=0x%02x, vspec=%d.%d, create_default_if_not_found=%s, info_loc=%p",
-                 feature_code, vspec.major, vspec.minor, sbool(create_default_if_not_found), info_loc);
+   DBGMSF(debug, "feature_code=0x%02x, vspec=%s, create_default_if_not_found=%s, info_loc=%p",
+                 feature_code, format_vspec_verbose(vspec), sbool(create_default_if_not_found), info_loc);
    assert(info_loc);
    free_thread_error_detail();
    DDCA_Feature_Metadata * meta = NULL;
@@ -513,7 +514,7 @@ ddca_get_feature_metadata_by_dref(
          ddca_dref,
          {
                bool debug = false;
-               DBGMSF(debug, "feature_code=0x%02x, dref=%s, create_default_if_not_found=%s, meta_loc=%p",
+               DBGTRC(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, create_default_if_not_found=%s, meta_loc=%p",
                              feature_code, dref_repr_t(dref), sbool(create_default_if_not_found), metadata_loc);
                assert(metadata_loc);
 
@@ -529,11 +530,7 @@ ddca_get_feature_metadata_by_dref(
                }
                *metadata_loc = external_metadata;
 
-               if (debug) {
-                  DBGMSG("Returning: %s", psc_desc(psc));
-                  if (psc == 0)
-                     dbgrpt_ddca_feature_metadata(external_metadata, 2);
-               }
+               DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
                assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
       );
@@ -736,7 +733,7 @@ ddca_get_simple_sl_value_table_by_dref(
       {
          assert(value_table_loc);
          psc = ddca_get_simple_sl_value_table_by_vspec(
-                  feature_code, dref->vcp_version, dref->mmid, value_table_loc);
+                  feature_code, dref->vcp_version_old, dref->mmid, value_table_loc);
          assert ( (psc==0 && *value_table_loc) || (psc!=0 && !*value_table_loc) );
       }
    )
