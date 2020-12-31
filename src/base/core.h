@@ -58,10 +58,6 @@ typedef uint16_t Retry_Op_Value;
 #define ASSERT_MARKER(_struct_ptr, _marker_value) \
    assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
 
-#define ASSERT_IFF(_cond1, _cond2) \
-   assert( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
-
-
 //
 // Initialization
 //

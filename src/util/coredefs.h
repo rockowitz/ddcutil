@@ -21,6 +21,9 @@ typedef unsigned char Byte;
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
+#define ASSERT_IFF(_cond1, _cond2) \
+   assert( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
+
 #ifdef TARGET_BSD
 #define I2C "iic"
 #else
