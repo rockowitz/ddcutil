@@ -27,6 +27,7 @@
 
 // #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_services.h"
@@ -156,6 +157,11 @@ _ddca_init(void) {
    if (!library_initialized) {
       init_base_services();
       init_ddc_services();
+
+      // hard code the threshold for now
+      int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
+      // int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
+      ddc_set_async_threshold(threshold);
 
       // no longer needed, values are initialized on first use per-thread
       // set_output_level(DDCA_OL_NORMAL);
@@ -513,10 +519,12 @@ ddca_is_sleep_suppression_enabled() {
 }
 
 
-void
+double
 ddca_set_default_sleep_multiplier(double multiplier)
 {
+   double result = tsd_get_default_sleep_multiplier_factor();
    tsd_set_default_sleep_multiplier_factor(multiplier);
+   return result;
 }
 
 double
@@ -529,6 +537,7 @@ void
 ddca_set_global_sleep_multiplier(double multiplier)
 {
    ddca_set_default_sleep_multiplier(multiplier);
+   return;
 }
 
 double
@@ -538,13 +547,15 @@ ddca_get_global_sleep_multiplier()
 }
 
 // for current thread
-void
+double
 ddca_set_sleep_multiplier(double multiplier)
 {
    // bool debug = true;
+   double result = tsd_get_sleep_multiplier_factor();
    // DBGMSF(debug, "Setting %5.2f", multiplier);
    tsd_set_sleep_multiplier_factor(multiplier);
    // DBGMSF(debug, "Done");
+   return result;
 }
 
 double

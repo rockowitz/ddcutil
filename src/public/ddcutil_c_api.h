@@ -236,15 +236,15 @@ ddca_is_verify_enabled(void);
 /** Sets the sleep multiplier factor to be used for new threads.
  *
  *  \param[in]  multiplier
+ *  \return     old multiplier
  *
  *  \remark
  *  This function is intended for use only during program initialization,
  *  typically from a value passed on the command line.
  *  Consequently there are no associated lock/unlock functions for the value.
  */
-void
+double
 ddca_set_default_sleep_multiplier(double multiplier);
-
 
 /** Gets the sleep multiplier factor used for new threads
  *
@@ -253,13 +253,11 @@ ddca_set_default_sleep_multiplier(double multiplier);
 double
 ddca_get_default_sleep_multiplier();
 
-
 /** \deprecated use #ddca_set_default_sleep_multiplier()
  */
 __attribute__ ((deprecated ("use ddca_set_default_sleep_multiplier")))
 void
 ddca_set_global_sleep_multiplier(double multiplier);
-
 
 /** \deprecated use #ddca_get_default_display_multiplier()
  */
@@ -271,10 +269,10 @@ ddca_get_global_sleep_multiplier();
 /** Sets the sleep multiplier factor for the current thread.
  *
  *  @param[in] multiplier
+ *  @return    old multiplier
  */
-void
+double
 ddca_set_sleep_multiplier(double multiplier);
-
 
 /** Gets the sleep multiplier for the current thread
  *
