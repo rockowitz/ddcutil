@@ -785,10 +785,11 @@ interpret_vcp_feature_response_std(
          if (vcpresp->result_code == 0x01) {
             // Do not report as DDC error if VCP code is 0x00, since that value is used
             // for probing.
-            bool msg_emitted = DBGTRC(debug, TRACE_GROUP,
+            // bool msg_emitted =
+                  DBGTRC(debug, TRACE_GROUP,
                                       "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
-            if (requested_vcp_code != 0x00 && !msg_emitted)
-               DDCMSG(debug, "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
+            // if (requested_vcp_code != 0x00 && !msg_emitted)
+            //    DDCMSG(debug, "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             aux_data->valid_response = true;
          }
          else {
