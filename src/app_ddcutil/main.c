@@ -300,9 +300,10 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
    enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
-   if (parsed_cmd->flags & CMD_FLAG_ASYNC)
-      threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
-   ddc_set_async_threshold(threshold);
+   if (parsed_cmd->flags & CMD_FLAG_ASYNC) {
+      threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
+      ddc_set_async_threshold(threshold);
+   }
 
    if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
       tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread

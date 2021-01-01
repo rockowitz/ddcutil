@@ -159,7 +159,7 @@ _ddca_init(void) {
       init_ddc_services();
 
       // hard code the threshold for now
-      int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
+      int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
       // int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
       ddc_set_async_threshold(threshold);
 

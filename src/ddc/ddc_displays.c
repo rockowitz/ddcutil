@@ -66,12 +66,13 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 static GPtrArray * all_displays = NULL;    // all detected displays
 static int dispno_max = 0;                 // highest assigned display number
-static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD;
+static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
 #ifdef USE_USB
 static bool detect_usb_displays = true;
 #else
 static bool detect_usb_displays = false;
 #endif
+
 
 void ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
@@ -256,18 +257,18 @@ bye:
  */
 bool initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref) );
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
 
-   psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);   // deleted CALLOPT_ERR_ABORT
+   psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc == 0)  {
       result = initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
 
-   DBGMSF(debug, "Done. dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
+   DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
    return result;
 }
 
@@ -278,11 +279,11 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 
    Display_Ref * dref = data;
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-   DBGMSF(debug, "Starting. dref = %s", dref_repr_t(dref) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref = %s", dref_repr_t(dref) );
 
    initial_checks_by_dref(dref);
    // g_thread_exit(NULL);
-   DBGMSF(debug, "Done. dref = %s, returning NULL", dref_repr_t(dref) );
+   DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning NULL", dref_repr_t(dref) );
    return NULL;
 }
 
@@ -942,7 +943,7 @@ get_display_ref_for_display_identifier(
  *
  * \return array of #Display_Ref
  */
-static
+// static
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
@@ -1022,7 +1023,6 @@ ddc_detect_all_displays() {
       }
    }
 #endif
-
 
    // verbose output is distracting within scans
    // saved and reset here so that async threads are not adjusting output level
@@ -1138,7 +1138,12 @@ ddc_is_usb_display_detection_enabled() {
 
 void
 init_ddc_displays() {
-   rtti_func_name_table_add(initial_checks_by_dh, "initial_checks_by_dh");
+   RTTI_ADD_FUNC(async_scan);
+   RTTI_ADD_FUNC(ddc_detect_all_displays);
+   RTTI_ADD_FUNC(initial_checks_by_dh);
+   RTTI_ADD_FUNC(initial_checks_by_dref);
+   RTTI_ADD_FUNC(non_async_scan);
+   RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    // dbgrpt_func_name_table(0);
 }
 

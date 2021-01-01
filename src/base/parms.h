@@ -103,8 +103,9 @@
 
 /** Parallelize display checks during initialization if at least this number of displays */
 // on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
-#define DISPLAY_CHECK_ASYNC_THRESHOLD   3
 #define DISPLAY_CHECK_ASYNC_NEVER    0xff
+#define DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD  3
+#define DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT   DISPLAY_CHECK_ASYNC_NEVER
 
 #define DEFAULT_SLEEP_LESS true
 
