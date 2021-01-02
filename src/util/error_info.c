@@ -734,13 +734,13 @@ errinfo_report(Error_Info * erec, int depth) {
    // rpt_vstring(depth, "(%s) Status code: %d", __func__, erec->status_code);
    // rpt_vstring(depth, "(%s) Location: %s", __func__, (erec->func) ? erec->func : "not set");
    // rpt_vstring(depth, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
-   rpt_push_output_dest(stderr);
+   // rpt_push_output_dest(stderr);
    rpt_vstring(depth, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set",
          errinfo_desc_func(erec->status_code) );  // can't call psc_desc(), violates layering
    if (erec->detail)
       rpt_label(depth+1, erec->detail);
-   rpt_pop_output_dest();
+   // rpt_pop_output_dest();
 
    if (erec->cause_ct > 0) {
       rpt_vstring(depth, "Caused by: ");
