@@ -88,16 +88,6 @@ if INCLUDE_TESTCASES_COND
 ddcutil_SOURCES += app_testcase.c
 endif
 
-# it's a hack for using API calls in standalone executable
-if USE_API_COND
-ddcutil_SOURCES += \
-   libmain/api_base.c \
-   libmain/api_displays.c \
-   libmain/api_metadata.c \
-   libmain/api_feature_access.c \
-   libmain/api_capabilities.c
-endif
-
 #
 # Files only in libddcutil
 #

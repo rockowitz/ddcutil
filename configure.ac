@@ -506,18 +506,6 @@ AS_IF( [test "x$enable_force_suse" = "xyes"],
          AC_MSG_NOTICE( [force-suse....disabled] )
      )
 
-dnl *** configure option: --enable-internal-api-use
-AC_ARG_ENABLE([use-api],
-              [ AS_HELP_STRING( [--enable-internal-api-use=@<:@no/yes@:>@], [Use ddcutil API internally@<:@default=no@:>@] )],
-              [enable_use_api=${enableval}],
-              [enable_use_api=no] )
-AM_CONDITIONAL([USE_API_COND], [test "x$enable_use_api" = "xyes"] )
-AS_IF( [test "x$enable_use_api" = "xyes"],
-         AC_DEFINE( [USE_API], [1], [If defined, use ddcutil APIs internally.])
-         AC_MSG_NOTICE( [use-api.....  enabled] )
-      ,
-         AC_MSG_NOTICE( [use-api.....  disabled] )
-     )
 
 dnl *** configure option: --enable-asan
 AC_ARG_ENABLE([asan],
@@ -1233,7 +1221,6 @@ AC_MSG_RESULT([
 	enable_x11:             ${enable_x11}   
 	enable_doxygen:         ${enable_doxygen}
 	enable_failsim:         ${enable_failsim}
-	enable_use_api:         ${enable_use_api}
 	enable_asan:            ${enable_asan}
 	include_testcases:      ${include_testcases}
 
