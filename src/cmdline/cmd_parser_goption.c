@@ -51,7 +51,7 @@ output_arg_func(const gchar* option_name,
       output_level = DDCA_OL_VERBOSE;
    else if ( streq(option_name, "-t")  || streq(option_name, "--terse") || streq(option_name, "--brief") )
       output_level = DDCA_OL_TERSE;
-   else if ( streq(option_name, "--vv") )
+   else if ( streq(option_name, "--vv") || streq(option_name, "--very-verbose") )
       output_level = DDCA_OL_VV;
    else {
       PROGRAM_LOGIC_ERROR("Unexpected option_name: %s", option_name);
@@ -223,6 +223,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
       {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+      {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG,
                            G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
 
       // Diagnostic output
