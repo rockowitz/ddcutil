@@ -33,6 +33,7 @@
 
 #include "base/adl_errors.h"
 #include "base/base_init.h"
+#include "base/build_info.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
@@ -114,7 +115,6 @@ rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
 static void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
-
       rpt_label(depth, "Experimental Options:");
       REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
       REPORT_FLAG_OPTION(2, "Unused");
@@ -148,6 +148,9 @@ report_performance_options(int depth)
 static void
 report_all_options(Parsed_Cmd * parsed_cmd, int depth)
 {
+    if (parsed_cmd->output_level >= DDCA_OL_VV)
+       report_build_options(depth);
+
     show_reporting();  // uses fout()
 
     rpt_vstring( depth, "%.*s%-*s%s",
