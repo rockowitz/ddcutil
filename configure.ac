@@ -227,12 +227,6 @@ dnl       ,
 dnl         AC_MSG_NOTICE( [udev...       disabled] )
 dnl      )
 
-dnl *** configure option: --enable-targetbsd
-AC_ARG_ENABLE([targetbsd],
-              [ AS_HELP_STRING([--enable-targetbsd=@<:@no/yes@:>@], [Build for BSD@<:@default=no@:>@] )],
-              [enable_targetbsd=${enableval}],
-              [enable_targetbsd=no] )
-
 dnl *** configure option: --enable-usb
 AC_ARG_ENABLE([usb],
               [ AS_HELP_STRING( [--enable-usb=@<:@yes/no@:>@], [Support USB connected displays@<:@default=yes@:>@] )],
@@ -265,9 +259,31 @@ dnl       AC_MSG_NOTICE( [x11...      enabled (provisional)]  ),
 dnl       AC_MSG_NOTICE( [x11...      disabled] )
 dnl      )              
 
+
+dnl *** configure option: --enable-asan
+AC_ARG_ENABLE([asan],
+              [ AS_HELP_STRING( [--enable-asan=@<:@no/yes@:>@], [Build for asan (address sanitizer)@<:@default=no@:>@] )],
+              [enable_asan=${enableval}],
+              [enable_asan=no] )
+AM_CONDITIONAL([ASAN_COND], [test "x$enable_asan" = "xyes"] )
+AS_IF( [test "x$enable_asan" = "xyes"],
+         AC_DEFINE( [WITH_ASAN], [1], [If defined, building for Asan instrumentation.])
+         AC_MSG_NOTICE( [asan..........enabled] )
+      ,
+         AC_MSG_NOTICE( [asan..........disabled] )
+     )
+
+
+dnl *** configure option: --enable-targetbsd
+AC_ARG_ENABLE([targetbsd],
+              [ AS_HELP_STRING([--enable-targetbsd=@<:@no/yes@:>@], [Build for BSD@<:@default=no@:>@ (Developer-only)] )],
+              [enable_targetbsd=${enableval}],
+              [enable_targetbsd=no] )
+
+
 dnl *** configure option: --enable-doxygen
 AC_ARG_ENABLE([doxygen],
-              [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-doxygen=@<:@no/yes@:>@], [Build API documentation using Doxygen (if it is installed)@<:@default=no@:>@ (Developer-only)] )],
               [enable_doxygen=${enableval}],
               [enable_doxygen=no] )
 AM_CONDITIONAL([ENABLE_DOXYGEN_COND], [test "x$enable_doxygen" = "xyes"] )
@@ -288,7 +304,7 @@ dnl Since that day is far off, we have just 1 option to enable SWIG for Python
 
 dnl *** configure option: --enable-swig
 AC_ARG_ENABLE([swig],
-              [ AS_HELP_STRING( [--enable-swig=@<:@no/yes@:>@], [Build SWIG interface@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-swig=@<:@no/yes@:>@], [Build SWIG interface@<:@default=no@:>@ (Developer-only)] )],
               [enable_swig=${enableval}],
               [enable_swig=no] )
 dnl Set flag for Makefile.am:
@@ -300,7 +316,7 @@ AS_IF([test "x$enable_swig" = "xyes"],
 
 dnl *** configure option: --enable-cython
 AC_ARG_ENABLE([cython],
-              [ AS_HELP_STRING( [--enable-cython=@<:@no/yes@:>@], [Build cython interface@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-cython=@<:@no/yes@:>@], [Build cython interface@<:@default=no@:>@ (Developer-only)] )],
               [enable_cython=${enableval}],
               [enable_cython=no] )
 dnl Set flag for Makefile.am:
@@ -312,7 +328,7 @@ AS_IF([test "x$enable_cython" = "xyes"],
 
 dnl *** configure option: --enable-cffi
 AC_ARG_ENABLE([cffi],
-              [ AS_HELP_STRING( [--enable-cffi=@<:@no/yes@:>@], [Build cffi interface@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-cffi=@<:@no/yes@:>@], [Build cffi interface@<:@default=no@:>@ (Developer-only)] )],
               [enable_cffi=${enableval}],
               [enable_cffi=no] )
 dnl Set flag for Makefile.am:
@@ -329,7 +345,7 @@ dnl #default behavior is to install the python bindings into subfolders of $pref
 dnl #however, this may require the user to set the PYTHONPATH environment variable
 dnl #in order to avoid this, invoke configure with the --enable-python-integration option
 
-dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder])],[enable_python_integration=$enableval],[enable_python_integration=check])
+dnl AC_ARG_ENABLE([python-integration],[AS_HELP_STRING([--enable-python-integration],[install the python bindings in the interpreters site-packages folder (Private)])],[enable_python_integration=$enableval],[enable_python_integration=check])
 
 
 ###
@@ -445,7 +461,7 @@ dnl     )
 
 dnl *** configure option: --enable-testcases
 AC_ARG_ENABLE([testcases],
-              [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-testcases=@<:@no/yes@:>@], [Include test cases @<:@default=no@:>@] (Developer-only) )],
               [include_testcases=${enableval}],
               [include_testcases=no] )
 AM_CONDITIONAL([INCLUDE_TESTCASES_COND], [test "x$include_testcases" = "xyes"] )
@@ -458,7 +474,7 @@ AS_IF([test "x$include_testcases" = "xyes"],
 
 dnl *** configure option: --enable-callgraph
 AC_ARG_ENABLE([callgraph],
-              [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-callgraph=@<:@no/yes@:>@], [Create .expand files for static call graph@<:@default=no@:>@] (Developer-only) )],
               [enable_callgraph=${enableval}],
               [enable_callgraph=no] )
 AM_CONDITIONAL([ENABLE_CALLGRAPH_COND], [test "x$enable_callgraph" = "xyes"] )
@@ -471,7 +487,7 @@ dnl GObject implementation has been mothballed.
 dnl TODO: delete or comment out this section
 dnl *** configure option: --enable-gobject-api
 AC_ARG_ENABLE([gobject-api],
-              [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-gobject-api=@<:@no/yes@:>@], [Build gobject related files, typelib@<:@default=no@:>@ (Developer-only)] )],
               [enable_gobject=${enableval}],
               [enable_gobject=no] )
 AM_CONDITIONAL([ENABLE_GOBJECT_COND], [test "x$enable_gobject" = "xyes"] )
@@ -482,7 +498,7 @@ AS_IF([test "x$enable_gobject" = "xyes"],
 
 dnl *** configure option: --enable-failsim
 AC_ARG_ENABLE([failsim],
-              [ AS_HELP_STRING( [--enable-failsim=@<:@no/yes@:>@], [Build with failure simulation@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-failsim=@<:@no/yes@:>@], [Build with failure simulation@<:@default=no@:>@ (Developer-only)] )],
               [enable_failsim=${enableval}],
               [enable_failsim=no] )
 AM_CONDITIONAL([ENABLE_FAILSIM_COND], [test "x$enable_failsim" = "xyes"] )
@@ -495,7 +511,7 @@ AS_IF( [test "x$enable_failsim" = "xyes"],
 
 dnl *** configure option: --enable-force-suse
 AC_ARG_ENABLE([force-suse],
-              [ AS_HELP_STRING( [--enable-force-suse=@<:@no/yes@:>@], [Force SUSE target directories@<:@default=no@:>@] )],
+              [ AS_HELP_STRING( [--enable-force-suse=@<:@no/yes@:>@], [Force SUSE target directories@<:@default=no@:>@ (Developer-only)]  )],
               [enable_force_suse=${enableval}],
               [enable_force_suse=no] )
 AM_CONDITIONAL([ENABLE_FORCE_SUSE_COND], [test "x$enable_force_suse" = "xyes"] )
@@ -504,20 +520,6 @@ AS_IF( [test "x$enable_force_suse" = "xyes"],
          AC_MSG_NOTICE( [force-suse....enabled] )
       ,
          AC_MSG_NOTICE( [force-suse....disabled] )
-     )
-
-
-dnl *** configure option: --enable-asan
-AC_ARG_ENABLE([asan],
-              [ AS_HELP_STRING( [--enable-asan=@<:@no/yes@:>@], [Build for asan (address sanitizer)@<:@default=no@:>@] )],
-              [enable_asan=${enableval}],
-              [enable_asan=no] )
-AM_CONDITIONAL([ASAN_COND], [test "x$enable_asan" = "xyes"] )
-AS_IF( [test "x$enable_asan" = "xyes"],
-         AC_DEFINE( [WITH_ASAN], [1], [If defined, building for Asan instrumentation.])
-         AC_MSG_NOTICE( [asan..........enabled] )
-      ,
-         AC_MSG_NOTICE( [asan..........disabled] )
      )
 
 
@@ -783,7 +785,7 @@ AM_COND_IF([USE_DOXYGEN],
 
 ### DOC-BASE
 
-dnl n. doc-base is Debain specific
+dnl n. doc-base is Debian specific
 dnl doc-base doesn't have pc file.
 AC_CHECK_PROGS( [DOCBASE_INSTALL_DOCS], [install-docs])
 AS_IF( [test -n "$DOCBASE_INSTALL_DOCS"], 
@@ -1209,19 +1211,21 @@ AC_MSG_RESULT([
 	required_packages:      ${required_packages}
 
 	enable_lib:             ${enable_lib}
-	enable_targetbsd:       ${enable_targetbsd}
 	enable_envcmds          ${enable_envcmds}
 	enable_udev             ${enable_udev}
+	enable_usb:             ${enable_usb}
+	enable_drm:             ${enable_drm}   
+	enable_x11:             ${enable_x11}   
+	enable_asan:            ${enable_asan}
+
+	Developer-only options:
+	enable_targetbsd:       ${enable_targetbsd}
 	enable_swig:            ${enable_swig}
 	enable_cython:          ${enable_cython}
 	enable_cffi:            ${enable_cffi}
 	enable_gobject          ${enable_gobject}
-	enable_usb:             ${enable_usb}
-	enable_drm:             ${enable_drm}   
-	enable_x11:             ${enable_x11}   
 	enable_doxygen:         ${enable_doxygen}
 	enable_failsim:         ${enable_failsim}
-	enable_asan:            ${enable_asan}
 	include_testcases:      ${include_testcases}
 
 	compiler:               ${CC}
