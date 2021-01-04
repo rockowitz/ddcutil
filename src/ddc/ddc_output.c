@@ -163,7 +163,7 @@ get_raw_value_for_feature_metadata(
    assert(dh->dref);
 
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. frec=%p");
+   DBGTRC(debug, TRACE_GROUP, "Starting. frec=%p, feature_code=0x%02x", frec, (frec) ? frec->feature_code : 0x00);
 
    // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
