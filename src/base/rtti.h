@@ -12,6 +12,7 @@
 
 void   rtti_func_name_table_add(void * func_addr, const char * func_name);
 char * rtti_get_func_name_by_addr(void * ptr);
+void * rtti_get_func_addr_by_name(char * name);
 void   dbgrpt_rtti_func_name_table(int depth);
 
 #endif /* RTTI_H_ */

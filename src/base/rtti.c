@@ -2,7 +2,7 @@
  * Primitive runtime type information facilities
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -10,6 +10,7 @@
 #include <string.h>
  
 #include "util/report_util.h"
+#include "util/string_util.h"
 #include "base/rtti.h"
 
 
@@ -30,6 +31,23 @@ char * rtti_get_func_name_by_addr(void * ptr) {
       if (!result)
          result = "<Not Found>";
    }
+   return result;
+}
+
+void * rtti_get_func_addr_by_name(char * name) {
+   void * result = NULL;
+   if (func_name_table) {
+      GHashTableIter iter;
+      gpointer key, value;
+      g_hash_table_iter_init(&iter, func_name_table);
+      while (g_hash_table_iter_next(&iter, &key, &value)) {
+         if (streq(name, (char *) value)) {
+            result = key;
+            break;
+         }
+      }
+   }
+   // printf("(%s) name=%s, returning %s\n", __func__, name, SBOOL(result));
    return result;
 }
 
