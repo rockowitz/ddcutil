@@ -31,6 +31,7 @@
 #include "base/execution_stats.h"
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 #include "base/tuned_sleep.h"
 
 #ifdef TARGET_BSD
@@ -77,7 +78,7 @@ bool get_i2c_fileio_use_timeout() {
  * The address has already been by #set_slave_address().
  */
 Status_Errno_DDC
-fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
+i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
@@ -156,7 +157,7 @@ bye:
  * The address has already been by #set_slave_address().
  */
 Status_Errno_DDC
-fileio_reader(
+i2c_fileio_reader(
       int    fd,
       Byte   slave_address,
       bool   single_byte_reads,
@@ -285,7 +286,7 @@ bye:
  * @retval <0      negative Linux errno value
  */
 Status_Errno_DDC
-ioctl_writer(
+i2c_ioctl_writer(
       int    fd,
       Byte   slave_address,
       int    bytect,
@@ -438,7 +439,7 @@ ioctl_reader1(
 }
 
 
-Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
+Status_Errno_DDC i2c_ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
@@ -456,4 +457,12 @@ Status_Errno_DDC ioctl_reader(int fd, Byte slave_address, bool read_bytewise, in
 
    DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
    return rc;
+}
+
+
+void init_i2c_execute_func_name_table() {
+   RTTI_ADD_FUNC( i2c_fileio_writer);
+   RTTI_ADD_FUNC( i2c_fileio_reader);
+   RTTI_ADD_FUNC( i2c_ioctl_writer);
+   RTTI_ADD_FUNC( i2c_ioctl_reader);
 }

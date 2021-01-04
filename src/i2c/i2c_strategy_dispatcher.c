@@ -32,16 +32,16 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 I2C_IO_Strategy  i2c_file_io_strategy = {
       I2C_IO_STRATEGY_FILEIO,
-      fileio_writer,
-      fileio_reader,
+      i2c_fileio_writer,
+      i2c_fileio_reader,
       "fileio_writer",
       "fileio_reader"
 };
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
       I2C_IO_STRATEGY_IOCTL,
-      ioctl_writer,
-      ioctl_reader,
+      i2c_ioctl_writer,
+      i2c_ioctl_reader,
       "ioctl_writer",
       "ioctl_reader"
 };

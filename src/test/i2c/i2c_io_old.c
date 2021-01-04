@@ -203,7 +203,7 @@ Public_Status_Code call_i2c_reader(
 
 
 Public_Status_Code do_i2c_file_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
-   return call_i2c_writer(fileio_writer, "write_writer", fh, bytect, bytes_to_write, sleep_millisec);
+   return call_i2c_writer(i2c_fileio_writer, "write_writer", fh, bytect, bytes_to_write, sleep_millisec);
 }
 
 #ifdef WONT_COMPILE_ON_FEDORA
@@ -220,12 +220,12 @@ Public_Status_Code do_i2c_smbus_write_i2c_block_data(int fh, int bytect, Byte * 
 
 
 Public_Status_Code do_i2c_ioctl_write(int fh, int bytect, Byte * bytes_to_write, int sleep_millisec) {
-   return call_i2c_writer(ioctl_writer, "ioctl_writer", fh, bytect, bytes_to_write, sleep_millisec);
+   return call_i2c_writer(i2c_ioctl_writer, "ioctl_writer", fh, bytect, bytes_to_write, sleep_millisec);
 }
 
 
 Public_Status_Code do_i2c_file_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
-   return call_i2c_reader(fileio_reader, "read_reader", fh, bytect, readbuf, sleep_millisec);
+   return call_i2c_reader(i2c_fileio_reader, "read_reader", fh, bytect, readbuf, sleep_millisec);
 }
 
 #ifdef WONT_COMPILE_ON_FEDORA
@@ -242,7 +242,7 @@ Public_Status_Code do_i2c_smbus_read_i2c_block_data(int fh, int bytect, Byte * r
 
 
 Public_Status_Code do_i2c_ioctl_read(int fh, int bytect, Byte * readbuf, int sleep_millisec) {
-   return call_i2c_reader(ioctl_reader, "ioctl_reader", fh, bytect, readbuf, sleep_millisec);
+   return call_i2c_reader(i2c_ioctl_reader, "ioctl_reader", fh, bytect, readbuf, sleep_millisec);
 }
 
 
@@ -256,11 +256,11 @@ Public_Status_Code perform_i2c_write(int fh, char * write_mode, int bytect, Byte
    int rc = 0;
    I2C_Writer writer = NULL;
 
-   if      ( streq(write_mode, "write") )                         writer = fileio_writer;
+   if      ( streq(write_mode, "write") )                         writer = i2c_fileio_writer;
 #ifdef WONT_COMPILE_ON_FEDORA
    else if ( streq(write_mode, "i2c_smbus_write_i2c_block_data")) writer = i2c_smbus_write_i2c_block_data_writer;
 #endif
-   else if ( streq(write_mode, "ioctl_write"))                    writer = ioctl_writer;
+   else if ( streq(write_mode, "ioctl_write"))                    writer = i2c_ioctl_writer;
 
    if (writer) {
       rc = call_i2c_writer(writer, write_mode, fh, bytect, bytes_to_write, sleep_millisec);
@@ -290,11 +290,11 @@ Public_Status_Code perform_i2c_read(int    fh, char * read_mode, int bytect, Byt
    int rc;
    I2C_Reader reader = NULL;
 
-   if      ( streq(read_mode, "read") )                         reader = fileio_reader;
+   if      ( streq(read_mode, "read") )                         reader = i2c_fileio_reader;
 #ifdef WONT_COMPILE_ON_FEDORA
    else if ( streq(read_mode, "i2c_smbus_read_i2c_block_data")) reader = i2c_smbus_read_i2c_block_data_reader;
 #endif
-   else if ( streq(read_mode, "ioctl_read"))                    reader = ioctl_reader;
+   else if ( streq(read_mode, "ioctl_read"))                    reader = i2c_ioctl_reader;
    // assert(reader);
 
    if (reader) {
