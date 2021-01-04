@@ -1101,15 +1101,13 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
-   ADD_FUNC(i2c_open_bus);
-   ADD_FUNC(i2c_close_bus);
-   ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
-   ADD_FUNC(i2c_get_edid_bytes_directly);
-   ADD_FUNC(i2c_detect_buses);
-   ADD_FUNC(i2c_detect_single_bus);
-   ADD_FUNC(i2c_get_raw_edid_by_fd);
-#undef ADD_FUNC
+   RTTI_ADD_FUNC(i2c_open_bus);
+   RTTI_ADD_FUNC(i2c_close_bus);
+   RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
+   RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
+   RTTI_ADD_FUNC(i2c_detect_buses);
+   RTTI_ADD_FUNC(i2c_detect_single_bus);
+   RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
 }
 
 
