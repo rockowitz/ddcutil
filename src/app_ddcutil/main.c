@@ -788,7 +788,7 @@ int main(int argc, char *argv[]) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
    init_tracing(parsed_cmd);
-   init_rtti();
+   init_rtti();      // add entries for this file
 
    time_t cur_time = time(NULL);
    char * cur_time_s = asctime(localtime(&cur_time));
@@ -801,6 +801,20 @@ int main(int argc, char *argv[]) {
 
    if (!master_initializer(parsed_cmd))
       goto bye;
+
+   // Initialization complete, rtti now contains entries for all traced functions
+   // Check that any functions specified on --trcfunc are actually traced.
+   // dbgrpt_rtti_func_name_table(0);
+   if (parsed_cmd->traced_functions) {
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
+         char * func_name = parsed_cmd->traced_functions[ndx];
+         // DBGMSG("Verifying: %s", func_name);
+         if (!rtti_get_func_addr_by_name(func_name)) {
+            rpt_vstring(0, "Traced function not found: %s", func_name);
+            goto bye;
+         }
+      }
+   }
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
