@@ -413,7 +413,8 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
    // complaining about uninitialized variable, trying to figure out why
    token = strsep(&rest, delims);      // n. overwrites character found
    while (token) {
-      // printf("(%s) token: |%s|\n", __func__, token);
+      if (debug)
+         printf("(%s) token: |%s|\n", __func__, token);
       if (strlen(token) > 0)
          workstruct[piecect++] = strdup(token);
       token = strsep(&rest, delims);
