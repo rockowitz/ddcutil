@@ -1381,8 +1381,6 @@ ddca_feature_list_count(
  *  @return    string representation; The value is valid until the next call
  *             to this function in the current thread.  Caller should not free.
  *
- *  @remark
- *  Returns NULL if feature_list == NULL
  *  @since 0.9.0
  */
 const char *
