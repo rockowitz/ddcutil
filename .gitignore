@@ -124,8 +124,8 @@ src/swig/*_wrap.c
 *plist/
 clang-report/
 *clang_output*
-cov-int/
-ddcutil-coverity.tgz
+# cov-int/
+# ddcutil-coverity.tgz
 *.diff
 fsctl
 docs/doxygen/doxyfile
@@ -139,8 +139,8 @@ docs/ddcutil-c-api
 *.so
 src/swig/set_pylocal_exec
 src/swig/pylocal
-run_coverity_fragment
-ddcutil-coverity.tgz.0
+# run_coverity_fragment
+# ddcutil-coverity.tgz.0
 ddcutil*.build
 src/swig/pyenv
 bug_reports
@@ -192,6 +192,5 @@ icon_originals
 icons_px
 ddcutil.desktop.changed
 doit
-coverity-setup
-issues
+# coverity-setup
 
