@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -887,9 +887,9 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
     }
     else {   // device/class not found
        g_snprintf(pb1, PATH_MAX, "%s/%s", dir_devices_i2cN, "device/class");
-       rpt_attr_output(d1, pb1, ":", "May be display port");
+       rpt_attr_output(d1, pb1, ":", "Not found. (May be display port)");
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "subsystem");
-       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc");
+       bool ddc_subdir_found = RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc");
        RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/device");
        RPT2_ATTR_EDID(    d1, NULL, dir_devices_i2cN, "device/edid");
        RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/status");
@@ -902,23 +902,24 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
           free(realpath);
        }
 
-       RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/name");
-       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/subsystem");
+       if (ddc_subdir_found) {
+          RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/name");
+          RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/subsystem");
 
-       char * i2c_dev_subdir = NULL;
-       RPT2_ATTR_SINGLE_SUBDIR(d1, &i2c_dev_subdir, NULL, NULL, dir_devices_i2cN, "device/ddc/i2c-dev");
+          char * i2c_dev_subdir = NULL;
+          RPT2_ATTR_SINGLE_SUBDIR(d1, &i2c_dev_subdir, NULL, NULL, dir_devices_i2cN, "device/ddc/i2c-dev");
 
-       // /sys/bus/i2c/devices/i2c-N/device/ddc/i2c-dev/i2c-M
-       //       dev
-       //       device (link)
-       //       name
-       //       subsystem (link)
+          // /sys/bus/i2c/devices/i2c-N/device/ddc/i2c-dev/i2c-M
+          //       dev
+          //       device (link)
+          //       name
+          //       subsystem (link)
 
-       RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "dev");
-       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "device");
-       RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
-       RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
-
+          RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "dev");
+          RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "device");
+          RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
+          RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
+       }
        //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN
 
        char * drm_dp_aux_subdir = NULL;
@@ -1099,7 +1100,13 @@ void sysfs_dir_cardN(
    char fqfn[PATH_MAX];
    g_snprintf(fqfn, PATH_MAX, "%s/%s", dirname, filename);
 
-   dir_foreach(fqfn, predicate_cardN, sysfs_dir_cardN_cardNconnector, accumulator, depth);
+   dir_ordered_foreach(
+         fqfn,
+         predicate_cardN,
+         gaux_ptr_scomp,    // GCompareFunc
+         sysfs_dir_cardN_cardNconnector,
+         accumulator,
+         depth);
 }
 
 
@@ -1258,18 +1265,20 @@ void dump_sysfs_i2c() {
    rpt_nl();
 
    char * cmds[] = {
+#ifdef NOT_USEFUL
+         "ls -l /sys/dev/char/237:*",
+         "ls -l /sys/dev/char/238:*",
+         "ls -l /sys/bus/pci/devices",
+         "ls -l /sys/bus/pci_express/devices",
+         "ls -l /sys/devices/pci*",
+         "ls -l /sys/class/pci*",             // pci_bus, pci_epc
+#endif
    "ls -l /sys/dev/char/89:*",
-   "ls -l /sys/dev/char/237:*",
-   "ls -l /sys/dev/char/238:*",
    "ls -l /sys/dev/char/239:*",
    "ls -l /sys/bus/i2c/devices",
-   "ls -l /sys/bus/pci/devices",
-   "ls -l /sys/bus/pci_express/devices",
    "ls -l /sys/bus/platform/devices",   // not symbolic links
-   "ls -l /sys/devices/pci*",
    "ls -l /sys/class/drm*",             // drm, drm_dp_aux_dev
    "ls -l /sys/class/i2c*",             // i2c, i2c-adapter, i2c-dev
-   "ls -l /sys/class/pci*",             // pci_bus, pci_epc
    NULL
    };
 
