@@ -730,6 +730,11 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    }
 }
 
+// satisfies GDestroyNotify()
+void i2c_free_bus_info_gdestroy(gpointer data) {
+   i2c_free_bus_info((I2C_Bus_Info*) data);
+}
+
 
 //
 // Bus Reports
@@ -916,8 +921,8 @@ int i2c_detect_buses() {
 #else
       Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
 #endif
-      // TODO: set free function
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
+      g_ptr_array_set_free_func(i2c_buses, i2c_free_bus_info_gdestroy);
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
          int busno = bva_get(i2c_bus_bva, ndx);
          DBGMSF(debug, "Checking busno = %d", busno);
@@ -938,8 +943,10 @@ int i2c_detect_buses() {
 
 
 void i2c_discard_buses() {
+   g_ptr_array_free(i2c_buses, true);
    i2c_buses= NULL;
 }
+
 
 I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    bool debug = false;
