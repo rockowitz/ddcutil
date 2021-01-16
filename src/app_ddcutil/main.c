@@ -612,13 +612,18 @@ find_dref(
          final_result = DDCRC_OK;
       }
       else {
-         if (!did_work)
+         bool temporary_did_work = false;
+         if (!did_work) {
             did_work = create_dispno_display_identifier(1);   // default monitor
+            temporary_did_work = true;
+         }
          // assert(did_work);
          DBGTRC(debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
          DBGTRC(debug, TRACE_GROUP, "display detection complete");
          dref = get_display_ref_for_display_identifier(did_work, callopts);
+         if (temporary_did_work)
+            free_display_identifier(did_work);
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
       }
    }  // !DISP_ID_BUSNO
