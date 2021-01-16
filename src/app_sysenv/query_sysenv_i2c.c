@@ -273,26 +273,39 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          // DBGMSG("i2c_get_functionality_flags_by_fd() returned %ul", functionality);
          i2c_report_functionality_flags(functionality, 90, d2);
 
-         //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
-         // TODO save force slave addr setting, set it for duration of call - do it outside loop
-         psc = i2c_get_raw_edid_by_fd(fd, buf0);
-         if (psc != 0) {
-            rpt_vstring(d2, "Unable to read EDID, psc=%s", psc_desc(psc));
-         }
-         else {
-            rpt_vstring(d2, "Raw EDID:");
-            rpt_hex_dump(buf0->bytes, buf0->len, d2);
-            edid = create_parsed_edid(buf0->bytes);
-            if (edid)
-              report_parsed_edid_base(
-                    edid,
-                    true,     // verbose
-                    false,    // show_edid
-                    d2);
-            else
-               rpt_vstring(d2, "Unable to parse EDID");
+         int maxtries = 3;
+         for (int tryctr = 0; tryctr < maxtries; tryctr++) {
+            //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+            // TODO save force slave addr setting, set it for duration of call - do it outside loop
+            psc = i2c_get_raw_edid_by_fd(fd, buf0, /* read_bytewise */ false);
+            if (psc != 0) {
+               rpt_vstring(d2, "Unable to read EDID, psc=%s", psc_desc(psc));
+               tryctr = 999;   // retries have already happened in i2c_get_raw_edid_by_fd()
+            }
+            else {
+               rpt_label(d2, "Raw EDID:");
+               rpt_hex_dump(buf0->bytes, buf0->len, d2);
+               edid = create_parsed_edid(buf0->bytes);
+               if (edid) {
+                  report_parsed_edid_base(
+                     edid,
+                     true,     // verbose
+                     false,    // show_edid
+                     d2);
+                  rpt_vstring(d2, "Attempt %d to read and parse EDID succeeded", tryctr+1);
+                  Byte * edidbytes = buf0->bytes;
+                  // Device_Id_Xref * xref = device_xref_get(buf0->bytes);
+                  // xref->i2c_busno = busno;
+                  device_xref_new_with_busno(busno, edidbytes);
+                  tryctr = 999;
+               }
+               else {
+                  rpt_vstring(d2, "Unable to parse EDID");
+                  if (tryctr < maxtries)
+                     rpt_label(d2, "Retrying read EDID");
+               }
+            }
 
-            Byte * edidbytes = buf0->bytes;
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
             if (!first_edid) {
                DBGMSG("Setting first_edid");
@@ -304,9 +317,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
                edidbytes = first_edid;
             }
 #endif
-            // Device_Id_Xref * xref = device_xref_get(buf0->bytes);
-            // xref->i2c_busno = busno;
-            device_xref_new_with_busno(busno, edidbytes);
+
          }
 
          rpt_nl();
