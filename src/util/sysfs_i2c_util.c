@@ -1,6 +1,6 @@
 // sysfs_i2c_util.c
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
@@ -93,8 +93,39 @@ get_i2c_device_sysfs_driver(int busno) {
       snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device/driver/module", busno);
       driver_name = get_rpath_basename(workbuf);
    }
-   printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
+   // printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
    return driver_name;
+}
+
+
+/** Gets the class of an I2C device,
+ *  i.e. /sys/bus/i2c/devices/i2c-n/device/class
+ *  or   /sys/bus/i2c/devices/i2c-n/device/device/device/class
+ *
+ *  \param  busno   I2C bus number
+ *  \return device class
+ *          0 if not found (should never occur)
+ */
+uint32_t get_i2c_device_sysfs_class(int busno) {
+   uint32_t result = 0;
+   char workbuf[100];
+   snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
+
+   char * s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
+   if (!s_class) {
+     snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device", busno);
+     s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ true);
+   }
+   if (s_class) {
+      // printf("(%s) Found %s/class\n", __func__, workbuf);
+      /* bool ok =*/  str_to_int(s_class, (int*) &result, 16);   // if fails, &result unchanged
+      free(s_class);
+   }
+   else{
+      // printf("(%s) class for bus %d not found\n", __func__, busno);
+   }
+   // printf("(%s) busno=%d, returning 0x%08x\n", __func__, busno, result);
+   return result;
 }
 
 
@@ -138,6 +169,9 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
 }
 
 
+
+
+
 /** Checks if an I2C bus cannot be a DDC/CI connected monitor
  *  and therefore can be ignored, e.g. if it is an SMBus device.
  *
@@ -150,15 +184,29 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
+   bool debug = false;
    bool result = false;
-   char * name = get_i2c_device_sysfs_name(busno);
-   char * driver = get_i2c_device_sysfs_driver(busno);
-   if (name)
-      result = ignorable_i2c_device_sysfs_name(name, driver);
+   uint32_t class = get_i2c_device_sysfs_class(busno);
+   if (class) {
+      // printf("(%s) class = 0x%08x\n", __func__, class);
+      uint32_t cl2 = class & 0xffff0000;
+      if (debug)
+         printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
+      result = (cl2 != 0x030000);
+   }
+   else {
+      char * name = get_i2c_device_sysfs_name(busno);
+      char * driver = get_i2c_device_sysfs_driver(busno);
+      if (name)
+         result = ignorable_i2c_device_sysfs_name(name, driver);
+      if (debug)
+         printf("(%s) busno=%d, name=|%s|, result=%s\n", __func__, busno, name, sbool(result));
+      free(name);    // safe if NULL
+      free(driver);  // ditto
+   }
 
-   // printf("(%s) busno=%d, name=|%s|, returning: %s\n", __func__, busno, name, bool_repr(result));
-   free(name);    // safe if NULL
-   free(driver);  // ditto
+   if (debug)
+      printf("(%s) busno=%d, returning: %s\n", __func__, busno, sbool(result));
    return result;
 }
 
