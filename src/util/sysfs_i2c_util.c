@@ -169,9 +169,6 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
 }
 
 
-
-
-
 /** Checks if an I2C bus cannot be a DDC/CI connected monitor
  *  and therefore can be ignored, e.g. if it is an SMBus device.
  *
@@ -192,7 +189,8 @@ sysfs_is_ignorable_i2c_device(int busno) {
       uint32_t cl2 = class & 0xffff0000;
       if (debug)
          printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
-      result = (cl2 != 0x030000);
+      result = (cl2 != 0x030000 &&
+                cl2 != 0x0a0000);    // docking station
    }
    else {
       char * name = get_i2c_device_sysfs_name(busno);
