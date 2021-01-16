@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -29,7 +29,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
-#ifdef USE_UDEV
+#ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
 #endif
 #include "util/utilrpt.h"
