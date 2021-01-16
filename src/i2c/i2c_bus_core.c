@@ -33,7 +33,7 @@
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
-#ifdef USE_UDEV
+#ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
 #endif
 #include "util/utilrpt.h"
@@ -179,8 +179,9 @@ Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
 #endif
    callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGTRC(debug, TRACE_GROUP,
-                 "fd=%d, addr=0x%02x, i2c_force_slave_addr_flag=%s, callopts=%s",
+                 "fd=%d, addr=0x%02x, filename=%s, i2c_force_slave_addr_flag=%s, callopts=%s",
                  fd, addr,
+                 filename_for_fd_t(fd),
                  sbool(i2c_force_slave_addr_flag),
                  interpret_call_options_t(callopts) );
    // FAILSIM;
@@ -205,8 +206,10 @@ retry:
    errsv = errno;
 
    if (rc < 0) {
-      if ( callopts & CALLOPT_ERR_MSG)
+      if ( callopts & CALLOPT_ERR_MSG) {
+         DBGMSG("%s", filename_for_fd_t(fd));
          REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errno);
+      }
 
       if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
          DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
@@ -221,7 +224,7 @@ retry:
    }
 
    DBGTRC((result || debug), TRACE_GROUP,
-           "addr = 0x%02x. Returning %s", addr, psc_desc(result));
+           "addr = 0x%02x. filename = %s, Returning %s", addr, filename_for_fd_t(fd), psc_desc(result));
       // show_backtrace(1);
 
    assert(result <= 0);
@@ -349,6 +352,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), sbool(read_bytewise));
+   assert(rawedid->buffer_size >= 256);
 
    Byte byte_to_write = 0x00;
    int rc = 0;
@@ -363,10 +367,11 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
    }
    else {
       DBGTRC(debug, TRACE_GROUP, "write() succeeded");
+
       rc = 0;
       if (read_bytewise) {
          int ndx = 0;
-         for (; ndx < 128 && rc == 0; ndx++) {
+         for (; ndx < 256 && rc == 0; ndx++) {
             RECORD_IO_EVENTX(
                 fd,
                 IE_READ,
@@ -379,16 +384,19 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
                rc = 0;
             }
           }
+          rawedid->len = ndx;
           DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
       }
       else {
          RECORD_IO_EVENTX(
              fd,
              IE_READ,
-             ( rc = read(fd, rawedid->bytes, 128) )
+             ( rc = read(fd, rawedid->bytes, 256) )
             );
          if (rc >= 0) {
-            assert(rc == 128);
+            DBGMSF(debug, "read() returned %d", rc);
+            rawedid->len = rc;
+            assert(rc == 128 || rc == 256);
             rc = 0;
          }
          else {
@@ -398,6 +406,10 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
       }
    } // write succeeded
 
+   // if ( (debug || IS_TRACING()) && rc == 0) {
+   //    DBGMSG("Returning buffer:");
+   //    rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
+   // }
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
    return rc;
 }
@@ -444,7 +456,7 @@ i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
  * @retval  0        success
  * @retval  <0       error
  */
-Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool read_bytewise_parm) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
@@ -454,6 +466,7 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
 
    assert(rawedid->buffer_size >= 128);
    Status_Errno_DDC rc;
+   int tryctr = 0;
 
    rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
    if (rc < 0) {
@@ -468,15 +481,18 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
 #endif
 
-   int max_tries = 4;  // 2 each read_bytewise == true/false
-   bool read_bytewise = EDID_Read_Bytewise;
+   int max_tries = 1;  // OLD: 2 each read_bytewise == true/false, now doing retries in caller
    rc = -1;
-   DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
-                 (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
+   // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
+   //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
 
-   for (int tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
-      DBGMSF(debug, "Trying EDID read, tryctr=%d, max_tries=%d, read_bytewise=%s",
-                    tryctr, max_tries, sbool(read_bytewise));
+   bool read_bytewise = read_bytewise_parm;
+   for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
+      if (tryctr >= 2)
+         read_bytewise = !read_bytewise_parm;
+      DBGTRC(debug, TRACE_GROUP, "Trying EDID read. tryctr=%d, max_tries=%d, read_bytewise=%s, using %s",
+                    tryctr, max_tries, sbool(read_bytewise),
+                    (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
       if (EDID_Read_Uses_I2C_Layer) {
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, read_bytewise);
@@ -484,24 +500,28 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
       else {
          rc = i2c_get_edid_bytes_directly(fd, rawedid, read_bytewise);
       }
-      if (rc == -ENXIO || rc == -EIO) {
+      if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP) {
          // DBGMSG("breaking");
          break;
       }
       assert(rc <= 0);
       if (rc == 0) {
-         rawedid->len = 128;
-         if (debug || IS_TRACING() ) {
+         // rawedid->len = 128;
+         if (debug || IS_TRACING_GROUP(DDCA_TRC_NONE) ) {    // only show if explicitly tracing this function
             DBGMSG("get bytes returned:");
             dbgrpt_buffer(rawedid, 1);
-            DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
+            // DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
-         Byte checksum = edid_checksum(rawedid->bytes);
-         if (checksum != 0) {
+         if (!is_valid_edid_header(rawedid->bytes)) {
+            DBGTRC(debug, TRACE_GROUP, "Invalid EDID header");
+            rc = DDCRC_INVALID_EDID;
+         }
+
+         else if (edid_checksum(rawedid->bytes) != 0) {
             // possible if successfully read bytes from i2c bus with no monitor
             // attached - the bytes will be junk.
             // e.g. nouveau driver, Quadro card, on blackrock
-            DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", checksum);
+            DBGTRC(debug, TRACE_GROUP, "Invalid EDID checksum %d, expected 0.", edid_checksum(rawedid->bytes));
             rawedid->len = 0;
             rc = DDCRC_INVALID_EDID;    // was DDCRC_EDID
          }
@@ -515,7 +535,7 @@ bye:
    if (rc < 0)
       rawedid->len = 0;
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "tries=%d, Returning %s", tryctr, psc_desc(rc));
    return rc;
 }
 
@@ -530,29 +550,47 @@ bye:
  */
 Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
+   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    Parsed_Edid * edid = NULL;
-   Buffer * rawedidbuf = buffer_new(128, NULL);
+   Buffer * rawedidbuf = buffer_new(256, NULL);
 
-   Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
-   if (rc == 0) {
-      edid = create_parsed_edid(rawedidbuf->bytes);
-      if (debug) {
-         if (edid)
-            report_parsed_edid(edid, false /* dump hex */, 0);
+   bool read_bytewise = EDID_Read_Bytewise;
+
+   Status_Errno_DDC rc = 0;
+   for (int tryctr = 0; tryctr < 4; tryctr++) {
+      if (tryctr >= 2)
+         read_bytewise = !EDID_Read_Bytewise;
+      DBGTRC(debug, TRACE_GROUP, "tryctr = %d", tryctr);
+      rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf, read_bytewise);
+      if (rc == 0) {
+         edid = create_parsed_edid(rawedidbuf->bytes);
+         if (debug) {
+            if (edid)
+               report_parsed_edid(edid, false /* dump hex */, 0);
+            else
+               DBGMSG("create_parsed_edid() returned NULL");
+         }
+         if (!edid)
+            rc = DDCRC_INVALID_EDID;
          else
-            DBGMSG("create_parsed_edid() returned NULL");
+            tryctr = 999;
       }
-      if (!edid)
-         rc = DDCRC_INVALID_EDID;
-   }
-   else {        // if (rc == DDCRC_EDID) {
-      DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", psc_desc(rc));
+      else {        // if (rc == DDCRC_EDID) {
+         DBGTRC(debug, TRACE_GROUP, "i2c_get_raw_edid_by_fd() returned %s", psc_desc(rc));
+         if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP)
+            tryctr = 999;
+      }
    }
 
    buffer_free(rawedidbuf, NULL);
-   DBGTRC(debug, TRACE_GROUP, "Returning %p", edid);
+
    *edid_ptr_loc = edid;
+   if (edid)
+      DBGTRC(debug, TRACE_GROUP, "Returning %s, *edid_ptr_loc = %p -> ...%s",
+                                 psc_desc(rc), edid, hexstring3_t(edid->bytes+124, 4, "", 1, false));
+   else
+      DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
+
    return rc;
 }
 
@@ -873,7 +911,7 @@ int i2c_detect_buses() {
    DBGTRC(debug, DDCA_TRC_I2C, "Starting.  i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
       // only returns buses with valid name (arg=false)
-#ifdef USE_UDEV
+#ifdef ENABLE_UDEV
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
 #else
       Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
@@ -1108,6 +1146,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
+   RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
 }
 
 
