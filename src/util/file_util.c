@@ -667,7 +667,7 @@ int rek_mkdir(
             printf("(%s) Creating path %s\n", __func__, path);
          if ( mkdir(path, 0777) < 0) {
             result = -errno;
-            f0printf(ferr, "Unable to create '%s', %s\n", path);
+            f0printf(ferr, "Unable to create '%s', %s\n", path, strerror(errno));
          }
       }
    }
