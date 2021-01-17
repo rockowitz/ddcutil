@@ -75,6 +75,11 @@ bool is_valid_edid_header(Byte * edidbytes) {
    return result;
 }
 
+bool is_valid_edid(Byte * edid) {
+   return is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
+}
+
+
 
 /** Unpacks the 2 byte manufacturer id field from the EDID into a 3 character
  * string.
