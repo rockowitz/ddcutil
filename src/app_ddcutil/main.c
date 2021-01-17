@@ -683,6 +683,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_CAPABILITIES:
       {
+         assert(dh);
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
@@ -693,6 +694,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_GETVCP:
       {
+         assert(dh);
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
@@ -713,6 +715,7 @@ execute_cmd_with_optional_display_handle(
       break;
 
    case CMDID_SAVE_SETTINGS:
+      assert(dh);
       if (parsed_cmd->argct != 0) {
          f0printf(fout(), "SCS command takes no arguments\n");
          main_rc = EXIT_FAILURE;
@@ -738,6 +741,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_DUMPVCP:
       {
+         assert(dh);
          // MCCS vspec can affect whether a feature is NC or TABLE
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
@@ -751,6 +755,7 @@ execute_cmd_with_optional_display_handle(
       }
 
    case CMDID_READCHANGES:
+      assert(dh);
       check_dynamic_features(dh->dref);
       ensure_vcp_version_set(dh);
 
@@ -759,6 +764,7 @@ execute_cmd_with_optional_display_handle(
       break;
 
    case CMDID_PROBE:
+      assert(dh);
       check_dynamic_features(dh->dref);
       ensure_vcp_version_set(dh);
 
