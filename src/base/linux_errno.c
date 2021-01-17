@@ -1,29 +1,9 @@
-/* linux_errno.c
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
-
-/** \file
+/** \file linux_errno.c
  * Linux errno descriptions
  */
+
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
@@ -274,19 +254,17 @@ void show_errno_desc_table() {
 }
 
 
-/* Simple call to get a description string for a Linux errno value.
+/** Simple call to get a description string for a Linux errno value.
  *
- * For use in specifically reporting an unmodulated Linux error number.
+ *  For use in specifically reporting an unmodulated Linux error number.
  *
- * Arguments:
- *    error_number  system errno value
- *
- * Returns:
- *    string describing the error.
+ *  \param  error_number  system errno value (positive)
+ *  \return  string describing the error.
  *
  * The string returned is valid until the next call to this function.
+ *
+ * The errno value must be passed as a positive number.
  */
-
 char * linux_errno_desc(int error_number) {
    bool debug = false;
    if (debug)
