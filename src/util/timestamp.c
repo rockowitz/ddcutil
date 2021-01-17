@@ -3,7 +3,7 @@
  *  Timestamp management
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -143,7 +143,7 @@ uint64_t elapsed_time_nanosec() {
 }
 
 
-/** Returns the elapsed time since start of program execution
+/** Returns the elapsed time in seconds since start of program execution
  *  as a formatted, printable string.
  *
  *  The string is built in a thread specific private buffer.  The returned
@@ -162,6 +162,29 @@ char * formatted_elapsed_time() {
    snprintf(elapsed_buf, 40, "%3"PRIu64".%03"PRIu64"", isecs, imillis - (isecs*1000) );
 
    // printf("(%s) |%s|\n", __func__, elapsed_buf);
+   return elapsed_buf;
+}
+
+
+/** Returns the difference in seconds between 2 timestamps,
+ *  as a formatted, printable string.
+ *
+ *  The string is built in a thread specific private buffer.  The returned
+ *  string is valid until the next call of this function in the same thread.
+ *
+ *  @param  start   start time, in nanoseconds
+ *  @param  end     end time, in nanoseconds
+ *  @return formatted time difference
+ */
+char *   formatted_delta_time(uint64_t start, uint64_t end) {
+   assert(end >= start);
+   static GPrivate  formatted_time_key = G_PRIVATE_INIT(g_free);
+   char * elapsed_buf = get_thread_fixed_buffer(&formatted_time_key, 40);
+
+   uint64_t delta_nanos = end - start;
+   uint64_t isecs    = delta_nanos/ (1000 * 1000 * 1000);
+   uint64_t imillis  = delta_nanos/ (1000 * 1000);
+   snprintf(elapsed_buf, 40, "%3"PRIu64".%03"PRIu64"", isecs, imillis - (isecs*1000) );
    return elapsed_buf;
 }
 
