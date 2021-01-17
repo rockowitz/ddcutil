@@ -601,8 +601,8 @@ find_dref(
                DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
             }
-            i2c_free_bus_info(businfo);
          }
+         i2c_free_bus_info(businfo);
       }
       else {
          f0printf(fout(), "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
