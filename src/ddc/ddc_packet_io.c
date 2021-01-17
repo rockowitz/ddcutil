@@ -204,6 +204,7 @@ ddc_open_display(
       }
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+      assert(false);   // avoid coverity error re null dreference
 #endif
       break;
    } // switch
