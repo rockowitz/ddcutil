@@ -709,7 +709,7 @@ int fopen_mkdir(
       *fp_loc = fopen(path,mode);
       if (!*fp_loc) {
          rc = -errno;
-         f0printf(ferr, "Unable to open %s with mode %s: %s\n", path, mode, path, strerror(errno));
+         f0printf(ferr, "Unable to open %s with mode %s: %s\n", path, mode, strerror(errno));
       }
    }
    assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
