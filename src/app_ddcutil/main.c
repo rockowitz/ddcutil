@@ -581,24 +581,27 @@ find_dref(
       int busno = did_work->busno;
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
-      if ( businfo && (businfo->flags & I2C_BUS_ADDR_0X50) ) {
-         dref = create_bus_display_ref(busno);
-         dref->dispno = -1;     // should use some other value for unassigned vs invalid
-         dref->pedid = businfo->edid;    // needed?
-         // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
-         dref->detail = businfo;
-         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-         dref->flags |= DREF_DDC_IS_MONITOR;
-         dref->flags |= DREF_TRANSIENT;
-         if (!initial_checks_by_dref(dref)) {
-            f0printf(outf, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
-            free_display_ref(dref);
-            dref = NULL;
-            final_result = DDCRC_INVALID_DISPLAY;
-         }
-         else {
-            DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
-            final_result = DDCRC_OK;
+      if ( businfo) {
+         if (businfo->flags & I2C_BUS_ADDR_0X50)  {
+            dref = create_bus_display_ref(busno);
+            dref->dispno = -1;     // should use some other value for unassigned vs invalid
+            dref->pedid = businfo->edid;    // needed?
+            // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
+            dref->detail = businfo;
+            dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+            dref->flags |= DREF_DDC_IS_MONITOR;
+            dref->flags |= DREF_TRANSIENT;
+            if (!initial_checks_by_dref(dref)) {
+               f0printf(outf, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+               free_display_ref(dref);
+               dref = NULL;
+               final_result = DDCRC_INVALID_DISPLAY;
+            }
+            else {
+               DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
+               final_result = DDCRC_OK;
+            }
+            i2c_free_bus_info(businfo);
          }
       }
       else {
