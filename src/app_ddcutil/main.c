@@ -703,6 +703,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_SETVCP:
       {
+         assert(dh);
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
