@@ -1,10 +1,9 @@
-
 /** \file parms.h
  *
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -42,11 +41,15 @@
 
 // One of the following 2 defines must be enabled:
 // #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
-#define DEFAULT_I2C_IO_STRATEGY   I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
-#define DEFAULT_I2C_READ_BYTEWISE false                   ///< Use single byte reads
+#define DEFAULT_I2C_IO_STRATEGY        I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
+#define DEFAULT_I2C_READ_BYTEWISE      false                   ///< Use single byte reads
+#define DEFAULT_EDID_WRITE_BEFORE_READ true
+#define DEFAULT_EDID_READ_SIZE         256                     ///< 128 or 256
+#define EDID_BUFFER_SIZE               256                     ///< always 256
 
 #define DEFAULT_EDID_READ_USES_I2C_LAYER  false
 #define DEFAULT_EDID_READ_BYTEWISE        false
+
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
