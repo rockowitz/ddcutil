@@ -2,7 +2,7 @@
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -21,9 +21,12 @@
 #include "i2c_strategy_dispatcher.h"
 
 // I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
-bool I2C_Read_Bytewise               = DEFAULT_I2C_READ_BYTEWISE;
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
+bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
+bool I2C_Read_Bytewise               = DEFAULT_I2C_READ_BYTEWISE;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
+int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
+
 
 
 // Trace class for this file

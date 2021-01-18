@@ -2,7 +2,7 @@
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_STRATEGY_DISPATCHER_H_
@@ -38,6 +38,8 @@ i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 extern bool I2C_Read_Bytewise;
 extern bool EDID_Read_Uses_I2C_Layer;
 extern bool EDID_Read_Bytewise;
+extern bool EDID_Write_Before_Read;
+extern int  EDID_Read_Size;
 
 
 Status_Errno_DDC
