@@ -45,7 +45,7 @@ Status_Errno  i2c_close_bus(int fd, Call_Options callopts);
 Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
 
 // EDID inspection
-Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid, bool read_bytewise);
+Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
 Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 
 // Retrieve and inspect bus information
