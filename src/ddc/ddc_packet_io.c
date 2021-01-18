@@ -365,7 +365,7 @@ DDCA_Status ddc_i2c_write_read_raw(
                            0x37,
                            get_packet_len(request_packet_ptr)-1,
                            get_packet_start(request_packet_ptr)+1 );
-   DBGMSF(debug, "invoke_i2c_writer() returned %d\n", rc);
+   DBGMSF(debug, "invoke_i2c_writer() returned %d", rc);
    if (rc == 0) {
       TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, NULL);
       // tuned_sleep_i2c_with_trace(SE_WRITE_TO_READ, __func__, NULL);
