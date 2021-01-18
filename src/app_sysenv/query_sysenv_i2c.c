@@ -3,7 +3,7 @@
  * Check I2C devices using directly coded I2C calls
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -201,7 +201,7 @@ try_single_getvcp_call(
       int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
       int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
       DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
-      rc = 0;
+      rc = 0;raw_scan_i2c_devices
    }
    else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
       DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
