@@ -3,7 +3,7 @@
  *  Access displays, whether DDC, ADL, or USB
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
@@ -33,6 +33,10 @@ ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, includin
 
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth);
+
+
+int
+get_display_count(bool include_invalid_displays);
 
 int
 ddc_report_displays(bool include_invalid_displays, int depth);
