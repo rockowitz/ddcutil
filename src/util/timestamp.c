@@ -166,8 +166,8 @@ char * formatted_elapsed_time() {
 }
 
 
-/** Returns the difference in seconds between 2 timestamps,
- *  as a formatted, printable string.
+/** Returns returns a time in nanoseconds as a formatted, printable string
+ *  in the form SECONDS.MILLISECONDS.
  *
  *  The string is built in a thread specific private buffer.  The returned
  *  string is valid until the next call of this function in the same thread.
@@ -176,14 +176,12 @@ char * formatted_elapsed_time() {
  *  @param  end     end time, in nanoseconds
  *  @return formatted time difference
  */
-char *   formatted_delta_time(uint64_t start, uint64_t end) {
-   assert(end >= start);
+char *   formatted_time(uint64_t nanos) {
    static GPrivate  formatted_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_time_key, 40);
 
-   uint64_t delta_nanos = end - start;
-   uint64_t isecs    = delta_nanos/ (1000 * 1000 * 1000);
-   uint64_t imillis  = delta_nanos/ (1000 * 1000);
+   uint64_t isecs    = nanos/ (1000 * 1000 * 1000);
+   uint64_t imillis  = nanos/ (1000 * 1000);
    snprintf(elapsed_buf, 40, "%3"PRIu64".%03"PRIu64"", isecs, imillis - (isecs*1000) );
    return elapsed_buf;
 }

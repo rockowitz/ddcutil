@@ -20,6 +20,6 @@ uint64_t cur_realtime_nanosec();   // Returns the current value of the realtime 
 void     show_timestamp_history(); // For debugging
 uint64_t elapsed_time_nanosec();   // nanoseconds since start of program, first call initializes
 char *   formatted_elapsed_time(); // printable elapsed time
-char *   formatted_delta_time(uint64_t start, uint64_t end);
+char *   formatted_time(uint64_t nanos);
 
 #endif /* TIMESTAMP_H_ */
