@@ -201,7 +201,7 @@ try_single_getvcp_call(
       int max_val = (ddc_response_bytes[7] << 8) + ddc_response_bytes[8];
       int cur_val = (ddc_response_bytes[9] << 8) + ddc_response_bytes[10];
       DBGMSF(debug, "cur_val = %d, max_val = %d", cur_val, max_val );
-      rc = 0;raw_scan_i2c_devices
+      rc = 0;
    }
    else if (ddc_response_bytes[4] == 0x01) {    // unsupported VCP code
       DBGMSF(debug, "Unsupported VCP code: 0x%02x", vcp_feature_code);
