@@ -89,14 +89,7 @@
 
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
-// #ifdef ENABLE_ENVCMDS    // unnecessary, forced by configure
 #include "app_sysenv/query_sysenv_usb.h"
-// #endif
-#endif
-
-
-#ifdef USE_API
-#include "public/ddcutil_c_api.h"
 #endif
 
 
@@ -161,9 +154,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, int depth)
               0,"",
               28, "User defined features:",
               (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
-              // sbool(enable_dynamic_features));
     rpt_nl();
-    // f0puts("\n", output_dest);
 
     report_performance_options(depth);
 
@@ -383,7 +374,6 @@ bye:
  */
 void test_display_detection_variants() {
 
-
    typedef enum {
       _FALSE,
       _TRUE,
@@ -403,32 +393,9 @@ void test_display_detection_variants() {
       int      valid_display_ct;
       uint64_t elapsed_nanos;
    } Choice_Results;
-   //                                        DNA
+
    char * choice_name[] = {"false", "true", "DNA"};
 
-
-#ifdef VARYING_I2C_READ_BYTEWISE
-   Choice_Entry choices[] =
-   //                          use I2c edid        i2c          write
-   // i2c_io_strategy          layer   bytewise    bytewise     b4 read
-   // ================         ======  ========     =======
-   { {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _FALSE,   _FALSE},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _TRUE,    _FALSE},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _FALSE,   _TRUE},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _TRUE,    _TRUE},
-
- //  {I2C_IO_STRATEGY_IOCTL,  false,   _FALSE,      _DNA},
- //  {I2C_IO_STRATEGY_IOCTL,  false,   _TRUE,       _DNA},
-     {I2C_IO_STRATEGY_IOCTL,  true,    _DNA,        _FALSE,      _FALSE},
-     {I2C_IO_STRATEGY_IOCTL,  true,    _DNA,        _TRUE,       _FALSE},
-     {I2C_IO_STRATEGY_IOCTL,  true,    _DNA,        _FALSE,      _TRUE},
-     {I2C_IO_STRATEGY_IOCTL,  true,    _DNA,        _TRUE,       _TRUE},
-   };
-#endif
    Choice_Entry choices[] =
    //                          use I2c edid        i2c          write     EDID Read
    // i2c_io_strategy          layer   bytewise    bytewise     b4 read   Size
@@ -502,7 +469,6 @@ void test_display_detection_variants() {
        rpt_nl();
        // will include any USB or ADL displays, but that's ok
        ddc_report_displays(/*include_invalid_displays=*/ true, 0);
-
    }
 
    rpt_label(  d, "SUMMARY");
@@ -528,8 +494,6 @@ void test_display_detection_variants() {
             cur_result->valid_display_ct,
             formatted_time(cur_result->elapsed_nanos));
    }
-
-
 }
 
 
@@ -609,9 +573,8 @@ void interrogate(Parsed_Cmd * parsed_cmd)
 #endif
 
 
-
-static
-void ensure_vcp_version_set(Display_Handle * dh)
+static void
+ensure_vcp_version_set(Display_Handle * dh)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
@@ -631,7 +594,8 @@ typedef enum {
 } Displayid_Requirement;
 
 
-const char * displayid_requirement_name(Displayid_Requirement id) {
+const char *
+displayid_requirement_name(Displayid_Requirement id) {
    char * result = NULL;
    switch (id) {
    case DISPLAY_ID_REQUIRED:    result = "DISPLAY_ID_REQUIRED";     break;
@@ -888,7 +852,8 @@ execute_cmd_with_optional_display_handle(
   * @retval  EXIT_SUCCESS normal exit
   * @retval  EXIT_FAILURE an error occurred
   */
-int main(int argc, char *argv[]) {
+int
+main(int argc, char *argv[]) {
    // FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
@@ -1060,7 +1025,6 @@ int main(int argc, char *argv[]) {
       ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
       // report_timestamp_history();  // debugging function
    }
-
 
 bye:
    DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
