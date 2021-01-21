@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,6 +26,7 @@
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 /** \endcond */
@@ -368,6 +370,17 @@ bye:
 }
 
 
+int get_sysfs_drm_edid_count() {
+   GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
+   int ival;
+   char * s = g_ptr_array_index(output, 0);
+   bool ok = str_to_int(s, &ival, 10);
+   assert(ok);
+   g_ptr_array_free(output, true);
+   return ival;
+}
+
+
 /** Tests for display detection variants.
  *
  *  Controlled by utility option --f4
@@ -380,13 +393,20 @@ void test_display_detection_variants() {
       _DNA
    } Bytewise_Option;
 
+   typedef enum {
+      _DYNAMIC = 0,
+      _128     = 128,
+      _256     = 256
+   } Edid_Read_Size_Option;
+
+
    typedef struct {
       I2C_IO_Strategy_Id     i2c_io_strategy_id;
       bool                   edid_uses_i2c_layer;
       Bytewise_Option        edid_read_bytewise;    // applies when edid_uses_i2c_layer == FALSE
       Bytewise_Option        i2c_read_bytewise;     // applies when edid_uses_i2c_layer == TRUE
       bool                   write_before_read;
-      int                    edid_read_size;
+      Edid_Read_Size_Option  edid_read_size;
    } Choice_Entry;
 
    typedef struct {
@@ -395,37 +415,83 @@ void test_display_detection_variants() {
    } Choice_Results;
 
    char * choice_name[] = {"false", "true", "DNA"};
+   char * read_size_name(int n) {
+      // DBGMSG("n=%d", n);
+      char * result = "WTF";
+      switch (n) {
+      case   0: result = "dynamic";  break;
+      case 128: result = "128";      break;
+      case 256: result = "256";      break;
+      default:  result = "INVALID";  break;
+      }
+#ifdef NUW
+      if (n == 0)
+         result = "dynamic";
+      else if (n == 128)
+         result = "128";
+      else if (n == 256)
+         result = "256";
+      else
+         result = "INVALID:";
+#endif
+      // DBGMSG("Returning: %s", result);
+      return result;
+   }
+
+   // char * read_size_name[] = {"dynamic", "128", "256"};
 
    Choice_Entry choices[] =
    //                          use I2c edid        i2c          write     EDID Read
    // i2c_io_strategy          layer   bytewise    bytewise     b4 read   Size
    // ================         ======  ========     =======     =======   ========
    {
-     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE,    256},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE,    256},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _FALSE,   _DYNAMIC},
 
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    256},
-     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   128},
-     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   256},
-     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    128},
-     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _FALSE,      _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_FILEIO,  false,   _TRUE,       _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _DYNAMIC},
    };
    int choice_ct = ARRAY_SIZE(choices);
 
@@ -447,14 +513,14 @@ void test_display_detection_variants() {
     // rpt_vstring(d, "i2c_read_bytewise:        %s", choice_name[cur.i2c_read_bytewise]);
        rpt_vstring(d, "EDID read bytewise:       %s", choice_name[cur.edid_read_bytewise]);
        rpt_vstring(d, "write before read:        %s", sbool(cur.write_before_read));
-       rpt_vstring(d, "EDID read size:           %d", cur.edid_read_size);
+       rpt_vstring(d, "EDID read size:           %s", read_size_name(cur.edid_read_size));
 
        i2c_set_io_strategy(       cur.i2c_io_strategy_id);
        EDID_Read_Uses_I2C_Layer = cur.edid_uses_i2c_layer;
        I2C_Read_Bytewise        = false;       //      cur.i2c_read_bytewise;
        EDID_Read_Bytewise       = cur.edid_read_bytewise;
        EDID_Read_Size           = cur.edid_read_size;
-       assert(EDID_Read_Size == 128 || EDID_Read_Size == 256);
+       assert(EDID_Read_Size == 128 || EDID_Read_Size == 256 || EDID_Read_Size == 0);
 
        // discard existing detected monitors
        ddc_discard_detected_displays();
@@ -473,27 +539,54 @@ void test_display_detection_variants() {
 
    rpt_label(  d, "SUMMARY");
    rpt_nl();
-   rpt_vstring(d, "Total Displays: %d", get_display_count(/*include_invalid_displays*/ true));
+   // will be wrong for our purposes if same monitor appears on 2 i2c buses
+   // int total_displays = get_sysfs_drm_edid_count();
+
+   // ddc_discard_detected_displays();
+   // ddc_ensure_displays_detected();  // to perform normal detection
+   // int total_displays = get_display_count(/*include_invalid_displays*/ true);
+   // rpt_vstring(d, "Total Displays (per /sys/class/drm): %d", total_displays);
    rpt_nl();
 
-   rpt_vstring(d, "   I2C IO    EDID        EDID Read  Write    EDID Read Valid    Seconds");
-   rpt_vstring(d, "   Strategy  Method      Bytewise   b4 Read  Size      Displays         ");
-   rpt_vstring(d, "   =======   ========    =========  =======  ========= ======== =======");
+   rpt_vstring(d, "   I2C IO    EDID        EDID Read   Write    EDID Read Valid    Seconds");
+   rpt_vstring(d, "   Strategy  Method      Bytewise    b4 Read  Size      Displays         ");
+   rpt_vstring(d, "   =======   ========    =========   =======  ========= ======== =======");
    for (int ndx = 0; ndx < choice_ct; ndx++) {
       Choice_Entry cur = choices[ndx];
       Choice_Results* cur_result = &results[ndx];
 
-      rpt_vstring(d, "%2d %-7s   %-9s   %-7s    %-5s %6d  %6d      %s",
+      rpt_vstring(d, "%2d %-7s   %-9s   %-7s     %-5s    %-7s %3d      %s",
             ndx+1,
             (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL",
             (cur.edid_uses_i2c_layer) ? "I2C Layer" : "Directly",
         //    choice_name[cur.i2c_read_bytewise],
             choice_name[cur.edid_read_bytewise],
             sbool(cur.write_before_read),
-            cur.edid_read_size,
+            read_size_name(cur.edid_read_size),
             cur_result->valid_display_ct,
             formatted_time(cur_result->elapsed_nanos));
    }
+   rpt_nl();
+#ifdef DO_NOT_DISTRIBUTE
+   rpt_label(d, "Failures");
+   rpt_nl();
+   for (int ndx = 0; ndx < choice_ct; ndx++) {
+      Choice_Entry cur = choices[ndx];
+      Choice_Results* cur_result = &results[ndx];
+
+      if (cur_result->valid_display_ct < 3)
+      rpt_vstring(d, "%2d %-7s   %-9s   %-7s     %-5s    %-7s %3d      %s",
+            ndx+1,
+            (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL",
+            (cur.edid_uses_i2c_layer) ? "I2C Layer" : "Directly",
+        //    choice_name[cur.i2c_read_bytewise],
+            choice_name[cur.edid_read_bytewise],
+            sbool(cur.write_before_read),
+            read_size_name(cur.edid_read_size),
+            cur_result->valid_display_ct,
+            formatted_time(cur_result->elapsed_nanos));
+   }
+#endif
 }
 
 
