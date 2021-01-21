@@ -348,7 +348,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 //
 
 static Status_Errno_DDC
-i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
+i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, int edid_read_size, bool read_bytewise)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
@@ -378,7 +378,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
    if (rc == 0) {
       if (read_bytewise) {
          int ndx = 0;
-         for (; ndx < EDID_Read_Size && rc == 0; ndx++) {
+         for (; ndx < edid_read_size && rc == 0; ndx++) {
             RECORD_IO_EVENTX(
                 fd,
                 IE_READ,
@@ -398,7 +398,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
          RECORD_IO_EVENTX(
              fd,
              IE_READ,
-             ( rc = read(fd, rawedid->bytes, EDID_Read_Size) )
+             ( rc = read(fd, rawedid->bytes, edid_read_size) )
             );
          if (rc >= 0) {
             DBGMSF(debug, "read() returned %d", rc);
@@ -423,7 +423,7 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, bool read_bytewise)
 
 
 static Status_Errno_DDC
-i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
+i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, int edid_read_size, bool read_bytewise)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
@@ -440,14 +440,14 @@ i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, bool read_bytewise)
    if (rc == 0) {   // write succeeded or no write
       if (read_bytewise) {
          int ndx = 0;
-         for (; ndx < EDID_Read_Size && rc == 0; ndx++) {
+         for (; ndx < edid_read_size && rc == 0; ndx++) {
             // DBGMSG("Before invoke_i2c_reader() call");
             rc = invoke_i2c_reader(fd, 0x50, false, 1, &rawedid->bytes[ndx] );
          }
          DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
       } // read_bytewise == true
       else {
-         rc = invoke_i2c_reader(fd, 0x50, read_bytewise, EDID_Read_Size, rawedid->bytes);
+         rc = invoke_i2c_reader(fd, 0x50, read_bytewise, edid_read_size, rawedid->bytes);
          DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
 
       }
@@ -497,29 +497,36 @@ Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
    }
 #endif
 
-   int max_tries = 2;
+   int edid_read_size = EDID_Read_Size;
+   int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
+   DBGTRC(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
 
    bool read_bytewise = EDID_Read_Bytewise;
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
-      // if (tryctr >= 2)
-      //   read_bytewise = !EDID_Read_Bytewise;
-      DBGTRC(debug, TRACE_GROUP, "Trying EDID read. tryctr=%d, max_tries=%d, read_bytewise=%s, using %s",
-                    tryctr, max_tries, sbool(read_bytewise),
+      if (EDID_Read_Size == 0)
+         edid_read_size = (tryctr < 2) ? 128 : 256;
+      else
+         edid_read_size = EDID_Read_Size;
+
+      DBGTRC(debug, TRACE_GROUP,
+                    "Trying EDID read. tryctr=%d, max_tries=%d,"
+                    " edid_read_size=%d, read_bytewise=%s, using %s",
+                    tryctr, max_tries, edid_read_size, sbool(read_bytewise),
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
       if (EDID_Read_Uses_I2C_Layer) {
-         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, read_bytewise);
+         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
       }
       else {
-         rc = i2c_get_edid_bytes_directly(fd, rawedid, read_bytewise);
+         rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
       }
-      if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP) {      // *** TEMP ***
-         // DBGMSG("breaking");
-         break;
-      }
+      // if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP) {      // *** TEMP ***
+      //    // DBGMSG("breaking");
+      //    break;
+      // }
       assert(rc <= 0);
       if (rc == 0) {
          // rawedid->len = 128;
