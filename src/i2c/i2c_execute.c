@@ -3,7 +3,7 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -335,7 +335,12 @@ i2c_ioctl_writer(
    // if error:
    //    -1, errno is set
    // 11/15: as seen: always returns 1 for success
-   int rc = ioctl(fd, I2C_RDWR, &msgset);
+   int rc = 0;
+   RECORD_IO_EVENTX(
+         fd,
+         IE_WRITE,
+         ( rc = ioctl(fd, I2C_RDWR, &msgset) )
+         );
    int errsv = errno;
    if (rc < 0) {
       if (debug) {
