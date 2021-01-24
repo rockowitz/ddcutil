@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_BASE_H_
@@ -51,7 +51,6 @@ bool only_nvidia_or_fglrx(Driver_Name_Node * driver_list);
 
 int  i2c_path_to_busno(char * path);
 
-
 #define ENV_ACCUMULATOR_MARKER "ENVA"
 /** Collects system environment information */
 typedef struct {
@@ -86,8 +85,6 @@ typedef struct {
 Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
 void env_accumulator_report(Env_Accumulator * accum, int depth);
-
-
 
 int execute_cmd_collect_with_filter(
       const char * cmd,

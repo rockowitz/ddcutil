@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE   // for asprintf() in stdio.h
@@ -439,8 +439,6 @@ char * driver_name_list_string(Driver_Name_Node * head) {
 }
 
 
-
-
 /** Execute a shell command and return the contents in a newly allocated
  *  #GPtrArray of lines. Optionally, keep only those lines containing at least
  *  one in a list of terms.  After filtering, the set of returned lines may
@@ -488,6 +486,7 @@ int execute_cmd_collect_with_filter(
    DBGMSF(debug, "Returning: %d", rc);
    return rc;
 }
+
 
 /** Given a path whose final segment is of the form "i2c-n",
  *  returns the bus number.
