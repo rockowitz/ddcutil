@@ -348,7 +348,11 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 //
 
 static Status_Errno_DDC
-i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, int edid_read_size, bool read_bytewise)
+i2c_get_edid_bytes_directly(
+      int     fd,
+      Buffer* rawedid,
+      int     edid_read_size,
+      bool    read_bytewise)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
@@ -423,7 +427,11 @@ i2c_get_edid_bytes_directly(int fd, Buffer* rawedid, int edid_read_size, bool re
 
 
 static Status_Errno_DDC
-i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, int edid_read_size, bool read_bytewise)
+i2c_get_edid_bytes_using_i2c_layer(
+      int     fd,
+      Buffer* rawedid,
+      int     edid_read_size,
+      bool    read_bytewise)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
@@ -467,12 +475,14 @@ i2c_get_edid_bytes_using_i2c_layer(int fd, Buffer* rawedid, int edid_read_size, 
 /** Gets EDID bytes of a monitor on an open I2C device.
  *
  * @param  fd        file descriptor for open /dev/i2c-n
- * @param  rawedid   buffer in which to return first 128 bytes of EDID
+ * @param  rawedid   buffer in which to return bytes of the EDID
  *
  * @retval  0        success
  * @retval  <0       error
  */
-Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid) {
+Status_Errno_DDC
+i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
+{
    bool debug  = false;
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
@@ -559,7 +569,9 @@ bye:
  *
  * @return status code
  */
-Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc) {
+Status_Errno_DDC
+i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
+{
    bool debug  = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    Parsed_Edid * edid = NULL;
