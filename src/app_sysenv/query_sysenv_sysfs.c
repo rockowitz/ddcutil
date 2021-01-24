@@ -1273,6 +1273,7 @@ void dump_sysfs_i2c() {
          "ls -l /sys/devices/pci*",
          "ls -l /sys/class/pci*",             // pci_bus, pci_epc
 #endif
+   "ls -l /sys/class/backlight:*",
    "ls -l /sys/dev/char/89:*",
    "ls -l /sys/dev/char/239:*",
    "ls -l /sys/bus/i2c/devices",
