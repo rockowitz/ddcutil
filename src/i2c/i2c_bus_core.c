@@ -237,8 +237,8 @@ retry:
 // I2C Bus Inspection - Slave Addresses
 //
 
-#define IS_EDP_DEVICE(_busno) is_drm_laptop_device(_busno, "-eDP-")
-#define IS_LVDS_DEVICE(_busno) is_drm_laptop_device(_busno, "LVDS")
+#define IS_EDP_DEVICE(_busno) is_laptop_drm_connector(_busno, "-eDP-")
+#define IS_LVDS_DEVICE(_busno) is_laptop_drm_connector(_busno, "-LVDS-")
 
 /** Checks whether a /dev/i2c-n device represents an eDP or LVDS device,
  *  i.e. a laptop display.
@@ -250,7 +250,7 @@ retry:
 // Attempting to recode using opendir() and readdir() produced
 // a complicated mess.  Using execute_shell_cmd_collect() is simple.
 // Simplicity has its virtues.
-static bool is_drm_laptop_device(int busno, char * drm_name_fragment) {
+static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
    bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
