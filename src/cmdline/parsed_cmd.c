@@ -1,7 +1,7 @@
 /** @file parsed_cmd.c
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -101,7 +101,8 @@ Parsed_Cmd *  new_parsed_cmd() {
    // n. all flags are false, byte values 0, integers 0, pointers NULL because of calloc
    // parsed_cmd->output_level = OL_DEFAULT;
    parsed_cmd->output_level = DDCA_OL_NORMAL;
-   parsed_cmd->i1 = -1;    // if set, values should be >= 0
+   parsed_cmd->edid_read_size = -1;   // if set, values are >= 0
+   parsed_cmd->i1 = -1;               // if set, values are >= 0
    // parsed_cmd->nodetect = true;
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
    parsed_cmd->setvcp_values = g_array_new(false,         // not null-terminated
@@ -230,6 +231,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                       setvcp_value_type_name(elem->feature_value_type),
                       elem->feature_value);
    }
+   rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
    rpt_int( "i1",                NULL, parsed_cmd->i1,                            d1);
    rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
    rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);

@@ -1,7 +1,7 @@
 /** @file parsed_cmd.h
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
@@ -107,6 +107,7 @@ struct {
    float                  sleep_multiplier;
    DDCA_MCCS_Version_Spec mccs_vspec;
 // DDCA_MCCS_Version_Id   mccs_version_id;
+   int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
    int                    i1;         // available for temporary use
 } Parsed_Cmd;

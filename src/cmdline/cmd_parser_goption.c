@@ -183,6 +183,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gint     hidwork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
+   gint     edid_read_size_work = -1;
    gint     i1_work = -1;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
@@ -284,6 +285,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
 
       {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"edid-read-size",
+                      '\0', 0, G_OPTION_ARG_INT,         &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
 
       // Debugging
       {"excp",       '\0', 0, G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
@@ -616,6 +619,18 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
          parsed_cmd->sleep_multiplier = multiplier;
       }
    }
+
+   DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
+   if (edid_read_size_work !=  -1 &&
+       edid_read_size_work != 128 &&
+       edid_read_size_work !=   0 &&
+       edid_read_size_work != 256)
+   {
+      fprintf(stderr, "Invalid EDID read size: %d\n", edid_read_size_work);
+      ok = false;
+   }
+   else
+      parsed_cmd->edid_read_size = edid_read_size_work;
 
 
 #ifdef COMMA_DELIMITED_TRACE
