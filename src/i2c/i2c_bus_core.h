@@ -53,9 +53,10 @@ Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 #define I2C_BUS_EXISTS               0x80
 #define I2C_BUS_ACCESSIBLE           0x40
 #define I2C_BUS_ADDR_0X50            0x20      ///< detected I2C bus address 0x50
-#define I2C_BUS_ADDR_0X37            0x10
+#define I2C_BUS_ADDR_0X37            0x10      ///< detected I2C bus address 0x37
 #define I2C_BUS_ADDR_0X30            0x08      ///< detected write-only addr to specify EDID block number
 #define I2C_BUS_EDP                  0x04      ///< bus associated with eDP display
+#define I2C_BUS_LVDS                 0x02      ///< bus associated with LVDS display
 #define I2C_BUS_PROBED               0x01      ///< has bus been checked?
 #define I2C_BUS_VALID_NAME_CHECKED 0x0800
 #define I2C_BUS_HAS_VALID_NAME     0x0400

@@ -464,6 +464,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
              I2C_Bus_Info * curinfo = dref->detail;
              if (curinfo->flags & I2C_BUS_EDP)
                  msg = "This is an eDP laptop display. Laptop displays do not support DDC/CI.";
+             else if (curinfo->flags & I2C_BUS_LVDS)
+                  msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
              else if ( is_embedded_parsed_edid(dref->pedid) )
                  msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
          }

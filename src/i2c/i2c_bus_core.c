@@ -237,16 +237,20 @@ retry:
 // I2C Bus Inspection - Slave Addresses
 //
 
-/** Checks whether a /dev/i2c-n device represents an dDP device,
+#define IS_EDP_DEVICE(_busno) is_drm_laptop_device(_busno, "-eDP-")
+#define IS_LVDS_DEVICE(_busno) is_drm_laptop_device(_busno, "LVDS")
+
+/** Checks whether a /dev/i2c-n device represents an eDP or LVDS device,
  *  i.e. a laptop display.
  *
  *  @param  busno   i2c bus number
+ *  #param  drm_name_fragment  string to look for
  *  @return true/false
  */
 // Attempting to recode using opendir() and readdir() produced
 // a complicated mess.  Using execute_shell_cmd_collect() is simple.
 // Simplicity has its virtues.
-static bool is_edp_device(int busno) {
+static bool is_drm_laptop_device(int busno, char * drm_name_fragment) {
    bool debug = false;
    // DBGMSF(debug, "Starting.  busno=%d", busno);
    bool result = false;
@@ -259,7 +263,7 @@ static bool is_edp_device(int busno) {
    if (lines)  {    // command should never fail, but just in case
       for (int ndx = 0; ndx < lines->len; ndx++) {
          char * s = g_ptr_array_index(lines, ndx);
-         if (strstr(s, "-eDP-")) {
+         if (strstr(s, drm_name_fragment)) {
             result = true;
             break;
          }
@@ -637,11 +641,16 @@ bool i2c_detect_x37(int fd) {
       if (rc == 1)
          result = true;
 
+      // Per DDC/CI v1.1, section 6.4
+      // The NULL message is used in the following cases:
+      //   To detect that the display is DDC/CI capable (by reading it at 0x6Fh I2c slave address)
+      //   ...
+
       Byte    readbuf[4];  //  4 byte buffer
       rc = read(fd, readbuf, 4);
       DBGTRC(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_desc(rc));
       // test doesn't work, buffer contains random bytes (but same random bytes for every
-      // display in a single call to i2cdetect)
+      // display in a single call to i2cdetect_x37
       // Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
       // if (rc == 4) {
       //    DBGMSG("read x37 returned: 0x%08x", readbuf);
@@ -704,10 +713,13 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", ddcrc);
           if (ddcrc == 0) {
              bus_info->flags |= I2C_BUS_ADDR_0X50;
-
-             if ( is_edp_device(bus_info->busno) ) {
+             if ( IS_EDP_DEVICE(bus_info->busno) ) {
                 DBGMSF(debug, "eDP device detected");
                 bus_info->flags |= I2C_BUS_EDP;
+             }
+             else if ( IS_LVDS_DEVICE(bus_info->busno) ) {
+                DBGMSF(debug, "LVDS device detected");
+                bus_info->flags |= I2C_BUS_LVDS;
              }
              else {
                 if ( i2c_detect_x37(fd) )
@@ -730,7 +742,7 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
    DBGMSF(debug, "bus_info = %p", bus_info);
    if (bus_info) {
-      if ( memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
+      if (memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
          assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
          if (bus_info->edid)
             free_parsed_edid(bus_info->edid);
@@ -771,6 +783,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    if ( bus_info->flags & I2C_BUS_PROBED ) {
       rpt_vstring(depth, "Bus accessible:          %s", sbool(bus_info->flags&I2C_BUS_ACCESSIBLE ));
       rpt_vstring(depth, "Bus is eDP:              %s", sbool(bus_info->flags&I2C_BUS_EDP ));
+      rpt_vstring(depth, "Bus is LVDS:             %s", sbool(bus_info->flags&I2C_BUS_LVDS));
       rpt_vstring(depth, "Valid bus name checked:  %s", sbool(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED));
       rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(bus_info->flags & I2C_BUS_HAS_VALID_NAME));
 #ifdef DETECT_SLAVE_ADDRS
@@ -818,7 +831,9 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
 #endif
       rpt_vstring(depth+1, "I2C address 0x50 (EDID) responsive: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth+1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
-      if (!(businfo->flags & I2C_BUS_EDP))
+      rpt_vstring(depth+1, "Is LVDS device:                     %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
+
+      if ( !(businfo->flags & (I2C_BUS_EDP||I2C_BUS_LVDS)) )
       rpt_vstring(depth+1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
