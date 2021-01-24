@@ -335,6 +335,9 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
     // global variable in dyn_dynamic_features:
     enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
 
+    if (parsed_cmd->edid_read_size >= 0)
+       EDID_Read_Size           = parsed_cmd->edid_read_size;
+
     init_ddc_services();   // n. initializes start timestamp
     // overrides setting in init_ddc_services():
     i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
