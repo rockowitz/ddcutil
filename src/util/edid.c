@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -75,8 +75,8 @@ bool is_valid_edid_header(Byte * edidbytes) {
    return result;
 }
 
-bool is_valid_edid(Byte * edid) {
-   return is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
+bool is_valid_raw_edid(Byte * edid, int len) {
+   return (len >= 128) && is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
 }
 
 

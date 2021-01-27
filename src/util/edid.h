@@ -4,7 +4,7 @@
  * the bytes of the EDID are obtained.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
@@ -36,7 +36,7 @@ Byte edid_checksum(Byte * edid);
 
 bool is_valid_edid_checksum(Byte * edidbytes);
 bool is_valid_edid_header(Byte * edidbytes);
-bool is_valid_edid(Byte * edidbytes);
+bool is_valid_raw_edid(Byte * edidbytes, int len);
 
 void parse_mfg_id_in_buffer(Byte * mfgIdBytes, char * buffer, int bufsize);
 
