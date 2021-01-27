@@ -463,9 +463,9 @@ i2c_get_edid_bytes_using_i2c_layer(
          DBGMSF(debug, "invoke_i2c_reader returned %s", psc_desc(rc));
 
       }
-      // if (rc == 0) {
-      //    rawedid->len = 128;
-      // }
+      if (rc == 0) {
+         rawedid->len = edid_read_size;
+      }
    }  // write succeeded
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
@@ -537,10 +537,10 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       else {
          rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
       }
-      // if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP) {      // *** TEMP ***
-      //    // DBGMSG("breaking");
-      //    break;
-      // }
+      if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {
+         // DBGMSG("breaking");
+         break;
+      }
       assert(rc <= 0);
       if (rc == 0) {
          // rawedid->len = 128;
@@ -549,7 +549,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
             dbgrpt_buffer(rawedid, 1);
             // DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
-         if (!is_valid_edid(rawedid->bytes)) {
+         if (!is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
             DBGTRC(debug, TRACE_GROUP, "Invalid EDID");
             rc = DDCRC_INVALID_EDID;
          }
