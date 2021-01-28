@@ -32,6 +32,11 @@ Makefile
 Makefile.in
 src/**/am--include-marker
 
+# Generated files
+ddcutil.pc
+src/public/ddcutil_macros.h
+
+
 # Executable
 /src/ddcutil
 
