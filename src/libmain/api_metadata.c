@@ -1,6 +1,6 @@
 // api_metadata.c
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -764,8 +764,10 @@ ddca_get_simple_sl_value_table(
    return rc;
 }
 
+#endif
 
 // typedef void * Feature_Value_Table;   // temp
+
 
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
@@ -785,7 +787,6 @@ ddca_get_simple_nc_feature_value_name_by_table(
    assert ( (rc==0 && *value_name_loc) || (rc!=0 && !*value_name_loc) );
    return rc;
 }
-#endif
 
 
 #ifdef UNUSED
