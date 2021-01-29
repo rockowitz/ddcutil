@@ -1,26 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2020 Sanford Rockowitz rockowitz@minsoft.com> -->
-<component type="console-application">   <!-- gnome-software does not display if console-application -->
+<!-- Copyright 2020-2021 Sanford Rockowitz rockowitz@minsoft.com> -->
+
+<!-- The use of this file varies by implementation. 
+     The extensive inline comments document this variability.
+     In particular, when building with COPR, the supplied ddcutil.appdata.xml file is modified.
+-->
+
+ <!-- gnome-software does not display if console-application -->
+<component type="console-application">  
 
   <metadata_license>CC0-1.0</metadata_license>
 
-  <!-- if ddcutil, com.ddcutil.ddcutil, the .desktop file name must matcch -->  
-  <!-- 11, eliminate type desktop, COPR accepts, but gnome-software doesn't show -->
-  <!-- 12, ddcutil.desktop -> com.ddcutil.ddcutil: COPR accepts, gnome-sotware doesn't show -->
+  <!-- if  id is ddcutil or com.ddcutil.ddcutil, the .desktop file name must match -->  
+  <!-- if eliminate atribute 'type="desktop"', COPR accepts the id, but gnome-software doesn't show -->
+  <!-- if ddcutil.desktop -> com.ddcutil.ddcutil: COPR accepts, gnome-sotware doesn't show -->
   <id>com.ddcutil.ddcutil</id>  
-  <!-- 26: rename ddcutil -> ddcutilx to verity that COPR doesn't change -
-       verified, changed back -->
+
+  <!-- Verified that COPR does not change the name -->
   <name>ddcutil</name>
+
   <project_license>GPL-2.0-or-later</project_license>
   <summary>Command line program to control monitor settings</summary>
   <description>
-    <p>ddcutil is a command line program for querying and changing monitor settings, such as brightness color levels, and power one hours.
+    <p>ddcutil is a command line program for querying and changing monitor 
+    settings, such as brightness color levels, and power on hours.
 
-    Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), which implements features defined in the Montor Control Command Set (MCCS) specification. Typically, ddcutil communicates with the monitor's VCP over an I2C bus, as per the Display Data Channel/Command Interface Standard (DDC/CI). </p>
-    <p>Alternatively, some monitors (e.g. Eizo ColorEdge, Apple Cinema) provide a USB interface to the VCP, as described in the USB Monitor Control Class Specification. ddcutil can communicate with these monitors using USB.</p>                                                                                       
+    Most mointors, other than lapdop displays, have a Virtual Control Panel (VCP), 
+    which implements features defined in the Montor Control Command Set (MCCS) 
+    specification. Typically, ddcutil communicates with the monitor's VCP over an 
+    I2C bus, as per the Display Data Channel/Command Interface Standard (DDC/CI). </p>
+
     <p>The corresponding desktop application is ddcui.</p>
-    <p>A particular use case for ddcutil is as part of color profile management. Monitor calibration is relative to the monitor color settings currently in effect, e.g. red gain. ddcutil allows color related settings to be saved at the time a monitor is calibrated, and then restored when the calibration is applied.</p>
+
   </description>
+
   <!-- provides appears to be unchanged by COPR -->
   <provides>
     <binary>ddcutil</binary>
@@ -35,8 +48,31 @@
     </screenshot>
   </screenshots>
 
-  <!-- with no icons here, appstream.xml emitted by COPR  contains 64 and 128 bit icons of type "cached" -->
 
+
+  <!-- launchable appears to be unchanged by COPR -->
+   <launchable type="desktop-id">ddcutil.desktop</launchable> 
+
+  <!-- tags that COPR copies unchanged: update_contact, url, developer_name -->
+  <update_contact>rockowitz@minsoft.com></update_contact>
+  <url type="homepage">https://www.ddcutil.com</url>
+  <url type="bugtracker">https://github.com/rockowitz/ddcutil/issues</url>
+  <url type="faq">https://www.ddcutil.com/faq</url>
+
+  <developer_name>Sanford Rockowitz</developer_name>
+
+  <!-- COPR replaces <releases> with its own list from COPR history
+       The release elements have tags version and timestamp, no date -->
+  <releases>
+     <release version="1.0.0" date="2021-01-27"/>
+     <release version="0.9.9" date="2019-12-09"/>
+     <release version="0.9.8" date="2019-12-06"/>
+     <release version="0.9.7" date="2019-09-04"/>
+     <release version="0.9.6" date="2019-08-25"/>
+  </releases>
+
+
+  <!-- with no icons here, appstream.xml emitted by COPR  contains 64 and 128 bit icons of type "cached" -->
 
   <!-- icon tag is invalid if component type = desktop-application" -->
   <!--  <icon type="url">https://www.ddcutil.com/images/ddcutil-48px.png</icon> -->  <!-- COPR build does not find -->
@@ -130,25 +166,6 @@
        14: re-enable launchable, also enable stock icon
            appstreamcli validate shows no errors
   -->
-
-
-  <!-- launchable appears to be unchanged by COPR -->
-   <launchable type="desktop-id">ddcutil.desktop</launchable> 
-
-  <!-- tags that COPR copies unchanged: update_contact, url, developer_name -->
-  <update_contact>rockowitz@minsoft.com></update_contact>
-  <url type="homepage">https://www.ddcutil.com</url>
-  <url type="bugtracker">https://github.com/rockowitz/ddcutil/issues</url>
-  <url type="faq">https://www.ddcutil.com/faq</url>
-
-  <developer_name>Sanford Rockowitz</developer_name>
-  <!-- 12: COPR replaces <releases> with its own list, with tags version and timestamp, no date -->
-  <releases>
-     <release version="0.9.9" date="2019-12-09"/>
-     <release version="0.9.8" date="2019-12-06"/>
-     <release version="0.9.7" date="2019-09-04"/>
-     <release version="0.9.6" date="2019-08-25"/>
-  </releases>
 
   <!-- 25: The following stock icons found in org.kde.kdialog.metainfo.xml which is of type console-application 
            n. neighter of these icons exist for theme hicolor, but do for other themes
