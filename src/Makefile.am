@@ -85,7 +85,9 @@ app_ddcutil/app_getvcp.c \
 app_ddcutil/app_vcpinfo.c
 
 if INCLUDE_TESTCASES_COND
-ddcutil_SOURCES += app_testcase.c
+ddcutil_SOURCES += app_ddcutil/app_testcases.c
+else
+ddcutil_SOURCES += test/testcase_mock_table.c
 endif
 
 #

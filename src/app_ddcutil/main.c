@@ -78,6 +78,8 @@
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
+#include "test/testcases.h"
+
 #include "app_ddcutil/app_capabilities.h"
 #include "app_ddcutil/app_dynamic_features.h"
 #include "app_ddcutil/app_dumpload.h"
@@ -1029,7 +1031,7 @@ main(int argc, char *argv[]) {
 
 #ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_TESTCASE) {
-      bool ok = app_testcases(Parsed_Command parsed_cmd);
+      bool ok = app_testcases(parsed_cmd);
       main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 #endif
