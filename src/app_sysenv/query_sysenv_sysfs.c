@@ -846,8 +846,6 @@ void query_drm_using_sysfs()
 // Functions for probing /sys
 //
 
-
-
 // *** Detail for /sys/bus/i2c/devices (Initial Version)  ***
 
 void one_bus_i2c_device(int busno, void * accumulator, int depth) {
@@ -1291,42 +1289,43 @@ void dump_sysfs_i2c() {
       rpt_nl();
    }
 
-   rpt_nl();
-   rpt_label(0, "*** Detail for /sys/bus/i2c/devices (Initial Version) ***");
-   dir_ordered_foreach(
-         "/sys/bus/i2c/devices",
-         NULL,                 // fn_filter
-         i2c_compare,
-         each_i2c_device_new,
-         NULL,                 // accumulator
-         0);                   // depth
+   if (get_output_level() >= DDCA_OL_VV) {
+      rpt_nl();
+      rpt_label(0, "*** Detail for /sys/bus/i2c/devices (Initial Version) ***");
+      dir_ordered_foreach(
+            "/sys/bus/i2c/devices",
+            NULL,                 // fn_filter
+            i2c_compare,
+            each_i2c_device_new,
+            NULL,                 // accumulator
+            0);                   // depth
 
-   rpt_nl();
-   rpt_label(0, "*** Detail for /sys/class/drm  (Initial Version) ***");
-   dir_ordered_foreach(
-         "/sys/class/drm",
-         drm_filter                ,
-         gaux_ptr_scomp,    // GCompareFunc
-         each_drm_device,    //
-         NULL,                 // accumulator
-         0);                   // depth
+      rpt_nl();
+      rpt_label(0, "*** Detail for /sys/class/drm  (Initial Version) ***");
+      dir_ordered_foreach(
+            "/sys/class/drm",
+            drm_filter                ,
+            gaux_ptr_scomp,    // GCompareFunc
+            each_drm_device,    //
+            NULL,                 // accumulator
+            0);                   // depth
 
 #ifdef TMI
-   GPtrArray *  video_devices =   execute_shell_cmd_collect(
-         "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
-   rpt_nl();
+      GPtrArray *  video_devices =   execute_shell_cmd_collect(
+            "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
+      rpt_nl();
 
-   rpt_vstring(0, "Display devices: (class 0x03nnnn)");
-   for (int ndx = 0; ndx < video_devices->len; ndx++) {
-      char * dirname = g_ptr_array_index(video_devices, ndx);
-      rpt_vstring(2, "%s", dirname);
-   }
+      rpt_vstring(0, "Display devices: (class 0x03nnnn)");
+      for (int ndx = 0; ndx < video_devices->len; ndx++) {
+         char * dirname = g_ptr_array_index(video_devices, ndx);
+         rpt_vstring(2, "%s", dirname);
+      }
 #endif
+
+   }
 
    rpt_nl();
    rpt_vstring(0, "*** Reporting video devices ***");
-   // rpt_vstring(0, "using dir_foreach");
-   // general probe
    dir_foreach(
             "/sys/bus/pci/devices",
             NULL,
