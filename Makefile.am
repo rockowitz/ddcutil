@@ -12,10 +12,6 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 
 EXTRA_DIST =  README.md NEWS.md 
-EXTRA_DIST += ddcutil.desktop  
-EXTRA_DIST += ddcutil.appdata.xml
-# temporarily just distribute the svg icon
-# EXTRA_DIST += icons/ddcutil.svg
 
 # if ENABLE_GOBJECT_COND
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
@@ -26,28 +22,35 @@ if USE_DOXYGEN
 DOXYDIR = docs
 endif
 
-# The desktop files: 
-desktopdir= $(datadir)/applications
-desktop_DATA=ddcutil.desktop
 
-metainfodir=$(datadir)/metainfo
-metainfo_DATA=ddcutil.appdata.xml
-
-# Application icons
-# appicondir=$(datadir)/icons/hicolor/scalable/apps
-# appicon_DATA=icons/ddcutil.svg
-
-iconsdir=$(datadir)
-nobase_dist_icons_DATA = \
-   icons/hicolor/16x16/apps/ddcutil.png \
-   icons/hicolor/32x32/apps/ddcutil.png \
-   icons/hicolor/48x48/apps/ddcutil.png \
-   icons/hicolor/128x128/apps/ddcutil.png 
-
-# GNOME Classic looks only in pixmaps
-pixmapsdir=$(datadir)
-nobase_dist_pixmaps_DATA = \
-   pixmaps/ddcutil.png
+## Defer installation of appstream related files
+## EXTRA_DIST += ddcutil.desktop  
+## EXTRA_DIST += ddcutil.appdata.xml
+## # temporarily just distribute the svg icon
+## # EXTRA_DIST += icons/ddcutil.svg
+## 
+## # The desktop files: 
+## desktopdir= $(datadir)/applications
+## desktop_DATA=ddcutil.desktop
+## 
+## metainfodir=$(datadir)/metainfo
+## metainfo_DATA=ddcutil.appdata.xml
+## 
+## # Application icons
+## # appicondir=$(datadir)/icons/hicolor/scalable/apps
+## # appicon_DATA=icons/ddcutil.svg
+## 
+## iconsdir=$(datadir)
+## nobase_dist_icons_DATA = \
+##    icons/hicolor/16x16/apps/ddcutil.png \
+##    icons/hicolor/32x32/apps/ddcutil.png \
+##    icons/hicolor/48x48/apps/ddcutil.png \
+##    icons/hicolor/128x128/apps/ddcutil.png 
+## 
+## # GNOME Classic looks only in pixmaps
+## pixmapsdir=$(datadir)
+## nobase_dist_pixmaps_DATA = \
+##    pixmaps/ddcutil.png
 
 # doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
 
