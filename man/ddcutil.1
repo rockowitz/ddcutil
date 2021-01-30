@@ -241,6 +241,11 @@ Verify or do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. \fB--noveri
 .TQ
 .B "--async"
 If there are multiple monitors, initial checks are performed in multiple threads, improving performance.
+.TQ
+.BI "--edid-read-size " "128|256"
+Force \fBddcutil\fP to read the specified number of bytes when reading the EDID.
+This option is a work-around for certain driver bugs.
+The default is 256. 
 
 .PP
 Options to tune execution:
