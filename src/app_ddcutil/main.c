@@ -725,9 +725,7 @@ find_dref(
                                     did_repr(parsed_cmd->pdid),
                                     displayid_requirement_name(displayid_required));
    FILE * outf = fout();
-
    Status_Errno_DDC final_result = DDCRC_OK;
-
    Display_Ref * dref = NULL;
    Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
@@ -735,11 +733,12 @@ find_dref(
 
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
+      DBGTRC(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
       // special handling for --busno
       int busno = did_work->busno;
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
-      if ( businfo) {
+      if (businfo) {
          if (businfo->flags & I2C_BUS_ADDR_0X50)  {
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
@@ -750,8 +749,9 @@ find_dref(
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
             if (!initial_checks_by_dref(dref)) {
-               f0printf(outf, "DDC communication failed for monitor on I2C bus /dev/i2c-%d\n", busno);
+               f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
+               i2c_free_bus_info(businfo);
                dref = NULL;
                final_result = DDCRC_INVALID_DISPLAY;
             }
@@ -759,19 +759,26 @@ find_dref(
                DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
             }
+         }  // has edid
+         else {   // no EDID found
+            f0printf(fout(), "No monitor detected on bus /dev/i2c-%d\n", busno);
+            i2c_free_bus_info(businfo);
+            final_result = DDCRC_INVALID_DISPLAY;
          }
-      }
+      }    // businfo allocated
       else {
-         f0printf(fout(), "No monitor detected on I2C bus /dev/i2c-%d\n", busno);
+         f0printf(fout(), "Bus /dev/i2c-%d not found\n", busno);
          final_result = DDCRC_INVALID_DISPLAY;
       }
    }       // DISP_ID_BUSNO
    else {
       if (!did_work && displayid_required == DISPLAY_ID_OPTIONAL) {
+         DBGTRC(debug, DDCA_TRC_NONE, "No monitor specified, none required for command");
          dref = NULL;
          final_result = DDCRC_OK;
       }
       else {
+         DBGTRC(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
          bool temporary_did_work = false;
          if (!did_work) {
             did_work = create_dispno_display_identifier(1);   // default monitor
@@ -790,7 +797,10 @@ find_dref(
 
    *dref_loc = dref;
    DBGTRC(debug, TRACE_GROUP,
-                 "Done. *dref_loc = %p, returning %s", *dref_loc, psc_desc(final_result));
+                 "Done. *dref_loc = %p -> %s , returning %s",
+                 *dref_loc,
+                 dref_repr_t(*dref_loc),
+                 psc_desc(final_result));
    return final_result;
 }
 
