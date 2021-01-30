@@ -3,7 +3,7 @@
  *  Utility functions for glib.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -264,6 +264,33 @@ gaux_ptr_array_from_null_terminated_array(
    while (*p) {
       gpointer v = (dup_func) ? dup_func(*p) : *p;
       g_ptr_array_add(result, v);
+   }
+   return result;
+}
+
+/** Implements g_ptr_array_find_with_equal_func(), which requires glib 2.54.
+ *
+ */
+gboolean
+gaux_ptr_array_find_with_equal_func(
+      GPtrArray *    haystack,
+      gconstpointer  needle,
+      GEqualFunc     equal_func,
+      guint *        index_)
+{
+   bool result = false;
+   *index_ = -1;
+   if (haystack && (haystack->len == 0) && needle) {
+      for (int ndx = 0; ndx < haystack->len; ndx++) {
+         if (equal_func)
+            result = equal_func(g_ptr_array_index(haystack,ndx), needle);
+         else
+            result = g_ptr_array_index(haystack,ndx) == needle;
+         if (result) {
+            *index_ = ndx;
+            break;
+         }
+      }
    }
    return result;
 }

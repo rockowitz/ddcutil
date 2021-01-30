@@ -3,7 +3,7 @@
  *  Utility functions for glib.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -65,6 +65,12 @@ gaux_ptr_array_from_null_terminated_array(
       GAuxDupFunc    dup_func,
       GDestroyNotify element_free_func);
 
+gboolean
+gaux_ptr_array_find_with_equal_func(
+      GPtrArray *    haystack,
+      gconstpointer  needle,
+      GEqualFunc     equal_func,
+      guint *        index_);
 
 
 #endif /* GLIB_UTIL_H_ */
