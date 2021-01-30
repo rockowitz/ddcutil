@@ -1,7 +1,7 @@
 /** \file ddc_watch_displays.c - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -22,6 +22,7 @@
 // #include <unistd.h>
 
 #include "util/glib_string_util.h"
+#include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -170,7 +171,9 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
    guint found_index;
    for (int ndx = 0; ndx < first->len; ndx++) {
       gpointer cur = g_ptr_array_index(first, ndx);
-      bool found = g_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+      // g_ptr_array_find_with_equal_func() requires glib 2.54
+      // instead use our own implementation
+      bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
       if (!found) {
          g_ptr_array_add(result, strdup(cur));
       }
@@ -189,7 +192,7 @@ bool displays_eq(GPtrArray * first, GPtrArray * second) {
       for (int ndx = 0; ndx < first->len; ndx++) {
          guint found_index;
          gpointer cur = g_ptr_array_index(first, ndx);
-         bool found = g_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+         bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
          if (!found) {
             result = false;
             break;
