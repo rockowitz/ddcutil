@@ -1863,7 +1863,7 @@ format_feature_detail_x93_audio_balance(
       int                     bufsz)
 {
   assert (code_info->vcp_code == 0x93);
-  // Continous in 2.0, NC in 3.0, 2.2, assume 2.1 same as 2.0
+  // Continuous in 2.0, NC in 3.0, 2.2, assume 2.1 same as 2.0
   // NC with reserved x00 and special xff values in 3.0,
 
   // This function should not be called if VCP_STD_CONT,
