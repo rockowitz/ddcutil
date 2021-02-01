@@ -1,0 +1,4 @@
+Starting with release 1.0.0, .gitignore specifies only files that should be
+ignored by any ddcutil git repository, e.g. build artifacts. File of local
+interest only should instead be specified in file .git/info/exclude, which 
+which unlike .gitignore is not tracked in the respository. 
