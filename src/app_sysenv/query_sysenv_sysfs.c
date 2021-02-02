@@ -27,6 +27,7 @@
 
 #include "base/core.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 /** \endcond */
 
 #include "i2c/i2c_sysfs.h"
@@ -35,6 +36,9 @@
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv_sysfs.h"
+
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_ENV;
 
 // Notes on directory structure
 //
@@ -586,6 +590,7 @@ void each_i2c_device(
       int    depth)
 {
    bool debug = false;
+   DBGTRC(debug, DDCA_TRC_NONE, "dirname=%s, fn=%s", dirname, fn);
    assert(streq(dirname, "/sys/bus/i2c/devices"));
    DBGMSF(debug, "dirname=|%s|, fn=|%s|", dirname, fn);
    Env_Accumulator * accum = accumulator;
@@ -602,11 +607,12 @@ void each_i2c_device(
       bva_append(accum->sys_bus_i2c_device_numbers, busno);
    }
    else {
-      rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
-      // DBGMSG("Unexpected /sys/bus/i2c/devices file name: %s", fn);
+      // rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
+      DBGTRC(debug, DDCA_TRC_NONE, "Ignorable /sys/bus/i2c/devices file name: %s", fn);
    }
 
    accum->sysfs_i2c_devices_exist = true;
+   DBGTRC(debug, DDCA_TRC_NONE, "Done");
 }
 
 
@@ -619,6 +625,8 @@ void each_i2c_device(
  *  array of detected I2C device numbers.
  */
 void query_sys_bus_i2c(Env_Accumulator * accumulator) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    accumulator->sys_bus_i2c_device_numbers = bva_create();
    rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    char * dname = "/sys/bus/i2c";
@@ -634,6 +642,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
    }
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
 
@@ -695,6 +704,7 @@ void query_drm_using_sysfs()
    int depth = 0;
    int d1    = depth+1;
    int d2    = depth+2;
+   int d3    = depth+3;
 
    bool debug = false;
 
@@ -730,8 +740,8 @@ void query_drm_using_sysfs()
                   // rpt_vstring(d1, "%s/dpms: %s", cur_dir_name, s_dpms);
 
                   // attribute enabled always "disabled"
-                  // char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
-                  // rpt_vstring(d1, "%s/enabled: %s", cur_dir_name, s_enabled);
+                  char * s_enabled = read_sysfs_attr(cur_dir_name, "enabled", false);
+                  rpt_vstring(d1, "%s/enabled: %s", cur_dir_name, s_enabled);
 
                   char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
                   rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
@@ -742,9 +752,9 @@ void query_drm_using_sysfs()
 
                      // hex_dump(gba_edid->data, gba_edid->len);
 
-#ifdef UNNEEDED
                     rpt_vstring(d2, "Raw EDID:");
-                    rpt_hex_dump(gba_edid->data, gba_edid->len, 2);
+                    rpt_hex_dump(gba_edid->data, gba_edid->len, d3);
+#ifdef UNNEEDED
                     if (gba_edid->len >= 128) {
                        Parsed_Edid * parsed_edid = create_parsed_edid(gba_edid->data);
                        if (parsed_edid) {
@@ -918,7 +928,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
           RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
           RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
        }
-       //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxN
+       //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxNdump_sysfs_i2c
 
        char * drm_dp_aux_subdir = NULL;
        RPT2_ATTR_SINGLE_SUBDIR(    d1, &drm_dp_aux_subdir,  str_starts_with, "drm_dp_aux", dir_devices_i2cN, "device");
@@ -1178,6 +1188,8 @@ void one_pci_device(
       void *       accumulator,
       int          depth)
 {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_NONE, "Starting. dirname=%s, filename=%s", dirname, filename);
    int d0 = depth;
    int d1 = depth+1;
 
@@ -1185,14 +1197,17 @@ void one_pci_device(
    g_snprintf(dir_fn, PATH_MAX, "%s/%s", dirname, filename);
 
    char * device_class = read_sysfs_attr(dir_fn, "class", false);
-   if (!device_class)
+   if (!device_class) {
+      DBGTRC(debug, DDCA_TRC_NONE, "Done.  no device_class");
       return;
+   }
    unsigned class_id = h2uint(device_class);
    // DBGMSF(debug, "class_id: 0x%08x", class_id);
    //   if (str_starts_with(device_class, "0x03")) {
    if (class_id >> 16 != 0x03 &&     // Display controller
        class_id >> 16 != 0x0a)       // Docking station
    {
+       DBGTRC(debug, DDCA_TRC_NONE, "Done. class not display or docking station");
        return;
    }
    free(device_class);
@@ -1243,6 +1258,8 @@ void one_pci_device(
           sysfs_dir_i2cN,
           accumulator,
           d1);
+
+    DBGTRC(debug, DDCA_TRC_NONE, "Done");
 }
 
 #ifdef UNUSED
@@ -1256,6 +1273,8 @@ bool startswith_pci(char * value) {
  */
 
 void dump_sysfs_i2c() {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    rpt_nl();
    rpt_label(0, "Dumping sysfs i2c entries");
 
@@ -1332,5 +1351,14 @@ void dump_sysfs_i2c() {
             one_pci_device,
             NULL,
             0);
+
+   DBGTRC(debug, TRACE_GROUP, "Done");
+}
+
+void init_query_sysfs() {
+   RTTI_ADD_FUNC(dump_sysfs_i2c);
+   RTTI_ADD_FUNC(each_i2c_device);
+   RTTI_ADD_FUNC(one_pci_device);
+   RTTI_ADD_FUNC(query_sys_bus_i2c);
 }
 
