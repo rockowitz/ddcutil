@@ -3,19 +3,22 @@
  * I2C utility functions
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
-#include <errno.h>
 #ifdef TARGET_BSD
-#include "../bsd/i2c-dev.h"
-#include "../bsd/i2c.h"
+#include "bsd/i2c-dev.h"
+#include "bsd/i2c.h"
 #else
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #endif
+
+#include <assert.h>
+#include <errno.h>
+#include <glib-2.0/glib.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -36,8 +39,7 @@ int i2c_name_to_busno(const char * name) {
    int result = -1;
    if (name && str_starts_with(name, I2C"-")) {
       int ival;
-      bool ok = str_to_int(name+4, &ival, 10);
-      if (ok)
+      if ( str_to_int(name+4, &ival, 10) )
          result = ival;
    }
    return result;
@@ -53,27 +55,44 @@ int i2c_name_to_busno(const char * name) {
  *  \return  -1  if v1 sorts before v2,
  *            0  v1 equals v2
  *            1  v1 sorts after v2
+ *
+ *  \remark
+ *  Arguments are of type gconstpointer, i.e. void * so
+ *  that the function signature matches GCompareFunc.
  */
-int i2c_compare(const void * v1, const void * v2) {
-   char ** s1 = (char**) v1;
-   char ** s2 = (char**) v2;
+gint i2c_compare(gconstpointer v1, gconstpointer v2) {
    int result = 0;
-   int i1 = i2c_name_to_busno(*s1);
-   int i2 = i2c_name_to_busno(*s2);
-   if (i1 >= 0 && i2 >= 0) {
-      if (i1 < i2)
-         result = -1;
-      else if (i1 == i2)
-         result = 0;
-      else
-         result = 1;
-   }
-   else if (i1 >= 0)
+   // do something "reasonable" for pathological cases
+   if (!v1 && v2)
       result = -1;
-   else if (i2 >= 0)
+   else if (!v1 && !v2)
+      result = 0;
+   else if (v1 && !v2)
       result = 1;
-   else
-      result = strcmp(*s1, *s2);
+
+   else {      // normal case
+      int i1 = i2c_name_to_busno((char*)v1);
+      int i2 = i2c_name_to_busno((char*)v2);
+
+      if (i1 >= 0 && i2 >= 0) {
+         if (i1 < i2)
+            result = -1;
+         else if (i1 == i2)
+            result = 0;
+         else
+            result = 1;
+      }
+
+      // parseables before unparseables
+      else if (i1 >= 0)
+         result = -1;
+      else if (i2 >= 0)
+         result = 1;
+
+      // if neither parseable, compare as strings
+      else
+         result = strcmp((char*)v1, (char*)v2);
+   }
    return result;
 }
 
