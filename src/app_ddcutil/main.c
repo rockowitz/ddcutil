@@ -388,6 +388,37 @@ int get_sysfs_drm_edid_count() {
 }
 
 
+typedef enum {
+   _DYNAMIC = 0,
+   _128     = 128,
+   _256     = 256
+} Edid_Read_Size_Option;
+
+static char * read_size_name(int n) {
+   // DBGMSG("n=%d", n);
+   char * result = "WTF";
+   switch (n) {
+   case   0: result = "dynamic";  break;
+   case 128: result = "128";      break;
+   case 256: result = "256";      break;
+   default:  result = "INVALID";  break;
+   }
+#ifdef NUW
+   if (n == 0)
+      result = "dynamic";
+   else if (n == 128)
+      result = "128";
+   else if (n == 256)
+      result = "256";
+   else
+      result = "INVALID:";
+#endif
+   // DBGMSG("Returning: %s", result);
+   return result;
+}
+
+
+
 /** Tests for display detection variants.
  *
  *  Controlled by utility option --f4
@@ -399,13 +430,6 @@ void test_display_detection_variants() {
       _TRUE,
       _DNA
    } Bytewise_Option;
-
-   typedef enum {
-      _DYNAMIC = 0,
-      _128     = 128,
-      _256     = 256
-   } Edid_Read_Size_Option;
-
 
    typedef struct {
       I2C_IO_Strategy_Id     i2c_io_strategy_id;
@@ -422,28 +446,6 @@ void test_display_detection_variants() {
    } Choice_Results;
 
    char * choice_name[] = {"false", "true", "DNA"};
-   char * read_size_name(int n) {
-      // DBGMSG("n=%d", n);
-      char * result = "WTF";
-      switch (n) {
-      case   0: result = "dynamic";  break;
-      case 128: result = "128";      break;
-      case 256: result = "256";      break;
-      default:  result = "INVALID";  break;
-      }
-#ifdef NUW
-      if (n == 0)
-         result = "dynamic";
-      else if (n == 128)
-         result = "128";
-      else if (n == 256)
-         result = "256";
-      else
-         result = "INVALID:";
-#endif
-      // DBGMSG("Returning: %s", result);
-      return result;
-   }
 
    // char * read_size_name[] = {"dynamic", "128", "256"};
 
@@ -1059,7 +1061,6 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
-      main_rc = EXIT_SUCCESS;
       DBGTRC(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
       query_usbenv();
