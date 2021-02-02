@@ -226,10 +226,11 @@ one_drm_card(
       int          depth)
 {
    bool debug = false;
-   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
-   dir_ordered_foreach(buf, starts_with_card, i2c_compare, read_drm_nondp_card_connector_node, info, depth);
+   dir_ordered_foreach(buf, starts_with_card, gaux_ptr_scomp, read_drm_nondp_card_connector_node, info, depth);
+   DBGMSF(debug, "Done");
 }
 
 
