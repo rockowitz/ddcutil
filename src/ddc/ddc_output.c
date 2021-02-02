@@ -540,20 +540,14 @@ ddc_collect_raw_subset_values(
    assert(subset == VCP_SUBSET_PROFILE);  // currently the only use of this function,
                                           // will need to reconsider handling of Feature_Set_Flags if other
                                           // uses arise
-
    Public_Status_Code psc = 0;
-
-   // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
-   // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
-
    Feature_Set_Flags flags = FSF_NOTABLE;
    if (subset == VCP_SUBSET_PROFILE)
       flags |= FSF_RW_ONLY;
    Dyn_Feature_Set * feature_set = dyn_create_feature_set2(
                                      subset,
                                      dh->dref,          // vcp_version,
-                                     FSF_NOTABLE);
-                                //   false);      // exclude_table_features
+                                     flags);
    if (debug)
       dbgrpt_dyn_feature_set(feature_set, true, 0);
 
