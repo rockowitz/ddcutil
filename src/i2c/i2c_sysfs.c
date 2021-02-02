@@ -414,18 +414,18 @@ void report_one_bus_i2c(
 {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   rpt_nl();
    int busno = i2c_name_to_busno(fn);  //   catches non-i2cN names
    if (busno < 0) {
-      rpt_vstring(depth, "Ignoring: %s/%s", dirname, fn);
-      return;
+      rpt_vstring(depth, "Ignoring %s/%s", dirname, fn);
    }
-
-   rpt_nl();
-   rpt_vstring(depth, "Examining device /sys/bus/i2c/devices/i2c-%d...", busno);
-   int d1 = (debug) ? -1 : depth+1;
-   I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
-   report_i2c_sys_info(info, depth+1);
-   free_i2c_sys_info(info);
+   else {
+      rpt_vstring(depth, "Examining /sys/bus/i2c/devices/i2c-%d...", busno);
+      int d1 = (debug) ? -1 : depth+1;
+      I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
+      report_i2c_sys_info(info, depth+1);
+      free_i2c_sys_info(info);
+   }
 }
 
 
