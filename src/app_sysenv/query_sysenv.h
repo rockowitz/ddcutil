@@ -13,4 +13,6 @@
 
 void query_sysenv();
 
+void init_sysenv();
+
 #endif /* QUERY_SYSENV_H_ */

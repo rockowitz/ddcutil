@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -35,6 +35,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
 
@@ -57,6 +58,8 @@
 
 #include "query_sysenv.h"
 
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_ENV;
 
 /** Compile time and runtime checks of endianness.
  *
@@ -404,6 +407,8 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
  *  Also looks for devices with name attribute "DPMST"
  */
 static void probe_i2c_devices_using_udev() {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    char * subsys_name = "i2c-dev";
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
    sysenv_rpt_current_time(NULL, 1);
@@ -438,6 +443,8 @@ static void probe_i2c_devices_using_udev() {
    summaries = find_devices_by_sysattr_name(nameattr);
    report_i2c_udev_device_summaries(summaries, "Summary of udev DPMST devices...",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
+
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
 
@@ -592,6 +599,8 @@ void final_analysis(Env_Accumulator * accum, int depth) {
  * Returns:      nothing
  */
 void query_sysenv() {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
@@ -740,5 +749,13 @@ void query_sysenv() {
    final_analysis(accumulator, 0);
 
    env_accumulator_free(accumulator);     // make Coverity happy
+
+   DBGTRC(debug, TRACE_GROUP, "Done");
+}
+
+void init_sysenv() {
+   RTTI_ADD_FUNC(query_sysenv);
+   RTTI_ADD_FUNC(probe_i2c_devices_using_udev);
+   init_query_sysfs();
 }
 
