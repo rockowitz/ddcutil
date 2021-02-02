@@ -1,7 +1,7 @@
 /** @file app_getvcp.c
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -325,11 +325,9 @@ app_show_feature_set_values_by_dh(
       flags |= FSF_RW_ONLY;
    if (parsed_cmd->flags & CMD_FLAG_RO_ONLY)
       flags |= FSF_RO_ONLY;
-
-   // this is nonsense, getvcp on a WO feature should be
-   // caught by parser
+   // this is nonsense, getvcp on a WO feature should be caught by parser
    if (parsed_cmd->flags & CMD_FLAG_WO_ONLY) {
-      flags |= FSF_WO_ONLY;
+      // flags |= FSF_WO_ONLY;
       DBGMSG("Invalid: GETVCP for WO features");
       assert(false);
    }
@@ -508,7 +506,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
          else {  // x52 is a FIFO
             int ctr = 0;
             for (;ctr < MAX_CHANGES; ctr++) {
-               Byte changed_feature_id;
+               Byte changed_feature_id = 0x00;
                Error_Info * x52_error = show_changed_feature(dh, &changed_feature_id);
                if (x52_error) {
                   result = x52_error;
