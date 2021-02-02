@@ -264,19 +264,18 @@ gpointer watch_displays_using_poll(gpointer data) {
    DBGTRC(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
-   while (true) {
-      if (terminate_watch_thread) {
-         DBGTRC(true, TRACE_GROUP, "Terminating");
-         free_watch_displays_data(wdd);
-         g_thread_exit(0);
-      }
-
-      prev_displays = check_displays(prev_displays, data);
+   while (!terminate_watch_thread) {
+     // else    // logically meaningless, since if() case exits, but avoids clang use after free warning
+     prev_displays = check_displays(prev_displays, data);
 
       usleep(3000*1000);
       // printf(".");
       // fflush(stdout);
    }
+   DBGTRC(true, TRACE_GROUP, "Terminating");
+   free_watch_displays_data(wdd);
+   g_thread_exit(0);
+   return NULL;    // satisfy compiler check that value returned
 }
 
 
@@ -349,7 +348,7 @@ gpointer watch_displays_using_udev(gpointer data) {
    DBGMSF(debug, "Starting");
 
    Watch_Displays_Data * wdd = data;
-   assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
    // DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
    // pid_t cur_pid = getpid();
@@ -380,6 +379,7 @@ gpointer watch_displays_using_udev(gpointer data) {
          DBGTRC(true, TRACE_GROUP, "Terminating");
          free_watch_displays_data(wdd);
          g_thread_exit(0);
+         assert(false);    // avoid clang warning re wdd use after free
       }
 
       // Doesn't work to detect client crash, main thread and process remains for some time.
