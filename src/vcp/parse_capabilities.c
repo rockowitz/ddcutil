@@ -2,7 +2,7 @@
  *  Parse the capabilities string returned by DDC, query the parsed data structure.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -672,6 +672,7 @@ Parsed_Capabilities * parse_capabilities(
       if (seg->name_start == NULL)  {
          // error condition encountered
          pcaps->caps_validity = CAPABILITIES_INVALID;
+         free(seg);
          break;
       }
       buf_start = seg->remainder_start;
