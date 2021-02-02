@@ -511,7 +511,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    }
 #endif
 
-   int edid_read_size = EDID_Read_Size;
+
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
@@ -520,10 +520,9 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 
    bool read_bytewise = EDID_Read_Bytewise;
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
+      int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
-      else
-         edid_read_size = EDID_Read_Size;
 
       DBGTRC(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
