@@ -3,7 +3,7 @@
  *  Primary file for the DUMPVCP and LOADVCP commands
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -12,8 +12,10 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
-#ifndef TARGET_BSD
+#include <glib-2.0/glib.h>
+#ifdef TARGET_BSD
+// what goes here?
+#else
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #endif
 #include <pwd.h>
@@ -109,20 +111,23 @@ char * create_simple_vcp_fn_by_dh(
  *  \return status code
  */
 Status_Errno_DDC
-dumpvcp_as_file(Display_Handle * dh, const char * fn)
+dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, fn=%s", dh_repr_t(dh), fn);
-   char * filename = (fn) ? strdup(fn) : NULL;
+   DBGMSF(debug, "Starting. dh=%s, fn=%s", dh_repr_t(dh), filename);
+   char fn[PATH_MAX] = {0};
+   if (filename)
+      g_strlcpy(fn, filename, PATH_MAX);
 
    FILE * fout = stdout;
    FILE * ferr = stderr;
    Status_Errno_DDC ddcrc = 0;
-   char fqfn[PATH_MAX] = {0};
+
    Dumpload_Data * data = NULL;
    ddcrc = dumpvcp_as_dumpload_data(dh, &data);
    if (ddcrc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
+      free_dumpload_data(data);
 
       FILE * output_fp = NULL;
 
@@ -130,12 +135,11 @@ dumpvcp_as_file(Display_Handle * dh, const char * fn)
          output_fp = fopen(filename, "w+");
          if (!output_fp) {
             ddcrc = -errno;
-            f0printf(ferr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
+            f0printf(ferr, "Unable to open %s for writing: %s\n", filename, strerror(errno));
          }
       }
       else {
          char simple_fn_buf[NAME_MAX+1];
-
          time_t time_millis = data->timestamp_millis;
          create_simple_vcp_fn_by_dh(
                                dh,
@@ -145,25 +149,18 @@ dumpvcp_as_file(Display_Handle * dh, const char * fn)
          struct passwd * pw = getpwuid(getuid());
          const char * homedir = pw->pw_dir;
 
-         snprintf(fqfn, PATH_MAX, "%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
-         // DBGMSG("fqfn=%s   ", fqfn );
-         filename = fqfn;
+         snprintf(fn, PATH_MAX, "%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
+         // DBGMSG("fn=%s   ", fqfn );
          // control with MsgLevel?
-         f0printf(fout, "Writing file: %s\n", filename);
-         ddcrc = fopen_mkdir(filename, "w+", ferr, &output_fp);
+         f0printf(fout, "Writing file: %s\n", fn);
+         ddcrc = fopen_mkdir(fn, "w+", ferr, &output_fp);
          ASSERT_IFF(output_fp, ddcrc == 0);
          if (ddcrc != 0) {
-            f0printf(ferr, "Unable to create '%s', %s\n", filename, strerror(-ddcrc));
+            f0printf(ferr, "Unable to create '%s', %s\n", fn, strerror(-ddcrc));
          }
       }
-      free_dumpload_data(data);
 
-      if (!output_fp) {
-         int errsv = errno;
-         f0printf(ferr, "Unable to open %s for writing: %s\n", fqfn, strerror(errno));
-         ddcrc = -errsv;
-      }
-      else {
+      if (output_fp) {
          int ct = strings->len;
          int ndx;
          for (ndx=0; ndx<ct; ndx++){
@@ -172,10 +169,14 @@ dumpvcp_as_file(Display_Handle * dh, const char * fn)
          }
          fclose(output_fp);
       }
+      else {
+         int errsv = errno;
+         f0printf(ferr, "Unable to open %s for writing: %s\n", fn, strerror(errno));
+         ddcrc = -errsv;
+      }
+
       g_ptr_array_free(strings, true);
    }
-   if (fn)
-      free(filename);
    return ddcrc;
 }
 
