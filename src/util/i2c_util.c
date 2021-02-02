@@ -50,49 +50,50 @@ int i2c_name_to_busno(const char * name) {
  *  a string other than a number.  Non-numeric values sort before numeric
  *  values.
  *
- *  \param   v1   pointer to first string to compare
- *  \param   v2   pointer to second string to compare
+ *  This is a qsort type comparison function.  The arguments are pointers
+ *  to pointers to strings, not pointers to strings.
+ *
+ *  Arguments are of type gconstpointer so that the function signature
+ *  matches GCompareFunc.
+ *
+ *  \param   v1   pointer to pointer to first string to compare
+ *  \param   v2   pointer to pointer to second string to compare
  *  \return  -1  if v1 sorts before v2,
  *            0  v1 equals v2
  *            1  v1 sorts after v2
- *
- *  \remark
- *  Arguments are of type gconstpointer, i.e. void * so
- *  that the function signature matches GCompareFunc.
  */
 gint i2c_compare(gconstpointer v1, gconstpointer v2) {
+   bool debug = false;
+
    int result = 0;
+   char * s1 = (v1) ? *(char**)v1 : NULL;
+   char * s2 = (v2) ? *(char**)v2 : NULL;
+   if (debug)
+      printf("(%s) s1=%p->%s, s2=%p->%s\n", __func__, s1, s1, s2, s2);
+
    // do something "reasonable" for pathological cases
-   if (!v1 && v2)
+   if (!s1 && s2)
       result = -1;
-   else if (!v1 && !v2)
+   else if (!s1 && !s2)
       result = 0;
-   else if (v1 && !v2)
+   else if (s1 && !s2)
       result = 1;
 
    else {      // normal case
-      int i1 = i2c_name_to_busno((char*)v1);
-      int i2 = i2c_name_to_busno((char*)v2);
-
-      if (i1 >= 0 && i2 >= 0) {
-         if (i1 < i2)
-            result = -1;
-         else if (i1 == i2)
-            result = 0;
-         else
-            result = 1;
-      }
-
-      // parseables before unparseables
-      else if (i1 >= 0)
+      int i1 = i2c_name_to_busno(s1);
+      int i2 = i2c_name_to_busno(s2);
+      if (i1 < 0 && i2 < 0)
+         result = strcmp(s1, s2);
+      else if (i1 < i2)
          result = -1;
-      else if (i2 >= 0)
-         result = 1;
-
-      // if neither parseable, compare as strings
+      else if (i1 == i2)
+         result = 0;
       else
-         result = strcmp((char*)v1, (char*)v2);
+         result = 1;
    }
+
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
 
