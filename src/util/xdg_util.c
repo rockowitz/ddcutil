@@ -33,6 +33,7 @@ char * all_xdg_data_dirs()
    if (!xdg_data_dirs)
       xdg_data_dirs = "usr/local/share/:/usr/share/";
    char * all_dirs = g_strdup_printf("%s:%s", xdg_data_home, xdg_data_dirs);
+   free(xdg_data_home);
    if (debug)
       printf("(%s) Returning: %s\n", __func__, all_dirs);
    return all_dirs;
@@ -95,6 +96,7 @@ char * find_xdg_data_file(
       free(fqfn);
       fqfn = NULL;
    }
+   free(dir_string);
    if (debug)
       printf("(%s) Done. Returning: %s\n", __func__, fqfn);
    return fqfn;
