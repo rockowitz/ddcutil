@@ -395,7 +395,6 @@ typedef enum {
 } Edid_Read_Size_Option;
 
 static char * read_size_name(int n) {
-   // DBGMSG("n=%d", n);
    char * result = "WTF";
    switch (n) {
    case   0: result = "dynamic";  break;
@@ -403,20 +402,8 @@ static char * read_size_name(int n) {
    case 256: result = "256";      break;
    default:  result = "INVALID";  break;
    }
-#ifdef NUW
-   if (n == 0)
-      result = "dynamic";
-   else if (n == 128)
-      result = "128";
-   else if (n == 256)
-      result = "256";
-   else
-      result = "INVALID:";
-#endif
-   // DBGMSG("Returning: %s", result);
    return result;
 }
-
 
 
 /** Tests for display detection variants.
