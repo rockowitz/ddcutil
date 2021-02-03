@@ -83,7 +83,11 @@ g_hash_table_get_keys_as_array_local (GHashTable *hash_table,
  * @remark This function is needed because glib function g_hash_table_get_keys_as_array()
  *   does not exist in glib versions less than 2.40
  */
-gpointer * g_list_to_g_array(GList * glist, guint * length) {
+gpointer *
+g_list_to_g_array(
+      GList * glist,
+      guint * length)
+{
    int len = 0;
    gpointer * result = NULL;
    guint ndx = 0;
@@ -107,7 +111,11 @@ gpointer * g_list_to_g_array(GList * glist, guint * length) {
  * @param b pointer to second string
  * @return -1, 0, +1 in the usual way
  */
-gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
+gint
+gaux_ptr_scomp(
+      gconstpointer a,
+      gconstpointer b)
+{
    char ** ap = (char **) a;
    char ** bp = (char **) b;
    // printf("(%s) ap = %p -> -> %p -> |%s|\n", __func__, ap, *ap, *ap);
@@ -116,7 +124,11 @@ gint gaux_ptr_scomp(gconstpointer a, gconstpointer b) {
 }
 
 
-GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit) {
+GPtrArray *
+gaux_ptr_array_truncate(
+      GPtrArray * gpa,
+      int         limit)
+{
    assert(gpa);
    bool debug = false;
    if (debug)

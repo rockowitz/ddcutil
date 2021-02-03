@@ -15,9 +15,15 @@
 #include <stdio.h>
 /** \endcond */
 
-gpointer * g_list_to_g_array(GList * glist, guint * length);
+gpointer *
+g_list_to_g_array(
+      GList * glist,
+      guint * length);
 
-gint gaux_ptr_scomp(gconstpointer a, gconstpointer b);
+gint
+gaux_ptr_scomp(
+      gconstpointer a,
+      gconstpointer b);
 
 void *
 get_thread_dynamic_buffer(
@@ -30,7 +36,10 @@ get_thread_fixed_buffer(
       GPrivate * buf_key_ptr,
       guint16    required_size);
 
-GPtrArray * gaux_ptr_array_truncate(GPtrArray * gpa, int limit);
+GPtrArray *
+gaux_ptr_array_truncate(
+      GPtrArray * gpa,
+      int         limit);
 
 // Future:
 typedef  gpointer (*GAuxDupFunc)(gpointer src);
