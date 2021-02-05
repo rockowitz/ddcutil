@@ -115,7 +115,7 @@ uint32_t get_i2c_device_sysfs_class(int busno) {
    char * s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
    if (!s_class) {
      snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/device/device", busno);
-     s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ true);
+     s_class = read_sysfs_attr(workbuf, "class", /*verbose*/ false);
    }
    if (s_class) {
       // printf("(%s) Found %s/class\n", __func__, workbuf);
