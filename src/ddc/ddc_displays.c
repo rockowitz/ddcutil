@@ -41,9 +41,6 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "adl/adl_shim.h"
-#ifdef HAVE_ADL
-#include "adl/adl_impl/adl_intf.h"
-#endif
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -603,12 +600,6 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
-#ifdef HAVE_ADL
-      rpt_vstring(d1, "ADL device information: ");
-      ADL_Display_Detail * adl_detail = dref->detail;
-      assert(memcmp(adl_detail->marker, ADL_DISPLAY_DETAIL_MARKER, 4) == 0);
-      adlshim_report_adl_display_detail(adl_detail, d2);
-#endif
       break;
    case(DDCA_IO_USB):
 #ifdef USE_USB
