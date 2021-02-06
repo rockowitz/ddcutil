@@ -89,11 +89,7 @@ ddca_ddcutil_version_string(void) {
 // Indicates whether the ddcutil library was built with ADL support. .
 bool
 ddca_built_with_adl(void) {
-#ifdef HAVE_ADL
-   return true;
-#else
    return false;
-#endif
 }
 
 
@@ -115,9 +111,6 @@ ddca_built_with_usb(void) {
 DDCA_Build_Option_Flags
 ddca_build_options(void) {
    uint8_t result = 0x00;
-#ifdef HAVE_ADL
-   result |= DDCA_BUILT_WITH_ADL;
-#endif
 #ifdef USE_USB
          result |= DDCA_BUILT_WITH_USB;
 #endif
