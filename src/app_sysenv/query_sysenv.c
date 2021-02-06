@@ -39,10 +39,6 @@
 
 #include "i2c/i2c_sysfs.h"
 
-#ifdef HAVE_ADL
-#include "adl/adl_shim.h"
-#endif
-
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
 
 #include "query_sysenv_access.h"
@@ -263,16 +259,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       found_driver_specific_checks = true;
       rpt_nl();
       rpt_vstring(0,"Performing ADL specific checks...");
-#ifdef HAVE_ADL
-     if (!adlshim_is_available()) {
-        set_output_level(DDCA_OL_VERBOSE);  // force error msg that names missing dll
-        bool ok = adlshim_initialize();
-        if (!ok)
-           printf("WARNING: Using AMD proprietary video driver fglrx but unable to load ADL library\n");
-     }
-#else
-     rpt_vstring(0,"WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
-#endif
+      rpt_vstring(0,"WARNING: Using AMD proprietary video driver fglrx but ddcutil built without ADL support");
    }
 
    if (!found_driver_specific_checks)

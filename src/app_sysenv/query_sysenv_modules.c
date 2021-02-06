@@ -109,15 +109,6 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    if (!is_builtin)
       rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-#ifdef HAVE_ADL
-   bool module_required = !only_fglrx(accum->driver_list);
-   if (!module_required) {
-      rpt_nl();
-      rpt_vstring(d0,"Using only proprietary fglrx driver. Module i2c_dev not required.");
-      accum->module_i2c_dev_needed = false;
-   }
-   else
-#endif
    if (!is_builtin) {
       assert(accum->dev_i2c_device_numbers);    // already set
       if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_loaded ) {
