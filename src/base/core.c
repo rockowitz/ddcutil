@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -382,9 +382,6 @@ static
 Value_Name_Title_Table trace_group_table = {
       VNT(DDCA_TRC_BASE,  "BASE"),
       VNT(DDCA_TRC_I2C,   "I2C"),
-#ifdef HAVE_ADL
-      VNT(TRC_ADL, "ADL"),
-#endif
       VNT(DDCA_TRC_DDC,   "DDC"),
       VNT(DDCA_TRC_USB,   "USB"),
       VNT(DDCA_TRC_TOP,   "TOP"),
