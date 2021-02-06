@@ -722,11 +722,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       printf("ddcutil %s\n", BUILD_VERSION);
       // TODO: patch values at link time
       // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
-#ifdef HAVE_ADL
-      printf("Built with support for AMD Display Library (AMD proprietary driver).\n");
-#else
-      printf("Built without support for AMD Display Library (AMD proprietary driver).\n");
-#endif
 #ifdef USE_USB
       printf("Built with support for USB connected displays.\n");
 #else
@@ -745,7 +740,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       puts("");
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
-         puts("Copyright (C) 2015-2020 Sanford Rockowitz");
+         puts("Copyright (C) 2015-2021 Sanford Rockowitz");
          puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
          puts("This is free software: you are free to change and redistribute it.");
          puts("There is NO WARRANTY, to the extent permitted by law.");

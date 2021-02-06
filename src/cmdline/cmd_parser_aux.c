@@ -383,10 +383,6 @@ char * monitor_selection_option_help =
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
        "  --bus <bus number>, for /dev/"I2C"-<bus number>\n"
-#ifdef HAVE_ADL
-       "  --adl <adapter_number>.<display_number>, for monitors connected to an AMD video card\n"
-       "          running AMD's proprietary video driver (ADL is an acronym for AMD Display Library)\n"
-#endif
 #ifdef USE_USB
        "  --usb <usb bus number>.<usb device number>, for monitors communicating via USB\n"
 #endif
