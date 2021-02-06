@@ -3,7 +3,7 @@
  * Dispatch test cases
  *
  * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,9 +29,6 @@
 #include "base/core.h"
 
 #include "adl/adl_shim.h"
-#ifdef HAVE_ADL
-#include "adl/adl_impl/adl_intf.h"
-#endif
 
 #include "test/testcase_table.h"
 
