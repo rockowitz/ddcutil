@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FILE_UTIL_H_
@@ -101,13 +101,11 @@ int read_file_with_filter(
       bool         ignore_case,
       int          limit);
 
-int
-rek_mkdir(
+int rek_mkdir(
       const char * path,
       FILE *       ferr);
 
-int
-fopen_mkdir(
+int fopen_mkdir(
       const char * path,
       const char * mode,
       FILE *       ferr,
