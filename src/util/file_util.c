@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -32,9 +32,12 @@
  *  @param  verbose     if true, write message to stderr if unable to open file or other error
  *
  *  @retval >=0:  number of lines added to line_array
- *  @retval <0    -errno
+ *  @retval <0    -errno from fopen() or getline()
  *
  *  The caller is responsible for freeing the lines added to line_array.
+ *
+ *  Strings are appended to #line_array.  It is not cleared at start of
+ *  function execution.
  */
 int
 file_getlines(
@@ -528,39 +531,53 @@ dir_ordered_foreach(
 
 
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
- *  those lines containing at least one on a list of terms.  After filtering, the set
- *  of returned lines may be further reduced to either the first or last n number of
+ *  those lines containing at least one in a list of terms.  After filtering, the set
+ *  of returned lines may be further reduced to either the first or last N number of
  *  lines.
  *
- *  \param  line_array #GPtrArray in which to return the lines read
- *  \param  fn         file name
+ *  \param  line_array    #GPtrArray in which to return the lines read
+ *  \param  fn            file name
  *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
  *  \param  ignore_case   ignore case when testing filter terms
  *  \param  limit if 0, return all lines that pass filter terms
  *                if > 0, return at most the first #limit lines that satisfy the filter terms
  *                if < 0, return at most the last  #limit lines that satisfy the filter terms
  *  \return if >= 0, number of lines before filtering and limit applied
- *          if < 0,  -errno
+ *          if < 0,  -errno, from file_getlines(), i.e. fopen(), getline()
  *
+ *   **line_array** is emptied at start of function execution.
+ *  Lines read are appended to existing lines in line_array
  *  \remark
  *  This function was created because using grep in conjunction with pipes was
  *  producing obscure shell errors.
+ *  \remark
+ *  Returning the count of unfiltered lines is a bit odd, but the caller can
+ *  get the filtered count from line_array->len
  */
 int read_file_with_filter(
-      GPtrArray * line_array,
-      const char *      fn,
-      char **     filter_terms,
-      bool        ignore_case,
-      int         limit)
+      GPtrArray *  line_array,
+      const char * fn,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit)
 {
-   // bool debug = false;
-   // DBGMSF(debug, "line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-   //          line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+   bool debug = false;
+   if (debug) {
+      printf("(%s) line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
+             __func__, line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+      if (ntsa_length(filter_terms) > 0) {
+         printf("(%s) filter_terms:\n", __func__);
+         for (char ** term_ptr = filter_terms; *term_ptr; term_ptr++)
+            printf("(%s)    |%s|\n", __func__, *term_ptr);
+      }
+   }
 
    g_ptr_array_set_free_func(line_array, g_free);    // in case not already set
+   g_ptr_array_remove_range(line_array, 0, line_array->len);
 
-   int rc = file_getlines(fn, line_array, /*verbose*/ true);
-   // DBGMSF(debug, "file_getlines() returned %d", rc);
+   int rc = file_getlines(fn, line_array, /*verbose*/ false);
+   if (debug)
+      printf("(%s) file_getlines() returned %d\n", __func__, rc);
 
    if (rc > 0) {
       filter_and_limit_g_ptr_array(
@@ -570,13 +587,14 @@ int read_file_with_filter(
          limit);
    }
    else { // rc == 0
-      // DBGMSF(debug, "Empty file");
+      if (debug)
+         printf("(%s) Empty file\n", __func__);
    }
 
-   // DBGMSF(debug, "Returning: %d", rc);
+   if (debug)
+      printf("(%s) Done. Returning: %d\n", __func__, rc);
    return rc;
 }
-
 
 
 /** Deletes lines from a #GPtrArray of text lines. If filter terms
@@ -587,7 +605,7 @@ int read_file_with_filter(
  *  \param line_array   GPtrArray of null-terminated strings
  *  \param filter_terms null-terminated string array of terms
  *  \param ignore_case  if true, ignore case when testing filter terms
- *  \param  limit if 0, return all lines that pass filter terms
+ *  \param limit  if 0,   return all lines that pass filter terms
  *                if > 0, return at most the first #limit lines that satisfy the filter terms
  *                if < 0, return at most the last  #limit lines that satisfy the filter terms
  *
