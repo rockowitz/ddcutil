@@ -439,55 +439,6 @@ char * driver_name_list_string(Driver_Name_Node * head) {
 }
 
 
-/** Execute a shell command and return the contents in a newly allocated
- *  #GPtrArray of lines. Optionally, keep only those lines containing at least
- *  one in a list of terms.  After filtering, the set of returned lines may
- *  be further reduced to either the first or last n number of lines.
- *
- *  \param  cmd        command to execute
- *  \param  fn         file name
- *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
- *  \param  ignore_case   ignore case when testing filter terms
- *  \param  limit if 0, return all lines that pass filter terms
- *                if > 0, return at most the first #limit lines that satisfy the filter terms
- *                if < 0, return at most the last  #limit lines that satisfy the filter terms
- *  \param  result_loc  address at which to return a pointer to the newly allocate #GPtrArray
- *  \return if >= 0, number of lines before filtering and limit applied
- *          if < 0,  -errno
- */
-int execute_cmd_collect_with_filter(
-      const char *       cmd,
-      char **      filter_terms,
-      bool         ignore_case,
-      int          limit,
-      GPtrArray ** result_loc)
-{
-   bool debug = false;
-   DBGMSF(debug, "cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d",
-            cmd, ntsa_length(filter_terms), sbool(ignore_case), limit);
-
-   int rc = 0;
-   GPtrArray *line_array = execute_shell_cmd_collect(cmd);
-   if (!line_array) {
-      rc = -1;
-   }
-   else {
-      rc = line_array->len;
-      if (rc > 0) {
-         filter_and_limit_g_ptr_array(
-            line_array,
-            filter_terms,
-            ignore_case,
-            limit);
-      }
-   }
-   *result_loc = line_array;
-
-   DBGMSF(debug, "Returning: %d", rc);
-   return rc;
-}
-
-
 /** Given a path whose final segment is of the form "i2c-n",
  *  returns the bus number.
  *

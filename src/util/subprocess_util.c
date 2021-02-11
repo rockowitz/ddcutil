@@ -3,7 +3,7 @@
  * Functions to execute shell commands
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -16,6 +16,7 @@
 
 #include "config.h"
 
+#include "file_util.h"
 #include "glib_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -176,6 +177,57 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
     free(cmdbuf);
     return result;
  }
+
+
+/** Execute a shell command and return the contents in a newly allocated
+ *  #GPtrArray of lines. Optionally, keep only those lines containing at least
+ *  one in a list of terms.  After filtering, the set of returned lines may
+ *  be further reduced to either the first or last n number of lines.
+ *
+ *  \param  cmd        command to execute
+ *  \param  fn         file name
+ *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
+ *  \param  ignore_case   ignore case when testing filter terms
+ *  \param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *  \param  result_loc  address at which to return a pointer to the newly allocate #GPtrArray
+ *  \return if >= 0, number of lines before filtering and limit applied
+ *          if < 0,  -errno
+ */
+int execute_cmd_collect_with_filter(
+      const char * shell_cmd,
+      char **      filter_terms,
+      bool         ignore_case,
+      int          limit,
+      GPtrArray ** result_loc)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) cmd|%s|, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
+            __func__, shell_cmd, ntsa_length(filter_terms), sbool(ignore_case), limit);
+
+   int rc = 0;
+   GPtrArray *line_array = execute_shell_cmd_collect(shell_cmd);
+   if (!line_array) {
+      rc = -1;
+   }
+   else {
+      rc = line_array->len;
+      if (rc > 0) {
+         filter_and_limit_g_ptr_array(
+            line_array,
+            filter_terms,
+            ignore_case,
+            limit);
+      }
+   }
+   *result_loc = line_array;
+
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, rc);
+   return rc;
+}
 
 
 /** Executes a shell command that always outputs a single line and returns the

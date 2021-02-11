@@ -86,11 +86,5 @@ Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
 void env_accumulator_report(Env_Accumulator * accum, int depth);
 
-int execute_cmd_collect_with_filter(
-      const char * cmd,
-      char **      filter_terms,
-      bool         ignore_case,
-      int          limit,
-      GPtrArray ** result_loc);
 
 #endif /* QUERY_SYSENV_BASE_H_ */
