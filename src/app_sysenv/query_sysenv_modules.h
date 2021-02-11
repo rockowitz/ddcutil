@@ -3,7 +3,7 @@
  *  Module checks
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -14,7 +14,6 @@
 
 #include "query_sysenv_base.h"
 
-bool is_module_builtin(char * module_name);
 bool is_module_loadable(char * module_name, int depth);
 void check_i2c_dev_module(Env_Accumulator * accum, int depth);
 void probe_modules_d(int depth);
