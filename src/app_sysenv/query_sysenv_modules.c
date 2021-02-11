@@ -3,7 +3,7 @@
  *  Module checks
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -96,9 +96,18 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    accum->module_i2c_dev_needed = true;
    accum->i2c_dev_loaded_or_builtin = false;
 
-   bool is_builtin = is_module_builtin("i2c-dev");
+   int builtin_rc = is_module_builtin("i2c-dev");
+   bool is_builtin = false;
+   if (builtin_rc < 0) {
+      rpt_vstring(d1, "Unable to determine if module %s is built into kernel.  Assuming NOT");
+      is_builtin = false;
+   }
+   else {
+      is_builtin = (builtin_rc == 1);
+      rpt_vstring(d1,"Module %s is %sbuilt into kernel", "i2c-dev", (is_builtin) ? "" : "NOT ");
+   }
+
    accum->module_i2c_dev_builtin = is_builtin;
-   rpt_vstring(d1,"Module %s is %sbuilt into kernel", "i2c-dev", (is_builtin) ? "" : "NOT ");
 
    accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev", d1);
    if (!is_builtin)
