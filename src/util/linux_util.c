@@ -64,7 +64,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
     if (debug)
        printf("(%s) search_str=|%s|, len=%ld\n", __func__, search_str, (unsigned long) strlen(search_str));
 
-    GPtrArray * lines = g_ptr_array_new_full(400, g_free);
+    GPtrArray * lines = g_ptr_array_new_full(15000, g_free);
     char * terms[2];
     terms[0] = search_str;
     terms[1] = NULL;
