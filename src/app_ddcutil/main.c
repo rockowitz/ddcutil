@@ -185,11 +185,35 @@ validate_environment()
 {
    bool ok = true;
 #ifdef TARGET_LINUX
-   int depth = 0;
-   if (!is_module_builtin("i2c-dev") && !is_module_loaded_using_sysfs("i2c_dev")) {
-      rpt_vstring(depth, "ddcutil requires module i2c_dev.");
-      ok = false;
-   }
+   bool debug = false;
+   if (!is_module_loaded_using_sysfs("i2c_dev")) {
+      char * parm_name = "CONFIG_I2C_CHARDEV";
+      int  value_buf_size = 40;
+      char value_buffer[value_buf_size];
+      int rc = get_kernel_config_parm(parm_name, value_buffer, value_buf_size);
+      if (rc < 0) {
+         fprintf(stderr, "Unable to read read kernel configuration file: errno=%d, %s\n", -rc, strerror(-rc));
+         fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
+         ok = false;
+      }
+
+      else if (rc == 0) {
+         fprintf(stderr, "Kernel configuration parameter %s not found\n", parm_name);
+         fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
+         ok = false;
+      }
+      else {
+         DBGMSF(debug, "get_kernel_config_parm(%s, ...) returned |%s|", parm_name, value_buffer);
+         if (!streq(value_buffer, "y")) {
+            fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.");
+            ok = false;
+         }
+      }
+      if (!ok) {
+         fprintf(stderr, "ddcutil requires module i2c-dev\n");
+         ok = true;  // make it just a warning in case we're wrong
+      }
+  }
 #endif
    return ok;
 }
