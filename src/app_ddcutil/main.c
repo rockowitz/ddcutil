@@ -393,6 +393,7 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
     init_performance_options(parsed_cmd);
 
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
+       show_ddcutil_version();
        report_all_options(parsed_cmd, 0);
     }
 
