@@ -40,39 +40,56 @@ bool is_module_loadable(char * module_name, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. module_name=%s", module_name);
 
-   bool result = false;
-
    struct utsname utsbuf;
    int rc = uname(&utsbuf);
    assert(rc == 0);
 
+   // module_name = "i2c-stub";   // for testing something that will be found
    char module_name_ko[100];
    g_snprintf(module_name_ko, 100, "%s.ko", module_name);
 
-   char dirname[PATH_MAX];
-   g_snprintf(dirname, PATH_MAX, "/lib/modules/%s/kernel/drivers/i2c", utsbuf.release);
+   DBGMSF(debug, "machine: %s", utsbuf.machine);
 
-   struct dirent *dent;
-     DIR           *d;
-     d = opendir(dirname);
-     if (!d) {
-        rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
-     }
-     else {
-        while ((dent = readdir(d)) != NULL) {
-           // DBGMSG("%s", dent->d_name);
-           if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-              if (str_starts_with(dent->d_name, module_name_ko)) {
-                 result = true;
-                 break;
+   char * libdirs[3];
+   libdirs[0] = "lib";
+   if (streq(utsbuf.machine, "amd_64")){
+      libdirs[1] = "lib64";
+      libdirs[2] = NULL;
+   }
+   else
+      libdirs[1] = NULL;
+
+   int libsndx = 0;
+   bool found = false;
+   for ( ;libdirs[libsndx] && !found; libsndx++ ) {
+      char dirname[PATH_MAX];
+      g_snprintf(dirname, PATH_MAX, "/%s/modules/%s/kernel/drivers/i2c", libdirs[libsndx], utsbuf.release);
+      DBGMSF(debug, "Checking %s", dirname);
+
+      struct dirent *dent;
+         DIR           *d;
+         d = opendir(dirname);
+         if (!d) {
+             rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+         }
+         else {
+            // rpt_vstring(depth, "Examining directory: %s", dirname);
+            while ((dent = readdir(d)) != NULL) {
+              DBGMSF(debug, "dent->d_name: %s, module_name_ko=%s", dent->d_name, module_name_ko);
+              if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+                 if (streq(dent->d_name, module_name_ko)) {
+                    found = true;
+                    DBGMSF(debug, "Found");
+                    break;
+                 }
               }
            }
         }
         closedir(d);
      }
 
-   DBGMSF(debug, "Done. Returning: %s", sbool(result));
-   return result;
+   DBGMSF(debug, "Done. Returning: %s", sbool(found));
+   return found;
 }
 
 
@@ -88,6 +105,7 @@ bool is_module_loadable(char * module_name, int depth) {
  *       #accum->loadable_i2c_dev_exists
  */
 void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
+   bool debug = false;
    int d0 = depth;
    int d1 = depth+1;
    rpt_vstring(d0,"Checking for module i2c_dev...");
@@ -96,24 +114,72 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    accum->module_i2c_dev_needed = true;
    accum->i2c_dev_loaded_or_builtin = false;
 
+   bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
+   rpt_vstring(d1, "sysfs reports module i2c_dev is%s loaded.", (is_loaded) ? "" : " NOT");
+
    int builtin_rc = is_module_builtin("i2c-dev");
+   if (builtin_rc < 0)
+      rpt_vstring(d1, "Unable to access modules.builtin file to check if i2c_dev is built in to kernel");
+   else
+      rpt_vstring(d1, "Checking modules.builtin indicates i2c_dev is%s built into the kernel",
+                      (builtin_rc == 0) ? " NOT" : "");
+
+   char * parm_name = "CONFIG_I2C_CHARDEV";
+   int  value_buf_size = 40;
+   char value_buffer[value_buf_size];
+   int config_rc = get_kernel_config_parm(parm_name, value_buffer, value_buf_size);
+   int config_status = 0;
+   if (config_rc < 0) {
+      rpt_vstring(d1, "Unable to read read kernel configuration file: errno=%d, %s", -config_rc, strerror(-config_rc));
+      // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
+      // ok = false;
+      config_status = -1;
+   }
+
+   else if (config_rc == 0) {
+      rpt_vstring(d1, "Kernel configuration parameter %s not found.", parm_name);
+      // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
+      // ok = false;
+      config_status = -1;
+   }
+   else {
+      DBGMSF(debug, "get_kernel_config_parm(%s, ...) returned |%s|", parm_name, value_buffer);
+      config_status = (streq(value_buffer, "y")) ? 1 : 0;
+      rpt_vstring(d1, "Checking kernel configuration file indicates i2c_dev is%s built into the kernel",
+                      (builtin_rc == 1) ? "" : " NOT");
+   }
+
    bool is_builtin = false;
-   if (builtin_rc < 0) {
-      rpt_vstring(d1, "Unable to determine if module %s is built into kernel.  Assuming NOT");
+   if (config_status == 1 || builtin_rc == 1) {
+      if (config_status != builtin_rc)
+         rpt_vstring(d1, "Treating module as built into kernel");
+      is_builtin = true;
+   }
+   else if (config_status == 0 ||builtin_rc == 0) {
+      if (config_status != builtin_rc)
+         rpt_vstring(d1, "Treating module as not built into kernel");
       is_builtin = false;
    }
    else {
-      is_builtin = (builtin_rc == 1);
-      rpt_vstring(d1,"Module %s is %sbuilt into kernel", "i2c-dev", (is_builtin) ? "" : "NOT ");
+      rpt_vstring(d1, "Unable to determine if module i2c-dev is built into kernel.  Assuming NOT");
+      is_builtin = false;
    }
 
    accum->module_i2c_dev_builtin = is_builtin;
 
-   accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev", d1);
+   bool loadable = false;
+   if (config_rc >= 0) {
+      loadable = (config_rc == 0) ? true : false;
+   }
+   else {
+      loadable = is_module_loadable("i2c-dev",  d1);   // only checks lib, not lib64!!!
+   }
+
+   accum->loadable_i2c_dev_exists = loadable;
    if (!is_builtin)
       rpt_vstring(d1,"Loadable i2c-dev module %sfound", (accum->loadable_i2c_dev_exists) ? "" : "NOT ");
 
-   bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
+
    accum->i2c_dev_loaded_or_builtin = is_loaded || is_builtin;
    if (!is_builtin)
       rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
