@@ -54,7 +54,7 @@ file_getlines(
    if (!fp) {
       int errsv = errno;
       rc = -errno;
-      if (verbose)
+      if (verbose || debug)
          fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errsv));
    }
    else {
@@ -63,21 +63,25 @@ file_getlines(
       size_t len = 0;
       int     linectr = 0;
       errno = 0;
-      while (getline(&line, &len, fp) >= 0) {
+      // int     getline_rc = 0;
+
+      while ( getline(&line, &len, fp) >= 0) {
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
-         g_ptr_array_add(line_array, line);
-         // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
+         g_ptr_array_add(line_array, line);   // line will be freed when line_array is freed
+         // printf("(%s) Retrieved line of length %zu, trimmed length %zu: %s\n",
+         //           __func__, len, strlen(line), line);
          line = NULL;  // reset for next getline() call
          len  = 0;
       }
-      if (errno != 0)  {   // getline error?
+      // assert(getline_rc < 0);
+      if (errno != 0) {   // was it an error or eof?
          rc = -errno;
-         if (verbose)
+         if (verbose || debug)
             fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
-      }
-      free(line);
-      rc = linectr;
+         }
+      else
+         rc = linectr;
 
       fclose(fp);
    }
