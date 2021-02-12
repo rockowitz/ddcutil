@@ -736,6 +736,13 @@ void show_ddcmsg() {
                               sbool(report_ddc_errors));
 }
 
+void show_ddcutil_version() {
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "ddcutil version: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              VERSION);
+}
+
 
 /** Reports output levels for:
  *   - general output level (terse, verbose, etc)
@@ -754,6 +761,7 @@ void show_reporting() {
    show_traced_files();
    // f0puts("", fout());
 }
+
 
 
 //

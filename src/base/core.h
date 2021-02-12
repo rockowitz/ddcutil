@@ -203,6 +203,9 @@ bool ddcmsg(DDCA_Trace_Group trace_group, const char* funcname, const int lineno
 // Show report levels for all types
 void show_reporting();
 
+// report ddcutil version
+void show_version();
+
 
 //
 // Issue messages of various types
