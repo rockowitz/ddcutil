@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -204,7 +204,7 @@ bool ddcmsg(DDCA_Trace_Group trace_group, const char* funcname, const int lineno
 void show_reporting();
 
 // report ddcutil version
-void show_version();
+void show_ddcutil_version();
 
 
 //
