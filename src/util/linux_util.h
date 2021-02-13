@@ -13,5 +13,6 @@
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
 
 int is_module_builtin(char * module_name);
+bool is_module_loadable(char * module_name);
 
 #endif /* LINUX_UTIL_H_ */

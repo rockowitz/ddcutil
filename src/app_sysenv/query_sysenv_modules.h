@@ -14,7 +14,6 @@
 
 #include "query_sysenv_base.h"
 
-bool is_module_loadable(char * module_name, int depth);
 void check_i2c_dev_module(Env_Accumulator * accum, int depth);
 void probe_modules_d(int depth);
 

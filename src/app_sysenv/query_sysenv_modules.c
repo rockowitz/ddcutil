@@ -28,70 +28,6 @@
 #include "query_sysenv_modules.h"
 
 
-/* Checks if a loadable module exists
- *
- * Arguments:
- *   module_name    simple module name, as it appears in the file system, e.g. i2c-dev,
- *                  without .ko, .ko.xz
- *
- * Returns:         true/false
- */
-bool is_module_loadable(char * module_name, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. module_name=%s", module_name);
-
-   struct utsname utsbuf;
-   int rc = uname(&utsbuf);
-   assert(rc == 0);
-
-   // module_name = "i2c-stub";   // for testing something that will be found
-   char module_name_ko[100];
-   g_snprintf(module_name_ko, 100, "%s.ko", module_name);
-
-   DBGMSF(debug, "machine: %s", utsbuf.machine);
-
-   char * libdirs[3];
-   libdirs[0] = "lib";
-   if (streq(utsbuf.machine, "amd_64")){
-      libdirs[1] = "lib64";
-      libdirs[2] = NULL;
-   }
-   else
-      libdirs[1] = NULL;
-
-   int libsndx = 0;
-   bool found = false;
-   for ( ;libdirs[libsndx] && !found; libsndx++ ) {
-      char dirname[PATH_MAX];
-      g_snprintf(dirname, PATH_MAX, "/%s/modules/%s/kernel/drivers/i2c", libdirs[libsndx], utsbuf.release);
-      DBGMSF(debug, "Checking %s", dirname);
-
-      struct dirent *dent;
-         DIR           *d;
-         d = opendir(dirname);
-         if (!d) {
-             rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
-         }
-         else {
-            // rpt_vstring(depth, "Examining directory: %s", dirname);
-            while ((dent = readdir(d)) != NULL) {
-              DBGMSF(debug, "dent->d_name: %s, module_name_ko=%s", dent->d_name, module_name_ko);
-              if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-                 if (streq(dent->d_name, module_name_ko)) {
-                    found = true;
-                    DBGMSF(debug, "Found");
-                    break;
-                 }
-              }
-           }
-        }
-        closedir(d);
-     }
-
-   DBGMSF(debug, "Done. Returning: %s", sbool(found));
-   return found;
-}
-
 
 /** Checks if module i2c_dev is required and if so whether it is loaded.
  *  Reports the result.
@@ -108,7 +44,7 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    bool debug = false;
    int d0 = depth;
    int d1 = depth+1;
-   rpt_vstring(d0,"Checking for module i2c_dev...");
+   rpt_vstring(d0,"Checking for driver i2c_dev...");
    DDCA_Output_Level output_level = get_output_level();
 
    accum->module_i2c_dev_needed = true;
@@ -172,7 +108,7 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
       loadable = (config_rc == 0) ? true : false;
    }
    else {
-      loadable = is_module_loadable("i2c-dev",  d1);   // only checks lib, not lib64!!!
+      loadable = is_module_loadable("i2c-dev");
    }
 
    accum->loadable_i2c_dev_exists = loadable;
