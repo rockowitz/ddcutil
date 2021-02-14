@@ -382,11 +382,15 @@ static bool
 master_initializer(Parsed_Cmd * parsed_cmd) {
    bool ok = false;
 
+#ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
+#endif
       // will be reported by the environment command
       if (!validate_environment())
          goto bye;
+#ifdef ENABLE_ENVCMDS
    }
+#endif
 
     if (!init_failsim(parsed_cmd))
        goto bye;      // main_rc == EXIT_FAILURE
@@ -1115,7 +1119,7 @@ main(int argc, char *argv[]) {
       query_usbenv();
       main_rc = EXIT_SUCCESS;
 #else
-      f0printf(fout, "ddcutil was not built with support for USB connected monitors\n");
+      f0printf(fout(), "ddcutil was not built with support for USB connected monitors\n");
       main_rc = EXIT_FAILURE;
 #endif
    }
@@ -1208,5 +1212,7 @@ static void init_rtti() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
+#ifdef ENABLE_ENVCMDS
    RTTI_ADD_FUNC(interrogate);
+#endif
 }
