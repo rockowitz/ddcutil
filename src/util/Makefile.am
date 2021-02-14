@@ -56,12 +56,14 @@ libutil_la_SOURCES +=      \
 sysfs_i2c_util.c
 endif
 
-
-
-# actually required in multiple places, but good enough for now
 if ENABLE_USB_COND
 libutil_la_SOURCES +=      \
 device_id_util.c
+else
+if ENABLE_ENVCMDS_COND
+libutil_la_SOURCES +=      \
+device_id_util.c
+endif
 endif
 
 if ENABLE_UDEV_COND
