@@ -28,8 +28,12 @@
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
+#ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
+#ifdef ENABLE_USB
 #include "util/udev_usb_util.h"
+#endif
+#endif
 /** \endcond */
 
 #include "base/build_info.h"
@@ -432,7 +436,7 @@ static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
    }
 }
 
-
+#ifdef ENABLE_UDEV
 /** Queries UDEV for devices in subsystem "i2c-dev".
  *  Also looks for devices with name attribute "DPMST"
  */
@@ -476,6 +480,7 @@ static void probe_i2c_devices_using_udev() {
 
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
+#endif
 
 
 /** Analyze collected environment information, Make suggestions.
@@ -735,7 +740,9 @@ void query_sysenv() {
       query_x11();
 #endif
 
+#ifdef ENABLE_UDEV
       probe_i2c_devices_using_udev();
+#endif
 
       // temp
       // get_i2c_smbus_devices_using_udev();
@@ -776,6 +783,7 @@ void query_sysenv() {
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
 
+#ifdef ENABLE_UDEV
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
          query_using_shell_command(accumulator->dev_i2c_device_numbers,
@@ -783,6 +791,7 @@ void query_sysenv() {
            "udevadm info --attribute-walk /dev/i2c-%d",
                                    "udevadm");
       }
+#endif
    }
 
    rpt_nl();
@@ -798,7 +807,9 @@ void query_sysenv() {
 
 void init_sysenv() {
    RTTI_ADD_FUNC(query_sysenv);
+#ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(probe_i2c_devices_using_udev);
+#endif
    init_query_sysfs();
 }
 
