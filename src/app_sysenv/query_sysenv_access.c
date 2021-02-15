@@ -429,32 +429,11 @@ void check_i2c_devices(Env_Accumulator * accum) {
    rpt_vstring(0,"Checking /dev/i2c-* devices...");
    DDCA_Output_Level output_level = get_output_level();
 
-#ifdef ADL
-   Driver_Name_Node * driver_list = accum->driver_list;
-   bool just_fglrx = only_fglrx(driver_list);
-   if (just_fglrx){
-      accum->dev_i2c_devices_required = false;
-      rpt_nl();
-      rpt_vstring(0,"Apparently using only the AMD proprietary driver fglrx.");
-      rpt_vstring(0,"Devices /dev/i2c-* are not required.");
-      // TODO: delay leaving to properl set other variables
-      if (output_level < DDCA_OL_VERBOSE)
-         return;
-      rpt_vstring(0, "/dev/i2c device detail is purely informational.");
-   }
-#endif
-
    rpt_nl();
    rpt_multiline(0,
-#ifdef ADL
-          "Unless the system is using the AMD proprietary driver fglrx, devices /dev/i2c-*",
-          "must exist and the logged on user must have read/write permission for those",
-          "devices (or at least those devices associated with monitors).",
-#else
           "Devices /dev/i2c-* must exist and the logged on user must have read/write "
           "permission for those devices (or at least those devices associated ",
           "with monitors).",
-#endif
           "",
           "Typically, this access is enabled by:",
           "  - setting the group for /dev/i2c-* to i2c",
