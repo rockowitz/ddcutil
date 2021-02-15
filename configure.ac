@@ -374,6 +374,13 @@ AS_IF([test "x$enable_targetbsd" = "xyes" -a "x$enable_usb" = "xyes" ],
        ]
    ) 
 
+AS_IF([test "x$enable_udev" != "xyes" -a "x$enable_usb" = "xyes" ],
+       [ AC_MSG_NOTICE( [--disable-udev forces --disable-usb] )
+        enable_usb=no
+       ]
+   ) 
+
+
 # --disable-envcmds => --disable-drm, --disable-x11
 
 AS_IF([test "x$enable_envcmds" != "xyes" -a "x$enable_drm" = "xyes" ],
@@ -405,7 +412,6 @@ AS_IF([test "x$enable_targetbsd" = "xyes"],
      )
 
 AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
-dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_envcmds" = "xyes"],
       AC_MSG_NOTICE( [envcmds...    enabled] )
       AC_DEFINE( [ENABLE_ENVCMDS], [1], [If defined, enable environment commands.])
@@ -416,7 +422,6 @@ AS_IF([test "x$enable_envcmds" = "xyes"],
      )
 
 AM_CONDITIONAL([ENABLE_UDEV_COND], [test "x$enable_udev" = "xyes"] )
-dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
 AS_IF([test "x$enable_udev" = "xyes"],
       AC_MSG_NOTICE( [udev...       enabled] )
       AC_DEFINE( [ENABLE_UDEV], [1], [If defined, use UDEV.])
@@ -427,7 +432,6 @@ AS_IF([test "x$enable_udev" = "xyes"],
      )
 
 AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
-dnl ENABLE_USB_FLAG used in package/ddcutil.apec.in
 AS_IF([test "x$enable_usb" = "xyes"],
         AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
         AC_SUBST(  ENABLE_USB_FLAG, [1] )
