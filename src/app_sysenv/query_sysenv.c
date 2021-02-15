@@ -343,6 +343,7 @@ void query_x11() {
 // i2cdetect
 //
 
+#ifdef OLD
 /** Examines /dev/i2c devices using command i2cdetect, if it exists.
  *
  *  \param  i2c_device_numbers  I2C bus numbers to check
@@ -382,6 +383,48 @@ static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
             // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
             if (rc != 1) {
                rpt_vstring(d1,"i2cdetect command unavailable");
+               break;
+            }
+         }
+      }
+   }
+}
+#endif
+
+
+static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
+                const char * pattern,
+                const char * command_name)
+{
+   assert(i2c_device_numbers);
+
+   int d0 = 0;
+   int d1 = 1;
+
+   rpt_vstring(d0,"Examining I2C buses using %s... ", command_name);
+   sysenv_rpt_current_time(NULL, d1);
+
+   if (bva_length(i2c_device_numbers) == 0) {
+      rpt_vstring(d1, "No I2C buses found");
+   }
+   else {
+      for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
+         int busno = bva_get(i2c_device_numbers, ndx);
+         if (sysfs_is_ignorable_i2c_device(busno)) {
+            rpt_nl();
+            rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus or other ignorable device."
+                            "  Skipping %s.", busno, command_name);
+         }
+         else {
+            char cmd[200];
+            snprintf(cmd, 200, pattern, busno);
+           //    "udevadm info --attribute-walk --path=$(udevadm info --query=path --name=i2c-%d)", busno);
+            rpt_nl();
+            rpt_vstring(d1,"Probing bus /dev/i2c-%d using command \"%s\"", busno, cmd);
+            int rc = execute_shell_cmd_rpt(cmd, 2 /* depth */);
+            // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
+            if (rc != 1) {
+               rpt_vstring(d1,"%s command unavailable", command_name);
                break;
             }
          }
@@ -679,7 +722,12 @@ void query_sysenv() {
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
 
+#ifdef OLD
       query_using_i2cdetect(accumulator->dev_i2c_device_numbers);
+#endif
+      query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                "i2cdetect -y %d",
+                                "i2cdetect");
 
       raw_scan_i2c_devices(accumulator);
 
@@ -727,6 +775,14 @@ void query_sysenv() {
       // CONSIDER: make conditional on ambiguous EDID, MST
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
+
+      if (get_output_level() >= DDCA_OL_VV) {
+         rpt_nl();
+         query_using_shell_command(accumulator->dev_i2c_device_numbers,
+        //   "udevadm info --attribute-walk --path=$(udevadm info --query=path --name=i2c-%d)",
+           "udevadm info --attribute-walk /dev/i2c-%d",
+                                   "udevadm");
+      }
    }
 
    rpt_nl();
