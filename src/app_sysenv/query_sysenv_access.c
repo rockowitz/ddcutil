@@ -3,7 +3,7 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -19,11 +19,15 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
+#endif
 
 #include "base/linux_errno.h"
 /** \endcond */
@@ -98,25 +102,33 @@ Byte_Value_Array identify_i2c_devices() {
 
    Byte_Value_Array bva1 = NULL;
    Byte_Value_Array bva2 = NULL;
+#ifdef ENABLE_UDEV
    Byte_Value_Array bva3 = NULL;
    Byte_Value_Array bva4 = NULL;
+#endif
 
    bva1 = get_i2c_devices_by_existence_test();
    if (redundant_i2c_device_identification_checks) {     // normally false, set true for testing
       bva2 = get_i2c_devices_by_ls();
+#ifdef ENABLE_UDEV
       bva3 = get_i2c_device_numbers_using_udev(/* include_smbus= */ true);
       bva4 = get_i2c_device_numbers_using_udev_w_sysattr_name_filter(NULL);
+#endif
 
       assert(bva_sorted_eq(bva1,bva2));
+#ifdef ENABLE_UDEV
       assert(bva_sorted_eq(bva1,bva3));
       assert(bva_sorted_eq(bva1,bva4));
+#endif
    }
 
    i2c_device_numbers_result = bva1;
    if (redundant_i2c_device_identification_checks) {
       bva_free(bva2);
+#ifdef ENABLE_UDEV
       bva_free(bva3);
       bva_free(bva4);
+#endif
    }
    // DBGMSG("Identified %d I2C devices", bva_length(bva1));
    return i2c_device_numbers_result;
