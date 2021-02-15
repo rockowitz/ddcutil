@@ -136,7 +136,7 @@ Byte_Value_Array identify_i2c_devices() {
 
 
 /** Reports the username and id of the logged on user. Saves the id and a
- *  copy of the name the #Env_Accumulator structure passed.
+ *  copy of the name in the #Env_Accumulator structure passed.
  *
  *  \param  accumuator collects user name and userid
  */
@@ -182,8 +182,6 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
 
       for (int ndx = 0; ndx < busct; ndx++) {
          busno = bva_get(accum->dev_i2c_device_numbers, ndx);
-  //  for (busno=0; busno < 32; busno++) {
-  //       if (i2c_device_exists(busno)) {
             snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
             int rc;
             int errsv;
@@ -241,7 +239,6 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
                         accum->all_dev_i2c_is_group_rw = false;
                   }
                }
- //           }
          }
       }
 
@@ -378,7 +375,7 @@ static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
 }
 
 
-static void check_udev() {
+static void check_udev_files() {
    // makedev not used on udev systems.
    // So look for makedev.d, but don't complain if it's not found
    if (directory_exists("/etc/makedev.d")) {
@@ -397,7 +394,6 @@ static void check_udev() {
 
    rpt_vstring(1, "Checking rules directory /etc/udev/rules.d:");
    execute_shell_cmd_rpt("grep -H i2c /etc/udev/rules.d/*rules ", 2);
-
 }
 
 
@@ -480,10 +476,9 @@ void check_i2c_devices(Env_Accumulator * accum) {
    check_group_i2c(accum, verbose);
 
    if (verbose) {
-      check_udev();
+      check_udev_files();
    }
 
    DBGMSF(debug, "Done");
 }
-
 
