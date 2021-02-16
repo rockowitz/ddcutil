@@ -33,7 +33,6 @@
 
 #include "public/ddcutil_types.h"
 
-#include "base/adl_errors.h"
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
@@ -224,6 +223,7 @@ validate_environment()
       if (config_rc < 0) {   // if couldn't read config file
 #endif
          int modules_rc = is_module_builtin("i2c-dev");
+         // consider calling is_module_loadable() if not built in
          if (modules_rc < 0) {
             fprintf(stderr, "Unable to read modules.builtin\n");
             fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine"
