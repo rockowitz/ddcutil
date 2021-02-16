@@ -192,6 +192,7 @@ validate_environment()
       ok = true;
    }
    else {
+#ifdef USE_CONFIG_FILE
       char * parm_name = "CONFIG_I2C_CHARDEV";
       int  value_buf_size = 40;
       char value_buffer[value_buf_size];
@@ -221,10 +222,13 @@ validate_environment()
       }
       // config_rc = -1;   // force failure for testing
       if (config_rc < 0) {   // if couldn't read config file
+#endif
          int modules_rc = is_module_builtin("i2c-dev");
          if (modules_rc < 0) {
             fprintf(stderr, "Unable to read modules.builtin\n");
-            fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
+            fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine"
+                            " if it is built into the kernel\n");
+            ok = true;  // make this just a warning, we'll fail later if not in kernel
          }
          else if (modules_rc == 0) {
             ok = false;
@@ -236,10 +240,12 @@ validate_environment()
       }
       if (!ok) {
          fprintf(stderr, "ddcutil requires module i2c-dev\n");
-         DBGMSF(debug, "Forcing ok = true");
-         ok = true;  // make it just a warning in case we're wrong
+         // DBGMSF(debug, "Forcing ok = true");
+         // ok = true;  // make it just a warning in case we're wrong
       }
+#ifdef USE_CONFIG_FILE
   }
+#endif
 #else
    ok = true;
 #endif
@@ -384,8 +390,8 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
-#endif
       // will be reported by the environment command
+#endif
       if (!validate_environment())
          goto bye;
 #ifdef ENABLE_ENVCMDS
