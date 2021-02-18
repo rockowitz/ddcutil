@@ -1,6 +1,6 @@
 /** \file read_capabilities.c */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -123,7 +123,6 @@ get_capabilities_string(
 #endif
       }
       else {
-
          Buffer * pcaps_buffer;
          ddc_excp = get_capabilities_into_buffer(dh, &pcaps_buffer);
          // psc = (ddc_excp) ? ddc_excp->psc : 0;
