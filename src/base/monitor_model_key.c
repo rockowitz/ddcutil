@@ -169,11 +169,14 @@ monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
 #endif
 
+   char * result = NULL;
    // perhaps use thread safe buffer so caller doesn't have to free
-   char * result = model_id_string(
-                      model_id->mfg_id,
-                      model_id->model_name,
-                      model_id->product_code);
+   if (model_id) {
+      result = model_id_string(
+                         model_id->mfg_id,
+                         model_id->model_name,
+                         model_id->product_code);
+   }
 #ifdef FUTURE
    strcpy(result, buf);
    free(result);
