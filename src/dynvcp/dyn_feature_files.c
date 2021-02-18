@@ -3,7 +3,7 @@
  *  Maintain user-defined (aka dynamic) feature definitions
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -182,7 +182,7 @@ find_feature_def_file(
 }
 
 
-
+#ifdef OLD
 /** Look for feature definition file in the current directory and
  *  in the $HOME/.config/ddcutil directory.
  *
@@ -231,6 +231,7 @@ find_feature_def_file0(
    DBGTRC(debug, TRACE_GROUP, "Returning: |%s|", result);
    return result;
 }
+#endif
 
 
 #ifdef OLD
