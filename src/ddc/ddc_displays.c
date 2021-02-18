@@ -868,8 +868,9 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
             valid_dref->io_path.io_mode == DDCA_IO_I2C)
       {
          int busno = invalid_dref->io_path.path.i2c_busno;
+         // int valid_busno = valid_dref->io_path.path.i2c_busno;
          char buf0[40];
-         snprintf(buf0, 40, "/sys/bus/i2c/devices/dev-i2c%d", busno);
+         snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
          set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
          char * rpath = NULL;
          bool ok = RPT2_ATTR_REALPATH(0, &rpath, buf0, "device");
@@ -882,12 +883,6 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
             result = false;
          GByteArray * edid;
          ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
-
-         // int valid_busno = valid_dref->io_path.path.i2c_busno;
-
-
-
-
          if (ok)
             g_byte_array_free(edid, true);
          else
@@ -897,7 +892,6 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", sbool(result) );
    return result;
 }
-
 
 
 void filter_phantom_displays(GPtrArray * all_displays) {
