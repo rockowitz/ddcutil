@@ -4,7 +4,7 @@
  *  See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <unistd.h>
@@ -37,6 +37,28 @@ char * all_xdg_data_dirs()
    if (debug)
       printf("(%s) Returning: %s\n", __func__, all_dirs);
    return all_dirs;
+}
+
+char * xdg_data_home_dir() {
+   bool debug = false;
+   char * home = getenv("HOME");
+   char * xdg_data_home = getenv("XDG_DATA_HOME");
+   if (xdg_data_home)
+      xdg_data_home = strdup(xdg_data_home);
+   if (!xdg_data_home && home)
+      xdg_data_home = g_strdup_printf("%s/.local/share/", home);
+
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, xdg_data_home);
+   return xdg_data_home;
+}
+
+char * xdg_data_home_file(const char * application, const char * simple_fn)
+{
+   char * home_data_dir = xdg_data_home_dir();
+   char * result = g_strdup_printf("%s%s/%s", home_data_dir, application, simple_fn);
+   free(home_data_dir);
+   return result;
 }
 
 
