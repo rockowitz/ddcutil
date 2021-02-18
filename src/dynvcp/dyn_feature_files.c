@@ -168,6 +168,11 @@ get_feature_metadata(
 #endif
 
 
+/** Look for feature definition file on the XDG_DATA_PATH
+ *
+ *  \param simple_fn  simple filename, without ".mccs" suffix
+ *  \return fully qualified name of file found (caller must free), NULL if not found
+ */
 char *
 find_feature_def_file(
       const char * simple_fn)
@@ -180,84 +185,6 @@ find_feature_def_file(
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
-
-
-#ifdef OLD
-/** Look for feature definition file in the current directory and
- *  in the $HOME/.config/ddcutil directory.
- *
- *  \param simple_fn  simple filename, without ".mccs" suffix
- *  \return fully qualified name of file found (caller must free), NULL if not found
- *
- *  \remark
- *  Consider generalizing, moving to file_util.c
- */
-// static
-char *
-find_feature_def_file0(
-      const char * simple_fn)
-{
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  simple_fn=|%s|", simple_fn);
-   char * result = NULL;
-
-   char * paths[] = {
-         ".",      // current directory
-         "~/.config/ddcutil"
-
-    //     "~/.local/share/ddcutil",
-    //     "/usr/local/share/ddcutil",
-    //     "/usr/share/ddcutil"
-
-   };
-   int paths_ct = ARRAY_SIZE(paths);
-
-   for (int ndx = 0; ndx < paths_ct; ndx++ ) {
-      wordexp_t exp_result;
-      int wordexp_flags = 0;
-      wordexp_flags = WRDE_SHOWERR;           // TEMP
-      wordexp(paths[ndx], &exp_result, wordexp_flags);
-      char * epath = exp_result.we_wordv[0];
-      char fqnamebuf[PATH_MAX];
-      snprintf(fqnamebuf, PATH_MAX, "%s/%s.mccs", epath, simple_fn);
-      // DBGMSF(debug, "fqnamebuf:  |%s|", fqnamebuf);
-      wordfree(&exp_result);
-      if (access(fqnamebuf, R_OK) == 0) {
-         result = strdup(fqnamebuf);
-         break;
-      }
-   }
-
-   DBGTRC(debug, TRACE_GROUP, "Returning: |%s|", result);
-   return result;
-}
-#endif
-
-
-#ifdef OLD
-// refactored to file_getlines_errinfo()
-// reads a feature definition file into an array of text lines
-Error_Info *
-read_feature_definition_file(
-      const char *  filename,
-      GPtrArray *   lines)
-{
-   Error_Info * errs = NULL;
-
-   int rc = file_getlines(filename,  lines, false);
-   if (rc < 0) {
-      char * detail = g_strdup_printf("Error reading file %s", filename);
-      errs = errinfo_new2(
-            rc,
-            __func__,
-            detail);
-      // TODO: variant of errinfo_new2() that puts detail last, as variable args (detail_fmt, ...)
-      free(detail);
-   }
-   return errs;
-}
-#endif
-
 
 
 /** Search the file system for a feature definition file specified by
