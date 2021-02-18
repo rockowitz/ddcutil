@@ -1,6 +1,6 @@
 /** \file monitor_model_key.c */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -47,6 +47,7 @@ monitor_model_key_undefined_value() {
    return result;
 }
 
+
 DDCA_Monitor_Model_Key
 monitor_model_key_value_from_edid(Parsed_Edid * edid) {
    DDCA_Monitor_Model_Key result;
@@ -57,7 +58,6 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
    result.defined = true;
    return result;
 }
-
 
 
 /** Allocates and initializes a new Monitor_Model_Key */
@@ -78,6 +78,7 @@ monitor_model_key_new(
    return result;
 }
 
+
 #ifdef UNUSED
 DDCA_Monitor_Model_Key *
 monitor_model_key_undefined_new() {
@@ -86,6 +87,7 @@ monitor_model_key_undefined_new() {
    return result;
 }
 #endif
+
 
 void
 monitor_model_key_free(
@@ -152,6 +154,7 @@ monitor_model_key_eq(
    return result;
 }
 
+
 #ifdef UNUSED
 bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
    // DDCA_Monitor_Model_Key undefined = monitor_model_key_undefined_value();
@@ -159,6 +162,7 @@ bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
    return mmk.defined;
 }
 #endif
+
 
 char *
 monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
@@ -195,6 +199,4 @@ char * mmk_repr(DDCA_Monitor_Model_Key mmk) {
       snprintf(buf, 100, "[%s,%s,%d]", mmk.mfg_id, mmk.model_name, mmk.product_code);
    return buf;
 }
-
-
 
