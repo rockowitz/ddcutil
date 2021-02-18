@@ -35,6 +35,7 @@ libvcp_la_SOURCES =           \
 ddc_command_codes.c           \
 parse_capabilities.c          \
 parsed_capabilities_feature.c \
+persistent_capabilities.c     \
 vcp_feature_codes.c           \
 vcp_feature_set.c             \
 vcp_feature_values.c    
