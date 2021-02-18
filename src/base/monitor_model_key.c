@@ -162,12 +162,24 @@ bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
 
 char *
 monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
+#ifdef FUTURE
+   // don't make this change just before release
+   static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
+   const int bufsz = 100;
+   char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
+#endif
+
    // perhaps use thread safe buffer so caller doesn't have to free
    char * result = model_id_string(
                       model_id->mfg_id,
                       model_id->model_name,
                       model_id->product_code);
+#ifdef FUTURE
+   strcpy(result, buf);
+   free(result);
 
+   return buf;
+#endif
    return result;
 }
 
