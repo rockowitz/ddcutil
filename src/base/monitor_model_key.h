@@ -1,19 +1,14 @@
 /** \file monitor_model_key.h */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MONITOR_MODEL_KEY_H_
 #define MONITOR_MODEL_KEY_H_
 
-
-// #include <inttypes.h>
-// #include <stdlib.h>
+#include <inttypes.h>
 
 #include "private/ddcutil_types_private.h"
-
-// #include "util/edid.h"
-
 
 DDCA_Monitor_Model_Key
 monitor_model_key_value(
