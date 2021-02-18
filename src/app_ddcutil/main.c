@@ -113,7 +113,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
       rpt_label(depth, "Experimental Options:");
       REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
-      REPORT_FLAG_OPTION(2, "Unused");
+      REPORT_FLAG_OPTION(2, "Filter phantom displays");
       REPORT_FLAG_OPTION(3, "Unused");
       REPORT_FLAG_OPTION(4, "Read strategy tests");
       REPORT_FLAG_OPTION(5, "Unused");
@@ -293,11 +293,17 @@ bool init_failsim(Parsed_Cmd * parsed_cmd) {
    return true;
 }
 
+
 bool init_utility_options(Parsed_Cmd* parsed_cmd)
 {
    if (parsed_cmd->flags & CMD_FLAG_F1) {
       fprintf(stdout, "EDID reads will use normal I2C calls\n");
       EDID_Read_Uses_I2C_Layer = true;
+   }
+
+   if (parsed_cmd->flags & CMD_FLAG_F2) {
+      fprintf(stdout, "Filter phantom displays\n");
+      check_phantom_displays = true;    // extern in ddc_displays.h
    }
 
    // HACK FOR TESTING
@@ -1221,4 +1227,5 @@ static void init_rtti() {
 #ifdef ENABLE_ENVCMDS
    RTTI_ADD_FUNC(interrogate);
 #endif
+   init_app_capabilities();
 }
