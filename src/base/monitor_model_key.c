@@ -15,7 +15,7 @@
 #include "monitor_model_key.h"
 
 
-/** Returns a Monitor_Model_Key as a value on the stack. */
+/** Returns a Monitor_Model_Key on the stack. */
 DDCA_Monitor_Model_Key
 monitor_model_key_value(
       const char *   mfg_id,
@@ -28,8 +28,8 @@ monitor_model_key_value(
 
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
-   DDCA_Monitor_Model_Key  result;
 
+   DDCA_Monitor_Model_Key  result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    g_strlcpy(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
@@ -39,6 +39,7 @@ monitor_model_key_value(
 }
 
 
+/** Returns an "undefined" Monitor_Model_Key on the stack. */
 DDCA_Monitor_Model_Key
 monitor_model_key_undefined_value() {
    DDCA_Monitor_Model_Key result;
@@ -48,6 +49,8 @@ monitor_model_key_undefined_value() {
 }
 
 
+/** Returns a Monitor Model Key on the stack with values obtained
+ *  from an EDID */
 DDCA_Monitor_Model_Key
 monitor_model_key_value_from_edid(Parsed_Edid * edid) {
    DDCA_Monitor_Model_Key result;
@@ -60,7 +63,7 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
 }
 
 
-/** Allocates and initializes a new Monitor_Model_Key */
+/** Allocates and initializes a new Monitor_Model_Key on the heap. */
 DDCA_Monitor_Model_Key *
 monitor_model_key_new(
       const char *   mfg_id,
@@ -69,12 +72,42 @@ monitor_model_key_new(
 {
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
+
    DDCA_Monitor_Model_Key * result = calloc(1, sizeof(DDCA_Monitor_Model_Key));
    // memcpy(result->marker, MONITOR_MODEL_KEY_MARKER, 4);
    g_strlcpy(result->mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    g_strlcpy(result->model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
    result->product_code = product_code;
    result->defined = true;
+   return result;
+}
+
+
+/** Frees a Monitor_Model_Key */
+void
+monitor_model_key_free(
+      DDCA_Monitor_Model_Key * model_id)
+{
+   free(model_id);
+}
+
+
+/** Compares 2 Monitor_Model_Key values for equality */
+bool
+monitor_model_key_eq(
+      DDCA_Monitor_Model_Key mmk1,
+      DDCA_Monitor_Model_Key mmk2)
+{
+   bool result = false;
+   if (!mmk1.defined && !mmk2.defined) {
+      result = true;
+   }
+   else if (mmk1.defined && mmk2.defined) {
+      result =
+         (mmk1.product_code == mmk2.product_code      &&
+          strcmp(mmk1.mfg_id, mmk2.mfg_id) == 0       &&
+          strcmp(mmk1.model_name, mmk2.model_name) == 0 );
+   }
    return result;
 }
 
@@ -86,18 +119,27 @@ monitor_model_key_undefined_new() {
    // memcpy(result->marker, MONITOR_MODEL_KEY_MARKER, 4);
    return result;
 }
+
+// needed at API level?
+DDCA_Monitor_Model_Key
+monitor_model_key_assign(DDCA_Monitor_Model_Key old) {
+   return old;
+}
+
+bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
+   // DDCA_Monitor_Model_Key undefined = monitor_model_key_undefined_value();
+   // bool result = monitor_model_key_eq(mmk, undefined);
+   return mmk.defined;
+}
 #endif
 
 
-void
-monitor_model_key_free(
-      DDCA_Monitor_Model_Key * model_id)
-{
-   free(model_id);
-}
-
-
-/** Create a feature definition key.
+/** Returns a string form of a Monitor_Model_Key, suitable for use as an
+ *  identifier in file names, hash keys, etc.
+ *
+ *  The returned value has the form MFG-MODEL-PRODUCT_CODE.
+ *
+ *  Non-alphanumeric characters (commonly " ") in the model name are replaced by "_".
  *
  *  \param   mfg
  *  \param   model_name
@@ -129,41 +171,11 @@ model_id_string(
 }
 
 
-// needed at API level?
-DDCA_Monitor_Model_Key
-monitor_model_key_assign(DDCA_Monitor_Model_Key old) {
-   return old;
-}
-
-
-bool
-monitor_model_key_eq(
-      DDCA_Monitor_Model_Key mmk1,
-      DDCA_Monitor_Model_Key mmk2)
-{
-   bool result = false;
-   if (!mmk1.defined && !mmk2.defined) {
-      result = true;
-   }
-   else if (mmk1.defined && mmk2.defined) {
-      result =
-         (mmk1.product_code == mmk2.product_code      &&
-          strcmp(mmk1.mfg_id, mmk2.mfg_id) == 0       &&
-          strcmp(mmk1.model_name, mmk2.model_name) == 0 );
-   }
-   return result;
-}
-
-
-#ifdef UNUSED
-bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
-   // DDCA_Monitor_Model_Key undefined = monitor_model_key_undefined_value();
-   // bool result = monitor_model_key_eq(mmk, undefined);
-   return mmk.defined;
-}
-#endif
-
-
+/** Returns a string representation of a Monitor_Model_Key in a form
+ *  suitable for file names, hash keys, etc.
+ *
+ *  The value returned has the same form as returned by #model_id_string.
+ */
 char *
 monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
 #ifdef FUTURE
@@ -190,6 +202,10 @@ monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
    return result;
 }
 
+
+/** Returns a string representation of a Monitor_Model_Key in a format
+ *  suitable for debug messages.
+ */
 char * mmk_repr(DDCA_Monitor_Model_Key mmk) {
    // TODO: make thread safe
    static char buf[100];
