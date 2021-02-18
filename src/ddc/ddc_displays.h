@@ -23,6 +23,8 @@
 #include "usb/usb_displays.h"
 #endif
 
+extern bool check_phantom_displays;
+
 void ddc_set_async_threshold(int threshold);
 
 bool

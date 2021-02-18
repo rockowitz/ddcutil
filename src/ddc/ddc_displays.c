@@ -22,6 +22,7 @@
 #include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_usb_util.h"
 #include "util/udev_util.h"
@@ -57,8 +58,10 @@
 #include "ddc/ddc_displays.h"
 
 
-// Default race class for this file
+// Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
+
+bool check_phantom_displays = false;
 
 
 static GPtrArray * all_displays = NULL;    // all detected displays
@@ -416,6 +419,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
 
    switch(dref->dispno) {
+   case -2:
+      rpt_vstring(depth, "Phantom display");
+      break;
    case -1:
       rpt_vstring(depth, "Invalid display");
       break;
@@ -852,6 +858,80 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 }
 
 
+bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting. invalid_dref=%s, valid_dref=%s",
+                 dref_repr_t(invalid_dref), dref_repr_t(valid_dref));
+   bool result = false;
+   if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0 || true) {   // TEMP
+      if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
+            valid_dref->io_path.io_mode == DDCA_IO_I2C)
+      {
+         int busno = invalid_dref->io_path.path.i2c_busno;
+         char buf0[40];
+         snprintf(buf0, 40, "/sys/bus/i2c/devices/dev-i2c%d", busno);
+         set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
+         char * rpath = NULL;
+         bool ok = RPT2_ATTR_REALPATH(0, &rpath, buf0, "device");
+         char * attr_value = NULL;
+         ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "status");
+         if (!ok  || !streq(attr_value, "disconnected"))
+            result = false;
+         ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "enabled");
+         if (!ok  || !streq(attr_value, "disabled"))
+            result = false;
+         GByteArray * edid;
+         ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
+
+         // int valid_busno = valid_dref->io_path.path.i2c_busno;
+
+
+
+
+         if (ok)
+            g_byte_array_free(edid, true);
+         else
+            result = false;
+      }
+   }
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", sbool(result) );
+   return result;
+}
+
+
+
+void filter_phantom_displays(GPtrArray * all_displays) {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting.  all_displays->len = %d", all_displays->len);
+   GPtrArray * valid_displays = g_ptr_array_sized_new(all_displays->len);
+   GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      if (dref->dispno < 0)     // -1 or -2
+         g_ptr_array_add(invalid_displays, dref);
+      else
+         g_ptr_array_add(valid_displays, dref);
+   }
+   DBGTRC(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
+                              valid_displays->len, invalid_displays->len);
+   if (invalid_displays->len > 0 || valid_displays->len == 0 ) {
+      for (int invalid_ndx = 0; invalid_ndx < invalid_displays->len; invalid_ndx++) {
+         Display_Ref * invalid_ref = g_ptr_array_index(invalid_displays, invalid_ndx);
+         for (int valid_ndx = 0; valid_ndx < valid_displays->len; valid_ndx++) {
+            Display_Ref *  valid_ref = g_ptr_array_index(valid_displays, valid_ndx);
+            if (is_phantom_display(invalid_ref, valid_ref)) {
+               invalid_ref->dispno = -2;
+            }
+         }
+      }
+   }
+   g_ptr_array_free(invalid_displays, false);
+   g_ptr_array_free(valid_displays, false);
+   DBGTRC(debug, TRACE_GROUP, "Done");
+}
+
+
 /** Searches the master display list for a display matching the
  *  specified #Display_Identifier, returning its #Display_Ref
  *
@@ -984,6 +1064,7 @@ ddc_detect_all_displays() {
       }
    }
 
+#ifdef ADL
   GPtrArray * all_adl_details = adlshim_get_valid_display_details();
   int adlct = all_adl_details->len;
   for (int ndx = 0; ndx < adlct; ndx++) {
@@ -1005,6 +1086,7 @@ ddc_detect_all_displays() {
   // all_adl_details points to a transitory data structure created by
   // adlshim_get_valid_display_details() and must be freed
   g_ptr_array_free(all_adl_details, true);
+#endif
 
 #ifdef USE_USB
    if (detect_usb_displays) {
@@ -1041,10 +1123,16 @@ ddc_detect_all_displays() {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
+#ifdef ADL
    DBGMSF(debug, "display_list->len=%d, async_threshold=%d, adlct=%d",
                  display_list->len, async_threshold, adlct);
    // ADL displays do not support async scan.  Not worth implementing.
    if (display_list->len >= async_threshold && adlct == 0)
+#else
+      DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
+                    display_list->len, async_threshold);
+      if (display_list->len >= async_threshold)
+#endif
       async_scan(display_list);
    else
       non_async_scan(display_list);
@@ -1066,6 +1154,9 @@ ddc_detect_all_displays() {
          dref->dispno = -1;
       }
    }
+
+   if (check_phantom_displays)      // for testing
+      filter_phantom_displays(display_list);
 
    // if (debug) {
    //    DBGMSG("Displays detected:");
@@ -1151,8 +1242,10 @@ void
 init_ddc_displays() {
    RTTI_ADD_FUNC(async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
+   RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(initial_checks_by_dh);
    RTTI_ADD_FUNC(initial_checks_by_dref);
+   RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(non_async_scan);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    // dbgrpt_func_name_table(0);
