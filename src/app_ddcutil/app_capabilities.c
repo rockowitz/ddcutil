@@ -3,7 +3,7 @@
  *  Capabilities functions factored out of main.c
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -24,9 +24,11 @@
 
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 /** \endcond */
 
 #include "vcp/parse_capabilities.h"
+#include "vcp/persistent_capabilities.h"
 
 #include "dynvcp/dyn_parsed_capabilities.h"
 
@@ -34,9 +36,10 @@
 
 #include "app_ddcutil/app_capabilities.h"
 
+bool persistent_capabilities_enabled = true;
 
 // Default trace class for this file
-// static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 
 /** Gets the capabilities string for a display.
@@ -53,35 +56,55 @@
 DDCA_Status
 app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc)
 {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
+   // if (debug) {
+   //    dbgrpt_capabilities_hash(1, NULL);
+   // }
    // FILE * fout = stdout;
     FILE * ferr = stderr;
-    bool debug = false;
-    Error_Info * ddc_excp = get_capabilities_string(dh, capabilities_string_loc);
-    Public_Status_Code psc =  ERRINFO_STATUS(ddc_excp);
-    assert( (ddc_excp && psc!=0) || (!ddc_excp && psc==0) );
 
-    if (ddc_excp) {
-       switch(psc) {
-       case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
-       case DDCRC_DETERMINED_UNSUPPORTED:
-          f0printf(ferr, "Unsupported request\n");
-          break;
-       case DDCRC_RETRIES:
-          f0printf(ferr,
-                   "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
-                   dh_repr(dh));
-          break;
-       default:
-          f0printf(ferr, "(%s) !!! Unable to get capabilities for monitor on %s\n",
-                 __func__, dh_repr(dh));
-          DBGMSG("Unexpected status code: %s", psc_desc(psc));
+    Error_Info * ddc_excp = NULL;
+    Public_Status_Code psc = 0;
+    *capabilities_string_loc = NULL;
+    if (persistent_capabilities_enabled) {
+       *capabilities_string_loc = get_persistent_capabilities(dh->dref->mmid);
+       DBGTRC(debug, TRACE_GROUP, "get_persistent_capabilities() returned %s",
+                                  *capabilities_string_loc);
+    }
+    if (!*capabilities_string_loc) {
+       ddc_excp = get_capabilities_string(dh, capabilities_string_loc);
+       psc =  ERRINFO_STATUS(ddc_excp);
+       assert( (ddc_excp && psc!=0) || (!ddc_excp && psc==0) );
+
+       if (ddc_excp) {
+          switch(psc) {
+          case DDCRC_REPORTED_UNSUPPORTED:       // should not happen
+          case DDCRC_DETERMINED_UNSUPPORTED:
+             f0printf(ferr, "Unsupported request\n");
+             break;
+          case DDCRC_RETRIES:
+             f0printf(ferr,
+                      "Unable to get capabilities for monitor on %s.  Maximum DDC retries exceeded.\n",
+                      dh_repr(dh));
+             break;
+          default:
+             f0printf(ferr, "(%s) !!! Unable to get capabilities for monitor on %s\n",
+                    __func__, dh_repr(dh));
+             DBGMSG("Unexpected status code: %s", psc_desc(psc));
+          }
+          // errinfo_free(ddc_excp);
+          ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
        }
-       // errinfo_free(ddc_excp);
-       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
+       else {
+          assert(capabilities_string_loc);
+          if (persistent_capabilities_enabled)
+             set_persistent_capabilites(dh->dref->mmid, *capabilities_string_loc);
+       }
     }
-    else {
-       assert(capabilities_string_loc);
-    }
+
+    DBGTRC(debug, TRACE_GROUP, "Returning: %s, *capabilities_string_loc -> %s",
+                               psc_desc(psc), *capabilities_string_loc);
     return psc;
 }
 
@@ -136,3 +159,9 @@ app_capabilities(Display_Handle * dh)
    }
    return ddcrc;
 }
+
+void init_app_capabilities() {
+   RTTI_ADD_FUNC(app_get_capabilities_string);
+}
+
+

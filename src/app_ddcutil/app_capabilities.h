@@ -3,7 +3,7 @@
  *  Implement the CAPABILITIES command
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef APP_CAPABILITIES_H_
@@ -13,6 +13,8 @@
 #include "base/displays.h"
 /** \endcond */
 #include "vcp/parse_capabilities.h"
+
+extern bool persistent_capabilities_enabled;
 
 DDCA_Status
 app_get_capabilities_string(
@@ -27,5 +29,7 @@ app_show_parsed_capabilities(
 DDCA_Status
 app_capabilities(              // implements the CAPABILITIES command
       Display_Handle * dh);
+
+void init_app_capabilities();
 
 #endif /* APP_CAPABILITIES_H_ */
