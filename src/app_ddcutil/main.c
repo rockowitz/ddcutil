@@ -41,6 +41,7 @@
 #include "base/displays.h"
 #include "base/dynamic_sleep.h"
 #include "base/linux_errno.h"
+#include "base/monitor_model_key.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
@@ -803,7 +804,6 @@ find_dref(
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
       DBGTRC(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
-      // special handling for --busno
       int busno = did_work->busno;
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
@@ -812,6 +812,11 @@ find_dref(
             dref = create_bus_display_ref(busno);
             dref->dispno = -1;     // should use some other value for unassigned vs invalid
             dref->pedid = businfo->edid;    // needed?
+            dref->mmid  = monitor_model_key_new(
+                             dref->pedid->mfg_id,
+                             dref->pedid->model_name,
+                             dref->pedid->product_code);
+
             // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
             dref->detail = businfo;
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
