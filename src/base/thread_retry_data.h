@@ -1,6 +1,6 @@
-// thread_retry_data.h
+/** \file thread_retry_data.h */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef THREAD_RETRY_DATA_H_
@@ -8,6 +8,7 @@
 
 #include "public/ddcutil_types.h"
 #include "base/per_thread_data.h"
+
 
 
 typedef struct {
