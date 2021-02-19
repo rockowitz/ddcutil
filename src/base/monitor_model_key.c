@@ -1,4 +1,7 @@
-/** \file monitor_model_key.c */
+/** \file monitor_model_key.c
+ *  Uniquely identifies a monitor model using its manufacturer id,
+ *  model name, and product code, as specified in the EDID.
+ */
 
 // Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
