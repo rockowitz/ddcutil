@@ -110,11 +110,45 @@ bye:
 }
 
 
+static inline bool
+generic_model_name(char * model_name) {
+   char * generic_names[] = {
+         "LG IPS FULLHD",
+         "LG UltraFine",
+         "LG Ultrawide",
+         "LG UltraWide",
+         "Samsung Syncmaster"};
+   int namect = ARRAY_SIZE(generic_names);
+   bool result = false;
+   for (int ndx = 0; ndx < namect; ndx++) {
+      if ( streq(model_name, generic_names[ndx]) ) {
+         result = true;
+         break;
+      }
+   }
+   return result;
+}
+
+
+static inline bool
+non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
+{
+   return ( generic_model_name(mmk->model_name) &&
+            ( mmk->product_code == 0 || mmk->product_code == 0x0101) );
+}
+
+
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 {
    assert(mmk);
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.  mmk -> %s", mmk_repr(*mmk));
+
+   char * result = NULL;
+   if (non_unique_model_id(mmk)) {
+      DBGTRC(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
+      goto bye;
+   }
 
     if (!capabilities_hash) {
       Error_Info * errs = load_persistent_capabilities_file();
@@ -125,7 +159,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
             ERRINFO_FREE_WITH_REPORT(errs,true);
       }
    }
-   char * result = NULL;
+
    if (mmk) {
       char * mms = monitor_model_string(mmk);
 
@@ -138,6 +172,8 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
       result = g_hash_table_lookup (capabilities_hash, mms);
       free(mms);
     }
+
+bye:
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
@@ -150,9 +186,14 @@ void set_persistent_capabilites(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. mmk->%s, capabilities = %s",
           monitor_model_string(mmk), capabilities);
-   char * mms = monitor_model_string(mmk);
-   g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
-   save_persistent_capabilities_file();
+
+   if (non_unique_model_id(mmk))
+      DBGTRC(debug, TRACE_GROUP, "Not saving capabilities for non-unique Monitor_Model_Key.");
+   else {
+      char * mms = monitor_model_string(mmk);
+      g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
+      save_persistent_capabilities_file();
+   }
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
