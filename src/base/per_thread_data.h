@@ -6,7 +6,7 @@
  *  are not unidirectional.  The functionality has been split into 3 files for clarity.
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PER_THREAD_DATA_H_
@@ -36,6 +36,16 @@ struct {
 //   int          maxtries;
    uint16_t       counters[MAX_MAX_TRIES+2];
 } Per_Thread_Try_Stats;
+
+//! I2C retry limit types
+typedef enum{
+   WRITE_ONLY_TRIES_OP,       /**< Maximum write-only operation tries */
+   WRITE_READ_TRIES_OP,       /**< Maximum read-write operation tries */
+   MULTI_PART_READ_OP,        /**< Maximum multi-part read operation tries */
+   MULTI_PART_WRITE_OP        /**< Maximum multi-part write operation tries */
+} Retry_Operation;
+#define RETRY_OP_COUNT 4
+typedef uint16_t Retry_Op_Value;
 
 
 typedef struct {
