@@ -207,25 +207,32 @@ retry:
    errsv = errno;
 
    if (rc < 0) {
-      if ( callopts & CALLOPT_ERR_MSG) {
-         DBGMSG("%s", filename_for_fd_t(fd));
-         REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errno);
+      if (errsv == EBUSY) {
+         if (callopts & CALLOPT_ERR_MSG) {
+            DBGMSG("ioctl(%s, I2C_SLAVE, 0x%02x returned EBUSY",
+                   filename_for_fd_t(fd), addr);
+         }
+         if (i2c_force_slave_addr_flag && op == I2C_SLAVE) {
+            DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
+                   filename_for_fd_t(fd), addr );
+            // normally errors counted at higher level, but in this case it would be
+            // lost because of retry
+            COUNT_STATUS_CODE(-errsv);
+            op = I2C_SLAVE_FORCE;
+            debug = true;   // force final message for clarity
+            goto retry;
+         }
       }
-
-      if (errsv == EBUSY && i2c_force_slave_addr_flag && op == I2C_SLAVE) {
-         DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for address 0x%02x", addr );
-         // normally errors counted at higher level, but in this case it would be lost because of retry
-         COUNT_STATUS_CODE(-errsv);
-         op = I2C_SLAVE_FORCE;
-         debug = true;   // force final message for clarity
-         goto retry;
+      else {
+         REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errsv);
       }
 
       result = -errsv;
    }
 
    DBGTRC((result || debug), TRACE_GROUP,
-           "addr = 0x%02x. filename = %s, Returning %s", addr, filename_for_fd_t(fd), psc_desc(result));
+           "addr = 0x%02x. filename = %s, Returning %s",
+           addr, filename_for_fd_t(fd), psc_desc(result));
       // show_backtrace(1);
 
    assert(result <= 0);
@@ -1174,6 +1181,7 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
 
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_open_bus);
+   RTTI_ADD_FUNC(i2c_set_addr);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
