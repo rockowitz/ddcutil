@@ -863,7 +863,8 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    DBGTRC(debug, TRACE_GROUP, "Starting. invalid_dref=%s, valid_dref=%s",
                  dref_repr_t(invalid_dref), dref_repr_t(valid_dref));
    bool result = false;
-   if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0 || true) {   // TEMP
+   if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0) {
+      DBGTRC(debug, TRACE_GROUP, "EDIDs match");
       if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
             valid_dref->io_path.io_mode == DDCA_IO_I2C)
       {
@@ -883,10 +884,10 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
             result = false;
          GByteArray * edid;
          ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
-         if (ok)
-            g_byte_array_free(edid, true);
-         else
+         if (ok) {
             result = false;
+            g_byte_array_free(edid, true);
+         }
       }
    }
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", sbool(result) );
