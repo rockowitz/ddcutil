@@ -252,6 +252,7 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 
    parsed_edid->year = edidbytes[17] + 1990;
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
+   parsed_edid->manufacture_week = edidbytes[16];
    parsed_edid->edid_version_major = edidbytes[18];
 #ifdef UNNEEDED
    if (parsed_edid->edid_version_major != 1 && parsed_edid->edid_version_major != 2) {
@@ -331,10 +332,10 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
       rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
-      char * title = (edid->is_model_year) ? "Model year:" : "Manufacture year:";
-      rpt_vstring(d1,"%-20s  %d", title, edid->year);
-      rpt_vstring(d1,"EDID version:         %d.%d", edid->edid_version_major, edid->edid_version_minor);
-
+      if (edid->is_model_year)
+      rpt_vstring(d1,"Model year:           %d", edid->year);
+      else
+      rpt_vstring(d1,"Manufacture year:     %d,  Week: %d", edid->year, edid->manufacture_week);
       if (verbose) {
          rpt_vstring(d1,"Extra descriptor:        %s",          edid->extra_descriptor_string);
          char explbuf[100];

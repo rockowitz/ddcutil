@@ -59,6 +59,7 @@ struct {
    char         extra_descriptor_string[EDID_EXTRA_STRING_FIELD_SIZE];  ///< (tag 0xfe)
    int          year;                    ///< can be year of manufacture or model
    bool         is_model_year;           ///< if true, year is model year, if false, is manufacture year
+   uint8_t      manufacture_week;        ///< xFF if is_model_year == true
    Byte         edid_version_major;      ///< EDID major version number
    Byte         edid_version_minor;      ///< EDID minor version number
    ushort       wx;                      ///< whitepoint x coordinate
