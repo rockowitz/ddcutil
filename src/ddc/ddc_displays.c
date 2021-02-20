@@ -1,5 +1,5 @@
 /** \file ddc_displays.c
- * Access displays, whether DDC, ADL, or USB
+ * Access displays, whether DDC or USB
  */
 
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -29,8 +29,6 @@
 #endif
 /** \endcond */
 
-#include "base/adl_errors.h"
-#include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/feature_metadata.h"
 #include "base/linux_errno.h"
@@ -41,7 +39,6 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "adl/adl_shim.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -455,7 +452,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
       break;
    case DDCA_IO_ADL:
-      adlshim_report_active_display_by_dref(dref, d1);
+      PROGRAM_LOGIC_ERROR("ADL implementation removed");
       break;
    case DDCA_IO_USB:
 #ifdef USE_USB
@@ -632,7 +629,8 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
-      break;
+         PROGRAM_LOGIC_ERROR("ADL implementation removed");
+         break;
    case(DDCA_IO_USB):
 #ifdef USE_USB
          rpt_vstring(d1, "USB device information: ");
@@ -731,6 +729,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
    }
 
+#ifdef ADL
    if (criteria->iAdapterIndex >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iAdapterIndex != criteria->iAdapterIndex)
          goto bye;
@@ -740,6 +739,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iDisplayIndex != criteria->iDisplayIndex)
          goto bye;
    }
+#endif
 
 #ifdef USE_USB
    if (criteria->hiddev >= 0) {
@@ -989,8 +989,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
       criteria->i2c_busno = did->busno;
       break;
    case DISP_ID_ADL:
-      criteria->iAdapterIndex = did->iAdapterIndex;
-      criteria->iDisplayIndex = did->iDisplayIndex;
+      PROGRAM_LOGIC_ERROR("ADL implementation removed");
       break;
    case DISP_ID_MONSER:
       criteria->mfg_id = did->mfg_id;
@@ -1060,7 +1059,7 @@ get_display_ref_for_display_identifier(
 }
 
 
-/** Detects all connected displays by querying the I2C, ADL, and USB subsystems.
+/** Detects all connected displays by querying the I2C and USB subsystems.
  *
  * \return array of #Display_Ref
  */
@@ -1093,30 +1092,6 @@ ddc_detect_all_displays() {
          g_ptr_array_add(display_list, dref);
       }
    }
-
-#ifdef ADL
-  GPtrArray * all_adl_details = adlshim_get_valid_display_details();
-  int adlct = all_adl_details->len;
-  for (int ndx = 0; ndx < adlct; ndx++) {
-     ADL_Display_Detail * detail = g_ptr_array_index(all_adl_details, ndx);
-     Display_Ref * dref = create_adl_display_ref(detail->iAdapterIndex, detail->iDisplayIndex);
-     dref->dispno = -1;
-     dref->pedid = detail->pEdid;   // needed?
-     dref->mmid  = monitor_model_key_new(
-                      dref->pedid->mfg_id,
-                      dref->pedid->model_name,
-                      dref->pedid->product_code);
-     // drec->detail.adl_detail = detail;
-     dref->detail = detail;
-     dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-     dref->flags |= DREF_DDC_IS_MONITOR;
-     g_ptr_array_add(display_list, dref);
-  }
-  // Unlike businfo and usb_monitors, which point to persistent data structures,
-  // all_adl_details points to a transitory data structure created by
-  // adlshim_get_valid_display_details() and must be freed
-  g_ptr_array_free(all_adl_details, true);
-#endif
 
 #ifdef USE_USB
    if (detect_usb_displays) {
@@ -1152,17 +1127,9 @@ ddc_detect_all_displays() {
    DDCA_Output_Level olev = get_output_level();
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
-
-#ifdef ADL
-   DBGMSF(debug, "display_list->len=%d, async_threshold=%d, adlct=%d",
-                 display_list->len, async_threshold, adlct);
-   // ADL displays do not support async scan.  Not worth implementing.
-   if (display_list->len >= async_threshold && adlct == 0)
-#else
       DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
                     display_list->len, async_threshold);
       if (display_list->len >= async_threshold)
-#endif
       async_scan(display_list);
    else
       non_async_scan(display_list);
