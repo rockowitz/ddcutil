@@ -122,8 +122,11 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  */
 bool initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
+   assert(dh && dh->dref);
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
-   assert(dh);
+   DBGTRC(debug, TRACE_GROUP, "Starting. communication flags: %s",
+                                 dref_basic_flags_t(dh->dref->flags));
+
    DDCA_Any_Vcp_Value * pvalrec;
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -243,8 +246,10 @@ bye:
       dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
    }
 
-   DBGTRC(debug, TRACE_GROUP, "dh=%s, Returning: %s",
+   DBGTRC(debug, TRACE_GROUP, "Done. dh=%s, Returning: %s",
                  dh_repr_t(dh), sbool(communication_working));
+   DBGTRC(debug, TRACE_GROUP, "Done. communication flags: %s",
+                                 dref_basic_flags_t(dh->dref->flags));
    return communication_working;
 }
 
@@ -257,7 +262,8 @@ bye:
  */
 bool initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
+                 dref_repr_t(dref), dref_basic_flags_t(dref->flags));
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -267,8 +273,13 @@ bool initial_checks_by_dref(Display_Ref * dref) {
       result = initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
+   else {
+     dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+   }
 
    DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
+   DBGTRC(debug, TRACE_GROUP, "Done. communication flags: %s",
+                               dref_basic_flags_t(dref->flags));
    return result;
 }
 
@@ -413,7 +424,8 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
+                 dref_repr_t(dref), dref_basic_flags_t(dref->flags));
    assert(dref);
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
@@ -461,20 +473,34 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    if (output_level >= DDCA_OL_NORMAL) {
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          rpt_vstring(d1, "DDC communication failed");
+         char msgbuf[100] = {0};
          char * msg = NULL;
-         if (dref->io_path.io_mode == DDCA_IO_I2C)
-         {
-             I2C_Bus_Info * curinfo = dref->detail;
-             if (curinfo->flags & I2C_BUS_EDP)
-                 msg = "This is an eDP laptop display. Laptop displays do not support DDC/CI.";
-             else if (curinfo->flags & I2C_BUS_LVDS)
-                  msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
-             else if ( is_embedded_parsed_edid(dref->pedid) )
-                 msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
+         if (dref->dispno == -2) {
+            if (dref->actual_display) {
+               snprintf(msgbuf, 100, "Use non-phantom device %s",
+                        dref_short_name_t(dref->actual_display));
+               msg = msgbuf;
+            }
+            else {
+               // should never occur
+               msg = "Use non-phantom device";
+            }
          }
-         if (output_level >= DDCA_OL_VERBOSE) {
-            if (!msg) {
-               msg = "Is DDC/CI enabled in the monitor's on-screen display?";
+         else {
+            if (dref->io_path.io_mode == DDCA_IO_I2C)
+            {
+                I2C_Bus_Info * curinfo = dref->detail;
+                if (curinfo->flags & I2C_BUS_EDP)
+                    msg = "This is an eDP laptop display. Laptop displays do not support DDC/CI.";
+                else if (curinfo->flags & I2C_BUS_LVDS)
+                     msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
+                else if ( is_embedded_parsed_edid(dref->pedid) )
+                    msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
+            }
+            if (output_level >= DDCA_OL_VERBOSE) {
+               if (!msg) {
+                  msg = "Is DDC/CI enabled in the monitor's on-screen display?";
+               }
             }
          }
          if (msg) {
@@ -514,7 +540,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
    }
 
-   DBGMSF(debug, "Done");
+   DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
 
@@ -860,8 +886,13 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 
 bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = true;
+   char * invalid_repr = strdup(dref_repr_t(invalid_dref));
+   char *   valid_repr = strdup(dref_repr_t(valid_dref));
    DBGTRC(debug, TRACE_GROUP, "Starting. invalid_dref=%s, valid_dref=%s",
-                 dref_repr_t(invalid_dref), dref_repr_t(valid_dref));
+                 invalid_repr, valid_repr);
+   free(invalid_repr);
+   free(valid_repr);
+
    bool result = false;
    if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0) {
       DBGTRC(debug, TRACE_GROUP, "EDIDs match");
@@ -875,18 +906,21 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
          set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
          char * rpath = NULL;
          bool ok = RPT2_ATTR_REALPATH(0, &rpath, buf0, "device");
-         char * attr_value = NULL;
-         ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "status");
-         if (!ok  || !streq(attr_value, "disconnected"))
-            result = false;
-         ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "enabled");
-         if (!ok  || !streq(attr_value, "disabled"))
-            result = false;
-         GByteArray * edid;
-         ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
          if (ok) {
-            result = false;
-            g_byte_array_free(edid, true);
+            result = true;
+            char * attr_value = NULL;
+            ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "status");
+            if (!ok  || !streq(attr_value, "disconnected"))
+               result = false;
+            ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "enabled");
+            if (!ok  || !streq(attr_value, "disabled"))
+               result = false;
+            GByteArray * edid;
+            ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
+            if (ok) {
+               result = false;
+               g_byte_array_free(edid, true);
+            }
          }
       }
    }
@@ -917,6 +951,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
             Display_Ref *  valid_ref = g_ptr_array_index(valid_displays, valid_ndx);
             if (is_phantom_display(invalid_ref, valid_ref)) {
                invalid_ref->dispno = -2;
+               invalid_ref->actual_display = valid_ref;
             }
          }
       }
