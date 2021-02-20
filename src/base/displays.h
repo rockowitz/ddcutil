@@ -175,6 +175,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
 
+char * dref_communication_flags_t(Dref_Flags flags);
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
@@ -199,6 +200,7 @@ typedef struct _display_ref {
    Display_Async_Rec *      async_rec;
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
    uint64_t                 next_i2c_io_after;     // nanosec
+   struct _display_ref *    actual_display;        // if dispno == -2
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
