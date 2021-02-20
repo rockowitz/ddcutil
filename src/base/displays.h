@@ -175,7 +175,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
 
-char * dref_communication_flags_t(Dref_Flags flags);
+char * dref_basic_flags_t(Dref_Flags flags);
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.

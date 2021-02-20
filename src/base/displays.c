@@ -1177,34 +1177,38 @@ char * hiddev_number_to_name(int hiddev_number) {
 #endif
 
 
-char * dref_communication_flags_t(uint16_t flags) {
-   int max_size = 6 * 32 + 1;
+#define ADD_DREF_FLAG(FLAG_NAME) \
+   if (flags&FLAG_NAME) strcat(buf, #FLAG_NAME", ")
+
+char * dref_basic_flags_t(uint16_t flags) {
+   int max_size = 6 * 35 + 1;
    static GPrivate  key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&key, max_size);
-
    buf[0] = '\0';
-   if (flags & DREF_DDC_COMMUNICATION_CHECKED)
-      strcat(buf, "DREF_DDC_COMMUNICATION_CHECKED, ");
-   if (flags & DREF_DDC_COMMUNICATION_WORKING)
-      strcat(buf, "DREF_DDC_COMMUNICATION_WORKING, ");
-   if (flags & DREF_DDC_IS_MONITOR_CHECKED)
-        strcat(buf, "DREF_DDC_IS_MONITOR_CHECKED, ");
-   if (flags & DREF_DDC_IS_MONITOR)
-        strcat(buf, "DREF_DDC_IS_MONITOR, ");
-   if (flags & DREF_TRANSIENT)
-        strcat(buf, "DREF_OPEN, ");
-   if (flags & DREF_TRANSIENT)
-        strcat(buf, "DREF_OPEN, ");
+   ADD_DREF_FLAG(DREF_DDC_COMMUNICATION_CHECKED                 );
+   ADD_DREF_FLAG(DREF_DDC_COMMUNICATION_WORKING                 );
+   ADD_DREF_FLAG(DREF_DDC_IS_MONITOR_CHECKED                    );
+   ADD_DREF_FLAG(DREF_DDC_IS_MONITOR                            );
+   ADD_DREF_FLAG(DREF_TRANSIENT                                 );
+   ADD_DREF_FLAG(DREF_OPEN                                      );
+
+   //   unreported flags
+   //   ADD_DREF_FLAG(DREF_DYNAMIC_FEATURES_CHECKED                  );
+   //   ADD_DREF_FLAG(DREF_DDC_NULL_RESPONSE_CHECKED                 );
+   //   ADD_DREF_FLAG(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    );
+   //   ADD_DREF_FLAG(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED );
+   //   ADD_DREF_FLAG(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         );
+   //   ADD_DREF_FLAG(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         );
+
    int len = strlen(buf);
    if (len > 0 )
       buf[len-2] = '\0';
    return buf;
 }
-
+#undef ADD_DREF_FLAG
 
 void init_displays() {
    displays_master_list = g_ptr_array_new();
-
 }
 
 
