@@ -48,22 +48,6 @@ get_display_ref_for_display_identifier(
    Display_Identifier* pdid,
    Call_Options        callopts);
 
-Display_Ref*
-ddc_find_display_by_dispno(
-   int           dispno);
-
-Display_Ref*
-ddc_find_display_by_mfg_model_sn(
-   const char *  mfg_id,
-   const char *  model,
-   const char *  sn,
-   Byte          findopts);
-
-Display_Ref*
-ddc_find_display_by_edid(
-   const Byte *  pEdidBytes,
-   Byte          findopts);
-
 void
 ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 
