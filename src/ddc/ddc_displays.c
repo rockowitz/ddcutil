@@ -729,18 +729,6 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
    }
 
-#ifdef ADL
-   if (criteria->iAdapterIndex >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iAdapterIndex != criteria->iAdapterIndex)
-         goto bye;
-   }
-
-   if (criteria->iDisplayIndex >= 0) {
-      if (dref->io_path.io_mode != DDCA_IO_ADL || dref->io_path.path.adlno.iDisplayIndex != criteria->iDisplayIndex)
-         goto bye;
-   }
-#endif
-
 #ifdef USE_USB
    if (criteria->hiddev >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
