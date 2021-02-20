@@ -120,7 +120,7 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-bool initial_checks_by_dh(Display_Handle * dh) {
+bool ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    assert(dh && dh->dref);
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
@@ -260,7 +260,7 @@ bye:
  *  \param dref pointer to #Display_Ref for monitor
  *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
-bool initial_checks_by_dref(Display_Ref * dref) {
+bool ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
                  dref_repr_t(dref), dref_basic_flags_t(dref->flags));
@@ -270,7 +270,7 @@ bool initial_checks_by_dref(Display_Ref * dref) {
 
    psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
    if (psc == 0)  {
-      result = initial_checks_by_dh(dh);
+      result = ddc_initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
    else {
@@ -292,7 +292,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
    assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
    DBGTRC(debug, TRACE_GROUP, "Starting. dref = %s", dref_repr_t(dref) );
 
-   initial_checks_by_dref(dref);
+   ddc_initial_checks_by_dref(dref);
    // g_thread_exit(NULL);
    DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning NULL", dref_repr_t(dref) );
    return NULL;
@@ -545,7 +545,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
 
 int
-get_display_count(bool include_invalid_displays) {
+ddc_get_display_count(bool include_invalid_displays) {
    int display_ct = -1;
    if (all_displays) {
       display_ct = 0;
@@ -853,7 +853,7 @@ void non_async_scan(GPtrArray * all_displays) {
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      initial_checks_by_dref(dref);
+      ddc_initial_checks_by_dref(dref);
 
 #ifdef OLD
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
@@ -1273,8 +1273,8 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
-   RTTI_ADD_FUNC(initial_checks_by_dh);
-   RTTI_ADD_FUNC(initial_checks_by_dref);
+   RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
+   RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(non_async_scan);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);

@@ -28,7 +28,7 @@ extern bool check_phantom_displays;
 void ddc_set_async_threshold(int threshold);
 
 bool
-initial_checks_by_dref(Display_Ref * dref);
+ddc_initial_checks_by_dref(Display_Ref * dref);
 
 GPtrArray *
 ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
@@ -38,7 +38,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth);
 
 
 int
-get_display_count(bool include_invalid_displays);
+ddc_get_display_count(bool include_invalid_displays);
 
 int
 ddc_report_displays(bool include_invalid_displays, int depth);

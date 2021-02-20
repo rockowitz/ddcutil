@@ -601,7 +601,7 @@ void test_display_detection_variants() {
        ddc_discard_detected_displays();
        uint64_t start_time = cur_realtime_nanosec();
        ddc_ensure_displays_detected();
-       int valid_ct = get_display_count(/*include_invalid_displays*/ false);
+       int valid_ct = ddc_get_display_count(/*include_invalid_displays*/ false);
        uint64_t end_time = cur_realtime_nanosec();
        cur_result->elapsed_nanos = end_time-start_time;
        rpt_vstring(d, "Valid displays:           %d", valid_ct);
@@ -822,7 +822,7 @@ find_dref(
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
             dref->flags |= DREF_TRANSIENT;
-            if (!initial_checks_by_dref(dref)) {
+            if (!ddc_initial_checks_by_dref(dref)) {
                f0printf(outf, "DDC communication failed for monitor on bus /dev/i2c-%d\n", busno);
                free_display_ref(dref);
                i2c_free_bus_info(businfo);
