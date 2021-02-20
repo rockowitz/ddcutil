@@ -178,7 +178,7 @@ Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
 #ifdef FOR_TESTING
    bool force_i2c_slave_failure = false;
 #endif
-   callopts |= CALLOPT_ERR_MSG;    // temporary
+   // callopts |= CALLOPT_ERR_MSG;    // temporary
    DBGTRC(debug, TRACE_GROUP,
                  "fd=%d, addr=0x%02x, filename=%s, i2c_force_slave_addr_flag=%s, callopts=%s",
                  fd, addr,
@@ -208,18 +208,18 @@ retry:
 
    if (rc < 0) {
       if (errsv == EBUSY) {
-         if (callopts & CALLOPT_ERR_MSG) {
-            DBGMSG("ioctl(%s, I2C_SLAVE, 0x%02x returned EBUSY",
+         DBGTRC(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
                    filename_for_fd_t(fd), addr);
-         }
+
          if (i2c_force_slave_addr_flag && op == I2C_SLAVE) {
-            DBGMSG("Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
+            DBGTRC(debug, TRACE_GROUP,
+                   "Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
                    filename_for_fd_t(fd), addr );
             // normally errors counted at higher level, but in this case it would be
             // lost because of retry
             COUNT_STATUS_CODE(-errsv);
             op = I2C_SLAVE_FORCE;
-            debug = true;   // force final message for clarity
+            // debug = true;   // force final message for clarity
             goto retry;
          }
       }
@@ -229,6 +229,17 @@ retry:
 
       result = -errsv;
    }
+   if (result == -EBUSY) {
+      DBGMSG("set_addr(%s,%s,0x%02x) failed, error = EBUSY",
+             filename_for_fd_t(fd),
+             (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
+             addr);
+   }
+   else if (result == 0 && op == I2C_SLAVE_FORCE) {
+      DBGMSG( "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
+                   filename_for_fd_t(fd),
+                   addr);
+   }
 
    DBGTRC((result || debug), TRACE_GROUP,
            "addr = 0x%02x. filename = %s, Returning %s",
@@ -236,6 +247,8 @@ retry:
       // show_backtrace(1);
 
    assert(result <= 0);
+   // if (addr == 0x37)  result = -EBUSY;    // for testing
+   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(result));
    return result;
 }
 
@@ -278,7 +291,8 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
       g_ptr_array_free(lines, true);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "busno=%d, returning: %s", busno, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
+                              busno, drm_name_fragment, sbool(result));
    return result;
 }
 
