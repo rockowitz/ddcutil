@@ -3,7 +3,7 @@
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -22,8 +22,6 @@
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
 #include "base/per_thread_data.h"
-
-#include "adl/adl_shim.h"
 
 // #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
@@ -86,13 +84,6 @@ ddca_ddcutil_version_string(void) {
 }
 
 
-// Indicates whether the ddcutil library was built with ADL support. .
-bool
-ddca_built_with_adl(void) {
-   return false;
-}
-
-
 // Indicates whether the ddcutil library was built with support for USB connected monitors. .
 bool
 ddca_built_with_usb(void) {
@@ -119,14 +110,6 @@ ddca_build_options(void) {
 #endif
    // DBGMSG("Returning 0x%02x", result);
    return result;
-}
-
-
-// Indicates whether ADL successfully initialized.
-// (would fail e.g. fglrx driver not found)
-bool
-ddca_adl_is_available(void) {
-   return adlshim_is_available();
 }
 
 
