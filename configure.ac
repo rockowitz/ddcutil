@@ -51,7 +51,7 @@ dnl sanity check: check for a unique file in source directory:
 AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
-# removed from list: package/debian/changelog
+
 AC_CONFIG_FILES([
 	Makefile 
 	src/Makefile 
@@ -61,7 +61,6 @@ AC_CONFIG_FILES([
 	src/vcp/Makefile
 	src/dynvcp/Makefile
 	src/i2c/Makefile
-	src/adl/Makefile
 	src/usb/Makefile
 	src/ddc/Makefile
 	src/test/Makefile
