@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <linux/hiddev.h>
 #include <linux/limits.h>
 #include <stddef.h>
@@ -21,7 +21,6 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-// #include <wchar.h>
 
 #include "util/device_id_util.h"
 #include "util/report_util.h"
