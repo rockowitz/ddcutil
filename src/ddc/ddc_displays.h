@@ -1,6 +1,6 @@
 /** @file ddc_displays.h
  *
- *  Access displays, whether DDC, ADL, or USB
+ *  Access displays, whether DDC or USB
  */
 
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -18,7 +18,6 @@
 
 #include "i2c/i2c_bus_core.h"
 
-#include "adl/adl_shim.h"
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
