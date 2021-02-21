@@ -10,11 +10,10 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 #include <time.h>
 
-#include "../i2c/i2c_strategy_dispatcher.h"
 #include "util/error_info.h"
 #include "util/report_util.h"
 /** \endcond */
@@ -27,6 +26,7 @@
 #include "base/sleep.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
