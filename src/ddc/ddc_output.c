@@ -1,7 +1,7 @@
 /** \file ddc_output.c
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -19,7 +19,6 @@
 #include "util/report_util.h"
 /** \endcond */
 
-#include "base/adl_errors.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
 #include "base/linux_errno.h"
@@ -28,7 +27,6 @@
 #include "base/sleep.h"
 
 #include "i2c/i2c_bus_core.h"
-#include "adl/adl_shim.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
