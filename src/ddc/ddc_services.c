@@ -9,11 +9,10 @@
 #include "config.h"
 
 /** \cond */
-#include <i2c/i2c_strategy_dispatcher.h>
 #include <stdio.h>
-/** \endcond */
 
 #include "util/report_util.h"
+/** \endcond */
 
 #include "base/base_init.h"
 #include "base/feature_metadata.h"
@@ -29,6 +28,7 @@
 #include "dynvcp/dyn_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #ifdef USE_USB
 #include "usb/usb_displays.h"
 #endif
