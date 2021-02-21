@@ -3,7 +3,7 @@
  *  Public C API for ddcutil
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -72,7 +72,6 @@ ddca_ddcutil_version_string(void);
 #ifdef ALT
  * Defined Bits
  * <table>
- * <tr><td>#DDCA_BUILT_WITH_ADL</td><td>built with ADL support</td>
  * <tr><td>#DDCA_BUILT_WITH_USB</td><td>built with USB support
  * <tr><td>#DDCA_BUILT_WITH_FAILSIM</td><td> built with failure simulation
  * </table>
@@ -84,7 +83,6 @@ ddca_ddcutil_version_string(void);
  *
  * | Defined Bits: | |
  * |:-------| :--------------
- * |#DDCA_BUILT_WITH_ADL  | built with ADL support
  * |#DDCA_BUILT_WITH_USB  | built with USB support
  * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
  *
