@@ -58,7 +58,6 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "adl/adl_shim.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
