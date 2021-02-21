@@ -2,7 +2,7 @@
  *
  *  Status Code Management
  */
-// Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -82,6 +82,7 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
        .number_finder      = errno_name_to_number,
        .base_number_finder = errno_name_to_number
       },
+#ifdef ADL
       {.id                 = RR_ADL,
        .base               = RCRANGE_ADL_START,
        .max                = RCRANGE_ADL_MAX,
@@ -92,6 +93,7 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
        .number_finder      = adl_error_name_to_modulated_number,   // mock implementation if not HAVE_ADL
        .base_number_finder = adl_error_name_to_number              // mock implementation if not HAVE_ADL
       },
+#endif
       {.id                 = RR_DDC,
        .base               = RCRANGE_DDC_START,
        .max                = RCRANGE_DDC_MAX,
