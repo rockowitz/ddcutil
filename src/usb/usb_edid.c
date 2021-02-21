@@ -3,7 +3,7 @@
  *  Functions to get EDID for USB connected monitors
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -40,7 +40,9 @@
 
 #include "i2c/i2c_bus_core.h"     // for EDID fallback
 #include "i2c/i2c_bus_selector.h" // for EDID fallback
+#ifdef ADL
 #include "adl/adl_shim.h"         // for EDID fallback
+#endif
 
 #include "usb/usb_base.h"
 
@@ -312,7 +314,6 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
                                     model_sn->model,
                                     model_sn->sn);
             parsed_edid = adlshim_get_parsed_edid_by_dref(dref);
-#endif
             DDCA_Adlno adlno = adlshim_find_adlno_by_mfg_model_sn(
                                     NULL,              // mfg_id
                                     model_sn->model,
@@ -324,6 +325,8 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
             }
             // memory leak: not freeing dref because don't want to clobber parsed_edid
             // need to review Display_Ref lifecycle
+#endif
+            PROGRAM_LOGIC_ERROR("ADL implementation removed");
          }
       }
    }
