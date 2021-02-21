@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -41,7 +41,6 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "adl/adl_shim.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -179,10 +178,6 @@ ddc_open_display(
 
    case DDCA_IO_ADL:
       PROGRAM_LOGIC_ERROR("Case DDCA_IO_ADL");
-#ifdef OLD
-      dh = create_adl_display_handle_from_display_ref(dref);  // n. sets dh->dref = dref
-      dref->pedid = adlshim_get_parsed_edid_by_dh(dh);
-#endif
       break;
 
    case DDCA_IO_USB:
@@ -350,7 +345,6 @@ DDCA_Status ddc_i2c_write_read_raw(
    assert(dh);
    assert(dh->dref);
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
-   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_DEVI2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
@@ -398,84 +392,7 @@ DDCA_Status ddc_i2c_write_read_raw(
    return rc;
 }
 
-
-/* Writes a DDC request packet to an ADL display,
- * and returns the raw response.
- *
- * Arguments:
- *   dh               display handle ADL device
- *   request_packet_ptr   DDC packet to write
- *   max_read_bytes   maximum number of bytes to read
- *   readbuf          where to return response
- *   pbytes_received  where to write count of bytes received
- *
- * Returns:
- *   0 if success
- *   modulated ADL status code otherwise
- *
- *   Negative ADL status codes indicate errors
- *   Positive values indicate success but with
- *   additional information.  Never seen.  How to handle?
- */
-
-static DDCA_Status ddc_adl_write_read_raw(
-      Display_Handle * dh,
-      DDC_Packet *     request_packet_ptr,
-      int              max_read_bytes,
-      Byte *           readbuf,
-      int *            pbytes_received
-     )
-{
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. Using adl_ddc_write_only() and adl_ddc_read_only() dh=%s",
-          dh_repr_t(dh));
-   assert(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_ADL);
-   // ASSERT_DISPLAY_IO_MODE(dh, DDCA_IO_ADL);
-
-   DDCA_Status psc = adlshim_ddc_write_only(
-                               dh,
-                               get_packet_start(request_packet_ptr),   // n. no adjustment, unlike i2c version
-                               get_packet_len(request_packet_ptr)
-                              );
-   if (psc < 0) {
-      DBGTRC(debug, TRACE_GROUP, "adl_ddc_write_only() returned gsc=%d\n", psc);
-   }
-   else {
-      // tuned_sleep(DDCA_IO_ADL, SE_WRITE_TO_READ);
-      TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, NULL);
-      psc = adlshim_ddc_read_only(
-            dh,
-            readbuf,
-            pbytes_received);
-      // note_io_event(IE_READ_AFTER_WRITE, __func__);
-      if (psc < 0) {
-         DBGTRC(debug, TRACE_GROUP, "adl_ddc_read_only() returned %d\n", psc);
-      }
-      else {
-         if ( all_bytes_zero(readbuf+1, max_read_bytes-1)) {
-                 psc = DDCRC_READ_ALL_ZERO;
-                 DDCMSG(debug, "All zero response.");
-                 COUNT_STATUS_CODE(psc);
-         }
-         else if (memcmp(get_packet_start(request_packet_ptr), readbuf, get_packet_len(request_packet_ptr)) == 0) {
-            // is this a DDC error or a programming bug?
-            DDCMSG(debug, "Bytes read same as bytes written.", __func__ );
-            psc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);   // was DDCRC_READ_EQUALS_WRITE
-         }
-         else {
-            psc = 0;
-         }
-      }
-   }
-
-   if (psc < 0)
-      log_status_code(psc, __func__);
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s\n", psc_desc(psc));
-   return psc;
-}
-
-
+// TODO: eliminate this function, used to route I2C vs ADL calls
 // static  // allow function to appear in backtrace
 DDCA_Status ddc_write_read_raw(
       Display_Handle * dh,
@@ -497,30 +414,17 @@ DDCA_Status ddc_write_read_raw(
       DBGMSG("request_packet_ptr->raw_bytes: %s", s);
    }
 
-   DDCA_Status psc;
-
    // This function should not be called for USB
-   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C || dh->dref->io_path.io_mode == DDCA_IO_ADL);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
-   if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
-        psc =  ddc_i2c_write_read_raw(
-              dh,
-              request_packet_ptr,
-              read_bytewise,
-              max_read_bytes,
-              readbuf,
-              p_rcvd_bytes_ct
-       );
-   }
-   else {
-      psc =  ddc_adl_write_read_raw(
-              dh,
-              request_packet_ptr,
-              max_read_bytes,
-              readbuf,
-              p_rcvd_bytes_ct
-       );
-   }
+   DDCA_Status psc =  ddc_i2c_write_read_raw(
+                 dh,
+                 request_packet_ptr,
+                 read_bytewise,
+                 max_read_bytes,
+                 readbuf,
+                 p_rcvd_bytes_ct
+              );
 
    DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(psc));
    if (psc == 0) {
@@ -715,7 +619,8 @@ ddc_write_read_with_retry(
          DBGMSF(debug, "ddc_write_read() returned %s", psc_desc(psc) );
          COUNT_RETRYABLE_STATUS_CODE(psc);
 
-         if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
+         assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+
             // The problem: Does NULL response indicate an error condition, or
             // is the monitor using NULL response to indicate unsupported?
             // Acer monitor uses NULL response instead of setting the unsupported
@@ -762,17 +667,7 @@ ddc_write_read_with_retry(
             // if (retryable)
             //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
                   }
-         }  // DDCA_IO_I2C
 
-         else {   // DDC_IO_ADL
-            // TODO more detailed tests
-            if (psc == DDCRC_NULL_RESPONSE)
-               retryable = false;
-            else if (psc == DDCRC_READ_ALL_ZERO)
-               retryable = true;
-            else
-               retryable = false;
-         }
 
          if (psc == DDCRC_READ_ALL_ZERO)
             ddcrc_read_all_zero_ct++;
@@ -890,6 +785,10 @@ ddc_i2c_write_only(
  * \param  dh                  Display_Handle for open I2C or ADL device
  * \param  request_packet_ptr  DDC packet to write
  * \return NULL if success, #Error_Info struct if error
+ *
+ * @todo
+ * Eliminate this function, it used to route to the ADL version as
+ * well as ddc_i2c_write_only()
  */
 Error_Info *
 ddc_write_only(
@@ -899,25 +798,9 @@ ddc_write_only(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   DDCA_Status psc = 0;
-   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
-   if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
-      psc = ddc_i2c_write_only(dh, request_packet_ptr);
-   }
-   else {
-      psc = adlshim_ddc_write_only(
-              dh,
-              get_packet_start(request_packet_ptr),
-              get_packet_len(request_packet_ptr)
-              // get_packet_start(request_packet_ptr)+1,
-              // get_packet_len(request_packet_ptr)-1
-             );
-      if (psc > 0) {
-         DBGMSG("Unusual positive return code from ADL: %d", psc);
-         psc = 0;
-      }
-   }
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
+   DDCA_Status psc = ddc_i2c_write_only(dh, request_packet_ptr);
    Error_Info *  ddc_excp = NULL;
    if (psc)
       ddc_excp = errinfo_new(psc, __func__);
@@ -944,7 +827,7 @@ ddc_write_only_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting." );
 
-   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status        psc;
    int                tryctr;
@@ -965,22 +848,6 @@ ddc_write_only_with_retry(
       psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
 
-      if (psc < 0) {
-         COUNT_RETRYABLE_STATUS_CODE(psc);
-         if (dh->dref->io_path.io_mode == DDCA_IO_I2C) {
-            if (psc < 0) {
-               if (psc != -EIO)
-                   retryable = false;
-            }
-         }
-         else {
-            if (psc < 0) {
-                // no logic in ADL case to test for continuing to retry, should there be ???
-                // is it even meaningful to retry for ADL?
-                   // retryable = true;    // *** TEMP ***
-            }
-         }
-      }   // rc < 0
       // try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
    }
 
