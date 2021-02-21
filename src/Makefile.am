@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c adl usb dynvcp ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients 
+SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -215,10 +215,11 @@ libcommon_la_LIBADD = \
 ddc/libddc.la    \
 dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
-adl/libadl.la    \
 vcp/libvcp.la    \
 base/libbase.la  \
 util/libutil.la 
+
+# adl/libadl.la 
 
 if ENABLE_USB_COND
 libcommon_la_LIBADD += \
