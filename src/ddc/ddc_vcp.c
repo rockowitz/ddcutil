@@ -2,7 +2,7 @@
  *  Virtual Control Panel access
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -30,7 +30,9 @@
 
 #include "i2c/i2c_bus_core.h"
 
+#ifdef ADL
 #include "adl/adl_shim.h"
+#endif
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
