@@ -370,6 +370,14 @@ get_i2c_sys_info(
 }
 
 
+/** Emit detailed /sys report
+ *
+ *  \param  info   pointer to struct with relevant /sys information
+ *  \param  depth  logical indentation depth, if < 0 perform no indentation
+ *
+ *  \remark
+ *  This function is used by the DETECT command.
+ */
 // report intended for detect command
 
 void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
