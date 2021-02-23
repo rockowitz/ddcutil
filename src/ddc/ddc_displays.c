@@ -302,7 +302,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 
 /** Gets a list of all detected displays, whether they support DDC or not.
  *
- *  Initializes the list of detected monitors if necessary.
+ *  Detection must already have been occurred.
  *
  *  \return **GPtrArray of #Display_Ref instances
  */
@@ -409,7 +409,9 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 
 /** Shows information about a display, specified by a #Display_Ref
  *
- * Output is written using report functions
+ *  This function is used by the DISPLAY command.
+ *
+ *  Output is written using report functions
  *
  * \param dref   pointer to display reference
  * \param depth  logical indentation depth
@@ -541,6 +543,11 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 }
 
 
+/** Returns the number of detected displays.
+ *
+ *  \param  include_invalid_displays
+ *  \return number of displays, 0 if display detection has not yet occurred.
+ */
 int
 ddc_get_display_count(bool include_invalid_displays) {
    int display_ct = -1;
