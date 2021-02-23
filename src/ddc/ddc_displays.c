@@ -880,7 +880,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 
 
 bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
-   bool debug = true;
+   bool debug = false;
    char * invalid_repr = strdup(dref_repr_t(invalid_dref));
    char *   valid_repr = strdup(dref_repr_t(valid_dref));
    DBGTRC(debug, TRACE_GROUP, "Starting. invalid_dref=%s, valid_dref=%s",
@@ -925,7 +925,7 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
 
 
 void filter_phantom_displays(GPtrArray * all_displays) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.  all_displays->len = %d", all_displays->len);
    GPtrArray * valid_displays = g_ptr_array_sized_new(all_displays->len);
    GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
