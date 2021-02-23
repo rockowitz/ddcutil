@@ -87,10 +87,12 @@ Retcode_Range_Table_Entry retcode_range_table[] = {
        .max                = RCRANGE_ADL_MAX,
     // .desc_finder        = NULL,                    // will be filled in by call to ...
     // .finder_arg_is_modulated = false,              //    ... register_retcode_desc_finder()
+#ifdef ADL
        .desc_finder = get_adl_status_description,
        .finder_arg_is_modulated = false,                     // finder_arg_is_modulated
        .number_finder      = adl_error_name_to_modulated_number,   // mock implementation if not HAVE_ADL
        .base_number_finder = adl_error_name_to_number              // mock implementation if not HAVE_ADL
+#endif
       },
       {.id                 = RR_DDC,
        .base               = RCRANGE_DDC_START,
