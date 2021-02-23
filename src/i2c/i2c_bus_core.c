@@ -830,8 +830,10 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
  *
  * @param   businfo     bus record
  * @param   depth       logical indentation depth
+ *
+ * @remark
+ * This function is used by detect, interrogate commands, C API
  */
-// used by detect, interrogate commands, C API
 void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    assert(businfo);
    DDCA_Output_Level output_level = get_output_level();
