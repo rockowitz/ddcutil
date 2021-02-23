@@ -317,8 +317,8 @@ GPtrArray * ddc_get_all_displays() {
 /** Gets the controller firmware version as a string
  *
  * \param dh  pointer to display handle
- * \return pointer to character string, which is valid until the next
- * call to this function.
+ * \return    pointer to character string, which is valid until the next
+ *            call to this function.
  *
  * \remark
  * Consider caching the value in dh->dref

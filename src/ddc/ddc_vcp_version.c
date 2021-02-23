@@ -110,7 +110,6 @@ DDCA_MCCS_Version_Spec get_saved_vcp_version(
    if (debug) {
       DBGMSG("Starting. dref=%s", dref_repr_t(dref) );
 
-      DBGMSG("          dref->vcp_version (old) =  %s",  format_vspec_verbose(dref->vcp_version_old));
       DBGMSG("          dref->vcp_version_cmdline = %s", format_vspec_verbose(dref->vcp_version_cmdline));
       if (dref->dfr) {
       DBGMSG("          dref->dfr->vspec = %s ",         format_vspec_verbose(dref->dfr->vspec));
@@ -159,8 +158,6 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
    if (debug) {
       DBGMSG("Starting. dh=%s, dh->dref=%s", dh_repr(dh), dref_repr_t(dh->dref) );
 
-     DBGMSG("          dh->dref->vcp_version_old =  %s",     format_vspec_verbose(dh->dref->vcp_version_old));
-
       DBGMSG("          dh->dref->vcp_version_cmdline = %s", format_vspec_verbose(dh->dref->vcp_version_cmdline));
 
       if (dh->dref->dfr) {
@@ -199,9 +196,6 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    bool debug = false;
 
    if (debug) {
-      DBGMSG(   "Starting. dref=%s, dref->vcp_version_old (original) =  %s",
-                    dref_repr_t(dref),    format_vspec_verbose(dref->vcp_version_old));
-
       DBGMSG(   "          dref->vcp_version_cmdline =  %s",
                                           format_vspec_verbose(dref->vcp_version_cmdline));
       if (dref->dfr)

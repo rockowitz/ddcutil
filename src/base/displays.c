@@ -627,7 +627,6 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
-   dref->vcp_version_old = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
 
@@ -835,8 +834,6 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
       rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
    }
 
-   // rpt_vstring(d1, "vcp_version:  %d.%d\n", dref->vcp_version.major, dref->vcp_version.minor );
-   rpt_vstring(d1, "vcp_version_old:  %s", format_vspec(dref->vcp_version_old) );
    rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
    dbgrpt_dref_flags(dref->flags, d1);
    rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}

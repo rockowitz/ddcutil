@@ -774,7 +774,6 @@ dbgrpt_display_info(
 
    rpt_vstring(d1, "dref:                %s", dref_repr_t(dinfo->dref));
    if (dinfo->dref) {  // paranoid, should never be NULL
-      rpt_vstring(d1, "VCP Version (dref):  %s",    format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_old));
       rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
    }
 }
