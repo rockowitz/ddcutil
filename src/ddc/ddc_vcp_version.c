@@ -190,6 +190,11 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dh(Display_Handle * dh) {
  *  \param   dref     display reference
  *  \return  #Version_Spec struct containing version, contains 0.0 if version
  *           could not be retrieved (pre MCCS v2)
+ *
+ *   Precedence of VCP versions:
+ *   - version specified on the command line
+ *   - version in a dynamic feature record for the display
+ *   - version returned by feature xDF
  */
 DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    assert(dref);
@@ -197,14 +202,14 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
 
    if (debug) {
       DBGMSG(   "          dref->vcp_version_cmdline =  %s",
-                                          format_vspec_verbose(dref->vcp_version_cmdline));
+                        format_vspec_verbose(dref->vcp_version_cmdline));
       if (dref->dfr)
-         DBGMSG("          dref->dfr->vspec = ",  format_vspec_verbose(dref->dfr->vspec));
+         DBGMSG("          dref->dfr->vspec = ",
+                        format_vspec_verbose(dref->dfr->vspec));
       else
          DBGMSG("          dref->dfr is null");
-
       DBGMSG(   "          dref->vcp_version_xdf = %s",
-                                          format_vspec_verbose (dref->vcp_version_xdf));
+                        format_vspec_verbose (dref->vcp_version_xdf));
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
             dbgrpt_dref_flags(dref->flags, 2);
       }
