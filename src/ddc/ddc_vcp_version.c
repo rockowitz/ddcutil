@@ -221,6 +221,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
    if (vcp_version_eq(result, DDCA_VSPEC_UNQUERIED)) {
       Display_Handle * dh = NULL;
       // ddc_open_display() should not fail
+      // 2/2020: but it can return -EBUSY
       Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       assert(psc == 0);
       result = set_vcp_version_xdf_by_dh(dh);
