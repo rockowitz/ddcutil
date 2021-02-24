@@ -19,10 +19,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <wordexp.h>
 
 #include "util/data_structures.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
+#include "util/file_util.h"
+#include "util/glib_string_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -101,6 +104,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 static void init_rtti();
+
 
 //
 // Report core settings and command line options
@@ -1023,6 +1027,94 @@ execute_cmd_with_optional_display_handle(
 
 
 //
+// Configuration file
+//
+
+char * read_configuration_file() {
+   bool debug = true;
+   char * result = NULL;
+   char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+   if (config_fn) {
+      GPtrArray * config_lines = g_ptr_array_new_with_free_func(free);
+      Error_Info * errs = file_getlines_errinfo(config_fn, config_lines);
+      if (errs) {
+         fprintf(stderr, "Error reading configuration file %s: %s",
+                         config_fn,
+                         errinfo_summary(errs));
+      }
+      else {
+         for (int ndx = 0; ndx < config_lines->len; ndx++) {
+            char * line = g_ptr_array_index(config_lines, ndx);
+            char * p = line;
+            while(p && *p == ' ') p++;
+            if ( !*p || *p == '*' || *p == '#')
+               g_ptr_array_remove_index(config_lines, ndx);
+         }
+         result = join_string_g_ptr_array(config_lines, " ");
+         g_ptr_array_free(config_lines, true);
+         if (result && strlen(result) == 0) {
+            free(result);
+            result = NULL;
+         }
+      }
+   }
+   DBGMSF(debug, "Returning: %s", result);
+   return result;
+}
+
+
+int tokenize_init_line(char * string, char ***tokens_loc) {
+   bool debug = true;
+   wordexp_t p;
+   int flags = WRDE_NOCMD;
+   if (debug)
+      flags |= WRDE_SHOWERR;
+   wordexp(string, &p, flags);
+   *tokens_loc = p.we_wordv;
+   if (debug) {
+      ntsa_show(p.we_wordv);
+      DBGMSG("Returning: %d", p.we_wordc);
+   }
+   return p.we_wordc;
+}
+
+
+int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc) {
+   bool debug = true;
+   char * cmd_prefix = read_configuration_file();
+   char ** prefix_tokens = NULL;
+   int prefix_token_ct = 0;
+   if (cmd_prefix) {
+      prefix_token_ct = tokenize_init_line(cmd_prefix, &prefix_tokens);
+   }
+   *new_argv_loc = old_argv;
+   int new_argc = old_argc;
+   if (prefix_token_ct > 0) {
+      int new_ct = prefix_token_ct + old_argc + 1;
+      DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
+      char ** combined = calloc(new_ct, sizeof(char *));
+      combined[0] = old_argv[0];
+      int new_ndx = 1;
+      for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
+         combined[new_ndx] = prefix_tokens[prefix_ndx];
+      }
+      for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
+         combined[new_ndx] = old_argv[old_ndx];
+      }
+      combined[new_ndx] = NULL;
+      DBGMSF(debug, "Final new_ndx = %d", new_ndx);
+      *new_argv_loc = combined;
+      new_argc = ntsa_length(combined);
+   }
+
+
+   DBGMSF(debug, "Returning: %d", new_argc);
+   return new_argc;
+}
+
+
+
+//
 // Mainline
 //
 
@@ -1040,7 +1132,14 @@ main(int argc, char *argv[]) {
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
    init_base_services();  // so tracing related modules are initialized
-   Parsed_Cmd * parsed_cmd = parse_command(argc, argv);
+
+   char ** new_argv_loc = NULL;
+   int new_argc = apply_config_file(argc, argv, &new_argv_loc);
+
+   DBGMSG("new_argc = %d", new_argc);
+   ntsa_show(new_argv_loc);
+
+   Parsed_Cmd * parsed_cmd = parse_command(new_argc, new_argv_loc);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
