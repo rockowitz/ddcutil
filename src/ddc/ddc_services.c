@@ -24,8 +24,10 @@
 #include "base/thread_sleep_data.h"
 
 #include "vcp/vcp_feature_codes.h"
+#include "vcp/persistent_capabilities.h"
 
 #include "dynvcp/dyn_feature_codes.h"
+#include "dynvcp/dyn_feature_files.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
@@ -158,8 +160,10 @@ void init_ddc_services() {
 
    // ddc:
    try_data_init();
+   init_persistent_capabilities();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
+   init_dyn_feature_files();
    init_ddc_display_lock();
    init_ddc_displays();
    init_ddc_output();
