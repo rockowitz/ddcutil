@@ -307,6 +307,8 @@ char * find_xdg_data_file(
 
 /** Searches $XDG_CONFIG_HOME and then $XDG_CONFIG_DIRS for
  *  a specified file in a particular application sub-directory.
+ *
+ *  The caller is responsible for freeing the returned string.
  */
 char * find_xdg_config_file(
       const char * application,
