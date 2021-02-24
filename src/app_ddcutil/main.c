@@ -29,6 +29,7 @@
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
+#include "util/xdg_util.h"
 /** \endcond */
 
 #include "public/ddcutil_types.h"
@@ -1057,6 +1058,8 @@ main(int argc, char *argv[]) {
 
    if (!master_initializer(parsed_cmd))
       goto bye;
+
+   // xdg_tests(); // for development
 
    // Initialization complete, rtti now contains entries for all traced functions
    // Check that any functions specified on --trcfunc are actually traced.
