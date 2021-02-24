@@ -28,4 +28,6 @@ Error_Info * dfr_check_by_dref(Display_Ref * dref);
 Error_Info * dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk);
 #endif
 
+void init_dyn_feature_files();
+
 #endif /* DYN_FEATURE_FILES_H_ */

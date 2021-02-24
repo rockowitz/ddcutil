@@ -19,11 +19,11 @@
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
 
-#include "util/error_info.h"
 #include "util/edid.h"
+#include "util/error_info.h"
+#include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/string_util.h"
-#include "util/file_util.h"
 #include "util/xdg_util.h"
 /** \endcond */
 
@@ -34,6 +34,7 @@
 #include "base/dynamic_features_yaml.h"
 #endif
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
 
 #include "dyn_feature_files.h"
 
@@ -371,3 +372,9 @@ dfr_check_by_mmk(
 }
 #endif
 
+
+void init_dyn_feature_files() {
+   RTTI_ADD_FUNC(dfr_check_by_dref);
+   RTTI_ADD_FUNC(dfr_load_by_mmk);
+   RTTI_ADD_FUNC(find_feature_def_file);
+}
