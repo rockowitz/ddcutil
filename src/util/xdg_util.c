@@ -28,8 +28,7 @@
  *  If no value is found the name is constructed from $HOME and
  *  the specified sub-directory.
  */
-static char *
-xdg_home_dir(
+static char * xdg_home_dir(
       const char * envvar_name,
       const char * home_subdir_name)
 {
@@ -50,6 +49,7 @@ xdg_home_dir(
    return xdg_home;
 }
 
+
 /** Returns the name of the xdg base directory for data files */
 char * xdg_data_home_dir() {
    bool debug = false;
@@ -68,7 +68,7 @@ char * xdg_config_home_dir() {
    return result;
 }
 
-/** Returns the name of the xdg base directory for cache files */
+/** Returns the name of the xdg base directory for cached files */
 char * xdg_cache_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_CACHE_HOME", ".cache");
@@ -78,8 +78,7 @@ char * xdg_cache_home_dir() {
 }
 
 
-static char *
-xdg_dirs(
+static char * xdg_dirs(
       const char * envvar_name,
       const char * default_dirs)
 {
@@ -98,52 +97,21 @@ xdg_dirs(
 }
 
 
+/** Returns the value of $XDG_DATA_DIRS or the default "/usr/local/share:/usr/share" */
 char * xdg_data_dirs() {
    return xdg_dirs("XDG_DATA_DIRS",  "/usr/local/share/:/usr/share");
 }
 
+
+/** Returns the value of $XDG_CONFIG_DIRS, or the default "/etc/xdg" */
 char * xdg_config_dirs() {
-   return xdg_dirs("XDG_CONFIG_DIRS",  "etc/xdg"); }
+   return xdg_dirs("XDG_CONFIG_DIRS",  "/etc/xdg"); }
 
 
 
-
-#ifdef OLD
-
-// Returns either
-
-char * all_xdg_path_dirs(
-      const char * envvar_xdg_home_dir,
-      const char * default_xdg_home_dir_part,
-      const char * envvar_xdg_dirs,
-      const char * default_xdg_dirs)
-{
-   bool debug = false;
-   if (debug) {
-      printf("(%s) envvar_xdg_home_dir=%s, default_xdg_home_dir_part=%s\n ",
-            __func__, envvar_xdg_home_dir, default_xdg_home_dir_part);
-      printf("(%s) envvars_xdg_dirs=%s, default_xdg_dirs=%s\n",
-            __func__, envvar_xdg_dirs, default_xdg_dirs);
-   }
-   char * home = getenv("HOME");
-   char * xdg_home_dir = getenv(envvar_xdg_home_dir); // e.g. "XDG_DATA_HOME"
-   if (xdg_home_dir)/** Finds a file in the application sub-directory of a base XDG directory. */
-      xdg_home_dir = strdup(xdg_home_dir);
-    if (!xdg_home_dir && home)
-       xdg_home_dir = g_strdup_printf("%s/%s/", home, default_xdg_home_dir_part); // $HOME, ./local/share
-    char * xdg_data_dirs = getenv(envvar_xdg_dirs);
-    if (!xdg_data_dirs)
-       xdg_data_dirs = strdup(default_xdg_dirs);   // e.g "usr/local/share/:/usr/share/";
-    char * all_dirs = g_strdup_printf("%s:%s", xdg_home_dir, xdg_data_dirs);
-    free(xdg_home_dir);
-    free(xdg_data_dirs);
-    if (debug)
-       printf("(%s) Returning: %s\n", __func__, all_dirs);
-    return all_dirs;
- }
-#endif
-
-
+/** Returns a path string containing value of the XDG data home directory,
+ *  followed by the XDG data dirs string.
+ */
 char * xdg_data_path() {
    bool debug = false;
    char * result = NULL;
@@ -161,6 +129,10 @@ char * xdg_data_path() {
    return result;
 }
 
+
+/** Returns a path string containing value of the XDG configuration home directory,
+ *  followed by the XDG config dirs string.
+ */
 char * xdg_config_path() {
    bool debug = false;
    char * result = NULL;
@@ -181,6 +153,7 @@ char * xdg_config_path() {
 char * xdg_cache_path() {
    return xdg_cache_home_dir();
 }
+
 
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_DATA_HOME.
@@ -235,89 +208,19 @@ char * xdg_cache_home_file(const char * application, const char * simple_fn)
 }
 
 
-#ifdef OLD
-   /** Finds a file in the application sub-directory of a base XDG directory. */
-   static char *
-   find_xdg_home_file(
-         const char * dir,
-         const char * application,
-         const char * simple_fn)
-   {
-      assert(dir);
-      assert(application);
-      assert(simple_fn);
-
-      bool debug = true;
-      char * result = NULL;
-      char * fqfn = g_strdup_printf("%s/%s/%s", dir, application, simple_fn);
-      if (debug)
-         printf("(%s) Checking: %s\n", __func__, fqfn);
-     // if (access(fqfn, R_OK)) {
-      if (regular_file_exists(fqfn)) {
-         result = fqfn;
-      }
-      else
-         free(fqfn);
-      if (debug)
-         printf("%s) dir=%s. application=%s, simple_fn=%s, returning: %s\n",
-                __func__, dir, application, simple_fn, result);
-      return result;
-   }
-#endif
-
-
-
-#ifdef OLD
-/** Returns a string containing the XDG_DATA_HOME directory, followed by the
- *  XDG_DAT_DIRS directories.
- */
-char * xdg_data_path()
-{
-   bool debug = false;
-   char * result = all_xdg_path_dirs(
-                         "XDG_DATA_HOME",
-                         "/.local/share/",
-                         "XDG_DATA_DIRS",
-                         "/usr/local/share/:/usr/share/");
-   if (debug)
-      printf("(%s) Returning: %s\n", __func__, result);
-   return result;
-}
-
-
-/** Returns a string containing the XDG_CONFIG_HOME directory, followed by the
- *  XDG_CONFIG_DIRS directories.
- */
-char * xdg_config_path()
-{
-   bool debug = false;
-   char * result = all_xdg_path_dirs(
-                         "XDG_CONFIG_HOME",
-                         "/.config/",
-                         "XDG_CONFIG_DIRS",
-                         "/etc/xdg/");
-   if (debug)
-      printf("(%s) Returning: %s\n", __func__, result);
-   return result;
-}
-
-#endif
-
-
-
 typedef struct {
    char * iter_start;
    char * iter_end;
 } Iter_State;
 
-static void
-xdg_dirs_iter_init(char * dir_list, Iter_State * state) {
+
+static void xdg_dirs_iter_init(char * dir_list, Iter_State * state) {
    state->iter_start = dir_list;  // to avoid const warnings
    state->iter_end = state->iter_start + strlen(dir_list);
 }
 
-static char *
-xdg_dirs_iter_next(Iter_State * state) {
+
+static char * xdg_dirs_iter_next(Iter_State * state) {
    bool debug = false;
    if (state->iter_start >= state->iter_end)
       return NULL;
@@ -337,48 +240,7 @@ xdg_dirs_iter_next(Iter_State * state) {
 }
 
 
-/** Looks for a file first in the $XDG_DATA_HOME directory,
- *  the in the direct $XDG_DATA_DIRS directories.
- *  Returns fqfn, or NULL if not found.
- */
-
-#ifdef OLD
-char * find_xdg_data_file(
-      const char * application,
-      const char * simple_fn)
-{
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting. application = %s, simple_fn=%s\n", __func__, application, simple_fn);
-   Iter_State iter_state;
-   char * dir_string = xdg_data_path();
-   char * next_dir = NULL;
-   char * fqfn = NULL;
-   xdg_dirs_iter_init(dir_string, &iter_state);
-   while ( !fqfn && (next_dir = xdg_dirs_iter_next(&iter_state)) ) {
-      int lastndx = strlen(next_dir) - 1;
-      if (next_dir[lastndx] == '/')
-         next_dir[lastndx] = '\0';
-      fqfn = g_strdup_printf("%s/%s/%s", next_dir, application, simple_fn);
-      free(next_dir);
-      if (debug)
-         printf("(%s) Checking: %s\n", __func__, fqfn);
-     // if (access(fqfn, R_OK)) {
-      if (regular_file_exists(fqfn)) {
-         continue;
-      }
-      free(fqfn);
-      fqfn = NULL;
-   }
-   free(dir_string);
-   if (debug)
-      printf("(%s) Done. Returning: %s\n", __func__, fqfn);
-   return fqfn;
-}
-#endif
-
-static char *
-find_xdg_path_file(
+static char * find_xdg_path_file(
       const char * path,
       const char * application,
       const char * simple_fn)
@@ -416,11 +278,12 @@ find_xdg_path_file(
 }
 
 
-/* Searches $XDG_DATA_HOME and then $XDG_DATA_DIRS for
- * a specified file in a particular application sub-directory.
+/** Looks for a file first in the $XDG_DATA_HOME directory,
+ *  then in the $XDG_DATA_DIRS directories.
+ *
+ *  \return fully qualified file name, or NULL if not found.
  */
-char *
-find_xdg_data_file(
+char * find_xdg_data_file(
       const char * application,
       const char * simple_fn)
 {
@@ -442,8 +305,8 @@ find_xdg_data_file(
 }
 
 
-/* Searches $XDG_CONFIG_HOME and then $XDG_CONFIG_DIRS for
- * a specified file in a particular application sub-directory.
+/** Searches $XDG_CONFIG_HOME and then $XDG_CONFIG_DIRS for
+ *  a specified file in a particular application sub-directory.
  */
 char * find_xdg_config_file(
       const char * application,
@@ -464,6 +327,9 @@ char * find_xdg_config_file(
 
 }
 
+
+/** Looks for a file in the specified subdirectory of $XDG_CACHE_HOME
+ */
 char * find_xdg_cache_file(
       const char * application,
       const char * simple_fn)
@@ -483,23 +349,6 @@ char * find_xdg_cache_file(
    return result;
 }
 
-#ifdef ALT
-/** Finds a file in the application sub-directory of $XDG_CACHE_HOME */
-char *
-find_xdg_cache_file(
-      const char * application,
-      const char * simple_fn)
-{
-   char * result = NULL;
-   char * dir = xdg_cache_home_dir();
-   if (dir) {
-      result = find_xdg_home_file(dir, application, simple_fn);
-      free(dir);
-   }
-   return result;
-}
-#endif
-
 
 void xdg_tests() {
    rpt_vstring(1, "xdg_data_home_dir():   %s", xdg_data_home_dir() );
@@ -509,24 +358,22 @@ void xdg_tests() {
    rpt_vstring(1, "xdg_data_dirs():       %s", xdg_data_dirs() );
    rpt_vstring(1, "xdg_config_dirs():     %s", xdg_config_dirs() );
 
-   rpt_vstring(1, "xdg_data_path():   %s", xdg_data_path() );
-   rpt_vstring(1, "xdg_config_path(): %s", xdg_config_path() );
-   rpt_vstring(1, "xdg_cache_path():  %s", xdg_cache_path() );
+   rpt_vstring(1, "xdg_data_path():       %s", xdg_data_path() );
+   rpt_vstring(1, "xdg_config_path():     %s", xdg_config_path() );
+   rpt_vstring(1, "xdg_cache_path():      %s", xdg_cache_path() );
 
    rpt_vstring(1, "xdg_data_home_file(\"ddcutil\", \"something.mccs\"): %s",
          xdg_data_home_file("ddcutil", "something.mccs"));
-   rpt_vstring(1, "xdg_config_home_file(\"ddcutil\", \"ddcutilrc\"): %s",
+   rpt_vstring(1, "xdg_config_home_file(\"ddcutil\", \"ddcutilrc\"   ): %s",
          xdg_config_home_file("ddcutil", "ddcutilrc"));
-   rpt_vstring(1, "xdg_cache_home_file(\"ddcutil\", \"capabilities\"): %s",
+   rpt_vstring(1, "xdg_cache_home_file(\"ddcutil\", \"capabilities\" ): %s",
          xdg_cache_home_file("ddcutil", "capabilities"));
 
    rpt_vstring(1, "find xdg_data_file(\"ddcutil\", \"something.mccs\"): %s",
          find_xdg_data_file("ddcutil", "something.mccs"));
-   rpt_vstring(1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\"): %s",
+   rpt_vstring(1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\"):    %s",
          find_xdg_config_file("ddcutil", "ddcutilrc"));
-   rpt_vstring(1, "find_xdg_cache_file(\"ddcutil\", \"capabilities\"): %s",
+   rpt_vstring(1, "find_xdg_cache_file(\"ddcutil\", \"capabilities\"):  %s",
          find_xdg_cache_file("ddcutil", "capabilities"));
-
-
 }
 
