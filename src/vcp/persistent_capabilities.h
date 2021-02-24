@@ -18,4 +18,5 @@ void set_persistent_capabilites(
 
 void dbgrpt_capabilities_hash(int depth, const char * msg);
 
+void init_persistent_capabilities();
 #endif /* PERSISTENT_CAPABILITIES_H_ */

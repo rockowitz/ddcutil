@@ -19,6 +19,7 @@
 
 #include "base/core.h"
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
 
 #include "persistent_capabilities.h"
 
@@ -30,7 +31,7 @@ GHashTable *  capabilities_hash = NULL;
 Error_Info * load_persistent_capabilities_file()
 {
    bool debug = false;
-   if (debug) {
+   if (debug || IS_TRACING()) {
       DBGMSG("Starting. capabilities_hash:");
       dbgrpt_capabilities_hash(1,NULL);
    }
@@ -42,7 +43,7 @@ Error_Info * load_persistent_capabilities_file()
       capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
    }
 
-   char * data_file_name = xdg_data_home_file("ddcutil", "capabilities");
+   char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
    DBGTRC(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
    GPtrArray * linearray = g_ptr_array_new_with_free_func(free);
    errs = file_getlines_errinfo(data_file_name, linearray);
@@ -68,7 +69,7 @@ Error_Info * load_persistent_capabilities_file()
       }
       g_ptr_array_free(linearray, true);
    }
-   if (debug) {
+   if (debug || IS_TRACING()) {
       DBGMSG("Done. capabilities_hash:");
       dbgrpt_capabilities_hash(1, NULL);
    }
@@ -80,12 +81,13 @@ Error_Info * load_persistent_capabilities_file()
 void save_persistent_capabilities_file()
 {
    bool debug = false;
-   char * data_file_name = xdg_data_home_file("ddcutil", "capabilities");
+   char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
    DBGTRC(debug, TRACE_GROUP, "Starting. data_file_name=%s", data_file_name);
 
-   FILE * fp = fopen(data_file_name, "w");
+   FILE * fp = NULL;
+   fopen_mkdir(data_file_name, "w", ferr(), &fp);
    if (!fp) {
-      SEVEREMSG("Error opening %s: %s", data_file_name, strerror(errno));
+      // SEVEREMSG("Error opening %s: %s", data_file_name, strerror(errno));   // handled by fopen_mdkr()
       goto bye;
    }
    if (capabilities_hash) {
@@ -94,7 +96,7 @@ void save_persistent_capabilities_file()
       g_hash_table_iter_init(&iter, capabilities_hash);
 
       for (int line_ctr=1; g_hash_table_iter_next(&iter, &key, &value); line_ctr++) {
-         // DBGMSF(debug, "Writing line %d: %s:%s", line_ctr, key, value);
+         DBGTRC(debug, DDCA_TRC_NONE, "Writing line %d: %s:%s", line_ctr, key, value);
          int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
          if (ct < 0) {
             SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
@@ -223,4 +225,8 @@ void dbgrpt_capabilities_hash(int depth, const char * msg) {
 }
 
 
+void init_persistent_capabilities() {
+   RTTI_ADD_FUNC(load_persistent_capabilities_file);
+   RTTI_ADD_FUNC(save_persistent_capabilities_file);
+}
 
