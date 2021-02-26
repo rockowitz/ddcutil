@@ -105,6 +105,15 @@ Error_Info * errinfo_new_with_causes2(
       const char *   func,
       char *         detail);
 
+Error_Info *
+errinfo_new_with_causes3(
+      int            status_code,
+      Error_Info **  causes,
+      int            cause_ct,
+      const char *   func,
+      char *         detail,
+      ...);
+
 #ifdef UNUSED
 Error_Info * errinfo_new_with_callee_status_codes(
       int            status_code,
@@ -141,6 +150,10 @@ char * errinfo_causes_string(
 void errinfo_report(
       Error_Info *   erec,
       int            depth);
+
+
+void
+errinfo_report_details(Error_Info * erec, int depth);
 
 char * errinfo_summary(
       Error_Info *   erec);

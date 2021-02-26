@@ -462,6 +462,25 @@ errinfo_new_with_causes2(
 }
 
 
+Error_Info *
+errinfo_new_with_causes3(
+      int            status_code,
+      Error_Info **  causes,
+      int            cause_ct,
+      const char *   func,
+      char *         detail,
+      ...)
+{
+   va_list ap;
+   va_start(ap, detail);
+   Error_Info * result = errinfo_newv(status_code, func, detail, ap);
+   va_end(ap);
+   for (int ndx = 0; ndx < cause_ct; ndx++) {
+      errinfo_add_cause(result, causes[ndx]);
+   }
+   return result;
+}
+
 
 #ifdef UNUSED
 
@@ -758,6 +777,30 @@ errinfo_report(Error_Info * erec, int depth) {
    }
 #endif
    // rpt_vstring(depth, "(%s) Done", __func__);
+}
+
+void
+errinfo_report_details(Error_Info * erec, int depth) {
+   assert(erec);
+   int d0 = depth;
+   int d1 = depth+1;
+
+   // rpt_vstring(depth, "Exception in function %s: status=%s",
+   //       (erec->func) ? erec->func : "not set",
+   //       errinfo_desc_func(erec->status_code) );  // can't call psc_desc(), violates layering
+   if (erec->detail)
+      rpt_label(d0, erec->detail);
+   else
+      rpt_vstring(d0, "Error %d in function %s",erec->status_code, erec->func);
+
+   // printf("%s) cause_ct = %d\n", __func__, erec->cause_ct);
+   if (erec->cause_ct > 0) {
+      // rpt_vstring(depth, "Caused by: ");
+      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+         errinfo_report_details(erec->causes[ndx], d1);
+      }
+   }
+
 }
 
 
