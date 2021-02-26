@@ -39,6 +39,7 @@
 
 #include "base/base_init.h"
 #include "base/build_info.h"
+#include "base/config_file.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
@@ -51,10 +52,11 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/thread_retry_data.h"
-#include "base/tuned_sleep.h"
 #include "base/thread_sleep_data.h"
+#include "base/tuned_sleep.h"
 
 #include "vcp/parse_capabilities.h"
+#include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
 
 #include "dynvcp/dyn_feature_files.h"
@@ -171,7 +173,6 @@ report_all_options(Parsed_Cmd * parsed_cmd, int depth)
 }
 
 
-//
 //
 // Initialization functions called only once but factored out of main() to clarify mainline
 //
@@ -451,25 +452,17 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
        report_all_options(parsed_cmd, 0);
     }
 
+    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
+
    ok = true;
 
 bye:
    return ok;
 }
 
-
-int get_sysfs_drm_edid_count() {
-   int ival = 0;
-   GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
-   if (output) {
-      char * s = g_ptr_array_index(output, 0);
-      bool ok = str_to_int(s, &ival, 10);
-      assert(ok);
-      g_ptr_array_free(output, true);
-   }
-   return ival;
-}
-
+//
+// Test display detection variants
+//
 
 typedef enum {
    _DYNAMIC = 0,
@@ -1029,7 +1022,7 @@ execute_cmd_with_optional_display_handle(
 //
 // Configuration file
 //
-
+#ifdef OLD
 char * read_configuration_file() {
    bool debug = true;
    char * result = NULL;
@@ -1061,10 +1054,32 @@ char * read_configuration_file() {
    DBGMSF(debug, "Returning: %s", result);
    return result;
 }
+#endif
 
 
+#ifdef NOT_HERE
+   rpt_nl();
+   Error_Info * errs = load_configuration_file(/*verbose=*/false);
+   if (errs) {
+      // rpt_vstring(0,"Error(s) reading configuration file");
+      errinfo_report_details(errs, 0);
+      errinfo_free(errs);
+   }
+   rpt_nl();
+   dbgrpt_ini_hash(0);
+   rpt_nl();
+#endif
+
+
+/** Tokenize a string as per the command line
+ *
+ *  \param  string to tokenize
+ *  \param  tokens_loc where to return the address of a
+ *                     null-terminate list of tokens
+ *  \return number of tokens
+ */
 int tokenize_init_line(char * string, char ***tokens_loc) {
-   bool debug = true;
+   bool debug = false;
    wordexp_t p;
    int flags = WRDE_NOCMD;
    if (debug)
@@ -1079,39 +1094,65 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
 }
 
 
+/** Combines the options from a configuration with the command line arguments,
+ *  returning a new list of tokens.
+ *
+ *  \param  old_argc  argc as passed on the command line
+ *  \param  old argv  argv as passed on the command line
+ *  \param  new_argv_loc  where to return the address of the combined token list
+ *  \return number of tokens in the combined list, -1 if errors
+ *          reading the configuration file. n. it is not an error if the
+ *          configuration file does not exist.  In that case 0 is returned.
+ */
 int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc) {
-   bool debug = true;
-   char * cmd_prefix = read_configuration_file();
-   char ** prefix_tokens = NULL;
-   int prefix_token_ct = 0;
-   if (cmd_prefix) {
-      prefix_token_ct = tokenize_init_line(cmd_prefix, &prefix_tokens);
+   bool debug = false;
+   // char * cmd_prefix = read_configuration_file();
+   int new_argc = 0;
+   Error_Info * errs = load_configuration_file(false);
+   if (errs && errs->status_code != DDCRC_NOT_FOUND) {
+      // rpt_vstring(0,"Error(s) reading configuration file");
+      errinfo_report_details(errs, 0);
+      errinfo_free(errs);
+      new_argc = -1;
    }
-   *new_argv_loc = old_argv;
-   int new_argc = old_argc;
-   if (prefix_token_ct > 0) {
-      int new_ct = prefix_token_ct + old_argc + 1;
-      DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
-      char ** combined = calloc(new_ct, sizeof(char *));
-      combined[0] = old_argv[0];
-      int new_ndx = 1;
-      for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
-         combined[new_ndx] = prefix_tokens[prefix_ndx];
-      }
-      for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
-         combined[new_ndx] = old_argv[old_ndx];
-      }
-      combined[new_ndx] = NULL;
-      DBGMSF(debug, "Final new_ndx = %d", new_ndx);
-      *new_argv_loc = combined;
-      new_argc = ntsa_length(combined);
-   }
+   else {
+      // dbgrpt_ini_hash(0);
+      char * global_options  = get_config_value("global",  "options");
+      char * ddcutil_options = get_config_value("ddcutil", "options");
 
+      char * cmd_prefix = g_strdup_printf("%s %s",
+                                   (global_options) ? global_options : "",
+                                   (ddcutil_options) ? ddcutil_options : "");
+      DBGMSF(debug, "cmd_prefix= |%s|", cmd_prefix);
+      char ** prefix_tokens = NULL;
+      int prefix_token_ct = 0;
+      if (cmd_prefix) {
+         prefix_token_ct = tokenize_init_line(cmd_prefix, &prefix_tokens);
+      }
+      *new_argv_loc = old_argv;
+      new_argc = old_argc;
+      if (prefix_token_ct > 0) {
+         int new_ct = prefix_token_ct + old_argc + 1;
+         DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
+         char ** combined = calloc(new_ct, sizeof(char *));
+         combined[0] = old_argv[0];
+         int new_ndx = 1;
+         for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
+            combined[new_ndx] = prefix_tokens[prefix_ndx];
+         }
+         for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
+            combined[new_ndx] = old_argv[old_ndx];
+         }
+         combined[new_ndx] = NULL;
+         DBGMSF(debug, "Final new_ndx = %d", new_ndx);
+         *new_argv_loc = combined;
+         new_argc = ntsa_length(combined);
+      }
+   }
 
    DBGMSF(debug, "Returning: %d", new_argc);
    return new_argc;
 }
-
 
 
 //
@@ -1131,15 +1172,18 @@ main(int argc, char *argv[]) {
    // FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
+   Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
 
    char ** new_argv_loc = NULL;
    int new_argc = apply_config_file(argc, argv, &new_argv_loc);
+   if (new_argc < 0)
+      goto bye;
 
-   DBGMSG("new_argc = %d", new_argc);
-   ntsa_show(new_argv_loc);
+   // DBGMSG("new_argc = %d", new_argc);
+   // ntsa_show(new_argv_loc);
 
-   Parsed_Cmd * parsed_cmd = parse_command(new_argc, new_argv_loc);
+   parsed_cmd = parse_command(new_argc, new_argv_loc);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
