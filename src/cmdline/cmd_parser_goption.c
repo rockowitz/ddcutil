@@ -167,8 +167,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    gboolean f4_flag        = false;
    gboolean f5_flag        = false;
    gboolean f6_flag        = false;
-   gboolean debug_parse_flag = false;
-   gboolean x52_no_fifo_flag = false;
+   gboolean debug_parse_flag  = false;
+   gboolean x52_no_fifo_flag  = false;
+   gboolean enable_cc_flag = false;
+   gboolean ignore_cc_flag = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -260,7 +262,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
 //    {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
-
+      {"enable-capabilities-cache",
+                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   "Enable cached capabilities",   NULL},
+      {"ignore-capabilities-cache",
+                               '\0', 0, G_OPTION_ARG_NONE,     &ignore_cc_flag,   "Ignore cached capabilities string",   NULL},
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
@@ -429,6 +434,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
+   SET_CMDFLAG(CMD_FLAG_IGNORE_CACHED_CAPABILITIES , ignore_cc_flag);
+   SET_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES , enable_cc_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
