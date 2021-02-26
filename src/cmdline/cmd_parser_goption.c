@@ -264,6 +264,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
       {"enable-capabilities-cache",
                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   "Enable cached capabilities",   NULL},
+      {"disable-capabilities-cache",
+                         '\0', 0, G_OPTION_FLAG_REVERSE, &enable_cc_flag,   "Disable cached capabilities (default)",   NULL},
+
  //     {"ignore-capabilities-cache",
  //                              '\0', 0, G_OPTION_ARG_NONE,     &ignore_cc_flag,   "Ignore cached capabilities string",   NULL},
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
