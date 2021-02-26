@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stddef.h>
+#include <unistd.h>
 
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
@@ -26,7 +27,49 @@
 
 static DDCA_Trace_Group TRACE_GROUP  = DDCA_TRC_VCP;
 
+bool capabilities_cache_enabled = false;
+bool ignore_cached_capabilities = false;  // unused
+
 GHashTable *  capabilities_hash = NULL;
+
+char * get_capabilities_cache_file_name() {
+   return xdg_cache_home_file("ddcutil", "capabilities");
+}
+
+void delete_capabilities_file() {
+   bool debug = true;
+   char * fn = xdg_cache_home_file("ddcutil", "capabilities");
+   if (regular_file_exists(fn)) {
+      DBGMSF(debug, "Deleting file: %s", fn);
+      int rc = unlink(fn);
+      if (rc < 0) {
+         // should never occur
+         fprintf(fout(), "Unexpected error deleting file %s: %s\n",
+                         fn, strerror(errno));
+      }
+   }
+   else {
+      DBGMSF(debug, "File does not exist: %s", fn);
+   }
+}
+
+
+bool enable_capabilities_cache(bool onoff) {
+   bool old = capabilities_cache_enabled;
+   if (onoff) {
+      capabilities_cache_enabled = true;
+   }
+   else {
+      capabilities_cache_enabled = false;
+      if (capabilities_hash) {
+         g_hash_table_destroy(capabilities_hash);
+         capabilities_hash = NULL;
+      }
+      delete_capabilities_file();
+   }
+   return old;
+}
+
 
 Error_Info * load_persistent_capabilities_file()
 {
@@ -36,39 +79,52 @@ Error_Info * load_persistent_capabilities_file()
       dbgrpt_capabilities_hash(1,NULL);
    }
    Error_Info * errs = NULL;
-   if (capabilities_hash) {
-      g_hash_table_destroy(capabilities_hash);
+   if (capabilities_cache_enabled) {
+      if (capabilities_hash) {
+         g_hash_table_destroy(capabilities_hash);
+      }
+      else {
+         capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
+      }
+
+      char * data_file_name = get_capabilities_cache_file_name();
+      // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
+      DBGTRC(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
+      GPtrArray * linearray = g_ptr_array_new_with_free_func(free);
+      errs = file_getlines_errinfo(data_file_name, linearray);
+      free(data_file_name);
+      if (!errs) {
+         for (int ndx = 0; ndx < linearray->len; ndx++) {
+            char * aline = strtrim(g_ptr_array_index(linearray, ndx));
+            // DBGMSF(debug, "Processing line %d: %s", ndx+1, aline);
+            if (strlen(aline) > 0 && aline[0] != '*' && aline[0] != '#') {
+               char * colon = index(aline, ':');
+               if (!colon) {
+                  if (!errs)
+                     errs = errinfo_new(DDCRC_BAD_DATA, __func__);
+                  errinfo_add_cause(errs, errinfo_new2(DDCRC_BAD_DATA, __func__,
+                                                       "Line %d, No colon in %s",
+                                                        ndx+1, aline));
+               }
+               else {
+                  *colon = '\0';
+                  g_hash_table_insert(capabilities_hash, strdup(aline), strdup(colon+1));
+               }
+            }
+            free(aline);
+         }
+         g_ptr_array_free(linearray, true);
+      }
    }
    else {
-      capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
+      if (capabilities_hash) {
+         g_hash_table_destroy(capabilities_hash);
+         capabilities_hash = NULL;
+      }
+
+      delete_capabilities_file();
    }
 
-   char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
-   DBGTRC(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
-   GPtrArray * linearray = g_ptr_array_new_with_free_func(free);
-   errs = file_getlines_errinfo(data_file_name, linearray);
-   if (!errs) {
-      for (int ndx = 0; ndx < linearray->len; ndx++) {
-         char * aline = strtrim(g_ptr_array_index(linearray, ndx));
-         // DBGMSF(debug, "Processing line %d: %s", ndx+1, aline);
-         if (strlen(aline) > 0 && aline[0] != '*' && aline[0] != '#') {
-            char * colon = index(aline, ':');
-            if (!colon) {
-               if (!errs)
-                  errs = errinfo_new(DDCRC_BAD_DATA, __func__);
-               errinfo_add_cause(errs, errinfo_new2(DDCRC_BAD_DATA, __func__,
-                                                    "Line %d, No colon in %s",
-                                                     ndx+1, aline));
-            }
-            else {
-               *colon = '\0';
-               g_hash_table_insert(capabilities_hash, strdup(aline), strdup(colon+1));
-            }
-         }
-         free(aline);
-      }
-      g_ptr_array_free(linearray, true);
-   }
    if (debug || IS_TRACING()) {
       DBGMSG("Done. capabilities_hash:");
       dbgrpt_capabilities_hash(1, NULL);
@@ -84,27 +140,29 @@ void save_persistent_capabilities_file()
    char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
    DBGTRC(debug, TRACE_GROUP, "Starting. data_file_name=%s", data_file_name);
 
-   FILE * fp = NULL;
-   fopen_mkdir(data_file_name, "w", ferr(), &fp);
-   if (!fp) {
-      // SEVEREMSG("Error opening %s: %s", data_file_name, strerror(errno));   // handled by fopen_mdkr()
-      goto bye;
-   }
-   if (capabilities_hash) {
-      GHashTableIter iter;
-      gpointer key, value;
-      g_hash_table_iter_init(&iter, capabilities_hash);
+   if (capabilities_cache_enabled) {
+      FILE * fp = NULL;
+      fopen_mkdir(data_file_name, "w", ferr(), &fp);
+      if (!fp) {
+         // SEVEREMSG("Error opening %s: %s", data_file_name, strerror(errno));   // handled by fopen_mdkr()
+         goto bye;
+      }
+      if (capabilities_hash) {
+         GHashTableIter iter;
+         gpointer key, value;
+         g_hash_table_iter_init(&iter, capabilities_hash);
 
-      for (int line_ctr=1; g_hash_table_iter_next(&iter, &key, &value); line_ctr++) {
-         DBGTRC(debug, DDCA_TRC_NONE, "Writing line %d: %s:%s", line_ctr, key, value);
-         int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
-         if (ct < 0) {
-            SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
-            break;
+         for (int line_ctr=1; g_hash_table_iter_next(&iter, &key, &value); line_ctr++) {
+            DBGTRC(debug, DDCA_TRC_NONE, "Writing line %d: %s:%s", line_ctr, key, value);
+            int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
+            if (ct < 0) {
+               SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
+               break;
+            }
          }
       }
+      fclose(fp);
    }
-   fclose(fp);
 
 bye:
    free(data_file_name);
@@ -152,28 +210,30 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
       goto bye;
    }
 
-    if (!capabilities_hash) {
-      Error_Info * errs = load_persistent_capabilities_file();
-      if (errs) {
-         if (ERRINFO_STATUS(errs) == -ENOENT)
-            errinfo_free(errs);
-         else
-            ERRINFO_FREE_WITH_REPORT(errs,true);
+   if (capabilities_cache_enabled) {
+      if (!capabilities_hash) {  // if not yet loaded
+         Error_Info * errs = load_persistent_capabilities_file();
+         if (errs) {
+            if (ERRINFO_STATUS(errs) == -ENOENT)
+               errinfo_free(errs);
+            else
+               ERRINFO_FREE_WITH_REPORT(errs,true);
+         }
       }
+
+      if (mmk) {
+         char * mms = monitor_model_string(mmk);
+
+         if (debug) {
+            DBGMSG("Hash table before lookup:");
+            dbgrpt_capabilities_hash(2, NULL);
+            DBGMSG("Looking for key: mms -> |%s|", mms);
+         }
+
+         result = g_hash_table_lookup (capabilities_hash, mms);
+         free(mms);
+     }
    }
-
-   if (mmk) {
-      char * mms = monitor_model_string(mmk);
-
-      if (debug) {
-         DBGMSG("Hash table before lookup:");
-         dbgrpt_capabilities_hash(2, NULL);
-         DBGMSG("Looking for key: mms -> |%s|", mms);
-      }
-
-      result = g_hash_table_lookup (capabilities_hash, mms);
-      free(mms);
-    }
 
 bye:
    DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
@@ -189,12 +249,14 @@ void set_persistent_capabilites(
    DBGTRC(debug, TRACE_GROUP, "Starting. mmk->%s, capabilities = %s",
           monitor_model_string(mmk), capabilities);
 
-   if (non_unique_model_id(mmk))
-      DBGTRC(debug, TRACE_GROUP, "Not saving capabilities for non-unique Monitor_Model_Key.");
-   else {
-      char * mms = monitor_model_string(mmk);
-      g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
-      save_persistent_capabilities_file();
+   if (capabilities_cache_enabled) {
+      if (non_unique_model_id(mmk))
+         DBGTRC(debug, TRACE_GROUP, "Not saving capabilities for non-unique Monitor_Model_Key.");
+      else {
+         char * mms = monitor_model_string(mmk);
+         g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
+         save_persistent_capabilities_file();
+      }
    }
    DBGTRC(debug, TRACE_GROUP, "Done");
 }

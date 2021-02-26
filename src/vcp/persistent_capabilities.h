@@ -7,16 +7,16 @@
 #define PERSISTENT_CAPABILITIES_H_
 
 #include "private/ddcutil_types_private.h"
-
 #include "util/error_info.h"
 
+// extern bool persistent_capabilities_enabled;
+// extern bool ignore_cached_capabilities;
+
+bool   enable_capabilities_cache(bool onoff);
+char * get_capabilities_cache_file_name();
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk);
+void   set_persistent_capabilites(DDCA_Monitor_Model_Key* mmk, const char * capabilities);
+void   dbgrpt_capabilities_hash(int depth, const char * msg);
+void   init_persistent_capabilities();
 
-void set_persistent_capabilites(
-        DDCA_Monitor_Model_Key* mmk,
-        const char *            capabilities);
-
-void dbgrpt_capabilities_hash(int depth, const char * msg);
-
-void init_persistent_capabilities();
 #endif /* PERSISTENT_CAPABILITIES_H_ */
