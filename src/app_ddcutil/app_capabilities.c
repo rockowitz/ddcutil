@@ -36,7 +36,7 @@
 
 #include "app_ddcutil/app_capabilities.h"
 
-bool persistent_capabilities_enabled = true;
+
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
@@ -67,11 +67,14 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
     Error_Info * ddc_excp = NULL;
     Public_Status_Code psc = 0;
     *capabilities_string_loc = NULL;
-    if (persistent_capabilities_enabled) {
+    // if (persistent_capabilities_enabled) {  // handled in persistent_capabilities.c
        *capabilities_string_loc = get_persistent_capabilities(dh->dref->mmid);
        DBGTRC(debug, TRACE_GROUP, "get_persistent_capabilities() returned %s",
                                   *capabilities_string_loc);
-    }
+       if (*capabilities_string_loc && get_output_level() >= DDCA_OL_VERBOSE) {
+          rpt_vstring(0, "Read cached capabilities string from %s", get_capabilities_cache_file_name());
+       }
+    // }
     if (!*capabilities_string_loc) {
        ddc_excp = get_capabilities_string(dh, capabilities_string_loc);
        psc =  ERRINFO_STATUS(ddc_excp);
@@ -98,7 +101,7 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
        }
        else {
           assert(capabilities_string_loc);
-          if (persistent_capabilities_enabled)
+          // if (persistent_capabilities_enabled)
              set_persistent_capabilites(dh->dref->mmid, *capabilities_string_loc);
        }
     }
