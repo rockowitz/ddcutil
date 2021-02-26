@@ -28,4 +28,7 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
+int
+get_sysfs_drm_edid_count();
+
 #endif /* SYSFS_I2C_UTIL_H_ */

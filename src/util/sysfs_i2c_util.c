@@ -3,6 +3,8 @@
 // Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -10,6 +12,7 @@
 
 #include "file_util.h"
 #include "string_util.h"
+#include "subprocess_util.h"
 #include "sysfs_util.h"
 
 #include "sysfs_i2c_util.h"
@@ -71,7 +74,6 @@ get_i2c_device_sysfs_name(
    // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
    return name;
 }
-
 
 
 /** Gets the driver name of an I2C device,
@@ -208,4 +210,18 @@ sysfs_is_ignorable_i2c_device(int busno) {
       printf("(%s) busno=%d, returning: %s\n", __func__, busno, sbool(result));
    return result;
 }
+
+
+int get_sysfs_drm_edid_count() {
+   int ival = 0;
+   GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
+   if (output) {
+      char * s = g_ptr_array_index(output, 0);
+      bool ok = str_to_int(s, &ival, 10);
+      assert(ok);
+      g_ptr_array_free(output, true);
+   }
+   return ival;
+}
+
 
