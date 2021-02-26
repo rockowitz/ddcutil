@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
+
 char *
 read_sysfs_attr(
       const char * dirname,
