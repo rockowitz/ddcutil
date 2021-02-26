@@ -208,11 +208,11 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
    rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
    rpt_bool("enable persistent cache:",
-                                 NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_PERSISTENT_CACHE , d1);
+                                 NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_PERSISTENT_CACHE,  d1);
    rpt_bool("ignore persistent cache:",
-                                 NULL, parsed_cmd->flags & CMD_FLAG_IGNORE_PERSISTENT_CACHE , d1);
+                                 NULL, parsed_cmd->flags & CMD_FLAG_IGNORE_PERSISTENT_CACHE,  d1);
    rpt_bool("clear persistent cache:",
-                                 NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE , d1);
+                                 NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE,   d1);
    rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);
 // rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id),      d1);
 
