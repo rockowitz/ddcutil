@@ -2,7 +2,7 @@
  *  String utility functions header file
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef STRINGUTIL_H_
@@ -65,7 +65,9 @@ char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(const char * start, int len);
 char * strtrim(const char * s);
 char * strtrim_r(const char * s, char * buffer, int bufsz);
+char * ltrim_in_place(char * s);
 char * rtrim_in_place(char * s);
+char * trim_in_place(char * s);
 char * substr(const char * s, int startpos, int ct);
 char * lsub(const char * s, int ct);
 char * str_replace_char(char * s, char old_char, char new_char);

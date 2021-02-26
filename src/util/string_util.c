@@ -2,7 +2,7 @@
  *  String utility functions
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -256,6 +256,20 @@ char * strtrim_r(const char * s, char * buffer, int bufsz) {
 }
 
 
+/** Returns a pointer to the first non-whitespace character in a string.
+ *
+ *  @param string to trim
+ *  @return pointer to first non-whitespace character,
+ *          to the ending \0 if all characters are whitespace
+ */
+char * ltrim_in_place(char * s) {
+   char * p = s;
+   while (*p && isspace(*p))
+      p++;
+   return p;
+}
+
+
 /** Trims trailing whitespace from a string.
  *
  * @param s string to trim
@@ -272,6 +286,26 @@ char * rtrim_in_place(char * s) {
    }
    return s;
 }
+
+
+/** Trims leading and trailing whitespace from a string.
+ *  Trailing whitespace characters are replaced by \0.
+ *
+ * @param s string to trim
+ * @return pointer to first non-whitespcace character
+ */
+char * trim_in_place(char * s) {
+   char * p = s;
+   while (*p && isspace(*p))
+      p++;
+   int len = strlen(p);
+   while (len > 0 && isspace(p[len-1]))
+      s[--len] = '\0';
+   return p;
+}
+
+
+
 
 
 /** Trims leading and trailing whitespace from a string and
