@@ -28,7 +28,7 @@
 static DDCA_Trace_Group TRACE_GROUP  = DDCA_TRC_VCP;
 
 bool capabilities_cache_enabled = false;
-bool ignore_cached_capabilities = false;  // unused
+// bool ignore_cached_capabilities = false;  // unused
 
 GHashTable *  capabilities_hash = NULL;
 
@@ -37,7 +37,7 @@ char * get_capabilities_cache_file_name() {
 }
 
 void delete_capabilities_file() {
-   bool debug = true;
+   bool debug = false;
    char * fn = xdg_cache_home_file("ddcutil", "capabilities");
    if (regular_file_exists(fn)) {
       DBGMSF(debug, "Deleting file: %s", fn);
@@ -55,6 +55,8 @@ void delete_capabilities_file() {
 
 
 bool enable_capabilities_cache(bool onoff) {
+   bool debug = false;
+   DBGMSF(debug, "onoff=%s", sbool(onoff));
    bool old = capabilities_cache_enabled;
    if (onoff) {
       capabilities_cache_enabled = true;
@@ -67,6 +69,8 @@ bool enable_capabilities_cache(bool onoff) {
       }
       delete_capabilities_file();
    }
+   DBGMSF(debug, "capabilities_cache_enabled=%s. returning: %s",
+         sbool(capabilities_cache_enabled), sbool(old));
    return old;
 }
 
@@ -138,7 +142,8 @@ void save_persistent_capabilities_file()
 {
    bool debug = false;
    char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
-   DBGTRC(debug, TRACE_GROUP, "Starting. data_file_name=%s", data_file_name);
+   DBGTRC(debug, TRACE_GROUP, "Starting. capabilities_cache_enabled: %s, data_file_name=%s",
+                              sbool(capabilities_cache_enabled), data_file_name);
 
    if (capabilities_cache_enabled) {
       FILE * fp = NULL;
@@ -246,8 +251,8 @@ void set_persistent_capabilites(
         const char *             capabilities)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. mmk->%s, capabilities = %s",
-          monitor_model_string(mmk), capabilities);
+   DBGTRC(debug, TRACE_GROUP, "Starting. capabilities_cache_enabled=%s. mmk->%s, capabilities = %s",
+          sbool(capabilities_cache_enabled), monitor_model_string(mmk), capabilities);
 
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk))

@@ -9,9 +9,6 @@
 #include "private/ddcutil_types_private.h"
 #include "util/error_info.h"
 
-// extern bool persistent_capabilities_enabled;
-// extern bool ignore_cached_capabilities;
-
 bool   enable_capabilities_cache(bool onoff);
 char * get_capabilities_cache_file_name();
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk);
