@@ -72,7 +72,9 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
        DBGTRC(debug, TRACE_GROUP, "get_persistent_capabilities() returned %s",
                                   *capabilities_string_loc);
        if (*capabilities_string_loc && get_output_level() >= DDCA_OL_VERBOSE) {
-          rpt_vstring(0, "Read cached capabilities string from %s", get_capabilities_cache_file_name());
+          char * s = get_capabilities_cache_file_name();
+          rpt_vstring(0, "Read cached capabilities string from %s", s);
+          free(s);
        }
     // }
     if (!*capabilities_string_loc) {
