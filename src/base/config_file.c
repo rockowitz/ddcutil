@@ -120,7 +120,12 @@ char * get_config_value(char * segment, char * id) {
 }
 
 
-
+/** Loads the ddcutil configuration file, located as per the XDG specification
+ *
+ * \param verbose  if true, issue error meesages
+ * \retval DDCRC_NOT_FOUND Configuration file not found
+ * \retval DDCRC_BAD_DATA
+ */
 Error_Info *
 load_configuration_file( bool verbose ) {
    bool debug = false;
