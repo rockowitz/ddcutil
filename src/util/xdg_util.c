@@ -121,6 +121,7 @@ char * xdg_data_path() {
    if (home_dir) {
       result = g_strdup_printf("%s:%s", home_dir, dirs);
       free(home_dir);
+      free(dirs);
    }
    else
       result = dirs;
@@ -142,6 +143,7 @@ char * xdg_config_path() {
    if (home_dir) {
       result = g_strdup_printf("%s:%s", home_dir, dirs);
       free(home_dir);
+      free(dirs);
    }
    else
       result = dirs;
