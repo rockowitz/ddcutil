@@ -222,30 +222,30 @@ bool is_module_loadable(char * module_name) {
          printf("(%s) Checking %s\n", __func__, dirname);
 
       struct dirent *dent;
-         DIR           *d;
-         d = opendir(dirname);
-         if (!d) {
+      DIR           *d;
+      d = opendir(dirname);
+      if (!d) {
+         if (debug)
+            printf("(%s) Unable to open directory %s: %s\n", __func__, dirname, strerror(errno));
+      }
+      else {
+      // rpt_vstring(depth, "Examining directory: %s", dirname);
+         while ((dent = readdir(d)) != NULL) {
             if (debug)
-               printf("(%s) Unable to open directory %s: %s\n", __func__, dirname, strerror(errno));
-         }
-         else {
-            // rpt_vstring(depth, "Examining directory: %s", dirname);
-            while ((dent = readdir(d)) != NULL) {
-               if (debug)
-                  printf("(%s) dent->d_name: %s, module_name_ko=%s",
-                         __func__, dent->d_name, module_name_ko);
-              if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
-                 if (str_starts_with(dent->d_name, module_name_ko)) {   // may be e.g. i2c-dev.ko.xz
-                    found = true;
-                    if (debug)
-                       printf("(%s) Found\n", __func__);
-                    break;
-                 }
-              }
-           }
-        }
-        closedir(d);
-     }
+               printf("(%s) dent->d_name: %s, module_name_ko=%s",
+                      __func__, dent->d_name, module_name_ko);
+            if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+               if (str_starts_with(dent->d_name, module_name_ko)) {   // may be e.g. i2c-dev.ko.xz
+                  found = true;
+                  if (debug)
+                     printf("(%s) Found\n", __func__);
+                  break;
+               }
+            }
+         } // while
+         closedir(d);
+      }  // else
+   }
 
    if (debug)
       printf("(%s) Done. Returning: %s", __func__, sbool(found));
