@@ -58,7 +58,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
-bool check_phantom_displays = false;
+bool check_phantom_displays = true;
 
 
 static GPtrArray * all_displays = NULL;    // all detected displays
@@ -1147,6 +1147,7 @@ ddc_detect_all_displays() {
       }
    }
 
+   DBGMSG("-- check_phantom_displays=%s", sbool(check_phantom_displays));
    if (check_phantom_displays)      // for testing
       filter_phantom_displays(display_list);
 
