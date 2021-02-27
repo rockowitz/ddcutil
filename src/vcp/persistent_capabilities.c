@@ -295,5 +295,7 @@ void dbgrpt_capabilities_hash(int depth, const char * msg) {
 void init_persistent_capabilities() {
    RTTI_ADD_FUNC(load_persistent_capabilities_file);
    RTTI_ADD_FUNC(save_persistent_capabilities_file);
+   RTTI_ADD_FUNC(get_persistent_capabilities);
+   RTTI_ADD_FUNC(set_persistent_capabilites);
 }
 
