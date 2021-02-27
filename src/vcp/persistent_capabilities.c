@@ -32,6 +32,7 @@ bool capabilities_cache_enabled = false;
 
 GHashTable *  capabilities_hash = NULL;
 
+/* caller is responisble for freeing returned value */
 char * get_capabilities_cache_file_name() {
    return xdg_cache_home_file("ddcutil", "capabilities");
 }
