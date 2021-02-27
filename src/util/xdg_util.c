@@ -22,11 +22,12 @@
 #include "xdg_util.h"
 
 
-
 /** Returns the name of the base data, configuration, or cache, directory.
  *  First the specified environment variable is checked.
  *  If no value is found the name is constructed from $HOME and
  *  the specified sub-directory.
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 static char * xdg_home_dir(
       const char * envvar_name,
@@ -50,7 +51,10 @@ static char * xdg_home_dir(
 }
 
 
-/** Returns the name of the xdg base directory for data files */
+/** Returns the name of the xdg base directory for data files
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 char * xdg_data_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_DATA_HOME", ".local/share");
@@ -59,7 +63,11 @@ char * xdg_data_home_dir() {
    return result;
 }
 
-/** Returns the name of the xdg base directory for configuration files */
+
+/** Returns the name of the xdg base directory for configuration files
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 char * xdg_config_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_CONFIG_HOME", ".config");
@@ -68,7 +76,11 @@ char * xdg_config_home_dir() {
    return result;
 }
 
-/** Returns the name of the xdg base directory for cached files */
+
+/** Returns the name of the xdg base directory for cached files
+*
+*  Caller is responsible for freeing the returned memory.
+*/
 char * xdg_cache_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_CACHE_HOME", ".cache");
@@ -77,7 +89,11 @@ char * xdg_cache_home_dir() {
    return result;
 }
 
-
+/** Returns the value of the specified environment variable,
+ *  If the value is blank, return default_dirs.
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 static char * xdg_dirs(
       const char * envvar_name,
       const char * default_dirs)
@@ -97,13 +113,19 @@ static char * xdg_dirs(
 }
 
 
-/** Returns the value of $XDG_DATA_DIRS or the default "/usr/local/share:/usr/share" */
+/** Returns the value of $XDG_DATA_DIRS or the default "/usr/local/share:/usr/share"
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 char * xdg_data_dirs() {
    return xdg_dirs("XDG_DATA_DIRS",  "/usr/local/share/:/usr/share");
 }
 
 
-/** Returns the value of $XDG_CONFIG_DIRS, or the default "/etc/xdg" */
+/** Returns the value of $XDG_CONFIG_DIRS, or the default "/etc/xdg"
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 char * xdg_config_dirs() {
    return xdg_dirs("XDG_CONFIG_DIRS",  "/etc/xdg"); }
 
@@ -111,6 +133,8 @@ char * xdg_config_dirs() {
 
 /** Returns a path string containing value of the XDG data home directory,
  *  followed by the XDG data dirs string.
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * xdg_data_path() {
    bool debug = false;
@@ -133,6 +157,8 @@ char * xdg_data_path() {
 
 /** Returns a path string containing value of the XDG configuration home directory,
  *  followed by the XDG config dirs string.
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * xdg_config_path() {
    bool debug = false;
@@ -160,6 +186,8 @@ char * xdg_cache_path() {
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_DATA_HOME.
  *  Does not check for the file's existence
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * xdg_data_home_file(const char * application, const char * simple_fn)
 {
@@ -178,6 +206,8 @@ char * xdg_data_home_file(const char * application, const char * simple_fn)
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_CONFIG_HOME.
  *  Does not check for the file's existence
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * xdg_config_home_file(const char * application, const char * simple_fn)
 {
@@ -195,6 +225,8 @@ char * xdg_config_home_file(const char * application, const char * simple_fn)
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_CACHE_HOME.
  *  Does not check for the file's existence
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * xdg_cache_home_file(const char * application, const char * simple_fn)
 {
@@ -241,7 +273,7 @@ static char * xdg_dirs_iter_next(Iter_State * state) {
    return buf;
 }
 
-
+/* Caller is responsible for freeing the returned memory. */
 static char * find_xdg_path_file(
       const char * path,
       const char * application,
@@ -284,6 +316,8 @@ static char * find_xdg_path_file(
  *  then in the $XDG_DATA_DIRS directories.
  *
  *  \return fully qualified file name, or NULL if not found.
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * find_xdg_data_file(
       const char * application,
@@ -333,6 +367,8 @@ char * find_xdg_config_file(
 
 
 /** Looks for a file in the specified subdirectory of $XDG_CACHE_HOME
+ *
+ *  Caller is responsible for freeing the returned memory.
  */
 char * find_xdg_cache_file(
       const char * application,
