@@ -120,7 +120,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
       rpt_label(depth, "Experimental Options:");
       REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
-      REPORT_FLAG_OPTION(2, "Filter phantom displays");
+      REPORT_FLAG_OPTION(2, "Unused");    // was Filter phantom displays
       REPORT_FLAG_OPTION(3, "Unused");
       REPORT_FLAG_OPTION(4, "Read strategy tests");
       REPORT_FLAG_OPTION(5, "Unused");
@@ -307,10 +307,10 @@ bool init_utility_options(Parsed_Cmd* parsed_cmd)
       EDID_Read_Uses_I2C_Layer = true;
    }
 
-   if (parsed_cmd->flags & CMD_FLAG_F2) {
-      fprintf(stdout, "Filter phantom displays\n");
-      check_phantom_displays = true;    // extern in ddc_displays.h
-   }
+   // if (parsed_cmd->flags & CMD_FLAG_F2) {
+   //    fprintf(stdout, "Filter phantom displays\n");
+   //   check_phantom_displays = true;    // extern in ddc_displays.h
+   // }
 
    // HACK FOR TESTING
    if (parsed_cmd->flags & CMD_FLAG_F6) {
@@ -397,7 +397,7 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
  *   \return ok if successful, false if error
  */
 static bool
-master_initializer(Parsed_Cmd * parsed_cmd) {
+master_initializer(Parsed_Cmd * parsed_cmd, char * default_options) {
    bool ok = false;
 
 #ifdef ENABLE_ENVCMDS
@@ -449,6 +449,9 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
 
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
        show_ddcutil_version();
+       rpt_vstring(0, "%.*s%-*s%s",
+                 0,"",
+                 28, "Config file options:", default_options);
        report_all_options(parsed_cmd, 0);
     }
 
@@ -1100,11 +1103,12 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
  *  \param  old_argc  argc as passed on the command line
  *  \param  old argv  argv as passed on the command line
  *  \param  new_argv_loc  where to return the address of the combined token list
+ *  \param  detault_options_loc  where to return string of options obtained from init file
  *  \return number of tokens in the combined list, -1 if errors
  *          reading the configuration file. n. it is not an error if the
  *          configuration file does not exist.  In that case 0 is returned.
  */
-int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc) {
+int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc, char** default_options_loc) {
    bool debug = false;
    // char * cmd_prefix = read_configuration_file();
    int new_argc = 0;
@@ -1124,6 +1128,7 @@ int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc) {
                                    (global_options) ? global_options : "",
                                    (ddcutil_options) ? ddcutil_options : "");
       DBGMSF(debug, "cmd_prefix= |%s|", cmd_prefix);
+      *default_options_loc = cmd_prefix;
       char ** prefix_tokens = NULL;
       int prefix_token_ct = 0;
       if (cmd_prefix) {
@@ -1175,15 +1180,16 @@ main(int argc, char *argv[]) {
    Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
 
-   char ** new_argv_loc = NULL;
-   int new_argc = apply_config_file(argc, argv, &new_argv_loc);
+   char ** new_argv = NULL;
+   char *  combined_default_options = NULL;
+   int new_argc = apply_config_file(argc, argv, &new_argv, &combined_default_options);
    if (new_argc < 0)
       goto bye;
 
    // DBGMSG("new_argc = %d", new_argc);
-   // ntsa_show(new_argv_loc);
+   // ntsa_show(new_argv);
 
-   parsed_cmd = parse_command(new_argc, new_argv_loc);
+   parsed_cmd = parse_command(new_argc, new_argv);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
@@ -1199,7 +1205,7 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   if (!master_initializer(parsed_cmd))
+   if (!master_initializer(parsed_cmd, combined_default_options))
       goto bye;
 
    // xdg_tests(); // for development
