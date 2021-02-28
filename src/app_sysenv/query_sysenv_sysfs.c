@@ -890,6 +890,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
             RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "name");
             RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "device");
             RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "i2c-dev", i2c_dev_subdir, "subsystem");
+            free(i2c_dev_subdir);
          }
       }
     }
@@ -927,6 +928,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
           RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "device");
           RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "name");
           RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device/ddc/i2c-dev", i2c_dev_subdir, "subsystem");
+          free(i2c_dev_subdir);
        }
        //  /sys/bus/i2c/devices/i2c-N/device/drm_dp_auxNdump_sysfs_i2c
 
@@ -940,8 +942,10 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
           RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device");
           RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "name");
           RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device", drm_dp_aux_subdir, "device/subsystem");
+          free(drm_dp_aux_subdir);
        }
     }
+   free(dir_devices_i2cN);
 }
 
 
@@ -992,6 +996,7 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
       RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, drm_dp_aux_subdir, "device");
       RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, drm_dp_aux_subdir, "name");
    // RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, drm_dp_aux_subdir, "subsystem")
+      free(drm_dp_aux_subdir);
    }
 
    // e.g. /sys/class/drm/card0-DP-1/i2c-13
@@ -1015,6 +1020,7 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
       RPT2_ATTR_REALPATH(    d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir, "device");
       RPT2_ATTR_TEXT(        d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir, "name");
       RPT2_ATTR_REALPATH(    d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir, "subsystem");
+      free(i2cN_subdir);
    }
 
    free(real_cardX_dir);
@@ -1062,6 +1068,7 @@ void sysfs_dir_cardN_cardNconnector(
       RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_drm_dp_aux, "dev");
       RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_drm_dp_aux, "name");
       RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_drm_dp_aux, "subsystem");
+      free(dir_drm_dp_aux);
    }
    char * dir_i2cN = NULL;
    RPT2_ATTR_SINGLE_SUBDIR(d0, &dir_i2cN, str_starts_with, "i2c-",dirname_fn);
@@ -1076,10 +1083,12 @@ void sysfs_dir_cardN_cardNconnector(
          RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "dev");
          RPT2_ATTR_TEXT(    d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "name");
          RPT2_ATTR_REALPATH(d0, NULL, dirname_fn, dir_i2cN, "i2c-dev", dir_i2cN_i2cdev_i2cN, "subsystem");
+         free(dir_i2cN_i2cdev_i2cN);
       }
       RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "device");
       RPT2_ATTR_TEXT(     d0, NULL, dirname_fn, dir_i2cN, "name");
       RPT2_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
+      free(dir_i2cN);
    }
 }
 
@@ -1154,6 +1163,8 @@ void sysfs_dir_i2cN(
       RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "dev");
       RPT2_ATTR_TEXT(         d0, NULL, fqfn, "i2c-dev", i2cN, "name");
       RPT2_ATTR_REALPATH(     d0, NULL, fqfn, "i2c-dev", i2cN, "subsystem");
+      free(i2cN);
+      free(i2c_dev_fn);
    }
 }
 
@@ -1248,6 +1259,7 @@ void one_pci_device(
              sysfs_dir_cardN,
              accumulator,
              d1);
+       free(drm_fn);
     }
 
     // Process i2c-N subdirectories:
