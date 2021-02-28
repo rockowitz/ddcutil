@@ -46,9 +46,11 @@ format_absolute_gamma(char * buf, int bufsz, Byte bgamma) {
    int i_gamma = bgamma + 100;
    char sgamma1[10];
    g_snprintf(sgamma1, 10, "%d", i_gamma);
-   g_snprintf(buf, bufsz, "%s.%s",
-                          lsub(sgamma1, strlen(sgamma1)-2),
-                          substr(sgamma1, strlen(sgamma1)-2, 2));
+   char * sgamma1_left =   lsub(sgamma1, strlen(sgamma1)-2);
+   char * sgamma1_right =  substr(sgamma1, strlen(sgamma1)-2, 2);
+   g_snprintf(buf, bufsz, "%s.%s", sgamma1_left, sgamma1_right);
+   free(sgamma1_left);
+   free(sgamma1_right);
    return buf;
 }
 
@@ -273,7 +275,7 @@ report_gamma_capabilities(
          g_snprintf(buf2, 100, "%s %s (0x%02x)",
                                (ndx > 0) ? "," : "",
                                sgamma, raw_gamma);
-         g_strlcat(buf, buf2, 300);
+         STRLCAT(buf, buf2, 300);
       }
       rpt_vstring(d0, "Specific presets: %s", buf);
    }   // g_specific_presets
