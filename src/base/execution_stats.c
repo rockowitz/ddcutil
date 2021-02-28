@@ -2,7 +2,7 @@
  *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
