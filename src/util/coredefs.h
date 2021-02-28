@@ -2,7 +2,7 @@
  *  Basic definitions.that re not application specific
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -23,6 +23,28 @@ typedef unsigned char Byte;
 
 #define ASSERT_IFF(_cond1, _cond2) \
    assert( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
+
+
+// Workaround for coverity complaints re g_strlcpy(), g_strlcat()
+
+#define STRLCPY(_str, _dst, _size) \
+   do \
+{ size_t ct = g_strlcpy(_str, _dst, _size); assert(ct < _size);} \
+   while(0)
+
+#define STRLCAT(_str, _dst, _size) \
+   do \
+{ size_t ct = g_strlcat(_str, _dst, _size); assert(ct < _size);} \
+   while(0)
+
+
+
+/*
+#define STRLCPY(_dst, _src, _size) \
+do { \
+   strncpy(_dst, _src, _size); _dst[strlen(_dst)] = '\0'; \
+} while(0)
+*/
 
 #ifdef TARGET_BSD
 #define I2C "iic"
