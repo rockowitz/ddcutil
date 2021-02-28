@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -839,7 +839,7 @@ errinfo_summary(Error_Info * erec) {
    int required_size = strlen(buf1) + 1;
 
    char * buf = get_thread_dynamic_buffer(&esumm_key, &esumm_len_key, required_size);
-   g_strlcpy(buf, buf1, required_size);
+   STRLCPY(buf, buf1, required_size);
    free(buf1);
    return buf;
 }
