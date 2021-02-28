@@ -186,7 +186,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    for (ndx = 0; ndx < parsed_cmd->argct; ndx++) {
       printf("   argument %d:  %s\n", ndx, parsed_cmd->args[ndx]);
    }
-   char buf[20];
+   char buf[30];
    g_snprintf(buf,30, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1],
                                      parsed_cmd->max_tries[2] );
    rpt_str("raw_command",        NULL, parsed_cmd->raw_command,                               d1);
