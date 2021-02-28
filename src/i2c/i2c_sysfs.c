@@ -74,13 +74,14 @@ read_i2cN_device_node(
    assert(info);
    bool debug = false;;
    DBGMSF(debug, "device_path=%s", device_path);
-   char * i2c_N = g_strdup(g_path_get_basename(device_path));
+   char * i2c_N = g_path_get_basename(device_path);
    int d0 = depth;
    if (debug && d0 < 0)
       d0 = 2;
    RPT2_ATTR_TEXT( d0, &info->device_name,    device_path, "name");
    RPT2_ATTR_TEXT( d0, &info->i2c_dev_dev,    device_path, "i2c-dev", i2c_N, "dev");
    RPT2_ATTR_TEXT( d0, &info->i2c_dev_name,   device_path, "i2c-dev", i2c_N, "name");
+   free(i2c_N);
 }
 
 #ifdef IN_PROGRESS
@@ -157,6 +158,7 @@ read_drm_dp_card_connector_node(
    if (drm_dp_aux_dir) {
       RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_name, connector_path, drm_dp_aux_dir, "name");
       RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_dev,  connector_path, drm_dp_aux_dir, "dev");
+      free(drm_dp_aux_dir);
    }
 
    RPT2_ATTR_EDID(d0, NULL, connector_path, "edid");
