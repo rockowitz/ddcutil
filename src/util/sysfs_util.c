@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //* \cond */
@@ -75,15 +75,16 @@ read_sysfs_attr_w_default_r(
       unsigned     bufsz,
       bool         verbose)
 {
+   assert(strlen(default_value) < bufsz);
    char fn[PATH_MAX];
    sprintf(fn, "%s/%s", dirname, attrname);
    char * result = file_get_first_line(fn, verbose);
    if (result) {
-      g_strlcpy(buf, result, bufsz);
+      STRLCPY(buf, result, bufsz);
       free(result);
    }
    else {
-      g_strlcpy(buf, default_value, bufsz);
+      STRLCPY(buf, default_value, bufsz);
    }
    return buf;
 }
@@ -214,13 +215,13 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
-   g_strlcpy(buffer, fn_segment, bufsz);
+   STRLCPY(buffer, fn_segment, bufsz);
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
          break;
-      g_strlcat(buffer, "/", bufsz);
-      g_strlcat(buffer, segment, bufsz);
+      STRLCAT(buffer, "/", bufsz);
+      STRLCAT(buffer, segment, bufsz);
    }
    return buffer;
 }
