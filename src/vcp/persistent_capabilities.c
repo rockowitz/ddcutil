@@ -52,6 +52,7 @@ void delete_capabilities_file() {
    else {
       DBGMSF(debug, "File does not exist: %s", fn);
    }
+   free(fn);
 }
 
 
@@ -228,7 +229,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
       }
 
       if (mmk) {
-         char * mms = monitor_model_string(mmk);
+         char * mms = strdup(monitor_model_string(mmk));
 
          if (debug) {
             DBGMSG("Hash table before lookup:");
@@ -259,7 +260,7 @@ void set_persistent_capabilites(
       if (non_unique_model_id(mmk))
          DBGTRC(debug, TRACE_GROUP, "Not saving capabilities for non-unique Monitor_Model_Key.");
       else {
-         char * mms = monitor_model_string(mmk);
+         char * mms = strdup(monitor_model_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
          save_persistent_capabilities_file();
       }
