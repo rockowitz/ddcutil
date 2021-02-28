@@ -27,17 +27,19 @@ typedef unsigned char Byte;
 
 // Workaround for coverity complaints re g_strlcpy(), g_strlcat()
 
-#define STRLCPY(_str, _dst, _size) \
+#define STRLCPY0(_str, _dst, _size) \
    do \
 { size_t ct = g_strlcpy(_str, _dst, _size); assert(ct < _size);} \
    while(0)
 
-#define STRLCPY2(_str, _dst, _size)   (void) g_strlcpy(_str, _dst, _size);
+#define STRLCPY(_str, _dst, _size)  /* coverity[OVERRUN] */  (void) g_strlcpy(_str, _dst, _size)
 
-#define STRLCPY3(_str, _dst, _size)  /* coverity[OVERRUN] */  (void) g_strlcpy(_str, _dst, _size);
+#define STRLCPY2(_str, _dst, _size)   (void) g_strlcpy(_str, _dst, _size)
 
-#define STRLCPY4(_str, _dst, _size)  /* coverity[overrun-buffer-val] */  (void) g_strlcpy(_str, _dst, _size);
-#define STRLCPY5(_str, _dst, _size)  /* coverity[access_debuf_const] */  (void) g_strlcpy(_str, _dst, _size);
+#define STRLCPY3(_str, _dst, _size)  /* coverity[OVERRUN] */  (void) g_strlcpy(_str, _dst, _size)
+
+#define STRLCPY4(_str, _dst, _size)  /* coverity[overrun-buffer-val] */  (void) g_strlcpy(_str, _dst, _size)
+#define STRLCPY5(_str, _dst, _size)  /* coverity[access_debuf_const] */  (void) g_strlcpy(_str, _dst, _size)
 
 #ifdef REF
  *    /* coverity[OVERRUN] */ (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
