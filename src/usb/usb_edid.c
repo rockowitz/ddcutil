@@ -246,7 +246,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          if (streq(parsed_edid->model_name, model_name) &&
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
-            g_strlcpy(parsed_edid->edid_source, "X11", EDID_SOURCE_FIELD_SIZE);
+            STRLCPY(parsed_edid->edid_source, "X11", EDID_SOURCE_FIELD_SIZE);
             DBGMSF(debug, "Found matching EDID from X11");
             break;
          }
@@ -303,7 +303,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
             DBGMSG("Using EDID for /dev/i2c-%d", bus_info->busno);
             parsed_edid = bus_info->edid;
             edid_source = "I2C";
-            // g_strlcpy(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
+            // STRLCPY(parsed_edid->edid_source, "I2C", EDID_SOURCE_FIELD_SIZE);
             // result = NULL;   // for testing - both i2c and X11 methods work
          }
          else {    // ADL
@@ -320,7 +320,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
             if (adlno.iAdapterIndex >= 0)   {    //  {-1,-1} means unset
                parsed_edid = adlshim_get_parsed_edid_by_adlno(adlno.iAdapterIndex, adlno.iDisplayIndex);
                edid_source = "ADL";
-                  // g_strlcpy(parsed_edid->edid_source, "ADL", EDID_SOURCE_FIELD_SIZE);
+                  // STRLCPY(parsed_edid->edid_source, "ADL", EDID_SOURCE_FIELD_SIZE);
             }
             // memory leak: not freeing dref because don't want to clobber parsed_edid
             // need to review Display_Ref lifecycle
@@ -340,7 +340,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
    if (model_sn)
       free_model_sn_pair(model_sn);
    if (parsed_edid)
-      g_strlcpy(parsed_edid->edid_source, edid_source, EDID_SOURCE_FIELD_SIZE);
+      STRLCPY(parsed_edid->edid_source, edid_source, EDID_SOURCE_FIELD_SIZE);
    DBGMSF(debug, "Returning: %p", parsed_edid);
    return parsed_edid;
 }
@@ -388,7 +388,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
           // }
        }
        else
-          g_strlcpy(parsed_edid->edid_source, "USB", EDID_SOURCE_FIELD_SIZE);
+          STRLCPY(parsed_edid->edid_source, "USB", EDID_SOURCE_FIELD_SIZE);
 
        buffer_free(edid_buffer, __func__);
        edid_buffer = NULL;
