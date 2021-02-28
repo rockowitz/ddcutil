@@ -3,7 +3,7 @@
  *  Experimental async code
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -19,8 +19,6 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-
-
 #define ASYNC_GETVCP_DATA_MARKER "GVCP"
 typedef struct {
    char  marker[4];
@@ -29,6 +27,7 @@ typedef struct {
    DDCA_Vcp_Value_Type call_type;
    DDCA_Notification_Func callback_func;
 } Async_Getvcp_Data;
+
 
 // function to be run in thread
 gpointer threaded_get_vcp_value(gpointer data) {
@@ -59,6 +58,7 @@ gpointer threaded_get_vcp_value(gpointer data) {
       return NULL;
    }
 
+
 Error_Info *
 start_get_vcp_value(
        Display_Handle *          dh,
@@ -73,6 +73,7 @@ start_get_vcp_value(
    Error_Info * ddc_excp = NULL;
 
    Async_Getvcp_Data parms;
+   memcpy(parms.marker, ASYNC_GETVCP_DATA_MARKER, 4);
    parms.call_type = call_type;
    parms.feature_code = feature_code;
    parms.dh = dh;
