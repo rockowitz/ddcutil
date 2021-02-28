@@ -2,10 +2,11 @@
  * Utilities for interpreting libdrm data structures
  */
 
-// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include <assert.h>
 #include <glib-2.0/glib.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -163,18 +164,18 @@ char * interpret_property_flags(uint32_t flags) {
    uint32_t extended_type = flags & DRM_MODE_PROP_EXTENDED_TYPE;
    if (extended_type) {
       if (strlen(buf) > 0)
-         g_strlcat(buf, ", ", bufsz);
+         STRLCAT(buf, ", ", bufsz);
       char * extended_name = "other extended type";
       if (extended_type == DRM_MODE_PROP_OBJECT)
          extended_name = "DRM_MODE_PROP_OBJECT";
       else if (extended_type == DRM_MODE_PROP_SIGNED_RANGE)
          extended_name = "DRM_MODE_PROP_SIGNED_RANGE";
-      g_strlcat(buf, extended_name, bufsz);
+      STRLCAT(buf, extended_name, bufsz);
    }
    if (flags & DRM_MODE_PROP_ATOMIC) {
       if (strlen(buf) > 0)
-         g_strlcat(buf, ", ", bufsz);
-      g_strlcat(buf,  "DRM_MODE_PROP_ATOMIC", bufsz);
+         STRLCAT(buf, ", ", bufsz);
+      STRLCAT(buf,  "DRM_MODE_PROP_ATOMIC", bufsz);
    }
    return buf;
 }
