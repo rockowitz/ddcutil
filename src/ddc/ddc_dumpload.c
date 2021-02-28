@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -177,16 +177,16 @@ create_dumpload_data_from_g_ptr_array(
                   valid_data = false;
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
-               g_strlcpy(data->edidstr, s1, sizeof(data->edidstr));
+               STRLCPY(data->edidstr, s1, sizeof(data->edidstr));
             }
             else if (streq(s0, "MFG_ID")) {
-               g_strlcpy(data->mfg_id, s1, sizeof(data->mfg_id));
+               STRLCPY(data->mfg_id, s1, sizeof(data->mfg_id));
             }
             else if (streq(s0, "MODEL")) {
-               g_strlcpy(data->model, rest, sizeof(data->model));
+               STRLCPY(data->model, rest, sizeof(data->model));
             }
             else if (streq(s0, "SN")) {
-               g_strlcpy(data->serial_ascii, rest, sizeof(data->serial_ascii));
+               STRLCPY(data->serial_ascii, rest, sizeof(data->serial_ascii));
             }
             else if (streq(s0, "VCP_VERSION")) {
                data->vcp_version = parse_vspec(s1);
