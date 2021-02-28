@@ -438,7 +438,7 @@ filename_for_fd_t(int fd) {
    char * filename_loc;
    int rc = filename_for_fd(fd, &filename_loc);
    if (rc == 0) {
-      g_strlcpy(fn_buf, filename_loc, PATH_MAX+1);
+      STRLCPY(fn_buf, filename_loc, PATH_MAX+1);
       free(filename_loc);
       result = fn_buf;
    }
