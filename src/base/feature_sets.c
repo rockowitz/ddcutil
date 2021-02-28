@@ -3,7 +3,7 @@
  * Feature set identifiers
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -160,7 +160,7 @@ char * feature_set_flag_names_t(Feature_Set_Flags flags) {
              feature_set_flag_table,
              false,                      // use value name, not description
              "|");                      // sepstr
-   g_strlcpy(buf, s, 100);
+   STRLCPY(buf, s, 100);
    free(s);
    return buf;
 }
