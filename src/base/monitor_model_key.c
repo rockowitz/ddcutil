@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "util/edid.h"
+#include "util/glib_util.h"
 
 #include "core.h"
 
@@ -34,8 +35,8 @@ monitor_model_key_value(
 
    DDCA_Monitor_Model_Key  result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
-   g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
-   g_strlcpy(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   STRLCPY(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
    result.product_code = product_code;
    result.defined = true;
    return result;
@@ -58,8 +59,8 @@ DDCA_Monitor_Model_Key
 monitor_model_key_value_from_edid(Parsed_Edid * edid) {
    DDCA_Monitor_Model_Key result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
-   g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
-   g_strlcpy(result.model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   STRLCPY(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY(result.model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
    result.product_code = edid->product_code;
    result.defined = true;
    return result;
@@ -178,30 +179,31 @@ model_id_string(
  *  suitable for file names, hash keys, etc.
  *
  *  The value returned has the same form as returned by #model_id_string.
+ *
+ *  \param  model_id
+ *  \return string representation
+ *
+ *  The value returned will be valid until the next call to this function in
+ *  the current thread.  Caller should not free.
  */
 char *
 monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
-#ifdef FUTURE
-   // don't make this change just before release
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
    const int bufsz = 100;
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
-#endif
 
    char * result = NULL;
    // perhaps use thread safe buffer so caller doesn't have to free
    if (model_id) {
-      result = model_id_string(
+      char * s  = model_id_string(
                          model_id->mfg_id,
                          model_id->model_name,
                          model_id->product_code);
+      strcpy(buf, s);
+      free(s);
+      result = buf;
    }
-#ifdef FUTURE
-   strcpy(result, buf);
-   free(result);
 
-   return buf;
-#endif
    return result;
 }
 
