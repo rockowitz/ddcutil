@@ -584,10 +584,10 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    DBGMSF(debug, "start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
    DBGMSF(debug, "name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
                                                    segment->name_len, segment->name_start);
-   REQUIRE(*pos == '(',
-           g_strdup_printf("Missing parenthesized value for segment %.*s",
-                           segment->name_len, segment->name_start),
-           pos);
+   char * errmsg = g_strdup_printf("Missing parenthesized value for segment %.*s",
+                                   segment->name_len, segment->name_start);
+   REQUIRE(*pos == '(', errmsg, pos);
+   free(errmsg);
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
    REQUIRE(pos < end,
