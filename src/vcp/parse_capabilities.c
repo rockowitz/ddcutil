@@ -590,10 +590,10 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    free(errmsg);
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
-   REQUIRE(pos < end,
-           g_strdup_printf("No closing parenthesis for segment %.*s",
-                           segment->name_len, segment->name_start),
-           pos);
+   errmsg = g_strdup_printf("No closing parenthesis for segment %.*s",
+                            segment->name_len, segment->name_start);
+   REQUIRE(pos < end, errmsg, pos);
+   free(errmsg);
    segment->value_len = pos - segment->value_start;
    REQUIRE(segment->value_len > 0, "zero length value", pos);
 
