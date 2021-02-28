@@ -41,6 +41,11 @@ typedef unsigned char Byte;
 #define STRLCPY4(_str, _dst, _size)  /* coverity[overrun-buffer-val] */  (void) g_strlcpy(_str, _dst, _size)
 #define STRLCPY5(_str, _dst, _size)  /* coverity[access_debuf_const] */  (void) g_strlcpy(_str, _dst, _size)
 
+#define STRLCPY6(_str, _dst, _size)  /* coverity[OVERRUN] */ /* coverity[CHECKED_RETURN] */ g_strlcpy(_str, _dst, _size)
+
+#define STRLCPY7(_str, _dst, _size)  /* coverity[OVERRUN, CHECKED_RETURN] */  g_strlcpy(_str, _dst, _size)
+
+
 #ifdef REF
  *    /* coverity[OVERRUN] */ (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
    /* coverity[overrun-buffer-val] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);

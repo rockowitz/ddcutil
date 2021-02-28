@@ -70,6 +70,8 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
    STRLCPY3(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
    STRLCPY4(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
    STRLCPY5(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY6(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY7(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
 
 
    /* coverity[OVERRUN] */ (void) g_strlcpy(result.model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
