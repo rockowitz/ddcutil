@@ -2,7 +2,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -235,7 +235,7 @@ create_empty_ddc_packet(int max_size, const char * tag) {
    DDC_Packet * packet = malloc(sizeof(DDC_Packet));
    packet->raw_bytes = buffer_new(max_size, "empty DDC packet");
    if (tag) {
-      g_strlcpy(packet->tag, tag, MAX_DDC_TAG);
+      g_strlcpy(packet->tag, tag, MAX_DDC_TAG);  // no need to check if packet->tag truncated
    }
    else
       packet->tag[0] = '\0';
