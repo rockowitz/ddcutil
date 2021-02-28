@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -1725,7 +1725,10 @@ format_feature_detail_x72_gamma(
       char   sgamma2[10];
       g_snprintf (sgamma, 10, "%d", igamma);
       int slen = strlen(sgamma);
-      g_snprintf(sgamma2, 10, "%s.%s", substr(sgamma, 0, slen-2), substr(sgamma, slen-2, 2) );
+      char * a =  substr(sgamma, 0, slen-2);
+      char * b = substr(sgamma, slen-2, 2);
+      g_snprintf(sgamma2, 10, "%s.%s",a, b);
+      free(a); free(b);
       g_snprintf(buffer, bufsz, "%s - Mode: %s (sl=0x%02x), gamma=%s (sh=0x%02x)",
                                  formatted_sh_sl,
                                  ssl, code_info->sl, sgamma2, code_info->sh);
