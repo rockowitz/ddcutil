@@ -32,6 +32,9 @@ typedef unsigned char Byte;
 { size_t ct = g_strlcpy(_str, _dst, _size); assert(ct < _size);} \
    while(0)
 
+#define STRLCPY2(_str, _dst, _size)   (void) g_strlcpy(_str, _dst, _size);
+
+
 #define STRLCAT(_str, _dst, _size) \
    do \
 { size_t ct = g_strlcat(_str, _dst, _size); assert(ct < _size);} \
