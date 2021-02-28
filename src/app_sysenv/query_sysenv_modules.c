@@ -28,7 +28,6 @@
 #include "query_sysenv_modules.h"
 
 
-
 /** Checks if module i2c_dev is required and if so whether it is loaded.
  *  Reports the result.
  *
@@ -162,5 +161,6 @@ void probe_modules_d(int depth) {
    g_snprintf(cmd, bufsz, "grep -EH \"\(%s)\" /etc/modprobe.d/*conf", grep_terms );
    // DBGMSG("cmd: %s", cmd);
    execute_shell_cmd_rpt(cmd, depth+1);
+   free(grep_terms);
    free(cmd);
 }
