@@ -9,11 +9,9 @@
 
 /** \cond */
 #include <assert.h>
-#include <file/file.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
-#include <bsd/string.h>
 /** \endcond */
 
 #include "util/data_structures.h"
