@@ -115,9 +115,9 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. dh=%s, fn=%s", dh_repr_t(dh), filename);
-   char fn[PATH_MAX] = {0};
+   char fn[PATH_MAX+1] = {0};
    if (filename)
-      g_strlcpy(fn, filename, PATH_MAX);
+      STRLCPY(fn, filename, PATH_MAX+1);
 
    FILE * fout = stdout;
    FILE * ferr = stderr;
@@ -127,8 +127,6 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
    ddcrc = dumpvcp_as_dumpload_data(dh, &data);
    if (ddcrc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
-      free_dumpload_data(data);
-
       FILE * output_fp = NULL;
 
       if (filename) {
@@ -141,6 +139,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
       else {
          char simple_fn_buf[NAME_MAX+1];
          time_t time_millis = data->timestamp_millis;
+         // assert(simple_fn_buf && sizeof(simple_fn_buf) > 0);   // avoid coverity warning re leaked memory
          create_simple_vcp_fn_by_dh(
                                dh,
                                time_millis,
@@ -159,6 +158,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
             f0printf(ferr, "Unable to create '%s', %s\n", fn, strerror(-ddcrc));
          }
       }
+      free_dumpload_data(data);
 
       if (output_fp) {
          int ct = strings->len;
