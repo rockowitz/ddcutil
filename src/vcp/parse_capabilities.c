@@ -559,6 +559,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    }
    char * pos = trimmed_start;
 
+   char * errmsg = NULL;
 #define REQUIRE(_condition, _msg, _position)  \
    if (!(_condition)) { \
       g_ptr_array_add(messages, g_strdup_printf("%s at offset %jd", \
@@ -574,26 +575,31 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    REQUIRE( pos < end, "Nothing follows segment name", pos);
    segment->name_len = pos-trimmed_start;
    while ( pos < end && *pos == ' ' ) { pos++; }   // blanks following segment name
-   REQUIRE( pos < end,
-         g_strdup_printf("Nothing follows segment name (2) %.*s",
-                         segment->name_len, segment->name_start),
-         pos);
+
+   errmsg = g_strdup_printf("Nothing follows segment name (2) %.*s",
+                            segment->name_len, segment->name_start);
+   REQUIRE( pos < end, errmsg, pos);
+   free(errmsg);
+
    // assert(*pos == '(');
    DBGMSF(debug, "pos=%p, trimmed_start=%p", pos, trimmed_start);
    segment->name_len = pos - trimmed_start;
    DBGMSF(debug, "start=%p, len=%d, trimmed_start=%p", start, len, trimmed_start);
    DBGMSF(debug, "name_len = %d, name_start = %p -> %.*s", segment->name_len, segment->name_start,
                                                    segment->name_len, segment->name_start);
-   char * errmsg = g_strdup_printf("Missing parenthesized value for segment %.*s",
+   errmsg = g_strdup_printf("Missing parenthesized value for segment %.*s",
                                    segment->name_len, segment->name_start);
    REQUIRE(*pos == '(', errmsg, pos);
    free(errmsg);
+
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
+
    errmsg = g_strdup_printf("No closing parenthesis for segment %.*s",
                             segment->name_len, segment->name_start);
    REQUIRE(pos < end, errmsg, pos);
    free(errmsg);
+
    segment->value_len = pos - segment->value_start;
    REQUIRE(segment->value_len > 0, "zero length value", pos);
 
