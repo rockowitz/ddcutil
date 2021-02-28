@@ -1113,11 +1113,16 @@ int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc, cha
    // char * cmd_prefix = read_configuration_file();
    int new_argc = 0;
    Error_Info * errs = load_configuration_file(false);
-   if (errs && errs->status_code != DDCRC_NOT_FOUND) {
-      // rpt_vstring(0,"Error(s) reading configuration file");
-      errinfo_report_details(errs, 0);
+   if (errs) {
+      if (errs->status_code == DDCRC_NOT_FOUND) {
+         new_argc = 0;
+      }
+      else {
+         // rpt_vstring(0,"Error(s) reading configuration file");
+         errinfo_report_details(errs, 0);
+         new_argc = -1;
+      }
       errinfo_free(errs);
-      new_argc = -1;
    }
    else {
       // dbgrpt_ini_hash(0);
@@ -1153,6 +1158,7 @@ int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc, cha
          *new_argv_loc = combined;
          new_argc = ntsa_length(combined);
       }
+      ntsa_free(prefix_tokens, /* free strings */ false);
    }
 
    DBGMSF(debug, "Returning: %d", new_argc);
