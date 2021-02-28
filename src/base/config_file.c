@@ -51,12 +51,12 @@ bool is_segment(char * s, char ** seg_name_loc) {
       char * seg_name = strtrim(untrimmed);
       DBGMSF(debug, "seg_name=|%s|", seg_name);
       if (strlen(seg_name) > 0) {
-
          *seg_name_loc = seg_name;
          result = true;
       }
       else
          free(seg_name);
+      free(untrimmed);
    }
    DBGMSF(debug, "s: %s, Returning %s", s, sbool(result));
    return result;
@@ -94,7 +94,6 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
       free(untrimed_value);
    }
    DBGMSF(debug, "s: |%s|, Returning %s", s, sbool(result));
-   return result;
    return result;
 }
 
@@ -177,7 +176,6 @@ load_configuration_file( bool verbose ) {
                   char * full_key = g_strdup_printf("%s/%s", cur_segment, key);
                   DBGMSF(debug, "Inserting %s -> %s", full_key, value);
                   g_hash_table_insert(ini_file_hash, full_key, value);
-                  free(key);
                   continue;
                }
                else {
@@ -191,6 +189,8 @@ load_configuration_file( bool verbose ) {
                                           ndx+1, trimmed);
                   g_ptr_array_add(causes, cause);
                }
+               free(key);
+               free(value);
                continue;
             }
 
@@ -214,6 +214,8 @@ load_configuration_file( bool verbose ) {
          }
       } // process the lines
    }  // config file exists
+   if (cur_segment)
+      free(cur_segment);
 
    // if (errs && verbose)
    //    errinfo_report(errs, 0);
