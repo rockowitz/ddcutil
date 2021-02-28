@@ -961,6 +961,7 @@ void each_i2c_device_new(const char * dirname, const char * fn, void * accumulat
    }
 }
 
+
 // *** Detail for /sys/class/drm (initial version) ***
 
 void each_drm_device(const char * dirname, const char * fn, void * accumulator, int depth) {
@@ -973,7 +974,6 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
    char * real_cardX_dir = realpath(drm_cardX_dir, NULL);
    rpt_vstring(depth, "Examining %s -> %s", drm_cardX_dir, real_cardX_dir);
 
-   DBGMSF(debug, "Wolf 11");
    // e.g. /sys/class/drm/card0-DP-1
    RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc");
    RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "device");
@@ -989,7 +989,6 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
    // messages subdirectories of card0/DP-1
    // e.g. /sys/class/drm/card0-DP-1/drm_dp_aux0
    //      does not exist for non-DP
-   DBGMSF(debug, "Wolf 12");
    if (drm_dp_aux_subdir) {
       rpt_nl();
       RPT2_ATTR_TEXT(         d1, NULL, drm_cardX_dir, drm_dp_aux_subdir, "dev");
@@ -1002,8 +1001,6 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
    // e.g. /sys/class/drm/card0-DP-1/i2c-13
    // does not exist for non-DP
 
-
-   DBGMSF(debug, "Wolf 13");
    if (i2cN_subdir) {
       rpt_nl();
       RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir, "device");
@@ -1023,6 +1020,7 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
       free(i2cN_subdir);
    }
 
+   free(drm_cardX_dir);
    free(real_cardX_dir);
 }
 
