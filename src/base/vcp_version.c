@@ -3,15 +3,17 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <file/file.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
+#include <bsd/string.h>
 /** \endcond */
 
 #include "util/data_structures.h"
@@ -165,7 +167,7 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    char * private_buffer = get_thread_fixed_buffer(&format_vspec_key, 20);
 
    if ( vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED) )
-      g_strlcpy(private_buffer,  "Unqueried", 20);  // g_strlcpy() to quiet coverity
+      STRLCPY(private_buffer,  "Unqueried", 20);  // g_strlcpy() to quiet coverity
    else if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) )
       strcpy(private_buffer,  "Unknown");     // will coverity flag this?
    else
