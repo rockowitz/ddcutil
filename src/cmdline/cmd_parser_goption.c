@@ -114,9 +114,9 @@ stats_arg_func(const    gchar* option_name,
  * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
  *          NULL if execution should be terminated
  */
-Parsed_Cmd * parse_command(int argc, char * argv[]) {
+Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    bool debug = false;
-   DBGMSF(debug, "Starting" );
+   DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
    validate_cmdinfo();   // assertions
 
    if (debug) {
@@ -191,44 +191,51 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
 
-   GOptionEntry option_entries[] = {
+   GOptionEntry ddcutil_only_options[] = {
+         //  Monitor selection options
+         {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
+         {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
+         {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
+         {"hiddev", '\0',  0, G_OPTION_ARG_INT,      &hidwork,          "hiddev device number",        "number" },
+         {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers",  "busnum.devicenum"},
+         {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",   "mfg_id"},
+         {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
+         {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
+         {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+
+         // Feature selection filters
+         {"show-unsupported",
+                     'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
+         {"notable", '\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
+         {"no-table",'\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
+         {"show-table",'\0',G_OPTION_FLAG_REVERSE,
+                              G_OPTION_ARG_NONE,     &notable_flag,     "Report table type feature codes",  NULL},
+         {"rw",      '\0', 0, G_OPTION_ARG_NONE,     &rw_only_flag,     "Include only RW features",         NULL},
+         {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
+         {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
+
+         // Output control
+         {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
+         {"terse",   't',  G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+         {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
+         {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+         {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG,
+                              G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+  // Program information
+                              {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
+      {NULL},
+   };
+
+
+   GOptionEntry common_options[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
 
-      //  Monitor selection options
-      {"display", 'd',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
-      {"dis",    '\0',  0, G_OPTION_ARG_INT,      &dispwork,         "Display number",              "number"},
-      {"bus",     'b',  0, G_OPTION_ARG_INT,      &buswork,          "I2C bus number",              "busnum" },
-      {"hiddev", '\0',  0, G_OPTION_ARG_INT,      &hidwork,          "hiddev device number",        "number" },
-      {"usb",     'u',  0, G_OPTION_ARG_STRING,   &usbwork,          "USB bus and device numbers",  "busnum.devicenum"},
-      {"mfg",     'g',  0, G_OPTION_ARG_STRING,   &mfg_id_work,      "Monitor manufacturer code",   "mfg_id"},
-      {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
-      {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
-      {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
 
-      // Feature selection filters
-      {"show-unsupported",
-                  'U',  0, G_OPTION_ARG_NONE,     &show_unsupported_flag, "Report unsupported features", NULL},
-      {"notable", '\0', G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
-      {"no-table",'\0', 0, G_OPTION_ARG_NONE,     &notable_flag,     "Exclude table type feature codes",  NULL},
-      {"show-table",'\0',G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &notable_flag,     "Report table type feature codes",  NULL},
-      {"rw",      '\0', 0, G_OPTION_ARG_NONE,     &rw_only_flag,     "Include only RW features",         NULL},
-      {"ro",      '\0', 0, G_OPTION_ARG_NONE,     &ro_only_flag,     "Include only RO features",         NULL},
-      {"wo",      '\0', 0, G_OPTION_ARG_NONE,     &wo_only_flag,     "Include only WO features",         NULL},
-
-
-      // Output control
-      {"verbose", 'v',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extended detail",             NULL},
-      {"terse",   't',  G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-      {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-      {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
-      {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG,
-                           G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
 
       // Diagnostic output
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
@@ -309,9 +316,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
 
-      // Program information
-      {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
-
 
       // Generic options to aid development
       {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work,         "special", "non-negative number" },
@@ -327,10 +331,18 @@ Parsed_Cmd * parse_command(int argc, char * argv[]) {
       { NULL }
    };
 
+   GOptionGroup * all_options = g_option_group_new(
+         "group name", "group description", "help description", NULL, NULL);
+   if (parser_mode == MODE_DDCUTIL) {
+      g_option_group_add_entries(all_options, ddcutil_only_options);
+   }
+   g_option_group_add_entries(all_options, common_options);
+
+
    GError* error = NULL;
    GOptionContext* context = g_option_context_new("- DDC query and manipulation");
-   g_option_context_add_main_entries(context, option_entries, NULL);
-   // g_option_context_add_group(context,  gtk_get_option_group(TRUE));
+   // g_option_context_add_main_entries(context, option_entries, NULL);
+   g_option_context_set_main_group(context, all_options); ;
 
    // comma delimited list of trace identifiers:
    // char * trace_group_string = strjoin(trace_group_names, trace_group_ct, ", ");
