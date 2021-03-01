@@ -896,53 +896,6 @@ execute_cmd_with_optional_display_handle(
 //
 // Configuration file
 //
-#ifdef OLD
-char * read_configuration_file() {
-   bool debug = true;
-   char * result = NULL;
-   char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
-   if (config_fn) {
-      GPtrArray * config_lines = g_ptr_array_new_with_free_func(free);
-      Error_Info * errs = file_getlines_errinfo(config_fn, config_lines);
-      if (errs) {
-         fprintf(stderr, "Error reading configuration file %s: %s",
-                         config_fn,
-                         errinfo_summary(errs));
-      }
-      else {
-         for (int ndx = 0; ndx < config_lines->len; ndx++) {
-            char * line = g_ptr_array_index(config_lines, ndx);
-            char * p = line;
-            while(p && *p == ' ') p++;
-            if ( !*p || *p == '*' || *p == '#')
-               g_ptr_array_remove_index(config_lines, ndx);
-         }
-         result = join_string_g_ptr_array(config_lines, " ");
-         g_ptr_array_free(config_lines, true);
-         if (result && strlen(result) == 0) {
-            free(result);
-            result = NULL;
-         }
-      }
-   }
-   DBGMSF(debug, "Returning: %s", result);
-   return result;
-}
-#endif
-
-
-#ifdef NOT_HERE
-   rpt_nl();
-   Error_Info * errs = load_configuration_file(/*verbose=*/false);
-   if (errs) {
-      // rpt_vstring(0,"Error(s) reading configuration file");
-      errinfo_report_details(errs, 0);
-      errinfo_free(errs);
-   }
-   rpt_nl();
-   dbgrpt_ini_hash(0);
-   rpt_nl();
-#endif
 
 
 int apply_config_file(
@@ -1004,8 +957,8 @@ main(int argc, char *argv[]) {
    init_base_services();  // so tracing related modules are initialized
 
    char ** new_argv = NULL;
-   char *  combined_default_options = NULL;
-   int new_argc = apply_config_file(argc, argv, &new_argv, &combined_default_options);
+   char *  combined_config_file_options = NULL;
+   int new_argc = apply_config_file(argc, argv, &new_argv, &combined_config_file_options);
    if (new_argc < 0)
       goto bye;
 
@@ -1028,8 +981,8 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   bool ok = master_initializer(parsed_cmd, combined_default_options);
-   free(combined_default_options);
+   bool ok = master_initializer(parsed_cmd, combined_config_file_options);
+   free(combined_config_file_options);
    if (!ok)
       goto bye;
 
