@@ -260,7 +260,7 @@ report_gamma_capabilities(
    }
    else if (gamma_mode == gspecific_presets) {
       // process specific_gammas
-      char buf[300] = "\0";
+      char * buf = strdup("");
       char bgamma[10];
       char * sgamma = NULL;
       for (int ndx = 0; ndx < specific_gamma_ct; ndx++) {
@@ -275,9 +275,12 @@ report_gamma_capabilities(
          g_snprintf(buf2, 100, "%s %s (0x%02x)",
                                (ndx > 0) ? "," : "",
                                sgamma, raw_gamma);
-         STRLCAT(buf, buf2, 300);
+         char * bufold = buf;
+         buf = g_strdup_printf("%s%s", bufold, buf2);
+         free(bufold);
       }
       rpt_vstring(d0, "Specific presets: %s", buf);
+      free(buf);
    }   // g_specific_presets
 
 bye:
