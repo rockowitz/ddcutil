@@ -43,6 +43,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/ddcutil_config_file.h"
 #include "base/displays.h"
 #include "base/dynamic_sleep.h"
 #include "base/linux_errno.h"
@@ -54,6 +55,8 @@
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
+
+#include "ddc/common_init.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
@@ -153,6 +156,8 @@ report_all_options(Parsed_Cmd * parsed_cmd, int depth)
 {
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_build_options(depth);
+
+
 
     show_reporting();  // uses fout()
 
@@ -261,45 +266,6 @@ validate_environment()
 }
 
 
-static void
-init_tracing(Parsed_Cmd * parsed_cmd)
-{
-   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
-       dbgtrc_show_time = true;                           // extern in core.h
-    if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
-       dbgtrc_show_thread_id = true;                      // extern in core.h
-    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
-    set_trace_levels(parsed_cmd->traced_groups);
-    if (parsed_cmd->traced_functions) {
-       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
-          add_traced_function(parsed_cmd->traced_functions[ndx]);
-    }
-    if (parsed_cmd->traced_files) {
-       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
-          add_traced_file(parsed_cmd->traced_files[ndx]);
-    }
-}
-
-bool init_failsim(Parsed_Cmd * parsed_cmd) {
-#ifdef ENABLE_FAILSIM
-   fsim_set_name_to_number_funcs(
-         status_name_to_modulated_number,
-         status_name_to_unmodulated_number);
-   if (parsed_cmd->failsim_control_fn) {
-      bool ok = fsim_load_control_file(parsed_cmd->failsim_control_fn);
-      if (!ok) {
-         fprintf(stderr, "Error loading failure simulation control file %s.\n",
-                         parsed_cmd->failsim_control_fn);
-         return false;
-
-      }
-      fsim_report_error_table(0);
-   }
-#endif
-   return true;
-}
-
-
 bool init_utility_options(Parsed_Cmd* parsed_cmd)
 {
    if (parsed_cmd->flags & CMD_FLAG_F1) {
@@ -325,71 +291,6 @@ bool init_utility_options(Parsed_Cmd* parsed_cmd)
 }
 
 
-void init_max_tries(Parsed_Cmd * parsed_cmd)
-{
-   // n. MAX_MAX_TRIES checked during command line parsing
-   if (parsed_cmd->max_tries[0] > 0) {
-      // ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
-      // try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);
-      try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);  // resets highest, lowest
-
-      // redundant
-      trd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
-      trd_set_initial_thread_max_tries(0, parsed_cmd->max_tries[0]);
-   }
-
-   if (parsed_cmd->max_tries[1] > 0) {
-      // ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
-      // try_data_set_maxtries2(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
-      try_data_init_retry_type(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
-
-      trd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
-      trd_set_initial_thread_max_tries(1, parsed_cmd->max_tries[1]);
-   }
-
-   if (parsed_cmd->max_tries[2] > 0) {
-      // ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
-      // ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
-      // try_data_set_maxtries2(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
-      // try_data_set_maxtries2(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
-      try_data_init_retry_type(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
-      try_data_init_retry_type(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
-
-      trd_set_default_max_tries(2, parsed_cmd->max_tries[2]);
-      trd_set_initial_thread_max_tries(2, parsed_cmd->max_tries[2]);
-      // impedance match
-      trd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
-      trd_set_initial_thread_max_tries(3, parsed_cmd->max_tries[2]);
-   }
-}
-
-
-void init_performance_options(Parsed_Cmd * parsed_cmd)
-{
-   enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
-   enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
-
-   int threshold = DISPLAY_CHECK_ASYNC_NEVER;
-   if (parsed_cmd->flags & CMD_FLAG_ASYNC) {
-      threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
-      ddc_set_async_threshold(threshold);
-   }
-
-   if (parsed_cmd->sleep_multiplier != 0 && parsed_cmd->sleep_multiplier != 1) {
-      tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
-      tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
-      if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
-      {
-         tsd_dsa_enable_globally(true);
-      }
-   }
-
-   // experimental timeout of i2c read()
-   if (parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
-      set_i2c_fileio_use_timeout(true);
-   }
-}
-
 
 /** Master initialization function
  *
@@ -399,6 +300,8 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
 static bool
 master_initializer(Parsed_Cmd * parsed_cmd, char * default_options) {
    bool ok = false;
+
+submaster_initializer(parsed_cmd);
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
@@ -410,42 +313,12 @@ master_initializer(Parsed_Cmd * parsed_cmd, char * default_options) {
    }
 #endif
 
-    if (!init_failsim(parsed_cmd))
-       goto bye;      // main_rc == EXIT_FAILURE
-
-    // global variable in dyn_dynamic_features:
-    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-
-    if (parsed_cmd->edid_read_size >= 0)
-       EDID_Read_Size           = parsed_cmd->edid_read_size;
-
 #ifdef ENABLE_ENVCMDS
     init_sysenv();
 #endif
 
-    init_ddc_services();   // n. initializes start timestamp
-    // overrides setting in init_ddc_services():
-    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-
-    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
-
     if (!init_utility_options(parsed_cmd))
        goto bye;
-
-    set_output_level(parsed_cmd->output_level);
-    enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
-    // TMI:
-    // if (show_recoverable_errors)
-    //    parsed_cmd->stats = true;
-
-    init_max_tries(parsed_cmd);
-
- #ifdef USE_USB
-       DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
-       assert (rc == DDCRC_OK);
- #endif
-
-    init_performance_options(parsed_cmd);
 
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
        show_ddcutil_version();
@@ -454,8 +327,6 @@ master_initializer(Parsed_Cmd * parsed_cmd, char * default_options) {
                  28, "Config file options:", default_options);
        report_all_options(parsed_cmd, 0);
     }
-
-    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
 
    ok = true;
 
@@ -1074,96 +945,43 @@ char * read_configuration_file() {
 #endif
 
 
-/** Tokenize a string as per the command line
- *
- *  \param  string to tokenize
- *  \param  tokens_loc where to return the address of a
- *                     null-terminate list of tokens
- *  \return number of tokens
- */
-int tokenize_init_line(char * string, char ***tokens_loc) {
+int apply_config_file(
+      int old_argc,
+      char ** old_argv,
+      char *** new_argv_loc,
+      char** default_options_loc)
+{
    bool debug = false;
-   wordexp_t p;
-   int flags = WRDE_NOCMD;
-   if (debug)
-      flags |= WRDE_SHOWERR;
-   wordexp(string, &p, flags);
-   *tokens_loc = p.we_wordv;
-   if (debug) {
-      ntsa_show(p.we_wordv);
-      DBGMSG("Returning: %d", p.we_wordc);
-   }
-   return p.we_wordc;
-}
+   char **prefix_tokens = NULL;
+   char * default_options = NULL;
 
+   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, &default_options);
 
-/** Combines the options from a configuration with the command line arguments,
- *  returning a new list of tokens.
- *
- *  \param  old_argc  argc as passed on the command line
- *  \param  old argv  argv as passed on the command line
- *  \param  new_argv_loc  where to return the address of the combined token list
- *  \param  detault_options_loc  where to return string of options obtained from init file
- *  \return number of tokens in the combined list, -1 if errors
- *          reading the configuration file. n. it is not an error if the
- *          configuration file does not exist.  In that case 0 is returned.
- */
-int apply_config_file(int old_argc, char ** old_argv, char *** new_argv_loc, char** default_options_loc) {
-   bool debug = false;
-   // char * cmd_prefix = read_configuration_file();
-   int new_argc = 0;
-   Error_Info * errs = load_configuration_file(false);
-   if (errs) {
-      if (errs->status_code == DDCRC_NOT_FOUND) {
-         new_argc = 0;
+   *new_argv_loc = old_argv;
+   int new_argc = old_argc;
+   if (prefix_token_ct > 0) {
+      int new_ct = prefix_token_ct + old_argc + 1;
+      DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
+      char ** combined = calloc(new_ct, sizeof(char *));
+      combined[0] = old_argv[0];
+      int new_ndx = 1;
+      for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
+         combined[new_ndx] = prefix_tokens[prefix_ndx];
       }
-      else {
-         // rpt_vstring(0,"Error(s) reading configuration file");
-         errinfo_report_details(errs, 0);
-         new_argc = -1;
+      for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
+         combined[new_ndx] = old_argv[old_ndx];
       }
-      errinfo_free(errs);
+      combined[new_ndx] = NULL;
+      DBGMSF(debug, "Final new_ndx = %d", new_ndx);
+      *new_argv_loc = combined;
+      new_argc = ntsa_length(combined);
    }
-   else {
-      // dbgrpt_ini_hash(0);
-      char * global_options  = get_config_value("global",  "options");
-      char * ddcutil_options = get_config_value("ddcutil", "options");
-
-      char * cmd_prefix = g_strdup_printf("%s %s",
-                                   (global_options) ? global_options : "",
-                                   (ddcutil_options) ? ddcutil_options : "");
-      DBGMSF(debug, "cmd_prefix= |%s|", cmd_prefix);
-      *default_options_loc = cmd_prefix;
-      char ** prefix_tokens = NULL;
-      int prefix_token_ct = 0;
-      if (cmd_prefix) {
-         prefix_token_ct = tokenize_init_line(cmd_prefix, &prefix_tokens);
-      }
-      *new_argv_loc = old_argv;
-      new_argc = old_argc;
-      if (prefix_token_ct > 0) {
-         int new_ct = prefix_token_ct + old_argc + 1;
-         DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
-         char ** combined = calloc(new_ct, sizeof(char *));
-         combined[0] = old_argv[0];
-         int new_ndx = 1;
-         for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
-            combined[new_ndx] = prefix_tokens[prefix_ndx];
-         }
-         for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
-            combined[new_ndx] = old_argv[old_ndx];
-         }
-         combined[new_ndx] = NULL;
-         DBGMSF(debug, "Final new_ndx = %d", new_ndx);
-         *new_argv_loc = combined;
-         new_argc = ntsa_length(combined);
-      }
-      ntsa_free(prefix_tokens, /* free strings */ false);
-   }
+   ntsa_free(prefix_tokens, /* free strings */ false);
 
    DBGMSF(debug, "Returning: %d", new_argc);
    return new_argc;
 }
+
 
 
 //
@@ -1195,7 +1013,7 @@ main(int argc, char *argv[]) {
    // DBGMSG("new_argc = %d", new_argc);
    // ntsa_show(new_argv);
 
-   parsed_cmd = parse_command(new_argc, new_argv);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }

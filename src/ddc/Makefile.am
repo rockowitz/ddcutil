@@ -24,6 +24,7 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libddc.la
 
 libddc_la_SOURCES =         \
+common_init.c               \
 ddc_async.c                 \
 ddc_displays.c              \
 ddc_display_lock.c          \
