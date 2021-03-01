@@ -5,19 +5,21 @@
 
 
 #include <assert.h>
+#include <ctype.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <glib-2.0/glib.h>
 
 #include "public/ddcutil_status_codes.h"
 
-#include "util/xdg_util.h"
 #include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/xdg_util.h"
 
 #include "base/core.h"
+
 #include "base/config_file.h"
 
 
@@ -40,7 +42,6 @@ bool is_comment(char * s) {
    return result;
 }
 
-
 static
 bool is_segment(char * s, char ** seg_name_loc) {
    bool debug = false;
@@ -49,6 +50,7 @@ bool is_segment(char * s, char ** seg_name_loc) {
       char * untrimmed = substr(s, 1, strlen(s)-2);
       DBGMSF(debug, "untrimmed=|%s|", untrimmed);
       char * seg_name = strtrim(untrimmed);
+      for (char * p = seg_name; *p; p++) {*p = tolower(*p);}
       DBGMSF(debug, "seg_name=|%s|", seg_name);
       if (strlen(seg_name) > 0) {
          *seg_name_loc = seg_name;
@@ -62,7 +64,6 @@ bool is_segment(char * s, char ** seg_name_loc) {
    return result;
 }
 
-
 static
 bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    bool debug = false;
@@ -72,17 +73,17 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    if (colon) {
       char * untrimmed_key = substr(s, 0, colon-s);
       char * key = strtrim( untrimmed_key );
+      for (char *p = key; *p; p++) {*p=tolower(*p);}
       DBGMSF(debug, "untrimmed_key = |%s|, key = |%s|", untrimmed_key, key);
       char * s_end = s + strlen(s);
       char * v_start = colon+1;
-      char * untrimed_value = substr(v_start, 0, s_end-v_start);
-
-      char * value = strtrim( untrimed_value)  ;
-      DBGMSF(debug, "untrimmed_value = |%s|, value = |%s|", untrimed_value, value);
+      char * untrimmed_value = substr(v_start, 0, s_end-v_start);
+      char * value = strtrim( untrimmed_value)  ;
+      DBGMSF(debug, "untrimmed_value = |%s|, value = |%s|", untrimmed_value, value);
       DBGMSF(debug, "key=|%s|, value=|%s|", key, value);
 
-      if (strlen(key) > 0 && strlen(value) > 0) {
-         *key_loc = key;
+      if (strlen(key) > 0) {
+         *key_loc   = key;
          *value_loc = value;
          result = true;
       }
@@ -91,7 +92,7 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
          free(value);
       }
       free(untrimmed_key);
-      free(untrimed_value);
+      free(untrimmed_value);
    }
    DBGMSF(debug, "s: |%s|, Returning %s", s, sbool(result));
    return result;

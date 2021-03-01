@@ -60,6 +60,7 @@ bool   str_ends_with(const char * value_to_test, const char * end_part);
 int    str_contains(const char * value_to_test, const char * segment);
 bool   str_all_printable(const char * s);
 char * strupper(char * s);
+char * strlower(char * s);
 char * strdup_uc(const char* s);
 char * strjoin( const char ** pieces, const int ct, const char * sepstr);
 char * chars_to_string(const char * start, int len);

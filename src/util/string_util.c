@@ -748,6 +748,23 @@ char * strupper(char * s) {
 }
 
 
+/** Converts an ASCII string to lower case.  The original string is converted in place.
+ *
+ * @param  s string to force to lower case
+ * @return converted string
+ */
+char * strlower(char * s) {
+   if (s) {     // check s not a null pointer
+      char * p = s;
+      while(*p) {
+         *p = tolower(*p);
+         p++;
+      }
+   }
+   return s;
+}
+
+
 /** Creates an upper case copy of an ASCII string
  *
  * @param  s  string to copy
