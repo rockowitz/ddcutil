@@ -69,7 +69,8 @@ int get_config_file(char * application, char *** tokens_loc, char** default_opti
       errinfo_free(errs);
    }
    else {
-      // dbgrpt_ini_hash(0);
+      if (debug)
+         dbgrpt_ini_hash(0);
       char * global_options  = get_config_value("global",  "options");
       char * ddcutil_options = get_config_value(application, "options");
 
