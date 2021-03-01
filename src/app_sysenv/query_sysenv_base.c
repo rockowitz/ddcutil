@@ -135,14 +135,10 @@ void sysenv_rpt_file_first_line(const char * fn, const char * title, int depth) 
  */
 bool sysenv_show_one_file(const char * dir_name, const char * simple_fn, bool verbose, int depth) {
    bool result = false;
-   char fqfn[PATH_MAX];
-   // strcpy(fqfn,dir_name);
-   strncpy(fqfn, dir_name, PATH_MAX);
-   fqfn[PATH_MAX-1] = '\0';
-   if (!str_ends_with(dir_name, "/"))
-      strcat(fqfn,"/");
-   assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
-   strncat(fqfn,simple_fn, sizeof(fqfn)-(strlen(fqfn)+1));  // use strncat to make Coverity happy
+   char * fqfn = g_strdup_printf("%s%s%s",
+                                 dir_name,
+                                 (str_ends_with(dir_name, "/")) ? "" : "/",
+                                 simple_fn);
    if (regular_file_exists(fqfn)) {
       rpt_vstring(depth, "%s:", fqfn);
       rpt_file_contents(fqfn, /*verbose=*/true, depth+1);
@@ -150,6 +146,7 @@ bool sysenv_show_one_file(const char * dir_name, const char * simple_fn, bool ve
    }
    else if (verbose)
       rpt_vstring(depth, "File not found: %s", fqfn);
+   free(fqfn);
    return result;
 }
 
