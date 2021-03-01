@@ -946,17 +946,15 @@ char * read_configuration_file() {
 
 
 int apply_config_file(
-      int old_argc,
-      char ** old_argv,
+      int      old_argc,
+      char **  old_argv,
       char *** new_argv_loc,
-      char** default_options_loc)
+      char**   default_options_loc)
 {
    bool debug = false;
    char **prefix_tokens = NULL;
-   char * default_options = NULL;
 
-   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, &default_options);
-   *default_options_loc = default_options;
+   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, default_options_loc);
 
    *new_argv_loc = old_argv;
    int new_argc = old_argc;
@@ -1030,7 +1028,9 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   if (!master_initializer(parsed_cmd, combined_default_options))
+   bool ok = master_initializer(parsed_cmd, combined_default_options);
+   free(combined_default_options);
+   if (!ok)
       goto bye;
 
    // xdg_tests(); // for development
