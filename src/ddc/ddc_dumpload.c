@@ -180,7 +180,7 @@ create_dumpload_data_from_g_ptr_array(
                STRLCPY(data->edidstr, s1, sizeof(data->edidstr));
             }
             else if (streq(s0, "MFG_ID")) {
-               STRLCPY(data->mfg_id, s1, sizeof(data->mfg_id));
+               memcpy(data->mfg_id, s1, sizeof(data->mfg_id));
             }
             else if (streq(s0, "MODEL")) {
                STRLCPY(data->model, rest, sizeof(data->model));
