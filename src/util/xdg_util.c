@@ -290,7 +290,8 @@ static char * find_xdg_path_file(
    Iter_State iter_state;
    char * next_dir = NULL;
    char * fqfn = NULL;
-   xdg_dirs_iter_init(strdup(path), &iter_state);
+   char *path2 = strdup(path);
+   xdg_dirs_iter_init(path2, &iter_state);
    while ( !fqfn && (next_dir = xdg_dirs_iter_next(&iter_state)) ) {
       int lastndx = strlen(next_dir) - 1;
       if (next_dir[lastndx] == '/')
@@ -306,6 +307,7 @@ static char * find_xdg_path_file(
       free(fqfn);
       fqfn = NULL;
    }
+   free(path2);
    if (debug)
       printf("(%s) Done. Returning: %s\n", __func__, fqfn);
    return fqfn;
