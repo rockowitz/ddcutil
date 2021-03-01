@@ -36,7 +36,7 @@ monitor_model_key_value(
    DDCA_Monitor_Model_Key  result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    (void) g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
-   STRLCPY2(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
+   STRLCPY(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
    result.product_code = product_code;
    result.defined = true;
    return result;
