@@ -956,6 +956,7 @@ int apply_config_file(
    char * default_options = NULL;
 
    int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, &default_options);
+   *default_options_loc = default_options;
 
    *new_argv_loc = old_argv;
    int new_argc = old_argc;
