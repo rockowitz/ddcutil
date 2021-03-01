@@ -839,7 +839,7 @@ errinfo_summary(Error_Info * erec) {
    int required_size = strlen(buf1) + 1;
 
    char * buf = get_thread_dynamic_buffer(&esumm_key, &esumm_len_key, required_size);
-   STRLCPY(buf, buf1, required_size);
+   strcpy(buf, buf1);
    free(buf1);
    return buf;
 }
