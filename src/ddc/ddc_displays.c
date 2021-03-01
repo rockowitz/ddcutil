@@ -1147,7 +1147,7 @@ ddc_detect_all_displays() {
       }
    }
 
-   DBGMSG("-- check_phantom_displays=%s", sbool(check_phantom_displays));
+   DBGTRC(debug, TRACE_GROUP, "-- check_phantom_displays=%s", sbool(check_phantom_displays));
    if (check_phantom_displays)      // for testing
       filter_phantom_displays(display_list);
 
