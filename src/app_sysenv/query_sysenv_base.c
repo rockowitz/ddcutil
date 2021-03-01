@@ -137,7 +137,8 @@ bool sysenv_show_one_file(const char * dir_name, const char * simple_fn, bool ve
    bool result = false;
    char fqfn[PATH_MAX];
    // strcpy(fqfn,dir_name);
-   STRLCPY(fqfn, dir_name, PATH_MAX);  // make coverity happy
+   strncpy(fqfn, dir_name, PATH_MAX);
+   fqfn[PATH_MAX-1] = '\0';
    if (!str_ends_with(dir_name, "/"))
       strcat(fqfn,"/");
    assert(strlen(fqfn) + strlen(simple_fn) <= PATH_MAX);   // for Coverity
