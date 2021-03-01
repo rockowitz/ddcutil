@@ -126,15 +126,17 @@ ddca_build_options(void) {
 Parsed_Cmd * apply_config_file() {
    bool debug = true;
    DBGMSF(debug, "Starting");
-   char ** tokens;
-   char * unparsed_options;
+   char ** tokens = NULL;
+   char * unparsed_options = NULL;
    int token_ct = get_config_file("libddcutil", &tokens, &unparsed_options);
+   free(unparsed_options);
    Parsed_Cmd * parsed_cmd = parse_command(token_ct, tokens, MODE_LIBDDCUTIL);
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
-
-   return parsed_cmd;
+   free(tokens);
    DBGMSF(debug, "Done");
+   return parsed_cmd;
+
 
 }
 
