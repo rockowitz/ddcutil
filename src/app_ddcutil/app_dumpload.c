@@ -114,10 +114,8 @@ Status_Errno_DDC
 dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, fn=%s", dh_repr_t(dh), filename);
-   char fn[PATH_MAX+1] = {0};
-   if (filename)
-      STRLCPY(fn, filename, PATH_MAX+1);
+   DBGMSF(debug, "Starting. dh=%s, filename=%s", dh_repr_t(dh), filename);
+   char * actual_filename = NULL;
 
    FILE * fout = stdout;
    FILE * ferr = stderr;
@@ -135,6 +133,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
             ddcrc = -errno;
             f0printf(ferr, "Unable to open %s for writing: %s\n", filename, strerror(errno));
          }
+         actual_filename = strdup(filename);
       }
       else {
          char simple_fn_buf[NAME_MAX+1];
@@ -148,14 +147,14 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
          struct passwd * pw = getpwuid(getuid());
          const char * homedir = pw->pw_dir;
 
-         snprintf(fn, PATH_MAX, "%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
-         // DBGMSG("fn=%s   ", fqfn );
+         char * actual_filename = g_strdup_printf("%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
+         // DBGMSG("actual_filename=%s   ", fqfn );
          // control with MsgLevel?
-         f0printf(fout, "Writing file: %s\n", fn);
-         ddcrc = fopen_mkdir(fn, "w+", ferr, &output_fp);
+         f0printf(fout, "Writing file: %s\n", actual_filename);
+         ddcrc = fopen_mkdir(actual_filename, "w+", ferr, &output_fp);
          ASSERT_IFF(output_fp, ddcrc == 0);
          if (ddcrc != 0) {
-            f0printf(ferr, "Unable to create '%s', %s\n", fn, strerror(-ddcrc));
+            f0printf(ferr, "Unable to create '%s', %s\n", actual_filename, strerror(-ddcrc));
          }
       }
       free_dumpload_data(data);
@@ -171,11 +170,12 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
       }
       else {
          int errsv = errno;
-         f0printf(ferr, "Unable to open %s for writing: %s\n", fn, strerror(errno));
+         f0printf(ferr, "Unable to open %s for writing: %s\n", actual_filename, strerror(errno));
          ddcrc = -errsv;
       }
 
       g_ptr_array_free(strings, true);
+      free(actual_filename);
    }
    return ddcrc;
 }
