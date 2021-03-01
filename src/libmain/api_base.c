@@ -17,11 +17,15 @@
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
+#include "base/ddcutil_config_file.h"
 #include "base/parms.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
 #include "base/per_thread_data.h"
+
+#include "cmdline/cmd_parser.h"
+#include "cmdline/parsed_cmd.h"
 
 // #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
@@ -32,6 +36,8 @@
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
+
+#include "ddc/common_init.h"
 
 #include "libmain/api_base_internal.h"
 
@@ -117,6 +123,21 @@ ddca_build_options(void) {
 // Initialization
 //
 
+Parsed_Cmd * apply_config_file() {
+   bool debug = true;
+   DBGMSF(debug, "Starting");
+   char ** tokens;
+   char * unparsed_options;
+   int token_ct = get_config_file("libddcutil", &tokens, &unparsed_options);
+   Parsed_Cmd * parsed_cmd = parse_command(token_ct, tokens, MODE_LIBDDCUTIL);
+   if (debug)
+      dbgrpt_parsed_cmd(parsed_cmd, 1);
+
+   return parsed_cmd;
+   DBGMSF(debug, "Done");
+
+}
+
 bool library_initialized = false;
 
 /** Initializes the ddcutil library module.
@@ -132,12 +153,14 @@ _ddca_init(void) {
    bool debug = false;
    if (!library_initialized) {
       init_base_services();
-      init_ddc_services();
+      Parsed_Cmd* parsed_cmd = apply_config_file();
+      submaster_initializer(parsed_cmd);
+      // init_ddc_services();
 
-      // hard code the threshold for now
-      int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
-      // int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
-      ddc_set_async_threshold(threshold);
+     //  // hard code the threshold for now
+     //  int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
+     //  // int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
+     //  ddc_set_async_threshold(threshold);
 
       // no longer needed, values are initialized on first use per-thread
       // set_output_level(DDCA_OL_NORMAL);
