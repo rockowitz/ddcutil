@@ -107,13 +107,14 @@ char * get_config_file_name() {
 }
 
 char * get_config_value(char * segment, char * id) {
+   bool debug = false;
    assert(segment);
    assert(id);
-   bool debug = false;
    char * result = NULL;
    if (ini_file_hash) {
-      char * full_key = g_strdup_printf("%s/%s", segment, id);
+      char * full_key = strlower(g_strdup_printf("%s/%s", segment, id));
       result = g_hash_table_lookup(ini_file_hash, full_key);
+      free(full_key);
    }
    DBGMSF(debug, "segment=%s, id=%s, returning: %s", segment, id, result);
    return result;
