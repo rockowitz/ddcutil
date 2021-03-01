@@ -215,7 +215,7 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
-   STRLCPY(buffer, fn_segment, bufsz);
+   (void) g_strlcpy(buffer, fn_segment, bufsz);
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
