@@ -27,22 +27,17 @@ typedef unsigned char Byte;
 
 // Workaround for coverity complaints re g_strlcpy(), g_strlcat()
 
-#define STRLCPY0(_dst, _src, _size) \
-   do \
-{ size_t ct = g_strlcpy(_dst, _src, _size); assert(ct < _size);} \
-   while(0)
+#define STRLCPY(_dst, _src, _size) \
+do { \
+   assert(sizeof(_dst) >= 1); \
+   strncpy(_dst, _src, _size); _dst[sizeof(_dst)-1] = '\0'; \
+} while(0)
 
-#define STRLCPY9(_dst, _src, _size) \
-   do { \
-         size_t maxcpy = ( sizeof(_dst) < _size ) ? sizeof(_dst) : _size; \
-         size_t ndx = 0;                                                   \
-         for ( ; ndx < maxcpy-1 && _src[ndx]; ndx++) {                     \
-            _dst[ndx] =  _src[ndx];                                        \
-         };                                                                \
-         _dst[ndx] = '\0';                                                  \
-   } while(0)
+#define STRLCAT(_dst, _src, _size) \
+   /* coverity[index_parm] */ (void) g_strlcat(_dst, _src, _size)
 
 
+#ifdef ALTERNATIVES
 #define STRLCPY11(_dst, _src, _size)  \
    do {                             \
      assert(sizeof(_dst) >= _size); \
@@ -55,43 +50,9 @@ typedef unsigned char Byte;
    /* coverity[OVERRUN, index_parm, overrun-call, access_debuf_const,CHECKED_RETURN] */ \
    (void) g_strlcpy(_dst, _src, _size)
 
-// works
-#define STRLCPY2(_dst, _src, _size)   (void) g_strlcpy(_dst, _src, _size)
-// works
-#define STRLCPY3(_dst, _src, _size)  /* coverity[OVERRUN] */  (void) g_strlcpy(_dst, _src, _size)
-//works
-#define STRLCPY4(_dst, _src, _size)  /* coverity[overrun-buffer-val] */  (void) g_strlcpy(_dst, _src, _size)
-// works
-#define STRLCPY5(_dst, _src, _size)  /* coverity[access_debuf_const] */  (void) g_strlcpy(_dst, _src, _size)
-// fails:
-#define STRLCPY6(_dst, _src, _size)  /* coverity[OVERRUN] */ /* coverity[CHECKED_RETURN] */ g_strlcpy(_dst, _src, _size)
-// seems to work:
-#define STRLCPY7(_dst, _src, _size)  /* coverity[OVERRUN, CHECKED_RETURN] */  g_strlcpy(_dst, _src, _size)
 
-
-#ifdef REF
- *    /* coverity[OVERRUN] */ (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
-   /* coverity[overrun-buffer-val] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
-   /* coverity[access_debuf_const] */ (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
- *
 #endif
 
-#ifdef NO
-#define STRLCAT(_dst, _src, _size) \
-   do \
-{ size_t ct = g_strlcat(_dst, _src, _size); assert(ct < _size);} \
-   while(0)
-#endif
-#define STRLCAT(_dst, _src, _size) \
-   /* coverity[index_parm] */ (void) g_strlcat(_dst, _src, _size)
-
-
-
-#define STRLCPY(_dst, _src, _size) \
-do { \
-   assert(sizeof(_dst) >= 1); \
-   strncpy(_dst, _src, _size); _dst[sizeof(_dst)-1] = '\0'; \
-} while(0)
 
 #ifdef TARGET_BSD
 #define I2C "iic"
