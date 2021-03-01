@@ -235,7 +235,8 @@ create_empty_ddc_packet(int max_size, const char * tag) {
    DDC_Packet * packet = malloc(sizeof(DDC_Packet));
    packet->raw_bytes = buffer_new(max_size, "empty DDC packet");
    if (tag) {
-      g_strlcpy(packet->tag, tag, MAX_DDC_TAG);  // no need to check if packet->tag truncated
+      strncpy(packet->tag, tag, sizeof(packet->tag));  // no need to check if packet->tag truncated
+      packet->tag[sizeof(packet->tag)-1] = '\0';
    }
    else
       packet->tag[0] = '\0';
