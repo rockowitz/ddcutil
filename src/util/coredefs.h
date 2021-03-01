@@ -83,7 +83,7 @@ typedef unsigned char Byte;
    while(0)
 #endif
 #define STRLCAT(_dst, _src, _size) \
-   /* coverity[index_parm] */ g_strlcat(_dst, _src, _size)
+   /* coverity[index_parm] */ (void) g_strlcat(_dst, _src, _size)
 
 
 
