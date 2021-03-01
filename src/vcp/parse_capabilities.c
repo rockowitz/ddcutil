@@ -549,6 +549,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    // n. Apple Cinema Display precedes segment name with blank
    char * trimmed_start = ltrim(start, len);
    int    trimmed_len   = len - (trimmed_start - start) ;
+   char * errmsg = NULL;
    // DBGMSG("trimmed_len=%ld, trimmed_start=%p -> |%.*s|",
    //        trimmed_len, trimmed_start, trimmed_len, trimmed_start);
    if (trimmed_len == 0) {
@@ -559,7 +560,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    }
    char * pos = trimmed_start;
 
-   char * errmsg = NULL;
+
 #define REQUIRE(_condition, _msg, _position)  \
    if (!(_condition)) { \
       g_ptr_array_add(messages, g_strdup_printf("%s at offset %jd", \
@@ -579,7 +580,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    errmsg = g_strdup_printf("Nothing follows segment name (2) %.*s",
                             segment->name_len, segment->name_start);
    REQUIRE( pos < end, errmsg, pos);
-   free(errmsg);
+   free(errmsg); errmsg = NULL;
 
    // assert(*pos == '(');
    DBGMSF(debug, "pos=%p, trimmed_start=%p", pos, trimmed_start);
@@ -590,7 +591,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    errmsg = g_strdup_printf("Missing parenthesized value for segment %.*s",
                                    segment->name_len, segment->name_start);
    REQUIRE(*pos == '(', errmsg, pos);
-   free(errmsg);
+   free(errmsg); errmsg = NULL;
 
    segment->value_start = pos+1;
    pos =find_closing_paren(pos, end);
@@ -598,7 +599,7 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    errmsg = g_strdup_printf("No closing parenthesis for segment %.*s",
                             segment->name_len, segment->name_start);
    REQUIRE(pos < end, errmsg, pos);
-   free(errmsg);
+   free(errmsg); errmsg=NULL;
 
    segment->value_len = pos - segment->value_start;
    REQUIRE(segment->value_len > 0, "zero length value", pos);
@@ -611,6 +612,8 @@ next_capabilities_segment(char * start, int len, GPtrArray* messages, char * cap
    // printf("remainder: |%.*s|\n", segment->remainder_len, segment->remainder_start);
 
 bye:
+   if (errmsg)
+      free(errmsg);
    DBGMSF(debug, "Returning: %p", segment);
    return segment;
 }
