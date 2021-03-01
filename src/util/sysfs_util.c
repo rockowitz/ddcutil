@@ -80,7 +80,7 @@ read_sysfs_attr_w_default_r(
    sprintf(fn, "%s/%s", dirname, attrname);
    char * result = file_get_first_line(fn, verbose);
    if (result) {
-      STRLCPY(buf, result, bufsz);
+      (void) g_strlcpy(buf, result, bufsz);   // (void) to avoid coverity warning re unused return value
       free(result);
    }
    else {
@@ -215,13 +215,16 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
-   (void) g_strlcpy(buffer, fn_segment, bufsz);
+   strncpy(buffer, fn_segment, bufsz);
+   buffer[bufsz-1] = '\0';
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
          break;
-      STRLCAT(buffer, "/", bufsz);
-      STRLCAT(buffer, segment, bufsz);
+      strncat(buffer, "/", bufsz);
+      buffer[bufsz-1] = '\0';
+      strncat(buffer, segment, bufsz);
+      buffer[bufsz-1] = '\0';
    }
    return buffer;
 }
