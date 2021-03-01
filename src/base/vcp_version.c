@@ -165,9 +165,9 @@ char * format_vspec(DDCA_MCCS_Version_Spec vspec) {
    char * private_buffer = get_thread_fixed_buffer(&format_vspec_key, 20);
 
    if ( vcp_version_eq(vspec, DDCA_VSPEC_UNQUERIED) )
-      STRLCPY(private_buffer,  "Unqueried", 20);  // g_strlcpy() to quiet coverity
+      strcpy(private_buffer,  "Unqueried");
    else if ( vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN) )
-      strcpy(private_buffer,  "Unknown");     // will coverity flag this?
+      strcpy(private_buffer,  "Unknown");
    else
       g_snprintf(private_buffer, 20, "%d.%d", vspec.major, vspec.minor);
    // DBGMSG("Returning: |%s|", private_buffer);
