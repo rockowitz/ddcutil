@@ -18,8 +18,6 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 
-// #include "file_util.h"
-#include "report_util.h"
 #include "xdg_util.h"
 
 
@@ -415,29 +413,29 @@ char * find_xdg_cache_file(
 
 
 void xdg_tests() {
-   rpt_vstring(1, "xdg_data_home_dir():   %s", xdg_data_home_dir() );
-   rpt_vstring(1, "xdg_data_config_dir(): %s", xdg_config_home_dir() );
-   rpt_vstring(1, "xdg_data_cache_dir():  %s", xdg_cache_home_dir() );
+   printf( "xdg_data_home_dir():   %s\n", xdg_data_home_dir() );
+   printf( "xdg_data_config_dir(): %s\n", xdg_config_home_dir() );
+   printf( "xdg_data_cache_dir():  %s\n", xdg_cache_home_dir() );
 
-   rpt_vstring(1, "xdg_data_dirs():       %s", xdg_data_dirs() );
-   rpt_vstring(1, "xdg_config_dirs():     %s", xdg_config_dirs() );
+   printf( "xdg_data_dirs():       %s\n", xdg_data_dirs() );
+   printf( "xdg_config_dirs():     %s\n", xdg_config_dirs() );
 
-   rpt_vstring(1, "xdg_data_path():       %s", xdg_data_path() );
-   rpt_vstring(1, "xdg_config_path():     %s", xdg_config_path() );
-   rpt_vstring(1, "xdg_cache_path():      %s", xdg_cache_path() );
+   printf( "xdg_data_path():       %s\n", xdg_data_path() );
+   printf( "xdg_config_path():     %s\n", xdg_config_path() );
+   printf( "xdg_cache_path():      %s\n", xdg_cache_path() );
 
-   rpt_vstring(1, "xdg_data_home_file(\"ddcutil\", \"something.mccs\"): %s",
+   printf( "xdg_data_home_file(\"ddcutil\", \"something.mccs\"): %s",
          xdg_data_home_file("ddcutil", "something.mccs"));
-   rpt_vstring(1, "xdg_config_home_file(\"ddcutil\", \"ddcutilrc\"   ): %s",
+   printf( "xdg_config_home_file(\"ddcutil\", \"ddcutilrc\"   ): %s",
          xdg_config_home_file("ddcutil", "ddcutilrc"));
-   rpt_vstring(1, "xdg_cache_home_file(\"ddcutil\", \"capabilities\" ): %s",
+   printf( "xdg_cache_home_file(\"ddcutil\", \"capabilities\" ): %s",
          xdg_cache_home_file("ddcutil", "capabilities"));
 
-   rpt_vstring(1, "find xdg_data_file(\"ddcutil\", \"something.mccs\"): %s",
+   printf( "find xdg_data_file(\"ddcutil\", \"something.mccs\"): %s",
          find_xdg_data_file("ddcutil", "something.mccs"));
-   rpt_vstring(1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\"):    %s",
+   printf( "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\"):    %s",
          find_xdg_config_file("ddcutil", "ddcutilrc"));
-   rpt_vstring(1, "find_xdg_cache_file(\"ddcutil\", \"capabilities\"):  %s",
+   printf( "find_xdg_cache_file(\"ddcutil\", \"capabilities\"):  %s",
          find_xdg_cache_file("ddcutil", "capabilities"));
 }
 
