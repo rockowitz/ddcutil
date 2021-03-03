@@ -1,11 +1,13 @@
 /** \file ddcutil_config_file.c
  *  Processes an INI file used for ddcutil options
+ *
+ *  This is not a generic utility file, but is included in
+ *  the util directory to simplify its copying unmodified into
+ *  the ddcui source tree.
  */
 
 // Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#include "../util/ddcutil_config_file.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -17,13 +19,16 @@
 #include "util/string_util.h"
 #include "util/xdg_util.h"
 
+#include "util/ddcutil_config_file.h"
 
 // *** TEMP ***
+#ifdef UNUSED
 static char * config_fn = NULL;
 
 char * get_config_file_name() {
    return config_fn;
 }
+#endif
 
 
 /** Tokenize a string as per the command line
