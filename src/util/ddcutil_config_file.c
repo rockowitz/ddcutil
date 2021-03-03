@@ -12,14 +12,14 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <wordexp.h>
 
-#include "util/config_file.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
-#include "util/xdg_util.h"
+#include "config_file.h"
+#include "string_util.h"
+#include "xdg_util.h"
 
-#include "util/ddcutil_config_file.h"
+#include "ddcutil_config_file.h"
 
 // *** TEMP ***
 #ifdef UNUSED
@@ -65,14 +65,14 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
  *          In that case 0 is returned..
  */
 int read_ddcutil_config_file(
-      char *   ddcutil_application,
+      const char *   ddcutil_application,
       char *** tokenized_options_loc,
       char**   untokenized_option_string_loc) {
    bool debug = true;
    int token_ct = 0;
    *tokenized_options_loc = NULL;
    *untokenized_option_string_loc = NULL;
-   config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+   char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    if (!config_fn) {
       if (debug)
          printf("(%s) Configuration file not found\n", __func__);
@@ -90,14 +90,14 @@ int read_ddcutil_config_file(
          token_ct = 0;
       }
       else {
-         f0printf(stderr, "Error loading configuration file: %d\n", load_rc);
+         fprintf(stderr, "Error loading configuration file: %d\n", load_rc);
          token_ct = load_rc;
       }
    }
    if (errmsgs->len > 0) {
-      f0printf(stderr, "Error(s) processing configuration file %s\n", config_fn);
+      fprintf(stderr, "Error(s) processing configuration file %s\n", config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         f0printf(stderr, "   %s\n", g_ptr_array_index(errmsgs, ndx));
+         fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
       }
       token_ct = -1;
    }
@@ -128,3 +128,92 @@ bye:
    return token_ct;
 
 }
+
+
+int merge_command_tokens(
+      int      old_argc,
+      char **  old_argv,
+      int      config_token_ct,
+      char **  config_tokens,
+      char *** new_argv_loc)
+{
+   bool debug = false;
+
+   // default, assume no config file parms
+   *new_argv_loc = old_argv;
+   int new_argc = old_argc;
+
+   if (config_token_ct > 0) {
+      int new_ct = config_token_ct + old_argc + 1;
+      if (debug)
+         printf("(%s) config_token_ct = %d, argc=%d, new_ct=%d\n",
+               __func__, config_token_ct, old_argc, new_ct);
+      char ** combined = calloc(new_ct, sizeof(char *));
+      combined[0] = old_argv[0];
+      int new_ndx = 1;
+      for (int prefix_ndx = 0; prefix_ndx < config_token_ct; prefix_ndx++, new_ndx++) {
+         combined[new_ndx] = config_tokens[prefix_ndx];
+      }
+      for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
+         combined[new_ndx] = old_argv[old_ndx];
+      }
+      combined[new_ndx] = NULL;
+      if (debug)
+         printf("(%s) Final new_ndx = %d", __func__, new_ndx);
+      *new_argv_loc = combined;
+      new_argc = ntsa_length(combined);
+   }
+   ntsa_free(config_tokens, /* free strings */ false);
+
+   if (debug)
+      printf("(%s) Returning %d\n", __func__, new_argc);
+   return new_argc;
+}
+
+
+
+/** Combines the options from the ddcutil configuration file with the command line arguments,
+ *  returning a new list of tokens.
+ *
+ *  \param  old_argc  argc as passed on the command line
+ *  \param  old argv  argv as passed on the command line
+ *  \param  new_argv_loc  where to return the address of the combined token list
+ *  \param  detault_options_loc  where to return string of options obtained from ini file
+ *  \return number of tokens in the combined list, -1 if errors
+ *          reading the configuration file. n. it is not an error if the
+ *          configuration file does not exist.  In that case 0 is returned.
+ */
+int full_arguments(
+      const char * ddcutil_application,     // "ddcutil", "ddcui"
+      int      old_argc,
+      char **  old_argv,
+      char *** new_argv_loc,
+      char**   default_options_loc)
+{
+   bool debug = false;
+   char **prefix_tokens = NULL;
+
+   *new_argv_loc = old_argv;
+   int new_argc = old_argc;
+
+   int prefix_token_ct = read_ddcutil_config_file(ddcutil_application, &prefix_tokens, default_options_loc);
+   if (debug)
+      printf("(%s) get_config_file() returned %d\n", __func__, prefix_token_ct);
+   if (prefix_token_ct < 0) {
+      new_argc = -1;
+   }
+   else if (prefix_token_ct > 0) {
+      new_argc =  merge_command_tokens(
+            old_argc,
+            old_argv,
+            prefix_token_ct,
+            prefix_tokens,
+            new_argv_loc);
+   }
+
+   if (debug)
+      printf("(%s) Returning: %d\n", __func__, new_argc);
+   return new_argc;
+}
+
+

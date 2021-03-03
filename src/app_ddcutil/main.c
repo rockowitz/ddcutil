@@ -899,6 +899,8 @@ execute_cmd_with_optional_display_handle(
 //
 
 
+#ifdef OLD
+
 /** Combines the options from the ddcutil configuration file with the command line arguments,
  *  returning a new list of tokens.
  *
@@ -912,50 +914,22 @@ execute_cmd_with_optional_display_handle(
  */
 static
 int apply_config_file(
+      const char * ddcutil_application,     // "ddcutil", "ddcui"
       int      old_argc,
       char **  old_argv,
       char *** new_argv_loc,
       char**   default_options_loc)
 {
-   bool debug = false;
-   char **prefix_tokens = NULL;
+   return full_arguments(
+         "ddcutil",     // "ddcutil", "ddcui"
+         old_argc,
+         old_argv,
+         new_argv_loc,
+         default_options_loc);
 
-   *new_argv_loc = old_argv;
-   int new_argc = old_argc;
-
-   int prefix_token_ct = read_ddcutil_config_file("ddcutil", &prefix_tokens, default_options_loc);
-   DBGMSF(debug, "get_config_file() returned %d", prefix_token_ct);
-   if (prefix_token_ct < 0) {
-      new_argc = -1;
-      goto bye;
-   }
-
-
-   if (prefix_token_ct > 0) {
-      int new_ct = prefix_token_ct + old_argc + 1;
-      DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
-      char ** combined = calloc(new_ct, sizeof(char *));
-      combined[0] = old_argv[0];
-      int new_ndx = 1;
-      for (int prefix_ndx = 0; prefix_ndx < prefix_token_ct; prefix_ndx++, new_ndx++) {
-         combined[new_ndx] = prefix_tokens[prefix_ndx];
-      }
-      for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
-         combined[new_ndx] = old_argv[old_ndx];
-      }
-      combined[new_ndx] = NULL;
-      DBGMSF(debug, "Final new_ndx = %d", new_ndx);
-      *new_argv_loc = combined;
-      new_argc = ntsa_length(combined);
-   }
-   ntsa_free(prefix_tokens, /* free strings */ false);
-
-bye:
-   DBGMSF(debug, "Returning: %d", new_argc);
-   return new_argc;
 }
 
-
+#endif
 
 //
 // Mainline
@@ -979,7 +953,7 @@ main(int argc, char *argv[]) {
 
    char ** new_argv = NULL;
    char *  combined_config_file_options = NULL;
-   int new_argc = apply_config_file(argc, argv, &new_argv, &combined_config_file_options);
+   int new_argc = full_arguments("ddcutil", argc, argv, &new_argv, &combined_config_file_options);
    if (new_argc < 0)
       goto bye;
 

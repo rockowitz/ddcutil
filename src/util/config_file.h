@@ -16,7 +16,7 @@ int    load_configuration_file(
            GHashTable**  hash_table_loc,
            GPtrArray*    errmsgs,
            bool          verbose);
-char * get_config_value(GHashTable * config_hash, char * segment, char * id);
+char * get_config_value(GHashTable * config_hash, const char * segment, const char * id);
 void   dump_ini_hash( GHashTable * config_hash);
 
 #endif /* CONFIG_FILE_H_ */

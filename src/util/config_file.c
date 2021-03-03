@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stddef.h>
 
 #include "file_util.h"
@@ -36,7 +37,7 @@ bool is_comment(char * s) {
       }
    }
    if (debug)
-      printf("(%s) s: %s, Returning %s\n", __func__, s, sbool(result));
+      printf("(%s) s: %s, Returning %s\n", __func__, s, SBOOL(result));
    return result;
 }
 
@@ -59,7 +60,7 @@ bool is_segment(char * s, char ** seg_name_loc) {
       free(untrimmed);
    }
    if (debug)
-      printf("(%s) s: %s, Returning %s\n", __func__, s, sbool(result));
+      printf("(%s) s: %s, Returning %s\n", __func__, s, SBOOL(result));
    return result;
 }
 
@@ -95,12 +96,12 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
       free(untrimmed_value);
    }
    if (debug)
-      printf("(%s) s: |%s|, Returning %s\n", __func__, s, sbool(result));
+      printf("(%s) s: |%s|, Returning %s\n", __func__, s, SBOOL(result));
    return result;
 }
 
 
-char * get_config_value(GHashTable * ini_file_hash, char * segment, char * id) {
+char * get_config_value(GHashTable * ini_file_hash, const char * segment, const char * id) {
    bool debug = false;
    assert(segment);
    assert(id);
