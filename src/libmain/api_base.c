@@ -136,9 +136,8 @@ Parsed_Cmd * apply_config_file() {
    free(tokens);
    DBGMSF(debug, "Done");
    return parsed_cmd;
-
-
 }
+
 
 bool library_initialized = false;
 
