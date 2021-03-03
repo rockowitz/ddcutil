@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "../util/config_file.h"
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -11,16 +13,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// #include "public/ddcutil_status_codes.h"
-
 #include "util/file_util.h"
-// #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/xdg_util.h"
 
-// #include "base/core.h"
-
-// #include "base/config_file.h"
 
 
 static

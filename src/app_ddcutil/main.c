@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <util/config_file.h>
 #include <wordexp.h>
 
 #include "util/data_structures.h"
@@ -39,7 +40,6 @@
 
 #include "base/base_init.h"
 #include "base/build_info.h"
-#include "base/config_file.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
@@ -898,6 +898,7 @@ execute_cmd_with_optional_display_handle(
 //
 
 
+static
 int apply_config_file(
       int      old_argc,
       char **  old_argv,

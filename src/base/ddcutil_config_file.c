@@ -4,17 +4,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <wordexp.h>
 
-#include <stddef.h>
- 
-// #include "public/ddcutil_status_codes.h"
-
-#include "util/string_util.h"
+#include "util/config_file.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
 #include "util/xdg_util.h"
+
 #include "base/core.h"
-#include "base/config_file.h"
 #include "base/ddcutil_config_file.h"
 
 // *** TEMP ***
