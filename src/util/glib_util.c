@@ -162,7 +162,7 @@ gaux_ptr_array_append_array(
 {
    assert(dest);
    if (src) {
-      for (int ndx = 0; ndx < src->len; ndx++) {
+      for (guint ndx = 0; ndx < src->len; ndx++) {
          gpointer v = g_ptr_array_index(src,ndx);
          if (dup_func)
             v = dup_func(v);
@@ -183,13 +183,13 @@ gaux_ptr_array_join(
    GPtrArray * dest = g_ptr_array_sized_new(new_len);
    if (element_free_func)
       g_ptr_array_set_free_func(dest,element_free_func);
-   for (int ndx = 0; ndx < gpa1->len; ndx++) {
+   for (int gundx = 0; ndx < gpa1->len; ndx++) {
       gpointer v = g_ptr_array_index(gpa1,ndx);
       if (dup_func)
          v = dup_func(v);
       g_ptr_array_add(dest, v);
    }
-   for (int ndx = 0; ndx < gpa2->len; ndx++) {
+   for (guint ndx = 0; ndx < gpa2->len; ndx++) {
       gpointer v = g_ptr_array_index(gpa2,ndx);
       if (dup_func)
          v = dup_func(v);
@@ -207,7 +207,7 @@ gaux_ptr_array_copy(
    GPtrArray * dest = g_ptr_array_sized_new(src->len);
    if (element_free_func)
       g_ptr_array_set_free_func(dest, element_free_func);
-   for (int ndx = 0; ndx < src->len; ndx++) {
+   for (guint ndx = 0; ndx < src->len; ndx++) {
       gpointer v = g_ptr_array_index(src,ndx);
       if (dup_func)
          v = dup_func(v);
@@ -247,7 +247,7 @@ gaux_ptr_array_find_with_equal_func(
    bool result = false;
    *index_ = -1;
    if (haystack && (haystack->len == 0) && needle) {
-      for (int ndx = 0; ndx < haystack->len; ndx++) {
+      for (guint ndx = 0; ndx < haystack->len; ndx++) {
          if (equal_func)
             result = equal_func(g_ptr_array_index(haystack,ndx), needle);
          else

@@ -15,6 +15,10 @@
 #include <stdio.h>
 /** \endcond */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 gpointer *
 g_list_to_g_array(
       GList * glist,
@@ -75,6 +79,11 @@ gaux_ptr_array_find_with_equal_func(
       gconstpointer  needle,
       GEqualFunc     equal_func,
       guint *        index_);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 
 #endif /* GLIB_UTIL_H_ */
