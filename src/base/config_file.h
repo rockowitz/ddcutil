@@ -8,6 +8,9 @@
 #ifndef CONFIG_FILE_H_
 #define CONFIG_FILE_H_
 
+#include <stdbool.h>
+#include "util/error_info.h"
+
 Error_Info * load_configuration_file( bool verbose );
 char *       get_config_file_name();
 char *       get_config_value(char * segment, char * id);
