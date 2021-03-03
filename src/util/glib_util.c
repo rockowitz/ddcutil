@@ -183,7 +183,7 @@ gaux_ptr_array_join(
    GPtrArray * dest = g_ptr_array_sized_new(new_len);
    if (element_free_func)
       g_ptr_array_set_free_func(dest,element_free_func);
-   for (int gundx = 0; ndx < gpa1->len; ndx++) {
+   for (guint ndx = 0; ndx < gpa1->len; ndx++) {
       gpointer v = g_ptr_array_index(gpa1,ndx);
       if (dup_func)
          v = dup_func(v);
