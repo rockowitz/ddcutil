@@ -10,14 +10,13 @@
 
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
-#include "util/error_info.h"
 
-int          load_configuration_file(char *        config_fn,
-                                     GHashTable**  hash_table_loc,
-                                     GPtrArray*    errmsgs,
-                                     bool          verbose );
-
-char *       get_config_value(GHashTable * config_hash, char * segment, char * id);
-void         dbgrpt_ini_hash(GHashTable * config_hash, int depth);
+int    load_configuration_file(
+           char *        config_fn,
+           GHashTable**  hash_table_loc,
+           GPtrArray*    errmsgs,
+           bool          verbose);
+char * get_config_value(GHashTable * config_hash, char * segment, char * id);
+void   dump_ini_hash( GHashTable * config_hash);
 
 #endif /* CONFIG_FILE_H_ */

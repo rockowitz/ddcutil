@@ -19,10 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <util/config_file.h>
-#include <wordexp.h>
+
+// #include <wordexp.h>
 
 #include "util/data_structures.h"
+#include "util/config_file.h"
+#include "util/ddcutil_config_file.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
@@ -43,7 +45,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
-#include "base/ddcutil_config_file.h"
 #include "base/displays.h"
 #include "base/dynamic_sleep.h"
 #include "base/linux_errno.h"
@@ -898,6 +899,17 @@ execute_cmd_with_optional_display_handle(
 //
 
 
+/** Combines the options from the ddcutil configuration file with the command line arguments,
+ *  returning a new list of tokens.
+ *
+ *  \param  old_argc  argc as passed on the command line
+ *  \param  old argv  argv as passed on the command line
+ *  \param  new_argv_loc  where to return the address of the combined token list
+ *  \param  detault_options_loc  where to return string of options obtained from ini file
+ *  \return number of tokens in the combined list, -1 if errors
+ *          reading the configuration file. n. it is not an error if the
+ *          configuration file does not exist.  In that case 0 is returned.
+ */
 static
 int apply_config_file(
       int      old_argc,
@@ -911,7 +923,7 @@ int apply_config_file(
    *new_argv_loc = old_argv;
    int new_argc = old_argc;
 
-   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, default_options_loc);
+   int prefix_token_ct = read_ddcutil_config_file("ddcutil", &prefix_tokens, default_options_loc);
    DBGMSF(debug, "get_config_file() returned %d", prefix_token_ct);
    if (prefix_token_ct < 0) {
       new_argc = -1;

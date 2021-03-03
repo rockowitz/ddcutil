@@ -11,13 +11,14 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
- 
+
 #include "public/ddcutil_c_api.h"
+
+#include "util/ddcutil_config_file.h"
 
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
-#include "base/ddcutil_config_file.h"
 #include "base/parms.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
@@ -129,7 +130,7 @@ Parsed_Cmd * apply_config_file() {
    DBGMSF(debug, "Starting");
    char ** tokens = NULL;
    char * unparsed_options = NULL;
-   int token_ct = get_config_file("libddcutil", &tokens, &unparsed_options);
+   int token_ct = read_ddcutil_config_file("libddcutil", &tokens, &unparsed_options);
    free(unparsed_options);
 
    Parsed_Cmd * parsed_cmd = NULL;

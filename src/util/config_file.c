@@ -1,10 +1,10 @@
-// config_file.c
+/** \file config_file.c
+ *
+ *  Reads an INI style configuration file
+ */
 
 // Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-
-#include "../util/config_file.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -13,10 +13,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "util/file_util.h"
-#include "util/string_util.h"
-#include "util/xdg_util.h"
+#include "file_util.h"
+#include "string_util.h"
+#include "xdg_util.h"
 
+#include "config_file.h"
 
 
 static
@@ -114,13 +115,16 @@ char * get_config_value(GHashTable * ini_file_hash, char * segment, char * id) {
    return result;
 }
 
-/** Loads the ddcutil configuration file, located as per the XDG specification
+/** Loads an INI style configuration file.
  *
- * \param verbose  if true, issue error meesages
- * \retval DDCRC_NOT_FOUND Configuration file not found
- * \retval DDCRC_BAD_DATA
- * \retval -ENOENT   config file not found
- * \retval -EIO      error reading file
+ * \param  config_file_name  file name
+ * \param  hash_table_loc    where to return newly allocated hash table
+ * \param  errmsgs           per-line error messages
+ * \param  verbose           if true, write error messages to terminal
+ * \retval -ENOENT           configuration file not found
+ * \retval < 0               errors reading file
+ *
+ * If errors occur interpreting the file, **errmsgs** will be non-empty
  */
 
 int load_configuration_file(
@@ -195,7 +199,7 @@ int load_configuration_file(
                continue;
             }
 
-            char * msg = g_strdup_printf("Line %d invalidd: %s", ndx+1, trimmed);
+            char * msg = g_strdup_printf("Line %d invalid: %s", ndx+1, trimmed);
             if (verbose)
                printf("%s\n", msg);
             g_ptr_array_add(errmsgs, msg);
@@ -215,7 +219,8 @@ int load_configuration_file(
    return result;
 }
 
-void dbgrpt_ini_hash(GHashTable * ini_file_hash, int depth) {
+
+void dump_ini_hash(GHashTable * ini_file_hash) {
    printf("(%s) ini file hash table:\n", __func__);
 
    if (ini_file_hash) {

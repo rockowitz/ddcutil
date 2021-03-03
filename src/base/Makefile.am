@@ -33,11 +33,9 @@ noinst_LTLIBRARIES = libbase.la
 libbase_la_SOURCES =      \
 base_init.c               \
 build_info.c              \
-config_file.c             \
 core.c                    \
 ddc_errno.c               \
 ddc_packets.c             \
-ddcutil_config_file.c     \
 dynamic_features.c        \
 dynamic_sleep.c           \
 displays.c                \

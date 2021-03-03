@@ -6,7 +6,7 @@
 #ifndef DDCUTIL_CONFIG_FILE_H_
 #define DDCUTIL_CONFIG_FILE_H_
 
-int get_config_file(char * application, char *** tokens_loc, char** default_options_loc);
-char *       get_config_file_name();
+int    read_ddcutil_config_file(char * application, char *** tokens_loc, char** default_options_loc);
+char * get_config_file_name();
 
 #endif /* DDCUTIL_CONFIG_FILE_H_ */

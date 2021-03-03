@@ -32,7 +32,9 @@ distclean-local:
 noinst_LTLIBRARIES = libutil.la libutilaux.la
 
 libutil_la_SOURCES = \
+config_file.c              \
 data_structures.c          \
+ddcutil_config.h           \
 debug_util.c               \
 edid.c                     \
 error_info.c               \
