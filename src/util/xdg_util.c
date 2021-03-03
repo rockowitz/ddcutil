@@ -13,13 +13,35 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #define _GNU_SOURCE
 #include <stdio.h>
 
-#include "file_util.h"
+// #include "file_util.h"
 #include "report_util.h"
 #include "xdg_util.h"
+
+
+/** Checks if a regular file exists.
+ *
+ * @param fqfn fully qualified file name
+ * @return     true/false
+ * @remark
+ * Trivial function copied from file_util.c to avoid dependency.
+ */
+static bool
+regular_file_exists(const char * fqfn) {
+   bool result = false;
+   struct stat stat_buf;
+   int rc = stat(fqfn, &stat_buf);
+   if (rc == 0) {
+      result = S_ISREG(stat_buf.st_mode);
+   }
+   return result;
+}
+
+
 
 
 /** Returns the name of the base data, configuration, or cache, directory.
