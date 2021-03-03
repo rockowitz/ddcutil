@@ -8,12 +8,22 @@
 
 #include <stddef.h>
  
-#include "public/ddcutil_status_codes.h"
+// #include "public/ddcutil_status_codes.h"
 
 #include "util/string_util.h"
+#include "util/report_util.h"
+#include "util/xdg_util.h"
 #include "base/core.h"
 #include "base/config_file.h"
 #include "base/ddcutil_config_file.h"
+
+// *** TEMP ***
+static char * config_fn = NULL;
+
+char * get_config_file_name() {
+   return config_fn;
+}
+
 
 
 /** Tokenize a string as per the command line
@@ -24,7 +34,7 @@
  *  \return number of tokens
  */
 int tokenize_init_line(char * string, char ***tokens_loc) {
-   bool debug = false;
+   bool debug = true;
    wordexp_t p;
    int flags = WRDE_NOCMD;
    if (debug)
@@ -51,28 +61,45 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
  *          configuration file does not exist.  In that case 0 is returned.
  */
 int get_config_file(char * application, char *** tokens_loc, char** default_options_loc) {
-   bool debug = false;
+   bool debug = true;
    // char * cmd_prefix = read_configuration_file();
    int token_ct = 0;
    *tokens_loc = NULL;
    *default_options_loc = NULL;
-   Error_Info * errs = load_configuration_file(false);
-   if (errs) {
-      if (errs->status_code == DDCRC_NOT_FOUND) {
-         token_ct = 0;
-      }
-      else {
-         // rpt_vstring(0,"Error(s) reading configuration file");
-         errinfo_report_details(errs, 0);
-         token_ct = -1;
-      }
-      errinfo_free(errs);
-   }
-   else {
+   // int result = 0;
+   config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+
+   if (!config_fn) {
       if (debug)
-         dbgrpt_ini_hash(0);
-      char * global_options  = get_config_value("global",  "options");
-      char * ddcutil_options = get_config_value(application, "options");
+         printf("(%s) Configuration file not found\n", __func__);
+      token_ct = 0;
+      goto bye;
+   }
+
+   GHashTable * config_hash = NULL;
+   GPtrArray * errmsgs = g_ptr_array_new();
+   int load_rc = load_configuration_file(config_fn, &config_hash, errmsgs, false);
+   DBGMSF(debug, "load_configuration file() returned %d", load_rc);
+   if (load_rc < 0) {
+      if (load_rc != -ENOENT) {
+         rpt_vstring(1, "Error loading configuration file: %d", load_rc);
+         token_ct = load_rc;
+      }
+      else
+         token_ct = 0;
+   }
+   if (errmsgs->len > 0) {
+      rpt_vstring(0,"Error(s) reading configuration file %s", config_fn);
+      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+         rpt_label(1, g_ptr_array_index(errmsgs, ndx));
+      }
+      token_ct = -1;
+   }
+   if (token_ct >= 0) {
+      if (debug)
+         dbgrpt_ini_hash(config_hash, 0);
+      char * global_options  = get_config_value(config_hash, "global",  "options");
+      char * ddcutil_options = get_config_value(config_hash, application, "options");
 
       char * cmd_prefix = g_strdup_printf("%s %s",
                                    (global_options) ? global_options : "",
@@ -85,6 +112,8 @@ int get_config_file(char * application, char *** tokens_loc, char** default_opti
          *tokens_loc = prefix_tokens;
       }
    }
+bye:
+   DBGMSF(debug, "Returning: %d", token_ct);
    return token_ct;
 
 }

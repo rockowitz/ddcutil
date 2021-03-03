@@ -9,11 +9,15 @@
 #define CONFIG_FILE_H_
 
 #include <stdbool.h>
+#include <glib-2.0/glib.h>
 #include "util/error_info.h"
 
-Error_Info * load_configuration_file( bool verbose );
-char *       get_config_file_name();
-char *       get_config_value(char * segment, char * id);
-void         dbgrpt_ini_hash(int depth);
+int          load_configuration_file(char *        config_fn,
+                                     GHashTable**  hash_table_loc,
+                                     GPtrArray*    errmsgs,
+                                     bool          verbose );
+
+char *       get_config_value(GHashTable * config_hash, char * segment, char * id);
+void         dbgrpt_ini_hash(GHashTable * config_hash, int depth);
 
 #endif /* CONFIG_FILE_H_ */

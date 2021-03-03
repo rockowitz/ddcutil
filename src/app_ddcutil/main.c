@@ -907,10 +907,17 @@ int apply_config_file(
    bool debug = false;
    char **prefix_tokens = NULL;
 
-   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, default_options_loc);
-
    *new_argv_loc = old_argv;
    int new_argc = old_argc;
+
+   int prefix_token_ct = get_config_file("ddcutil", &prefix_tokens, default_options_loc);
+   DBGMSF(debug, "get_config_file() returned %d", prefix_token_ct);
+   if (prefix_token_ct < 0) {
+      new_argc = -1;
+      goto bye;
+   }
+
+
    if (prefix_token_ct > 0) {
       int new_ct = prefix_token_ct + old_argc + 1;
       DBGMSF(debug, "prefix_token_ct = %d, argc=%d, new_ct=%d", prefix_token_ct, old_argc, new_ct);
@@ -930,6 +937,7 @@ int apply_config_file(
    }
    ntsa_free(prefix_tokens, /* free strings */ false);
 
+bye:
    DBGMSF(debug, "Returning: %d", new_argc);
    return new_argc;
 }

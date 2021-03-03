@@ -123,6 +123,7 @@ ddca_build_options(void) {
 // Initialization
 //
 
+static
 Parsed_Cmd * apply_config_file() {
    bool debug = true;
    DBGMSF(debug, "Starting");
@@ -130,7 +131,17 @@ Parsed_Cmd * apply_config_file() {
    char * unparsed_options = NULL;
    int token_ct = get_config_file("libddcutil", &tokens, &unparsed_options);
    free(unparsed_options);
-   Parsed_Cmd * parsed_cmd = parse_command(token_ct, tokens, MODE_LIBDDCUTIL);
+
+   Parsed_Cmd * parsed_cmd = NULL;
+   if (token_ct < 0) {
+      // abort or just issue msg?
+      fprintf(stderr, "Errors in ddcutil configuration file\n");
+      token_ct = 0;
+      free(tokens);
+      tokens = calloc(1, sizeof(char*));
+
+   }
+   parsed_cmd = parse_command(token_ct, tokens, MODE_LIBDDCUTIL);
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
    free(tokens);

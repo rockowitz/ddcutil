@@ -6,21 +6,21 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "public/ddcutil_status_codes.h"
+// #include "public/ddcutil_status_codes.h"
 
-#include "util/error_info.h"
 #include "util/file_util.h"
-#include "util/report_util.h"
+// #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/xdg_util.h"
 
-#include "base/core.h"
+// #include "base/core.h"
 
-#include "base/config_file.h"
+// #include "base/config_file.h"
 
 
 static
@@ -38,7 +38,8 @@ bool is_comment(char * s) {
          result = true;
       }
    }
-   DBGMSF(debug, "s: %s, Returning %s", s, sbool(result));
+   if (debug)
+      printf("(%s) s: %s, Returning %s\n", __func__, s, sbool(result));
    return result;
 }
 
@@ -48,10 +49,10 @@ bool is_segment(char * s, char ** seg_name_loc) {
    bool result = false;
    if (strlen(s) > 0 && *s == '[' && s[strlen(s)-1] == ']') {
       char * untrimmed = substr(s, 1, strlen(s)-2);
-      DBGMSF(debug, "untrimmed=|%s|", untrimmed);
+      // DBGMSF(debug, "untrimmed=|%s|", untrimmed);
       char * seg_name = strtrim(untrimmed);
       for (char * p = seg_name; *p; p++) {*p = tolower(*p);}
-      DBGMSF(debug, "seg_name=|%s|", seg_name);
+      // DBGMSF(debug, "seg_name=|%s|", seg_name);
       if (strlen(seg_name) > 0) {
          *seg_name_loc = seg_name;
          result = true;
@@ -60,27 +61,29 @@ bool is_segment(char * s, char ** seg_name_loc) {
          free(seg_name);
       free(untrimmed);
    }
-   DBGMSF(debug, "s: %s, Returning %s", s, sbool(result));
+   if (debug)
+      printf("(%s) s: %s, Returning %s\n", __func__, s, sbool(result));
    return result;
 }
 
 static
 bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    bool debug = false;
-   DBGMSF(debug, "Starting. s->|%s|", s);
+   if (debug)
+      printf("(%s) Starting. s->|%s|\n", __func__, s);
    bool result = false;
    char * colon = index(s,':');
    if (colon) {
       char * untrimmed_key = substr(s, 0, colon-s);
       char * key = strtrim( untrimmed_key );
       for (char *p = key; *p; p++) {*p=tolower(*p);}
-      DBGMSF(debug, "untrimmed_key = |%s|, key = |%s|", untrimmed_key, key);
+      // DBGMSF(debug, "untrimmed_key = |%s|, key = |%s|", untrimmed_key, key);
       char * s_end = s + strlen(s);
       char * v_start = colon+1;
       char * untrimmed_value = substr(v_start, 0, s_end-v_start);
       char * value = strtrim( untrimmed_value)  ;
-      DBGMSF(debug, "untrimmed_value = |%s|, value = |%s|", untrimmed_value, value);
-      DBGMSF(debug, "key=|%s|, value=|%s|", key, value);
+      // DBGMSF(debug, "untrimmed_value = |%s|, value = |%s|", untrimmed_value, value);
+      // DBGMSF(debug, "key=|%s|, value=|%s|", key, value);
 
       if (strlen(key) > 0) {
          *key_loc   = key;
@@ -94,19 +97,13 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
       free(untrimmed_key);
       free(untrimmed_value);
    }
-   DBGMSF(debug, "s: |%s|, Returning %s", s, sbool(result));
+   if (debug)
+      printf("(%s) s: |%s|, Returning %s\n", __func__, s, sbool(result));
    return result;
 }
 
 
-static GHashTable * ini_file_hash = NULL;
-static char * config_file_name = NULL;
-
-char * get_config_file_name() {
-   return config_file_name;
-}
-
-char * get_config_value(char * segment, char * id) {
+char * get_config_value(GHashTable * ini_file_hash, char * segment, char * id) {
    bool debug = false;
    assert(segment);
    assert(id);
@@ -116,46 +113,53 @@ char * get_config_value(char * segment, char * id) {
       result = g_hash_table_lookup(ini_file_hash, full_key);
       free(full_key);
    }
-   DBGMSF(debug, "segment=%s, id=%s, returning: %s", segment, id, result);
+   if (debug)
+      printf("(%s) segment=%s, id=%s, returning: %s\n", __func__, segment, id, result);
    return result;
 }
-
 
 /** Loads the ddcutil configuration file, located as per the XDG specification
  *
  * \param verbose  if true, issue error meesages
  * \retval DDCRC_NOT_FOUND Configuration file not found
  * \retval DDCRC_BAD_DATA
+ * \retval -ENOENT   config file not found
+ * \retval -EIO      error reading file
  */
-Error_Info *
-load_configuration_file( bool verbose ) {
-   bool debug = false;
-   Error_Info * errs = NULL;
 
+int load_configuration_file(
+      char *         config_file_name,
+      GHashTable **  hash_table_loc,
+      GPtrArray *    errmsgs,
+      bool           verbose)
+{
+   bool debug = false;
+   assert(config_file_name);
+   int result = 0;
    char * cur_segment = NULL;
-   assert(!ini_file_hash);
-   char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
-   if (!config_fn) {
-      errs = errinfo_new2(DDCRC_NOT_FOUND, __func__,
-                          "Configuration file not found: ddcutilrc");
-   }
-   else {
-      config_file_name = config_fn;
-      GPtrArray * config_lines = g_ptr_array_new_with_free_func(free);
-      errs = file_getlines_errinfo(config_fn, config_lines);
-      if (errs) {
+   GHashTable * ini_file_hash = NULL;
+
+   GPtrArray * config_lines = g_ptr_array_new_with_free_func(free);
+   int getlines_rc = file_getlines(config_file_name, config_lines, verbose);
+   if (getlines_rc < 0) {
+      result = getlines_rc;
+      if (getlines_rc != -ENOENT) {
+         char * msg = g_strdup_printf("Error reading configuration file %s: %s",
+               config_file_name,
+               strerror(-getlines_rc) );
+         g_ptr_array_add(errmsgs, msg);
          if (verbose) {
-            fprintf(stderr, "Error reading configuration file %s: %s",
-                            config_fn,
-                            errinfo_summary(errs));
+            fprintf(stderr, "%s/n", msg);
          }
-      }  // error reading lines
-      else {  //process the lines
-         ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
-         GPtrArray * causes = g_ptr_array_new_with_free_func(free);
-         for (int ndx = 0; ndx < config_lines->len; ndx++) {
+      }
+   }  // error reading lines
+   else {  //process the lines
+      ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
+      *hash_table_loc = ini_file_hash;
+      for (int ndx = 0; ndx < config_lines->len; ndx++) {
             char * line = g_ptr_array_index(config_lines, ndx);
-            DBGMSF(debug, "Processing line %d: |%s|", ndx+1, line);
+            if (debug)
+               printf("(%s) Processing line %d: |%s|\n", __func__, ndx+1, line);
             char * trimmed = trim_in_place(line);
 
             char * seg_name;
@@ -172,62 +176,51 @@ load_configuration_file( bool verbose ) {
                continue;
             }
 
-            DBGMSF(debug, "before is_kv, line=%d. trimmed=|%s|", ndx+1, trimmed);
+            // DBGMSF(debug, "before is_kv, line=%d. trimmed=|%s|", ndx+1, trimmed);
             if ( is_kv(trimmed, &key, &value) ) {
                if (cur_segment) {
                   char * full_key = g_strdup_printf("%s/%s", cur_segment, key);
-                  DBGMSF(debug, "Inserting %s -> %s", full_key, value);
+                  if (debug)
+                     printf("(%s) Inserting %s -> %s\n", __func__, full_key, value);
                   g_hash_table_insert(ini_file_hash, full_key, value);
                   continue;
                }
                else {
-                  DBGMSF(debug, "trimmed: |%s|", trimmed);
-                  if (verbose)
-                     rpt_vstring(1, "Line %d invalid before section header", ndx+1);
-                  Error_Info * cause = errinfo_new2(
-                                          DDCRC_BAD_DATA,
-                                          __func__,
-                                          "Line %d invalid before section header: %s",
+                  if (debug)
+                     printf("(%s) trimmed: |%s|\n", __func__, trimmed);
+                  char * msg = g_strdup_printf("Line %d invalid before section header: %s",
                                           ndx+1, trimmed);
-                  g_ptr_array_add(causes, cause);
+                  if (verbose)
+                     printf("%s\n", msg);
+                  g_ptr_array_add(errmsgs, msg);
                }
                free(key);
                free(value);
                continue;
             }
 
+            char * msg = g_strdup_printf("Line %d invalidd: %s", ndx+1, trimmed);
             if (verbose)
-               rpt_vstring(1, "Line %d invalidd: %s", ndx+1, trimmed);
-            Error_Info * cause = errinfo_new2(
-                                       DDCRC_BAD_DATA,
-                                       __func__,
-                                       "Line %d invalidd: %s",
-                                       ndx+1, trimmed);
-            g_ptr_array_add(causes, cause);
+               printf("%s\n", msg);
+            g_ptr_array_add(errmsgs, msg);
+      } // for loop
+      g_ptr_array_free(config_lines, true);
+      if (cur_segment)
+         free(cur_segment);
+   } // process the lines
 
-         } // for loop
-
-         g_ptr_array_free(config_lines, true);
-         if (causes->len > 0) {
-            errs = errinfo_new_with_causes3(
-                  DDCRC_BAD_DATA, (struct error_info **) causes->pdata, causes->len,
-                  __func__, "Error(s) reading configuration file %s", config_fn);
-            g_ptr_array_free(causes, false);
-         }
-      } // process the lines
-   }  // config file exists
-   if (cur_segment)
-      free(cur_segment);
-
-   // if (errs && verbose)
-   //    errinfo_report(errs, 0);
-   DBGMSF(debug, "Returning: %s", errinfo_summary(errs));
-   return errs;
+   if (debug) {
+      if (errmsgs->len > 0) {
+         for (int ndx = 0; ndx < errmsgs->len; ndx++)
+            printf("   %s\n", (char *) g_ptr_array_index(errmsgs, ndx));
+      }
+      printf("(%s) Returning: %d\n", __func__, result);
+   }
+   return result;
 }
 
-
-void dbgrpt_ini_hash(int depth) {
-   rpt_label(depth, "ini file hash table:");
+void dbgrpt_ini_hash(GHashTable * ini_file_hash, int depth) {
+   printf("(%s) ini file hash table:\n", __func__);
 
    if (ini_file_hash) {
       GHashTableIter iter;
@@ -235,10 +228,10 @@ void dbgrpt_ini_hash(int depth) {
 
       g_hash_table_iter_init(&iter, ini_file_hash);
       while (g_hash_table_iter_next(&iter, &key, &value)) {
-         rpt_vstring(depth+1, "%s -> %s", (char *) key, (char *) value);
+         printf("   %s -> %s\n", (char *) key, (char *) value);
       }
    }
    else
-      rpt_label(depth, "Configuration file not loaded");
+      printf("Configuration file not loaded\n");
 }
 
