@@ -75,10 +75,16 @@ bool is_valid_edid_header(Byte * edidbytes) {
    return result;
 }
 
+
 bool is_valid_raw_edid(Byte * edid, int len) {
    return (len >= 128) && is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
 }
 
+bool is_valid_raw_cea861_extension_block(Byte * edid, int len) {
+   bool result = len >= 128 && edid[0] == 0x02 && is_valid_edid_checksum(edid);
+
+   return result;
+}
 
 
 /** Unpacks the 2 byte manufacturer id field from the EDID into a 3 character

@@ -37,6 +37,7 @@ Byte edid_checksum(Byte * edid);
 bool is_valid_edid_checksum(Byte * edidbytes);
 bool is_valid_edid_header(Byte * edidbytes);
 bool is_valid_raw_edid(Byte * edidbytes, int len);
+bool is_valid_raw_cea861_extension_block(Byte * edid, int len);
 
 void parse_mfg_id_in_buffer(Byte * mfgIdBytes, char * buffer, int bufsize);
 
