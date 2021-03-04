@@ -20,8 +20,6 @@
 #include <string.h>
 #include <unistd.h>
 
-// #include <wordexp.h>
-
 #include "util/data_structures.h"
 #include "util/config_file.h"
 #include "util/ddcutil_config_file.h"
