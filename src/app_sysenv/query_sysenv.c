@@ -783,6 +783,7 @@ void query_sysenv() {
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
 
+#ifdef TMI
 #ifdef ENABLE_UDEV
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
@@ -791,6 +792,7 @@ void query_sysenv() {
            "udevadm info --attribute-walk /dev/i2c-%d",
                                    "udevadm");
       }
+#endif
 #endif
    }
 
