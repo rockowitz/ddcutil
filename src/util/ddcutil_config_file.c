@@ -39,7 +39,7 @@ char * get_config_file_name() {
  *  \return number of tokens
  */
 int tokenize_init_line(char * string, char ***tokens_loc) {
-   bool debug = true;
+   bool debug = false;
    wordexp_t p;
    int flags = WRDE_NOCMD;
    if (debug)
@@ -68,7 +68,7 @@ int read_ddcutil_config_file(
       const char *   ddcutil_application,
       char *** tokenized_options_loc,
       char**   untokenized_option_string_loc) {
-   bool debug = true;
+   bool debug = false;
    int token_ct = 0;
    *tokenized_options_loc = NULL;
    *untokenized_option_string_loc = NULL;
@@ -122,8 +122,8 @@ int read_ddcutil_config_file(
    }
 bye:
    if (debug) {
-      printf("Returning untokenized options: |%s|, token_ct=%d\n",
-            *untokenized_option_string_loc, token_ct);
+      printf("(%s) Returning untokenized options: |%s|, token_ct = %d\n",
+             __func__, *untokenized_option_string_loc, token_ct);
    }
    return token_ct;
 

@@ -200,7 +200,10 @@ int load_configuration_file(
                continue;
             }
 
-            char * msg = g_strdup_printf("Line %d invalid: %s", ndx+1, trimmed);
+            char * msg = (cur_segment)
+                            ? g_strdup_printf("Line %d invalid: %s", ndx+1, trimmed)
+                            : g_strdup_printf("Line %d invalid before section header: %s",
+                                              ndx+1, trimmed);
             if (verbose)
                printf("%s\n", msg);
             g_ptr_array_add(errmsgs, msg);
