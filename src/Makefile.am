@@ -85,6 +85,11 @@ app_ddcutil/app_probe.c \
 app_ddcutil/app_setvcp.c \
 app_ddcutil/app_vcpinfo.c
 
+if ENABLE_ENVCMDS_COND
+ddcutil_SOURCES += \
+app_ddcutil/app_interrogate.c
+endif
+
 if INCLUDE_TESTCASES_COND
 ddcutil_SOURCES += app_ddcutil/app_testcases.c
 else
