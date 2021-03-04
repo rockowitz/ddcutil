@@ -380,8 +380,8 @@ i2c_get_edid_bytes_directly(
       bool    read_bytewise)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), sbool(read_bytewise));
+   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
+                 fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
@@ -557,7 +557,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       else {
          rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
       }
-      if (rc == -ENXIO || rc == -EIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {
+      if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {    // removed -EIO 3/4/2021
          // DBGMSG("breaking");
          break;
       }
@@ -880,7 +880,9 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                             businfo->edid->model_name,
                             businfo->edid->serial_ascii);
       else
-         report_parsed_edid(businfo->edid, false, depth);
+         report_parsed_edid(businfo->edid,
+                           (output_level >= DDCA_OL_VV) ? true : false,
+                           depth);
    }
 }
 
