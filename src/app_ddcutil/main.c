@@ -601,10 +601,9 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   bool ok = master_initializer(parsed_cmd);
-   if (ok)
-      report_all_options(parsed_cmd, combined_config_file_options, 0);
+   report_all_options(parsed_cmd, combined_config_file_options, 0);
    free(combined_config_file_options);
+   bool ok = master_initializer(parsed_cmd);
    if (!ok)
       goto bye;
 
