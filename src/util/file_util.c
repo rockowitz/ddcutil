@@ -324,15 +324,15 @@ get_filenames_by_filter(
 
 /** Gets the file name for a file descriptor
  *
- * @param  fd    file descriptor
- * @param  p_fn  where to return a pointer to the file name
- *               The caller is responsible for freeing this memory
+ * @param  fd            file descriptor
+ * @param  filename_loc  where to return a pointer to the file name
+ *                       The caller is responsible for freeing this memory
  *
  * @retval 0      success
  * @retval -errno if error (see readlink() doc for possible error numbers)
  */
 int
-filename_for_fd(int fd, char** p_fn) {
+filename_for_fd(int fd, char** filename_loc) {
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
@@ -341,15 +341,15 @@ filename_for_fd(int fd, char** p_fn) {
    if (ct < 0) {
       rc = -errno;
       free(result);
-      *p_fn = NULL;
+      *filename_loc = NULL;
    }
    else {
       assert(ct <= PATH_MAX);
       result[ct] = '\0';
-      *p_fn = result;
+      *filename_loc = result;
    }
-   // printf("(%s) fd=%d, returning: %d, *pfn=%p -> |%s|\n",
-   //        __func__, fd, rc, *pfn, *pfn);
+   // printf("(%s) fd=%d, ct=%ld, returning: %d, *filename_loc=%p -> |%s|\n",
+   //        __func__, fd, ct, rc, *filename_loc, *filename_loc);
    return rc;
 }
 
@@ -365,17 +365,19 @@ filename_for_fd(int fd, char** p_fn) {
 char *
 filename_for_fd_t(int fd) {
    static GPrivate  key = G_PRIVATE_INIT(g_free);
-   char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX+1);
+   char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX);
 
    char * result = NULL;  // value to return
 
-   char * filename_loc;
-   int rc = filename_for_fd(fd, &filename_loc);
+   char * filename;
+   int rc = filename_for_fd(fd, &filename);
+   // printf("(%s) filename_for_fd() returned rc=%d filename->|%s|\n", __func__, rc, filename);
    if (rc == 0) {
-      STRLCPY(fn_buf, filename_loc, PATH_MAX+1);
-      free(filename_loc);
+      (void) g_strlcpy(fn_buf, filename, PATH_MAX);
+      free(filename);
       result = fn_buf;
    }
+   // printf("(%s) Returning: |%s|\n", __func__, result);
    return result;
 }
 
