@@ -135,25 +135,28 @@ report_performance_options(int depth)
 
 
 static void
-report_all_options(Parsed_Cmd * parsed_cmd, int depth)
+report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
+   rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "Force I2C slave address:",
+                       sbool(i2c_force_slave_addr_flag));
+   rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "User defined features:",
+                       (enable_dynamic_features) ? "enabled" : "disabled" );
+                       // "Enable user defined features" is too long a title
+   rpt_nl();
+}
+
+
+static void
+report_all_options(Parsed_Cmd * parsed_cmd, char * default_options, int depth)
 {
+    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
+       show_ddcutil_version();
+       rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Config file options:", default_options);
+    }
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_build_options(depth);
-
     show_reporting();  // uses fout()
-
-    rpt_vstring( depth, "%.*s%-*s%s",
-              0,"",
-              28, "Force I2C slave address:",
-              sbool(i2c_force_slave_addr_flag));
-    rpt_vstring( depth, "%.*s%-*s%s",
-              0,"",
-              28, "User defined features:",
-              (enable_dynamic_features) ? "enabled" : "disabled" );  // "Enable user defined features" is too long a title
-    rpt_nl();
-
+    report_optional_features(parsed_cmd, depth);
     report_performance_options(depth);
-
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_experimental_options(parsed_cmd, depth);
 }
@@ -240,49 +243,36 @@ validate_environment()
 }
 
 
-
 /** Master initialization function
  *
  *   \param  parsed_cmd  parsed command line
  *   \return ok if successful, false if error
  */
 static bool
-master_initializer(Parsed_Cmd * parsed_cmd, char * default_options) {
+master_initializer(Parsed_Cmd * parsed_cmd) {
    bool ok = false;
-
-submaster_initializer(parsed_cmd);
+   submaster_initializer(parsed_cmd);   // shared with libddcutil
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
       // will be reported by the environment command
-#endif
       if (!validate_environment())
          goto bye;
-#ifdef ENABLE_ENVCMDS
    }
+
+   init_sysenv();
+#else
+   if (!validate_environment())
+      goto bye;
 #endif
 
-#ifdef ENABLE_ENVCMDS
-    init_sysenv();
-#endif
-
-    if (!init_experimental_options(parsed_cmd))
-       goto bye;
-
-    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-       show_ddcutil_version();
-       rpt_vstring(0, "%.*s%-*s%s",
-                 0,"",
-                 28, "Config file options:", default_options);
-       report_all_options(parsed_cmd, 0);
-    }
-
+   if (!init_experimental_options(parsed_cmd))
+      goto bye;
    ok = true;
 
 bye:
    return ok;
 }
-
 
 
 static void
@@ -567,43 +557,6 @@ execute_cmd_with_optional_display_handle(
 
 
 //
-// Configuration file
-//
-
-
-#ifdef OLD
-
-/** Combines the options from the ddcutil configuration file with the command line arguments,
- *  returning a new list of tokens.
- *
- *  \param  old_argc  argc as passed on the command line
- *  \param  old argv  argv as passed on the command line
- *  \param  new_argv_loc  where to return the address of the combined token list
- *  \param  detault_options_loc  where to return string of options obtained from ini file
- *  \return number of tokens in the combined list, -1 if errors
- *          reading the configuration file. n. it is not an error if the
- *          configuration file does not exist.  In that case 0 is returned.
- */
-static
-int apply_config_file(
-      const char * ddcutil_application,     // "ddcutil", "ddcui"
-      int      old_argc,
-      char **  old_argv,
-      char *** new_argv_loc,
-      char**   default_options_loc)
-{
-   return full_arguments(
-         "ddcutil",     // "ddcutil", "ddcui"
-         old_argc,
-         old_argv,
-         new_argv_loc,
-         default_options_loc);
-
-}
-
-#endif
-
-//
 // Mainline
 //
 
@@ -648,7 +601,9 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   bool ok = master_initializer(parsed_cmd, combined_config_file_options);
+   bool ok = master_initializer(parsed_cmd);
+   if (ok)
+      report_all_options(parsed_cmd, combined_config_file_options, 0);
    free(combined_config_file_options);
    if (!ok)
       goto bye;
