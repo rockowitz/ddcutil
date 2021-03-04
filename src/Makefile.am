@@ -77,11 +77,12 @@ endif
 ddcutil_SOURCES = \
 app_ddcutil/main.c \
 app_ddcutil/app_capabilities.c \
-app_ddcutil/app_probe.c \
-app_ddcutil/app_dynamic_features.c \
 app_ddcutil/app_dumpload.c \
-app_ddcutil/app_setvcp.c \
+app_ddcutil/app_dynamic_features.c \
+app_ddcutil/app_experimental.c \
 app_ddcutil/app_getvcp.c \
+app_ddcutil/app_probe.c \
+app_ddcutil/app_setvcp.c \
 app_ddcutil/app_vcpinfo.c
 
 if INCLUDE_TESTCASES_COND
