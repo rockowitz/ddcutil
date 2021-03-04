@@ -39,6 +39,7 @@ debug_util.c               \
 edid.c                     \
 error_info.c               \
 file_util.c                \
+file_util_base.c           \
 glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \

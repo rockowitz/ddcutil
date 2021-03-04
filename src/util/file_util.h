@@ -16,11 +16,14 @@
 /** \endcond */
 
 #include "error_info.h"
+#include "file_util_base.h"
 
+#ifdef MOVED
 int file_getlines(
       const char *  fn,
       GPtrArray*    line_array,
       bool          verbose);
+#endif
 
 Error_Info * file_getlines_errinfo(
       const char *  filename,

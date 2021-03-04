@@ -10,20 +10,7 @@
 #define COREDEFS_H_
 
 #include "config.h"
-
-/** Raw byte
- */
-typedef unsigned char Byte;
-
-#ifndef ARRAY_SIZE
-/** Number of entries in array
- */
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
-#endif
-
-#define ASSERT_IFF(_cond1, _cond2) \
-   assert( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
-
+#include "coredefs_base.h"
 
 // Workaround for coverity complaints re g_strlcpy(), g_strlcat()
 

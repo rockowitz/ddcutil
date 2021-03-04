@@ -483,7 +483,7 @@ void add_traced_file(const char * filename) {
       g_ptr_array_add(traced_file_table, bname);
    else
       free(bname);
-   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, sbool(found));
+   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, SBOOL(found));
 }
 
 
@@ -494,7 +494,7 @@ void add_traced_file(const char * filename) {
  */
 bool is_traced_function(const char * funcname) {
    bool result = (traced_function_table && gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
-   // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, sbool(result2));
+   // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, SBOOL(result2));
    return result;
 }
 
@@ -509,7 +509,7 @@ bool is_traced_file(const char * filename) {
    if (filename) {
       char * bname = g_path_get_basename(filename);
       result = (traced_file_table && gaux_string_ptr_array_find(traced_file_table, bname) >= 0);
-      // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, sbool(result));
+      // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, SBOOL(result));
       free(bname);
    }
    return result;
@@ -733,7 +733,7 @@ void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Reporting DDC data errors: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              sbool(report_ddc_errors));
+                              SBOOL(report_ddc_errors));
 }
 
 void show_ddcutil_version() {

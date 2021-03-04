@@ -15,15 +15,19 @@
 #include <stdio.h>
 /** \endcond */
 
-#include "coredefs.h"
+#include "coredefs_base.h"
 #include "glib_util.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 //
 // General
 //
 
-static inline char * sbool(int val) {  return (val)  ? "true" : "false"; }
+static inline const char * sbool(int val) {  return (val)  ? "true" : "false"; }
 
 // A macro alternative to sbool()
 #define SBOOL(val) ( (val) ? "true" : "false" )
@@ -158,5 +162,10 @@ int vf0printf(FILE * stream, const char * format, va_list ap);
 
 bool all_bytes_zero(Byte * bytes, int bytect);
 bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* STRINGUTIL_H_ */
