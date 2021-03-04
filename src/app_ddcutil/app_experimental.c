@@ -4,16 +4,69 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <stdio.h>
 #include <strings.h>
+
 
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/timestamp.h"
 
+#include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "ddc/ddc_displays.h"
 
 #include "app_experimental.h"
+
+
+#define REPORT_FLAG_OPTION(_flagno, _action) \
+rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
+     (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", _action)
+void
+report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
+{
+      rpt_label(depth, "Experimental Options:");
+      REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
+      REPORT_FLAG_OPTION(2, "Unused");    // was Filter phantom displays
+      REPORT_FLAG_OPTION(3, "Unused");
+      REPORT_FLAG_OPTION(4, "Read strategy tests");
+      REPORT_FLAG_OPTION(5, "Unused");
+      REPORT_FLAG_OPTION(6, "Force I2c bus");
+
+      rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
+      rpt_nl();
+
+ }
+#undef REPORT_FLAG_OPTION
+
+
+bool init_experimental_options(Parsed_Cmd* parsed_cmd)
+{
+   if (parsed_cmd->flags & CMD_FLAG_F1) {
+      fprintf(stdout, "EDID reads will use normal I2C calls\n");
+      EDID_Read_Uses_I2C_Layer = true;
+   }
+
+   // if (parsed_cmd->flags & CMD_FLAG_F2) {
+   //    fprintf(stdout, "Filter phantom displays\n");
+   //   check_phantom_displays = true;    // extern in ddc_displays.h
+   // }
+
+   // HACK FOR TESTING
+   if (parsed_cmd->flags & CMD_FLAG_F6) {
+      fprintf(stdout, "Setting i2c_force_bus\n");
+      if ( !(parsed_cmd->pdid) || parsed_cmd->pdid->id_type != DISP_ID_BUSNO) {
+         fprintf(stdout, "bus number required, use --busno\n");
+         return false;
+      }
+      i2c_force_bus = true;
+   }
+   return true;
+}
+
+
+
+
 
 //
 // Test display detection variants
