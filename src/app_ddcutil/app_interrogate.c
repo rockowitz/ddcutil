@@ -3,26 +3,29 @@
 // Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-
-
-#include "config.h"
-
 #include <assert.h>
-#include <stdbool.h>
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include "base/core.h"
-#include "cmdline/parsed_cmd.h"
-#include "util/string_util.h"
-#include "base/parms.h"
+#include "config.h"
+
 #include "public/ddcutil_types.h"
+
+#include "util/string_util.h"
+
+#include "base/core.h"
+#include "base/parms.h"
 #include "base/thread_sleep_data.h"
+
+#include "cmdline/parsed_cmd.h"
+
+#include "i2c/i2c_bus_core.h"
+
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_stats.h"
-#include "i2c/i2c_bus_core.h"
-#include "ddc/ddc_displays.h"
 
 #include "app_sysenv/query_sysenv.h"
 
