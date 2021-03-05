@@ -123,7 +123,7 @@ int read_ddcutil_config_file(
    free(config_fn);
 
 bye:
-   if (debug) {
+   if (debug) {   // coverity[DEADCODE]
       printf("(%s) Returning untokenized options: |%s|, token_ct = %d\n",
              __func__, *untokenized_option_string_loc, token_ct);
    }
@@ -147,6 +147,7 @@ int merge_command_tokens(
 
    if (config_token_ct > 0) {
       int new_ct = config_token_ct + old_argc + 1;
+      /* coverity[DEADCODE] */
       if (debug)
          printf("(%s) config_token_ct = %d, argc=%d, new_ct=%d\n",
                __func__, config_token_ct, old_argc, new_ct);
@@ -165,10 +166,9 @@ int merge_command_tokens(
       *new_argv_loc = combined;
       new_argc = ntsa_length(combined);
    }
-   ntsa_free(config_tokens, /* free strings */ false);
 
    if (debug)
-      /* covertty[dead_error_line] */ printf("(%s) Returning %d\n", __func__, new_argc);
+      /* coverity[dead_error_line] */ printf("(%s) Returning %d\n", __func__, new_argc);
    return new_argc;
 }
 
@@ -215,7 +215,8 @@ int full_arguments(
             prefix_tokens,
             new_argv_loc);
    }
-   ntsa_free(prefix_tokens, false);
+   if (prefix_tokens)
+      ntsa_free(prefix_tokens, false);
 
    if (debug)
       printf("(%s) Returning: %d\n", __func__, new_argc);
