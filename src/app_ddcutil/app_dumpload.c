@@ -147,7 +147,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
          struct passwd * pw = getpwuid(getuid());
          const char * homedir = pw->pw_dir;
 
-         char * actual_filename = g_strdup_printf("%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
+         actual_filename = g_strdup_printf("%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
          // control with MsgLevel?
          f0printf(fout, "Writing file: %s\n", actual_filename);
          ddcrc = fopen_mkdir(actual_filename, "w+", ferr, &output_fp);
