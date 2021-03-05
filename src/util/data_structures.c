@@ -1332,13 +1332,12 @@ Bit_Set_256 bs256_add(
     int flagndx   = val >> 3;
     int shiftct   = val & 0x07;
     Byte flagbit  = 0x01 << shiftct;
-    if (debug) // coverity[DEADCODE]
+    if (debug)
        printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
               __func__, val, flagndx, shiftct, flagbit);
     result.bytes[flagndx] |= flagbit;
 
-    if (debug) {  //  /* coverity[DEADCODE] */ at start of line doesn't work
-       /* coverity[dead_error_begin] */
+    if (debug) {
        char * bs1 = bs256_to_string(flags, "","");
        char * bs2 = bs256_to_string(result, "","");
        printf("(%s) bitstring=%s, value %d, returning: %s\n",
@@ -1347,7 +1346,6 @@ Bit_Set_256 bs256_add(
        // free(bs2);
        // printf("(%s) wolf 3\n", __func__);
     }
-
 
     return result;
 }
