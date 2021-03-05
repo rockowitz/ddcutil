@@ -1332,7 +1332,7 @@ Bit_Set_256 bs256_add(
     int flagndx   = val >> 3;
     int shiftct   = val & 0x07;
     Byte flagbit  = 0x01 << shiftct;
-    if (debug)
+    if (debug) // coverity[DEADCODE]
        printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
               __func__, val, flagndx, shiftct, flagbit);
     result.bytes[flagndx] |= flagbit;
