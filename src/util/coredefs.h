@@ -28,7 +28,6 @@
    } while (0)
 #endif
 
-// i give up
 #define STRLCPY(_dst, _src, _size)  \
    /* coverity[access_dbuf_in_call] */ (void) g_strlcpy( (_dst), (_src), (_size) )
 
