@@ -79,8 +79,8 @@ static const char *dmi_chassis_type(Byte code)
 
 /** Reports DMI information for the system.
  */
-void query_dmidecode() {
-
+void query_dmidecode()
+{
    // Note: The alternative of calling execute_shell_cmd_collect() with the following
    // command fails if executing from a non-privileged account, which lacks permissions
    // for /dev/mem or /sys/firmware/dmi/tables/smbios_entry_point
