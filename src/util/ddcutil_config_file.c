@@ -123,7 +123,7 @@ int read_ddcutil_config_file(
    free(config_fn);
 
 bye:
-   if (debug) {   // coverity[DEADCODE]
+   if (debug) /* coverity[DEADCODE] */  {   /* coverity[dead_error_line] */
       printf("(%s) Returning untokenized options: |%s|, token_ct = %d\n",
              __func__, *untokenized_option_string_loc, token_ct);
    }
