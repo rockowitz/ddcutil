@@ -149,6 +149,7 @@ int merge_command_tokens(
       int new_ct = config_token_ct + old_argc + 1;
       /* coverity[DEADCODE] */
       if (debug)
+         // coverity[dead_error_line]
          printf("(%s) config_token_ct = %d, argc=%d, new_ct=%d\n",
                __func__, config_token_ct, old_argc, new_ct);
       char ** combined = calloc(new_ct, sizeof(char *));

@@ -1337,7 +1337,8 @@ Bit_Set_256 bs256_add(
               __func__, val, flagndx, shiftct, flagbit);
     result.bytes[flagndx] |= flagbit;
 
-/* coverity[DEADCODE] */    if (debug) {
+    if (debug) {  //  /* coverity[DEADCODE] */ at start of line doesn't work
+       /* coverity[dead_error_begin] */
        char * bs1 = bs256_to_string(flags, "","");
        char * bs2 = bs256_to_string(result, "","");
        printf("(%s) bitstring=%s, value %d, returning: %s\n",
