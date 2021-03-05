@@ -74,7 +74,7 @@ int read_ddcutil_config_file(
    *untokenized_option_string_loc = NULL;
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    if (!config_fn) {
-      if (debug) // coverity[dead_error_condition]
+      if (debug)
          printf("(%s) Configuration file not found\n", __func__);
       token_ct = 0;
       goto bye;
@@ -123,7 +123,7 @@ int read_ddcutil_config_file(
    free(config_fn);
 
 bye:
-   if (debug) /* coverity[DEADCODE] */  {   /* coverity[dead_error_line] */
+   if (debug)  {
       printf("(%s) Returning untokenized options: |%s|, token_ct = %d\n",
              __func__, *untokenized_option_string_loc, token_ct);
    }
@@ -147,9 +147,7 @@ int merge_command_tokens(
 
    if (config_token_ct > 0) {
       int new_ct = config_token_ct + old_argc + 1;
-      /* coverity[DEADCODE] */
       if (debug)
-         // coverity[dead_error_line]
          printf("(%s) config_token_ct = %d, argc=%d, new_ct=%d\n",
                __func__, config_token_ct, old_argc, new_ct);
       char ** combined = calloc(new_ct, sizeof(char *));
@@ -169,7 +167,7 @@ int merge_command_tokens(
    }
 
    if (debug)
-      /* coverity[dead_error_line] */ printf("(%s) Returning %d\n", __func__, new_argc);
+       printf("(%s) Returning %d\n", __func__, new_argc);
    return new_argc;
 }
 
@@ -202,7 +200,6 @@ int full_arguments(
 
    int prefix_token_ct =
          read_ddcutil_config_file(ddcutil_application, &prefix_tokens, default_options_loc);
-   /* coverity[dead_error_condition] */
    if (debug)
       printf("(%s) get_config_file() returned %d\n", __func__, prefix_token_ct);
    if (prefix_token_ct < 0) {
