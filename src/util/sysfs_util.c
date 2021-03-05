@@ -80,7 +80,7 @@ read_sysfs_attr_w_default_r(
    sprintf(fn, "%s/%s", dirname, attrname);
    char * result = file_get_first_line(fn, verbose);
    if (result) {
-      (void) g_strlcpy(buf, result, bufsz);   // (void) to avoid coverity warning re unused return value
+      /* coverity[access_dbuf_in_call] */ (void) g_strlcpy(buf, result, bufsz);   // (void) to avoid coverity warning re unused return value
       free(result);
    }
    else {
