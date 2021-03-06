@@ -629,6 +629,28 @@ Null_Terminated_String_Array ntsa_join(
 }
 
 
+Null_Terminated_String_Array  ntsa_prepend(
+      char *                       value,
+      Null_Terminated_String_Array old_array,
+      bool                         dup)
+{
+   int old_ct = ntsa_length(old_array);
+   int new_ct = old_ct + 1;
+   Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
+   char ** to = new_array;
+   *to++ = (dup) ? strdup(value) : value;
+   char ** from = old_array;
+   while (*from) {
+      *to++ = (dup) ? strdup(*from) : *from;
+      from++;
+   }
+   *to = NULL;
+
+   // ntsa_show(argv);
+   return new_array;
+}
+
+
 /** Searches a #Null_Terminated_String_Array for an entry that matches a given
  *  value using a match function provided.
  *
