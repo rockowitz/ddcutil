@@ -125,7 +125,7 @@ char * get_config_value(GHashTable * ini_file_hash, const char * segment, const 
  * \param  verbose           if true, write error messages to terminal
  * \retval -ENOENT           configuration file not found
  * \retval -EBADMSG          errors parsing configuration file
- * \retval < 0               errors reading from reading the file
+ * \retval < 0               errors reading configuration file
  *
  * If errors occur interpreting the file, **errmsgs** will be non-empty
  *
