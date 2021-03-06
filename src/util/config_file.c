@@ -116,16 +116,22 @@ char * get_config_value(GHashTable * ini_file_hash, const char * segment, const 
    return result;
 }
 
-/** Loads an INI style configuration file.
+/** Loads an INI style configuration file into a newly allocated
+ *  hash table.  Keys of the table have the form <segment name>/<key>.
  *
  * \param  config_file_name  file name
  * \param  hash_table_loc    where to return newly allocated hash table
  * \param  errmsgs           per-line error messages
  * \param  verbose           if true, write error messages to terminal
  * \retval -ENOENT           configuration file not found
- * \retval < 0               errors reading file
+ * \retval -EBADMSG          errors parsing configuration file
+ * \retval < 0               errors reading from reading the file
  *
  * If errors occur interpreting the file, **errmsgs** will be non-empty
+ *
+ * \remark
+ * There's really no errno value for errors parsing the file, which is
+ * a form of bad data.  EBADMSG has been hijacked for this purpose.
  */
 
 int load_configuration_file(
@@ -211,6 +217,8 @@ int load_configuration_file(
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
          free(cur_segment);
+      if (errmsgs->len > 0)
+         result = -EBADMSG;
    } // process the lines
 
    if (debug) {
