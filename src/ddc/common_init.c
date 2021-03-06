@@ -143,7 +143,10 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
 
 bool
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
-   bool ok = false;
+   bool debug = true;
+   bool ok = true;
+   printf("(%s) parsed_cmd = %p\n", __func__, parsed_cmd);
+   DBGMSF(debug, "Starting. parsed_cmd = %p", parsed_cmd);
 
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
