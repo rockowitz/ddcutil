@@ -169,27 +169,6 @@ Parsed_Cmd * apply_config_file() {
       ntsa_show(tokens);
    }
 
-#ifdef INSERT_SINGLE
- //  if (parser_mode == MODE_LIBDDCUTIL) {  //hack
-      int argc = token_ct;     //hack
-      char ** argv = tokens;   //hack
-      int new_ct = 1 + argc;
-      Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
-      char ** to = new_array;
-      *to++ = "dummy";
-      char ** from = argv;
-      while (*from) {
-            *to++ = *from++;
-      }
-      *to = NULL;
-
-      argc = new_ct;
-      argv = new_array;
-
-      DBGMSF(debug, "adjusted argc = %d, argv[]:");
-      ntsa_show(argv);
- //  } //hack
-#endif
 
 
 
