@@ -222,6 +222,7 @@ ddc/libddc.la    \
 dynvcp/libdynvcp.la \
 i2c/libi2c.la    \
 vcp/libvcp.la    \
+cmdline/libcmdline.la \
 base/libbase.la  \
 util/libutil.la 
 
@@ -234,7 +235,6 @@ libcommon_la_LIBADD += \
 endif
 
 libapp_la_LIBADD = \
-cmdline/libcmdline.la \
 util/libutilaux.la
 
 if ENABLE_ENVCMDS_COND
