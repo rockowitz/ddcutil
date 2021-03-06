@@ -127,26 +127,77 @@ ddca_build_options(void) {
 static
 Parsed_Cmd * apply_config_file() {
    bool debug = true;
+   // if (debug)
+   //    printf("(%s) Starting\n", __func__);
    DBGMSF(debug, "Starting");
-   char ** tokens = NULL;
-   char * unparsed_options = NULL;
-   int token_ct = read_ddcutil_config_file("libddcutil", &tokens, &unparsed_options);
-   free(unparsed_options);
 
    Parsed_Cmd * parsed_cmd = NULL;
+   char ** tokens = NULL;
+   char * unparsed_options = NULL;
+   if (debug)
+      printf("%s) About to call read_ddcutil_config_file\n", __func__);
+   int token_ct = read_ddcutil_config_file("libddcutil", &tokens, &unparsed_options);
+   if (token_ct <  0) {
+      fprintf(stderr, "Error reading configuration file.");
+   }
+
+   Null_Terminated_String_Array cmd_name_array = calloc(2, sizeof(char*));
+   cmd_name_array[0] = "libddcutil";
+   cmd_name_array[1] = NULL;
+
+   if (token_ct <= 0)
+      tokens = cmd_name_array;
+
+
+   if (parser_mode == MODE_LIBDDCUTIL) {
+      int new_ct = 1 + argc;
+      Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
+      char ** to = new_array;
+      *to++ = "dummy";
+      char ** from = argv;
+      while (*from) {
+            *to++ = *from++;
+      }
+      *to = NULL;
+
+      argc = new_ct;
+      argv = new_array;
+
+      DBGMSF(debug, "adjusted argc = %d, argv[]:");
+      ntsa_show(argv);
+   }
+
+
+
+
+   if (debug) {
+      printf("(%s) read_ddcutil_config_file() returned:\n", __func__);
+      printf("(%s) token_ct = %d\n", __func__, token_ct);
+      if (tokens) {
+         printf("(%s) tokens:\n", __func__);
+         ntsa_show(tokens);
+      }
+   }
+
+   free(unparsed_options);
+
    if (token_ct < 0) {
       // abort or just issue msg?
       fprintf(stderr, "Errors in ddcutil configuration file\n");
       token_ct = 0;
       free(tokens);
       tokens = calloc(1, sizeof(char*));
-
    }
+   printf("(%s) calling parse_command()\n", __func__);
    parsed_cmd = parse_command(token_ct, tokens, MODE_LIBDDCUTIL);
+   if (!parsed_cmd) {
+      fprintf(stderr, "Invalid configuration file options.  Terminating execution\n");
+      exit(1);
+   }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
    free(tokens);
-   DBGMSF(debug, "Done");
+   DBGMSF(debug, "Done.  Returning %p", parsed_cmd);
    return parsed_cmd;
 }
 
