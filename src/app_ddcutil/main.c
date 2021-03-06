@@ -569,7 +569,7 @@ execute_cmd_with_optional_display_handle(
 int
 main(int argc, char *argv[]) {
    // FILE * fout = stdout;
-   bool main_debug = false;
+   bool main_debug = true;
    int main_rc = EXIT_FAILURE;
    Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
@@ -580,10 +580,11 @@ main(int argc, char *argv[]) {
    if (new_argc < 0)
       goto bye;
 
-   // DBGMSG("new_argc = %d", new_argc);
-   // ntsa_show(new_argv);
+   DBGMSG("new_argc = %d", new_argc);
+   ntsa_show(new_argv);
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
+   DBGMSG("parse_command() returned %p", parsed_cmd);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }

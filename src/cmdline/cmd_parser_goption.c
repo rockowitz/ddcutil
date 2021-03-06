@@ -115,9 +115,29 @@ stats_arg_func(const    gchar* option_name,
  *          NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
    validate_cmdinfo();   // assertions
+
+#ifdef OUT
+   if (parser_mode == MODE_LIBDDCUTIL) {
+      int new_ct = 1 + argc;
+      Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
+      char ** to = new_array;
+      *to++ = "dummy";
+      char ** from = argv;
+      while (*from) {
+            *to++ = *from++;
+      }
+      *to = NULL;
+
+      argc = new_ct;
+      argv = new_array;
+
+      DBGMSF(debug, "adjusted argc = %d, argv[]:");
+      ntsa_show(argv);
+   }
+#endif
 
    if (debug) {
       DBGMSG("argc=%d", argc);
@@ -781,12 +801,16 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    // else if (explicit_display_spec_ct == 0)
    //   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
-   if (rest_ct == 0) {
+   if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
+         fprintf(stderr, "Unrecognized configuration file options: %s\n", cmd_and_args[0]);
+         ok = false;
+   }
+   else if (parser_mode == MODE_DDCUTIL && rest_ct == 0) {
       fprintf(stderr, "No command specified\n");
       ok = false;
    }
-   else {
-      char * cmd = cmd_and_args[0];;
+   if (ok && parser_mode == MODE_DDCUTIL) {
+      char * cmd = cmd_and_args[0];
       if (debug)
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
