@@ -127,8 +127,6 @@ ddca_build_options(void) {
 static
 Parsed_Cmd * apply_config_file() {
    bool debug = true;
-   // if (debug)
-   //    printf("(%s) Starting\n", __func__);
    DBGMSF(debug, "Starting");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -137,14 +135,12 @@ Parsed_Cmd * apply_config_file() {
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
 
-
    char ** tokens = NULL;
    char * unparsed_options = NULL;
-   if (debug)
-      printf("%s) About to call read_ddcutil_config_file\n", __func__);
+   DBGMSF(debug, "Calling read_ddcutil_config_file ...");
    int token_ct = read_ddcutil_config_file("libddcutil", &tokens, &unparsed_options);
 
-
+#ifdef NOT_NEEDED
    if (debug) {
       printf("(%s) read_ddcutil_config_file() returned:\n", __func__);
       printf("(%s) token_ct = %d\n", __func__, token_ct);
@@ -153,13 +149,11 @@ Parsed_Cmd * apply_config_file() {
          ntsa_show(tokens);
       }
    }
-
+#endif
 
    if (token_ct <  0) {
       fprintf(stderr, "Error reading configuration file.");
    }
-
-
    if (token_ct <= 0) {
       tokens = cmd_name_array;
    }
@@ -168,9 +162,6 @@ Parsed_Cmd * apply_config_file() {
       DBGMSF(debug, "Joined token array:");
       ntsa_show(tokens);
    }
-
-
-
 
    free(unparsed_options);
 
