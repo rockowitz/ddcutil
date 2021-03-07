@@ -66,6 +66,22 @@ read_sysfs_attr_w_default(
    return result;
 }
 
+
+/** Reads a /sys attribute file, which is 1 line of text.
+ *  into a buffer provided by the caller.
+ *  If the attribute is not found, returns a default value
+ *
+ * \param  dirname        directory name
+ * \param  attrname       attribute name, i.e. file name
+ * \param  default_value  default value, duplicated
+ * \param  buf            pointer to buffer
+ * \param  bufsz          size of buffer
+ * \param  verbose        if true, write message to stderr if unable to open file
+ * \return buf
+ *
+ *  If the string to be returned is too large for the buffer, it is truncated
+ *  to fit with a trailing '\0'.
+ */
 char *
 read_sysfs_attr_w_default_r(
       const char * dirname,
@@ -88,7 +104,6 @@ read_sysfs_attr_w_default_r(
    }
    return buf;
 }
-
 
 
 /** Reads a binary /sys attribute file
@@ -117,13 +132,18 @@ read_binary_sysfs_attr(
 }
 
 
-
+/** For a given directory path, returns the last component of the
+ *  resolved absolute path.
+ *
+ *  \param   path  path to resolve
+ *  \return  base name of resolved path, caller is responsible for freeing
+ */
 char *
 get_rpath_basename(
       const char * path)
 {
    char * result = NULL;
-   char resolved_path[PATH_MAX];
+   char   resolved_path[PATH_MAX];
    char * rpath = realpath(path, resolved_path);
    // printf("(%s) rpath=|%s|\n", __func__, rpath);
    if (rpath) {
