@@ -315,10 +315,10 @@ DDCA_Output_Level get_output_level() {
  *  \ingroup msglevel
  */
 DDCA_Output_Level set_output_level(DDCA_Output_Level newval) {
-   // printf("(%s) newval=%s  \n", __func__, msgLevelName(newval) );
-   // output_level = newval;
    Thread_Output_Settings * settings = get_thread_settings();
    DDCA_Output_Level old_level = settings->output_level;
+   // printf("(%s) old_level=%s, newval=%s  \n",
+   //        __func__, output_level_name(old_level), output_level_name(newval) );
    settings->output_level = newval;
    return old_level;
 }
