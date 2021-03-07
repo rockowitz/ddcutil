@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -111,33 +111,14 @@ stats_arg_func(const    gchar* option_name,
  *
  * \param   argc  number of command line arguments
  * \param   argv  array of pointers to command line arguments
+ * \param   parser_mode called for ddcutil or libddcutil?
  * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
  *          NULL if execution should be terminated
  */
 Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
    validate_cmdinfo();   // assertions
-
-#ifdef OUT
-   if (parser_mode == MODE_LIBDDCUTIL) {
-      int new_ct = 1 + argc;
-      Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
-      char ** to = new_array;
-      *to++ = "dummy";
-      char ** from = argv;
-      while (*from) {
-            *to++ = *from++;
-      }
-      *to = NULL;
-
-      argc = new_ct;
-      argv = new_array;
-
-      DBGMSF(debug, "adjusted argc = %d, argv[]:");
-      ntsa_show(argv);
-   }
-#endif
 
    if (debug) {
       DBGMSG("argc=%d", argc);
