@@ -143,7 +143,7 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
 
 bool
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
-   bool debug = true;
+   bool debug = false;
    bool ok = true;
    printf("(%s) parsed_cmd = %p\n", __func__, parsed_cmd);
    DBGMSF(debug, "Starting. parsed_cmd = %p", parsed_cmd);
