@@ -230,7 +230,7 @@ int load_configuration_file(
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
          free(cur_segment);
-      if (error_ct > 0)
+      if ( error_ct > 0 )
          result = -EBADMSG;
    } // process the lines
 
