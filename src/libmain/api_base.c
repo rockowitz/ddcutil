@@ -153,7 +153,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    if (errmsgs->len > 0) {
       f0printf(ferr(), "Errors reading configuration file %s:\n", config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         f0printf(fout(), "%s\n", g_ptr_array_index(errmsgs, ndx));
+         f0printf(fout(), "%s\n", (char*) g_ptr_array_index(errmsgs, ndx));
       }
    }
    g_ptr_array_free(errmsgs, true);
