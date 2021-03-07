@@ -604,7 +604,7 @@ main(int argc, char *argv[]) {
    }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
-   DBGMSG("parse_command() returned %p", parsed_cmd);
+   // DBGMSG("parse_command() returned %p", parsed_cmd);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
