@@ -579,7 +579,7 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   int new_argc = read_and_parse_config_file(
+   int new_argc = read_parse_and_merge_config_file(
                     "ddcutil",
                     argc,
                     argv,

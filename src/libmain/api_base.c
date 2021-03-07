@@ -141,7 +141,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    char *  config_fn;
    DBGMSF(debug, "Calling read_and_parse_config_file()");
    int read_and_parse_rc =
-         read_and_parse_config_file(
+         read_parse_and_merge_config_file(
                     "libddcutil", 1, cmd_name_array,
                     &new_argv, &untokenized_cmd_prefix,
                     &config_fn,

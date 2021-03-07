@@ -23,7 +23,7 @@ int merge_command_tokens(
       char **  config_tokens,
       char *** new_argv_loc);
 
-int read_and_parse_config_file(
+int read_parse_and_merge_config_file(
       const char * ddcutil_application,     // "ddcutil", "ddcui"
       int          old_argc,
       char **      old_argv,
