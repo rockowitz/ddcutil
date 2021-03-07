@@ -156,11 +156,12 @@ int load_configuration_file(
          char * msg = g_strdup_printf("Error reading configuration file %s: %s",
                config_file_name,
                strerror(-getlines_rc) );
+         if (verbose)
+            fprintf(stderr, "%s/n", msg);
          if (errmsgs)
             g_ptr_array_add(errmsgs, msg);
-         if (verbose) {
-            fprintf(stderr, "%s/n", msg);
-         }
+         else
+            free(msg);
       }
    }  // error reading lines
    else {  //process the lines
@@ -204,6 +205,8 @@ int load_configuration_file(
                      printf("%s\n", msg);
                   if (errmsgs)
                      g_ptr_array_add(errmsgs, msg);
+                  else
+                     free(msg);
                }
                free(key);
                free(value);
@@ -218,6 +221,8 @@ int load_configuration_file(
                printf("%s\n", msg);
             if (errmsgs)
                g_ptr_array_add(errmsgs, msg);
+            else
+               free(msg);
       } // for loop
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
