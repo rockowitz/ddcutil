@@ -167,6 +167,7 @@ int load_configuration_file(
    else {  //process the lines
       ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
       *hash_table_loc = ini_file_hash;
+      int error_ct = 0;
       for (int ndx = 0; ndx < config_lines->len; ndx++) {
             char * line = g_ptr_array_index(config_lines, ndx);
             if (debug)
@@ -201,6 +202,7 @@ int load_configuration_file(
                      printf("(%s) trimmed: |%s|\n", __func__, trimmed);
                   char * msg = g_strdup_printf("Line %d invalid before section header: %s",
                                           ndx+1, trimmed);
+                  error_ct++;
                   if (verbose)
                      printf("%s\n", msg);
                   if (errmsgs)
@@ -217,6 +219,7 @@ int load_configuration_file(
                             ? g_strdup_printf("Line %d invalid: %s", ndx+1, trimmed)
                             : g_strdup_printf("Line %d invalid before section header: %s",
                                               ndx+1, trimmed);
+            error_ct++;
             if (verbose)
                printf("%s\n", msg);
             if (errmsgs)
@@ -227,7 +230,7 @@ int load_configuration_file(
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
          free(cur_segment);
-      if (errmsgs->len > 0)
+      if (error_ct > 0)
          result = -EBADMSG;
    } // process the lines
 
