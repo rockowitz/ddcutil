@@ -569,7 +569,7 @@ execute_cmd_with_optional_display_handle(
 int
 main(int argc, char *argv[]) {
    // FILE * fout = stdout;
-   bool main_debug = true;
+   bool main_debug = false;
    int main_rc = EXIT_FAILURE;
    Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
@@ -578,17 +578,6 @@ main(int argc, char *argv[]) {
    char ** new_argv = NULL;
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
-
-#ifdef REF
-   int read_and_parse_config_file(
-         const char * ddcutil_application,     // "ddcutil", "ddcui"
-         int          old_argc,
-         char **      old_argv,
-         char ***     new_argv_loc,
-         char**       untokenized_cmd_prefix_loc,
-         char**       configure_fn_loc,
-         GPtrArray *  errmsgs)
-#endif
 
    int new_argc = read_and_parse_config_file(
                     "ddcutil",
