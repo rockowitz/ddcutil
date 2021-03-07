@@ -22,15 +22,6 @@
 
 #include "ddcutil_config_file.h"
 
-// *** TEMP ***
-#ifdef UNUSED
-static char * config_fn = NULL;
-
-char * get_config_file_name() {
-   return config_fn;
-}
-#endif
-
 
 /** Tokenize a string as per the command line
  *
@@ -151,18 +142,18 @@ bye:
       printf("(%s) Returning: %d\n", __func__, result);
    }
    return result;
-
 }
+
 
 /** Merges the tokenized command string passed to the program with tokens
  *  obtained from the configuration file.
  *
- *  \param   old_argc   original argument count
- *  \param   old_argv   original argument list
- *  \param   config_token_ct  number of tokens to insert
- *  \param   config_tokens    list of tokens
- *  \param   new_argv_loc     where to return address of merged argument list
- *  \return
+ *  \param   old_argc        original argument count
+ *  \param   old_argv        original argument list
+ *  \param   config_token_ct number of tokens to insert
+ *  \param   config_tokens   list of tokens
+ *  \param   new_argv_loc    where to return address of merged argument list
+ *  \return  length of merged argument list
  */
 int merge_command_tokens(
       int      old_argc,
@@ -207,6 +198,7 @@ int merge_command_tokens(
 
    return new_argc;
 }
+
 
 /** Reads and tokenizes the appropriate options entries in the config file,
  *  then combines the tokenized options from the ddcutil configuration file
