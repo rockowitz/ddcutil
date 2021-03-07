@@ -655,7 +655,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    else
       parsed_cmd->edid_read_size = edid_read_size_work;
 
-
 #ifdef COMMA_DELIMITED_TRACE
    if (tracework) {
        bool saved_debug = debug;
