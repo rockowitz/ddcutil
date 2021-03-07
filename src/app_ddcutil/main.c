@@ -574,14 +574,45 @@ main(int argc, char *argv[]) {
    Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
 
+   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(free);
    char ** new_argv = NULL;
-   char *  combined_config_file_options = NULL;
-   int new_argc = full_arguments("ddcutil", argc, argv, &new_argv, &combined_config_file_options);
+   char *  untokenized_cmd_prefix = NULL;
+   char *  configure_fn = NULL;
+
+#ifdef REF
+   int read_and_parse_config_file(
+         const char * ddcutil_application,     // "ddcutil", "ddcui"
+         int          old_argc,
+         char **      old_argv,
+         char ***     new_argv_loc,
+         char**       untokenized_cmd_prefix_loc,
+         char**       configure_fn_loc,
+         GPtrArray *  errmsgs)
+#endif
+
+   int new_argc = read_and_parse_config_file(
+                    "ddcutil",
+                    argc,
+                    argv,
+                    &new_argv,
+                    &untokenized_cmd_prefix,
+                    &configure_fn,
+                    config_file_errs);
+   if (config_file_errs->len > 0) {
+      f0printf(fout(), "Errors processing configuration file %s:\n", configure_fn);
+      for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
+         f0printf(fout(), g_ptr_array_index(config_file_errs,ndx));
+      }
+   }
+   g_ptr_array_free(config_file_errs, true);
+
    if (new_argc < 0)
       goto bye;
 
-   DBGMSG("new_argc = %d", new_argc);
-   ntsa_show(new_argv);
+   if (main_debug) {
+      DBGMSG("new_argc = %d, new_argv:", new_argc);
+      ntsa_show(new_argv);
+   }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
    DBGMSG("parse_command() returned %p", parsed_cmd);
@@ -600,8 +631,8 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   report_all_options(parsed_cmd, combined_config_file_options, 0);
-   free(combined_config_file_options);
+   report_all_options(parsed_cmd, untokenized_cmd_prefix, 0);
+   free(untokenized_cmd_prefix);
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
       goto bye;

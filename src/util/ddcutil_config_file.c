@@ -60,48 +60,64 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
  *  \param  ddcutil_application  "ddcutil", "libddcutil", "ddcui"
  *  \param  tokenized_options_loc   where to return the address of the null terminated token list
  *  \param  untokenized_string_loc  where to return untokenized string of options obtained from init file
- *  \return number of tokens, -1 if errors
+ *  \return 0, < 0 if errors
  *          It is not an error if the configuration file does not exist.
  *          In that case 0 is returned..
  */
 int read_ddcutil_config_file(
       const char *   ddcutil_application,
-      char *** tokenized_options_loc,
-      char**   untokenized_option_string_loc) {
-   bool debug = false;
+      char ***       tokenized_options_loc,
+      char**         untokenized_option_string_loc,
+      GPtrArray *    errmsgs,
+      char **        config_fn_loc,
+      bool           verbose)
+{
+   bool debug = true;
+
+   int result = 0;
    int token_ct = 0;
    *tokenized_options_loc = NULL;
    *untokenized_option_string_loc = NULL;
+   *config_fn_loc = NULL;
+   char ** prefix_tokens = NULL;
+
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+   *config_fn_loc = config_fn;
    if (!config_fn) {
       if (debug)
          printf("(%s) Configuration file not found\n", __func__);
+      result = 0;
       token_ct = 0;
       goto bye;
    }
 
    GHashTable * config_hash = NULL;
-   GPtrArray * errmsgs = g_ptr_array_new();
+   if (debug)
+      printf("(%s) Before load_configuration_file(), config_fn = %s\n",
+             __func__, config_fn);
    int load_rc = load_configuration_file(config_fn, &config_hash, errmsgs, false);
    if (debug)
       fprintf(stderr, "load_configuration file() returned %d\n", load_rc);
    if (load_rc < 0) {
       if (load_rc == -ENOENT) {
+         result = 0;
          token_ct = 0;
       }
+
       else {
-         fprintf(stderr, "Error loading configuration file: %d\n", load_rc);
-         token_ct = load_rc;
+         if (verbose)
+            fprintf(stderr, "Error loading configuration file: %d\n", load_rc);
+         result = load_rc;
       }
    }
-   if (errmsgs->len > 0) {
+   if (verbose && errmsgs && errmsgs->len > 0) {
       fprintf(stderr, "Error(s) processing configuration file %s\n", config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
          fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
       }
-      token_ct = -1;
    }
-   if (token_ct >= 0) {
+
+   if (load_rc == 0 || load_rc == -EBADMSG) {
       if (debug) {
          dump_ini_hash(config_hash);
       }
@@ -114,20 +130,22 @@ int read_ddcutil_config_file(
       if (debug)
          printf("(%s) combined_options= |%s|\n", __func__, combined_options);
       *untokenized_option_string_loc = combined_options;
-      char ** prefix_tokens = NULL;
+
       if (combined_options) {
          token_ct = tokenize_init_line(combined_options, &prefix_tokens);
          *tokenized_options_loc = prefix_tokens;
       }
    }
-   free(config_fn);
 
 bye:
    if (debug)  {
-      printf("(%s) Returning untokenized options: |%s|, token_ct = %d\n",
-             __func__, *untokenized_option_string_loc, token_ct);
+      printf("(%s) Returning untokenized options: |%s|, token_ct = %d, *config_fn_loc=%s\n",
+             __func__, *untokenized_option_string_loc, token_ct, *config_fn_loc);
+      printf("(%s) prefix_tokens:\n", __func__);
+      ntsa_show(prefix_tokens);
+      printf("(%s) Returning: %d\n", __func__, result);
    }
-   return token_ct;
+   return result;
 
 }
 
@@ -139,7 +157,7 @@ int merge_command_tokens(
       char **  config_tokens,
       char *** new_argv_loc)
 {
-   bool debug = false;
+   bool debug = true;
 
    // default, assume no config file parms
    *new_argv_loc = old_argv;
@@ -161,13 +179,17 @@ int merge_command_tokens(
       }
       combined[new_ndx] = NULL;
       if (debug)
-         printf("(%s) Final new_ndx = %d", __func__, new_ndx);
+         printf("(%s) Final new_ndx = %d\n", __func__, new_ndx);
       *new_argv_loc = combined;
       new_argc = ntsa_length(combined);
    }
 
-   if (debug)
-       printf("(%s) Returning %d\n", __func__, new_argc);
+   if (debug) {
+       printf("(%s) Returning %d, *new_argv_loc=%p\n", __func__, new_argc, *new_argv_loc);
+       printf("(%s) tokens:\n", __func__);
+       ntsa_show(*new_argv_loc);
+   }
+
    return new_argc;
 }
 
@@ -185,23 +207,34 @@ int merge_command_tokens(
  *          reading the configuration file. n. it is not an error if the
  *          configuration file does not exist.  In that case 0 is returned.
  */
-int full_arguments(
+int read_and_parse_config_file(
       const char * ddcutil_application,     // "ddcutil", "ddcui"
-      int      old_argc,
-      char **  old_argv,
-      char *** new_argv_loc,
-      char**   default_options_loc)
+      int          old_argc,
+      char **      old_argv,
+      char ***     new_argv_loc,
+      char**       untokenized_cmd_prefix_loc,
+      char**       configure_fn_loc,
+      GPtrArray *  errmsgs)
 {
-   bool debug = false;
-   char **prefix_tokens = NULL;
+   bool debug = true;
+   char **cmd_prefix_tokens = NULL;
 
    *new_argv_loc = old_argv;
    int new_argc = old_argc;
 
-   int prefix_token_ct =
-         read_ddcutil_config_file(ddcutil_application, &prefix_tokens, default_options_loc);
+   int read_config_rc =
+         read_ddcutil_config_file(
+               ddcutil_application,
+               &cmd_prefix_tokens,
+               untokenized_cmd_prefix_loc,
+               errmsgs,
+               configure_fn_loc,
+               debug);   // verbose
+   int prefix_token_ct = ntsa_length(cmd_prefix_tokens);
    if (debug)
-      printf("(%s) get_config_file() returned %d\n", __func__, prefix_token_ct);
+      printf("(%s) get_config_file() returned %d, configure_fn: %s\n",
+             __func__, read_config_rc, *configure_fn_loc);
+
    if (prefix_token_ct < 0) {
       new_argc = -1;
    }
@@ -210,14 +243,18 @@ int full_arguments(
             old_argc,
             old_argv,
             prefix_token_ct,
-            prefix_tokens,
+            cmd_prefix_tokens,
             new_argv_loc);
    }
-   if (prefix_tokens)
-      ntsa_free(prefix_tokens, false);
+   if (cmd_prefix_tokens)
+      ntsa_free(cmd_prefix_tokens, false);
 
-   if (debug)
-      printf("(%s) Returning: %d\n", __func__, new_argc);
+   if (debug) {
+       printf("(%s) Returning %d, *new_argv_loc=%p\n", __func__, new_argc, *new_argv_loc);
+       printf("(%s) tokens:\n", __func__);
+       ntsa_show(*new_argv_loc);
+   }
+
    return new_argc;
 }
 

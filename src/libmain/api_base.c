@@ -125,7 +125,7 @@ ddca_build_options(void) {
 //
 
 static
-Parsed_Cmd * apply_config_file() {
+Parsed_Cmd * get_parsed_libmain_config() {
    bool debug = true;
    DBGMSF(debug, "Starting");
 
@@ -135,52 +135,46 @@ Parsed_Cmd * apply_config_file() {
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
 
-   char ** tokens = NULL;
-   char * unparsed_options = NULL;
-   DBGMSF(debug, "Calling read_ddcutil_config_file ...");
-   int token_ct = read_ddcutil_config_file("libddcutil", &tokens, &unparsed_options);
+   GPtrArray* errmsgs = g_ptr_array_new_with_free_func(free);
+   char ** new_argv = NULL;
+   char *  untokenized_cmd_prefix = NULL;
+   char *  config_fn;
+   DBGMSF(debug, "Calling read_and_parse_config_file()");
+   int read_and_parse_rc =
+         read_and_parse_config_file(
+                    "libddcutil", 1, cmd_name_array,
+                    &new_argv, &untokenized_cmd_prefix,
+                    &config_fn,
+                    errmsgs);
+   assert(read_and_parse_rc < 0 || read_and_parse_rc >= 1);
+   DBGMSF(debug, "new_argv = %p", new_argv);
+   int new_argc = ntsa_length(new_argv);
 
-#ifdef NOT_NEEDED
-   if (debug) {
-      printf("(%s) read_ddcutil_config_file() returned:\n", __func__);
-      printf("(%s) token_ct = %d\n", __func__, token_ct);
-      if (tokens) {
-         printf("(%s) tokens:\n", __func__);
-         ntsa_show(tokens);
+   if (errmsgs->len > 0) {
+      f0printf(ferr(), "Errors reading configuration file %s:\n", config_fn);
+      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+         f0printf(fout(), "%s\n", g_ptr_array_index(errmsgs, ndx));
       }
    }
-#endif
+   g_ptr_array_free(errmsgs, true);
 
-   if (token_ct <  0) {
-      fprintf(stderr, "Error reading configuration file.");
-   }
-   if (token_ct <= 0) {
-      tokens = cmd_name_array;
-   }
-   else {
-      tokens = ntsa_join(cmd_name_array, tokens, false);
-      DBGMSF(debug, "Joined token array:");
-      ntsa_show(tokens);
-   }
+   // Continue even if config file errors
+   // if (new_argc < 0)
+   //    goto bye;
 
-   free(unparsed_options);
+   if (new_argc > 0) {
+      printf("(%s) calling parse_command()\n", __func__);
+      parsed_cmd = parse_command(ntsa_length(new_argv), new_argv, MODE_LIBDDCUTIL);
+      if (!parsed_cmd) {
+         fprintf(stderr, "Invalid configuration file options: %s\n.", untokenized_cmd_prefix);
+         fprintf(stderr, "Terminating execution\n");
+         exit(1);
+      }
+      if (debug)
+         dbgrpt_parsed_cmd(parsed_cmd, 1);
+   }
+   free(untokenized_cmd_prefix);
 
-   if (token_ct < 0) {
-      // abort or just issue msg?
-      fprintf(stderr, "Errors in ddcutil configuration file\n");
-      token_ct = 0;
-     // free(tokens);
-     // tokens = calloc(1, sizeof(char*));
-   }
-   printf("(%s) calling parse_command()\n", __func__);
-   parsed_cmd = parse_command(ntsa_length(tokens), tokens, MODE_LIBDDCUTIL);
-   if (!parsed_cmd) {
-      fprintf(stderr, "Invalid configuration file options.  Terminating execution\n");
-      exit(1);
-   }
-   if (debug)
-      dbgrpt_parsed_cmd(parsed_cmd, 1);
-   free(tokens);
    DBGMSF(debug, "Done.  Returning %p", parsed_cmd);
    return parsed_cmd;
 }
@@ -201,7 +195,7 @@ _ddca_init(void) {
    bool debug = false;
    if (!library_initialized) {
       init_base_services();
-      Parsed_Cmd* parsed_cmd = apply_config_file();
+      Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       submaster_initializer(parsed_cmd);
       // init_ddc_services();
 
