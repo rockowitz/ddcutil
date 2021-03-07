@@ -7,8 +7,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
 #include <limits.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "util/edid.h"
@@ -219,6 +223,64 @@ bye:
 }
 
 
+bool simple_read_edid(int busno, int read_size, bool write_before_read, int depth) {
+   assert(read_size == 128 || read_size == 256);
+   rpt_nl();
+   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write()",
+                  read_size, busno, (write_before_read) ? "WITH" : "WITHOUT");
+   size_t rc = 0;
+   char i2cdev[20];
+   Byte edid_buf[256];
+   snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
+   bool ok = false;
+   int fd = open(i2cdev, O_RDWR );
+   if (fd < 0) {
+      rpt_vstring(depth, "Open failed for %s, errno=%s", i2cdev, linux_errno_desc(errno));
+   }
+   else {
+      uint16_t op = I2C_SLAVE;
+      rc = ioctl(fd, op, 0x50);
+      int errsv = 0;
+      if (rc < 0) {
+         errsv = errno;
+         rpt_vstring(depth, "ioctl I2C_SLAVE returned errno=%s", linux_errno_desc(errno));
+         if (errsv == EBUSY) {
+            rpt_label(depth, "Retrying ioctl I2C_SLAVE_FORCE...");
+            errno = 0;
+            op = I2C_SLAVE_FORCE;
+            rc = ioctl(fd, op, 0x50);
+            if (rc < 0) {
+               rpt_vstring(depth, "ioctl(I2C_FORCE_SLACE) returned %s", linux_errno_desc(errno));
+            }
+         }
+         if (rc < 0) {
+            goto close;
+         }
+      }
+      if (write_before_read) {
+         edid_buf[0] = 0x00;
+         rc = write(fd, edid_buf, 1);
+         if (rc < 0) {
+            rpt_vstring(depth, "write() of 1 byte failed, errno = %s", linux_errno_desc(errno));
+            rpt_label(depth, "Continuing");
+         }
+      }
+      ssize_t actual_ct = read(fd, edid_buf, read_size);
+      if (actual_ct < 0) {
+         rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
+         goto close;
+      }
+      rpt_vstring(depth, "read() returned %d bytes", actual_ct);
+      rpt_hex_dump(edid_buf, actual_ct, depth+1);
+      ok = true;
+
+close:
+      close(fd);
+   }
+   return ok;
+}
+
+
 /** Checks each I2C device.
  *
  * This function largely uses direct coding to probe the I2C buses.
@@ -264,6 +326,19 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
+
+         int okct = 0;
+         simple_read_edid(busno, 128, false, d2);
+         simple_read_edid(busno, 128, false, d2);
+         simple_read_edid(busno, 256, false, d2);
+         if (okct < 3) {
+            rpt_nl();
+            rpt_label(d2, "Retrying with write() before read()...");
+            simple_read_edid(busno, 128, true, d2);
+            simple_read_edid(busno, 128, true, d2);
+            simple_read_edid(busno, 256, true, d2);
+         }
+         rpt_nl();
 
          int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
          if (fd < 0)
