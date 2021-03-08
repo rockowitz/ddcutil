@@ -59,26 +59,6 @@
 /** @defgroup output_redirection Basic Output Redirection
  */
 
-/** Current stream for normal output.
- *
- * @remark
- * Will be NULL until init_msg_control() is called.
- * Be careful during program initialization.
- *
- * @ingroup output_redirection
- */
-// static FILE * FOUT = NULL;
-
-/** Current stream for error messages.
- *
- * @remark
- * Will be NULL until init_msg_control() is called.
- * Be careful during program initialization.
- *
- * @ingroup output_redirection
- */
-// static FILE * FERR = NULL;
-
 
 #ifdef OVERKILL
 #define FOUT_STACK_SIZE 8
@@ -118,23 +98,7 @@ static Thread_Output_Settings *  get_thread_settings() {
    return settings;
 }
 
-
-
-/** Initialize **stdout** and **stderr** redirection.
- *
- * Must be called during program initialization.
- *
- * @ingroup output_redirection
- */
-void init_msg_control() {
-   // FOUT = stdout;
-   // FERR = stderr;
-
-   // initialization now performed in get_thread_settings()
-}
-
-
-// issue: how to specify that output should be discarded vs reset to stdout?
+// Issue: How to specify that output should be discarded vs reset to stdout?
 // issue will resetting report dest cause conflicts?
 // To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
 // problem:
@@ -167,31 +131,43 @@ void set_fout_to_default() {
 /** Redirect output that would normally go to **stderr**..
  *
  *  @param ferr pointer to output stream
- * @ingroup output_redirection
+ *
+ *  @ingroup output_redirection
  */
 void set_ferr(FILE * ferr) {
-   // FERR = ferr;
    Thread_Output_Settings * dests = get_thread_settings();
    dests->ferr = ferr;
 }
+
 
 /** Redirect output that would normally go to **stderr** back to **stderr**.
  * @ingroup output_redirection
  */
 void set_ferr_to_default() {
-   // FERR = stderr;
    Thread_Output_Settings * dests = get_thread_settings();
    dests->ferr = stderr;
 }
 
+
+/** Gets the "stdout" destination for the current thread
+ *
+ *  @return output destination
+ *
+ *  @ingroup output_redirection
+ */
 FILE * fout() {
-   // return FOUT;
    Thread_Output_Settings * dests = get_thread_settings();
    return dests->fout;
 }
 
+
+/** Gets the "stderr" destination for the current thread
+ *
+ *  @return output destination
+ *
+ *  @ingroup output_redirection
+ */
 FILE * ferr() {
-   // return FERR;
    Thread_Output_Settings * dests = get_thread_settings();
    return dests->ferr;
 }

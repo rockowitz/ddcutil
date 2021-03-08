@@ -80,11 +80,9 @@ typedef struct {
 
 
 //
-// Global redirection for messages that normally go to stdout and stderr,
+// Note: FILE * externs FOUT and FERR were eliminated when output redirection
+// was made thread specific.  Use fout() and ferr()
 // used within functions that are part of the shared library.
-//
-// extern FILE * FOUT;
-// extern FILE * FERR;
 
 void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);
