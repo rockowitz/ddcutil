@@ -3,7 +3,7 @@
 // Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-// Contains initialization functions extraced from main.c so they can
+// Contains initialization functions extracted from main.c so they can
 // be shared with libmain/api.base.c
 
 #include <assert.h>
