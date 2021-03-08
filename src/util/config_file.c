@@ -168,7 +168,7 @@ int load_configuration_file(
       ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
       *hash_table_loc = ini_file_hash;
       int error_ct = 0;
-      for (int ndx = 0; ndx < config_lines->len; ndx++) {
+      for (guint ndx = 0; ndx < config_lines->len; ndx++) {
             char * line = g_ptr_array_index(config_lines, ndx);
             if (debug)
                printf("(%s) Processing line %d: |%s|\n", __func__, ndx+1, line);
@@ -236,7 +236,7 @@ int load_configuration_file(
 
    if (debug) {
       if (errmsgs && errmsgs->len > 0) {
-         for (int ndx = 0; ndx < errmsgs->len; ndx++)
+         for (guint ndx = 0; ndx < errmsgs->len; ndx++)
             printf("   %s\n", (char *) g_ptr_array_index(errmsgs, ndx));
       }
       printf("(%s) Returning: %d\n", __func__, result);
