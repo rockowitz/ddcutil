@@ -146,6 +146,8 @@ report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
 static void
 report_all_options(Parsed_Cmd * parsed_cmd, char * default_options, int depth)
 {
+    bool debug = false;
+    DBGMSF(debug, "Executing...");
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
        show_ddcutil_version();
        rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Config file options:", default_options);
@@ -157,6 +159,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * default_options, int depth)
     report_performance_options(depth);
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_experimental_options(parsed_cmd, depth);
+    DBGMSF(debug, "Done");
 }
 
 
@@ -248,6 +251,8 @@ validate_environment()
  */
 static bool
 master_initializer(Parsed_Cmd * parsed_cmd) {
+   bool debug = false;
+   DBGMSF(debug, "Starting ...");
    bool ok = false;
    submaster_initializer(parsed_cmd);   // shared with libddcutil
 
@@ -269,6 +274,7 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    ok = true;
 
 bye:
+   DBGMSF(debug, "Done");
    return ok;
 }
 
@@ -573,6 +579,8 @@ main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
    Parsed_Cmd * parsed_cmd = NULL;
    init_base_services();  // so tracing related modules are initialized
+   DBGMSF(main_debug, "init_base_services() complete, ol = %s",
+                      output_level_name(get_output_level()) );
 
    GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(free);
    char ** new_argv = NULL;
@@ -587,6 +595,7 @@ main(int argc, char *argv[]) {
                     &untokenized_cmd_prefix,
                     &configure_fn,
                     config_file_errs);
+   DBGMSF(main_debug, "read_parse_and_merge_config_file() complete");
    if (config_file_errs->len > 0) {
       f0printf(fout(), "Errors processing configuration file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
@@ -604,7 +613,7 @@ main(int argc, char *argv[]) {
    }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
-   // DBGMSG("parse_command() returned %p", parsed_cmd);
+   DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
@@ -620,11 +629,13 @@ main(int argc, char *argv[]) {
           "Starting ddcutil execution, %s",
           cur_time_s);
 
-   report_all_options(parsed_cmd, untokenized_cmd_prefix, 0);
-   free(untokenized_cmd_prefix);
+
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
       goto bye;
+   if (parsed_cmd ->output_level >= DDCA_OL_VERBOSE)
+      report_all_options(parsed_cmd, untokenized_cmd_prefix, 0);
+   free(untokenized_cmd_prefix);
 
    // xdg_tests(); // for development
 
