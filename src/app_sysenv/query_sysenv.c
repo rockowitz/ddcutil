@@ -343,59 +343,6 @@ void query_x11() {
 #endif
 
 
-//
-// i2cdetect
-//
-
-#ifdef OLD
-/** Examines /dev/i2c devices using command i2cdetect, if it exists.
- *
- *  \param  i2c_device_numbers  I2C bus numbers to check
- *
- */
-static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
-   assert(i2c_device_numbers);
-
-#ifdef SYSENV_QUICK_TEST_RUN
-   DBGMSG("!!! Skipping i2cdetect checks to speed up testing !!!");
-   return;
-#endif
-
-   int d0 = 0;
-   int d1 = 1;
-
-   rpt_vstring(d0,"Examining I2C buses using i2cdetect... ");
-   sysenv_rpt_current_time(NULL, d1);
-
-   if (bva_length(i2c_device_numbers) == 0) {
-      rpt_vstring(d1, "No I2C buses found");
-   }
-   else {
-      for (int ndx=0; ndx< bva_length(i2c_device_numbers); ndx++) {
-         int busno = bva_get(i2c_device_numbers, ndx);
-         if (sysfs_is_ignorable_i2c_device(busno)) {
-            // calling i2cdetect for an SMBUs device fills dmesg with error messages
-            rpt_nl();
-            rpt_vstring(d1, "Device /dev/i2c-%d is a SMBus or other ignorable device.  Skipping i2cdetect.", busno);
-         }
-         else {
-            char cmd[80];
-            snprintf(cmd, 80, "i2cdetect -y %d", busno);
-            rpt_nl();
-            rpt_vstring(d1,"Probing bus /dev/i2c-%d using command \"%s\"", busno, cmd);
-            int rc = execute_shell_cmd_rpt(cmd, 2 /* depth */);
-            // DBGMSG("execute_shell_cmd(\"%s\") returned %d", cmd, rc);
-            if (rc != 1) {
-               rpt_vstring(d1,"i2cdetect command unavailable");
-               break;
-            }
-         }
-      }
-   }
-}
-#endif
-
-
 static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
                 const char * pattern,
                 const char * command_name)
@@ -731,8 +678,12 @@ void query_sysenv() {
       query_using_i2cdetect(accumulator->dev_i2c_device_numbers);
 #endif
       query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                "i2cdetect -y %d",
-                                "i2cdetect");
+                                "i2cdetect -y %d",   // command to issue
+                                "i2cdetect");        // command name for error message
+
+      // query_using_shell_command(accumulator->dev_i2c_device_numbers,
+      //                           "get-edid -b %d -i | parse-edid",   // command to issue
+      //                           "get-edid");        // command name for error message
 
       raw_scan_i2c_devices(accumulator);
 
