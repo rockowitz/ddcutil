@@ -127,7 +127,7 @@ ddca_build_options(void) {
 static
 Parsed_Cmd * get_parsed_libmain_config() {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGMSF(debug, "Starting. (A)");
 
    Parsed_Cmd * parsed_cmd = NULL;
 
@@ -163,11 +163,11 @@ Parsed_Cmd * get_parsed_libmain_config() {
    //    goto bye;
 
    if (new_argc > 0) {
-      printf("(%s) calling parse_command()\n", __func__);
+      DBGMSF(debug, "Calling parse_command()");
       parsed_cmd = parse_command(ntsa_length(new_argv), new_argv, MODE_LIBDDCUTIL);
       if (!parsed_cmd) {
-         fprintf(stderr, "Invalid configuration file options: %s\n.", untokenized_cmd_prefix);
-         fprintf(stderr, "Terminating execution\n");
+         fprintf(ferr(), "Invalid configuration file options: %s\n.", untokenized_cmd_prefix);
+         fprintf(ferr(), "Terminating execution\n");
          exit(1);
       }
       if (debug)
@@ -175,7 +175,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    }
    free(untokenized_cmd_prefix);
 
-   DBGMSF(debug, "Done.  Returning %p", parsed_cmd);
+   DBGMSF(debug, "Done. (B)  Returning %p", parsed_cmd);
    return parsed_cmd;
 }
 
