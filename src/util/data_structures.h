@@ -35,7 +35,7 @@ typedef void * Byte_Value_Array;
 Byte_Value_Array bva_create();
 int              bva_length(Byte_Value_Array bva);
 void             bva_append(Byte_Value_Array bva, Byte item);
-Byte             bva_get(Byte_Value_Array bva, int ndx);
+Byte             bva_get(Byte_Value_Array bva, guint ndx);
 bool             bva_contains(Byte_Value_Array bva, Byte item);
 bool             bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2);
 Byte *           bva_bytes(Byte_Value_Array bva);

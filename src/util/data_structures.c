@@ -48,7 +48,7 @@ Byte_Value_Array bva_create() {
 Byte_Value_Array bva_filter(Byte_Value_Array  bva, IFilter filter_func) {
    GByteArray * src = (GByteArray*) bva;
    GByteArray * result = g_byte_array_new();
-   for (int ndx=0; ndx < src->len;  ndx++) {
+   for (guint ndx=0; ndx < src->len;  ndx++) {
       guint8 v = src->data[ndx];
       // Byte v1 = v;
       if (filter_func(v))
@@ -90,9 +90,9 @@ void bva_append(Byte_Value_Array bva, Byte item) {
  *  **ndx** must be a valid value.
  *  The only check is by assert().
  */
-Byte bva_get(Byte_Value_Array bva, int ndx) {
+Byte bva_get(Byte_Value_Array bva, guint ndx) {
    GByteArray* ga = (GByteArray*) bva;
-   assert(0 <= ndx && ndx < ga->len);
+   assert(ndx < ga->len);
 
    guint8 v = ga->data[ndx];
    Byte v1 = v;
@@ -108,7 +108,7 @@ Byte bva_get(Byte_Value_Array bva, int ndx) {
  */
 bool bva_contains(Byte_Value_Array bva, Byte item) {
    GByteArray* ga = (GByteArray*) bva;
-   int ndx;
+   guint ndx;
    bool result = false;
    // printf("(%s) item=0x%02x, ga->len=%d\n", __func__, item, ga->len);
    for (ndx=0; ndx < ga->len; ndx++) {
@@ -255,6 +255,7 @@ void bva_report(Byte_Value_Array bva, char * title) {
 }
 
 
+#ifdef TESTS
 // Tests and sample code
 
 int egmain(int argc, char** argv) {
@@ -288,6 +289,7 @@ void test_value_array() {
    }
    bva_free(bva);
 }
+#endif
 
 
 //
