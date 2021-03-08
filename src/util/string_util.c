@@ -77,7 +77,7 @@ bool streq(const char * s1, const char * s2) {
 bool is_abbrev(const char * value, const char * longname, size_t  minchars) {
    bool result = false;
    if (value && longname) {
-      int vlen = strlen(value);
+      size_t vlen = strlen(value);
       if ( vlen >= minchars &&
            vlen <= strlen(longname) &&
            memcmp(value, longname, vlen) == 0   // n. returns 0 if vlen == 0
@@ -155,7 +155,7 @@ int str_contains(const char * value_to_test, const char * segment) {
 bool str_all_printable(const char * s) {
    bool result = true;
    if (s) {
-      for (int ndx = 0; ndx < strlen(s); ndx++) {
+      for (size_t ndx = 0; ndx < strlen(s); ndx++) {
          if (!isprint(s[ndx])) {
             result = false;
             break;
@@ -332,9 +332,7 @@ char * strtrim(const char * s) {
  *                  the string length, ct is reduced accordingly
  * @return extracted substring, in newly allocated memory
  */
-char * substr(const char * s, int startpos, int ct) {
-   assert(startpos >= 0);
-   assert(ct>=0);
+char * substr(const char * s, uint startpos, uint ct) {
    if (startpos + ct > strlen(s))
       ct = strlen(s) - startpos;
    char * result = calloc(ct+1, sizeof(char));
@@ -433,9 +431,10 @@ String_Array* new_string_array(int size) {
  */
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char * delims) {
    bool debug = false;
-   int max_pieces = (strlen(str_to_split)+1);
+   size_t max_pieces = (strlen(str_to_split)+1);
    if (debug)
-      printf("(%s) str_to_split=|%s|, delims=|%s|, max_pieces=%d\n", __func__, str_to_split, delims, max_pieces);
+      printf("(%s) str_to_split=|%s|, delims=|%s|, max_pieces=%zu\n",
+             __func__, str_to_split, delims, max_pieces);
 
    char** workstruct = calloc(sizeof(char *), max_pieces+1);
    int piecect = 0;
@@ -743,7 +742,7 @@ g_ptr_array_to_ntsa(
 {
    assert(gparray);
    Null_Terminated_String_Array ntsa = calloc(gparray->len+1, sizeof(char *));
-   for (int ndx=0; ndx < gparray->len; ndx++) {
+   for (guint ndx=0; ndx < gparray->len; ndx++) {
       if (duplicate)
          ntsa[ndx] = strdup(g_ptr_array_index(gparray,ndx));
       else
@@ -897,9 +896,9 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
 {
    assert(buf && (bufsz > 4) );   //avoid handling pathological case
    bool truncated = false;
-   int seplen = (sepstr) ? strlen(sepstr) : 0;
-   int maxchars = bufsz-1;
-   int newlen = ( strlen(buf) == 0 )
+   size_t seplen = (sepstr) ? strlen(sepstr) : 0;
+   size_t maxchars = bufsz-1;
+   size_t newlen = ( strlen(buf) == 0 )
                      ? strlen(nextval)
                      : ( strlen(buf) + seplen + strlen(nextval));
    if (newlen <= maxchars) {
@@ -1197,7 +1196,7 @@ char * hexstring2(
           const char *          sepstr,
           bool                  uppercase,
           char *                buffer,
-          int                   bufsz)
+          size_t                bufsz)
 {
    // if (len > 1)
    // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s, buffer=%p, bufsz=%d\n", __func__,
@@ -1206,7 +1205,7 @@ char * hexstring2(
    if (sepstr) {
       sepsize = strlen(sepstr);
    }
-   int required_size =   2*len             // hex rep of bytes
+   size_t required_size =   2*len             // hex rep of bytes
                        + (len-1)*sepsize   // for separators
                        + 1;                // terminating null
    // if (len > 1)
@@ -1284,7 +1283,7 @@ char * hexstring3_t(
    if (sepstr) {
       sepsize = strlen(sepstr);
    }
-   int required_size = 1;    // special case if len == 0
+   size_t required_size = 1;    // special case if len == 0
    // excessive if hunk_size > 1, but not worth the effort to be accurate
    if (len > 0)
       required_size =   2*len             // hex rep of bytes

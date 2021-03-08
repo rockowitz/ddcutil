@@ -73,7 +73,7 @@ char * strtrim_r(const char * s, char * buffer, int bufsz);
 char * ltrim_in_place(char * s);
 char * rtrim_in_place(char * s);
 char * trim_in_place(char * s);
-char * substr(const char * s, int startpos, int ct);
+char * substr(const char * s, uint startpos, uint ct);
 char * lsub(const char * s, int ct);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
@@ -135,7 +135,7 @@ char * hexstring2(
           const char *          sepstr,     // separator string between hex digits
           bool                  uppercase,  // use upper case hex characters
           char *                buffer,     // buffer in which to return hex string
-          int                   bufsz);     // buffer size
+          size_t                bufsz);     // buffer size
 char * hexstring3_t(
           const unsigned char * bytes,      // bytes to convert
           int                   len,        // number of bytes
