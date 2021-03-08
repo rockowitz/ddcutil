@@ -45,7 +45,9 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
 #endif
    {CMDID_VCPINFO,      "vcpinfo",        5,  0,       1},
+#ifdef WATCH_COMMAND
    {CMDID_READCHANGES,  "watch",          3,  0,       0},
+#endif
 #ifdef USE_USB
    {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1},
 #endif
@@ -133,6 +135,7 @@ bool parse_dot_separated_arg(const char * val, int * piAdapterIndex, int * piDis
    return ok;
 }
 
+
 bool parse_colon_separated_arg(const char * val, int * pv1, int * pv2) {
    int rc = sscanf(val, "%d:%d", pv1, pv2);
    // DBGMSG("val=|%s| sscanf() returned %d  ", val, rc );
@@ -145,6 +148,7 @@ bool parse_int_arg(char * val, int * pIval) {
    int ct = sscanf(val, "%d", pIval);
    return (ct == 1);
 }
+
 
 typedef struct feature_subset_table_entry_s {
    VCP_Feature_Subset   subset_id;
@@ -334,8 +338,10 @@ char * commands_list_help =
 #ifdef USE_USB
        "   chkusbmon                               Check if USB device is monitor (for UDEV)\n"
 #endif
+#ifdef DEPRECATED
        "   watch                                   Watch display for reported changes (under development)\n"
-       "\n";
+#endif
+      "\n";
 
 #ifdef OLD
 char * command_argument_help =
