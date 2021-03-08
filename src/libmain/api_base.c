@@ -126,7 +126,7 @@ ddca_build_options(void) {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting");
 
    Parsed_Cmd * parsed_cmd = NULL;
