@@ -47,7 +47,7 @@
 //
 // Initialization
 //
-void init_msg_control();
+// void init_msg_control();
 
 
 //
