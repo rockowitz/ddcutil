@@ -108,7 +108,7 @@ int read_ddcutil_config_file(
    }
    if (verbose && errmsgs && errmsgs->len > 0) {
       fprintf(stderr, "Error(s) processing configuration file %s\n", config_fn);
-      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+      for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
          fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
       }
    }
