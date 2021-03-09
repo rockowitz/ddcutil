@@ -106,6 +106,30 @@ stats_arg_func(const    gchar* option_name,
    return ok;
 }
 
+#define FUTURE
+#ifdef FUTURE
+   gboolean debug_pre_parse_func(
+                        GOptionContext *context,
+                        GOptionGroup *group,
+                        gpointer data,
+                        GError **error)
+   {
+      DBGMSG("Executing");
+     return true;
+   }
+
+   gboolean debug_post_parse_func(
+                        GOptionContext *context,
+                        GOptionGroup *group,
+                        gpointer data,
+                        GError **error)
+   {
+      DBGMSG("Executing");
+     return true;
+   }
+#endif
+
+
 
 /* Primary parsing function
  *
@@ -303,7 +327,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
       {"edid-read-size",
                       '\0', 0, G_OPTION_ARG_INT,         &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
+      {NULL},
+   };
 
+   GOptionEntry debug_options[] = {
       // Debugging
       {"excp",       '\0', 0, G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
       {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
@@ -326,7 +353,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
       {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
+      {NULL},
+   };
 
+   GOptionEntry final_options[] = {
       {G_OPTION_REMAINING,
                  '\0', 0,  G_OPTION_ARG_STRING_ARRAY, &cmd_and_args, "ARGUMENTS description",   "command [arguments...]"},
       { NULL }
@@ -338,12 +368,28 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       g_option_group_add_entries(all_options, ddcutil_only_options);
    }
    g_option_group_add_entries(all_options, common_options);
+#ifndef FUTURE
+   g_option_group_add_entries(all_options, debug_options);
+#endif
+   g_option_group_add_entries(all_options, final_options);
+
+#ifdef FUTURE
+   GOptionGroup * debug_option_group =
+   g_option_group_new("debug","Debug Options", "(debug options description)",
+                      NULL,   // user data
+                      NULL);  // function to free user data
+   g_option_group_add_entries(debug_option_group, debug_options);
+   g_option_group_set_parse_hooks(debug_option_group, debug_pre_parse_func, debug_post_parse_func);
+#endif
 
 
    GError* error = NULL;
    GOptionContext* context = g_option_context_new("- DDC query and manipulation");
    // g_option_context_add_main_entries(context, option_entries, NULL);
-   g_option_context_set_main_group(context, all_options); ;
+   g_option_context_set_main_group(context, all_options);
+#ifdef FUTURE
+   g_option_context_add_group(context, debug_option_group);
+#endif
 
    // comma delimited list of trace identifiers:
    // char * trace_group_string = strjoin(trace_group_names, trace_group_ct, ", ");
