@@ -6,7 +6,7 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 
 ### Added
 - Configuration file **ddcutilrc**, located on the XDG config path.   
-- Cache the monitor capabilities strings to improve performance of the **capabilities** command.  
+- Cache monitor capabilities strings to improve performance of the **capabilities** command.  
   Controlled by options ***--enable-capabilities-cache***, ***--disable-capabilities-cache***.
 - Workarounds for problems in DRM video drivers (e.g. i915, ARM) when displays are connected to 
   a docking station. The same monitor can appear as two different /dev/i2c devices,
