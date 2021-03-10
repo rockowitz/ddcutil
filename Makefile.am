@@ -11,7 +11,7 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 
-EXTRA_DIST =  README.md NEWS.md 
+EXTRA_DIST =  README.md NEWS.md CHANGELOG.md
 
 # if ENABLE_GOBJECT_COND
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
@@ -52,7 +52,7 @@ endif
 ## nobase_dist_pixmaps_DATA = \
 ##    pixmaps/ddcutil.png
 
-# doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog
+# doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog 
 
 SUBDIRS = src man data  $(DOXYDIR)
 
