@@ -106,7 +106,7 @@ stats_arg_func(const    gchar* option_name,
    return ok;
 }
 
-#define FUTURE
+// #define FUTURE
 #ifdef FUTURE
    gboolean debug_pre_parse_func(
                         GOptionContext *context,
