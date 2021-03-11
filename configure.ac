@@ -15,8 +15,8 @@ dnl - Macro names in comments are written in lower case to avoid processing as a
 AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [1])
-m4_define([ddcutil_minor_version], [0])
-m4_define([ddcutil_micro_version], [2])
+m4_define([ddcutil_minor_version], [1])
+m4_define([ddcutil_micro_version], [0])
 m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
