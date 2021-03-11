@@ -597,9 +597,11 @@ main(int argc, char *argv[]) {
                     config_file_errs);
    DBGMSF(main_debug, "read_parse_and_merge_config_file() complete");
    if (config_file_errs->len > 0) {
-      f0printf(fout(), "Errors processing configuration file %s:\n", configure_fn);
+      f0printf(ferr(), "Errors processing configuration file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
-         f0printf(fout(), g_ptr_array_index(config_file_errs,ndx));
+         char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
+         f0printf(ferr(), s);
+         free(s);
       }
    }
    g_ptr_array_free(config_file_errs, true);
