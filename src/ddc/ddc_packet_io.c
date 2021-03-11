@@ -342,6 +342,10 @@ DDCA_Status ddc_i2c_write_read_raw(
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
+   DBGTRC(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
+                              hexstring3_t(request_packet_ptr->raw_bytes->bytes,
+                                           request_packet_ptr->raw_bytes->len,
+                                           " ", 1, false) );
    assert(dh);
    assert(dh->dref);
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
@@ -375,6 +379,9 @@ DDCA_Status ddc_i2c_write_read_raw(
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
       TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, NULL);
+      if (rc == 0)
+         DBGTRC(debug, TRACE_GROUP, "Response bytes: %s",
+                                hexstring3_t(readbuf, max_read_bytes, " ", 1, false) );
 
       if (rc == 0 && all_bytes_zero(readbuf, max_read_bytes)) {
          DDCMSG(debug, "All zero response detected in %s", __func__);
@@ -757,6 +764,11 @@ ddc_i2c_write_only(
    if (debug)
       dbgrpt_packet(request_packet_ptr, 1);
 
+   DBGTRC(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
+                              hexstring3_t(request_packet_ptr->raw_bytes->bytes,
+                                           request_packet_ptr->raw_bytes->len,
+                                           " ", 1, false) );
+
    // Byte slave_address = request_packet_ptr[0];
    // assert(slave_address == 0x37);
    Byte slave_address = 0x37;
@@ -893,6 +905,8 @@ ddc_write_only_with_retry(
 static void
 init_ddc_packet_io_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
+   ADD_FUNC(ddc_i2c_write_read_raw);
+   ADD_FUNC(ddc_i2c_write_only);
    ADD_FUNC(ddc_write_read_raw);
    ADD_FUNC(ddc_write_read);
    ADD_FUNC(ddc_write_read_with_retry);
