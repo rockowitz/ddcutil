@@ -95,7 +95,7 @@ int  ntsa_findx( Null_Terminated_String_Array string_array, char * value, String
 int  ntsa_find(  Null_Terminated_String_Array string_array, char * value);
 Null_Terminated_String_Array  ntsa_join(  Null_Terminated_String_Array a1, Null_Terminated_String_Array a2, bool dup);
 Null_Terminated_String_Array  ntsa_prepend(char * value, Null_Terminated_String_Array string_array, bool dup);
-
+Null_Terminated_String_Array ntsa_create_empty_array();
 
 Null_Terminated_String_Array strsplit(const char * str_to_split, const char* delims);
 Null_Terminated_String_Array strsplit_maxlength(

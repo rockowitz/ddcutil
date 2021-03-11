@@ -650,6 +650,14 @@ Null_Terminated_String_Array  ntsa_prepend(
 }
 
 
+Null_Terminated_String_Array ntsa_create_empty_array() {
+   Null_Terminated_String_Array new_array = calloc(1, sizeof(char *));
+   *new_array = NULL;
+   return new_array;
+}
+
+
+
 /** Searches a #Null_Terminated_String_Array for an entry that matches a given
  *  value using a match function provided.
  *
