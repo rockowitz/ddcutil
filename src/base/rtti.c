@@ -1,8 +1,8 @@
 /* @file rtti.c
- * Primitive runtime type information facilities
+ * Runtime trace information
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
