@@ -27,7 +27,7 @@
  *
  *  \param  string to tokenize
  *  \param  tokens_loc where to return the address of a
- *                     null-terminate list of tokens
+ *                     null-terminated list of tokens
  *  \return number of tokens
  */
 int tokenize_init_line(char * string, char ***tokens_loc) {
@@ -56,9 +56,10 @@ int tokenize_init_line(char * string, char ***tokens_loc) {
  *  \param  errmsgs                 collects error messages if non-NULL
  *  \param  config_filename_loc     where to return fully qualified name of configuration file
  *  \param  verbose                 issue error messages if true
- *  \return 0, < 0 if errors
- *          It is not an error if the configuration file does not exist.
- *          In that case 0 is returned..
+ *  \retval >= 0                    number of tokens
+ *  \retval < 0                     status code for error
+ *
+ *  It is not an error if the configuration file does not exist. In that case 0 is returned..
  */
 int read_ddcutil_config_file(
       const char *   ddcutil_application,
@@ -71,7 +72,6 @@ int read_ddcutil_config_file(
    bool debug = false;
 
    int result = 0;
-   int token_ct = 0;
    *tokenized_options_loc = NULL;
    *untokenized_option_string_loc = NULL;
    *config_fn_loc = NULL;
@@ -82,8 +82,7 @@ int read_ddcutil_config_file(
    if (!config_fn) {
       if (debug)
          printf("(%s) Configuration file not found\n", __func__);
-      result = 0;
-      token_ct = 0;
+      prefix_tokens = ntsa_create_empty_array();
       goto bye;
    }
 
@@ -95,12 +94,7 @@ int read_ddcutil_config_file(
    if (debug)
       fprintf(stderr, "load_configuration file() returned %d\n", load_rc);
    if (load_rc < 0) {
-      if (load_rc == -ENOENT) {
-         result = 0;
-         token_ct = 0;
-      }
-
-      else {
+      if (load_rc != -ENOENT) {
          if (verbose)
             fprintf(stderr, "Error loading configuration file: %d\n", load_rc);
          result = load_rc;
@@ -128,17 +122,17 @@ int read_ddcutil_config_file(
       *untokenized_option_string_loc = combined_options;
 
       if (combined_options) {
-         token_ct = tokenize_init_line(combined_options, &prefix_tokens);
-         *tokenized_options_loc = prefix_tokens;
+         result = tokenize_init_line(combined_options, &prefix_tokens);
       }
    }
 
 bye:
+   *tokenized_options_loc = prefix_tokens;
    if (debug)  {
-      printf("(%s) Returning untokenized options: |%s|, token_ct = %d, *config_fn_loc=%s\n",
-             __func__, *untokenized_option_string_loc, token_ct, *config_fn_loc);
+      printf("(%s) Returning untokenized options: |%s|, *config_fn_loc=%s\n",
+             __func__, *untokenized_option_string_loc, *config_fn_loc);
       printf("(%s) prefix_tokens:\n", __func__);
-      ntsa_show(prefix_tokens);
+      ntsa_show(*tokenized_options_loc);
       printf("(%s) Returning: %d\n", __func__, result);
    }
    return result;
