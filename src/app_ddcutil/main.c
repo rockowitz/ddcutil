@@ -144,13 +144,12 @@ report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
 
 
 static void
-report_all_options(Parsed_Cmd * parsed_cmd, char * default_options, int depth)
+report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_options, int depth)
 {
     bool debug = false;
     DBGMSF(debug, "Executing...");
     if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
        show_ddcutil_version();
-       rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Config file options:", default_options);
     }
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_build_options(depth);
@@ -159,6 +158,12 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * default_options, int depth)
     report_performance_options(depth);
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_experimental_options(parsed_cmd, depth);
+    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
+       rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file:",
+                         (config_fn) ? config_fn : "(none)");
+       if (config_fn)
+          rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
+    }
     DBGMSF(debug, "Done");
 }
 
@@ -574,7 +579,6 @@ execute_cmd_with_optional_display_handle(
   */
 int
 main(int argc, char *argv[]) {
-   // FILE * fout = stdout;
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
    Parsed_Cmd * parsed_cmd = NULL;
@@ -636,7 +640,7 @@ main(int argc, char *argv[]) {
    if (!ok)
       goto bye;
    if (parsed_cmd ->output_level >= DDCA_OL_VERBOSE)
-      report_all_options(parsed_cmd, untokenized_cmd_prefix, 0);
+      report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
    free(untokenized_cmd_prefix);
 
    // xdg_tests(); // for development
