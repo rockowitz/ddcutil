@@ -674,9 +674,6 @@ void query_sysenv() {
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
 
-#ifdef OLD
-      query_using_i2cdetect(accumulator->dev_i2c_device_numbers);
-#endif
       query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                 "i2cdetect -y %d",   // command to issue
                                 "i2cdetect");        // command name for error message
