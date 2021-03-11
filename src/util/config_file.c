@@ -71,6 +71,8 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
       printf("(%s) Starting. s->|%s|\n", __func__, s);
    bool result = false;
    char * colon = index(s,':');
+   if (!colon)
+      colon = index(s,'=');
    if (colon) {
       char * untrimmed_key = substr(s, 0, colon-s);
       char * key = strtrim( untrimmed_key );
@@ -200,7 +202,7 @@ int load_configuration_file(
                else {
                   if (debug)
                      printf("(%s) trimmed: |%s|\n", __func__, trimmed);
-                  char * msg = g_strdup_printf("Line %d invalid before section header: %s",
+                  char * msg = g_strdup_printf("Line %d: Invalid before section header: %s",
                                           ndx+1, trimmed);
                   error_ct++;
                   if (verbose)
@@ -216,8 +218,8 @@ int load_configuration_file(
             }
 
             char * msg = (cur_segment)
-                            ? g_strdup_printf("Line %d invalid: %s", ndx+1, trimmed)
-                            : g_strdup_printf("Line %d invalid before section header: %s",
+                            ? g_strdup_printf("Line %d: invalid: %s", ndx+1, trimmed)
+                            : g_strdup_printf("Line %d: invalid before section header: %s",
                                               ndx+1, trimmed);
             error_ct++;
             if (verbose)
