@@ -233,6 +233,21 @@ static Status_Code_Info errno_desc[] = {
       EDENTRY(EISNAM           , "Is a named type file"),                         // 120
       EDENTRY(EREMOTEIO        , "Remote I/O error"),                             // 121
       EDENTRY(EDQUOT           , "Quota exceeded"),                               // 122
+
+      EDENTRY(ENOMEDIUM        , "No medium found"),                              // 123
+      EDENTRY(EMEDIUMTYPE      , "Wrong medium type"),                            // 124
+      EDENTRY(ECANCELED        , "Operation canceled"),                           // 125
+      EDENTRY(ENOKEY           , "Required key not available"),                   // 126
+      EDENTRY(EKEYEXPIRED      , "Key has expired"),                              // 127
+      EDENTRY(EKEYREVOKED      , "Key has been revoked"),                         // 128
+      EDENTRY(EKEYREJECTED     , "Key was rejected by service"),                  // 129
+      EDENTRY(EOWNERDEAD       , "Owner died"),                                   // 130
+
+      /* for robust mutexes */
+      EDENTRY(ENOTRECOVERABLE  , "State not recoverable"),                        // 131
+      EDENTRY(ERFKILL          , "Operation not possible due to RF-kill"),        // 132
+      EDENTRY(EHWPOISON        , "Memory page has hardware error"),               // 133
+
 #endif
 };
 #undef EDENTRY
