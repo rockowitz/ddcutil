@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <wordexp.h>
 
-#include "config_file.h"
+#include "simple_ini_file.h"
 #include "string_util.h"
 #include "xdg_util.h"
 

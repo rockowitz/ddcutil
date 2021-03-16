@@ -1,4 +1,4 @@
-/** \file config_file.c
+/** \file simple_ini_file.c
  *
  *  Reads an INI style configuration file
  */
@@ -18,8 +18,7 @@
 #include "string_util.h"
 #include "xdg_util.h"
 
-#include "config_file.h"
-
+#include "simple_ini_file.h"
 
 static
 bool is_comment(char * s) {

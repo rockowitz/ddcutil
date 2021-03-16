@@ -21,7 +21,6 @@
 #include <unistd.h>
 
 #include "util/data_structures.h"
-#include "util/config_file.h"
 #include "util/ddcutil_config_file.h"
 #include "util/error_info.h"
 #include "util/failsim.h"
@@ -29,6 +28,7 @@
 #include "util/glib_string_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
+#include "util/simple_ini_file.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
