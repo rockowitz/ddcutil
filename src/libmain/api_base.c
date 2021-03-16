@@ -126,7 +126,7 @@ ddca_build_options(void) {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. (A)");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -140,13 +140,15 @@ Parsed_Cmd * get_parsed_libmain_config() {
    char *  untokenized_cmd_prefix = NULL;
    char *  config_fn;
    DBGMSF(debug, "Calling read_and_parse_config_file()");
-   int read_and_parse_rc =
+   int read_parse_merge_rc =
          read_parse_and_merge_config_file(
                     "libddcutil", 1, cmd_name_array,
                     &new_argv, &untokenized_cmd_prefix,
                     &config_fn,
                     errmsgs);
-   assert(read_and_parse_rc < 0 || read_and_parse_rc >= 1);
+   DBGMSF(debug, "read_parse_and_merge_config_file() returned: %d, new_argv=%p",
+                 read_parse_merge_rc, new_argv);
+   assert(read_parse_merge_rc <= 0);
    DBGMSF(debug, "new_argv = %p", new_argv);
    int new_argc = ntsa_length(new_argv);
 
@@ -162,13 +164,15 @@ Parsed_Cmd * get_parsed_libmain_config() {
    // if (new_argc < 0)
    //    goto bye;
 
+   assert(new_argc >= 1);
    if (new_argc > 0) {
       DBGMSF(debug, "Calling parse_command()");
       parsed_cmd = parse_command(ntsa_length(new_argv), new_argv, MODE_LIBDDCUTIL);
       if (!parsed_cmd) {
          fprintf(ferr(), "Invalid configuration file options: %s\n.", untokenized_cmd_prefix);
-         fprintf(ferr(), "Terminating execution\n");
-         exit(1);
+         // fprintf(ferr(), "Terminating execution\n");
+         // exit(1);
+         parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
       }
       if (debug)
          dbgrpt_parsed_cmd(parsed_cmd, 1);
@@ -192,7 +196,7 @@ void __attribute__ ((constructor))
 _ddca_init(void) {
    // Note: Until init_msg_control() is called within init_base_services(),
    // FOUT is null, so DBGMSG() causes a segfault
-   bool debug = false;
+   bool debug = true;
    if (!library_initialized) {
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
