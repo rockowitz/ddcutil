@@ -126,7 +126,7 @@ ddca_build_options(void) {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. (A)");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -139,17 +139,14 @@ Parsed_Cmd * get_parsed_libmain_config() {
    char ** new_argv = NULL;
    char *  untokenized_cmd_prefix = NULL;
    char *  config_fn;
-   DBGMSF(debug, "Calling read_and_parse_config_file()");
-   int read_parse_merge_rc =
-         apply_config_file(
-                    "libddcutil", 1, cmd_name_array,
-                    &new_argv, &untokenized_cmd_prefix,
-                    &config_fn,
-                    errmsgs);
-   DBGMSF(debug, "read_parse_and_merge_config_file() returned: %d, new_argv=%p",
-                 read_parse_merge_rc, new_argv);
-   assert(read_parse_merge_rc <= 0);
-   DBGMSF(debug, "new_argv = %p", new_argv);
+   DBGMSF(debug, "Calling apply_config_file()");
+   int apply_config_rc = apply_config_file(
+                                 "libddcutil", 1, cmd_name_array,
+                                 &new_argv, &untokenized_cmd_prefix,
+                                 &config_fn,
+                                 errmsgs);
+   DBGMSF(debug, "apply_config_file() returned: %d, new_argv=%p", apply_config_rc, new_argv);
+   assert(apply_config_rc <= 0);
    int new_argc = ntsa_length(new_argv);
 
    if (errmsgs->len > 0) {
