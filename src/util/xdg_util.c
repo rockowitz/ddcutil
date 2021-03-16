@@ -40,8 +40,6 @@ regular_file_exists(const char * fqfn) {
 }
 
 
-
-
 /** Returns the name of the base data, configuration, or cache, directory.
  *  First the specified environment variable is checked.
  *  If no value is found the name is constructed from $HOME and
@@ -198,6 +196,7 @@ char * xdg_config_path() {
    return result;
 }
 
+
 char * xdg_cache_path() {
    return xdg_cache_home_dir();
 }
@@ -293,6 +292,7 @@ static char * xdg_dirs_iter_next(Iter_State * state) {
    return buf;
 }
 
+
 /* Caller is responsible for freeing the returned memory. */
 static char * find_xdg_path_file(
       const char * path,
@@ -337,6 +337,8 @@ static char * find_xdg_path_file(
 /** Looks for a file first in the $XDG_DATA_HOME directory,
  *  then in the $XDG_DATA_DIRS directories.
  *
+ *  \param  application   subdirectory name
+ *  \param  simple_fn     file name within subdirectory
  *  \return fully qualified file name, or NULL if not found.
  *
  *  Caller is responsible for freeing the returned memory.
@@ -366,7 +368,11 @@ char * find_xdg_data_file(
 /** Searches $XDG_CONFIG_HOME and then $XDG_CONFIG_DIRS for
  *  a specified file in a particular application sub-directory.
  *
- *  The caller is responsible for freeing the returned string.
+ *  \param  application   subdirectory name
+ *  \param  simple_fn     file name within subdirectory
+ *  \return fully qualified file name, or NULL if not found.
+ *
+ *  Caller is responsible for freeing the returned string.
  */
 char * find_xdg_config_file(
       const char * application,
@@ -384,13 +390,16 @@ char * find_xdg_config_file(
       printf("(%s) application=%s, simple_fn=%s, returning: %s\n",
               __func__, application, simple_fn, result);
    return result;
-
 }
 
 
 /** Looks for a file in the specified subdirectory of $XDG_CACHE_HOME
  *
- *  Caller is responsible for freeing the returned memory.
+ *  \param  application   subdirectory name
+ *  \param  simple_fn     file name within subdirectory
+ *  \return fully qualified file name, or NULL if not found.
+ *
+ *  Caller is responsible for freeing the returned string.
  */
 char * find_xdg_cache_file(
       const char * application,
@@ -412,6 +421,7 @@ char * find_xdg_cache_file(
 }
 
 
+#ifdef TESTS
 void xdg_tests() {
    printf( "xdg_data_home_dir():   %s\n", xdg_data_home_dir() );
    printf( "xdg_data_config_dir(): %s\n", xdg_config_home_dir() );
@@ -438,4 +448,5 @@ void xdg_tests() {
    printf( "find_xdg_cache_file(\"ddcutil\", \"capabilities\"):  %s",
          find_xdg_cache_file("ddcutil", "capabilities"));
 }
+#endif
 
