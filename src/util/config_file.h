@@ -11,12 +11,24 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
-int    load_configuration_file(
-           char *        config_fn,
-           GHashTable**  hash_table_loc,
-           GPtrArray*    errmsgs,
-           bool          verbose);
-char * get_config_value(GHashTable * config_hash, const char * segment, const char * id);
-void   dump_ini_hash( GHashTable * config_hash);
+#define PARSED_INI_FILE_MARKER "INIF"
+typedef struct {
+   char          marker[4];
+   char *        config_fn;
+   GHashTable *  hash_table;
+} Parsed_Ini_File;
 
+int    ini_file_load(
+           const char *      ini_filename,
+           GPtrArray*        errmsgs,
+           bool              verbose,
+           Parsed_Ini_File** ini_file_loc);
+char * ini_file_get_value(
+           Parsed_Ini_File * ini_file,
+           const char *      segment,
+           const char *      id);
+void   ini_file_dump(
+           Parsed_Ini_File * ini_file);
+void   ini_file_free(
+           Parsed_Ini_File * parsed_ini_file);
 #endif /* CONFIG_FILE_H_ */
