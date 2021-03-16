@@ -591,7 +591,7 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   int new_argc = read_parse_and_merge_config_file(
+   int rpm_rc = read_parse_and_merge_config_file(
                     "ddcutil",
                     argc,
                     argv,
@@ -610,8 +610,10 @@ main(int argc, char *argv[]) {
    }
    g_ptr_array_free(config_file_errs, true);
 
-   if (new_argc < 0)
+   if (rpm_rc < 0)
       goto bye;
+
+   int new_argc = ntsa_length(new_argv);
 
    if (main_debug) {
       DBGMSG("new_argc = %d, new_argv:", new_argc);
