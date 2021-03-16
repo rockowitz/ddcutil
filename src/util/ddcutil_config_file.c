@@ -56,7 +56,7 @@ int tokenize_options_line(char * string, char ***tokens_loc) {
  *  \param  errmsgs                 collects error messages if non-NULL
  *  \param  config_filename_loc     where to return fully qualified name of configuration file
  *  \param  verbose                 issue error messages if true
- *  \retval >= 0                    number of tokens
+ *  \retval 0                       success, or no config file found
  *  \retval < 0                     status code for error
  *
  *  It is not an error if the configuration file does not exist. In that case
@@ -206,13 +206,15 @@ int merge_command_tokens(
  *  \param  old argv  argv as passed on the command line
  *  \param  new_argv_loc  where to return the address of the combined token list
  *                        as a Null_Terminated_String_Array
- *  \param  detault_options_loc  where to return string of options obtained from ini file
+ *  \param  untokenized_cmd_prefix_loc
+ *                        where to return unparsed option string obtained from ini file
+ *  \param  configure_fn_loc  where to return name of configuration file read, NULL if not found
  *  \return number of tokens in the combined list, -1 if errors
  *          reading or parsing the configuration file. n. it is not an error if the
  *          configuration file does not exist.  In that case 0 is returned.
  */
 int apply_config_file(
-      const char * ddcutil_application,     // "ddcutil", "ddcui"
+      const char * ddcutil_application,     // "ddcutil", "ddcui", "libddcutil"
       int          old_argc,
       char **      old_argv,
       char ***     new_argv_loc,
@@ -230,14 +232,13 @@ int apply_config_file(
    int result = 0;
    // int new_argc = old_argc;
 
-   int read_config_rc =
-         read_ddcutil_config_file(
-               ddcutil_application,
-               &cmd_prefix_tokens,
-               untokenized_cmd_prefix_loc,
-               errmsgs,
-               configure_fn_loc,
-               debug);   // verbose
+   int read_config_rc = read_ddcutil_config_file(
+                           ddcutil_application,
+                           &cmd_prefix_tokens,
+                           untokenized_cmd_prefix_loc,
+                           errmsgs,
+                           configure_fn_loc,
+                           debug);   // verbose
 #ifdef NO
    if (read_config_rc == 0  || read_config_rc == -EBADMSG)
       assert(*configure_fn_loc && *untokenized_cmd_prefix_loc && cmd_prefix_tokens);
