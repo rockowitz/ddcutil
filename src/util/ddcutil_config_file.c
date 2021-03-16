@@ -211,7 +211,7 @@ int merge_command_tokens(
  *          reading or parsing the configuration file. n. it is not an error if the
  *          configuration file does not exist.  In that case 0 is returned.
  */
-int read_parse_and_merge_config_file(
+int apply_config_file(
       const char * ddcutil_application,     // "ddcutil", "ddcui"
       int          old_argc,
       char **      old_argv,

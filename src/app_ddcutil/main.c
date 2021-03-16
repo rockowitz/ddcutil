@@ -591,7 +591,7 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   int rpm_rc = read_parse_and_merge_config_file(
+   int rpm_rc = apply_config_file(
                     "ddcutil",
                     argc,
                     argv,
