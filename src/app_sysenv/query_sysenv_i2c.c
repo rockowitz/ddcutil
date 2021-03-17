@@ -228,7 +228,7 @@ bool simple_read_edid(int busno, int read_size, bool write_before_read, int dept
    rpt_nl();
    rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write()",
                   read_size, busno, (write_before_read) ? "WITH" : "WITHOUT");
-   size_t rc = 0;
+   int rc = 0;
    char i2cdev[20];
    Byte edid_buf[256];
    snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
@@ -265,7 +265,7 @@ bool simple_read_edid(int busno, int read_size, bool write_before_read, int dept
             rpt_label(depth, "Continuing");
          }
       }
-      ssize_t actual_ct = read(fd, edid_buf, read_size);
+      int actual_ct = read(fd, edid_buf, read_size);
       if (actual_ct < 0) {
          rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
          goto close;
