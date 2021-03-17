@@ -193,7 +193,7 @@ void __attribute__ ((constructor))
 _ddca_init(void) {
    // Note: Until init_msg_control() is called within init_base_services(),
    // FOUT is null, so DBGMSG() causes a segfault
-   bool debug = true;
+   bool debug = false;
    if (!library_initialized) {
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
