@@ -75,14 +75,14 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    if (!colon)
       colon = index(s,'=');
    if (colon) {
-      char * untrimmed_key = substr(s, 0, colon-s);
-      char * key = strtrim( untrimmed_key );
+      char * untrimmed_key = substr(s, 0, colon-s);  // allocates untrimmed_key
+      char * key = strtrim( untrimmed_key );         // allocates key
       for (char *p = key; *p; p++) {*p=tolower(*p);}
       // DBGMSF(debug, "untrimmed_key = |%s|, key = |%s|", untrimmed_key, key);
       char * s_end = s + strlen(s);
       char * v_start = colon+1;
-      char * untrimmed_value = substr(v_start, 0, s_end-v_start);
-      char * value = strtrim( untrimmed_value)  ;
+      char * untrimmed_value = substr(v_start, 0, s_end-v_start); // allocates untrimmed_value
+      char * value = strtrim( untrimmed_value);                   // allocates value
       // DBGMSF(debug, "untrimmed_value = |%s|, value = |%s|", untrimmed_value, value);
       // DBGMSF(debug, "key=|%s|, value=|%s|", key, value);
 
@@ -191,7 +191,7 @@ int ini_file_load(
 
          else if ( is_kv(trimmed, &key, &value) ) {
             if (cur_segment) {
-               char * full_key = g_strdup_printf("%s/%s", cur_segment, key);
+               char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
                if (debug)
                   printf("(%s) Inserting %s -> %s\n", __func__, full_key, value);
                g_hash_table_insert(ini_file_hash, full_key, value);
@@ -203,9 +203,9 @@ int ini_file_load(
                                        ndx+1, trimmed);
                emit_error_msg(msg, errmsgs, verbose);
                error_ct++;
+               free(value);
             }
             free(key);
-            free(value);
          }
 
          else {
@@ -244,6 +244,10 @@ int ini_file_load(
       *parsed_ini_loc = ini_file;
    }
 
+   if (debug) {
+      printf("(%s) Done.*parsed_ini_loc=%p, returning %d\n", __func__, *parsed_ini_loc, result);
+      fflush(stdout);
+   }
    ASSERT_IFF(result==0, *parsed_ini_loc);
    return result;
 }
