@@ -72,6 +72,8 @@ int read_ddcutil_config_file(
 {
    bool debug = false;
    if (debug)
+      verbose = true;
+   if (debug)
       printf("(%s) Starting. ddcutil_application=%s, errmsgs=%p, verbose=%s\n",
              __func__, ddcutil_application, errmsgs, SBOOL(verbose));
 
@@ -93,17 +95,16 @@ int read_ddcutil_config_file(
    *config_fn_loc = config_fn;
 
    Parsed_Ini_File * ini_file = NULL;
-   int load_rc = ini_file_load(config_fn, errmsgs, false, &ini_file);
+   int load_rc = ini_file_load(config_fn, errmsgs, verbose, &ini_file);
+   ASSERT_IFF(load_rc==0, ini_file);
    if (debug)
-      fprintf(stderr, "load_configuration file() returned %d\n", load_rc);
-   if (load_rc < 0 && load_rc != -ENOENT) {
-      if (verbose)
-         fprintf(stderr, "Error loading configuration file: %d\n", load_rc);
-   }
-   if (verbose && errmsgs && errmsgs->len > 0) {
-      fprintf(stderr, "Error(s) processing configuration file %s\n", config_fn);
-      for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
-         fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
+      fprintf(stderr, "ini_file_load() returned %d\n", load_rc);
+   if (verbose) {
+      fprintf(stderr, "(A) Error(s) processing configuration file: %s\n", config_fn);
+      if (errmsgs && errmsgs->len > 0) {
+         for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
+            fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
+         }
       }
    }
 
@@ -125,10 +126,11 @@ int read_ddcutil_config_file(
       }
       *untokenized_option_string_loc = combined_options;
       *tokenized_options_loc = prefix_tokens;
+      ini_file_free(ini_file);
    }
    else
       result = load_rc;
-   ini_file_free(ini_file);
+
 
 bye:
    if (debug)  {
@@ -250,7 +252,7 @@ int apply_config_file(
 
    int prefix_token_ct = (cmd_prefix_tokens) ? ntsa_length(cmd_prefix_tokens) : 0;
    if (debug)
-      printf("(%s) get_config_file() returned %d, configure_fn: %s\n",
+      printf("(%s) read_ddcutil_config_file() returned %d, configure_fn: %s\n",
              __func__, read_config_rc, *configure_fn_loc);
 
    if (read_config_rc == -ENOENT) {
