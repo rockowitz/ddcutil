@@ -601,9 +601,13 @@ main(int argc, char *argv[]) {
                     &untokenized_cmd_prefix,
                     &configure_fn,
                     config_file_errs);
+   if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
+      fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
+            untokenized_cmd_prefix);
+
    DBGMSF(main_debug, "read_parse_and_merge_config_file() complete");
    if (config_file_errs->len > 0) {
-      f0printf(ferr(), "Errors processing configuration file %s:\n", configure_fn);
+      f0printf(ferr(), "Errors processing ddcutil configuration file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
          char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
          f0printf(ferr(), s);
