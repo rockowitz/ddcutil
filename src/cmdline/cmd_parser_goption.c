@@ -434,7 +434,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
    bool ok = g_option_context_parse(context, &argc, &argv, &error);
    if (!ok) {
-      fprintf(stderr, "Option parsing failed: %s\n", error->message);
+      fprintf(stderr, "%s option parsing failed: %s\n",
+                      (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil",
+                      error->message);
    }
 
    // DBGMSG("buswork=%d", buswork);
