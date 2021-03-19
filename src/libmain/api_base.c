@@ -131,23 +131,29 @@ Parsed_Cmd * get_parsed_libmain_config() {
 
    Parsed_Cmd * parsed_cmd = NULL;
 
+   // dummy initial argument list so libddcutil is not a special case
    Null_Terminated_String_Array cmd_name_array = calloc(2, sizeof(char*));
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
 
    GPtrArray* errmsgs = g_ptr_array_new_with_free_func(free);
    char ** new_argv = NULL;
-   char *  untokenized_cmd_prefix = NULL;
+   int     new_argc = 0;
+   char *  untokenized_option_string = NULL;
    char *  config_fn;
    DBGMSF(debug, "Calling apply_config_file()");
    int apply_config_rc = apply_config_file(
-                                 "libddcutil", 1, cmd_name_array,
-                                 &new_argv, &untokenized_cmd_prefix,
+                                 "libddcutil",  // use this section of config file
+                                 1, cmd_name_array,
+                                 &new_argc,
+                                 &new_argv,
+                                 &untokenized_option_string,
                                  &config_fn,
                                  errmsgs);
-   DBGMSF(debug, "apply_config_file() returned: %d, new_argv=%p", apply_config_rc, new_argv);
+   DBGMSF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p",
+                 apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
-   int new_argc = ntsa_length(new_argv);
+   assert( new_argc == ntsa_length(new_argv) );
 
    if (errmsgs->len > 0) {
       f0printf(ferr(), "Errors reading configuration file %s:\n", config_fn);
@@ -158,23 +164,23 @@ Parsed_Cmd * get_parsed_libmain_config() {
    g_ptr_array_free(errmsgs, true);
 
    // Continue even if config file errors
-   // if (new_argc < 0)
+   // if (apply_config_rc < 0)
    //    goto bye;
 
    assert(new_argc >= 1);
-   if (new_argc > 0) {
-      DBGMSF(debug, "Calling parse_command()");
-      parsed_cmd = parse_command(ntsa_length(new_argv), new_argv, MODE_LIBDDCUTIL);
-      if (!parsed_cmd) {
-         fprintf(ferr(), "Invalid configuration file options: %s\n.", untokenized_cmd_prefix);
-         // fprintf(ferr(), "Terminating execution\n");
-         // exit(1);
-         parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
-      }
-      if (debug)
-         dbgrpt_parsed_cmd(parsed_cmd, 1);
+   DBGMSF(debug, "Calling parse_command()");
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
+   if (!parsed_cmd) {
+      fprintf(ferr(), "Ignoring invalid configuration file options: %s\n.",
+                      untokenized_option_string);
+      // fprintf(ferr(), "Terminating execution\n");
+      // exit(1);
+      parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
-   free(untokenized_cmd_prefix);
+   if (debug)
+      dbgrpt_parsed_cmd(parsed_cmd, 1);
+   free(untokenized_option_string);
+   free(config_fn);
 
    DBGMSF(debug, "Done. (B)  Returning %p", parsed_cmd);
    return parsed_cmd;

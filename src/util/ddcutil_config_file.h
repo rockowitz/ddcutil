@@ -8,27 +8,13 @@
 
 #include <glib-2.0/glib.h>
 
-int read_ddcutil_config_file(
-      const char *   ddcutil_application,
-      char ***       tokenized_options_loc,
-      char**         untokenized_option_string_loc,
-      GPtrArray *    errmsgs,
-      char **        config_fn_loc,
-      bool           verbose);
-
-int merge_command_tokens(
-      int      old_argc,
-      char **  old_argv,
-      int      config_token_ct,
-      char **  config_tokens,
-      char *** new_argv_loc);
-
 int apply_config_file(
-      const char * ddcutil_application,     // "ddcutil", "ddcui"
+      const char * ddcutil_application,     // "ddcutil", "ddcui", "libddcutil"
       int          old_argc,
       char **      old_argv,
+      int *        new_argc_loc,
       char ***     new_argv_loc,
-      char**       untokenized_cmd_prefix_loc,
+      char**       untokenized_option_string_loc,
       char**       configure_fn_loc,
       GPtrArray *  errmsgs);
 

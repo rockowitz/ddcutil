@@ -588,13 +588,15 @@ main(int argc, char *argv[]) {
 
    GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(free);
    char ** new_argv = NULL;
+   int     new_argc = 9;
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   int rpm_rc = apply_config_file(
-                    "ddcutil",
+   int apply_config_rc = apply_config_file(
+                    "ddcutil",     // use this section of config file
                     argc,
                     argv,
+                    &new_argc,
                     &new_argv,
                     &untokenized_cmd_prefix,
                     &configure_fn,
@@ -610,13 +612,13 @@ main(int argc, char *argv[]) {
    }
    g_ptr_array_free(config_file_errs, true);
 
-   if (rpm_rc < 0)
+   if (apply_config_rc < 0)
       goto bye;
 
-   int new_argc = ntsa_length(new_argv);
+   assert(new_argc == ntsa_length(new_argv));
 
    if (main_debug) {
-      DBGMSG("new_argc = %d, new_argv:", new_argc);
+      DBGMSG("new_argc = %d, new_argv:\n", new_argc);
       ntsa_show(new_argv);
    }
 

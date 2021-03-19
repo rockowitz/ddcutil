@@ -26,8 +26,7 @@
 /** Tokenize a string as per the command line
  *
  *  \param  string to tokenize
- *  \param  tokens_loc where to return the address of a
- *                     null-terminated list of tokens
+ *  \param  tokens_loc where to return the address of a null-terminated list of tokens
  *  \return number of tokens
  */
 int tokenize_options_line(char * string, char ***tokens_loc) {
@@ -39,35 +38,36 @@ int tokenize_options_line(char * string, char ***tokens_loc) {
    wordexp(string, &p, flags);
    *tokens_loc = p.we_wordv;
    if (debug) {
+      printf("(%s) Tokens:\n", __func__);
       ntsa_show(p.we_wordv);
-      printf("(%s) Returning: %ld\n", __func__, p.we_wordc);
+      printf("(%s) Returning: %zd\n", __func__, p.we_wordc);
    }
    return p.we_wordc;
 }
 
 
-/** Processes a ddcutil configuration file, returning the options in both an untokenized and
- *  a tokenized form.
+/** Processes a ddcutil configuration file, returning an options string obtained
+ *  both the global and applictation-specific sections of the configuration file.nd
  *
  *  \param  ddcutil_application     "ddcutil", "libddcutil", "ddcui"
- *  \param  tokenized_options_loc   where to return the address of the null terminated token list
- *  \param  untokenized_option_loc  where to return untokenized string of options obtained from
+ *  \param  config_filename_loc     where to return fully qualified name of configuration file
+ *  \param  untokenized_option_string_loc
+ *                                  where to return untokenized string of options obtained from
  *                                  the configuration file
  *  \param  errmsgs                 collects error messages if non-NULL
- *  \param  config_filename_loc     where to return fully qualified name of configuration file
  *  \param  verbose                 issue error messages if true
- *  \retval 0                       success, or no config file found
- *  \retval < 0                     status code for error
+ *  \retval 0                       success
+ *  \retval -ENOENT                 config file not found
+ *  \retval < 0                     other error
  *
- *  It is not an error if the configuration file does not exist. In that case
- *  an empty tokenized option list is created and 0 is returned..
+ *  An untokenized option string is returned iff rc == 0.
  */
+static
 int read_ddcutil_config_file(
       const char *   ddcutil_application,
-      char ***       tokenized_options_loc,
+      char **        config_fn_loc,
       char**         untokenized_option_string_loc,
       GPtrArray *    errmsgs,
-      char **        config_fn_loc,
       bool           verbose)
 {
    bool debug = false;
@@ -78,10 +78,8 @@ int read_ddcutil_config_file(
              __func__, ddcutil_application, errmsgs, SBOOL(verbose));
 
    int result = 0;
-   *tokenized_options_loc = NULL;
    *untokenized_option_string_loc = NULL;
    *config_fn_loc = NULL;
-   char ** prefix_tokens = NULL;
 
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    if (!config_fn) {
@@ -121,25 +119,17 @@ int read_ddcutil_config_file(
       if (debug)
          printf("(%s) combined_options= |%s|\n", __func__, combined_options);
 
-      if (combined_options) {
-         result = tokenize_options_line(combined_options, &prefix_tokens);
-      }
       *untokenized_option_string_loc = combined_options;
-      *tokenized_options_loc = prefix_tokens;
       ini_file_free(ini_file);
    }
    else
       result = load_rc;
 
-
 bye:
+   ASSERT_IFF(result==0, *untokenized_option_string_loc);
    if (debug)  {
-      printf("(%s) Returning untokenized options: |%s|, *config_fn_loc=%s\n",
-             __func__, *untokenized_option_string_loc, *config_fn_loc);
-      printf("(%s) *tokenized_options_loc:\n", __func__);
-      if (*tokenized_options_loc)
-         ntsa_show(*tokenized_options_loc);
-      printf("(%s) Returning: %d\n", __func__, result);
+      printf("(%s) Done. untokenized options: |%s|, *config_fn_loc=%s, returning: %d\n",
+             __func__, *untokenized_option_string_loc, *config_fn_loc, result);
    }
    return result;
 }
@@ -155,6 +145,7 @@ bye:
  *  \param   new_argv_loc    where to return address of merged argument list
  *  \return  length of merged argument list
  */
+static
 int merge_command_tokens(
       int      old_argc,
       char **  old_argv,
@@ -202,55 +193,50 @@ int merge_command_tokens(
 
 /** Reads and tokenizes the appropriate options entries in the config file,
  *  then combines the tokenized options from the ddcutil configuration file
- *  with the command line arguments, returning a new list of tokens.
+ *  with the command line arguments, returning a new argument list
  *
- *  \param  old_argc  argc as passed on the command line
- *  \param  old argv  argv as passed on the command line
- *  \param  new_argv_loc  where to return the address of the combined token list
- *                        as a Null_Terminated_String_Array
- *  \param  untokenized_cmd_prefix_loc
- *                        where to return unparsed option string obtained from ini file
- *  \param  configure_fn_loc  where to return name of configuration file read, NULL if not found
- *  \return number of tokens in the combined list, -1 if errors
- *          reading or parsing the configuration file. n. it is not an error if the
- *          configuration file does not exist.  In that case 0 is returned.
+ *  \param  application_name  for selecting config file segment
+ *  \param  old_argc          argc as passed on the command line
+ *  \param  old_argv          argv as passed on the command line
+ *  \param  new_argc_loc      where to return length of updated argv,
+ *                            contains old_argc if error
+ *  \param  new_argv_loc      where to return the address of the updated argv
+ *                            as a Null_Terminated_String_Array, contains old_argv if error
+ *  \param  untokenized_config_options_loc
+ *                            where to return untokenized option string obtained from ini file
+ *  \param  configure_fn_loc  where to return name of configuration file,
+ *                            NULL if not found
+ *  \param  errmsgs           collects error messages, if non-NULL
+ *  \retval 0                 success.
+ *  \retval < 0               error reading or parsing the configuration file.
+ *                            n. it is not an error if the configuration file does not exist.
  */
 int apply_config_file(
-      const char * ddcutil_application,     // "ddcutil", "ddcui", "libddcutil"
+      const char * application_name,     // "ddcutil", "ddcui", "libddcutil"
       int          old_argc,
       char **      old_argv,
+      int *        new_argc_loc,
       char ***     new_argv_loc,
-      char**       untokenized_cmd_prefix_loc,
+      char**       untokenized_config_options_loc,
       char**       configure_fn_loc,
       GPtrArray *  errmsgs)
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. ddcutil_application=%s, errmsgs=%p\n",
-             __func__, ddcutil_application, errmsgs);
-   char **cmd_prefix_tokens = NULL;
+      printf("(%s) Starting. application_name=%s, errmsgs=%p\n",
+             __func__, application_name, errmsgs);
 
    *new_argv_loc = old_argv;
+   *new_argc_loc = old_argc;
    int result = 0;
-   // int new_argc = old_argc;
 
    int read_config_rc = read_ddcutil_config_file(
-                           ddcutil_application,
-                           &cmd_prefix_tokens,
-                           untokenized_cmd_prefix_loc,
-                           errmsgs,
+                           application_name,
                            configure_fn_loc,
+                           untokenized_config_options_loc,
+                           errmsgs,
                            debug);   // verbose
-#ifdef NO
-   if (read_config_rc == 0  || read_config_rc == -EBADMSG)
-      assert(*configure_fn_loc && *untokenized_cmd_prefix_loc && cmd_prefix_tokens);
-   else if (read_config_rc == -ENOENT)
-      assert(!*configure_fn_loc && !*untokenized_cmd_prefix_loc && !cmd_prefix_tokens);
-   else   // error reading config file that exists
-      assert(*configure_fn_loc && !*untokenized_cmd_prefix_loc && !*cmd_prefix_tokens);
-#endif
-
-   int prefix_token_ct = (cmd_prefix_tokens) ? ntsa_length(cmd_prefix_tokens) : 0;
+   ASSERT_IFF(read_config_rc==0, *untokenized_config_options_loc);
    if (debug)
       printf("(%s) read_ddcutil_config_file() returned %d, configure_fn: %s\n",
              __func__, read_config_rc, *configure_fn_loc);
@@ -259,22 +245,27 @@ int apply_config_file(
       result = 0;
    }
    else if (read_config_rc < 0) {
-      result = -1;
+      result = read_config_rc;
    }
-   else if (prefix_token_ct > 0) {
-      int new_argc =  merge_command_tokens(
-            old_argc,
-            old_argv,
-            prefix_token_ct,
-            cmd_prefix_tokens,
-            new_argv_loc);
-      assert(new_argc == ntsa_length(*new_argv_loc));
-   }
-   if (cmd_prefix_tokens)
+   else {
+      char ** cmd_prefix_tokens = NULL;
+      int prefix_token_ct =
+            tokenize_options_line(*untokenized_config_options_loc, &cmd_prefix_tokens);
+      if (prefix_token_ct > 0) {
+          *new_argc_loc =  merge_command_tokens(
+               old_argc,
+               old_argv,
+               prefix_token_ct,
+               cmd_prefix_tokens,
+               new_argv_loc);
+         assert(*new_argc_loc == ntsa_length(*new_argv_loc));
+      }
       ntsa_free(cmd_prefix_tokens, false);
+   }
 
    if (debug) {
-       printf("(%s) Returning %d, *new_argv_loc=%p\n", __func__, result, *new_argv_loc);
+       printf("(%s) Done. *new_argc_loc=%d, *new_argv_loc=%p, returning %d\n",
+                    __func__, *new_argc_loc, *new_argv_loc, result);
        printf("(%s) tokens:\n", __func__);
        ntsa_show(*new_argv_loc);
    }
