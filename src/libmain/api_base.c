@@ -156,12 +156,15 @@ Parsed_Cmd * get_parsed_libmain_config() {
    assert( new_argc == ntsa_length(new_argv) );
 
    if (errmsgs->len > 0) {
-      f0printf(ferr(), "Errors reading configuration file %s:\n", config_fn);
+      f0printf(ferr(), "Errors reading libddcutil configuration file %s:\n", config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         f0printf(fout(), "%s\n", (char*) g_ptr_array_index(errmsgs, ndx));
+         f0printf(fout(), "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
       }
    }
    g_ptr_array_free(errmsgs, true);
+   if (untokenized_option_string && strlen(untokenized_option_string) > 0)
+      fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn,
+            untokenized_option_string);
 
    // Continue even if config file errors
    // if (apply_config_rc < 0)
@@ -171,10 +174,11 @@ Parsed_Cmd * get_parsed_libmain_config() {
    DBGMSF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
-      fprintf(ferr(), "Ignoring invalid configuration file options: %s\n.",
+      fprintf(ferr(), "Ignoring invalid configuration file options: %s\n",
                       untokenized_option_string);
       // fprintf(ferr(), "Terminating execution\n");
       // exit(1);
+      DBGMSF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
    if (debug)
@@ -197,8 +201,6 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   // Note: Until init_msg_control() is called within init_base_services(),
-   // FOUT is null, so DBGMSG() causes a segfault
    bool debug = false;
    if (!library_initialized) {
       init_base_services();
