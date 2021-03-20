@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -351,6 +351,20 @@ void rpt_hex_dump(const Byte * data, int size, int depth) {
 }
 
 
+/** Writes a Null_Terminated_String_Array with indentation.
+ *  Output is written to the current report destination.
+ *
+ * @param ntsa  array to report
+ * @param depth logical indentation depth
+ */
+void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth) {
+   assert(ntsa);
+   for (int ndx=0; ntsa[ndx]; ndx++) {
+      rpt_vstring(depth, "%s", ntsa[ndx]);
+   }
+}
+
+
 /** Writes a string to the current output destination, describing a pointer
  * to a named data structure.
  *
@@ -364,6 +378,7 @@ void rpt_structure_loc(const char * name, const void * ptr, int depth) {
    // fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
    rpt_vstring(depth, "%s at: %p", name, ptr);
 }
+
 
 /** Writes a pair of strings to the current output destination.
  *
