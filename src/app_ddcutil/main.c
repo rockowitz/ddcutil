@@ -605,7 +605,7 @@ main(int argc, char *argv[]) {
       fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
             untokenized_cmd_prefix);
 
-   DBGMSF(main_debug, "read_parse_and_merge_config_file() complete");
+   DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
    if (config_file_errs->len > 0) {
       f0printf(ferr(), "Errors processing ddcutil configuration file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
@@ -622,8 +622,8 @@ main(int argc, char *argv[]) {
    assert(new_argc == ntsa_length(new_argv));
 
    if (main_debug) {
-      DBGMSG("new_argc = %d, new_argv:\n", new_argc);
-      ntsa_show(new_argv);
+      DBGMSG("new_argc = %d, new_argv:", new_argc);
+      rpt_ntsa(new_argv, 1);
    }
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
