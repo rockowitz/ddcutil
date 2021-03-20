@@ -54,6 +54,8 @@ void init_linux_errno() {
 // linux_errno_desc(), will lookup the description using strerror().
 #define EDENTRY(id,desc) {id, #id, NULL}
 
+// Errors 1-34 defined in <asm-generic/errno-base.h>
+
 static Status_Code_Info errno_desc[] = {
       EDENTRY(0,        "success"),
       EDENTRY(EPERM,    "Operation not permitted"),
@@ -95,6 +97,46 @@ static Status_Code_Info errno_desc[] = {
       // math software:
       EDENTRY(EDOM,     "Math argument out of domain of func"),   // 33
       EDENTRY(ERANGE,   "Math result not representable"),         // 34
+
+#ifdef TARGET_LINUX
+     EDENTRY(EDEADLK,   "Resource deadlock would occur"),         // 35   == EDEADLOCK
+     EDENTRY(ENAMETOOLONG, "File name too long"),                 // 36
+     EDENTRY(ENOLCK,    "No record locks available"),             // 37
+     EDENTRY(ENOSYS,    "Invalid system call number"),            // 38
+     EDENTRY(ENOTEMPTY, "Directory not empty"),                   // 39
+     EDENTRY(ELOOP,     "Too many symbolic links encountered"),   // 40
+     EDENTRY(EAGAIN,    "Operation would block"),                 // 41  == EWOULDBLOCK
+     EDENTRY(ENOMSG,    "No message of desired type"),            // 42
+     EDENTRY(EIDRM,    "Identifier removed"),                     // 43
+     EDENTRY(ECHRNG,    "Channel number out of range"),           // 44
+     EDENTRY(EL2NSYNC,  "Level 2 not synchronized"),              // 45
+     EDENTRY(EL3HLT,    "Level 3 halted"),                        // 46
+     EDENTRY(EL3RST,    "Level 3 reset"),                         // 47
+     EDENTRY(ELNRNG,    "Link number out of range"),              // 48
+     EDENTRY(EUNATCH,   "Protocol driver not attached"),          // 49
+     EDENTRY(ENOCSI,    "No CSI structure available"),            // 50
+     EDENTRY(EL2HLT,    "Level 2 halted"),                        // 51
+     EDENTRY(EBADE,     "Invalid exchange"),                      // 52
+     EDENTRY(EBADR,     "Invalid request descriptor"),            // 53
+     EDENTRY(EXFULL,    "Exchange full"),                         // 54
+     EDENTRY(ENOANO,    "No anode"),                              // 55
+     EDENTRY(EBADRQC,   "Invalid request code"),                  // 56
+     EDENTRY(EBADSLT,   "Invalid slot"),                          // 57
+
+     EDENTRY(EBFONT,    "Bad font file format"),                  // 59
+     EDENTRY(ENOSTR,    "Device not a stream"),                   // 60
+     EDENTRY(ENODATA,   "No data available"),                     // 61
+     EDENTRY(ETIME,     "Timer expired"),                         // 62
+     EDENTRY(ENOSR,     "Out of streams resources"),              // 63
+     EDENTRY(ENONET,    "Machine is not on the network"),         // 64
+     EDENTRY(ENOPKG,    "Package not installed"),                 // 65
+     EDENTRY(EREMOTE,   "Object is remote"),                      // 66
+     EDENTRY(ENOLINK,   "Link has been severed"),                 // 67
+     EDENTRY(EADV,      "Advertise error"),                       // 68
+     EDENTRY(ESRMNT,    "Srmount error"),                         // 69
+     EDENTRY(ECOMM,     "Communication error on send"),           // 70
+
+#endif
 
 #ifdef TARGET_BSD
       // non-blocking and interrupt i/o
@@ -193,8 +235,23 @@ static Status_Code_Info errno_desc[] = {
 
 #else
 
-      // break in seq
-      EDENTRY(EPROTO,   "Protocol error"),                       // 71
+      EDENTRY(EPROTO,         "Protocol error"),    //  71
+      EDENTRY(EMULTIHOP,      "Multihop attempted"),    //  72
+      EDENTRY(EDOTDOT,        "RFS specific error"),    // 73
+      EDENTRY(EBADMSG,        "Not a data message"),    // 74
+      EDENTRY(EOVERFLOW,      "Value too large for defined data type"),    // 75
+      EDENTRY(ENOTUNIQ,       "Name not unique on network"),    // 76
+      EDENTRY(EBADFD,         "File descriptor in bad state"),    // 77
+      EDENTRY(EREMCHG,        "Remote address changed"),    // 78
+      EDENTRY(ELIBACC,        "Can not access a needed shared library"),    // 79
+      EDENTRY(ELIBBAD,        "Accessing a corrupted shared library"),    // 80
+      EDENTRY(ELIBSCN,        ".lib section in a.out corrupted"),    // 81
+      EDENTRY(ELIBMAX,        "Attempting to link in too many shared libraries"),    // 82
+      EDENTRY(ELIBEXEC,       "Cannot exec a shared library directly"),    // 83
+      EDENTRY(EILSEQ,         "Illegal byte sequence"),    // 84
+      EDENTRY(ERESTART,       "Interrupted system call should be restarted"),    // 85
+      EDENTRY(ESTRPIPE,       "Streams pipe error"),    // 86
+      EDENTRY(EUSERS,         "Too many users"),    // 87
 
       EDENTRY(ENOTSOCK,          "Socket operation on non-socket"),               //  88
       EDENTRY(EDESTADDRREQ,      "Destination address required"),                 //  89
