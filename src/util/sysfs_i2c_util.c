@@ -156,7 +156,7 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
          "smu",          // Mac G5, probing causes system hang
          "mac-io",       // Mac G5
          "u4",           // Mac G5
-         "AMDGPU SMU",
+         "AMDGPU SMU",   // AMD Navi2 variants, e.g. RX 6000 series
          NULL };
    if (name) {
       if (starts_with_any(name, ignorable_prefixes) >= 0)
