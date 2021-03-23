@@ -22,7 +22,7 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 - Additional functions are traceable using option ***--trcfunc***
 
 ### Fixed
-- Regard IO operations setting errno EBUSY as recoverable, suggest use of   option 
+- Regard IO operations setting errno EBUSY as recoverable, suggest use of option 
   ***--force-slave-address***.  (EBUSY can occur when ddcontrol's ddcci driver 
   is loaded.)
 - Fix build failure when configure option ***--disable-usb*** is combined with 
