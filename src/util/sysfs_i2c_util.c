@@ -188,6 +188,12 @@ sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
    bool result = false;
 
+   // It is possible for a display device to have an I2C bus
+   // that should be ignored.  Recent AMD Navi board (e.g. RX 6000)
+   // have an I2C SMU bus that will hang the card if probed.
+   // So first check for specific device names to ignore.
+   // If not found, then base the result on the device's class.
+
    char * name = get_i2c_device_sysfs_name(busno);
    char * driver = get_i2c_device_sysfs_driver(busno);
    if (name)
@@ -196,7 +202,6 @@ sysfs_is_ignorable_i2c_device(int busno) {
       printf("(%s) busno=%d, name=|%s|, result=%s\n", __func__, busno, name, sbool(result));
    free(name);    // safe if NULL
    free(driver);  // ditto
-
 
    if (!result) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
