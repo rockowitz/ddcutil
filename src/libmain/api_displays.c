@@ -659,9 +659,12 @@ ddca_get_display_info_list2(
             vspec = get_vcp_version_by_dref(dref);
          }
          memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
          STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
          STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
          STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+#pragma GCC diagnostic pop
          curinfo->product_code  = dref->pedid->product_code;
          curinfo->vcp_version    = vspec;
          curinfo->dref           = dref;
