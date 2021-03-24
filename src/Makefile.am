@@ -106,25 +106,15 @@ libddcutil_la_SOURCES = \
    libmain/api_feature_access.c \
    libmain/api_capabilities.c 
 
-# Despite what the Autotools book says, all-local is executed aftar all, not before 
-# So this ensures that the NEXT execution of all will compile build_info.c 
-
-# removed from all-local:
-# 	touch base/build_info.c
-
 all-local:
-	@echo "Executing hook all-local..."
-
-# Never executed:
-# all-hook:
-#	@echo "(src/Makefile) Executing all-hook..."
-#	touch base/build_info.c
-
-# fails
-# base/build_info.o: .FORCE
-#	@echo "Executing phony rule for build_info.o"
-#	touch base/built_info.c
-
+	@echo ""
+	@echo "(src/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:      $(CLEANFILES)"
+	@echo "   CFLAGS:          $(CFLAGS)"
+	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:        $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
+	@echo ""
 
 #
 # libcommon contains the source files that are 
