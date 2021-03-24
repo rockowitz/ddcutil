@@ -3,11 +3,18 @@ AM_CPPFLAGS =        \
   $(LIBDRM_CFLAGS)
 
 AM_CFLAGS = -Wall 
-AM_CFLAGS += -Werror
-# -pedantic issues warnings re code that doesn't conform to ISO C
-#  Alas, -m modifier on sscanf is a POSIX extension, not ISO C
-#  In combination with -Werror, causes device_util.c to fail compilation
+
+# AM_CFLAGS += -Werror
+# Distributing -Werror is Bad programming practice.  May cause compilation to fail
+# on external site having different compiler, compiler version, or configuration. 
+# See comments and answers in
+# https://stackoverflow.com/questions/10275554/how-to-disable-specified-warning-for-specified-file-while-using-autotools
+
 # AM_CFLAGS += -pedantic
+# -pedantic issues warnings re code that doesn't conform to ISO C
+# Alas, -m modifier on sscanf is a POSIX extension, not ISO C
+# In combination with -Werror, causes device_util.c to fail compilation
+
 # AM_CFLAGS += -H
 
 if ENABLE_CALLGRAPH_COND
@@ -17,6 +24,16 @@ endif
 
 CLEANFILES = \
 *expand
+
+all-local:
+	@echo ""
+	@echo "(src/util/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:      $(CLEANFILES)"
+	@echo "   CFLAGS:          $(CFLAGS)"
+	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:        $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
+	@echo ""
 
 clean-local:
 	@echo "(src/util/Makefile) clean-local"
