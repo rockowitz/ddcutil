@@ -28,8 +28,16 @@
    } while (0)
 #endif
 
-#define STRLCPY(_dst, _src, _size)  \
+#define STRLCPY_WORKS_USING_G_STRLCPY(_dst, _src, _size)  \
    /* coverity[access_dbuf_in_call] */ (void) g_strlcpy( (_dst), (_src), (_size) )
+
+// n. may  trigger  -Wstringop-truncation, if so caller must use #pragma to disable
+#define STRLCPY(_dst, _src, _size) \
+do { \
+  /* converity[access_dbuf_in_call] */ strncpy(_dst, _src, (_size)-1); \
+  _dst[(_size)-1] = '\0'; \
+} while(0)
+
 
 
 
@@ -41,8 +49,15 @@ do { \
    strncpy(_dst, _src, _size); _dst[sizeof(_dst)-1] = '\0'; \
 } while(0)
 
-#define STRLCAT(_dst, _src, _size) \
+#define STRLCAT_WORKS_FOR_COVERITY(_dst, _src, _size) \
    /* coverity[index_parm] */ (void) g_strlcat(_dst, _src, _size)
+
+#define STRLCAT(_dst, _src, _size) \
+do { \
+   strncat(_dst, _src, (_size)-1); \
+  _dst[(_size)-1] = '\0'; \
+} while(0)
+
 
 
 #ifdef ALTERNATIVES
