@@ -203,7 +203,7 @@ show:
 .PHONY: clang show
 
 # ldconfig fails when executed in pbuilder due to permissions
-# just have to tell users to run in manually
+# just have to tell users to run it manually
 
 # install-exec-local:
 # 	@echo "(install-exec-local):"
@@ -222,6 +222,17 @@ install-data-local:
 install-cmake-local:
 	@echo "(Makefile) install-cmake-local):"
 	@echo "  cmakedir                 = $(cmakedir)"
+
+
+all-local:
+	@echo ""
+	@echo "(Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:      $(CLEANFILES)"
+	@echo "   CFLAGS:          $(CFLAGS)"
+	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:        $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
+	@echo ""
 
 
 # rpmarch=`$(RPM) --showrc | grep "^build arc" | \
