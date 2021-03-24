@@ -22,6 +22,11 @@
 
 #include "sysfs_util.h"
 
+//  -Wstringop-trunction is brain dead
+//  compile will fail if -Werror set
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+
 
 /** Reads a /sys attribute file, which is 1 line of text
  *
@@ -235,16 +240,14 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
-   strncpy(buffer, fn_segment, bufsz);
-   buffer[bufsz-1] = '\0';
+   STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
       char * segment = va_arg(ap, char*);
       if (!segment)
          break;
-      strncat(buffer, "/", bufsz);
-      buffer[bufsz-1] = '\0';
-      strncat(buffer, segment, bufsz);
-      buffer[bufsz-1] = '\0';
+      STRLCAT(buffer, "/", bufsz);
+      STRLCAT(buffer, segment, bufsz);
+      STRLCAT(buffer, "/", bufsz);
    }
    return buffer;
 }
@@ -485,3 +488,5 @@ rpt2_attr_note_subdir(
    return found;
 }
 
+
+#pragma GCC diagnostic pop
