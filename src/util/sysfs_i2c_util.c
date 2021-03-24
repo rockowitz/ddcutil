@@ -187,24 +187,27 @@ bool
 sysfs_is_ignorable_i2c_device(int busno) {
    bool debug = false;
    bool result = false;
-   uint32_t class = get_i2c_device_sysfs_class(busno);
-   if (class) {
-      // printf("(%s) class = 0x%08x\n", __func__, class);
-      uint32_t cl2 = class & 0xffff0000;
-      if (debug)
-         printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
-      result = (cl2 != 0x030000 &&
-                cl2 != 0x0a0000);    // docking station
-   }
-   else {
-      char * name = get_i2c_device_sysfs_name(busno);
-      char * driver = get_i2c_device_sysfs_driver(busno);
-      if (name)
-         result = ignorable_i2c_device_sysfs_name(name, driver);
-      if (debug)
-         printf("(%s) busno=%d, name=|%s|, result=%s\n", __func__, busno, name, sbool(result));
-      free(name);    // safe if NULL
-      free(driver);  // ditto
+
+   char * name = get_i2c_device_sysfs_name(busno);
+   char * driver = get_i2c_device_sysfs_driver(busno);
+   if (name)
+      result = ignorable_i2c_device_sysfs_name(name, driver);
+   if (debug)
+      printf("(%s) busno=%d, name=|%s|, result=%s\n", __func__, busno, name, sbool(result));
+   free(name);    // safe if NULL
+   free(driver);  // ditto
+
+
+   if (!result) {
+      uint32_t class = get_i2c_device_sysfs_class(busno);
+      if (class) {
+         // printf("(%s) class = 0x%08x\n", __func__, class);
+         uint32_t cl2 = class & 0xffff0000;
+         if (debug)
+            printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
+         result = (cl2 != 0x030000 &&
+                   cl2 != 0x0a0000);    // docking station
+      }
    }
 
    if (debug)
