@@ -24,8 +24,8 @@
 
 //  -Wstringop-trunction is brain dead
 //  compile will fail if -Werror set
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wstringop-truncation"
 
 
 /** Reads a /sys attribute file, which is 1 line of text
@@ -101,7 +101,7 @@ read_sysfs_attr_w_default_r(
    sprintf(fn, "%s/%s", dirname, attrname);
    char * result = file_get_first_line(fn, verbose);
    if (result) {
-      /* coverity[access_dbuf_in_call] */ (void) g_strlcpy(buf, result, bufsz);   // (void) to avoid coverity warning re unused return value
+      STRLCPY(buf, result, bufsz);
       free(result);
    }
    else {
@@ -488,5 +488,3 @@ rpt2_attr_note_subdir(
    return found;
 }
 
-
-#pragma GCC diagnostic pop
