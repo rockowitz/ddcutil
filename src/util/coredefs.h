@@ -31,7 +31,6 @@
  *
  * Using memcpy() avoids all the warnings, but has the drawback that STRLCPY(), unlike
  * strndup() etc., does not have a return value, so is not a drop-in replacement.
- * Also, it requires that
  * However, in practice, that return value is not used by callers.
  */
 
