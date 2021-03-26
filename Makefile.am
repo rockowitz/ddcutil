@@ -224,7 +224,8 @@ install-cmake-local:
 	@echo "  cmakedir                 = $(cmakedir)"
 
 
-all-local:
+# Rename to "all-local" for development
+all-local-disabled:
 	@echo ""
 	@echo "(Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:      $(CLEANFILES)"

@@ -5,8 +5,8 @@ AM_CPPFLAGS =        \
 AM_CFLAGS = -Wall 
 
 # AM_CFLAGS += -Werror
-# Distributing -Werror is Bad programming practice.  May cause compilation to fail
-# on external site having different compiler, compiler version, or configuration. 
+# Distributing -Werror is bad programming practice.  It can result in build failure
+# on an external site having a different compiler, compiler version, or configuration. 
 # See comments and answers in
 # https://stackoverflow.com/questions/10275554/how-to-disable-specified-warning-for-specified-file-while-using-autotools
 
@@ -16,6 +16,7 @@ AM_CFLAGS = -Wall
 # In combination with -Werror, causes device_util.c to fail compilation
 
 # AM_CFLAGS += -H
+# Report headef file dependencies
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
@@ -25,7 +26,8 @@ endif
 CLEANFILES = \
 *expand
 
-all-local:
+# Rename to "all-local" for development
+all-local-disabled:
 	@echo ""
 	@echo "(src/util/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:      $(CLEANFILES)"
@@ -114,6 +116,6 @@ endif
 
 
 
-dist-hook:
+dist-hook0:
 	@echo "(src/util/Makefile) dist-hook"
 

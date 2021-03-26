@@ -106,7 +106,8 @@ libddcutil_la_SOURCES = \
    libmain/api_feature_access.c \
    libmain/api_capabilities.c 
 
-all-local:
+# Rename to "all=local" for development 
+all-local-disabled:
 	@echo ""
 	@echo "(src/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:      $(CLEANFILES)"
