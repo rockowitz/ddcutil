@@ -1122,9 +1122,10 @@ ddc_detect_all_displays() {
    DDCA_Output_Level olev = get_output_level();
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
-      DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
-                    display_list->len, async_threshold);
-      if (display_list->len >= async_threshold)
+
+   DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
+                 display_list->len, async_threshold);
+   if (display_list->len >= async_threshold)
       async_scan(display_list);
    else
       non_async_scan(display_list);
