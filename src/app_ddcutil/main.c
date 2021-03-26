@@ -586,7 +586,7 @@ main(int argc, char *argv[]) {
    DBGMSF(main_debug, "init_base_services() complete, ol = %s",
                       output_level_name(get_output_level()) );
 
-   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(free);
+   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(g_free);
    char ** new_argv = NULL;
    int     new_argc = 9;
    char *  untokenized_cmd_prefix = NULL;

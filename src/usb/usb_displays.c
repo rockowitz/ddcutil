@@ -1,7 +1,7 @@
 /** @file usb_displays.c
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -17,12 +17,12 @@
 #include "util/device_id_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/udev_util.h"
 #include "util/udev_usb_util.h"
+#include "util/udev_util.h"
 
-#include "usb_util/usb_hid_common.h"
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
+#include "usb_util/usb_hid_common.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -488,7 +488,7 @@ get_usb_monitor_list() {
       }  // monitor opened
    } // loop over device names
 
-   g_ptr_array_set_free_func(hiddev_names, free);
+   g_ptr_array_set_free_func(hiddev_names, g_free);
    g_ptr_array_free(hiddev_names, true);
 
    if ( debug || IS_TRACING() ) {

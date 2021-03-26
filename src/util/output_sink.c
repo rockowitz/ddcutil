@@ -1,7 +1,7 @@
 /* output_sink.c
  *
  * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -29,7 +29,7 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +88,7 @@ Output_Sink create_memory_sink(int initial_line_ct, int estimated_max_chars) {
    memcpy(psink->marker, OUTPUT_SINK_MARKER, 4);
    psink->sink_type = SINK_MEMORY;
    psink->line_array = g_ptr_array_sized_new(initial_line_ct);
-   g_ptr_array_set_free_func(psink->line_array, free);
+   g_ptr_array_set_free_func(psink->line_array, g_free);
    psink->cur_max_chars = estimated_max_chars;
    psink->workbuf = calloc(estimated_max_chars+1, sizeof(char));
    return psink;

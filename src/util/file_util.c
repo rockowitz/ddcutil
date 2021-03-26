@@ -293,7 +293,7 @@ get_filenames_by_filter(
    // const char *hiddev_paths[] = { "/dev/", "/dev/usb/", NULL };
    bool debug = false;
    GPtrArray * devnames =  g_ptr_array_new();
-   g_ptr_array_set_free_func(devnames, free);
+   g_ptr_array_set_free_func(devnames, g_free);
    char path[PATH_MAX];
 
    for (int i = 0; dirnames[i] != NULL; i++) {

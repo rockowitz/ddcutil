@@ -145,7 +145,7 @@ int is_module_builtin(char * module_name)
          filter_terms[0] = ko_name;
          filter_terms[1] = NULL;
          GPtrArray * lines = g_ptr_array_sized_new(400);
-         g_ptr_array_set_free_func(lines, free);
+         g_ptr_array_set_free_func(lines, g_free);
          int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, filter_terms, false, 0);
          if (unfiltered_ct < 0) {
            result = unfiltered_ct;   // -errno

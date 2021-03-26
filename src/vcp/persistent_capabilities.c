@@ -96,7 +96,7 @@ Error_Info * load_persistent_capabilities_file()
       char * data_file_name = get_capabilities_cache_file_name();
       // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
       DBGTRC(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
-      GPtrArray * linearray = g_ptr_array_new_with_free_func(free);
+      GPtrArray * linearray = g_ptr_array_new_with_free_func(g_free);
       errs = file_getlines_errinfo(data_file_name, linearray);
       free(data_file_name);
       if (!errs) {

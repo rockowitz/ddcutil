@@ -1,7 +1,7 @@
 /** @file hiddev_util.c
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
-// #include <glib.h>
 #include <glib-2.0/glib.h>
 #include <libudev.h>
 #include <linux/hiddev.h>
@@ -23,7 +22,6 @@
 #include <strings.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-// #include <wchar.h>
 
 #include "util/coredefs.h"
 #include "util/file_util.h"
@@ -109,7 +107,7 @@ get_hiddev_device_names_using_udev() {
    if (debug) printf("(%s) Starting...\n", __func__);
 
    GPtrArray * dev_names = g_ptr_array_sized_new(10);
-   g_ptr_array_set_free_func(dev_names, free);
+   g_ptr_array_set_free_func(dev_names, g_free);
 
    struct udev *udev;
    struct udev_enumerate *enumerate;

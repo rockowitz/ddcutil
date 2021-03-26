@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 
 #include "public/ddcutil_c_api.h"
@@ -20,10 +21,10 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/per_thread_data.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
-#include "base/per_thread_data.h"
 
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
@@ -136,7 +137,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
 
-   GPtrArray* errmsgs = g_ptr_array_new_with_free_func(free);
+   GPtrArray* errmsgs = g_ptr_array_new_with_free_func(g_free);
    char ** new_argv = NULL;
    int     new_argc = 0;
    char *  untokenized_option_string = NULL;

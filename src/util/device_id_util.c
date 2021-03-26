@@ -2,7 +2,7 @@
  * Lookup PCI and USB device ids
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -706,7 +706,7 @@ static void load_id_file(Device_Id_Type id_type){
       }       // if (all_lines)
       // to do: call
 
-      g_ptr_array_set_free_func(all_lines, free);
+      g_ptr_array_set_free_func(all_lines, g_free);
       g_ptr_array_free(all_lines, true);
       free(device_id_fqfn);
    }          // if pci.ids or usb.ids was found

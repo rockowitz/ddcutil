@@ -7,15 +7,14 @@
 #include "config.h"
 
 /** \cond */
-#define _GNU_SOURCE     // for syscall in unistd.h
 #include <assert.h>
-#include <stdbool.h>
-#include <glib-2.0/glib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glib-2.0/glib.h>
 #ifdef ENABLE_UDEV
 #include <libudev.h>
 #endif
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -103,7 +102,7 @@ GPtrArray *  get_sysfs_drm_displays() {
    bool debug = false;
 
    GPtrArray * connected_displays = g_ptr_array_new();
-   g_ptr_array_set_free_func(connected_displays, free);
+   g_ptr_array_set_free_func(connected_displays, g_free);
 
    // rpt_vstring(depth,"Examining /sys/class/drm...");
 #ifdef TARGET_BSD
@@ -167,7 +166,7 @@ GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
    assert(first);
    assert(second);
    // to consider: only allocate result if there's actually a difference
-   GPtrArray * result = g_ptr_array_new_with_free_func(free);
+   GPtrArray * result = g_ptr_array_new_with_free_func(g_free);
    guint found_index;
    for (int ndx = 0; ndx < first->len; ndx++) {
       gpointer cur = g_ptr_array_index(first, ndx);
