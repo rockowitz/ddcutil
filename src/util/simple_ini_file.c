@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 
 #include "file_util_base.h"
 #include "string_util.h"

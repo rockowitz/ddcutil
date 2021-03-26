@@ -12,13 +12,13 @@
 
 #include <assert.h>
 #include <ctype.h>
-#include <glib-2.0/glib.h>
 #include <errno.h>
-#include <stdio.h>
+#include <glib-2.0/glib.h>
+#include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 /** \endcond */
 
 #include "glib_util.h"
