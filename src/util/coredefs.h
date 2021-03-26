@@ -10,6 +10,7 @@
 #define COREDEFS_H_
 
 #include <glib-2.0/glib.h>   // for MIN()
+#include <string.h>          // for memcpy(), strlen()
 
 #include "config.h"          // for TARGET_BSD, TARGET_LINUX
 #include "coredefs_base.h"   // shared with ddcui
