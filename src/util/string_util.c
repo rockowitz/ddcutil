@@ -305,9 +305,6 @@ char * trim_in_place(char * s) {
 }
 
 
-
-
-
 /** Trims leading and trailing whitespace from a string and
  * returns the result in newly allocated memory.
  * It is the caller's responsibility to free this memory.
@@ -332,7 +329,7 @@ char * strtrim(const char * s) {
  *                  the string length, ct is reduced accordingly
  * @return extracted substring, in newly allocated memory
  */
-char * substr(const char * s, uint startpos, uint ct) {
+char * substr(const char * s, size_t startpos, size_t ct) {
    if (startpos + ct > strlen(s))
       ct = strlen(s) - startpos;
    char * result = calloc(ct+1, sizeof(char));
@@ -340,6 +337,7 @@ char * substr(const char * s, uint startpos, uint ct) {
    result[ct] = '\0';
    return result;
 }
+
 
 /** Returns the initial portion of a string
  *
