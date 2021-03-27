@@ -199,8 +199,6 @@ read_sysfs_attr0(
 }
 
 
-typedef bool (*Fn_Filter)(const char * fn, const char * val);
-
 static char *
 get_single_subdir_name(
       const char * dirname,
