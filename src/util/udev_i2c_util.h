@@ -2,14 +2,14 @@
   *  I2C specific udev utilities
   */
 
-// Copyright (C) 2016-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef UDEV_I2C_UTIL_H_
 #define UDEV_I2C_UTIL_H_
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 /** \endcond */
 

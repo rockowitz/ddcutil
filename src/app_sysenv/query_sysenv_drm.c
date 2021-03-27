@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -12,7 +12,7 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>

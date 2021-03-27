@@ -1,13 +1,13 @@
 /* \file ddc_output.h
  */
 
-// Copyright (C) 2014-202- Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_OUTPUT_H_
 #define DDC_OUTPUT_H_
 
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <time.h>
 

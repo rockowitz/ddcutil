@@ -3,7 +3,7 @@
  * * Adapted from file randr-edid.c from libCEC.    How to properly handle copyright?
  *
  * <copyright>
- * Copyright (C) 2016-2917 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -63,7 +63,7 @@
 
 /** \cond */
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>

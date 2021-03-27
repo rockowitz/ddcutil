@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <linux/hid.h>     // HID_MAX_DESCRIPTOR_SIZE is here on Mint
 #include <linux/uhid.h>    // for HID_MAX_DESCRIPTOR_SIZE
 #include <stdio.h>

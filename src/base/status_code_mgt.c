@@ -2,13 +2,13 @@
  *
  *  Status Code Management
  */
-// Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
 #include <base/adl_errors.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 /** \endcond */

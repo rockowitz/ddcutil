@@ -4,13 +4,13 @@
  *  in various Linux subsystems.
  */
 
-// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 
 #include <assert.h>
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
 

@@ -1,7 +1,7 @@
 /** @file vcp_feature_set.h
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_SET_H_
@@ -10,7 +10,7 @@
 #include "public/ddcutil_types.h"
 
 /** \cond */
-#include <glib.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #include "util/coredefs.h"
