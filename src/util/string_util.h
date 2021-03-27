@@ -32,27 +32,6 @@ static inline const char * sbool(int val) {  return (val)  ? "true" : "false"; }
 // A macro alternative to sbool()
 #define SBOOL(val) ( (val) ? "true" : "false" )
 
-
-#ifdef DEPRECATED
-// use glib function g_strlcpy() instead
-#define SAFE_STRNCPY(dest, src, buflen) \
-   do { \
-      strncpy(dest, src, (buflen) ); \
-      if (buflen > 0) \
-         dest[buflen-1] = '\0'; \
-   } while(0)
-#endif
-
-#ifdef DEPRECATED
-// use glib function g_snprintf()
-#define SAFE_SNPRINTF(buf, bufsz, fmt, ...) \
-   do { \
-      snprintf(buf, bufsz, fmt, __VA_ARGS__ ); \
-      if (bufsz > 0) \
-         buf[bufsz-1] = '\0'; \
-   } while(0)
-#endif
-
 //
 // String functions (other than hex)
 //
