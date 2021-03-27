@@ -74,7 +74,7 @@ char * ltrim_in_place(char * s);
 char * rtrim_in_place(char * s);
 char * trim_in_place(char * s);
 char * substr(const char * s, size_t startpos, size_t ct);
-char * lsub(const char * s, int ct);
+char * lsub(const char * s, size_t ct);
 char * str_replace_char(char * s, char old_char, char new_char);
 char * strcat_new(char * s1, char * s2);
 bool   sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval);

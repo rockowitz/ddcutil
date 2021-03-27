@@ -346,7 +346,7 @@ char * substr(const char * s, size_t startpos, size_t ct) {
  *                  the string length, ct is reduced accordingly
  * @return extracted substring, in newly allocated memory
  */
-char * lsub(const char * s, int ct) {
+char * lsub(const char * s, size_t ct) {
    return substr(s, 0, ct);
 }
 
