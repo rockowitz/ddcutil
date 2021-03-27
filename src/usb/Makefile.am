@@ -4,13 +4,7 @@ $(GLIB_CFLAGS)  \
 -I$(top_srcdir)/src \
 -I$(top_srcdir)/src/public 
 
-AM_CFLAGS  = -Wall 
-# AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
+AM_CFLAGS = $(AM_CFLAGS_STD)
 
 CLEANFILES = \
 *expand 
@@ -42,4 +36,3 @@ usb_edid.c      \
 usb_displays.c  \
 usb_vcp.c  
 endif
-

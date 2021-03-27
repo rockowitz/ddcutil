@@ -6,11 +6,6 @@ $(GLIB_CFLAGS)  \
 
 AM_CFLAGS = -Wall -Werror
 
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
-
 CLEANFILES = \
 *expand 
 
@@ -29,4 +24,3 @@ testcase_table.c \
 testcases.c
 
 endif
-

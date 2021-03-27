@@ -3,19 +3,8 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-if HAVE_ADL_COND
-AM_CPPFLAGS +=  \
-  -I@ADL_HEADER_DIR@  
-endif
+AM_CFLAGS = $(AM_CFLAGS_STD)
 
-AM_CFLAGS = -Wall 
-AM_CFLAGS += -Werror
-# Causes PROGRAM_LOGIC_ERROR() macro to fail:
-# AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
 
 CLEANFILES = \
 *expand
@@ -44,3 +33,19 @@ libddc_la_SOURCES += \
   ddc_watch_displays.c
 endif
 
+# Rename to "all=local" for development 
+all-local:
+	@echo ""
+	@echo "(src/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:       $(CLEANFILES)"
+	@echo "   CFLAGS:           $(CFLAGS)"
+	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:         $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
+	@echo "   ddcutil_FLAGS:    $(ddcutil_CFLAGS)"
+	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
+	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
+	@echo "   V:                $(V)"
+	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
+	@echo ""

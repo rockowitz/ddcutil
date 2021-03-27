@@ -3,15 +3,10 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-AM_CFLAGS  = -Wall 
-AM_CFLAGS += -Werror
+AM_CFLAGS = $(AM_CFLAGS_STD)
+
 # vcp_feature_codes.c requires extensive changes if -Wpedantic
 # AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
 
 CLEANFILES = \
 *expand
@@ -39,4 +34,3 @@ persistent_capabilities.c     \
 vcp_feature_codes.c           \
 vcp_feature_set.c             \
 vcp_feature_values.c    
-

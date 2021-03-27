@@ -7,7 +7,7 @@ AM_CPPFLAGS=     \
 -I$(top_srcdir)/src
 
 AM_CFLAGS = -Wall -fPIC
-AM_CFLAGS += -Werror
+# AM_CFLAGS += -Werror
 
 check_PROGRAMS =
 if ENABLE_SHARED_LIB_COND

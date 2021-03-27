@@ -2,40 +2,10 @@ AM_CPPFLAGS =        \
   $(GLIB_CFLAGS)     \
   $(LIBDRM_CFLAGS)
 
-AM_CFLAGS = -Wall 
-
-# AM_CFLAGS += -Werror
-# Distributing -Werror is bad programming practice.  It can result in build failure
-# on an external site having a different compiler, compiler version, or configuration. 
-# See comments and answers in
-# https://stackoverflow.com/questions/10275554/how-to-disable-specified-warning-for-specified-file-while-using-autotools
-
-# AM_CFLAGS += -pedantic
-# -pedantic issues warnings re code that doesn't conform to ISO C
-# Alas, -m modifier on sscanf is a POSIX extension, not ISO C
-# In combination with -Werror, causes device_util.c to fail compilation
-
-# AM_CFLAGS += -H
-# Report headef file dependencies
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
+AM_CFLAGS = $(AM_CFLAGS_STD)
 
 CLEANFILES = \
 *expand
-
-# Rename to "all-local" for development
-all-local-disabled:
-	@echo ""
-	@echo "(src/util/Makefile:all-local) Variable values:"
-	@echo "   CLEANFILES:      $(CLEANFILES)"
-	@echo "   CFLAGS:          $(CFLAGS)"
-	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
-	@echo "   CPPFLAGS:        $(CPPFLAGS)"
-	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
-	@echo ""
 
 clean-local:
 	@echo "(src/util/Makefile) clean-local"
@@ -119,3 +89,18 @@ endif
 dist-hook0:
 	@echo "(src/util/Makefile) dist-hook"
 
+# Rename to "all-local" for development
+all-local:
+	@echo ""
+	@echo "(src/util/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:       $(CLEANFILES)"
+	@echo "   CFLAGS:           $(CFLAGS)"
+	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:         $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
+	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
+	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
+	@echo "   V:                $(V)"
+	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
+	@echo ""

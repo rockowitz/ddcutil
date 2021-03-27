@@ -225,14 +225,19 @@ install-cmake-local:
 
 
 # Rename to "all-local" for development
-all-local-disabled:
+all-local:
 	@echo ""
 	@echo "(Makefile:all-local) Variable values:"
-	@echo "   CLEANFILES:      $(CLEANFILES)"
-	@echo "   CFLAGS:          $(CFLAGS)"
-	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
-	@echo "   CPPFLAGS:        $(CPPFLAGS)"
-	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
+	@echo "   CLEANFILES:       $(CLEANFILES)"
+	@echo "   CFLAGS:           $(CFLAGS)"
+	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:         $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
+	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
+	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
+	@echo "   V:                $(V)"
+	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
 	@echo ""
 
 

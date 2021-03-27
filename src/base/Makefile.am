@@ -3,14 +3,7 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-AM_CFLAGS = -Wall 
-AM_CFLAGS += -Werror
-# AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
+AM_CFLAGS = $(AM_CFLAGS_STD) 
 
 CLEANFILES = \
 *expand
@@ -56,3 +49,20 @@ status_code_mgt.c         \
 vcp_version.c
 
 
+
+# Rename to "all=local" for development 
+all-local:
+	@echo ""
+	@echo "(src/base/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:       $(CLEANFILES)"
+	@echo "   CFLAGS:           $(CFLAGS)"
+	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:         $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
+	@echo "   ddcutil_FLAGS:    $(ddcutil_CFLAGS)"
+	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
+	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
+	@echo "   V:                $(V)"
+	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
+	@echo ""

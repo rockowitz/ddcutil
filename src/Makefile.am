@@ -106,17 +106,6 @@ libddcutil_la_SOURCES = \
    libmain/api_feature_access.c \
    libmain/api_capabilities.c 
 
-# Rename to "all=local" for development 
-all-local-disabled:
-	@echo ""
-	@echo "(src/Makefile:all-local) Variable values:"
-	@echo "   CLEANFILES:      $(CLEANFILES)"
-	@echo "   CFLAGS:          $(CFLAGS)"
-	@echo "   AM_CFLAGS:       $(AM_CFLAGS)"
-	@echo "   CPPFLAGS:        $(CPPFLAGS)"
-	@echo "   AM_CPPFLAGS:     $(AM_CPPFLAGS)"
-	@echo ""
-
 #
 # libcommon contains the source files that are 
 # shared between ddcutil and libddcutil: 
@@ -172,15 +161,31 @@ $(LIBUSB_CFLAGS) \
 # Compiler flags
 #
 
-# AM_CFLAGS = -Wall -Werror
 AM_CFLAGS = -Wall
-# AM_CFLAGS += -Wpedantic
-# AM_CFLAGS += -Werror=implicit-function-declaration
+
+# Distributing -Werror is bad programming practice.  It can result in build failure
+# on an external site having a different compiler, compiler version, or configuration. 
+# See comments and answers in
+# https://stackoverflow.com/questions/10275554/how-to-disable-specified-warning-for-specified-file-while-using-autotools
+# AM_CFLAGS += -Werror
+
+# -pedantic issues warnings re code that doesn't conform to ISO C
+# In particular, -m modifier on sscanf is a POSIX extension, not ISO C
+# Also flags PROGRAM_LOGIC_ERROR() 
+# If combined with -Werror, will cause some module compilations to fail
+
+# AM_CFLAGS += -H
+# Report header file dependencies
+
 AM_CFLAGS += -Wimplicit-function-declaration
+
+# Will flag glib's use of _Static_assert, which is not in the C99 standard, 
+# but which is in gcc as of 4.6, also other constructs
+# AM_CFLAGS += -Wc99-c11-compat
 
 
 if ENABLE_CALLGRAPH_COND
-  AM_CFLAGS += -fdump-rtl-expand
+AM_CFLAGS += -fdump-rtl-expand
 endif
 
 if ASAN_COND
@@ -194,12 +199,19 @@ endif
 
 # AM_CFLAGS += $(PYTHON_CPPFLAGS)
 
-ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
+AM_CFLAGS += -fPIC
+
+# ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
 
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
 # libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
+# Makefile:420: *** Recursive variable 'AM_CFLAGS' references itself (eventually).  Stop.
+# export AM_CFLAGS
+
+AM_CFLAGS_STD=$(AM_CFLAGS)
+export AM_CFLAGS_STD
   
 #
 # Link the libraries 
@@ -333,3 +345,22 @@ install-exec-hook:
 uninstall-local:
 	@echo "(src/Makefile:uninstall-local) Executing..."
 	rm -f $(DESTDIR)$(libdir)/libddcutil*  
+	
+	
+# Rename to "all=local" for development 
+all-local:
+	@echo ""
+	@echo "(src/Makefile:all-local) Variable values:"
+	@echo "   CLEANFILES:       $(CLEANFILES)"
+	@echo "   CFLAGS:           $(CFLAGS)"
+	@echo "   AM_CFLAGS:        $(AM_CFLAGS)"
+	@echo "   CPPFLAGS:         $(CPPFLAGS)"
+	@echo "   AM_CPPFLAGS:      $(AM_CPPFLAGS)"
+	@echo "   ddcutil_FLAGS:    $(ddcutil_CFLAGS)"
+	@echo "   AUTOMAKE_OPTIONS: $(AUTOMAKE_OPTIONS)"
+	@echo "   MAKELEVEL:        $(MAKELEVEL)"
+	@echo "   MAKEFLAGS:        $(MAKEFLAGS)"
+	@echo "   V:                $(V)"
+	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
+	@echo ""
+

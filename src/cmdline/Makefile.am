@@ -3,15 +3,7 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-AM_CFLAGS  = -Wall 
-AM_CFLAGS += -Werror
-# flags g_option parser structs in cmd_parser_goption.c
-# AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
-
+AM_CFLAGS = $(AM_CFLAGS_STD)
 
 CLEANFILES = \
 *expand
@@ -23,5 +15,3 @@ libcmdline_la_SOURCES =      \
 cmd_parser_aux.c \
 cmd_parser_goption.c \
 parsed_cmd.c 
-
-

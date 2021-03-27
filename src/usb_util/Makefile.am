@@ -3,13 +3,10 @@ $(GLIB_CFLAGS) \
 -I$(top_srcdir)/src
 
 
-AM_CFLAGS = -Wall 
+AM_CFLAGS = $(AM_CFLAGS_STD)
+
 # lots of arguments for %p in format strings need (void*) casts if -Wpedantic
 # AM_CFLAGS += -Wpedantic
-
-if ENABLE_CALLGRAPH_COND
-AM_CFLAGS += -fdump-rtl-expand
-endif
 
 
 CLEANFILES = \

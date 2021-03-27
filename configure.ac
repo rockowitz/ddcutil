@@ -21,7 +21,7 @@ m4_define([ddcutil_version],
           [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
 
 dnl causes VERSION to be set in config.h
-AC_INIT([ddcutil], [ddcutil_version], [rockowitz@minsoft.com])
+AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
 
 AC_DEFINE_UNQUOTED( [PACKAGE_VMAJOR], [ ddcutil_major_version ], [ddcutil major version] )
 AC_DEFINE_UNQUOTED( [PACKAGE_VMINOR], [ ddcutil_minor_version ], [ddcutil minor version] )
@@ -87,11 +87,18 @@ dnl not working, why?
 # AC_DEFINE_UNQUOTED([DDCUTIL_MAJOR_VERSION], [$ddcutil_major_version], [ddcutil major version])
 
 
-
+dnl Automake options to be applied to every Makefile.am in the tree: 
+dnl The effect is as if each option were listed in AUTOMAKE_OPTIONS
 dnl removed -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
-AM_INIT_AUTOMAKE([1.11 -Wall -Wno-extra-portability foreign subdir-objects])
-dnl AM_SILENT_RULES defined as of automake 1.11, so don't need to test for macro's existence
+dnl n. first option in our list is the required automake version
+AM_INIT_AUTOMAKE([1.13 -Wall -Wno-extra-portability foreign subdir-objects ])
+
+dnl alternatively, add "silent-rules" to AM_INIT_AUTOMAKE
+dnl Eclipse warns that as of 2.68, AM_SILENT_RULES takes 0 arguments
+dnl but in 2.69 it only defaults to silen with argument "yes"
+dnl with "yes" arg, silent rules is the default
 AM_SILENT_RULES([yes])
+
 AM_PROG_AR
 
 dnl explicitly initialize pkg-config in case first call to pkg_check_modules is within an if test:
@@ -113,9 +120,9 @@ dnl but on Suse 13.2 w automake 1.13.4, get msg that
 dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
 
 dnl needed for OBS
-AC_PROG_CC_STDC
+dnl AC_PROG_CC_STDC
 
-AC_PROG_CC_C99
+# AC_PROG_CC_C99
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
