@@ -90,7 +90,7 @@ dist-hook0:
 	@echo "(src/util/Makefile) dist-hook"
 
 # Rename to "all-local" for development
-all-local:
+all-local-disabled:
 	@echo ""
 	@echo "(src/util/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"

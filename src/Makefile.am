@@ -348,7 +348,7 @@ uninstall-local:
 	
 	
 # Rename to "all=local" for development 
-all-local:
+all-local-disabled:
 	@echo ""
 	@echo "(src/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"

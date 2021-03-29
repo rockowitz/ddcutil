@@ -34,7 +34,7 @@ libddc_la_SOURCES += \
 endif
 
 # Rename to "all=local" for development 
-all-local:
+all-local-disabled:
 	@echo ""
 	@echo "(src/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"

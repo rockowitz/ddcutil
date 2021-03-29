@@ -51,7 +51,7 @@ vcp_version.c
 
 
 # Rename to "all=local" for development 
-all-local:
+all-local-disabled:
 	@echo ""
 	@echo "(src/base/Makefile:all-local) Variable values:"
 	@echo "   CLEANFILES:       $(CLEANFILES)"
