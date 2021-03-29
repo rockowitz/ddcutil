@@ -34,13 +34,10 @@ static bool saved_verify_setvcp = false;
 
 void
 set_standard_settings() {
-   printf("Seting standard settings in function %s()\n", __func__);
-   saved_report_ddc_errors = ddca_is_report_ddc_errors_enabled();
-   // printf("   Calling ddca_enable_report_ddc_errors(true)...\n");
-   // ddca_enable_report_ddc_errors(true);
-   printf("   Calling ddca_enable_verify(true)...\n");
+   // Report any DDC data errors to the terminal
+   saved_report_ddc_errors = ddca_enable_report_ddc_errors(true);
+   // Read value after setting it as verification
    saved_verify_setvcp = ddca_enable_verify(true);
-   // ddca_report_error_info(true);
 }
 
 void
