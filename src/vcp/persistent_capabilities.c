@@ -32,10 +32,12 @@ bool capabilities_cache_enabled = false;
 
 GHashTable *  capabilities_hash = NULL;
 
+
 /* caller is responisble for freeing returned value */
 char * get_capabilities_cache_file_name() {
    return xdg_cache_home_file("ddcutil", "capabilities");
 }
+
 
 void delete_capabilities_file() {
    bool debug = false;
@@ -77,7 +79,7 @@ bool enable_capabilities_cache(bool onoff) {
 }
 
 
-Error_Info * load_persistent_capabilities_file()
+static Error_Info * load_persistent_capabilities_file()
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
@@ -140,7 +142,7 @@ Error_Info * load_persistent_capabilities_file()
 }
 
 
-void save_persistent_capabilities_file()
+static void save_persistent_capabilities_file()
 {
    bool debug = false;
    char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
