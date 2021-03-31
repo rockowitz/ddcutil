@@ -61,7 +61,7 @@ ddca_get_capabilities_string(
    WITH_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
-         ddc_excp = get_capabilities_string(dh, &p_cap_string);
+         ddc_excp = ddc_get_capabilities_string(dh, &p_cap_string);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
          errinfo_free(ddc_excp);

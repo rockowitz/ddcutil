@@ -1,4 +1,4 @@
-/** \file read_capabilities.c */
+/** \file ddc_read_capabilities.c */
 
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -16,14 +16,19 @@
 #include "util/data_structures.h"
 #include "util/report_util.h"
 
+#include "public/ddcutil_types.h"
+
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
 #endif
+
+#include "vcp/persistent_capabilities.h"
 
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -32,10 +37,9 @@
 
 // Direct writes to stdout/stderr: none
 
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-//
-// Capabilities Related Functions
-//
 
 /** Executes the VCP Get Capabilities command to obtain the
  *  capabilities string.  The string is returned in null terminated
@@ -102,7 +106,7 @@ get_capabilities_into_buffer(
  * display handle.  It should NOT be freed by the caller.
  */
 Error_Info *
-get_capabilities_string(
+ddc_get_capabilities_string(
       Display_Handle * dh,
       char**           caps_loc)
 {
@@ -111,7 +115,7 @@ get_capabilities_string(
    assert(dh->dref);
    DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
 
-   Public_Status_Code psc = 0;
+   // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
@@ -123,13 +127,24 @@ get_capabilities_string(
 #endif
       }
       else {
-         Buffer * pcaps_buffer;
-         ddc_excp = get_capabilities_into_buffer(dh, &pcaps_buffer);
-         // psc = (ddc_excp) ? ddc_excp->psc : 0;
-         psc = ERRINFO_STATUS(ddc_excp);
-         if (psc == 0) {
-            dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
-            buffer_free(pcaps_buffer,__func__);
+         // n. persistent_capabilities_enabled handled in get_persistent_capabilities()
+         dh->dref->capabilities_string = get_persistent_capabilities(dh->dref->mmid);
+         DBGTRC(debug, TRACE_GROUP, "get_persistent_capabilities() returned %s",
+                                    dh->dref->capabilities_string);
+         if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
+            char * s = get_capabilities_cache_file_name();
+            rpt_vstring(0, "Read cached capabilities string from %s", s);
+            free(s);
+         }
+
+         if (!dh->dref->capabilities_string) {
+            Buffer * pcaps_buffer;
+            ddc_excp = get_capabilities_into_buffer(dh, &pcaps_buffer);
+            if (!ddc_excp) {
+               dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
+               buffer_free(pcaps_buffer,__func__);
+               set_persistent_capabilites(dh->dref->mmid, dh->dref->capabilities_string);
+            }
          }
       }
    }
@@ -140,6 +155,7 @@ get_capabilities_string(
 }
 
 
+#ifdef UNUSED
 Error_Info *
 get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
    assert(dref);
@@ -152,7 +168,7 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
       Display_Handle * dh = NULL;
       psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (psc == 0) {
-         ddc_excp = get_capabilities_string(dh, &dref->capabilities_string);
+         ddc_excp = ddc_get_capabilities_string(dh, &dref->capabilities_string);
          int rc = ERRINFO_STATUS(ddc_excp);
          if (rc == -EBADF) {
             DBGMSF(debug, "EBADF, skipping ddc_close_display()");
@@ -169,5 +185,10 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
           errinfo_summary(ddc_excp), *pcaps);
    return ddc_excp;
 }
+#endif
 
+
+void init_ddc_read_capabilities() {
+   RTTI_ADD_FUNC(ddc_get_capabilities_string);
+}
 

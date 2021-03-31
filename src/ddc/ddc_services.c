@@ -40,6 +40,7 @@
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
 
@@ -168,6 +169,7 @@ void init_ddc_services() {
    init_ddc_displays();
    init_ddc_output();
    init_ddc_packet_io();
+   init_ddc_read_capabilities();
    init_ddc_multi_part_io();
    init_ddc_vcp();
 

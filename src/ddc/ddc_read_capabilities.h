@@ -18,8 +18,10 @@
 // Get capability string for monitor.
 
 Error_Info *
-get_capabilities_string(
+ddc_get_capabilities_string(
       Display_Handle * dh,
       char**           caps_loc);
+
+void init_ddc_read_capabilities();
 
 #endif /* DDC_READ_CAPABILITIES_H_ */
