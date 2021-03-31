@@ -114,9 +114,11 @@ int read_ddcutil_config_file(
       char * global_options  = ini_file_get_value(ini_file, "global",  "options");
       char * ddcutil_options = ini_file_get_value(ini_file, ddcutil_application, "options");
 
-      char * combined_options = g_strdup_printf("%s %s",
-                                   (global_options)  ? global_options  : "",
-                                   (ddcutil_options) ? ddcutil_options : "");
+      char * s = g_strdup_printf("%s %s", (global_options)  ? global_options  : "",
+                                          (ddcutil_options) ? ddcutil_options : "");
+      char * combined_options = strtrim(s);
+      free(s);
+
       if (debug)
          printf("(%s) combined_options= |%s|\n", __func__, combined_options);
 
@@ -129,8 +131,12 @@ int read_ddcutil_config_file(
 bye:
    ASSERT_IFF(result==0, *untokenized_option_string_loc);
    if (debug)  {
+      // check for null to avoid -Wstringop-overflow
       printf("(%s) Done. untokenized options: |%s|, *config_fn_loc=%s, returning: %d\n",
-             __func__, *untokenized_option_string_loc, *config_fn_loc, result);
+             __func__,
+             (*untokenized_option_string_loc) ? *untokenized_option_string_loc : "(null)",
+             (*config_fn_loc)                 ? *config_fn_loc :                 "(null)",
+             result);
    }
    return result;
 }
