@@ -99,7 +99,7 @@ int read_ddcutil_config_file(
    if (debug)
       fprintf(stderr, "ini_file_load() returned %d\n", load_rc);
    if (verbose) {
-      fprintf(stderr, "(A) Error(s) processing configuration file: %s\n", config_fn);
+      fprintf(stderr, "Error(s) processing configuration file: %s\n", config_fn);
       if (errmsgs && errmsgs->len > 0) {
          for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
             fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
