@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] 2021-04-04
+## [1.1.0] 2021-04-05
 
 For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 
