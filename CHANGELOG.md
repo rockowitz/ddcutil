@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] 2021-03-15
+## [1.1.0] 2021-04-04
 
 For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 
@@ -31,6 +31,6 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 - Fix build failure when configure option ***--disable-usb*** is combined with 
   ***--enable-envcmds***.
 - On AMD Navi2 variants, e.g. RX 6000 series, **ddcutil** display detection put
- the GPU into an inconsistent state when probing a SMU I2C bus provided by the GPU. 
+ the GPU into an inconsistent state when probing a SMU I2C bus expolsed by the GPU. 
  This change ensures that **ddcutil** does not attempt to probe such buses. 
 
