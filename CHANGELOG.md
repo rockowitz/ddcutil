@@ -8,7 +8,7 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 - Configuration file **ddcutilrc**, located on the XDG config path.   
 - Cache monitor capabilities strings to improve performance of the **capabilities** command.  
   Controlled by options ***--enable-capabilities-cache***, ***--disable-capabilities-cache***.
-- Workarounds for problems in DRM video drivers (e.g. i915, ARM) when displays are connected to 
+- Workarounds for problems in DRM video drivers (e.g. i915, AMDGPU) when displays are connected to 
   a docking station. The same monitor can appear as two different /dev/i2c devices,
   but only one supports DDC/CI.  If possible these are reported as a "Phantom Display" instead 
   of as "Invalid Display". Also, try to work around problems reading the EDID on these 
