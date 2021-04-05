@@ -45,11 +45,10 @@ static void reset_stats() {
 
 /** Execute the INTERROGATE command
  *
- *  \param parsed_cmd  parsed command line
+ *  This convenience command executes the ENVIRONMENT, DETECT, and
+ *  for each detected display, the PROBE command.
  *
- *  \remark
- *  This command is in main.c instead of in a separate app_XXX.c file
- *  because it executes multiple commands.
+ *  \param parsed_cmd  parsed command line
  */
 void interrogate(Parsed_Cmd * parsed_cmd)
 {
@@ -57,8 +56,8 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC(debug, TRACE_GROUP, "Processing command INTERROGATE...");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
-   f0printf(fout(), "Setting output level verbose...\n");
-   set_output_level(DDCA_OL_VERBOSE);
+   f0printf(fout(), "Setting output level very-verbose...\n");
+   set_output_level(DDCA_OL_VV);
    f0printf(fout(), "Setting maximum retries...\n");
    f0printf(fout(), "Forcing --stats...\n");
    parsed_cmd->stats_types = DDCA_STATS_ALL;
@@ -71,6 +70,7 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    ddc_ensure_displays_detected();    // *** ???
    DBGTRC(debug, TRACE_GROUP, "display detection complete");
 
+   // ENVIRONMENT command
    query_sysenv();
 #ifdef USE_USB
    // 7/2017: disable, USB attached monitors are rare, and this just
@@ -83,16 +83,18 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
    reset_stats();
 
+   // DETECT command
    f0printf(fout(), "\n*** Detected Displays ***\n");
-   /* int display_ct =  */ ddc_report_displays(
+   /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
                               true,   // include_invalid_displays
-                              0);      // logical depth
+                              0);     // logical depth
    // printf("Detected: %d displays\n", display_ct);   // not needed
    f0printf(fout(), "\nStatistics for display detection:\n");
    ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
    reset_stats();
 
-   f0printf(fout(), "Setting output level normal  Table features will be skipped...\n");
+   // PROBE command
+   f0printf(fout(), "Setting output level normal. Table features will be skipped...\n");
    set_output_level(DDCA_OL_NORMAL);
 
    tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
