@@ -686,10 +686,11 @@ void query_sysenv() {
       query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                 "i2cdetect -y %d",   // command to issue
                                 "i2cdetect");        // command name for error message
+      rpt_nl();
 
-      // query_using_shell_command(accumulator->dev_i2c_device_numbers,
-      //                           "get-edid -b %d -i | parse-edid",   // command to issue
-      //                           "get-edid");        // command name for error message
+      query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                "get-edid -b %d -i | parse-edid",   // command to issue
+                                "get-edid | parse-edid");        // command name for error message
 
       raw_scan_i2c_devices(accumulator);
 
