@@ -663,6 +663,14 @@ void query_sysenv() {
       rpt_nl();
       query_proc_driver_nvidia();
 
+      rpt_vstring(0, "Checking display manager environment variables...");
+      char * s = getenv("DISPLAY");
+      rpt_vstring(1, "DISPLAY=%s", (s) ? s : "(not set)");
+      s = getenv("WAYLAND_DISPLAY");
+      rpt_vstring(1, "WAYLAND_DISPLAY=%s", (s) ? s : "(not set)");
+      s = getenv("XDG_SESSION_TYPE");
+      rpt_vstring(1, "XDG_SESSION_TYPE=%s", (s) ? s : "(not set)");
+
       rpt_nl();
       query_i2c_buses();
 
