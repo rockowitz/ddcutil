@@ -587,6 +587,7 @@ void query_sysenv() {
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
    ddc_ensure_displays_detected();
+   DBGTRC(debug, TRACE_GROUP, "display detection complete");
    device_xref_init();
 
    Env_Accumulator * accumulator = env_accumulator_new();
