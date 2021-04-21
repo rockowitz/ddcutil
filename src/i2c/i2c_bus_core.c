@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <i2c/i2c_strategy_dispatcher.h>
+#include <i2c/smbus.h>   // TEMP
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -380,11 +380,16 @@ i2c_get_edid_bytes_directly(
       bool    read_bytewise)
 {
    bool debug = false;
+#ifdef USE_SMBUS
+   read_bytewise = true;   // ** TEMP **
+#endif
+
    DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
+   // write_before_read = false;
    DBGTRC(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
    int rc = 0;
    if (write_before_read) {
@@ -407,18 +412,33 @@ i2c_get_edid_bytes_directly(
    if (rc == 0) {
       if (read_bytewise) {
          int ndx = 0;
+         __s32 smbus_result = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
             RECORD_IO_EVENTX(
                 fd,
                 IE_READ,
+#ifdef USE_SMBUS
+                ( smbus_result = i2c_smbus_read_byte_data(fd, ndx) )
+#else
                 ( rc = read(fd, &rawedid->bytes[ndx], 1) )
+#endif
+
+
                );
+            // DBGMSG("smbus_result = 0x%08x, %d", smbus_result, smbus_result);
+            if (smbus_result < 0)
+               rc = -errno;
+            else {
+               rawedid->bytes[ndx] = smbus_result;
+            }
+#ifndef USE_SMBUS
             if (rc < 0)
                rc = -errno;
             else  {
                assert(rc == 1);
                rc = 0;
             }
+#endif
           }
           rawedid->len = ndx;
           DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
