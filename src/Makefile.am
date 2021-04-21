@@ -265,6 +265,8 @@ libcommon_la_LIBADD += \
   $(UDEV_LIBS)   \
   $(LIBUSB_LIBS)
 
+libcommon_la_LIBADD += -li2c
+
 # libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD = $(ZLIB_LIBS)
 
