@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
 #include <limits.h>
 #include <sys/ioctl.h>
@@ -80,10 +81,8 @@ try_single_getvcp_call(
 
    // extra sleep time does not help P2411
 
-#ifdef NO
-   usleep(50000);   // doesn't help
-   // usleep(50000);
-   // write seems to be necessary to reset monitor state
+#ifdef ALT
+   // resets monitor state?
    unsigned char zeroByte = 0x00;  // 0x00;
    rc = write(fh, &zeroByte, 1);
    if (rc < 0) {
@@ -91,9 +90,8 @@ try_single_getvcp_call(
       return -1;
    }
 #endif
-   // without this or 0 byte write, read() sometimes returns all 0 on P2411H
+   // without usleep() or 0 byte write, read() sometimes returns all 0 on P2411H
    usleep(50000);
-   // usleep(50000);
 
    unsigned char ddc_cmd_bytes[] = {
       0x6e,              // address 0x37, shifted left 1 bit
@@ -135,19 +133,13 @@ try_single_getvcp_call(
       rc = -errsv;
       goto bye;
    }
-
-   char * hs = hexstring(ddc_response_bytes+1, rc);
-   rpt_vstring(depth, "read() returned %s", hs );
-   free(hs);
+   rpt_vstring(depth, "read() returned %s", hexstring_t(ddc_response_bytes+1,rc) );
 
    if (rc != readct) {
       DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
       rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
       goto bye;
    }
-
-   DBGMSF(debug, "read() returned %s", hexstring_t(ddc_response_bytes+1, readct) );
-   // hex_dump(ddc_response_bytes,1+rc);
 
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
@@ -223,11 +215,19 @@ bye:
 }
 
 
-bool simple_read_edid(int busno, int read_size, bool write_before_read, int depth) {
+bool simple_read_edid(
+      int  busno,
+      int  read_size,
+      bool write_before_read,
+      bool use_smbus,
+      int  depth)
+{
    assert(read_size == 128 || read_size == 256);
    rpt_nl();
-   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write()",
-                  read_size, busno, (write_before_read) ? "WITH" : "WITHOUT");
+   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write() using %s",
+                  read_size, busno,
+                  (write_before_read) ? "WITH" : "WITHOUT",
+                  (use_smbus) ? "read()" : "i2c_smbus_read_byte_data()");
    int rc = 0;
    char i2cdev[20];
    Byte edid_buf[256];
@@ -265,14 +265,47 @@ bool simple_read_edid(int busno, int read_size, bool write_before_read, int dept
             rpt_label(depth, "Continuing");
          }
       }
-      int actual_ct = read(fd, edid_buf, read_size);
-      if (actual_ct < 0) {
-         rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
-         goto close;
+
+      int actual_ct = 0;
+      if (use_smbus) {
+         unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
+         if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
+            rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", i2cdev);
+         }
+         else {
+            rc = 0;
+            int ndx = 0;
+            __s32 smbus_result = 0;
+            for (; ndx < read_size && rc == 0; ndx++) {
+               smbus_result = i2c_smbus_read_byte_data(fd, ndx);
+               // DBGMSG("smbus_result = 0x%08x, %d", smbus_result, smbus_result);
+               if (smbus_result < 0)
+                  rc = -errno;
+               else {
+                  edid_buf[ndx] = smbus_result;
+                  actual_ct = ndx+1;
+               }
+            }
+            if (rc < 0) {
+               rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
+                                 linux_errno_desc(errno));
+               goto close;
+            }
+            rpt_vstring(depth+1, "%d bytes were read", actual_ct);
+            rpt_hex_dump(edid_buf, actual_ct, depth+1);
+            ok = true;
+         }
       }
-      rpt_vstring(depth, "read() returned %d bytes", actual_ct);
-      rpt_hex_dump(edid_buf, actual_ct, depth+1);
-      ok = true;
+      else {
+         actual_ct = read(fd, edid_buf, read_size);
+         if (actual_ct < 0) {
+            rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
+            goto close;
+         }
+         rpt_vstring(depth, "read() returned %d bytes", actual_ct);
+         rpt_hex_dump(edid_buf, actual_ct, depth+1);
+         ok = true;
+      }
 
 close:
       close(fd);
@@ -304,7 +337,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    Parsed_Edid * edid = NULL;
 
    rpt_nl();
-   rpt_title("Performing basic scan of I2C devices using local sysenv functions...",depth);
+   rpt_title("Performing alternative scans of I2C devices using local sysenv functions...",depth);
    sysenv_rpt_current_time(NULL, d1);
 
    Buffer * buf0 = buffer_new(1000, __func__);
@@ -327,19 +360,37 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
-         int okct = 0;
-         simple_read_edid(busno, 128, false, d2);
-         simple_read_edid(busno, 128, false, d2);
-         simple_read_edid(busno, 256, false, d2);
-         if (okct < 3) {
-            rpt_nl();
-            rpt_label(d2, "Retrying with write() before read()...");
-            simple_read_edid(busno, 128, true, d2);
-            simple_read_edid(busno, 128, true, d2);
-            simple_read_edid(busno, 256, true, d2);
-         }
+         rpt_label(d2, "Tests using read()...");
+         bool ok = false;
+         rpt_label(d2, "Without write() before read()...");
+         ok = simple_read_edid(busno, 128, false, false, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, false, false, d2);
+         simple_read_edid(busno, 256, false, false, d2);
+         rpt_nl();
+         rpt_label(d2, "Retrying with write() before read()...");
+         ok = simple_read_edid(busno, 128, true, false, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, true, false, d2);
+         simple_read_edid(busno, 256, true, false, d2);
          rpt_nl();
 
+         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
+         rpt_label(d2, "Without write() before read()...");
+         ok = simple_read_edid(busno, 128, false, true, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, false, true, d2);
+         simple_read_edid(busno, 256, false, true, d2);
+         rpt_nl();
+         rpt_label(d2, "Retrying with write() before read()...");
+         ok = simple_read_edid(busno, 128, true, true, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, true, true, d2);
+         simple_read_edid(busno, 256, true, true, d2);
+         rpt_nl();
+
+         rpt_label(d2, "Obtain and interpret EDID using normal i2c functions...");
+         rpt_nl();
          int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
          if (fd < 0)
             continue;
@@ -392,7 +443,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
                edidbytes = first_edid;
             }
 #endif
-
          }
 
          rpt_nl();
