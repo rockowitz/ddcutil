@@ -71,16 +71,19 @@ static Public_Status_Code
 try_single_getvcp_call(
       int           fh,
       unsigned char vcp_feature_code,
+      bool          use_smbus,
       int           depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. vcp_feature_code=0x%02x", vcp_feature_code );
+   rpt_nl();
+   DBGMSF(true, "Starting. vcp_feature_code=0x%02x. use_smbus=%s", vcp_feature_code, sbool(use_smbus) );
+   // rpt_vstring(depth, "Starting. vcp_feature_code=0x%02x, use_smbus=%s",
+   //                     vcp_feature_code, sbool(use_smbus) );
 
    int ndx;
    Status_Errno rc = 0;
 
    // extra sleep time does not help P2411
-
 #ifdef ALT
    // resets monitor state?
    unsigned char zeroByte = 0x00;  // 0x00;
@@ -106,8 +109,8 @@ try_single_getvcp_call(
    ddc_cmd_bytes[5] = ddc_cmd_bytes[0];
    for (ndx=1; ndx < 5; ndx++)
       ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
-
    int writect = sizeof(ddc_cmd_bytes)-1;
+   rpt_vstring(depth, "Sending Get VCP Feature Command request packet: %s", hexstring_t(ddc_cmd_bytes+1, writect));
    rc = write(fh, ddc_cmd_bytes+1, writect);
    if (rc < 0) {
       int errsv = errno;
@@ -125,22 +128,53 @@ try_single_getvcp_call(
    unsigned char ddc_response_bytes[12];
    int readct = sizeof(ddc_response_bytes)-1;
 
-   rc = read(fh, ddc_response_bytes+1, readct);
-   if (rc < 0) {
-      // printf("(%s) read() returned %d, errno=%d.\n", __func__, rc, errno );
-      int errsv = errno;
-      DBGMSF(debug, "read() failed, errno=%s", linux_errno_desc(errsv));
-      rc = -errsv;
-      goto bye;
-   }
-   rpt_vstring(depth, "read() returned %s", hexstring_t(ddc_response_bytes+1,rc) );
+   rpt_vstring(depth, "Reading Get Feature Reply response packet");
 
-   if (rc != readct) {
-      DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
-      rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
-      goto bye;
+   if (use_smbus) {   // FAILS, reads 6e 6e 6e ...
+      unsigned long functionality = i2c_get_functionality_flags_by_fd(fh);
+       if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
+          rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
+          rc = DDCRC_UNIMPLEMENTED;
+       }
+       else {
+          int actual_ct = 0;
+          rc = 0;
+          int ndx = 0;
+          __s32 smbus_result = 0;
+          for (; ndx < readct && rc == 0; ndx++) {
+             smbus_result = i2c_smbus_read_byte_data(fh, ndx);
+             DBGMSF(debug, "ndx=%d, smbus_result = 0x%08x, %d", ndx, smbus_result, smbus_result);
+             if (smbus_result < 0)
+                rc = -errno;
+             else {
+                ddc_response_bytes[ndx+1] = smbus_result;
+                actual_ct = ndx+1;
+             }
+          }
+          if (rc < 0) {
+             rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
+                               linux_errno_desc(errno));
+             goto bye;
+          }
+          rpt_vstring(depth+1, "%d bytes were read", actual_ct);
+          rpt_vstring(depth, "ddc_response_bytes+1-> %s", hexstring_t(ddc_response_bytes+1,actual_ct) );
+       }
    }
+   else {
+      rc = read(fh, ddc_response_bytes+1, readct);
+      if (rc < 0) {
+         rc = -errno;
+         DBGMSF(debug, "read() failed, errno=%s", linux_errno_desc(-rc));
+         goto bye;
+      }
+      rpt_vstring(depth, "read() returned %s", hexstring_t(ddc_response_bytes+1,rc) );
 
+      if (rc != readct) {
+         DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
+         rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
+         goto bye;
+      }
+   }
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
@@ -227,7 +261,7 @@ bool simple_read_edid(
    rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write() using %s",
                   read_size, busno,
                   (write_before_read) ? "WITH" : "WITHOUT",
-                  (use_smbus) ? "read()" : "i2c_smbus_read_byte_data()");
+                  (use_smbus) ?  "i2c_smbus_read_byte_data()" : "read()");
    int rc = 0;
    char i2cdev[20];
    Byte edid_buf[256];
@@ -452,7 +486,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             int maxtries = 3;
             psc = -1;
             for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
-               psc = try_single_getvcp_call(fd, 0x10, d2);
+               psc = try_single_getvcp_call(fd, 0x10, false, d2);
                if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
                   switch (psc) {
                   case 0:
