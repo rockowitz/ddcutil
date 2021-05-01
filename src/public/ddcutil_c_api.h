@@ -519,7 +519,7 @@ ddca_enable_usb_display_detection(bool onoff);
 /** Reports whether USB devices are checked as part of display detection
  *
  *  @retval true  USB devices are checked
- *  @retval valse UBB devices are not checked
+ *  @retval false USB devices are not checked
  */
 bool
 ddca_ddca_is_usb_display_detection_enabled();
