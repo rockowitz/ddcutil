@@ -10,8 +10,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
+#include <i2c/smbus.h>
 #include <limits.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
