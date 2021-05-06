@@ -863,7 +863,6 @@ ddc_write_only_with_retry(
       // try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
    }
 
-
    Error_Info * ddc_excp = NULL;
 
    if (psc < 0) {
@@ -904,15 +903,15 @@ ddc_write_only_with_retry(
 
 static void
 init_ddc_packet_io_func_name_table() {
-#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
-   ADD_FUNC(ddc_i2c_write_read_raw);
-   ADD_FUNC(ddc_i2c_write_only);
-   ADD_FUNC(ddc_write_read_raw);
-   ADD_FUNC(ddc_write_read);
-   ADD_FUNC(ddc_write_read_with_retry);
-   ADD_FUNC(ddc_write_only);
-   ADD_FUNC(ddc_write_only_with_retry);
-#undef ADD_FUNC
+   RTTI_ADD_FUNC(ddc_open_display);
+   RTTI_ADD_FUNC(ddc_close_display);
+   RTTI_ADD_FUNC(ddc_i2c_write_read_raw);
+   RTTI_ADD_FUNC(ddc_i2c_write_only);
+   RTTI_ADD_FUNC(ddc_write_read_raw);
+   RTTI_ADD_FUNC(ddc_write_read);
+   RTTI_ADD_FUNC(ddc_write_read_with_retry);
+   RTTI_ADD_FUNC(ddc_write_only);
+   RTTI_ADD_FUNC(ddc_write_only_with_retry);
 }
 
 
