@@ -1,7 +1,7 @@
 /** \file ddc_watch_displays.h - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_WATCH_DISPLAYS_H_
@@ -38,5 +38,6 @@ void dummy_display_change_handler(
 
 DDCA_Status ddc_start_watch_displays();
 DDCA_Status ddc_stop_watch_displays();
+void init_ddc_watch_displays();
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */
