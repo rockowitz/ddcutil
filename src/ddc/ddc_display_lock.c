@@ -3,7 +3,7 @@
  *  opened simultaneously from multiple threads.
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -29,6 +29,7 @@
 #include "util/string_util.h"
 
 #include "base/displays.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
 #include "ddc/ddc_display_lock.h"
@@ -36,6 +37,8 @@
 #include "ddcutil_types.h"
 #include "ddcutil_status_codes.h"
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 #define DISTINCT_DISPLAY_DESC_MARKER "DDSC"
 typedef struct {
@@ -76,7 +79,7 @@ bool io_path_eq(DDCA_IO_Path path1, DDCA_IO_Path path2) {
 #endif
 
 
-bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
+static bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
    bool result = false;
    if (dpath_eq(ddesc->io_path, dref->io_path))
       result = true;
@@ -105,12 +108,8 @@ static GMutex descriptors_mutex;                // single threads access to disp
 static GMutex master_display_lock_mutex;
 
 
-void init_ddc_display_lock(void) {
-   display_descriptors= g_ptr_array_new();
-}
-
 // must be called when lock not held by current thread, o.w. deadlock
-char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
+static char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
    static GPrivate  repr_key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&repr_key, 100);
    g_mutex_lock(&descriptors_mutex);
@@ -120,6 +119,7 @@ char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
    g_mutex_unlock(&descriptors_mutex);
    return buf;
 }
+
 
 Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
    bool debug = false;
@@ -172,7 +172,7 @@ lock_distinct_display(
 {
    DDCA_Status ddcrc = 0;
    bool debug = false;
-   DBGMSF(debug, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC(debug, TRACE_GROUP, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
 
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -200,15 +200,15 @@ lock_distinct_display(
          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGMSF(debug, "Done.     id=%p -> %s, Returning: %s",
-                 id,distinct_display_ref_repr_t(id),  psc_desc(ddcrc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     id=%p -> %s, Returning: %s",
+                 id, distinct_display_ref_repr_t(id), psc_desc(ddcrc));
    return ddcrc;
 }
 
 
 DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
    bool debug = false;
-   DBGMSF(debug, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC(debug, TRACE_GROUP, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
    DDCA_Status ddcrc = 0;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -223,7 +223,7 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGMSF(debug, "Done.     id=%p -> %s, Returning %s",
+   DBGTRC(debug, TRACE_GROUP, "Done.     id=%p -> %s, Returning %s",
                  id, distinct_display_ref_repr_t(id), psc_desc(ddcrc));
    return ddcrc;
 }
@@ -250,3 +250,11 @@ void dbgrpt_distinct_display_descriptors(int depth) {
    g_mutex_unlock(&descriptors_mutex);
 }
 
+
+void init_ddc_display_lock(void) {
+   display_descriptors= g_ptr_array_new();
+
+   RTTI_ADD_FUNC(get_distinct_display_ref);
+   RTTI_ADD_FUNC(lock_distinct_display);
+   RTTI_ADD_FUNC(unlock_distinct_display);
+}
