@@ -206,6 +206,7 @@ _ddca_init(void) {
    if (!library_initialized) {
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
+      init_tracing(parsed_cmd);
       submaster_initializer(parsed_cmd);
       // init_ddc_services();
 
