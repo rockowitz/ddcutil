@@ -645,7 +645,7 @@ main(int argc, char *argv[]) {
    start_time_reported = parsed_cmd->traced_groups    ||
                          parsed_cmd->traced_functions ||
                          parsed_cmd->traced_files     ||
-                         IS_TRACING(),
+                         IS_TRACING()                 ||
                          main_debug;
    DBGMSF(start_time_reported, "Starting ddcutil execution, %s", program_start_time_s);
 
