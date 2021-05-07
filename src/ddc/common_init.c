@@ -34,10 +34,13 @@
 #include "ddc/common_init.h"
 
 
-
 void
 init_tracing(Parsed_Cmd * parsed_cmd)
 {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n",__func__);
+      
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                           // extern in core.h
     if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
@@ -52,7 +55,11 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
           add_traced_file(parsed_cmd->traced_files[ndx]);
     }
+    
+    if (debug)
+       printf("(%s) Done.\n", __func__);
 }
+
 
 bool init_failsim(Parsed_Cmd * parsed_cmd) {
 #ifdef ENABLE_FAILSIM
@@ -72,7 +79,6 @@ bool init_failsim(Parsed_Cmd * parsed_cmd) {
 #endif
    return true;
 }
-
 
 
 void init_max_tries(Parsed_Cmd * parsed_cmd)
