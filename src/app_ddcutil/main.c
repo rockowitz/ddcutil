@@ -581,8 +581,16 @@ int
 main(int argc, char *argv[]) {
    bool main_debug = false;
    int main_rc = EXIT_FAILURE;
+   bool start_time_reported = false;
+
+   time_t program_start_time = time(NULL);
+   char * program_start_time_s = asctime(localtime(&program_start_time));
+   if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
+        program_start_time_s[strlen(program_start_time_s)-1] = 0;
+
    Parsed_Cmd * parsed_cmd = NULL;
-   init_base_services();  // so tracing related modules are initialized
+   add_rtti_functions();      // add entries for this file
+   init_base_services();      // so tracing related modules are initialized
    DBGMSF(main_debug, "init_base_services() complete, ol = %s",
                       output_level_name(get_output_level()) );
 
@@ -632,17 +640,14 @@ main(int argc, char *argv[]) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
    init_tracing(parsed_cmd);
-   add_rtti_functions();      // add entries for this file
 
-   time_t cur_time = time(NULL);
-   char * cur_time_s = asctime(localtime(&cur_time));
-   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
-        cur_time_s[strlen(cur_time_s)-1] = 0;
-   DBGTRC(parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files,
-          TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
-          "Starting ddcutil execution, %s",
-          cur_time_s);
-
+   // tracing is sufficiently initialized, can report start time
+   start_time_reported = parsed_cmd->traced_groups    ||
+                         parsed_cmd->traced_functions ||
+                         parsed_cmd->traced_files     ||
+                         IS_TRACING(),
+                         main_debug;
+   DBGMSF(start_time_reported, "Starting ddcutil execution, %s", program_start_time_s);
 
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
@@ -804,14 +809,12 @@ main(int argc, char *argv[]) {
 bye:
    DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
 
-   cur_time = time(NULL);
-   cur_time_s = asctime(localtime(&cur_time));
-   if (cur_time_s[strlen(cur_time_s)-1] == 0x0a)
-      cur_time_s[strlen(cur_time_s)-1] = 0;
-   DBGTRC(parsed_cmd && (parsed_cmd->traced_groups || parsed_cmd->traced_functions || parsed_cmd->traced_files),
-           TRACE_GROUP,   /* redundant with parsed_cmd->traced_groups */
-           "ddcutil execution complete, %s",
-           cur_time_s);
+   time_t end_time = time(NULL);
+   char * end_time_s = asctime(localtime(&end_time));
+   if (end_time_s[strlen(end_time_s)-1] == 0x0a)
+      end_time_s[strlen(end_time_s)-1] = 0;
+   DBGMSF(start_time_reported, "ddcutil execution complete, %s", end_time_s);
+
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
    release_base_services();
