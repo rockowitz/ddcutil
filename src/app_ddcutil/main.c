@@ -109,7 +109,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
-static void init_rtti();
+static void add_rtti_functions();
 
 
 //
@@ -632,7 +632,7 @@ main(int argc, char *argv[]) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
    init_tracing(parsed_cmd);
-   init_rtti();      // add entries for this file
+   add_rtti_functions();      // add entries for this file
 
    time_t cur_time = time(NULL);
    char * cur_time_s = asctime(localtime(&cur_time));
@@ -819,7 +819,7 @@ bye:
 }
 
 
-static void init_rtti() {
+static void add_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
