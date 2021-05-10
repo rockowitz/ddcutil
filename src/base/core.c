@@ -422,22 +422,14 @@ static GPtrArray  * traced_file_table     = NULL;
  *  @param funcname function name
  */
 void add_traced_function(const char * funcname) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+   // printf("(%s) funcname=|%s|\n", __func__, funcname);
 
    if (!traced_function_table)
       traced_function_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-   bool found = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
-   if (found)
+   if (gaux_string_ptr_array_find(traced_function_table, funcname) < 0)
       g_ptr_array_add(traced_function_table, g_strdup(funcname));
-
-   if (debug)
-      printf("(%s) Dome. funcname=|%s|, found=%s\n",
-             __func__, funcname, SBOOL(found));
 }
-
 
 /** Adds a file to the list of files to be traced.
  *
@@ -449,10 +441,6 @@ void add_traced_function(const char * funcname) {
  *  If the file name does not end in ".c", that suffix is appended.
  */
 void add_traced_file(const char * filename) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting. filename = |%s| \n", __func__, filename);
-
    if (!traced_file_table)
       traced_file_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
@@ -467,14 +455,11 @@ void add_traced_file(const char * filename) {
       bname = temp;
    }
 
-   bool found = (gaux_string_ptr_array_find(traced_file_table, bname) < 0);
-   if (found)
+   if (gaux_string_ptr_array_find(traced_file_table, bname) < 0)
       g_ptr_array_add(traced_file_table, bname);
    else
       free(bname);
-   if (debug)
-      printf("(%s) Dome. filename=|%s|, bname=|%s|, found=%s\n",
-             __func__, filename, bname, SBOOL(found));
+   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, SBOOL(found));
 }
 
 
@@ -550,6 +535,27 @@ void show_traced_files() {
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               (buf && (strlen(buf) > 0)) ? buf : "none");
    free(buf);
+}
+
+static char * trace_destination = NULL;
+
+void set_trace_destination(char * filename) {
+   bool debug = true;
+   if (debug)
+      printf("(%s) filename = %s\n", __func__, filename);
+   if (filename) {
+      FILE * f = fopen(filename, "w");
+      if (f) {
+         trace_destination = filename;
+         fclose(f);
+         if (debug)
+            fprintf(stdout, "Writing trace output to: %s\n", filename);
+      }
+      else {
+         fprintf(stderr, "Unable to write to trace file %s: %s\n",
+                         filename, strerror(errno));
+      }
+   }
 }
 
 
@@ -704,7 +710,6 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
       if (debug_or_trace) {
-         // f0printf(fout(), "(%s) DDC: %s\n", funcname, buffer);
          // use dbgtrc() for consistent handling of timestamp and thread id prefixes
          dbgtrc(0xff, funcname, lineno, filename, "DDC: %s", buffer);
       }
@@ -842,8 +847,29 @@ bool dbgtrc(
       char * buf2 = g_strdup_printf("%s%s(%-30s) %s\n",
                                     thread_prefix, elapsed_prefix, funcname, buffer);
 
-      f0puts(buf2, fout());    // no automatic terminating null
-      fflush(fout());
+
+      if (trace_destination) {
+         FILE * f = fopen(trace_destination, "a");
+         if (f) {
+            int status = fputs(buf2, f);
+            if (status < 0) {    // per doc it's -1 = EOF
+               fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
+               free(trace_destination);
+               trace_destination = NULL;
+            }
+            else
+               fflush(f);
+            fclose(f);
+         }
+         else {
+            fprintf(stderr, "Error opening %s: %s\n", trace_destination, strerror(errno));
+            trace_destination = NULL;
+         }
+      }
+      if (!trace_destination) {
+         f0puts(buf2, fout());    // no automatic terminating null
+         fflush(fout());
+      }
 
       free(buffer);
       free(buf2);
