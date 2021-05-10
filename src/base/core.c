@@ -422,13 +422,20 @@ static GPtrArray  * traced_file_table     = NULL;
  *  @param funcname function name
  */
 void add_traced_function(const char * funcname) {
-   // printf("(%s) funcname=|%s|\n", __func__, funcname);
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
 
    if (!traced_function_table)
       traced_function_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-   if (gaux_string_ptr_array_find(traced_function_table, funcname) < 0)
+   bool found = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
+   if (found)
       g_ptr_array_add(traced_function_table, g_strdup(funcname));
+
+   if (debug)
+      printf("(%s) Done. funcname=|%s|, found=%s\n",
+             __func__, funcname, SBOOL(found));
 }
 
 /** Adds a file to the list of files to be traced.
@@ -441,6 +448,10 @@ void add_traced_function(const char * funcname) {
  *  If the file name does not end in ".c", that suffix is appended.
  */
 void add_traced_file(const char * filename) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. filename = |%s| \n", __func__, filename);
+
    if (!traced_file_table)
       traced_file_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
@@ -455,11 +466,14 @@ void add_traced_file(const char * filename) {
       bname = temp;
    }
 
-   if (gaux_string_ptr_array_find(traced_file_table, bname) < 0)
+   bool found = (gaux_string_ptr_array_find(traced_file_table, bname) < 0);
+   if (found)
       g_ptr_array_add(traced_file_table, bname);
    else
       free(bname);
-   // printf("(%s) filename=|%s|, bname=|%s|, found=%s\n", __func__, filename, bname, SBOOL(found));
+   if (debug)
+      printf("(%s) Done. filename=|%s|, bname=|%s|, found=%s\n",
+             __func__, filename, bname, SBOOL(found));
 }
 
 
