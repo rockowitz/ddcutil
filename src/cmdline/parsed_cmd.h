@@ -112,7 +112,14 @@ struct {
 // DDCA_MCCS_Version_Id   mccs_version_id;
    int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
-   int                    i1;         // available for temporary use
+   int                    i1;         // for temporary use
+   int                    i2;         // for temporary use
+   int                    i3;         // for temporary use
+   int                    i4;         // for temporary use
+   char *                 s1;         // for temporary use
+   char *                 s2;         // for temporary use
+   char *                 s3;         // for temporary use
+   char *                 s4;         // for temporary use
 } Parsed_Cmd;
 
 const char *  cmdid_name(Cmd_Id_Type id);
