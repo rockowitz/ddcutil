@@ -45,6 +45,12 @@
    assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
 
 //
+// Initialization
+//
+// void init_msg_control();
+
+
+//
 // Standard function call arguments and return values
 //
 
