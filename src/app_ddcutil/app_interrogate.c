@@ -68,10 +68,11 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    f0printf(fout(), "Forcing --force-slave-address..\n");
    i2c_force_slave_addr_flag = true;
    f0printf(fout(), "This command will take a while to run...\n\n");
+   try_data_set_maxtries2(MULTI_PART_READ_OP, MAX_MAX_TRIES);
+   try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
 
-
-   // ddc_ensure_displays_detected();    // unnecessary, called by query_sysenv()
-   // DBGTRC(debug, TRACE_GROUP, "display detection complete");
+   ddc_ensure_displays_detected();    // *** ???
+   DBGTRC(debug, TRACE_GROUP, "display detection complete");
 
    // ENVIRONMENT command
    query_sysenv();
