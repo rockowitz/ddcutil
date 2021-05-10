@@ -113,9 +113,6 @@ struct {
    int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
    int                    i1;         // for temporary use
-   int                    i2;         // for temporary use
-   int                    i3;         // for temporary use
-   int                    i4;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
