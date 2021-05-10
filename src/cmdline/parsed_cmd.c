@@ -131,6 +131,10 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    ntsa_free(parsed_cmd->traced_files, true);
    ntsa_free(parsed_cmd->traced_functions, true);
    g_array_free(parsed_cmd->setvcp_values, true);
+   free(parsed_cmd->s1);
+   free(parsed_cmd->s2);
+   free(parsed_cmd->s3);
+   free(parsed_cmd->s4);
 
    parsed_cmd->marker[3] = 'x';
    free(parsed_cmd);
@@ -240,11 +244,18 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       }
       rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
       rpt_int( "i1",                NULL, parsed_cmd->i1,                            d1);
+      rpt_int( "i2",                NULL, parsed_cmd->i2,                            d1);
+      rpt_int( "i3",                NULL, parsed_cmd->i3,                            d1);
+      rpt_int( "i4",                NULL, parsed_cmd->i4,                            d1);
       rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
       rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
       rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);
       rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
       rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
       rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
+      rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
+      rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
+      rpt_str( "s3",                NULL, parsed_cmd->s3,                            d1);
+      rpt_str( "s4",                NULL, parsed_cmd->s4,                            d1);
    }
 }
