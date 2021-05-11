@@ -861,7 +861,6 @@ bool dbgtrc(
       char * buf2 = g_strdup_printf("%s%s(%-30s) %s\n",
                                     thread_prefix, elapsed_prefix, funcname, buffer);
 
-
       if (trace_destination) {
          FILE * f = fopen(trace_destination, "a");
          if (f) {
