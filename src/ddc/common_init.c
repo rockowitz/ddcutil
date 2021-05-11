@@ -50,12 +50,20 @@ init_tracing(Parsed_Cmd * parsed_cmd)
     if (parsed_cmd->s1)
        set_trace_destination(parsed_cmd->s1);
     if (parsed_cmd->traced_functions) {
-       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++)
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
+          if (debug)
+                printf("(%s) Adding traced function: %s\n",
+                       __func__, parsed_cmd->traced_functions[ndx]);
           add_traced_function(parsed_cmd->traced_functions[ndx]);
+       }
     }
     if (parsed_cmd->traced_files) {
-       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++)
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++) {
+          if (debug)
+             printf("(%s) Adding traced file: %s\n",
+                    __func__, parsed_cmd->traced_files[ndx]);
           add_traced_file(parsed_cmd->traced_files[ndx]);
+       }
     }
     
     if (debug)
