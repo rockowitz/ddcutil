@@ -252,7 +252,6 @@ _ddca_terminate(void) {
 }
 
 
-
 //
 // Error Detail
 //
@@ -602,7 +601,7 @@ ddca_get_global_sleep_multiplier()
 double
 ddca_set_sleep_multiplier(double multiplier)
 {
-   // bool debug = true;
+   // bool debug = false;
    double result = tsd_get_sleep_multiplier_factor();
    // DBGMSF(debug, "Setting %5.2f", multiplier);
    tsd_set_sleep_multiplier_factor(multiplier);
@@ -613,7 +612,7 @@ ddca_set_sleep_multiplier(double multiplier)
 double
 ddca_get_sleep_multiplier()
 {
-   // bool debug = true;
+   // bool debug = false;
    // DBGMSF(debug, "Starting");
    double result = tsd_get_sleep_multiplier_factor();
    // DBGMSF(debug, "Returning %5.2f", result);

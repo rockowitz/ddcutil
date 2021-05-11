@@ -555,7 +555,7 @@ void show_traced_files() {
 static char * trace_destination = NULL;
 
 void set_trace_destination(char * filename) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) filename = %s\n", __func__, filename);
    if (filename) {

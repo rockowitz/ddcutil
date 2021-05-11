@@ -3,7 +3,7 @@
  *  For use only by other api_... files.
  */
 
-// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 
@@ -14,6 +14,18 @@
 #include "private/ddcutil_types_private.h"
 
 
+Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
+
+#define VALIDATE_DDCA_DREF(_ddca_dref, _dref, _debug) \
+   do { \
+      _dref = validated_ddca_display_ref(_ddca_dref); \
+      if (!_dref) { \
+         DBGTRC(_debug, DDCA_TRC_API, "Done.     Returning DDCRC_ARG"); \
+         return DDCRC_ARG; \
+      } \
+   } while(0)
+
+
 #define WITH_DR(ddca_dref, action) \
    do { \
       assert(library_initialized); \
@@ -21,6 +33,21 @@
       free_thread_error_detail(); \
       Display_Ref * dref = (Display_Ref *) ddca_dref; \
       if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  { \
+         psc = DDCRC_ARG; \
+      } \
+      else { \
+         (action); \
+      } \
+      return psc; \
+   } while(0);
+
+#define WITH_VALIDATED_DR(ddca_dref, action) \
+   do { \
+      assert(library_initialized); \
+      DDCA_Status psc = 0; \
+      free_thread_error_detail(); \
+      Display_Ref * dref = validated_ddca_display_ref(ddca_dref); \
+      if (!dref)  { \
          psc = DDCRC_ARG; \
       } \
       else { \

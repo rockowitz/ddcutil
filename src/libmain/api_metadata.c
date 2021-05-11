@@ -176,7 +176,7 @@ ddca_get_feature_list_by_dref(
       bool                    include_table_features,
       DDCA_Feature_List*      feature_list_loc)
 {
-   WITH_DR(
+   WITH_VALIDATED_DR(
          ddca_dref,
          {
                bool debug = false;
@@ -510,7 +510,7 @@ ddca_get_feature_metadata_by_dref(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata **    metadata_loc)
 {
-   WITH_DR(
+   WITH_VALIDATED_DR(
          ddca_dref,
          {
                bool debug = false;
@@ -647,7 +647,7 @@ ddca_get_feature_name_by_dref(
       DDCA_Display_Ref       ddca_dref,
       char **                name_loc)
 {
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
          {
                //*name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
                *name_loc = get_feature_name_by_id_and_vcp_version(feature_code,
@@ -865,7 +865,7 @@ ddca_is_udf_enabled(void)
 DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
       {
             bool debug = false;
             DBGMSF(debug, "dref=%s", dref_repr_t(dref));

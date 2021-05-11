@@ -254,19 +254,16 @@ ddca_report_parsed_capabilities_by_dref(
    free_thread_error_detail();
    DDCA_Status ddcrc = 0;
 
-   PRECOND(p_caps);
-#ifdef ALT
-   // no need to check marker since DDCA_Capabilities not opaque
-   if (!p_caps) {
-      ddcrc = DDCRC_ARG;
-      goto bye;
-   }
-#endif
+   PRECOND(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 ) {
-      ddcrc = DDCRC_ARG;
-      goto bye;
+   Display_Ref * dref = NULL;
+   // dref may be NULL, but if not it must be valid
+   if (ddca_dref) {
+      dref = validated_ddca_display_ref(dref);
+      if (!dref) {
+         ddcrc = DDCRC_ARG;
+         goto bye;
+      }
    }
 
    int d0 = depth;

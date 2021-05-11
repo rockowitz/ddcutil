@@ -37,6 +37,14 @@ static inline bool valid_display_ref(Display_Ref * dref) {
    return (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 }
 
+
+Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )
+      dref = NULL;
+   return dref;
+}
+
 // forward declarations
 void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
 void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
@@ -284,8 +292,8 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (dref != NULL && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 )  {
+   Display_Ref * dref = validated_ddca_display_ref(ddca_dref);
+   if (dref) {
 #ifdef TOO_MUCH_WORK
       char * dref_type_name = io_mode_name(dref->ddc_io_mode);
       switch (dref->ddc_io_mode) {
@@ -315,9 +323,10 @@ ddca_dbgrpt_display_ref(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   Display_Ref * dref = validated_ddca_display_ref(ddca_dref);
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
-   dbgrpt_display_ref(dref, depth+1);
+   if (dref)
+      dbgrpt_display_ref(dref, depth+1);
 }
 
 
@@ -326,20 +335,16 @@ ddca_report_display_by_dref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
-   free_thread_error_detail();
-   DDCA_Status rc = 0;
+    free_thread_error_detail();
+    DDCA_Status rc = 0;
 
     assert(library_initialized);
 
-    Display_Ref * dref = (Display_Ref *) ddca_dref;
-    if ( !valid_display_ref(dref) )  {
-       rc = DDCRC_ARG;
-       goto bye;
-    }
+    Display_Ref * dref = NULL;
+    VALIDATE_DDCA_DREF(ddca_dref, dref, /*debug=*/false);
 
     ddc_report_display_by_dref(dref, depth);
 
-bye:
    return rc;
 }
 
@@ -364,20 +369,15 @@ ddca_open_display2(
    bool debug = false;
    free_thread_error_detail();
    assert(library_initialized);
-   // assert(dh_loc);
+   assert(ddc_displays_already_detected());
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%p, wait=%s, on thread %d",
+                               ddca_dref, sbool(wait), get_thread_id());
    PRECOND(dh_loc);
 
-   assert(ddc_displays_already_detected());
-   // ddc_ensure_displays_detected();
-
-   // pid_t thread_id = syscall(SYS_gettid);
-   pid_t thread_id = get_thread_id(); 
-
-   DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%s, wait=%s, on thread %d", dref_repr_t(dref), sbool(wait), thread_id);
-   if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
+   DDCA_Status rc = 0;
+   Display_Ref * dref = validated_ddca_display_ref(ddca_dref);
+   if (!dref) {
       rc = DDCRC_ARG;
    }
    else {
@@ -389,9 +389,9 @@ ddca_open_display2(
      if (rc == 0)
         *dh_loc = dh;
    }
-   assert( (rc==0 && *dh_loc) || (rc!=0 && !*dh_loc));
-   DBGTRC(debug, DDCA_TRC_API,  "Done.     Returning rc=%s, dh_loc=%p -> %s",
-                                psc_desc(rc), dh_loc, dh_repr_t(*dh_loc));
+   ASSERT_IFF(rc==0, *dh_loc);
+   DBGTRC(debug, DDCA_TRC_API,  "Done.     Returning rc=%s, *dh_loc=%p -> %s",
+                                psc_desc(rc), *dh_loc, dh_repr_t(*dh_loc));
    return rc;
 }
 

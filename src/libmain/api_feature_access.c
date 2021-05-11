@@ -482,7 +482,7 @@ ddca_format_any_vcp_value_by_dref(
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc)
 {
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
          {
                assert(formatted_value_loc);
                bool debug = false;
@@ -545,7 +545,7 @@ ddca_format_non_table_vcp_value_by_dref(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
          {
                bool debug = false;
                if (debug) {
@@ -596,7 +596,7 @@ ddca_format_table_vcp_value_by_dref(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
          {
                return ddca_format_table_vcp_value(
                          feature_code,
