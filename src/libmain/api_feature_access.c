@@ -216,7 +216,7 @@ ddca_get_any_vcp_value_using_explicit_type(
       *valrec_loc = valrec2;
    }
 
-   DBGMSF(debug, "Done. Returning %s, *valrec_loc=%p", psc_desc(rc), *valrec_loc);
+   DBGMSF(debug, "Done.     Returning %s, *valrec_loc=%p", psc_desc(rc), *valrec_loc);
    assert( (rc==0 && *valrec_loc) || (rc!=0 && !*valrec_loc) );
    return rc;
 }
@@ -249,7 +249,7 @@ ddca_get_any_vcp_value_using_explicit_type_new(
          *pvalrec = valrec;
       }
    }
-   DBGMSF(debug, "Done. Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
+   DBGMSF(debug, "Done.     Returning %s, *pvalrec=%p", psc_desc(rc), *pvalrec);
    return rc;
 }
 #endif

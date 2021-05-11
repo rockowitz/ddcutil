@@ -240,7 +240,7 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
 
             // bye:
-               DBGTRC(debug, TRACE_GROUP, "Done. feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
+               DBGTRC(debug, TRACE_GROUP, "Done.     feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
                      feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
                      subset, feature_subset_name(subset), psc_desc(psc));
                DBGTRC(debug, TRACE_GROUP,
@@ -568,7 +568,7 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
 
-                DBGMSF(debug, "Done.  Returning: %s", ddca_rc_desc(psc));
+                DBGMSF(debug, "Done.     Returning: %s", ddca_rc_desc(psc));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
@@ -713,7 +713,7 @@ ddca_get_simple_sl_value_table_by_vspec(
   }
 
 bye:
-   DBGMSF(debug, "Done. *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
+   DBGMSF(debug, "Done.     *pvalue_table=%p, returning %s", *value_table_loc, psc_desc(rc));
    assert ( (rc==0 && *value_table_loc) || (rc!=0 && !*value_table_loc) );
    return rc;
 }
@@ -759,7 +759,7 @@ ddca_get_simple_sl_value_table(
    rc = ddca_get_simple_sl_value_table_by_vspec(
            feature_code, vspec, &DDCA_UNDEFINED_MONITOR_MODEL_KEY,  value_table_loc);
 
-   DBGMSF(debug, "Done. *value_table_loc=%p, returning %s", *value_table_loc, psc_desc(rc));
+   DBGMSF(debug, "Done.     *value_table_loc=%p, returning %s", *value_table_loc, psc_desc(rc));
    assert ( (rc==0 && *value_table_loc) || (rc!=0 && !*value_table_loc) );
    return rc;
 }

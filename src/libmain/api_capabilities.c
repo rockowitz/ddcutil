@@ -209,7 +209,7 @@ ddca_parse_capabilities_string(
    }
 
    *parsed_capabilities_loc = result;
-   DBGMSF(debug, "Done.    *parsed_capabilities_loc=%p, Returning: %d", *parsed_capabilities_loc, ddcrc);
+   DBGMSF(debug, "Done.     *parsed_capabilities_loc=%p, Returning: %d", *parsed_capabilities_loc, ddcrc);
    if (debug && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
@@ -382,7 +382,7 @@ ddca_report_parsed_capabilities_by_dh(
    ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
 
 bye:
-   DBGMSF(debug, "Done. Returning %s", ddca_rc_desc(ddcrc));
+   DBGMSF(debug, "Done.     Returning %s", ddca_rc_desc(ddcrc));
    return ddcrc;
 }
 
