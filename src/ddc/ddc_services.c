@@ -149,7 +149,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
  */
 void init_ddc_services() {
    bool debug = false;
-   DBGMSF(debug, "Executing");
+   DBGMSF(debug, "Starting");
 
    // i2c:
    i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
@@ -176,4 +176,5 @@ void init_ddc_services() {
    init_ddc_watch_displays();
 
    // dbgrpt_rtti_func_name_table(1);
+   DBGMSF(debug, "Done");
 }

@@ -515,7 +515,7 @@ ddc_start_watch_displays()
    }
 
    g_mutex_unlock(&watch_thread_mutex);
-   DBGTRC(debug, TRACE_GROUP, "Done. watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
    return ddcrc;
 }
 
@@ -554,7 +554,7 @@ ddc_stop_watch_displays()
       ddcrc = DDCRC_INVALID_OPERATION;
 
    g_mutex_unlock(&watch_thread_mutex);
-   DBGTRC(debug, TRACE_GROUP, "Done. watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
    return ddcrc;
 }
 

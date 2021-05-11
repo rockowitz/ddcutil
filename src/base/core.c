@@ -438,6 +438,7 @@ void add_traced_function(const char * funcname) {
              __func__, funcname, SBOOL(found));
 }
 
+
 /** Adds a file to the list of files to be traced.
  *
  *  @param filename file name
@@ -561,6 +562,13 @@ void set_trace_destination(char * filename) {
       FILE * f = fopen(filename, "w");
       if (f) {
          trace_destination = filename;
+
+         time_t trace_start_time = time(NULL);
+         char * trace_start_time_s = asctime(localtime(&trace_start_time));
+         if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
+              trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
+         fprintf(f, "Tracing started %s\n", trace_start_time_s);
+
          fclose(f);
          if (debug)
             fprintf(stdout, "Writing trace output to: %s\n", filename);

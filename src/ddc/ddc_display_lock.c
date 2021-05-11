@@ -151,7 +151,7 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
 
    g_mutex_unlock(&descriptors_mutex);
 
-   DBGMSF(debug, "Done.  Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
+   DBGMSF(debug, "Done.     Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
    return result;
 }
 

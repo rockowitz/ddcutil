@@ -132,7 +132,7 @@ bye:
    ASSERT_IFF(result==0, *untokenized_option_string_loc);
    if (debug)  {
       // check for null to avoid -Wstringop-overflow
-      printf("(%s) Done. untokenized options: |%s|, *config_fn_loc=%s, returning: %d\n",
+      printf("(%s) Done.     untokenized options: |%s|, *config_fn_loc=%s, returning: %d\n",
              __func__,
              (*untokenized_option_string_loc) ? *untokenized_option_string_loc : "(null)",
              (*config_fn_loc)                 ? *config_fn_loc :                 "(null)",
@@ -271,7 +271,7 @@ int apply_config_file(
    }
 
    if (debug) {
-       printf("(%s) Done. *new_argc_loc=%d, *new_argv_loc=%p, returning %d\n",
+       printf("(%s) Done.     *new_argc_loc=%d, *new_argv_loc=%p, returning %d\n",
                     __func__, *new_argc_loc, *new_argv_loc, result);
        printf("(%s) tokens:\n", __func__);
        ntsa_show(*new_argv_loc);

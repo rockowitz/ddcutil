@@ -204,7 +204,7 @@ ddca_did_repr(DDCA_Display_Identifier ddca_did) {
    if (pdid != NULL && memcmp(pdid->marker, DISPLAY_IDENTIFIER_MARKER, 4) == 0 )  {
       result = did_repr(pdid);
    }
-   // DBGMSG("Done.  Returning: %p", result);
+   // DBGMSG("Done.     Returning: %p", result);
    return result;
 }
 
@@ -243,9 +243,9 @@ ddca_get_display_ref(
          rc = DDCRC_INVALID_DISPLAY;
    }
 
-   DBGMSF(debug, "Done.  Returning: %d", rc);
+   DBGMSF(debug,   "Done.     Returning: %d", rc);
    if (rc == 0)
-      DBGMSF(debug,"    *dref_loc=%p", *dref_loc);
+      DBGMSF(debug,"          *dref_loc=%p", *dref_loc);
 
    assert( (rc==0 && *dref_loc) || (rc!=0 && !*dref_loc));
    return rc;
@@ -303,7 +303,7 @@ ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
       // result = dref_short_name(dref);
       result = dref_repr_t(dref);
    }
-   DBGMSF(debug, "Done. Returning: %s", result);
+   DBGMSF(debug, "Done.     Returning: %s", result);
    return result;
 }
 
@@ -684,7 +684,7 @@ ddca_get_display_info_list2(
    }
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
-      DBGMSG("Done. Returning %p", result_list);
+      DBGMSG("Done.     Returning %p", result_list);
       dbgrpt_display_info_list(result_list, 2);
    }
 
@@ -763,7 +763,7 @@ ddca_report_display_info(
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
-   DBGMSF(debug, "Done");
+   DBGMSF(debug, "Done.");
 }
 
 

@@ -244,7 +244,7 @@ validate_environment()
    ok = true;
 #endif
 
-   DBGMSF(debug, "Done. Returning: %s", sbool(ok));
+   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
    return ok;
 }
 
@@ -414,7 +414,7 @@ find_dref(
 
    *dref_loc = dref;
    DBGTRC(debug, TRACE_GROUP,
-                 "Done. *dref_loc = %p -> %s , returning %s",
+                 "Done.     *dref_loc = %p -> %s , returning %s",
                  *dref_loc,
                  dref_repr_t(*dref_loc),
                  psc_desc(final_result));
@@ -807,7 +807,7 @@ main(int argc, char *argv[]) {
    }
 
 bye:
-   DBGTRC(main_debug, TRACE_GROUP, "Done.  main_rc=%d", main_rc);
+   DBGTRC(main_debug, TRACE_GROUP, "Done.     main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);
    char * end_time_s = asctime(localtime(&end_time));

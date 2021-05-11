@@ -128,7 +128,7 @@ ddca_build_options(void) {
 static
 Parsed_Cmd * get_parsed_libmain_config() {
    bool debug = false;
-   DBGMSF(debug, "Starting. (A)");
+   DBGMSF(debug, "Starting.");
 
    Parsed_Cmd * parsed_cmd = NULL;
 
@@ -187,7 +187,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    free(untokenized_option_string);
    free(config_fn);
 
-   DBGMSF(debug, "Done. (B)  Returning %p", parsed_cmd);
+   DBGMSF(debug, "Done.     Returning %p", parsed_cmd);
    return parsed_cmd;
 }
 
@@ -244,10 +244,10 @@ _ddca_terminate(void) {
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
-      DBGMSF(debug, "library termination executed");
+      DBGMSF(debug, "Done.     library termination executed");
    }
    else {
-      DBGMSF(debug, "library was already terminated");   // should be impossible
+      DBGMSF(debug, "Done.     library was already terminated");   // should be impossible
    }
 }
 
@@ -265,7 +265,7 @@ ddca_get_error_detail() {
    DDCA_Error_Detail * result = dup_error_detail(get_thread_error_detail());
 
    if (debug) {
-      DBGMSG("Done.  Returning: %p", result);
+      DBGMSG("Done.     Returning: %p", result);
       if (result)
          report_error_detail(result, 2);
    }

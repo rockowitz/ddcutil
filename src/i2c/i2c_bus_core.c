@@ -248,7 +248,7 @@ retry:
 
    assert(result <= 0);
    // if (addr == 0x37)  result = -EBUSY;    // for testing
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(result));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", psc_desc(result));
    return result;
 }
 
@@ -784,9 +784,9 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       }
    }   // probing complete
 
-   // DBGTRC(debug, TRACE_GROUP, "Done. flags=0x%02x", bus_info->flags );
+   // DBGTRC(debug, TRACE_GROUP, "Done.     flags=0x%02x", bus_info->flags );
    if (debug || IS_TRACING() ) {
-      DBGMSG("Done. flags=0x%04x, bus info:", bus_info->flags );
+      DBGMSG("Done.     flags=0x%04x, bus info:", bus_info->flags );
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
@@ -1036,7 +1036,7 @@ void i2c_discard_buses() {
 
 I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_I2C, "Starting.  busno = %d", busno);
+   DBGTRC(debug, DDCA_TRC_I2C, "Starting. busno = %d", busno);
    I2C_Bus_Info * businfo = NULL;
 
    if (i2c_device_exists(busno) ) {
@@ -1047,7 +1047,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
          i2c_dbgrpt_bus_info(businfo, 0);
    }
 
-   DBGTRC(debug, DDCA_TRC_I2C, "Done.  busno=%d, returning: %p", busno, businfo);
+   DBGTRC(debug, DDCA_TRC_I2C, "Done.     busno=%d, returning: %p", busno, businfo);
    return businfo;
 }
 
@@ -1118,7 +1118,7 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
       }
    }
 
-   DBGMSF(debug, "Done. Returning: %p", result);
+   DBGMSF(debug, "Done.     Returning: %p", result);
    return result;
 }
 
@@ -1217,7 +1217,7 @@ int i2c_report_buses(bool report_all, int depth) {
    if (reported_ct == 0)
       rpt_vstring(depth, "   No buses\n");
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning %d\n", reported_ct);
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning %d\n", reported_ct);
    return reported_ct;
 }
 

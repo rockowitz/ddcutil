@@ -223,7 +223,7 @@ bye:
    assert(ddcrc <= 0);
    assert( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
    return ddcrc;
 }
 
@@ -285,7 +285,7 @@ ddc_close_display(Display_Handle * dh) {
    unlock_distinct_display(display_id);
 
    free_display_handle(dh);
-   DBGTRC(debug, TRACE_GROUP, "Done. dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
    return rc;
 }
 
@@ -395,7 +395,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done. psc=%s", psc_desc(rc));
+   DBGTRC(debug, TRACE_GROUP, "Done.    psc=%s", psc_desc(rc));
    return rc;
 }
 
@@ -433,7 +433,7 @@ DDCA_Status ddc_write_read_raw(
                  p_rcvd_bytes_ct
               );
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(psc));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", psc_desc(psc));
    if (psc == 0) {
       DBGTRC(debug, TRACE_GROUP,
              "      readbuf: %s",
@@ -737,7 +737,7 @@ ddc_write_read_with_retry(
 
    try_data_record_tries2(WRITE_READ_TRIES_OP, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done. Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -787,7 +787,7 @@ ddc_i2c_write_only(
             : SE_POST_WRITE;
    // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
    TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
-   DBGTRC(debug, TRACE_GROUP, "Done. rc=%s", psc_desc(rc) );
+   DBGTRC(debug, TRACE_GROUP, "Done.     rc=%s", psc_desc(rc) );
    return rc;
 }
 
@@ -817,7 +817,7 @@ ddc_write_only(
    if (psc)
       ddc_excp = errinfo_new(psc, __func__);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -896,7 +896,7 @@ ddc_write_only_with_retry(
 
    try_data_record_tries2(WRITE_ONLY_TRIES_OP, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
