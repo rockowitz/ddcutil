@@ -676,10 +676,13 @@ ddca_trace_group_name_to_value(char * name) {
 
 void
 ddca_set_trace_options(DDCA_Trace_Options  options) {
-   // global variables in core.c
    // DBGMSG("options = 0x%02x", options);
-   dbgtrc_show_time = options & DDCA_TRCOPT_TIMESTAMP;
-   dbgtrc_show_thread_id = options & DDCA_TRCOPT_THREAD_ID;
+   // global variables in core.c
+
+   if (options & DDCA_TRCOPT_TIMESTAMP)
+      dbgtrc_show_time = true;
+   if (options & DDCA_TRCOPT_THREAD_ID)
+      dbgtrc_show_thread_id = true;
 }
 
 
