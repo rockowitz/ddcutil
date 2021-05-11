@@ -243,9 +243,9 @@ bye:
       dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done. dh=%s, Returning: %s",
+   DBGTRC(debug, TRACE_GROUP, "Done.     dh=%s, Returning: %s",
                  dh_repr_t(dh), sbool(communication_working));
-   DBGTRC(debug, TRACE_GROUP, "Done. communication flags: %s",
+   DBGTRC(debug, TRACE_GROUP, "          Done. communication flags: %s",
                                  dref_basic_flags_t(dh->dref->flags));
    return communication_working;
 }
@@ -274,8 +274,8 @@ bool ddc_initial_checks_by_dref(Display_Ref * dref) {
      dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
-   DBGTRC(debug, TRACE_GROUP, "Done. communication flags: %s",
+   DBGTRC(debug, TRACE_GROUP, "Done.     dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
+   DBGTRC(debug, TRACE_GROUP, "          communication flags: %s",
                                dref_basic_flags_t(dref->flags));
    return result;
 }
@@ -291,7 +291,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 
    ddc_initial_checks_by_dref(dref);
    // g_thread_exit(NULL);
-   DBGTRC(debug, TRACE_GROUP, "Done. dref = %s, returning NULL", dref_repr_t(dref) );
+   DBGTRC(debug, TRACE_GROUP, "Done.     dref = %s, returning NULL", dref_repr_t(dref) );
    return NULL;
 }
 
@@ -601,7 +601,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
       }
    }
 
-   DBGMSF(debug, "Done.  Returning: %d", display_ct);
+   DBGMSF(debug, "Done.     Returning: %d", display_ct);
    return display_ct;
 }
 
@@ -707,7 +707,7 @@ new_display_criteria() {
    criteria->hiddev = -1;
    criteria->usb_busno = -1;
    criteria->usb_devno = -1;
-   DBGMSF(debug, "Done. Returning: %p", criteria);
+   DBGMSF(debug, "Done.    Returning: %p", criteria);
    return criteria;
 }
 
@@ -919,7 +919,7 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
          }
       }
    }
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", sbool(result) );
+   DBGTRC(debug, TRACE_GROUP,    "Done. Returning: %s", sbool(result) );
    return result;
 }
 
@@ -1017,11 +1017,11 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    if (debug) {
       if (result) {
-         DBGMSG("Done.  Returning: ");
+         DBGMSG("Done.     Returning: ");
          ddc_dbgrpt_display_ref(result, 1);
       }
       else
-         DBGMSG("Done.  Returning NULL");
+         DBGMSG("Done.     Returning NULL");
    }
 
    return result;
@@ -1156,7 +1156,7 @@ ddc_detect_all_displays() {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
    // }
-   DBGTRC(debug, TRACE_GROUP, "Done. Detected %d valid displays", dispno_max);
+   DBGTRC(debug, TRACE_GROUP, "Done.     Detected %d valid displays", dispno_max);
    return display_list;
 }
 
@@ -1173,7 +1173,7 @@ ddc_ensure_displays_detected() {
       i2c_detect_buses();
       all_displays = ddc_detect_all_displays();
    }
-   DBGMSF(debug, "all_displays has %d displays", all_displays->len);
+   DBGMSF(debug, "Done.     all_displays has %d displays", all_displays->len);
 }
 
 
