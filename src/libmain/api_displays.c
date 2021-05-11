@@ -376,7 +376,7 @@ ddca_open_display2(
    DDCA_Status rc = 0;
    *dh_loc = NULL;        // in case of error
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   DBGTRC(debug, DDCA_TRC_API, "ddca_dref=%s, wait=%s, on thread %d", dref_repr_t(dref), sbool(wait), thread_id);
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%s, wait=%s, on thread %d", dref_repr_t(dref), sbool(wait), thread_id);
    if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  {
       rc = DDCRC_ARG;
    }
@@ -390,7 +390,7 @@ ddca_open_display2(
         *dh_loc = dh;
    }
    assert( (rc==0 && *dh_loc) || (rc!=0 && !*dh_loc));
-   DBGTRC(debug, DDCA_TRC_API,  "Returning rc=%s, dh_loc=%p -> %s",
+   DBGTRC(debug, DDCA_TRC_API,  "Done.     Returning rc=%s, dh_loc=%p -> %s",
                                 psc_desc(rc), dh_loc, dh_repr_t(*dh_loc));
    return rc;
 }

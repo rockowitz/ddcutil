@@ -108,7 +108,7 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Opening display %s, callopts=%s",
+   DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
    assert(dh_loc);
 
