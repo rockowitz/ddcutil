@@ -559,7 +559,7 @@ void set_trace_destination(char * filename) {
    if (debug)
       printf("(%s) filename = %s\n", __func__, filename);
    if (filename) {
-      FILE * f = fopen(filename, "w");
+      FILE * f = fopen(filename, "a");
       if (f) {
          trace_destination = filename;
 
