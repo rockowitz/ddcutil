@@ -207,6 +207,24 @@ bool dbgtrc(
         ...);
 
 
+// n. using ___LINE__ instead of line in _assert_fail() causes compilation error
+#define TRACED_ASSERT(_assertion) \
+   do { \
+      if (_assertion) { \
+         ;              \
+      }                 \
+      else {           \
+         int line = __LINE__;  \
+         dbgtrc(true, __func__, __LINE__, __FILE__,   \
+                      "Assertion failed: \"%s\" in file %s at line %d",  \
+                      #_assertion, __FILE__,  __LINE__);   \
+         __assert_fail(#_assertion, __FILE__, line, __func__); \
+      } \
+   } while (0)
+
+
+
+
 #define SEVEREMSG(          format, ...) \
    severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
