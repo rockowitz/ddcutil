@@ -110,7 +110,7 @@ ddc_open_display(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
-   assert(dh_loc);
+   TRACED_ASSERT(dh_loc);
 
    Display_Handle * dh = NULL;
    DDCA_Status ddcrc = 0;
@@ -145,7 +145,7 @@ ddc_open_display(
             // DBGMSF(debug, "Calling set_addr(0x37) for %s", dref_repr_t(dref));
             ddcrc =  i2c_set_addr(fd, 0x37, callopts);
             if (ddcrc != 0) {
-               assert(ddcrc < 0);
+               TRACED_ASSERT(ddcrc < 0);
                close(fd);
             }
 
@@ -157,8 +157,8 @@ ddc_open_display(
                dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
 
                I2C_Bus_Info * bus_info = dref->detail;
-               assert(bus_info);   // need to convert to a test?
-               assert( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
+               TRACED_ASSERT(bus_info);   // need to convert to a test?
+               TRACED_ASSERT( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
                dref->pedid = bus_info->edid;
                if (!dref->pedid) {
@@ -184,7 +184,7 @@ ddc_open_display(
 #ifdef USE_USB
       {
          DBGTRC(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
-         assert(dref->usb_hiddev_name);
+         TRACED_ASSERT(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_dref(dref);
@@ -204,7 +204,7 @@ ddc_open_display(
 #endif
       break;
    } // switch
-   assert(!dh || dh->dref->pedid);
+   TRACED_ASSERT(!dh || dh->dref->pedid);
 
    if (ddcrc == 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
@@ -220,8 +220,8 @@ bye:
       COUNT_STATUS_CODE(ddcrc);
    }
    *dh_loc = dh;
-   assert(ddcrc <= 0);
-   assert( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
+   TRACED_ASSERT(ddcrc <= 0);
+   TRACED_ASSERT( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
    DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
    return ddcrc;
@@ -252,7 +252,7 @@ ddc_close_display(Display_Handle * dh) {
          {
             rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
             if (rc != 0) {
-               assert(rc < 0);
+               TRACED_ASSERT(rc < 0);
                DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
                COUNT_STATUS_CODE(rc);
             }
@@ -267,7 +267,7 @@ ddc_close_display(Display_Handle * dh) {
          {
             rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
             if (rc != 0) {
-               assert(rc < 0);
+               TRACED_ASSERT(rc < 0);
                DBGMSG("usb_close_device returned %d", rc);
                COUNT_STATUS_CODE(rc);
             }
@@ -346,16 +346,16 @@ DDCA_Status ddc_i2c_write_read_raw(
                               hexstring3_t(request_packet_ptr->raw_bytes->bytes,
                                            request_packet_ptr->raw_bytes->len,
                                            " ", 1, false) );
-   assert(dh);
-   assert(dh->dref);
-   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh);
+   TRACED_ASSERT(dh->dref);
+   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
 #endif
 
    Byte slave_addr = request_packet_ptr->raw_bytes->bytes[0];      // 0x6e
-   assert(slave_addr >> 1 == 0x37);
+   TRACED_ASSERT(slave_addr >> 1 == 0x37);
 
    CHECK_DEFERRED_SLEEP(dh);
    Status_Errno_DDC rc =
@@ -422,7 +422,7 @@ DDCA_Status ddc_write_read_raw(
    }
 
    // This function should not be called for USB
-   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status psc =  ddc_i2c_write_read_raw(
                  dh,
@@ -566,7 +566,7 @@ ddc_write_read_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
           dh_repr_t(dh), sbool(all_zero_response_ok)  );
-   assert(dh->dref->io_path.io_mode != DDCA_IO_USB);
+   TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
    // if (debug)
@@ -587,9 +587,9 @@ ddc_write_read_with_retry(
           sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES];
 
-   // assert(max_write_read_exchange_tries > 0);   // to avoid clang warning
+   // TRACED_ASSERT(max_write_read_exchange_tries > 0);   // to avoid clang warning
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
-   assert(max_tries >= 0);
+   TRACED_ASSERT(max_tries >= 0);
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_tries && psc < 0 && retryable;
         tryctr++)
@@ -626,7 +626,7 @@ ddc_write_read_with_retry(
          DBGMSF(debug, "ddc_write_read() returned %s", psc_desc(psc) );
          COUNT_RETRYABLE_STATUS_CODE(psc);
 
-         assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+         TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
             // The problem: Does NULL response indicate an error condition, or
             // is the monitor using NULL response to indicate unsupported?
@@ -810,7 +810,7 @@ ddc_write_only(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
 
-   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status psc = ddc_i2c_write_only(dh, request_packet_ptr);
    Error_Info *  ddc_excp = NULL;
@@ -839,7 +839,7 @@ ddc_write_only_with_retry(
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting." );
 
-   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status        psc;
    int                tryctr;
@@ -847,7 +847,7 @@ ddc_write_only_with_retry(
    Error_Info *       try_errors[MAX_MAX_TRIES];
 
    int max_tries = try_data_get_maxtries2(WRITE_ONLY_TRIES_OP);
-   assert(max_tries > 0);
+   TRACED_ASSERT(max_tries > 0);
    for (tryctr=0, psc=-999, retryable=true;
        tryctr < max_tries && psc < 0 && retryable;
        tryctr++)
