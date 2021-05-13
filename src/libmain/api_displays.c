@@ -367,11 +367,12 @@ ddca_open_display2(
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%p, wait=%s, on thread %d",
+                               ddca_dref, sbool(wait), get_thread_id());
    free_thread_error_detail();
    assert(library_initialized);
    assert(ddc_displays_already_detected());
-   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%p, wait=%s, on thread %d",
-                               ddca_dref, sbool(wait), get_thread_id());
+
    PRECOND(dh_loc);
 
    *dh_loc = NULL;        // in case of error
