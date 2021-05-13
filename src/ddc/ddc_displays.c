@@ -119,7 +119,7 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  */
 bool ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
-   assert(dh && dh->dref);
+   TRACED_ASSERT(dh && dh->dref);
    DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
    DBGTRC(debug, TRACE_GROUP, "Starting. communication flags: %s",
                                  dref_basic_flags_t(dh->dref->flags));
@@ -145,11 +145,11 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
 
          }
-         assert( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
+         TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
 
       }
       else {
-         assert(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
+         TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
 
          // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
          // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
@@ -182,15 +182,15 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
                dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
 
             else {
-               assert( psc == 0);
-               assert(pvalrec);
+               TRACED_ASSERT( psc == 0);
+               TRACED_ASSERT(pvalrec);
             }
-            assert( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
+            TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
          }
 
          if (psc == 0) {
 
-            assert( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
+            TRACED_ASSERT( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
             if (debug || IS_TRACING()) {
                DBGMSG("pvalrec:");
                dbgrpt_single_vcp_value(pvalrec, 1);
@@ -286,7 +286,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
    bool debug = false;
 
    Display_Ref * dref = data;
-   assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+   TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
    DBGTRC(debug, TRACE_GROUP, "Starting. dref = %s", dref_repr_t(dref) );
 
    ddc_initial_checks_by_dref(dref);
@@ -308,7 +308,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
  */
 GPtrArray * ddc_get_all_displays() {
    // ddc_ensure_displays_detected();
-   assert(all_displays);
+   TRACED_ASSERT(all_displays);
 
    return all_displays;
 }
@@ -425,8 +425,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
                  dref_repr_t(dref), dref_basic_flags_t(dref->flags));
-   assert(dref);
-   assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+   TRACED_ASSERT(dref);
+   TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
 
    switch(dref->dispno) {
@@ -447,8 +447,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    case DDCA_IO_I2C:
       {
          I2C_Bus_Info * curinfo = dref->detail;
-         assert(curinfo);
-         assert(memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
+         TRACED_ASSERT(curinfo);
+         TRACED_ASSERT(memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
          i2c_report_active_display(curinfo, d1);
       }
@@ -465,7 +465,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       break;
    }
 
-   assert( dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
+   TRACED_ASSERT( dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
 
    DDCA_Output_Level output_level = get_output_level();
 
@@ -555,7 +555,7 @@ ddc_get_display_count(bool include_invalid_displays) {
       display_ct = 0;
       for (int ndx=0; ndx<all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+         TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
          if (dref->dispno > 0 || include_invalid_displays) {
             display_ct++;
          }
@@ -586,7 +586,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
    int display_ct = 0;
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      assert(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+      TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
       if (dref->dispno > 0 || include_invalid_displays) {
          display_ct++;
          ddc_report_display_by_dref(dref, depth);
@@ -632,7 +632,7 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    case(DDCA_IO_I2C):
          rpt_vstring(d1, "I2C bus information: ");
          I2C_Bus_Info * businfo = dref->detail;
-         assert( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
+         TRACED_ASSERT( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
          i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_ADL):
@@ -642,7 +642,7 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
 #ifdef USE_USB
          rpt_vstring(d1, "USB device information: ");
          Usb_Monitor_Info * moninfo = dref->detail;
-         assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+         TRACED_ASSERT(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
          dbgrpt_usb_monitor_info(moninfo, d2);
 #else
          PROGRAM_LOGIC_ERROR("Built without USB support");
@@ -660,11 +660,11 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
  * \param depth   logical indentation depth
  */
 void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
-   assert(recs);
+   TRACED_ASSERT(recs);
    rpt_vstring(depth, "Reporting %d Display_Ref instances", recs->len);
    for (int ndx = 0; ndx < recs->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(recs, ndx);
-      assert( memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
+      TRACED_ASSERT( memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
       rpt_nl();
       ddc_dbgrpt_display_ref(drec, depth+1);
    }
@@ -725,7 +725,7 @@ new_display_criteria() {
  */
 static bool
 ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
-   assert(dref && criteria);
+   TRACED_ASSERT(dref && criteria);
    bool result = false;
 
    if (criteria->dispno >= 0 && criteria->dispno != dref->dispno)
@@ -743,7 +743,7 @@ ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
       char buf[40];
       snprintf(buf, 40, "%s/hiddev%d", usb_hiddev_directory(), criteria->hiddev);
       Usb_Monitor_Info * moninfo = dref->detail;
-      assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      TRACED_ASSERT(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
       if (!streq( moninfo->hiddev_device_name, buf))
          goto bye;
    }
@@ -808,7 +808,7 @@ void async_scan(GPtrArray * all_displays) {
    GPtrArray * threads = g_ptr_array_new();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
 
       GThread * th =
       g_thread_new(
@@ -847,7 +847,7 @@ void non_async_scan(GPtrArray * all_displays) {
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       ddc_initial_checks_by_dref(dref);
 
 #ifdef OLD
@@ -869,7 +869,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
    Display_Ref * result = NULL;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
-      assert(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
+      TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
       if (ddc_check_display_ref(drec, criteria)) {
          result = drec;
          break;
@@ -931,7 +931,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
    GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       if (dref->dispno < 0)     // -1 or -2
          g_ptr_array_add(invalid_displays, dref);
       else
@@ -1094,7 +1094,7 @@ ddc_detect_all_displays() {
       // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
       for (int ndx=0; ndx<usb_monitors->len; ndx++) {
          Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
-         assert(memcmp(curmon->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+         TRACED_ASSERT(memcmp(curmon->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
          Display_Ref * dref = create_usb_display_ref(
                                    curmon->hiddev_devinfo->busnum,
                                    curmon->hiddev_devinfo->devnum,
@@ -1136,7 +1136,7 @@ ddc_detect_all_displays() {
    // assign display numbers
    for (int ndx = 0; ndx < display_list->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
-      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
          dref->dispno = ++dispno_max;
 
