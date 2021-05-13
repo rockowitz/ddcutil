@@ -35,7 +35,6 @@
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 
-#include "base/core.h"
 
 static const char* report_type_id_table[] = {
       "invalid value",
@@ -752,9 +751,9 @@ get_multibyte_value_by_uref_multi(
 
 bye:
    if (debug) {
-      DBGMSG("Returning: %p", result);
+      printf("Returning: %p\n", result);
       if (result) {
-         dbgrpt_buffer(result, 1);
+         buffer_dump(result);
       }
    }
    return result;
