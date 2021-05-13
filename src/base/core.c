@@ -845,6 +845,12 @@ bool dbgtrc(
         char *            format,
         ...)
 {
+   bool debug = false;
+   if (debug)
+      printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld\n",
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid));
+
    bool msg_emitted = false;
    if ( is_tracing(trace_group, filename, funcname) ) {
       va_list(args);
@@ -878,8 +884,9 @@ bool dbgtrc(
                free(trace_destination);
                trace_destination = NULL;
             }
-            else
+            else {
                fflush(f);
+            }
             fclose(f);
          }
          else {
