@@ -1,23 +1,47 @@
 /** \file build_info.c
  *
  *  Build Information: version, build options etc.
+ *
+ *  This file hides the quirks and redundancies in configure.ac.
+ *  It is the single source of version information for all of
+ *  ddcutil. In particular, it handles how an optional version
+ *  suffix (e.g. RC1) is appended to the version string.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
 
+#include <glib-2.0/glib.h>
+
 #include "util/report_util.h"
 #include "base/build_info.h"
 
-const char * BUILD_VERSION = VERSION;      /**< ddcutil version */
 
-// TODO: patch dummy values at link time
-// const char * BUILD_DATE = __DATE__;
-const char * BUILD_DATE = "mmm dd yyyy";   /**<  build date, to be patched at link time */
-// const char * BUILD_TIME = __TIME__;
-const char * BUILD_TIME = "hh:mm:ss";      /**< build time, to be patched at link time */
+// const char * BUILD_VERSION = VERSION;      /**< ddcutil version */
+
+const char * get_base_ddcutil_version() {
+   return VERSION;
+}
+
+
+const char * get_ddcutil_version_suffix() {
+   return VERSION_VSUFFIX;
+}
+
+
+const char * get_full_ddcutil_version() {
+   static char full_ddcutil_version[20] = {0};
+   if (full_ddcutil_version[0] == '\0') {
+      g_strlcpy( full_ddcutil_version, VERSION, 20);
+      if ( strlen(VERSION_VSUFFIX) > 0) {
+         g_strlcat(full_ddcutil_version, "-", 20);
+         g_strlcat(full_ddcutil_version, VERSION_VSUFFIX, 20);
+      }
+   }
+   return full_ddcutil_version;
+}
 
 
 void report_build_options(int depth) {
