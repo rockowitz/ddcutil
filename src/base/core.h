@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "public/ddcutil_types.h"
@@ -218,10 +219,17 @@ bool dbgtrc(
          dbgtrc(true, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
+         syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
+                         #_assertion, __FILE__,  __LINE__);   \
          __assert_fail(#_assertion, __FILE__, line, __func__); \
       } \
    } while (0)
 
+
+#ifndef TRACED_ASSERT_IFF
+#define TRACED_ASSERT_IFF(_cond1, _cond2) \
+   TRACED_ASSERT( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
+#endif
 
 
 

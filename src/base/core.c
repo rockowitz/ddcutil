@@ -33,6 +33,7 @@
 #else
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <syslog.h>
 #endif
 #include <unistd.h>
 /** \endcond */
@@ -49,6 +50,7 @@
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
+#include "base/build_info.h"
 #include "base/core.h"
 
 
@@ -246,9 +248,9 @@ char * interpret_call_options_t(Call_Options calloptions) {
 
 static void
 print_simple_title_value(int    offset_start_to_title,
-                         char * title,
+                         const char * title,
                          int    offset_title_start_to_value,
-                         char * value)
+                         const char * value)
 {
    f0printf(fout(), "%.*s%-*s%s\n",
             offset_start_to_title,"",
@@ -580,6 +582,19 @@ void set_trace_destination(char * filename) {
    }
 }
 
+#ifdef FUTURE
+void init_syslog(const char * ddcutil_component) {
+   openlog(ddcutil_component,
+         LOG_CONS | LOG_PID,
+         LOG_USER);
+
+void close_syslog() {
+   closelog();
+}
+#endif
+
+
+
 
 /** Checks if a tracing is to be performed.
  *
@@ -758,7 +773,7 @@ void show_ddcutil_version() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "ddcutil version: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
-                              VERSION);
+                              get_full_ddcutil_version());
 }
 
 
