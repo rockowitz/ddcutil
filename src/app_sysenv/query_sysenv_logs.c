@@ -213,10 +213,12 @@ void probe_logs(Env_Accumulator * accum) {
 
    // TODO: Pick simpler data structures.  Is Value_Name_Title_Table worth it?
 
+
+   // 1 suffixes to not conflict with token in syslog.h
    const Byte LOG_XORG       = 0x80;
-   const Byte LOG_DAEMON     = 0x40;
-   const Byte LOG_SYSLOG     = 0x20;
-   const Byte LOG_KERN       = 0x10;
+   const Byte LOG_DAEMON1    = 0x40;
+   const Byte LOG_SYSLOG1     = 0x20;
+   const Byte LOG_KERN1       = 0x10;
    const Byte LOG_JOURNALCTL = 0x08;
    const Byte LOG_MESSAGES   = 0x04;
    const Byte LOG_DMESG      = 0x02;
@@ -224,10 +226,10 @@ void probe_logs(Env_Accumulator * accum) {
    Value_Name_Title_Table log_table = {
          VNT(LOG_DMESG,      "dmesg"              ),
          VNT(LOG_JOURNALCTL, "journalctl"         ),
-         VNT(LOG_DAEMON,     "/var/log/daemon.log" ),
-         VNT(LOG_KERN,       "/var/log/kern.log"  ),
+         VNT(LOG_DAEMON1,     "/var/log/daemon.log" ),
+         VNT(LOG_KERN1,       "/var/log/kern.log"  ),
          VNT(LOG_MESSAGES,   "/var/log/messages"  ),
-         VNT(LOG_SYSLOG,     "/var/log/syslog"    ),
+         VNT(LOG_SYSLOG1,     "/var/log/syslog"    ),
          VNT(LOG_XORG,       "/var/log/Xorg.0.log"),
          VNT_END
    };
