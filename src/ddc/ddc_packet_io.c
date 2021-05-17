@@ -111,6 +111,7 @@ ddc_open_display(
    DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s",
                  dref_repr_t(dref), interpret_call_options_t(callopts) );
    TRACED_ASSERT(dh_loc);
+   // TRACED_ASSERT(1==5);    // for testing
 
    Display_Handle * dh = NULL;
    DDCA_Status ddcrc = 0;
