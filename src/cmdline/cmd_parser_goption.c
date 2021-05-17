@@ -793,7 +793,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
 
    if (version_flag) {
-      printf("ddcutil %s\n", BUILD_VERSION);
+      printf("ddcutil %s\n", get_full_ddcutil_version());
       // TODO: patch values at link time
       // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef USE_USB
