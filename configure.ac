@@ -17,19 +17,47 @@ AC_PREREQ([2.69])
 m4_define([ddcutil_major_version], [1])
 m4_define([ddcutil_minor_version], [1])
 m4_define([ddcutil_micro_version], [1])
-m4_define([ddcutil_version],
-          [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
+m4_define([ddcutil_version_suffix], ["dev"])
+# m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
+dnl mf_define( [ddcutil_version], m4_format([%s.%s.%s%s],[ddcutil_major_version],[ddcutil_minor_version],[ddcutil_micro_version],[ddcutil_version_suffix])
+m4_define([ddcutil_version], [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
+dnl m4_ifdef('ddcutil_version_suffix' ,m4_define([ddcutil_version], [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version]))
 
+dnl It should be possible to define here the "fully qualified" version name, conditionally
+dnl containing the version suffix, but after hours of trying to get that to work (5/2021) 
+dnl I gave up.  It will be handled in the C code.
+
+dnl process command line args, perform initializations
+dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
+dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
 
-AC_DEFINE_UNQUOTED( [PACKAGE_VMAJOR], [ ddcutil_major_version ], [ddcutil major version] )
-AC_DEFINE_UNQUOTED( [PACKAGE_VMINOR], [ ddcutil_minor_version ], [ddcutil minor version] )
-AC_DEFINE_UNQUOTED( [PACKAGE_VMICRO], [ ddcutil_micro_version ], [ddcutil micro version] )
+dnl old unused cruft
+dnl AC_DEFINE( [PACKAGE_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version] )
+dnl AC_DEFINE( [PACKAGE_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
+dnl AC_DEFINE( [PACKAGE_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
+dnl AC_DEFINE( [PACKAGE_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
 
-AC_SUBST( PACKAGE_VMAJOR, [ddcutil_major_version] )
-AC_SUBST( PACKAGE_VMINOR, [ddcutil_minor_version] )
-AC_SUBST( PACKAGE_VMICRO, [ddcutil_micro_version] )
+dnl define preprocessor symbols
+dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
+dnl         symbol             value set by               comment 
+AC_DEFINE( [VERSION_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version] )
+AC_DEFINE( [VERSION_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
+AC_DEFINE( [VERSION_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
+AC_DEFINE( [VERSION_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
+dnl AC_DEFINE( [VERSION_SUFFIX], [ ddcutil_version_suffix ], [version suffix] )
+
+dnl substitute @PACKAGE_MAJOR@ etc. in Makefile.am with the value of the environment variable
+AC_SUBST( VERSION_VMAJOR,  [ddcutil_major_version] )
+AC_SUBST( VERSION_VMINOR,  [ddcutil_minor_version] )
+AC_SUBST( VERSION_VMICRO,  [ddcutil_micro_version] )
+AC_SUBST( VERSION_VSUFFIX, [ddcutil_version_suffix] )
+dnl old: 
+dnl AC_SUBST( PACKAGE_VMAJOR,  [ddcutil_major_version] )
+dnl AC_SUBST( PACKAGE_VMINOR,  [ddcutil_minor_version] )
+dnl AC_SUBST( PACKAGE_VMICRO,  [ddcutil_micro_version] )
+dnl AC_SUBST( PACKAGE_VSUFFIX, [ddcutil_version_suffix] )
 
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
@@ -39,15 +67,9 @@ AS_IF( [test 0$DBG -ne 0],
    AC_MSG_NOTICE([debug messages disabled])
    )
 
-dnl dnl uncomment the following line to enable debug messages from configure:
-dnl debug_config=yes
-dnl AS_IF( [ test -n "$debug_config"], 
-dnl    AC_MSG_NOTICE( [debug messages enabled ] ),
-dnl    AC_MSG_NOTICE( [debug messages disabled] )
-dnl    )
-
+dnl reduce clutter,  save files litmain.sh, config.guess, missing etc. here instead of top directory
 AC_CONFIG_AUX_DIR(config)
-dnl sanity check: check for a unique file in source directory: 
+dnl sanity check: verify a unique file in source directory: 
 AC_CONFIG_SRCDIR([src/util/coredefs.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -798,7 +820,7 @@ AM_COND_IF([USE_DOXYGEN],
 ### DOC-BASE
 
 dnl n. doc-base is Debian specific
-dnl doc-base doesn't have pc file.
+dnl doc-base does not have pc file.
 AC_CHECK_PROGS( [DOCBASE_INSTALL_DOCS], [install-docs])
 AS_IF( [test -n "$DOCBASE_INSTALL_DOCS"], 
           AC_MSG_NOTICE([doc-base execuable found])
@@ -1200,11 +1222,15 @@ AS_IF( [ grep suse /etc/os-release > /dev/null], [
 ### Generate output   
 ###
 
+dnl called once at end of configure.ac, generates and runs config.status
 AC_OUTPUT
 
 dnl a brief summary
 AC_MSG_RESULT([
 	ddcutil $VERSION
+	ddcutil_major_version
+	ddcutil_version_suffix
+	ddcutil_version
 	=============
 
 	libtool version  	${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
