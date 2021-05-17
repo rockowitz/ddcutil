@@ -11,7 +11,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
+#include <signal.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "public/ddcutil_c_api.h"
 
@@ -76,11 +78,11 @@ ddca_ddcutil_version(void) {
    static bool vspec_init = false;
 
    if (!vspec_init) {
-      int ct = sscanf(BUILD_VERSION, "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
+      int ct = sscanf(get_base_ddcutil_version(), "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
       assert(ct == 3);
       vspec_init = true;
    }
-   // DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
+   DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
    return vspec;
 }
 
@@ -88,7 +90,7 @@ ddca_ddcutil_version(void) {
 //  Returns the ddcutil version as a string in the form "major.minor.micro".
 const char *
 ddca_ddcutil_version_string(void) {
-   return BUILD_VERSION;
+   return get_full_ddcutil_version();
 }
 
 
@@ -191,6 +193,26 @@ Parsed_Cmd * get_parsed_libmain_config() {
    return parsed_cmd;
 }
 
+#ifdef TESTING CLEANUP
+void done() {
+   printf("(%s) Starting\n", __func__);
+   _ddca_terminate();
+   syslog(LOG_INFO, "(%s) executing done()", __func__);
+   printf("(%s) Done.\n", __func__);
+}
+
+void term_catcher() {
+   printf("(%s) Executing. library_initialized = %s\n",
+         __func__, SBOOL(library_initialized));
+}
+
+void atexit_func() {
+   printf("(%s) Executing. library_initalized = %s\n",
+         __func__, SBOOL(library_initialized));
+}
+#endif
+
+
 
 bool library_initialized = false;
 
@@ -204,9 +226,15 @@ void __attribute__ ((constructor))
 _ddca_init(void) {
    bool debug = false;
    if (!library_initialized) {
+      openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
+      syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
+      signal(SIGTERM, term_catcher);
+      // atexit(atexit_func);  // TESTING CLAEANUP
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
+      if (parsed_cmd->s1)
+         syslog(LOG_INFO, "Trace destination: %s", parsed_cmd->s1);
       submaster_initializer(parsed_cmd);
       // init_ddc_services();
 
@@ -223,11 +251,16 @@ _ddca_init(void) {
       ddc_start_watch_displays();
 
       library_initialized = true;
-      DBGMSF(debug, "library initialization executed");
+
+      // int atexit_rc = atexit(done);   // TESTING CLEANUP
+      // printf("(%s) atexit() returned %d\n", __func__, atexit_rc);
+
+      DBGTRC(debug, DDCA_TRC_API, "library initialization executed");
    }
    else {
-      DBGMSF(debug, "library was already initialized");
+      DBGTRC(debug, DDCA_TRC_API, "library was already initialized");
    }
+   // TRACED_ASSERT(1==5); for testing
 }
 
 
@@ -238,17 +271,21 @@ _ddca_init(void) {
  */
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
+   bool debug = true;
    if (library_initialized) {
+      DBGTRC(debug, DDCA_TRC_API, "Starting. library_initialized = true");
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
-      DBGMSF(debug, "Done.     library termination executed");
+      if (debug)
+         printf("(%s) library termination executed\n", __func__);
    }
    else {
-      DBGMSF(debug, "Done.     library was already terminated");   // should be impossible
+      if (debug)
+         printf("(%s) library was already terminated\n", __func__);   // should be impossible"
    }
+   syslog(LOG_INFO, "(%s) Terminating.", __func__);
+   closelog();
 }
 
 
