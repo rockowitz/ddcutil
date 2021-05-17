@@ -1,14 +1,16 @@
 /** @file ddcutil_macros.h.in
  *
  *  Macros for checking ddcutil version at compile time. 
- *  The Autotools build system converts this file to ddcutil.macros.h 
- *  at build time. The version values are set from those in configure.ac. 
+ *  The Autotools build system converts this file to ddcutil.macros.h. 
+ *  The version values are set from those in configure.ac. 
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#define DDCUTIL_VMAJOR @PACKAGE_VMAJOR@
-#define DDCUTIL_VMINOR @PACKAGE_VMINOR@
-#define DDCUTIL_VMICRO @PACKAGE_VMICRO@
+#define DDCUTIL_VMAJOR  @VERSION_VMAJOR@
+#define DDCUTIL_VMINOR  @VERSION_VMINOR@
+#define DDCUTIL_VMICRO  @VERSION_VMICRO@
+#define DDCUTIL_VSUFFIX @VERSION_VSUFFIX@
+
