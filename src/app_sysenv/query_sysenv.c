@@ -112,7 +112,7 @@ static void query_base_env(Env_Accumulator * accum) {
    int d1 = d0+1;
    int d2 = d0+2;
 
-   rpt_vstring(d0, "ddcutil version: %s", BUILD_VERSION);
+   rpt_vstring(d0, "ddcutil version: %s", get_full_ddcutil_version());
    rpt_nl();
 
    sysenv_rpt_file_first_line("/proc/version", NULL, 0);
