@@ -367,11 +367,14 @@ ddca_open_display2(
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%p, wait=%s, on thread %d",
-                               ddca_dref, sbool(wait), get_thread_id());
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
+                               ddca_dref, sbool(wait), dh_loc, get_thread_id());
+   DBGTRC(debug, DDCA_TRC_API,
+                 "library_initialized=%s, ddc_displays_already_detected() = %ld",
+                 sbool(library_initialized), ddc_displays_already_detected());
    free_thread_error_detail();
-   assert(library_initialized);
-   assert(ddc_displays_already_detected());
+   TRACED_ASSERT(library_initialized);
+   TRACED_ASSERT(ddc_displays_already_detected());
 
    PRECOND(dh_loc);
 
@@ -382,6 +385,10 @@ ddca_open_display2(
       rc = DDCRC_ARG;
    }
    else {
+      // for testing failure:
+      // TRACED_ASSERT(1==2);
+      // assert(1==2);
+
      Display_Handle* dh = NULL;
      Call_Options callopts = CALLOPT_NONE;
      if (wait)
@@ -390,7 +397,7 @@ ddca_open_display2(
      if (rc == 0)
         *dh_loc = dh;
    }
-   ASSERT_IFF(rc==0, *dh_loc);
+   TRACED_ASSERT_IFF(rc==0, *dh_loc);
    DBGTRC(debug, DDCA_TRC_API,  "Done.     Returning rc=%s, *dh_loc=%p -> %s",
                                 psc_desc(rc), *dh_loc, dh_repr_t(*dh_loc));
    return rc;
