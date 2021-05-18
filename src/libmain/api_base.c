@@ -271,7 +271,7 @@ _ddca_init(void) {
  */
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
-   bool debug = true;
+   bool debug = false;
    if (library_initialized) {
       DBGTRC(debug, DDCA_TRC_API, "Starting. library_initialized = true");
       release_base_services();
