@@ -153,6 +153,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
 
    Parsed_Cmd * parsed_cmd = new_parsed_cmd();
+   parsed_cmd->parser_mode = parser_mode;
    // parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
    // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
