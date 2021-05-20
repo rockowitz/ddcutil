@@ -24,6 +24,17 @@
 // Parsed_Cmd data structure
 //
 
+const char *  parser_mode_name(Parser_Mode mode) {
+   // use switch to force compilation error if a mode is added but not named
+   char * name = NULL;
+   switch(mode) {
+   case MODE_DDCUTIL:    name = "ddcutil";    break;
+   case MODE_LIBDDCUTIL: name = "libddcutil"; break;
+   }
+   return name;
+}
+
+
 // Must be kept in sync with Cmd_Id_Type
 Value_Name_Table cmd_id_table = {
       VNT(CMDID_NONE          , "none"),
@@ -155,6 +166,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_int_as_hex( "cmd_id",    NULL, parsed_cmd->cmd_id,             d1);
 
       rpt_structure_loc("pdid", parsed_cmd->pdid,                        d1);
+      rpt_str("parser mode",       NULL, parser_mode_name(parsed_cmd->parser_mode), d1);
       if (parsed_cmd->pdid)
           dbgrpt_display_identifier(parsed_cmd->pdid,                    d2);
 

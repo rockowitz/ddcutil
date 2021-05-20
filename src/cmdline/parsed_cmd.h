@@ -16,6 +16,10 @@
 #include "base/displays.h"
 #include "base/parms.h"
 
+typedef enum {
+   MODE_DDCUTIL,
+   MODE_LIBDDCUTIL
+} Parser_Mode;
 
 typedef enum {
    CMDID_NONE          =   0x0000,
@@ -94,6 +98,7 @@ typedef
 struct {
    char                   marker[4];      // always PCMD
    char *                 raw_command;
+   Parser_Mode            parser_mode;
    int                    argct;
    char *                 args[MAX_ARGS];
    Cmd_Id_Type            cmd_id;
@@ -119,6 +124,7 @@ struct {
    char *                 s4;         // for temporary use
 } Parsed_Cmd;
 
+const char *  parser_mode_name(Parser_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
 Parsed_Cmd *  new_parsed_cmd();
