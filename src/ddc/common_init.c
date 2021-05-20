@@ -1,4 +1,4 @@
-/** \file applib_init.c */
+/** \file common_init.c */
 
 // Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -47,8 +47,8 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_thread_id = true;                      // extern in core.h
     report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
     set_trace_levels(parsed_cmd->traced_groups);
-    if (parsed_cmd->s1)
-       set_trace_destination(parsed_cmd->s1);
+    // if (parsed_cmd->s1)
+    //    set_trace_destination(parsed_cmd->s1, parser_mode_name(parsed_cmd->parser_mode));
     if (parsed_cmd->traced_functions) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
           if (debug)
