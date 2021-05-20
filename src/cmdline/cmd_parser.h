@@ -12,11 +12,6 @@
 #ifndef CMD_PARSER_H_
 #define CMD_PARSER_H_
 
-typedef enum {
-   MODE_DDCUTIL,
-   MODE_LIBDDCUTIL
-} Parser_Mode;
-
 #include "cmdline/parsed_cmd.h"
 
 Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode mode);
