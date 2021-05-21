@@ -148,9 +148,15 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 {
     bool debug = false;
     DBGMSF(debug, "Executing...");
-    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-       show_ddcutil_version();
-    }
+    assert(parsed_cmd->output_level >= DDCA_OL_VERBOSE);
+
+    show_ddcutil_version();
+    rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file:",
+                         (config_fn) ? config_fn : "(none)");
+    if (config_fn)
+       rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
+
+
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_build_options(depth);
     show_reporting();  // uses fout()
@@ -158,12 +164,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     report_performance_options(depth);
     if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_experimental_options(parsed_cmd, depth);
-    if (parsed_cmd->output_level >= DDCA_OL_VERBOSE) {
-       rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file:",
-                         (config_fn) ? config_fn : "(none)");
-       if (config_fn)
-          rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
-    }
+
     DBGMSF(debug, "Done");
 }
 
@@ -609,10 +610,11 @@ main(int argc, char *argv[]) {
                     &untokenized_cmd_prefix,
                     &configure_fn,
                     config_file_errs);
+#ifdef LATER
    if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
       fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
             untokenized_cmd_prefix);
-
+#endif
    DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
    if (config_file_errs->len > 0) {
       f0printf(ferr(), "Errors processing ddcutil configuration file %s:\n", configure_fn);
@@ -639,6 +641,7 @@ main(int argc, char *argv[]) {
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
+
    init_tracing(parsed_cmd);
 
    // tracing is sufficiently initialized, can report start time
@@ -647,7 +650,9 @@ main(int argc, char *argv[]) {
                          parsed_cmd->traced_files     ||
                          IS_TRACING()                 ||
                          main_debug;
-   DBGMSF(start_time_reported, "Starting ddcutil execution, %s", program_start_time_s);
+   DBGMSF(start_time_reported, "Starting %s execution, %s",
+               parser_mode_name(parsed_cmd->parser_mode),
+               program_start_time_s);
 
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
