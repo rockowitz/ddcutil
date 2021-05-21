@@ -102,6 +102,7 @@ endif
 libddcutil_la_SOURCES = \
    libmain/api_base.c \
    libmain/api_displays.c \
+   libmain/api_error_info_internal.c \
    libmain/api_metadata.c \
    libmain/api_feature_access.c \
    libmain/api_capabilities.c 
