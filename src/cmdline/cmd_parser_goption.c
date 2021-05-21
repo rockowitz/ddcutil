@@ -359,10 +359,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
       {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
-      {"s1",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 6",  "string"},
-      {"s2",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 6",  "string"},
-      {"s3",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 6",  "string"},
-      {"s4",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s4,  "Special string 6",  "string"},
+      {"s1",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
+      {"s2",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
+      {"s3",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
+      {"s4",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s4,  "Special string 4",  "string"},
       {NULL},
    };
 
