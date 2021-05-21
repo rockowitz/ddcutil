@@ -140,7 +140,7 @@ char * get_library_filename() {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -188,6 +188,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    DBGMSF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
+      syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",
+            untokenized_option_string);
       fprintf(ferr(), "Ignoring invalid configuration file options: %s\n",
                       untokenized_option_string);
       // fprintf(ferr(), "Terminating execution\n");
@@ -236,7 +238,7 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
@@ -265,7 +267,7 @@ _ddca_init(void) {
          if (debug)
             printf("(%s) Setting trace destination %s\n", __func__, trace_file);
          syslog(LOG_INFO, "Trace destination: %s", trace_file);
-         flog = fopen(parsed_cmd->s1, "a+");
+         flog = fopen(trace_file, "a+");
          if (flog) {
             time_t trace_start_time = time(NULL);
             char * trace_start_time_s = asctime(localtime(&trace_start_time));
@@ -273,16 +275,15 @@ _ddca_init(void) {
                  trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
             fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
             if (debug) {
-               // to do: get absolute file name
-               fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",parsed_cmd->s1);
-
+               fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",trace_file);
             }
             set_default_thread_output_settings(flog, flog);
             set_fout(flog);
             set_ferr(flog);
          }
          else {
-            fprintf(stderr, "Error opening libddcutil trace file: %s\n", strerror(errno));
+            fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
+                            trace_file, strerror(errno));
          }
          free(trace_file);
       }
@@ -339,7 +340,7 @@ _ddca_terminate(void) {
       if (debug)
          printf("(%s) library was already terminated\n", __func__);   // should be impossible"
    }
-   syslog(LOG_INFO, "(%s) Terminating.", __func__);
+   syslog(LOG_INFO, "Terminating.");
    closelog();
 }
 
