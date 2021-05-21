@@ -61,8 +61,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
    // }
 
    // reports capabilities, and if successful returns Parsed_Capabilities
-   DDCA_Output_Level saved_ol = get_output_level();
-   set_output_level(DDCA_OL_VERBOSE);
+   DDCA_Output_Level saved_ol = set_output_level(DDCA_OL_VERBOSE);   // affects this thread only
 
 #ifdef OLD
    Parsed_Capabilities * pcaps =  app_get_capabilities_by_dh(dh);
