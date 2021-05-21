@@ -39,6 +39,7 @@
 #include "libmain/api_displays_internal.h"
 #include "libmain/api_metadata_internal.h"
 
+#include "libmain/api_error_info_internal.h"
 #include "libmain/api_capabilities_internal.h"
  
 

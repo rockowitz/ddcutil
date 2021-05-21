@@ -26,6 +26,7 @@
 #include "base/monitor_model_key.h"
 
 #include "libmain/api_base_internal.h"
+#include "libmain/api_error_info_internal.h"
 #include "libmain/api_displays_internal.h"
 
 

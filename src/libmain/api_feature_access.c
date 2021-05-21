@@ -3,7 +3,7 @@
  *  Get, set, and format feature values
  */
 
-// Copyright (C) 2015-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -30,6 +30,7 @@
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 
+#include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
 #include "libmain/api_displays_internal.h"
 
