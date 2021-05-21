@@ -57,7 +57,7 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
    f0printf(fout(), "Setting output level very-verbose...\n");
-   set_output_level(DDCA_OL_VV);
+   set_output_level(DDCA_OL_VV);  // affects this thread only
    f0printf(fout(), "Setting maximum retries...\n");
    try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, MAX_MAX_TRIES);
    try_data_set_maxtries2(WRITE_READ_TRIES_OP, MAX_MAX_TRIES);
@@ -97,7 +97,7 @@ void interrogate(Parsed_Cmd * parsed_cmd)
 
    // PROBE command
    f0printf(fout(), "Setting output level normal. Table features will be skipped...\n");
-   set_output_level(DDCA_OL_NORMAL);
+   set_output_level(DDCA_OL_NORMAL);  // affects this thread only
 
    tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
    GPtrArray * all_displays = ddc_get_all_displays();
