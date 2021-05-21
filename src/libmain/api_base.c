@@ -18,6 +18,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "util/ddcutil_config_file.h"
+#include "util/xdg_util.h"
 
 #include "base/base_init.h"
 #include "base/build_info.h"
@@ -248,10 +249,22 @@ _ddca_init(void) {
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
-      if (parsed_cmd->s1) {
+      if (parsed_cmd->s1 || parsed_cmd->library_trace_file) {
+         // convoluted code because --s1 was not described to user as resolving
+         // relative file name per XDG data spec
+         // to be simplified before release
+         char * trace_file = NULL;
+         if (parsed_cmd->s1)     // vestigial from testing
+            trace_file = strdup(parsed_cmd->s1);
+         if (!trace_file && parsed_cmd->library_trace_file) {
+            if (parsed_cmd->library_trace_file[0] != '/')
+               trace_file = xdg_data_home_file("ddcutil", parsed_cmd->library_trace_file);
+            else
+               trace_file = strdup(parsed_cmd->library_trace_file);
+         }
          if (debug)
-            printf("(%s) Setting trace destination %s\n", __func__, parsed_cmd->s1);
-         syslog(LOG_INFO, "Trace destination: %s", parsed_cmd->s1);
+            printf("(%s) Setting trace destination %s\n", __func__, trace_file);
+         syslog(LOG_INFO, "Trace destination: %s", trace_file);
          flog = fopen(parsed_cmd->s1, "a+");
          if (flog) {
             time_t trace_start_time = time(NULL);
@@ -271,6 +284,7 @@ _ddca_init(void) {
          else {
             fprintf(stderr, "Error opening libddcutil trace file: %s\n", strerror(errno));
          }
+         free(trace_file);
       }
       submaster_initializer(parsed_cmd);
       // init_ddc_services();
