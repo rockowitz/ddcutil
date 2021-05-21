@@ -38,6 +38,8 @@
 #include "util/coredefs.h"
 #include "util/error_info.h"
 
+#include "base/core_per_thread_settings.h"
+
 //
 // Common macros
 //
@@ -76,36 +78,13 @@ typedef struct {
 
 
 //
-// Note: FILE * externs FOUT and FERR were eliminated when output redirection
-// was made thread specific.  Use fout() and ferr()
-// used within functions that are part of the shared library.
-
-void set_fout(FILE * fout);
-void set_ferr(FILE * ferr);
-void set_fout_to_default();
-void set_ferr_to_default();
-
-FILE * fout();
-FILE * ferr();
-
-
-//
-// Message level control
-//
-
-DDCA_Output_Level get_output_level();
-DDCA_Output_Level set_output_level(DDCA_Output_Level newval);
-char *            output_level_name(DDCA_Output_Level val);
-
-
-//
 // Trace message control
 //
 
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 
-void set_trace_destination(char * filename);
+void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 void add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
 void show_traced_functions();
@@ -301,14 +280,7 @@ void program_logic_error(
 #define PROGRAM_LOGIC_ERROR(format, ...) \
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-DDCA_Error_Detail * error_info_to_ddca_detail(Error_Info * erec);
-DDCA_Error_Detail * dup_error_detail(DDCA_Error_Detail * old);
-void free_error_detail(DDCA_Error_Detail * ddca_erec);
-void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth);
+void set_default_thread_output_settings(FILE * fout, FILE * ferr);
+void init_core();
 
-void free_thread_error_detail();
-DDCA_Error_Detail * get_thread_error_detail();
-void save_thread_error_detail(DDCA_Error_Detail * error_detail);
-
-intmax_t get_thread_id();
 #endif /* BASE_CORE_H_ */

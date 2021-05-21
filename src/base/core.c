@@ -18,6 +18,7 @@
 
 #include "config.h"
 
+
 #define GNU_SOURCE    // for syscall()
 
 //* \cond */
@@ -35,6 +36,7 @@
 #include <sys/syscall.h>
 #include <syslog.h>
 #endif
+
 #include <unistd.h>
 /** \endcond */
 
@@ -51,158 +53,8 @@
 #include "base/linux_errno.h"
 
 #include "base/build_info.h"
+#include "base/core_per_thread_settings.h"
 #include "base/core.h"
-
-
-//
-// Global SDTOUT and STDERR redirection, for controlling message output in API
-//
-
-/** @defgroup output_redirection Basic Output Redirection
- */
-
-
-#ifdef OVERKILL
-#define FOUT_STACK_SIZE 8
-
-static FILE* fout_stack[FOUT_STACK_SIZE];
-static int   fout_stack_pos = -1;
-#endif
-
-
-typedef struct {
-   FILE * fout;
-   FILE * ferr;
-   DDCA_Output_Level output_level;
-   // bool   report_ddc_errors;    // unused, ddc error reporting left as global
-   DDCA_Error_Detail * error_detail;
-} Thread_Output_Settings;
-
-static Thread_Output_Settings *  get_thread_settings() {
-   static GPrivate per_thread_dests_key = G_PRIVATE_INIT(g_free);
-
-   Thread_Output_Settings *settings = g_private_get(&per_thread_dests_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, settings=%p\n", __func__, this_thread, settings);
-
-   if (!settings) {
-      settings = g_new0(Thread_Output_Settings, 1);
-      settings->fout = stdout;
-      settings->ferr = stderr;
-      settings->output_level = DDCA_OL_NORMAL;
-      // settings->report_ddc_errors = false;    // redundant, but specified for documentation
-
-      g_private_set(&per_thread_dests_key, settings);
-   }
-
-   // printf("(%s) Returning: %p\n", __func__, settings);
-   return settings;
-}
-
-// Issue: How to specify that output should be discarded vs reset to stdout?
-// issue will resetting report dest cause conflicts?
-// To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
-// problem:
-
-/** Redirect output on the current thread that would normally go to **stdout**.
- *
- *  @param fout pointer to output stream
- *
- * @ingroup output_redirection
- */
-void set_fout(FILE * fout) {
-   bool debug = false;
-   DBGMSF(debug, "fout = %p", fout);
-   Thread_Output_Settings * dests = get_thread_settings();
-   dests->fout = fout;
-   // FOUT = fout;
-   rpt_change_output_dest(fout);
-}
-
-/** Redirect output that would normally go to **stdout** back to **stdout**.
- * @ingroup output_redirection
- */
-void set_fout_to_default() {
-   // FOUT = stdout;
-   Thread_Output_Settings * dests = get_thread_settings();
-   dests->fout = stdout;
-   rpt_change_output_dest(stdout);
-}
-
-/** Redirect output that would normally go to **stderr**..
- *
- *  @param ferr pointer to output stream
- *
- *  @ingroup output_redirection
- */
-void set_ferr(FILE * ferr) {
-   Thread_Output_Settings * dests = get_thread_settings();
-   dests->ferr = ferr;
-}
-
-
-/** Redirect output that would normally go to **stderr** back to **stderr**.
- * @ingroup output_redirection
- */
-void set_ferr_to_default() {
-   Thread_Output_Settings * dests = get_thread_settings();
-   dests->ferr = stderr;
-}
-
-
-/** Gets the "stdout" destination for the current thread
- *
- *  @return output destination
- *
- *  @ingroup output_redirection
- */
-FILE * fout() {
-   Thread_Output_Settings * dests = get_thread_settings();
-   return dests->fout;
-}
-
-
-/** Gets the "stderr" destination for the current thread
- *
- *  @return output destination
- *
- *  @ingroup output_redirection
- */
-FILE * ferr() {
-   Thread_Output_Settings * dests = get_thread_settings();
-   return dests->ferr;
-}
-
-
-#ifdef OVERKILL
-
-// Functions that allow for temporarily changing the output destination.
-
-
-void push_fout(FILE* new_dest) {
-   assert(fout_stack_pos < FOUT_STACK_SIZE-1);
-   fout_stack[++fout_stack_pos] = new_dest;
-}
-
-
-void pop_fout() {
-   if (fout_stack_pos >= 0)
-      fout_stack_pos--;
-}
-
-
-void reset_fout_stack() {
-   fout_stack_pos = 0;
-}
-
-
-FILE * cur_fout() {
-   // special handling for unpushed case because can't statically initialize
-   // output_dest_stack[0] to stdout
-   return (fout_stack_pos < 0) ? stdout : fout_stack[fout_stack_pos];
-}
-#endif
 
 
 //
@@ -260,77 +112,9 @@ print_simple_title_value(int    offset_start_to_title,
 }
 
 
-//
-// Message level control for normal output
-//
-
-/** \defgroup msglevel Message Level Management
- *
- * Functions and variables to manage and query output level settings.
- */
-
-// static DDCA_Output_Level output_level;
 
 
-/** Gets the current output level.
- *
- * @return output level
- *
- * \ingroup msglevel
- */
-DDCA_Output_Level get_output_level() {
-   // return output_level;
-   Thread_Output_Settings * settings = get_thread_settings();
-   return settings->output_level;
-}
-
-
-/** Sets the output level.
- *
- * @param newval output level to set
- * @return old output level
- *
- *  \ingroup msglevel
- */
-DDCA_Output_Level set_output_level(DDCA_Output_Level newval) {
-   Thread_Output_Settings * settings = get_thread_settings();
-   DDCA_Output_Level old_level = settings->output_level;
-   // printf("(%s) old_level=%s, newval=%s  \n",
-   //        __func__, output_level_name(old_level), output_level_name(newval) );
-   settings->output_level = newval;
-   return old_level;
-}
-
-
-/** Gets the printable name of an output level.
- *
- * @param val  output level
- * @return printable name for output level
- *
- *  \ingroup msglevel
- */
-char * output_level_name(DDCA_Output_Level val) {
-   char * result = NULL;
-   switch (val) {
-      case DDCA_OL_TERSE:
-         result = "Terse";
-         break;
-      case DDCA_OL_NORMAL:
-         result = "Normal";
-         break;
-      case DDCA_OL_VERBOSE:
-         result = "Verbose";
-         break;
-      case DDCA_OL_VV:
-         result = "Very Vebose";
-      // default unnecessary, case exhausts enum
-   }
-   // printf("(%s) val=%d 0x%02x, returning: %s\n", __func__, val, val, result);
-   return result;
-}
-
-
-/** Reports the current output level.
+/** Reports the output level for the current thread
  *  The report is written to the current **FOUT** device.
  *
  *  \ingroup msglevel
@@ -556,27 +340,33 @@ void show_traced_files() {
 
 static char * trace_destination = NULL;
 
-void set_trace_destination(char * filename) {
-   bool debug = false;
+void show_trace_destination() {
+   print_simple_title_value(SHOW_REPORTING_TITLE_START, "Trace destination:",
+         SHOW_REPORTING_MIN_TITLE_SIZE,
+         (trace_destination) ? trace_destination : "sysout");
+}
+
+void set_libddcutil_output_destination(const char * filename, const char * trace_unit) {
+   bool debug = true;
    if (debug)
-      printf("(%s) filename = %s\n", __func__, filename);
+      printf("(%s) filename = %s, trace_unit = %s\n", __func__, filename, trace_unit);
    if (filename) {
+      trace_destination = strdup(filename);
+
       FILE * f = fopen(filename, "a");
       if (f) {
-         trace_destination = filename;
-
          time_t trace_start_time = time(NULL);
          char * trace_start_time_s = asctime(localtime(&trace_start_time));
          if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
               trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
-         fprintf(f, "Tracing started %s\n", trace_start_time_s);
+         fprintf(f, "%s tracing started %s\n", trace_unit, trace_start_time_s);
 
          fclose(f);
          if (debug)
-            fprintf(stdout, "Writing trace output to: %s\n", filename);
+            fprintf(stdout, "Writing %s trace output to %s\n", trace_unit, filename);
       }
       else {
-         fprintf(stderr, "Unable to write to trace file %s: %s\n",
+         fprintf(stderr, "Unable to write %s trace output to %s: %s\n", trace_unit,
                          filename, strerror(errno));
       }
    }
@@ -789,6 +579,7 @@ void show_ddcutil_version() {
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
+   show_trace_destination();
    show_trace_groups();
    show_traced_functions();
    show_traced_files();
@@ -863,8 +654,9 @@ bool dbgtrc(
    bool debug = false;
    if (debug)
       printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld\n",
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid));
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       (fout() == stdout) ? "==" : "!=");
 
    bool msg_emitted = false;
    if ( is_tracing(trace_group, filename, funcname) ) {
@@ -889,7 +681,7 @@ bool dbgtrc(
 
       char * buf2 = g_strdup_printf("%s%s(%-30s) %s\n",
                                     thread_prefix, elapsed_prefix, funcname, buffer);
-
+#ifdef NO
       if (trace_destination) {
          FILE * f = fopen(trace_destination, "a");
          if (f) {
@@ -918,6 +710,14 @@ bool dbgtrc(
       free(buf2);
       msg_emitted = true;
    }
+#endif
+
+      f0puts(buf2, fout());
+      fflush(fout());
+      free(buffer);
+      free(buf2);
+      msg_emitted = true;
+}
 
    return msg_emitted;
 }
@@ -992,176 +792,6 @@ void program_logic_error(
   fflush(f);
 }
 
-
-//
-// DDCA_Error_Detail related functions
-//
-
-/** Frees a #DDCA_Error_Detail instance
- *
- *  @param  instance to free
- */
-void
-free_error_detail(DDCA_Error_Detail * ddca_erec)
-{
-   if (ddca_erec) {
-      assert(memcmp(ddca_erec->marker, DDCA_ERROR_DETAIL_MARKER, 4) == 0);
-      for (int ndx = 0; ndx < ddca_erec->cause_ct; ndx++) {
-         free_error_detail(ddca_erec->causes[ndx]);
-      }
-      free(ddca_erec->detail);
-      ddca_erec->marker[3] = 'x';
-      free(ddca_erec);
-   }
-}
-
-
-/** Converts an internal #Error_Info instance to a publicly visible #DDCA_Error_Detail
- *
- *  @param  erec  instance to convert
- *  @return new #DDCA_Error_Detail instance
- */
-DDCA_Error_Detail *
-error_info_to_ddca_detail(Error_Info * erec)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. erec=%p", erec);
-   if (debug)
-      errinfo_report(erec, 2);
-
-   DDCA_Error_Detail * result = NULL;
-   if (erec) {
-      // ???
-      int reqd_size = sizeof(DDCA_Error_Detail) + erec->cause_ct * sizeof(DDCA_Error_Detail*);
-      result = calloc(1, reqd_size);
-      memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
-      result->status_code = erec->status_code;
-      if (erec->detail)
-         result->detail = strdup(erec->detail);
-      for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         DDCA_Error_Detail * cause = error_info_to_ddca_detail(erec->causes[ndx]);
-         result->causes[ndx] = cause;
-      }
-      result->cause_ct = erec->cause_ct;
-   }
-
-   DBGMSF(debug, "Done. Returning: %p", result);
-   if (debug)
-      report_error_detail(result, 2);
-   return result;
-}
-
-
-/** Makes a deep copy of a #DDC_Error_Detail instance.
- *
- *  @param  old  instance to copy
- *  @return new copy
- */
-DDCA_Error_Detail *
-dup_error_detail(DDCA_Error_Detail * old) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. old=%p", old);
-   if (debug)
-      report_error_detail(old, 2);
-
-   DDCA_Error_Detail * result = NULL;
-   if (old) {
-      // ???
-      int reqd_size = sizeof(DDCA_Error_Detail) + old->cause_ct * sizeof(DDCA_Error_Detail*);
-      result = calloc(1, reqd_size);
-      memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
-      result->status_code = old->status_code;
-      if (old->detail)
-         result->detail = strdup(old->detail);
-      for (int ndx = 0; ndx < old->cause_ct; ndx++) {
-         DDCA_Error_Detail * cause = dup_error_detail(old->causes[ndx]);
-         result->causes[ndx] = cause;
-      }
-      result->cause_ct = old->cause_ct;
-   }
-
-   DBGMSF(debug, "Done. Returning: %p", result);
-   if (debug)
-      report_error_detail(result, 2);
-   return result;
-}
-
-
-/** Emits a detailed report of a #DDCA_Error_Detail struct.
- *  Output is written to the current report output destination.
- *
- *  @param ddca_erec  instance to report
- *  @param depth      logical indentation depth
- */
-void report_error_detail(DDCA_Error_Detail * ddca_erec, int depth)
-{
-   if (ddca_erec) {
-      rpt_vstring(depth, "status_code=%s, detail=%s", ddcrc_desc_t(ddca_erec->status_code), ddca_erec->detail);
-      if (ddca_erec->cause_ct > 0) {
-         rpt_label(depth,"Caused by: ");
-         for (int ndx = 0; ndx < ddca_erec->cause_ct; ndx++) {
-            struct ddca_error_detail * cause = ddca_erec->causes[ndx];
-            report_error_detail(cause, depth+1);
-         }
-      }
-   }
-}
-
-
-// Thread-specific functions
-
-/** Frees the #DDCA_Error_Detail (if any) for the current thread.
- */
-void free_thread_error_detail() {
-   Thread_Output_Settings * settings = get_thread_settings();
-   if (settings->error_detail) {
-      free_error_detail(settings->error_detail);
-      settings->error_detail = NULL;
-   }
-}
-
-
-/** Gets the #DDCA_Error_Detail record for the current thread
- *
- *  @return #DDCA_Error_Detail instance, NULL if none
- */
-DDCA_Error_Detail * get_thread_error_detail() {
-   Thread_Output_Settings * settings = get_thread_settings();
-   return settings->error_detail;
-}
-
-
-/** Set the #DDCA_Error_Detail record for the current thread.
- *
- *  @param error_detail  #DDCA_Error_Detail record to set
- */
-void save_thread_error_detail(DDCA_Error_Detail * error_detail) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. error_detail=%p", error_detail);
-   if (debug)
-      report_error_detail(error_detail, 2);
-
-   Thread_Output_Settings * settings = get_thread_settings();
-   if (settings->error_detail)
-      free_error_detail(settings->error_detail);
-   settings->error_detail = error_detail;
-
-   DBGMSF(debug, "Done");
-}
-
-
-/** Gets the id number of the current thread
- *
- *  @ return  thread number
- */
-
-intmax_t get_thread_id()
-{
-#ifdef TARGET_BSD
-   int tid = pthread_getthreadid_np();
-#else
-   pid_t tid = syscall(SYS_gettid);
-#endif
-   return tid;
+void init_core() {
 }
 
