@@ -220,6 +220,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    GOptionEntry libddcutil_only_options[] = {
          {"libddcutil-trace-file",
                      '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->library_trace_file,  "libddcutil trace file",  "file name"},
+         {NULL},
    };
 
    GOptionEntry ddcutil_only_options[] = {
@@ -379,7 +380,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
    g_option_group_add_entries(all_options, common_options);
    if (parser_mode == MODE_LIBDDCUTIL) {
-      g_option_group_add_entries(all_options,libddcutil_only_options);
+      g_option_group_add_entries(all_options, libddcutil_only_options);
    }
 #ifndef FUTURE
    g_option_group_add_entries(all_options, debug_options);
