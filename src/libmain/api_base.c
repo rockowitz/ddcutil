@@ -22,6 +22,7 @@
 #include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
+#include "base/core_per_thread_settings.h"
 #include "base/parms.h"
 #include "base/per_thread_data.h"
 #include "base/thread_retry_data.h"
@@ -43,6 +44,7 @@
 
 #include "ddc/common_init.h"
 
+#include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
 
 
@@ -122,6 +124,14 @@ ddca_build_options(void) {
    return result;
 }
 
+#ifdef FUTURE
+char * get_library_filename() {
+   intmax_t pid = get_process_id();
+   return NULL;
+}
+#endif
+
+
 
 //
 // Initialization
@@ -129,7 +139,7 @@ ddca_build_options(void) {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting.");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -193,7 +203,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    return parsed_cmd;
 }
 
-#ifdef TESTING CLEANUP
+
+#ifdef TESTING_CLEANUP
 void done() {
    printf("(%s) Starting\n", __func__);
    _ddca_terminate();
@@ -201,7 +212,7 @@ void done() {
    printf("(%s) Done.\n", __func__);
 }
 
-void term_catcher() {
+void dummy_sigterm_handler() {
    printf("(%s) Executing. library_initialized = %s\n",
          __func__, SBOOL(library_initialized));
 }
@@ -212,7 +223,7 @@ void atexit_func() {
 }
 #endif
 
-
+static FILE * flog = NULL;
 
 bool library_initialized = false;
 
@@ -224,23 +235,49 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   bool debug = false;
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
       openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
       syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
-      signal(SIGTERM, term_catcher);
+#ifdef TESTING_CLEANUP
+      // signal(SIGTERM, dummy_sigterm_handler);
       // atexit(atexit_func);  // TESTING CLAEANUP
+#endif
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
-      if (parsed_cmd->s1)
+      if (parsed_cmd->s1) {
+         if (debug)
+            printf("(%s) Setting trace destination %s\n", __func__, parsed_cmd->s1);
          syslog(LOG_INFO, "Trace destination: %s", parsed_cmd->s1);
+         flog = fopen(parsed_cmd->s1, "a+");
+         if (flog) {
+            time_t trace_start_time = time(NULL);
+            char * trace_start_time_s = asctime(localtime(&trace_start_time));
+            if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
+                 trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
+            fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
+            if (debug) {
+               // to do: get absolute file name
+               fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",parsed_cmd->s1);
+
+            }
+            set_default_thread_output_settings(flog, flog);
+            set_fout(flog);
+            set_ferr(flog);
+         }
+         else {
+            fprintf(stderr, "Error opening libddcutil trace file: %s\n", strerror(errno));
+         }
+      }
       submaster_initializer(parsed_cmd);
       // init_ddc_services();
 
-     //  // hard code the threshold for now
+     //  explicitly set the async threshold for testing
      //  int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
-     //  // int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
+     //  int threshold = DISPLAY_CHECK_ASYNC_NEVER; //
      //  ddc_set_async_threshold(threshold);
 
       // no longer needed, values are initialized on first use per-thread
@@ -252,8 +289,10 @@ _ddca_init(void) {
 
       library_initialized = true;
 
+#ifdef TESTING_CLEANUP
       // int atexit_rc = atexit(done);   // TESTING CLEANUP
       // printf("(%s) atexit() returned %d\n", __func__, atexit_rc);
+#endif
 
       DBGTRC(debug, DDCA_TRC_API, "library initialization executed");
    }
@@ -277,6 +316,8 @@ _ddca_terminate(void) {
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
+      if (flog)
+         fclose(flog);
       if (debug)
          printf("(%s) library termination executed\n", __func__);
    }
