@@ -117,6 +117,7 @@ struct {
 // DDCA_MCCS_Version_Id   mccs_version_id;
    int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
+   char *                 library_trace_file;
    int                    i1;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
