@@ -67,7 +67,7 @@ Thread_Output_Settings * get_default_thread_output_settings() {
 
 /** Sets the fout and ferr values to be used for newly created threads */
 void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
              __func__, fout, ferr, stdout, stderr);
@@ -83,7 +83,7 @@ void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
 
 /** Sets the output_level to be used for newly created threads */
 void set_default_thread_output_level(DDCA_Output_Level ol) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) ol=%s\n", __func__, output_level_name(ol));
    g_mutex_lock(&default_thread_output_settings_mutex);
@@ -128,7 +128,7 @@ Thread_Output_Settings *  get_thread_settings() {
  * @ingroup output_redirection
  */
 void set_fout(FILE * fout) {
-   bool debug = true;
+   bool debug = false;
 
    Thread_Output_Settings * dests = get_thread_settings();
    dests->fout = fout;
