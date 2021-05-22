@@ -13,6 +13,7 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
+#include "base/ddc_errno.h"
 
 #include "libmain/api_error_info_internal.h"
 
