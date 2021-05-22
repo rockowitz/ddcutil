@@ -74,8 +74,10 @@ ddca_get_capabilities_string(
          }
         //  DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
          assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
-         DBGMSF(debug, "Done.     ddca_dh=%s, *pcaps_loc=%p, Returning: %s",
-                        dh_repr((Display_Handle *) ddca_dh ), *pcaps_loc, ddca_rc_desc(psc));
+         DBGMSF(debug, "Done.     ddca_dh=%s, Returning %s, *pcaps_loc=%p -> |%s|",
+                        dh_repr((Display_Handle *) ddca_dh),
+                        ddca_rc_desc(psc),
+                        *pcaps_loc, *pcaps_loc);
       }
    );
 }
@@ -260,7 +262,7 @@ ddca_report_parsed_capabilities_by_dref(
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
    if (ddca_dref) {
-      dref = validated_ddca_display_ref(dref);
+      dref = validated_ddca_display_ref(ddca_dref);
       if (!dref) {
          ddcrc = DDCRC_ARG;
          goto bye;
