@@ -757,7 +757,7 @@ ddca_add_traced_file(const char * filename) {
 
 void
 ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
-   set_trace_levels(trace_flags);
+   set_trace_groups(trace_flags);
 }
 
 

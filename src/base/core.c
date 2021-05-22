@@ -186,7 +186,7 @@ static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
  *
  * @ingroup dbgtrace
  */
-void set_trace_levels(DDCA_Trace_Group trace_flags) {
+void set_trace_groups(DDCA_Trace_Group trace_flags) {
    bool debug = false;
    DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
