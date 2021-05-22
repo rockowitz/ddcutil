@@ -470,7 +470,8 @@ ddc_write_read(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, read_bytewise=%s, max_read_bytes=%d",
+                 dh_repr_t(dh), sbool(read_bytewise), max_read_bytes );
 
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
