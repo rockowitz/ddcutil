@@ -1265,8 +1265,8 @@ char * hexstring2(
  * Note that if the returned pointer is referenced after another call to
  * this function, the results are unpredictable.
  *
- * This function is intended to simplify formatting of diagnostic messages, since
- * the caller needn't be concerned with buffer size and allocation.
+ * This function is intended to simplify formatting of diagnostic messages.
+ * The caller needn't be concerned with buffer size and allocation.
  */
 char * hexstring3_t(
           const unsigned char * bytes,      // bytes to convert
@@ -1275,11 +1275,13 @@ char * hexstring3_t(
           uint8_t               hunk_size,  // separator string frequency
           bool                  uppercase)  // use upper case hex characters
 {
+   bool debug = false;
    static GPrivate  hexstring3_key = G_PRIVATE_INIT(g_free);
    static GPrivate  hexstring3_len_key = G_PRIVATE_INIT(g_free);
 
-   // printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
-   //       bytes, len, sepstr, sbool(uppercase));
+   if (debug)
+      printf("(%s) bytes=%p, len=%d, sepstr=|%s|, uppercase=%s\n", __func__,
+             bytes, len, sepstr, sbool(uppercase));
    if (hunk_size == 0)
       sepstr = NULL;
    else if (sepstr == NULL)
@@ -1295,7 +1297,9 @@ char * hexstring3_t(
       required_size =   2*len             // hex rep of bytes
                        + (len-1)*sepsize   // for separators
                        + 1;                // terminating null
-   // printf("(%s) sepstr=|%s|, hunk_size=%d, required_size=%d\n", __func__, sepstr, hunk_size, required_size);
+   if (debug)
+      printf("(%s) sepstr=|%s|, hunk_size=%d, required_size=%zu\n",
+             __func__, sepstr, hunk_size, required_size);
 
    char * buf = get_thread_dynamic_buffer(&hexstring3_key, &hexstring3_len_key, required_size);
    // char * buf = get_thread_private_buffer(&hexstring3_key, NULL, required_size);
@@ -1313,11 +1317,14 @@ char * hexstring3_t(
       if (insert_sepstr)
          strcat(buf, sepstr);
    }
-   // printf("(%s) strlen(buffer) = %ld, required_size=%d   \n", __func__, strlen(buffer), required_size );
-   // printf("(%s)  buffer=|%s|\n", __func__, buffer );
+   if (debug) {
+      printf("(%s) strlen(buf) = %ld, required_size=%zu\n", __func__, strlen(buf), required_size );
+      printf("(%s)  buf=|%s|\n", __func__, buf );
+   }
    assert(strlen(buf) <= required_size-1);
 
-   // printf("(%s) Returning: %p\n", __func__, buf);
+   if (debug)
+      printf("(%s) Returning: %p -> |%s|\n", __func__, buf, buf);
    return buf;
 }
 
