@@ -507,8 +507,10 @@ create_ddc_base_response_packet(
    DDC_Packet ** packet_ptr_addr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%p, response_bytes_buffer_size=%d",
+                              i2c_response_bytes, response_bytes_buffer_size);
+   DBGTRC(debug, TRACE_GROUP, "          i2c_response_bytes -> |%s|",
+                              hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
@@ -593,14 +595,15 @@ create_ddc_response_packet(
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP,
-          "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20));
+          "Starting. response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
+          response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
    Status_DDC result = create_ddc_base_response_packet(
                           i2c_response_bytes,
                           response_bytes_buffer_size,
                           tag,
                           packet_ptr_addr);
-   // DBGMSG("create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p", result, *packet_ptr_addr);
+   DBGMSF(debug, "create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p", result, *packet_ptr_addr);
    if (result == 0) {
       if (isNullPacket(*packet_ptr_addr)) {
          result = DDCRC_NULL_RESPONSE;
@@ -613,7 +616,7 @@ create_ddc_response_packet(
    if (result != DDCRC_OK && *packet_ptr_addr) {
       // if (debug)
       //    DBGMSG("failure, freeing response packet at %p", *packet_ptr_addr);
-      TRCMSG("failure, freeing response packet at %p", *packet_ptr_addr);
+      DBGTRC(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_addr);
       // does this cause the free(readbuf) failure in try_read?
       free_ddc_packet(*packet_ptr_addr);
       *packet_ptr_addr = 0;
@@ -892,7 +895,8 @@ create_ddc_typed_response_packet(
       DDC_Packet**    packet_ptr_addr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%s", hexstring_t(i2c_response_bytes, 20) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. response_bytes_buffer_size=%d, response_bytes=|%s|",
+                              response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
    // n. may return DDC_NULL_RESPONSE??   (old note)
