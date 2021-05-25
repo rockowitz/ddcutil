@@ -81,7 +81,8 @@ ddca_ddcutil_version(void) {
    static bool vspec_init = false;
 
    if (!vspec_init) {
-      int ct = sscanf(get_base_ddcutil_version(), "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
+      int ct = sscanf(get_base_ddcutil_version(),
+                      "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
       assert(ct == 3);
       vspec_init = true;
    }
@@ -90,9 +91,18 @@ ddca_ddcutil_version(void) {
 }
 
 
-//  Returns the ddcutil version as a string in the form "major.minor.micro".
+/**  Returns the ddcutil version as a string in the form "major.minor.micro".
+ *
+ */
 const char *
 ddca_ddcutil_version_string(void) {
+   return get_base_ddcutil_version();
+}
+
+
+// Returns the full ddcutil version as a string that may be suffixed with an extension
+const char *
+ddca_ddcutil_extended_version_string(void) {
    return get_full_ddcutil_version();
 }
 

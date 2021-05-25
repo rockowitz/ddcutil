@@ -63,10 +63,21 @@ ddca_ddcutil_version(void);
 /**
  * Returns the ddcutil version as a string in the form "major.minor.micro".
  *
- * @return version string.
+ * @return version string (caller must not free)
  */
 const char *
 ddca_ddcutil_version_string(void);
+
+
+/** Returns the full ddcutil version as a string, possibly with a suffix,
+ *
+ * @return string in form "1.3.0" or "1.3.0-dev" (caller must not free)
+ *
+ * @since 1.2.0
+ */
+const char *
+ddca_ddcutil_extended_version_string(void);
+
 
 // Bit ids for ddca_get_build_options() - how to make connection in doxygen?
 #ifdef ALT
