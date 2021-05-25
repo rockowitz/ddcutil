@@ -179,6 +179,19 @@ DDCA_Trace_Group trace_class_name_to_value(char * name) {
 
 static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
 
+/** Replaces the groups to be traced.
+ *
+ * @param trace_flags bit flags indicating groups to trace
+ *
+ * @ingroup dbgtrace
+ */
+void set_trace_groups(DDCA_Trace_Group trace_flags) {
+   bool debug = false;
+   DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
+
+   trace_levels = trace_flags;
+}
+
 
 /** Adds to the groups to be traced.
  *
