@@ -409,13 +409,25 @@ void
 ddca_add_traced_file(
       const char * filename);
 
-/* Specify one or more trace groups.
+/** Replaces the groups being traced
  *
  *  \param[in] trace_flags  bitfield indicating groups to trace
  */
 void
 ddca_set_trace_groups(
       DDCA_Trace_Group trace_flags);
+
+
+/** Adds to the groups being traced
+ *
+ *  \param[in] trace_flags  bitfield indicating groups to trace
+ *
+ *  @since 1.1.1
+ */
+void
+ddca_add_trace_groups(
+      DDCA_Trace_Group trace_flags);
+
 
 /** Given a trace group name, returns its identifier.
  *  Case is ignored.
