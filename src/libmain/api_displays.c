@@ -618,6 +618,46 @@ ddca_get_display_info_list(void)
 }
 
 
+static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
+   memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
+   curinfo->dispno        = dref->dispno;
+
+   curinfo->path = dref->io_path;
+   if (dref->io_path.io_mode == DDCA_IO_USB) {
+      curinfo->usb_bus    = dref->usb_bus;
+      curinfo->usb_device = dref->usb_device;
+   }
+
+   DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
+   if (dref->dispno != -1) {
+      vspec = get_vcp_version_by_dref(dref);
+   }
+   memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+   STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
+#pragma GCC diagnostic pop
+   curinfo->product_code  = dref->pedid->product_code;
+   curinfo->vcp_version    = vspec;
+   curinfo->dref           = dref;
+
+#ifdef MMID
+   curinfo->mmid = monitor_model_key_value(
+                                  dref->pedid->mfg_id,
+                                  dref->pedid->model_name,
+                                  dref->pedid->product_code);
+// #ifdef OLD
+   assert(streq(curinfo->mfg_id,     curinfo->mmid.mfg_id));
+   assert(streq(curinfo->model_name, curinfo->mmid.model_name));
+   assert(curinfo->product_code == curinfo->mmid.product_code);
+// #endif
+#endif
+}
+
+
+
 DDCA_Status
 ddca_get_display_info_list2(
       bool                      include_invalid_displays,
@@ -654,41 +694,7 @@ ddca_get_display_info_list2(
 
       if (dref->dispno != -1 || include_invalid_displays) {
          DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
-         memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
-         curinfo->dispno        = dref->dispno;
-
-         curinfo->path = dref->io_path;
-         if (dref->io_path.io_mode == DDCA_IO_USB) {
-            curinfo->usb_bus    = dref->usb_bus;
-            curinfo->usb_device = dref->usb_device;
-         }
-
-         DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
-         if (dref->dispno != -1) {
-            vspec = get_vcp_version_by_dref(dref);
-         }
-         memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-         STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
-         STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
-         STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
-#pragma GCC diagnostic pop
-         curinfo->product_code  = dref->pedid->product_code;
-         curinfo->vcp_version    = vspec;
-         curinfo->dref           = dref;
-
-#ifdef MMID
-         curinfo->mmid = monitor_model_key_value(
-                                        dref->pedid->mfg_id,
-                                        dref->pedid->model_name,
-                                        dref->pedid->product_code);
-// #ifdef OLD
-         assert(streq(curinfo->mfg_id,     curinfo->mmid.mfg_id));
-         assert(streq(curinfo->model_name, curinfo->mmid.model_name));
-         assert(curinfo->product_code == curinfo->mmid.product_code);
-// #endif
-#endif
+         init_display_info(dref, curinfo);
       }
    }
 
