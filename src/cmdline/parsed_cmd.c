@@ -17,6 +17,7 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/parms.h"
 
 #include "cmdline/parsed_cmd.h"
 
@@ -120,6 +121,12 @@ Parsed_Cmd *  new_parsed_cmd() {
                                            true,          // clear to 0's
                                            sizeof(Parsed_Setvcp_Args));
    g_array_set_clear_func(parsed_cmd->setvcp_values, destroy_parsed_setvcp_value);
+   if (DEFAULT_ENABLE_UDF)
+      parsed_cmd->flags |= CMD_FLAG_ENABLE_UDF;
+   if (DEFAULT_ENABLE_USB)
+      parsed_cmd->flags |= CMD_FLAG_ENABLE_USB;
+   if (DEFAULT_ENABLE_CACHED_CAPABILITIES)
+      parsed_cmd->flags |= CMD_FLAG_ENABLE_CACHED_CAPABILITIES;
    return parsed_cmd;
 }
 
