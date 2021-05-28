@@ -630,7 +630,7 @@ ddca_get_display_info_list2(
    PRECOND(dlist_loc);
 
    ddc_ensure_displays_detected();
-   GPtrArray * all_displays = ddc_get_all_displays();
+   GPtrArray * all_displays = ddc_get_all_displays();  // array of Display_Ref
 
    int true_ct = all_displays->len;
    if (!include_invalid_displays) {
