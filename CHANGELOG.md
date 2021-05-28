@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.1] 2021-06-01
+
+### Added
+- libddcutil log file
+- libddcuti writes critical events to syslog
+- API function ddca_add_trace_group()
+- API function ddca_get_extended_version_string()
+- Macro DDCUTIL_VSUFFIX
+
+### Changed
+- If possible, command **ddcutil environment --verbose** calls **get-edid|parse-edid** 
+  as an additional EDID check.
+- Additional validation of DDCA_Display_Ref argument to API functions
+- Improved tracing of assert() failures
+
+
 ## [1.1.0] 2021-04-05
 
 For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
@@ -23,6 +39,7 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 - **environment --verbose** has more detailed reporting of relevant sections of /sys.
 - Additional information on **detect --verbose**.
 - Additional functions are traceable using option ***--trcfunc***
+- User defined features are enabled by default.
 
 ### Fixed
 - Regard IO operations setting errno EBUSY as recoverable, suggest use of option 
