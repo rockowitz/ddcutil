@@ -233,8 +233,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
       rpt_bool("enable cached capabilities:",
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
-      rpt_bool("ignore cached capabilities:",
-                                    NULL, parsed_cmd->flags & CMD_FLAG_IGNORE_CACHED_CAPABILITIES, d1);
+//    rpt_bool("ignore cached capabilities:",
+//                                  NULL, parsed_cmd->flags & CMD_FLAG_IGNORE_CACHED_CAPABILITIES, d1);
    // rpt_bool("clear persistent cache:",
    //                                 NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE, d1);
       rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);
