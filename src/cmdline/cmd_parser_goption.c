@@ -178,9 +178,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean rw_only_flag   = false;
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
-   gboolean enable_udf_flag = true;
+   gboolean enable_udf_flag = DEFAULT_ENABLE_UDF;
+   const char * enable_udf_expl = (enable_udf_flag) ? "Enable User Define Features (default)" : "Enable User Define Features";
+   const char * disable_udf_expl = (enable_udf_flag) ? "Disable User Defined Features" : "Disable User Define Features (default)";
 #ifdef USE_USB
-   gboolean enable_usb_flag = false;
+   gboolean enable_usb_flag = DEFAULT_ENABLE_USB;
+   const char * enable_usb_expl = (enable_usb_flag) ? "Detect USB devices (default)" : "Detect USB devices";
+   const char * disable_usb_expl = (enable_usb_flag) ? "Ignore USB devices" : "Ignore USB devices (default)";
 #endif
    gboolean timeout_i2c_io_flag = false;
    gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
@@ -195,8 +199,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean f6_flag        = false;
    gboolean debug_parse_flag  = false;
    gboolean x52_no_fifo_flag  = false;
-   gboolean enable_cc_flag = false;
-   gboolean ignore_cc_flag = false;
+   gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
+   const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
+   const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
+   // gboolean ignore_cc_flag = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
    char *   snwork         = NULL;
@@ -281,12 +287,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       // Behavior options
 #ifdef USE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Detect USB devices", NULL},
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
       {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
 
       {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
-                               G_OPTION_ARG_NONE, &enable_usb_flag,  "Do not detect USB devices", NULL},
+                               G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
 #endif
       {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
       {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
@@ -302,15 +308,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 //    {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
       {"enable-capabilities-cache",
-                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   "Enable cached capabilities",   NULL},
+                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE, &enable_cc_flag,   "Disable cached capabilities (default)",   NULL},
+                           G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
 
- //     {"ignore-capabilities-cache",
- //                              '\0', 0, G_OPTION_ARG_NONE,     &ignore_cc_flag,   "Ignore cached capabilities string",   NULL},
-      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support (default)", NULL},
+      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
+                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
       {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
 
       // Performance and retry
@@ -512,7 +516,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
-   SET_CMDFLAG(CMD_FLAG_IGNORE_CACHED_CAPABILITIES , ignore_cc_flag);
+// SET_CMDFLAG(CMD_FLAG_IGNORE_CACHED_CAPABILITIES , ignore_cc_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES , enable_cc_flag);
 
    if (failsim_fn_work) {
