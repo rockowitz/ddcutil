@@ -600,6 +600,12 @@ dnl i2c-dev.h is in linux-headers
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
+dnl libi2c and libi2c-dev have no .pc files.  Check for header file instead.
+AC_CHECK_HEADER( [i2c/smbus.h],
+                    AC_MSG_NOTICE( [header file i2c/smbus.h found.] ), 
+                    AC_MSG_ERROR( [Package libi2c-dev >= 4.0 required.] )
+					)
+
 
 ###
 ### Required library tests
@@ -1229,9 +1235,7 @@ AC_OUTPUT
 dnl a brief summary
 AC_MSG_RESULT([
 	ddcutil $VERSION
-	ddcutil_major_version
-	ddcutil_version_suffix
-	ddcutil_version
+	version suffix:   ddcutil_version_suffix
 	=============
 
 	libtool version  	${LT_CURRENT}:${LT_REVISION}:${LT_AGE}
