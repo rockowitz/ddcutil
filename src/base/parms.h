@@ -113,7 +113,7 @@
 #define DEFAULT_SLEEP_LESS true
 
 #ifdef USE_USB
-#define DEFAULT_ENABLE_USB true
+#define DEFAULT_ENABLE_USB false
 #else
 #define DEFAULT_ENABLE_USB false
 #endif
