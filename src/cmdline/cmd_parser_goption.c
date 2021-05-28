@@ -178,7 +178,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean rw_only_flag   = false;
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
-   gboolean enable_udf_flag = false;
+   gboolean enable_udf_flag = true;
 #ifdef USE_USB
    gboolean enable_usb_flag = false;
 #endif
@@ -308,7 +308,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
  //     {"ignore-capabilities-cache",
  //                              '\0', 0, G_OPTION_ARG_NONE,     &ignore_cc_flag,   "Ignore cached capabilities string",   NULL},
-      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support", NULL},
+      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  "Enable user defined feature support (default)", NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  "Disable user defined feature support", NULL},
       {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
