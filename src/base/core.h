@@ -211,6 +211,17 @@ bool dbgtrc(
    TRACED_ASSERT( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
 #endif
 
+#define TRACED_ABORT(_assertion) \
+   do { \
+      int line = __LINE__;  \
+      dbgtrc(true, __func__, __LINE__, __FILE__,   \
+                   "Assertion failed: \"%s\" in file %s at line %d",  \
+                   #_assertion, __FILE__,  __LINE__);   \
+      syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
+                      #_assertion, __FILE__,  __LINE__);   \
+      __assert_fail(#_assertion, __FILE__, line, __func__); \
+   } while (0)
+
 
 
 #define SEVEREMSG(          format, ...) \
