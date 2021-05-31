@@ -44,6 +44,7 @@
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
+#include "ddc/ddc_watch_displays.h"
 
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
@@ -740,6 +741,14 @@ void query_sysenv() {
       // CONSIDER: make conditional on ambiguous EDID, MST
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
+
+      if (get_output_level() >= DDCA_OL_VV) {
+         rpt_nl();
+         rpt_label(0, "*** Calling get_sysfs_drm_displays() from ddc_watch.c... ***");
+         GPtrArray * connected_displays = get_sysfs_drm_displays(/*verbose=*/ true);
+         g_ptr_array_free(connected_displays, true);
+      }
+
 
 #ifdef TMI
 #ifdef ENABLE_UDEV
