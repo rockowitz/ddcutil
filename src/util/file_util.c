@@ -199,8 +199,8 @@ read_binary_file(
    assert(fn);
 
    bool debug = false;
-
-   // DBGMSG("fn=%s", fn);
+   if (debug)
+      printf("(%s) fn=%s,est_size=%d\n", __func__, fn, est_size);
 
    Byte  buf[1];
 
@@ -229,12 +229,14 @@ read_binary_file(
    fclose(fp);
 
 bye:
+   // printf("(%s) bye\n", __func__);
    if (debug) {
       if (gbarray)
-         printf("(%s) Returning GByteArray of size %d", __func__, gbarray->len);
+         printf("(%s) Returning GByteArray of size %d\n", __func__, gbarray->len);
       else
-         printf("(%s) Returning NULL", __func__);
-      }
+         printf("(%s) Returning NULL\n", __func__);
+   }
+   // printf("(%s) byebye\n", __func__);
    return gbarray;
 }
 
