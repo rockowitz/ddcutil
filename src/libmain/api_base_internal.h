@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <syslog.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -29,29 +30,38 @@ extern bool library_initialized;
 
 extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 
-#define PRECOND(expr) \
-   if (!(expr)) { \
-      if (api_failure_mode & DDCA_PRECOND_STDERR) { \
-          fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
-                          #expr, __func__, __LINE__, __FILE__); \
+#define API_PRECOND(expr) \
+   do { \
+      if (!(expr)) { \
+         syslog(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+                         #expr, __FILE__,  __LINE__);   \
+         if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
+            DBGTRC(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+                         #expr, __func__, __LINE__, __FILE__); \
+            fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
+                             #expr, __func__, __LINE__, __FILE__); \
+         } \
+         if (api_failure_mode & DDCA_PRECOND_RETURN)  \
+            return DDCRC_ARG;  \
+         /* __assert_fail(#expr, __FILE__, __LINE__, __func__); */ \
+         abort();  \
       } \
-      if (api_failure_mode & DDCA_PRECOND_RETURN)  \
-         return DDCRC_ARG;  \
-      else \
-         abort(); \
-   }
+   } while (0)
 
-#define PRECOND_NORC(expr) \
-   if (!(expr)) { \
-      if (api_failure_mode & DDCA_PRECOND_STDERR) { \
-          fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
-                          #expr, __func__, __LINE__, __FILE__); \
-      } \
-      if (api_failure_mode & DDCA_PRECOND_RETURN)  \
-         return;  \
-      else \
+
+#define API_PRECOND_NORC(expr) \
+   do { \
+      if (!(expr)) { \
+         syslog(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+                            #expr, __FILE__,  __LINE__);   \
+         if (api_failure_mode & DDCA_PRECOND_STDERR) \
+             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
+                             #expr, __func__, __LINE__, __FILE__); \
+         if (api_failure_mode & DDCA_PRECOND_RETURN)  \
+            return;  \
          abort(); \
-   }
+      } \
+   } while (0)
 
 //
 // Precondition Failure Mode
