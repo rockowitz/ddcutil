@@ -41,8 +41,9 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )
-      dref = NULL;
+   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0  ||
+      !ddc_is_valid_display_ref(dref) )
+         dref=NULL;
    return dref;
 }
 
@@ -73,7 +74,7 @@ ddca_create_dispno_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    Display_Identifier* did = create_dispno_display_identifier(dispno);
    *did_loc = did;
    assert(*did_loc);
@@ -88,7 +89,7 @@ ddca_create_busno_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    Display_Identifier* did = create_busno_display_identifier(busno);
    *did_loc = did;
    assert(*did_loc);
@@ -105,7 +106,7 @@ ddca_create_mfg_model_sn_display_identifier(
 {
    free_thread_error_detail();
    // assert(did_loc);
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
 
@@ -142,7 +143,7 @@ ddca_create_edid_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    *did_loc = NULL;
    DDCA_Status rc = 0;
    if (edid == NULL) {
@@ -165,7 +166,7 @@ ddca_create_usb_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_display_identifier(bus, device);
    *did_loc = did;
    assert(*did_loc);
@@ -180,7 +181,7 @@ ddca_create_usb_hiddev_display_identifier(
 {
    // assert(did_loc);
    free_thread_error_detail();
-   PRECOND(did_loc);
+   API_PRECOND(did_loc);
    Display_Identifier* did = create_usb_hiddev_display_identifier(hiddev_devno);
    *did_loc = did;
    assert(*did_loc);
@@ -232,7 +233,7 @@ ddca_get_display_ref(
    DBGMSF(debug, "Starting.  did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
    // assert(dref_loc);
-   PRECOND(dref_loc);
+   API_PRECOND(dref_loc);
    DBGMSF(debug,"    *dref_loc=%p", *dref_loc);
    DDCA_Status rc = 0;
 
@@ -277,7 +278,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
       free_thread_error_detail();
       return DDCRC_OK;
    }
-   WITH_DR(ddca_dref,
+   WITH_VALIDATED_DR(ddca_dref,
          {
             if (dref->flags & DREF_TRANSIENT)
                psc = free_display_ref(dref);
@@ -377,7 +378,7 @@ ddca_open_display2(
    TRACED_ASSERT(library_initialized);
    TRACED_ASSERT(ddc_displays_already_detected());
 
-   PRECOND(dh_loc);
+   API_PRECOND(dh_loc);
 
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
@@ -629,7 +630,7 @@ static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    }
 
    DDCA_MCCS_Version_Spec vspec = DDCA_VSPEC_UNKNOWN;
-   if (dref->dispno != -1) {
+   if (dref->dispno > 0) {
       vspec = get_vcp_version_by_dref(dref);
    }
    memcpy(curinfo->edid_bytes,    dref->pedid->bytes, 128);
@@ -657,6 +658,27 @@ static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
 }
 
 
+DDCA_Status
+ddca_get_display_info(
+      DDCA_Display_Ref  ddca_dref,
+      DDCA_Display_Info ** dinfo_loc)
+{
+   WITH_VALIDATED_DR(
+         ddca_dref,
+         {
+               bool debug = false;
+               DBGTRC(debug, DDCA_TRC_API, "Starting");
+               API_PRECOND(dinfo_loc);
+               DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
+               init_display_info(dref, info);
+               psc=0;
+         }
+   )
+}
+
+
+
+
 
 DDCA_Status
 ddca_get_display_info_list2(
@@ -667,7 +689,7 @@ ddca_get_display_info_list2(
    DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, "Starting");
    free_thread_error_detail();
    // assert(dlist_loc);
-   PRECOND(dlist_loc);
+   API_PRECOND(dlist_loc);
 
    ddc_ensure_displays_detected();
    GPtrArray * all_displays = ddc_get_all_displays();  // array of Display_Ref
@@ -677,7 +699,7 @@ ddca_get_display_info_list2(
       true_ct = 0;         // number of valid displays
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         if (dref->dispno != -1)    // ignore invalid displays
+         if (dref->dispno > 0)    // ignore invalid displays
             true_ct++;
       }
    }
@@ -692,7 +714,7 @@ ddca_get_display_info_list2(
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
 
-      if (dref->dispno != -1 || include_invalid_displays) {
+      if (dref->dispno > 0 || include_invalid_displays) {
          DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
          init_display_info(dref, curinfo);
       }
@@ -740,7 +762,7 @@ ddca_report_display_info(
    DBGMSF(debug, "Starting. dinfo=%p, depth=%d", dinfo, depth);
 
    // assert(dinfo);
-   PRECOND_NORC(dinfo);
+   API_PRECOND_NORC(dinfo);
    assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
    int d0 = depth;
    int d1 = depth+1;
