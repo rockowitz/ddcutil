@@ -56,7 +56,11 @@ ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 void
 ddc_ensure_displays_detected();
 
-void ddc_discard_detected_displays();     // FOR TESTING, LEAKS MEMORY
+void
+ddc_discard_detected_displays();     // FOR TESTING, LEAKS MEMORY
+
+bool
+ddc_is_valid_display_ref(Display_Ref * dref);
 
 bool
 ddc_displays_already_detected();

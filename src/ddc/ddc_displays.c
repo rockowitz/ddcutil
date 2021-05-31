@@ -430,10 +430,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
 
    switch(dref->dispno) {
-   case -2:
+   case DISPNO_REMOVED:  // -3
+      rpt_vstring(depth, "Removed display");
+      break;
+   case DISPNO_PHANTOM:    // -2
       rpt_vstring(depth, "Phantom display");
       break;
-   case -1:
+   case DISPNO_INVALID:   // -3
       rpt_vstring(depth, "Invalid display");
       break;
    case 0:          // valid display, no assigned display number
@@ -474,7 +477,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          rpt_vstring(d1, "DDC communication failed");
          char msgbuf[100] = {0};
          char * msg = NULL;
-         if (dref->dispno == -2) {
+         if (dref->dispno == DISPNO_PHANTOM) {
             if (dref->actual_display) {
                snprintf(msgbuf, 100, "Use non-phantom device %s",
                         dref_short_name_t(dref->actual_display));
@@ -563,7 +566,6 @@ ddc_get_display_count(bool include_invalid_displays) {
    }
    return display_ct;
 }
-
 
 
 /** Reports all displays found.
@@ -932,7 +934,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      if (dref->dispno < 0)     // -1 or -2
+      if (dref->dispno < 0)     // DISPNO_INVALID, DISPNO_PHANTOM, DISPNO_REMOVED
          g_ptr_array_add(invalid_displays, dref);
       else
          g_ptr_array_add(valid_displays, dref);
@@ -945,7 +947,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
          for (int valid_ndx = 0; valid_ndx < valid_displays->len; valid_ndx++) {
             Display_Ref *  valid_ref = g_ptr_array_index(valid_displays, valid_ndx);
             if (is_phantom_display(invalid_ref, valid_ref)) {
-               invalid_ref->dispno = -2;
+               invalid_ref->dispno = DISPNO_PHANTOM;    // -2
                invalid_ref->actual_display = valid_ref;
             }
          }
@@ -1073,7 +1075,7 @@ ddc_detect_all_displays() {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
-         dref->dispno = -1;
+         dref->dispno = DISPNO_INVALID;   // -1
          dref->pedid = businfo->edid;    // needed?
          dref->mmid  = monitor_model_key_new(
                           dref->pedid->mfg_id,
@@ -1099,7 +1101,7 @@ ddc_detect_all_displays() {
                                    curmon->hiddev_devinfo->busnum,
                                    curmon->hiddev_devinfo->devnum,
                                    curmon->hiddev_device_name);
-         dref->dispno = -1;
+         dref->dispno = DISPNO_INVALID;   // -1
          dref->pedid = curmon->edid;
          if (dref->pedid)
             dref->mmid  = monitor_model_key_new(
@@ -1144,7 +1146,7 @@ ddc_detect_all_displays() {
 
       }
       else {
-         dref->dispno = -1;
+         dref->dispno = DISPNO_INVALID;   // -1;
       }
    }
 
@@ -1177,10 +1179,28 @@ ddc_ensure_displays_detected() {
 }
 
 
-void ddc_discard_detected_displays() {
+void
+ddc_discard_detected_displays() {
    all_displays = NULL;
    i2c_discard_buses();
 }
+
+bool
+ddc_is_valid_display_ref(Display_Ref * dref) {
+   bool result = false;
+   if (all_displays) {
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
+         if (cur == dref) {
+            if (cur->dispno > 0)
+               result = true;
+            break;
+         }
+      }
+   }
+   return result;
+}
+
 
 
 /** Indicates whether displays have already been detected
