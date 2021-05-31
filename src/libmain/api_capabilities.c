@@ -56,7 +56,7 @@ ddca_get_capabilities_string(
    DBGMSF(debug, "Starting. ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ));
    free_thread_error_detail();
    // assert(pcaps_loc);
-   PRECOND(pcaps_loc);
+   API_PRECOND(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
    WITH_DH(ddca_dh,
@@ -135,7 +135,7 @@ ddca_parse_capabilities_string(
    DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
    // assert(parsed_capabilities_loc);
    free_thread_error_detail();
-   PRECOND(parsed_capabilities_loc);
+   API_PRECOND(parsed_capabilities_loc);
    DDCA_Status ddcrc = DDCRC_BAD_DATA;
    DBGMSF(debug, "ddcrc initialized to %s", psc_desc(ddcrc));
    DDCA_Capabilities * result = NULL;
@@ -257,7 +257,7 @@ ddca_report_parsed_capabilities_by_dref(
    free_thread_error_detail();
    DDCA_Status ddcrc = 0;
 
-   PRECOND(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
+   API_PRECOND(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
