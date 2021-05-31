@@ -25,7 +25,7 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
       } \
    } while(0)
 
-
+#ifdef OLD
 #define WITH_DR(ddca_dref, action) \
    do { \
       assert(library_initialized); \
@@ -40,6 +40,7 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
       } \
       return psc; \
    } while(0);
+#endif
 
 #define WITH_VALIDATED_DR(ddca_dref, action) \
    do { \
