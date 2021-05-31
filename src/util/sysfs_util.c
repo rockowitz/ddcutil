@@ -238,6 +238,7 @@ assemble_sysfs_path2(
       const char *  fn_segment,
       va_list       ap)
 {
+   bool debug = false;
    STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
       char * segment = va_arg(ap, char*);
@@ -245,8 +246,10 @@ assemble_sysfs_path2(
          break;
       STRLCAT(buffer, "/", bufsz);
       STRLCAT(buffer, segment, bufsz);
-      STRLCAT(buffer, "/", bufsz);
+      // STRLCAT(buffer, "/", bufsz);
    }
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, buffer);
    return buffer;
 }
 
@@ -258,7 +261,10 @@ rpt2_attr_text(
       const char * fn_segment,
       ...)
 {
-   // DBGMSG("Starting. fn_segment=%s", fn_segment);
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. fn_segment=%s\n", __func__, fn_segment);
+
    bool found = false;
    if (value_loc)
       *value_loc = NULL;
@@ -268,7 +274,8 @@ rpt2_attr_text(
    va_start(ap, fn_segment);
    assemble_sysfs_path2(pb1, PATH_MAX, fn_segment, ap);
    va_end(ap);
-   // DBGMSG("pb1=%s", pb1);
+   if (debug)
+      printf("(%s) pb1=%s\n", __func__, pb1);
 
    char * val = read_sysfs_attr0(pb1, false);
    if (val) {
@@ -282,7 +289,8 @@ rpt2_attr_text(
   else {
      rpt_attr_output(depth, pb1, ": ", "Not Found");
   }
-  // DBGMSG("Done");
+  if (debug)
+     printf("(%s) Done.\n", __func__);
   return found;
 }
 
