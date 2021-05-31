@@ -32,6 +32,9 @@ ddc_initial_checks_by_dref(Display_Ref * dref);
 GPtrArray *
 ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 
+GPtrArray *
+ddc_get_filtered_displays(bool include_invalid_displays);
+
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth);
 

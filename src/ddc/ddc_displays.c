@@ -313,6 +313,18 @@ GPtrArray * ddc_get_all_displays() {
    return all_displays;
 }
 
+GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
+   TRACED_ASSERT(all_displays);
+   GPtrArray * result = g_ptr_array_sized_new(all_displays->len);
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * cur = g_ptr_array_index(all_displays, ndx);
+      if (include_invalid_displays || cur->dispno > 0) {
+         g_ptr_array_add(result, cur);
+      }
+   }
+   return result;
+}
+
 
 /** Gets the controller firmware version as a string
  *
