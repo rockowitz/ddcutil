@@ -678,6 +678,45 @@ ddca_get_display_info(
 
 
 
+DDCA_Status
+ddca_get_display_refs(
+      bool                include_invalid_displays,
+      DDCA_Display_Ref**  drefs_loc)
+{
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, "Starting");
+   free_thread_error_detail();
+   // assert(dlist_loc);
+   API_PRECOND(drefs_loc);
+
+   ddc_ensure_displays_detected();
+   GPtrArray * filtered_displays = ddc_get_filtered_displays(include_invalid_displays);  // array of Display_Ref
+
+   DDCA_Display_Ref * result_list = calloc(filtered_displays->len + 1,sizeof(DDCA_Display_Ref));
+   DDCA_Display_Ref * cur_ddca_dref = result_list;
+
+   for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(filtered_displays, ndx);
+         *cur_ddca_dref = (DDCA_Display_Ref*) dref;
+         cur_ddca_dref++;
+   }
+   *cur_ddca_dref = NULL; // redundant since calloc()
+   g_ptr_array_free(filtered_displays, false);
+
+   if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
+      DBGMSG("Done.     Returning %p", result_list);
+      DDCA_Display_Ref * cur_ddca_dref = result_list;
+      while (cur_ddca_dref) {
+         Display_Ref * dref = (Display_Ref*) cur_ddca_dref;
+         rpt_vstring(1, "DDCA_Display_Ref %p -> display %d", cur_ddca_dref, dref->dispno);
+         cur_ddca_dref++;
+      }
+   }
+
+   *drefs_loc = result_list;
+   assert(*drefs_loc);
+   return 0;
+}
 
 
 DDCA_Status
@@ -692,33 +731,23 @@ ddca_get_display_info_list2(
    API_PRECOND(dlist_loc);
 
    ddc_ensure_displays_detected();
-   GPtrArray * all_displays = ddc_get_all_displays();  // array of Display_Ref
+   GPtrArray * filtered_displays = ddc_get_filtered_displays(include_invalid_displays);  // array of Display_Ref
 
-   int true_ct = all_displays->len;
-   if (!include_invalid_displays) {
-      true_ct = 0;         // number of valid displays
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         if (dref->dispno > 0)    // ignore invalid displays
-            true_ct++;
-      }
-   }
+   int filtered_ct = filtered_displays->len;
 
-   int reqd_size =   offsetof(DDCA_Display_Info_List,info) + true_ct * sizeof(DDCA_Display_Info);
+   int reqd_size =   offsetof(DDCA_Display_Info_List,info) + filtered_ct * sizeof(DDCA_Display_Info);
    DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
-   result_list->ct = true_ct;
-   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %zu, sizeof(Display_Info_List) = %zu, reqd_size=%d, true_ct=%d, offsetof(DDCA_Display_Info_List,info) = %zu",
-           sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List), reqd_size, true_ct, offsetof(DDCA_Display_Info_List,info));
+   result_list->ct = filtered_ct;
+   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %zu, sizeof(Display_Info_List) = %zu, reqd_size=%d, filtered_ct=%d, offsetof(DDCA_Display_Info_List,info) = %zu",
+           sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List),
+           reqd_size, filtered_ct, offsetof(DDCA_Display_Info_List,info));
 
-   int true_ctr = 0;
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-
-      if (dref->dispno > 0 || include_invalid_displays) {
-         DDCA_Display_Info * curinfo = &result_list->info[true_ctr++];
-         init_display_info(dref, curinfo);
-      }
+   for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(filtered_displays, ndx);
+      DDCA_Display_Info * curinfo = &result_list->info[ndx++];
+      init_display_info(dref, curinfo);
    }
+   g_ptr_array_free(filtered_displays, false);
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Done.     Returning %p", result_list);
