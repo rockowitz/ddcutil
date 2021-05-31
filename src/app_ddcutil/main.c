@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include "util/data_structures.h"
@@ -354,7 +355,7 @@ find_dref(
       if (businfo) {
          if (businfo->flags & I2C_BUS_ADDR_0X50)  {
             dref = create_bus_display_ref(busno);
-            dref->dispno = -1;     // should use some other value for unassigned vs invalid
+            dref->dispno = DISPNO_INVALID;      // or should it be DISPNO_NOT_SET?
             dref->pedid = businfo->edid;    // needed?
             dref->mmid  = monitor_model_key_new(
                              dref->pedid->mfg_id,
@@ -588,6 +589,12 @@ main(int argc, char *argv[]) {
    char * program_start_time_s = asctime(localtime(&program_start_time));
    if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
+
+   openlog("ddcutil",          // prepended to every log message
+           LOG_CONS |          // write to system console if error sending to system logger
+           LOG_PID,            // include caller's process id
+           LOG_USER);          // generic user program, syslogger can use to determine how to handle
+   syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
 
    Parsed_Cmd * parsed_cmd = NULL;
    add_rtti_functions();      // add entries for this file
@@ -823,6 +830,8 @@ bye:
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
    release_base_services();
+   syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
+   closelog();
    return main_rc;
 }
 
