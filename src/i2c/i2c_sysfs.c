@@ -72,8 +72,8 @@ read_i2cN_device_node(
 {
    assert(device_path);
    assert(info);
-   bool debug = false;;
-   DBGMSF(debug, "device_path=%s", device_path);
+   bool debug = false;
+   DBGMSF(debug, "Starting. device_path=%s", device_path);
    char * i2c_N = g_path_get_basename(device_path);
    int d0 = depth;
    if (debug && d0 < 0)
@@ -82,6 +82,7 @@ read_i2cN_device_node(
    RPT2_ATTR_TEXT( d0, &info->i2c_dev_dev,    device_path, "i2c-dev", i2c_N, "dev");
    RPT2_ATTR_TEXT( d0, &info->i2c_dev_name,   device_path, "i2c-dev", i2c_N, "name");
    free(i2c_N);
+   DBGMSF(debug, "Done.");
 }
 
 #ifdef IN_PROGRESS
@@ -428,10 +429,10 @@ void report_one_bus_i2c(
    rpt_nl();
    int busno = i2c_name_to_busno(fn);  //   catches non-i2cN names
    if (busno < 0) {
-      rpt_vstring(depth, "Ignoring %s/%s", dirname, fn);
+      rpt_vstring(depth, "Ignoring (A) %s/%s", dirname, fn);
    }
    else {
-      rpt_vstring(depth, "Examining /sys/bus/i2c/devices/i2c-%d...", busno);
+      rpt_vstring(depth, "Examining (A) /sys/bus/i2c/devices/i2c-%d...", busno);
       int d1 = (debug) ? -1 : depth+1;
       I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
       report_i2c_sys_info(info, depth+1);
@@ -441,7 +442,7 @@ void report_one_bus_i2c(
 
 
 void dbgrpt_sys_bus_i2c(int depth) {
-   rpt_label(depth, "Examining /sys/bus/i2c/devices for MST, duplicate EDIDs:");
+   rpt_label(depth, "Examining (B) /sys/bus/i2c/devices for MST, duplicate EDIDs:");
    rpt_nl();
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
 }
