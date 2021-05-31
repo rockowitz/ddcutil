@@ -628,7 +628,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
    accumulator->sys_bus_i2c_device_numbers = bva_create();
-   rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
+   rpt_vstring(0,"Examining (3) /sys/bus/i2c/devices...");
    char * dname = "/sys/bus/i2c";
    if (!directory_exists(dname)) {
       rpt_vstring(1, "Directory not found: %s", dname);
@@ -708,7 +708,7 @@ void query_drm_using_sysfs()
 
    bool debug = false;
 
-   rpt_vstring(depth,"Examining /sys/class/drm...");
+   rpt_vstring(depth,"Examining (4) /sys/class/drm...");
    dname = "/sys/class/drm";
    dir1 = opendir(dname);
    if (!dir1) {
@@ -868,7 +868,7 @@ void one_bus_i2c_device(int busno, void * accumulator, int depth) {
 
    char * dir_devices_i2cN = g_strdup_printf("/sys/bus/i2c/devices/i2c-%d", busno);
    char * real_device_dir = realpath(dir_devices_i2cN, pb1);
-   rpt_vstring(depth, "Examining %s -> %s", dir_devices_i2cN, real_device_dir);
+   rpt_vstring(depth, "Examining (5) %s -> %s", dir_devices_i2cN, real_device_dir);
    RPT2_ATTR_REALPATH(d1, NULL, dir_devices_i2cN, "device");
    RPT2_ATTR_TEXT(    d1, NULL, dir_devices_i2cN, "name");
    char * device_class = NULL;
@@ -972,7 +972,7 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
 
    char * drm_cardX_dir = g_strdup_printf("/sys/class/drm/%s", fn);
    char * real_cardX_dir = realpath(drm_cardX_dir, NULL);
-   rpt_vstring(depth, "Examining %s -> %s", drm_cardX_dir, real_cardX_dir);
+   rpt_vstring(depth, "Examining (6) %s -> %s", drm_cardX_dir, real_cardX_dir);
 
    // e.g. /sys/class/drm/card0-DP-1
    RPT2_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, "ddc");
@@ -1231,7 +1231,7 @@ void one_pci_device(
 
    // DBGMSG("dirname=%s, filename=%s, pb1=%s, rpath=%s", dirname, filename, pb1, rpath);
    rpt_nl();
-    rpt_vstring(       d0, "Examining %s/%s -> %s", dirname, filename, rpath);
+    rpt_vstring(       d0, "Examining (7) %s/%s -> %s", dirname, filename, rpath);
     RPT2_ATTR_REALPATH(d1, NULL, dirname, filename, "device");
     RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "class");
     RPT2_ATTR_TEXT(    d1, NULL, dirname, filename, "boot_vga");
