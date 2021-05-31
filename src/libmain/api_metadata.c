@@ -399,7 +399,7 @@ ddca_get_feature_flags_by_vspec(
    free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
    // assert(feature_flags);
-   PRECOND(feature_flags);
+   API_PRECOND(feature_flags);
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
 //    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
       Display_Feature_Metadata * dfm =  get_version_feature_info_by_vspec_dfm(
