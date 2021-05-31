@@ -177,6 +177,12 @@ typedef uint16_t Dref_Flags;
 
 char * dref_basic_flags_t(Dref_Flags flags);
 
+// define in ddcutil_types.h?, or perhaps use -1 for generic invalid, put type of invalid in Dref_Flags?
+#define DISPNO_NOT_SET    0
+#define DISPNO_INVALID -1
+#define DISPNO_PHANTOM -2
+#define DISPNO_REMOVED -3
+
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
  * It can contain an I2C bus number, and ADL adapter/display number pair,
