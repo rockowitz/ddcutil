@@ -40,4 +40,6 @@ DDCA_Status ddc_start_watch_displays();
 DDCA_Status ddc_stop_watch_displays();
 void init_ddc_watch_displays();
 
+GPtrArray *  get_sysfs_drm_displays(bool verbose);
+
 #endif /* DDC_WATCH_DISPLAYS_H_ */
