@@ -206,6 +206,12 @@ lock_distinct_display(
 }
 
 
+/** Unlocks a distinct display.
+ *
+ *  \param id  distinct display identifier
+ *  \retval DDCRC_LOCKED attempting to unlock a display owned by a different thread
+ *  \retval DDCRC_OK
+ */
 DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
@@ -229,6 +235,33 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
 }
 
 
+/** Unlocks all distinct displays.
+ *
+ *  The function is used during reinitialization.
+ */
+void unlock_all_distinct_displays() {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
+   g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
+   g_mutex_lock(&descriptors_mutex);
+    for (int ndx=0; ndx < display_descriptors->len; ndx++) {
+       Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
+       DBGTRC(debug, TRACE_GROUP, "%2d - %p  %-28s",
+                        ndx, cur,
+                        dpath_repr_t(&cur->io_path) );
+
+       g_mutex_unlock(&cur->display_mutex);
+    }
+    g_mutex_unlock(&descriptors_mutex);
+    g_mutex_unlock(&master_display_lock_mutex);
+    DBGTRC(debug, TRACE_GROUP, "Done");
+ }
+
+
+/** Emits a report of all distinct display descriptors.
+ *
+ *  \param depth logical indentation depth
+ */
 void dbgrpt_distinct_display_descriptors(int depth) {
    rpt_vstring(depth, "display_descriptors@%p", display_descriptors);
    g_mutex_lock(&descriptors_mutex);
@@ -251,6 +284,7 @@ void dbgrpt_distinct_display_descriptors(int depth) {
 }
 
 
+/** Initializes this module */
 void init_ddc_display_lock(void) {
    display_descriptors= g_ptr_array_new();
 

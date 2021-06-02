@@ -29,6 +29,8 @@ DDCA_Status lock_distinct_display(Distinct_Display_Ref id, Distinct_Display_Flag
 
 DDCA_Status unlock_distinct_display(Distinct_Display_Ref id);
 
+void unlock_all_distinct_displays();
+
 void dbgrpt_distinct_display_descriptors(int depth);
 
 #endif /* DDC_DISPLAY_LOCK_H_ */
