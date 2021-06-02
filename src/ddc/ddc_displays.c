@@ -705,7 +705,7 @@ void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
  */
 void dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
    int d1 = depth + 1;
-   rpt_vstring(depth, "msg");
+   rpt_vstring(depth, "%s", msg);
    if (ptrarray->len == 0)
       rpt_vstring(d1, "None");
    else {
