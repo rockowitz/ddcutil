@@ -1250,7 +1250,7 @@ ddc_discard_detected_displays() {
 
 void
 ddc_redetect_displays() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
    // grab locks to prevent any opens?
    ddc_close_all_displays();  // n. unlocks each display
