@@ -1027,10 +1027,13 @@ int i2c_detect_buses() {
 
 
 void i2c_discard_buses() {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (i2c_buses) {
       g_ptr_array_free(i2c_buses, true);
       i2c_buses= NULL;
    }
+   DBGTRC(debug, TRACE_GROUP, "Done.");
 }
 
 
