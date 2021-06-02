@@ -287,6 +287,14 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 }
 
 
+DDCA_Status
+ddca_redetect_displays() {
+   ddc_redetect_displays();
+   return 0;
+}
+
+
+
 // static char dref_work_buf[100];
 
 const char *
@@ -620,6 +628,8 @@ ddca_get_display_info_list(void)
 
 
 static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
+   bool debug = false;
+   DBGMSF(debug, "dref=%p, curinfo=%p", dref,curinfo);
    memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
    curinfo->dispno        = dref->dispno;
 
@@ -655,6 +665,8 @@ static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    assert(curinfo->product_code == curinfo->mmid.product_code);
 // #endif
 #endif
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -736,16 +748,23 @@ ddca_get_display_info_list2(
    int filtered_ct = filtered_displays->len;
 
    int reqd_size =   offsetof(DDCA_Display_Info_List,info) + filtered_ct * sizeof(DDCA_Display_Info);
+   DBGMSF(debug, "reqd_size=%d", reqd_size);
    DDCA_Display_Info_List * result_list = calloc(1,reqd_size);
    result_list->ct = filtered_ct;
-   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %zu, sizeof(Display_Info_List) = %zu, reqd_size=%d, filtered_ct=%d, offsetof(DDCA_Display_Info_List,info) = %zu",
-           sizeof(DDCA_Display_Info), sizeof(DDCA_Display_Info_List),
+   DBGMSF(debug, "sizeof(DDCA_Display_Info) = %zu,"
+                 " sizeof(Display_Info_List) = %zu, reqd_size=%d, filtered_ct=%d, offsetof(DDCA_Display_Info_List,info) = %zu",
+           sizeof(DDCA_Display_Info),
+           sizeof(DDCA_Display_Info_List),
            reqd_size, filtered_ct, offsetof(DDCA_Display_Info_List,info));
 
+   DDCA_Display_Info * curinfo = &result_list->info[0];
    for (int ndx = 0; ndx < filtered_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(filtered_displays, ndx);
-      DDCA_Display_Info * curinfo = &result_list->info[ndx++];
+      // DDCA_Display_Info * curinfo = &result_list->info[ndx++];
+
+      DBGMSF(debug, "dref=%p, curinfo=%p", dref, curinfo);
       init_display_info(dref, curinfo);
+      curinfo++;
    }
    g_ptr_array_free(filtered_displays, false);
 
