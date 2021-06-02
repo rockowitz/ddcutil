@@ -136,7 +136,8 @@ GPtrArray * get_sysfs_drm_displays(bool verbose)
                // DBGMSG("%s", dent->d_name);
                // char cur_fn[100];
                if (str_starts_with(dent->d_name, cardname)) {
-                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
+                  if (verbose)
+                     rpt_vstring(d1, "Found connector: %s", dent->d_name);
                   char cur_dir_name[PATH_MAX];
                   g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
                   char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
