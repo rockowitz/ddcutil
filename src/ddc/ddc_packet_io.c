@@ -29,6 +29,7 @@
 #include "util/utilrpt.h"
 /** \endcond */
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/displays.h"
 #include "base/dynamic_sleep.h"
@@ -54,6 +55,8 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
+
+static GHashTable * open_displays = NULL;
 
 #ifdef DEPRECATED
 // Deprecated - use all_bytes_zero() in string_util.c
@@ -211,6 +214,10 @@ ddc_open_display(
       if (dref->io_path.io_mode != DDCA_IO_USB)
          TUNED_SLEEP_WITH_TRACE(dh, SE_POST_OPEN, NULL);
       dref->flags |= DREF_OPEN;
+      // protect with lock?
+      if (!open_displays)
+         open_displays = g_hash_table_new(g_direct_hash, NULL);
+      g_hash_table_add(open_displays, dh);
    }
    else {
       unlock_distinct_display(ddisp_ref);
@@ -284,12 +291,22 @@ ddc_close_display(Display_Handle * dh) {
    dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
    unlock_distinct_display(display_id);
+   g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
    DBGTRC(debug, TRACE_GROUP, "Done.     dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
    return rc;
 }
 
+void ddc_close_all_displays() {
+   GList * display_handles = g_hash_table_get_keys(open_displays);
+   for (GList * cur = display_handles; cur; cur = cur->next) {
+      Display_Handle * dh = cur->data;
+      ddc_close_display(dh);
+   }
+   // open_displays should be empty at this point
+   TRACED_ASSERT(g_hash_table_size(open_displays) == 0);
+}
 
 
 
