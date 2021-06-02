@@ -836,7 +836,8 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
    dbgrpt_dref_flags(dref->flags, d1);
-   rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");}
+   rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+}
 
 
 #ifdef OLD
