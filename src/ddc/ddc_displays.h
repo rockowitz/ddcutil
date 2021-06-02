@@ -53,6 +53,9 @@ get_display_ref_for_display_identifier(
 void
 ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 
+void
+ddc_dbgrpt_display_refs(GPtrArray * recs, int depth);
+
 // GPtrArray *
 // ddc_detect_all_displays();
 
@@ -62,8 +65,18 @@ ddc_ensure_displays_detected();
 void
 ddc_discard_detected_displays();     // FOR TESTING, LEAKS MEMORY
 
+void
+ddc_redetect_displays();
+
 bool
 ddc_is_valid_display_ref(Display_Ref * dref);
+
+void
+dbgrpt_dref_ptr_array(char * msg, GPtrArray* ptrarray, int depth);
+
+void
+dbgrpt_valid_display_refs(int depth);
+
 
 bool
 ddc_displays_already_detected();

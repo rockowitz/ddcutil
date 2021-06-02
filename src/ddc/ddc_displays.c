@@ -76,6 +76,7 @@ void ddc_set_async_threshold(int threshold) {
    async_threshold = threshold;
 }
 
+
 static inline bool
 value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
    bool result = pvalrec && pvalrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE &&
@@ -85,6 +86,7 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
                  pvalrec->val.c_nc.sl == 0;
    return result;
 }
+
 
 /** Collects initial monitor checks to perform them on a single open of the
  *  monitor device, and to avoid repeating them.
@@ -166,7 +168,6 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
             goto bye;
          }
 #endif
-
 
          if ( psc == DDCRC_NULL_RESPONSE        ||
               psc == DDCRC_ALL_RESPONSES_NULL   ||
@@ -281,7 +282,10 @@ bool ddc_initial_checks_by_dref(Display_Ref * dref) {
 }
 
 
-// function to be run in thread
+/** Performs initial checks in a thread
+ *
+ *  \param data display reference
+ */
 void * threaded_initial_checks_by_dref(gpointer data) {
    bool debug = false;
 
@@ -314,6 +318,8 @@ GPtrArray * ddc_get_all_displays() {
 }
 
 GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. include_invalid_displays=%s", sbool(include_invalid_displays));
    TRACED_ASSERT(all_displays);
    GPtrArray * result = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -321,6 +327,10 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
       if (include_invalid_displays || cur->dispno > 0) {
          g_ptr_array_add(result, cur);
       }
+   }
+   DBGTRC(debug, TRACE_GROUP, "Returning array of size %d", result->len);
+   if (debug) {
+      ddc_dbgrpt_display_refs(result, 2);
    }
    return result;
 }
@@ -668,6 +678,8 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
 }
 
 
+// TODO: consolidate
+
 /** Debugging function to report a collection of #Display_Ref.
  *
  * \param recs    pointer to collection of #Display_Ref
@@ -683,6 +695,27 @@ void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
       ddc_dbgrpt_display_ref(drec, depth+1);
    }
 }
+
+
+/** Emits a debug report a GPtrArray of display references
+ *
+ *  \param msg       initial message line
+ *  \param ptrarray  array of pointers to #Display_Ref
+ *  \param depth     logical indentation depth
+ */
+void dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
+   int d1 = depth + 1;
+   rpt_vstring(depth, "msg");
+   if (ptrarray->len == 0)
+      rpt_vstring(d1, "None");
+   else {
+      for (int ndx = 0; ndx < ptrarray->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(ptrarray, ndx);
+         dbgrpt_display_ref(dref, d1);
+      }
+   }
+}
+
 
 
 //
@@ -1077,6 +1110,7 @@ GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
+   dispno_max = 0;
 
    GPtrArray * display_list = g_ptr_array_new();
 
@@ -1155,14 +1189,14 @@ ddc_detect_all_displays() {
          dref->dispno = ++dispno_max;
 
          // check_dynamic_features(dref);    // wrong location for hook
-
       }
       else {
          dref->dispno = DISPNO_INVALID;   // -1;
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "-- check_phantom_displays=%s", sbool(check_phantom_displays));
+   DBGTRC(debug, TRACE_GROUP, "-- check_phantom_displays=%s",
+                              sbool(check_phantom_displays));
    if (check_phantom_displays)      // for testing
       filter_phantom_displays(display_list);
 
@@ -1173,6 +1207,8 @@ ddc_detect_all_displays() {
    DBGTRC(debug, TRACE_GROUP, "Done.     Detected %d valid displays", dispno_max);
    return display_list;
 }
+
+
 
 
 /** Initializes the master display list.
@@ -1190,27 +1226,87 @@ ddc_ensure_displays_detected() {
    DBGMSF(debug, "Done.     all_displays has %d displays", all_displays->len);
 }
 
-
+// deprecated - used only by test_display_detection_variants()
 void
 ddc_discard_detected_displays() {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
+   if (all_displays) {
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         // TODO: unlock any locked displays
+         DDCA_Status ddcrc = free_display_ref(dref);
+          if (ddcrc != 0) {
+            // ignoring possible DDCRC_LOCKED
+            DBGMSG("Ignoring free_display_ref() status code %s", psc_desc(ddcrc));
+         }
+      }
+      all_displays = NULL;
+   }
+   i2c_discard_buses();
+   DBGTRC(debug, TRACE_GROUP, "Done");
+}
+
+
+void
+ddc_redetect_displays() {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "Starting");
+   // grab locks to prevent any opens?
+   ddc_close_all_displays();  // n. unlocks each display
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      DDCA_Status ddcrc = free_display_ref(dref);
+      TRACED_ASSERT(ddcrc==0);
+   }
    all_displays = NULL;
    i2c_discard_buses();
+
+   i2c_detect_buses();
+   all_displays = ddc_detect_all_displays();
+   if (debug) {
+      dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
+      // dbgrpt_valid_display_refs(1);
+   }
+   DBGTRC(debug, TRACE_GROUP, "Done.  all_displays->len = %d", all_displays->len);
 }
+
 
 bool
 ddc_is_valid_display_ref(Display_Ref * dref) {
+   bool debug = false;
+   DBGMSF(debug, "Checking dref=%p", dref);
    bool result = false;
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
+         DBGMSF(debug, "Checking vs valid dref %p", cur);
+
          if (cur == dref) {
-            if (cur->dispno > 0)
+            // if (cur->dispno > 0)  // why?
                result = true;
             break;
          }
       }
    }
+   DBGMSF(debug, "dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
    return result;
+}
+
+void dbgrpt_valid_display_refs(int depth) {
+   rpt_vstring(depth, "Valid display refs = all_displays:");
+   if (all_displays) {
+      if (all_displays->len == 0)
+         rpt_vstring(depth+1, "None");
+      else {
+         for (int ndx = 0; ndx < all_displays->len; ndx++) {
+            Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+            rpt_vstring(depth+1, "%p, dispno=%d", dref, dref->dispno);
+         }
+      }
+   }
+   else
+      rpt_vstring(depth+1, "all_displays == NULL");
 }
 
 
