@@ -608,6 +608,18 @@ ddca_report_displays(
       bool include_invalid_displays,
       int  depth);
 
+/** Reinitializes detected displays
+ *
+ *  - closes all open displays, releasing any display locks
+ *  - n. all existing display handles become invalid (TODO: validate dh similarly to dref)
+ *  - releases display refs (all existing display refs become invalid)
+ *  - releases i2c bus info
+ *  - rescans i2c buses
+ *  - redetects displays
+ */
+DDCA_Status
+ddca_redetect_displays();
+
 
 //
 // Display Identifier
