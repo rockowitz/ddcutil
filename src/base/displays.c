@@ -796,7 +796,7 @@ void dbgrpt_dref_flags(Dref_Flags flags, int depth) {
  *  \param  depth logical indentation depth
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
-   rpt_structure_loc("DisplayRef", dref, depth );
+   rpt_structure_loc("Display_Ref", dref, depth );
    int d1 = depth+1;
    int d2 = depth+2;
 
