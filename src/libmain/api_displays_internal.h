@@ -15,6 +15,7 @@
 
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
+Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
 
 #define VALIDATE_DDCA_DREF(_ddca_dref, _dref, _debug) \
    do { \
@@ -72,6 +73,25 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
       } \
       return psc; \
    } while(0);
+
+
+#define WITH_VALIDATED_DH(ddca_dh, action) \
+   do { \
+      assert(library_initialized); \
+      DDCA_Status psc = 0; \
+      free_thread_error_detail(); \
+      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
+      if (!dh)  { \
+         psc = DDCRC_ARG; \
+      } \
+      else { \
+         (action); \
+      } \
+      return psc; \
+   } while(0);
+
+
+
 
 // extern DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY;
 
