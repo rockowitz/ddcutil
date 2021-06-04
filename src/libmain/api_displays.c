@@ -47,6 +47,15 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
    return dref;
 }
 
+Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0  ||
+      !ddc_is_valid_display_handle(dh) )
+         dh=NULL;
+   return dh;
+}
+
+
 // forward declarations
 void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
 void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
