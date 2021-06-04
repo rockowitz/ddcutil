@@ -85,7 +85,7 @@ ddca_get_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value*  valrec)
 {
    assert(valrec);
-   WITH_DH(ddca_dh,  {
+   WITH_VALIDATED_DH(ddca_dh,  {
        Error_Info * ddc_excp = NULL;
        Parsed_Nontable_Vcp_Response * code_info;
        ddc_excp = ddc_get_nontable_vcp_value(
@@ -119,7 +119,7 @@ ddca_get_table_vcp_value(
       DDCA_Vcp_Feature_Code  feature_code,
       DDCA_Table_Vcp_Value **    table_value_loc)
 {
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
       {
          assert(table_value_loc);
          Error_Info * ddc_excp = NULL;
@@ -157,7 +157,7 @@ ddca_get_vcp_value(
 {
    Error_Info * ddc_excp = NULL;
 
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
          {
                bool debug = false;
                DBGMSF(debug, "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
@@ -342,7 +342,7 @@ ddca_get_formatted_vcp_value(
    bool debug = false;
    DBGMSF(debug, "Starting. feature_code=0x%02x", feature_code);
    Error_Info * ddc_excp = NULL;
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
          {
                *formatted_value_loc = NULL;
                DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
@@ -619,7 +619,7 @@ set_single_vcp_value(
       DDCA_Any_Vcp_Value **  verified_value_loc)
 {
       Error_Info * ddc_excp = NULL;
-      WITH_DH(ddca_dh,  {
+      WITH_VALIDATED_DH(ddca_dh,  {
             ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
@@ -895,7 +895,7 @@ ddca_get_profile_related_values(
       DDCA_Display_Handle ddca_dh,
       char**              profile_values_string_loc)
 {
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
       {
          bool debug = false;
          DBGMSF(debug, "Before dumpvcp_to_string_by_dh(), pprofile_values_string=%p,"
@@ -918,7 +918,7 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char * profile_values_string)
 {
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
       {
          free_thread_error_detail();
          Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, dh);
@@ -949,7 +949,7 @@ ddca_start_get_any_vcp_value(
    // DDCA_Status rc = DDCRC_ARG;
    Error_Info * ddc_excp = NULL;
 
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
        {
           ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
           psc = (ddc_excp) ? ddc_excp->status_code : 0;
