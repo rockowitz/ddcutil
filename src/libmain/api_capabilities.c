@@ -59,7 +59,7 @@ ddca_get_capabilities_string(
    API_PRECOND(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
       {
          char * p_cap_string = NULL;
          ddc_excp = ddc_get_capabilities_string(dh, &p_cap_string);
