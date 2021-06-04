@@ -1,19 +1,27 @@
 # Changelog
 
-## [1.1.1] 2021-06-01
+## [1.1.1] 2021-06-15
 
 ### Added
 - libddcutil log file
-- libddcuti writes critical events to syslog
+- libddcuti and ddcutil write critical events to syslog
 - API function ddca_add_trace_group()
 - API function ddca_get_extended_version_string()
+- API function ddca_redetect_displays()
+- API function ddca_get_display_refs()
+- API function ddca_get_display_info()
 - Macro DDCUTIL_VSUFFIX
 
 ### Changed
 - If possible, command **ddcutil environment --verbose** calls **get-edid|parse-edid** 
   as an additional EDID check.
-- Additional validation of DDCA_Display_Ref argument to API functions
+- Additional validation of DDCA_Display_Ref and DDCA_Display_Handle arguments to API functions
 - Improved tracing of assert() failures
+- --enable-capabilities-cache is now the default
+- libddcutil name is now libddcutil.so.4.1.0  
+
+### Fixed
+- Incorrect sysfs path definitions in **ddcutil environment --verbose**   
 
 
 ## [1.1.0] 2021-04-05
