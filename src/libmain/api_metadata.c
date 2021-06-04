@@ -545,7 +545,7 @@ ddca_get_feature_metadata_by_dh(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata **    metadata_loc)
 {
-   WITH_DH(
+   WITH_VALIDATED_DH(
          ddca_dh,
          {
                bool debug = false;
@@ -887,7 +887,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
-   WITH_DH(ddca_dh,
+   WITH_VALIDATED_DH(ddca_dh,
       {
             bool debug = false;
             DBGMSF(debug, "dref=%s", dh_repr_t(dh));
