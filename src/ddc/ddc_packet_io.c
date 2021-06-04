@@ -25,6 +25,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/debug_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/utilrpt.h"
 /** \endcond */
@@ -84,6 +85,35 @@ bool is_ddc_null_message(Byte * packet) {
           );
 }
 #endif
+
+
+bool
+ddc_is_valid_display_handle(Display_Handle * dh) {
+   bool debug = false;
+   DBGMSF(debug, "Checking dh=%p", dh);
+   bool result = false;
+   if (open_displays) {
+      result = g_hash_table_contains(open_displays, dh);
+   }
+   DBGMSF(debug, "dh=%p, returning %s", dh, sbool(result));
+   return result;
+}
+
+
+void ddc_dbgrpt_valid_display_handles(int depth) {
+   rpt_vstring(depth, "Valid display handle = open_displays:");
+   if (open_displays) {
+      GList * display_handles = g_hash_table_get_keys(open_displays);
+      for (GList * cur = display_handles; cur; cur = cur->next) {
+         Display_Handle * dh = cur->data;
+         rpt_vstring(depth+1, "%p -> %s", dh, dh_repr_t(dh));
+      }
+      g_list_free(display_handles);
+   }
+   else {
+      rpt_vstring(depth+1, "None");
+   }
+}
 
 
 //

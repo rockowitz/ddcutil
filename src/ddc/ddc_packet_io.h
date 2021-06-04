@@ -29,6 +29,10 @@ Status_Errno ddc_close_display(
 
 void  ddc_close_all_displays();
 
+bool ddc_is_valid_display_handle(Display_Handle * dh);
+
+void ddc_dbgrpt_valid_display_handles(int depth);
+
 Error_Info * ddc_write_only(
       Display_Handle * dh,
       DDC_Packet *     request_packet_ptr);
