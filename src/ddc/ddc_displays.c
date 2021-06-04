@@ -1310,7 +1310,6 @@ void dbgrpt_valid_display_refs(int depth) {
 }
 
 
-
 /** Indicates whether displays have already been detected
  *
  *  @return true/false
