@@ -193,7 +193,7 @@ bye:
   * \retval 0   not built in
   * \retval < 0 error reading the modules.builtin file, value is -errno
   */
-int is_module_builtin2(const char * module_name) {
+int is_module_builtin(const char * module_name) {
    int rc = module_status_using_libkmod(module_name);
    int result = 0;
    switch(rc)
@@ -216,7 +216,7 @@ int is_module_builtin2(const char * module_name) {
  *
  *  \remark             returns false if module_status_using_libkmod() returns -errno
  */
-bool is_module_loadable2(const char * module_name) {
+bool is_module_loadable(const char * module_name) {
    int rc = module_status_using_libkmod(module_name);
    bool result = false;
    switch(rc)

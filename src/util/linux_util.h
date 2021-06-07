@@ -19,4 +19,6 @@ int module_status_using_libkmod(const char * module_alias);
 
 int is_module_loaded_using_libkmod(const char * module_name);
 
+int is_module_builtin(const char * module_name);
+bool is_module_loadable(const char * module_name);
 #endif /* LINUX_UTIL_H_ */
