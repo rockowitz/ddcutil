@@ -176,7 +176,8 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 
 #ifdef TARGET_LINUX
 
-bool validate_environment_using_libkmod()
+static bool
+validate_environment_using_libkmod()
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -219,8 +220,6 @@ validate_environment()
    }
    else {
       ok = validate_environment_using_libkmod();
-      // ok = validate_environment_using_config_file();
-      // ok = validate_environment_using_file_system();
    }
 #else
    ok = true;
