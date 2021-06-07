@@ -176,39 +176,6 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 
 #ifdef TARGET_LINUX
 
-
-bool validate_environment_using_file_system()
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-
-   bool ok = false;
-   if (is_module_loaded_using_sysfs("i2c_dev")) {
-      ok = true;
-   }
-   else {
-      int modules_rc = is_module_builtin("i2c-dev");
-       // consider calling is_module_loadable() if not built in
-       if (modules_rc < 0) {
-          fprintf(stderr, "Unable to read modules.builtin\n");
-          fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine"
-                          " if it is built into the kernel\n");
-          ok = true;  // make this just a warning, we'll fail later if not in kernel
-       }
-       else if (modules_rc == 0) {
-          ok = false;
-          fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.\n");
-       }
-       else {
-          ok = true;
-      }
-   }
-
-   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
-   return ok;
-}
-
-
 bool validate_environment_using_libkmod()
 {
    bool debug = false;
