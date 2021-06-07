@@ -53,65 +53,6 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    assert(is_loaded == is_module_loaded_using_libkmod("i2c-dev"));    // ** TEMP **
    rpt_vstring(d1, "sysfs reports module i2c_dev is%s loaded.", (is_loaded) ? "" : " NOT");
 
-#ifdef OLD
-   int builtin_rc = is_module_builtin("i2c-dev");
-   if (builtin_rc < 0)
-      rpt_vstring(d1, "Unable to access modules.builtin file to check if i2c_dev is built in to kernel");
-   else
-      rpt_vstring(d1, "Checking modules.builtin indicates i2c_dev is%s built into the kernel",
-                      (builtin_rc == 0) ? " NOT" : "");
-
-   char * parm_name = "CONFIG_I2C_CHARDEV";
-   int  value_buf_size = 40;
-   char value_buffer[value_buf_size];
-   int config_rc = get_kernel_config_parm(parm_name, value_buffer, value_buf_size);
-   int config_status = 0;
-   if (config_rc < 0) {
-      rpt_vstring(d1, "Unable to read read kernel configuration file: errno=%d, %s", -config_rc, strerror(-config_rc));
-      // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
-      // ok = false;
-      config_status = -1;
-   }
-
-   else if (config_rc == 0) {
-      rpt_vstring(d1, "Kernel configuration parameter %s not found.", parm_name);
-      // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
-      // ok = false;
-      config_status = -1;
-   }
-   else {
-      DBGMSF(debug, "get_kernel_config_parm(%s, ...) returned |%s|", parm_name, value_buffer);
-      config_status = (streq(value_buffer, "y")) ? 1 : 0;
-      rpt_vstring(d1, "Checking kernel configuration file indicates i2c_dev is%s built into the kernel",
-                      (builtin_rc == 1) ? "" : " NOT");
-   }
-
-   bool is_builtin = false;
-   if (config_status == 1 || builtin_rc == 1) {
-      if (config_status != builtin_rc)
-         rpt_vstring(d1, "Treating module as built into kernel");
-      is_builtin = true;
-   }
-   else if (config_status == 0 ||builtin_rc == 0) {
-      if (config_status != builtin_rc)
-         rpt_vstring(d1, "Treating module as not built into kernel");
-      is_builtin = false;
-   }
-   else {
-      rpt_vstring(d1, "Unable to determine if module i2c-dev is built into kernel.  Assuming NOT");
-      is_builtin = false;
-   }
-
-
-
-   bool loadable = false;
-   if (config_rc >= 0) {
-      loadable = (config_rc == 0) ? true : false;
-   }
-   else {
-      loadable = is_module_loadable("i2c-dev");
-   }
-#else
    bool is_builtin = false;
    bool loadable = false;
    int module_status = module_status_using_libkmod("i2c-dev");
@@ -139,7 +80,7 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    if (module_status >= 0)
       rpt_vstring(d1, "Module i2c_dev is%s built into the kernel",
                       (is_builtin) ? "" : " NOT");
-#endif
+
    accum->module_i2c_dev_builtin = is_builtin;
    accum->loadable_i2c_dev_exists = loadable;
    if (!is_builtin)
