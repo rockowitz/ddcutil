@@ -230,68 +230,6 @@ bool is_module_loadable2(const char * module_name) {
 }
 
 
-/** Reads the modules.builtin file to see a module is built into the kernel.
-  *
-  * \param  module_name  simple module name, as it appears in the file system, e.g. i2c-dev
-  * \retval 1   is built in
-  * \retval 0   not built in
-  * \retval < 0 error reading the modules.builtin file, value is -errno
-  */
-int is_module_builtin(char * module_name)
-{
-   bool debug = false;
-   int result = -1;
-
-   struct utsname utsbuf;
-   int rc = uname(&utsbuf);
-   assert(rc == 0);
-
-   const char * libdirs[] = {
-                  "lib",
-                  "lib64",
-                  "lib32",
-                  "usr/lib",  // needed for arch?
-                  NULL};
-
-   int ndx = 0;
-   for (; libdirs[ndx] && result == -1; ndx++) {
-      char modules_builtin_fn[100];
-      snprintf(modules_builtin_fn, 100, "/%s/modules/%s/modules.builtin",
-                                        libdirs[ndx], utsbuf.release);
-      if ( !is_readable_file(modules_builtin_fn) ) {
-         if (debug)
-            printf("(%s) File %s not readable\n", __func__, modules_builtin_fn);
-      }
-      else {
-         if (debug)
-            printf("(%s) Found readable file %s\n", __func__, modules_builtin_fn);
-         char ko_name[40];
-         snprintf(ko_name, 40, "%s.ko", module_name);
-         char * filter_terms[2];
-         filter_terms[0] = ko_name;
-         filter_terms[1] = NULL;
-         GPtrArray * lines = g_ptr_array_sized_new(400);
-         g_ptr_array_set_free_func(lines, g_free);
-         int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, filter_terms, false, 0);
-         if (unfiltered_ct < 0) {
-           result = unfiltered_ct;   // -errno
-         }
-         else if (lines->len == 0) {
-            result = 0;
-         }
-         else {
-            assert(lines->len == 1);
-            result = 1;
-         }
-         g_ptr_array_free(lines, true);
-      }
-   }
-   if (debug)
-      printf("(%s) module_name=%s, returning %d\n",__func__,  module_name, result);
-   return result;
-}
-
-
 /** Uses libkmod to check if a kernel module is loaded.
  *
  *  \param  module name
