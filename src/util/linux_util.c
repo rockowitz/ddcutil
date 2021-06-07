@@ -186,30 +186,45 @@ bye:
 
 
 // transitional
+/** Checks if a module is built into the kernel.
+  *
+  * \param  module_name  simple module name, as it appears in the file system, e.g. i2c-dev
+  * \retval 1   is built in
+  * \retval 0   not built in
+  * \retval < 0 error reading the modules.builtin file, value is -errno
+  */
 int is_module_builtin2(const char * module_name) {
    int rc = module_status_using_libkmod(module_name);
    int result = 0;
    switch(rc)
    {
-   case 0: result = 0;    break;     // not found
-   case 1: result = 1;    break;     // builtin
-   case 2: result = 0;    break;     // is loadable file
-   default: result = rc;  break;     // -errno
+   case KERNEL_MODULE_NOT_FOUND:     result = 0;  break;     // 0
+   case KERNEL_MODULE_BUILTIN:       result = 1;  break;     // 1
+   case KERNEL_MODULE_LOADABLE_FILE: result = 0;  break;     // 2
+   default:                          result = rc; break;     // -errno
    }
    return result;
 }
 
 
 // transitional
+/** Checks if a loadable module exists
+ *
+ *  \param module_name  simple module name, as it appears in the file system,
+ *                      e.g. i2c-dev, without .ko, .ko.xz
+ *  \return             true/false
+ *
+ *  \remark             returns false if module_status_using_libkmod() returns -errno
+ */
 bool is_module_loadable2(const char * module_name) {
    int rc = module_status_using_libkmod(module_name);
    bool result = false;
    switch(rc)
    {
-   case 0: result = false;  break;     // not found
-   case 1: result = false;    break;     // builtin
-   case 2: result = true;    break;     // is loadable file
-   default: result = false;  break;     // -errno   ???
+   case KERNEL_MODULE_NOT_FOUND:     result = false;  break;     // 0
+   case KERNEL_MODULE_BUILTIN:       result = false;  break;     // 1
+   case KERNEL_MODULE_LOADABLE_FILE: result = true;   break;     // 2
+   default:                          result = false;  break;     // -errno
    }
    return result;
 }
