@@ -175,49 +175,6 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 //
 
 #ifdef TARGET_LINUX
-bool validate_environment_using_config_file() {
-   bool debug = false;
-   DBGMSF(debug, "Starting");
-
-   bool ok = false;
-   if (is_module_loaded_using_sysfs("i2c_dev")) {
-      ok = true;
-   }
-   else {
-      char * parm_name = "CONFIG_I2C_CHARDEV";
-      int  value_buf_size = 40;
-      char value_buffer[value_buf_size];
-      int config_rc = get_kernel_config_parm(parm_name, value_buffer, value_buf_size);
-      DBGMSF(debug, "config_rc = %d", config_rc);
-      if (config_rc < 0) {
-         fprintf(stderr, "Unable to read read kernel configuration file: errno=%d, %s\n", -config_rc, strerror(-config_rc));
-         // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
-         ok = false;
-      }
-      else if (config_rc == 0) {
-         fprintf(stderr,
-               "Configuration parameter %s not found in kernel configuration file\n",
-               parm_name);
-         // fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine if it is built into the kernel\n");
-         ok = false;
-      }
-      else {
-         DBGMSF(debug, "get_kernel_config_parm(%s, ...) returned |%s|", parm_name, value_buffer);
-         if (!streq(value_buffer, "y")) {
-            fprintf(stderr, "Module i2c-dev is not loaded and the kernel configuration"
-                            " file indicates is not built into the kernel.\n");
-            ok = false;
-         }
-         else
-            ok = true;
-      }
-      ok = true;  // in case we're wrong
-
-  }
-
-   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
-   return ok;
-}
 
 
 bool validate_environment_using_file_system()
