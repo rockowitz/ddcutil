@@ -46,51 +46,41 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    rpt_vstring(d0,"Checking for driver i2c_dev...");
    DDCA_Output_Level output_level = get_output_level();
 
-   accum->module_i2c_dev_needed = true;
-   accum->i2c_dev_loaded_or_builtin = false;
-
+   // Eventually use only one test
    bool is_loaded = is_module_loaded_using_sysfs("i2c-dev");
-   assert(is_loaded == is_module_loaded_using_libkmod("i2c-dev"));    // ** TEMP **
    rpt_vstring(d1, "sysfs reports module i2c_dev is%s loaded.", (is_loaded) ? "" : " NOT");
+   bool is_loaded2 = is_module_loaded_using_libkmod("i2c-dev");
+   if (is_loaded2 != is_loaded) {
+      rpt_vstring(d1, "BUT libkmod reports module i2c_dev is%s loaded. !!!", (is_loaded) ? "" : " NOT");
+      rpt_vstring(d1, "REGARDING sysfs AS CORRECT !!!");
+   }
 
    bool is_builtin = false;
    bool loadable = false;
    int module_status = module_status_using_libkmod("i2c-dev");
-   switch (module_status) {
-   case KERNEL_MODULE_NOT_FOUND:
-      is_builtin = false;
-      loadable = false;
-      break;
-   case KERNEL_MODULE_BUILTIN:
-      is_builtin = true;
-      loadable = false;
-      break;
-   case KERNEL_MODULE_LOADABLE_FILE:
-      is_builtin = false;
-      loadable = true;
-      break;
-   default:
+     if (module_status < 0) {
       rpt_vstring(d1, "Unable to determine i2c-dev status.");
       rpt_vstring(d1, "module_status_using_libkmod() returned %s", psc_desc(module_status));
-      rpt_vstring(d1, "Treating i2c-dev as not builtin and not loadable");
-      is_builtin = false;
-      loadable = false;
-      break;
+      rpt_vstring(d1, "Treating i2c-dev as not builtin and not loadable!!!");
    }
-   if (module_status >= 0)
-      rpt_vstring(d1, "Module i2c_dev is%s built into the kernel",
-                      (is_builtin) ? "" : " NOT");
-
+   else if (module_status == 0) {
+      rpt_vstring(d1, "Kernel module i2c-dev does not exist!");
+   }
+   if (module_status == KERNEL_MODULE_BUILTIN)
+      is_builtin = true;
+   if (module_status == KERNEL_MODULE_LOADABLE_FILE)
+      loadable = true;
+   accum->module_i2c_dev_needed = true;           // relic from driver fglrx, which did not require dev-i2c
    accum->module_i2c_dev_builtin = is_builtin;
    accum->loadable_i2c_dev_exists = loadable;
-   if (!is_builtin)
-      rpt_vstring(d1,"Loadable i2c-dev module %sfound", (accum->loadable_i2c_dev_exists) ? "" : "NOT ");
-
    accum->i2c_dev_loaded_or_builtin = is_loaded || is_builtin;
-   if (!is_builtin)
+
+   rpt_vstring(d1, "Module i2c_dev is%s built into the kernel",
+                      (is_builtin) ? "" : " NOT");
+   if (!is_builtin) {
+      rpt_vstring(d1,"Loadable i2c-dev module %sfound", (accum->loadable_i2c_dev_exists) ? "" : "NOT ");
       rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
 
-   if (!is_builtin) {
       assert(accum->dev_i2c_device_numbers);    // already set
       if (bva_length(accum->dev_i2c_device_numbers) == 0 && !is_loaded ) {
          rpt_nl();
