@@ -174,20 +174,16 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 // Initialization functions called only once but factored out of main() to clarify mainline
 //
 
-
-static bool
-validate_environment()
-{
+#ifdef TARGET_LINUX
+bool validate_environment_using_config_file() {
    bool debug = false;
    DBGMSF(debug, "Starting");
 
    bool ok = false;
-#ifdef TARGET_LINUX
    if (is_module_loaded_using_sysfs("i2c_dev")) {
       ok = true;
    }
    else {
-#ifdef USE_CONFIG_FILE
       char * parm_name = "CONFIG_I2C_CHARDEV";
       int  value_buf_size = 40;
       char value_buffer[value_buf_size];
@@ -215,36 +211,101 @@ validate_environment()
          else
             ok = true;
       }
-      // config_rc = -1;   // force failure for testing
-      if (config_rc < 0) {   // if couldn't read config file
-#endif
-         int modules_rc = is_module_builtin("i2c-dev");
-         // consider calling is_module_loadable() if not built in
-         if (modules_rc < 0) {
-            fprintf(stderr, "Unable to read modules.builtin\n");
-            fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine"
-                            " if it is built into the kernel\n");
-            ok = true;  // make this just a warning, we'll fail later if not in kernel
-         }
-         else if (modules_rc == 0) {
-            ok = false;
-            fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.\n");
-         }
-         else {
-            ok = true;
-         }
-      }
-      if (!ok) {
-         fprintf(stderr, "ddcutil requires module i2c-dev\n");
-         // DBGMSF(debug, "Forcing ok = true");
-         // ok = true;  // make it just a warning in case we're wrong
-      }
-#ifdef USE_CONFIG_FILE
+      ok = true;  // in case we're wrong
+
   }
+
+   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
+   return ok;
+}
+
+
+bool validate_environment_using_file_system()
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   bool ok = false;
+   if (is_module_loaded_using_sysfs("i2c_dev")) {
+      ok = true;
+   }
+   else {
+      int modules_rc = is_module_builtin("i2c-dev");
+       // consider calling is_module_loadable() if not built in
+       if (modules_rc < 0) {
+          fprintf(stderr, "Unable to read modules.builtin\n");
+          fprintf(stderr, "Module i2c-dev is not loaded and ddcutil can't determine"
+                          " if it is built into the kernel\n");
+          ok = true;  // make this just a warning, we'll fail later if not in kernel
+       }
+       else if (modules_rc == 0) {
+          ok = false;
+          fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.\n");
+       }
+       else {
+          ok = true;
+      }
+   }
+
+   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
+   return ok;
+}
+
+
+bool validate_environment_using_libkmod()
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   bool ok = false;
+   if (is_module_loaded_using_sysfs("i2c_dev")) {
+      ok = true;
+   }
+   else {
+      int module_status = module_status_using_libkmod("i2c-dev");
+      if (module_status < 0) {
+         fprintf(stderr, "ddcutil cannot determine if module i2c-dev is loaded or built into the kernel.\n");
+         ok = true;  // make this just a warning, we'll fail later if not in kernel
+      }
+      else if (module_status == 0) {   // MODULE_STATUS_NOT_FOUND
+         ok = false;
+         fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.\n");
+      }
+      else {
+          ok = true;
+      }
+   }
+
+   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
+   return ok;
+}
 #endif
+
+
+static bool
+validate_environment()
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   bool ok;
+
+#ifdef TARGET_LINUX
+   if (is_module_loaded_using_sysfs("i2c_dev")) {
+      ok = true;
+   }
+   else {
+      ok = validate_environment_using_libkmod();
+      // ok = validate_environment_using_config_file();
+      // ok = validate_environment_using_file_system();
+   }
 #else
    ok = true;
 #endif
+   if (!ok) {
+      fprintf(stderr, "ddcutil requires module i2c-dev\n");
+      // DBGMSF(debug, "Forcing ok = true");
+      ok = true;  // make it just a warning in case we're wrong
+   }
 
    DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
    return ok;
