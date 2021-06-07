@@ -5,6 +5,8 @@
 // Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#define USE_LIBKMOD
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -13,10 +15,23 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+#ifdef USE_LIBKMOD
+#include <libkmod.h>
+#endif
 
 #include "file_util.h"
 #include "string_util.h"
 
+#include "linux_util.h"
+
+
+/** Tests whether a file is readable by trying to read from it,
+  * as opposed to considering all the rules re permissions, file type,
+  * links, etc.
+  *
+  * \param filename
+  * \return true if file can be read from false if not
+  */
 bool is_readable_file(const char * filename)
 {
    // avoid all the rules re permissions, file type, links, ls etc
@@ -36,12 +51,12 @@ bool is_readable_file(const char * filename)
 /** Gets the value of a kernel configuration parameter from file
   * /boot/config-KERNEL_RELEASE", where KERNEL_RELEASE is the kernel release name.
   *
-  * @param     parm_name   parameter name
-  * @param     buffer      buffer in which to return value
-  * @param     bufsz       size of buffer
-  * @parm      1           configuration parm found, value is in buffer
-  * @retval    0           configuration parm not found
-  * @retval    < 0         error reading configuration file
+  * \param     parm_name   parameter name
+  * \param     buffer      buffer in which to return value
+  * \param     bufsz       size of buffer
+  * \param     1           configuration parm found, value is in buffer
+  * \retval    0           configuration parm not found
+  * \retval    < 0         error reading configuration file
   */
 
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
@@ -104,6 +119,101 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 }
 
 
+/** Uses libkmod to determine if a kernel module exists and
+  * if so whether it is built into the kernel or a loadable file.
+  *
+  * \param   module_alias
+  * \retval  0=KERNEL_MODULE_NOT_FOUND      not found  (or use -ENOENT?)
+  * \retval  1=KERNEL_MODULE_BUILTIN        module is built into kernel
+  * \retval  2=KERNEL_MODULE_LOADABLE_FILE  module is is loadable file
+  * \retval  < 0                            -errno
+  *
+  * \remark Adapted from kmod file tools/modinfo.c
+  */
+int module_status_using_libkmod(const char * module_alias)
+{
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
+
+   int result = 0;
+   struct kmod_ctx * ctx;
+   struct kmod_module *  mod;
+   int err;
+   const char * filename;
+
+   ctx = kmod_new(NULL, NULL);
+   if (!ctx) {
+      result = -errno;
+      if (result == 0)     // review of kmond_new() code indicates should be impossible
+         result = -999;    // .. but kmod_new() documentation does not guarantee
+      goto bye;
+   }
+
+   struct kmod_list *l, *list = NULL;
+   err = kmod_module_new_from_lookup(ctx, module_alias, &list);
+   if (err < 0) {
+      result = err;
+      goto bye;
+   }
+
+   if (list == NULL) {
+      if (debug)
+         printf("(%s) Module %s not found.\n", __func__, module_alias);
+      result = KERNEL_MODULE_NOT_FOUND;   // or use result = -ENOENT ?
+      goto bye;
+   }
+
+   kmod_list_foreach(l, list) {
+      mod = kmod_module_get_module(l);
+      // would fail if 2 entries in list since filename is const
+      // but this is how tools/modinfo.c does it, assumes only 1 entry
+      filename = kmod_module_get_path(mod);
+      kmod_module_unref(mod);
+   }
+   kmod_module_unref_list(list);
+
+   result = (filename) ? KERNEL_MODULE_LOADABLE_FILE : KERNEL_MODULE_BUILTIN;
+
+bye:
+   if (ctx)
+      kmod_unref(ctx);
+
+   if (debug)
+      printf("(%s) Done.     module_alias=%s, returning %d\n",__func__,  module_alias, result);
+   return result;
+}
+
+
+// transitional
+int is_module_builtin2(const char * module_name) {
+   int rc = module_status_using_libkmod(module_name);
+   int result = 0;
+   switch(rc)
+   {
+   case 0: result = 0;    break;     // not found
+   case 1: result = 1;    break;     // builtin
+   case 2: result = 0;    break;     // is loadable file
+   default: result = rc;  break;     // -errno
+   }
+   return result;
+}
+
+
+// transitional
+bool is_module_loadable2(const char * module_name) {
+   int rc = module_status_using_libkmod(module_name);
+   bool result = false;
+   switch(rc)
+   {
+   case 0: result = false;  break;     // not found
+   case 1: result = false;    break;     // builtin
+   case 2: result = true;    break;     // is loadable file
+   default: result = false;  break;     // -errno   ???
+   }
+   return result;
+}
+
 
 /** Reads the modules.builtin file to see a module is built into the kernel.
   *
@@ -115,6 +225,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 int is_module_builtin(char * module_name)
 {
    bool debug = false;
+   int result = -1;
 
    struct utsname utsbuf;
    int rc = uname(&utsbuf);
@@ -126,7 +237,7 @@ int is_module_builtin(char * module_name)
                   "lib32",
                   "usr/lib",  // needed for arch?
                   NULL};
-   int result = -1;
+
    int ndx = 0;
    for (; libdirs[ndx] && result == -1; ndx++) {
       char modules_builtin_fn[100];
@@ -159,28 +270,70 @@ int is_module_builtin(char * module_name)
          }
          g_ptr_array_free(lines, true);
       }
-
    }
    if (debug)
       printf("(%s) module_name=%s, returning %d\n",__func__,  module_name, result);
    return result;
 }
 
-#ifdef REF
- bool is_builtin = is_module_builtin("i2c-dev");
-   accum->module_i2c_dev_builtin = is_builtin;
-   rpt_vstring(d1,"Module %s is %sbuilt into kernel", "i2c-dev", (is_builtin) ? "" : "NOT ");
 
-   accum->loadable_i2c_dev_exists = is_module_loadable("i2c-dev", d1);
-   if (!is_builtin)
-      rpt_vstring(d1,"Loadable i2c-dev module %sfound", (accum->loadable_i2c_dev_exists) ? "" : "NOT ");
+/** Uses libkmod to check if a kernel module is loaded.
+ *
+ *  \param  module name
+ *  \retval 0  not loaded
+ *  \retval 1  is loaded
+ *  \retval <0 -errno
+ *
+ *  \remark Adapted from kmod file tools/lsmod.c
+ */
+int is_module_loaded_using_libkmod(const char * module_name) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. module_name=%s\n", __func__, module_name);
 
-   bool is_loaded = is_module_loaded_using_sysfs("i2c_dev");
-   accum->i2c_dev_loaded_or_builtin = is_loaded || is_builtin;
-   if (!is_builtin)
-      rpt_vstring(d1,"Module %s is %sloaded", "i2c_dev", (is_loaded) ? "" : "NOT ");
-#endif
+   int result = 0;
+   int err = 0;
 
+   struct kmod_ctx * ctx = kmod_new(NULL, NULL);
+   if (!ctx) {
+      result = -errno;
+      if (result == 0)  // kmond_new() doc does not guarantee that errno set
+         result = -999;
+      goto bye;
+   }
+
+    struct kmod_list *list = NULL;
+    err = kmod_module_new_from_loaded(ctx, &list);
+    if (err < 0) {
+       fprintf(stderr, "Error: could not get list of modules: %s\n", strerror(-err));
+       result = err;
+       goto bye;
+    }
+
+    struct kmod_list *itr;
+    bool found = false;
+    kmod_list_foreach(itr, list) {
+       struct kmod_module *mod = kmod_module_get_module(itr);
+       const char *name = kmod_module_get_name(mod);
+       kmod_module_unref(mod);
+       if (streq(name, module_name)) {
+          found = true;
+          break;
+       }
+    }
+    kmod_module_unref_list(list);
+
+    result = (found) ? 1 : 0;
+
+bye:
+   if (ctx) {
+      kmod_unref(ctx);
+   }
+
+   if (debug)
+      printf("(%s) Done.     Returning: %d\n", __func__, result);
+   return result;
+}
 
 
 /** Checks if a loadable module exists

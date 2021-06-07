@@ -12,6 +12,13 @@
 
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
 
+#define KERNEL_MODULE_NOT_FOUND     0     // not found
+#define KERNEL_MODULE_BUILTIN       1     // module is built into kernel
+#define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
+int module_status_using_libkmod(const char * module_alias);
+
+int is_module_loaded_using_libkmod(const char * module_name);
+
 int is_module_builtin(char * module_name);
 bool is_module_loadable(char * module_name);
 
