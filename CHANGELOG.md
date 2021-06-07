@@ -21,8 +21,10 @@
 - libddcutil name is now libddcutil.so.4.1.0  
 
 ### Fixed
-- Incorrect sysfs path definitions in **ddcutil environment --verbose**   
-
+- Incorrect assembly of sysfs path definitions in **ddcutil environment --verbose** 
+- ddcutil diagnostics were not finding module i2c-dev if the system (e.g. NixOS) 
+  used a non-standard location for the modules directory (Issue #178). The checks 
+  have been rewritten to use libkmod.
 
 ## [1.1.0] 2021-04-05
 
