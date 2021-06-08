@@ -132,7 +132,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
   */
 int module_status_using_libkmod(const char * module_alias)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
 
