@@ -17,6 +17,7 @@
 
 #include "util/data_structures.h"
 #include "util/edid.h"
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -398,8 +399,8 @@ static void probe_i2c_devices_using_udev() {
 
    // Detailed scan of I2C device information.   TMI
    // probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
-   // rpt_nl();
 
+   rpt_nl();
    GPtrArray * summaries = get_i2c_devices_using_udev();
    report_i2c_udev_device_summaries(summaries, "Summary of udev I2C devices",1);
 
@@ -429,6 +430,45 @@ static void probe_i2c_devices_using_udev() {
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
 #endif
+
+
+void rpt_module_status(int depth, const char * module_name) {
+   int module_status =  module_status_using_libkmod(module_name);
+   switch( module_status) {
+   case KERNEL_MODULE_NOT_FOUND:    // 0
+      rpt_vstring(depth,"Kernel module %-16s not found", module_name);
+      break;
+   case KERNEL_MODULE_BUILTIN:      // 1
+      rpt_vstring(depth,"Kernel module %-16s is builtin", module_name);
+      break;
+   case KERNEL_MODULE_LOADABLE_FILE: // 2
+      if (is_module_loaded_using_libkmod(module_name))
+         rpt_vstring(depth, "Kernel module %-16s is loaded", module_name);
+      else
+         rpt_vstring(depth, "Kernel module %-16s found but not loaded", module_name);
+      break;
+   default:
+      rpt_vstring(depth, "Error %s from module_status_using_libkmod() for %s",
+                  psc_desc(module_status), module_name);
+      break;
+   }
+}
+
+
+void query_loaded_modules_using_libkmod() {
+   rpt_vstring(0,"Checking if modules are loaded or builtin...");
+
+   char ** pmodule_names = get_known_video_driver_module_names();
+   char * curmodule;
+   int ndx;
+   for (ndx=0; (curmodule=pmodule_names[ndx]) != NULL; ndx++) {
+      rpt_module_status(1, curmodule);
+   }
+   pmodule_names = get_other_driver_module_names();
+   for (ndx=0; (curmodule=pmodule_names[ndx]) != NULL; ndx++) {
+      rpt_module_status(1, curmodule);
+   }
+}
 
 
 /** Analyze collected environment information, Make suggestions.
@@ -646,23 +686,50 @@ void query_sysenv() {
 
    rpt_nl();
    rpt_vstring(0,"*** Additional probes ***");
-   // printf("Gathering card and driver information...\n");
-   rpt_nl();
-   query_proc_modules_for_video();
-   if (!accumulator->is_arm) {
-      // rpt_nl();
-      // query_card_and_driver_using_lspci();
-      //rpt_nl();
-      //query_card_and_driver_using_lspci_alt();
-   }
-   rpt_nl();
-   query_loaded_modules_using_sysfs();
+
    rpt_nl();
    query_sys_bus_i2c(accumulator);
 
+   rpt_nl();
+   env_accumulator_report(accumulator, 0);
+
+   rpt_nl();
+   final_analysis(accumulator, 0);
+
+
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
-      query_proc_driver_nvidia();
+      rpt_nl();
+      rpt_label(0, "*** Additional checks for remote diagnosis ***");
+
+      rpt_nl();
+      rpt_vstring(0, "*** Detected Displays ***");
+      /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
+                                 true,   // include_invalid_displays
+                                 1);     // logical depth
+      // printf("Detected: %d displays\n", display_ct);   // not needed
+
+      query_loaded_modules_using_libkmod();
+
+      // printf("Gathering card and driver information...\n");
+      rpt_nl();
+      query_proc_modules_for_video();
+      if (!accumulator->is_arm) {
+         // rpt_nl();
+         // query_card_and_driver_using_lspci();
+         //rpt_nl();
+         //query_card_and_driver_using_lspci_alt();
+      }
+      rpt_nl();
+      if ( driver_name_list_find_exact(accumulator->driver_list, "nvidia")) {
+         query_proc_driver_nvidia();
+         rpt_nl();
+      }
+      if (driver_name_list_find_exact(accumulator->driver_list, "amdgpu")) {
+         rpt_vstring(0, "amdgpu configuration parameters:");
+         query_sys_amdgpu_parameters(1);
+         rpt_nl();
+      }
 
       rpt_vstring(0, "Checking display manager environment variables...");
       char * s = getenv("DISPLAY");
@@ -689,10 +756,13 @@ void query_sysenv() {
                                 "i2cdetect");        // command name for error message
       rpt_nl();
 
+#ifndef SYSENV_QUICK_TEST_RUN
       query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                 "get-edid -b %d -i | parse-edid",   // command to issue
                                 "get-edid | parse-edid");        // command name for error message
 
+      test_edid_read_variants(accumulator);
+#endif
       raw_scan_i2c_devices(accumulator);
 
 #ifdef USE_X11
@@ -705,16 +775,6 @@ void query_sysenv() {
 
       // temp
       // get_i2c_smbus_devices_using_udev();
-
-      Driver_Name_Node * driver_list = accumulator->driver_list;
-      rpt_nl();
-      rpt_vstring(0, "amdgpu configuration parameters:");
-      if (driver_name_list_find_exact(driver_list, "amdgpu")) {
-         query_sys_amdgpu_parameters(1);
-      }
-      // else
-      //    rpt_vstring(0, "!!! not amdgpu");
-      rpt_nl();
 
 #ifdef SYSENV_QUICK_TEST_RUN
       DBGMSG("!!! Skipping config file and log checking to speed up testing !!!");
@@ -742,6 +802,8 @@ void query_sysenv() {
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
 
+      dbgrpt_refined_sys(0);
+
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
          rpt_label(0, "*** Calling get_sysfs_drm_displays() from ddc_watch.c... ***");
@@ -763,16 +825,10 @@ void query_sysenv() {
 #endif
    }
 
-   rpt_nl();
-   env_accumulator_report(accumulator, 0);
-
-   rpt_nl();
-   final_analysis(accumulator, 0);
-
    env_accumulator_free(accumulator);     // make Coverity happy
-
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
+
 
 void init_sysenv() {
    RTTI_ADD_FUNC(query_sysenv);
