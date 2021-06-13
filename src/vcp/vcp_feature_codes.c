@@ -4089,6 +4089,7 @@ VCP_Feature_Table_Entry vcp_code_table[] = {
       //.name="Display application",
       .default_sl_values=xdc_display_application_values,
       .desc="Type of application used on display",  // my desc
+      .vcp_subsets = VCP_SUBSET_COLOR,         // observed on U32H750 to interact with color settings
       .v20_flags = DDCA_RW | DDCA_SIMPLE_NC,
       .v20_name = "Display Mode",
       .v30_name = "Display Application",
