@@ -13,6 +13,7 @@
 
 
 void raw_scan_i2c_devices(Env_Accumulator * accum);
+void test_edid_read_variants(Env_Accumulator * accum);
 void query_i2c_buses();
 
 #endif /* QUERY_SYSENV_I2C_H_ */

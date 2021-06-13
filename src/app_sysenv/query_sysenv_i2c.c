@@ -75,10 +75,10 @@ try_single_getvcp_call(
       int           depth)
 {
    bool debug = false;
-   rpt_nl();
-   DBGMSF(true, "Starting. vcp_feature_code=0x%02x. use_smbus=%s", vcp_feature_code, sbool(use_smbus) );
-   // rpt_vstring(depth, "Starting. vcp_feature_code=0x%02x, use_smbus=%s",
-   //                     vcp_feature_code, sbool(use_smbus) );
+   // rpt_nl();
+   // DBGMSF(true, "Starting. vcp_feature_code=0x%02x. use_smbus=%s", vcp_feature_code, sbool(use_smbus) );
+   rpt_vstring(depth, "%s: vcp_feature_code=0x%02x, use_smbus=%s", __func__,
+                       vcp_feature_code, sbool(use_smbus) );
 
    int ndx;
    Status_Errno rc = 0;
@@ -348,6 +348,67 @@ close:
 }
 
 
+void test_edid_read_variants(Env_Accumulator * accum) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+
+   int depth = 0;
+   int d1 = depth+1;
+   int d2 = depth+2;
+
+   rpt_nl();
+   rpt_title("Testing EDID read alternatives...",depth);
+   sysenv_rpt_current_time(NULL, d1);
+
+   int  busct = 0;
+
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_device_exists(busno)) {
+         busct++;
+         rpt_nl();
+         rpt_vstring(d1, "Examining device /dev/i2c-%d...", busno);
+
+         if (sysfs_is_ignorable_i2c_device(busno)) {
+            rpt_vstring(d2, "Device /dev/i2c-%d is a SMBus or other ignorable device.  Skipping.", busno);
+            continue;
+         }
+
+         if (!is_i2c_device_rw(busno))   // issues message if not RW
+            continue;
+
+         rpt_label(d2, "Tests using read()...");
+         bool ok = false;
+         rpt_label(d2, "Without write() before read()...");
+         ok = simple_read_edid(busno, 128, false, false, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, false, false, d2);
+         simple_read_edid(busno, 256, false, false, d2);
+         rpt_nl();
+         rpt_label(d2, "Retrying with write() before read()...");
+         ok = simple_read_edid(busno, 128, true, false, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, true, false, d2);
+         simple_read_edid(busno, 256, true, false, d2);
+         rpt_nl();
+
+         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
+         rpt_label(d2, "Without write() before read()...");
+         ok = simple_read_edid(busno, 128, false, true, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, false, true, d2);
+         simple_read_edid(busno, 256, false, true, d2);
+         rpt_nl();
+         rpt_label(d2, "Retrying with write() before read()...");
+         ok = simple_read_edid(busno, 128, true, true, d2);
+         if (!ok)
+            simple_read_edid(busno, 128, true, true, d2);
+         simple_read_edid(busno, 256, true, true, d2);
+         rpt_nl();
+      }
+   }
+}
+
+
 /** Checks each I2C device.
  *
  * This function largely uses direct coding to probe the I2C buses.
@@ -394,35 +455,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
-         rpt_label(d2, "Tests using read()...");
-         bool ok = false;
-         rpt_label(d2, "Without write() before read()...");
-         ok = simple_read_edid(busno, 128, false, false, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, false, false, d2);
-         simple_read_edid(busno, 256, false, false, d2);
-         rpt_nl();
-         rpt_label(d2, "Retrying with write() before read()...");
-         ok = simple_read_edid(busno, 128, true, false, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, true, false, d2);
-         simple_read_edid(busno, 256, true, false, d2);
-         rpt_nl();
-
-         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
-         rpt_label(d2, "Without write() before read()...");
-         ok = simple_read_edid(busno, 128, false, true, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, false, true, d2);
-         simple_read_edid(busno, 256, false, true, d2);
-         rpt_nl();
-         rpt_label(d2, "Retrying with write() before read()...");
-         ok = simple_read_edid(busno, 128, true, true, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, true, true, d2);
-         simple_read_edid(busno, 256, true, true, d2);
-         rpt_nl();
-
          rpt_label(d2, "Obtain and interpret EDID using normal i2c functions...");
          rpt_nl();
          int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
@@ -437,6 +469,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          for (int tryctr = 0; tryctr < maxtries; tryctr++) {
             //  Base_Status_Errno rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
             // TODO save force slave addr setting, set it for duration of call - do it outside loop
+            rpt_vstring(d2, "Reading EDID using get_raw_edid_by_fd()...");
             psc = i2c_get_raw_edid_by_fd(fd, buf0);
             if (psc != 0) {
                rpt_vstring(d2, "Unable to read EDID, psc=%s", psc_desc(psc));
