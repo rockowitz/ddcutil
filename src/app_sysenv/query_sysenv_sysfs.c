@@ -628,7 +628,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting");
    accumulator->sys_bus_i2c_device_numbers = bva_create();
-   rpt_vstring(0,"Examining (3) /sys/bus/i2c/devices...");
+   rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    char * dname = "/sys/bus/i2c";
    if (!directory_exists(dname)) {
       rpt_vstring(1, "Directory not found: %s", dname);
