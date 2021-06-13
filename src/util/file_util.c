@@ -472,6 +472,60 @@ dir_ordered_foreach(
 }
 
 
+/** Selects files from a directory using a filter function,
+ *  then Iterates over the selected files in an ordered manner.
+ *
+ *  \param   dirname      directory name
+ *  \param   dir_filter   tests the name of a file in a directory to see if should
+ *                        be processed.  If NULL, all files are processed.
+ *  \param   compare_func qsort style function to compare filenames. If NULL perform string comparison
+ *  \param   func         function to be called for each file processed
+ *  \param   accumulator  pointer to a data structure passed
+ *  \param   depth        logical indentation depth
+ */
+void
+dir_filtered_ordered_foreach(
+        const char *          dirname,
+        Dir_Filter_Func       dir_filter,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
+{
+   GPtrArray * simple_filenames = g_ptr_array_new();
+
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         // DBGMSG("%s", dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!dir_filter || dir_filter(dirname, dent->d_name)) {
+               g_ptr_array_add(simple_filenames, strdup(dent->d_name));
+            }
+         }
+      }
+      closedir(d);
+
+      if (compare_func)
+         g_ptr_array_sort(simple_filenames, compare_func);
+      else
+         g_ptr_array_sort(simple_filenames, indirect_strcmp);
+
+      for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
+         char * fn = g_ptr_array_index(simple_filenames, ndx);
+         func(dirname, fn, accumulator, depth);
+      }
+   }
+}
+
+
+
+
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only
  *  those lines containing at least one in a list of terms.  After filtering, the set
  *  of returned lines may be further reduced to either the first or last N number of

@@ -69,6 +69,9 @@ char * filename_for_fd_t(
 typedef bool (*Filename_Filter_Func)(
       const char *  simple_fn);
 
+typedef bool (*Dir_Filter_Func) (
+      const char * dirname, const char * simple_fn);
+
 /** Signature of function called by #dir_foreach to process each file. */
 typedef void (*Dir_Foreach_Func)(
       const char *  dirname,
@@ -90,6 +93,16 @@ void dir_ordered_foreach(
       Dir_Foreach_Func      func,
       void *                accumulator,
       int                   depth);
+
+
+void
+dir_filtered_ordered_foreach(
+        const char *          dirname,
+        Dir_Filter_Func       dir_filter,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth);
 
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
