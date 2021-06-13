@@ -85,16 +85,6 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
    reset_stats();
 
-   // DETECT command
-   f0printf(fout(), "\n*** Detected Displays ***\n");
-   /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
-                              true,   // include_invalid_displays
-                              0);     // logical depth
-   // printf("Detected: %d displays\n", display_ct);   // not needed
-   f0printf(fout(), "\nStatistics for display detection:\n");
-   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
-   reset_stats();
-
    // PROBE command
    f0printf(fout(), "Setting output level normal. Table features will be skipped...\n");
    set_output_level(DDCA_OL_NORMAL);  // affects this thread only
