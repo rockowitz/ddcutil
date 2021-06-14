@@ -163,6 +163,27 @@ get_rpath_basename(
 // Functions for probing /sys
 //
 
+/*
+The rpt_attr...() functions share a common set of behaviors.
+
+1) They write the value read to the fout() device, typically sysout.
+
+2) A message is not actually written if either global setting set_rpt_sysfs_attr_silent(true)
+   or the logical indentation depth (depth parm) is less than 0.
+
+3) If the value_loc parm is non-null, the function returns the address of
+   newly allocated memory containing the value.  NULL is returned if the
+   attribute is not found.
+
+4) If the logical indentation depth (depth parm) is less than 0,
+   nothing is written to the terminal.
+
+5) The depth and value_loc arguments are followed by 1 or more parts
+   of a file name.  The parts are assembled to create the fully qualified
+   name of the attribute.
+ */
+
+
 static bool rpt2_silent = false;
 
 bool
