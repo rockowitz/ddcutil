@@ -1295,16 +1295,18 @@ void dump_sysfs_i2c() {
 #ifdef NOT_USEFUL
          "ls -l /sys/dev/char/237:*",
          "ls -l /sys/dev/char/238:*",
-         "ls -l /sys/bus/pci/devices",
          "ls -l /sys/bus/pci_express/devices",
          "ls -l /sys/devices/pci*",
          "ls -l /sys/class/pci*",             // pci_bus, pci_epc
 #endif
-   "ls -l /sys/class/backlight:*",
-   "ls -l /sys/dev/char/89:*",
-   "ls -l /sys/dev/char/239:*",
+   "ls -l /sys/bus/pci/devices",
    "ls -l /sys/bus/i2c/devices",
    "ls -l /sys/bus/platform/devices",   // not symbolic links
+   "ls -l /sys/dev/char/89:*",
+   "ls -l /sys/dev/char/239:*",
+   "ls -l /sys/dev/char/242:*",
+   "ls -l /sys/dev/char/511:*",
+   "ls -l /sys/class/backlight:*",
    "ls -l /sys/class/drm*",             // drm, drm_dp_aux_dev
    "ls -l /sys/class/i2c*",             // i2c, i2c-adapter, i2c-dev
    NULL
