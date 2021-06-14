@@ -947,18 +947,18 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
          snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
          bool old_silent = set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
          char * rpath = NULL;
-         bool ok = RPT2_ATTR_REALPATH(0, &rpath, buf0, "device");
+         bool ok = RPT_ATTR_REALPATH(0, &rpath, buf0, "device");
          if (ok) {
             result = true;
             char * attr_value = NULL;
-            ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "status");
+            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "status");
             if (!ok  || !streq(attr_value, "disconnected"))
                result = false;
-            ok = RPT2_ATTR_TEXT(0, &attr_value, rpath, "enabled");
+            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "enabled");
             if (!ok  || !streq(attr_value, "disabled"))
                result = false;
             GByteArray * edid;
-            ok = RPT2_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
+            ok = RPT_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
             if (ok) {
                result = false;
                g_byte_array_free(edid, true);

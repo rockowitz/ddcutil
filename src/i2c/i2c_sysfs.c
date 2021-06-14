@@ -78,9 +78,9 @@ read_i2cN_device_node(
    int d0 = depth;
    if (debug && d0 < 0)
       d0 = 2;
-   RPT2_ATTR_TEXT( d0, &info->device_name,    device_path, "name");
-   RPT2_ATTR_TEXT( d0, &info->i2c_dev_dev,    device_path, "i2c-dev", i2c_N, "dev");
-   RPT2_ATTR_TEXT( d0, &info->i2c_dev_name,   device_path, "i2c-dev", i2c_N, "name");
+   RPT_ATTR_TEXT( d0, &info->device_name,    device_path, "name");
+   RPT_ATTR_TEXT( d0, &info->i2c_dev_dev,    device_path, "i2c-dev", i2c_N, "dev");
+   RPT_ATTR_TEXT( d0, &info->i2c_dev_name,   device_path, "i2c-dev", i2c_N, "name");
    free(i2c_N);
    DBGMSF(debug, "Done.");
 }
@@ -103,27 +103,27 @@ read_drm_card_connector_node_common(
    g_snprintf(connector_path, PATH_MAX, "%s/%s", dirname, connector);
 
    char * drm_dp_aux_dir;
-   RPT2_ATTR_SINGLE_SUBDIR(d0, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", connector_path);
+   RPT_ATTR_SINGLE_SUBDIR(d0, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", connector_path);
    if (drm_dp_aux_dir) {
-      RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_name, connector_path, drm_dp_aux_dir, "name");
-      RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_dev,  connector_path, drm_dp_aux_dir, "dev");
+      RPT_ATTR_TEXT(d0, &info->drm_dp_aux_name, connector_path, drm_dp_aux_dir, "name");
+      RPT_ATTR_TEXT(d0, &info->drm_dp_aux_dev,  connector_path, drm_dp_aux_dir, "dev");
    }
 
    char * ddc_path_fn;
-   RPT2_ATTR_REALPATH(d0, &ddc_path_fn, connector_path, "ddc");
+   RPT_ATTR_REALPATH(d0, &ddc_path_fn, connector_path, "ddc");
    if (ddc_path_fn) {
       info->ddc_path = ddc_path_fn;
       info->linked_ddc_filename = g_path_get_basename(ddc_path_fn);
       info->connector = g_path_get_basename(connector_path);  // == coonector
-      RPT2_ATTR_TEXT(d0, &info->ddc_name,         ddc_path_fn, "name");
-      RPT2_ATTR_TEXT(d0, &info->ddc_i2c_dev_name, ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "name");
-      RPT2_ATTR_TEXT(d0, &info->ddc_i2c_dev_dev,  ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "dev");
+      RPT_ATTR_TEXT(d0, &info->ddc_name,         ddc_path_fn, "name");
+      RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_name, ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "name");
+      RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_dev,  ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "dev");
    }
 
 
-   RPT2_ATTR_EDID(d1, NULL, dirname, connector, "edid");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "status");
+   RPT_ATTR_EDID(d1, NULL, dirname, connector, "edid");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "status");
 }
 #endif
 
@@ -144,27 +144,27 @@ read_drm_dp_card_connector_node(
       d0 = 2;
 
    char * ddc_path_fn;
-   RPT2_ATTR_REALPATH(d0, &ddc_path_fn, connector_path, "ddc");
+   RPT_ATTR_REALPATH(d0, &ddc_path_fn, connector_path, "ddc");
    if (ddc_path_fn) {
       info->ddc_path = ddc_path_fn;
       info->linked_ddc_filename = g_path_get_basename(ddc_path_fn);
       info->connector = g_path_get_basename(connector_path);
-      RPT2_ATTR_TEXT(d0, &info->ddc_name,         ddc_path_fn, "name");
-      RPT2_ATTR_TEXT(d0, &info->ddc_i2c_dev_name, ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "name");
-      RPT2_ATTR_TEXT(d0, &info->ddc_i2c_dev_dev,  ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "dev");
+      RPT_ATTR_TEXT(d0, &info->ddc_name,         ddc_path_fn, "name");
+      RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_name, ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "name");
+      RPT_ATTR_TEXT(d0, &info->ddc_i2c_dev_dev,  ddc_path_fn, "i2c-dev", info->linked_ddc_filename, "dev");
    }
 
    char * drm_dp_aux_dir;
-   RPT2_ATTR_SINGLE_SUBDIR(d0, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", connector_path);
+   RPT_ATTR_SINGLE_SUBDIR(d0, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", connector_path);
    if (drm_dp_aux_dir) {
-      RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_name, connector_path, drm_dp_aux_dir, "name");
-      RPT2_ATTR_TEXT(d0, &info->drm_dp_aux_dev,  connector_path, drm_dp_aux_dir, "dev");
+      RPT_ATTR_TEXT(d0, &info->drm_dp_aux_name, connector_path, drm_dp_aux_dir, "name");
+      RPT_ATTR_TEXT(d0, &info->drm_dp_aux_dev,  connector_path, drm_dp_aux_dir, "dev");
       free(drm_dp_aux_dir);
    }
 
-   RPT2_ATTR_EDID(d0, NULL, connector_path, "edid");
-   RPT2_ATTR_TEXT(d0, NULL, connector_path, "enabled");
-   RPT2_ATTR_TEXT(d0, NULL, connector_path, "status");
+   RPT_ATTR_EDID(d0, NULL, connector_path, "edid");
+   RPT_ATTR_TEXT(d0, NULL, connector_path, "enabled");
+   RPT_ATTR_TEXT(d0, NULL, connector_path, "status");
 }
 
 
@@ -196,7 +196,7 @@ read_drm_nondp_card_connector_node(
       return;
    }
 
-   bool is_dp = RPT2_ATTR_SINGLE_SUBDIR(depth, NULL, str_starts_with, "drm_dp_aux", dirname, connector);
+   bool is_dp = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, str_starts_with, "drm_dp_aux", dirname, connector);
    if (is_dp) {
       DBGMSF(debug, "Is display port connector, skipping");
       return;
@@ -204,16 +204,16 @@ read_drm_nondp_card_connector_node(
 
    char i2cN[20];
    g_snprintf(i2cN, 20, "i2c-%d", info->busno);
-   bool found_i2c = RPT2_ATTR_SINGLE_SUBDIR(depth, NULL, streq, i2cN, dirname, connector, "ddc/i2c-dev");
+   bool found_i2c = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, streq, i2cN, dirname, connector, "ddc/i2c-dev");
    if (!found_i2c)
       return;
    info->connector = strdup(connector);
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");
-   RPT2_ATTR_EDID(d1, NULL, dirname, connector, "edid");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
-   RPT2_ATTR_TEXT(d1, NULL, dirname, connector, "status");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");
+   RPT_ATTR_EDID(d1, NULL, dirname, connector, "edid");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
+   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "status");
    return;
 }
 
@@ -244,7 +244,7 @@ read_controller_driver(
       int            depth)
 {
    char * driver_path = NULL;
-   RPT2_ATTR_REALPATH(depth, &driver_path, controller_path, "driver");
+   RPT_ATTR_REALPATH(depth, &driver_path, controller_path, "driver");
    if (driver_path) {
       info->driver = g_path_get_basename(driver_path);
       free(driver_path);
@@ -270,17 +270,17 @@ read_pci_display_controller_node(
    int depth1 = (depth < 0) ? -1 : depth + 1;   // for called functions
 
    char * class;
-   RPT2_ATTR_TEXT(d0, &class, nodepath, "class");
+   RPT_ATTR_TEXT(d0, &class, nodepath, "class");
    if (class && str_starts_with(class, "0x03")) {
       // this is indeed a display controller node
-      RPT2_ATTR_TEXT(d0, NULL, nodepath, "boot_vga");
-      RPT2_ATTR_TEXT(d0, NULL, nodepath, "vendor");
-      RPT2_ATTR_TEXT(d0, NULL, nodepath, "device");
+      RPT_ATTR_TEXT(d0, NULL, nodepath, "boot_vga");
+      RPT_ATTR_TEXT(d0, NULL, nodepath, "vendor");
+      RPT_ATTR_TEXT(d0, NULL, nodepath, "device");
 
-      // RPT2_ATTR_TEXT(d0, NULL, nodepath, "fw_version");
+      // RPT_ATTR_TEXT(d0, NULL, nodepath, "fw_version");
 #ifdef OLD
       char * driver_path = NULL;
-      RPT2_ATTR_REALPATH(d0, &driver_path, nodepath, "driver");
+      RPT_ATTR_REALPATH(d0, &driver_path, nodepath, "driver");
       if (driver_path && info->connector)   // why the info->connector test?
          info->driver = g_path_get_basename(driver_path);
       free(driver_path);
@@ -322,17 +322,17 @@ get_i2c_sys_info(
       result = calloc(1, sizeof(I2C_Sys_Info));
       result->busno = busno;
       // real path is in /sys/devices tree
-      RPT2_ATTR_REALPATH(d1, &pci_i2c_device_path, i2c_device_path);
+      RPT_ATTR_REALPATH(d1, &pci_i2c_device_path, i2c_device_path);
       result->pci_device_path = pci_i2c_device_path;
       DBGMSF(debug, "pci_i2c_device_path=%s", pci_i2c_device_path);
       read_i2cN_device_node(pci_i2c_device_path, result, d1);
 
-      RPT2_ATTR_REALPATH(d1, &pci_i2c_device_parent, pci_i2c_device_path, "..");
+      RPT_ATTR_REALPATH(d1, &pci_i2c_device_parent, pci_i2c_device_path, "..");
       DBGMSF(debug, "pci_i2c_device_parent=%s", pci_i2c_device_parent);
 
       bool has_drm_dp_aux_dir =
-              RPT2_ATTR_SINGLE_SUBDIR(d1, NULL, str_starts_with, "drm_dp_aux", pci_i2c_device_parent);
-      // RPT2_ATTR_SINGLE_SUBDIR(d1, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", pci_i2c_device_parent);
+              RPT_ATTR_SINGLE_SUBDIR(d1, NULL, str_starts_with, "drm_dp_aux", pci_i2c_device_parent);
+      // RPT_ATTR_SINGLE_SUBDIR(d1, &drm_dp_aux_dir, str_starts_with, "drm_dp_aux", pci_i2c_device_parent);
       // if (drm_dp_aux_dir) {
       if (has_drm_dp_aux_dir) {
          // pci_i2c_device_parent is a drm connector node
@@ -346,7 +346,7 @@ get_i2c_sys_info(
 #ifdef OLD
          char * driver_path = NULL;
          // look in controller node:
-         RPT2_ATTR_REALPATH(d1, &driver_path, pci_i2c_device_parent, "../../..", "driver");
+         RPT_ATTR_REALPATH(d1, &driver_path, pci_i2c_device_parent, "../../..", "driver");
          result->driver = g_path_get_basename(driver_path);
          free(driver_path);
 #endif
@@ -360,7 +360,7 @@ get_i2c_sys_info(
 
 #ifdef OLD
          char * driver_path = NULL;
-         RPT2_ATTR_REALPATH(d1, &driver_path, pci_i2c_device_parent, "driver");
+         RPT_ATTR_REALPATH(d1, &driver_path, pci_i2c_device_parent, "driver");
          result->driver = g_path_get_basename(driver_path);
          free(driver_path);
 #endif
@@ -548,7 +548,7 @@ void report_drm_dir(
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
    char * name_val;
-   bool found_name = RPT2_ATTR_TEXT(0, &name_val, dirname, fn, "name");
+   bool found_name = RPT_ATTR_TEXT(0, &name_val, dirname, fn, "name");
    DBGMSF(debug, "RPT_ATTR_TEXT returned %s, name_val -> %s", sbool(found_name), name_val);
 }
 
@@ -562,7 +562,7 @@ void report_one_i2c_dir(
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
    char * name_val;
-   bool found_name = RPT2_ATTR_TEXT(0, &name_val, dirname, fn, "name");
+   bool found_name = RPT_ATTR_TEXT(0, &name_val, dirname, fn, "name");
    DBGMSF(debug, "RPT_ATTR_TEXT returned %s, name_val -> %s", sbool(found_name), name_val);
 }
 
@@ -578,21 +578,21 @@ void report_one_connector(
    char * i2c_subdir_name   = NULL;
    char * drm_dp_aux_subdir = NULL;
    char * i2c_subdir        = NULL;
-   RPT2_ATTR_SINGLE_SUBDIR(depth, &i2c_subdir_name, is_i2cN, "i2c-", dirname, simple_fn);
-   RPT2_ATTR_SINGLE_SUBDIR(depth, &drm_dp_aux_subdir, is_drm_dp_aux_subdir, "drm_dp_aux", dirname, simple_fn);
-   RPT2_ATTR_REALPATH(depth, NULL, dirname, simple_fn, "ddc");
-   RPT2_ATTR_TEXT(depth, NULL, dirname, simple_fn, "dpms");
-   RPT2_ATTR_EDID(depth, NULL, dirname, simple_fn, "edid");
-   RPT2_ATTR_TEXT(depth, NULL, dirname, simple_fn, "enabled");
-   RPT2_ATTR_TEXT(depth, NULL, dirname, simple_fn, "status");
+   RPT_ATTR_SINGLE_SUBDIR(depth, &i2c_subdir_name, is_i2cN, "i2c-", dirname, simple_fn);
+   RPT_ATTR_SINGLE_SUBDIR(depth, &drm_dp_aux_subdir, is_drm_dp_aux_subdir, "drm_dp_aux", dirname, simple_fn);
+   RPT_ATTR_REALPATH(depth, NULL, dirname, simple_fn, "ddc");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "dpms");
+   RPT_ATTR_EDID(depth, NULL, dirname, simple_fn, "edid");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "enabled");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "status");
    if (drm_dp_aux_subdir) {     // DisplayPort
-      RPT2_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "name");
-      RPT2_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "dev");
+      RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "name");
+      RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "dev");
    }
 
-   RPT2_ATTR_SINGLE_SUBDIR(0, &i2c_subdir, is_i2cN, "i2c-", dirname, simple_fn);
+   RPT_ATTR_SINGLE_SUBDIR(0, &i2c_subdir, is_i2cN, "i2c-", dirname, simple_fn);
    if (i2c_subdir) {
-      RPT2_ATTR_TEXT(depth, NULL, dirname, simple_fn, i2c_subdir, "name");
+      RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, i2c_subdir, "name");
    }
 
    DBGMSF(debug, "Done");
@@ -625,8 +625,8 @@ void report_one_pci_device(
 {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
-   RPT2_ATTR_TEXT(    depth, NULL, dirname, fn, "class");
-   RPT2_ATTR_REALPATH(depth, NULL, dirname, fn, "driver");
+   RPT_ATTR_TEXT(    depth, NULL, dirname, fn, "class");
+   RPT_ATTR_REALPATH(depth, NULL, dirname, fn, "driver");
 
    char * thisdir = g_strdup_printf("%s/%s", dirname, fn);
    dir_filtered_ordered_foreach(
@@ -637,7 +637,7 @@ void report_one_pci_device(
          NULL,
          depth);
 
-   if ( RPT2_ATTR_NOTE_SUBDIR(0, NULL, dirname, fn, "drm"))  {
+   if ( RPT_ATTR_NOTE_SUBDIR(0, NULL, dirname, fn, "drm"))  {
          char * drmdir = g_strdup_printf("%s/%s/drm", dirname, fn);
          dir_filtered_ordered_foreach(
                drmdir, is_cardN_dir, NULL, report_one_cardN, NULL, depth);

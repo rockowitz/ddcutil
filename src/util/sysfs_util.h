@@ -58,68 +58,68 @@ rpt_attr_output(
       const char * value);
 
 bool
-rpt2_attr_text(
+rpt_attr_text(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...);
 
-#define RPT2_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_text(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+#define RPT_ATTR_TEXT(depth, value_loc, fn_segment, ...) \
+   rpt_attr_text(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_TEXT(value_loc, fn_segment, ...) \
-   rpt2_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+   rpt_attr_text(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
-rpt2_attr_binary(
+rpt_attr_binary(
       int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
       ...);
 
 bool
-rpt2_attr_edid(
+rpt_attr_edid(
       int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
       ...);
 
-#define RPT2_ATTR_EDID(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+#define RPT_ATTR_EDID(depth, value_loc, fn_segment, ...) \
+   rpt_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_EDID(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_edid(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+   rpt_attr_edid(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
-rpt2_attr_realpath(
+rpt_attr_realpath(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...);
 
-#define RPT2_ATTR_REALPATH(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_realpath(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+#define RPT_ATTR_REALPATH(depth, value_loc, fn_segment, ...) \
+   rpt_attr_realpath(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_REALPATH(value_loc, fn_segment, ...) \
-   rpt2_attr_realpath(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+   rpt_attr_realpath(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
-rpt2_attr_realpath_basename(
+rpt_attr_realpath_basename(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...);
 
-#define RPT2_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_realpath_basename(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+#define RPT_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
+   rpt_attr_realpath_basename(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
+   rpt_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
 
 bool
-rpt2_attr_single_subdir(
+rpt_attr_single_subdir(
       int          depth,
       char **      value_loc,
       Fn_Filter    predicate_function,
@@ -127,20 +127,20 @@ rpt2_attr_single_subdir(
       const char * fn_segment,
       ...);
 
-#define RPT2_ATTR_SINGLE_SUBDIR(depth, value_loc, predicate_func, predicate_val, fn_segment, ...) \
-   rpt2_attr_single_subdir(depth, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
+#define RPT_ATTR_SINGLE_SUBDIR(depth, value_loc, predicate_func, predicate_val, fn_segment, ...) \
+   rpt_attr_single_subdir(depth, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
 #define GET_ATTR_SINGLE_SUBDIR(value_loc, predicate_func, predicate_val, fn_segment, ...) \
-   rpt2_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
+   rpt_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
-rpt2_attr_note_subdir(
+rpt_attr_note_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...);
 
-#define RPT2_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
-   rpt2_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
+#define RPT_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
+   rpt_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
 
 #endif /* SYSFS_UTIL_H_ */

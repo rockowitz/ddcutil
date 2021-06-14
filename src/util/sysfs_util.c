@@ -276,7 +276,7 @@ assemble_sysfs_path2(
 
 
 bool
-rpt2_attr_text(
+rpt_attr_text(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
@@ -317,7 +317,7 @@ rpt2_attr_text(
 
 
 bool
-rpt2_attr_binary(
+rpt_attr_binary(
       int           depth,
       GByteArray ** value_loc,
       const char *  fn_segment,
@@ -350,7 +350,7 @@ rpt2_attr_binary(
 
 
 bool
-rpt2_attr_edid(
+rpt_attr_edid(
        int           depth,
        GByteArray ** value_loc,
        const char *  fn_segment,
@@ -367,7 +367,7 @@ rpt2_attr_edid(
     if (value_loc)
        *value_loc = NULL;
     GByteArray * edid = NULL;
-    found = rpt2_attr_binary(depth, &edid, pb1, NULL);
+    found = rpt_attr_binary(depth, &edid, pb1, NULL);
     if (edid) {
        assert(found);
        if (depth >= 0)
@@ -384,7 +384,7 @@ rpt2_attr_edid(
 
 
 bool
-rpt2_attr_realpath(
+rpt_attr_realpath(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
@@ -417,7 +417,7 @@ rpt2_attr_realpath(
 
 
 bool
-rpt2_attr_realpath_basename(
+rpt_attr_realpath_basename(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
@@ -451,7 +451,7 @@ rpt2_attr_realpath_basename(
 
 
 bool
-rpt2_attr_single_subdir(
+rpt_attr_single_subdir(
       int          depth,
       char **      value_loc,
       Fn_Filter    predicate_function,
@@ -489,7 +489,7 @@ rpt2_attr_single_subdir(
 
 
 bool
-rpt2_attr_note_subdir(
+rpt_attr_note_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
