@@ -69,6 +69,9 @@ char * filename_for_fd_t(
 typedef bool (*Filename_Filter_Func)(
       const char *  simple_fn);
 
+/** Signature of the filter function passed to #dir_ordered_foreach,
+ *  #dir_filtered_ordered_foreach
+ */
 typedef bool (*Dir_Filter_Func) (
       const char * dirname, const char * simple_fn);
 
