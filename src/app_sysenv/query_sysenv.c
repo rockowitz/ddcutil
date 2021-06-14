@@ -796,8 +796,8 @@ void query_sysenv() {
       probe_modules_d(0);
 
       dump_sysfs_i2c();
-
       rpt_nl();
+
       // CONSIDER: make conditional on ambiguous EDID, MST
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
