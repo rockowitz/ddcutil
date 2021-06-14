@@ -802,7 +802,7 @@ void query_sysenv() {
       // show reports as in command detect --vv
       dbgrpt_sys_bus_i2c(0);
 
-      dbgrpt_refined_sys(0);
+      dump_simplified_sys_bus_pci(0);
 
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();

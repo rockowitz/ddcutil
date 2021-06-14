@@ -24,7 +24,7 @@ void query_sys_bus_i2c(Env_Accumulator * accum);
 void query_sys_amdgpu_parameters(int depth);
 void query_drm_using_sysfs();
 void dump_sysfs_i2c();
-void dbgrpt_refined_sys(int depth);
+void dump_simplified_sys_bus_pci(int depth);
 
 void init_query_sysfs();
 

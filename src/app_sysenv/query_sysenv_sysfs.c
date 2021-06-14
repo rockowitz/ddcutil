@@ -1570,7 +1570,7 @@ void report_one_pci_device(
 
 
 void
-dbgrpt_refined_sys(int depth) {
+dump_simplified_sys_bus_pci(int depth) {
    rpt_nl();
    rpt_nl();
    rpt_label(depth, "*** Simplified /sys/bus/pci/devices scan ***");
