@@ -1367,6 +1367,225 @@ void dump_sysfs_i2c() {
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
+
+
+//
+//  Pruned Scan
+//
+
+//  Filter functions
+
+#ifdef MAYBE_FUTURE
+bool dirname_starts_with(const char * dirname, const char * val) {
+   bool debug = true;
+   DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
+   bool result = str_starts_with(dirname, val);
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+#endif
+
+// for e.g. i2c-3
+bool is_i2cN(const char * dirname, const char * val) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
+   bool result = str_starts_with(dirname, "i2c-");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+bool is_drm_dp_aux_subdir(const char * dirname, const char * val) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, val=%s", dirname, val);
+   bool result = str_starts_with(dirname, "drm_dp_aux");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+// for e.g. card0-DP-1
+bool is_card_connector_dir(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = str_starts_with(simple_fn, "card");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+// for e.g. card0
+bool is_cardN_dir(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = str_starts_with(simple_fn, "card");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+bool is_drm_dir(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = streq(simple_fn, "drm");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+bool is_i2cN_dir(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = str_starts_with(simple_fn, "i2c-");
+   DBGMSF(debug, "Returning %s", sbool(result));
+   return result;
+}
+
+// does dirname/simple_fn have attribute class with value display controller or docking station?
+bool has_class_display_or_docking_station(
+      const char * dirname, const char * simple_fn)
+{
+   bool debug = false;
+   bool result = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   char * class_val = NULL;
+   int    iclass = 0;
+   int    top_byte = 0;
+   if ( GET_ATTR_TEXT(&class_val, dirname, simple_fn, "class") ) {
+      if (str_to_int(class_val, &iclass, 16) ) {
+         top_byte = iclass >> 16;
+         if (top_byte == 0x03 || top_byte == 0x0a)  // display controller or docking station
+            result = true;
+      }
+   }
+   DBGMSF(debug, "class_val = %s, top_byte = 0x%02x, result=%s",
+                 class_val, top_byte, sbool(result) );
+   return result;
+}
+
+
+//  Directory report functions
+
+// report <device>/drm
+void report_drm_dir(
+      const char * dirname,   // <device>
+      const char * fn,        // drm
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   char * name_val;
+   bool found_name = RPT_ATTR_TEXT(0, &name_val, dirname, fn, "name");
+   DBGMSF(debug, "RPT_ATTR_TEXT returned %s, name_val -> %s", sbool(found_name), name_val);
+}
+
+// report <device>/i2c-N
+void report_one_i2c_dir(
+      const char * dirname,     // <device>
+      const char * fn,          // i2c-1, i2c-2, etc., possibly 1-0037, 1-0023, 1-0050 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   char * name_val;
+   bool found_name = RPT_ATTR_TEXT(0, &name_val, dirname, fn, "name");
+   DBGMSF(debug, "RPT_ATTR_TEXT returned %s, name_val -> %s", sbool(found_name), name_val);
+}
+
+void report_one_connector(
+      const char * dirname,     // <device>/drm/cardN
+      const char * simple_fn,   // card0-HDMI-1 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+
+   char * i2c_subdir_name   = NULL;
+   char * drm_dp_aux_subdir = NULL;
+   char * i2c_subdir        = NULL;
+   RPT_ATTR_SINGLE_SUBDIR(depth, &i2c_subdir_name, is_i2cN, "i2c-", dirname, simple_fn);
+   RPT_ATTR_SINGLE_SUBDIR(depth, &drm_dp_aux_subdir, is_drm_dp_aux_subdir, "drm_dp_aux", dirname, simple_fn);
+   RPT_ATTR_REALPATH(depth, NULL, dirname, simple_fn, "ddc");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "dpms");
+   RPT_ATTR_EDID(depth, NULL, dirname, simple_fn, "edid");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "enabled");
+   RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, "status");
+   if (drm_dp_aux_subdir) {     // DisplayPort
+      RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "name");
+      RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "dev");
+   }
+
+   RPT_ATTR_SINGLE_SUBDIR(0, &i2c_subdir, is_i2cN, "i2c-", dirname, simple_fn);
+   if (i2c_subdir) {
+      RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, i2c_subdir, "name");
+   }
+
+   DBGMSF(debug, "Done");
+}
+
+void report_one_cardN(
+      const char * dirname,
+      const char * simple_fn,
+      void *       accum,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   char * thisdir = g_strdup_printf("%s/%s", dirname, simple_fn);
+   dir_filtered_ordered_foreach(
+         thisdir,
+         is_card_connector_dir,
+         NULL,
+         report_one_connector,
+         NULL,
+         depth);
+   DBGMSF(debug, "Done.");
+}
+
+void report_one_pci_device(
+      const char * dirname,     //
+      const char * fn,          // i2c-1, i2c-2, etc., possibly 1-0037, 1-0023, 1-0050 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   RPT_ATTR_TEXT(    depth, NULL, dirname, fn, "class");
+   RPT_ATTR_REALPATH(depth, NULL, dirname, fn, "driver");
+
+   char * thisdir = g_strdup_printf("%s/%s", dirname, fn);
+   dir_filtered_ordered_foreach(
+         thisdir,
+         is_i2cN_dir,
+         i2c_compare,
+         report_one_i2c_dir,
+         NULL,
+         depth);
+
+   if ( RPT_ATTR_NOTE_SUBDIR(0, NULL, dirname, fn, "drm"))  {
+         char * drmdir = g_strdup_printf("%s/%s/drm", dirname, fn);
+         dir_filtered_ordered_foreach(
+               drmdir, is_cardN_dir, NULL, report_one_cardN, NULL, depth);
+   }
+
+   rpt_nl();
+}
+
+
+void
+dbgrpt_refined_sys(int depth) {
+   rpt_nl();
+   rpt_nl();
+   rpt_label(depth, "*** Simplified /sys/bus/pci/devices scan ***");
+   rpt_nl();
+   dir_filtered_ordered_foreach("/sys/bus/pci/devices",
+                       has_class_display_or_docking_station,      // filter function
+                       NULL,                    // ordering function
+                       report_one_pci_device,
+                       NULL,                    // accumulator
+                       depth);
+}
+
+
+
+
 void init_query_sysfs() {
    RTTI_ADD_FUNC(dump_sysfs_i2c);
    RTTI_ADD_FUNC(each_i2c_device);
