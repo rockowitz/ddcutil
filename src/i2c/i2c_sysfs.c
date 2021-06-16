@@ -418,7 +418,7 @@ void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
 }
 
 
-void report_one_bus_i2c(
+static void report_one_bus_i2c(
       const char * dirname,     //
       const char * fn,          // i2c-1, i2c-2, etc., possibly 1-0037, 1-0023, 1-0050 etc
       void *       data,
