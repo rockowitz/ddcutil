@@ -392,12 +392,15 @@ void test_edid_read_variants(Env_Accumulator * accum) {
          rpt_nl();
 
          rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
+#ifdef FAIL
+         // hang observed w/o write, using i2c_smbus_read_byte_data()
          rpt_label(d2, "Without write() before read()...");
          ok = simple_read_edid(busno, 128, false, true, d2);
          if (!ok)
             simple_read_edid(busno, 128, false, true, d2);
          simple_read_edid(busno, 256, false, true, d2);
          rpt_nl();
+#endif
          rpt_label(d2, "Retrying with write() before read()...");
          ok = simple_read_edid(busno, 128, true, true, d2);
          if (!ok)
