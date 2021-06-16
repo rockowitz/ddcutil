@@ -46,6 +46,28 @@ int i2c_name_to_busno(const char * name) {
 }
 
 
+/** Converts a string of the form "xxx-N" to a number.
+ *
+ *  \param  name  string to convert
+ *  \return extracted number, -1 if conversion fails
+ *
+ *  \remark A generalization of #i2_name_to_busno()
+ */
+int extract_number_after_hyphen(const char * name) {
+   int result = -1;
+
+   if (name) {
+      char * hyphen = strchr(name, '-');
+      if (hyphen && *(hyphen+1) != -1) {
+         int ival;
+         if ( str_to_int(hyphen+1, &ival, 10) )
+            result = ival;
+      }
+   }
+   return result;
+}
+
+
 /** Compare strings i2c-X by bus number, handling unusual case where "X" is
  *  a string other than a number.  Non-numeric values sort before numeric
  *  values.
@@ -80,8 +102,10 @@ gint i2c_compare(gconstpointer v1, gconstpointer v2) {
       result = 1;
 
    else {      // normal case
-      int i1 = i2c_name_to_busno(s1);
-      int i2 = i2c_name_to_busno(s2);
+      // int i1 = i2c_name_to_busno(s1);
+      // int i2 = i2c_name_to_busno(s2);
+      int i1 = extract_number_after_hyphen(s1);
+      int i2 = extract_number_after_hyphen(s2);
       if (i1 < 0 && i2 < 0)
          result = strcmp(s1, s2);
       else if (i1 < i2)
