@@ -955,13 +955,15 @@ bool str_to_int(const char * sval, int * p_ival, int base)
 
    char * endptr;
    bool ok = false;
-   if ( *sval != '\0') {
-      long result = strtol(sval, &endptr, base); // allow hex
-      // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-      //        __func__, sval, endptr, *endptr, *endptr, result);
-      if (*endptr == '\0') {
-         *p_ival = result;
-         ok = true;
+   if (sval) {
+      if ( *sval != '\0') {
+         long result = strtol(sval, &endptr, base); // allow hex
+         // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+         //        __func__, sval, endptr, *endptr, *endptr, result);
+         if (*endptr == '\0') {
+            *p_ival = result;
+            ok = true;
+         }
       }
    }
 
