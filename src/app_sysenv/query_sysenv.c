@@ -795,14 +795,14 @@ void query_sysenv() {
 
       probe_modules_d(0);
 
-      dump_sysfs_i2c();
+      // show reports as in command detect --vv
+      DDCA_Output_Level old_level = set_output_level(DDCA_OL_VV);
+      dbgrpt_sys_bus_i2c(0);
+      set_output_level(old_level);
       rpt_nl();
 
-      // CONSIDER: make conditional on ambiguous EDID, MST
-      // show reports as in command detect --vv
-      dbgrpt_sys_bus_i2c(0);
-
-      dump_simplified_sys_bus_pci(0);
+      dump_sysfs_i2c();
+      rpt_nl();
 
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
@@ -810,7 +810,6 @@ void query_sysenv() {
          GPtrArray * connected_displays = get_sysfs_drm_displays(/*verbose=*/ true);
          g_ptr_array_free(connected_displays, true);
       }
-
 
 #ifdef TMI
 #ifdef ENABLE_UDEV

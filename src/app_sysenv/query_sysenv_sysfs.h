@@ -25,6 +25,7 @@ void query_sys_amdgpu_parameters(int depth);
 void query_drm_using_sysfs();
 void dump_sysfs_i2c();
 void dump_simplified_sys_bus_pci(int depth);
+void show_relevant_char_major_numbers();
 
 void init_query_sysfs();
 

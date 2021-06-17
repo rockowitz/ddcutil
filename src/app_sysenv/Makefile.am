@@ -34,6 +34,10 @@ query_sysenv_i2c.c \
 query_sysenv_logs.c \
 query_sysenv_modules.c \
 query_sysenv_procfs.c \
+query_sysenv_sysfs_common.c \
+query_sysenv_original_sys_scans.c \
+query_sysenv_detailed_bus_pci_devices.c \
+query_sysenv_simplified_sys_bus_pci_devices.c \
 query_sysenv_sysfs.c \
 query_sysenv_xref.c 
 
