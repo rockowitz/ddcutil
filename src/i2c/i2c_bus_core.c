@@ -854,6 +854,12 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       }
    }
 
+#ifndef TARGET_BSD
+   I2C_Sys_Info * info = get_i2c_sys_info(bus_info->busno, -1);
+   report_i2c_sys_info(info, depth);
+   free_i2c_sys_info(info);
+#endif
+
    DBGMSF(debug, "Done");
 }
 
