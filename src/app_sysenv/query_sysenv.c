@@ -761,7 +761,8 @@ void query_sysenv() {
                                 "get-edid -b %d -i | parse-edid",   // command to issue
                                 "get-edid | parse-edid");        // command name for error message
 
-      test_edid_read_variants(accumulator);
+      if (get_output_level() >= DDCA_OL_VV)
+         test_edid_read_variants(accumulator);
 #endif
       raw_scan_i2c_devices(accumulator);
 
@@ -794,12 +795,6 @@ void query_sysenv() {
       device_xref_report(0);
 
       probe_modules_d(0);
-
-      // show reports as in command detect --vv
-      DDCA_Output_Level old_level = set_output_level(DDCA_OL_VV);
-      dbgrpt_sys_bus_i2c(0);
-      set_output_level(old_level);
-      rpt_nl();
 
       dump_sysfs_i2c();
       rpt_nl();
