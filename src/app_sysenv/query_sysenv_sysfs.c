@@ -911,7 +911,7 @@ void dump_sysfs_i2c() {
 
    rpt_nl();
    show_top_level_sys_entries(0);
-   dump_original_sys_scans();
+   // dump_original_sys_scans();
    dump_simplified_sys_bus_pci(0);
    dump_detailed_sys_bus_pci(0);
    DBGTRC(debug, TRACE_GROUP, "Done");
