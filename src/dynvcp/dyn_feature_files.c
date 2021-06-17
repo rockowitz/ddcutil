@@ -208,7 +208,7 @@ dfr_load_by_mmk(
       Dynamic_Features_Rec ** dfr_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "mmk = %s", monitor_model_string(&mmk));
+   DBGTRC(debug, TRACE_GROUP, "mmk = %s", monitor_model_string(&mmk));
 
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
