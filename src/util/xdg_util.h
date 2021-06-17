@@ -1,4 +1,4 @@
-/** \file xdg_util.c
+/** \file xdg_util.h
  *  Implement XDG Base Directory Specification
  */
 
