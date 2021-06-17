@@ -107,6 +107,20 @@ char * xdg_cache_home_dir() {
    return result;
 }
 
+
+/** Returns the name of the xdg base directory for state files
+*
+*  Caller is responsible for freeing the returned memory.
+*/
+char * xdg_state_home_dir() {
+   bool debug = false;
+   char * result = xdg_home_dir("XDG_CACHE_HOME", ".local/state");
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, result);
+   return result;
+}
+
+
 /** Returns the value of the specified environment variable,
  *  If the value is blank, return default_dirs.
  *
@@ -197,11 +211,6 @@ char * xdg_config_path() {
 }
 
 
-char * xdg_cache_path() {
-   return xdg_cache_home_dir();
-}
-
-
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_DATA_HOME.
  *  Does not check for the file's existence
@@ -241,6 +250,7 @@ char * xdg_config_home_file(const char * application, const char * simple_fn)
    return result;
 }
 
+
 /** Returns the fully qualified name of a file in the application
  *  sub-directory of $XDG_CACHE_HOME.
  *  Does not check for the file's existence
@@ -252,6 +262,26 @@ char * xdg_cache_home_file(const char * application, const char * simple_fn)
    bool debug = false;
    char * result = NULL;
    char * dir = xdg_cache_home_dir();
+   if (dir && strlen(dir) > 0)
+      result = g_strdup_printf("%s%s/%s", dir, application, simple_fn);
+   free(dir);
+   if (debug)
+      printf("(%s) Returning: %s\n", __func__, result);
+   return result;
+}
+
+
+/** Returns the fully qualified name of a file in the application
+ *  sub-directory of $XDG_STATE_HOME.
+ *  Does not check for the file's existence
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
+char * xdg_state_home_file(const char * application, const char * simple_fn)
+{
+   bool debug = false;
+   char * result = NULL;
+   char * dir = xdg_state_home_dir();
    if (dir && strlen(dir) > 0)
       result = g_strdup_printf("%s%s/%s", dir, application, simple_fn);
    free(dir);
@@ -407,7 +437,7 @@ char * find_xdg_cache_file(
 {
    bool debug = false;
    char * result = NULL;;
-   char * path = xdg_cache_path();
+   char * path = xdg_cache_home_dir();
    assert(path);   // will be null if $HOME not set, how to handle?
    result = find_xdg_path_file(
                 path,
@@ -420,6 +450,33 @@ char * find_xdg_cache_file(
    return result;
 }
 
+
+/** Looks for a file in the specified subdirectory of $XDG_STATE_HOME
+ *
+ *  \param  application   subdirectory name
+ *  \param  simple_fn     file name within subdirectory
+ *  \return fully qualified file name, or NULL if not found.
+ *
+ *  Caller is responsible for freeing the returned string.
+ */
+char * find_xdg_state_file(
+      const char * application,
+      const char * simple_fn)
+{
+   bool debug = false;
+   char * result = NULL;;
+   char * path = xdg_state_home_dir();
+   assert(path);   // will be null if $HOME not set, how to handle?
+   result = find_xdg_path_file(
+                path,
+                application,
+                simple_fn);
+   free(path);
+   if (debug)
+      printf("(%s) application=%s, simple_fn=%s, returning: %s\n",
+              __func__, application, simple_fn, result);
+   return result;
+}
 
 #ifdef TESTS
 void xdg_tests() {
