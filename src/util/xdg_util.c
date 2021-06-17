@@ -162,7 +162,6 @@ char * xdg_config_dirs() {
    return xdg_dirs("XDG_CONFIG_DIRS",  "/etc/xdg"); }
 
 
-
 /** Returns a path string containing value of the XDG data home directory,
  *  followed by the XDG data dirs string.
  *
