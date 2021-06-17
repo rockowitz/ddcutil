@@ -270,7 +270,7 @@ _ddca_init(void) {
             trace_file = strdup(parsed_cmd->s1);
          if (!trace_file && parsed_cmd->library_trace_file) {
             if (parsed_cmd->library_trace_file[0] != '/')
-               trace_file = xdg_data_home_file("ddcutil", parsed_cmd->library_trace_file);
+               trace_file = xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file);
             else
                trace_file = strdup(parsed_cmd->library_trace_file);
          }
