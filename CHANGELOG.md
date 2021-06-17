@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.1] 2021-06-15
+## [1.1.1] 2021-07-01
 
 ### Added
 - libddcutil log file
@@ -18,7 +18,8 @@
 - Additional validation of DDCA_Display_Ref and DDCA_Display_Handle arguments to API functions
 - Improved tracing of assert() failures
 - --enable-capabilities-cache is now the default
-- libddcutil name is now libddcutil.so.4.1.0  
+- libddcutil name is now libddcutil.so.4.1.0
+- Command **detect**: improved analysis of /sys 
 
 ### Fixed
 - Incorrect assembly of sysfs path definitions in **ddcutil environment --verbose** 
