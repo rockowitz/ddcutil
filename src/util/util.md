@@ -1,6 +1,6 @@
 /** \dir
 
-Direcory util provides services that are independent of **ddcutil** and could be used in other applications.
+Directory util provides services that are independent of **ddcutil** and could be used in other applications.
 
 Most files provide general purpose functions such as data structures, and output management. 
 

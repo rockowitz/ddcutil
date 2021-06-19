@@ -5,7 +5,7 @@ ddcutil
 brightness and color levels.
 
 Most monitors, other than laptop displays, have a Virtual Control Panel (VCP), 
-which implements features defined in the Montor Control Command Set (MCCS).
+which implements features defined in the Monitor Control Command Set (MCCS).
 Typically, **ddcutil** communicates with the monitor's VCP over an I2C bus, as per 
 the Display Data Channel/Command Interface Standard (DDC/CI).
 
