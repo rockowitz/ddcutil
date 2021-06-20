@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv cmdline . gobject_api swig cython cffi  sample_clients
+SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv cmdline .  sample_clients
 
 MOSTLYCLEANFILES =   
 
