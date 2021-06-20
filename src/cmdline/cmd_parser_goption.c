@@ -313,7 +313,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
 
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
+      {"enable-udf",'\0',0,G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
       {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
+      {"disable-udf",'\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
       {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
 
