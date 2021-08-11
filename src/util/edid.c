@@ -312,15 +312,20 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
 /** Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *
- *  @param  edid       pointer to parsed edid struct
- *  @param  verbose    show additional detail
- *  @param  show_raw   include hex dump of EDID
- *  @param  depth      logical indentation depth
+ *  @param  edid              pointer to parsed edid struct
+ *  @param  verbose_synopsis  show additional EDID detail
+ *  @param  show_raw          include hex dump of EDID
+ *  @param  depth             logical indentation depth
  *
  *  @remark
  *  Output is written using rpt_ functions.
  */
-void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, int depth) {
+void report_parsed_edid_base(
+      Parsed_Edid *  edid,
+      bool           verbose_synopsis,
+      bool           show_raw,
+      int            depth)
+{
    bool debug = false;
    if (debug)
       printf("(%s) Starting. edid=%p", __func__, edid);
@@ -342,7 +347,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
       rpt_vstring(d1,"Model year:           %d", edid->year);
       else
       rpt_vstring(d1,"Manufacture year:     %d,  Week: %d", edid->year, edid->manufacture_week);
-      if (verbose) {
+      if (verbose_synopsis) {
          rpt_vstring(d1,"Extra descriptor:        %s",          edid->extra_descriptor_string);
          char explbuf[100];
          explbuf[0] = '\0';
@@ -447,7 +452,7 @@ void report_parsed_edid_base(Parsed_Edid * edid, bool verbose, bool show_raw, in
 
    }
    else {
-       if (verbose)
+       if (verbose_synopsis)
          rpt_vstring(d1,"No EDID");
    }
 
