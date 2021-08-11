@@ -640,7 +640,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
       edid = create_parsed_edid(rawedidbuf->bytes);
       if (debug) {
          if (edid)
-            report_parsed_edid(edid, false /* dump hex */, 0);
+            report_parsed_edid(edid, false /* verbose */, 0);
          else
             DBGMSG("create_parsed_edid() returned NULL");
       }
@@ -920,8 +920,9 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                             businfo->edid->model_name,
                             businfo->edid->serial_ascii);
       else
-         report_parsed_edid(businfo->edid,
-                           (output_level >= DDCA_OL_VV) ? true : false,
+         report_parsed_edid_base(businfo->edid,
+                           (output_level >= DDCA_OL_VV),
+                           (output_level >= DDCA_OL_VERBOSE),
                            depth);
    }
 }
