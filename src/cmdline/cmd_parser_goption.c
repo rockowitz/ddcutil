@@ -260,9 +260,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
          {"brief",   '\0', G_OPTION_FLAG_NO_ARG,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show brief detail",                NULL},
-         {"vv",      '\0', G_OPTION_FLAG_NO_ARG,
+         {"vv",      '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
-         {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG,
+         {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
   // Program information
                               {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
