@@ -19,7 +19,9 @@
 - Improved tracing of assert() failures
 - --enable-capabilities-cache is now the default
 - libddcutil name is now libddcutil.so.4.1.0
-- Command **detect**: improved analysis of /sys 
+- Command **detect**: improved analysis of /sys
+- Command **detect**: ***--verbose*** option reports raw EDID
+- Option ***--help*** does not report undocumented option ***--very-verbose***.
 
 ### Fixed
 - Incorrect assembly of sysfs path definitions in **ddcutil environment --verbose** 
