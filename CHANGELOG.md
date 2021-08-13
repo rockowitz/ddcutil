@@ -43,8 +43,8 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
   of as "Invalid Display". Also, try to work around problems reading the EDID on these 
   monitors, which  can cause the monitor to not be detected.
 - Option ***--edid-read-size 128*** or ***--edid-read-size 256*** forces **ddcutil** to request
-  that number of bytes when reading the EDID, which can occasionally cause the EDID 
-  the EDID to be read successfully. 
+  that number of bytes when reading the EDID, which can occasionally allow the EDID to
+  be read successfully. 
 - Issue warning at startup if driver i2c-dev is neither loaded nor built into the kernel.
 
 ### Changed
