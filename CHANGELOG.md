@@ -6,10 +6,11 @@
 - libddcutil log file
 - libddcuti and ddcutil write critical events to syslog
 - API function ddca_add_trace_group()
-- API function ddca_get_extended_version_string()
+- API function ddca_extended_version_string()
 - API function ddca_redetect_displays()
 - API function ddca_get_display_refs()
 - API function ddca_get_display_info()
+- API function ddca_free_display_info()
 - Macro DDCUTIL_VSUFFIX
 
 ### Changed
