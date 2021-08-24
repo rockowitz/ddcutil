@@ -433,7 +433,7 @@ ddca_set_trace_groups(
  *
  *  \param[in] trace_flags  bitfield indicating groups to trace
  *
- *  @since 1.1.1
+ *  @since 1.2.0
  */
 void
 ddca_add_trace_groups(
@@ -547,6 +547,47 @@ ddca_enable_usb_display_detection(bool onoff);
 bool
 ddca_ddca_is_usb_display_detection_enabled();
 
+/** Gets display references list for all detected displays.
+ *
+ *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
+ *  @param[out] drefs_loc where to return pointer to null-terminated array of #DDCA_Display_Ref
+ *  @retval     0  always succeeds
+ *
+ *  @since 1.2.0
+ */
+DDCA_Status
+ddca_get_display_refs(
+      bool                include_invalid_displays,
+      DDCA_Display_Ref**  drefs_loc);
+
+/** Gets publicly visible information about a display reference
+ *
+ *  The returned struct can simply be free()'d by the client.
+ *
+ *  @param  ddca_dref display reference
+ *  @param  dinfo_loc where to return pointer to newly allocated #DDCA_Display_Info
+ *
+ *  @since 1.2.0
+ */
+DDCA_Status
+ddca_get_display_info(
+      DDCA_Display_Ref  ddca_dref,
+      DDCA_Display_Info ** dinfo_loc);
+
+/** Frees a #DDCA_Display_Info struct.
+ *
+ *  This is a convenience function. #DDCA_Display_Info is copied to
+ *  the client and contains no pointers.  It can simply be free()'d
+ *  by the client.
+ *
+ *  @param info_rec pointer to instance to free
+ *
+ *  @since 1.2.0
+ */
+
+void
+ddca_free_display_info(DDCA_Display_Info * info_rec);
+
 /** Gets a list of the detected displays.
  *
  *  @param[in]  include_invalid_displays if true, displays that do not support DDC are included
@@ -560,9 +601,9 @@ ddca_get_display_info_list2(
 
 /** Frees a list of detected displays.
  *
- *  This function understands which fields in the list
- *  point to permanently allocated data structures and should
- *  not be freed.
+ *  This is a convenience function. #DDCA_Display_Info_List
+ *  contains no pointers and is copied to the client, so the
+ *  list can simply be free'd by the client.
  *
  *  \param[in] dlist pointer to #DDCA_Display_Info_List
  */
@@ -616,6 +657,8 @@ ddca_report_displays(
  *  - releases i2c bus info
  *  - rescans i2c buses
  *  - redetects displays
+ *
+ *  @since 1.2.0
  */
 DDCA_Status
 ddca_redetect_displays();
