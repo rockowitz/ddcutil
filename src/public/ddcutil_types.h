@@ -346,7 +346,10 @@ typedef struct {
 
 
 #define DDCA_DISPLAY_INFO_MARKER "DDIN"
-/** Describes one monitor detected by ddcutil. */
+/** Describes one monitor detected by ddcutil.
+ *
+ *  This struct is copied to the caller and can simply be freed.
+ */
 typedef struct {
    char                   marker[4];        ///< always "DDIN"
    int                    dispno;           ///< ddcutil assigned display number
