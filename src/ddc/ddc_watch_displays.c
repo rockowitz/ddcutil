@@ -233,7 +233,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
    GPtrArray * cur_displays = get_sysfs_drm_displays(false);
    if ( !displays_eq(prev_displays, cur_displays) ) {
-      if ( debug || IS_TRACING() || true ) {
+      if ( debug || IS_TRACING() ) {
          DBGMSG("Displays changed!");
          DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
@@ -492,7 +492,7 @@ void dummy_display_change_handler(
       DBGTRC(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
    }
    if (added && added->len > 0) {
-      DBGTRC(debug, TRACE_GROUP, "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
+      DBGTRC(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
    }
 }
 
