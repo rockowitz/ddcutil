@@ -486,7 +486,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
    if (removed && removed->len > 0) {
       DBGTRC(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
