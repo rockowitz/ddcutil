@@ -91,10 +91,8 @@ bool
 ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGMSF(debug, "Checking dh=%p", dh);
-   bool result = false;
-   if (open_displays) {
-      result = g_hash_table_contains(open_displays, dh);
-   }
+   assert(open_displays);
+   bool result = g_hash_table_contains(open_displays, dh);
    DBGMSF(debug, "dh=%p, returning %s", dh, sbool(result));
    return result;
 }
@@ -102,17 +100,18 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
 
 void ddc_dbgrpt_valid_display_handles(int depth) {
    rpt_vstring(depth, "Valid display handle = open_displays:");
-   if (open_displays) {
-      GList * display_handles = g_hash_table_get_keys(open_displays);
+   assert(open_displays);
+   GList * display_handles = g_hash_table_get_keys(open_displays);
+   if (g_list_length(display_handles) > 0) {
       for (GList * cur = display_handles; cur; cur = cur->next) {
          Display_Handle * dh = cur->data;
          rpt_vstring(depth+1, "%p -> %s", dh, dh_repr_t(dh));
       }
-      g_list_free(display_handles);
    }
    else {
       rpt_vstring(depth+1, "None");
    }
+   g_list_free(display_handles);
 }
 
 
@@ -245,8 +244,7 @@ ddc_open_display(
          TUNED_SLEEP_WITH_TRACE(dh, SE_POST_OPEN, NULL);
       dref->flags |= DREF_OPEN;
       // protect with lock?
-      if (!open_displays)
-         open_displays = g_hash_table_new(g_direct_hash, NULL);
+      assert(open_displays);
       g_hash_table_add(open_displays, dh);
    }
    else {
@@ -321,6 +319,7 @@ ddc_close_display(Display_Handle * dh) {
    dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
    unlock_distinct_display(display_id);
+   assert(open_displays);
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
@@ -329,6 +328,7 @@ ddc_close_display(Display_Handle * dh) {
 }
 
 void ddc_close_all_displays() {
+   assert(open_displays);
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
       Display_Handle * dh = cur->data;
@@ -967,4 +967,6 @@ init_ddc_packet_io_func_name_table() {
 void
 init_ddc_packet_io() {
    init_ddc_packet_io_func_name_table();
+
+   open_displays = g_hash_table_new(g_direct_hash, NULL);
 }
