@@ -692,6 +692,7 @@ ddca_get_display_info(
                API_PRECOND(dinfo_loc);
                DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
                init_display_info(dref, info);
+               *dinfo_loc = info;
                psc=0;
          }
    )
@@ -788,13 +789,13 @@ ddca_get_display_info_list2(
 }
 
 
-static void
+void
 ddca_free_display_info(DDCA_Display_Info * info_rec) {
-   // All pointers in DDCA_Display_Info are to permanently allocated
+   // DDCA_Display_Info contains no pointers, can simply be free'd
    // data structures.  Nothing to free.
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
       info_rec->marker[3] = 'x';
-      // free(info_rec);
+      free(info_rec);
    }
 }
 
@@ -802,8 +803,12 @@ ddca_free_display_info(DDCA_Display_Info * info_rec) {
 void
 ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
    if (dlist) {
+      // n. DDCA_Display_Info contains no pointers,
+      // DDCA_Display_Info_List can simply be free'd.
       for (int ndx = 0; ndx < dlist->ct; ndx++) {
-         ddca_free_display_info(&dlist->info[ndx]);
+          DDCA_Display_Info * info_rec = &dlist->info[ndx];
+          if (memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0)
+             info_rec->marker[3] = 'x';
       }
       free(dlist);
    }
@@ -874,7 +879,6 @@ dbgrpt_display_info(
       rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
    }
 }
-
 
 void
 ddca_report_display_info_list(
@@ -964,4 +968,6 @@ int
 ddca_report_displays(bool include_invalid_displays, int depth) {
    return ddc_report_displays(include_invalid_displays, depth);
 }
+
+
 
