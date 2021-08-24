@@ -135,30 +135,29 @@ try_single_getvcp_call(
        if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
           rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
           rc = DDCRC_UNIMPLEMENTED;
+          goto bye;
        }
-       else {
-          int actual_ct = 0;
-          rc = 0;
-          int ndx = 0;
-          __s32 smbus_result = 0;
-          for (; ndx < readct && rc == 0; ndx++) {
-             smbus_result = i2c_smbus_read_byte_data(fh, ndx);
-             DBGMSF(debug, "ndx=%d, smbus_result = 0x%08x, %d", ndx, smbus_result, smbus_result);
-             if (smbus_result < 0)
-                rc = -errno;
-             else {
-                ddc_response_bytes[ndx+1] = smbus_result;
-                actual_ct = ndx+1;
-             }
+       int actual_ct = 0;
+       rc = 0;
+       int ndx = 0;
+       __s32 smbus_result = 0;
+       for (; ndx < readct && rc == 0; ndx++) {
+          smbus_result = i2c_smbus_read_byte_data(fh, ndx);
+          DBGMSF(debug, "ndx=%d, smbus_result = 0x%08x, %d", ndx, smbus_result, smbus_result);
+          if (smbus_result < 0)
+             rc = -errno;
+          else {
+             ddc_response_bytes[ndx+1] = smbus_result;
+             actual_ct = ndx+1;
           }
-          if (rc < 0) {
-             rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
-                               linux_errno_desc(errno));
-             goto bye;
-          }
-          rpt_vstring(depth+1, "%d bytes were read", actual_ct);
-          rpt_vstring(depth, "ddc_response_bytes+1-> %s", hexstring_t(ddc_response_bytes+1,actual_ct) );
        }
+       if (rc < 0) {
+          rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
+                            linux_errno_desc(errno));
+          goto bye;
+       }
+       rpt_vstring(depth+1, "%d bytes were read", actual_ct);
+       rpt_vstring(depth, "ddc_response_bytes+1-> %s", hexstring_t(ddc_response_bytes+1,actual_ct) );
    }
    else {
       rc = read(fh, ddc_response_bytes+1, readct);
