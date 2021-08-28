@@ -488,6 +488,7 @@ char * bbf_to_string(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
    else
       buffer = malloc(reqd_size);
    char * pos = buffer;
+   *pos = '\0';
    unsigned int flagno = 0;
    // printf("(%s) bbflags->byte=0x%s\n", __func__, hexstring(flags->byte,32));
    for (flagno = 0; flagno < 256; flagno++) {
