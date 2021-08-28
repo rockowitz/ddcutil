@@ -801,9 +801,12 @@ void query_sysenv() {
 
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
-         rpt_label(0, "*** Calling get_sysfs_drm_displays() from ddc_watch.c... ***");
-         GPtrArray * connected_displays = get_sysfs_drm_displays(/*verbose=*/ true);
-         g_ptr_array_free(connected_displays, true);
+         rpt_label(0, "*** Calling get_sysfs_drm_card_numbers(), get_sysfs_drm_displays() from ddc_watch.c... ***");
+         Byte_Bit_Flags drm_card_numbers = get_sysfs_drm_card_numbers();
+         if (bbf_count_set(drm_card_numbers) > 0) {
+            GPtrArray * connected_displays = get_sysfs_drm_displays(drm_card_numbers, /*verbose=*/ true);
+            g_ptr_array_free(connected_displays, true);
+         }
       }
 
 #ifdef TMI

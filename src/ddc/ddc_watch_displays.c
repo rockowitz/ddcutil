@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 // #include <unistd.h>
 
+#include "util/data_structures.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
@@ -48,6 +49,7 @@ typedef struct {
    Display_Change_Handler display_change_handler;
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
+   Byte_Bit_Flags         drm_card_numbers;
 } Watch_Displays_Data;
 
 
@@ -87,21 +89,77 @@ bool check_thread_or_process(pid_t id) {
 }
 
 
-GPtrArray * get_sysfs_drm_displays(bool verbose)
+Byte_Bit_Flags get_sysfs_drm_card_numbers()
 {
-   struct dirent *dent;
-   // struct dirent *dent2;
+   const char * dname =
+#ifdef TARGET_BSD
+                    "/compat/linux/sys/class/drm";
+#else
+                    "/sys/class/drm";
+#endif
+
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. dname=%s", dname);
+
+   Byte_Bit_Flags result = bbf_create();
+
    DIR           *dir1;
-   char          *dname;
    char          dnbuf[90];
    const int     cardname_sz = 20;
    char          cardname[cardname_sz];
 
    int depth = 0;
    int d1    = depth+1;
-   int d2    = depth+2;
 
+   // rpt_vstring(depth, "Examining (W) %s...", dname);
+   dir1 = opendir(dname);
+   if (!dir1) {
+      rpt_vstring(depth, "Unable to open directory %s: %s",
+                     dname, strerror(errno));
+   }
+   else {
+      closedir(dir1);
+      int cardno = 0;
+      for (;;cardno++) {
+         snprintf(cardname, cardname_sz, "card%d", cardno);
+         snprintf(dnbuf, 80, "%s/%s", dname, cardname);
+         dir1 = opendir(dnbuf);
+         DBGMSF(debug, "dnbuf=%s", dnbuf);
+         if (dir1) {
+            bbf_set(result, cardno);
+            closedir(dir1);
+         }
+         else {
+            //  rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+            break;
+         }
+      }
+
+      if (bbf_count_set(result) == 0) {
+         rpt_vstring(d1, "No drm class video cards found in %s", dname);
+      }
+   }
+   char * s = bbf_to_string(result, NULL, 0);
+   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", s);
+   free(s);
+
+   return result;
+}
+
+
+GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
+{
    bool debug = false;
+   int  depth = 0;
+   int  d1    = depth+1;
+   int  d2    = depth+2;
+
+   struct dirent *dent;
+   DIR           *dir1;
+   char          *dname;
+   char          dnbuf[90];
+   const int     cardname_sz = 20;
+   char          cardname[cardname_sz];
 
    GPtrArray * connected_displays = g_ptr_array_new();
    g_ptr_array_set_free_func(connected_displays, g_free);
@@ -111,69 +169,58 @@ GPtrArray * get_sysfs_drm_displays(bool verbose)
 #else
    dname = "/sys/class/drm";
 #endif
-   DBGMSF(debug, "dname=%s", dname);
-   if (verbose)
-      rpt_vstring(depth, "Examining (W) %s...", dname);
-   dir1 = opendir(dname);
-   if (!dir1) {
-      rpt_vstring(d1, "drm not defined in sysfs. Unable to open directory %s: %s\n",
-                     dname, strerror(errno));
-   }
-   else {
-      closedir(dir1);
-      int cardno = 0;
-      for (;;cardno++) {
-         snprintf(cardname, cardname_sz, "card%d", cardno);
-         snprintf(dnbuf, 80, "/sys/class/drm/%s", cardname);
-         dir1 = opendir(dnbuf);
-         DBGMSF(debug, "dnbuf=%s", dnbuf);
-         if (!dir1) {
-            // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
-            break;
-         }
-         else {
-            while ((dent = readdir(dir1)) != NULL) {
-               // DBGMSG("%s", dent->d_name);
-               // char cur_fn[100];
-               if (str_starts_with(dent->d_name, cardname)) {
-                  if (verbose)
-                     rpt_vstring(d1, "Found connector: %s", dent->d_name);
-                  char cur_dir_name[PATH_MAX];
-                  g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
-                  char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
-                  // rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
-                  if (verbose)
-                     rpt_vstring(d2, "Display: %s, status=%s", dent->d_name, s_status);
-                  // edid present iff status == "connected"
-                  if (streq(s_status, "connected")) {
-                     if (verbose) {
-                        GByteArray * gba_edid = read_binary_sysfs_attr(
-                              cur_dir_name, "edid", 128, /*verbose=*/ true);
-                        if (gba_edid) {
-                           rpt_vstring(d2, "%s/edid:", cur_dir_name);
-                           rpt_hex_dump(gba_edid->data, gba_edid->len, d2);
-                           g_byte_array_free(gba_edid, true);
-                        }
-                        else {
-                           rpt_vstring(d2, "Reading %s/edid failed.", cur_dir_name);
-                        }
-                     }
-
-                     g_ptr_array_add(connected_displays, strdup(dent->d_name));
-                 }
-                  if (verbose)
-                     rpt_nl();
-               }
-            }
-            closedir(dir1);
-         }
+   DBGTRC(debug, TRACE_GROUP, "Examining %s...", dname);
+   Byte_Bit_Flags iter = bbf_iter_new(sysfs_drm_cards);
+   int cardno = -1;
+   while ( (cardno = bbf_iter_next(iter)) >= 0) {
+      snprintf(cardname, cardname_sz, "card%d", cardno);
+      snprintf(dnbuf, 80, "%s/%s", dname, cardname);
+      dir1 = opendir(dnbuf);
+      DBGMSF(debug, "dnbuf=%s", dnbuf);
+      if (!dir1) {
+         // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+         break;
       }
-      if (cardno==0)
-         rpt_vstring(d1, "No drm class cards found in %s", dname);
+      else {
+         while ((dent = readdir(dir1)) != NULL) {
+            // DBGMSG("%s", dent->d_name);
+            // char cur_fn[100];
+            if (str_starts_with(dent->d_name, cardname)) {
+               if (verbose)
+                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
+               char cur_dir_name[PATH_MAX];
+               g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
+               char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
+               // rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
+               if (verbose)
+                  rpt_vstring(d2, "Display: %s, status=%s", dent->d_name, s_status);
+               // edid present iff status == "connected"
+               if (streq(s_status, "connected")) {
+                  if (verbose) {
+                     GByteArray * gba_edid = read_binary_sysfs_attr(
+                           cur_dir_name, "edid", 128, /*verbose=*/ true);
+                     if (gba_edid) {
+                        rpt_vstring(d2, "%s/edid:", cur_dir_name);
+                        rpt_hex_dump(gba_edid->data, gba_edid->len, d2);
+                        g_byte_array_free(gba_edid, true);
+                     }
+                     else {
+                        rpt_vstring(d2, "Reading %s/edid failed.", cur_dir_name);
+                     }
+                  }
+
+                  g_ptr_array_add(connected_displays, strdup(dent->d_name));
+              }
+               if (verbose)
+                  rpt_nl();
+            }
+         }
+         closedir(dir1);
+      }
    }
 
    g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC(debug || verbose, TRACE_GROUP, "Connected displays: %s",
+   DBGTRC(debug, TRACE_GROUP, "Connected displays: %s",
                               join_string_g_ptr_array_t(connected_displays, ", "));
    return connected_displays;
 }
@@ -231,7 +278,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
    Displays_Change_Type change_type = Changed_None;
 
-   GPtrArray * cur_displays = get_sysfs_drm_displays(false);
+   GPtrArray * cur_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
    if ( !displays_eq(prev_displays, cur_displays) ) {
       if ( debug || IS_TRACING() ) {
          DBGMSG("Displays changed!");
@@ -279,7 +326,7 @@ gpointer watch_displays_using_poll(gpointer data) {
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays(false);
+   GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
    DBGTRC(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
@@ -386,7 +433,7 @@ gpointer watch_displays_using_udev(gpointer data) {
    int fd = udev_monitor_get_fd(mon);
    set_fd_blocking(fd);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays(false);
+   GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
    DBGTRC(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
@@ -508,29 +555,45 @@ ddc_start_watch_displays()
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. " );
    DDCA_Status ddcrc = DDCRC_OK;
-   g_mutex_lock(&watch_thread_mutex);
 
-   if (watch_thread)
-      ddcrc = DDCRC_INVALID_OPERATION;
-   else {
-      terminate_watch_thread = false;
-      Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-      memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-      data->display_change_handler = dummy_display_change_handler;
-      data->main_process_id = getpid();
-      // data->main_thread_id = syscall(SYS_gettid);
-      data->main_thread_id = get_thread_id();
-      watch_thread = g_thread_new(
-                       "watch_displays",             // optional thread name
-#if ENABLE_UDEV
-                       watch_displays_using_udev,
+   char * class_drm_dir =
+#ifdef TARGET_BSD
+         "/compat/sys/class/drm";
 #else
-                       watch_displays_using_poll,
+         "/sys/class/drm";
 #endif
-                       data);
+   Byte_Bit_Flags drm_card_numbers = get_sysfs_drm_card_numbers();
+   if (bbf_count_set(drm_card_numbers) == 0) {
+      rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
+      ddcrc = DDCRC_INVALID_OPERATION;
    }
+   else {
 
-   g_mutex_unlock(&watch_thread_mutex);
+      g_mutex_lock(&watch_thread_mutex);
+
+      if (watch_thread)
+         ddcrc = DDCRC_INVALID_OPERATION;
+      else {
+         terminate_watch_thread = false;
+         Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
+         memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+         data->display_change_handler = dummy_display_change_handler;
+         data->main_process_id = getpid();
+         // data->main_thread_id = syscall(SYS_gettid);
+         data->main_thread_id = get_thread_id();
+         data->drm_card_numbers = drm_card_numbers;
+         watch_thread = g_thread_new(
+                          "watch_displays",             // optional thread name
+   #if ENABLE_UDEV
+                          watch_displays_using_udev,
+   #else
+                          watch_displays_using_poll,
+   #endif
+                          data);
+      }
+
+      g_mutex_unlock(&watch_thread_mutex);
+   }
    DBGTRC(debug, TRACE_GROUP, "Done.     watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
    return ddcrc;
 }
