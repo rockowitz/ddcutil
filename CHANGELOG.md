@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0] 2021-08-24
+## [1.2.0] 2021-08-28
 
 ### Added
 - libddcutil log file
@@ -29,6 +29,8 @@
 - ddcutil diagnostics were not finding module i2c-dev if the system (e.g. NixOS) 
   used a non-standard location for the modules directory (Issue #178). The checks 
   have been rewritten to use libkmod.
+- Eliminate repeated messages from the experimental display hotplug detection code
+  if no /sys/class/drm/cardN devices exist. (libddcutil)
 
 ## [1.1.0] 2021-04-05
 
