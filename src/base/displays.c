@@ -29,6 +29,7 @@
 
 #include "core.h"
 #include "monitor_model_key.h"
+#include "rtti.h"
 #include "vcp_version.h"
 
 #include "displays.h"
@@ -1109,11 +1110,15 @@ char * dh_repr(Display_Handle * dh) {
  * \param  dh  display handle to free
  */
 void   free_display_handle(Display_Handle * dh) {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_BASE, "Starting. dh=%p", dh);
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
+      DBGTRC(debug, DDCA_TRC_NONE, "dh = %s", dh_repr_t(dh));
       dh->marker[3] = 'x';
       free(dh->repr);
       free(dh);
    }
+   DBGTRC(debug, DDCA_TRC_BASE, "Done");
 }
 
 
@@ -1206,6 +1211,8 @@ char * dref_basic_flags_t(uint16_t flags) {
 #undef ADD_DREF_FLAG
 
 void init_displays() {
+   RTTI_ADD_FUNC(free_display_handle);
+
    displays_master_list = g_ptr_array_new();
 }
 
