@@ -18,13 +18,6 @@
 #include "error_info.h"
 #include "file_util_base.h"
 
-#ifdef MOVED
-int file_getlines(
-      const char *  fn,
-      GPtrArray*    line_array,
-      bool          verbose);
-#endif
-
 Error_Info * file_getlines_errinfo(
       const char *  filename,
       GPtrArray *   lines);
@@ -97,9 +90,7 @@ void dir_ordered_foreach(
       void *                accumulator,
       int                   depth);
 
-
-void
-dir_filtered_ordered_foreach(
+void dir_filtered_ordered_foreach(
         const char *          dirname,
         Dir_Filter_Func       dir_filter,
         GCompareFunc          compare_func,
