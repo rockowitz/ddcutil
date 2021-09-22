@@ -119,7 +119,7 @@ char * xdg_cache_home_dir() {
 */
 char * xdg_state_home_dir() {
    bool debug = false;
-   char * result = xdg_home_dir("XDG_CACHE_HOME", ".local/state");
+   char * result = xdg_home_dir("XDG_STATE_HOME", ".local/state");
    if (debug)
       printf("(%s) Returning: %s\n", __func__, result);
    return result;
