@@ -11,6 +11,7 @@
 
 // #define _GNU_SOURCE 1       // for function group_member
 #include <assert.h>
+#include <dirent.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/utsname.h>
@@ -28,6 +29,7 @@
 #endif
 #ifdef USE_X11
 #include "util/x11_util.h"
+#include "util/xdg_util.h"
 #endif
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
@@ -471,6 +473,106 @@ void query_loaded_modules_using_libkmod() {
 }
 
 
+static GPtrArray * get_path_application_files(const char * path, const char * application) {
+   GPtrArray * fqfns = g_ptr_array_new_with_free_func(free);
+   Null_Terminated_String_Array dirs = strsplit(path, ":");
+   char * dirname;
+   for (int ndx = 0; (dirname=dirs[ndx]); ndx++) {
+      char * appdir = (dirname[strlen(dirname)-1] == '/')
+              ? g_strdup_printf("%s%s",  dirname, application)
+              : g_strdup_printf("%s/%s", dirname, application);
+      DIR * d = opendir(appdir);
+      if (d) {
+         struct dirent *directory_entry;
+         while ((directory_entry = readdir(d)) != NULL) {
+            // printf("%s\n", directory_entry->d_name);
+            if (directory_entry->d_type == DT_REG) {
+               char * fq_name = g_strdup_printf("%s/%s", appdir, directory_entry->d_name);
+               g_ptr_array_add(fqfns, fq_name);
+            }
+         }
+         closedir(d);
+      }
+      free(appdir);
+   }
+   ntsa_free(dirs, true);
+   return fqfns;
+}
+
+
+static void query_xdg_files(int depth) {
+   int d1 = depth+1;
+   int d2 = depth+2;
+   int d3 = depth+3;
+
+   rpt_vstring(d1, "$%-15s: %s", "XDG_DATA_HOME",   getenv("XDG_DATA_HOME"));
+   rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_HOME", getenv("XDG_CONFIG_HOME"));
+   rpt_vstring(d1, "$%-15s: %s", "XDG_STATE_HOME",  getenv("XDG_STATE_HOME"));
+   rpt_vstring(d1, "$%-15s: %s", "XDG_CACHE_HOME",  getenv("XDG_CACHE_HOME"));
+   rpt_vstring(d1, "$%-15s: %s", "XDG_DATA_DIRS",   getenv("XDG_DATA_DIRS"));
+   rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_DIRS", getenv("XDG_CONFIG_DIRS"));
+
+   rpt_nl();
+   rpt_label(depth, "xdg functions:");
+   char * s = xdg_data_home_dir();
+   rpt_vstring(d1, "xdg_data_home_dir():      %s", s);
+   free(s);
+   s = xdg_config_home_dir();
+   rpt_vstring(d1, "xdg_config_home_dir():    %s", s);
+   free(s);
+   s = xdg_cache_home_dir();
+   rpt_vstring(d1, "xdg_cache_home_dir():     %s", s);
+   free(s);
+   s = xdg_state_home_dir();
+   rpt_vstring(d1, "xdg_state_home_dir():     %s", s);
+   free(s);
+
+   char * data_path = xdg_data_path();
+   rpt_vstring(d1, "xdg_data_path():          %s", data_path);
+   s = xdg_config_path();
+   rpt_vstring(d1, "xdg_config_path():        %s", s);
+   free(s);
+
+   rpt_nl();
+   char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+   // rpt_vstring(d1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\") returned: %s", config_fn);
+   if (config_fn) {
+      rpt_vstring(d1, "Found configuration file: %s", config_fn);
+      rpt_file_contents(config_fn, /*verbose=*/ true, d2);
+      free(config_fn);
+   }
+   else
+      rpt_label(d1, "Configuration file ddcutilrc not found");
+
+   rpt_nl();
+   char * cache_fn = find_xdg_cache_file("ddcutil", "capabilities");
+   // rpt_vstring(d1, "find_xdg_cache_file(\"ddcutil\", \"capabilities\") returned: %s", config_fn);
+   if (cache_fn) {
+      rpt_vstring(d1, "Found capabilities cache file: %s", cache_fn);
+      rpt_file_contents(cache_fn, /*verbose=*/ true, d2);
+      free(cache_fn);
+   }
+   else
+      rpt_label(d1, "Capabilities cache file not found");
+
+   rpt_nl();
+   rpt_label(d1, "Files on data path:");
+
+   GPtrArray * data_files = get_path_application_files(data_path, "ddcutil");
+   for (int ndx = 0; ndx < data_files->len; ndx++) {
+      char * fn = g_ptr_array_index(data_files, ndx);
+      rpt_label(d2, fn);
+      if (str_ends_with(fn, ".mccs")) {
+         rpt_file_contents(fn, /*verbose=*/ true, d3);
+         rpt_nl();
+      }
+   }
+
+   g_ptr_array_free(data_files, true);
+   rpt_nl();
+}
+
+
 /** Analyze collected environment information, Make suggestions.
  *
  * \param accum  accumulated environment information
@@ -820,6 +922,8 @@ void query_sysenv() {
       }
 #endif
 #endif
+
+      query_xdg_files(0);
    }
 
    env_accumulator_free(accumulator);     // make Coverity happy
