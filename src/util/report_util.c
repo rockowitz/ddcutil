@@ -237,7 +237,7 @@ void rpt_nl() {
 }
 
 
-/* Writes a constant string to the current output destination.
+/** Writes a constant string to the current output destination.
  *
  * A newline is appended to the string specified.
  *
@@ -256,7 +256,7 @@ void rpt_title(const char * title, int depth) {
 }
 
 
-/* Writes a constant string to the current output destination.
+/** Writes a constant string to the current output destination.
  *
  * A newline is appended to the string specified.
  *
@@ -311,9 +311,9 @@ void rpt_vstring(int depth, char * format, ...) {
 
 /** Convenience function that writes multiple constant strings.
  *
- *   @param depth    logical indentation depth
- *   @param ...      pointers to constant strings,
- *                   last pointer is NULL to terminate list
+ *  @param depth    logical indentation depth
+ *  @param ...      pointers to constant strings,
+ *                  last pointer is NULL to terminate list
  */
 void rpt_multiline(int depth, ...) {
    va_list args;
@@ -342,9 +342,9 @@ void rpt_g_ptr_array(int depth, GPtrArray * strings) {
 /** Writes a hex dump with indentation.
  *  Output is written to the current report destination
  *
- * @param data  start of bytes to dump
- * @param size  number of bytes to dump
- * @param depth logical indentation depth
+ *  @param data  start of bytes to dump
+ *  @param size  number of bytes to dump
+ *  @param depth logical indentation depth
  */
 void rpt_hex_dump(const Byte * data, int size, int depth) {
    fhex_dump_indented(rpt_cur_output_dest(), data, size, rpt_get_indent(depth));
@@ -354,8 +354,8 @@ void rpt_hex_dump(const Byte * data, int size, int depth) {
 /** Writes a Null_Terminated_String_Array with indentation.
  *  Output is written to the current report destination.
  *
- * @param ntsa  array to report
- * @param depth logical indentation depth
+ *  @param ntsa  array to report
+ *  @param depth logical indentation depth
  */
 void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth) {
    assert(ntsa);
@@ -366,13 +366,13 @@ void rpt_ntsa(Null_Terminated_String_Array ntsa, int depth) {
 
 
 /** Writes a string to the current output destination, describing a pointer
- * to a named data structure.
+ *  to a named data structure.
  *
- * The output is indented per the specified indentation depth.
+ *  The output is indented per the specified indentation depth.
  *
- * @param name  struct name
- * @param ptr   pointer to struc
- * @param depth logical indentation depth
+ *  @param name  struct name
+ *  @param ptr   pointer to struc
+ *  @param depth logical indentation depth
  */
 void rpt_structure_loc(const char * name, const void * ptr, int depth) {
    // fprintf(rpt_cur_output_dest(), "%*s%s at: %p\n", rpt_indent(depth), "", name, ptr);
@@ -382,15 +382,15 @@ void rpt_structure_loc(const char * name, const void * ptr, int depth) {
 
 /** Writes a pair of strings to the current output destination.
  *
- * If offset_absolute is true, then the s2 value will start in the same column,
- * irrespective of the line indentation.   This may make some reports easier to read.
+ *  If offset_absolute is true, then the s2 value will start in the same column,
+ *  irrespective of the line indentation.   This may make some reports easier to read.
  *
- * @param s1 first string
- * @param s2 second string
- * @param col2offset  offset from start of line where s2 starts
- * @param offset_absolute  if true,  col2offset is relative to the start of the line, before indentation
- *                         if false, col2offset is relative to the indented start of s1
- * @param depth logical indentation depth
+ *  @param s1 first string
+ *  @param s2 second string
+ *  @param col2offset  offset from start of line where s2 starts
+ *  @param offset_absolute  if true,  col2offset is relative to the start of the line, before indentation
+ *                          if false, col2offset is relative to the indented start of s1
+ *  @param depth logical indentation depth
  */
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth) {
    int col1sz = col2offset;
@@ -401,11 +401,13 @@ void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int 
 }
 
 
-/* Reports the contents of a file.
+/** Reports the contents of a file.
  *
- * @param   fn        name of file
- * @param   verbose   if true, emit message if error reading file
- * @depth   depth     logical indentation depth
+ *  @param   fn        name of file
+ *  @param   verbose   if true, emit message if error reading file
+ *  @param   depth     logical indentation depth
+ *  @retval >=0        number of lines read
+ *  @retval <0         -errno from fopen() or getline()
  */
 int rpt_file_contents(const char * fn, bool verbose, int depth) {
    GPtrArray * line_array = g_ptr_array_new();
