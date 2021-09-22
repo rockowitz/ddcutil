@@ -63,11 +63,10 @@ int tokenize_options_line(char * string, char ***tokens_loc) {
  *
  *  An untokenized option string is returned iff rc == 0.
  */
-static
 int read_ddcutil_config_file(
       const char *   ddcutil_application,
       char **        config_fn_loc,
-      char**         untokenized_option_string_loc,
+      char **        untokenized_option_string_loc,
       GPtrArray *    errmsgs,
       bool           verbose)
 {
