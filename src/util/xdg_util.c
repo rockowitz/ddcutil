@@ -40,10 +40,12 @@ regular_file_exists(const char * fqfn) {
 }
 
 
-/** Returns the name of the base data, configuration, or cache, directory.
+/** Returns the name of the base data, configuration, or cache directory.
  *  First the specified environment variable is checked.
  *  If no value is found the name is constructed from $HOME and
  *  the specified sub-directory.
+ *
+ *  The returned value is guaranteed to end in '/'.
  *
  *  Caller is responsible for freeing the returned memory.
  */
@@ -52,10 +54,12 @@ static char * xdg_home_dir(
       const char * home_subdir_name)
 {
    bool debug = false;
-
    char * xdg_home = getenv(envvar_name);  // do not free
-   if (xdg_home && strlen(xdg_home) > 0)
-      xdg_home = strdup(xdg_home);
+   if (xdg_home && strlen(xdg_home) > 0) {
+      xdg_home = (xdg_home[strlen(xdg_home)-1] == '/')
+                    ? strdup(xdg_home)
+                    : g_strdup_printf("%s/", xdg_home);
+   }
    else {
       char * home = getenv("HOME");
       if (home && strlen(home) > 0)
@@ -64,7 +68,8 @@ static char * xdg_home_dir(
          xdg_home = NULL;
    }
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, xdg_home);
+      printf("(%s) envvar_name=|%s|, home_subdir_name=|%s|, returning: %s\n",
+             __func__, envvar_name, home_subdir_name, xdg_home);
    return xdg_home;
 }
 
