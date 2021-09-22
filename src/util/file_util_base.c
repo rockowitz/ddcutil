@@ -1,11 +1,7 @@
 // file_util_base.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
- 
-
-
 
 /** \cond */
 #include <assert.h>
