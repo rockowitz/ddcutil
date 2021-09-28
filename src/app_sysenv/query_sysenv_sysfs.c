@@ -7,8 +7,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
-#include <app_sysenv/query_sysenv_simplified_sys_bus_pci_devices.h>
 #include <assert.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -35,11 +35,10 @@
 #include "i2c/i2c_sysfs.h"
 
 #include "query_sysenv_base.h"
-
 #include "query_sysenv_sysfs_common.h"
 #include "query_sysenv_original_sys_scans.h"
 #include "query_sysenv_detailed_bus_pci_devices.h"
-
+#include "query_sysenv_simplified_sys_bus_pci_devices.h"
 #include "query_sysenv_xref.h"
 
 #include "query_sysenv_sysfs.h"
@@ -900,6 +899,186 @@ void show_top_level_sys_entries(int depth) {
 }
 
 
+// 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
+
+typedef struct {
+   char * connector_name;
+   int    i2c_busno;
+   bool   is_aux_channel;
+   int    base_busno;
+   char * name;
+   char * base_name;
+   Byte * edid_bytes;
+   gsize  edid_size;
+   bool   enabled;
+   char * status;
+} Sys_Drm_Display;
+
+
+void free_sys_drm_display(void * display) {
+   if (display) {
+      Sys_Drm_Display * disp = display;
+      free(disp->connector_name);
+      free(disp->edid_bytes);
+      free(disp->name);
+      free(disp->status);
+      free(disp);
+   }
+}
+
+
+static GPtrArray * sys_drm_displays = NULL;  // Sys_Drm_Display;
+
+// typedef Dir_Filter_Func
+bool is_drm_connector(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = false;
+   if (str_starts_with(simple_fn, "card")) {
+      char * s0 = strdup( simple_fn + 4);   // work around const char *
+      char * s = s0;
+      while (isdigit(*s)) s++;
+      if (*s == '-')
+         result = true;
+      free(s0);
+   }
+   DBGMSF(debug, "Done.     Returning %s", SBOOL(result));
+   return result;
+}
+
+
+bool fn_starts_with(const char * filename, const char * val) {
+   return str_starts_with(filename, val);
+}
+
+
+// typedef Dir_Foreach_Func
+void one_drm_connector(
+      const char *  dirname,
+      const char *  fn,
+      void *        accumulator,
+      int           depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s, depth=%d", dirname, fn, depth);
+   assert( accumulator == sys_drm_displays);   // temp
+   Sys_Drm_Display * cur = calloc(1, sizeof(Sys_Drm_Display));
+   g_ptr_array_add(sys_drm_displays, cur);
+   cur->connector_name = strdup(fn);
+   char * b1 = NULL;
+   RPT_ATTR_TEXT(depth,&b1, dirname, fn, "enabled");
+   cur->enabled = streq(b1, "enabled");
+   RPT_ATTR_TEXT(depth, &cur->status,  dirname, fn, "status");
+
+   GByteArray * edid_byte_array = NULL;
+   rpt_attr_edid(depth, &edid_byte_array, dirname, fn, "edid");
+   if (edid_byte_array) {
+      cur->edid_bytes = g_byte_array_steal(edid_byte_array, &cur->edid_size);
+   }
+
+   bool has_drm_dp_aux_subdir =
+         RPT_ATTR_SINGLE_SUBDIR(
+               depth,
+               NULL,     // char **      value_loc,
+               fn_starts_with,
+               "drm_dp_aux",
+               dirname,
+               fn);
+
+   char * buf = NULL;
+   bool has_i2c_subdir =
+         RPT_ATTR_SINGLE_SUBDIR(depth, &buf, fn_starts_with,"i2c-",
+                                dirname, fn);
+
+   ASSERT_IFF(has_drm_dp_aux_subdir, has_i2c_subdir);
+   cur->is_aux_channel = has_drm_dp_aux_subdir;
+   if (has_i2c_subdir) {  // DP
+      cur->base_busno = i2c_name_to_busno(buf);
+      RPT_ATTR_TEXT(depth, &cur->name, dirname, fn, buf, "name");
+
+      RPT_ATTR_TEXT(depth, &cur->base_name, dirname, fn, "ddc", "name");
+
+      has_i2c_subdir =
+            RPT_ATTR_SINGLE_SUBDIR(depth, &buf, fn_starts_with, "i2c-",
+                                   dirname, fn, "ddc", "i2c-dev");
+      if (has_i2c_subdir) {
+         cur->base_busno = i2c_name_to_busno(buf);
+      }
+   }
+   else {   // not DP
+      RPT_ATTR_TEXT(depth, &cur->name, dirname, fn, "ddc", "name");
+
+      has_i2c_subdir = RPT_ATTR_SINGLE_SUBDIR(
+            depth,
+            &buf,
+            fn_starts_with,
+            "i2c-",
+            dirname,
+            fn,
+            "ddc",
+            "i2c-dev");
+      if (has_i2c_subdir) {
+         cur->i2c_busno = i2c_name_to_busno(buf);
+      }
+   }
+}
+
+
+void scan_sys_drm_displays(int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_nl();
+   rpt_label(d0, "Scanning /sys/class/drm for /dev/i2c device numbers and EDIDs");
+   if (sys_drm_displays) {
+      g_ptr_array_free(sys_drm_displays, true);
+      sys_drm_displays = NULL;
+   }
+   sys_drm_displays = g_ptr_array_new_with_free_func(free_sys_drm_display);
+
+   dir_filtered_ordered_foreach("/sys/class/drm",
+                       is_drm_connector,      // filter function
+                       NULL,                    // ordering function
+                       one_drm_connector,
+                       sys_drm_displays,                    // accumulator
+                       d1);
+
+   DBGMSF(debug, "Done");
+}
+
+
+void report_sys_drm_displays(int depth) {
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_nl();
+   rpt_label(d0, "Displays via DRM connector:");
+   if (!sys_drm_displays)
+     scan_sys_drm_displays(depth);
+   GPtrArray * displays = sys_drm_displays;
+   if (!displays || displays->len == 0) {
+      rpt_label(d1, "None");
+   }
+   else {
+      for (int ndx = 0; ndx < displays->len; ndx++) {
+         Sys_Drm_Display * cur = g_ptr_array_index(displays, ndx);
+         rpt_nl();
+         rpt_vstring(d0, "Connector: %s", cur->connector_name);
+         rpt_vstring(d1, "i2c_busno: %d", cur->i2c_busno);
+         rpt_vstring(d1, "enabled:   %s", sbool(cur->enabled));
+         rpt_vstring(d1, "status:    %s", cur->status);
+         rpt_vstring(d1, "name:      %s", cur->name);
+         rpt_label(d1,   "edid:");
+         rpt_hex_dump(cur->edid_bytes, cur->edid_size, d1);
+         if (cur->is_aux_channel) {
+            rpt_vstring(d1, "base_busno:    %d", cur->base_busno);
+            rpt_vstring(d1, "base_name:     %s", cur->base_name);
+         }
+      }
+   }
+}
+
+
 /** Master function for dumping /sys directory
  */
 void dump_sysfs_i2c() {
@@ -914,6 +1093,7 @@ void dump_sysfs_i2c() {
    // dump_original_sys_scans();
    dump_simplified_sys_bus_pci(0);
    dump_detailed_sys_bus_pci(0);
+   report_sys_drm_displays(0);
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
