@@ -267,7 +267,6 @@ assemble_sysfs_path2(
          break;
       STRLCAT(buffer, "/", bufsz);
       STRLCAT(buffer, segment, bufsz);
-      // STRLCAT(buffer, "/", bufsz);
    }
    if (debug)
       printf("(%s) Returning: %s\n", __func__, buffer);
@@ -459,11 +458,16 @@ rpt_attr_single_subdir(
       const char * fn_segment,
       ...)
 {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. depth=%d, value_loc=%p\n", __func__, depth, value_loc);
    char pb1[PATH_MAX];
    va_list ap;
    va_start(ap, fn_segment);
    assemble_sysfs_path2(pb1, PATH_MAX, fn_segment, ap);
    va_end(ap);
+   if (debug)
+      printf("(%s) pb1=|%s|\n", __func__, pb1);
 
    if (value_loc)
       *value_loc = NULL;
@@ -484,6 +488,8 @@ rpt_attr_single_subdir(
       g_snprintf(buf, PATH_MAX+100, "No %s subdirectory found", predicate_value);
       rpt_attr_output(depth, pb1, ":", buf);
    }
+   if (debug)
+      printf("(%s) Done.    Returning %s\n", __func__, SBOOL(found));
    return found;
 }
 
