@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0] 2021-08-28
+## [1.2.0] 2021-09-28
 
 ### Added
 - libddcutil log file
