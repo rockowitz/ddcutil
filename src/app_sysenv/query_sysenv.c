@@ -505,6 +505,7 @@ static void query_xdg_files(int depth) {
    int d2 = depth+2;
    int d3 = depth+3;
 
+   rpt_label(depth, "XDG Base Directory Environment Variables:");
    rpt_vstring(d1, "$%-15s: %s", "XDG_DATA_HOME",   getenv("XDG_DATA_HOME"));
    rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_HOME", getenv("XDG_CONFIG_HOME"));
    rpt_vstring(d1, "$%-15s: %s", "XDG_STATE_HOME",  getenv("XDG_STATE_HOME"));
@@ -513,7 +514,7 @@ static void query_xdg_files(int depth) {
    rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_DIRS", getenv("XDG_CONFIG_DIRS"));
 
    rpt_nl();
-   rpt_label(depth, "xdg functions:");
+   rpt_label(depth, "XDG Utility Functions:");
    char * s = xdg_data_home_dir();
    rpt_vstring(d1, "xdg_data_home_dir():      %s", s);
    free(s);
@@ -534,6 +535,7 @@ static void query_xdg_files(int depth) {
    free(s);
 
    rpt_nl();
+   rpt_label(depth, "ddcutil Configuration, Cache, and Data files:");
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    // rpt_vstring(d1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\") returned: %s", config_fn);
    if (config_fn) {
