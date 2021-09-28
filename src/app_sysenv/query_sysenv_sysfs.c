@@ -899,6 +899,7 @@ void show_top_level_sys_entries(int depth) {
 }
 
 
+#ifdef FUTURE
 // 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
 
 typedef struct {
@@ -1077,6 +1078,7 @@ void report_sys_drm_displays(int depth) {
       }
    }
 }
+#endif
 
 
 /** Master function for dumping /sys directory
@@ -1093,7 +1095,9 @@ void dump_sysfs_i2c() {
    // dump_original_sys_scans();
    dump_simplified_sys_bus_pci(0);
    dump_detailed_sys_bus_pci(0);
+#ifdef FUTURE
    report_sys_drm_displays(0);
+#endif
    DBGTRC(debug, TRACE_GROUP, "Done");
 }
 
