@@ -5,7 +5,7 @@
 // Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#define USE_LIBKMOD
+#include "config.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -15,7 +15,9 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <unistd.h>
-#ifdef USE_LIBKMOD
+#ifdef LIBKMOD_H_SUBDIR_KMOD
+#include <kmod/libkmod.h>
+#else
 #include <libkmod.h>
 #endif
 
@@ -25,9 +27,8 @@
 #include "linux_util.h"
 
 
-/** Tests whether a file is readable by trying to read from it,
-  * as opposed to considering all the rules re permissions, file type,
-  * links, etc.
+/** Tests whether a file is readable by trying to read from it, as opposed to
+  * considering all the rules re permissions, file type, links, etc.
   *
   * \param filename
   * \return true if file can be read from false if not
