@@ -535,6 +535,15 @@ AC_CHECK_HEADER( [i2c/smbus.h],
                     AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
 					)
 
+dnl on openSUSE, libkmod.h is found in a subdirectory
+AC_CHECK_HEADER( [kmod/libkmod.h],
+                    AC_DEFINE([LIBKMOD_H_SUBDIR_KMOD], [1], [libkmod.h location is include/kmod])
+                    AC_MSG_NOTICE( [header file libkmod.h found in subdirectory include/kmod]  )
+               ,
+	            AC_MSG_NOTICE( [header file libkmod.h not in subdirectory include/kmod]    )
+
+               )
+
 
 ###
 ### Required library tests
@@ -550,7 +559,7 @@ PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.32)
 required_packages="$required_packages glib-2.0 >= 2.32"
 
 PKG_CHECK_MODULES(KMOD, libkmod)
-required_packages = "$required_packages kmod"
+required_packages="$required_packages kmod"
 
 
 AS_IF( [test "x$enable_udev" = "xyes"],
@@ -883,4 +892,4 @@ AC_MSG_RESULT([
 	CPPFLAGS:               ${CPPFLAGS}
 	LDFLAGS:                ${LDFLAGS}
 ])
-
+dnl cat config.h
