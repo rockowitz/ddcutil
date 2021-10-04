@@ -191,6 +191,7 @@ validate_environment_using_libkmod()
       if (module_status < 0) {
          fprintf(stderr, "ddcutil cannot determine if module i2c-dev is loaded or built into the kernel.\n");
          ok = true;  // make this just a warning, we'll fail later if not in kernel
+         fprintf(stderr, "Execution may fail.\n");
       }
       else if (module_status == 0) {   // MODULE_STATUS_NOT_FOUND
          ok = false;
