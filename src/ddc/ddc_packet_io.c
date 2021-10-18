@@ -140,8 +140,8 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s",
-                 dref_repr_t(dref), interpret_call_options_t(callopts) );
+   DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s, dh_loc=%p",
+                 dref_repr_t(dref), interpret_call_options_t(callopts), dh_loc );
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
 
@@ -159,7 +159,7 @@ ddc_open_display(
       goto bye;
    }
    // DBGMSF(debug, "lockrc = %s, DREF_OPEN = %s", psc_desc(lockrc), sbool(dref->flags&DREF_OPEN));
-   ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
+   TRACED_ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
 
    if (dref->flags & DREF_OPEN) {
       ddcrc = DDCRC_ALREADY_OPEN;
@@ -244,7 +244,7 @@ ddc_open_display(
          TUNED_SLEEP_WITH_TRACE(dh, SE_POST_OPEN, NULL);
       dref->flags |= DREF_OPEN;
       // protect with lock?
-      assert(open_displays);
+      TRACED_ASSERT(open_displays);
       g_hash_table_add(open_displays, dh);
    }
    else {
