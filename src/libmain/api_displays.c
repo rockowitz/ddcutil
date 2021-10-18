@@ -239,7 +239,7 @@ ddca_get_display_ref(
 {
    free_thread_error_detail();
    bool debug = false;
-   DBGMSF(debug, "Starting.  did=%p, dref_loc=%p", did, dref_loc);
+   DBGTRC(debug, DDCA_TRC_API, "Starting.  did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
    // assert(dref_loc);
    API_PRECOND(dref_loc);
@@ -262,7 +262,7 @@ ddca_get_display_ref(
          rc = DDCRC_INVALID_DISPLAY;
    }
 
-   DBGMSF(debug,   "Done.     Returning: %d", rc);
+   DBGTRC(debug, DDCA_TRC_API, "Done.     Returning: %d, *dref_loc=%p", rc, *dref_loc);
    if (rc == 0)
       DBGMSF(debug,"          *dref_loc=%p", *dref_loc);
 
