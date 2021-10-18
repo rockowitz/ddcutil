@@ -425,7 +425,7 @@ void close_syslog() {
  *
  */
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
-   bool result =  (trace_group == 0xff) || (trace_levels & trace_group); // is trace_group being traced?
+   bool result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
 

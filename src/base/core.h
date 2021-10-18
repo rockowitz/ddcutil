@@ -196,7 +196,7 @@ bool dbgtrc(
       }                 \
       else {           \
          int line = __LINE__;  \
-         dbgtrc(true, __func__, __LINE__, __FILE__,   \
+         dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
          syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
@@ -228,12 +228,12 @@ bool dbgtrc(
    severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 // cannot map to dbgtrc, writes to stderr, not stdout
-// #define SEVEREMSG(format, ...) dbgtrc(0xff,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+// #define SEVEREMSG(format, ...) dbgtrc(DDCA_TRC_ALL,       __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DBGMSG(            format, ...) dbgtrc(0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#define DBGMSG(            format, ...) dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #define DBGMSF(debug_flag, format, ...) \
-   do { if (debug_flag) dbgtrc( 0xff, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+   do { if (debug_flag) dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 
 #define TRCMSG(            format, ...) \
    dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
@@ -241,12 +241,12 @@ bool dbgtrc(
 // For messages that are issued either if tracing is enabled for the appropriate trace group or
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
 if (_flag) { \
-   dbgtrc(0xff, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
+   dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
    if (_structptr) { \
       _dbgfunc(_structptr, 1); \
    } \
@@ -254,7 +254,7 @@ if (_flag) { \
 
 #define DBGTRC_RET_STRUCT(_flag, _trace_group, _structname, _dbgfunc, _structptr) \
 if ( (_flag) || (is_tracing(_trace_group, __FILE__, __func__)) ) { \
-   dbgtrc( 0xff, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
+   dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
    if (_structptr) { \
       _dbgfunc(_structptr, 1); \
    } \
