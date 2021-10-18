@@ -176,7 +176,7 @@ lock_distinct_display(
 
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   assert(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    bool self_thread = false;
    g_mutex_lock(&master_display_lock_mutex);  //wrong - will hold lock during wait
    if (ddesc->display_mutex_thread == g_thread_self() )
@@ -218,7 +218,7 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
    DDCA_Status ddcrc = 0;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   assert(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
    if (ddesc->display_mutex_thread != g_thread_self()) {
       DBGMSG("Attempting to unlock display lock owned by different thread");
