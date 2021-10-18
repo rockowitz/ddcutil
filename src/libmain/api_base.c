@@ -261,19 +261,11 @@ _ddca_init(void) {
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
-      if (parsed_cmd->s1 || parsed_cmd->library_trace_file) {
-         // convoluted code because --s1 was not described to user as resolving
-         // relative file name per XDG data spec
-         // to be simplified before release
-         char * trace_file = NULL;
-         if (parsed_cmd->s1)     // vestigial from testing
-            trace_file = strdup(parsed_cmd->s1);
-         if (!trace_file && parsed_cmd->library_trace_file) {
-            if (parsed_cmd->library_trace_file[0] != '/')
-               trace_file = xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file);
-            else
-               trace_file = strdup(parsed_cmd->library_trace_file);
-         }
+
+      if (parsed_cmd->library_trace_file) {
+         char * trace_file = (parsed_cmd->library_trace_file[0] != '/')
+                ? xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file)
+                : strdup(parsed_cmd->library_trace_file);
          if (debug)
             printf("(%s) Setting trace destination %s\n", __func__, trace_file);
          syslog(LOG_INFO, "Trace destination: %s", trace_file);
@@ -297,8 +289,8 @@ _ddca_init(void) {
          }
          free(trace_file);
       }
+
       submaster_initializer(parsed_cmd);
-      // init_ddc_services();
 
      //  explicitly set the async threshold for testing
      //  int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
