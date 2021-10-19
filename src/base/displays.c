@@ -1055,31 +1055,34 @@ char * dh_repr_t(Display_Handle * dh) {
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
 
    if (dh) {
-      assert(dh->dref);
+      if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
+         assert(dh->dref);
 
-      switch (dh->dref->io_path.io_mode) {
-      case DDCA_IO_I2C:
-           snprintf(buf, bufsz,
-                    "Display_Handle[i2c: fd=%d, busno=%d]",
-                    dh->fd, dh->dref->io_path.path.i2c_busno);
-           break;
-       case DDCA_IO_ADL:
-           snprintf(buf, bufsz,
-                    "Display_Handle[adl: display %d.%d]",
-                    dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
-           break;
-       case DDCA_IO_USB:
+         switch (dh->dref->io_path.io_mode) {
+         case DDCA_IO_I2C:
+              snprintf(buf, bufsz,
+                       "Display_Handle[i2c: fd=%d, busno=%d]",
+                       dh->fd, dh->dref->io_path.path.i2c_busno);
+              break;
+          case DDCA_IO_ADL:
+              snprintf(buf, bufsz,
+                       "Display_Handle[adl: display %d.%d]",
+                       dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
+              break;
+          case DDCA_IO_USB:
 #ifdef ENABLE_USB
-           snprintf(buf, bufsz,
-                    "Display_Handle[usb: %d:%d, %s/hiddev%d]",
-                    dh->dref->usb_bus, dh->dref->usb_device,
-                    usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
+              snprintf(buf, bufsz,
+                       "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                       dh->dref->usb_bus, dh->dref->usb_device,
+                       usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
 #else
-           PROGRAM_LOGIC_ERROR("io_path.io_mode == DDCA_IO_USB");
+              PROGRAM_LOGIC_ERROR("io_path.io_mode == DDCA_IO_USB");
 #endif
-           break;
-       }
-       buf[bufsz-1] = '\0';
+              break;
+          }
+          buf[bufsz-1] = '\0';
+      }
+      else strcpy(buf, "Display_Handle[Invalid]");
    }
    else {
       strcpy(buf, "Display_Handle[NULL]");
