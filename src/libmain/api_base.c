@@ -18,6 +18,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "util/ddcutil_config_file.h"
+#include "util/file_util.h"
 #include "util/xdg_util.h"
 
 #include "base/base_init.h"
@@ -248,7 +249,7 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
@@ -269,7 +270,10 @@ _ddca_init(void) {
          if (debug)
             printf("(%s) Setting trace destination %s\n", __func__, trace_file);
          syslog(LOG_INFO, "Trace destination: %s", trace_file);
-         flog = fopen(trace_file, "a+");
+
+         fopen_mkdir(trace_file, "a", stderr, &flog);
+
+         // flog = fopen(trace_file, "a");
          if (flog) {
             time_t trace_start_time = time(NULL);
             char * trace_start_time_s = asctime(localtime(&trace_start_time));
