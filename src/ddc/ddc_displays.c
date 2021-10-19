@@ -1276,7 +1276,7 @@ ddc_redetect_displays() {
 bool
 ddc_is_valid_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Checking dref=%p", dref);
+   DBGTRC(debug, TRACE_GROUP, "Checking dref=%p", dref);
    bool result = false;
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1290,7 +1290,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
          }
       }
    }
-   DBGMSF(debug, "dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
    return result;
 }
 
@@ -1370,6 +1370,8 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(non_async_scan);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
+   RTTI_ADD_FUNC(ddc_is_valid_display_ref);
+
    // dbgrpt_func_name_table(0);
 }
 
