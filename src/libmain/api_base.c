@@ -249,7 +249,7 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
