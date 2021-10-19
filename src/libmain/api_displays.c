@@ -41,17 +41,22 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
    Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0  ||
-      !ddc_is_valid_display_ref(dref) )
+   if (dref) {
+      if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0  ||
+          !ddc_is_valid_display_ref(dref) )
          dref=NULL;
+   }
    return dref;
 }
 
+
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0  ||
-      !ddc_is_valid_display_handle(dh) )
+   if (dh) {
+      if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0  ||
+          !ddc_is_valid_display_handle(dh) )
          dh=NULL;
+   }
    return dh;
 }
 
