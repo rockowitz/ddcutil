@@ -308,7 +308,6 @@ ddca_redetect_displays() {
 }
 
 
-
 // static char dref_work_buf[100];
 
 const char *
@@ -375,6 +374,7 @@ ddca_report_display_by_dref(
 
 //
 // Open and close display
+//
 
 DDCA_Status
 ddca_open_display(
@@ -383,6 +383,7 @@ ddca_open_display(
 {
    return ddca_open_display2(ddca_dref, false, dh_loc);
 }
+
 
 DDCA_Status
 ddca_open_display2(
