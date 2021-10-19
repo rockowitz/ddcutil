@@ -90,10 +90,10 @@ bool is_ddc_null_message(Byte * packet) {
 bool
 ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Checking dh=%p", dh);
+   DBGTRC(debug, TRACE_GROUP, "Checking dh=%p", dh);
    assert(open_displays);
    bool result = g_hash_table_contains(open_displays, dh);
-   DBGMSF(debug, "dh=%p, returning %s", dh, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "dh=%p, returning %s", dh, sbool(result));
    return result;
 }
 
@@ -961,6 +961,7 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_write_read_with_retry);
    RTTI_ADD_FUNC(ddc_write_only);
    RTTI_ADD_FUNC(ddc_write_only_with_retry);
+   RTTI_ADD_FUNC(ddc_is_valid_display_handle);
 }
 
 
