@@ -90,10 +90,10 @@ bool is_ddc_null_message(Byte * packet) {
 bool
 ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Checking dh=%p", dh);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%p", dh);
    assert(open_displays);
    bool result = g_hash_table_contains(open_displays, dh);
-   DBGTRC(debug, TRACE_GROUP, "dh=%p, returning %s", dh, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "Done.     dh=%p, returning %s", dh, sbool(result));
    return result;
 }
 

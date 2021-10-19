@@ -1082,7 +1082,7 @@ char * dh_repr_t(Display_Handle * dh) {
           }
           buf[bufsz-1] = '\0';
       }
-      else strcpy(buf, "Display_Handle[Invalid]");
+      else strcpy(buf, "Invalid Display_Handle");
    }
    else {
       strcpy(buf, "Display_Handle[NULL]");
@@ -1114,14 +1114,13 @@ char * dh_repr(Display_Handle * dh) {
  */
 void   free_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_BASE, "Starting. dh=%p", dh);
+   DBGTRC(debug, DDCA_TRC_BASE, "Starting. dh=%p -> %s", dh, dh_repr_t(dh));
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
-      DBGTRC(debug, DDCA_TRC_NONE, "dh = %s", dh_repr_t(dh));
       dh->marker[3] = 'x';
       free(dh->repr);
       free(dh);
    }
-   DBGTRC(debug, DDCA_TRC_BASE, "Done");
+   DBGTRC(debug, DDCA_TRC_BASE, "Done.");
 }
 
 

@@ -1276,7 +1276,7 @@ ddc_redetect_displays() {
 bool
 ddc_is_valid_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Checking dref=%p", dref);
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%p -> %s", dref, dref_repr_t(dref));
    bool result = false;
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1290,7 +1290,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
          }
       }
    }
-   DBGTRC(debug, TRACE_GROUP, "dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
+   DBGTRC(debug, TRACE_GROUP, "Done.     dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
    return result;
 }
 
