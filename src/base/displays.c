@@ -911,7 +911,7 @@ char * dref_repr_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
-      g_snprintf(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
+      g_snprintf(buf, 100, "Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), dref);
    else
       strcpy(buf, "Display_Ref[NULL]");
    return buf;
@@ -1061,8 +1061,8 @@ char * dh_repr_t(Display_Handle * dh) {
          switch (dh->dref->io_path.io_mode) {
          case DDCA_IO_I2C:
               snprintf(buf, bufsz,
-                       "Display_Handle[i2c: fd=%d, busno=%d]",
-                       dh->fd, dh->dref->io_path.path.i2c_busno);
+                       "Display_Handle[i2c: fd=%d, busno=%d @%p]",
+                       dh->fd, dh->dref->io_path.path.i2c_busno, dh);
               break;
           case DDCA_IO_ADL:
               snprintf(buf, bufsz,
@@ -1072,9 +1072,9 @@ char * dh_repr_t(Display_Handle * dh) {
           case DDCA_IO_USB:
 #ifdef ENABLE_USB
               snprintf(buf, bufsz,
-                       "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                       "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
                        dh->dref->usb_bus, dh->dref->usb_device,
-                       usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
+                       usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno, dh);
 #else
               PROGRAM_LOGIC_ERROR("io_path.io_mode == DDCA_IO_USB");
 #endif
@@ -1082,7 +1082,10 @@ char * dh_repr_t(Display_Handle * dh) {
           }
           buf[bufsz-1] = '\0';
       }
-      else strcpy(buf, "Invalid Display_Handle");
+      else {
+         snprintf(buf, bufsz, "Invalid Display_Handle@%p", dh);
+         //  strcpy(buf, "Invalid Display_Handle");
+      }
    }
    else {
       strcpy(buf, "Display_Handle[NULL]");
