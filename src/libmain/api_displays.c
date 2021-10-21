@@ -300,7 +300,9 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Status
 ddca_redetect_displays() {
+   DBGTRC(true, DDCA_TRC_API, "Starting.");
    ddc_redetect_displays();
+   DBGTRC(true, DDCA_TRC_API, "Done.     Returning 0");
    return 0;
 }
 
@@ -710,7 +712,8 @@ ddca_get_display_refs(
       DDCA_Display_Ref**  drefs_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, "Starting");
+   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC,
+                 "Starting. include_invalid_displays=%s", SBOOL(include_invalid_displays));
    free_thread_error_detail();
    // assert(dlist_loc);
    API_PRECOND(drefs_loc);
@@ -730,7 +733,7 @@ ddca_get_display_refs(
    g_ptr_array_free(filtered_displays, false);
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
-      DBGMSG("Done.     Returning %p", result_list);
+      DBGMSG("Done.     Returning 0. *drefs_loc=%p", result_list);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
       while (cur_ddca_dref) {
          Display_Ref * dref = (Display_Ref*) cur_ddca_dref;
@@ -789,23 +792,30 @@ ddca_get_display_info_list2(
 
    *dlist_loc = result_list;
    assert(*dlist_loc);
+   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC,
+                 "Done.   Returned list has %d displays", result_list->ct);
    return 0;
 }
 
 
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec) {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "Starting. info_rec->%p", info_rec);
    // DDCA_Display_Info contains no pointers, can simply be free'd
    // data structures.  Nothing to free.
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
+   DBGTRC(debug, DDCA_TRC_API, "Done.");
 }
 
 
 void
 ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "Starting. dlist=%p", dlist);
    if (dlist) {
       // n. DDCA_Display_Info contains no pointers,
       // DDCA_Display_Info_List can simply be free'd.
@@ -816,6 +826,7 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
       }
       free(dlist);
    }
+   DBGTRC(debug, DDCA_TRC_API, "Done.");
 }
 
 
