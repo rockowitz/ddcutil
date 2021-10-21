@@ -115,7 +115,7 @@ static char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
    g_mutex_lock(&descriptors_mutex);
    Distinct_Display_Desc * ref = (Distinct_Display_Desc *) id;
    assert(memcmp(ref->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
-   g_snprintf(buf, 100, "Distinct_Display_Ref[%s]", dpath_repr_t(&ref->io_path));
+   g_snprintf(buf, 100, "Distinct_Display_Ref[%s @%p]", dpath_repr_t(&ref->io_path), ref);
    g_mutex_unlock(&descriptors_mutex);
    return buf;
 }
@@ -123,7 +123,7 @@ static char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
 
 Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
+   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref));
 
    void * result = NULL;
    g_mutex_lock(&descriptors_mutex);
@@ -151,7 +151,7 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
 
    g_mutex_unlock(&descriptors_mutex);
 
-   DBGMSF(debug, "Done.     Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
+   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
    return result;
 }
 
