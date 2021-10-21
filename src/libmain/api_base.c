@@ -263,6 +263,8 @@ _ddca_init(void) {
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
 
+      trace_to_syslog = (parsed_cmd->flags && CMD_FLAG_F3);  // HACK
+
       if (parsed_cmd->library_trace_file) {
          char * trace_file = (parsed_cmd->library_trace_file[0] != '/')
                 ? xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file)
