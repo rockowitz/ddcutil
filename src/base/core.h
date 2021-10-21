@@ -179,6 +179,8 @@ void severemsg(
         char *       format,
         ...);
 
+extern bool trace_to_syslog;
+
 bool dbgtrc(
         DDCA_Trace_Group  trace_group,
         const char * funcname,

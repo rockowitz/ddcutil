@@ -637,6 +637,8 @@ void severemsg(
       va_end(args);
 }
 
+bool trace_to_syslog;
+
 
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
@@ -724,6 +726,11 @@ bool dbgtrc(
       msg_emitted = true;
    }
 #endif
+
+      // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
+      if (trace_to_syslog) {    // HACK
+         syslog(LOG_INFO, "%s", buf2);
+      }
 
       f0puts(buf2, fout());
       fflush(fout());
