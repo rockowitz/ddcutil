@@ -41,8 +41,10 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    if (debug)
       printf("(%s) Starting.\n",__func__);
       
-   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)     // timestamps on debug and trace messages?
+   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)      // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                           // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)       // wall timestamps on debug and trace messages?
+       dbgtrc_show_wall_time = true;                      // extern in core.h
     if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
        dbgtrc_show_thread_id = true;                      // extern in core.h
     report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
