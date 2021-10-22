@@ -159,9 +159,16 @@ ddc_open_display(
       goto bye;
    }
    // DBGMSF(debug, "lockrc = %s, DREF_OPEN = %s", psc_desc(lockrc), sbool(dref->flags&DREF_OPEN));
-   TRACED_ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
+   // assumes there is only one Display_Ref for a display
+   // DREF_OPEN flag will not be set if caller used a different Display_Ref on this open call
+   // TRACED_ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
 
-   if (dref->flags & DREF_OPEN) {
+  //  if (dref->flags & DREF_OPEN) {
+  //     ddcrc = DDCRC_ALREADY_OPEN;
+  //     goto bye;
+  //  }
+
+   if (lockrc == DDCRC_ALREADY_OPEN) {
       ddcrc = DDCRC_ALREADY_OPEN;
       goto bye;
    }
