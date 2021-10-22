@@ -300,9 +300,9 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Status
 ddca_redetect_displays() {
-   DBGTRC(true, DDCA_TRC_API, "Starting.");
+   DBGTRC(false, DDCA_TRC_API, "Starting.");
    ddc_redetect_displays();
-   DBGTRC(true, DDCA_TRC_API, "Done.     Returning 0");
+   DBGTRC(false, DDCA_TRC_API, "Done.     Returning 0");
    return 0;
 }
 
@@ -357,16 +357,18 @@ ddca_report_display_by_dref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
-    free_thread_error_detail();
-    DDCA_Status rc = 0;
+   DBGTRC(false, DDCA_TRC_API, "Starting. ddca_dref=%p", ddca_dref);
+   free_thread_error_detail();
+   DDCA_Status rc = 0;
 
-    assert(library_initialized);
+   assert(library_initialized);
 
-    Display_Ref * dref = NULL;
-    VALIDATE_DDCA_DREF(ddca_dref, dref, /*debug=*/false);
+   Display_Ref * dref = NULL;
+   VALIDATE_DDCA_DREF(ddca_dref, dref, /*debug=*/false);
 
-    ddc_report_display_by_dref(dref, depth);
+   ddc_report_display_by_dref(dref, depth);
 
+   DBGTRC(false, DDCA_TRC_API, "Done.     Returning %s", psc_desc(rc));
    return rc;
 }
 
