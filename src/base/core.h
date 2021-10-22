@@ -82,6 +82,7 @@ typedef struct {
 //
 
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
+extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);

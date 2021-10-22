@@ -138,6 +138,7 @@ void show_output_level() {
  */
 
 bool dbgtrc_show_time      = false;   ///< include elapsed time in debug/trace output
+bool dbgtrc_show_wall_time = false;   ///< include wall time in debug/trace output
 bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace output
 
 static
@@ -600,6 +601,29 @@ void show_reporting() {
 }
 
 
+/** Returns the elapsed time in seconds since start of program execution
+ *  as a formatted, printable string.
+ *
+ *  The string is built in a thread specific private buffer.  The returned
+ *  string is valid until the next call of this function in the same thread.
+ *
+ *  @return formatted elapsed time
+ */
+char * formatted_wall_time() {
+   static GPrivate  formatted_wall_time_key = G_PRIVATE_INIT(g_free);
+   char * time_buf = get_thread_fixed_buffer(&formatted_wall_time_key, 40);
+
+   time_t epoch_seconds = time(NULL);
+   struct tm broken_down_time;
+   localtime_r(&epoch_seconds, &broken_down_time);
+
+   strftime(time_buf, 40, "%b %d %T", &broken_down_time);
+
+   // printf("(%s) |%s|\n", __func__, time_buf);
+   return time_buf;
+}
+
+
 
 //
 // Issue messages of various types
@@ -680,9 +704,12 @@ bool dbgtrc(
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
 
-      char  elapsed_prefix[15] = "";
+      char  elapsed_prefix[20]  = "";
+      char  walltime_prefix[20] = "";
       if (dbgtrc_show_time)
-         g_snprintf(elapsed_prefix, 15, "[%s]", formatted_elapsed_time());
+         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
+      if (dbgtrc_show_wall_time)
+         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
 
       char thread_prefix[15] = "";
       if (dbgtrc_show_thread_id) {
@@ -694,8 +721,8 @@ bool dbgtrc(
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 
-      char * buf2 = g_strdup_printf("%s%s(%-30s) %s\n",
-                                    thread_prefix, elapsed_prefix, funcname, buffer);
+      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s\n",
+                                    thread_prefix, walltime_prefix, elapsed_prefix, funcname, buffer);
 #ifdef NO
       if (trace_destination) {
          FILE * f = fopen(trace_destination, "a");
