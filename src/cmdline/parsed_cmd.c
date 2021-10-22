@@ -230,6 +230,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("enable udf",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_UDF,               d1);
       rpt_bool("enable usb",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_USB,               d1);
       rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
+      rpt_bool("walltime prefix:",  NULL, parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE,           d1);
       rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
       rpt_bool("enable cached capabilities:",
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
