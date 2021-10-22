@@ -788,6 +788,8 @@ ddca_set_trace_options(DDCA_Trace_Options  options) {
 
    if (options & DDCA_TRCOPT_TIMESTAMP)
       dbgtrc_show_time = true;
+   if (options & DDCA_TRCOPT_WALLTIME)
+      dbgtrc_show_time = true;
    if (options & DDCA_TRCOPT_THREAD_ID)
       dbgtrc_show_thread_id = true;
 }
