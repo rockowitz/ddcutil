@@ -764,7 +764,7 @@ bool dbgtrc(
       free(buffer);
       free(buf2);
       msg_emitted = true;
-}
+   }
 
    return msg_emitted;
 }
