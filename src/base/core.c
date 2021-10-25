@@ -554,8 +554,14 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
          // use dbgtrc() for consistent handling of timestamp and thread id prefixes
          dbgtrc(0xff, funcname, lineno, filename, "DDC: %s", buffer);
       }
-      else
+      else {
          f0printf(fout(), "DDC: %s\n", buffer);
+
+         // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
+         if (trace_to_syslog) {    // HACK
+            syslog(LOG_INFO, "%s", buffer);
+         }
+      }
       fflush(fout());
       va_end(args);
    }
@@ -601,13 +607,12 @@ void show_reporting() {
 }
 
 
-/** Returns the elapsed time in seconds since start of program execution
- *  as a formatted, printable string.
+/** Returns the wall time as a formatted string.
  *
  *  The string is built in a thread specific private buffer.  The returned
  *  string is valid until the next call of this function in the same thread.
  *
- *  @return formatted elapsed time
+ *  @return formatted wall time
  */
 char * formatted_wall_time() {
    static GPrivate  formatted_wall_time_key = G_PRIVATE_INIT(g_free);
@@ -629,8 +634,11 @@ char * formatted_wall_time() {
 // Issue messages of various types
 //
 
+bool trace_to_syslog;
+
+
 /** Issues an error message.
- *  The message is written to the current FERR device.
+ *  The message is written to the current FERR device and to the system log.
  *
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
@@ -655,13 +663,14 @@ void severemsg(
       va_list(args);
       va_start(args, format);
       vsnprintf(buffer, 200, format, args);
-      snprintf(buf2, 250, "(%s) %s\n", funcname, buffer);
+      g_snprintf(buf2, 250, "(%s) %s", funcname, buffer);
       f0puts(buf2, ferr());
+      f0putc('\n', ferr());
       fflush(ferr());
       va_end(args);
-}
 
-bool trace_to_syslog;
+      syslog(LOG_ERR, "%s", buf2);
+}
 
 
 /** Core function for emitting debug or trace messages.
@@ -672,6 +681,9 @@ bool trace_to_syslog;
  *  - the value is trace group is 0xff
  *  - funcname is the name of a function being traced
  *  - filename is the name of a file being traced
+ *
+ *  The message is output to the current FERR device and optionally,
+ *  depending on the syslog setting, to the system log.
  *
  *  @param trace_group   trace group of caller, 0xff to always output
  *  @param funcname      function name of caller
@@ -721,7 +733,7 @@ bool dbgtrc(
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 
-      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s\n",
+      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s",
                                     thread_prefix, walltime_prefix, elapsed_prefix, funcname, buffer);
 #ifdef NO
       if (trace_destination) {
@@ -754,12 +766,12 @@ bool dbgtrc(
    }
 #endif
 
-      // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
-      if (trace_to_syslog) {    // HACK
+      if (trace_to_syslog) {
          syslog(LOG_INFO, "%s", buf2);
       }
 
       f0puts(buf2, fout());
+      f0putc('\n', fout());
       fflush(fout());
       free(buffer);
       free(buf2);
@@ -776,7 +788,7 @@ bool dbgtrc(
 //
 
 /** Reports an IOCTL error.
- *  The message is written to the current **FERR** device.
+ *  The message is written to the current **FERR** device and to the system log.
  *
  * @param  ioctl_name  ioctl name
  * @param  errnum      errno value
@@ -792,15 +804,21 @@ void report_ioctl_error(
       int          lineno)
 {
    int errsv = errno;
-   f0printf(ferr(), "(%s) Error in ioctl(%s), errno=%s\n",
-           funcname, ioctl_name, linux_errno_desc(errnum) );
+   char buffer[200];
+   g_snprintf(buffer, 200, "(%s) Error in ioctl(%s), errno=%s",
+                           funcname, ioctl_name, linux_errno_desc(errnum) );
+   f0puts(buffer, ferr());
+   f0putc('\n',   ferr());
    fflush(ferr());
+
+   syslog(LOG_ERR, "%s", buffer);
+
    errno = errsv;
 }
 
 
 /** Called when a condition that should be impossible has been detected.
- *  Issues messages to the current FERR device.
+ *  Issues messages to the current **FERR** device and the system log.
  *
  * This function is normally invoked using macro PROGRAM_LOGIC_ERROR()
  *
@@ -819,26 +837,28 @@ void program_logic_error(
       char *       format,
       ...)
 {
-  // assemble the error message
-  char buffer[200];
-  va_list(args);
-  va_start(args, format);
-  vsnprintf(buffer, 200, format, args);
-  va_end(args);
+   // assemble the error message
+   char buffer[200];
+   va_list(args);
+   va_start(args, format);
+   vsnprintf(buffer, 200, format, args);
+   va_end(args);
 
-  // assemble the location message:
-  char buf2[250];
-  snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:\n",
-                      funcname, lineno, fn);
+   // assemble the location message:
+   char buf2[250];
+   snprintf(buf2, 250, "Program logic error in function %s at line %d in file %s:",
+                       funcname, lineno, fn);
 
-  // don't combine into 1 line, might be very long.  just output 2 lines:
-  FILE * f = ferr();
-  f0puts(buf2,   f);
-  f0puts(buffer, f);
-  f0puts("\n",   f);
-  fflush(f);
+   // don't combine into 1 line, might be very long.  just output 2 lines:
+   FILE * f = ferr();
+   f0printf(f, "%s\n", buf2);
+   f0printf(f, "%s\n", buffer);
+   fflush(f);
+
+   syslog(LOG_ERR, "%s", buf2);
+   syslog(LOG_ERR, "%s", buffer);
 }
+
 
 void init_core() {
 }
-
