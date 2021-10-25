@@ -636,7 +636,7 @@ main(int argc, char *argv[]) {
 
    init_tracing(parsed_cmd);
 
-   trace_to_syslog = (parsed_cmd->flags && CMD_FLAG_F3);  // HACK
+   trace_to_syslog = (parsed_cmd->flags && (CMD_FLAG_SYSLOG|CMD_FLAG_F3));
 
    // tracing is sufficiently initialized, can report start time
    start_time_reported = parsed_cmd->traced_groups    ||

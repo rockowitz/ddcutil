@@ -264,6 +264,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       }
       rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
       rpt_str ("library trace file:", NULL, parsed_cmd->library_trace_file,          d1);
+      rpt_bool("write to syslog:",  NULL, parsed_cmd->flags & CMD_FLAG_SYSLOG,       d1);
       rpt_int( "i1",                NULL, parsed_cmd->i1,                            d1);
       rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
       rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
