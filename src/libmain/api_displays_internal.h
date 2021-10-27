@@ -91,11 +91,24 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
    } while(0);
 
 
+#define WITH_VALIDATED_DH2(ddca_dh, action) \
+   do { \
+      assert(library_initialized); \
+      DDCA_Status psc = 0; \
+      free_thread_error_detail(); \
+      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
+      if (!dh)  { \
+         psc = DDCRC_ARG; \
+         DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p, Returning %s", psc_desc(psc)); \
+      } \
+      else { \
+         (action); \
+      } \
+      return psc; \
+   } while(0);
 
 
 // extern DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY;
-
-
 
 // Monitor Model Key - UNPUBLISHED, USED INTERNALLY
 
