@@ -48,6 +48,7 @@
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
+#include "libmain/api_services_internal.h"
 
 
 //
@@ -296,6 +297,7 @@ _ddca_init(void) {
          free(trace_file);
       }
 
+      init_api_services();
       submaster_initializer(parsed_cmd);
 
      //  explicitly set the async threshold for testing
