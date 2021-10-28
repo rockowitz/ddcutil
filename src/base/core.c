@@ -222,7 +222,7 @@ static GPtrArray  * traced_file_table     = NULL;
  *  @param funcname function name
  */
 void add_traced_function(const char * funcname) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
 
