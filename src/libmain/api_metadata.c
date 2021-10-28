@@ -893,13 +893,12 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
    DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dh=%p", ddca_dh);
    WITH_VALIDATED_DH2(ddca_dh,
       {
-            bool debug = false;
             DBGMSF(debug, "dref=%s", dh_repr_t(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
 
             DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p->%s. Returning: %s(%d)",
-                  ddca_dh, dh_repr_t(ddca_dh), psc, ddca_rc_name(psc));
+                   ddca_dh, dh_repr_t(ddca_dh), ddca_rc_name(psc), psc);
       }
    );
 }
