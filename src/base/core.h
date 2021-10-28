@@ -238,9 +238,6 @@ bool dbgtrc(
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc(DDCA_TRC_ALL, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
 
-#define TRCMSG(            format, ...) \
-   dbgtrc(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 // For messages that are issued either if tracing is enabled for the appropriate trace group or
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
