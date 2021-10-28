@@ -267,14 +267,14 @@ void add_traced_file(const char * filename) {
       bname = temp;
    }
 
-   bool found = (gaux_string_ptr_array_find(traced_file_table, bname) < 0);
-   if (found)
+   bool missing = (gaux_string_ptr_array_find(traced_file_table, bname) < 0);
+   if (missing)
       g_ptr_array_add(traced_file_table, bname);
    else
       free(bname);
    if (debug)
-      printf("(%s) Done. filename=|%s|, bname=|%s|, found=%s\n",
-             __func__, filename, bname, SBOOL(found));
+      printf("(%s) Done. filename=|%s|, bname=|%s|, missing=%s\n",
+             __func__, filename, bname, SBOOL(missing));
 }
 
 
