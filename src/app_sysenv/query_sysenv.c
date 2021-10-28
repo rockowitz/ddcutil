@@ -24,12 +24,12 @@
 #include "util/subprocess_util.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
+#include "util/xdg_util.h"
 #ifdef PROBE_USING_SYSTEMD
 #include "util/systemd_util.h"
 #endif
 #ifdef USE_X11
 #include "util/x11_util.h"
-#include "util/xdg_util.h"
 #endif
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
