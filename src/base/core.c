@@ -222,20 +222,20 @@ static GPtrArray  * traced_file_table     = NULL;
  *  @param funcname function name
  */
 void add_traced_function(const char * funcname) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
 
    if (!traced_function_table)
       traced_function_table = g_ptr_array_new();
    // n. g_ptr_array_find_with_equal_func() requires glib 2.54
-   bool found = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
-   if (found)
+   bool missing = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
+   if (missing)
       g_ptr_array_add(traced_function_table, g_strdup(funcname));
 
    if (debug)
-      printf("(%s) Done. funcname=|%s|, found=%s\n",
-             __func__, funcname, SBOOL(found));
+      printf("(%s) Done. funcname=|%s|, missing=%s\n",
+             __func__, funcname, SBOOL(missing));
 }
 
 
