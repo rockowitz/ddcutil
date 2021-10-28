@@ -21,8 +21,7 @@ check_PROGRAMS += \
   demo_global_settings \
   demo_profile_features \
   demo_redirection \
-  demo_vcpinfo \
-  demo_watch_displays
+  demo_vcpinfo
 endif
 
 laclient_SOURCES               = clmain.c
@@ -34,7 +33,6 @@ demo_global_settings_SOURCES   = demo_global_settings.c
 demo_profile_features_SOURCES  = demo_profile_features.c
 demo_redirection_SOURCES       = demo_redirection.c
 demo_vcpinfo_SOURCES           = demo_vcpinfo.c
-demo_watch_displays_SOURCES    = demo_watch_displays.c
 
 LDADD       = ../libddcutil.la
 AM_LDFLAGS  = -pie
