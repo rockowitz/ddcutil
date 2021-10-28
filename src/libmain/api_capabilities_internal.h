@@ -39,6 +39,8 @@ void ddca_parse_and_report_capabilities(
 // DEPRECATED
 
 
+#ifdef UNUSED
+
 //
 // MCCS Version Id
 //
@@ -69,6 +71,8 @@ __attribute__ ((deprecated))
 char *
 ddca_mccs_version_id_desc(
       DDCA_MCCS_Version_Id  version_id) ;
+
+#endif
 
 
 
