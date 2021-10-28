@@ -3,7 +3,7 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -22,6 +22,7 @@
 
 #include "base/displays.h"
 #include "base/feature_metadata.h"
+#include "base/rtti.h"
 #include "base/vcp_version.h"
 
 #include "vcp/ddc_command_codes.h"
@@ -53,13 +54,13 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ));
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    free_thread_error_detail();
    // assert(pcaps_loc);
    API_PRECOND(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
-   WITH_VALIDATED_DH(ddca_dh,
+   WITH_VALIDATED_DH2(ddca_dh,
       {
          char * p_cap_string = NULL;
          ddc_excp = ddc_get_capabilities_string(dh, &p_cap_string);
@@ -74,8 +75,8 @@ ddca_get_capabilities_string(
          }
         //  DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
          assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
-         DBGMSF(debug, "Done.     ddca_dh=%s, Returning %s, *pcaps_loc=%p -> |%s|",
-                        dh_repr((Display_Handle *) ddca_dh),
+         DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%s, Returning %s, *pcaps_loc=%p -> |%s|",
+                        dh_repr_t((Display_Handle *) ddca_dh),
                         ddca_rc_desc(psc),
                         *pcaps_loc, *pcaps_loc);
       }
@@ -415,4 +416,9 @@ ddca_feature_list_from_capabilities(
    return result;
 }
 
-
+#ifdef NOT_NEEDED
+void init_api_capabilities() {
+   printf("(%s) Executing\n", __func__);
+   RTTI_ADD_FUNC(ddca_get_capabilities_string);
+}
+#endif
