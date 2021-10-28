@@ -18,6 +18,7 @@
 #include "util/utilrpt.h"
 /** \endcond */
 
+#include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 
@@ -967,6 +968,7 @@ create_ddc_multi_part_read_response_packet(
       DDC_Packet **  packet_ptr)
 {
    bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting.  response_type=0x%02x, tag=%s, packet_ptr=%p");
 
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
@@ -976,7 +978,8 @@ create_ddc_multi_part_read_response_packet(
                                               &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc_t(rc), packet);
+      DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
+                                 ddcrc_desc_t(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1005,6 +1008,7 @@ create_ddc_multi_part_read_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
+   DBGTRC(debug, TRACE_GROUP, "Returning %s(%d). *packet_ptr=%p", psc_desc(rc), rc, *packet_ptr);
    return rc;
 }
 
@@ -1021,6 +1025,8 @@ create_ddc_getvcp_response_packet(
        DDC_Packet **  packet_ptr)
 {
    bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting.  expected_vcp_opcode=0x%02x, packet_ptr=%p",
+                              expected_vcp_opcode, packet_ptr);
 
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(
@@ -1031,7 +1037,8 @@ create_ddc_getvcp_response_packet(
                &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      TRCMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_desc_t(rc), packet);
+      DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
+                                 ddcrc_desc_t(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1060,6 +1067,7 @@ create_ddc_getvcp_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
+   DBGTRC(debug, TRACE_GROUP, "Returning %s(%d). *packet_ptr=%p", psc_name(rc), rc, *packet_ptr);
    return rc;
 }
 
