@@ -539,10 +539,11 @@ ddca_format_non_table_vcp_value(
       char **                     formatted_value_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API,"feature_code=0x%02x, vspec=%d.%d, mmid=%s",
+   DBGTRC(debug, DDCA_TRC_API,"Starting. feature_code=0x%02x, vspec=%d.%d, mmid=%s, formatted_value_loc=%p",
              feature_code,
              vspec.major, vspec.minor,
-             (mmid) ? mmk_repr(*mmid) : "NULL");
+             (mmid) ? mmk_repr(*mmid) : "NULL",
+             formatted_value_loc);
    API_PRECOND(formatted_value_loc);
    *formatted_value_loc = NULL;
 
@@ -561,8 +562,8 @@ ddca_format_non_table_vcp_value(
 
    if (ddcrc == 0)
       DBGTRC(debug, DDCA_TRC_API,
-          "Done.     Returning: %s(%d) formatted_value_loc=%p -> %s",
-          psc_name(ddcrc), ddcrc, *formatted_value_loc, **formatted_value_loc);
+          "Done.     Returning: %s(%d), *formatted_value_loc=%p->%s",
+          psc_name(ddcrc), ddcrc, *formatted_value_loc, *formatted_value_loc);
    else
       DBGTRC(debug, DDCA_TRC_API,
           "Done.     Returning: %s(%d), *formatted_value_loc=%p",
@@ -648,13 +649,12 @@ DDCA_Status
 set_single_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Any_Vcp_Value *   valrec,
-      DDCA_Any_Vcp_Value **  verified_value_loc)
+      DDCA_Any_Vcp_Value **  verified_value_loc)  // NULL => do not return value
 {
       Error_Info * ddc_excp = NULL;
       bool debug = false;
       DBGTRC(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
                                   ddca_dh, valrec, verified_value_loc);
-      API_PRECOND(verified_value_loc);
       WITH_VALIDATED_DH2(ddca_dh,  {
             ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
