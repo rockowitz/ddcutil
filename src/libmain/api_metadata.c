@@ -545,17 +545,18 @@ ddca_get_feature_metadata_by_dh(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata **    metadata_loc)
 {
-   WITH_VALIDATED_DH(
+   bool debug = false;
+   // if (feature_code == 0xca)
+   //    debug = true;
+   DBGTRC(debug, DDCA_TRC_API,
+          "feature_code=0x%02x, ddca_dh=%p, create_default_if_not_found=%s, metadata_loc=%p",
+          feature_code, ddca_dh, sbool(create_default_if_not_found), metadata_loc);
+   API_PRECOND(metadata_loc);
+   WITH_VALIDATED_DH2(
          ddca_dh,
          {
-               bool debug = false;
-               // if (feature_code == 0xca)
-               //    debug = true;
-               DBGMSF(debug, "Starting.  feature_code=0x%02x, ddca_dh=%s, create_default_if_not_found=%s, metadata_loc=%p",
-                             feature_code, ddca_dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
-               assert(metadata_loc);
 
                DDCA_Feature_Metadata * external_metadata = NULL;
                Display_Feature_Metadata * internal_metadata =
@@ -569,7 +570,8 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
 
-                DBGMSF(debug, "Done.     Returning: %s", ddca_rc_desc(psc));
+                DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p->%s. Returning: %s",
+                      ddca_dh, dh_repr_t(ddca_dh), ddca_rc_desc(psc));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
@@ -887,14 +889,17 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
-   WITH_VALIDATED_DH(ddca_dh,
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dh=%p", ddca_dh);
+   WITH_VALIDATED_DH2(ddca_dh,
       {
             bool debug = false;
             DBGMSF(debug, "dref=%s", dh_repr_t(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
 
-            DBGMSF(debug, "Returning: %s", ddca_rc_name(psc));
+            DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p->%s. Returning: %s(%d)",
+                  ddca_dh, dh_repr_t(ddca_dh), psc, ddca_rc_name(psc));
       }
    );
 }
