@@ -26,23 +26,6 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       } \
    } while(0)
 
-#ifdef OLD
-#define WITH_DR(ddca_dref, action) \
-   do { \
-      assert(library_initialized); \
-      DDCA_Status psc = 0; \
-      free_thread_error_detail(); \
-      Display_Ref * dref = (Display_Ref *) ddca_dref; \
-      if (dref == NULL || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0 )  { \
-         psc = DDCRC_ARG; \
-      } \
-      else { \
-         (action); \
-      } \
-      return psc; \
-   } while(0);
-#endif
-
 #define WITH_VALIDATED_DR(ddca_dref, action) \
    do { \
       assert(library_initialized); \
@@ -57,42 +40,6 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       } \
       return psc; \
    } while(0);
-
-
-#ifdef OLD
-#define WITH_DH(_ddca_dh_, _action_) \
-   do { \
-      assert(library_initialized); \
-      DDCA_Status psc = 0; \
-      free_thread_error_detail(); \
-      Display_Handle * dh = (Display_Handle *) _ddca_dh_; \
-      if ( !dh || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  { \
-         psc = DDCRC_ARG; \
-      } \
-      else { \
-         (_action_); \
-      } \
-      return psc; \
-   } while(0);
-#endif
-
-#ifdef OLD
-#define WITH_VALIDATED_DH(ddca_dh, action) \
-   do { \
-      assert(library_initialized); \
-      DDCA_Status psc = 0; \
-      free_thread_error_detail(); \
-      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
-      if (!dh)  { \
-         psc = DDCRC_ARG; \
-      } \
-      else { \
-         (action); \
-      } \
-      return psc; \
-   } while(0);
-#endif
-
 
 #define WITH_VALIDATED_DH2(ddca_dh, action) \
    do { \
