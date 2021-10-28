@@ -74,7 +74,7 @@ ddca_mccs_version_id_desc(
 
 #endif
 
-
+void init_api_capabilities();
 
 #endif /* API_CAPABILITIES_INTERNAL_H_ */
 
