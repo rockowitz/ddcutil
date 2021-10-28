@@ -76,7 +76,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
    } while(0);
 #endif
 
-
+#ifdef OLD
 #define WITH_VALIDATED_DH(ddca_dh, action) \
    do { \
       assert(library_initialized); \
@@ -91,6 +91,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       } \
       return psc; \
    } while(0);
+#endif
 
 
 #define WITH_VALIDATED_DH2(ddca_dh, action) \
