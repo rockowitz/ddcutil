@@ -192,6 +192,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
    gboolean deferred_sleep_flag = false;
    gboolean per_thread_stats_flag = false;
+   gboolean show_settings_flag = false;
    gboolean dsa_flag       = false;
    gboolean f1_flag        = false;
    gboolean f2_flag        = false;
@@ -267,7 +268,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
   // Program information
-                              {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version", NULL},
+         {"settings",'\0', 0, G_OPTION_ARG_NONE,     &show_settings_flag,"Show current settings",           NULL},
+         {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version",             NULL},
       {NULL},
    };
 
@@ -527,7 +529,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
-// SET_CMDFLAG(CMD_FLAG_IGNORE_CACHED_CAPABILITIES , ignore_cc_flag);
+   SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES , enable_cc_flag);
 
    if (failsim_fn_work) {
