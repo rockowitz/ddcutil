@@ -149,7 +149,6 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 {
     bool debug = false;
     DBGMSF(debug, "Executing...");
-    assert(parsed_cmd->output_level >= DDCA_OL_VERBOSE);
 
     show_ddcutil_version();
     rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file:",
@@ -163,8 +162,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
     report_performance_options(depth);
-    if (parsed_cmd->output_level >= DDCA_OL_VV)
-       report_experimental_options(parsed_cmd, depth);
+    report_experimental_options(parsed_cmd, depth);
 
     DBGMSF(debug, "Done");
 }
@@ -649,7 +647,7 @@ main(int argc, char *argv[]) {
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
       goto bye;
-   if (parsed_cmd ->output_level >= DDCA_OL_VERBOSE)
+   if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
    free(untokenized_cmd_prefix);
 
