@@ -603,6 +603,11 @@ void show_reporting() {
    show_trace_groups();
    show_traced_functions();
    show_traced_files();
+   print_simple_title_value(SHOW_REPORTING_TITLE_START,
+                              "Trace to syslog: ",
+                              SHOW_REPORTING_MIN_TITLE_SIZE,
+                              SBOOL(trace_to_syslog));
+
    // f0puts("", fout());
 }
 
