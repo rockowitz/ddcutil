@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.1] 2021-10-30
+
+### Added
+- Option ***--syslog***: Send trace and debug messages to the system 
+  log as well as the trace location
+- Option ***--wall-timestamp***, ***--wts***: Prefix trace and debug 
+  messages with the current wall time.
+- Option ***--settings***: Report option settings in effect.
+
+### Changed
+- Details of current settings are no longer reported if option ***--verbose*** is specified.
+  Use option ***--settings***
+- Removed sample program demo_watch_displays
+
+### Fixed
+- Build failure if configure option --enable-x11=no
+- API functions ddc_open_display(),ddc_open_display2() always return 
+  DDCRC_ALREADY_OPEN if the the display is already open in the current
+  thread. Previously an assert() failure would occur under certain 
+  circumstances.
+
 ## [1.2.0] 2021-09-28
 
 ### Added
