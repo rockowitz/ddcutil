@@ -738,7 +738,7 @@ bool dbgtrc(
          snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
       }
 
-      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s",
+      char * buf2 = g_strdup_printf("%s%s%s(%-32s) %s",
                                     thread_prefix, walltime_prefix, elapsed_prefix, funcname, buffer);
 #ifdef NO
       if (trace_destination) {
@@ -785,6 +785,170 @@ bool dbgtrc(
 
    return msg_emitted;
 }
+
+
+#ifdef TOO_COMPLICATED
+// TOOD dbgtrc() calls vdbgtrc()
+
+/** Core function for emitting debug or trace messages.
+ *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
+ *
+ *  The message is output if any of the following are true:
+ *  - the trace_group specified is currently active
+ *  - the value is trace group is 0xff
+ *  - funcname is the name of a function being traced
+ *  - filename is the name of a file being traced
+ *
+ *  The message is output to the current FERR device and optionally,
+ *  depending on the syslog setting, to the system log.
+ *
+ *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param funcname      function name of caller
+ *  @param lineno        line number in caller
+ *  @param filename      file name of caller
+ *  @param format        format string for message
+ *  @param ap            arguments for format string
+ *
+ *  @return **true** if message was output, **false** if not
+ */
+bool vdbgtrc(
+        DDCA_Trace_Group  trace_group,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        const char *      pre_prefix,
+        char *            format,
+        va_list           ap)
+{
+   bool debug = false;
+   if (debug) {
+      printf("(vdbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|, ap=%p\n",
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       (fout() == stdout) ? "==" : "!=",
+                       format, pre_prefix,
+                       ap);
+     printf("          &ap=%p, ap=%p\n", &ap, ap);
+   }
+
+   bool msg_emitted = false;
+   if ( is_tracing(trace_group, filename, funcname) ) {
+      char * buffer = g_strdup_vprintf(format, ap);
+      if (debug)
+         printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
+
+      if (!pre_prefix)
+         pre_prefix="";
+      if (debug)
+         printf("(%s) pre_prefix=%p->|%s|\n", __func__, pre_prefix, pre_prefix);
+
+      char  elapsed_prefix[20]  = "";
+      char  walltime_prefix[20] = "";
+      if (dbgtrc_show_time)
+         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
+      if (dbgtrc_show_wall_time)
+         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
+
+      char thread_prefix[15] = "";
+      if (dbgtrc_show_thread_id) {
+#ifdef TARGET_BSD
+      int tid = pthread_getthreadid_np();
+#else
+         pid_t tid = syscall(SYS_gettid);
+#endif
+         snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
+      }
+
+      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
+                       thread_prefix, walltime_prefix, elapsed_prefix, funcname,
+                       pre_prefix, buffer);
+      if (debug)
+         printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
+#ifdef NO
+      if (trace_destination) {
+         FILE * f = fopen(trace_destination, "a");
+         if (f) {
+            int status = fputs(buf2, f);
+            if (status < 0) {    // per doc it's -1 = EOF
+               fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
+               free(trace_destination);
+               trace_destination = NULL;
+            }
+            else {
+               fflush(f);
+            }
+            fclose(f);
+         }
+         else {
+            fprintf(stderr, "Error opening %s: %s\n", trace_destination, strerror(errno));
+            trace_destination = NULL;
+         }
+      }
+      if (!trace_destination) {
+         f0puts(buf2, fout());    // no automatic terminating null
+         fflush(fout());
+      }
+
+      free(pre_prefix_buffer);
+      free(buf2);
+      msg_emitted = true;
+   }
+#endif
+
+      if (trace_to_syslog) {
+         syslog(LOG_INFO, "%s", buf2);
+      }
+
+      f0puts(buf2, fout());
+      f0putc('\n', fout());
+      fflush(fout());
+      free(buffer);
+      free(buf2);
+      msg_emitted = true;
+   }
+
+   if (debug)
+      printf("(%s) Done.   Returning %s\n", __func__, sbool(msg_emitted));
+   return msg_emitted;
+}
+
+
+bool dbgtrc_returning(
+        DDCA_Trace_Group  trace_group,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        int               rc,
+        char *            format,
+        ...)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, rc=%d, format=|%s|\n",
+                       __func__,
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       (fout() == stdout) ? "==" : "!=",
+                       rc, format);
+
+   char pre_prefix[60];
+   g_snprintf(pre_prefix, 60, "Done     Returning: %s.", psc_name_code(rc));
+   if (debug)
+      printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
+
+   va_list(args);
+   va_start(args, format);
+   if (debug)
+      printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+   bool msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+   va_end(args);
+
+   if (debug)
+      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+   return msg_emitted;
+
+}
+#endif
 
 
 //
