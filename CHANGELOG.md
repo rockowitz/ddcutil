@@ -10,12 +10,13 @@
 - Option ***--settings***: Report option settings in effect.
 
 ### Changed
-- Details of current settings are no longer reported if option ***--verbose*** is specified.
-  Use option ***--settings***
+- Details of current settings are no longer reported in every command invocation
+  when option ***--verbose*** is specified.  Use option ***--settings*** to 
+  control option reporting.
 - Removed sample program demo_watch_displays
 
 ### Fixed
-- Build failure if configure option --enable-x11=no
+- Build failure if configure option ***--enable-x11=no*** was specified.
 - API functions ddc_open_display(),ddc_open_display2() always return 
   DDCRC_ALREADY_OPEN if the the display is already open in the current
   thread. Previously an assert() failure would occur under certain 
