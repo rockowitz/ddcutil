@@ -938,8 +938,8 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref 
    dh->dref = dref;
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
    dh->repr = g_strdup_printf(
-                "[i2c: fd=%d, busno=%d]",
-                dh->fd, dh->dref->io_path.path.i2c_busno);
+                "[i2c: fd=%d, busno=%d @%p]",
+                dh->fd, dh->dref->io_path.path.i2c_busno, dh);
    return dh;
 }
 
@@ -985,10 +985,11 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref 
    dh->fd = fd;
    dh->dref = dref;
    dh->repr = g_strdup_printf(
-                "[usb: %d:%d, %s/hiddev%d]",
+                "[usb: %d:%d, %s/hiddev%d @%p]",
                 // "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                 dh->dref->usb_bus, dh->dref->usb_device,
-                usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno);
+                usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno,
+                dh);
    // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
    return dh;
 }
@@ -1061,18 +1062,18 @@ char * dh_repr_t(Display_Handle * dh) {
          switch (dh->dref->io_path.io_mode) {
          case DDCA_IO_I2C:
               snprintf(buf, bufsz,
-                       "Display_Handle[i2c: fd=%d, busno=%d @%p]",
+                       "[i2c: fd=%d, busno=%d @%p]",
                        dh->fd, dh->dref->io_path.path.i2c_busno, dh);
               break;
           case DDCA_IO_ADL:
               snprintf(buf, bufsz,
-                       "Display_Handle[adl: display %d.%d]",
+                       "[adl: display %d.%d]",
                        dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
               break;
           case DDCA_IO_USB:
 #ifdef ENABLE_USB
               snprintf(buf, bufsz,
-                       "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
+                       "[usb: %d:%d, %s/hiddev%d @%p]",
                        dh->dref->usb_bus, dh->dref->usb_device,
                        usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno, dh);
 #else
