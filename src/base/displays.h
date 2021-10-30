@@ -241,11 +241,14 @@ typedef struct {
    char *       repr;
 } Display_Handle;
 
+#ifdef OLD
 Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref * dref);
 #ifdef OLD
 Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref);
 #endif
 Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref * dref);
+#endif
+Display_Handle * create_base_display_handle(int fd, Display_Ref * dref);
 void             dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth);
 char *           dh_repr(Display_Handle * dh);
 char *           dh_repr_t(Display_Handle * dh);

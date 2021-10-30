@@ -194,7 +194,7 @@ ddc_open_display(
                // 10/24/15, try disabling:
                // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
 
-               dh = create_bus_display_handle_from_display_ref(fd, dref);    // n. sets dh->dref = dref
+               dh = create_base_display_handle(fd, dref);    // n. sets dh->dref = dref
 
                I2C_Bus_Info * bus_info = dref->detail;
                TRACED_ASSERT(bus_info);   // need to convert to a test?
@@ -234,7 +234,7 @@ ddc_open_display(
             ddcrc = fd;
          }
          else {
-            dh = create_usb_display_handle_from_display_ref(fd, dref);
+            dh = create_base_display_handle(fd, dref);
             dref->pedid = usb_get_parsed_edid_by_dh(dh);
          }
       }

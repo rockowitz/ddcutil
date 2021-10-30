@@ -920,6 +920,8 @@ char * dref_repr_t(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
+#ifdef OLD
+
 /** Creates a #Display_Handle for an I2C #Display_Ref.
  *
  *  \param  fd   Linux file descriptor of open display
@@ -971,6 +973,49 @@ Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref 
    return dh;
 }
 #endif
+
+#endif
+
+
+/** Creates a #Display_Handle for a #Display_Ref.
+ *
+ *  \param  fd    Linux file descriptor of open display
+ *  \param  dref  pointer to #Display_Ref
+ *  \return newly allocated #Display_Handle
+ *
+ *  \remark
+ *  This functions handles the boilerplate of creating a #Display_Handle.
+ */
+Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
+   // assert(dref->io_mode == DDCA_IO_USB);
+   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
+   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
+   dh->fd = fd;
+   dh->dref = dref;
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      dh->repr = g_strdup_printf(
+                     "Display_Handle[i2c: fd=%d, busno=%d @%p]",
+                     dh->fd, dh->dref->io_path.path.i2c_busno, dh);
+   }
+#ifdef USE_USB
+   else if (dref->io_path.io_mode == DDCA_IO_USB) {
+      dh->repr = g_strdup_printf(
+                "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
+                // "Display_Handle[usb: %d:%d, %s/hiddev%d]",
+                dh->dref->usb_bus, dh->dref->usb_device,
+                usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno,
+                dh);
+   }
+#endif
+   else {
+      // DDCA_IO_ADL, DDCA_IO_USB if !USE_USB
+      PROGRAM_LOGIC_ERROR("Unimplemented io_mode = %d", dref->io_path.io_mode);
+      dh->repr = NULL;
+   }
+
+   return dh;
+}
+
 
 
 /** Reports the contents of a #Display_Handle in a format useful for debugging.
@@ -1039,18 +1084,18 @@ char * dh_repr_t(Display_Handle * dh) {
          switch (dh->dref->io_path.io_mode) {
          case DDCA_IO_I2C:
               snprintf(buf, bufsz,
-                       "[i2c: fd=%d, busno=%d @%p]",
+                       "Display_Handle[i2c: fd=%d, busno=%d @%p]",
                        dh->fd, dh->dref->io_path.path.i2c_busno, dh);
               break;
           case DDCA_IO_ADL:
               snprintf(buf, bufsz,
-                       "[adl: display %d.%d]",
+                       "Display_Handle[adl: display %d.%d]",
                        dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
               break;
           case DDCA_IO_USB:
 #ifdef ENABLE_USB
               snprintf(buf, bufsz,
-                       "[usb: %d:%d, %s/hiddev%d @%p]",
+                       "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
                        dh->dref->usb_bus, dh->dref->usb_device,
                        usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno, dh);
 #else
