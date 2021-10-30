@@ -54,7 +54,7 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    free_thread_error_detail();
    // assert(pcaps_loc);
    API_PRECOND(pcaps_loc);
@@ -75,10 +75,22 @@ ddca_get_capabilities_string(
          }
         //  DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
          assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
-         DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%s, Returning %s, *pcaps_loc=%p -> |%s|",
-                        dh_repr_t((Display_Handle *) ddca_dh),
-                        ddca_rc_desc(psc),
-                        *pcaps_loc, *pcaps_loc);
+#ifdef OLD
+         if (debug)
+            printf("(%s)1 psc=%d, *pcaps_loc=%p -> |%s|\n", __func__, psc, *pcaps_loc, *pcaps_loc);
+         DBGTRC(debug, DDCA_TRC_API,
+               "Done. Returrning %s(%d), ddca_dh=%s, *pcaps_loc=%p -> |%s|",
+               psc_desc(psc), psc,
+               dh_repr_t((Display_Handle *) ddca_dh),
+               *pcaps_loc, *pcaps_loc);
+         if (debug)
+            printf("\n(%s) Using DBGTRC_RETURNING...\n", __func__);
+#endif
+         DBGTRC_DONE(debug, DDCA_TRC_API,
+               "Returning %s. ddca_dh=%s, *pcaps_loc=%p -> |%s|",
+               psc_name_code(psc),
+               dh_repr_t((Display_Handle *) ddca_dh),
+               *pcaps_loc, *pcaps_loc);
       }
    );
 }

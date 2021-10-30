@@ -181,7 +181,7 @@ ddca_get_feature_list_by_dref(
          ddca_dref,
          {
                bool debug = false;
-               DBGTRC(debug, TRACE_GROUP, "Starting. feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
+               DBGTRC_STARTING(debug, TRACE_GROUP, "feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
                              "include_table_features=%s, feature_list_loc=%p",
                       feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
                       dref, dref_repr_t(dref),
@@ -241,11 +241,11 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
 
             // bye:
-               DBGTRC(debug, TRACE_GROUP, "Done.     feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
+               DBGTRC_DONE(debug, TRACE_GROUP, "feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
                      feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
                      subset, feature_subset_name(subset), psc_desc(psc));
-               DBGTRC(debug, TRACE_GROUP,
-                      "      Feature list: %s", feature_list_string(feature_list_loc, "", ","));
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
                   // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
          }
       );
@@ -890,14 +890,14 @@ DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. ddca_dh=%p", ddca_dh);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p", ddca_dh);
    WITH_VALIDATED_DH2(ddca_dh,
       {
             DBGMSF(debug, "dref=%s", dh_repr_t(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
 
-            DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p->%s. Returning: %s(%d)",
+            DBGTRC_DONE(debug, DDCA_TRC_API, "ddca_dh=%p->%s. Returning: %s(%d)",
                    ddca_dh, dh_repr_t(ddca_dh), ddca_rc_name(psc), psc);
       }
    );

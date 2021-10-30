@@ -244,7 +244,7 @@ ddca_get_display_ref(
 {
    free_thread_error_detail();
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting.  did=%p, dref_loc=%p", did, dref_loc);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
    API_PRECOND(dref_loc);
 
@@ -268,7 +268,7 @@ ddca_get_display_ref(
    }
 
    TRACED_ASSERT( (rc==0 && *dref_loc) || (rc!=0 && !*dref_loc) );
-   DBGTRC(debug, DDCA_TRC_API, "Done.     Returning: %d, *dref_loc=%p", rc, *dref_loc);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s, *dref_loc=%p", psc_name_code(rc), *dref_loc);
    return rc;
 }
 
@@ -300,9 +300,9 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Status
 ddca_redetect_displays() {
-   DBGTRC(false, DDCA_TRC_API, "Starting.");
+   DBGTRC_STARTING(false, DDCA_TRC_API, "");
    ddc_redetect_displays();
-   DBGTRC(false, DDCA_TRC_API, "Done.     Returning 0");
+   DBGTRC_DONE(false, DDCA_TRC_API, "Returning 0");
    return 0;
 }
 
@@ -357,7 +357,7 @@ ddca_report_display_by_dref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
-   DBGTRC(false, DDCA_TRC_API, "Starting. ddca_dref=%p", ddca_dref);
+   DBGTRC_STARTING(false, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
    free_thread_error_detail();
    DDCA_Status rc = 0;
 
@@ -368,7 +368,7 @@ ddca_report_display_by_dref(
 
    ddc_report_display_by_dref(dref, depth);
 
-   DBGTRC(false, DDCA_TRC_API, "Done.     Returning %s", psc_desc(rc));
+   DBGTRC_DONE(false, DDCA_TRC_API, "Returning %s", psc_name_code(rc));
    return rc;
 }
 
@@ -393,12 +393,12 @@ ddca_open_display2(
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API,
-          "Starting. ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
+   DBGTRC_STARTING(debug, DDCA_TRC_API,
+          "ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
           ddca_dref, sbool(wait), dh_loc, get_thread_id());
-   DBGTRC(debug, DDCA_TRC_API,
-          "          library_initialized=%s, ddc_displays_already_detected() = %ld",
-                 sbool(library_initialized), ddc_displays_already_detected());
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_API,
+          "library_initialized=%s, ddc_displays_already_detected() = %ld",
+          sbool(library_initialized), ddc_displays_already_detected());
    free_thread_error_detail();
    TRACED_ASSERT(library_initialized);
    TRACED_ASSERT(ddc_displays_already_detected());
@@ -425,8 +425,8 @@ ddca_open_display2(
         *dh_loc = dh;
    }
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
-   DBGTRC(debug, DDCA_TRC_API,  "Done.     Returning rc=%s, *dh_loc=%p -> %s",
-                                psc_desc(rc), *dh_loc, dh_repr_t(*dh_loc));
+   DBGTRC_DONE(debug, DDCA_TRC_API,  "Returning:%s, *dh_loc=%p -> %s",
+                                psc_name_code(rc), *dh_loc, dh_repr_t(*dh_loc));
    return rc;
 }
 
@@ -438,7 +438,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. dh = %s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dh = %s", dh_repr_t(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          rc = DDCRC_ARG;
@@ -448,7 +448,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
          rc = ddc_close_display(dh);
       }
    }
-   DBGTRC(debug, DDCA_TRC_API, "Done.     Returning %s", psc_desc(rc));
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s(%d)", psc_name(rc), rc);
    return rc;
 }
 
@@ -696,12 +696,13 @@ ddca_get_display_info(
          ddca_dref,
          {
                bool debug = false;
-               DBGTRC(debug, DDCA_TRC_API, "Starting");
+               DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
                API_PRECOND(dinfo_loc);
                DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
                init_display_info(dref, info);
                *dinfo_loc = info;
                psc=0;
+               DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0");
          }
    )
 }
@@ -714,8 +715,8 @@ ddca_get_display_refs(
       DDCA_Display_Ref**  drefs_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC,
-                 "Starting. include_invalid_displays=%s", SBOOL(include_invalid_displays));
+   DBGTRC_STARTING(debug, DDCA_TRC_API|DDCA_TRC_DDC,
+                 "include_invalid_displays=%s", SBOOL(include_invalid_displays));
    free_thread_error_detail();
    // assert(dlist_loc);
    API_PRECOND(drefs_loc);
@@ -734,6 +735,7 @@ ddca_get_display_refs(
    *cur_ddca_dref = NULL; // redundant since calloc()
    g_ptr_array_free(filtered_displays, false);
 
+   int dref_ct = 0;
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Done.     Returning 0. *drefs_loc=%p", result_list);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
@@ -741,11 +743,13 @@ ddca_get_display_refs(
          Display_Ref * dref = (Display_Ref*) cur_ddca_dref;
          rpt_vstring(1, "DDCA_Display_Ref %p -> display %d", cur_ddca_dref, dref->dispno);
          cur_ddca_dref++;
+         dref_ct++;
       }
    }
 
    *drefs_loc = result_list;
    assert(*drefs_loc);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0. Returned list has %d displays", dref_ct);
    return 0;
 }
 
@@ -756,7 +760,7 @@ ddca_get_display_info_list2(
       DDCA_Display_Info_List**  dlist_loc)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, "Starting");
+   DBGTRC_STARTING(debug, DDCA_TRC_API|DDCA_TRC_DDC, "");
    free_thread_error_detail();
    // assert(dlist_loc);
    API_PRECOND(dlist_loc);
@@ -794,8 +798,8 @@ ddca_get_display_info_list2(
 
    *dlist_loc = result_list;
    assert(*dlist_loc);
-   DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC,
-                 "Done.   Returned list has %d displays", result_list->ct);
+   DBGTRC_DONE(debug, DDCA_TRC_API|DDCA_TRC_DDC,
+                 "Returning: 0. Returned list has %d displays", result_list->ct);
    return 0;
 }
 
@@ -803,21 +807,21 @@ ddca_get_display_info_list2(
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. info_rec->%p", info_rec);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "info_rec->%p", info_rec);
    // DDCA_Display_Info contains no pointers, can simply be free'd
    // data structures.  Nothing to free.
    if (info_rec && memcmp(info_rec->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0) {
       info_rec->marker[3] = 'x';
       free(info_rec);
    }
-   DBGTRC(debug, DDCA_TRC_API, "Done.");
+   DBGTRC_DONE(debug, DDCA_TRC_API,"");
 }
 
 
 void
 ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_API, "Starting. dlist=%p", dlist);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dlist=%p", dlist);
    if (dlist) {
       // n. DDCA_Display_Info contains no pointers,
       // DDCA_Display_Info_List can simply be free'd.
@@ -828,7 +832,7 @@ ddca_free_display_info_list(DDCA_Display_Info_List * dlist) {
       }
       free(dlist);
    }
-   DBGTRC(debug, DDCA_TRC_API, "Done.");
+   DBGTRC_DONE(debug, DDCA_TRC_API, "");
 }
 
 
