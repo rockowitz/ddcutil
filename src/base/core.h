@@ -190,6 +190,15 @@ bool dbgtrc(
         char *       format,
         ...);
 
+bool dbgtrc_returning(
+        DDCA_Trace_Group  trace_group,
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        int          rc,
+        char *       format,
+        ...);
+
 
 // n. using ___LINE__ instead of line in _assert_fail() causes compilation error
 #define TRACED_ASSERT(_assertion) \
@@ -242,6 +251,21 @@ bool dbgtrc(
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
+    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "Starting "format, ##__VA_ARGS__)
+
+#define DBGTRC_DONE(debug_flag, trace_group, format, ...) \
+    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "Done     "format, ##__VA_ARGS__)
+
+
+#define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
+    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "         "format, ##__VA_ARGS__)
+
+#ifdef TOO_COMPLICATED
+#define DBGTRC_RETURNING(debug_flag, trace_group, rc, format, ...) \
+    dbgtrc_returning( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
+#endif
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
