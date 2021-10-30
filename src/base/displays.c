@@ -943,29 +943,6 @@ Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref 
    return dh;
 }
 
-#ifdef OLD
-/** Creates a #Display_Handle for an ADL #Display_Ref.
- *
- *  \param  dref pointer to #Display_Ref
- *  \return newly allocated #Display_Handle
- *
- *  \remark
- *  This functions handles the boilerplate of creating a #Display_Handle.
- */
-Display_Handle * create_adl_display_handle_from_display_ref(Display_Ref * dref) {
-   // assert(dref->io_mode == DDCA_IO_ADL);
-   assert(dref->io_path.io_mode == DDCA_IO_ADL);
-   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
-   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->dref = dref;
-   // dref->vcp_version = DDCA_VSPEC_UNQUERIED;   // needed?
-   dh->repr = g_strdup_printf(
-                "[adl: display %d.%d]",
-                // "Display_Handle[adl: display %d.%d]",
-                 dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
-   return dh;
-}
-#endif
 
 #ifdef USE_USB
 /** Creates a #Display_Handle for a USB #Display_Ref.
