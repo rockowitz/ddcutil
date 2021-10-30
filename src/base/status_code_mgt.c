@@ -301,6 +301,39 @@ char * psc_desc(Public_Status_Code psc) {
    return workbuf;
 }
 
+
+/** Returns a string containing the name of a #Public_Status_Code,
+ *  followed by its numeric value.
+ *
+ *  If the code is not recognized, the string contains only the numeric value.
+ *
+ *  @param  psc  status code number
+ *  @return string description of status code
+ *
+ *  @remark
+ *  The value returned is valid until the next call of this function in the
+ *  same thread. Caller should not free.
+ */
+char * psc_name_code(Public_Status_Code psc) {
+   static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
+   char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
+   // printf("(%s) workbuf=%p\n", __func__, workbuf);
+   // static char workbuf[GSC_WORKBUF_SIZE];
+   // printf("(%s) status_code=%d\n", __func__, status_code);
+   Status_Code_Info * pinfo = find_status_code_info(psc);
+   if (pinfo) {
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d)",
+               pinfo->name, psc);
+   }
+   else {
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
+               psc );
+   }
+   return workbuf;
+}
+
+
+
 #undef GSC_WORKBUF_SIZE
 
 

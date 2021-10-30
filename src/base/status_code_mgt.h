@@ -98,8 +98,9 @@ Retcode_Range_Id get_modulation(int rc);
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code);
 
 // Return status code description and name.  Do not free after use.
-char * psc_desc(Public_Status_Code rc);
-char * psc_name(Public_Status_Code status_code);
+char * psc_desc(     Public_Status_Code status_code);
+char * psc_name_code(Public_Status_Code status_code);
+char * psc_name(     Public_Status_Code status_code);
 
 bool status_name_to_unmodulated_number(
         const char *         status_code_name,
