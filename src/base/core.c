@@ -352,6 +352,7 @@ void show_traced_files() {
    free(buf);
 }
 
+#ifdef UNUSED
 static char * trace_destination = NULL;
 
 void show_trace_destination() {
@@ -359,7 +360,9 @@ void show_trace_destination() {
          SHOW_REPORTING_MIN_TITLE_SIZE,
          (trace_destination) ? trace_destination : "sysout");
 }
+#endif
 
+#ifdef UNUSED
 void set_libddcutil_output_destination(const char * filename, const char * trace_unit) {
    bool debug = true;
    if (debug)
@@ -385,6 +388,7 @@ void set_libddcutil_output_destination(const char * filename, const char * trace
       }
    }
 }
+#endif
 
 #ifdef FUTURE
 void init_syslog(const char * ddcutil_component) {
@@ -599,7 +603,9 @@ void show_ddcutil_version() {
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
+#ifdef UNUSED
    show_trace_destination();
+#endif
    show_trace_groups();
    show_traced_functions();
    show_traced_files();
