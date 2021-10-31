@@ -48,6 +48,18 @@ static FILE* alt_initial_output_dest = NULL;
 static bool  initial_output_dest_changed = false;
 #endif
 
+static FILE* default_output_dest;
+
+/** Sets the initial report output destination for newly created threads.
+ *
+ *  Note this does not change the report output destination for existing threads.
+ *
+ *  @param output_dest  default output destination
+ */
+void rpt_set_default_output_dest(FILE* output_dest) {
+   default_output_dest = output_dest;
+}
+
 
 //* Thread specific state */
 typedef struct {
@@ -78,6 +90,9 @@ static Per_Thread_Settings *  get_thread_settings() {
       settings = g_new0(Per_Thread_Settings, 1);
       settings->indent_spaces_stack_pos = -1;
       settings->output_dest_stack_pos   = -1;
+
+      if (default_output_dest)
+         settings->output_dest_stack[++settings->output_dest_stack_pos] = default_output_dest;
 
       g_private_set(&per_thread_settings_key, settings);
    }
