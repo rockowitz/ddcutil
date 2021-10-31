@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.1] 2021-10-30
+## [1.2.1] 2021-10-31
 
 ### Added
 - Option ***--syslog***: Send trace and debug messages to the system 
@@ -17,7 +17,7 @@
 
 ### Fixed
 - Build failure if configure option ***--enable-x11=no*** was specified.
-- API functions ddc_open_display(),ddc_open_display2() always return 
+- API functions ddc_open_display(),ddc_open_display2() now always return 
   DDCRC_ALREADY_OPEN if the the display is already open in the current
   thread. Previously an assert() failure would occur under certain 
   circumstances.
