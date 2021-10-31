@@ -248,7 +248,7 @@ create_empty_ddc_packet(int max_size, const char * tag) {
 
    DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
    if (debug)
-      dbgrpt_packet(packet, 1);
+      dbgrpt_packet(packet, 2);
 
    return packet;
 }
@@ -951,7 +951,7 @@ create_ddc_typed_response_packet(
 
    DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr_addr);
    if ( (debug || IS_TRACING()) && rc >= 0)
-      dbgrpt_packet(*packet_ptr_addr, 1);
+      dbgrpt_packet(*packet_ptr_addr, 2);
 
    assert( (rc == 0 && *packet_ptr_addr) || (rc != 0 && !*packet_ptr_addr));
    return rc;
@@ -989,7 +989,7 @@ create_ddc_multi_part_read_response_packet(
       if (data_len < min_data_len || data_len > max_data_len) {
          DDCMSG(debug, "Invalid data fragment_length_wo_null: %d", data_len);
          if (IS_REPORTING_DDC())
-            dbgrpt_packet(packet, 1);
+            dbgrpt_packet(packet, 2);
          rc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);    // was DDCRC_INVALID_DATA
       }
       else {
@@ -1048,7 +1048,7 @@ create_ddc_getvcp_response_packet(
          // dump_packet(packet);
          DDCMSG(debug, "Invalid data length: %d, should be 8", data_len);
          if ( IS_REPORTING_DDC() )
-            dbgrpt_packet(packet, 1);
+            dbgrpt_packet(packet, 2);
          rc = COUNT_STATUS_CODE(DDCRC_DDC_DATA);     // was DDCRC_INVALID_DATA
       }
       else {
