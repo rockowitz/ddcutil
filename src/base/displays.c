@@ -1146,13 +1146,13 @@ char * dh_repr(Display_Handle * dh) {
  */
 void   free_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_BASE, "Starting. dh=%p -> %s", dh, dh_repr_t(dh));
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dh=%p -> %s", dh, dh_repr_t(dh));
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
       dh->marker[3] = 'x';
       free(dh->repr);
       free(dh);
    }
-   DBGTRC(debug, DDCA_TRC_BASE, "Done.");
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "");
 }
 
 
