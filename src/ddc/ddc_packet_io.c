@@ -578,7 +578,7 @@ ddc_write_read(
       }
       else {
          DBGMSG("Done.     Returning: NULL, *response_packet_ptr_loc ->");
-         dbgrpt_packet(*response_packet_ptr_loc, 3);
+         dbgrpt_packet(*response_packet_ptr_loc, 2);
       }
    }
 
@@ -818,7 +818,7 @@ ddc_i2c_write_only(
    int fh = dh->fd;
    DBGTRC(debug, TRACE_GROUP, "Starting.");
    if (debug)
-      dbgrpt_packet(request_packet_ptr, 1);
+      dbgrpt_packet(request_packet_ptr, 2);
 
    DBGTRC(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
                               hexstring3_t(request_packet_ptr->raw_bytes->bytes,
