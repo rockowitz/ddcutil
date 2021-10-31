@@ -90,10 +90,10 @@ bool is_ddc_null_message(Byte * packet) {
 bool
 ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%p", dh);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
    bool result = g_hash_table_contains(open_displays, dh);
-   DBGTRC(debug, TRACE_GROUP, "Done.     dh=%p, returning %s", dh, sbool(result));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Rreturning %s. dh=%p", sbool(result), dh);
    return result;
 }
 
@@ -140,8 +140,8 @@ ddc_open_display(
       Display_Handle** dh_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Opening display %s, callopts=%s, dh_loc=%p",
-                 dref_repr_t(dref), interpret_call_options_t(callopts), dh_loc );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Opening display %s, callopts=%s, dh_loc=%p",
+                      dref_repr_t(dref), interpret_call_options_t(callopts), dh_loc );
    TRACED_ASSERT(dh_loc);
    // TRACED_ASSERT(1==5);    // for testing
 
@@ -223,7 +223,7 @@ ddc_open_display(
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
-         DBGTRC(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
          TRACED_ASSERT(dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
@@ -266,7 +266,7 @@ bye:
    TRACED_ASSERT(ddcrc <= 0);
    TRACED_ASSERT( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s, *dh_loc=%s", psc_desc(ddcrc), dh_repr_t(*dh_loc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr_t(*dh_loc));
    return ddcrc;
 }
 
@@ -282,7 +282,7 @@ bye:
 Status_Errno
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, dref=%s, fd=%d, dpath=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, fd=%d, dpath=%s",
               dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Display_Ref * dref = dh->dref;
    Status_Errno rc = 0;
@@ -330,7 +330,7 @@ ddc_close_display(Display_Handle * dh) {
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
-   DBGTRC(debug, TRACE_GROUP, "Done.     dref=%s  Returning: %s", dref_repr_t(dref), psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "dref=%s", dref_repr_t(dref));
    return rc;
 }
 
@@ -393,11 +393,11 @@ DDCA_Status ddc_i2c_write_read_raw(
         )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p",dh_repr_t(dh), readbuf);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, readbuf=%p",dh_repr_t(dh), readbuf);
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
-   DBGTRC(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
                               hexstring3_t(request_packet_ptr->raw_bytes->bytes,
                                            request_packet_ptr->raw_bytes->len,
                                            " ", 1, false) );
@@ -435,7 +435,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
       TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, NULL);
       if (rc == 0)
-         DBGTRC(debug, TRACE_GROUP, "Response bytes: %s",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Response bytes: %s",
                                 hexstring3_t(readbuf, max_read_bytes, " ", 1, false) );
 
       if (rc == 0 && all_bytes_zero(readbuf, max_read_bytes)) {
@@ -450,9 +450,10 @@ DDCA_Status ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.    psc=%s", psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
+
 
 // TODO: eliminate this function, used to route I2C vs ADL calls
 // static  // allow function to appear in backtrace
@@ -466,7 +467,7 @@ DDCA_Status ddc_write_read_raw(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, readbuf=%p, max_read_bytes=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, readbuf=%p, max_read_bytes=%d",
                               dh_repr_t(dh), readbuf, max_read_bytes);
    if (debug) {
       // DBGMSG("request_packet_ptr->raw_bytes:");
@@ -488,10 +489,10 @@ DDCA_Status ddc_write_read_raw(
                  p_rcvd_bytes_ct
               );
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", psc_desc(psc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    if (psc == 0) {
-      DBGTRC(debug, TRACE_GROUP,
-             "      readbuf: %s",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+             "readbuf: %s",
              hexstring3_t(readbuf, *p_rcvd_bytes_ct, " ", 4, false));
    }
    return psc;
@@ -524,7 +525,7 @@ ddc_write_read(
      )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, read_bytewise=%s, max_read_bytes=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d",
                  dh_repr_t(dh), sbool(read_bytewise), max_read_bytes );
 
    Byte * readbuf = calloc(1, max_read_bytes);
@@ -550,7 +551,7 @@ ddc_write_read(
               expected_subtype,
               __func__,
               response_packet_ptr_loc);
-       DBGTRC(debug, TRACE_GROUP,
+       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
               "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
               ddcrc_desc_t(psc), *response_packet_ptr_loc );
 
@@ -572,14 +573,13 @@ ddc_write_read(
    if (psc < 0)
       excp = errinfo_new(psc, __func__);
 
-   if (debug || IS_TRACING()) {
-      if (excp) {
-         DBGMSG("Done.     Returning: %s", errinfo_summary(excp)  );
-      }
-      else {
-         DBGMSG("Done.     Returning: NULL, *response_packet_ptr_loc ->");
+   if (excp) {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(excp)  );
+   }
+   else {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: NULL, *response_packet_ptr_loc ->");
+      if (debug || IS_TRACING())
          dbgrpt_packet(*response_packet_ptr_loc, 2);
-      }
    }
 
    return excp;
@@ -620,7 +620,7 @@ ddc_write_read_with_retry(
         )
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, all_zero_response_ok=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, all_zero_response_ok=%s",
           dh_repr_t(dh), sbool(all_zero_response_ok)  );
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
@@ -672,7 +672,7 @@ ddc_write_read_with_retry(
       try_errors[tryctr] = cur_excp;
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
-         DBGTRC(debug, TRACE_GROUP | DDCA_TRC_RETRY,
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
                 "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                 dh_repr_t(dh),
                 ddcrc_null_response_ct);
@@ -737,7 +737,7 @@ ddc_write_read_with_retry(
       }    // rc < 0
       // DBGMSG("Bottom of try loop. psc=%d, tryctr=%d, retryable=%s", psc, tryctr, sbool(retryable));
    }
-   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
          tryctr, psc, sbool(retryable), sbool(read_bytewise));
 
    int errct = (psc == 0) ? tryctr-1 : tryctr;
@@ -757,7 +757,7 @@ ddc_write_read_with_retry(
          char * s0 = (psc == 0) ? "Succeeded" : "Failed";
          char * s1 = (errct == 1) ? "" : "s";
          char * s = errinfo_array_summary(try_errors, errct);
-         DBGTRC(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s after %d error%s: %s", s0, errct, s1, s);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s after %d error%s: %s", s0, errct, s1, s);
          free(s);
 
    }
@@ -770,7 +770,7 @@ ddc_write_read_with_retry(
 
    if (psc < 0) {
       // int last_try_index = tryctr-1;
-      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
 
       if (retryable)
          psc = DDCRC_RETRIES;
@@ -793,7 +793,7 @@ ddc_write_read_with_retry(
 
    try_data_record_tries2(WRITE_READ_TRIES_OP, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -816,11 +816,11 @@ ddc_i2c_write_only(
 {
    bool debug = false;
    int fh = dh->fd;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (debug)
       dbgrpt_packet(request_packet_ptr, 2);
 
-   DBGTRC(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "request_packet_ptr->raw_bytes: %s",
                               hexstring3_t(request_packet_ptr->raw_bytes->bytes,
                                            request_packet_ptr->raw_bytes->len,
                                            " ", 1, false) );
@@ -843,7 +843,7 @@ ddc_i2c_write_only(
             : SE_POST_WRITE;
    // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
    TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
-   DBGTRC(debug, TRACE_GROUP, "Done.     rc=%s", psc_desc(rc) );
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -864,7 +864,7 @@ ddc_write_only(
       DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
@@ -873,7 +873,7 @@ ddc_write_only(
    if (psc)
       ddc_excp = errinfo_new(psc, __func__);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -893,7 +893,7 @@ ddc_write_only_with_retry(
       DDC_Packet *     request_packet_ptr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting." );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "" );
 
    TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
@@ -930,7 +930,8 @@ ddc_write_only_with_retry(
       //   tryctr == max_tries && !retryable
 
       // int last_try_index = tryctr-1;
-      DBGTRC(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s",
+                                           tryctr, sbool(retryable));
 
       if (retryable)
          psc = DDCRC_RETRIES;
@@ -952,7 +953,7 @@ ddc_write_only_with_retry(
 
    try_data_record_tries2(WRITE_ONLY_TRIES_OP, psc, tryctr);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
