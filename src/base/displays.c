@@ -1073,6 +1073,11 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
  * \return  string  representation of handle
  */
 char * dh_repr_t(Display_Handle * dh) {
+   // dh_repr is precalculated when display handle is created, returning the
+   // value is thread safe
+   return dh->repr;
+
+#ifdef UNNECESSARY
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
    const int bufsz = 100;
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
@@ -1115,6 +1120,7 @@ char * dh_repr_t(Display_Handle * dh) {
    }
 
    return buf;
+#endif
 }
 
 
@@ -1129,7 +1135,7 @@ char * dh_repr(Display_Handle * dh) {
    assert(dh->dref);
    assert(dh->repr);
    // Do not calculate and memoize dh->repr here, due to possible race condition between threads
-   // Instead always precalculate at time of Display_Handle creation
+   // Instead precalculate at time of Display_Handle creation
    return dh->repr;
 }
 
