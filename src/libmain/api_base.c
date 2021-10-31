@@ -19,6 +19,7 @@
 
 #include "util/ddcutil_config_file.h"
 #include "util/file_util.h"
+#include "util/report_util.h"
 #include "util/xdg_util.h"
 
 #include "base/base_init.h"
@@ -287,6 +288,9 @@ _ddca_init(void) {
             set_default_thread_output_settings(flog, flog);
             set_fout(flog);
             set_ferr(flog);
+
+            rpt_set_default_output_dest(flog);    // for future threads
+            rpt_push_output_dest(flog);           // for this thread
          }
          else {
             fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
