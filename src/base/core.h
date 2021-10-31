@@ -258,14 +258,11 @@ bool dbgtrc_returning(
 #define DBGTRC_DONE(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__)
 
-
 #define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
-#ifdef TOO_COMPLICATED
 #define DBGTRC_RETURNING(debug_flag, trace_group, rc, format, ...) \
     dbgtrc_returning( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
-#endif
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \

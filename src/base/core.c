@@ -699,7 +699,7 @@ void severemsg(
  *
  *  @return **true** if message was output, **false** if not
  */
-bool dbgtrc(
+bool dbgtrc_old(
         DDCA_Trace_Group  trace_group,
         const char *      funcname,
         const int         lineno,
@@ -787,8 +787,6 @@ bool dbgtrc(
 }
 
 
-#ifdef TOO_COMPLICATED
-// TOOD dbgtrc() calls vdbgtrc()
 
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
@@ -806,6 +804,7 @@ bool dbgtrc(
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
  *  @param filename      file name of caller
+ *  @param pre_prefix
  *  @param format        format string for message
  *  @param ap            arguments for format string
  *
@@ -913,6 +912,58 @@ bool vdbgtrc(
 }
 
 
+/** Core function for emitting debug or trace messages.
+ *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
+ *
+ *  The message is output if any of the following are true:
+ *  - the trace_group specified is currently active
+ *  - the value is trace group is 0xff
+ *  - funcname is the name of a function being traced
+ *  - filename is the name of a file being traced
+ *
+ *  The message is output to the current FERR device and optionally,
+ *  depending on the syslog setting, to the system log.
+ *
+ *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param funcname      function name of caller
+ *  @param lineno        line number in caller
+ *  @param filename      file name of caller
+ *  @param format        format string for message
+ *  @param ...           arguments for format string
+ *
+ *  @return **true** if message was output, **false** if not
+ */
+bool dbgtrc(
+        DDCA_Trace_Group  trace_group,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        char *            format,
+        ...)
+{
+   bool debug = false;
+   if (debug)
+      printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       (fout() == stdout) ? "==" : "!=");
+
+   bool msg_emitted = false;
+   if ( is_tracing(trace_group, filename, funcname) ) {
+      va_list(args);
+      va_start(args, format);
+      if (debug)
+         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, "", format, args);
+      va_end(args);
+   }
+
+   if (debug)
+      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+   return msg_emitted;
+}
+
+
 bool dbgtrc_returning(
         DDCA_Trace_Group  trace_group,
         const char *      funcname,
@@ -931,24 +982,24 @@ bool dbgtrc_returning(
                        (fout() == stdout) ? "==" : "!=",
                        rc, format);
 
-   char pre_prefix[60];
-   g_snprintf(pre_prefix, 60, "Done     Returning: %s.", psc_name_code(rc));
-   if (debug)
-      printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
+   bool msg_emitted = false;
+   if ( is_tracing(trace_group, filename, funcname) ) {
+      char pre_prefix[60];
+      g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", psc_name_code(rc));
+      if (debug)
+         printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
 
-   va_list(args);
-   va_start(args, format);
-   if (debug)
-      printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
-   bool msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
-   va_end(args);
-
+      va_list(args);
+      va_start(args, format);
+      if (debug)
+         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+      va_end(args);
+   }
    if (debug)
       printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
    return msg_emitted;
-
 }
-#endif
 
 
 //
