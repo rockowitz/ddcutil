@@ -93,7 +93,7 @@ bool i2c_force_bus = false;
  */
 int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, callopts=0x%02x", busno, callopts);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
    int  fd;             // Linux file descriptor
@@ -117,7 +117,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       ptd_append_thread_description(filename);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     busno=%d, Returning file descriptor: %d", busno, fd);
+   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
    return fd;
 }
 
@@ -132,8 +132,8 @@ int i2c_open_bus(int busno, Byte callopts) {
  */
 Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. fd=%d - %s, callopts=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "fd=%d - %s, callopts=%s",
           fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
 
    Status_Errno result = 0;
@@ -152,8 +152,7 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC(debug, TRACE_GROUP, "Done.     fd=%d, filename=%s, Returning: %s",
-                              fd, filename_for_fd_t(fd), psc_desc(result));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
    return result;
 }
 
@@ -179,7 +178,7 @@ Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
    bool force_i2c_slave_failure = false;
 #endif
    // callopts |= CALLOPT_ERR_MSG;    // temporary
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, addr=0x%02x, filename=%s, i2c_force_slave_addr_flag=%s, callopts=%s",
                  fd, addr,
                  filename_for_fd_t(fd),
@@ -208,11 +207,11 @@ retry:
 
    if (rc < 0) {
       if (errsv == EBUSY) {
-         DBGTRC(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
                    filename_for_fd_t(fd), addr);
 
          if (i2c_force_slave_addr_flag && op == I2C_SLAVE) {
-            DBGTRC(debug, TRACE_GROUP,
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
                    filename_for_fd_t(fd), addr );
             // normally errors counted at higher level, but in this case it would be
@@ -241,14 +240,14 @@ retry:
                    addr);
    }
 
-   DBGTRC((result || debug), TRACE_GROUP,
+   DBGTRC_NOPREFIX((result || debug), TRACE_GROUP,
            "addr = 0x%02x. filename = %s, Returning %s",
            addr, filename_for_fd_t(fd), psc_desc(result));
       // show_backtrace(1);
 
    assert(result <= 0);
    // if (addr == 0x37)  result = -EBUSY;    // for testing
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %s", psc_desc(result));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -291,7 +290,7 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
       g_ptr_array_free(lines, true);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
                               busno, drm_name_fragment, sbool(result));
    return result;
 }
@@ -384,13 +383,13 @@ i2c_get_edid_bytes_directly(
    read_bytewise = true;   // ** TEMP **
 #endif
 
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
    // write_before_read = false;
-   DBGTRC(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
    int rc = 0;
    if (write_before_read) {
       Byte byte_to_write = 0x00;
@@ -401,11 +400,11 @@ i2c_get_edid_bytes_directly(
          );
       if (rc < 0) {
          rc = -errno;
-         DBGMSF(debug, "write() failed.  rc = %s", psc_desc(rc));
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() failed.  rc = %s", psc_name_code(rc));
       }
       else {
          rc = 0;
-         DBGTRC(debug, TRACE_GROUP, "write() succeeded");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() succeeded");
       }
    }
 
@@ -466,7 +465,7 @@ i2c_get_edid_bytes_directly(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -479,7 +478,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       bool    read_bytewise)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
@@ -512,7 +511,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -529,7 +528,7 @@ Status_Errno_DDC
 i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 {
    bool debug  = false;
-   DBGTRC(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
 #ifdef OLD
    bool conservative = false;
@@ -554,7 +553,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 
 
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
-   DBGTRC(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
@@ -565,7 +564,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
 
-      DBGTRC(debug, TRACE_GROUP,
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
                     " edid_read_size=%d, read_bytewise=%s, using %s",
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise),
@@ -590,7 +589,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
             DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
          if (!is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
-            DBGTRC(debug, TRACE_GROUP, "Invalid EDID");
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID");
             rc = DDCRC_INVALID_EDID;
          }
          if (rc == DDCRC_INVALID_EDID) {
@@ -614,7 +613,7 @@ bye:
    if (rc < 0)
       rawedid->len = 0;
 
-   DBGTRC(debug, TRACE_GROUP, "tries=%d, Returning %s", tryctr, psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "tries=%d", tryctr);
    return rc;
 }
 
@@ -631,7 +630,7 @@ Status_Errno_DDC
 i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 {
    bool debug  = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, filename=%s", fd, filename_for_fd_t(fd));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(EDID_BUFFER_SIZE, NULL);
 
@@ -652,10 +651,10 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
    *edid_ptr_loc = edid;
    if (edid)
-      DBGTRC(debug, TRACE_GROUP, "Returning %s, *edid_ptr_loc = %p -> ...%s",
-                                 psc_desc(rc), edid, hexstring3_t(edid->bytes+124, 4, "", 1, false));
+      DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*edid_ptr_loc = %p -> ...%s",
+                                 edid, hexstring3_t(edid->bytes+124, 4, "", 1, false));
    else
-      DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(rc));
+      DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
 
    return rc;
 }
@@ -691,7 +690,7 @@ bool i2c_detect_x37(int fd) {
       // regard either a successful write() or a read() as indication slave address is valid
       Byte    writebuf = {0x00};
       rc = write(fd, &writebuf, 1);
-      DBGTRC(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_desc(rc));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
       if (rc == 1)
          result = true;
 
@@ -702,7 +701,7 @@ bool i2c_detect_x37(int fd) {
 
       Byte    readbuf[4];  //  4 byte buffer
       rc = read(fd, readbuf, 4);
-      DBGTRC(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_desc(rc));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
       // test doesn't work, buffer contains random bytes (but same random bytes for every
       // display in a single call to i2cdetect_x37
       // Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
@@ -743,7 +742,7 @@ void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. busno=%d, buf_info=%p", bus_info->busno, bus_info );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
 
@@ -784,9 +783,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       }
    }   // probing complete
 
-   // DBGTRC(debug, TRACE_GROUP, "Done.     flags=0x%02x", bus_info->flags );
+   DBGTRC_DONE(debug, TRACE_GROUP, "flags=0x%04x, bus info:", bus_info->flags );
    if (debug || IS_TRACING() ) {
-      DBGMSG("Done.     flags=0x%04x, bus info:", bus_info->flags );
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
@@ -976,7 +974,7 @@ int i2c_device_count() {
       if (i2c_device_exists(busno))
          busct++;
    }
-   DBGTRC(debug, TRACE_GROUP, "Returning %d", busct );
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Returning %d", busct );
    return busct;
 }
 
@@ -1004,7 +1002,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 
 int i2c_detect_buses() {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_I2C, "Starting.  i2c_buses = %p", i2c_buses);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
       // only returns buses with valid name (arg=false)
 #ifdef ENABLE_UDEV
@@ -1028,25 +1026,25 @@ int i2c_detect_buses() {
       bva_free(i2c_bus_bva);
    }
    int result = i2c_buses->len;
-   DBGTRC(debug, DDCA_TRC_I2C, "Returning: %d", result);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
 
 
 void i2c_discard_buses() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (i2c_buses) {
       g_ptr_array_free(i2c_buses, true);
       i2c_buses= NULL;
    }
-   DBGTRC(debug, TRACE_GROUP, "Done.");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_I2C, "Starting. busno = %d", busno);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno = %d", busno);
    I2C_Bus_Info * businfo = NULL;
 
    if (i2c_device_exists(busno) ) {
@@ -1057,7 +1055,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
          i2c_dbgrpt_bus_info(businfo, 0);
    }
 
-   DBGTRC(debug, DDCA_TRC_I2C, "Done.     busno=%d, returning: %p", busno, businfo);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "busno=%d, returning: %p", busno, businfo);
    return businfo;
 }
 
@@ -1204,7 +1202,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
  */
 int i2c_report_buses(bool report_all, int depth) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. report_all=%s\n", sbool(report_all));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "report_all=%s\n", sbool(report_all));
 
    assert(i2c_buses);
    int busct = i2c_buses->len;
@@ -1227,7 +1225,7 @@ int i2c_report_buses(bool report_all, int depth) {
    if (reported_ct == 0)
       rpt_vstring(depth, "   No buses\n");
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning %d\n", reported_ct);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d\n", reported_ct);
    return reported_ct;
 }
 

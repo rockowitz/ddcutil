@@ -93,9 +93,8 @@ ddc_save_current_settings(
       Display_Handle * dh)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
           "Invoking DDC Save Current Settings command. dh=%s", dh_repr_t(dh));
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
@@ -110,15 +109,14 @@ ddc_save_current_settings(
       // dump_packet(request_packet_ptr);
 
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
       if (request_packet_ptr)
          free_ddc_packet(request_packet_ptr);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
    if ( (debug||IS_TRACING()) && ddc_excp)
       errinfo_report(ddc_excp, 0);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -142,7 +140,7 @@ ddc_set_nontable_vcp_value(
       int              new_value)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr_t(dh) );
    Public_Status_Code psc = 0;
@@ -168,9 +166,9 @@ ddc_set_nontable_vcp_value(
          free_ddc_packet(request_packet_ptr);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(psc));
-   if ( psc==DDCRC_RETRIES && (debug || IS_TRACING()) )
-      DBGMSG("          Try errors: %s", errinfo_causes_string(ddc_excp));
+   if ( psc==DDCRC_RETRIES )
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));  // needed?
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -193,8 +191,8 @@ set_table_vcp_value(
       int               bytect)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
-                              feature_code, bytect);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
+                                       feature_code, bytect);
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
@@ -203,7 +201,9 @@ set_table_vcp_value(
       psc = DDCRC_UNIMPLEMENTED;
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
+      psc = DDCRC_INTERNAL_ERROR;
 #endif
+      ddc_excp = ERRINFO_NEW(psc);
    }
    else {
       // TODO: clean up function signatures
@@ -216,9 +216,9 @@ set_table_vcp_value(
       buffer_free(new_value, __func__);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
-   if ( (debug || IS_TRACING()) && psc == DDCRC_RETRIES )
-      DBGMSG("      Try errors: %s", errinfo_causes_string(ddc_excp));
+   if ( psc == DDCRC_RETRIES )
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -533,7 +533,7 @@ ddc_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
 
    Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
@@ -575,7 +575,8 @@ ddc_get_nontable_vcp_value(
    if (debug || IS_TRACING() ) {
       psc = ERRINFO_STATUS(excp);
       if (psc != 0)
-         DBGMSG("ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                "ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
                 psc_desc(psc), response_packet_ptr);
    }
 
@@ -633,19 +634,20 @@ ddc_get_nontable_vcp_value(
    // DBGMSG("parsed_response = %p", parsed_response);
 
    assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
-   if (debug || IS_TRACING() ) {
-      if (excp) {
-         DBGMSG("Done.     Error reading feature x%02x.  Returning exception: %s", feature_code, errinfo_summary(excp));
-         // errinfo_report(excp, 1);
-      }
-      else {
-         DBGMSG("Done.     Success reading feature x%02x. *ppinterpreted_code=%p", feature_code, parsed_response);
-         DBGMSG("          mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
-                parsed_response->mh, parsed_response->ml,
-                parsed_response->sh, parsed_response->sl,
-                (parsed_response->mh<<8) | parsed_response->ml,
-                (parsed_response->sh<<8) | parsed_response->sl);
-      }
+   if (excp) {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Error reading feature x%02x.  Returning exception: %s",
+                                 feature_code, errinfo_summary(excp));
+      // errinfo_report(excp, 1);
+   }
+   else {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Success reading feature x%02x. *ppinterpreted_code=%p",
+                                      feature_code, parsed_response);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
+                      parsed_response->mh, parsed_response->ml,
+                      parsed_response->sh, parsed_response->sl,
+                      (parsed_response->mh<<8) | parsed_response->ml,
+                      (parsed_response->sh<<8) | parsed_response->sl);
    }
    *ppInterpretedCode = parsed_response;
 
@@ -668,7 +670,7 @@ ddc_get_table_vcp_value(
        Buffer**               pp_table_bytes)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x", feature_code);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -683,7 +685,7 @@ ddc_get_table_vcp_value(
             &paccumulator);
    psc = (ddc_excp) ? ddc_excp->status_code : 0;
    if (debug || psc != 0) {
-      DBGTRC(debug, TRACE_GROUP,
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
              "multi_part_read_with_retry() returned %s", psc_desc(psc));
    }
 
@@ -705,9 +707,9 @@ ddc_get_table_vcp_value(
 
    }
 
-   DBGTRC(debug, TRACE_GROUP,
-          "Done. rc=%s, *pp_table_bytes=%p", psc_desc(psc), *pp_table_bytes);
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+          "rc=%s, *pp_table_bytes=%p", psc_name_code(psc), *pp_table_bytes);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
@@ -732,7 +734,7 @@ ddc_get_vcp_value(
        DDCA_Any_Vcp_Value **  valrec_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Reading feature 0x%02x, dh=%s, dh->fd=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x, dh=%s, dh->fd=%d",
             feature_code, dh_repr_t(dh), dh->fd);
 
    Public_Status_Code psc = 0;
@@ -813,16 +815,17 @@ ddc_get_vcp_value(
    *valrec_loc = valrec;
    ASSERT_IFF(psc == 0,*valrec_loc);
 
-   if (debug || IS_TRACING() ) {
-      if (psc == 0)  {
-         DBGMSG("Done.     Returning: %s, *valrec ->", errinfo_summary(ddc_excp));
-         dbgrpt_single_vcp_value(valrec,3);
-      }
-      else
-         DBGMSG("Done.     Returning: %s", errinfo_summary(ddc_excp));
+   if (psc == 0)  {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s, *valrec ->", errinfo_summary(ddc_excp));
+      if (debug || IS_TRACING() )
+         dbgrpt_single_vcp_value(valrec,2);
    }
+   else
+      DBGTRC_DONE(debug, TRACE_GROUP, "ddc_excp = %s", errinfo_summary(ddc_excp));
+
    return ddc_excp;
 }
+
 
 static void init_ddc_vcp_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);

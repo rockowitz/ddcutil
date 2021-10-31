@@ -161,7 +161,7 @@ get_raw_value_for_feature_metadata(
    assert(dh->dref);
 
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. frec=%p, feature_code=0x%02x", frec, (frec) ? frec->feature_code : 0x00);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "frec=%p, feature_code=0x%02x", frec, (frec) ? frec->feature_code : 0x00);
 
    // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -304,15 +304,15 @@ get_raw_value_for_feature_metadata(
    *pvalrec = valrec;
    ASSERT_IFF(!ddc_excp, *pvalrec);;
 
-   if (debug || IS_TRACING()) {
-      if (ddc_excp) {
-         DBGMSG("Done.     Returning %s", errinfo_summary(ddc_excp));
-      }
-      else {
-         DBGMSG("Done.     Returning NULL, *pvalrec -> ");
-         dbgrpt_single_vcp_value(*pvalrec, 3);
-      }
+   if (ddc_excp) {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
    }
+   else {
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL, *pvalrec -> ");
+      if (debug || IS_TRACING())
+         dbgrpt_single_vcp_value(*pvalrec, 2);
+   }
+
    return ddc_excp;
 }
 
@@ -593,7 +593,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
       FILE *                      msg_fh)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. suppress_unsupported=%s", sbool(suppress_unsupported));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "suppress_unsupported=%s", sbool(suppress_unsupported));
 
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp;
@@ -733,9 +733,9 @@ ddc_get_formatted_value_for_display_feature_metadata(
    if (pvalrec)
       free_single_vcp_value(pvalrec);
 
-   DBGTRC(debug, TRACE_GROUP,
-          "Done.      Returning: %s, *formatted_value_loc=%p -> %s",
-          psc_desc(psc), *formatted_value_loc, *formatted_value_loc);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc,
+          "*formatted_value_loc=%p -> %s",
+          *formatted_value_loc, *formatted_value_loc);
 
    ASSERT_IFF(psc == 0, !ddc_excp);
    ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
@@ -884,10 +884,8 @@ ddc_show_vcp_values(
         Byte_Bit_Flags      features_seen)
 {
    bool debug = false;
-   if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names_t(flags);
-      DBGMSG("Starting.  subset=%d, flags=%s,  dh=%s", subset, s0, dh_repr(dh) );
-   }
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset=%d, flags=%s,  dh=%s",
+                   subset, feature_set_flag_names_t(flags), dh_repr(dh) );
 
    Public_Status_Code psc = 0;
 
@@ -916,7 +914,7 @@ ddc_show_vcp_values(
    psc = show_feature_set_values2_dfm(
             dh, feature_set, collector, flags, features_seen);
    dyn_free_feature_set(feature_set);
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning %s", psc_desc(psc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 

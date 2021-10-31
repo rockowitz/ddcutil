@@ -80,7 +80,7 @@ bool get_i2c_fileio_use_timeout() {
 Status_Errno_DDC
 i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
    int rc = 0;
 
@@ -135,7 +135,7 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    }
 
 bye:
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -165,7 +165,7 @@ i2c_fileio_reader(
       Byte * readbuf)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
                  fd, filename_for_fd_t(fd),
                  bytect, slave_address, sbool(single_byte_reads));
 
@@ -251,7 +251,7 @@ i2c_fileio_reader(
    }
 
 bye:
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -293,7 +293,7 @@ i2c_ioctl_writer(
       Byte * pbytes)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
 #ifdef EXPLORING
@@ -360,7 +360,7 @@ i2c_ioctl_writer(
       rc = -errsv;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %d", rc);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -385,7 +385,7 @@ ioctl_reader1(
       int    bytect,
       Byte * readbuf) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
 
    struct i2c_msg              messages[1];
@@ -439,14 +439,15 @@ ioctl_reader1(
    else if (rc < 0)
       rc = -errsv;
    // DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 
 
-Status_Errno_DDC i2c_ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
+Status_Errno_DDC
+i2c_ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
    int rc = 0;
 
@@ -460,7 +461,7 @@ Status_Errno_DDC i2c_ioctl_reader(int fd, Byte slave_address, bool read_bytewise
       rc = ioctl_reader1(fd, slave_address, bytect, readbuf);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s, readbuf: %s", psc_desc(rc), hexstring_t(readbuf, bytect));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 

@@ -88,7 +88,7 @@ Status_Errno_DDC invoke_i2c_writer(
       Byte * bytes_to_write)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, bytes_to_write=%p -> %s",
                  fd,
                  filename_for_fd_t(fd),
@@ -105,7 +105,7 @@ Status_Errno_DDC invoke_i2c_writer(
    assert (rc <= 0);
    RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
-   DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -128,7 +128,7 @@ Status_Errno_DDC invoke_i2c_reader(
        Byte *     readbuf)
 {
      bool debug = false;
-     DBGTRC(debug, TRACE_GROUP,
+     DBGTRC_STARTING(debug, TRACE_GROUP,
                    "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, read_bytewise=%s, readbuf=%p",
                    fd,
                    filename_for_fd_t(fd),
@@ -147,9 +147,9 @@ Status_Errno_DDC invoke_i2c_reader(
      assert (rc <= 0);
 
      if (rc == 0) {
-        DBGTRC(debug, TRACE_GROUP, "Bytes read: %s", hexstring_t(readbuf, bytect) );
+        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Bytes read: %s", hexstring_t(readbuf, bytect) );
      }
-     DBGTRC(debug, TRACE_GROUP, "Returning rc=%s", psc_desc(rc));
+     DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
      return rc;
 }
 
@@ -176,7 +176,4 @@ Status_Errno_DDC invoke_single_byte_i2c_reader(
    return psc;
 }
 #endif
-
-
-
 
