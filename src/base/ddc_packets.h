@@ -246,6 +246,6 @@ int    get_packet_len(  DDC_Packet * packet);
 Byte * get_data_start(  DDC_Packet * packet);
 int    get_data_len(    DDC_Packet * packet);
 
-
+void init_ddc_packets();
 
 #endif /* DDC_PACKETS_H_ */

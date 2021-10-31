@@ -28,6 +28,7 @@ void init_base_services() {
    // init_linux_errno();
    init_thread_data_module();
    init_displays();
+   init_ddc_packets();
 }
 
 void release_base_services() {

@@ -123,7 +123,7 @@ static char * distinct_display_ref_repr_t(Distinct_Display_Ref id) {
 
 Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 
    void * result = NULL;
    g_mutex_lock(&descriptors_mutex);
@@ -151,7 +151,7 @@ Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref) {
 
    g_mutex_unlock(&descriptors_mutex);
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
    return result;
 }
 
@@ -172,7 +172,7 @@ lock_distinct_display(
 {
    DDCA_Status ddcrc = 0;
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
 
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -200,8 +200,7 @@ lock_distinct_display(
          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGTRC(debug, TRACE_GROUP, "Done.     id=%p -> %s, Returning: %s",
-                 id, distinct_display_ref_repr_t(id), psc_desc(ddcrc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    return ddcrc;
 }
 
@@ -214,7 +213,7 @@ lock_distinct_display(
  */
 DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    DDCA_Status ddcrc = 0;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -229,8 +228,7 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC(debug, TRACE_GROUP, "Done.     id=%p -> %s, Returning %s",
-                 id, distinct_display_ref_repr_t(id), psc_desc(ddcrc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    return ddcrc;
 }
 
@@ -241,20 +239,20 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
  */
 void unlock_all_distinct_displays() {
    bool debug = true;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
    g_mutex_lock(&descriptors_mutex);
     for (int ndx=0; ndx < display_descriptors->len; ndx++) {
        Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
-       DBGTRC(debug, TRACE_GROUP, "%2d - %p  %-28s",
-                        ndx, cur,
-                        dpath_repr_t(&cur->io_path) );
+       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%2d - %p  %-28s",
+                                           ndx, cur,
+                                           dpath_repr_t(&cur->io_path) );
 
        g_mutex_unlock(&cur->display_mutex);
     }
     g_mutex_unlock(&descriptors_mutex);
     g_mutex_unlock(&master_display_lock_mutex);
-    DBGTRC(debug, TRACE_GROUP, "Done");
+    DBGTRC_DONE(debug, TRACE_GROUP, "");
  }
 
 
@@ -291,4 +289,5 @@ void init_ddc_display_lock(void) {
    RTTI_ADD_FUNC(get_distinct_display_ref);
    RTTI_ADD_FUNC(lock_distinct_display);
    RTTI_ADD_FUNC(unlock_distinct_display);
+   RTTI_ADD_FUNC(unlock_all_distinct_displays);
 }

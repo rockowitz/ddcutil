@@ -21,6 +21,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
+#include "base/rtti.h"
 
 #include "base/ddc_packets.h"
 
@@ -508,9 +509,9 @@ create_ddc_base_response_packet(
    DDC_Packet ** packet_ptr_addr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. i2c_response_bytes=%p, response_bytes_buffer_size=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "i2c_response_bytes=%p, response_bytes_buffer_size=%d",
                               i2c_response_bytes, response_bytes_buffer_size);
-   DBGTRC(debug, TRACE_GROUP, "          i2c_response_bytes -> |%s|",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_response_bytes -> |%s|",
                               hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
    int result = DDCRC_OK;
@@ -563,8 +564,7 @@ create_ddc_base_response_packet(
    else
       *packet_ptr_addr = NULL;
 
-   DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc_t(result), *packet_ptr_addr);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "*packet_ptr_addr=%p", *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -595,8 +595,8 @@ create_ddc_response_packet(
        DDC_Packet **   packet_ptr_addr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
           response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
    Status_DDC result = create_ddc_base_response_packet(
@@ -617,7 +617,7 @@ create_ddc_response_packet(
    if (result != DDCRC_OK && *packet_ptr_addr) {
       // if (debug)
       //    DBGMSG("failure, freeing response packet at %p", *packet_ptr_addr);
-      DBGTRC(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_addr);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_addr);
       // does this cause the free(readbuf) failure in try_read?
       free_ddc_packet(*packet_ptr_addr);
       *packet_ptr_addr = 0;
@@ -627,8 +627,7 @@ create_ddc_response_packet(
       log_status_code(result, __func__);
    }
 
-   DBGTRC(debug, TRACE_GROUP,
-          "Returning %s, *packet_ptr_addr=%p", ddcrc_desc_t(result), *packet_ptr_addr);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "*packet_ptr_addr=%p", *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -754,8 +753,8 @@ interpret_vcp_feature_response_std(
        Parsed_Nontable_Vcp_Response* aux_data)   // record in which interpreted feature response will be stored
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. requested_vcp_code: 0x%02x, vcp_data_bytes: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "requested_vcp_code: 0x%02x, vcp_data_bytes: %s",
           requested_vcp_code, hexstring3_t(vcp_data_bytes, bytect, " ", 4, false));
 
    int result = DDCRC_OK;
@@ -791,7 +790,7 @@ interpret_vcp_feature_response_std(
             // Do not report as DDC error if VCP code is 0x00, since that value is used
             // for probing.
             // bool msg_emitted =
-                  DBGTRC(debug, TRACE_GROUP,
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                                       "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
             // if (requested_vcp_code != 0x00 && !msg_emitted)
             //    DDCMSG(debug, "Unsupported VCP Code: 0x%02x", vcpresp->vcp_opcode);
@@ -809,10 +808,10 @@ interpret_vcp_feature_response_std(
          int max_val = (vcpresp->mh << 8) | vcpresp->ml;
          int cur_val = (vcpresp->sh << 8) | vcpresp->sl;
 
-         DBGTRC(debug, TRACE_GROUP,
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
                 vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         DBGTRC(debug, TRACE_GROUP, "valid_response=%s", sbool(valid_response));
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "valid_response=%s", sbool(valid_response));
 
          aux_data->valid_response   = true;
          aux_data->supported_opcode = true;
@@ -827,7 +826,7 @@ interpret_vcp_feature_response_std(
    }
    
    // result = DDCRC_DDC_DATA; // force error for testing
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", psc_desc(result));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -896,7 +895,7 @@ create_ddc_typed_response_packet(
       DDC_Packet**    packet_ptr_addr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. response_bytes_buffer_size=%d, response_bytes=|%s|",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "response_bytes_buffer_size=%d, response_bytes=|%s|",
                               response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_addr);
@@ -907,7 +906,7 @@ create_ddc_typed_response_packet(
                expected_type,
                tag,
                packet_ptr_addr);
-   DBGTRC(debug, TRACE_GROUP, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Create_ddc_response_packet() returned %s, *packet_ptr_addr=%p",
                                psc_desc(rc), *packet_ptr_addr);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_addr;
@@ -950,7 +949,7 @@ create_ddc_typed_response_packet(
       *packet_ptr_addr = NULL;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s, *packet_ptr=%p", ddcrc_desc_t(rc), *packet_ptr_addr);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr_addr);
    if ( (debug || IS_TRACING()) && rc >= 0)
       dbgrpt_packet(*packet_ptr_addr, 1);
 
@@ -959,6 +958,7 @@ create_ddc_typed_response_packet(
 }
 
 
+#ifdef UNUSED
 Status_DDC
 create_ddc_multi_part_read_response_packet(
       Byte           response_type,
@@ -968,7 +968,7 @@ create_ddc_multi_part_read_response_packet(
       DDC_Packet **  packet_ptr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  response_type=0x%02x, tag=%s, packet_ptr=%p");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "response_type=0x%02x, tag=%s, packet_ptr=%p");
 
    DDC_Packet * packet = NULL;
    Status_DDC rc = create_ddc_response_packet(i2c_response_bytes,
@@ -978,8 +978,8 @@ create_ddc_multi_part_read_response_packet(
                                               &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
-                                 ddcrc_desc_t(rc), packet);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
+                                 psc_name_code(rc), packet);
    }
    if (rc == 0) {
       // dump_packet(packet);
@@ -1008,10 +1008,10 @@ create_ddc_multi_part_read_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
-   DBGTRC(debug, TRACE_GROUP, "Returning %s(%d). *packet_ptr=%p", psc_desc(rc), rc, *packet_ptr);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
    return rc;
 }
-
+#endif
 
 // VCP Feature response
 
@@ -1025,7 +1025,7 @@ create_ddc_getvcp_response_packet(
        DDC_Packet **  packet_ptr)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  expected_vcp_opcode=0x%02x, packet_ptr=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "expected_vcp_opcode=0x%02x, packet_ptr=%p",
                               expected_vcp_opcode, packet_ptr);
 
    DDC_Packet * packet = NULL;
@@ -1037,7 +1037,7 @@ create_ddc_getvcp_response_packet(
                &packet);
    if (rc != 0) {
       // DBGMSG("create_ddc_response_packet() returned %s, packet=%p", ddcrc_description(rc), packet);
-      DBGTRC(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "create_ddc_response_packet() returned %s, packet=%p",
                                  ddcrc_desc_t(rc), packet);
    }
    if (rc == 0) {
@@ -1067,7 +1067,7 @@ create_ddc_getvcp_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
-   DBGTRC(debug, TRACE_GROUP, "Returning %s(%d). *packet_ptr=%p", psc_name(rc), rc, *packet_ptr);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
    return rc;
 }
 
@@ -1132,3 +1132,14 @@ Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
    }
    return rc;
 }
+
+
+void init_ddc_packets() {
+   RTTI_ADD_FUNC(create_ddc_base_response_packet);
+   RTTI_ADD_FUNC(create_ddc_getvcp_response_packet);
+// RTTI_ADD_FUNC(create_ddc_multi_part_read_response_packet);
+   RTTI_ADD_FUNC(create_ddc_response_packet);
+   RTTI_ADD_FUNC(create_ddc_typed_response_packet);
+   RTTI_ADD_FUNC(interpret_vcp_feature_response_std);
+}
+

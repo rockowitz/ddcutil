@@ -122,9 +122,8 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
 bool ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
-   DBGTRC(debug, TRACE_GROUP, "Starting. communication flags: %s",
-                                 dref_basic_flags_t(dh->dref->flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
 
    DDCA_Any_Vcp_Value * pvalrec;
 
@@ -132,7 +131,7 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
       Public_Status_Code psc = 0;
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
-      DBGTRC(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
                              //    psc_desc(psc),
                                  errinfo_summary(ddc_excp),
                                  pvalrec);
@@ -244,10 +243,8 @@ bye:
       dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     dh=%s, Returning: %s",
-                 dh_repr_t(dh), sbool(communication_working));
-   DBGTRC(debug, TRACE_GROUP, "          Done. communication flags: %s",
-                                 dref_basic_flags_t(dh->dref->flags));
+   DBGTRC_DONE(debug, TRACE_GROUP, "dh=%s, Returning: %s", dh_repr(dh), sbool(communication_working));
+   DBGTRC_DONE(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
    return communication_working;
 }
 
@@ -260,8 +257,8 @@ bye:
  */
 bool ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
-                 dref_repr_t(dref), dref_basic_flags_t(dref->flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
+                                       dref_repr_t(dref), dref_basic_flags_t(dref->flags));
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -275,9 +272,8 @@ bool ddc_initial_checks_by_dref(Display_Ref * dref) {
      dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.     dref = %s, returning %s", dref_repr_t(dref), sbool(result) );
-   DBGTRC(debug, TRACE_GROUP, "          communication flags: %s",
-                               dref_basic_flags_t(dref->flags));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref = %s", sbool(result), dref_repr_t(dref) );
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dref->flags));
    return result;
 }
 
@@ -291,11 +287,11 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 
    Display_Ref * dref = data;
    TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref = %s", dref_repr_t(dref) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref) );
 
    ddc_initial_checks_by_dref(dref);
    // g_thread_exit(NULL);
-   DBGTRC(debug, TRACE_GROUP, "Done.     dref = %s, returning NULL", dref_repr_t(dref) );
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref = %s,", dref_repr_t(dref) );
    return NULL;
 }
 
@@ -319,7 +315,7 @@ GPtrArray * ddc_get_all_displays() {
 
 GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. include_invalid_displays=%s", sbool(include_invalid_displays));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
    TRACED_ASSERT(all_displays);
    GPtrArray * result = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -328,7 +324,7 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
          g_ptr_array_add(result, cur);
       }
    }
-   DBGTRC(debug, TRACE_GROUP, "Returning array of size %d", result->len);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug) {
       ddc_dbgrpt_display_refs(result, 2);
    }
@@ -445,7 +441,7 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, communication flags: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
                  dref_repr_t(dref), dref_basic_flags_t(dref->flags));
    TRACED_ASSERT(dref);
    TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -490,7 +486,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       break;
    }
 
-   TRACED_ASSERT( dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
+   TRACED_ASSERT(dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
 
    DDCA_Output_Level output_level = get_output_level();
 
@@ -564,7 +560,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -850,7 +846,7 @@ bye:
  */
 void async_scan(GPtrArray * all_displays) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. all_displays=%p, display_count=%d", all_displays, all_displays->len);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d", all_displays, all_displays->len);
 
    GPtrArray * threads = g_ptr_array_new();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -884,13 +880,13 @@ void async_scan(GPtrArray * all_displays) {
       }
    }
 #endif
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 void non_async_scan(GPtrArray * all_displays) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. checking %d displays", all_displays->len);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -906,9 +902,8 @@ void non_async_scan(GPtrArray * all_displays) {
       }
 #endif
    }
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
 
 
 static Display_Ref *
@@ -930,14 +925,14 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
    char * invalid_repr = strdup(dref_repr_t(invalid_dref));
    char *   valid_repr = strdup(dref_repr_t(valid_dref));
-   DBGTRC(debug, TRACE_GROUP, "Starting. invalid_dref=%s, valid_dref=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "invalid_dref=%s, valid_dref=%s",
                  invalid_repr, valid_repr);
    free(invalid_repr);
    free(valid_repr);
 
    bool result = false;
    if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0) {
-      DBGTRC(debug, TRACE_GROUP, "EDIDs match");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDIDs match");
       if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
             valid_dref->io_path.io_mode == DDCA_IO_I2C)
       {
@@ -967,14 +962,14 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
          set_rpt_sysfs_attr_silent(old_silent);
       }
    }
-   DBGTRC(debug, TRACE_GROUP,    "Done. Returning: %s", sbool(result) );
+   DBGTRC_DONE(debug, TRACE_GROUP,    "Returning: %s", sbool(result) );
    return result;
 }
 
 
 void filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  all_displays->len = %d", all_displays->len);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
    GPtrArray * valid_displays = g_ptr_array_sized_new(all_displays->len);
    GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -985,7 +980,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
       else
          g_ptr_array_add(valid_displays, dref);
    }
-   DBGTRC(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
                               valid_displays->len, invalid_displays->len);
    if (invalid_displays->len > 0 || valid_displays->len == 0 ) {
       for (int invalid_ndx = 0; invalid_ndx < invalid_displays->len; invalid_ndx++) {
@@ -1001,7 +996,7 @@ void filter_phantom_displays(GPtrArray * all_displays) {
    }
    g_ptr_array_free(invalid_displays, false);
    g_ptr_array_free(valid_displays, false);
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -1110,7 +1105,7 @@ get_display_ref_for_display_identifier(
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "check_phantom_displays=%s", sbool(check_phantom_displays));
    dispno_max = 0;
 
    GPtrArray * display_list = g_ptr_array_new();
@@ -1196,8 +1191,6 @@ ddc_detect_all_displays() {
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "-- check_phantom_displays=%s",
-                              sbool(check_phantom_displays));
    if (check_phantom_displays)      // for testing
       filter_phantom_displays(display_list);
 
@@ -1205,7 +1198,7 @@ ddc_detect_all_displays() {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
    // }
-   DBGTRC(debug, TRACE_GROUP, "Done.     Detected %d valid displays", dispno_max);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Detected %d valid displays", dispno_max);
    return display_list;
 }
 
@@ -1231,7 +1224,7 @@ ddc_ensure_displays_detected() {
 void
 ddc_discard_detected_displays() {
    bool debug = true;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -1245,14 +1238,14 @@ ddc_discard_detected_displays() {
       all_displays = NULL;
    }
    i2c_discard_buses();
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 void
 ddc_redetect_displays() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // grab locks to prevent any opens?
    ddc_close_all_displays();  // n. unlocks each display
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1269,14 +1262,14 @@ ddc_redetect_displays() {
       dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
       // dbgrpt_valid_display_refs(1);
    }
-   DBGTRC(debug, TRACE_GROUP, "Done.  all_displays->len = %d", all_displays->len);
+   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
 }
 
 
 bool
 ddc_is_valid_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%p -> %s", dref, dref_repr_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
    bool result = false;
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1290,7 +1283,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
          }
       }
    }
-   DBGTRC(debug, TRACE_GROUP, "Done.     dref=%p, dispno=%d, returning %s", dref, dref->dispno, sbool(result));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref=%p, dispno=%d", sbool(result), dref, dref->dispno);
    return result;
 }
 
