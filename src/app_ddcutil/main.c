@@ -319,7 +319,7 @@ find_dref(
       Display_Ref ** dref_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "did: %s, set_default_display: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "did: %s, set_default_display: %s",
                                     did_repr(parsed_cmd->pdid),
                                     displayid_requirement_name(displayid_required));
    FILE * outf = fout();
@@ -331,7 +331,7 @@ find_dref(
 
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
-      DBGTRC(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
       int busno = did_work->busno;
       // is this really a monitor?
       I2C_Bus_Info * businfo = i2c_detect_single_bus(busno);
@@ -358,7 +358,7 @@ find_dref(
                final_result = DDCRC_INVALID_DISPLAY;
             }
             else {
-               DBGTRC(debug, TRACE_GROUP, "Synthetic Display_Ref");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
             }
          }  // has edid
@@ -375,21 +375,21 @@ find_dref(
    }       // DISP_ID_BUSNO
    else {
       if (!did_work && displayid_required == DISPLAY_ID_OPTIONAL) {
-         DBGTRC(debug, DDCA_TRC_NONE, "No monitor specified, none required for command");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, none required for command");
          dref = NULL;
          final_result = DDCRC_OK;
       }
       else {
-         DBGTRC(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
          bool temporary_did_work = false;
          if (!did_work) {
             did_work = create_dispno_display_identifier(1);   // default monitor
             temporary_did_work = true;
          }
          // assert(did_work);
-         DBGTRC(debug, TRACE_GROUP, "Detecting displays...");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
-         DBGTRC(debug, TRACE_GROUP, "display detection complete");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
          dref = get_display_ref_for_display_identifier(did_work, callopts);
          if (temporary_did_work)
             free_display_identifier(did_work);
@@ -398,11 +398,10 @@ find_dref(
    }  // !DISP_ID_BUSNO
 
    *dref_loc = dref;
-   DBGTRC(debug, TRACE_GROUP,
-                 "Done.     *dref_loc = %p -> %s , returning %s",
+   DBGTRC_RETURNING(debug, TRACE_GROUP, final_result,
+                 "*dref_loc = %p -> %s",
                  *dref_loc,
-                 dref_repr_t(*dref_loc),
-                 psc_desc(final_result));
+                 dref_repr_t(*dref_loc) );
    return final_result;
 }
 
@@ -423,17 +422,18 @@ execute_cmd_with_optional_display_handle(
       Display_Handle * dh)
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh = %p -> %s", dh, dh_repr_t(dh));
    int main_rc =EXIT_SUCCESS;
 
    if (dh) {
       if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
-         DBGTRC(debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Forcing mccs_vspec=%d.%d",
                             parsed_cmd->mccs_vspec.major, parsed_cmd->mccs_vspec.minor);
          dh->dref->vcp_version_cmdline = parsed_cmd->mccs_vspec;
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "%s", cmdid_name(parsed_cmd->cmd_id));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", cmdid_name(parsed_cmd->cmd_id));
    switch(parsed_cmd->cmd_id) {
 
    case CMDID_LOADVCP:
@@ -546,6 +546,9 @@ execute_cmd_with_optional_display_handle(
       break;
    }    // switch
 
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s(%d)",
+                                   (main_rc == 0) ? "EXIT_SUCCESS" : "EXIT_FAILURE",
+                                   main_rc);
    return main_rc;
 }
 
@@ -673,7 +676,7 @@ main(int argc, char *argv[]) {
       callopts |= CALLOPT_FORCE;
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
-   DBGTRC(main_debug, TRACE_GROUP, "Initialization complete, process commands");
+   DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
    if (parsed_cmd->cmd_id == CMDID_LISTVCP) {    // vestigial
       app_listvcp(stdout);
@@ -695,7 +698,7 @@ main(int argc, char *argv[]) {
    // start of commands that actually access monitors
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
-      DBGTRC(main_debug, TRACE_GROUP, "Detecting displays...");
+      DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
       }
@@ -703,7 +706,7 @@ main(int argc, char *argv[]) {
          ddc_ensure_displays_detected();
          ddc_report_displays(/*include_invalid_displays=*/ true, 0);
       }
-      DBGTRC(main_debug, TRACE_GROUP, "Display detection complete");
+      DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Display detection complete");
       main_rc = EXIT_SUCCESS;
    }
 
@@ -717,7 +720,7 @@ main(int argc, char *argv[]) {
 
 #ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
-      DBGTRC(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
+      DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
       query_sysenv();
       main_rc = EXIT_SUCCESS;
@@ -725,7 +728,7 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
 #ifdef USE_USB
-      DBGTRC(main_debug, TRACE_GROUP, "Processing command USBENV...");
+      DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
       query_usbenv();
       main_rc = EXIT_SUCCESS;
@@ -739,7 +742,7 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
 #ifdef USE_USB
       // DBGMSG("Processing command chkusbmon...\n");
-      DBGTRC(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
+      DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
@@ -802,7 +805,7 @@ main(int argc, char *argv[]) {
    }
 
 bye:
-   DBGTRC(main_debug, TRACE_GROUP, "Done.     main_rc=%d", main_rc);
+   DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);
    char * end_time_s = asctime(localtime(&end_time));

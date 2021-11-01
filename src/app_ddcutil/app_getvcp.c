@@ -118,7 +118,7 @@ app_show_single_vcp_value_by_dfm(
       Display_Feature_Metadata *  dfm)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Getting feature 0x%02x for %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting feature 0x%02x for %s",
                                dfm->feature_code, dh_repr(dh) );
 
    // DDCA_Feature_Metadata * extmeta = dfm_to_ddca_feature_metadata(meta);
@@ -155,7 +155,7 @@ app_show_single_vcp_value_by_dfm(
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(ddcrc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
@@ -183,7 +183,7 @@ app_show_single_vcp_value_by_feature_id(
       bool                  force)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. Getting feature 0x%02x for %s, force=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting feature 0x%02x for %s, force=%s",
                               feature_id, dh_repr(dh), sbool(force) );
 
    Public_Status_Code         psc = 0;
@@ -204,7 +204,7 @@ app_show_single_vcp_value_by_feature_id(
       dfm_free(dfm);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -228,8 +228,8 @@ app_show_vcp_subset_values_by_dh(
         Byte_Bit_Flags      features_seen)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. dh=%s, subset_id=%s, flags=%s, features_seen=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "dh=%s, subset_id=%s, flags=%s, features_seen=%p",
           dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names_t(flags), features_seen );
 
    GPtrArray * collector = NULL;
@@ -245,6 +245,7 @@ app_show_vcp_subset_values_by_dh(
          DBGMSG("Returning: %s", psc_desc(psc));
       }
    }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -307,7 +308,7 @@ app_show_feature_set_values_by_dh(
    bool debug = false;
    if (debug || IS_TRACING()) {
       char * s0 = feature_set_flag_names_t(parsed_cmd->flags);
-      DBGMSG("Starting. dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(parsed_cmd->fref), s0);
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(parsed_cmd->fref), s0);
       // dbgrpt_feature_set_ref(parsed_cmd->fref,1);
    }
 
@@ -348,7 +349,7 @@ app_show_feature_set_values_by_dh(
             NULL);
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
