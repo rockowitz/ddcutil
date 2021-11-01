@@ -302,7 +302,7 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 
 /** Gets a list of all detected displays, whether they support DDC or not.
  *
- *  Detection must already have been occurred.
+ *  Detection must already have occurred.
  *
  *  \return **GPtrArray of #Display_Ref instances
  */
@@ -325,7 +325,7 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
-   if (debug) {
+   if (debug || IS_TRACING()) {
       ddc_dbgrpt_display_refs(result, 2);
    }
    return result;
@@ -970,7 +970,7 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
 void filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
-   GPtrArray * valid_displays = g_ptr_array_sized_new(all_displays->len);
+   GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
    GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -994,8 +994,8 @@ void filter_phantom_displays(GPtrArray * all_displays) {
          }
       }
    }
-   g_ptr_array_free(invalid_displays, false);
-   g_ptr_array_free(valid_displays, false);
+   g_ptr_array_free(invalid_displays, true);
+   g_ptr_array_free(valid_displays, true);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
