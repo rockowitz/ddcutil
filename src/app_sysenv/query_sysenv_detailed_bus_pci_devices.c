@@ -129,7 +129,6 @@ void sysfs_dir_cardN_cardNconnector(
  *  @param accumulator
  *  @param depth        logical indentation depth
  */
-
 void sysfs_dir_cardN(
       const char * dirname,
       const char * filename,
@@ -192,9 +191,6 @@ void sysfs_dir_i2cN(
 }
 
 
-
-
-
 /**  Process a single /sys/bus/pci/devices/<pci-device>
  *
  *   Returns immediately if class is not a display device or docking station
@@ -216,7 +212,7 @@ void one_pci_device(
       int          depth)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_NONE, "Starting. dirname=%s, filename=%s", dirname, filename);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=%s, filename=%s", dirname, filename);
    int d0 = depth;
    int d1 = depth+1;
 
@@ -225,7 +221,7 @@ void one_pci_device(
 
    char * device_class = read_sysfs_attr(dir_fn, "class", false);
    if (!device_class) {
-      DBGTRC(debug, DDCA_TRC_NONE, "Done.  no device_class");
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "no device_class");
       return;
    }
    unsigned class_id = h2uint(device_class);
@@ -234,7 +230,7 @@ void one_pci_device(
    if (class_id >> 16 != 0x03 &&     // Display controller
        class_id >> 16 != 0x0a)       // Docking station
    {
-       DBGTRC(debug, DDCA_TRC_NONE, "Done. class not display or docking station");
+       DBGTRC_DONE(debug, DDCA_TRC_NONE, "class not display or docking station");
        return;
    }
    free(device_class);
@@ -288,7 +284,7 @@ void one_pci_device(
           accumulator,
           d1);
 
-    DBGTRC(debug, DDCA_TRC_NONE, "Done");
+    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -310,5 +306,4 @@ dump_detailed_sys_bus_pci(int depth) {
 void init_query_detailed_bus_pci_devices() {
    RTTI_ADD_FUNC(one_pci_device);
 }
-
 
