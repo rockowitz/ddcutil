@@ -83,8 +83,8 @@ static Error_Info * load_persistent_capabilities_file()
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      DBGMSG("Starting. capabilities_hash:");
-      dbgrpt_capabilities_hash(1,NULL);
+      DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
+      dbgrpt_capabilities_hash(2,NULL);
    }
    Error_Info * errs = NULL;
    if (capabilities_cache_enabled) {
@@ -97,7 +97,7 @@ static Error_Info * load_persistent_capabilities_file()
 
       char * data_file_name = get_capabilities_cache_file_name();
       // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
-      DBGTRC(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
       GPtrArray * linearray = g_ptr_array_new_with_free_func(g_free);
       errs = file_getlines_errinfo(data_file_name, linearray);
       free(data_file_name);
@@ -134,8 +134,8 @@ static Error_Info * load_persistent_capabilities_file()
    }
 
    if (debug || IS_TRACING()) {
-      DBGMSG("Done. capabilities_hash:");
-      dbgrpt_capabilities_hash(1, NULL);
+      DBGTRC_DONE(debug, TRACE_GROUP, "capabilities_hash:");
+      dbgrpt_capabilities_hash(2, NULL);
    }
 
    return errs;
@@ -146,7 +146,7 @@ static void save_persistent_capabilities_file()
 {
    bool debug = false;
    char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
-   DBGTRC(debug, TRACE_GROUP, "Starting. capabilities_cache_enabled: %s, data_file_name=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_cache_enabled: %s, data_file_name=%s",
                               sbool(capabilities_cache_enabled), data_file_name);
 
    if (capabilities_cache_enabled) {
@@ -162,7 +162,7 @@ static void save_persistent_capabilities_file()
          g_hash_table_iter_init(&iter, capabilities_hash);
 
          for (int line_ctr=1; g_hash_table_iter_next(&iter, &key, &value); line_ctr++) {
-            DBGTRC(debug, DDCA_TRC_NONE, "Writing line %d: %s:%s", line_ctr, key, value);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Writing line %d: %s:%s", line_ctr, key, value);
             int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
             if (ct < 0) {
                SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
@@ -175,7 +175,7 @@ static void save_persistent_capabilities_file()
 
 bye:
    free(data_file_name);
-   DBGTRC(debug, TRACE_GROUP, "Done.");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -211,11 +211,11 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 {
    assert(mmk);
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  mmk -> %s", mmk_repr(*mmk));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "mmk -> %s", mmk_repr(*mmk));
 
    char * result = NULL;
    if (non_unique_model_id(mmk)) {
-      DBGTRC(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
       goto bye;
    }
 
@@ -245,7 +245,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
    }
 
 bye:
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
 
@@ -255,19 +255,20 @@ void set_persistent_capabilites(
         const char *             capabilities)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. capabilities_cache_enabled=%s. mmk->%s, capabilities = %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_cache_enabled=%s. mmk->%s, capabilities = %s",
           sbool(capabilities_cache_enabled), monitor_model_string(mmk), capabilities);
 
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk))
-         DBGTRC(debug, TRACE_GROUP, "Not saving capabilities for non-unique Monitor_Model_Key.");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                         "Not saving capabilities for non-unique Monitor_Model_Key.");
       else {
          char * mms = strdup(monitor_model_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
          save_persistent_capabilities_file();
       }
    }
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 

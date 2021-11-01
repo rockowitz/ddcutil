@@ -179,11 +179,11 @@ find_feature_def_file(
       const char * simple_fn)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting.  simple_fn=|%s|", simple_fn);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "simple_fn=|%s|", simple_fn);
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s.mccs", simple_fn);
    char * result = find_xdg_data_file("ddcutil", buf);
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", result);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
 
@@ -208,7 +208,7 @@ dfr_load_by_mmk(
       Dynamic_Features_Rec ** dfr_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "mmk = %s", monitor_model_string(&mmk));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "mmk = %s", monitor_model_string(&mmk));
 
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
@@ -267,15 +267,12 @@ dfr_load_by_mmk(
    dfr_save(dfr);
 #endif
 
-   if (debug || IS_TRACING()) {
-      if (errs) {
-         DBGMSG("Done.  Returning errs: ");
-         errinfo_report(errs, 1);
-      }
-      else
-         DBGMSG("Done.  *dfr_loc=%p", *dfr_loc);
+   if (debug && errs) {
+      DBGMSG("Returning errs: ");
+      errinfo_report(errs, 2);
    }
 
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. *dfr_loc=%p", errinfo_summary(errs), *dfr_loc);
    return errs;
 }
 
@@ -310,7 +307,7 @@ dfr_check_by_dref(
       Display_Ref * dref)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s, enable_dynamic_features=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, enable_dynamic_features=%s",
                  dref_repr_t(dref), sbool(enable_dynamic_features));
 
    Error_Info * errs = NULL;
@@ -333,13 +330,13 @@ dfr_check_by_dref(
    }
 
 bye:
-   if (debug || IS_TRACING_GROUP(DDCA_TRC_UDF) ) {
+   if (debug || IS_TRACING() ) {
       if (errs) {
-         DBGMSG("Done.  Returning errs: ");
-         errinfo_report(errs, 1);
+         DBGTRC_DONE(debug, TRACE_GROUP, "Returning errs: ");
+         errinfo_report(errs, 2);
       }
       else
-         DBGMSG("Done.  dref->dfr=%p", dref->dfr);
+         DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref->dfr=%p", dref->dfr);
    }
    return errs;
 }
