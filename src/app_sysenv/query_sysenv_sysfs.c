@@ -572,7 +572,7 @@ void each_i2c_device(
       int    depth)
 {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_NONE, "dirname=%s, fn=%s", dirname, fn);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=%s, fn=%s", dirname, fn);
    assert(streq(dirname, "/sys/bus/i2c/devices"));
    DBGMSF(debug, "dirname=|%s|, fn=|%s|", dirname, fn);
    Env_Accumulator * accum = accumulator;
@@ -590,11 +590,11 @@ void each_i2c_device(
    }
    else {
       // rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
-      DBGTRC(debug, DDCA_TRC_NONE, "Ignorable /sys/bus/i2c/devices file name: %s", fn);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Ignorable /sys/bus/i2c/devices file name: %s", fn);
    }
 
    accum->sysfs_i2c_devices_exist = true;
-   DBGTRC(debug, DDCA_TRC_NONE, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -608,7 +608,7 @@ void each_i2c_device(
  */
 void query_sys_bus_i2c(Env_Accumulator * accumulator) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    accumulator->sys_bus_i2c_device_numbers = bva_create();
    rpt_vstring(0,"Examining /sys/bus/i2c/devices...");
    char * dname = "/sys/bus/i2c";
@@ -624,7 +624,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
    }
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -1085,7 +1085,7 @@ void report_sys_drm_displays(int depth) {
  */
 void dump_sysfs_i2c() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    rpt_nl();
 
    rpt_label(0, "Dumping sysfs i2c entries");
@@ -1098,7 +1098,7 @@ void dump_sysfs_i2c() {
 #ifdef FUTURE
    report_sys_drm_displays(0);
 #endif
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 

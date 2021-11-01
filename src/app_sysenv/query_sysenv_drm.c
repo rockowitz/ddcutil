@@ -145,7 +145,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
    rpt_nl();
 
-   DBGTRC(debug, TRACE_GROUP, "Starting. fd=%d", fd);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d", fd);
 
    // succeeds if run as root, fails w errno=EACCES(13) if not
    // but no effect on subsequent failures for nvidia
@@ -496,7 +496,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
 
 bye:
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
    rpt_nl();
    return;
 }
