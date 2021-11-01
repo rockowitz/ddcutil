@@ -240,11 +240,6 @@ retry:
                    addr);
    }
 
-   DBGTRC_NOPREFIX((result || debug), TRACE_GROUP,
-           "addr = 0x%02x. filename = %s, Returning %s",
-           addr, filename_for_fd_t(fd), psc_desc(result));
-      // show_backtrace(1);
-
    assert(result <= 0);
    // if (addr == 0x37)  result = -EBUSY;    // for testing
    DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
