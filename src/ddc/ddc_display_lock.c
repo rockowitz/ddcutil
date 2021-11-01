@@ -238,7 +238,7 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
  *  The function is used during reinitialization.
  */
 void unlock_all_distinct_displays() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
    g_mutex_lock(&descriptors_mutex);
