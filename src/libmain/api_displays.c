@@ -733,7 +733,7 @@ ddca_get_display_refs(
          cur_ddca_dref++;
    }
    *cur_ddca_dref = NULL; // redundant since calloc()
-   g_ptr_array_free(filtered_displays, false);
+   g_ptr_array_free(filtered_displays, true);
 
    int dref_ct = 0;
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
@@ -789,7 +789,7 @@ ddca_get_display_info_list2(
       init_display_info(dref, curinfo);
       curinfo++;
    }
-   g_ptr_array_free(filtered_displays, false);
+   g_ptr_array_free(filtered_displays, true);
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Done.     Returning %p", result_list);
