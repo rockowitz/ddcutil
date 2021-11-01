@@ -393,7 +393,7 @@ static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
  */
 static void probe_i2c_devices_using_udev() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * subsys_name = "i2c-dev";
    rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
    sysenv_rpt_current_time(NULL, 1);
@@ -429,7 +429,7 @@ static void probe_i2c_devices_using_udev() {
    report_i2c_udev_device_summaries(summaries, "Summary of udev DPMST devices...",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
 
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 #endif
 
@@ -727,12 +727,12 @@ void final_analysis(Env_Accumulator * accum, int depth) {
  */
 void query_sysenv() {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
    ddc_ensure_displays_detected();
-   DBGTRC(debug, TRACE_GROUP, "display detection complete");
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
    device_xref_init();
 
    Env_Accumulator * accumulator = env_accumulator_new();
@@ -929,7 +929,7 @@ void query_sysenv() {
    }
 
    env_accumulator_free(accumulator);     // make Coverity happy
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
