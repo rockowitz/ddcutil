@@ -173,7 +173,7 @@ ddca_get_vcp_value(
       DDCA_Any_Vcp_Value **  pvalrec)
 {
    Error_Info * ddc_excp = NULL;
-   bool debug = true;
+   bool debug = false;
 
    WITH_VALIDATED_DH2(ddca_dh,
          {
