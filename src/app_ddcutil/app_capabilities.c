@@ -56,7 +56,7 @@ DDCA_Status
 app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
 
    FILE * ferr = stderr;
    Error_Info * ddc_excp = NULL;
@@ -88,8 +88,8 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
 
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s, *capabilities_string_loc -> %s",
-                               psc_desc(psc), *capabilities_string_loc);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "*capabilities_string_loc -> %s",
+                                             *capabilities_string_loc);
    return psc;
 }
 

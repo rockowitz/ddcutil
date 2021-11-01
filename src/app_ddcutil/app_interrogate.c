@@ -53,7 +53,7 @@ static void reset_stats() {
 void interrogate(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Processing command INTERROGATE...");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dup2(1,2);   // redirect stderr to stdout
    // set_ferr(fout);    // ensure that all messages are collected - made unnecessary by dup2()
    f0printf(fout(), "Setting output level very-verbose...\n");
@@ -70,7 +70,7 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???
-   DBGTRC(debug, TRACE_GROUP, "display detection complete");
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
 
    // ENVIRONMENT command
    query_sysenv();
@@ -106,7 +106,7 @@ void interrogate(Parsed_Cmd * parsed_cmd)
       reset_stats();
    }
    f0printf(fout(), "\nDisplay scanning complete.\n");
-   DBGTRC(debug, TRACE_GROUP, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 #endif
 

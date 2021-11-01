@@ -34,7 +34,7 @@
  */
 void check_dynamic_features(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC(debug, DDCA_TRC_UDF, "Starting..enable_dynamic_features=%s", sbool(enable_dynamic_features));
+   DBGTRC_STARTING(debug, DDCA_TRC_UDF, "enable_dynamic_features=%s", sbool(enable_dynamic_features));
 
    if (!enable_dynamic_features)    // global variable
       goto bye;
@@ -69,7 +69,7 @@ void check_dynamic_features(Display_Ref * dref) {
    }
 
 bye:
-   DBGTRC(debug, DDCA_TRC_UDF, "Done.");
+   DBGTRC_DONE(debug, DDCA_TRC_UDF, "");
 }
 
 

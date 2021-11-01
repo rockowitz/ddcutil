@@ -107,7 +107,7 @@ app_set_vcp_value(
 {
    FILE * errf = ferr();
    bool debug = false;
-   DBGTRC(debug,DDCA_TRC_TOP, "Starting. feature=0x%02x, new_value=%s, value_type=%s, force=%s",
+   DBGTRC_STARTING(debug,DDCA_TRC_TOP, "feature=0x%02x, new_value=%s, value_type=%s, force=%s",
                 feature_code, new_value, setvcp_value_type_name(value_type), sbool(force));
 
    assert(new_value && strlen(new_value) > 0);
@@ -240,7 +240,7 @@ app_set_vcp_value(
 bye:
    dfm_free(dfm);  // handles dfm == NULL
 
-   DBGTRC(debug, DDCA_TRC_TOP, "Done.     Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_DONE(debug, DDCA_TRC_TOP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
