@@ -113,7 +113,7 @@ ddc_get_capabilities_string(
    bool debug = false;
    assert(dh);
    assert(dh->dref);
-   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
 
    // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
@@ -129,7 +129,7 @@ ddc_get_capabilities_string(
       else {
          // n. persistent_capabilities_enabled handled in get_persistent_capabilities()
          dh->dref->capabilities_string = get_persistent_capabilities(dh->dref->mmid);
-         DBGTRC(debug, TRACE_GROUP, "get_persistent_capabilities() returned %s",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_persistent_capabilities() returned |%s|",
                                     dh->dref->capabilities_string);
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
             char * s = get_capabilities_cache_file_name();
@@ -149,8 +149,8 @@ ddc_get_capabilities_string(
       }
    }
    *caps_loc = dh->dref->capabilities_string;
-   DBGMSF(debug, "Done. dh=%s, error_info = %s, capabilities: %s", dh_repr_t(dh),
-          errinfo_summary(ddc_excp), *caps_loc);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. *caps_loc -> |%s|",
+                                   errinfo_summary(ddc_excp), *caps_loc);
    return ddc_excp;
 }
 
