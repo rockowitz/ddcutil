@@ -841,7 +841,12 @@ ddca_dbgrpt_feature_metadata(
       DDCA_Feature_Metadata * md,
       int                     depth)
 {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   // rpt_push_output_dest(stdout);
    dbgrpt_ddca_feature_metadata(md, depth);
+   // rpt_pop_output_dest();
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
