@@ -2,12 +2,13 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1325,54 +1326,66 @@ csb_to_g_ptr_array(Circular_String_Buffer * csb) {
 
 const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
 
+/** Sets a flag in a #Bit_Set_256
+ *
+ *  \param  flags   existing #Bit_Set_256 value
+ *  \param  flagno  flag number to set (0 based)
+ *  \return updated set
+ */
 Bit_Set_256 bs256_add(
-    Bit_Set_256 flags,
-    Byte val)
+    Bit_Set_256 bitset,
+    Byte        bitno)
 {
     bool debug = false;
 
-    Bit_Set_256 result = flags;
-    int flagndx   = val >> 3;
-    int shiftct   = val & 0x07;
+    Bit_Set_256 result = bitset;
+    int bytendx   = bitno >> 3;
+    int shiftct   = bitno & 0x07;
     Byte flagbit  = 0x01 << shiftct;
-    if (debug)
-       printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-              __func__, val, flagndx, shiftct, flagbit);
-    result.bytes[flagndx] |= flagbit;
+    if (debug) {
+       printf("(%s) bitno=0x%02x, bytendx=%d, shiftct=%d, flagbit=0x%02x\n",
+              __func__, bitno, bytendx, shiftct, flagbit);
+    }
+    result.bytes[bytendx] |= flagbit;
 
     if (debug) {
-       char * bs1 = bs256_to_string(flags, "","");
-       char * bs2 = bs256_to_string(result, "","");
-       printf("(%s) bitstring=%s, value %d, returning: %s\n",
-              __func__, bs1, val, bs2);
-       // free( bs1);
-       // free(bs2);
-       // printf("(%s) wolf 3\n", __func__);
+       char * bs1 = strdup(bs256_to_string(bitset,  "",""));
+       char * bs2 = strdup(bs256_to_string(result, "",""));
+       printf("(%s) old bitstring=%s, value %d, returning: %s\n",
+              __func__, bs1, bitno, bs2);
+       free( bs1);
+       free(bs2);
     }
 
     return result;
 }
 
 
+/** Tests if a bit is set in a #Bit_Set_256.
+ *
+ *  \param bitset  #Bit_Set_256 to check
+ *  \param bitno   bit number to test (0 based)
+ *  \return true/false
+ */
 bool bs256_contains(
-    Bit_Set_256 flags,
-    Byte val)
+    Bit_Set_256 bitset,
+    Byte        bitno)
 {
     bool debug = false;
 
-    int flagndx   = val >> 3;
-    int shiftct   = val  & 0x07;
+    int flagndx   = bitno >> 3;
+    int shiftct   = bitno  & 0x07;
     Byte flagbit  = 0x01 << shiftct;
-    // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-    //        __func__, val, flagndx, shiftct, flagbit);
-    bool result = flags.bytes[flagndx] & flagbit;
+    // printf("(%s) bitno=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+    //        __func__, bitno, flagndx, shiftct, flagbit);
+    bool result = bitset.bytes[flagndx] & flagbit;
     if (debug) {
-       printf("(%s) flags:\n   ",__func__);
+       printf("(%s) bitset:\n   ",__func__);
        for (int ndx = 0; ndx < 32; ndx++) {
-          printf("%02x", flags.bytes[ndx]);
+          printf("%02x", bitset.bytes[ndx]);
        }
        printf("\n");
-       printf("(%s)  bit %d, returning: %d\n",  __func__, val, result);
+       printf("(%s)  bit %d, returning: %d\n",  __func__, bitno, result);
     }
     return result;
 }
@@ -1427,10 +1440,41 @@ Bit_Set_256 bs256_and_not(
 }
 
 
-// #ifdef OLD
+#define BB256_REPR_BUF_SZ (3*32+1)
+/** Represents a #Bit_Set_256 value as a sequence of 32 hex values.
+ *
+ *  \param buf   buffer in which to return value
+ *  \param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
+ *  \param bbset value to represent
+ */
+void bb256_repr(char * buf, int bufsz, Bit_Set_256 bbset) {
+   assert(bufsz >= BB256_REPR_BUF_SZ);
+   g_snprintf(buf, bufsz,
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x",
+              bbset.bytes[ 0], bbset.bytes[ 1], bbset.bytes[ 2], bbset.bytes[ 3],
+              bbset.bytes[ 4], bbset.bytes[ 5], bbset.bytes[ 6], bbset.bytes[ 7],
+              bbset.bytes[ 8], bbset.bytes[ 9], bbset.bytes[10], bbset.bytes[11],
+              bbset.bytes[12], bbset.bytes[13], bbset.bytes[14], bbset.bytes[15],
+              bbset.bytes[16], bbset.bytes[17], bbset.bytes[18], bbset.bytes[19],
+              bbset.bytes[20], bbset.bytes[21], bbset.bytes[22], bbset.bytes[23],
+              bbset.bytes[24], bbset.bytes[25], bbset.bytes[26], bbset.bytes[27],
+              bbset.bytes[28], bbset.bytes[29], bbset.bytes[30], bbset.bytes[31] );
+}
+
+
+/** Returns the number of bits set in a #Bit_Set_256 instance.
+ *
+ *  \param  bbset  value to examine
+ *  \return number of bits set
+ */
 int bs256_count(
    Bit_Set_256 bbset)
 {
+   bool debug = false;
+
    int result = 0;
    int flagndx;
    int bitndx;
@@ -1441,10 +1485,13 @@ int bs256_count(
             result += 1;
       }
    }
-   // printf("(%s) returning: %d\n", __func__, result);
+   if (debug) {
+      char buf[BB256_REPR_BUF_SZ];
+      bb256_repr(buf, sizeof(buf), bbset);
+      printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
+   }
    return result;
 }
-// #endif
 
 
 #ifdef COMPILE_ERRORS
@@ -1470,6 +1517,16 @@ int bs256_count(
 #endif
 
 
+/** Returns a string representation of a #Bit_Set_256 as a list of hex numbers.
+ *
+ *  The value returned is valid until the next call to this function in the
+ *  current thread.
+ *
+ *  \param  bitset value to represent
+ *  \param  value_prefix  prefix for each hex number, typically "0x" or ""
+ *  \param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  \return string representation
+ */
 char *
 bs256_to_string(
       Bit_Set_256  bitset,
@@ -1478,7 +1535,7 @@ bs256_to_string(
 {
    bool debug = false;
    if (debug) {
-      printf("(%s) value_prefix=|%s|, sepstr=|%s|\n",
+      printf("(%s) value_prefix=|%s|, sepstr=|%s| bitset: ",
              __func__, value_prefix, sepstr);
       for (int ndx = 0; ndx < 32; ndx++) {
          printf("%02x", bitset.bytes[ndx]);
@@ -1487,7 +1544,7 @@ bs256_to_string(
       // rpt_hex_dump((Byte*)feature_list, 32, 2);
    }
 
-   static GPrivate  key = G_PRIVATE_INIT(g_free);
+   static GPrivate  key =     G_PRIVATE_INIT(g_free);
    static GPrivate  len_key = G_PRIVATE_INIT(g_free);
 
    if (!value_prefix)
@@ -1561,6 +1618,7 @@ bs256_iter_free(
    }
 }
 
+
 /** Reinitializes an iterator.  Sets the current position before the first
  *  value.
  *
@@ -1602,7 +1660,4 @@ bs256_iter_next(
    // printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
-
-
-
 
