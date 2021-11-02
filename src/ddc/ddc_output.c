@@ -600,6 +600,7 @@ ddc_get_formatted_value_for_display_feature_metadata(
    *formatted_value_loc = NULL;
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "vspec=%d.%d", vspec.major, vspec.minor);
    // DDCA_Feature_Metadata* extmeta = dfm_to_ddca_feature_metadata(dfm);
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
