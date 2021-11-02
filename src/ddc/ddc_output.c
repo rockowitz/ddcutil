@@ -568,12 +568,12 @@ ddc_collect_raw_subset_values(
  *  a formatted interpretation of the value.
  *
  * \param  dh         handle for open display
- * \param  internal_metadata
+ * \param  dfm        feature metadata
  * \param  suppress_unsupported
  *                    if true, do not report unsupported features
  * \param  prefix_value_with_feature_code
  *                    include feature code in formatted value
- * \param  pformatted_value
+ * \param  formatted_value_loc
  *                    where to return pointer to formatted value
  * \param msg_fh      where to write extended messages for verbose
  *                    value retrieval, etc.
@@ -584,7 +584,7 @@ ddc_collect_raw_subset_values(
  * earlier code.  It needs refactoring.
  */
 Public_Status_Code
-ddc_get_formatted_value_for_display_feature_metadata(
+ddc_get_formatted_value_for_dfm(
       Display_Handle *            dh,
       Display_Feature_Metadata *  dfm,
       bool                        suppress_unsupported,
@@ -803,7 +803,7 @@ show_feature_set_values2_dfm(
 
             char * formatted_value = NULL;
             Public_Status_Code psc =
-            ddc_get_formatted_value_for_display_feature_metadata(
+            ddc_get_formatted_value_for_dfm(
                   dh,
                   dfm,
                   suppress_unsupported,
@@ -923,7 +923,7 @@ ddc_show_vcp_values(
 static void init_ddc_output_func_name_table() {
 #define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
    ADD_FUNC(get_raw_value_for_feature_metadata);
-   ADD_FUNC(ddc_get_formatted_value_for_display_feature_metadata);
+   ADD_FUNC(ddc_get_formatted_value_for_dfm);
 #undef ADD_FUNC
 }
 

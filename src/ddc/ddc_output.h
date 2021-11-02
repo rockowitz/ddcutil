@@ -53,7 +53,7 @@ ddc_collect_raw_subset_values(
       FILE *              msg_fh);
 
 Public_Status_Code
-ddc_get_formatted_value_for_display_feature_metadata(
+ddc_get_formatted_value_for_dfm(
       Display_Handle *            dh,
       Display_Feature_Metadata *  dfm,
       bool                        suppress_unsupported,

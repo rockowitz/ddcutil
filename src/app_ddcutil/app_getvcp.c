@@ -142,7 +142,7 @@ app_show_single_vcp_value_by_dfm(
 
    if (ddcrc == 0) {
       char * formatted_value = NULL;
-      ddcrc = ddc_get_formatted_value_for_display_feature_metadata(
+      ddcrc = ddc_get_formatted_value_for_dfm(
                dh,
                dfm,
                false,      /* suppress_unsupported */
