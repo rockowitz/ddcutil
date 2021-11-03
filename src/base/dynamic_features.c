@@ -162,7 +162,13 @@ free_feature_metadata(
    DBGMSF(debug, "Done");
 }
 
-
+/**
+ *  \param   mfg_id
+ *  \param   model_name
+ *  \param   product_code
+ *  \param   filename
+ *  \return newly allocated #Dynamic_Features_Rec, caller must free
+ */
 Dynamic_Features_Rec *
 dfr_new(
       const char * mfg_id,
