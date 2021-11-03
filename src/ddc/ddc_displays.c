@@ -1253,6 +1253,7 @@ ddc_redetect_displays() {
       DDCA_Status ddcrc = free_display_ref(dref);
       TRACED_ASSERT(ddcrc==0);
    }
+   g_ptr_array_free(all_displays, true);
    all_displays = NULL;
    i2c_discard_buses();
 
