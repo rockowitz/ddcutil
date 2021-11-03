@@ -29,6 +29,9 @@
  *  \param  string to tokenize
  *  \param  tokens_loc where to return the address of a null-terminated list of tokens
  *  \return number of tokens
+ *
+ *  \remark
+ *  The caller is responsible for freeing the list of tokens
  */
 int tokenize_options_line(char * string, char ***tokens_loc) {
    bool debug = false;
