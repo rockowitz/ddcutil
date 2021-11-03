@@ -177,6 +177,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &untokenized_option_string,
                                  &config_fn,
                                  errmsgs);
+   ntsa_free(cmd_name_array, false);
    DBGMSF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p",
                  apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
@@ -212,6 +213,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
+   free(new_argv);
    free(untokenized_option_string);
    free(config_fn);
 
@@ -301,6 +303,7 @@ _ddca_init(void) {
 
       init_api_services();
       submaster_initializer(parsed_cmd);
+      free_parsed_cmd(parsed_cmd);
 
      //  explicitly set the async threshold for testing
      //  int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
