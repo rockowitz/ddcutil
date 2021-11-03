@@ -570,6 +570,7 @@ static void query_xdg_files(int depth) {
       }
    }
 
+   free(data_path);
    g_ptr_array_free(data_files, true);
    rpt_nl();
 }

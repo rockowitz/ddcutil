@@ -16,6 +16,7 @@
 - Removed sample program demo_watch_displays
 
 ### Fixed
+- Memory leak in ddca_redetect_displays(). 
 - Build failure if configure option ***--enable-x11=no*** was specified.
 - API functions ddc_open_display(),ddc_open_display2() now always return 
   DDCRC_ALREADY_OPEN if the the display is already open in the current
