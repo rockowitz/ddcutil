@@ -406,32 +406,32 @@ i2c_get_edid_bytes_directly(
    if (rc == 0) {
       if (read_bytewise) {
          int ndx = 0;
-         __s32 smbus_result = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
+#ifdef USE_SMBUS
+            __s32 smbus_result = 0;
             RECORD_IO_EVENTX(
                 fd,
                 IE_READ,
-#ifdef USE_SMBUS
                 ( smbus_result = i2c_smbus_read_byte_data(fd, ndx) )
-#else
-                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-#endif
-
-
                );
             // DBGMSG("smbus_result = 0x%08x, %d", smbus_result, smbus_result);
-            if (smbus_result < 0)
+            if (smbus_result < 0) {
                rc = -errno;
-            else {
-               rawedid->bytes[ndx] = smbus_result;
+               break;
             }
-#ifndef USE_SMBUS
-            if (rc < 0)
+            rawedid->bytes[ndx] = smbus_result;
+#else
+            RECORD_IO_EVENTX(
+                fd,
+                IE_READ,
+                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
+               );
+            if (rc < 0) {
                rc = -errno;
-            else  {
-               assert(rc == 1);
-               rc = 0;
+               break;
             }
+            assert(rc == 1);
+            rc = 0;
 #endif
           }
           rawedid->len = ndx;

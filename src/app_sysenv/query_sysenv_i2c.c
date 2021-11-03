@@ -133,7 +133,7 @@ try_single_getvcp_call(
    if (use_smbus) {   // FAILS, reads 6e 6e 6e ...
       unsigned long functionality = i2c_get_functionality_flags_by_fd(fh);
        if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
-          rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
+          rpt_vstring(depth, "File descriptor %d does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
           rc = DDCRC_UNIMPLEMENTED;
           goto bye;
        }
