@@ -343,6 +343,7 @@ _ddca_terminate(void) {
    bool debug = false;
    if (library_initialized) {
       DBGTRC(debug, DDCA_TRC_API, "Starting. library_initialized = true");
+      ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
