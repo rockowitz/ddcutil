@@ -104,7 +104,7 @@ tsd_report_one_thread_data_hash_table_entry(
       gpointer value,
       gpointer user_data)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "key (thread_id) = %d", GPOINTER_TO_INT(key));
    Per_Thread_Data * data = value;
    // This pointer is valid even after a thread goes away, since it
@@ -156,7 +156,7 @@ void report_all_thread_sleep_data(int depth) {
 // Registers a Per_Thread_Data instance in the master hash table for all threads
 static
 void register_thread_sleep_data(Per_Thread_Data * per_thread_data) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "per_thread_data=%p", per_thread_data);
    g_mutex_lock(&thread_sleep_data_mutex);
    if (!per_thread_data_hash) {
