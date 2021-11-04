@@ -159,6 +159,8 @@ int ini_file_load(
 
    GPtrArray * config_lines = g_ptr_array_new_with_free_func(g_free);
    int getlines_rc = file_getlines(ini_file_name, config_lines, verbose);
+   if (debug)
+      printf("(%s) file_getlines() returned %d\n", __func__, getlines_rc);
    if (getlines_rc < 0) {
       result = getlines_rc;
       if (getlines_rc != -ENOENT) {
@@ -171,6 +173,8 @@ int ini_file_load(
    else {  //process the lines
       ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
       int error_ct = 0;
+      if (debug)
+         printf("(%s) config_lines->len = %d\n", __func__, config_lines->len);
       for (guint ndx = 0; ndx < config_lines->len; ndx++) {
          char * line = g_ptr_array_index(config_lines, ndx);
          if (debug)
@@ -219,6 +223,8 @@ int ini_file_load(
             error_ct++;
          }
       } // for loop
+      if (debug)
+         printf("(%s) Freeing config_lines\n", __func__);
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
          free(cur_segment);
