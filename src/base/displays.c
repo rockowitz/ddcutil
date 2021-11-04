@@ -741,6 +741,8 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             free(dref->usb_hiddev_name);
          if (dref->capabilities_string)   // always a private copy
             free(dref->capabilities_string);
+         if (dref->mmid)
+             free(dref->mmid);
          // 9/2017: what about pedid, detail2?
          // what to do with gdl, request_queue?
          free(dref);

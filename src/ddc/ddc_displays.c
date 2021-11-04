@@ -1158,6 +1158,7 @@ ddc_detect_all_displays() {
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
       }
+      g_ptr_array_free(usb_monitors, true);
    }
 #endif
 
@@ -1250,6 +1251,7 @@ ddc_redetect_displays() {
    ddc_close_all_displays();  // n. unlocks each display
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      dref->flags |= DREF_TRANSIENT; // forcefully allow to free the dref
       DDCA_Status ddcrc = free_display_ref(dref);
       TRACED_ASSERT(ddcrc==0);
    }
