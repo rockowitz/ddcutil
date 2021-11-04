@@ -159,7 +159,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
    gchar * original_command = g_strjoinv(" ",argv);
    // DBGMSG("original command: %s", original_command);
-   parsed_cmd->raw_command = strdup(original_command);
+   parsed_cmd->raw_command = original_command;
 
 // gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
