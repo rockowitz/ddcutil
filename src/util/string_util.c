@@ -552,11 +552,14 @@ strsplit_maxlength(
  *  g_strfreev(string_array) equivalent to ntsa_free(string_array, true)
  */
 void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
+   // printf("(%s) Freeing NTSA %p\n", __func__, string_array );
    if (string_array) {
       if (free_strings) {
-      int ndx = 0;
-      while (string_array[ndx] != NULL)
-         free(string_array[ndx++]);
+         int ndx = 0;
+         while (string_array[ndx] != NULL) {
+            // printf("(%s) Freeing %p->%s\n", __func__, string_array[ndx], string_array[ndx]);
+            free(string_array[ndx++]);
+         }
       }
       free(string_array);
    }
@@ -635,7 +638,7 @@ Null_Terminated_String_Array ntsa_join(
  *  @param a1  instance to copy
  *  @return newly allocated #Null_Terminated_String_Array
  */
-Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1)
+Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1, bool dup)
 {
    assert(a1);
    int ct = ntsa_length(a1);
@@ -643,7 +646,10 @@ Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1)
    char ** to = result;
    char ** from = a1;
    while (*from) {
-      *to = strdup(*from);
+      if (dup)
+         *to = strdup(*from);
+      else
+         *to = *from;
       to++;
       from++;
    }
