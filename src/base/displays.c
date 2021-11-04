@@ -743,6 +743,8 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             free(dref->capabilities_string);
          // 9/2017: what about pedid, detail2?
          // what to do with gdl, request_queue?
+         if (dref->dfr)
+            dfr_free(dref->dfr);
          free(dref);
       }
    }
