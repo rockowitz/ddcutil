@@ -279,7 +279,7 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
 
 #ifdef UNUSED
 bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. fn = |%s|, pdid = %s", fn, did_repr(pdid));
 
    bool loadvcp_ok = true;
