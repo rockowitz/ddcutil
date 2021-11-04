@@ -626,6 +626,31 @@ Null_Terminated_String_Array ntsa_join(
 }
 
 
+
+/** Creates copy of a #Null_Terminated_String_Array.
+ *
+ *  The pointers in the new array point to newly allocated copies of the
+ *  original array.
+ *
+ *  @param a1  instance to copy
+ *  @return newly allocated #Null_Terminated_String_Array
+ */
+Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1)
+{
+   assert(a1);
+   int ct = ntsa_length(a1);
+   Null_Terminated_String_Array result = calloc((ct+1), sizeof(char *));
+   char ** to = result;
+   char ** from = a1;
+   while (*from) {
+      *to = strdup(*from);
+      to++;
+      from++;
+   }
+   return result;
+}
+
+
 Null_Terminated_String_Array  ntsa_prepend(
       char *                       value,
       Null_Terminated_String_Array old_array,
