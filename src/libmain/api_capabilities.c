@@ -145,7 +145,8 @@ ddca_parse_capabilities_string(
       DDCA_Capabilities **     parsed_capabilities_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. capabilities_string: |%s|", capabilities_string);
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
+                                       parsed_capabilities_loc, capabilities_string);
    // assert(parsed_capabilities_loc);
    free_thread_error_detail();
    API_PRECOND(parsed_capabilities_loc);
@@ -225,11 +226,12 @@ ddca_parse_capabilities_string(
    }
 
    *parsed_capabilities_loc = result;
-   DBGMSF(debug, "Done.     *parsed_capabilities_loc=%p, Returning: %d", *parsed_capabilities_loc, ddcrc);
-   if (debug && *parsed_capabilities_loc)
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
+   if ( (debug || IS_TRACING_GROUP(DDCA_TRC_API) ) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
+
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
-   assert( (ddcrc==0 && *parsed_capabilities_loc) || (ddcrc!=0 && !*parsed_capabilities_loc));
    return ddcrc;
 }
 
@@ -239,6 +241,7 @@ ddca_free_parsed_capabilities(
       DDCA_Capabilities * pcaps)
 {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "pcaps=%p", pcaps);
    if (pcaps) {
       assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
       free(pcaps->unparsed_string);
@@ -255,6 +258,7 @@ ddca_free_parsed_capabilities(
       pcaps->marker[3] = 'x';
       free(pcaps);
    }
+   DBGTRC_DONE(debug, DDCA_TRC_API, "");
 }
 
 
