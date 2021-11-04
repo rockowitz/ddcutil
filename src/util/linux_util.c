@@ -140,7 +140,6 @@ int module_status_using_libkmod(const char * module_alias)
    int result = 0;
    struct kmod_ctx * ctx;
    struct kmod_module *  mod;
-   int err;
    const char * filename;
 
    ctx = kmod_new(NULL, NULL);
@@ -152,9 +151,9 @@ int module_status_using_libkmod(const char * module_alias)
    }
 
    struct kmod_list *l, *list = NULL;
-   err = kmod_module_new_from_lookup(ctx, module_alias, &list);
-   if (err < 0) {
-      result = err;
+   int rc = kmod_module_new_from_lookup(ctx, module_alias, &list);
+   if (rc < 0) {
+      result = rc;
       goto bye;
    }
 
