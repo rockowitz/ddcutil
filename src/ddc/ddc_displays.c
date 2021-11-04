@@ -1223,7 +1223,7 @@ ddc_ensure_displays_detected() {
 // deprecated - used only by test_display_detection_variants()
 void
 ddc_discard_detected_displays() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
