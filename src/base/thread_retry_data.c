@@ -155,7 +155,7 @@ void trd_set_all_maxtries(Retry_Operation rcls, uint16_t maxtries) {
 
 #ifdef UNFINISHED
 void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Executing. new_max_tries = [%d,%d,%d]",
                  new_max_tries[0], new_max_tries[1], new_max_tries[2] );
    g_mutex_lock(&thead_retry_data_mutex);
@@ -228,7 +228,7 @@ void trd_set_thread_max_tries(
 #ifdef UNFINISHED
 // sets all at once
 void trd_set_thread_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Executing. new_max_tries = [%d,%d,%d]",
                  new_max_tries[0], new_max_tries[1], new_max_tries[2] );
    Per_Thread_Data * tsd = tsd_get_thread_retry_data();
