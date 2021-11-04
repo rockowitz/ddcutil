@@ -335,6 +335,8 @@ ddc_close_display(Display_Handle * dh) {
 }
 
 void ddc_close_all_displays() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    assert(open_displays);
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
@@ -343,6 +345,7 @@ void ddc_close_all_displays() {
    }
    // open_displays should be empty at this point
    TRACED_ASSERT(g_hash_table_size(open_displays) == 0);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 

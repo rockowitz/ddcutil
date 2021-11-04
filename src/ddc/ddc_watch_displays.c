@@ -147,6 +147,15 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
 }
 
 
+/** Gets a list of all displays known to DRM.
+ *
+ *  \param sysfs_drm_cards
+ *  \bool  verbose
+ *  \return GPtrArray of connector names for DRM displays
+ *
+ *  \remark
+ *  The caller is responsible for freeing the returned #GPtrArray.
+ */
 GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
 {
    bool debug = false;
@@ -210,7 +219,8 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
                   }
 
                   g_ptr_array_add(connected_displays, strdup(dent->d_name));
-              }
+               }
+               free(s_status);
                if (verbose)
                   rpt_nl();
             }
@@ -218,7 +228,7 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
          closedir(dir1);
       }
    }
-
+   bbf_iter_free(iter);
    g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
    DBGTRC(debug, TRACE_GROUP, "Connected displays: %s",
                               join_string_g_ptr_array_t(connected_displays, ", "));

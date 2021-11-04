@@ -158,8 +158,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    // DBGMSG("After new_parsed_cmd(), parsed_cmd->output_level_name = %s", output_level_name(parsed_cmd->output_level));
 
    gchar * original_command = g_strjoinv(" ",argv);
-   // DBGMSG("original command: %s", original_command);
-   parsed_cmd->raw_command = strdup(original_command);
+   DBGMSF(debug, "original command: %s", original_command);
+   parsed_cmd->raw_command = original_command;
 
 // gboolean stats_flag     = false;
    gboolean ddc_flag       = false;
@@ -461,11 +461,25 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    g_option_context_set_help_enabled(context, true);
    // bool ok = false;
 
+   if (debug) {
+      DBGMSG("Before g_option_context_parse(): argc=%d", argc);
+      int ndx = 0;
+      for (; ndx < argc; ndx++) {
+         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
+      }
+   }
    bool ok = g_option_context_parse(context, &argc, &argv, &error);
    if (!ok) {
       fprintf(stderr, "%s option parsing failed: %s\n",
                       (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil",
                       error->message);
+   }
+   if (debug) {
+      DBGMSG("After g_option_context_parse(): argc=%d", argc);
+      int ndx = 0;
+      for (; ndx < argc; ndx++) {
+         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
+      }
    }
 
    // DBGMSG("buswork=%d", buswork);
@@ -1029,6 +1043,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       parsed_cmd = NULL;
    }
 
+   if (debug) {
+      DBGMSG("Before return: argc=%d", argc);
+      int ndx = 0;
+      for (; ndx < argc; ndx++) {
+         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
+      }
+   }
    DBGMSF(debug, "Returning: %p", parsed_cmd);
    return parsed_cmd;
 }

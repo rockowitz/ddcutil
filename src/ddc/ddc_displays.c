@@ -1221,10 +1221,9 @@ ddc_ensure_displays_detected() {
    DBGMSF(debug, "Done.     all_displays has %d displays", all_displays->len);
 }
 
-// deprecated - used only by test_display_detection_variants()
 void
 ddc_discard_detected_displays() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -1246,17 +1245,20 @@ ddc_discard_detected_displays() {
 void
 ddc_redetect_displays() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    // grab locks to prevent any opens?
    ddc_close_all_displays();  // n. unlocks each display
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      dref->flags |= DREF_TRANSIENT; // forcefully allow to free the dref
-      DDCA_Status ddcrc = free_display_ref(dref);
-      TRACED_ASSERT(ddcrc==0);
+
+   if (all_displays) {
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         dref->flags |= DREF_TRANSIENT; // forcefully allow to free the dref
+         DDCA_Status ddcrc = free_display_ref(dref);
+         TRACED_ASSERT(ddcrc==0);
+      }
+      g_ptr_array_free(all_displays, true);
+      all_displays = NULL;
    }
-   g_ptr_array_free(all_displays, true);
-   all_displays = NULL;
    i2c_discard_buses();
 
    i2c_detect_buses();

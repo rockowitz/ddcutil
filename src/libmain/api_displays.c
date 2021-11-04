@@ -300,9 +300,10 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 
 DDCA_Status
 ddca_redetect_displays() {
-   DBGTRC_STARTING(false, DDCA_TRC_API, "");
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "");
    ddc_redetect_displays();
-   DBGTRC_DONE(false, DDCA_TRC_API, "Returning 0");
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning 0");
    return 0;
 }
 

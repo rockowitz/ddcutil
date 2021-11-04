@@ -407,7 +407,7 @@ parse_vcp_segment_new(
       GPtrArray *  vcp_array,
       GPtrArray *  messages)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting.  len = %d, start=%p -> %.*s", len, start, len, start);
    // Vcp_Code_Table_Entry * vcp_entry;    // future?
 

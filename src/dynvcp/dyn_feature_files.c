@@ -201,6 +201,8 @@ find_feature_def_file(
  *  created and returned, with flag DFR_FLAGS_NOT_FOUND set.  This record can then
  *  be saved along with with valid #Dynamic_Features_Rec instances to avoid
  *  repeatedly scanning for non-existent or invalid feature definition files.
+ *  @remark
+ *  Caller is responsible for freeing the #Dynamic_Features_Rec returned in dfr_loc.
  */
 Error_Info *
 dfr_load_by_mmk(
@@ -219,7 +221,7 @@ dfr_load_by_mmk(
 
    char * fqfn = find_feature_def_file(simple_fn);
    if (fqfn) {
-      GPtrArray * lines = g_ptr_array_new();
+      GPtrArray * lines = g_ptr_array_new_with_free_func(g_free);
       errs = file_getlines_errinfo(fqfn, lines); // read file into lines
       // DDCA_Output_Level ol = get_output_level();
       // if (ol >= DDCA_OL_VERBOSE) {
@@ -243,6 +245,7 @@ dfr_load_by_mmk(
              &dfr);
   //        }
 #endif
+         g_ptr_array_free(lines, true);
          assert( (errs && !dfr) || (!errs && dfr));
       }
       free(fqfn);

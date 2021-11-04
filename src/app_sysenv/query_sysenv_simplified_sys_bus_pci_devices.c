@@ -39,7 +39,7 @@
 
 #ifdef MAYBE_FUTURE
 bool dirname_starts_with(const char * dirname, const char * val) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
    bool result = str_starts_with(dirname, val);
    DBGMSF(debug, "Returning %s", sbool(result));

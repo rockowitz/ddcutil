@@ -177,6 +177,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &untokenized_option_string,
                                  &config_fn,
                                  errmsgs);
+   ntsa_free(cmd_name_array, false);
    DBGMSF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p",
                  apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
@@ -199,6 +200,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
 
    assert(new_argc >= 1);
    DBGMSF(debug, "Calling parse_command()");
+   // parse_command() clobbers new_argv
+   Null_Terminated_String_Array preserved = ntsa_copy(new_argv, false);
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
       syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",
@@ -212,6 +215,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
+   ntsa_free(preserved, true);
+   free(new_argv);
    free(untokenized_option_string);
    free(config_fn);
 
@@ -301,6 +306,7 @@ _ddca_init(void) {
 
       init_api_services();
       submaster_initializer(parsed_cmd);
+      free_parsed_cmd(parsed_cmd);
 
      //  explicitly set the async threshold for testing
      //  int threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
@@ -340,6 +346,7 @@ _ddca_terminate(void) {
    bool debug = false;
    if (library_initialized) {
       DBGTRC(debug, DDCA_TRC_API, "Starting. library_initialized = true");
+      ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
