@@ -182,6 +182,8 @@ int merge_command_tokens(
       for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
          combined[new_ndx] = old_argv[old_ndx];
       }
+      old_argv[0] = '\0';
+      config_tokens[0] = '\0';
       combined[new_ndx] = NULL;
       if (debug)
          printf("(%s) Final new_ndx = %d\n", __func__, new_ndx);
@@ -260,6 +262,10 @@ int apply_config_file(
       char ** cmd_prefix_tokens = NULL;
       int prefix_token_ct =
             tokenize_options_line(*untokenized_config_options_loc, &cmd_prefix_tokens);
+      if (debug){
+         printf("(%s) prefix_token_ct = %d\n", __func__, prefix_token_ct);
+         ntsa_show(cmd_prefix_tokens);
+      }
       if (prefix_token_ct > 0) {
           *new_argc_loc =  merge_command_tokens(
                old_argc,
@@ -270,6 +276,7 @@ int apply_config_file(
          assert(*new_argc_loc == ntsa_length(*new_argv_loc));
       }
       ntsa_free(cmd_prefix_tokens, false);
+      // ntsa_free(old_argv, false);  // can't free system's argv
    }
 
    if (debug) {
@@ -277,6 +284,8 @@ int apply_config_file(
                     __func__, *new_argc_loc, *new_argv_loc, result);
        printf("(%s) tokens:\n", __func__);
        ntsa_show(*new_argv_loc);
+       printf("(%s) *untokenized_config_options_loc=%p->|%s|\n",
+              __func__, *untokenized_config_options_loc, *untokenized_config_options_loc);
    }
 
    return result;
