@@ -631,6 +631,8 @@ main(int argc, char *argv[]) {
 
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
+   //   ntsa_free(new_argv, true);  // valgrind says invalid free, apparently because can point to original argv strings
+
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
@@ -653,6 +655,7 @@ main(int argc, char *argv[]) {
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
    free(untokenized_cmd_prefix);
+   free(configure_fn);
 
    // xdg_tests(); // for development
 
