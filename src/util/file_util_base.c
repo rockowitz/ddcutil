@@ -67,11 +67,19 @@ file_getlines(
          linectr++;
          rtrim_in_place(line);     // strip trailing newline
          g_ptr_array_add(line_array, line);   // line will be freed when line_array is freed
-         // printf("(%s) Retrieved line of length %zu, trimmed length %zu: %s\n",
-         //           __func__, len, strlen(line), line);
+         if (debug) {
+            printf("(%s) Retrieved line of length %zu, trimmed length %zu: %s\n",
+                      __func__, len, strlen(line), line);
+         }
          line = NULL;  // reset for next getline() call
          len  = 0;
       }
+      // From the getline() man page:
+      //    If *lineptr is set to NULL and *n is set 0 before the call,
+      //    then getline() will allocate a buffer for storing the line.
+      //    This buffer should be freed by the user program even if getline() failed.
+      free(line);
+
       // assert(getline_rc < 0);
       if (errno != 0) {   // was it an error or eof?
          rc = -errno;
