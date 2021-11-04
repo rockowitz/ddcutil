@@ -1220,7 +1220,6 @@ ddc_ensure_displays_detected() {
    DBGMSF(debug, "Done.     all_displays has %d displays", all_displays->len);
 }
 
-// deprecated - used only by test_display_detection_variants()
 void
 ddc_discard_detected_displays() {
    bool debug = false;
