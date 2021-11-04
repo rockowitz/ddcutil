@@ -364,7 +364,7 @@ void show_trace_destination() {
 
 #ifdef UNUSED
 void set_libddcutil_output_destination(const char * filename, const char * trace_unit) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) filename = %s, trace_unit = %s\n", __func__, filename, trace_unit);
    if (filename) {
