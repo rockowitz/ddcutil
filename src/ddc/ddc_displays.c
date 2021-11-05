@@ -1158,7 +1158,6 @@ ddc_detect_all_displays() {
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
       }
-      g_ptr_array_free(usb_monitors, true);
    }
 #endif
 
