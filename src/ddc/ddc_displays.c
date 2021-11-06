@@ -1206,7 +1206,8 @@ ddc_detect_all_displays() {
    //    DBGMSG("Displays detected:");
    //    report_display_recs(display_list, 1);
    // }
-   DBGTRC_DONE(debug, TRACE_GROUP, "Detected %d valid displays", dispno_max);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p, Detected %d valid displays",
+                display_list, dispno_max);
    return display_list;
 }
 
@@ -1220,12 +1221,14 @@ ddc_detect_all_displays() {
 void
 ddc_ensure_displays_detected() {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_displays) {
       i2c_detect_buses();
       all_displays = ddc_detect_all_displays();
    }
-   DBGMSF(debug, "Done.     all_displays has %d displays", all_displays->len);
+   DBGTRC_DONE(debug, TRACE_GROUP,
+               "all_displays=%p, all_displays has %d displays",
+               all_displays, all_displays->len);
 }
 
 void
@@ -1239,9 +1242,11 @@ ddc_discard_detected_displays() {
          DDCA_Status ddcrc = free_display_ref(dref);
           if (ddcrc != 0) {
             // ignoring possible DDCRC_LOCKED
-            DBGMSG("Ignoring free_display_ref() status code %s", psc_desc(ddcrc));
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                            "Ignoring free_display_ref() status code %s", psc_desc(ddcrc));
          }
       }
+      g_ptr_array_free(all_displays, false);
       all_displays = NULL;
    }
    i2c_discard_buses();
@@ -1262,7 +1267,7 @@ ddc_redetect_displays() {
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
       }
-      g_ptr_array_free(all_displays, true);
+      g_ptr_array_free(all_displays, false);
       all_displays = NULL;
    }
    i2c_discard_buses();
@@ -1273,7 +1278,8 @@ ddc_redetect_displays() {
       dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
       // dbgrpt_valid_display_refs(1);
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
+   DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
+                                   all_displays, all_displays->len);
 }
 
 
@@ -1367,6 +1373,7 @@ ddc_is_usb_display_detection_enabled() {
 void
 init_ddc_displays() {
    RTTI_ADD_FUNC(async_scan);
+   RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
