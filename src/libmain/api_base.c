@@ -200,23 +200,18 @@ Parsed_Cmd * get_parsed_libmain_config() {
 
    assert(new_argc >= 1);
    DBGMSF(debug, "Calling parse_command()");
-   // parse_command() clobbers new_argv
-   Null_Terminated_String_Array preserved = ntsa_copy(new_argv, false);
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
       syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",
             untokenized_option_string);
       fprintf(ferr(), "Ignoring invalid configuration file options: %s\n",
                       untokenized_option_string);
-      // fprintf(ferr(), "Terminating execution\n");
-      // exit(1);
       DBGMSF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
-   ntsa_free(preserved, true);
-   free(new_argv);
+   ntsa_free(new_argv, true);
    free(untokenized_option_string);
    free(config_fn);
 
