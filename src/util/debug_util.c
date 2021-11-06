@@ -3,7 +3,7 @@
  * Functions for debugging
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -17,6 +17,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef UNUSED
+#ifdef TARGET_BSD
+#include <pthread_np.h>
+#else
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <syslog.h>
+#endif
+#endif
+
 /** \endcond */
 
 #include "string_util.h"
@@ -188,5 +199,47 @@ void show_backtrace(int stack_adjust) {
       g_ptr_array_free(callstack, true);
    }
 }
+
+
+bool simple_dbgmsg(
+        bool              debug_flag,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        char *            format,
+        ...)
+{
+   bool debug_func = false;
+   if (debug_func)
+      printf("(simple_dbgmsg) Starting. debug_flag=%s, funcname=%s filename=%s, lineno=%d\n",
+                       sbool(debug_flag), funcname, filename, lineno);
+
+#ifdef UNUSED
+   char thread_prefix[15] = "";
+    int tid = pthread_getthreadid_np();
+       pid_t pid = syscall(SYS_getpid);
+       snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) pid);  // is this proper format for pid_t
+#endif
+
+   bool msg_emitted = false;
+   if ( debug_flag ) {
+      va_list(args);
+      va_start(args, format);
+      char * buffer = g_strdup_vprintf(format, args);
+      va_end(args);
+
+      char * buf2 = g_strdup_printf("(%-32s) %s", funcname, buffer);
+
+      f0puts(buf2, stdout);
+      f0putc('\n', stdout);
+      fflush(stdout);
+      free(buffer);
+      free(buf2);
+      msg_emitted = true;
+   }
+
+   return msg_emitted;
+}
+
 
 
