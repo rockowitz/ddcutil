@@ -793,7 +793,6 @@ bool dbgtrc_old(
 }
 
 
-
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *

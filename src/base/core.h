@@ -199,7 +199,6 @@ bool dbgtrc_returning(
         char *       format,
         ...);
 
-
 // n. using ___LINE__ instead of line in _assert_fail() causes compilation error
 #define TRACED_ASSERT(_assertion) \
    do { \
