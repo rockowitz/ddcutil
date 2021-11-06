@@ -1252,5 +1252,3 @@ void init_displays() {
    displays_master_list = g_ptr_array_new();
 }
 
-
-
