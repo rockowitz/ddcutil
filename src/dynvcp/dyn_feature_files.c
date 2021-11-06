@@ -325,9 +325,9 @@ dfr_check_by_dref(
       DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
             dref->pedid->mfg_id, dref->pedid->model_name, dref->pedid->product_code);
       errs = dfr_load_by_mmk(mmk, &dfr);
-      if (!errs) {
+ //     if (!errs) {
          dref->dfr = dfr;
-      }
+ //     }
 
       dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
    }
