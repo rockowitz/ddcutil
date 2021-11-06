@@ -26,6 +26,11 @@
 
 #include "dynamic_features.h"
 
+//
+// Trace control
+//
+
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
 
 //
 // Generic functions that probably belong elsewhere
@@ -135,7 +140,7 @@ free_feature_metadata(
       gpointer data)    // i.e. DDCA_Feature_Metadata *
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. DDCA_Feature_Metadata * data = %p", data);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting. DDCA_Feature_Metadata * data = %p", data);
 
    DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
    assert(info && memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
@@ -159,10 +164,11 @@ free_feature_metadata(
    info->marker[3] = 'x';
    free(info);
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-/**
+/** Create a #Dynameic_Feature_Rec
+ *
  *  \param   mfg_id
  *  \param   model_name
  *  \param   product_code
@@ -176,6 +182,10 @@ dfr_new(
       uint16_t     product_code,
       const char * filename)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "mfg_id -> %s, model_name -> %s, product_code=%d, filename -> %s",
+         mfg_id, model_name, product_code, filename);
+
    assert(mfg_id);
    assert(model_name);
 
@@ -188,6 +198,8 @@ dfr_new(
    frec->vspec        = DDCA_VSPEC_UNKNOWN;   // redundant, since set by calloc(), but be explicit
    if (filename)
       frec->filename  = strdup(filename);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", frec);
    return frec;
 }
 
@@ -197,7 +209,7 @@ dfr_free(
       Dynamic_Features_Rec * frec)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. frec=%p", frec);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "frec=%p", frec);
 
    if (frec) {
       assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
@@ -215,7 +227,7 @@ dfr_free(
       free(frec);
    }
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
