@@ -29,6 +29,7 @@
 #endif
 /** \endcond */
 
+#include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/feature_metadata.h"
 #include "base/linux_errno.h"
@@ -344,6 +345,7 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
 static char * get_firmware_version_string_t(Display_Handle * dh) {
    bool debug = false;
 
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
    static GPrivate  firmware_version_key = G_PRIVATE_INIT(g_free);
    char * version = get_thread_fixed_buffer(&firmware_version_key, 40);
 
@@ -360,12 +362,16 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
       if (psc != DDCRC_REPORTED_UNSUPPORTED && psc != DDCRC_DETERMINED_UNSUPPORTED) {
          DBGMSF(debug, "get_vcp_value(0xc9) returned %s", psc_desc(psc));
          strcpy(version, "DDC communication failed");
+         if (debug || IS_TRACING() || is_report_ddc_errors_enabled())
+            errinfo_report(ddc_excp, 1);
       }
+      errinfo_free(ddc_excp);
    }
    else {
       g_snprintf(version, 40, "%d.%d", valrec->val.c_nc.sh, valrec->val.c_nc.sl);
       free_single_vcp_value(valrec);
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", version);
    return version;
 }
 
@@ -381,7 +387,7 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
  */
 static char * get_controller_mfg_string_t(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh = %s", dh_repr(dh));
 
    const int MFG_NAME_BUF_SIZE = 100;
 
@@ -411,16 +417,18 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
    }
    else if (ddcrc == DDCRC_REPORTED_UNSUPPORTED || ddcrc == DDCRC_DETERMINED_UNSUPPORTED) {
       mfg_name = "Unspecified";
+      errinfo_free(ddc_excp);
    }
    else {
-      if (debug) {
-         DBGMSG("get_nontable_vcp_value(0xc8) returned %s", psc_desc(ddcrc));
-         DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
-      }
+      // if (debug) {
+      //    DBGMSG("get_nontable_vcp_value(0xc8) returned %s", psc_desc(ddcrc));
+      //    DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
+      // }
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || is_report_ddc_errors_enabled() );
       mfg_name = "DDC communication failed";
     }
 
-   DBGMSF(debug, "Returning: %s", mfg_name);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", mfg_name);
    return mfg_name;
 }
 
@@ -1367,8 +1375,8 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(non_async_scan);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
-
-   // dbgrpt_func_name_table(0);
+   RTTI_ADD_FUNC(get_controller_mfg_string_t);
+   RTTI_ADD_FUNC(get_firmware_version_string_t);
 }
 
 
