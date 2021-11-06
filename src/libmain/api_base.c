@@ -181,7 +181,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &config_fn,
                                  errmsgs);
    DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-   ntsa_free(cmd_name_array, true);   // true???
+   ntsa_free(cmd_name_array, false);
    DBGF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p: ",
                  apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
