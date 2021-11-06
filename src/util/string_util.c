@@ -552,15 +552,21 @@ strsplit_maxlength(
  *  g_strfreev(string_array) equivalent to ntsa_free(string_array, true)
  */
 void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
-   // printf("(%s) Freeing NTSA %p\n", __func__, string_array );
+   bool debug = false;
+   if (debug)
+      printf("(%s) Freeing NTSA %p, free_strings=%s\n", __func__, string_array, sbool(free_strings) );
    if (string_array) {
       if (free_strings) {
          int ndx = 0;
          while (string_array[ndx] != NULL) {
-            // printf("(%s) Freeing %p->%s\n", __func__, string_array[ndx], string_array[ndx]);
+            if (debug)
+               printf("(%s) Freeing string %d, %p->%s\n",
+                      __func__, ndx, string_array[ndx], string_array[ndx]);
             free(string_array[ndx++]);
          }
       }
+      if (debug)
+         printf("(%s) Freeing string_array=%p\n", __func__, string_array);
       free(string_array);
    }
 }
