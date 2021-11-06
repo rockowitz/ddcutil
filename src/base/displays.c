@@ -737,10 +737,12 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
       else {
          assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
          dref->marker[3] = 'x';
-         if (dref->usb_hiddev_name)       // always set by strdup()
+         if (dref->usb_hiddev_name)       // always set using strdup()
             free(dref->usb_hiddev_name);
          if (dref->capabilities_string)   // always a private copy
             free(dref->capabilities_string);
+         if (dref->mmid)                  // always a private copy
+            free(dref->mmid);
          // 9/2017: what about pedid, detail2?
          // what to do with gdl, request_queue?
          if (dref->dfr)
