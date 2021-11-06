@@ -461,26 +461,27 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    g_option_context_set_help_enabled(context, true);
    // bool ok = false;
 
-   if (debug) {
-      DBGMSG("Before g_option_context_parse(): argc=%d", argc);
-      int ndx = 0;
-      for (; ndx < argc; ndx++) {
-         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
-      }
-   }
-   bool ok = g_option_context_parse(context, &argc, &argv, &error);
+   /* From g_option_parse_documentation():
+      If the parsing is successful, any parsed arguments are removed from the
+      array and argc and argv are updated accordingly.
+
+      From g_option_parse_strv() documentation:
+      This function is similar to g_option_context_parse() except that it
+      respects the normal memory rules when dealing with a strv instead of
+      assuming that the passed-in array is the argv of the main function.
+      In particular, strings that are removed from the arguments list will
+      be freed using g_free().
+
+      Pass a mangleable copy of argv to g_option_context_parse_strv().
+   */
+   Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   bool ok = g_option_context_parse_strv(context, &temp_argv, &error);
    if (!ok) {
       fprintf(stderr, "%s option parsing failed: %s\n",
                       (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil",
                       error->message);
    }
-   if (debug) {
-      DBGMSG("After g_option_context_parse(): argc=%d", argc);
-      int ndx = 0;
-      for (; ndx < argc; ndx++) {
-         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
-      }
-   }
+   ntsa_free(temp_argv, true);
 
    // DBGMSG("buswork=%d", buswork);
    // DBGMSG("dispwork=%d", dispwork);
