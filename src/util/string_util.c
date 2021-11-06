@@ -636,6 +636,7 @@ Null_Terminated_String_Array ntsa_join(
  *  original array.
  *
  *  @param a1  instance to copy
+ *  @param dup if true, copy the strings as well as pointer array
  *  @return newly allocated #Null_Terminated_String_Array
  */
 Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1, bool dup)
