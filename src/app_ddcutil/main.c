@@ -654,8 +654,6 @@ main(int argc, char *argv[]) {
       goto bye;
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
-   free(untokenized_cmd_prefix);
-   free(configure_fn);
 
    // xdg_tests(); // for development
 
@@ -808,6 +806,8 @@ main(int argc, char *argv[]) {
    }
 
 bye:
+   free(untokenized_cmd_prefix);
+   free(configure_fn);
    DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);
