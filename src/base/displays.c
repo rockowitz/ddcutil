@@ -729,6 +729,8 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
 // Is it still meaningful to free a display ref?
 
 DDCA_Status free_display_ref(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%s", dref_repr_t(dref));
    DDCA_Status ddcrc = 0;
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
       if (dref->flags & DREF_OPEN) {
@@ -750,6 +752,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          free(dref);
       }
    }
+   DBGTRC_RETURNING(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
 
@@ -1250,6 +1253,7 @@ char * dref_basic_flags_t(uint16_t flags) {
 
 void init_displays() {
    RTTI_ADD_FUNC(free_display_handle);
+   RTTI_ADD_FUNC(free_display_ref);
 
    displays_master_list = g_ptr_array_new();
 }
