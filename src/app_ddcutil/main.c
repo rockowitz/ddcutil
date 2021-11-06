@@ -629,14 +629,9 @@ main(int argc, char *argv[]) {
       rpt_ntsa(new_argv, 1);
    }
 
-   // parse_cooamdn() clobbers new_argv, sets new_argv[1] = NULL
-   Null_Terminated_String_Array preserved = ntsa_copy(new_argv, false);
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
-   // rpt_ntsa(new_argv,3);
-   // rpt_ntsa(preserved, 5);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
-   ntsa_free(preserved, true);
-   free(new_argv);
+   ntsa_free(new_argv, true);
 
    if (!parsed_cmd) {
       goto bye;      // main_rc == EXIT_FAILURE
