@@ -18,6 +18,7 @@
 #include "public/ddcutil_c_api.h"
 
 #include "util/ddcutil_config_file.h"
+#include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/xdg_util.h"
@@ -151,10 +152,11 @@ char * get_library_filename() {
 // Initialization
 //
 
+
 static
 Parsed_Cmd * get_parsed_libmain_config() {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGF(debug, "Starting");
 
    Parsed_Cmd * parsed_cmd = NULL;
 
@@ -162,13 +164,14 @@ Parsed_Cmd * get_parsed_libmain_config() {
    Null_Terminated_String_Array cmd_name_array = calloc(2, sizeof(char*));
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
+   DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s", cmd_name_array, cmd_name_array[0]);
 
    GPtrArray* errmsgs = g_ptr_array_new_with_free_func(g_free);
    char ** new_argv = NULL;
    int     new_argc = 0;
    char *  untokenized_option_string = NULL;
    char *  config_fn;
-   DBGMSF(debug, "Calling apply_config_file()");
+   DBGF(debug, "Calling apply_config_file()...");
    int apply_config_rc = apply_config_file(
                                  "libddcutil",  // use this section of config file
                                  1, cmd_name_array,
@@ -177,11 +180,15 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &untokenized_option_string,
                                  &config_fn,
                                  errmsgs);
-   ntsa_free(cmd_name_array, false);
-   DBGMSF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p",
+   DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
+   ntsa_free(cmd_name_array, true);   // true???
+   DBGF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p: ",
                  apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
    assert( new_argc == ntsa_length(new_argv) );
+   if (debug)
+      ntsa_show(new_argv);
+
 
    if (errmsgs->len > 0) {
       f0printf(ferr(), "Errors reading libddcutil configuration file %s:\n", config_fn);
@@ -199,14 +206,14 @@ Parsed_Cmd * get_parsed_libmain_config() {
    //    goto bye;
 
    assert(new_argc >= 1);
-   DBGMSF(debug, "Calling parse_command()");
+   DBGF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
       syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",
             untokenized_option_string);
       fprintf(ferr(), "Ignoring invalid configuration file options: %s\n",
                       untokenized_option_string);
-      DBGMSF(debug, "Retrying parse_command() with no options");
+      DBGF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
    if (debug)
@@ -215,7 +222,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    free(untokenized_option_string);
    free(config_fn);
 
-   DBGMSF(debug, "Done.     Returning %p", parsed_cmd);
+   DBGF(debug, "Done.     Returning %p", parsed_cmd);
    return parsed_cmd;
 }
 
