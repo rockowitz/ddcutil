@@ -47,7 +47,7 @@ int tokenize_options_line(char * string, char ***tokens_loc) {
    *tokens_loc = p.we_wordv;
    if (debug) {
       printf("(%s) Tokens:\n", __func__);
-      ntsa_show(p.we_wordv);
+      ntsa_show(*tokens_loc);
       printf("(%s) Returning: %zd\n", __func__, p.we_wordc);
    }
    return p.we_wordc;
@@ -155,8 +155,11 @@ bye:
  *  \param   old_argv        original argument list
  *  \param   config_token_ct number of tokens to insert
  *  \param   config_tokens   list of tokens
- *  \param   new_argv_loc    where to return address of merged argument list
+ *  \param   merged_argv_loc where to return address of merged argument list
  *  \return  length of merged argument list
+ *
+ *  \remark
+ *  old_argc/old_argv are argc/argv as passed on the command line
  */
 static
 int merge_command_tokens(
@@ -164,12 +167,12 @@ int merge_command_tokens(
       char **  old_argv,
       int      config_token_ct,
       char **  config_tokens,
-      char *** new_argv_loc)
+      char *** merged_argv_loc)
 {
    bool debug = false;
 
-   *new_argv_loc = NULL;
-   int new_argc  = 0;
+   *merged_argv_loc = NULL;
+   int merged_argv  = 0;
 
    if (config_token_ct > 0) {
       int new_ct = config_token_ct + old_argc + 1;
@@ -191,22 +194,23 @@ int merge_command_tokens(
       combined[new_ndx] = NULL;
       if (debug)
          printf("(%s) Final new_ndx = %d\n", __func__, new_ndx);
-      *new_argv_loc = combined;
-      new_argc      = new_ct - 1;
-      assert(new_argc == ntsa_length(combined));
+      *merged_argv_loc = combined;
+      merged_argv      = new_ct - 1;
+      assert(merged_argv == ntsa_length(combined));
    }
    else {
-      *new_argv_loc = ntsa_copy(old_argv, true);
-      new_argc      = old_argc;
+      *merged_argv_loc = ntsa_copy(old_argv, true);
+      merged_argv      = old_argc;
    }
 
    if (debug) {
-       printf("(%s) Returning %d, *new_argv_loc=%p\n", __func__, new_argc, *new_argv_loc);
+       printf("(%s) Returning %d, *merged_argv_loc=%p\n",
+              __func__, merged_argv, *merged_argv_loc);
        printf("(%s) tokens:\n", __func__);
-       ntsa_show(*new_argv_loc);
+       ntsa_show(*merged_argv_loc);
    }
 
-   return new_argc;
+   return merged_argv;
 }
 
 
@@ -286,7 +290,7 @@ int apply_config_file(
                           new_argv_loc);
       assert(*new_argc_loc == ntsa_length(*new_argv_loc));
 
-      ntsa_free(cmd_prefix_tokens, false);
+      ntsa_free(cmd_prefix_tokens, true);
       // ntsa_free(old_argv, false);  // can't free system's argv
    }
 
