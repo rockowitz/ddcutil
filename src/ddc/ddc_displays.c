@@ -1264,7 +1264,6 @@ ddc_redetect_displays() {
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         dref->flags |= DREF_TRANSIENT;  // bypass check that only transient refs can be removed
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
       }
