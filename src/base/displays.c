@@ -650,7 +650,7 @@ Display_Ref * create_bus_display_ref(int busno) {
    io_path.path.i2c_busno = busno;
    Display_Ref * dref = create_base_display_ref(io_path);
    if (debug) {
-      DBGMSG("Done.  Constructed bus display ref:");
+      DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref,0);
    }
    return dref;
