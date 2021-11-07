@@ -1119,7 +1119,7 @@ ddc_detect_all_displays() {
    GPtrArray * display_list = g_ptr_array_new();
 
    int busct = i2c_detect_buses();
-   // DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
+   DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
    int busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
@@ -1202,10 +1202,10 @@ ddc_detect_all_displays() {
    if (check_phantom_displays)      // for testing
       filter_phantom_displays(display_list);
 
-   // if (debug) {
-   //    DBGMSG("Displays detected:");
-   //    report_display_recs(display_list, 1);
-   // }
+   if (debug) {
+      DBGMSG("Displays detected:");
+      dbgrpt_dref_ptr_array("display_list:", display_list, 1);
+   }
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p, Detected %d valid displays",
                 display_list, dispno_max);
    return display_list;
@@ -1264,6 +1264,7 @@ ddc_redetect_displays() {
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         // dref->flags |= DREF_TRANSIENT;
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
       }
