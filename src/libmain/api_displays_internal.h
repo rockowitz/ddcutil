@@ -41,6 +41,21 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       return psc; \
    } while(0);
 
+#define WITH_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
+   do { \
+      assert(library_initialized); \
+      _ddcrc = 0; \
+      free_thread_error_detail(); \
+      Display_Ref * dref = validated_ddca_display_ref(_ddca_dref); \
+      if (!dref)  { \
+         _ddcrc = DDCRC_ARG; \
+      } \
+      else { \
+         (_action); \
+      } \
+   } while(0);
+
+
 #define WITH_VALIDATED_DH2(ddca_dh, action) \
    do { \
       assert(library_initialized); \
