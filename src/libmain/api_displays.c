@@ -285,16 +285,20 @@ ddca_create_display_ref(
 // deprecated, not needed, in library there are no transient display refs
 DDCA_Status
 ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
-   if (!ddca_dref) {
-      free_thread_error_detail();
-      return DDCRC_OK;
-   }
-   WITH_VALIDATED_DR(ddca_dref,
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
+   DDCA_Status psc = 0;
+   free_thread_error_detail();
+   if (ddca_dref) {
+      WITH_VALIDATED_DR3(ddca_dref, psc,
          {
             if (dref->flags & DREF_TRANSIENT)
                psc = free_display_ref(dref);
          }
-   );
+      );
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s", psc_name_code(psc));
+   return psc;
 }
 
 
@@ -855,6 +859,7 @@ ddca_report_display_info(
       rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
    else
       rpt_label(  d0, "Invalid display - Does not support DDC");
+   // rpt_vstring(      d1, "Display ref:         %p -> %s", dinfo->dref, dref_repr_t(dinfo->dref) );
    // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_I2C):
