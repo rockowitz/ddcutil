@@ -290,6 +290,25 @@ ddca_set_sleep_multiplier(double multiplier);
 double
 ddca_get_sleep_multiplier();
 
+/** Controls the force I2C slave address setting.
+ *
+ *  Normally, ioctcl operation I2C_SLAVE is used to set the I2C slave address.
+ *  If that returns EBUSY and this setting is in effect, slave address setting
+ *  is retried using operation I2C_SLAVE_FORCE.
+ *
+ * \param[in] onoff true/false
+ * \return  prior value
+ */
+bool
+ddca_enable_force_slave_address(bool onoff);
+
+/** Query the force I2C slave address setting.
+ * \return true/false
+ */
+bool
+ddca_is_force_slave_address_enabled(void);
+
+
 
 //
 // Output Redirection
