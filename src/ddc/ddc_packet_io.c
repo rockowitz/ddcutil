@@ -338,6 +338,7 @@ void ddc_close_all_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    assert(open_displays);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Closing %d open displays", g_hash_table_size(open_displays));
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
       Display_Handle * dh = cur->data;
