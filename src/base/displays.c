@@ -726,12 +726,23 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
 #endif
 
 
-// Is it still meaningful to free a display ref?
-
+/** Free a display reference.
+ *
+ *  \param dref  display reference to free
+ *  \retval DDCRC_OK       success
+ *  \retval DDCRC_ARG      invalid display reference
+ *  \retval DDCRC_LOCKED   display reference not marked as transient
+ */
 DDCA_Status free_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p -> %s", dref, dref_repr_t(dref));
    DDCA_Status ddcrc = 0;
+   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+      ddcrc = DDCRC_ARG;
+      DBGMSG("Invalid dref.");
+      rpt_hex_dump((Byte*) dref->marker, 4, 2);
+      goto bye;
+   }
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
       if (dref->flags & DREF_OPEN) {
          ddcrc = DDCRC_LOCKED;
@@ -749,12 +760,15 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          // what to do with gdl, request_queue?
          if (dref->dfr)
             dfr_free(dref->dfr);
+         dref->marker[3] = 'x';
          free(dref);
       }
    }
+bye:
    DBGTRC_RETURNING(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
+
 
 /** Tests if 2 #Display_Ref instances specify the same path to the
  *  display.
