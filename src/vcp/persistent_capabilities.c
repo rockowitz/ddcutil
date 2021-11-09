@@ -24,22 +24,55 @@
 
 #include "persistent_capabilities.h"
 
-
 static DDCA_Trace_Group TRACE_GROUP  = DDCA_TRC_VCP;
 
-bool capabilities_cache_enabled = false;
-// bool ignore_cached_capabilities = false;  // unused
+static bool capabilities_cache_enabled = false;
+static GHashTable *  capabilities_hash = NULL;
 
-GHashTable *  capabilities_hash = NULL;
+static GMutex persistent_capabilities_mutex;
 
 
-/* caller is responisble for freeing returned value */
+static void dbgrpt_capabilities_hash0(int depth, const char * msg) {
+
+   int d = depth;
+   if (msg) {
+      rpt_label(depth, msg);
+      d = depth+1;
+   }
+   if (!capabilities_hash)
+      rpt_label(d, "No capabilities hash table");
+   else {
+      if (g_hash_table_size(capabilities_hash) == 0)
+         rpt_label(d, "Empty capabilities hash table");
+      else {
+         // rpt_label(depth, "capabilities_hash hash table:");
+         GHashTableIter iter;
+         gpointer key, value;
+         g_hash_table_iter_init(&iter, capabilities_hash);
+         while (g_hash_table_iter_next(&iter, &key, &value)) {
+            rpt_vstring(d, "%s : (%p -> |%s|)", (char *) key, value, (char*) value);
+         }
+      }
+      // rpt_nl();
+   }
+
+}
+
+
+void dbgrpt_capabilities_hash(int depth, const char * msg) {
+   g_mutex_lock(&persistent_capabilities_mutex);
+   dbgrpt_capabilities_hash0(depth, msg);
+   g_mutex_unlock(&persistent_capabilities_mutex);
+}
+
+
+/* caller is responsible for freeing returned value */
 char * get_capabilities_cache_file_name() {
    return xdg_cache_home_file("ddcutil", "capabilities");
 }
 
 
-void delete_capabilities_file() {
+static void delete_capabilities_file() {
    bool debug = false;
    char * fn = xdg_cache_home_file("ddcutil", "capabilities");
    if (regular_file_exists(fn)) {
@@ -61,6 +94,7 @@ void delete_capabilities_file() {
 bool enable_capabilities_cache(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "onoff=%s", sbool(onoff));
+   g_mutex_lock(&persistent_capabilities_mutex);
    bool old = capabilities_cache_enabled;
    if (onoff) {
       capabilities_cache_enabled = true;
@@ -73,6 +107,7 @@ bool enable_capabilities_cache(bool onoff) {
       }
       delete_capabilities_file();
    }
+   g_mutex_unlock(&persistent_capabilities_mutex);
    DBGMSF(debug, "capabilities_cache_enabled=%s. returning: %s",
          sbool(capabilities_cache_enabled), sbool(old));
    return old;
@@ -84,16 +119,16 @@ static Error_Info * load_persistent_capabilities_file()
    bool debug = false;
    if (debug || IS_TRACING()) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
-      dbgrpt_capabilities_hash(2,NULL);
+      dbgrpt_capabilities_hash0(2,NULL);
    }
    Error_Info * errs = NULL;
    if (capabilities_cache_enabled) {
       if (capabilities_hash) {
          g_hash_table_destroy(capabilities_hash);
       }
-      else {
+      // else {
          capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
-      }
+      // }
 
       char * data_file_name = get_capabilities_cache_file_name();
       // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
@@ -135,7 +170,7 @@ static Error_Info * load_persistent_capabilities_file()
 
    if (debug || IS_TRACING()) {
       DBGTRC_DONE(debug, TRACE_GROUP, "capabilities_hash:");
-      dbgrpt_capabilities_hash(2, NULL);
+      dbgrpt_capabilities_hash0(2, NULL);
    }
 
    return errs;
@@ -207,11 +242,21 @@ non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
 }
 
 
+/** Looks up the capabilities string for a monitor model.
+ *
+ *  The returned value is owned by the persistent capabilities
+ *  table and should not be freed.
+ *
+ *  \param mmk
+ *  \return capabilities string, NULL if not found
+ *
+ */
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 {
    assert(mmk);
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "mmk -> %s", mmk_repr(*mmk));
+   g_mutex_lock(&persistent_capabilities_mutex);
 
    char * result = NULL;
    if (non_unique_model_id(mmk)) {
@@ -235,7 +280,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 
          if (debug) {
             DBGMSG("Hash table before lookup:");
-            dbgrpt_capabilities_hash(2, NULL);
+            dbgrpt_capabilities_hash0(2, NULL);
             DBGMSG("Looking for key: mms -> |%s|", mms);
          }
 
@@ -245,11 +290,22 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
    }
 
 bye:
+   g_mutex_unlock(&persistent_capabilities_mutex);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
 
 
+/** Saves a capabilities string in the capabilities lookup table and,
+ *  if persistent capabilities are enabled, writes the string and its
+ *  key to the table on the file system.
+ *
+ *  \param mmk            monitor model id
+ *  \param capabilities   capabilities string
+ *
+ *  \remark
+ *  The string arguments are copied into the hash table.
+ */
 void set_persistent_capabilites(
         DDCA_Monitor_Model_Key * mmk,
         const char *             capabilities)
@@ -258,6 +314,7 @@ void set_persistent_capabilites(
    DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_cache_enabled=%s. mmk->%s, capabilities = %s",
           sbool(capabilities_cache_enabled), monitor_model_string(mmk), capabilities);
 
+   g_mutex_lock(&persistent_capabilities_mutex);
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk))
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -265,35 +322,14 @@ void set_persistent_capabilites(
       else {
          char * mms = strdup(monitor_model_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
+         if (debug || IS_TRACING())
+            dbgrpt_capabilities_hash0(2, "Capabilities hash after insert and before saving");
          save_persistent_capabilities_file();
       }
    }
+   g_mutex_unlock(&persistent_capabilities_mutex);
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
-void dbgrpt_capabilities_hash(int depth, const char * msg) {
-   int d = depth;
-   if (msg) {
-      rpt_label(depth, msg);
-      d = depth+1;
-   }
-   if (!capabilities_hash)
-      rpt_label(d, "No capabilities hash table");
-   else {
-      if (g_hash_table_size(capabilities_hash) == 0)
-         rpt_label(d, "Empty capabilities hash table");
-      else {
-         // rpt_label(depth, "capabilities_hash hash table:");
-         GHashTableIter iter;
-         gpointer key, value;
-         g_hash_table_iter_init(&iter, capabilities_hash);
-         while (g_hash_table_iter_next(&iter, &key, &value)) {
-            rpt_vstring(d, "%s -> %s", (char *) key, (char*) value);
-         }
-      }
-      // rpt_nl();
-   }
 }
 
 
