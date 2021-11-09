@@ -227,7 +227,7 @@ ddca_parse_capabilities_string(
    *parsed_capabilities_loc = result;
 
    DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
-   if ( (debug || IS_TRACING_GROUP(DDCA_TRC_API) ) && *parsed_capabilities_loc)
+   if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
 
    ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
