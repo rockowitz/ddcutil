@@ -105,7 +105,6 @@ dbgrpt_ddca_cap_vcp(DDCA_Cap_Vcp * cap, int depth) {
    rpt_vstring(d1, "value_ct:        %d", cap->value_ct);
    if (cap->value_ct > 0) {
       rpt_label(d1, "Values: ");
-
       for (int ndx = 0; ndx < cap->value_ct; ndx++) {
          rpt_vstring(d2, "Value:   0x%02x", cap->values[ndx]);
       }
