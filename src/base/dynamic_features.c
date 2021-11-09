@@ -152,15 +152,10 @@ free_feature_metadata(
    free(info->feature_desc);
    free(info->feature_name);
    if (info->sl_values) {
+      DBGMSF(debug, "Freeing sl_values table at %p", info->sl_values);
       free_sl_value_table(info->sl_values);
-#ifdef OLD
-      DDCA_Feature_Value_Entry * cur = info->sl_values;
-      for ( ;cur->value_code != 0x00 || cur->value_name; cur++ ) {
-         free(cur->value_name);
-      }
-      free(info->sl_values);      // is this right? freeing a hunk allocated by GPtrArray
-#endif
    }
+   // free latest_sl_values ?
    info->marker[3] = 'x';
    free(info);
 
