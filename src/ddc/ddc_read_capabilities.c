@@ -102,8 +102,8 @@ get_capabilities_into_buffer(
  * Returns:
  *   status code
  *
- * The returned pointer points to a string that is part of the
- * display handle.  It should NOT be freed by the caller.
+ * The returned pointer is to a string that is part of the display reference
+ * associated with the display handle.  It should NOT be freed by the caller.
  */
 Error_Info *
 ddc_get_capabilities_string(
@@ -128,7 +128,7 @@ ddc_get_capabilities_string(
       }
       else {
          // n. persistent_capabilities_enabled handled in get_persistent_capabilities()
-         dh->dref->capabilities_string = get_persistent_capabilities(dh->dref->mmid);
+         dh->dref->capabilities_string = strdup(get_persistent_capabilities(dh->dref->mmid));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_persistent_capabilities() returned |%s|",
                                     dh->dref->capabilities_string);
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
