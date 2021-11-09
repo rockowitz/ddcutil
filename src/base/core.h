@@ -114,6 +114,10 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 
 #define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(DDCA_TRC_NONE, __FILE__, __func__)
 
+#define IS_DBGTRC(debug_flag, group) \
+    ( (debug_flag)  || is_tracing((group), __FILE__, __func__) )
+
+
 
 //
 //  Error_Info reporting
