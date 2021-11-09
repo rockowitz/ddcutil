@@ -326,7 +326,7 @@ dfr_check_by_dref(
             dref->pedid->mfg_id, dref->pedid->model_name, dref->pedid->product_code);
       errs = dfr_load_by_mmk(mmk, &dfr);
  //     if (!errs) {
-         dref->dfr = dfr;
+         dref->dfr = dfr;   // will be a dummy record if errors
  //     }
 
       dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
