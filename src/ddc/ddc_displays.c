@@ -1235,16 +1235,14 @@ void
 ddc_discard_detected_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   // grab locks to prevent any opens?
+   ddc_close_all_displays();
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         // TODO: unlock any locked displays
+         dref->flags |= DREF_TRANSIENT;  // hack to allow all Display Refernces to be freed
          DDCA_Status ddcrc = free_display_ref(dref);
-          if (ddcrc != 0) {
-            // ignoring possible DDCRC_LOCKED
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                            "Ignoring free_display_ref() status code %s", psc_desc(ddcrc));
-         }
+         TRACED_ASSERT(ddcrc==0);
       }
       g_ptr_array_free(all_displays, false);
       all_displays = NULL;
@@ -1258,21 +1256,7 @@ void
 ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
-   // grab locks to prevent any opens?
-   ddc_close_all_displays();  // n. unlocks each display
-
-   if (all_displays) {
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         // dref->flags |= DREF_TRANSIENT;
-         DDCA_Status ddcrc = free_display_ref(dref);
-         TRACED_ASSERT(ddcrc==0);
-      }
-      g_ptr_array_free(all_displays, false);
-      all_displays = NULL;
-   }
-   i2c_discard_buses();
-
+   ddc_discard_detected_displays();
    i2c_detect_buses();
    all_displays = ddc_detect_all_displays();
    if (debug) {
