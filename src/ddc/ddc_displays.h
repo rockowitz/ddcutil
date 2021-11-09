@@ -38,7 +38,6 @@ ddc_get_filtered_displays(bool include_invalid_displays);
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth);
 
-
 int
 ddc_get_display_count(bool include_invalid_displays);
 
@@ -63,7 +62,7 @@ void
 ddc_ensure_displays_detected();
 
 void
-ddc_discard_detected_displays();     // FOR TESTING, LEAKS MEMORY
+ddc_discard_detected_displays();
 
 void
 ddc_redetect_displays();
