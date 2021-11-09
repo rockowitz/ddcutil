@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.1] 2021-10-31
+## [1.2.1] 2021-11-08
 
 ### Added
 - Option ***--syslog***: Send trace and debug messages to the system 
@@ -8,6 +8,7 @@
 - Option ***--wall-timestamp***, ***--wts***: Prefix trace and debug 
   messages with the current wall time.
 - Option ***--settings***: Report option settings in effect.
+- API functions ddca_enable_force_slave_address(), ddca_is_force_slave_address_enabled() 
 
 ### Changed
 - Details of current settings are no longer reported in every command invocation
@@ -16,7 +17,7 @@
 - Removed sample program demo_watch_displays
 
 ### Fixed
-- Fixed numerous memory leaks, in particular ones triggeredd by ddca_redetect_displays(). 
+- Fixed numerous memory leaks, in particular ones triggered by ddca_redetect_displays(). 
 - Build failure if configure option ***--enable-x11=no*** was specified.
 - API functions ddc_open_display(),ddc_open_display2() now always return 
   DDCRC_ALREADY_OPEN if the the display is already open in the current
@@ -87,6 +88,6 @@ For details, see [ddcutil Release Notes](https://www.ddcutil.com/release_notes).
 - Fix build failure when configure option ***--disable-usb*** is combined with 
   ***--enable-envcmds***.
 - On AMD Navi2 variants, e.g. RX 6000 series, **ddcutil** display detection put
- the GPU into an inconsistent state when probing a SMU I2C bus expolsed by the GPU. 
+ the GPU into an inconsistent state when probing a SMU I2C bus exposed by the GPU. 
  This change ensures that **ddcutil** does not attempt to probe such buses. 
 
