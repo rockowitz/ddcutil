@@ -28,7 +28,6 @@ static DDCA_Trace_Group TRACE_GROUP  = DDCA_TRC_VCP;
 
 static bool capabilities_cache_enabled = false;
 static GHashTable *  capabilities_hash = NULL;
-
 static GMutex persistent_capabilities_mutex;
 
 
@@ -55,26 +54,12 @@ static void dbgrpt_capabilities_hash0(int depth, const char * msg) {
       }
       // rpt_nl();
    }
-
-}
-
-
-void dbgrpt_capabilities_hash(int depth, const char * msg) {
-   g_mutex_lock(&persistent_capabilities_mutex);
-   dbgrpt_capabilities_hash0(depth, msg);
-   g_mutex_unlock(&persistent_capabilities_mutex);
-}
-
-
-/* caller is responsible for freeing returned value */
-char * get_capabilities_cache_file_name() {
-   return xdg_cache_home_file("ddcutil", "capabilities");
 }
 
 
 static void delete_capabilities_file() {
    bool debug = false;
-   char * fn = xdg_cache_home_file("ddcutil", "capabilities");
+   char * fn = get_capabilities_cache_file_name();
    if (regular_file_exists(fn)) {
       DBGMSF(debug, "Deleting file: %s", fn);
       int rc = unlink(fn);
@@ -91,31 +76,7 @@ static void delete_capabilities_file() {
 }
 
 
-bool enable_capabilities_cache(bool onoff) {
-   bool debug = false;
-   DBGMSF(debug, "onoff=%s", sbool(onoff));
-   g_mutex_lock(&persistent_capabilities_mutex);
-   bool old = capabilities_cache_enabled;
-   if (onoff) {
-      capabilities_cache_enabled = true;
-   }
-   else {
-      capabilities_cache_enabled = false;
-      if (capabilities_hash) {
-         g_hash_table_destroy(capabilities_hash);
-         capabilities_hash = NULL;
-      }
-      delete_capabilities_file();
-   }
-   g_mutex_unlock(&persistent_capabilities_mutex);
-   DBGMSF(debug, "capabilities_cache_enabled=%s. returning: %s",
-         sbool(capabilities_cache_enabled), sbool(old));
-   return old;
-}
-
-
-static Error_Info * load_persistent_capabilities_file()
-{
+static Error_Info * load_persistent_capabilities_file() {
    bool debug = false;
    if (debug || IS_TRACING()) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
@@ -126,9 +87,7 @@ static Error_Info * load_persistent_capabilities_file()
       if (capabilities_hash) {
          g_hash_table_destroy(capabilities_hash);
       }
-      // else {
-         capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
-      // }
+      capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
 
       char * data_file_name = get_capabilities_cache_file_name();
       // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
@@ -177,8 +136,7 @@ static Error_Info * load_persistent_capabilities_file()
 }
 
 
-static void save_persistent_capabilities_file()
-{
+static void save_persistent_capabilities_file() {
    bool debug = false;
    char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
    DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_cache_enabled: %s, data_file_name=%s",
@@ -214,8 +172,7 @@ bye:
 }
 
 
-static inline bool
-generic_model_name(char * model_name) {
+static inline bool generic_model_name(char * model_name) {
    char * generic_names[] = {
          "LG IPS FULLHD",
          "LG UltraFine",
@@ -234,22 +191,75 @@ generic_model_name(char * model_name) {
 }
 
 
-static inline bool
-non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
+static inline bool non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
 {
    return ( generic_model_name(mmk->model_name) &&
             ( mmk->product_code == 0 || mmk->product_code == 0x0101) );
 }
 
 
-/** Looks up the capabilities string for a monitor model.
+// Publicly visible functions
+
+/** Emit a debug report of the capabilities hash table
+ *
+ *  \param depth  logical indentation depth
+ *  \param msg    if non-null, emit this message before the report
+ *
+ *  \remark
+ *  This operation is protected by the persistent capabilities mutex
+ */
+void dbgrpt_capabilities_hash(int depth, const char * msg) {
+   g_mutex_lock(&persistent_capabilities_mutex);
+   dbgrpt_capabilities_hash0(depth, msg);
+   g_mutex_unlock(&persistent_capabilities_mutex);
+}
+
+
+/** Returns the name of the file that stores persistent capabilities
+ *
+ *  \return name of file, normally $HOME/.cache/ddcutil/capabilities
+ */
+/* caller is responsible for freeing returned value */
+char * get_capabilities_cache_file_name() {
+   return xdg_cache_home_file("ddcutil", "capabilities");
+}
+
+
+/** Enable saving capabilities strings in a file.
+ *
+ *  \param onoff   true to enable, false to disable
+ *  \return old setting
+ */
+bool enable_capabilities_cache(bool onoff) {
+   bool debug = false;
+   DBGMSF(debug, "onoff=%s", sbool(onoff));
+   g_mutex_lock(&persistent_capabilities_mutex);
+   bool old = capabilities_cache_enabled;
+   if (onoff) {
+      capabilities_cache_enabled = true;
+   }
+   else {
+      capabilities_cache_enabled = false;
+      if (capabilities_hash) {
+         g_hash_table_destroy(capabilities_hash);
+         capabilities_hash = NULL;
+      }
+      delete_capabilities_file();
+   }
+   g_mutex_unlock(&persistent_capabilities_mutex);
+   DBGMSF(debug, "capabilities_cache_enabled=%s. returning: %s",
+         sbool(capabilities_cache_enabled), sbool(old));
+   return old;
+}
+
+
+/** Look up the capabilities string for a monitor model.
  *
  *  The returned value is owned by the persistent capabilities
- *  table and should not be freed.
+ *  hash table and should not be freed.
  *
- *  \param mmk
+ *  \param mmk monitor model key
  *  \return capabilities string, NULL if not found
- *
  */
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 {
@@ -300,7 +310,7 @@ bye:
  *  if persistent capabilities are enabled, writes the string and its
  *  key to the table on the file system.
  *
- *  \param mmk            monitor model id
+ *  \param mmk            monitor model key
  *  \param capabilities   capabilities string
  *
  *  \remark
