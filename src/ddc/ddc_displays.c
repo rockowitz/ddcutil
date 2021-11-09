@@ -1231,6 +1231,7 @@ ddc_ensure_displays_detected() {
                all_displays, all_displays->len);
 }
 
+
 void
 ddc_discard_detected_displays() {
    bool debug = false;
@@ -1240,11 +1241,11 @@ ddc_discard_detected_displays() {
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         dref->flags |= DREF_TRANSIENT;  // hack to allow all Display Refernces to be freed
+         dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
       }
-      g_ptr_array_free(all_displays, false);
+      g_ptr_array_free(all_displays, true);
       all_displays = NULL;
    }
    i2c_discard_buses();
