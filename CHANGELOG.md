@@ -1,28 +1,26 @@
 # Changelog
 
-## [1.2.1] 2021-11-08
+## [1.2.1] 2021-11-10
 
 ### Added
-- Option ***--syslog***: Send trace and debug messages to the system 
-  log as well as the trace location
-- Option ***--wall-timestamp***, ***--wts***: Prefix trace and debug 
-  messages with the current wall time.
+- Option ***--syslog***: Send trace and debug messages to the system log in
+  addition to the trace location.
+- Option ***--wall-timestamp***, ***--wts***: Prefix trace and debug messages
+  with the current wall time.
 - Option ***--settings***: Report option settings in effect.
-- API functions ddca_enable_force_slave_address(), ddca_is_force_slave_address_enabled() 
 
 ### Changed
-- Details of current settings are no longer reported in every command invocation
+- Details of current settings are no longer reported by every command invocation
   when option ***--verbose*** is specified.  Use option ***--settings*** to 
   control option reporting.
-- Removed sample program demo_watch_displays
+- Removed sample program demo_watch_displays.
 
 ### Fixed
-- Fixed numerous memory leaks, in particular ones triggered by ddca_redetect_displays(). 
+- Numerous memory leaks, in particular ones triggered by ddca_redetect_displays(). 
 - Build failure if configure option ***--enable-x11=no*** was specified.
 - API functions ddc_open_display(),ddc_open_display2() now always return 
-  DDCRC_ALREADY_OPEN if the the display is already open in the current
-  thread. Previously an assert() failure would occur under certain 
-  circumstances.
+  DDCRC_ALREADY_OPEN if the the display is already open in the current thread.
+  Previously an assert() failure would occur under certain circumstances.
 
 ## [1.2.0] 2021-09-28
 
