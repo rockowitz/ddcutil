@@ -760,6 +760,7 @@ ddca_set_timeout_millis(
 #endif
 
 
+// unpublished
 bool
 ddca_enable_force_slave_address(bool onoff) {
    bool old = i2c_force_slave_addr_flag;
@@ -768,6 +769,7 @@ ddca_enable_force_slave_address(bool onoff) {
 }
 
 
+// unpublished
 bool
 ddca_is_force_slave_address_enabled(void) {
    return i2c_force_slave_addr_flag;
