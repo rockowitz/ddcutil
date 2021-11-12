@@ -74,6 +74,11 @@ gaux_ptr_array_from_null_terminated_array(
       GDestroyNotify element_free_func);
 
 gboolean
+gaux_streq(              // alternative to g_str_equal(), has GEqualFunc signature
+      gconstpointer a,
+      gconstpointer b);
+
+gboolean
 gaux_ptr_array_find_with_equal_func(
       GPtrArray *    haystack,
       gconstpointer  needle,

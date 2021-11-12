@@ -15,6 +15,7 @@
 /** \endcond */
 
 #include "glib_util.h"
+#include "string_util.h"
 
 #ifdef ALTERNATIVE
 
@@ -234,6 +235,16 @@ gaux_ptr_array_from_null_terminated_array(
    return result;
 }
 
+
+// GEqualFunc
+
+gboolean gaux_streq(gconstpointer a, gconstpointer b) {
+   gboolean result = streq((const char *) a, (const char *) b);
+   // printf("(%s) a=|%s|, b=|%s|, returning %s\n", __func__, (const char * )a, (const char *) b, sbool(result));
+   return result;
+}
+
+
 /** Implements g_ptr_array_find_with_equal_func(), which requires glib 2.54.
  *
  */
@@ -242,18 +253,20 @@ gaux_ptr_array_find_with_equal_func(
       GPtrArray *    haystack,
       gconstpointer  needle,
       GEqualFunc     equal_func,
-      guint *        index_)
+      guint *        index_loc)
 {
    bool result = false;
-   *index_ = -1;
-   if (haystack && (haystack->len == 0) && needle) {
+   if (index_loc)
+      *index_loc = -1;
+   if (haystack && (haystack->len > 0) && needle) {
       for (guint ndx = 0; ndx < haystack->len; ndx++) {
          if (equal_func)
             result = equal_func(g_ptr_array_index(haystack,ndx), needle);
          else
             result = g_ptr_array_index(haystack,ndx) == needle;
          if (result) {
-            *index_ = ndx;
+            if (index_loc)
+               *index_loc = ndx;
             break;
          }
       }
