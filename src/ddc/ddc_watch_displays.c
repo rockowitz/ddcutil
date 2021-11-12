@@ -99,7 +99,7 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
 #endif
 
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. dname=%s", dname);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dname=%s", dname);
 
    Byte_Bit_Flags result = bbf_create();
 
@@ -140,7 +140,7 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
       }
    }
    char * s = bbf_to_string(result, NULL, 0);
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", s);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", s);
    free(s);
 
    return result;
@@ -178,7 +178,7 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
 #else
    dname = "/sys/class/drm";
 #endif
-   DBGTRC(debug, TRACE_GROUP, "Examining %s...", dname);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s...", dname);
    Byte_Bit_Flags iter = bbf_iter_new(sysfs_drm_cards);
    int cardno = -1;
    while ( (cardno = bbf_iter_next(iter)) >= 0) {
@@ -230,7 +230,7 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
    }
    bbf_iter_free(iter);
    g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC(debug, TRACE_GROUP, "Connected displays: %s",
+   DBGTRC_DONE(debug, TRACE_GROUP, "Connected displays: %s",
                               join_string_g_ptr_array_t(connected_displays, ", "));
    return connected_displays;
 }
@@ -279,7 +279,7 @@ static bool displays_eq(GPtrArray * first, GPtrArray * second) {
 
 static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. pref_displays=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays=%s",
                  join_string_g_ptr_array_t(prev_displays, ", "));
 
    Watch_Displays_Data * wdd = data;
@@ -298,20 +298,23 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
       GPtrArray * removed = displays_minus(prev_displays, cur_displays);
       if (removed->len > 0) {
-         DBGTRC(debug, TRACE_GROUP,
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
          change_type = Changed_Removed;
       }
 
       GPtrArray * added = displays_minus(cur_displays, prev_displays);
       if (added->len > 0) {
-         DBGTRC(debug, TRACE_GROUP,
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
          change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
       }
 
    //    if (change_type != Changed_None) {
       // assert( change_type != Changed_Both);
+      // DBGMSG("wdd->display_change_handler = %p (%s)",
+      //         wdd->display_change_handler,
+      //         rtti_get_func_name_by_addr(wdd->display_change_handler) );
       if (wdd && wdd->display_change_handler) {
          wdd->display_change_handler( change_type, removed, added);
       }
@@ -322,7 +325,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
    g_ptr_array_free(prev_displays, true);
 
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s",
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s",
                               join_string_g_ptr_array_t(cur_displays, ", "));
    return cur_displays;
 }
@@ -332,12 +335,12 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
 gpointer watch_displays_using_poll(gpointer data) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
    GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (!terminate_watch_thread) {
@@ -348,7 +351,7 @@ gpointer watch_displays_using_poll(gpointer data) {
       // printf(".");
       // fflush(stdout);
    }
-   DBGTRC(true, TRACE_GROUP, "Terminating");
+   DBGTRC_DONE(true, TRACE_GROUP, "Terminating");
    free_watch_displays_data(wdd);
    g_thread_exit(0);
    return NULL;    // satisfy compiler check that value returned
@@ -422,7 +425,7 @@ void set_fd_blocking(int fd) {
 #ifdef ENABLE_UDEV
 gpointer watch_displays_using_udev(gpointer data) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -444,7 +447,7 @@ gpointer watch_displays_using_udev(gpointer data) {
    set_fd_blocking(fd);
 
    GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
-   DBGTRC(debug, TRACE_GROUP,
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (true) {
@@ -474,7 +477,7 @@ gpointer watch_displays_using_udev(gpointer data) {
       }
 #endif
 
-      DBGTRC(debug, TRACE_GROUP, "Blocking until there is data");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Blocking until there is data");
       // by default, is non-blocking as of libudev 171, use fcntl() to make file descriptor blocking
       struct udev_device* dev = udev_monitor_receive_device(mon);
       if (dev) {
@@ -511,20 +514,19 @@ gpointer watch_displays_using_udev(gpointer data) {
          }
 
          const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
-         if (debug)
-            printf("   HOTPLUG:   %s\n", hotplug);     // "1"
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
 
          prev_displays = check_displays(prev_displays, data);
 
          udev_device_unref(dev);
-
-
       }
       else {
          // Failure indicates main thread has died.  Kill this one too.
          int errsv=errno;
-         DBGMSG("No Device from udev_monitor_receive_device(). An error occurred. errno=%d=%s",
-                 errsv, linux_errno_name(errsv));
+         DBGTRC_DONE(debug, TRACE_GROUP,
+                            "No Device from udev_monitor_receive_device()."
+                            " An error occurred. errno=%d=%s. Terminating thread.",
+                            errsv, linux_errno_name(errsv));
          g_thread_exit(GINT_TO_POINTER(-1));
          // break;
       }
@@ -544,13 +546,14 @@ void dummy_display_change_handler(
         GPtrArray *          added)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
+   // DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
    if (removed && removed->len > 0) {
-      DBGTRC(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
    }
    if (added && added->len > 0) {
-      DBGTRC(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
    }
+   // DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -563,7 +566,7 @@ DDCA_Status
 ddc_start_watch_displays()
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. " );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "" );
    DDCA_Status ddcrc = DDCRC_OK;
 
    char * class_drm_dir =
@@ -604,7 +607,7 @@ ddc_start_watch_displays()
 
       g_mutex_unlock(&watch_thread_mutex);
    }
-   DBGTRC(debug, TRACE_GROUP, "Done.     watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   DBGTRC_DONE(debug, TRACE_GROUP, "watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
    return ddcrc;
 }
 
@@ -623,7 +626,7 @@ DDCA_Status
 ddc_stop_watch_displays()
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. " );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "" );
    DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
 
@@ -643,18 +646,19 @@ ddc_stop_watch_displays()
       ddcrc = DDCRC_INVALID_OPERATION;
 
    g_mutex_unlock(&watch_thread_mutex);
-   DBGTRC(debug, TRACE_GROUP, "Done.     watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
 
 
 void init_ddc_watch_displays() {
+   RTTI_ADD_FUNC(check_displays);
+   RTTI_ADD_FUNC(ddc_start_watch_displays);
+   RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(dummy_display_change_handler);
+   RTTI_ADD_FUNC(get_sysfs_drm_displays);
+   RTTI_ADD_FUNC(watch_displays_using_poll);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(watch_displays_using_udev);
 #endif
-   RTTI_ADD_FUNC(watch_displays_using_poll);
-   RTTI_ADD_FUNC(get_sysfs_drm_displays);
-   RTTI_ADD_FUNC(ddc_start_watch_displays);
-   RTTI_ADD_FUNC(ddc_stop_watch_displays);
 }
