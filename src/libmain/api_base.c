@@ -164,7 +164,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    Null_Terminated_String_Array cmd_name_array = calloc(2, sizeof(char*));
    cmd_name_array[0] = "libddcutil";
    cmd_name_array[1] = NULL;
-   DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s", cmd_name_array, cmd_name_array[0]);
+   DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s",
+                cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
 
    GPtrArray* errmsgs = g_ptr_array_new_with_free_func(g_free);
    char ** new_argv = NULL;
@@ -180,15 +181,14 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &untokenized_option_string,
                                  &config_fn,
                                  errmsgs);
-   DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-   ntsa_free(cmd_name_array, false);
+   // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
+   // ntsa_free(cmd_name_array, false);
    DBGF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p: ",
                  apply_config_rc, new_argc, new_argv);
    assert(apply_config_rc <= 0);
    assert( new_argc == ntsa_length(new_argv) );
    if (debug)
       ntsa_show(new_argv);
-
 
    if (errmsgs->len > 0) {
       f0printf(ferr(), "Errors reading libddcutil configuration file %s:\n", config_fn);
@@ -205,6 +205,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    // if (apply_config_rc < 0)
    //    goto bye;
 
+
    assert(new_argc >= 1);
    DBGF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
@@ -218,6 +219,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
+   DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
+   ntsa_free(cmd_name_array, false);
    ntsa_free(new_argv, true);
    free(untokenized_option_string);
    free(config_fn);
