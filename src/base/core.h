@@ -203,6 +203,15 @@ bool dbgtrc_returning(
         char *       format,
         ...);
 
+bool dbgtrc_returning_errinfo(
+        DDCA_Trace_Group  trace_group,
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        Error_Info * errs,
+        char *       format,
+        ...);
+
 // n. using ___LINE__ instead of line in _assert_fail() causes compilation error
 #define TRACED_ASSERT(_assertion) \
    do { \

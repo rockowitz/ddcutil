@@ -1007,6 +1007,44 @@ bool dbgtrc_returning(
 }
 
 
+bool dbgtrc_returning_errinfo(
+        DDCA_Trace_Group  trace_group,
+        const char *      funcname,
+        const int         lineno,
+        const char *      filename,
+        Error_Info *      errs,
+        char *            format,
+        ...)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, errs=%p, format=|%s|\n",
+                       __func__,
+                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       (fout() == stdout) ? "==" : "!=",
+                       errs, format);
+
+   bool msg_emitted = false;
+   if ( is_tracing(trace_group, filename, funcname) ) {
+      char pre_prefix[60];
+      g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", errinfo_summary(errs));
+      if (debug)
+         printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
+
+      va_list(args);
+      va_start(args, format);
+      if (debug)
+         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+      va_end(args);
+   }
+   if (debug)
+      printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
+   return msg_emitted;
+}
+
+
 //
 // Standardized handling of exceptional conditions, including
 // error messages and possible program termination.
