@@ -6,7 +6,7 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -119,8 +119,8 @@ void sleep_millis_with_tracex(
    if (!message)
       message = "";
 
-   dbgtrc((debug) ? 0xff : DDCA_TRC_SLEEP,
-           func, lineno, filename, "Sleeping for %d milliseconds. %s", milliseconds, message);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_SLEEP,
+                   "Sleeping for %d milliseconds. %s", milliseconds, message);
 
    sleep_millis(milliseconds);
 }
