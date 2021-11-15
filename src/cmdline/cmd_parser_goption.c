@@ -202,9 +202,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean f6_flag        = false;
    gboolean debug_parse_flag  = false;
    gboolean x52_no_fifo_flag  = false;
+
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
+   // gboolean enable_cc_flag_set = false;
+   // gboolean disable_cc_flag_set = false;
+
    // gboolean ignore_cc_flag = false;
    char *   mfg_id_work    = NULL;
    char *   modelwork      = NULL;
@@ -500,11 +504,18 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       ok = false;
    }
 
-
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
       if (_flag) \
          parsed_cmd->flags |= _bit; \
+   } while(0)
+
+#define SET_CLR_CMDFLAG(_bit, _flag) \
+   do { \
+      if (_flag) \
+         parsed_cmd->flags |= _bit; \
+      else \
+         parsed_cmd->flags &= ~_bit; \
    } while(0)
 
    parsed_cmd->output_level     = output_level;
@@ -545,7 +556,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
-   SET_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES , enable_cc_flag);
+
+   SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
@@ -559,6 +571,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
 
 #undef SET_CMDFLAG
+#undef SET_CLR_CMDFLAG
+
+     // rpt_vstring(1, "(%s) show settings: %s",
+   //                             __func__, sbool(parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS));
 
    // Create display identifier
    //
