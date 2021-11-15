@@ -27,7 +27,7 @@ extern "C" {
 // General
 //
 
-static inline const char * sbool(int val) {  return (val)  ? "true" : "false"; }
+static inline const char * sbool(uint64_t val) {  return (val)  ? "true" : "false"; }
 
 // A macro alternative to sbool()
 #define SBOOL(val) ( (val) ? "true" : "false" )
