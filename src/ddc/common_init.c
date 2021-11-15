@@ -163,7 +163,7 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
 bool
 submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
-   bool ok = true;
+   bool ok = false;
    DBGMSF(debug, "Starting. parsed_cmd = %p", parsed_cmd);
 
    if (!init_failsim(parsed_cmd))
@@ -190,17 +190,17 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
     init_max_tries(parsed_cmd);
 
  #ifdef USE_USB
-       DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
-       assert (rc == DDCRC_OK);
+   DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
+   assert (rc == DDCRC_OK);
  #endif
 
-    init_performance_options(parsed_cmd);
-
-    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
+   init_performance_options(parsed_cmd);
+   enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
 
    ok = true;
 
 bye:
+   DBGMSF(debug, "Done. Returning %s", sbool(ok));
    return ok;
 }
 
