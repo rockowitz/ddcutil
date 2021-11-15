@@ -120,7 +120,8 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-bool ddc_initial_checks_by_dh(Display_Handle * dh) {
+static bool
+ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
@@ -244,8 +245,8 @@ bye:
       dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "dh=%s, Returning: %s", dh_repr(dh), sbool(communication_working));
-   DBGTRC_DONE(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, communication_working, "dh=%s", dh_repr(dh));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
    return communication_working;
 }
 
