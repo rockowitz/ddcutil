@@ -212,6 +212,15 @@ bool dbgtrc_returning_errinfo(
         char *       format,
         ...);
 
+bool dbgtrc_returning_expression(
+        DDCA_Trace_Group  trace_group,
+        const char * funcname,
+        const int    lineno,
+        const char * fn,
+        const char * retval_expression,
+        char *       format,
+        ...);
+
 // n. using ___LINE__ instead of line in _assert_fail() causes compilation error
 #define TRACED_ASSERT(_assertion) \
    do { \
@@ -274,7 +283,20 @@ bool dbgtrc_returning_errinfo(
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RETURNING(debug_flag, trace_group, rc, format, ...) \
-    dbgtrc_returning( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
+    dbgtrc_returning( \
+          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), __func__, __LINE__, __FILE__, \
+          rc, format, ##__VA_ARGS__)
+
+#define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
+    dbgtrc_returning_expression( \
+          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
+          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
+
+#define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
+    dbgtrc_returning_errinfo( \
+          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
+          __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
+
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
@@ -292,7 +314,6 @@ if ( (_flag) || (is_tracing(_trace_group, __FILE__, __func__)) ) { \
       _dbgfunc(_structptr, 1); \
    } \
 }
-
 
 //
 // Error handling
