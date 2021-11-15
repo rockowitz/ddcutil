@@ -232,11 +232,11 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
       rpt_bool("walltime prefix:",  NULL, parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE,           d1);
       rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
+      rpt_bool("show settings:",    NULL, parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS,            d1);
       rpt_bool("enable cached capabilities:",
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
-      rpt_bool("show settings:",    NULL, parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS,            d1);
    // rpt_bool("clear persistent cache:",
-   //                                 NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE, d1);
+   //                               NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE,   d1);
       rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);
    // rpt_str ("MCCS version id",   NULL, vcp_version_id_name(parsed_cmd->mccs_version_id),      d1);
 
