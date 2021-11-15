@@ -53,10 +53,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 static Error_Info *
 get_capabilities_into_buffer(
       Display_Handle * dh,
-      Buffer**         capbilities_buffer_loc)
+      Buffer**         capabilities_buffer_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
    Public_Status_Code psc;
    Error_Info * ddc_excp = NULL;
 
@@ -67,14 +67,14 @@ get_capabilities_into_buffer(
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
                false,                      // !all_zero_response_ok
-               capbilities_buffer_loc);
-   Buffer * cap_buffer = *capbilities_buffer_loc;
+               capabilities_buffer_loc);
+   Buffer * cap_buffer = *capabilities_buffer_loc;
    // psc = (ddc_excp) ? ddc_excp->psc: 0;
    psc = ERRINFO_STATUS(ddc_excp);
    assert(psc <= 0);
    if (psc == 0) {
       // trim trailing blanks and nulls
-      int len = buffer_length(*capbilities_buffer_loc);
+      int len = buffer_length(*capabilities_buffer_loc);
       while ( len > 0 ) {
          Byte ch = cap_buffer->bytes[len-1];
          if (ch == ' ' || ch == '\0')
@@ -86,7 +86,8 @@ get_capabilities_into_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
-   DBGMSF(debug, "Done.     dh=%s, Returning: %s", dh_repr_t(dh), errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp,
+                       "*capabilities_buffer_loc=%p", *capabilities_buffer_loc);
    return ddc_excp;
 }
 
@@ -128,7 +129,7 @@ ddc_get_capabilities_string(
       }
       else {
          // n. persistent_capabilities_enabled handled in get_persistent_capabilities()
-         dh->dref->capabilities_string = strdup(get_persistent_capabilities(dh->dref->mmid));
+         dh->dref->capabilities_string = g_strdup(get_persistent_capabilities(dh->dref->mmid));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_persistent_capabilities() returned |%s|",
                                     dh->dref->capabilities_string);
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
@@ -149,8 +150,7 @@ ddc_get_capabilities_string(
       }
    }
    *caps_loc = dh->dref->capabilities_string;
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. *caps_loc -> |%s|",
-                                   errinfo_summary(ddc_excp), *caps_loc);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*caps_loc -> |%s|", *caps_loc);
    return ddc_excp;
 }
 
@@ -190,5 +190,6 @@ get_capabilities_string_by_dref(Display_Ref * dref, char **pcaps) {
 
 void init_ddc_read_capabilities() {
    RTTI_ADD_FUNC(ddc_get_capabilities_string);
+   RTTI_ADD_FUNC(get_capabilities_into_buffer);
 }
 
