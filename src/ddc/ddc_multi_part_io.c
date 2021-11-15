@@ -181,8 +181,8 @@ multi_part_read_with_retry(
 {
    bool debug = false;
    Retry_Op_Value max_multi_part_read_tries = try_data_get_maxtries2(MULTI_PART_READ_OP);
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting.  request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
           request_type, request_subtype, sbool(all_zero_response_ok), max_multi_part_read_tries);
 
@@ -197,7 +197,7 @@ multi_part_read_with_retry(
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
    while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
-      DBGTRC(debug, DDCA_TRC_NONE,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
              tryctr, max_multi_part_read_tries);
 
@@ -242,7 +242,7 @@ multi_part_read_with_retry(
       tryctr++;
    }
    assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
-   DBGTRC(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%s",
                             tryctr, rc, errinfo_summary(ddc_excp));
 
    if (debug) {
@@ -273,7 +273,8 @@ multi_part_read_with_retry(
    try_data_record_tries2(MULTI_PART_READ_OP, rc, tryctr);
 
    *buffer_loc = accumulator;
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
+   ASSERT_IFF(ddc_excp, !*buffer_loc);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*buffer_loc=%p", *buffer_loc);
    return ddc_excp;
 }
 
