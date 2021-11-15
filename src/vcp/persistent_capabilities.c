@@ -26,7 +26,7 @@
 
 static DDCA_Trace_Group TRACE_GROUP  = DDCA_TRC_VCP;
 
-static bool capabilities_cache_enabled = false;
+static bool capabilities_cache_enabled = false;   // default set in parser
 static GHashTable *  capabilities_hash = NULL;
 static GMutex persistent_capabilities_mutex;
 
@@ -128,7 +128,7 @@ static Error_Info * load_persistent_capabilities_file() {
    }
 
    if (debug || IS_TRACING()) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "capabilities_hash:");
+      DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
       dbgrpt_capabilities_hash0(2, NULL);
    }
 
@@ -227,15 +227,15 @@ char * get_capabilities_cache_file_name() {
 
 /** Enable saving capabilities strings in a file.
  *
- *  \param onoff   true to enable, false to disable
+ *  \param  newval   true to enable, false to disable
  *  \return old setting
  */
-bool enable_capabilities_cache(bool onoff) {
+bool enable_capabilities_cache(bool newval) {
    bool debug = false;
-   DBGMSF(debug, "onoff=%s", sbool(onoff));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "newval=%s", sbool(newval));
    g_mutex_lock(&persistent_capabilities_mutex);
    bool old = capabilities_cache_enabled;
-   if (onoff) {
+   if (newval) {
       capabilities_cache_enabled = true;
    }
    else {
@@ -247,8 +247,8 @@ bool enable_capabilities_cache(bool onoff) {
       delete_capabilities_file();
    }
    g_mutex_unlock(&persistent_capabilities_mutex);
-   DBGMSF(debug, "capabilities_cache_enabled=%s. returning: %s",
-         sbool(capabilities_cache_enabled), sbool(old));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, old, "capabilities_cache_enabled has been set = %s",
+         sbool(capabilities_cache_enabled));
    return old;
 }
 
@@ -344,6 +344,7 @@ void set_persistent_capabilites(
 
 
 void init_persistent_capabilities() {
+   RTTI_ADD_FUNC(enable_capabilities_cache);
    RTTI_ADD_FUNC(load_persistent_capabilities_file);
    RTTI_ADD_FUNC(save_persistent_capabilities_file);
    RTTI_ADD_FUNC(get_persistent_capabilities);
