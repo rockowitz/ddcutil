@@ -191,14 +191,13 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          }
 
          if (psc == 0) {
-
             TRACED_ASSERT( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
             if (debug || IS_TRACING()) {
                DBGMSG("pvalrec:");
                dbgrpt_single_vcp_value(pvalrec, 1);
             }
 
-            DBGTRC(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
                      pvalrec->value_type,
                      pvalrec->val.c_nc.mh,
                      pvalrec->val.c_nc.ml,
@@ -206,11 +205,11 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                      pvalrec->val.c_nc.sl);
             if (value_bytes_zero_for_any_value(pvalrec))
             {
-               DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
                dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
             }
             else {
-               DBGTRC(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
                dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
             }
          }
@@ -237,7 +236,7 @@ bye:
    if (!communication_working && i2c_force_bus) {
       dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
       communication_working = true;
-      DBGTRC(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
+      DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
             dh_repr_t(dh) );
       dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
       dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
