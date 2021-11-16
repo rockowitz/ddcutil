@@ -332,10 +332,10 @@ _ddca_init(void) {
       // printf("(%s) atexit() returned %d\n", __func__, atexit_rc);
 #endif
 
-      DBGTRC(debug, DDCA_TRC_API, "library initialization executed");
+      DBGTRC_DONE(debug, DDCA_TRC_API, "library initialization executed");
    }
    else {
-      DBGTRC(debug, DDCA_TRC_API, "library was already initialized");
+      DBGTRC_DONE (debug, DDCA_TRC_API, "library was already initialized");
    }
    // TRACED_ASSERT(1==5); for testing
 }
@@ -349,20 +349,18 @@ _ddca_init(void) {
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
-      DBGTRC(debug, DDCA_TRC_API, "Starting. library_initialized = true");
       ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
       library_initialized = false;
       if (flog)
          fclose(flog);
-      if (debug)
-         printf("(%s) library termination executed\n", __func__);
+      DBGTRC_DONE(debug, DDCA_TRC_API, "library termination complete");
    }
    else {
-      if (debug)
-         printf("(%s) library was already terminated\n", __func__);   // should be impossible"
+      DBGTRC_DONE(debug, DDCA_TRC_API, "library was already terminated");   // should be impossible
    }
    syslog(LOG_INFO, "Terminating.");
    closelog();
