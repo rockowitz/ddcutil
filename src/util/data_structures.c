@@ -861,18 +861,19 @@ void buffer_free(Buffer * buffer, const char * trace_msg) {
    // ASSERT_WITH_BACKTRACE(buffer);
    // ASSERT_WITH_BACKTRACE(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
 
-      if (buffer->bytes) {
-        if (trace_buffer_malloc_free)
-            printf("(%s) Freeing buffer->bytes = %p, &buffer->bytes=%p\n",
-                   __func__, buffer->bytes, (void*)&(buffer->bytes));
-        free(buffer->bytes);
-      }
-      if (trace_buffer_malloc_free)
-         printf("(%s) Freeing buffer = %p, %s\n", __func__, (void*)buffer, trace_msg);
-      buffer->marker[3] = 'x';
-      free(buffer);
-      if (trace_buffer_malloc_free)
-         printf("(%s) Done\n", __func__);
+   if (buffer->bytes) {
+     if (trace_buffer_malloc_free)
+         printf("(%s) Freeing buffer->bytes = %p, &buffer->bytes=%p\n",
+                __func__, buffer->bytes, (void*)&(buffer->bytes));
+     free(buffer->bytes);
+   }
+   if (trace_buffer_malloc_free)
+      printf("(%s) Freeing buffer = %p, %s\n", __func__, (void*)buffer, trace_msg);
+   buffer->marker[3] = 'x';
+   free(buffer);
+
+   if (trace_buffer_malloc_free)
+      printf("(%s) Done\n", __func__);
 }
 
 
