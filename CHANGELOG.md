@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.1] 2021-11-12
+## [1.2.1] 2021-11-15
 
 ### Added
 - Option ***--syslog***: Send trace and debug messages to the system log in
@@ -21,6 +21,7 @@
 - API functions ddc_open_display(),ddc_open_display2() now always return 
   DDCRC_ALREADY_OPEN if the the display is already open in the current thread.
   Previously an assert() failure would occur under certain circumstances.
+- Options ***--disable-capabilities-cache***, ***--disable-udf*** not respected
 - Proof of concept code that watches for display hotplug events 
 
 ## [1.2.0] 2021-09-28
