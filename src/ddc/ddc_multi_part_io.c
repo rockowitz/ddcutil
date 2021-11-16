@@ -296,8 +296,8 @@ try_multi_part_write(
    bool debug = false;
    Byte request_type = DDC_PACKET_TYPE_TABLE_WRITE_REQUEST;
    Byte request_subtype = vcp_code;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, value_to_set);
 
    Public_Status_Code psc = 0;
@@ -333,7 +333,7 @@ try_multi_part_write(
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done. Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    assert( (ddc_excp && psc<0) || (!ddc_excp && psc==0) );
    return ddc_excp;
 }
