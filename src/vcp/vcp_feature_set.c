@@ -107,7 +107,7 @@ create_feature_set(
    bool debug = false;
    if (debug || IS_TRACING()) {
       char * sflags = feature_set_flag_names_t(feature_setflags);
-      DBGMSG("Starting. subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%s(0x%04x), vcp_version=%d.%d, flags=%s",
                  feature_subset_name(subset_id), subset_id, vcp_version.major, vcp_version.minor,
                  sflags);
       // show_backtrace(2);
@@ -158,7 +158,7 @@ create_feature_set(
    else {
       if (subset_id == VCP_SUBSET_TABLE || subset_id == VCP_SUBSET_LUT) {
          exclude_table_features = false;
-         DBGTRC(debug, TRACE_GROUP, "Reset exclude_table_features = false");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Reset exclude_table_features = false");
       }
       int known_feature_ct = vcp_get_feature_code_count();
       int ndx = 0;
@@ -251,7 +251,7 @@ create_feature_set(
 
    assert(fset);
    if (debug || IS_TRACING()) {
-      DBGMSG("Returning: %p", fset);
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
       dbgrpt_feature_set(fset, 1);
    }
    return fset;
@@ -262,7 +262,7 @@ create_feature_set(
 VCP_Feature_Set *
 create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. vcp_entry=%p", vcp_entry);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "vcp_entry=%p", vcp_entry);
 
    struct vcp_feature_set * fset = calloc(1,sizeof(struct vcp_feature_set));
    assert(fset);     // avoid coverity "Dereference before null check" warning
@@ -272,7 +272,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
    g_ptr_array_add(fset->members, vcp_entry);
 
    if (debug || IS_TRACING()) {
-      DBGMSG("Returning: %p", fset);
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
       if (fset)
          dbgrpt_feature_set(fset, 1);
    }
@@ -294,7 +294,7 @@ create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry) {
 VCP_Feature_Set *
 create_single_feature_set_by_hexid(Byte id, bool force) {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. id=0x%02x, force=%s", id, sbool(force));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=0x%02x, force=%s", id, sbool(force));
 
    struct vcp_feature_set * fset = NULL;
    VCP_Feature_Table_Entry* vcp_entry = NULL;
@@ -306,7 +306,7 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
       fset = create_single_feature_set_by_vcp_entry(vcp_entry);
 
    if (debug || IS_TRACING()) {
-      DBGMSG("Returning: %p", fset);
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", fset);
       if (fset)
          dbgrpt_feature_set(fset, 1);
    }
