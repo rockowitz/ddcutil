@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stddef.h>
+#include <strings.h>
 #include <unistd.h>
 
 #include "public/ddcutil_types.h"
