@@ -58,8 +58,8 @@ try_multi_part_read(
       Buffer *         accumulator)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-          "Starting. request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+          "request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
           request_type, request_subtype, sbool(all_zero_response_ok), accumulator);
 
    const int MAX_FRAGMENT_SIZE = 32;
@@ -79,7 +79,7 @@ try_multi_part_read(
    int  cur_offset = 0;
    bool complete   = false;
    while (!complete && !excp) {         // loop over fragments
-      DBGTRC(debug, DDCA_TRC_NONE, "Top of fragment loop");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Top of fragment loop");
 
       int fragment_size;
       update_ddc_multi_part_read_request_packet_offset(request_packet_ptr, cur_offset);
@@ -98,7 +98,7 @@ try_multi_part_read(
            &response_packet_ptr
           );
       psc = (excp) ? excp->status_code : 0;
-      DBGTRC(debug, DDCA_TRC_NONE,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, errinfo_summary(excp));
       TUNED_SLEEP_WITH_TRACE(dh, SE_AFTER_EACH_CAP_TABLE_SEGMENT, NULL);
@@ -122,17 +122,17 @@ try_multi_part_read(
 
       int display_current_offset = aux_data_ptr->fragment_offset;
       if (display_current_offset != cur_offset) {
-         DBGTRC(debug, DDCA_TRC_NONE,
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                 "display_current_offset %d != cur_offset %d", display_current_offset, cur_offset);
          psc = DDCRC_MULTI_PART_READ_FRAGMENT;
          excp = errinfo_new(psc, __func__);
          COUNT_STATUS_CODE(psc);
       }
       else {
-         DBGTRC(debug, DDCA_TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
 
          fragment_size = aux_data_ptr->fragment_length;         // ***
-         DBGTRC(debug, DDCA_TRC_NONE, "fragment_size = %d", fragment_size);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "fragment_size = %d", fragment_size);
          if (fragment_size == 0) {
             complete = true;   // redundant
          }
@@ -152,7 +152,7 @@ try_multi_part_read(
 
    free_ddc_packet(request_packet_ptr);
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %s", errinfo_summary(excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, excp, "");
    return excp;
 }
 
@@ -356,7 +356,7 @@ multi_part_write_with_retry(
    bool debug = false;
    if (IS_TRACING())
       puts("");
-   DBGTRC(debug, TRACE_GROUP, "Starting. dh=%s, vcp_code=0x%02x",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, vcp_code=0x%02x",
                               dh_repr_t(dh), vcp_code);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
@@ -368,7 +368,7 @@ multi_part_write_with_retry(
    bool can_retry = true;
 
    while (tryctr < max_multi_part_write_tries && rc < 0 && can_retry) {
-      DBGTRC(debug, TRACE_GROUP,
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
              "Start of while loop. try_ctr=%d, max_multi_part_write_tries=%d",
              tryctr, max_multi_part_write_tries);
 
@@ -401,7 +401,7 @@ multi_part_write_with_retry(
       }
    }
 
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
