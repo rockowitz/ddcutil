@@ -548,7 +548,7 @@ ddca_get_feature_metadata_by_dh(
    bool debug = false;
    // if (feature_code == 0xca)
    //    debug = true;
-   DBGTRC(debug, DDCA_TRC_API,
+   DBGTRC_STARTING(debug, DDCA_TRC_API,
           "feature_code=0x%02x, ddca_dh=%p, create_default_if_not_found=%s, metadata_loc=%p",
           feature_code, ddca_dh, sbool(create_default_if_not_found), metadata_loc);
    API_PRECOND(metadata_loc);
