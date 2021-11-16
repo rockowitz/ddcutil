@@ -589,15 +589,15 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
          }
          if (rc == DDCRC_INVALID_EDID) {
             if (is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len)) {
-               DBGTRC(debug, TRACE_GROUP, "EDID appears to start with a CEA 861 extension block");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID appears to start with a CEA 861 extension block");
             }
          }
          if (rawedid->len == 256) {
             if (is_valid_raw_cea861_extension_block(rawedid->bytes+128, rawedid->len-128)) {
-                  DBGTRC(debug, TRACE_GROUP, "Second physical EDID block appears to be a CEA 861 extension block");
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second physical EDID block appears to be a CEA 861 extension block");
             }
             else if (is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
-                  DBGTRC(debug, TRACE_GROUP, "Second physical EDID block appears to be an initial EDID header block");
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second physical EDID block appears to be an initial EDID header block");
             }
 
          }
