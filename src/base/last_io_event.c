@@ -129,7 +129,7 @@ void record_io_finish(
 
    }
 
-   DBGTRC(trace_finish_timestamps | debug, DDCA_TRC_NONE,
+   DBGTRC_NOPREFIX(trace_finish_timestamps | debug, DDCA_TRC_NONE,
           "fd=%d, event_type = %-10s, function = %-20s, delta: %"PRIu64" nanosec, %"PRIu64" millisec)",     // PRIU64,
                    fd, io_event_name(event_type), function, delta_nanos, delta_nanos_then_millis);
 
