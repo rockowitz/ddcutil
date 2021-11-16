@@ -465,7 +465,7 @@ ddca_format_any_vcp_value(
                                            feature_code, vspec.major, vspec.minor);
       else
          *formatted_value_loc = g_strdup_printf("Feature %02x is not readable", feature_code);
-      DBGTRC(debug, TRACE_GROUP, "%s", *formatted_value_loc);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", *formatted_value_loc);
       ddcrc = DDCRC_INVALID_OPERATION;
       goto bye;
    }
@@ -653,13 +653,13 @@ set_single_vcp_value(
 {
       Error_Info * ddc_excp = NULL;
       bool debug = false;
-      DBGTRC(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
+      DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
                                   ddca_dh, valrec, verified_value_loc);
       WITH_VALIDATED_DH2(ddca_dh,  {
             ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
-            DBGTRC(debug, DDCA_TRC_API, "Returning: %s(%d)", psc_name(psc), psc);
+            DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
          } );
 }
 
