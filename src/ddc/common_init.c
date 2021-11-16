@@ -171,6 +171,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
+   DBGMSF(debug, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
 
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
