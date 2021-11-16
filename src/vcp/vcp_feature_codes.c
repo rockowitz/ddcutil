@@ -2065,7 +2065,7 @@ format_feature_detail_xc8_display_controller_type(
         Nontable_Vcp_Value * info,  DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    assert(info->vcp_code == 0xc8);
    bool ok = true;
    Byte mfg_id = info->sl;
@@ -2082,7 +2082,7 @@ format_feature_detail_xc8_display_controller_type(
    snprintf(buffer, bufsz,
             "Mfg: %s (sl=0x%02x), controller number: mh=0x%02x, ml=0x%02x, sh=0x%02x",
             sl_msg, mfg_id, info->mh, info->ml, info->sh);
-   DBGTRC(debug, TRACE_GROUP, "Returning: %s, buffer = |%s|", sbool(ok), buffer);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "buffer = |%s|", buffer);
    return ok;
 }
 
