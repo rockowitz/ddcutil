@@ -51,14 +51,14 @@ int i2c_name_to_busno(const char * name) {
  *  \param  name  string to convert
  *  \return extracted number, -1 if conversion fails
  *
- *  \remark A generalization of #i2_name_to_busno()
+ *  \remark A generalization of #i2c_name_to_busno()
  */
 int extract_number_after_hyphen(const char * name) {
    int result = -1;
 
    if (name) {
       char * hyphen = strchr(name, '-');
-      if (hyphen && *(hyphen+1) != -1) {
+      if (hyphen && *(hyphen+1) != '\0') {
          int ival;
          if ( str_to_int(hyphen+1, &ival, 10) )
             result = ival;
