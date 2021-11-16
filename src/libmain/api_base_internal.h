@@ -36,7 +36,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
          syslog(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
-            DBGTRC(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
                          #expr, __func__, __LINE__, __FILE__); \
             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
                              #expr, __func__, __LINE__, __FILE__); \
