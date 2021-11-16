@@ -140,7 +140,7 @@ dyn_create_feature_set0(
       GPtrArray *          members_dfm)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. subset_id=%d, number of members=%d",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset_id=%d, number of members=%d",
                               subset_id, (members_dfm) ? members_dfm->len : -1);
 
    Dyn_Feature_Set * fset = calloc(1,sizeof(Dyn_Feature_Set));
@@ -148,7 +148,7 @@ dyn_create_feature_set0(
    fset->subset = subset_id;
    fset->members_dfm = members_dfm;
 
-   DBGTRC(debug, TRACE_GROUP, "Returning %p", fset);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", fset);
    return fset;
 }
 
