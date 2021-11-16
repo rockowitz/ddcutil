@@ -4,7 +4,7 @@
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -29,6 +29,7 @@
 static bool sleep_suppression_enabled = DEFAULT_SLEEP_LESS;
 
 bool enable_sleep_suppression(bool enable) {
+   // DBGMSG("enable = %s", sbool(enable));
    bool old = sleep_suppression_enabled;
    sleep_suppression_enabled = enable;
    return old;
@@ -42,6 +43,7 @@ bool is_sleep_suppression_enabled() {
 static bool deferred_sleep_enabled = false;
 
 bool enable_deferred_sleep(bool enable) {
+   // DBGMSG("enable = %s", sbool(enable));
    bool old = deferred_sleep_enabled;
    deferred_sleep_enabled = enable;
    return old;
