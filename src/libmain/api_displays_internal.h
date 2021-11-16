@@ -21,7 +21,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
    do { \
       _dref = validated_ddca_display_ref(_ddca_dref); \
       if (!_dref) { \
-         DBGTRC(_debug, DDCA_TRC_API, "Done.     Returning DDCRC_ARG"); \
+         DBGTRC_DONE(_debug, DDCA_TRC_API, "Returning DDCRC_ARG"); \
          return DDCRC_ARG; \
       } \
    } while(0)
