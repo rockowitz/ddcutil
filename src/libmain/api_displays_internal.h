@@ -64,11 +64,12 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
       if (!dh)  { \
          psc = DDCRC_ARG; \
-         DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s. ddca_dh=%p", psc_name_code(psc), ddca_dh); \
+         DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "ddca_dh=%p", ddca_dh); \
       } \
       else { \
          (action); \
       } \
+      DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, ""); \
       return psc; \
    } while(0);
 
