@@ -531,7 +531,7 @@ ddca_get_feature_metadata_by_dref(
                }
                *metadata_loc = external_metadata;
 
-               DBGTRC(debug, TRACE_GROUP, "Returning: %s", psc_desc(psc));
+               DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
                assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
       );
@@ -570,8 +570,8 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
 
-                DBGTRC(debug, DDCA_TRC_API, "Done.     ddca_dh=%p->%s. Returning: %s",
-                      ddca_dh, dh_repr_t(ddca_dh), ddca_rc_desc(psc));
+                DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+                                        "ddca_dh=%p->%s", ddca_dh, dh_repr_t(ddca_dh));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
