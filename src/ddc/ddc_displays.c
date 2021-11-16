@@ -1333,17 +1333,21 @@ ddc_displays_already_detected()
  */
 DDCA_Status
 ddc_enable_usb_display_detection(bool onoff) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. onoff=%s", sbool(onoff));
+
+   DDCA_Status rc = DDCRC_UNIMPLEMENTED;
 #ifdef USE_USB
-   DDCA_Status rc = DDCRC_INVALID_OPERATION;
-   if (!ddc_displays_already_detected()) {
+   if (ddc_displays_already_detected()) {
+      rc = DDCRC_INVALID_OPERATION;
+   }
+   else {
       detect_usb_displays = onoff;
       rc = DDCRC_OK;
-      // DBGMSG("detect_usb_displays = %s", sbool(detect_usb_displays));
    }
-   return rc;
-#else
-   return DDCRC_UNIMPLEMENTED;
 #endif
+   DBGMSF(debug, "Done.     Returning %s", psc_name_code(rc));
+   return rc;
 }
 
 
