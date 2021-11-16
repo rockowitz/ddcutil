@@ -456,7 +456,7 @@ gpointer watch_displays_using_udev(gpointer data) {
       // leave in so that code checkers are fooled into thinking that
       // free_watch_displays_data() is called at program termination
       if (terminate_watch_thread) {
-         DBGTRC(true, TRACE_GROUP, "Terminating");
+         DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
          free_watch_displays_data(wdd);
          g_thread_exit(0);
          assert(false);    // avoid clang warning re wdd use after free
