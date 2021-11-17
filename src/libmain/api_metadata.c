@@ -177,18 +177,20 @@ ddca_get_feature_list_by_dref(
       bool                    include_table_features,
       DDCA_Feature_List*      feature_list_loc)
 {
-   WITH_VALIDATED_DR(
-         ddca_dref,
-         {
-               bool debug = false;
-               DBGTRC_STARTING(debug, TRACE_GROUP, "feature_subset_id=%d=0x%08x=%s, dref=%p=%s, "
-                             "include_table_features=%s, feature_list_loc=%p",
-                      feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
-                      dref, dref_repr_t(dref),
-                      sbool(include_table_features),
-                      feature_list_loc);
-               assert(feature_list_loc);
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
+              "include_table_features=%s, feature_list_loc=%p",
+              feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+          ddca_dref,
+          sbool(include_table_features),
+          feature_list_loc);
+   assert(feature_list_loc);
+   DDCA_Status psc = 0;
+   VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
 
+   WITH_VALIDATED_DR3(
+         ddca_dref, psc,
+         {
                DDCA_MCCS_Version_Spec vspec = // dref->vcp_version;
                                              get_vcp_version_by_dref(dref);
                DBGMSF(debug, "vspec=%%", format_vspec_verbose(vspec) );
@@ -197,7 +199,7 @@ ddca_get_feature_list_by_dref(
                // Whether a feature is a table feature can vary by version, so can't
                // specify VCP_SPEC_ANY to request feature ids in any version
                assert(vcp_version_is_valid(vspec, /* allow unknown */ false));
-               VCP_Feature_Subset subset = VCP_SUBSET_NONE;  // pointless initialization to avoid compile warning
+
                switch (feature_set_id) {
                case DDCA_SUBSET_KNOWN:
                   subset = VCP_SUBSET_KNOWN;
@@ -239,16 +241,15 @@ ddca_get_feature_list_by_dref(
                DDCA_Feature_List result = feature_list_from_dyn_feature_set(fset);
                memcpy(feature_list_loc, &result, 32);
                dyn_free_feature_set(fset);
-
-            // bye:
-               DBGTRC_DONE(debug, TRACE_GROUP, "feature_set_id=%d=0x%08x=%s, subset=%d=%s, Returning: %s",
-                     feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
-                     subset, feature_subset_name(subset), psc_desc(psc));
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                      "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
-                  // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
          }
-      );
+   );
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
+         feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+         subset, feature_subset_name(subset));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+          "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
+      // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
+   return psc;
 }
 
 
@@ -511,14 +512,15 @@ ddca_get_feature_metadata_by_dref(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata **    metadata_loc)
 {
-   WITH_VALIDATED_DR(
-         ddca_dref,
-         {
-               bool debug = false;
-               DBGTRC(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, create_default_if_not_found=%s, meta_loc=%p",
-                             feature_code, dref_repr_t(dref), sbool(create_default_if_not_found), metadata_loc);
-               assert(metadata_loc);
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "feature_code=0x%02x, ddca_dref=%p, create_default_if_not_found=%s, meta_loc=%p",
+                 feature_code, ddca_dref, sbool(create_default_if_not_found), metadata_loc);
+   assert(metadata_loc);
 
+   DDCA_Status psc = 0;
+   WITH_VALIDATED_DR3(
+         ddca_dref, psc,
+         {
                DDCA_Feature_Metadata * external_metadata = NULL;
                Display_Feature_Metadata * internal_metadata =
                   dyn_get_feature_metadata_by_dref(feature_code, dref, create_default_if_not_found);
@@ -530,11 +532,11 @@ ddca_get_feature_metadata_by_dref(
                   dfm_free(internal_metadata);
                }
                *metadata_loc = external_metadata;
-
-               DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
-               assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
-      );
+   );
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   ASSERT_IFF(psc==0, *metadata_loc);
+   return psc;
 }
 
 
@@ -569,13 +571,12 @@ ddca_get_feature_metadata_by_dh(
                   dfm_free(internal_metadata);
                }
                *metadata_loc = external_metadata;
-
-                DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+               ASSERT_IFF(psc == 0, *metadata_loc);
+               DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
                                         "ddca_dh=%p->%s", ddca_dh, dh_repr_t(ddca_dh));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
-                assert( (psc==0 && *metadata_loc) || (psc!=0 &&!*metadata_loc) );
          }
       );
 }
@@ -650,7 +651,8 @@ ddca_get_feature_name_by_dref(
       DDCA_Display_Ref       ddca_dref,
       char **                name_loc)
 {
-   WITH_VALIDATED_DR(ddca_dref,
+   DDCA_Status psc = 0;
+   WITH_VALIDATED_DR3(ddca_dref, psc,
          {
                //*name_loc = ddca_feature_name_by_vspec(feature_code, dref->vcp_version, dref->mmid);
                *name_loc = get_feature_name_by_id_and_vcp_version(feature_code,
@@ -660,6 +662,7 @@ ddca_get_feature_name_by_dref(
                   psc = DDCRC_ARG;
          }
    )
+   return psc;
 }
 
 
@@ -873,22 +876,23 @@ ddca_is_udf_enabled(void)
 DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
-   WITH_VALIDATED_DR(ddca_dref,
-      {
-            bool debug = false;
-            DBGMSF(debug, "dref=%s", dref_repr_t(dref));
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddca_dref=%p", ddca_dref);
 
+   DDCA_Status psc = 0;
+   WITH_VALIDATED_DR3(ddca_dref, psc,
+      {
             free_thread_error_detail();
             Error_Info * ddc_excp = dfr_check_by_dref(dref);
             if (ddc_excp) {
                psc = ddc_excp->status_code;
-               DBGMSF(debug, "ddc_excp->status_code=%s, psc=%s", ddca_rc_name(ddc_excp->status_code), ddca_rc_name(psc));
                save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
                errinfo_free(ddc_excp);
             }
-            DBGMSF(debug, "Returning: %s", ddca_rc_name(psc));
       }
    );
+   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   return psc;
 }
 
 DDCA_Status
