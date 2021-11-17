@@ -154,12 +154,14 @@ void report_one_connector(
    if (drm_dp_aux_subdir) {     // DisplayPort
       RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "name");
       RPT_ATTR_TEXT(0, NULL, dirname, simple_fn, drm_dp_aux_subdir, "dev");
+      free(drm_dp_aux_subdir);
    }
 
    RPT_ATTR_SINGLE_SUBDIR(depth, &i2c_subdir, is_i2cN, "i2c-", dirname, simple_fn);
    if (i2c_subdir) {
       RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, i2c_subdir, "name");
       RPT_ATTR_TEXT(depth, NULL, dirname, simple_fn, i2c_subdir, "dev");
+      free(i2c_subdir);
    }
 
    DBGMSF(debug, "Done");
