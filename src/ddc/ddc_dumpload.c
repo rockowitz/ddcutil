@@ -563,7 +563,7 @@ loadvcp_by_string(
  */
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "buf=%p, bufsz=%d", buf, bufsz);
    if (bufsz == 0 || buf == NULL) {
       bufsz = 128;
@@ -625,7 +625,7 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
  */
 void
 collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    // temporarily use same output format as filename, but format the
    // date separately here for flexibility
