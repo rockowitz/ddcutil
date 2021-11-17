@@ -198,7 +198,7 @@ ddc_open_display(
 
                I2C_Bus_Info * bus_info = dref->detail;
                TRACED_ASSERT(bus_info);   // need to convert to a test?
-               TRACED_ASSERT( memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
+               TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
                dref->pedid = bus_info->edid;
                if (!dref->pedid) {
@@ -224,7 +224,7 @@ ddc_open_display(
 #ifdef USE_USB
       {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
-         TRACED_ASSERT(dref->usb_hiddev_name);
+         TRACED_ASSERT(dref && dref->usb_hiddev_name);
          // if (!dref->usb_hiddev_name) { // HACK
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_dref(dref);
@@ -407,7 +407,7 @@ DDCA_Status ddc_i2c_write_read_raw(
                                            " ", 1, false) );
    TRACED_ASSERT(dh);
    TRACED_ASSERT(dh->dref);
-   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
@@ -482,7 +482,7 @@ DDCA_Status ddc_write_read_raw(
    }
 
    // This function should not be called for USB
-   TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   TRACED_ASSERT(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status psc =  ddc_i2c_write_read_raw(
                  dh,
