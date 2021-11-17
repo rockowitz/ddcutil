@@ -421,9 +421,9 @@ execute_cmd_with_optional_display_handle(
       Parsed_Cmd *     parsed_cmd,
       Display_Handle * dh)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh = %p -> %s", dh, dh_repr_t(dh));
-   int main_rc =EXIT_SUCCESS;
+   int main_rc = EXIT_SUCCESS;
 
    if (dh) {
       if (!vcp_version_eq(parsed_cmd->mccs_vspec, DDCA_VSPEC_UNKNOWN)) {
@@ -833,4 +833,5 @@ static void add_rtti_functions() {
    RTTI_ADD_FUNC(interrogate);
 #endif
    init_app_capabilities();
+   init_app_dumpload();
 }
