@@ -56,7 +56,6 @@ ddca_get_capabilities_string(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    free_thread_error_detail();
-   // assert(pcaps_loc);
    API_PRECOND(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
@@ -71,24 +70,10 @@ ddca_get_capabilities_string(
             // make copy to prevent caller from mucking around in ddcutil's
             // internal data structures
             *pcaps_loc = strdup(p_cap_string);
-            // DBGMSF(debug, "*pcaps_loc=%p", *pcaps_loc);
          }
-        //  DBGMSF(debug, "psc=%s", ddca_rc_desc(psc));
-         assert( (psc==0 && *pcaps_loc) || (psc!=0 && !*pcaps_loc));
-#ifdef OLD
-         if (debug)
-            printf("(%s)1 psc=%d, *pcaps_loc=%p -> |%s|\n", __func__, psc, *pcaps_loc, *pcaps_loc);
-         DBGTRC(debug, DDCA_TRC_API,
-               "Done. Returrning %s(%d), ddca_dh=%s, *pcaps_loc=%p -> |%s|",
-               psc_desc(psc), psc,
-               dh_repr_t((Display_Handle *) ddca_dh),
-               *pcaps_loc, *pcaps_loc);
-         if (debug)
-            printf("\n(%s) Using DBGTRC_RETURNING...\n", __func__);
-#endif
-         DBGTRC_DONE(debug, DDCA_TRC_API,
-               "Returning %s. ddca_dh=%s, *pcaps_loc=%p -> |%s|",
-               psc_name_code(psc),
+         ASSERT_IFF(psc==0, *pcaps_loc);
+         DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+               "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
                dh_repr_t((Display_Handle *) ddca_dh),
                *pcaps_loc, *pcaps_loc);
       }
