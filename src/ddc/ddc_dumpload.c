@@ -32,6 +32,7 @@
 #include "base/displays.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 #include "base/vcp_version.h"
 
@@ -562,9 +563,12 @@ loadvcp_by_string(
  */
 char *
 format_timestamp(time_t time_millis, char * buf, int bufsz) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "buf=%p, bufsz=%d", buf, bufsz);
    if (bufsz == 0 || buf == NULL) {
       bufsz = 128;
       buf = calloc(1, bufsz);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Allocated new buffer: %p", buf);
    }
    struct tm tm = *localtime(&time_millis);
    snprintf(buf, bufsz, "%4d%02d%02d-%02d%02d%02d",
@@ -575,6 +579,7 @@ format_timestamp(time_t time_millis, char * buf, int bufsz) {
                   tm.tm_min,
                   tm.tm_sec
                  );
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning: %p", buf);
    return buf;
 }
 
@@ -620,6 +625,8 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
  */
 void
 collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    // temporarily use same output format as filename, but format the
    // date separately here for flexibility
    char timestamp_buf[30];
@@ -635,6 +642,8 @@ collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    // Value is ignored on input, so just don't output it and avoid the issues. (11/2018)
    // snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", time_millis);
    // g_ptr_array_add(vals, strdup(buf));
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Appended %s", buf);
 }
 
 #ifdef UNUSED
@@ -839,4 +848,10 @@ dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
    }
    DBGMSF(debug, "Returning: %s, *result_loc=|%s|", psc_desc(psc), *result_loc);
    return psc;
+}
+
+
+void init_ddc_dumpload() {
+   RTTI_ADD_FUNC(format_timestamp);
+   RTTI_ADD_FUNC(collect_machine_readable_timestamp);
 }

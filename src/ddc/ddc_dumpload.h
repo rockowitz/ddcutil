@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -79,5 +79,7 @@ Public_Status_Code
 dumpvcp_as_string(
       Display_Handle * dh,
       char**           result_loc);
+
+void init_ddc_dumpload();
 
 #endif /* DDC_DUMPLOAD_H_ */
