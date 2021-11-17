@@ -443,7 +443,8 @@ void free_cur_report_locals(Cur_Report_Locals * locals) {
 }
 
 
-Parsed_Hid_Report * find_hid_report(Parsed_Hid_Collection * col, Byte report_type, uint16_t report_id) {
+Parsed_Hid_Report *
+find_hid_report(Parsed_Hid_Collection * col, Byte report_type, uint16_t report_id) {
    Parsed_Hid_Report * result = NULL;
 
    if (col->reports->len) {
