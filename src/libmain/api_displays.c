@@ -297,7 +297,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
          }
       );
    }
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s", psc_name_code(psc));
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
    return psc;
 }
 
@@ -429,9 +429,9 @@ ddca_open_display2(
      if (rc == 0)
         *dh_loc = dh;
    }
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s", *dh_loc, dh_repr_t(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
-   DBGTRC_DONE(debug, DDCA_TRC_API,  "Returning:%s, *dh_loc=%p -> %s",
-                                psc_name_code(rc), *dh_loc, dh_repr_t(*dh_loc));
    return rc;
 }
 
@@ -697,19 +697,22 @@ ddca_get_display_info(
       DDCA_Display_Ref  ddca_dref,
       DDCA_Display_Info ** dinfo_loc)
 {
-   WITH_VALIDATED_DR(
-         ddca_dref,
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API,  "ddca_dref=%p", ddca_dref);
+   DDCA_Status ddcrc = 0;
+
+   WITH_VALIDATED_DR3(
+         ddca_dref, ddcrc,
          {
-               bool debug = false;
-               DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
                API_PRECOND(dinfo_loc);
                DDCA_Display_Info * info = calloc(1, sizeof(DDCA_Display_Info));
                init_display_info(dref, info);
                *dinfo_loc = info;
-               psc=0;
-               DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0");
          }
    )
+
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "");
+   return ddcrc;
 }
 
 
