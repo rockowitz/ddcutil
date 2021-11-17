@@ -403,7 +403,7 @@ get_feature_set_entry(
 {
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    VCP_Feature_Table_Entry * ventry = NULL;
-   if (index >= 0 || index < fset->members->len)
+   if (index < fset->members->len)  // n. index is unsigned, no need to test if >= 0
       ventry = g_ptr_array_index(fset->members,index);
    return ventry;
 }
