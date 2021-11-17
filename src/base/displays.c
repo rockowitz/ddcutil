@@ -699,7 +699,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_hiddev_name = strdup(hiddev_devname);
 
    if (debug) {
-      DBGMSG("Done.  Constructed ADL display ref:");
+      DBGMSG("Done.  Constructed USB display ref:");
       dbgrpt_display_ref(dref,0);
    }
    return dref;
@@ -737,10 +737,11 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p -> %s", dref, dref_repr_t(dref));
    DDCA_Status ddcrc = 0;
-   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+   if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       ddcrc = DDCRC_ARG;
       DBGMSG("Invalid dref.");
-      rpt_hex_dump((Byte*) dref->marker, 4, 2);
+      if (dref)
+         rpt_hex_dump((Byte*) dref->marker, 4, 2);
       goto bye;
    }
    if (dref && (dref->flags & DREF_TRANSIENT) ) {
@@ -748,7 +749,6 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          ddcrc = DDCRC_LOCKED;
       }
       else {
-         assert(memcmp(dref->marker, DISPLAY_REF_MARKER,4) == 0);
          dref->marker[3] = 'x';
          if (dref->usb_hiddev_name)       // always set using strdup()
             free(dref->usb_hiddev_name);
