@@ -37,6 +37,7 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/rtti.h"
 #include "vcp/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -50,6 +51,8 @@
 
 #include "app_ddcutil/app_dumpload.h"
 
+
+static const char TRACE_GROUP = DDCA_TRC_TOP;
 
 // Filename creation
 
@@ -114,7 +117,7 @@ Status_Errno_DDC
 dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, filename=%s", dh_repr_t(dh), filename);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, filename=%p->%s", dh_repr_t(dh), filename, filename);
    char * actual_filename = NULL;
 
    FILE * fout = stdout;
@@ -138,7 +141,8 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
       else {
          char simple_fn_buf[NAME_MAX+1];
          time_t time_millis = data->timestamp_millis;
-         // assert(simple_fn_buf && sizeof(simple_fn_buf) > 0);   // avoid coverity warning re leaked memory
+         // avoids coverity warning re leaked memory, but causes gcc warning that always true:
+         // assert(simple_fn_buf && sizeof(simple_fn_buf) > 0);
          create_simple_vcp_fn_by_dh(
                                dh,
                                time_millis,
@@ -176,6 +180,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
       g_ptr_array_free(strings, true);
       free(actual_filename);
    }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
@@ -309,4 +314,8 @@ bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
    return loadvcp_ok;
 }
 #endif
+
+void init_app_dumpload() {
+   RTTI_ADD_FUNC(dumpvcp_as_file);
+}
 
