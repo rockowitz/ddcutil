@@ -37,6 +37,7 @@
 
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
@@ -168,6 +169,7 @@ void init_ddc_services() {
    init_dyn_feature_files();
    init_ddc_display_lock();
    init_ddc_displays();
+   init_ddc_dumpload();
    init_ddc_output();
    init_ddc_packet_io();
    init_ddc_read_capabilities();
