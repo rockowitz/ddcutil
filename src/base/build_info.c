@@ -35,7 +35,7 @@ const char * get_full_ddcutil_version() {
    static char full_ddcutil_version[20] = {0};
    if (full_ddcutil_version[0] == '\0') {
       g_strlcpy( full_ddcutil_version, VERSION, 20);
-      if ( strlen(VERSION_VSUFFIX) > 0) {
+      if (strlen(VERSION_VSUFFIX) > 0) {
          g_strlcat(full_ddcutil_version, "-", 20);
          g_strlcat(full_ddcutil_version, VERSION_VSUFFIX, 20);
       }
