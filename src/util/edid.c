@@ -226,7 +226,9 @@ static void get_edid_descriptor_strings(
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    // bool debug = false;
+#ifdef UNNEEDED
    bool ok = true;
+#endif
    Parsed_Edid* parsed_edid = NULL;
 
    if ( !is_valid_edid_header(edidbytes) || !is_valid_edid_checksum(edidbytes) )
@@ -286,10 +288,12 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->supported_features = edidbytes[0x18];
    parsed_edid->extension_flag = edidbytes[0x7e];
 
+#ifdef UNNEEDED
    if (!ok) {
       free(parsed_edid);
       parsed_edid = NULL;
    }
+#endif
 
 bye:
    return parsed_edid;
