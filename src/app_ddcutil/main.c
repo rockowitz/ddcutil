@@ -421,7 +421,7 @@ execute_cmd_with_optional_display_handle(
       Parsed_Cmd *     parsed_cmd,
       Display_Handle * dh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh = %p -> %s", dh, dh_repr_t(dh));
    int main_rc = EXIT_SUCCESS;
 
