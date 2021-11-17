@@ -1096,6 +1096,8 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
 char * dh_repr_t(Display_Handle * dh) {
    // dh_repr is precalculated when display handle is created, returning the
    // value is thread safe
+   if (!dh)
+      return "Display_Handle[NULL]";
    return dh->repr;
 
 #ifdef UNNECESSARY
