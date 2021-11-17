@@ -191,7 +191,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          }
 
          if (psc == 0) {
-            TRACED_ASSERT( pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
+            TRACED_ASSERT(pvalrec && pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
             if (debug || IS_TRACING()) {
                DBGMSG("pvalrec:");
                dbgrpt_single_vcp_value(pvalrec, 1);
@@ -451,8 +451,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
                  dref_repr_t(dref), dref_basic_flags_t(dref->flags));
-   TRACED_ASSERT(dref);
-   TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+   TRACED_ASSERT(dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
 
    switch(dref->dispno) {
@@ -476,8 +475,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    case DDCA_IO_I2C:
       {
          I2C_Bus_Info * curinfo = dref->detail;
-         TRACED_ASSERT(curinfo);
-         TRACED_ASSERT(memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
+         TRACED_ASSERT(curinfo && memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
          i2c_report_active_display(curinfo, d1);
       }
