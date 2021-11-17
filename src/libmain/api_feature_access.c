@@ -105,16 +105,16 @@ ddca_get_non_table_vcp_value(
           // DBGMSG("valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
           //        valrec->mh, valrec->ml, valrec->sh, valrec->sl);
           free(code_info);
-          DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s.  "
+          DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
                 "valrec:  mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-                psc_name_code(psc),  valrec->mh, valrec->ml, valrec->sh, valrec->sl);
+                valrec->mh, valrec->ml, valrec->sh, valrec->sl);
        }
        else {
           psc = ddc_excp->status_code;
           save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
           // errinfo_free(ddc_excp, report_freed_exceptions, __func__);
           errinfo_free(ddc_excp);
-          DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s", psc_name_code(psc));
+          DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
        }
     } );
 }
@@ -151,14 +151,12 @@ ddca_get_table_vcp_value(
                memcpy(tv->bytes, p_table_bytes->bytes, len);
             }
             *table_value_loc = tv;
-
             buffer_free(p_table_bytes, __func__);
-
          }
          TRACED_ASSERT( (psc==0 && *table_value_loc) || (psc!=0 && !*table_value_loc));
-         DBGTRC_DONE(debug, DDCA_TRC_API,
-                "Returning %s.     ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
-                psc_name_code(psc), ddca_dh, dh_repr_t(ddca_dh), feature_code, *table_value_loc);
+         DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+                "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
+                ddca_dh, dh_repr_t(ddca_dh), feature_code, *table_value_loc);
       }
    );
 }
@@ -172,21 +170,21 @@ ddca_get_vcp_value(
       DDCA_Vcp_Value_Type    call_type,   // why is this needed?   look it up from dh and feature_code
       DDCA_Any_Vcp_Value **  pvalrec)
 {
-   Error_Info * ddc_excp = NULL;
-   bool debug = false;
 
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API,
+          "ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
+          ddca_dh, feature_code, call_type, pvalrec);
+
+   Error_Info * ddc_excp = NULL;
    WITH_VALIDATED_DH2(ddca_dh,
          {
-               DBGTRC_STARTING(debug, DDCA_TRC_API,
-                      "ddca_dh=%p, feature_code=0x%02x, call_type=%d, pvalrec=%p",
-                      ddca_dh, feature_code, call_type, pvalrec);
                *pvalrec = NULL;
                ddc_excp = ddc_get_vcp_value(dh, feature_code, call_type, pvalrec);
                psc = (ddc_excp) ? ddc_excp->status_code : 0;
                save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
                errinfo_free(ddc_excp);
-               DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s, *pvalrec=%p",
-                                           psc_name_code(psc), *pvalrec);
+               DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "*pvalrec=%p", *pvalrec);
          }
    );
 }
@@ -361,6 +359,7 @@ ddca_get_formatted_vcp_value(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "feature_code=0x%02x, formatted_value_loc=%p",
                  feature_code, formatted_value_loc);
+
    API_PRECOND(formatted_value_loc);
    Error_Info * ddc_excp = NULL;
    WITH_VALIDATED_DH2(ddca_dh,
@@ -416,7 +415,7 @@ ddca_get_formatted_vcp_value(
                       }
                   }
                }
-               DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s", psc_name_code(psc));
+               DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
          }
    )
 }
@@ -491,7 +490,7 @@ ddca_format_any_vcp_value(
 bye:
    if (dfm)
       dfm_free(dfm);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s, formatted_value_loc -> %s", psc_name_code(ddcrc), *formatted_value_loc);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "formatted_value_loc -> %s", *formatted_value_loc);
    // 7/2019: wrong, *formatted_value_loc always set, why did this ever work?
    // assert( (ddcrc==0 && *formatted_value_loc) || (ddcrc!=0 &&!*formatted_value_loc) );
    return ddcrc;
@@ -505,18 +504,20 @@ ddca_format_any_vcp_value_by_dref(
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc)
 {
-   WITH_VALIDATED_DR(ddca_dref,
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, ddca_dref=%p, valrec=%s",
+             feature_code,
+             ddca_dref,
+             summarize_single_vcp_value(valrec) );
+   assert(formatted_value_loc);
+   DDCA_Status ddcrc = 0;
+   WITH_VALIDATED_DR3(ddca_dref, ddcrc,
          {
-               assert(formatted_value_loc);
-               bool debug = false;
-               if (debug) {
-                  DBGMSG("feature_code=0x%02x, ddca_dref=%s, valrec=%s",
-                         feature_code,
-                         dref_repr_t(dref),
-                         summarize_single_vcp_value(valrec) );
-                  dbgrpt_display_ref( dref, 1);
+               if (debug || IS_TRACING()) {
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
+                  dbgrpt_display_ref(dref,1);
                }
-               psc = ddca_format_any_vcp_value(
+               ddcrc = ddca_format_any_vcp_value(
                          feature_code,
                          get_vcp_version_by_dref(dref),
                          // dref->vcp_version,
@@ -527,6 +528,9 @@ ddca_format_any_vcp_value_by_dref(
                // assert( (psc==0 && *formatted_value_loc) || (psc!=0 &&!*formatted_value_loc) );
          }
    )
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "*formatted_value_loc = %p -> |%s|",
+                                         *formatted_value_loc, *formatted_value_loc);
+   return ddcrc;
 }
 
 
@@ -561,13 +565,10 @@ ddca_format_non_table_vcp_value(
    // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
 
    if (ddcrc == 0)
-      DBGTRC_DONE(debug, DDCA_TRC_API,
-          "Returning: %s, *formatted_value_loc=%p->%s",
-          psc_name_code(ddcrc), *formatted_value_loc, *formatted_value_loc);
+      DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc,
+             "*formatted_value_loc=%p->%s", *formatted_value_loc, *formatted_value_loc);
    else
-      DBGTRC_DONE(debug, DDCA_TRC_API,
-          "Returning: %s, *formatted_value_loc=%p",
-          psc_name_code(ddcrc), *formatted_value_loc);
+      DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc,  "*formatted_value_loc=%p", *formatted_value_loc);
 
    return ddcrc;
 }
@@ -579,18 +580,18 @@ ddca_format_non_table_vcp_value_by_dref(
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
-   WITH_VALIDATED_DR(ddca_dref,
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, ddca_dref=%p",
+                          feature_code, ddca_dref);
+   assert(formatted_value_loc);
+   DDCA_Status ddcrc = 0;
+   WITH_VALIDATED_DR3(ddca_dref, ddcrc,
          {
-               bool debug = false;
-               if (debug) {
-                  DBGMSG("feature_code=0x%02x, ddca_dref=%s",
-                         feature_code,
-                         dref_repr_t(dref) );
-                         // summarize_single_vcp_value(valrec) );
-                  dbgrpt_display_ref( dref, 1);
+               if (debug || IS_TRACING()) {
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
+                  dbgrpt_display_ref(dref,1);
                }
-               assert(formatted_value_loc);
-               psc = ddca_format_non_table_vcp_value(
+               ddcrc = ddca_format_non_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
                          get_vcp_version_by_dref(dref),
@@ -600,6 +601,9 @@ ddca_format_non_table_vcp_value_by_dref(
                // assert( (psc==0 &&*formatted_value_loc) || (psc!=0 && !*formatted_value_loc) );
          }
    )
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "*formatted_value_loc = %p -> |%s|",
+                                               *formatted_value_loc, *formatted_value_loc);
+   return ddcrc;
 }
 
 
@@ -630,9 +634,18 @@ ddca_format_table_vcp_value_by_dref(
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
-   WITH_VALIDATED_DR(ddca_dref,
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                          "feature_code=0x%02x, ddca_dref=%p", feature_code, ddca_dref);
+   assert(formatted_value_loc);
+   DDCA_Status ddcrc = 0;
+   WITH_VALIDATED_DR3(ddca_dref, ddcrc,
          {
-               return ddca_format_table_vcp_value(
+               if (debug || IS_TRACING()) {
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
+                  dbgrpt_display_ref(dref,1);
+               }
+              ddcrc = ddca_format_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
                          get_vcp_version_by_dref(dref),
@@ -641,6 +654,9 @@ ddca_format_table_vcp_value_by_dref(
                          formatted_value_loc);
          }
    )
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "*formatted_value_loc = %p -> |%s|",
+                                               *formatted_value_loc, *formatted_value_loc);
+   return ddcrc;
 }
 
 
@@ -651,10 +667,11 @@ set_single_vcp_value(
       DDCA_Any_Vcp_Value *   valrec,
       DDCA_Any_Vcp_Value **  verified_value_loc)  // NULL => do not return value
 {
-      Error_Info * ddc_excp = NULL;
       bool debug = false;
       DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
                                   ddca_dh, valrec, verified_value_loc);
+
+      Error_Info * ddc_excp = NULL;
       WITH_VALIDATED_DH2(ddca_dh,  {
             ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
@@ -803,7 +820,7 @@ ddca_set_non_table_vcp_value_verify(
                           NULL);
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s", psc_name_code(rc), rc);
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, rc, "");
    return rc;
 }
 
@@ -946,19 +963,11 @@ ddca_get_profile_related_values(
    WITH_VALIDATED_DH2(ddca_dh,
       {
          psc = dumpvcp_as_string(dh, profile_values_string_loc);
-         TRACED_ASSERT( (psc==0 && *profile_values_string_loc) || (psc != 0 && !profile_values_string_loc) );
-         if (psc ==0)
-            DBGTRC_DONE(debug, DDCA_TRC_API,
-                   "Returning: %s, *profile_values_string_loc=%p -> %s",
-                   psc_name_code(psc),
-                   *profile_values_string_loc,
-                   *profile_values_string_loc);
-         else
-            DBGTRC_DONE(debug, DDCA_TRC_API,
-                   "Returning: %s, *profile_values_string_loc=%p",
-                   psc_name_code(psc),
-                   *profile_values_string_loc);
-
+         TRACED_ASSERT_IFF(psc==0, *profile_values_string_loc);
+         DBGTRC_RETURNING(debug, TRACE_GROUP, psc,
+                                 "*profile_values_string_loc=%p -> %s",
+                                 *profile_values_string_loc,
+                                 *profile_values_string_loc);
       }
    );
 }
@@ -982,7 +991,7 @@ ddca_set_profile_related_values(
             save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
             errinfo_free(ddc_excp);
          }
-         DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s", psc_name_code(psc), psc);
+         DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
       }
    );
 }
@@ -1011,7 +1020,7 @@ ddca_start_get_any_vcp_value(
           ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
           psc = (ddc_excp) ? ddc_excp->status_code : 0;
           errinfo_free(ddc_excp);
-          DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s", psc_name_code(psc));
+          DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
        }
       );
 }
