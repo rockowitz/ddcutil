@@ -221,7 +221,14 @@ bool dbgtrc_returning_expression(
         char *       format,
         ...);
 
-// n. using ___LINE__ instead of line in _assert_fail() causes compilation error
+
+/* __assert_fail() is not part of the C spec, it is part of the Linux
+ * implementation of assert(), etc., which are macros.
+ * It is reported to not exist on Termux.
+ * However, if  "assert(#_assertion);" is used instead of "__assert_fail(...);",
+ * the program does not terminate.
+ */
+// n. using ___LINE__ instead of line in __assert_fail() causes compilation error
 #define TRACED_ASSERT(_assertion) \
    do { \
       if (_assertion) { \
@@ -234,7 +241,8 @@ bool dbgtrc_returning_expression(
                       #_assertion, __FILE__,  __LINE__);   \
          syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
-         __assert_fail(#_assertion, __FILE__, line, __func__); \
+         /* assert(#_assertion); */ \
+         __assert_fail(#_assertion, __FILE__, line, __func__);  \
       } \
    } while (0)
 
@@ -244,6 +252,7 @@ bool dbgtrc_returning_expression(
    TRACED_ASSERT( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
 #endif
 
+#ifdef UNUSED
 #define TRACED_ABORT(_assertion) \
    do { \
       int line = __LINE__;  \
@@ -254,7 +263,7 @@ bool dbgtrc_returning_expression(
                       #_assertion, __FILE__,  __LINE__);   \
       __assert_fail(#_assertion, __FILE__, line, __func__); \
    } while (0)
-
+#endif
 
 
 #define SEVEREMSG(          format, ...) \
