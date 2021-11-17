@@ -112,3 +112,44 @@ int gaux_string_ptr_array_find(GPtrArray * haystack, const char * needle) {
    return result;
 }
 
+
+bool gaux_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second) {
+   assert(first);
+   assert(second);
+   bool result = false;
+   // assumes each entry in first and second is unique
+   if (first->len == second->len) {
+      result = true;
+      for (int ndx = 0; ndx < first->len; ndx++) {
+         guint found_index;
+         gpointer cur = g_ptr_array_index(first, ndx);
+         bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+         if (!found) {
+            result = false;
+            break;
+         }
+      }
+   }
+   return result;
+}
+
+
+GPtrArray * gaux_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second) {
+   // returns first - second
+      assert(first);
+      assert(second);
+      // to consider: only allocate result if there's actually a difference
+      GPtrArray * result = g_ptr_array_new_with_free_func(g_free);
+      guint found_index;
+      for (int ndx = 0; ndx < first->len; ndx++) {
+         gpointer cur = g_ptr_array_index(first, ndx);
+         // g_ptr_array_find_with_equal_func() requires glib 2.54
+         // instead use our own implementation
+         bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
+         if (!found) {
+            g_ptr_array_add(result, strdup(cur));
+         }
+      }
+      return result;
+   }
+

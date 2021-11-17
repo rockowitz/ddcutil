@@ -236,47 +236,6 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
 }
 
 
-// returns first - second
-static GPtrArray * displays_minus(GPtrArray * first, GPtrArray *second) {
-   assert(first);
-   assert(second);
-   // to consider: only allocate result if there's actually a difference
-   GPtrArray * result = g_ptr_array_new_with_free_func(g_free);
-   guint found_index;
-   for (int ndx = 0; ndx < first->len; ndx++) {
-      gpointer cur = g_ptr_array_index(first, ndx);
-      // g_ptr_array_find_with_equal_func() requires glib 2.54
-      // instead use our own implementation
-      bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
-      if (!found) {
-         g_ptr_array_add(result, strdup(cur));
-      }
-   }
-   return result;
-}
-
-
-static bool displays_eq(GPtrArray * first, GPtrArray * second) {
-   assert(first);
-   assert(second);
-   bool result = false;
-   // assumes each entry in first and second is unique
-   if (first->len == second->len) {
-      result = true;
-      for (int ndx = 0; ndx < first->len; ndx++) {
-         guint found_index;
-         gpointer cur = g_ptr_array_index(first, ndx);
-         bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
-         if (!found) {
-            result = false;
-            break;
-         }
-      }
-   }
-   return result;
-}
-
-
 static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays=%s",
@@ -289,21 +248,21 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    Displays_Change_Type change_type = Changed_None;
 
    GPtrArray * cur_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
-   if ( !displays_eq(prev_displays, cur_displays) ) {
+   if ( !gaux_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
       if ( debug || IS_TRACING() ) {
          DBGMSG("Displays changed!");
          DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
       }
 
-      GPtrArray * removed = displays_minus(prev_displays, cur_displays);
+      GPtrArray * removed = gaux_string_ptr_arrays_minus(prev_displays, cur_displays);
       if (removed->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
          change_type = Changed_Removed;
       }
 
-      GPtrArray * added = displays_minus(cur_displays, prev_displays);
+      GPtrArray * added = gaux_string_ptr_arrays_minus(cur_displays, prev_displays);
       if (added->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
