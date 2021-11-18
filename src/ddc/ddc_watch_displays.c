@@ -21,10 +21,12 @@
 // #include <unistd.h>
 
 #include "util/data_structures.h"
+#include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
@@ -89,62 +91,7 @@ bool check_thread_or_process(pid_t id) {
 }
 
 
-Byte_Bit_Flags get_sysfs_drm_card_numbers()
-{
-   const char * dname =
-#ifdef TARGET_BSD
-                    "/compat/linux/sys/class/drm";
-#else
-                    "/sys/class/drm";
-#endif
 
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dname=%s", dname);
-
-   Byte_Bit_Flags result = bbf_create();
-
-   DIR           *dir1;
-   char          dnbuf[90];
-   const int     cardname_sz = 20;
-   char          cardname[cardname_sz];
-
-   int depth = 0;
-   int d1    = depth+1;
-
-   // rpt_vstring(depth, "Examining (W) %s...", dname);
-   dir1 = opendir(dname);
-   if (!dir1) {
-      rpt_vstring(depth, "Unable to open directory %s: %s",
-                     dname, strerror(errno));
-   }
-   else {
-      closedir(dir1);
-      int cardno = 0;
-      for (;;cardno++) {
-         snprintf(cardname, cardname_sz, "card%d", cardno);
-         snprintf(dnbuf, 80, "%s/%s", dname, cardname);
-         dir1 = opendir(dnbuf);
-         DBGMSF(debug, "dnbuf=%s", dnbuf);
-         if (dir1) {
-            bbf_set(result, cardno);
-            closedir(dir1);
-         }
-         else {
-            //  rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
-            break;
-         }
-      }
-
-      if (bbf_count_set(result) == 0) {
-         rpt_vstring(d1, "No drm class video cards found in %s", dname);
-      }
-   }
-   char * s = bbf_to_string(result, NULL, 0);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", s);
-   free(s);
-
-   return result;
-}
 
 
 /** Gets a list of all displays known to DRM.
@@ -156,7 +103,8 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
  *  \remark
  *  The caller is responsible for freeing the returned #GPtrArray.
  */
-GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
+#ifdef OLD
+GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
 {
    bool debug = false;
    int  depth = 0;
@@ -234,6 +182,57 @@ GPtrArray * get_sysfs_drm_displays(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
                               join_string_g_ptr_array_t(connected_displays, ", "));
    return connected_displays;
 }
+#endif
+
+
+// Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
+// to sysfs_i2c_util.c?
+
+static
+void get_sysfs_drm_examine_one_connector(
+      const char * dirname,     // <device>/drm/cardN
+      const char * simple_fn,   // card0-HDMI-1 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   GPtrArray * connected_displays = (GPtrArray *) data;
+
+   char * status = NULL;
+   bool found_status = RPT_ATTR_TEXT(-1, &status, dirname, simple_fn, "status");
+   if (found_status && streq(status,"connected")) {
+         g_ptr_array_add(connected_displays, strdup(simple_fn));
+      }
+   g_free(status);
+
+   DBGMSF(debug, "Added connector %s", simple_fn);
+}
+
+
+static
+GPtrArray * get_sysfs_drm_displays() {
+   bool debug = true;
+   char * dname =
+ #ifdef TARGET_BSD
+              "/compat/linux/sys/class/drm";
+ #else
+              "/sys/class/drm";
+ #endif
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
+   GPtrArray * connected_displays = g_ptr_array_new_with_free_func(g_free);
+   dir_filtered_ordered_foreach(
+                 dname,
+                 is_sysfs_drm_connector_dir_name,      // filter function
+                 NULL,                    // ordering function
+                 get_sysfs_drm_examine_one_connector,
+                 connected_displays,      // accumulator
+                 0);
+   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Connected displays: %s",
+                              join_string_g_ptr_array_t(connected_displays, ", "));
+   return connected_displays;
+ }
 
 
 static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
@@ -615,7 +614,6 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(dummy_display_change_handler);
-   RTTI_ADD_FUNC(get_sysfs_drm_displays);
    RTTI_ADD_FUNC(watch_displays_using_poll);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(watch_displays_using_udev);
