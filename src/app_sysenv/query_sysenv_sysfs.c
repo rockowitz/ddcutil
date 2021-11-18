@@ -835,9 +835,6 @@ void query_drm_using_sysfs_old()
 }
 
 
-
-
-
 void report_one_connector(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
@@ -933,17 +930,19 @@ void show_top_level_sys_entries(int depth) {
    }
 
    for (int ndx = 0; ndx < filtered_proc_devices->len; ndx++) {
-      char * name;
-      int    number;
-      sscanf(g_ptr_array_index(filtered_proc_devices, ndx),  "%d %ms", &number, &name);
-      // DBGMSG("number = %d, name = %s"show_top_level_sys_entries, number, name);
-      char cmd[100];
-      snprintf(cmd, 100,       "ls -l /sys/dev/char/%d:*", number);
-      // DBGMSG("cmd: %s", cmd);
-       rpt_vstring(depth+1, "Char major: %d %s", number, name);
-      execute_shell_cmd_rpt(cmd,depth + 2);
-      rpt_nl();
-      free(name);
+      char * name = NULL;
+      int    number = 0;
+      if (sscanf(g_ptr_array_index(filtered_proc_devices, ndx),
+                 "%d %ms", &number, &name)  == 2) { // allow for pathological case of invalid /proc data
+         // DBGMSG("number = %d, name = %s"show_top_level_sys_entries, number, name);
+         char cmd[100];
+         snprintf(cmd, 100,       "ls -l /sys/dev/char/%d:*", number);
+         // DBGMSG("cmd: %s", cmd);
+         rpt_vstring(depth+1, "Char major: %d %s", number, name);
+         execute_shell_cmd_rpt(cmd,depth + 2);
+         free(name);
+         rpt_nl();
+      }
    }
 
    g_ptr_array_free(filtered_proc_devices, true);
