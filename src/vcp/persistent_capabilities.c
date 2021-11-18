@@ -101,7 +101,7 @@ static Error_Info * load_persistent_capabilities_file() {
             char * aline = strtrim(g_ptr_array_index(linearray, ndx));
             // DBGMSF(debug, "Processing line %d: %s", ndx+1, aline);
             if (strlen(aline) > 0 && aline[0] != '*' && aline[0] != '#') {
-               char * colon = index(aline, ':');
+               char * colon = strchr(aline, ':');
                if (!colon) {
                   if (!errs)
                      errs = errinfo_new(DDCRC_BAD_DATA, __func__);

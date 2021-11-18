@@ -244,7 +244,7 @@ bool is_sysfs_drm_connector_dir_name(const char * dirname, const char * simple_f
 
    bool result = false;
    if (str_starts_with(simple_fn, "card")) {
-      char * hyphen_loc = index(simple_fn+4, '-');
+      char * hyphen_loc = strchr(simple_fn+4, '-');
       if (hyphen_loc) {
          // todo: test for card number
          result = true;
