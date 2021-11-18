@@ -241,7 +241,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
                  join_string_g_ptr_array_t(prev_displays, ", "));
 
    Watch_Displays_Data * wdd = data;
-   assert(memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
    // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
    Displays_Change_Type change_type = Changed_None;
@@ -273,7 +273,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
       // DBGMSG("wdd->display_change_handler = %p (%s)",
       //         wdd->display_change_handler,
       //         rtti_get_func_name_by_addr(wdd->display_change_handler) );
-      if (wdd && wdd->display_change_handler) {
+      if (wdd->display_change_handler) {
          wdd->display_change_handler( change_type, removed, added);
       }
       // }
