@@ -673,7 +673,7 @@ void query_sys_amdgpu_parameters(int depth) {
 
 /** Examines /sys/class/drm
  */
-void query_drm_using_sysfs()
+void query_drm_using_sysfs_old()
 {
    struct dirent *dent;
    struct dirent *dent2;
@@ -778,6 +778,7 @@ void query_drm_using_sysfs()
                        closedir(dir2);
                     }
 
+                    // TODO - incorporate in new code
                     // rpt_nl();
 
                     Device_Id_Xref * xref = NULL;
@@ -834,6 +835,56 @@ void query_drm_using_sysfs()
 }
 
 
+
+
+
+void report_one_connector(
+      const char * dirname,     // <device>/drm/cardN
+      const char * simple_fn,   // card0-HDMI-1 etc
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   int d1 = depth+1;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+
+   rpt_vstring(depth, "Connector: %s", simple_fn);
+
+   rpt_nl();
+   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "enabled");
+   RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
+   RPT_ATTR_EDID(d1, NULL, dirname, simple_fn, "edid");
+
+   // TODO:
+   // add to xref table as per code in query_drm_using_sysfs_old()
+
+   DBGMSF(debug, "Done");
+}
+
+
+void query_drm_using_sysfs()
+{
+   DBGMSG("Starting");
+   int depth = 1;
+   int d0 = depth;
+   rpt_nl();
+   char * dname =
+#ifdef TARGET_BSD
+             "/compat/linux/sys/class/drm";
+#else
+             "/sys/class/drm";
+#endif
+
+   rpt_vstring(d0, "Examining (5) %s", dname);
+   dir_filtered_ordered_foreach(
+                dname,
+                is_sysfs_drm_connector_dir_name,      // filter function
+                NULL,                    // ordering function
+                report_one_connector,
+                NULL,                    // accumulator
+                depth);
+}
+
 //
 // Functions for probing /sys
 //
@@ -885,7 +936,7 @@ void show_top_level_sys_entries(int depth) {
       char * name;
       int    number;
       sscanf(g_ptr_array_index(filtered_proc_devices, ndx),  "%d %ms", &number, &name);
-      // DBGMSG("number = %d, name = %s", number, name);
+      // DBGMSG("number = %d, name = %s"show_top_level_sys_entries, number, name);
       char cmd[100];
       snprintf(cmd, 100,       "ls -l /sys/dev/char/%d:*", number);
       // DBGMSG("cmd: %s", cmd);
