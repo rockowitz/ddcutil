@@ -40,7 +40,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    bool debug = false;
    if (debug)
       printf("(%s) Starting.\n",__func__);
-   if (parsed_cmd->flags && (CMD_FLAG_SYSLOG|CMD_FLAG_F3))
+   if (parsed_cmd->flags & (CMD_FLAG_SYSLOG|CMD_FLAG_F3))
       trace_to_syslog = true;
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)      // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                           // extern in core.h
