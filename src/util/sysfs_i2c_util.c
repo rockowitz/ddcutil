@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 
 #include "file_util.h"
+#include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
 #include "sysfs_util.h"
@@ -206,7 +207,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
    if (!result) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
       if (class) {
-         // printf("(%s) class = 0x%08x\n", __func__, class);
+         // printf("(%s) class = 0x%08x\n", __func__, class);get_sysfs_drm_displays
          uint32_t cl2 = class & 0xffff0000;
          if (debug)
             printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
@@ -233,4 +234,86 @@ int get_sysfs_drm_edid_count() {
    return ival;
 }
 
+
+// for e.g. card0-HDMI-0
+bool is_sysfs_drm_connector_dir_name(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
+
+   bool result = false;
+   if (str_starts_with(simple_fn, "card")) {
+      char * hyphen_loc = index(simple_fn+4, '-');
+      if (hyphen_loc) {
+         // todo: test for card number
+         result = true;
+      }
+   }
+
+   if (debug)
+      printf("(%s) Returning %s\n", __func__, sbool(result));
+   return result;
+}
+
+
+// TODO: rewrite using sys functions
+Byte_Bit_Flags get_sysfs_drm_card_numbers()
+{
+   const char * dname =
+#ifdef TARGET_BSD
+                    "/compat/linux/sys/class/drm";
+#else
+                    "/sys/class/drm";
+#endif
+
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. dname=|%s|\n", __func__, dname);
+
+   Byte_Bit_Flags result = bbf_create();
+
+   DIR           *dir1;
+   char          dnbuf[90];
+   const int     cardname_sz = 20;
+   char          cardname[cardname_sz];
+
+   int depth = 0;
+   int d1    = depth+1;
+
+   // rpt_vstring(depth, "Examining (W) %s...", dname);
+   dir1 = opendir(dname);
+   if (!dir1) {
+      rpt_vstring(depth, "Unable to open directory %s: %s",
+                     dname, strerror(errno));
+   }
+   else {
+      closedir(dir1);
+      int cardno = 0;
+      for (;;cardno++) {
+         snprintf(cardname, cardname_sz, "card%d", cardno);
+         snprintf(dnbuf, 80, "%s/%s", dname, cardname);
+         dir1 = opendir(dnbuf);
+         if (debug)
+            printf("(%s) dnbuf=%s", __func__, dnbuf);
+         if (dir1) {
+            bbf_set(result, cardno);
+            closedir(dir1);
+         }
+         else {
+            //  rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+            break;
+         }
+      }
+
+      if (bbf_count_set(result) == 0) {
+         rpt_vstring(d1, "No drm class video cards found in %s", dname);
+      }
+   }
+   char * s = bbf_to_string(result, NULL, 0);
+   if (debug)
+      printf("(%s) Done.     Returning: %s\n", __func__, s);
+   free(s);
+
+   return result;
+}
 
