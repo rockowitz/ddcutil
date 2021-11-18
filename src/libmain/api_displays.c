@@ -430,7 +430,8 @@ ddca_open_display2(
         *dh_loc = dh;
    }
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s", *dh_loc, dh_repr_t(*dh_loc));
+   DBGTRC_RETURNING(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s",
+                                             *dh_loc, dh_repr_t(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
 }
