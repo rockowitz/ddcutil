@@ -131,6 +131,7 @@ void report_one_i2c_dir(
    DBGMSF(debug, "RPT_ATTR_TEXT returned %s, name_val -> %s", sbool(found_name), name_val);
 }
 
+static
 void report_one_connector(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
