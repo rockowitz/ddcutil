@@ -79,7 +79,7 @@ bool is_deferred_sleep_enabled() {
  *  \todo
  *  Take into account the time since the last monitor return in the
  *  current thread.
- *  \tod
+ *  \todo
  *  Take into account per-display error statistics.  Would require
  *  error statistics be maintained on a per-display basis, either
  *  in the display reference or display handle.
@@ -102,7 +102,9 @@ void tuned_sleep_with_tracex(
       const char *     msg)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. Sleep event type = %s, dh=%s", sleep_event_name(event_type), dh_repr_t(dh));
+   DBGMSF(debug, "Starting. Sleep event type = %s, dh=%s",
+                 sleep_event_name(event_type), dh_repr_t(dh));
+   assert(dh);
    assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
            (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );
 
