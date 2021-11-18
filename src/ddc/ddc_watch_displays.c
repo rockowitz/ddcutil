@@ -212,7 +212,7 @@ void get_sysfs_drm_examine_one_connector(
 
 static
 GPtrArray * get_sysfs_drm_displays() {
-   bool debug = true;
+   bool debug = false;
    char * dname =
  #ifdef TARGET_BSD
               "/compat/linux/sys/class/drm";
