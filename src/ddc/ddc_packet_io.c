@@ -193,7 +193,6 @@ ddc_open_display(
                // Is this needed?
                // 10/24/15, try disabling:
                // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-
                dh = create_base_display_handle(fd, dref);    // n. sets dh->dref = dref
 
                I2C_Bus_Info * bus_info = dref->detail;
@@ -244,6 +243,7 @@ ddc_open_display(
 #endif
       break;
    } // switch
+   TRACED_ASSERT_IFF(ddcrc == 0, dh);
    TRACED_ASSERT(!dh || dh->dref->pedid);
 
    if (ddcrc == 0) {
