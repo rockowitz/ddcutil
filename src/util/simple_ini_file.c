@@ -74,9 +74,9 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    if (debug)
       printf("(%s) Starting. s->|%s|\n", __func__, s);
    bool result = false;
-   char * colon = index(s,':');
+   char * colon = strchr(s,':');
    if (!colon)
-      colon = index(s,'=');
+      colon = strchr(s,'=');
    if (colon) {
       char * untrimmed_key = substr(s, 0, colon-s);  // allocates untrimmed_key
       char * key = strtrim( untrimmed_key );         // allocates key
