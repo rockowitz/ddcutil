@@ -39,19 +39,6 @@
 #include "query_sysenv_detailed_bus_pci_devices.h"
 
 
-// Filter Functions
-
-bool predicate_cardN(const char * val) {
-   return str_starts_with(val, "card");
-}
-
-bool startswith_i2c(const char * value) {
-   return str_starts_with(value, "i2c-");
-}
-
-bool class_display_device_predicate(char * value) {
-   return str_starts_with(value, "0x03");
-}
 
 
 // Directory Report Functions

@@ -40,25 +40,3 @@ unsigned h2uint(char * hval) {
    return ival;
 }
 
-
-// does dirname/simple_fn have attribute class with value display controller or docking station?
-bool has_class_display_or_docking_station(
-      const char * dirname, const char * simple_fn)
-{
-   bool debug = false;
-   bool result = false;
-   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
-   char * class_val = NULL;
-   int    iclass = 0;
-   int    top_byte = 0;
-   if ( GET_ATTR_TEXT(&class_val, dirname, simple_fn, "class") ) {
-      if (str_to_int(class_val, &iclass, 16) ) {
-         top_byte = iclass >> 16;
-         if (top_byte == 0x03 || top_byte == 0x0a)  // display controller or docking station
-            result = true;
-      }
-   }
-   DBGMSF(debug, "class_val = %s, top_byte = 0x%02x, result=%s",
-                 class_val, top_byte, sbool(result) );
-   return result;
-}

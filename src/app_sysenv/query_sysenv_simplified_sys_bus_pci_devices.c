@@ -4,7 +4,7 @@
  *  that focuses on attributes determined to be of significance.
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
@@ -20,6 +20,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
+#include "util/sysfs_i2c_util.h"
 
 #include "base/core.h"
 #include "query_sysenv_simplified_sys_bus_pci_devices.h"
@@ -34,69 +35,6 @@
 //
 //  Pruned Scan
 //
-
-//  Filter functions
-
-#ifdef MAYBE_FUTURE
-bool dirname_starts_with(const char * dirname, const char * val) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
-   bool result = str_starts_with(dirname, val);
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-#endif
-
-// for e.g. i2c-3
-bool is_i2cN(const char * dirname, const char * val) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
-   bool result = str_starts_with(dirname, "i2c-");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
-bool is_drm_dp_aux_subdir(const char * dirname, const char * val) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, val=%s", dirname, val);
-   bool result = str_starts_with(dirname, "drm_dp_aux");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
-// for e.g. card0-DP-1
-bool is_card_connector_dir(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
-   bool result = str_starts_with(simple_fn, "card");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
-// for e.g. card0
-bool is_cardN_dir(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
-   bool result = str_starts_with(simple_fn, "card");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
-bool is_drm_dir(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
-   bool result = streq(simple_fn, "drm");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
-bool is_i2cN_dir(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   DBGMSF(debug, "dirname=%s, simple_fn=%s", dirname, simple_fn);
-   bool result = str_starts_with(simple_fn, "i2c-");
-   DBGMSF(debug, "Returning %s", sbool(result));
-   return result;
-}
-
 
 //  Directory report functions
 

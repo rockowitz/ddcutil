@@ -29,6 +29,7 @@
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
+#include "util/sysfs_i2c_util.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_i2c_util.h"
 #endif
@@ -167,11 +168,6 @@ read_drm_dp_card_connector_node(
    RPT_ATTR_TEXT(d0, NULL, connector_path, "status");
 }
 
-
-static bool
-starts_with_card(const char * val) {
-   return str_starts_with(val, "card");
-}
 
 
 // Process a <controller>/drm/cardN/cardN-<connector> for case when

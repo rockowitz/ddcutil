@@ -22,6 +22,7 @@
 
 #include "sysfs_util.h"
 
+
 //  -Wstringop-trunction is brain dead
 //  compile will fail if -Werror set
 // #pragma GCC diagnostic push

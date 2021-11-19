@@ -4,7 +4,7 @@
  *  and the second starting at /sys/bus/i2c/devices
  */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -18,17 +18,12 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
+#include "util/sysfs_i2c_util.h"
 
 #include "base/core.h"
 
 #include "query_sysenv_original_sys_scans.h"
 
-
-// Filter Functions
-
-bool drm_filter(const char * name) {
-   return str_starts_with(name, "card") && strlen(name) > 5;
-}
 
 
 // Directory Report Functions
