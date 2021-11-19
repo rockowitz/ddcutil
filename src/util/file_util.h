@@ -91,12 +91,12 @@ void dir_ordered_foreach(
       int                   depth);
 
 void dir_filtered_ordered_foreach(
-        const char *          dirname,
-        Dir_Filter_Func       dir_filter,
-        GCompareFunc          compare_func,
-        Dir_Foreach_Func      func,
-        void *                accumulator,
-        int                   depth);
+      const char *          dirname,
+      Dir_Filter_Func       dir_filter,
+      GCompareFunc          compare_func,
+      Dir_Foreach_Func      func,
+      void *                accumulator,
+      int                   depth);
 
 void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
