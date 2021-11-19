@@ -45,6 +45,7 @@ xdg_util.c
 
 if !ENABLE_TARGETBSD_COND
 libutil_la_SOURCES +=      \
+sysfs_filter_functions.c   \
 sysfs_i2c_util.c
 endif
 
