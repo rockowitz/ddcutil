@@ -35,13 +35,10 @@ sysfs_is_ignorable_i2c_device(
 int
 get_sysfs_drm_edid_count();
 
-bool
-is_sysfs_drm_connector_dir_name(
-      const char * dirname,
-      const char * simple_fn);
-
 Byte_Bit_Flags
 get_sysfs_drm_card_numbers();
+
+#ifdef MOVED
 
 bool
 starts_with_card(const char * val);
@@ -96,6 +93,8 @@ bool is_drm_dir(const char * dirname, const char * simple_fn);
 bool is_i2cN_dir(const char * dirname, const char * simple_fn);
 
 bool has_class_display_or_docking_station(const char * dirname, const char * simple_fn);
+
+#endif
 
 
 #endif /* SYSFS_I2C_UTIL_H_ */

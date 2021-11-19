@@ -19,8 +19,9 @@
 #include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/sysfs_util.h"
+#include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
+#include "util/sysfs_util.h"
 
 #include "base/core.h"
 #include "query_sysenv_simplified_sys_bus_pci_devices.h"
