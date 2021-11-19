@@ -3,84 +3,46 @@
 // Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
-#include <assert.h>
-#include <errno.h>
-#include <glib-2.0/glib.h>
+// #include <glib-2.0/glib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#include "file_util.h"
-#include "report_util.h"
 #include "string_util.h"
-#include "subprocess_util.h"
 #include "sysfs_util.h"
-
-#include "sysfs_i2c_util.h"
-
 
 #include "sysfs_filter_functions.h"
 
 
-
-
 //
-// Filter Functions
+// Filename_Filter_Func
 //
-
-// for e.g. card0-HDMI-0
-bool is_sysfs_drm_connector_dir_name(const char * dirname, const char * simple_fn) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
-
-   bool result = false;
-   if (str_starts_with(simple_fn, "card")) {
-      char * hyphen_loc = strchr(simple_fn+4, '-');
-      if (hyphen_loc) {
-         // todo: test for card number
-         result = true;
-      }
-   }
-
-   if (debug)
-      printf("(%s) Returning %s\n", __func__, sbool(result));
-   return result;
-}
-
 
 bool
-starts_with_card(const char * val) {
-   return str_starts_with(val, "card");
+starts_with_card(const char * value) {
+   return str_starts_with(value, "card");
 }
 
+bool predicate_cardN(const char * value) {
+   return str_starts_with(value, "card");
+}
 
-
-// Filter Functions
-
-bool predicate_cardN(const char * val) {
-   return str_starts_with(val, "card");
+bool drm_filter(const char * name) {
+   return str_starts_with(name, "card") && strlen(name) > 5;
 }
 
 bool startswith_i2c(const char * value) {
    return str_starts_with(value, "i2c-");
 }
 
-bool class_display_device_predicate(char * value) {
+bool class_display_device_predicate(const char * value) {
    return str_starts_with(value, "0x03");
 }
 
 
-// Filter Functions
-
-bool drm_filter(const char * name) {
-   return str_starts_with(name, "card") && strlen(name) > 5;
-}
-
-
-//  Filter functions
+//
+// Dir_Filter_Func
+//
 
 #ifdef MAYBE_FUTURE
 bool dirname_starts_with(const char * dirname, const char * val) {
@@ -165,7 +127,25 @@ bool has_class_display_or_docking_station(
    return result;
 }
 
+// for e.g. card0-HDMI-0
+bool is_sysfs_drm_connector_dir_name(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
 
+   bool result = false;
+   if (str_starts_with(simple_fn, "card")) {
+      char * hyphen_loc = strchr(simple_fn+4, '-');
+      if (hyphen_loc) {
+         // todo: test for card number
+         result = true;
+      }
+   }
+
+   if (debug)
+      printf("(%s) Returning %s\n", __func__, sbool(result));
+   return result;
+}
 
 
 
