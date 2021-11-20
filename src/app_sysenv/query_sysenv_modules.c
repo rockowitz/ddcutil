@@ -49,16 +49,18 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    // Eventually use only one test
    bool is_loaded = is_module_loaded_using_sysfs("i2c-dev");
    rpt_vstring(d1, "sysfs reports module i2c_dev is%s loaded.", (is_loaded) ? "" : " NOT");
+
    bool is_loaded2 = is_module_loaded_using_libkmod("i2c-dev");
    if (is_loaded2 != is_loaded) {
       rpt_vstring(d1, "BUT libkmod reports module i2c_dev is%s loaded. !!!", (is_loaded) ? "" : " NOT");
       rpt_vstring(d1, "REGARDING sysfs AS CORRECT !!!");
    }
 
+
    bool is_builtin = false;
    bool loadable = false;
    int module_status = module_status_using_libkmod("i2c-dev");
-     if (module_status < 0) {
+   if (module_status < 0) {
       rpt_vstring(d1, "Unable to determine i2c-dev status.");
       rpt_vstring(d1, "module_status_using_libkmod() returned %s", psc_desc(module_status));
       rpt_vstring(d1, "Treating i2c-dev as not builtin and not loadable!!!");
@@ -70,6 +72,7 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
       is_builtin = true;
    if (module_status == KERNEL_MODULE_LOADABLE_FILE)
       loadable = true;
+
    accum->module_i2c_dev_needed = true;           // relic from driver fglrx, which did not require dev-i2c
    accum->module_i2c_dev_builtin = is_builtin;
    accum->loadable_i2c_dev_exists = loadable;
