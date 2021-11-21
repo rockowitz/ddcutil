@@ -405,7 +405,7 @@ gpointer watch_displays_using_udev(gpointer data) {
    int fd = udev_monitor_get_fd(mon);
    set_fd_blocking(fd);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
+   GPtrArray * prev_displays = get_sysfs_drm_displays();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
