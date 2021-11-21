@@ -138,11 +138,15 @@ int module_status_using_libkmod(const char * module_alias)
       printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
 
    int result = 0;
-   struct kmod_ctx * ctx;
+   struct kmod_ctx * ctx = NULL;
    struct kmod_module *  mod;
    const char * filename;
+   int rc = 0;
 
-   ctx = kmod_new(NULL, NULL);
+   ctx = kmod_new(
+            NULL ,     // use default modules directory, /lib/modules/`uname -r`
+            NULL);     // use default config file path: /etc/modprobe.d, /run/modprobe.d,
+                       // /usr/local/lib/modprobe.d and /lib/modprobe.d.
    if (!ctx) {
       result = -errno;
       if (result == 0)     // review of kmond_new() code indicates should be impossible
@@ -150,8 +154,27 @@ int module_status_using_libkmod(const char * module_alias)
       goto bye;
    }
 
-   struct kmod_list *l, *list = NULL;
-   int rc = kmod_module_new_from_lookup(ctx, module_alias, &list);
+   if (debug) {
+      const char *  s1 = kmod_get_dirname(ctx);
+      printf("(%s) ctx->dirname = |%s|\n", __func__, s1);
+   }
+
+   // According to inline kmod doc, this is only a performance enhancer, but
+   // without it valgrind reports a branch is taken based on an uninitialized
+   // variable in kmod_module_new_from_lookup().  Execution does, however,
+   // proceed. "valgrind modinfo" shows the same behavior.
+   // If kmod_load_resources() is called, this bogus error message does
+   // not occur.
+   rc = kmod_load_resources(ctx);
+   if (rc < 0) {
+      if (debug)
+         printf("(__func__) kmod_load_resources() returned %d\n", rc);
+      result = rc;
+      goto bye;
+   }
+
+   struct kmod_list* list = NULL;
+   rc = kmod_module_new_from_lookup(ctx, module_alias, &list);
    if (rc < 0) {
       result = rc;
       goto bye;
@@ -164,11 +187,16 @@ int module_status_using_libkmod(const char * module_alias)
       goto bye;
    }
 
-   kmod_list_foreach(l, list) {
-      mod = kmod_module_get_module(l);
+   struct kmod_list* itr;
+   kmod_list_foreach(itr, list) {
+      mod = kmod_module_get_module(itr);
       // would fail if 2 entries in list since filename is const
       // but this is how tools/modinfo.c does it, assumes only 1 entry
       filename = kmod_module_get_path(mod);
+      const char *name = kmod_module_get_name(mod);
+      if (debug) {
+         printf("(%s) name = |%s|, path = |%s|\n", __func__, name, filename);
+      }
       kmod_module_unref(mod);
    }
    kmod_module_unref_list(list);
@@ -185,6 +213,69 @@ bye:
 }
 
 
+/** Uses libkmod to check if a kernel module is loaded.
+ *
+ *  \param  module name
+ *  \retval 0  not loaded
+ *  \retval 1  is loaded
+ *  \retval <0 -errno
+ *
+ *  \remark Adapted from kmod file tools/lsmod.c
+ *
+ *  \remark
+ *  Similar to module_status_using_libkmod(), but calls
+ *  kmod_module_new_from_loaded() instead of kmod_module_new_from_lookup().
+ */
+int is_module_loaded_using_libkmod(const char * module_name) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. module_name=%s\n", __func__, module_name);
+
+   int result = 0;
+   int err = 0;
+
+   struct kmod_ctx * ctx = kmod_new(NULL, NULL);
+   if (!ctx) {
+      result = -errno;
+      if (result == 0)  // kmond_new() doc does not guarantee that errno set
+         result = -999;
+      goto bye;
+   }
+
+   struct kmod_list *list = NULL;
+   err = kmod_module_new_from_loaded(ctx, &list);
+   if (err < 0) {
+       fprintf(stderr, "Error: could not get list of loaded modules: %s\n", strerror(-err));
+       result = err;
+       goto bye;
+   }
+
+   struct kmod_list *itr;
+   bool found = false;
+   kmod_list_foreach(itr, list) {
+       struct kmod_module *mod = kmod_module_get_module(itr);
+       const char *name = kmod_module_get_name(mod);
+       kmod_module_unref(mod);
+       if (streq(name, module_name)) {
+          found = true;
+          break;
+       }
+   }
+   kmod_module_unref_list(list);
+
+   result = (found) ? 1 : 0;
+
+bye:
+   if (ctx) {
+      kmod_unref(ctx);
+   }
+
+   if (debug)
+      printf("(%s) Done.     Returning: %d\n", __func__, result);
+   return result;
+}
+
+
 // transitional
 /** Checks if a module is built into the kernel.
   *
@@ -192,16 +283,18 @@ bye:
   * \retval 1   is built in
   * \retval 0   not built in
   * \retval < 0 error reading the modules.builtin file, value is -errno
+  *
+  * \remark   returns false if module_status_using_libkmod() returns -errno
   */
 int is_module_builtin(const char * module_name) {
    int rc = module_status_using_libkmod(module_name);
    int result = 0;
    switch(rc)
    {
-   case KERNEL_MODULE_NOT_FOUND:     result = 0;  break;     // 0
-   case KERNEL_MODULE_BUILTIN:       result = 1;  break;     // 1
-   case KERNEL_MODULE_LOADABLE_FILE: result = 0;  break;     // 2
-   default:                          result = rc; break;     // -errno
+   case KERNEL_MODULE_NOT_FOUND:     result = false;  break;     // 0
+   case KERNEL_MODULE_BUILTIN:       result = true;  break;     // 1
+   case KERNEL_MODULE_LOADABLE_FILE: result = false;  break;     // 2
+   default:                          result = false;  break;     // -errno
    }
    return result;
 }
@@ -230,61 +323,4 @@ bool is_module_loadable(const char * module_name) {
 }
 
 
-/** Uses libkmod to check if a kernel module is loaded.
- *
- *  \param  module name
- *  \retval 0  not loaded
- *  \retval 1  is loaded
- *  \retval <0 -errno
- *
- *  \remark Adapted from kmod file tools/lsmod.c
- */
-int is_module_loaded_using_libkmod(const char * module_name) {
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting. module_name=%s\n", __func__, module_name);
-
-   int result = 0;
-   int err = 0;
-
-   struct kmod_ctx * ctx = kmod_new(NULL, NULL);
-   if (!ctx) {
-      result = -errno;
-      if (result == 0)  // kmond_new() doc does not guarantee that errno set
-         result = -999;
-      goto bye;
-   }
-
-    struct kmod_list *list = NULL;
-    err = kmod_module_new_from_loaded(ctx, &list);
-    if (err < 0) {
-       fprintf(stderr, "Error: could not get list of modules: %s\n", strerror(-err));
-       result = err;
-       goto bye;
-    }
-
-    struct kmod_list *itr;
-    bool found = false;
-    kmod_list_foreach(itr, list) {
-       struct kmod_module *mod = kmod_module_get_module(itr);
-       const char *name = kmod_module_get_name(mod);
-       kmod_module_unref(mod);
-       if (streq(name, module_name)) {
-          found = true;
-          break;
-       }
-    }
-    kmod_module_unref_list(list);
-
-    result = (found) ? 1 : 0;
-
-bye:
-   if (ctx) {
-      kmod_unref(ctx);
-   }
-
-   if (debug)
-      printf("(%s) Done.     Returning: %d\n", __func__, result);
-   return result;
-}
 
