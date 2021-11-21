@@ -825,14 +825,12 @@ bool vdbgtrc(
         va_list           ap)
 {
    bool debug = false;
-   if (debug) {
+   if (true) {
       printf("(vdbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|, ap=%p\n",
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
                        trace_group, funcname, filename, lineno, syscall(SYS_gettid),
                        (fout() == stdout) ? "==" : "!=",
-                       format, pre_prefix,
-                       ap);
-     printf("          &ap=%p, ap=%p\n", &ap, ap);
+                       format, pre_prefix);
    }
 
    bool msg_emitted = false;
