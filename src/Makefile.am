@@ -185,6 +185,11 @@ AM_CFLAGS += -Wimplicit-function-declaration
 # but which is in gcc as of 4.6, also other constructs
 # AM_CFLAGS += -Wc99-c11-compat
 
+# Option added in Clang 12, if set causes warnings in WITH_VALIDATED_DH*() macros etc.
+# The option does not exist in gcc.
+# The "-Wno-" option form is ignored by gcc, but should be respected when compiling
+# in an environment, e.g. termux, where this option is enabled by default. 
+AM_CFLAGS += -Wno-compound-token-split-by-macro
 
 if ENABLE_CALLGRAPH_COND
 AM_CFLAGS += -fdump-rtl-expand
