@@ -32,6 +32,7 @@
 #include "util/simple_ini_file.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 #include "util/xdg_util.h"
@@ -808,6 +809,7 @@ main(int argc, char *argv[]) {
 bye:
    free(untokenized_cmd_prefix);
    free(configure_fn);
+   free_pcre_hash_table();
    DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);

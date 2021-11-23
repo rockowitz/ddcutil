@@ -21,6 +21,7 @@
 #include "util/debug_util.h"
 #include "util/file_util.h"
 #include "util/report_util.h"
+#include "util/sysfs_filter_functions.h"
 #include "util/xdg_util.h"
 
 #include "base/base_init.h"
@@ -354,6 +355,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
+      free_pcre_hash_table();
       library_initialized = false;
       if (flog)
          fclose(flog);
