@@ -128,7 +128,7 @@ void sysfs_dir_cardN(
 
    dir_ordered_foreach(
          fqfn,
-         predicate_cardN,
+         predicate_cardN_connector,
          gaux_ptr_scomp,    // GCompareFunc
          sysfs_dir_cardN_cardNconnector,
          accumulator,
