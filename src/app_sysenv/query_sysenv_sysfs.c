@@ -875,7 +875,7 @@ void query_drm_using_sysfs()
    rpt_vstring(d0, "Examining (5) %s", dname);
    dir_filtered_ordered_foreach(
                 dname,
-                is_sysfs_drm_connector_dir_name,      // filter function
+                is_card_connector_dir,      // filter function
                 NULL,                    // ordering function
                 report_one_connector,
                 NULL,                    // accumulator
