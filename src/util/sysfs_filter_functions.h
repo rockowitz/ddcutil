@@ -14,8 +14,11 @@
 
 // Filename_Filter_Func
 
-bool starts_with_card(              const char * value);
+// bool starts_with_card(              const char * value);
 bool predicate_cardN(               const char * value);
+
+bool predicate_cardN_connector(      const char * value);
+
 bool startswith_i2c(                const char * value);
 bool class_display_device_predicate(const char * value);
 bool drm_filter(                    const char * name);
@@ -42,6 +45,8 @@ bool is_i2cN_dir(const char * dirname, const char * simple_fn);
 
 bool has_class_display_or_docking_station(const char * dirname, const char * simple_fn);
 
-bool is_sysfs_drm_connector_dir_name(const char * dirname, const char * simple_fn);
+bool is_sysfs_drm_connector_dir_name(const char *dirname, const char *simple_fn);
+
+
 
 #endif /* SYSFS_FILTER_FUNCTIONS_H_ */
