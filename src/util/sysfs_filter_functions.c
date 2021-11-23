@@ -1,17 +1,15 @@
 // sysfs_filter_functions.c
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-// #include <glib-2.0/glib.h>
 #include <assert.h>
 #include <glib-2.0/glib.h>
-// #include <regex.h>
+#include <pcre.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pcre.h>
 
 #include "string_util.h"
 #include "sysfs_util.h"
