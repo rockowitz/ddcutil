@@ -11,6 +11,7 @@
 
 #include "data_structures.h"
 
+void free_pcre_hash_table();
 
 // Filename_Filter_Func
 

@@ -21,6 +21,7 @@
 
 GHashTable * pcre_hash_table = NULL;
 
+
 GHashTable* get_pcre_hash_table() {
    // printf("(%s) Starting. pcre_hash = %p\n", __func__, pcre_hash);
    if (!pcre_hash_table)
@@ -28,7 +29,7 @@ GHashTable* get_pcre_hash_table() {
             g_str_hash,                // GHashFunc hash_func,
             g_str_equal,               // GEqualFunc key_equal_func,
             g_free,                    // GDestroyNotify key_destroy_func,
-            NULL);                     // need function to delete *pcre
+            g_free);                   // GDestroyNotify value_destroy_func, is g_free sufficient?
 
    // printf("(%s) Done. Returning pcre_hash_table = %p\n", __func__, pcre_hash_table);
    return pcre_hash_table;
