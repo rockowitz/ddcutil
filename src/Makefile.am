@@ -271,6 +271,7 @@ libcommon_la_LIBADD += \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
   $(LIBUSB_LIBS) \
+  $(PCRE_LIBS)   \
   $(KMOD_LIBS)
 
 libcommon_la_LIBADD += -li2c
