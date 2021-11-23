@@ -224,7 +224,7 @@ GPtrArray * get_sysfs_drm_displays() {
    GPtrArray * connected_displays = g_ptr_array_new_with_free_func(g_free);
    dir_filtered_ordered_foreach(
                  dname,
-                 is_sysfs_drm_connector_dir_name,      // filter function
+                 is_card_connector_dir,   // filter function
                  NULL,                    // ordering function
                  get_sysfs_drm_examine_one_connector,
                  connected_displays,      // accumulator
