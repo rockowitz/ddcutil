@@ -830,7 +830,7 @@ bool vdbgtrc(
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
                        trace_group, funcname, filename, lineno, syscall(SYS_gettid),
                        (fout() == stdout) ? "==" : "!=",
-                       format, pre_prefix);
+                       pre_prefix, format);
    }
 
    bool msg_emitted = false;
