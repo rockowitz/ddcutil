@@ -214,7 +214,7 @@ void dump_original_sys_scans() {
       rpt_label(0, "*** Detail for /sys/class/drm  (Initial Version) ***");
       dir_ordered_foreach(
             "/sys/class/drm",
-            drm_filter                ,
+            predicate_cardN_connector,
             gaux_ptr_scomp,    // GCompareFunc
             each_drm_device,    //
             NULL,                 // accumulator
