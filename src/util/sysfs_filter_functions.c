@@ -105,7 +105,7 @@ bool pcre_compile_and_eval(const char * pattern, const char * value) {
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
    if (!re) {
-      printf("%s) Compiling...\n", __func__);
+      // printf("(%s) Compiling...\n", __func__);
       const char *   error = NULL;
       int erroffset = 0;
 
