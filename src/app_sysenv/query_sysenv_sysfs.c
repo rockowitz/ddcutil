@@ -694,7 +694,8 @@ void insert_drm_xref(int depth, char * cur_dir_name, char * i2c_node_name, Byte 
       if (!xref)
          DBGMSG("Unexpected. Bus %d not in xref table", drm_busno);
    }
-   if (!xref) {   // i.e. if !i2c_node_name or lookup by busno failed
+   // can we assert that edidbytes != NULL?
+   if (!xref && edidbytes) {   // i.e. if !i2c_node_name or lookup by busno failed
       // DBGMSG("searching by EDID");
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
                if (first_edid) {
