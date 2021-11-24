@@ -43,8 +43,10 @@ GHashTable* get_regex_hash_table() {
 
 
 void free_regex_hash_table() {
-   if (regex_hash_table)
+   if (regex_hash_table) {
       g_hash_table_destroy(regex_hash_table);
+      regex_hash_table = NULL;
+   }
 }
 
 
