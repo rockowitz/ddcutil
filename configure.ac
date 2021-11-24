@@ -561,9 +561,6 @@ required_packages="$required_packages glib-2.0 >= 2.32"
 PKG_CHECK_MODULES(KMOD, libkmod)
 required_packages="$required_packages kmod"
 
-PKG_CHECK_MODULES(PCRE, libpcre)
-required_packages="$required_packages pcre"
-
 AS_IF( [test "x$enable_udev" = "xyes"],
   [   PKG_CHECK_MODULES(UDEV,   libudev, 
        [ libudev_found=1],  
