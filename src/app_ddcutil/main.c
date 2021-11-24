@@ -809,7 +809,7 @@ main(int argc, char *argv[]) {
 bye:
    free(untokenized_cmd_prefix);
    free(configure_fn);
-   free_pcre_hash_table();
+   free_regex_hash_table();
    DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
    time_t end_time = time(NULL);

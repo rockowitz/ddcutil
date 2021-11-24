@@ -355,7 +355,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
-      free_pcre_hash_table();
+      free_regex_hash_table();
       library_initialized = false;
       if (flog)
          fclose(flog);
