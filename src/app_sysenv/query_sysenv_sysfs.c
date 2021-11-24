@@ -755,12 +755,10 @@ void report_one_connector(
 
       Byte * edid_bytes = NULL;
       if (edid_byte_array) {
-         gsize edid_size = 0;
-         edid_bytes = g_byte_array_steal(edid_byte_array, &edid_size);
+         edid_bytes = g_byte_array_free(edid_byte_array, false);
       }
       insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
       free(edid_bytes);
-      // g_byte_array_free(edid_byte_array, true);
    }
    else
       rpt_vstring(d2, "No i2c-N subdirectory");
