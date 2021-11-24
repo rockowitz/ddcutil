@@ -6,6 +6,8 @@
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// #define SYSENV_QUICK_TEST_RUN 1
+
 /** \cond */
 #include <config.h>
 
@@ -897,6 +899,10 @@ void query_sysenv() {
 
       query_drm_using_sysfs();
 
+      rpt_nl();
+      rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 0);
+      execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
+
       device_xref_report(0);
 
       probe_modules_d(0);
@@ -904,6 +910,7 @@ void query_sysenv() {
       dump_sysfs_i2c();
       rpt_nl();
 
+#ifdef OLD
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
          rpt_label(0, "*** Calling get_sysfs_drm_card_numbers(), get_sysfs_drm_displays() from ddc_watch.c... ***");
@@ -912,6 +919,7 @@ void query_sysenv() {
             query_drm_using_sysfs();
          }
       }
+#endif
 
 #ifdef TMI
 #ifdef ENABLE_UDEV
