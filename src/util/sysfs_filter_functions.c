@@ -5,7 +5,7 @@
 
 #include <assert.h>
 #include <glib-2.0/glib.h>
-#include <pcre.h>
+#include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,44 +21,48 @@
 // Store compiled regular expressions
 //
 
-GHashTable * pcre_hash_table = NULL;
+GHashTable * regex_hash_table = NULL;
 
+// GDestroyNotify void (*GDestroyNotify) (gpointer data);
+void destroy_regex(gpointer data) {
+   regfree( (regex_t*) data );
+}
 
-GHashTable* get_pcre_hash_table() {
-   // printf("(%s) Starting. pcre_hash = %p\n", __func__, pcre_hash);
-   if (!pcre_hash_table)
-      pcre_hash_table = g_hash_table_new_full(
+GHashTable* get_regex_hash_table() {
+   // printf("(%s) Starting. regex_hash_table = %p\n", __func__, regex_hash_table);
+   if (!regex_hash_table)
+      regex_hash_table = g_hash_table_new_full(
             g_str_hash,                // GHashFunc hash_func,
             g_str_equal,               // GEqualFunc key_equal_func,
             g_free,                    // GDestroyNotify key_destroy_func,
-            g_free);                   // GDestroyNotify value_destroy_func, is g_free sufficient?
+            destroy_regex);            // GDestroyNotify value_destroy_func
 
-   // printf("(%s) Done. Returning pcre_hash_table = %p\n", __func__, pcre_hash_table);
-   return pcre_hash_table;
+   // printf("(%s) Done. Returning regex_hash_table = %p\n", __func__, regex_hash_table);
+   return regex_hash_table;
 }
 
 
-void free_pcre_hash_table() {
-   if (pcre_hash_table)
-      g_hash_table_destroy(pcre_hash_table);
+void free_regex_hash_table() {
+   if (regex_hash_table)
+      g_hash_table_destroy(regex_hash_table);
 }
 
 
-void save_hashed_pcre(const char * pattern, pcre * re) {
+void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
    bool debug = false;
    if (debug)
-      printf("(%s) Executing. pattern = |%s|, re=%p\n", __func__, pattern, re);
-   GHashTable * pcre_hash = get_pcre_hash_table();
-   g_hash_table_replace(pcre_hash, strdup( pattern), re);
+      printf("(%s) Executing. pattern = |%s|, compiled_re=%p\n", __func__, pattern, compiled_re);
+   GHashTable * regex_hash = get_regex_hash_table();
+   g_hash_table_replace(regex_hash, strdup( pattern), compiled_re);
 }
 
 
-pcre * get_hashed_pcre(const char * pattern) {
+regex_t * get_compiled_regex(const char * pattern) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern = |%s|\n", __func__, pattern);
-   GHashTable * pcre_hash = get_pcre_hash_table();
-   pcre * result = g_hash_table_lookup(pcre_hash, pattern);
+   GHashTable * regex_hash = get_regex_hash_table();
+   regex_t * result = g_hash_table_lookup(regex_hash, pattern);
    if (debug)
       printf("(%s) Returning %p. pattern = |%s|\n", __func__, result, pattern);
    return result;
@@ -73,55 +77,44 @@ static const char * cardN_connector_pattern = "^card[0-9]+[-]";
 static const char * cardN_pattern = "^card[0-9]+$";
 
 
-bool eval_pcre(pcre * re, const char * value) {
+bool eval_regex(regex_t * re, const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. re=%p, value=|%s|\n", __func__, re, value);
-   static int ovecsize = 30;     // should be a multiple of 3
-   int ovector[ovecsize];
-   int rc = pcre_exec(
+   int rc = regexec(
           re,                   /* the compiled pattern */
-          NULL,                 /* no extra data - we didn't study the pattern */
           value,                /* the subject string */
-          strlen(value),        /* the length of the subject */
-          0,                    /* start at offset 0 in the subject */
-          0,                    /* default options */
-          ovector,              /* output vector for substring information */
-          ovecsize              /* number of elements in the output vector - multiple of 3 */
+          0,
+          NULL,
+          0
        );
-   bool result = (rc >= 0) ? true : false;
+   bool result = (rc  == 0) ? true : false;
    if (debug)
-       printf("(%s) Returning %s. value=|%s|, pcre_exec() returned %d\n",
+       printf("(%s) Returning %s. value=|%s|, regexec() returned %d\n",
              __func__, sbool(result), value, rc);
    return result;
 }
 
 
-bool pcre_compile_and_eval(const char * pattern, const char * value) {
+bool compile_and_eval_regex(const char * pattern, const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
-   pcre * re =  get_hashed_pcre(pattern);
+   regex_t * re = get_compiled_regex(pattern);
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
    if (!re) {
-      // printf("(%s) Compiling...\n", __func__);
-      const char *   error = NULL;
-      int erroffset = 0;
-
-      re = pcre_compile(
-            pattern,
-            0,         // default options
-            &error,    // for error msg
-            &erroffset,  // error offset
-            NULL);        // use default char tables
-      if (!re) {
-               printf("PCRE compilation failed at offset %d: %s\n", erroffset, error);
-               assert(re);
+      if (debug)
+         printf("(%s) Compiling...\n", __func__);
+      re = calloc(1, sizeof(regex_t));
+      int rc = regcomp(re, pattern, REG_EXTENDED);
+      if (rc != 0) {
+         printf("(%s) regcomp() returned %d\n", __func__, rc);
+         assert(rc == 0);
       }
-      save_hashed_pcre(pattern, re);
+      save_compiled_regex(pattern, re);
    }
-   bool result = eval_pcre(re, value);
+   bool result = eval_regex(re, value);
    if (debug)
       printf("(%s) Done. Returning %s\n", __func__, sbool(result));
    return result;
@@ -133,7 +126,7 @@ bool predicate_cardN(const char * value) {
    if (debug)
       printf("(%s) Starting. value = |%s|\n", __func__, value);
 
-   bool b2 = pcre_compile_and_eval(cardN_pattern, value);
+   bool b2 = compile_and_eval_regex(cardN_pattern, value);
 
    // bool result = str_starts_with(value, "card") && strlen(value) == 5;
    // if (debug)
@@ -149,7 +142,7 @@ bool predicate_cardN_connector(const char * value) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. value=|%s|\n", __func__, value);
-   bool b1 = pcre_compile_and_eval(cardN_connector_pattern, value);
+   bool b1 = compile_and_eval_regex(cardN_connector_pattern, value);
    if (debug)
       printf("(%s) Returning %s, value=|%s|\n", __func__, sbool( b1), value);
    return b1;
