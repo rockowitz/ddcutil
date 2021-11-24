@@ -673,6 +673,7 @@ void query_sys_amdgpu_parameters(int depth) {
 
 /** Examines /sys/class/drm
  */
+#ifdef OLD
 void query_drm_using_sysfs_old()
 {
    struct dirent *dent;
@@ -833,6 +834,55 @@ void query_drm_using_sysfs_old()
    rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 1);
    execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
 }
+#endif
+
+
+void insert_drm_xref(int depth, char * cur_dir_name, char * i2c_node_name, Byte * edidbytes) {
+   bool debug = false;
+   DBGMSF(debug, "depth=%d, cur_dir_name=%s, i2c_node_name = %s, edidbytes=%p",
+                 depth, cur_dir_name, i2c_node_name, edidbytes);
+   int d2 = depth;
+   // rpt_nl();
+
+   int drm_busno =  i2c_path_to_busno(cur_dir_name);
+   DBGMSF(debug, "cur_dir_name=%s, drm_busno=%d", cur_dir_name, drm_busno);
+
+   Device_Id_Xref * xref = NULL;
+   DBGMSF(debug, "i2c_node_name = %s", i2c_node_name);
+   if (i2c_node_name) {
+      // DBGMSG("Using i2c_node_name");
+
+      xref = device_xref_find_by_busno(drm_busno);
+      if (!xref)
+         DBGMSG("Unexpected. Bus %d not in xref table", drm_busno);
+   }
+   if (!xref) {   // i.e. if !i2c_node_name or lookup by busno failed
+      // DBGMSG("searching by EDID");
+#ifdef SYSENV_TEST_IDENTICAL_EDIDS
+               if (first_edid) {
+                  DBGMSG("Forcing duplicate EDID");
+                  edidbytes = first_edid;
+               }
+#endif
+      xref = device_xref_find_by_edid(edidbytes);
+      if (!xref) {
+         char * tag = device_xref_edid_tag(edidbytes);
+         DBGMSG("Unexpected. EDID ...%s not in xref table", tag);
+         free(tag);
+      }
+   }
+   if (xref) {
+      if (xref->ambiguous_edid) {
+         rpt_vstring(d2, "Multiple displays have same EDID ...%s", xref->edid_tag);
+         rpt_vstring(d2, "drm name, and bus number in device cross reference table may be incorrect");
+      }
+      // xref->sysfs_drm_name = strdup(dent->d_name);
+      xref->sysfs_drm_name = strdup(cur_dir_name);
+      xref->sysfs_drm_i2c  = i2c_node_name;
+      xref->sysfs_drm_busno = drm_busno;
+      DBGMSF(debug, "sysfs_drm_busno = %d", xref->sysfs_drm_busno);
+   }
+}
 
 
 void report_one_connector(
@@ -843,18 +893,39 @@ void report_one_connector(
 {
    bool debug = false;
    int d1 = depth+1;
+   int d2 = depth+2;
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
 
    rpt_vstring(depth, "Connector: %s", simple_fn);
 
-   rpt_nl();
+   // rpt_nl();
+   GByteArray * edid_byte_array;
    RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "enabled");
    RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
-   RPT_ATTR_EDID(d1, NULL, dirname, simple_fn, "edid");
+   RPT_ATTR_EDID(d1, &edid_byte_array, dirname, simple_fn, "edid");
 
-   // TODO:
-   // add to xref table as per code in query_drm_using_sysfs_old()
+   char * i2c_subdir_name = NULL;
+   GET_ATTR_SINGLE_SUBDIR(&i2c_subdir_name, is_i2cN, NULL, dirname, simple_fn);
+   // rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
 
+   if (i2c_subdir_name) {
+      char * node_name = NULL;
+      rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
+      RPT_ATTR_TEXT(d2, &node_name, dirname, simple_fn, i2c_subdir_name, "name");
+
+      i2c_path_to_busno(i2c_subdir_name);
+
+      Byte * edid_bytes = NULL;
+      if (edid_byte_array) {
+         gsize edid_size = 0;
+         edid_bytes = g_byte_array_steal(edid_byte_array, &edid_size);
+      }
+      insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
+      free(edid_bytes);
+      // g_byte_array_free(edid_byte_array, true);
+   }
+   else
+      rpt_vstring(d2, "No i2c-N subdirectory");
    DBGMSF(debug, "Done");
 }
 
@@ -880,6 +951,12 @@ void query_drm_using_sysfs()
                 report_one_connector,
                 NULL,                    // accumulator
                 depth);
+
+#ifdef MOVED
+   // belongs elsewhere
+   rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 1);
+   execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
+#endif
 }
 
 //
