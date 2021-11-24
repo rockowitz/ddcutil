@@ -287,7 +287,7 @@ read_pci_display_controller_node(
       // examine all drm/cardN subnodes
       char buf[PATH_MAX];
       g_snprintf(buf, PATH_MAX, "%s/%s", nodepath, "drm");
-      DBGMSF(debug, "Calling dir_ordered_foreach, buf=%s, predicate starts_with_card()", buf);
+      DBGMSF(debug, "Calling dir_ordered_foreach, buf=%s, predicate predicate_cardN_connector()", buf);
       dir_ordered_foreach(buf, predicate_cardN_connector, i2c_compare, one_drm_card, info, depth1);
    }
    free(class);
