@@ -146,7 +146,7 @@ typedef enum {
  DDCA_TRC_VCP   = 0x0200,       /**< VCP layer, feature definitions */
  DDCA_TRC_DDCIO = 0x0400,       /**< DDC IO functions */
  DDCA_TRC_SLEEP = 0x0800,       /**< low level sleeps */
- DDCA_TRC_RETRY = 0x1000,       /**< successful retries, subset of DDCA_TRC_SLEEP */
+ DDCA_TRC_RETRY = 0x1000,       /**< successful retries, subset of DDCA_TRC_DDCIO */
 
  DDCA_TRC_NONE = 0x0000,        /**< all tracing disabled    */
  DDCA_TRC_ALL  = 0xffff         /**< all tracing enabled     */
