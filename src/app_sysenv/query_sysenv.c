@@ -747,18 +747,19 @@ void query_sysenv() {
 
    if (output_level >= DDCA_OL_VV)
       report_build_options(0);
-
    rpt_nl();
+
    rpt_vstring(0,"*** Basic System Information ***");
    rpt_nl();
-   query_base_env(accumulator);
 
+   query_base_env(accumulator);
    rpt_nl();
+
    rpt_vstring(0,"*** Primary Check 1: Identify video card and driver ***");
    rpt_nl();
    query_card_and_driver_using_sysfs(accumulator);
-
    rpt_nl();
+
    rpt_vstring(0,"*** Primary Check 2: Check that /dev/i2c-* exist and writable ***");
    rpt_nl();
    accumulator->dev_i2c_device_numbers = identify_i2c_devices();
@@ -767,13 +768,13 @@ void query_sysenv() {
    // rpt_vstring(0, "Identified %d I2C devices", bva_length(accumulator->dev_i2c_device_numbers));
    // rpt_nl();
    check_i2c_devices(accumulator);
-
    rpt_nl();
+
    rpt_vstring(0,"*** Primary Check 3: Check that module i2c_dev is loaded ***");
    rpt_nl();
    check_i2c_dev_module(accumulator, 0);
-
    rpt_nl();
+
    rpt_vstring(0,"*** Primary Check 4: Driver specific checks ***");
    rpt_nl();
    driver_specific_tests(accumulator->driver_list);
@@ -792,15 +793,15 @@ void query_sysenv() {
 #endif
 
    rpt_nl();
-   rpt_vstring(0,"*** Additional probes ***");
 
+   rpt_vstring(0,"*** Additional probes ***");
    rpt_nl();
    query_sys_bus_i2c(accumulator);
-
    rpt_nl();
+
    env_accumulator_report(accumulator, 0);
-
    rpt_nl();
+
    final_analysis(accumulator, 0);
 
 
@@ -808,8 +809,8 @@ void query_sysenv() {
       rpt_nl();
       rpt_nl();
       rpt_label(0, "*** Additional checks for remote diagnosis ***");
-
       rpt_nl();
+
       rpt_vstring(0, "*** Detected Displays ***");
       /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
                                  true,   // include_invalid_displays
@@ -817,9 +818,9 @@ void query_sysenv() {
       // printf("Detected: %d displays\n", display_ct);   // not needed
 
       query_loaded_modules_using_libkmod();
+      rpt_nl();
 
       // printf("Gathering card and driver information...\n");
-      rpt_nl();
       query_proc_modules_for_video();
       if (!accumulator->is_arm) {
          // rpt_nl();
@@ -828,6 +829,7 @@ void query_sysenv() {
          //query_card_and_driver_using_lspci_alt();
       }
       rpt_nl();
+
       if ( driver_name_list_find_exact(accumulator->driver_list, "nvidia")) {
          query_proc_driver_nvidia();
          rpt_nl();
@@ -845,11 +847,11 @@ void query_sysenv() {
       rpt_vstring(1, "WAYLAND_DISPLAY=%s", (s) ? s : "(not set)");
       s = getenv("XDG_SESSION_TYPE");
       rpt_vstring(1, "XDG_SESSION_TYPE=%s", (s) ? s : "(not set)");
-
       rpt_nl();
+
       query_i2c_buses();
-
       rpt_nl();
+
       rpt_vstring(0,"xrandr connection report:");
       execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
       rpt_nl();
@@ -898,8 +900,8 @@ void query_sysenv() {
 #endif
 
       query_drm_using_sysfs();
-
       rpt_nl();
+
       rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 0);
       execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
 
