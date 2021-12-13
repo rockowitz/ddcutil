@@ -128,7 +128,7 @@ int i2c_open_bus(int busno, Byte callopts) {
  * @param  callopts  call option flags, controlling failure action
  *
  * @retval 0  success
- * @retval <0 negative Linux errno value if close
+ * @retval <0 negative Linux errno value if close fails
  */
 Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    bool debug = false;
