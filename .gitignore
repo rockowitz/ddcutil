@@ -30,6 +30,8 @@ config.cache
 /libtool
 Makefile
 Makefile.in
+/autoscan.log
+/configure.scan
 src/**/am--include-marker
 
 # Generated files
