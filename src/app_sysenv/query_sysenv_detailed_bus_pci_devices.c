@@ -40,6 +40,64 @@
 #include "query_sysenv_detailed_bus_pci_devices.h"
 
 
+/** Reports a sysfs subdirectory N-0037, where N is the I2C bus number.
+ *  This directory is created by ddcci driver, which conflicts with ddcutil.
+ *
+ *  \param depth
+ *  \param fq_i2c_dir_name
+ *  \param busno
+ *
+ *  \TODO
+ *  Extract busno from fq_i2c_dir_name
+ */
+
+void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fqfn=%s, busno=%d", fq_i2c_dir_name, busno);
+
+   int d0 = depth;
+   char buf[20];
+   char * fn_0037 = NULL;
+   g_snprintf(buf, 20, "%d-0037", busno);
+   RPT_ATTR_SINGLE_SUBDIR(d0, &fn_0037, streq, buf, fq_i2c_dir_name);
+   if (fn_0037) {
+      RPT_ATTR_REALPATH(d0, NULL, fq_i2c_dir_name, fn_0037, "driver/module");
+      RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, "name");
+      char * ddcci_subdir = NULL;
+      char ddcciN[20];
+      g_snprintf(ddcciN, 20, "ddcci%d", busno);
+      RPT_ATTR_SINGLE_SUBDIR(d0, &ddcci_subdir, streq, ddcciN, fq_i2c_dir_name, fn_0037);
+      if (ddcci_subdir) {
+         RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "capabilities");
+         RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "dev");
+         // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idModel");
+#ifdef HUH
+
+         GByteArray * idModel = NULL;
+
+         rpt_attr_binary(d0, &idModel, fq_i2c_dir_name, fn_0037, ddcciN, "idModel");
+         if (idModel) {
+         char * node = "Fully qualified node name";
+         rpt_attr_output(d0, node, "=", hexstring_t(idModel->data, idModel->len));
+         }
+#endif
+         // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idModule");
+         RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN,  "idProt");
+         RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN,  "idSerial");
+         RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN,  "idType");
+         // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idVendor");
+         char * backlight_subdir = NULL;
+         if ( RPT_ATTR_NOTE_SUBDIR(d0, &backlight_subdir, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN) ) {
+            RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "actual_brightness");
+            RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "brightness");
+            RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "max_brightness");
+            RPT_ATTR_REALPATH(d0, NULL, fq_i2c_dir_name , fn_0037, ddcciN, "backlight", ddcciN, "subsystem");
+         }
+      }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
 
 
 // Directory Report Functions
@@ -98,6 +156,11 @@ void sysfs_dir_cardN_cardNconnector(
       RPT_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "device");
       RPT_ATTR_TEXT(     d0, NULL, dirname_fn, dir_i2cN, "name");
       RPT_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
+
+      int busno = i2c_name_to_busno(dir_i2cN);
+
+      rpt_0037_subdir(d0, pb1, busno);
+
       free(dir_i2cN);
    }
 }
@@ -134,6 +197,9 @@ void sysfs_dir_cardN(
          accumulator,
          depth);
 }
+
+
+
 
 
 /**  Process /sys/bus/pci/devices/<pci-device>/i2c-N directory
@@ -176,6 +242,12 @@ void sysfs_dir_i2cN(
       free(i2cN);
       free(i2c_dev_fn);
    }
+   // look for N-0037 subdirectory
+
+   int busno = i2c_name_to_busno(filename);
+
+   rpt_0037_subdir(d0, fqfn, busno);
+
 }
 
 
@@ -292,6 +364,7 @@ dump_detailed_sys_bus_pci(int depth) {
 
 
 void init_query_detailed_bus_pci_devices() {
+   RTTI_ADD_FUNC(rpt_0037_subdir);
    RTTI_ADD_FUNC(one_pci_device);
 }
 
