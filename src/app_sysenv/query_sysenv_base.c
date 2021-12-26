@@ -469,3 +469,6 @@ int  i2c_path_to_busno(char * path) {
 Byte * first_edid = NULL;
 #endif
 
+bool sysfs_quick_test = false;
+
+

@@ -734,6 +734,12 @@ void query_sysenv() {
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
+   char * s = getenv("SYSFS_QUICK_TEST");
+   if (s && strlen(s) > 0) {
+      sysfs_quick_test = true;
+      rpt_label(0, "Environment variable SYSFS_QUICK_TEST is set.  Skipping some tests.");
+   }
+
    ddc_ensure_displays_detected();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
    device_xref_init();
@@ -804,7 +810,6 @@ void query_sysenv() {
 
    final_analysis(accumulator, 0);
 
-
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       rpt_nl();
@@ -867,14 +872,14 @@ void query_sysenv() {
                                 "i2cdetect");        // command name for error message
       rpt_nl();
 
-#ifndef SYSENV_QUICK_TEST_RUN
-      query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                "get-edid -b %d -i | parse-edid",   // command to issue
-                                "get-edid | parse-edid");        // command name for error message
+      if (!sysfs_quick_test) {
+         query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                   "get-edid -b %d -i | parse-edid",   // command to issue
+                                   "get-edid | parse-edid");        // command name for error message
 
-      if (get_output_level() >= DDCA_OL_VV)
-         test_edid_read_variants(accumulator);
-#endif
+         if (get_output_level() >= DDCA_OL_VV)
+            test_edid_read_variants(accumulator);
+      }
       raw_scan_i2c_devices(accumulator);
 
 #ifdef USE_X11
@@ -888,12 +893,12 @@ void query_sysenv() {
       // temp
       // get_i2c_smbus_devices_using_udev();
 
-#ifdef SYSENV_QUICK_TEST_RUN
-      DBGMSG("!!! Skipping config file and log checking to speed up testing !!!");
-#else
-      probe_config_files(accumulator);
-      probe_logs(accumulator);
-#endif
+      if (sysfs_quick_test)
+         DBGMSG("!!! Skipping config file and log checking to speed up testing !!!");
+      else {
+         probe_config_files(accumulator);
+         probe_logs(accumulator);
+      }
 
 #ifdef USE_LIBDRM
       probe_using_libdrm();

@@ -86,5 +86,6 @@ Env_Accumulator * env_accumulator_new();
 void env_accumulator_free(Env_Accumulator * accum);
 void env_accumulator_report(Env_Accumulator * accum, int depth);
 
+extern bool sysfs_quick_test;
 
 #endif /* QUERY_SYSENV_BASE_H_ */
