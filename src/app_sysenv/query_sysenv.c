@@ -734,7 +734,7 @@ void query_sysenv() {
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
-   char * s = getenv("SYSFS_QUICK_TEST");
+   char * s = getenv("SYSENV_QUICK_TEST");
    if (s && strlen(s) > 0) {
       sysfs_quick_test = true;
       rpt_label(0, "Environment variable SYSFS_QUICK_TEST is set.  Skipping some tests.");
