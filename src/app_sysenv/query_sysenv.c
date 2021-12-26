@@ -859,6 +859,8 @@ void query_sysenv() {
       rpt_vstring(0,"Checking for possibly conflicting programs...");
       execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
       rpt_nl();
+      execute_shell_cmd_rpt("lsmod | grep ddcci | grep -v grep", 1);
+      rpt_nl();
 
       query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                 "i2cdetect -y %d",   // command to issue
