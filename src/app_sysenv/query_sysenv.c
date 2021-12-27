@@ -291,7 +291,7 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
 void query_x11() {
    GPtrArray* edid_recs = get_x11_edids();
    rpt_nl();
-   rpt_vstring(0,"EDIDs reported by X11 for connected xrandr outputs:");
+   rpt_vstring(0,"*** EDIDs reported by X11 for connected xrandr outputs ***");
    // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
 
    for (int ndx=0; ndx < edid_recs->len; ndx++) {
@@ -397,7 +397,7 @@ static void probe_i2c_devices_using_udev() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * subsys_name = "i2c-dev";
-   rpt_vstring(0,"Probing I2C devices using udev, susbsystem %s...", subsys_name);
+   rpt_vstring(0,"*** Probe I2C devices using udev, susbsystem %s ***", subsys_name);
    sysenv_rpt_current_time(NULL, 1);
    // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
 
@@ -430,6 +430,7 @@ static void probe_i2c_devices_using_udev() {
    summaries = find_devices_by_sysattr_name(nameattr);
    report_i2c_udev_device_summaries(summaries, "Summary of udev DPMST devices...",1);
    free_udev_device_summaries(summaries);   // ok if summaries == NULL
+   rpt_nl();
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -460,7 +461,7 @@ void rpt_module_status(int depth, const char * module_name) {
 
 
 void query_loaded_modules_using_libkmod() {
-   rpt_vstring(0,"Checking if modules are loaded or builtin...");
+   rpt_vstring(0,"*** Checking if modules are loaded or builtin... ***");
 
    char ** pmodule_names = get_known_video_driver_module_names();
    char * curmodule;
@@ -507,39 +508,30 @@ static void query_xdg_files(int depth) {
    int d2 = depth+2;
    int d3 = depth+3;
 
-   rpt_label(depth, "XDG Base Directory Environment Variables:");
-   rpt_vstring(d1, "$%-15s: %s", "XDG_DATA_HOME",   getenv("XDG_DATA_HOME"));
-   rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_HOME", getenv("XDG_CONFIG_HOME"));
-   rpt_vstring(d1, "$%-15s: %s", "XDG_STATE_HOME",  getenv("XDG_STATE_HOME"));
-   rpt_vstring(d1, "$%-15s: %s", "XDG_CACHE_HOME",  getenv("XDG_CACHE_HOME"));
-   rpt_vstring(d1, "$%-15s: %s", "XDG_DATA_DIRS",   getenv("XDG_DATA_DIRS"));
-   rpt_vstring(d1, "$%-15s: %s", "XDG_CONFIG_DIRS", getenv("XDG_CONFIG_DIRS"));
+   rpt_label(depth, "*** XDG Directory Settings ***");
 
+   rpt_label(d1, "XDG Base Directory Environment Variables:");
+   rpt_vstring(d2, "$%-15s: %s", "XDG_DATA_HOME",   getenv("XDG_DATA_HOME"));
+   rpt_vstring(d2, "$%-15s: %s", "XDG_CONFIG_HOME", getenv("XDG_CONFIG_HOME"));
+   rpt_vstring(d2, "$%-15s: %s", "XDG_STATE_HOME",  getenv("XDG_STATE_HOME"));
+   rpt_vstring(d2, "$%-15s: %s", "XDG_CACHE_HOME",  getenv("XDG_CACHE_HOME"));
+   rpt_vstring(d2, "$%-15s: %s", "XDG_DATA_DIRS",   getenv("XDG_DATA_DIRS"));
+   rpt_vstring(d2, "$%-15s: %s", "XDG_CONFIG_DIRS", getenv("XDG_CONFIG_DIRS"));
    rpt_nl();
+
    rpt_label(depth, "XDG Utility Functions:");
-   char * s = xdg_data_home_dir();
-   rpt_vstring(d1, "xdg_data_home_dir():      %s", s);
-   free(s);
-   s = xdg_config_home_dir();
-   rpt_vstring(d1, "xdg_config_home_dir():    %s", s);
-   free(s);
-   s = xdg_cache_home_dir();
-   rpt_vstring(d1, "xdg_cache_home_dir():     %s", s);
-   free(s);
-   s = xdg_state_home_dir();
-   rpt_vstring(d1, "xdg_state_home_dir():     %s", s);
-   free(s);
-
-   char * data_path = xdg_data_path();
-   rpt_vstring(d1, "xdg_data_path():          %s", data_path);
-   s = xdg_config_path();
-   rpt_vstring(d1, "xdg_config_path():        %s", s);
-   free(s);
-
+   char * s = NULL;
+   s = xdg_data_home_dir();   rpt_vstring(d2, "xdg_data_home_dir():      %s", s);  free(s);
+   s = xdg_config_home_dir(); rpt_vstring(d2, "xdg_config_home_dir():    %s", s);  free(s);
+   s = xdg_cache_home_dir();  rpt_vstring(d2, "xdg_cache_home_dir():     %s", s);  free(s);
+   s = xdg_state_home_dir();  rpt_vstring(d2, "xdg_state_home_dir():     %s", s);  free(s);
+   s = xdg_data_path();       rpt_vstring(d2, "xdg_data_path():          %s", s);  free(s);
+   s = xdg_config_path();     rpt_vstring(d2, "xdg_config_path():        %s", s);  free(s);
    rpt_nl();
-   rpt_label(depth, "ddcutil Configuration, Cache, and Data files:");
+
+   rpt_label(depth, "*** ddcutil Configuration, Cache, and Data files ***");
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
-   // rpt_vstring(d1, "find_xdg_config_file(\"ddcutil\", \"ddcutilrc\") returned: %s", config_fn);
+   rpt_nl();
    if (config_fn) {
       rpt_vstring(d1, "Found configuration file: %s", config_fn);
       rpt_file_contents(config_fn, /*verbose=*/ true, d2);
@@ -547,10 +539,9 @@ static void query_xdg_files(int depth) {
    }
    else
       rpt_label(d1, "Configuration file ddcutilrc not found");
-
    rpt_nl();
+
    char * cache_fn = find_xdg_cache_file("ddcutil", "capabilities");
-   // rpt_vstring(d1, "find_xdg_cache_file(\"ddcutil\", \"capabilities\") returned: %s", config_fn);
    if (cache_fn) {
       rpt_vstring(d1, "Found capabilities cache file: %s", cache_fn);
       rpt_file_contents(cache_fn, /*verbose=*/ true, d2);
@@ -558,10 +549,10 @@ static void query_xdg_files(int depth) {
    }
    else
       rpt_label(d1, "Capabilities cache file not found");
-
    rpt_nl();
-   rpt_label(d1, "Files on data path:");
 
+   rpt_label(d1, "Files on data path:");
+   char * data_path = xdg_data_path();
    GPtrArray * data_files = get_path_application_files(data_path, "ddcutil");
    for (int ndx = 0; ndx < data_files->len; ndx++) {
       char * fn = g_ptr_array_index(data_files, ndx);
@@ -571,7 +562,6 @@ static void query_xdg_files(int depth) {
          rpt_nl();
       }
    }
-
    free(data_path);
    g_ptr_array_free(data_files, true);
    rpt_nl();
@@ -740,6 +730,8 @@ void query_sysenv() {
       rpt_label(0, "Environment variable SYSFS_QUICK_TEST is set.  Skipping some tests.");
    }
 
+   i2c_force_slave_addr_flag = true;    // be a bully
+
    ddc_ensure_displays_detected();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
    device_xref_init();
@@ -751,9 +743,11 @@ void query_sysenv() {
       rpt_nl();
    }
 
-   if (output_level >= DDCA_OL_VV)
+   if (output_level >= DDCA_OL_VV) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: report_build_options()");
       report_build_options(0);
-   rpt_nl();
+      rpt_nl();
+   }
 
    rpt_vstring(0,"*** Basic System Information ***");
    rpt_nl();
@@ -816,7 +810,7 @@ void query_sysenv() {
       rpt_label(0, "*** Additional checks for remote diagnosis ***");
       rpt_nl();
 
-      rpt_vstring(0, "*** Detected Displays ***");
+      rpt_vstring(0, "*** Displays as reported by DETECT Command ***");
       /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
                                  true,   // include_invalid_displays
                                  1);     // logical depth
@@ -867,18 +861,21 @@ void query_sysenv() {
       execute_shell_cmd_rpt("lsmod | grep ddcci | grep -v grep", 1);
       rpt_nl();
 
-      query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                "i2cdetect -y %d",   // command to issue
-                                "i2cdetect");        // command name for error message
-      rpt_nl();
-
-      if (!sysfs_quick_test) {
+      if (sysfs_quick_test)
+         DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
+      else {
+         query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                   "i2cdetect -y %d",   // command to issue
+                                   "i2cdetect");        // command name for error message
+         rpt_nl();
          query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                    "get-edid -b %d -i | parse-edid",   // command to issue
                                    "get-edid | parse-edid");        // command name for error message
 
-         if (get_output_level() >= DDCA_OL_VV)
+         if (get_output_level() >= DDCA_OL_VV) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: test_read_variants()");
             test_edid_read_variants(accumulator);
+         }
       }
       raw_scan_i2c_devices(accumulator);
 
