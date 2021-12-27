@@ -292,6 +292,9 @@ bool dbgtrc_returning_expression(
 #define DBGTRC(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
+#define DBGTRC_SYSLOG(debug_flag, trace_group, format, ...) \
+    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_SYSLOG, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
 #define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__)
 
