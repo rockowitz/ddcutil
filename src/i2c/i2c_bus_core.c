@@ -229,13 +229,14 @@ retry:
       result = -errsv;
    }
    if (result == -EBUSY) {
-      DBGMSG("set_addr(%s,%s,0x%02x) failed, error = EBUSY",
+      DBGTRC_SYSLOG(true, TRACE_GROUP, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
              filename_for_fd_t(fd),
              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
              addr);
    }
    else if (result == 0 && op == I2C_SLAVE_FORCE) {
-      DBGMSG( "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
+      DBGTRC_SYSLOG(true, TRACE_GROUP,
+                    "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
                    filename_for_fd_t(fd),
                    addr);
    }
