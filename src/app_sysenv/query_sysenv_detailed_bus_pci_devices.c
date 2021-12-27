@@ -52,7 +52,7 @@
  */
 
 void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fqfn=%s, busno=%d", fq_i2c_dir_name, busno);
 
    int d0 = depth;
@@ -158,6 +158,7 @@ void sysfs_dir_cardN_cardNconnector(
       RPT_ATTR_REALPATH( d0, NULL, dirname_fn, dir_i2cN, "subsystem");
 
       int busno = i2c_name_to_busno(dir_i2cN);
+      rpt_nl();
 
       rpt_0037_subdir(d0, pb1, busno);
 
@@ -242,7 +243,6 @@ void sysfs_dir_i2cN(
       free(i2cN);
       free(i2c_dev_fn);
    }
-   // look for N-0037 subdirectory
 
    int busno = i2c_name_to_busno(filename);
 
@@ -305,7 +305,7 @@ void one_pci_device(
 
    // DBGMSG("dirname=%s, filename=%s, pb1=%s, rpath=%s", dirname, filename, pb1, rpath);
    rpt_nl();
-    rpt_vstring(       d0, "Examining (7) %s/%s -> %s", dirname, filename, rpath);
+    rpt_vstring(       d0, "Examining %s/%s -> %s", dirname, filename, rpath);
     RPT_ATTR_REALPATH(d1, NULL, dirname, filename, "device");
     RPT_ATTR_TEXT(    d1, NULL, dirname, filename, "class");
     RPT_ATTR_TEXT(    d1, NULL, dirname, filename, "boot_vga");
@@ -353,7 +353,7 @@ dump_detailed_sys_bus_pci(int depth) {
    rpt_nl();
    rpt_nl();
    rpt_label(depth, "*** Detailed /sys/bus/pci/devices scan ***");
-   rpt_nl();
+   // rpt_nl();
    dir_filtered_ordered_foreach("/sys/bus/pci/devices",
                        has_class_display_or_docking_station,      // filter function
                        NULL,                    // ordering function
