@@ -334,15 +334,8 @@ endif
 install-exec-hook:
 	@echo "(src/Makefile) Executing install-exec-hook ..." 
 	rm -f $(DESTDIR)$(libdir)/libddcutil.la  
-	rm -f $(DESTDIR)$(libdir)/libddcutil.a  
 
-
-#	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
-#		rm $(DESTDIR)$(libdir)/libddcutil.la ; \
-#	fi
-#	@if [ -f $(DESTDIR)$(libdir)/libddcutil.a ] ; then \
-#		rm $(DESTDIR)$(libdir)/libddcutil.a ; \
-#	fi
+#	rm -f $(DESTDIR)$(libdir)/libddcutil.a  
 
 #	@if [ -f $(DESTDIR)$(libdir)/libddcutil.la ] ; then \
 #	  echo "(src/Makefile) install-exec-hook: Stripping dependency_libs from libddcutil.la" ; \
