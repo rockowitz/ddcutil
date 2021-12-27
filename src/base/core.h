@@ -119,6 +119,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 
 typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_NONE   0
+#define DBGTRC_OPTIONS_SYSLOG 1
 
 
 //
