@@ -868,6 +868,9 @@ bool vdbgtrc(
       char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
                        thread_prefix, walltime_prefix, elapsed_prefix, funcname,
                        pre_prefix, buffer);
+      char * syslog_buf = g_strdup_printf("%s(%-30s) %s%s",
+            elapsed_prefix, funcname,
+            pre_prefix, buffer);
       if (debug)
          printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
 #ifdef NO
@@ -902,7 +905,7 @@ bool vdbgtrc(
 #endif
 
       if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         syslog(LOG_INFO, "%s", buf2);
+         syslog(LOG_INFO, "%s", syslog_buf);
       }
 
       if (is_tracing(trace_group, filename, funcname)) {
@@ -912,6 +915,7 @@ bool vdbgtrc(
       }
       free(buffer);
       free(buf2);
+      free(syslog_buf);
       msg_emitted = true;
    }
 
