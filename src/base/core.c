@@ -838,7 +838,7 @@ bool vdbgtrc(
    }
 
    bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
       char * buffer = g_strdup_vprintf(format, ap);
       if (debug)
          printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
@@ -901,13 +901,15 @@ bool vdbgtrc(
    }
 #endif
 
-      if (trace_to_syslog) {
+      if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          syslog(LOG_INFO, "%s", buf2);
       }
 
-      f0puts(buf2, fout());
-      f0putc('\n', fout());
-      fflush(fout());
+      if (is_tracing(trace_group, filename, funcname)) {
+         f0puts(buf2, fout());
+         f0putc('\n', fout());
+         fflush(fout());
+      }
       free(buffer);
       free(buf2);
       msg_emitted = true;
