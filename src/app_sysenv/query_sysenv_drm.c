@@ -670,22 +670,25 @@ GPtrArray * get_dri_device_names_using_filesys() {
  * the functions, set errno=22 (EINVAL).
  */
 void probe_using_libdrm() {
-   rpt_title("Probing connected monitors using libdrm...",0);
+   int d0 = 0;
+   int d1 = d0+1;
+   int d2 = d0+2;
+   rpt_label(d0, "*** Probing connected monitors using libdrm ***");
 
    if ( directory_exists("/proc/driver/nvidia/") ) {
       rpt_nl();
       rpt_vstring(1,"Checking Nvidia options to see if experimental kernel modesetting enabled:");
       char * cmd = "modprobe -c | grep \"^options nvidia\"";
-      rpt_vstring(1, "Executing command: %s", cmd);
-      execute_shell_cmd_rpt(cmd, 2 /* depth */);
+      rpt_vstring(d1, "Executing command: %s", cmd);
+      execute_shell_cmd_rpt(cmd, d2);
    }
 
    // Check libdrm version, since there seems to be some sensitivity
    rpt_nl();
    if (is_command_in_path("pkg-config")) {
-      rpt_vstring(1, "Checking libdrm version using pkg-config...");
+      rpt_vstring(d1, "Checking libdrm version using pkg-config...");
       char * cmd = "pkg-config --modversion libdrm";
-      execute_shell_cmd_rpt(cmd, 2);
+      execute_shell_cmd_rpt(cmd, d2);
    }
 
    else {
@@ -693,15 +696,15 @@ void probe_using_libdrm() {
 
       if (is_command_in_path("dpkg-query")) {
          char * cmd = "dpkg-query -l libdrm2 | grep ii";
-         rpt_vstring(1, "Checking libdrm version using dpkg-query...");
-         execute_shell_cmd_rpt(cmd, 2);
+         rpt_vstring(d1, "Checking libdrm version using dpkg-query...");
+         execute_shell_cmd_rpt(cmd, d2);
       }
 
       rpt_nl();
       if (is_command_in_path("rpm")) {
          char * cmd = "rpm -qa | grep libdrm";
-         rpt_vstring(1, "Checking libdrm version using rpm...");
-         execute_shell_cmd_rpt(cmd, 2);
+         rpt_vstring(d1, "Checking libdrm version using rpm...");
+         execute_shell_cmd_rpt(cmd, d2);
       }
    }
 
@@ -713,8 +716,8 @@ void probe_using_libdrm() {
    rpt_nl();
    // returns 1 if the DRM driver is loaded, 0 otherwise
    int drm_available = drmAvailable();
-   rpt_vstring(1, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
-                  sbool(drm_available));
+   rpt_vstring(d1, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
+                   sbool(drm_available));
 
 #ifdef DOESNT_WORK
    // function drmOpenMinor() is static
