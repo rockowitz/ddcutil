@@ -735,6 +735,7 @@ void report_one_connector(
    int d2 = depth+2;
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
 
+   rpt_nl();
    rpt_vstring(depth, "Connector: %s", simple_fn);
 
    // rpt_nl();
@@ -769,7 +770,8 @@ void report_one_connector(
 
 void query_drm_using_sysfs()
 {
-   DBGMSG("Starting");
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    int depth = 1;
    int d0 = depth;
    rpt_nl();
@@ -780,14 +782,15 @@ void query_drm_using_sysfs()
              "/sys/class/drm";
 #endif
 
-   rpt_vstring(d0, "Examining (5) %s", dname);
+   rpt_vstring(d0, "*** Examining %s ***", dname);
    dir_filtered_ordered_foreach(
                 dname,
-                is_card_connector_dir,      // filter function
+                is_card_connector_dir,   // filter function
                 NULL,                    // ordering function
                 report_one_connector,
                 NULL,                    // accumulator
                 depth);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 //
@@ -796,8 +799,8 @@ void query_drm_using_sysfs()
 
 
 void show_top_level_sys_entries(int depth) {
-   rpt_label(depth, "Character device major numbers of interest:");
-   char * names[] = {"i2c", "drm", "aux", "vfio", NULL};
+   rpt_label(depth, "*** Character device major numbers of interest: ***");
+   char * names[] = {"i2c", "drm", "ddcci", "aux", "vfio", NULL};
    GPtrArray * filtered_proc_devices = g_ptr_array_new();
    read_file_with_filter(
              filtered_proc_devices,
@@ -810,7 +813,8 @@ void show_top_level_sys_entries(int depth) {
      rpt_label(depth+1, g_ptr_array_index(filtered_proc_devices, ndx));
    }
    rpt_nl();
-   rpt_label(depth, "Top level i2c related nodes...");
+
+   rpt_label(depth, "*** Top Level I2C Related Nodes ***");
    rpt_nl();
    char * cmds[] = {
 #ifdef NOT_USEFUL
@@ -1050,7 +1054,7 @@ void dump_sysfs_i2c() {
    rpt_nl();
    show_top_level_sys_entries(0);
    // dump_original_sys_scans();
-   dump_simplified_sys_bus_pci(0);
+   // dump_simplified_sys_bus_pci(0);
    dump_detailed_sys_bus_pci(0);
 #ifdef FUTURE
    report_sys_drm_displays(0);
@@ -1060,6 +1064,7 @@ void dump_sysfs_i2c() {
 
 
 void init_query_sysfs() {
+   RTTI_ADD_FUNC(query_drm_using_sysfs);
    RTTI_ADD_FUNC(query_sys_bus_i2c);
    RTTI_ADD_FUNC(each_i2c_device);
    RTTI_ADD_FUNC(dump_sysfs_i2c);
