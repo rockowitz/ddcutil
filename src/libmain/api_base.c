@@ -264,7 +264,7 @@ void __attribute__ ((constructor))
 _ddca_init(void) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting library_initialized=%s\n", __func__, sbool(library_initialized));
+      printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
       openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
       syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
@@ -334,6 +334,7 @@ _ddca_init(void) {
 #endif
 
       DBGTRC_DONE(debug, DDCA_TRC_API, "library initialization executed");
+      syslog(LOG_INFO, "Library initialization complete.");
    }
    else {
       DBGTRC_DONE (debug, DDCA_TRC_API, "library was already initialized");
@@ -763,7 +764,6 @@ ddca_set_timeout_millis(
 #endif
 
 
-// unpublished
 bool
 ddca_enable_force_slave_address(bool onoff) {
    bool old = i2c_force_slave_addr_flag;
@@ -772,7 +772,6 @@ ddca_enable_force_slave_address(bool onoff) {
 }
 
 
-// unpublished
 bool
 ddca_is_force_slave_address_enabled(void) {
    return i2c_force_slave_addr_flag;
