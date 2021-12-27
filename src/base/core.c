@@ -556,7 +556,7 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
       vsnprintf(buffer, 200, format, args);
       if (debug_or_trace) {
          // use dbgtrc() for consistent handling of timestamp and thread id prefixes
-         dbgtrc(0xff, funcname, lineno, filename, "DDC: %s", buffer);
+         dbgtrc(0xff, DBGTRC_OPTIONS_NONE, funcname, lineno, filename, "DDC: %s", buffer);
       }
       else {
          f0printf(fout(), "DDC: %s\n", buffer);
@@ -684,6 +684,7 @@ void severemsg(
 }
 
 
+#ifdef OLD
 /** Core function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
@@ -791,6 +792,7 @@ bool dbgtrc_old(
 
    return msg_emitted;
 }
+#endif
 
 
 /** Core function for emitting debug or trace messages.
@@ -806,6 +808,7 @@ bool dbgtrc_old(
  *  depending on the syslog setting, to the system log.
  *
  *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param options       execution option flags
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
  *  @param filename      file name of caller
@@ -817,6 +820,7 @@ bool dbgtrc_old(
  */
 bool vdbgtrc(
         DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
@@ -928,6 +932,7 @@ bool vdbgtrc(
  *  depending on the syslog setting, to the system log.
  *
  *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param options       execution options
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
  *  @param filename      file name of caller
@@ -938,6 +943,7 @@ bool vdbgtrc(
  */
 bool dbgtrc(
         DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
@@ -957,7 +963,7 @@ bool dbgtrc(
       va_start(args, format);
       if (debug)
          printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
-      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, "", format, args);
+      msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, "", format, args);
       va_end(args);
    }
 
@@ -969,6 +975,7 @@ bool dbgtrc(
 
 bool dbgtrc_returning(
         DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
@@ -996,7 +1003,7 @@ bool dbgtrc_returning(
       va_start(args, format);
       if (debug)
          printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
-      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+      msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }
    if (debug)
@@ -1007,6 +1014,7 @@ bool dbgtrc_returning(
 
 bool dbgtrc_returning_errinfo(
         DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
@@ -1033,7 +1041,7 @@ bool dbgtrc_returning_errinfo(
       va_start(args, format);
       if (debug)
          printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
-      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+      msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
       g_free(pre_prefix);
    }
@@ -1047,6 +1055,7 @@ bool dbgtrc_returning_errinfo(
 
 bool dbgtrc_returning_expression(
         DDCA_Trace_Group  trace_group,
+        Dbgtrc_Options    options,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
@@ -1074,18 +1083,13 @@ bool dbgtrc_returning_expression(
       va_start(args, format);
       if (debug)
          printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
-      msg_emitted = vdbgtrc(trace_group, funcname, lineno, filename, pre_prefix, format, args);
+      msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }
    if (debug)
       printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
    return msg_emitted;
 }
-
-
-
-
-
 
 
 //
