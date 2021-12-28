@@ -3,11 +3,11 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#ifndef SYSENV_ACCESS_H_
+#ifndef QUERY_SYSENV_ACCESS_H_
 #define QUERY_SYSENV_ACCESS_H_
 
 #include "util/data_structures.h"
