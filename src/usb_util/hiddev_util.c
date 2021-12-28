@@ -731,9 +731,11 @@ get_multibyte_value_by_uref_multi(
    int      rc;
    Buffer * result = NULL;
 
+#ifndef NDEBUG
    __u32 report_type = uref_multi->uref.report_type;
    assert(report_type == HID_REPORT_TYPE_FEATURE ||
           report_type == HID_REPORT_TYPE_INPUT);   // *** CG19 ***
+#endif
 
    rc = ioctl(fd, HIDIOCGUSAGES, uref_multi);  // Fills in usage value
    if (rc != 0) {
