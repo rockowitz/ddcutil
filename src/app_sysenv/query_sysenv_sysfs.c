@@ -557,7 +557,7 @@ void query_loaded_modules_using_sysfs() {
  *
  *  Called by #dir_foreach() from #query_sys_bus_i2c()
  *
- *  \param  dirname     always /sys/bus/i2c/devicesS
+ *  \param  dirname     always /sys/bus/i2c/devices
  *  \param  fn          i2c-0, i2c-1, ... (n. these are symbolic links)
  *  \param  accumulator collects environment information
  *  \param  depth       logical indentation depth
@@ -587,6 +587,10 @@ void each_i2c_device(
    int busno = i2c_name_to_busno(fn);
    if (busno >= 0) {
       bva_append(accum->sys_bus_i2c_device_numbers, busno);
+   }
+   else if (str_ends_with(fn, "-0037")) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddcci device name: %s", fn);
+      accum->sysfs_ddcci_devices_exist = true;
    }
    else {
       // rpt_vstring(depth, "%-34s Unexpected file name: %s", cur_dir_name, fn);
@@ -623,6 +627,10 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
       if (!accumulator->sysfs_i2c_devices_exist)
          rpt_vstring(1, "No i2c devices found in %s", dname);
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
+      if (accumulator->sysfs_ddcci_devices_exist) {
+         rpt_vstring(1, "Devices created by driver ddcci found in %s", dname);
+         rpt_vstring(1, "Use ddcutil option --force-slave-address to recover from EBUSY errors.");
+      }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
