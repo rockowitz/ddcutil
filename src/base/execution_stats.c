@@ -326,7 +326,10 @@ int log_any_status_code(Status_Code_Counts * pcounts, int rc, const char * calle
    // DBGMSG("Old count=%d", ct);
 
    // check the new value
-   int newct = GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
+#ifndef NDEBUG
+   int newct =
+#endif
+   GPOINTER_TO_INT(g_hash_table_lookup(pcounts->error_counts_hash,  GINT_TO_POINTER(rc)) );
    g_mutex_unlock(&status_code_counts_mutex);
    // DBGMSG("new count for key %d = %d", rc, newct);
    assert(newct == ct+1);
@@ -523,8 +526,10 @@ int max_sleep_event_name_size() {
 /** Returns the name of sleep event type */
 const char * sleep_event_name(Sleep_Event_Type event_type) {
    // ensure sleep_event_names stays in sync with Sync_Event_Type
+#ifndef NDEBUG
    const int sleep_event_type_count = SE_SPECIAL+1;   // relies on values in enum assigned from 0
    assert( SLEEP_EVENT_ID_CT ==  sleep_event_type_count);
+#endif
    return sleep_event_names[event_type];
 }
 
