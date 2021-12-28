@@ -87,7 +87,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno);
 void i2c_free_bus_info(I2C_Bus_Info * bus_info);
 
 // Simple Bus_Info retrieval
-I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx);
+I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx);
 I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
 
 

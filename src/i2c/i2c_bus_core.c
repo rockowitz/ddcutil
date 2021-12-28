@@ -869,6 +869,8 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
  * This function is used by detect, interrogate commands, C API
  */
 void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting.  businfo=%p", businfo);
    assert(businfo);
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
@@ -889,8 +891,8 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth+1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
       rpt_vstring(depth+1, "Is LVDS device:                     %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 
-      if ( !(businfo->flags & (I2C_BUS_EDP||I2C_BUS_LVDS)) )
-      rpt_vstring(depth+1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
+      // if ( !(businfo->flags & (I2C_BUS_EDP|I2C_BUS_LVDS)) )
+      // rpt_vstring(depth+1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
@@ -919,6 +921,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                            (output_level >= DDCA_OL_VERBOSE),
                            depth);
    }
+   DBGMSF(debug, "Done.");
 }
 
 
@@ -1070,16 +1073,18 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
  * @return  pointer to Bus_Info struct for the bus,\n
  *          NULL if invalid index
  */
-I2C_Bus_Info * i2c_get_bus_info_by_index(int busndx) {
-   assert(busndx >= 0);
+I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx) {
+   // assert(busndx >= 0);
    assert(i2c_buses);
 
    bool debug = false;
    DBGMSF(debug, "Starting.  busndx=%d", busndx );
 
    I2C_Bus_Info * bus_info = NULL;
+#ifndef NDEBUG
    int busct = i2c_buses->len;
    assert(busndx < busct);
+#endif
    bus_info = g_ptr_array_index(i2c_buses, busndx);
    // report_businfo(busInfo);
    if (debug) {
