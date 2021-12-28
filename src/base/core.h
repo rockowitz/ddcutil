@@ -239,22 +239,30 @@ bool dbgtrc_returning_expression(
  * the program does not terminate.
  */
 // n. using ___LINE__ instead of line in __assert_fail() causes compilation error
+#ifdef NDEBUG
+#define TRACED_ASSERT(_assertion) \
+   do { \
+   } while (0)
+#else
 #define TRACED_ASSERT(_assertion) \
    do { \
       if (_assertion) { \
          ;              \
       }                 \
       else {           \
-         int line = __LINE__;  \
+         /* int line = __LINE__; */  \
          dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
          syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
          /* assert(#_assertion); */ \
-         __assert_fail(#_assertion, __FILE__, line, __func__);  \
+         /*  __assert_fail(#_assertion, __FILE__, line, __func__); */  \
+         /* don't need assertion info, dbgtrc() and dbgtrc() have been called */ \
+         exit(1); \
       } \
    } while (0)
+#endif
 
 
 #ifndef TRACED_ASSERT_IFF
