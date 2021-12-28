@@ -1118,7 +1118,7 @@ ddc_detect_all_displays() {
 
    int busct = i2c_detect_buses();
    DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
-   int busndx = 0;
+   uint busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
@@ -1240,8 +1240,10 @@ ddc_discard_detected_displays() {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
          dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
+#ifndef NDEBUG
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
+#endif
       }
       g_ptr_array_free(all_displays, true);
       all_displays = NULL;
