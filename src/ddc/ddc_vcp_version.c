@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -223,9 +223,13 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       // ddc_open_display() should not fail
       // 2/2020: but it can return -EBUSY
       Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-      assert(psc == 0);
-      result = set_vcp_version_xdf_by_dh(dh);
-      assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
+      if (psc == 0) {
+         result = set_vcp_version_xdf_by_dh(dh);
+         assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
+      }
+      else {
+         dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
+      }
       ddc_close_display(dh);
    }
 
