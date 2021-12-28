@@ -48,47 +48,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_ENV;
 
 // Notes on directory structure
 //
-//  /sys/bus/pci/devices/0000:nn:nn.n/
-//        boot_vga   1  if the boot device, appears not exist ow
-//        class      0x030000 for video
-//        device     hex PID
-//        driver    -> /sys/bus/pci/drivers/radeon
-//        drm
-//           card0 (dir)
-//           controlD64 (dir)
-//           controlD128 (dir)
-//        enable
-//        graphics (dir)
-//            fb0 (dir)
-//        i2c-n (dir)
-//            device -> /sys/bus/pci/devices/0000:nn:nn.n
-//            name
-//        modalias
-//        subsystem (dir)  -> /sys/bus/pci
-//             devices (dir)
-//             drivers (dir)
-//        subsystem_device
-//        subsystem_vendor
-//        vendor           hex VID
-//
-// also of possible interest:
-// /sys/class/i2c-dev/i2c-*/name
-//    refers to video driver or piix4_smbus
-// also accessed at:
-// /sys/bus/i2c/devices/i2c-*/name
-// /sys/bus/pci/drivers/nouveau
-// /sys/bus/pci/drivers/piix4_smbus
-// /sys/bus/pci/drivers/nouveau/0000:01:00.0
-//                                           /name
-//                                           i2c-dev
-// /sys/module/nvidia
-// /sys/module/i2c_dev ?
-// /sys/module/... etc
-
 // Raspbian:
 // /sys/bus/platform/drivers/vc4_v3d
 // /sys/module/vc4
-
 
 
 // Two ways to get the hex device identifiers.  Both are ugly.
@@ -282,12 +244,15 @@ void report_device_identification(char * sysfs_device_dir, int depth) {
 
    DBGMSF(debug, "Reading device ids from individual attribute files...");
    Device_Ids dev_ids = read_device_ids1(sysfs_device_dir);
+#ifdef ALTERNATIVE
+   // works, pick one
    DBGMSF(debug, "Reading device ids by parsing modalias attribute...");
    Device_Ids dev_ids2 = read_device_ids2(sysfs_device_dir);
    assert(dev_ids.vendor_id == dev_ids2.vendor_id);
    assert(dev_ids.device_id == dev_ids2.device_id);
    assert(dev_ids.subvendor_id == dev_ids2.subvendor_id);
    assert(dev_ids.subdevice_id == dev_ids2.subdevice_id);
+#endif
 
    bool pci_ids_ok = devid_ensure_initialized();
    if (pci_ids_ok) {
