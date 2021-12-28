@@ -170,8 +170,10 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
    // bool all_i2c_rw = false;
    assert(accum->dev_i2c_device_numbers);    // already set
    int busct = bva_length(accum->dev_i2c_device_numbers);
+#ifndef NDEBUG
    int busct0 = i2c_device_count();   // simple count, no side effects, consider replacing with local code
    assert(busct == busct0);
+#endif
    if (busct == 0 &&   !accum->dev_i2c_devices_required) {
       rpt_vstring(0,"WARNING: No /dev/i2c-* devices found");
    }
