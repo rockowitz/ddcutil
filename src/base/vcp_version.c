@@ -209,6 +209,8 @@ Value_Name_Title_Table version_id_table = {
  * @return value in external form.
  */
 char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
+   char * result2 = vnt_title(version_id_table, version_id);
+#ifndef NDEBUG
    char * result = NULL;
    switch (version_id) {
    case DDCA_MCCS_V10:    result = "1.0";     break;
@@ -219,9 +221,9 @@ char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id) {
    case DDCA_MCCS_VNONE:  result = "unknown"; break;
    case DDCA_MCCS_VANY:   result = "any";     break;
    }
-   char * result2 = vnt_title(version_id_table, version_id);
    assert(streq(result, result2));
-   return result;
+#endif
+   return result2;
 }
 
 
