@@ -413,8 +413,10 @@ DDCA_Status ddc_i2c_write_read_raw(
    bool single_byte_reads = false;   // doesn't work
 #endif
 
+#ifndef NDEBUG
    Byte slave_addr = request_packet_ptr->raw_bytes->bytes[0];      // 0x6e
    TRACED_ASSERT(slave_addr >> 1 == 0x37);
+#endif
 
    CHECK_DEFERRED_SLEEP(dh);
    Status_Errno_DDC rc =
