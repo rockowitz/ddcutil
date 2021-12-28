@@ -77,8 +77,12 @@ int bva_length(Byte_Value_Array bva) {
  */
 void bva_append(Byte_Value_Array bva, Byte item) {
    GByteArray* ga = (GByteArray*) bva;
+#ifdef NDEBUG
+   g_byte_array_append(ga, &item, 1);
+#else
    GByteArray * ga2 = g_byte_array_append(ga, &item, 1);
    assert(ga2 == ga);
+#endif
 }
 
 
@@ -517,8 +521,10 @@ int bbf_to_bytes(Byte_Bit_Flags bbflags, Byte * buffer, int buflen) {
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
 
+#ifndef NDEBUG
    int bit_set_ct = bbf_count_set(flags);
    assert(buflen >= bit_set_ct);
+#endif
 
    unsigned int bufpos = 0;
    unsigned int flagno = 0;
