@@ -574,7 +574,7 @@ void each_i2c_device(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dirname=%s, fn=%s", dirname, fn);
    assert(streq(dirname, "/sys/bus/i2c/devices"));
-   DBGMSF(debug, "dirname=|%s|, fn=|%s|", dirname, fn);
+
    Env_Accumulator * accum = accumulator;
    char cur_dir_name[100];
    sprintf(cur_dir_name, "%s/%s", dirname, fn);
@@ -587,6 +587,7 @@ void each_i2c_device(
    int busno = i2c_name_to_busno(fn);
    if (busno >= 0) {
       bva_append(accum->sys_bus_i2c_device_numbers, busno);
+      accum->sysfs_i2c_devices_exist = true;
    }
    else if (str_ends_with(fn, "-0037")) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ddcci device name: %s", fn);
@@ -597,7 +598,6 @@ void each_i2c_device(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Ignorable /sys/bus/i2c/devices file name: %s", fn);
    }
 
-   accum->sysfs_i2c_devices_exist = true;
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
