@@ -191,7 +191,10 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
     init_max_tries(parsed_cmd);
 
  #ifdef USE_USB
-   DDCA_Status rc = ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
+#ifndef NDEBUG
+   DDCA_Status rc =
+#endif
+   ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
    assert (rc == DDCRC_OK);
  #endif
 
