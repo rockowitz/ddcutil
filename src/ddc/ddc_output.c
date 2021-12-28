@@ -605,7 +605,9 @@ ddc_get_formatted_value_for_dfm(
    Byte feature_code = dfm->feature_code;
    char * feature_name = dfm->feature_name;
    bool is_table_feature = dfm->feature_flags & DDCA_TABLE;
+#ifndef NDEBUG
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
+#endif
    DDCA_Output_Level output_level = get_output_level();
    if (output_level >= DDCA_OL_VERBOSE) {
       fprintf(msg_fh, "\nGetting data for %s VCP code 0x%02x - %s:\n",
