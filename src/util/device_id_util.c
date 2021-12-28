@@ -225,7 +225,10 @@ load_simple_id_segment(
       char   atag[40];
       ushort acode;
       char*  aname = NULL;
-      int ct = sscanf(a_line, "%s %hx %m[^\n]",
+#ifndef NDEBUG
+      int ct =
+#endif
+      sscanf(a_line, "%s %hx %m[^\n]",
                           atag,
                           &acode,
                           &aname);
@@ -397,7 +400,10 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
          if (tabct == 0) {
             char   atag[40];
             char*  rest = NULL;
-            int ct = sscanf(a_line, "%s %m[^\n]",
+#ifndef NDEBUG
+            int ct =
+#endif
+            sscanf(a_line, "%s %m[^\n]",
                              atag,
                              &rest);
             // printf("(%s) ct = %d\n", __func__, ct);
