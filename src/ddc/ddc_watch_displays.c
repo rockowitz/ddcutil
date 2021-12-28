@@ -343,9 +343,11 @@ void show_sysattr_list_entries(
    struct udev_list_entry * cur_entry = NULL;
    udev_list_entry_foreach(cur_entry, head) {
       const char * attr_name   = udev_list_entry_get_name(cur_entry);
+#ifndef NDEBUG
       const char * attr_value  = udev_list_entry_get_value(cur_entry);
-      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
       assert(attr_value == NULL);
+#endif
+      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
       // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
       if (attr_value2 && strchr(attr_value2, '\n')) {
       // if (streq(attr_name, "uevent")) {
@@ -376,7 +378,10 @@ void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
    assert (flags != -1);
    flags &= ~O_NONBLOCK;
-   int rc = fcntl(fd, F_SETFL, flags);
+#ifndef NDEBUG
+   int rc =
+#endif
+   fcntl(fd, F_SETFL, flags);
    assert(rc != -1);
 }
 
