@@ -63,6 +63,7 @@ typedef struct {
    Driver_Name_Node * driver_list;
    bool               sysfs_i2c_devices_exist;
    Byte_Value_Array   sys_bus_i2c_device_numbers;
+   bool               sysfs_ddcci_devices_exist;
    bool               group_i2c_checked;
    bool               group_i2c_exists;
    bool               dev_i2c_devices_required;
