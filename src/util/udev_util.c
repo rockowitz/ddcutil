@@ -1,7 +1,7 @@
 /** @file udev_util.c
  * UDEV utility functions
  */
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Adapted from source code at http://www.signal11.us/oss/udev/
@@ -230,17 +230,21 @@ void report_udev_device(struct udev_device * dev, int depth) {
    udev_list_entry_foreach(cur_entry, properties_list_entry) {
       const char * prop_name   = udev_list_entry_get_name(cur_entry);
       const char * prop_value  = udev_list_entry_get_value(cur_entry);
+#ifndef NDEBUG
       const char * prop_value2 = udev_device_get_property_value(dev, prop_name);
       assert(streq(prop_value, prop_value2));
+#endif
       rpt_vstring(d2, "%s -> %s", prop_name, prop_value);
    }
 
    rpt_vstring(d1, "Sysattrs:");
    udev_list_entry_foreach(cur_entry, sysattr_list_entry) {
       const char * attr_name   = udev_list_entry_get_name(cur_entry);
+#ifndef NDEBUG
       const char * attr_value  = udev_list_entry_get_value(cur_entry);
-      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
       assert(attr_value == NULL);
+#endif
+      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
       // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
       if (attr_value2 && strchr(attr_value2, '\n')) {
       // if (streq(attr_name, "uevent")) {
