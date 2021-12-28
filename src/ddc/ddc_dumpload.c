@@ -119,7 +119,9 @@ create_dumpload_data_from_g_ptr_array(
    *dumpload_data_loc = NULL;
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
+#ifndef NDEBUG
    bool valid_data = true;
+#endif
    // default:
    data->vcp_version.major = 2;
    data->vcp_version.minor = 0;
@@ -149,7 +151,9 @@ create_dumpload_data_from_g_ptr_array(
             //                       "Invalid data at line %d: %s", linectr, line);
             // errinfo_add_cause(errs, err);
             ADD_DATA_ERROR("Invalid data");
+#ifndef NDEBUG
             valid_data = false;
+#endif
          }
          else {
             rest = head + strlen(s0);;
@@ -174,8 +178,10 @@ create_dumpload_data_from_g_ptr_array(
                bool ok = str_to_int(s1, &ival, 10);
                if (ok && ival >= 0 && ival <= 65535)
                   data->product_code = (uint16_t) ival;
+#ifndef NDEBUG
                else
                   valid_data = false;
+#endif
             }
             else if (streq(s0, "EDID") || streq(s0, "EDIDSTR")) {
                STRLCPY(data->edidstr, s1, sizeof(data->edidstr));
@@ -201,7 +207,9 @@ create_dumpload_data_from_g_ptr_array(
                   //                  DDCRC_BAD_DATA, __func__,
                   //                  "Invalid VCP VERSION at line %d: %s\n", linectr, line) );
                   ADD_DATA_ERROR("Invalid VCP VERSION");
+#ifndef NDEBUG
                   valid_data = false;
+#endif
                }
             }
             else if (streq(s0, "TIMESTAMP_TEXT")   ||
@@ -214,7 +222,9 @@ create_dumpload_data_from_g_ptr_array(
                if (ct != 3) {
                   // f0printf(ferr(), "Invalid VCP data at line %d: %s\n", linectr, line);
                   ADD_DATA_ERROR("Invalid VCP data");
+#ifndef NDEBUG
                   valid_data = false;
+#endif
                }
                else {   // found feature id and value
                   Byte feature_id;
@@ -222,7 +232,9 @@ create_dumpload_data_from_g_ptr_array(
                   if (!ok) {
                      // f0printf(ferr(), "Invalid opcode at line %d: %s", linectr, s1);
                      ADD_DATA_ERROR("Invalid  opcode");
+#ifndef NDEBUG
                      valid_data = false;
+#endif
                   }
                   else {     // valid opcode
                      DDCA_Any_Vcp_Value * valrec = NULL;
@@ -255,7 +267,9 @@ create_dumpload_data_from_g_ptr_array(
                            //          "Invalid hex string value for opcode at line %d: %s\n",
                            //          linectr, line);
                            ADD_DATA_ERROR("Invalid hex string value for opcode");
+#ifndef NDEBUG
                            valid_data = false;
+#endif
                         }
                         else {
                            valrec = create_table_vcp_value_by_bytes(
@@ -271,7 +285,9 @@ create_dumpload_data_from_g_ptr_array(
                         if (ct == 0) {
                            // f0printf(ferr(), "Invalid value for opcode at line %d: %s\n", linectr, line);
                            ADD_DATA_ERROR("Invalid value for opcode");
+#ifndef NDEBUG
                            valid_data = false;
+#endif
                         }
                         else {
                            // good opcode and value
@@ -299,7 +315,9 @@ create_dumpload_data_from_g_ptr_array(
                           errinfo_new2(
                                 DDCRC_BAD_DATA, __func__,
                                 "Unexpected field \"%s\" at line %d: %s", s0, linectr, line) );
+#ifndef NDEBUG
                valid_data = false;
+#endif
             }
          }    // more than 1 field on line
       }       // non-comment line
