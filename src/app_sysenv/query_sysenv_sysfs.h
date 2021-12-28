@@ -17,6 +17,8 @@ typedef struct {
    ushort   subdevice_id;    // subsystem device id
    ushort   subvendor_id;    // subsystem vendor id
 } Device_Ids;
+Device_Ids read_device_ids1(char * cur_dir_name);
+Device_Ids read_device_ids2(char * cur_dir_name);
 
 void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
 void query_loaded_modules_using_sysfs();
