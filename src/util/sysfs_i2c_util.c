@@ -228,7 +228,10 @@ int get_sysfs_drm_edid_count() {
    GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
    if (output) {
       char * s = g_ptr_array_index(output, 0);
-      bool ok = str_to_int(s, &ival, 10);
+#ifndef NDEBUG
+      bool ok =
+#endif
+      str_to_int(s, &ival, 10);
       assert(ok);
       g_ptr_array_free(output, true);
    }
