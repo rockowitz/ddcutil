@@ -20,23 +20,29 @@
 
 ushort h2ushort(char * hval) {
    bool debug = false;
-   int ct;
+
    ushort ival;
-   ct = sscanf(hval, "%hx", &ival);
-   assert(ct == 1);
-   if (debug)
-      DBGMSG("hhhh = |%s|, returning 0x%04x", hval, ival);
+#ifdef NDEBUG
+   sscanf(hval, "%hx", &ival);
+#else
+   assert( sscanf(hval, "%hx", &ival) == 1);
+#endif
+
+   DBGMSF(debug, "hhhh = |%s|, returning 0x%04x", hval, ival);
    return ival;
 }
 
 unsigned h2uint(char * hval) {
    bool debug = false;
-   int ct;
+
    unsigned ival;
-   ct = sscanf(hval, "%x", &ival);
-   assert(ct == 1);
-   if (debug)
-      DBGMSG("hhhh = |%s|, returning 0x%08x", hval, ival);
+#ifdef NDEBUG
+   sscanf(hval, "%x", &ival);
+#else
+   assert( sscanf(hval, "%x", &ival) == 1);
+#endif
+
+   DBGMSF(debug, "hhhh = |%s|, returning 0x%08x", hval, ival);
    return ival;
 }
 
