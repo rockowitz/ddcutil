@@ -86,7 +86,10 @@ ddca_ddcutil_version(void) {
    static bool vspec_init = false;
 
    if (!vspec_init) {
-      int ct = sscanf(get_base_ddcutil_version(),
+#ifndef NDEBUG
+      int ct =
+#endif
+            sscanf(get_base_ddcutil_version(),
                       "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
       assert(ct == 3);
       vspec_init = true;
@@ -620,7 +623,9 @@ int
 ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    // stats for multi part writes and reads are separate, but the
    // max tries for both are identical
+#ifndef NDEBUG
    Retry_Op_Value result3 = try_data_get_maxtries2((Retry_Operation) retry_type);
+#endif
    // new way using retry_mgt
    Retry_Op_Value result2 = trd_get_thread_max_tries((Retry_Operation) retry_type);
    // assert(result == result2);
