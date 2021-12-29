@@ -26,7 +26,6 @@
 
 #include "dynvcp/dyn_feature_codes.h"
 
-#include "ddc/ddc_async.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
