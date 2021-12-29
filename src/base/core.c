@@ -831,7 +831,7 @@ bool vdbgtrc(
    if (debug) {
       printf("(vdbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        pre_prefix, format);
    }
@@ -959,7 +959,7 @@ bool dbgtrc(
    if (debug)
       printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=");
 
    bool msg_emitted = false;
@@ -993,7 +993,7 @@ bool dbgtrc_returning(
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, rc=%d, format=|%s|\n",
                        __func__,
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        rc, format);
 
@@ -1032,7 +1032,7 @@ bool dbgtrc_returning_errinfo(
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, errs=%p, format=|%s|\n",
                        __func__,
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        errs, format);
 
@@ -1073,7 +1073,7 @@ bool dbgtrc_returning_expression(
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, retaval=%s, format=|%s|\n",
                        __func__,
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
+                       trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        retval, format);
 
