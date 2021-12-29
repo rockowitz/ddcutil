@@ -3,7 +3,7 @@
  *  Maintains statistics on DDC retries, along with maxtries settings.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -41,13 +41,14 @@ static bool debug_mutex = false;
  *
  *  \remark
  *  This function is necessary because the behavior if a GLib mutex is
- *  relocked by the curren thread is undefined.
+ *  relocked by the current thread is undefined.
  */
 
 // avoids locking if this thread already owns the lock, since behavior undefined
 bool lock_if_unlocked() {
    bool debug = false;
    debug = debug || debug_mutex;
+
    bool lock_performed = false;
    bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&this_thread_has_lock));
    DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
@@ -57,11 +58,11 @@ bool lock_if_unlocked() {
       // should this be a depth counter rather than a boolean?
       g_private_set(&this_thread_has_lock, GINT_TO_POINTER(true));
       if (debug) {
-         // pid_t cur_thread_id = syscall(SYS_gettid);
          intmax_t cur_thread_id = get_thread_id();
          DBGMSG("Locked by thread %d", cur_thread_id);
       }
    }
+
    DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
    return lock_performed;
 }
@@ -83,13 +84,14 @@ void unlock_if_needed(bool unlock_requested) {
       if (currently_locked) {
          g_private_set(&this_thread_has_lock, GINT_TO_POINTER(false));
          if (debug) {
-            // pid_t cur_thread_id = syscall(SYS_gettid);
             intmax_t cur_thread_id = get_thread_id();
-            DBGMSF(debug, "Unlocked by thread %d", cur_thread_id);
+            DBGMSG("Unlocked by thread %d", cur_thread_id);
          }
          g_mutex_unlock(&try_data_mutex);
       }
    }
+
+   DBGMSF(debug, "Done");
 }
 
 
