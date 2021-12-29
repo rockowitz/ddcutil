@@ -18,7 +18,6 @@
 
 #include "config.h"
 
-
 #define GNU_SOURCE    // for syscall()
 
 //* \cond */
@@ -49,11 +48,11 @@
 #include "util/string_util.h"
 #include "util/timestamp.h"
 
+#include "base/build_info.h"
+#include "base/core_per_thread_settings.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
-#include "base/build_info.h"
-#include "base/core_per_thread_settings.h"
 #include "base/core.h"
 
 
@@ -839,6 +838,8 @@ bool vdbgtrc(
 
    bool msg_emitted = false;
    if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
+      Thread_Output_Settings * thread_settings = get_thread_settings();
+
       char * buffer = g_strdup_vprintf(format, ap);
       if (debug)
          printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
@@ -857,12 +858,9 @@ bool vdbgtrc(
 
       char thread_prefix[15] = "";
       if (dbgtrc_show_thread_id) {
-#ifdef TARGET_BSD
-      int tid = pthread_getthreadid_np();
-#else
-         pid_t tid = syscall(SYS_gettid);
-#endif
-         snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
+         intmax_t tid = get_thread_id();
+         assert(tid == thread_settings->tid);
+         snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);  // is this proper format for pid_t
       }
 
       char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
@@ -908,9 +906,10 @@ bool vdbgtrc(
          syslog(LOG_INFO, "%s", syslog_buf);
       }
 
+      assert(fout() == thread_settings->fout);
       if (is_tracing(trace_group, filename, funcname)) {
-         f0puts(buf2, fout());
-         f0putc('\n', fout());
+         f0puts(buf2, thread_settings->fout);
+         f0putc('\n', thread_settings->fout);
          fflush(fout());
       }
       free(buffer);
