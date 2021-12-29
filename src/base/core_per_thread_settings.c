@@ -105,6 +105,7 @@ Thread_Output_Settings *  get_thread_settings() {
 
    if (!settings) {
       settings = get_default_thread_output_settings();
+      settings->tid = get_thread_id();
       g_private_set(&per_thread_dests_key, settings);
       if (debug)
          printf("(%s) Allocated settings=%p for thread %ld, fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
