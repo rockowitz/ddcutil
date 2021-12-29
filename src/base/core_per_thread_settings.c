@@ -109,7 +109,7 @@ Thread_Output_Settings *  get_thread_settings() {
       g_private_set(&per_thread_dests_key, settings);
       if (debug)
          printf("(%s) Allocated settings=%p for thread %ld, fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-               __func__, settings, get_thread_id(), settings->fout, settings->ferr, stdout, stderr);
+               __func__, settings, settings->tid, settings->fout, settings->ferr, stdout, stderr);
    }
 
    // printf("(%s) Returning: %p\n", __func__, settings);
@@ -135,7 +135,7 @@ void set_fout(FILE * fout) {
    dests->fout = fout;
    if (debug)
       printf("(%s) tid=%ld, dests=%p, fout=%p, stdout=%p\n",
-             __func__, get_thread_id(), dests, fout, stdout);
+             __func__, dests->tid, dests, fout, stdout);
    // FOUT = fout;
    rpt_change_output_dest(fout);
 }
@@ -311,13 +311,17 @@ char * output_level_name(DDCA_Output_Level val) {
  *  @ return  thread number
  */
 
-intmax_t get_thread_id()
-{
+intmax_t get_thread_id() {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
 #ifdef TARGET_BSD
    int tid = pthread_getthreadid_np();
 #else
    pid_t tid = syscall(SYS_gettid);
 #endif
+   if (debug)
+      printf("(%s) Done.    Returning %ld\n", __func__, (intmax_t) tid);
    return tid;
 }
 
