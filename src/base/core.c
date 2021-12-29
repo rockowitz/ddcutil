@@ -858,8 +858,8 @@ bool vdbgtrc(
 
       char thread_prefix[15] = "";
       if (dbgtrc_show_thread_id) {
-         intmax_t tid = get_thread_id();
-         assert(tid == thread_settings->tid);
+         // intmax_t tid = get_thread_id();
+         // assert(tid == thread_settings->tid);
          snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);  // is this proper format for pid_t
       }
 
@@ -906,7 +906,7 @@ bool vdbgtrc(
          syslog(LOG_INFO, "%s", syslog_buf);
       }
 
-      assert(fout() == thread_settings->fout);
+      // assert(fout() == thread_settings->fout);
       if (is_tracing(trace_group, filename, funcname)) {
          f0puts(buf2, thread_settings->fout);
          f0putc('\n', thread_settings->fout);
