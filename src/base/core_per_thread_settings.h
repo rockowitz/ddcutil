@@ -27,16 +27,19 @@
 #define CORE_PER_THREAD_SETTINGS_H_
 
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "ddcutil_types.h"
 
 
 typedef struct {
-   FILE * fout;
-   FILE * ferr;
-   DDCA_Output_Level output_level;
-   // bool   report_ddc_errors;    // unused, ddc error reporting left as global
+   FILE *              fout;
+   FILE *              ferr;
+   DDCA_Output_Level   output_level;
+   // bool             report_ddc_errors;  // unused, ddc error reporting left as global
    DDCA_Error_Detail * error_detail;
+   intmax_t            tid;
 } Thread_Output_Settings;
 
 Thread_Output_Settings *  get_thread_settings();  // get settings for the current thread
