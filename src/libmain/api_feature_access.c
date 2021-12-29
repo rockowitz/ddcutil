@@ -996,6 +996,7 @@ ddca_set_profile_related_values(
    );
 }
 
+#ifdef EXPERIMENTAL_ASYNC
 
 //
 // Async operation - experimental
@@ -1054,6 +1055,8 @@ ddca_pass_callback(
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
+
+#endif
 
 #ifdef FUTURE
 // which header file would this go in?

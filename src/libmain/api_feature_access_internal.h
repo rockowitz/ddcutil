@@ -4,7 +4,7 @@
  *  and of otherwise unpublished and archived functions.
  */
 
-// Copyright (C) 2015-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_FEATURE_ACCESS_INTERNAL_H_
@@ -78,6 +78,7 @@ ddca_format_any_vcp_value(
       char **                 formatted_value_loc);
 
 
+#ifdef EXPERIMENTAL_ASYNC
 //
 // Experimental - Not for public use
 //
@@ -112,6 +113,7 @@ ddca_queue_get_non_table_vcp_value(
       DDCA_Vcp_Feature_Code    feature_code
 );
 
+#endif
 
 
 #endif /* API_FEATURE_ACCESS_INTERNAL_H_ */
