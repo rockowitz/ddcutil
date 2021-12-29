@@ -78,42 +78,4 @@ ddca_format_any_vcp_value(
       char **                 formatted_value_loc);
 
 
-#ifdef EXPERIMENTAL_ASYNC
-//
-// Experimental - Not for public use
-//
-// Used in exploratory Python APIs
-//
-
-DDCA_Status
-ddca_start_get_any_vcp_value(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type         call_type,
-      DDCA_Notification_Func      callback_func);
-
-
-// UNIMPLEMENTED
-/** Registers a callback function to call when a VCP value changes */
-DDCA_Status
-ddca_register_callback(
-      DDCA_Notification_Func func,
-      uint8_t                callback_options);   // type is a placeholder
-
-DDCA_Status
-ddca_pass_callback(
-      Simple_Callback_Func  func,
-      int                   parm
-      );
-
-// unimplemeted
-DDCA_Status
-ddca_queue_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code
-);
-
-#endif
-
-
 #endif /* API_FEATURE_ACCESS_INTERNAL_H_ */

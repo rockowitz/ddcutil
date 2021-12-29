@@ -996,67 +996,7 @@ ddca_set_profile_related_values(
    );
 }
 
-#ifdef EXPERIMENTAL_ASYNC
 
-//
-// Async operation - experimental
-//
-
-DDCA_Status
-ddca_start_get_any_vcp_value(
-      DDCA_Display_Handle         ddca_dh,
-      DDCA_Vcp_Feature_Code       feature_code,
-      DDCA_Vcp_Value_Type         call_type,
-      DDCA_Notification_Func      callback_func)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_API,
-                 "ddca_dh=%p, feature_code=0x%02x, call_type=%d",
-                 ddca_dh, feature_code, call_type);
-   // DDCA_Status rc = DDCRC_ARG;
-   Error_Info * ddc_excp = NULL;
-
-   WITH_VALIDATED_DH2(ddca_dh,
-       {
-          ddc_excp = start_get_vcp_value(dh, feature_code, call_type, callback_func);
-          psc = (ddc_excp) ? ddc_excp->status_code : 0;
-          errinfo_free(ddc_excp);
-          DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
-       }
-      );
-}
-
-
-DDCA_Status
-ddca_register_callback(
-      DDCA_Notification_Func func,
-      uint8_t                callback_options) // type is a placeholder
-{
-   return DDCRC_UNIMPLEMENTED;
-}
-
-DDCA_Status
-ddca_queue_get_non_table_vcp_value(
-      DDCA_Display_Handle      ddca_dh,
-      DDCA_Vcp_Feature_Code    feature_code)
-{
-   return DDCRC_UNIMPLEMENTED;
-}
-
-
-// CFFI
-DDCA_Status
-ddca_pass_callback(
-      Simple_Callback_Func  func,
-      int                   parm)
-{
-   DBGMSG("parm=%d", parm);
-   int callback_rc = func(parm+2);
-   DBGMSG("returning %d", callback_rc);
-   return callback_rc;
-}
-
-#endif
 
 #ifdef FUTURE
 // which header file would this go in?
