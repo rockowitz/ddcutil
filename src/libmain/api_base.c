@@ -159,7 +159,7 @@ char * get_library_filename() {
 
 static
 Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = false;
+   bool debug = true;
    DBGF(debug, "Starting");
 
    Parsed_Cmd * parsed_cmd = NULL;
@@ -265,7 +265,7 @@ bool library_initialized = false;
  */
 void __attribute__ ((constructor))
 _ddca_init(void) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
