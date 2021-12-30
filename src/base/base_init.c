@@ -21,6 +21,9 @@
 /** Master initialization function for files in subdirectory base
  */
 void init_base_services() {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
    errinfo_init(psc_name, psc_desc);
    init_sleep_stats();
    init_execution_stats();
@@ -29,6 +32,8 @@ void init_base_services() {
    init_thread_data_module();
    init_displays();
    init_ddc_packets();
+   if (debug)
+      printf("(%s) Done\n", __func__);
 }
 
 void release_base_services() {
