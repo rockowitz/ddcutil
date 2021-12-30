@@ -1071,7 +1071,7 @@ bool dbgtrc_returning_expression(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, retaval=%s, format=|%s|\n",
+             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, retval=%s, format=|%s|\n",
                        __func__,
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
