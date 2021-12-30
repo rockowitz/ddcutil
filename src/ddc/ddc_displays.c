@@ -850,7 +850,7 @@ bye:
 /**
  *  \param all_displays #GPtrArray of pointers to #Display_Ref
  */
-void async_scan(GPtrArray * all_displays) {
+void ddc_async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d", all_displays, all_displays->len);
 
@@ -890,7 +890,7 @@ void async_scan(GPtrArray * all_displays) {
 }
 
 
-void non_async_scan(GPtrArray * all_displays) {
+void ddc_non_async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
 
@@ -1176,9 +1176,9 @@ ddc_detect_all_displays() {
    DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
                  display_list->len, async_threshold);
    if (display_list->len >= async_threshold)
-      async_scan(display_list);
+      ddc_async_scan(display_list);
    else
-      non_async_scan(display_list);
+      ddc_non_async_scan(display_list);
 
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(olev);
@@ -1208,8 +1208,6 @@ ddc_detect_all_displays() {
                 display_list, dispno_max);
    return display_list;
 }
-
-
 
 
 /** Initializes the master display list.
@@ -1362,14 +1360,14 @@ ddc_is_usb_display_detection_enabled() {
 
 void
 init_ddc_displays() {
-   RTTI_ADD_FUNC(async_scan);
+   RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(is_phantom_display);
-   RTTI_ADD_FUNC(non_async_scan);
+   RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
    RTTI_ADD_FUNC(get_controller_mfg_string_t);
