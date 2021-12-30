@@ -21,7 +21,7 @@
 /** Master initialization function for files in subdirectory base
  */
 void init_base_services() {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting.\n", __func__);
    errinfo_init(psc_name, psc_desc);
