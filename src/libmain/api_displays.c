@@ -801,14 +801,14 @@ ddca_get_display_info_list2(
    g_ptr_array_free(filtered_displays, true);
 
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
-      DBGMSG("Done.     Returning %p", result_list);
+      DBGMSG("Final result list %p", result_list);
       dbgrpt_display_info_list(result_list, 2);
    }
 
    *dlist_loc = result_list;
    assert(*dlist_loc);
-   DBGTRC_DONE(debug, DDCA_TRC_API|DDCA_TRC_DDC,
-                 "Returning: 0. Returned list has %d displays", result_list->ct);
+   DBGTRC_RETURNING(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
+                           "Returned list has %d displays", result_list->ct);
    return 0;
 }
 
