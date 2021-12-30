@@ -200,7 +200,7 @@ void set_trace_groups(DDCA_Trace_Group trace_flags) {
  * @ingroup dbgtrace
  */
 void add_trace_groups(DDCA_Trace_Group trace_flags) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
    trace_levels |= trace_flags;
@@ -429,9 +429,9 @@ void close_syslog() {
  *
  */
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
-      printf("(%s) Starting.  tracegroup=0x%04x, filename=%s, funcname=%s\n",
+      printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
               __func__, trace_group, filename, funcname);
 
    bool result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
@@ -439,7 +439,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
 
    if (debug)
-      printf("(%s) trace_group = %x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
+      printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
               __func__, trace_group, filename, funcname, trace_levels, result);
    return result;
 }
@@ -961,7 +961,7 @@ bool dbgtrc(
         char *            format,
         ...)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
