@@ -578,7 +578,7 @@ execute_cmd_with_optional_display_handle(
   */
 int
 main(int argc, char *argv[]) {
-   bool main_debug = false;
+   bool main_debug = true;
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 
@@ -656,6 +656,8 @@ main(int argc, char *argv[]) {
                          parsed_cmd->traced_files     ||
                          IS_TRACING()                 ||
                          main_debug;
+   if (main_debug)
+      printf("(%s) start_time_reported = %s\n", __func__, SBOOL(start_time_reported));
    DBGMSF(start_time_reported, "Starting %s execution, %s",
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
@@ -682,6 +684,7 @@ main(int argc, char *argv[]) {
       }
    }
 
+   printf("wolf 1\n");
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
