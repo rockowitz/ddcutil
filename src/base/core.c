@@ -186,7 +186,7 @@ static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
  * @ingroup dbgtrace
  */
 void set_trace_groups(DDCA_Trace_Group trace_flags) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
    trace_levels = trace_flags;
@@ -200,7 +200,7 @@ void set_trace_groups(DDCA_Trace_Group trace_flags) {
  * @ingroup dbgtrace
  */
 void add_trace_groups(DDCA_Trace_Group trace_flags) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
    trace_levels |= trace_flags;
@@ -411,7 +411,7 @@ void close_syslog() {
  * - function name
  *
  * @param trace_group group to check
- * @param filename    file from which check is occurring (not currently used)
+ * @param filename    file from which check is occurring
  * @param funcname    function name
  *
  * @return **true** if tracing enabled, **false** if not
@@ -429,12 +429,18 @@ void close_syslog() {
  *
  */
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting.  tracegroup=0x%04x, filename=%s, funcname=%s\n",
+              __func__, trace_group, filename, funcname);
+
    bool result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
 
-   // printf("(%s) trace_group = %02x, filename=%s, funcname=%s, traceLevels=0x%02x, returning %d\n",
-   //        __func__, trace_group, filename, funcname, trace_levels, result);
+   if (debug)
+      printf("(%s) trace_group = %x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
+              __func__, trace_group, filename, funcname, trace_levels, result);
    return result;
 }
 
@@ -936,7 +942,7 @@ bool vdbgtrc(
  *  The message is output to the current FERR device and optionally,
  *  depending on the syslog setting, to the system log.
  *
- *  @param trace_group   trace group of caller, 0xff to always output
+ *  @param trace_group   trace group of caller, DDCA_TRC_ALL = 0xffff to always output
  *  @param options       execution options
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
@@ -955,7 +961,7 @@ bool dbgtrc(
         char *            format,
         ...)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
@@ -966,8 +972,8 @@ bool dbgtrc(
    if ( is_tracing(trace_group, filename, funcname) ) {
       va_list(args);
       va_start(args, format);
-      if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+      // if (debug)
+      //    printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, "", format, args);
       va_end(args);
    }
