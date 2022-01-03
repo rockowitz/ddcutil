@@ -66,6 +66,8 @@ Value_Name_Table callopt_bitname_table2 = {
       VN(CALLOPT_RDONLY),
       VN(CALLOPT_WARN_FINDEX),
       VN(CALLOPT_FORCE),
+      VN(CALLOPT_WAIT),
+      VN(CALLOPT_FORCE_SLAVE_ADDR),
       VN(CALLOPT_NONE),                // special entry
       VN_END
 };
@@ -84,7 +86,7 @@ char * interpret_call_options_t(Call_Options calloptions) {
    char * buf = get_thread_fixed_buffer(&buf_key, 100);
 
    char * buftemp = vnt_interpret_flags(calloptions, callopt_bitname_table2, false, "|");
-   g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation beingn
+   g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation benign
    free(buftemp);
 
    return buf;
