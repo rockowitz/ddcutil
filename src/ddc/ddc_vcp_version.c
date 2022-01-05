@@ -211,7 +211,7 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       DBGMSG(   "          dref->vcp_version_xdf = %s",
                         format_vspec_verbose (dref->vcp_version_xdf));
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING)) {
-            dbgrpt_dref_flags(dref->flags, 2);
+         DBGMSG("       flags: %s", interpret_dref_flags_t(dref->flags) );
       }
    }
 
