@@ -232,16 +232,30 @@ retry:
       result = -errsv;
    }
    if (result == -EBUSY) {
-      DBGTRC_SYSLOG(true, TRACE_GROUP, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
-             filename_for_fd_t(fd),
-             (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
-             addr);
+      char msgbuf[60];
+      g_snprintf(msgbuf, 60, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
+                             filename_for_fd_t(fd),
+                             (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
+                             addr);
+      if (op == I2C_SLAVE) {
+         DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
+      }
+      else {   // I2C_SLAVE_FORCE
+         DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
+      }
+      syslog(LOG_ERR, "%s", msgbuf);
+
    }
    else if (result == 0 && op == I2C_SLAVE_FORCE) {
-      DBGTRC_SYSLOG(true, TRACE_GROUP,
+      char msgbuf[80];
+      g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
+            filename_for_fd_t(fd),
+            addr);
+      DBGTRC(debug, TRACE_GROUP,
                     "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
                    filename_for_fd_t(fd),
                    addr);
+      syslog(LOG_INFO, msgbuf);
    }
 
    assert(result <= 0);
