@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -578,7 +578,7 @@ execute_cmd_with_optional_display_handle(
   */
 int
 main(int argc, char *argv[]) {
-   bool main_debug = true;
+   bool main_debug = false;
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 
