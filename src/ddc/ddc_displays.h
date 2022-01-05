@@ -3,7 +3,7 @@
  *  Access displays, whether DDC or USB
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
@@ -21,8 +21,6 @@
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
-
-extern bool check_phantom_displays;
 
 void ddc_set_async_threshold(int threshold);
 

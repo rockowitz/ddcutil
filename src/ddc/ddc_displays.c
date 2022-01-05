@@ -2,7 +2,7 @@
  * Access displays, whether DDC or USB
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #include "i2c/i2c_strategy_dispatcher.h"
@@ -58,9 +59,6 @@
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
-
-bool check_phantom_displays = true;
-
 
 static GPtrArray * all_displays = NULL;    // all detected displays
 static int dispno_max = 0;                 // highest assigned display number
@@ -125,7 +123,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    DDCA_Any_Vcp_Value * pvalrec;
 
@@ -245,7 +243,7 @@ bye:
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, communication_working, "dh=%s", dh_repr(dh));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dh->dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
    return communication_working;
 }
 
@@ -258,8 +256,9 @@ bye:
  */
 bool ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
-                                       dref_repr_t(dref), dref_basic_flags_t(dref->flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref->flags: %s", interpret_dref_flags_t(dref->flags));
+
    bool result = false;
    Display_Handle * dh = NULL;
    Public_Status_Code psc = 0;
@@ -269,12 +268,14 @@ bool ddc_initial_checks_by_dref(Display_Ref * dref) {
       result = ddc_initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
-   else {
+   // else {    // why else?
      dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-   }
+   // }
+   if (psc == -EBUSY)
+      dref->flags |= DREF_DDC_BUSY;
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref = %s", sbool(result), dref_repr_t(dref) );
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", dref_basic_flags_t(dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dref->flags));
    return result;
 }
 
@@ -310,7 +311,6 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 GPtrArray * ddc_get_all_displays() {
    // ddc_ensure_displays_detected();
    TRACED_ASSERT(all_displays);
-
    return all_displays;
 }
 
@@ -449,19 +449,24 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
-                 dref_repr_t(dref), dref_basic_flags_t(dref->flags));
+   // DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, communication flags: %s",
+   //               dref_repr_t(dref), dref_basic_flags_t(dref->flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s",  dref_repr_t(dref));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref->flags: %s", interpret_dref_flags_t(dref->flags));
    TRACED_ASSERT(dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
 
    switch(dref->dispno) {
+   case DISPNO_BUSY:       // -4
+      rpt_vstring(depth, "Busy display");
+      break;
    case DISPNO_REMOVED:  // -3
       rpt_vstring(depth, "Removed display");
       break;
    case DISPNO_PHANTOM:    // -2
       rpt_vstring(depth, "Phantom display");
       break;
-   case DISPNO_INVALID:   // -3
+   case DISPNO_INVALID:   // -1
       rpt_vstring(depth, "Invalid display");
       break;
    case 0:          // valid display, no assigned display number
@@ -522,6 +527,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                      msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
                 else if ( is_embedded_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
+                else if ( curinfo->flags & I2C_BUS_BUSY) {
+                   struct stat stat_buf;
+                   char buf[20];
+                   g_snprintf(buf, 20, "/dev/bus/ddcci/%d", dref->io_path.path.i2c_busno);
+                   // DBGMSG("buf: %s", buf);
+                   int rc = stat(buf, &stat_buf);
+                   // DBGMSG("stat returned %d", rc);
+                   if (rc == 0)
+                      rpt_label(d1, "I2C device is busy.  Likely conflict with driver ddcci.");
+                   else
+                      rpt_label(d1, "I2C device is busy");
+                   msg = "Try using option --force-slave-address";
+                }
             }
             if (output_level >= DDCA_OL_VERBOSE) {
                if (!msg) {
@@ -1111,7 +1129,7 @@ get_display_ref_for_display_identifier(
 GPtrArray *
 ddc_detect_all_displays() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "check_phantom_displays=%s", sbool(check_phantom_displays));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dispno_max = 0;
 
    GPtrArray * display_list = g_ptr_array_new();
@@ -1123,7 +1141,7 @@ ddc_detect_all_displays() {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = create_bus_display_ref(businfo->busno);
-         dref->dispno = DISPNO_INVALID;   // -1
+         dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
          dref->pedid = businfo->edid;    // needed?
          dref->mmid  = monitor_model_key_new(
                           dref->pedid->mfg_id,
@@ -1187,18 +1205,16 @@ ddc_detect_all_displays() {
    for (int ndx = 0; ndx < display_list->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING)
          dref->dispno = ++dispno_max;
-
-         // check_dynamic_features(dref);    // wrong location for hook
-      }
+      else if (dref->flags & DREF_DDC_BUSY)
+         dref->dispno = DISPNO_BUSY;
       else {
          dref->dispno = DISPNO_INVALID;   // -1;
       }
    }
 
-   if (check_phantom_displays)      // for testing
-      filter_phantom_displays(display_list);
+   filter_phantom_displays(display_list);
 
    if (debug) {
       DBGMSG("Displays detected:");
@@ -1219,7 +1235,7 @@ ddc_ensure_displays_detected() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_displays) {
-      i2c_detect_buses();
+      // i2c_detect_buses();  // called in ddc_detect_all_displays()
       all_displays = ddc_detect_all_displays();
    }
    DBGTRC_DONE(debug, TRACE_GROUP,
