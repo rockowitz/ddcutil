@@ -903,7 +903,7 @@ ddca_report_display_info(
       g_snprintf(fn, 20, "/dev/bus/ddcci/%d", busno);
       struct stat statrec;
       if (stat(fn, &statrec) == 0 )
-         rpt_vstring(d1, "Driver ddcci is hogging I2C slave address x37 (DDC) for /dev/i2c-%d", busno);
+         rpt_vstring(d1, "Driver ddcci is hogging I2C slave address x37 (DDC) on /dev/i2c-%d", busno);
       rpt_vstring(d1, "Consider using option --force-slave-address.");
    }
    DBGMSF(debug, "Done.");
