@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -177,6 +177,10 @@ ddc_open_display(
 
    case DDCA_IO_I2C:
       {
+         I2C_Bus_Info * bus_info = dref->detail;
+         TRACED_ASSERT(bus_info);   // need to convert to a test?
+         TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
+
          int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
          if (fd < 0) {
             ddcrc = fd;
@@ -186,6 +190,8 @@ ddc_open_display(
             ddcrc =  i2c_set_addr(fd, 0x37, callopts);
             if (ddcrc != 0) {
                TRACED_ASSERT(ddcrc < 0);
+               if (ddcrc == -EBUSY)
+                  bus_info->flags |= I2C_BUS_BUSY;
                close(fd);
             }
 
@@ -194,10 +200,6 @@ ddc_open_display(
                // 10/24/15, try disabling:
                // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
                dh = create_base_display_handle(fd, dref);    // n. sets dh->dref = dref
-
-               I2C_Bus_Info * bus_info = dref->detail;
-               TRACED_ASSERT(bus_info);   // need to convert to a test?
-               TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
                dref->pedid = bus_info->edid;
                if (!dref->pedid) {
