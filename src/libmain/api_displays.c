@@ -1,6 +1,6 @@
 // api_displays.c
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -771,7 +772,6 @@ ddca_get_display_info_list2(
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API|DDCA_TRC_DDC, "");
    free_thread_error_detail();
-   // assert(dlist_loc);
    API_PRECOND(dlist_loc);
 
    ddc_ensure_displays_detected();
@@ -850,17 +850,18 @@ ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
-   bool debug = false;
-   DBGMSF(debug, "Starting. dinfo=%p, depth=%d", dinfo, depth);
-
-   // assert(dinfo);
    API_PRECOND_NORC(dinfo);
-   assert(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
+   API_PRECOND_NORC(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
+   bool debug = false;
+   DBGMSF(debug, "Starting. dinfo=%p, dinfo->dispno=%d, depth=%d", dinfo, dinfo->dispno, depth);
+
    int d0 = depth;
    int d1 = depth+1;
    int d2 = depth+2;
    if (dinfo->dispno > 0)
       rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
+   else if (dinfo->dispno == DISPNO_BUSY)
+      rpt_vstring(d0, "Display busy, cannot communicate.  Consider using option --force-slave-address.");
    else
       rpt_label(  d0, "Invalid display - Does not support DDC");
    // rpt_vstring(      d1, "Display ref:         %p -> %s", dinfo->dref, dref_repr_t(dinfo->dref) );
@@ -893,6 +894,18 @@ ddca_report_display_info(
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
    rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
+
+
+   if (dinfo->dispno == DISPNO_BUSY) {
+      rpt_nl();
+      char fn[20];
+      int busno =  dinfo->path.path.i2c_busno;
+      g_snprintf(fn, 20, "/dev/bus/ddcci/%d", busno);
+      struct stat statrec;
+      if (stat(fn, &statrec) == 0 )
+         rpt_vstring(d1, "Driver ddcci is hogging I2C slave address x37 (DDC) for /dev/i2c-%d", busno);
+      rpt_vstring(d1, "Consider using option --force-slave-address.");
+   }
    DBGMSF(debug, "Done.");
 }
 
@@ -902,6 +915,8 @@ dbgrpt_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dinfo=%p");
    ddca_report_display_info(dinfo, depth);
    int d1 = depth+1;
 
@@ -909,6 +924,7 @@ dbgrpt_display_info(
    if (dinfo->dref) {  // paranoid, should never be NULL
       rpt_vstring(d1, "VCP Version (dref xdf): %s", format_vspec_verbose(((Display_Ref*)dinfo->dref)->vcp_version_xdf));
    }
+   DBGMSF(debug, "Done.");
 }
 
 void
@@ -940,6 +956,7 @@ dbgrpt_display_info_list(
    for (int ndx=0; ndx<dlist->ct; ndx++) {
       dbgrpt_display_info(&dlist->info[ndx], d1);
    }
+   DBGMSF(debug, "Done.");
 }
 
 
