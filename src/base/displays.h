@@ -2,7 +2,7 @@
  * Display Specification
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -174,14 +174,16 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x0400
 #define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
+#define DREF_DDC_BUSY                                  0x8000
 
-char * dref_basic_flags_t(Dref_Flags flags);
+char * interpret_dref_flags_t(Dref_Flags flags);    // replaces dref_basic_flags()?
 
 // define in ddcutil_types.h?, or perhaps use -1 for generic invalid, put type of invalid in Dref_Flags?
-#define DISPNO_NOT_SET    0
+#define DISPNO_NOT_SET  0
 #define DISPNO_INVALID -1
 #define DISPNO_PHANTOM -2
 #define DISPNO_REMOVED -3
+#define DISPNO_BUSY    -4
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.

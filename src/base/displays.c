@@ -2,7 +2,7 @@
  * Monitor identifier, reference, handle
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/data_structures.h"
 #include "util/glib_util.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
@@ -786,41 +787,17 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
-void dbgrpt_dref_flags(Dref_Flags flags, int depth) {
-
-#define RPT_DREF_FLAG(FLAG_NAME) \
-   rpt_vstring(d1, "%s: %s", #FLAG_NAME, sbool(flags&FLAG_NAME) )
-
-   int d0 = depth;
-   int d1 = d0+1;
-   // DBGMSG("d1 = %d", d1);
-   rpt_vstring(d0, "flags:        0x%02x", flags);
-   RPT_DREF_FLAG(DREF_DDC_COMMUNICATION_CHECKED                 );
-   RPT_DREF_FLAG(DREF_DDC_COMMUNICATION_WORKING                 );
-   RPT_DREF_FLAG(DREF_DDC_NULL_RESPONSE_CHECKED                 );
-   RPT_DREF_FLAG(DREF_DDC_IS_MONITOR_CHECKED                    );
-   RPT_DREF_FLAG(DREF_DDC_IS_MONITOR                            );
-   RPT_DREF_FLAG(DREF_TRANSIENT                                 );
-   RPT_DREF_FLAG(DREF_DYNAMIC_FEATURES_CHECKED                  );
-   RPT_DREF_FLAG(DREF_OPEN                                      );
-   RPT_DREF_FLAG(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    );
-   RPT_DREF_FLAG(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED );
-   RPT_DREF_FLAG(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         );
-   RPT_DREF_FLAG(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         );
-
-#undef RPT_DREF_FLAG
-}
-
-
 /** Reports the contents of a #Display_Ref in a format appropriate for debugging.
  *
  *  \param  dref  pointer to #Display_Ref instance
  *  \param  depth logical indentation depth
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dref=%p", dref);
    rpt_structure_loc("Display_Ref", dref, depth );
    int d1 = depth+1;
-   int d2 = depth+2;
+   // int d2 = depth+2;
 
 #ifdef OLD
    // old
@@ -848,7 +825,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 #endif
 
    // alt:
-   rpt_vstring(d1, "io_path:      %s", dpath_repr_t(&(dref->io_path)));
+   rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
 
    if (dref->io_path.io_mode == DDCA_IO_USB) {
       rpt_int("usb_bus",         NULL, dref->usb_bus,         d1);
@@ -857,8 +834,11 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    }
 
    rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
-   dbgrpt_dref_flags(dref->flags, d1);
-   rpt_vstring(d2, "mmid:                                       %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+   // dbgrpt_dref_flags(dref->flags, d1);
+   rpt_vstring(d1, "flags:            %s", interpret_dref_flags_t(dref->flags) );
+   rpt_vstring(d1, "mmid:             %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+
+   DBGMSF(debug, "Done");
 }
 
 
@@ -1237,35 +1217,44 @@ char * hiddev_number_to_name(int hiddev_number) {
 #endif
 
 
-#define ADD_DREF_FLAG(FLAG_NAME) \
-   if (flags&FLAG_NAME) strcat(buf, #FLAG_NAME", ")
+Value_Name_Table dref_flags_table = {
+      VN(DREF_DDC_COMMUNICATION_CHECKED),
+ //   VN(DREF_DDC_COMMUNICATION_WORKING),
+      VN(DREF_DDC_NULL_RESPONSE_CHECKED),
+      VN(DREF_DDC_IS_MONITOR_CHECKED),
+      VN(DREF_DDC_IS_MONITOR),
+      VN(DREF_TRANSIENT),
+      VN(DREF_DYNAMIC_FEATURES_CHECKED),
+      VN(DREF_OPEN),
+      VN(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED),
+      VN(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED),
+      VN(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED),
+      VN(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED),
+      VN(DREF_DDC_BUSY),
+      VN(CALLOPT_NONE),                // special entry
+      VN_END
+};
 
-char * dref_basic_flags_t(uint16_t flags) {
-   int max_size = 6 * 35 + 1;
-   static GPrivate  key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&key, max_size);
-   buf[0] = '\0';
-   ADD_DREF_FLAG(DREF_DDC_COMMUNICATION_CHECKED                 );
-   ADD_DREF_FLAG(DREF_DDC_COMMUNICATION_WORKING                 );
-   ADD_DREF_FLAG(DREF_DDC_IS_MONITOR_CHECKED                    );
-   ADD_DREF_FLAG(DREF_DDC_IS_MONITOR                            );
-   ADD_DREF_FLAG(DREF_TRANSIENT                                 );
-   ADD_DREF_FLAG(DREF_OPEN                                      );
 
-   //   unreported flags
-   //   ADD_DREF_FLAG(DREF_DYNAMIC_FEATURES_CHECKED                  );
-   //   ADD_DREF_FLAG(DREF_DDC_NULL_RESPONSE_CHECKED                 );
-   //   ADD_DREF_FLAG(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    );
-   //   ADD_DREF_FLAG(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED );
-   //   ADD_DREF_FLAG(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         );
-   //   ADD_DREF_FLAG(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         );
+/** Interprets a **Dref_Flags** value as a printable string.
+ *  The returned value is valid until the next call of this function in
+ *  the current thread.
+ *
+ *  @param flags  value to interpret
+ *
+ *  @return interpreted value
+ */
+char * interpret_dref_flags_t(Dref_Flags flags) {
+   static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&buf_key, 200);
 
-   int len = strlen(buf);
-   if (len > 0 )
-      buf[len-2] = '\0';
+   char * buftemp = vnt_interpret_flags(flags, dref_flags_table, false, ", ");
+   g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation benign
+   free(buftemp);
+
    return buf;
 }
-#undef ADD_DREF_FLAG
+
 
 void init_displays() {
    RTTI_ADD_FUNC(free_display_handle);
