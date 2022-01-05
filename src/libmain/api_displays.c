@@ -861,7 +861,7 @@ ddca_report_display_info(
    if (dinfo->dispno > 0)
       rpt_vstring(d0, "Display number:  %d", dinfo->dispno);
    else if (dinfo->dispno == DISPNO_BUSY)
-      rpt_vstring(d0, "Display busy, cannot communicate.  Consider using option --force-slave-address.");
+      rpt_vstring(d0, "Busy display - Cannot communicate DDC");
    else
       rpt_label(  d0, "Invalid display - Does not support DDC");
    // rpt_vstring(      d1, "Display ref:         %p -> %s", dinfo->dref, dref_repr_t(dinfo->dref) );
