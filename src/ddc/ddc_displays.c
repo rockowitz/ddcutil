@@ -527,7 +527,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                      msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
                 else if ( is_embedded_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
-                else if ( curinfo->flags & I2C_BUS_BUSY) {
+                // else if ( curinfo->flags & I2C_BUS_BUSY) {
+                else if ( dref->dispno == DISPNO_BUSY) {
                    struct stat stat_buf;
                    char buf[20];
                    g_snprintf(buf, 20, "/dev/bus/ddcci/%d", dref->io_path.path.i2c_busno);
@@ -1389,5 +1390,4 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(get_controller_mfg_string_t);
    RTTI_ADD_FUNC(get_firmware_version_string_t);
 }
-
 
