@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -61,7 +61,7 @@ typedef Byte Call_Options;
 #define CALLOPT_WARN_FINDEX  0x10    ///< issue warning msg re hiddev_field_info.field_index change
 #define CALLOPT_FORCE        0x08    ///< ignore various validity checks
 #define CALLOPT_WAIT         0x04    ///< wait on locked resources, if false then fail
-#define CALLOPT_FORCE_SLAVE_ADDR 0x02 ///< use op FORCE_I2C_SLAVE
+#define CALLOPT_FORCE_SLAVE_ADDR 0x02 ///< use op I2C_SLAVE_FORCE (not currently used)
 
 char * interpret_call_options_t(Call_Options calloptions);
 
