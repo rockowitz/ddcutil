@@ -684,7 +684,6 @@ main(int argc, char *argv[]) {
       }
    }
 
-   printf("wolf 1\n");
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
