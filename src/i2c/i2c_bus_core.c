@@ -2,7 +2,7 @@
  *
  * I2C bus detection and inspection
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -210,7 +210,10 @@ retry:
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
                    filename_for_fd_t(fd), addr);
 
-         if (i2c_force_slave_addr_flag && op == I2C_SLAVE) {
+         if (op == I2C_SLAVE &&
+               i2c_force_slave_addr_flag )
+             // future?: (i2c_force_slave_addr_flag || (callopts & CALLOPT_FORCE_SLAVE_ADDR)) )
+         {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
                    filename_for_fd_t(fd), addr );
@@ -672,9 +675,11 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 }
 
 
-bool i2c_detect_x37(int fd) {
+static bool
+i2c_detect_x37(int fd, bool* busy_loc) {
    bool debug = false;
    bool result = false;
+   *busy_loc = false;
 
    // Quirks
    // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
@@ -708,8 +713,10 @@ bool i2c_detect_x37(int fd) {
       if (rc >= 0)
          result = true;
    }
+   else if (rc == -EBUSY)
+      *busy_loc = true;
 
-   DBGMSF(debug, "Returning %s", SBOOL(result));
+   DBGMSF(debug, "Returning %s, *busy_loc=%s", SBOOL(result), SBOOL(*busy_loc));
    return result;
 }
 
@@ -759,7 +766,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
 
           DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
-          DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %d", ddcrc);
+          DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
           if (ddcrc == 0) {
              bus_info->flags |= I2C_BUS_ADDR_0X50;
              if ( IS_EDP_DEVICE(bus_info->busno) ) {
@@ -771,8 +778,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_LVDS;
              }
              else {
-                if ( i2c_detect_x37(fd) )
+                bool ebusy = false;
+                if ( i2c_detect_x37(fd, &ebusy) )
                    bus_info->flags |= I2C_BUS_ADDR_0X37;
+                else if (ebusy)
+                   bus_info->flags |= I2C_BUS_BUSY;
              }
           }
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
@@ -839,6 +849,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
 #endif
       rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
@@ -1017,8 +1028,8 @@ int i2c_detect_buses() {
          I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
          businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
          i2c_check_bus(businfo);
-         // if (debug || IS_TRACING() )
-         //    i2c_dbgrpt_bus_info(businfo, 0);
+         if (debug || IS_TRACING() )
+            i2c_dbgrpt_bus_info(businfo, 0);
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);
       }

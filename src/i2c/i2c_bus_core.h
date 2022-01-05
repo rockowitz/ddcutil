@@ -2,7 +2,7 @@
  *
  *  I2C bus detection and inspection
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_CORE_H_
@@ -60,6 +60,7 @@ Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 #define I2C_BUS_PROBED               0x01      ///< has bus been checked?
 #define I2C_BUS_VALID_NAME_CHECKED 0x0800
 #define I2C_BUS_HAS_VALID_NAME     0x0400
+#define I2C_BUS_BUSY               0x0200      ///< for possible future use
 
 #define I2C_BUS_INFO_MARKER "BINF"
 /** Information about one I2C bus */
