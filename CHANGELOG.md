@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.2] 2022-01-05
+
+### Added
+- API functions ddca_enable_force_slave_address(), ddca_is_force_slave_address_enabled()
+
+### Changed
+- Improve handling of and messages regarding DDC communication failures with errno EBUSY. 
+  In particular, this state occurs when driver ddcci is loaded.
+- ENVIRONMENT command: Suggests use of --force-slave-address if driver ddcci detected
+- ENVIRONMENT command: Simplify the exploration of sysfs 
+- Allow for building static library if configure option --enable-static is set. 
+  By default, static libraries are not built, 
+
+### Fixed
+- Avoid compilation warnings when assert() statments disabled
+
 ## [1.2.1] 2021-11-15
 
 ### Added
