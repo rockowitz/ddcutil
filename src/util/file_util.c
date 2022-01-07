@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -493,6 +493,7 @@ dir_filtered_ordered_foreach(
         int                   depth)
 {
    GPtrArray * simple_filenames = g_ptr_array_new();
+   g_ptr_array_set_free_func(simple_filenames, free);
 
    struct dirent *dent;
    DIR           *d;
@@ -521,6 +522,7 @@ dir_filtered_ordered_foreach(
          func(dirname, fn, accumulator, depth);
       }
    }
+   g_ptr_array_free(simple_filenames, true);
 }
 
 
