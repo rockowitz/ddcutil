@@ -1,20 +1,28 @@
 # Changelog
 
-## [1.2.2] 2022-01-05
+## [1.2.2] 2022-01-07
 
 ### Added
-- API functions ddca_enable_force_slave_address(), ddca_is_force_slave_address_enabled()
+- API function ddca_enable_force_slave_address()
+- API function ddca_is_force_slave_address_enabled()
 
 ### Changed
-- Improve handling of and messages regarding DDC communication failures with errno EBUSY. 
-  In particular, this state occurs when driver ddcci is loaded.
-- ENVIRONMENT command: Suggests use of --force-slave-address if driver ddcci detected
-- ENVIRONMENT command: Simplify the exploration of sysfs 
-- Allow for building static library if configure option --enable-static is set. 
+- Improve handling of and messages regarding DDC communication failures with 
+  errno EBUSY. In particular, this error occurs when driver ddcci is loaded.
+- Command **environment**: Suggest use of option ***--force-slave-address*** 
+  if driver ddcci is detected
+- Command **environment**: Simplify the exploration of sysfs.
+- Command **detect**: If DDC communication fails with error EBUSY, report the
+  display as "Busy" instead of "Invalid" and suggest use of option 
+  ***--force-slave-address***.
+- When building ddcutil, allow for building a static library if **configure** 
+  option ***--enable-static*** is set. Linux distributions frown on packaging 
+  static libraries, but if a user wants to build it who am I to judge. 
   By default, static libraries are not built, 
 
 ### Fixed
-- Avoid compilation warnings when assert() statments disabled
+- Avoid compilation warnings when assert() statments are disabled (NDEBUG is
+  defined).
 
 ## [1.2.1] 2021-11-15
 
