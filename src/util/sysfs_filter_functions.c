@@ -1,6 +1,6 @@
-// sysfs_filter_functions.c
+/** \file sysfs_filter_functions.c */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "report_util.h"
 #include "string_util.h"
 #include "sysfs_util.h"
 
@@ -25,7 +26,9 @@ GHashTable * regex_hash_table = NULL;
 
 // GDestroyNotify void (*GDestroyNotify) (gpointer data);
 void destroy_regex(gpointer data) {
+   // printf("(%s) Destroying compiled regex at %p\n", __func__, data);
    regfree( (regex_t*) data );
+   free(data);                      // ???
 }
 
 GHashTable* get_regex_hash_table() {
@@ -42,20 +45,45 @@ GHashTable* get_regex_hash_table() {
 }
 
 
-void free_regex_hash_table() {
+void dbgrpt_regex_hash_table() {
    if (regex_hash_table) {
+      GHashTableIter iter;
+      gpointer key, value;
+      g_hash_table_iter_init(&iter, regex_hash_table);
+      while (g_hash_table_iter_next(&iter, &key, &value)) {
+          rpt_vstring(2, "   %p->\"%s\"  :   %p", key, (char *) key, value);
+      }
+   }
+   else
+      rpt_vstring(1, "regex_hash_table not allocated");
+}
+
+
+void free_regex_hash_table() {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. regex_hash_table=%p\n", __func__, regex_hash_table);
+   if (regex_hash_table) {
+      if (debug) {
+         printf("(%s) Hash table contents:\n", __func__);
+         dbgrpt_regex_hash_table(regex_hash_table);
+      }
       g_hash_table_destroy(regex_hash_table);
       regex_hash_table = NULL;
    }
+   if (debug)
+      printf("(%s) Done.\n", __func__);
 }
 
 
 void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
    bool debug = false;
    if (debug)
-      printf("(%s) Executing. pattern = |%s|, compiled_re=%p\n", __func__, pattern, compiled_re);
+      printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n", __func__, pattern, compiled_re);
    GHashTable * regex_hash = get_regex_hash_table();
    g_hash_table_replace(regex_hash, strdup( pattern), compiled_re);
+   if (debug)
+      printf("(%s) Done.\n", __func__);
 }
 
 
@@ -106,9 +134,9 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
    // printf("(%s) forcing re = NULL\n", __func__);
    // re = NULL;
    if (!re) {
-      if (debug)
-         printf("(%s) Compiling...\n", __func__);
       re = calloc(1, sizeof(regex_t));
+      if (debug)
+         printf("(%s) Allocated regex %p, compiling...\n", __func__, re);
       int rc = regcomp(re, pattern, REG_EXTENDED);
       if (rc != 0) {
          printf("(%s) regcomp() returned %d\n", __func__, rc);
