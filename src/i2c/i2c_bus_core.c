@@ -237,12 +237,7 @@ retry:
                              filename_for_fd_t(fd),
                              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
                              addr);
-      if (op == I2C_SLAVE) {
-         DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
-      }
-      else {   // I2C_SLAVE_FORCE
-         DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
-      }
+      DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
       syslog(LOG_ERR, "%s", msgbuf);
 
    }
@@ -251,10 +246,7 @@ retry:
       g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
             filename_for_fd_t(fd),
             addr);
-      DBGTRC(debug, TRACE_GROUP,
-                    "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
-                   filename_for_fd_t(fd),
-                   addr);
+      DBGTRC(debug || get_output_level() > DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
       syslog(LOG_INFO, msgbuf);
    }
 
