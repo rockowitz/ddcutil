@@ -46,12 +46,14 @@ static GMutex default_thread_output_settings_mutex;
 
 static Thread_Output_Settings * default_thread_output_settings = NULL;
 
+
 static void allocate_default_thread_output_settings() {
    default_thread_output_settings = g_new0(Thread_Output_Settings, 1);
    default_thread_output_settings->fout = stdout;
    default_thread_output_settings->ferr = stderr;
    default_thread_output_settings->output_level = DDCA_OL_NORMAL;
 }
+
 
 /** Gets all settings to be used for new threads */
 Thread_Output_Settings * get_default_thread_output_settings() {
@@ -64,6 +66,7 @@ Thread_Output_Settings * get_default_thread_output_settings() {
    g_mutex_unlock(&default_thread_output_settings_mutex);
    return result;
 }
+
 
 /** Sets the fout and ferr values to be used for newly created threads */
 void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
@@ -81,6 +84,7 @@ void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
    g_mutex_unlock(&default_thread_output_settings_mutex);
 }
 
+
 /** Sets the output_level to be used for newly created threads */
 void set_default_thread_output_level(DDCA_Output_Level ol) {
    bool debug = false;
@@ -92,6 +96,7 @@ void set_default_thread_output_level(DDCA_Output_Level ol) {
    default_thread_output_settings->output_level = ol;
    g_mutex_unlock(&default_thread_output_settings_mutex);
 }
+
 
 /** Gets Thread_Output_Settings struct for the current thread */
 Thread_Output_Settings *  get_thread_settings() {
@@ -140,6 +145,7 @@ void set_fout(FILE * fout) {
    rpt_change_output_dest(fout);
 }
 
+
 /** Redirect output that would normally go to **stdout** back to **stdout**.
  * @ingroup output_redirection
  */
@@ -151,6 +157,7 @@ void set_fout_to_default() {
    free(default_settings);
    rpt_change_output_dest(dests->fout);
 }
+
 
 /** Redirect output that would normally go to **stderr**..
  *
@@ -240,9 +247,6 @@ FILE * cur_fout() {
  * Functions and variables to manage and query output level settings.
  */
 
-// static DDCA_Output_Level output_level;
-
-
 /** Returns the output level for the current thread
  *
  * @return output level
@@ -250,7 +254,6 @@ FILE * cur_fout() {
  * \ingroup msglevel
  */
 DDCA_Output_Level get_output_level() {
-   // return output_level;
    Thread_Output_Settings * settings = get_thread_settings();
    return settings->output_level;
 }
@@ -266,8 +269,6 @@ DDCA_Output_Level get_output_level() {
 DDCA_Output_Level set_output_level(DDCA_Output_Level newval) {
    Thread_Output_Settings * settings = get_thread_settings();
    DDCA_Output_Level old_level = settings->output_level;
-   // printf("(%s) old_level=%s, newval=%s  \n",
-   //        __func__, output_level_name(old_level), output_level_name(newval) );
    settings->output_level = newval;
    return old_level;
 }
@@ -297,20 +298,16 @@ char * output_level_name(DDCA_Output_Level val) {
          result = "Very Vebose";
       // default unnecessary, case exhausts enum
    }
-   // printf("(%s) val=%d 0x%02x, returning: %s\n", __func__, val, val, result);
    return result;
 }
 
 
 // get_thread_id() and get_process_id() probably should be in a util level file
 
- // g_mutex_lock(&default_thread_output_settings_mutex);
-
 /** Gets the id number of the current thread
  *
  *  @ return  thread number
  */
-
 intmax_t get_thread_id() {
    bool debug = false;
    if (debug)
@@ -325,6 +322,11 @@ intmax_t get_thread_id() {
    return tid;
 }
 
+
+/** Gets the id number of the current process
+ *
+ *  @ return  process number
+ */
 intmax_t get_process_id()
 {
    pid_t pid = syscall(SYS_getpid);
