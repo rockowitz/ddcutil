@@ -121,7 +121,6 @@ print_simple_title_value(int    offset_start_to_title,
  *  \ingroup msglevel
  */
 void show_output_level() {
-   // printf("Output level:           %s\n", output_level_name(output_level));
    Thread_Output_Settings * settings = get_thread_settings();
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Output level: ",
