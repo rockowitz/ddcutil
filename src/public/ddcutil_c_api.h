@@ -3,7 +3,7 @@
  *  Public C API for ddcutil
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -358,13 +358,10 @@ ddca_start_capture(
  *  If error output was also being captured, error output is redirected
  *  to **stderr**.
  *
- *  @return captured output as a string.
+ *  @return captured output as a string, caller responsible for freeing
  *
  *  @note
  *  If output is not currently being captured, returns a 0 length string.
- *  @note
- *  The returned string is valid until the next call to this function
- *  on the current thread.  It should not be freed by the caller.
  *
  *  @note  Writes messages to actual **stderr** in case of error.
  *  @since 0.9.0
