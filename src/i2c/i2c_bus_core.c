@@ -189,7 +189,7 @@ Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
    Status_Errno result = 0;
    int rc = 0;
    int errsv = 0;
-   uint16_t op = I2C_SLAVE;
+   uint16_t op = (callopts & CALLOPT_FORCE_SLAVE_ADDR) ? I2C_SLAVE_FORCE : I2C_SLAVE;
 
 retry:
    errno = 0;
@@ -211,7 +211,7 @@ retry:
                    filename_for_fd_t(fd), addr);
 
          if (op == I2C_SLAVE &&
-               i2c_force_slave_addr_flag )
+               i2c_force_slave_addr_flag )  // global setting
              // future?: (i2c_force_slave_addr_flag || (callopts & CALLOPT_FORCE_SLAVE_ADDR)) )
          {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
