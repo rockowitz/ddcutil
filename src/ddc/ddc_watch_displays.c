@@ -1,7 +1,7 @@
 /** \file ddc_watch_displays.c - Watch for monitor addition and removal
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -38,6 +38,8 @@
 
 #include "ddc/ddc_watch_displays.h"
 
+// Experimental code, disable for distribution
+static bool watch_displays_enabled = false;
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
@@ -90,9 +92,6 @@ bool check_thread_or_process(pid_t id) {
       DBGMSG("!!! Returning: %s", sbool(result));
    return result;
 }
-
-
-
 
 
 /** Gets a list of all displays known to DRM.
@@ -422,6 +421,7 @@ gpointer watch_displays_using_udev(gpointer data) {
       if (terminate_watch_thread) {
          DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
          free_watch_displays_data(wdd);
+         g_ptr_array_free(prev_displays, true);
          g_thread_exit(0);
          assert(false);    // avoid clang warning re wdd use after free
       }
@@ -530,48 +530,49 @@ DDCA_Status
 ddc_start_watch_displays()
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "" );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
-   char * class_drm_dir =
-#ifdef TARGET_BSD
-         "/compat/sys/class/drm";
-#else
-         "/sys/class/drm";
-#endif
-   Byte_Bit_Flags drm_card_numbers = get_sysfs_drm_card_numbers();
-   if (bbf_count_set(drm_card_numbers) == 0) {
-      rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
-      ddcrc = DDCRC_INVALID_OPERATION;
-   }
-   else {
-
-      g_mutex_lock(&watch_thread_mutex);
-
-      if (watch_thread)
-         ddcrc = DDCRC_INVALID_OPERATION;
-      else {
-         terminate_watch_thread = false;
-         Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-         memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-         data->display_change_handler = dummy_display_change_handler;
-         data->main_process_id = getpid();
-         // data->main_thread_id = syscall(SYS_gettid);
-         data->main_thread_id = get_thread_id();
-         data->drm_card_numbers = drm_card_numbers;
-         watch_thread = g_thread_new(
-                          "watch_displays",             // optional thread name
-   #if ENABLE_UDEV
-                          watch_displays_using_udev,
+   if (watch_displays_enabled) {
+      char * class_drm_dir =
+   #ifdef TARGET_BSD
+            "/compat/sys/class/drm";
    #else
-                          watch_displays_using_poll,
+            "/sys/class/drm";
    #endif
-                          data);
+      Byte_Bit_Flags drm_card_numbers = get_sysfs_drm_card_numbers();
+      if (bbf_count_set(drm_card_numbers) == 0) {
+         rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
+         ddcrc = DDCRC_INVALID_OPERATION;
       }
+      else {
+         g_mutex_lock(&watch_thread_mutex);
 
-      g_mutex_unlock(&watch_thread_mutex);
+         if (watch_thread)
+            ddcrc = DDCRC_INVALID_OPERATION;
+         else {
+            terminate_watch_thread = false;
+            Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
+            memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+            data->display_change_handler = dummy_display_change_handler;
+            data->main_process_id = getpid();
+            // data->main_thread_id = syscall(SYS_gettid);
+            data->main_thread_id = get_thread_id();
+            data->drm_card_numbers = drm_card_numbers;
+            watch_thread = g_thread_new(
+                             "watch_displays",             // optional thread name
+      #if ENABLE_UDEV
+                             watch_displays_using_udev,
+      #else
+                             watch_displays_using_poll,
+      #endif
+                             data);
+         }
+         g_mutex_unlock(&watch_thread_mutex);
+      }
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "watch_thread=%p, returning: %s", watch_thread, ddcrc_desc_t(ddcrc));
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
+                                        watch_displays_enabled, watch_thread);
    return ddcrc;
 }
 
@@ -590,26 +591,31 @@ DDCA_Status
 ddc_stop_watch_displays()
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "" );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
-   g_mutex_lock(&watch_thread_mutex);
 
-   // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
-   if (watch_thread) {
-      terminate_watch_thread = true;  // signal watch thread to terminate
-#ifndef ENABLE_UDEV
-      // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
-      // so termiate flag doesn't get checked
-      // no big deal, ddc_stop_watch_displays() is only called at program termination to
-      // release resources for tidyness
-      g_thread_join(watch_thread);
-#endif
-      watch_thread = NULL;
+   if (watch_displays_enabled) {
+      g_mutex_lock(&watch_thread_mutex);
+
+      // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
+      if (watch_thread) {
+         terminate_watch_thread = true;  // signal watch thread to terminate
+   #ifndef ENABLE_UDEV
+         // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
+         // so termiate flag doesn't get checked
+         // no big deal, ddc_stop_watch_displays() is only called at program termination to
+         // release resources for tidyness
+         g_thread_join(watch_thread);
+   #endif
+         g_thread_unref(watch_thread);
+         watch_thread = NULL;
+      }
+      else
+         ddcrc = DDCRC_INVALID_OPERATION;
+
+      g_mutex_unlock(&watch_thread_mutex);
+
    }
-   else
-      ddcrc = DDCRC_INVALID_OPERATION;
-
-   g_mutex_unlock(&watch_thread_mutex);
    DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
