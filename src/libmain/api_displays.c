@@ -392,16 +392,30 @@ ddca_open_display(
 }
 
 
+// unpublished extension
+
+
+/** Options for opening a DDCA_Display_Ref
+ */
+
+typedef enum {
+   DDCA_OPENOPT_NONE             = 0,
+   DDCA_OPENOPT_WAIT             = 1,
+   DDCA_OPENOPT_FORCE_SLAVE_ADDR = 2
+} DDCA_Open_Options;
+
+
+static
 DDCA_Status
-ddca_open_display2(
+ddca_open_display3(
       DDCA_Display_Ref      ddca_dref,
-      bool                  wait,
+      DDCA_Open_Options     options,
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API,
-          "ddca_dref=%p, wait=%s, dh_loc=%p, on thread %d",
-          ddca_dref, sbool(wait), dh_loc, get_thread_id());
+          "ddca_dref=%p, options=0x%02x, dh_loc=%p, on thread %d",
+          ddca_dref, options, dh_loc, get_thread_id());
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API,
           "library_initialized=%s, ddc_displays_already_detected() = %ld",
           sbool(library_initialized), ddc_displays_already_detected());
@@ -424,8 +438,10 @@ ddca_open_display2(
 
      Display_Handle* dh = NULL;
      Call_Options callopts = CALLOPT_NONE;
-     if (wait)
+     if (options & DDCA_OPENOPT_WAIT)
         callopts |= CALLOPT_WAIT;
+     if (options & DDCA_OPENOPT_FORCE_SLAVE_ADDR)
+        callopts |= CALLOPT_FORCE_SLAVE_ADDR;
      rc = ddc_open_display(dref,  callopts, &dh);
      if (rc == 0)
         *dh_loc = dh;
@@ -435,6 +451,19 @@ ddca_open_display2(
                                              *dh_loc, dh_repr_t(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
+}
+
+
+DDCA_Status
+ddca_open_display2(
+      DDCA_Display_Ref      ddca_dref,
+      bool                  wait,
+      DDCA_Display_Handle * dh_loc)
+{
+   return ddca_open_display3(ddca_dref,
+                             (wait) ? DDCA_OPENOPT_WAIT : DDCA_OPENOPT_NONE,
+                             dh_loc);
+
 }
 
 
