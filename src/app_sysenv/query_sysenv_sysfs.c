@@ -796,12 +796,13 @@ void show_top_level_sys_entries(int depth) {
      "ls -l /sys/devices/pci*",
      "ls -l /sys/class/pci*",             // pci_bus, pci_epc
 #endif
-     "ls -l /sys/class/backlight:*",
      "ls -l /sys/bus/pci/devices",
      "ls -l /sys/bus/i2c/devices",
+     "ls -l /sys/bus/ddcci/devices",
      "ls -l /sys/bus/platform/devices",   // not symbolic links
      "ls -l /sys/class/drm*",             // drm, drm_dp_aux_dev
      "ls -l /sys/class/i2c*",             // i2c, i2c-adapter, i2c-dev
+     "ls -l /sys/class/backlight",
      "ls -l /sys/class/vfio*",
      NULL
    };
