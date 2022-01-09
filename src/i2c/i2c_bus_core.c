@@ -247,7 +247,7 @@ retry:
             filename_for_fd_t(fd),
             addr);
       DBGTRC(debug || get_output_level() > DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      syslog(LOG_INFO, msgbuf);
+      syslog(LOG_INFO, "%s", msgbuf);
    }
 
    assert(result <= 0);
