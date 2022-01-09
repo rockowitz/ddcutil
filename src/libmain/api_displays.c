@@ -1,6 +1,6 @@
-// api_displays.c
+/** \file api_displays.c */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -10,21 +10,22 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "util/report_util.h"
-#include "util/string_util.h"
-
-#include "base/core.h"
-
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
 
+#include "util/report_util.h"
+#include "util/string_util.h"
+
+#include "base/core.h"
+#include "base/displays.h"
+#include "base/monitor_model_key.h"
+
+#include "i2c/i2c_sysfs.h"
+
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
-
-#include "base/displays.h"
-#include "base/monitor_model_key.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"
@@ -897,23 +898,39 @@ ddca_report_display_info(
    // rpt_vstring(d1, "IO mode:             %s", io_mode_name(dinfo->path.io_mode));
    switch(dinfo->path.io_mode) {
    case (DDCA_IO_I2C):
-         rpt_vstring(d1, "I2C bus:             /dev/i2c-%d", dinfo->path.path.i2c_busno);
+         rpt_vstring(d1, "I2C bus:              /dev/i2c-%d", dinfo->path.path.i2c_busno);
          break;
    case (DDCA_IO_ADL):
-         rpt_vstring(d1, "ADL adapter.display: %d.%d",
+         rpt_vstring(d1, "ADL adapter.display:  %d.%d",
                          dinfo->path.path.adlno.iAdapterIndex, dinfo->path.path.adlno.iDisplayIndex);
          break;
    case (DDCA_IO_USB):
-         rpt_vstring(d1, "USB bus.device:      %d.%d",
+         rpt_vstring(d1, "USB bus.device:       %d.%d",
                          dinfo->usb_bus, dinfo->usb_device);
          rpt_vstring(d1, "USB hiddev device:   /dev/usb/hiddev%d", dinfo->path.path.hiddev_devno);
          break;
    }
 
-   rpt_vstring(d1, "Mfg Id:              %s", dinfo->mfg_id);
-   rpt_vstring(d1, "Model:               %s", dinfo->model_name);
-   rpt_vstring(d1, "Product code:        %u", dinfo->product_code);
-   rpt_vstring(d1, "Serial number:       %s", dinfo->sn);
+   rpt_vstring(d1, "Mfg Id:               %s", dinfo->mfg_id);
+   rpt_vstring(d1, "Model:                %s", dinfo->model_name);
+   rpt_vstring(d1, "Product code:         %u", dinfo->product_code);
+   rpt_vstring(d1, "Serial number:        %s", dinfo->sn);
+
+   // binary SN is not part of DDCA_Display_Info
+   Parsed_Edid * edid = create_parsed_edid(dinfo->edid_bytes);
+   if (edid) {     // should never fail, but being ultracautios
+      // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
+      // useful for differentiating displays that share a generic ASCII "serial number"
+      rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
+   }
+
+#ifdef NOT_WORKING
+   if (dinfo->path.io_mode == DDCA_IO_I2C) {
+      I2C_Sys_Info * info = get_i2c_sys_info(dinfo->path.path.i2c_busno, -1);
+      rpt_vstring(d1, "DRM Connector:        %s", (info->connector) ? info->connector : "");
+   }
+#endif
+
    // rpt_label(  d1, "Monitor Model Id:");
    // rpt_vstring(d2, "Mfg Id:           %s", dinfo->mmid.mfg_id);
    // rpt_vstring(d2, "Model name:       %s", dinfo->mmid.model_name);
@@ -921,7 +938,7 @@ ddca_report_display_info(
    rpt_vstring(d1, "EDID:");
    rpt_hex_dump(dinfo->edid_bytes, 128, d2);
    // rpt_vstring(d1, "dref:                %p", dinfo->dref);
-   rpt_vstring(d1, "VCP Version:         %s", format_vspec(dinfo->vcp_version));
+   rpt_vstring(d1, "VCP Version:          %s", format_vspec(dinfo->vcp_version));
 // rpt_vstring(d1, "VCP Version Id:      %s", format_vcp_version_id(dinfo->vcp_version_id) );
 
 
