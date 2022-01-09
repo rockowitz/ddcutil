@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] 2022-01-07
+## [1.2.2] 2022-01-09
 
 ### Added
 - API function ddca_enable_force_slave_address()
@@ -9,20 +9,31 @@
 ### Changed
 - Improve handling of and messages regarding DDC communication failures with 
   errno EBUSY. In particular, this error occurs when driver ddcci is loaded.
-- Command **environment**: Suggest use of option ***--force-slave-address*** 
-  if driver ddcci is detected
+  - Command **detect**: If DDC communication fails with error EBUSY, report the
+    display as "Busy" instead of "Invalid" and suggest use of option 
+    ***--force-slave-address***.
+  - Command **environment**: Suggest use of option ***--force-slave-address*** 
+    if driver ddcci is detected.
+  - Messages re EBUSY errors are always written to the system log.
 - Command **environment**: Simplify the exploration of sysfs.
-- Command **detect**: If DDC communication fails with error EBUSY, report the
-  display as "Busy" instead of "Invalid" and suggest use of option 
-  ***--force-slave-address***.
 - When building ddcutil, allow for building a static library if **configure** 
   option ***--enable-static*** is set. Linux distributions frown on packaging 
   static libraries, but if a user wants to build it who am I to judge. 
-  By default, static libraries are not built, 
+  By default, static libraries are not built,
+- Disable watch display thread.
+- Delete incomplete, experimental code for asynhronous feature access, 
+  including files src/ddc/ddc_async.c/h. 
+- Remove unused files src/util/output_sink.c/h.
+- Replace use of Linux specific function **__assert_fail()** with **exit()** in
+  traced assertions.  **__assert_fail** is not in the C specification but is 
+  part of the Linux implementation of assert(), and can present a problem in 
+  porting ddcutil.
+- API function ddca_report_display_info(): include binary serial number
 
 ### Fixed
 - Avoid compilation warnings when assert() statments are disabled (NDEBUG is
   defined).
+- Memory leaks.
 
 ## [1.2.1] 2021-11-15
 
