@@ -996,6 +996,56 @@ ddca_set_profile_related_values(
 }
 
 
+//
+// Vestiges of old experimental async API.
+// Never published, retained for ABI compatibility.
+//
+
+DDCA_Status
+ddca_start_get_any_vcp_value(
+      DDCA_Display_Handle         ddca_dh,
+      DDCA_Vcp_Feature_Code       feature_code,
+      DDCA_Vcp_Value_Type         call_type,
+      DDCA_Notification_Func      callback_func)
+{
+   return DDCRC_UNIMPLEMENTED;
+}
+
+
+DDCA_Status
+ddca_register_callback(
+      DDCA_Notification_Func func,
+      uint8_t                callback_options) // type is a placeholder
+{
+   return DDCRC_UNIMPLEMENTED;
+}
+
+DDCA_Status
+ddca_queue_get_non_table_vcp_value(
+      DDCA_Display_Handle      ddca_dh,
+      DDCA_Vcp_Feature_Code    feature_code)
+{
+   return DDCRC_UNIMPLEMENTED;
+}
+
+//
+// CFFI
+//
+DDCA_Status
+ddca_pass_callback(
+      Simple_Callback_Func  func,
+      int                   parm)
+{
+   DBGMSG("parm=%d", parm);
+   int callback_rc = func(parm+2);
+   DBGMSG("returning %d", callback_rc);
+   return callback_rc;
+}
+
+
+
+
+
 
 #ifdef FUTURE
 // which header file would this go in?
