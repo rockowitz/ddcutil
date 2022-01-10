@@ -922,6 +922,7 @@ ddca_report_display_info(
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
       rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
+      free_parsed_edid(edid);
    }
 
 #ifdef NOT_WORKING
