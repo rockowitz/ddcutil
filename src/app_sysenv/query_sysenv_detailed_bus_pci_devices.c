@@ -4,7 +4,7 @@
  *  that performs minimal filtering of attributes.
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  /** \cond */
@@ -93,7 +93,9 @@ void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
             RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "max_brightness");
             RPT_ATTR_REALPATH(d0, NULL, fq_i2c_dir_name , fn_0037, ddcciN, "backlight", ddcciN, "subsystem");
          }
+         free(ddcci_subdir);
       }
+      free(fn_0037);
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
