@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] 2022-01-09
+## [1.2.2] 2022-01-10
 
 ### Added
 - API function ddca_enable_force_slave_address()
@@ -20,7 +20,6 @@
   option ***--enable-static*** is set. Linux distributions frown on packaging 
   static libraries, but if a user wants to build it who am I to judge. 
   By default, static libraries are not built,
-- Disable watch display thread.
 - Delete incomplete, experimental code for asynhronous feature access, 
   including files src/ddc/ddc_async.c/h. 
 - Remove unused files src/util/output_sink.c/h.
