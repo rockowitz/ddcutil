@@ -38,8 +38,8 @@
 
 #include "ddc/ddc_watch_displays.h"
 
-// Experimental code, disable for distribution
-static bool watch_displays_enabled = false;
+// Experimental code
+static bool watch_displays_enabled = true;
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
