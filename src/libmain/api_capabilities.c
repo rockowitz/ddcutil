@@ -237,6 +237,10 @@ ddca_free_parsed_capabilities(
          cur_vcp->marker[3] = 'x';
          free(cur_vcp->values);
       }
+      free(pcaps->vcp_codes);
+
+      free(pcaps->cmd_codes);
+
 
       ntsa_free(pcaps->messages, true);
       pcaps->marker[3] = 'x';
