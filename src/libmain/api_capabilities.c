@@ -229,7 +229,6 @@ ddca_free_parsed_capabilities(
    if (pcaps) {
       assert(memcmp(pcaps->marker, DDCA_CAPABILITIES_MARKER, 4) == 0);
       free(pcaps->unparsed_string);
-
       DBGMSF(debug, "vcp_code_ct = %d", pcaps->vcp_code_ct);
       for (int ndx = 0; ndx < pcaps->vcp_code_ct; ndx++) {
          DDCA_Cap_Vcp * cur_vcp = &pcaps->vcp_codes[ndx];
@@ -238,10 +237,7 @@ ddca_free_parsed_capabilities(
          free(cur_vcp->values);
       }
       free(pcaps->vcp_codes);
-
       free(pcaps->cmd_codes);
-
-
       ntsa_free(pcaps->messages, true);
       pcaps->marker[3] = 'x';
       free(pcaps);
