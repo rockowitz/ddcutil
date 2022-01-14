@@ -908,6 +908,8 @@ void query_sysenv() {
 
       rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 0);
       execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
+      rpt_title("Query file system for i2c nodes under /sys/class/drm/card*/ddc/i2c-dev/...", 0);
+      execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/ddc/i2c-dev/i2c*", 1);
 
       device_xref_report(0);
 
