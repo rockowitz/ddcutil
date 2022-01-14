@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // #define SYSENV_QUICK_TEST_RUN 1
