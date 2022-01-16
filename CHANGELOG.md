@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] 2022-01-10
+## [1.2.2] 2022-01-16
 
 ### Added
 - API function ddca_enable_force_slave_address()
@@ -30,6 +30,8 @@
 - API function ddca_report_display_info(): include binary serial number
 
 ### Fixed
+- Only write Starting/Terminating messages to the system log if option 
+  --syslog is specified.
 - Avoid compilation warnings when assert() statments are disabled (NDEBUG is
   defined).
 - Memory leaks.
