@@ -28,7 +28,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
       rpt_label(depth, "Experimental Options:");
       REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
       REPORT_FLAG_OPTION(2, "Unused");    // was Filter phantom displays
-      REPORT_FLAG_OPTION(3, "Write trace messages to syslog");
+      REPORT_FLAG_OPTION(3, "Unused");
       REPORT_FLAG_OPTION(4, "Read strategy tests");
       REPORT_FLAG_OPTION(5, "Unused");
       REPORT_FLAG_OPTION(6, "Force I2c bus");
