@@ -587,12 +587,6 @@ main(int argc, char *argv[]) {
    if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
 
-   openlog("ddcutil",          // prepended to every log message
-           LOG_CONS |          // write to system console if error sending to system logger
-           LOG_PID,            // include caller's process id
-           LOG_USER);          // generic user program, syslogger can use to determine how to handle
-   syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
-
    Parsed_Cmd * parsed_cmd = NULL;
    add_rtti_functions();      // add entries for this file
    init_base_services();      // so tracing related modules are initialized
@@ -661,6 +655,14 @@ main(int argc, char *argv[]) {
    DBGMSF(start_time_reported, "Starting %s execution, %s",
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
+   if (trace_to_syslog) {
+      openlog("ddcutil",          // prepended to every log message
+              LOG_CONS |          // write to system console if error sending to system logger
+              LOG_PID,            // include caller's process id
+              LOG_USER);          // generic user program, syslogger can use to determine how to handle
+      syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
+
+   }
 
    bool ok = master_initializer(parsed_cmd);
    if (!ok)
@@ -836,8 +838,10 @@ bye:
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
    release_base_services();
-   syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
-   closelog();
+   if (trace_to_syslog) {
+      syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
+      closelog();
+   }
    return main_rc;
 }
 
