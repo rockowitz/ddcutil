@@ -1,6 +1,6 @@
 /** \file app_experimental.c */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
