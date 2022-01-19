@@ -775,13 +775,15 @@ ddca_get_display_refs(
    *cur_ddca_dref = NULL; // redundant since calloc()
    g_ptr_array_free(filtered_displays, true);
 
-   int dref_ct = 0;
    if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
-      DBGMSG("Done.     Returning 0. *drefs_loc=%p", result_list);
+      int dref_ct = 0;
+      for (; result_list[dref_ct]; dref_ct++) {}
+      DBGTRC_RETURNING(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
+                              "*drefs_loc=%p contains %d displays:", result_list, dref_ct);
       DDCA_Display_Ref * cur_ddca_dref = result_list;
-      while (cur_ddca_dref) {
-         Display_Ref * dref = (Display_Ref*) cur_ddca_dref;
-         rpt_vstring(1, "DDCA_Display_Ref %p -> display %d", cur_ddca_dref, dref->dispno);
+      while (*cur_ddca_dref) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_API|DDCA_TRC_DDC,
+                                "DDCA_Display_Ref %p -> %s", cur_ddca_dref, dref_repr_t(*cur_ddca_dref) );
          cur_ddca_dref++;
          dref_ct++;
       }
@@ -789,7 +791,6 @@ ddca_get_display_refs(
 
    *drefs_loc = result_list;
    assert(*drefs_loc);
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0. Returned list has %d displays", dref_ct);
    return 0;
 }
 
