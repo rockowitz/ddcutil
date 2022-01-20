@@ -380,6 +380,32 @@ void report_parsed_edid_base(
                default:
                   strcat(explbuf, " (Invalid DVI standard)");
                }
+               strcat(explbuf, ", Bit depth: ");
+               switch ( (edid->video_input_definition & 0x70) >> 4) {
+               case 0x00:
+                  strcat(explbuf, "undefined");
+                  break;
+               case 0x01:
+                  strcat(explbuf, "6");
+                  break;
+               case 0x02:
+                  strcat(explbuf, "8");
+                  break;
+               case 0x03:
+                  strcat(explbuf, "10");
+                  break;
+               case 0x04:
+                  strcat(explbuf, "12");
+                  break;
+               case 0x05:
+                  strcat(explbuf, "14");
+                  break;
+               case 0x06:
+                  strcat(explbuf, "16");
+                  break;
+               case 0x07:
+                  strcat(explbuf, " (x07 reserved)");
+               }
             }
          }
          else {
