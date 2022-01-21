@@ -934,7 +934,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                             businfo->edid->serial_ascii);
       else
          report_parsed_edid_base(businfo->edid,
-                           (output_level >= DDCA_OL_VV),
+                           (output_level >= DDCA_OL_VERBOSE), // was DDCA_OL_VV
                            (output_level >= DDCA_OL_VERBOSE),
                            depth);
    }
