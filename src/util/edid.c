@@ -472,8 +472,8 @@ void report_parsed_edid_base(
          // restrict to EDID version >= 1.3?
          rpt_vstring(d1,"Extension blocks: %u",    edid->extension_flag);
 
-      //  if (strlen(edid->edid_source) > 0)
-         rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
+         if (strlen(edid->edid_source) > 0)   // will be set only for USB devices, values "USB", "X11"
+            rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
       }  // if (verbose_synopsis)
       if (show_raw) {
          rpt_vstring(depth,"EDID hex dump:");
