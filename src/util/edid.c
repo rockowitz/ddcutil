@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -341,7 +341,7 @@ void report_parsed_edid_base(
       rpt_vstring(depth,"EDID synopsis:");
       rpt_vstring(d1,"Mfg id:               %s",          edid->mfg_id);
       rpt_vstring(d1,"Model:                %s",          edid->model_name);
-   // rpt_vstring(d1,"Product code:         0x%04x (%u)",      edid->product_code, edid->product_code);
+   // rpt_vstring(d1,"Product code:         0x%04x (%u)", edid->product_code, edid->product_code);
       rpt_vstring(d1,"Product code:         %u",          edid->product_code);
       rpt_vstring(d1,"Serial number:        %s",          edid->serial_ascii);
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
@@ -352,6 +352,7 @@ void report_parsed_edid_base(
       else
       rpt_vstring(d1,"Manufacture year:     %d,  Week: %d", edid->year, edid->manufacture_week);
       if (verbose_synopsis) {
+         rpt_vstring(d1,"EDID version:         %d.%d",       edid->edid_version_major, edid->edid_version_minor);
          rpt_vstring(d1,"Extra descriptor:        %s",          edid->extra_descriptor_string);
          char explbuf[100];
          explbuf[0] = '\0';
@@ -412,7 +413,6 @@ void report_parsed_edid_base(
             strcpy(explbuf, "Analog Input");
          }
          rpt_vstring(d1,"Video input definition:    0x%02x - %s", edid->video_input_definition, explbuf);
-      // rpt_vstring(d1,"Video input:      %s",          (edid->is_digital_input) ? "Digital" : "Analog");
          // end, video_input_definition interpretation
 
          rpt_vstring(d1, "Supported features:");
@@ -474,13 +474,13 @@ void report_parsed_edid_base(
 
       //  if (strlen(edid->edid_source) > 0)
          rpt_vstring(depth,"EDID source: %s",        edid->edid_source);
-      }
+      }  // if (verbose_synopsis)
       if (show_raw) {
          rpt_vstring(depth,"EDID hex dump:");
          rpt_hex_dump(edid->bytes, 128, d1);
       }
 
-   }
+   }  // if (edid)
    else {
        if (verbose_synopsis)
          rpt_vstring(d1,"No EDID");
