@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] 2022-01-16
+## [1.2.2] 2022-01-21
 
 ### Added
 - API function ddca_enable_force_slave_address()
@@ -28,12 +28,17 @@
   part of the Linux implementation of assert(), and can present a problem in 
   porting ddcutil.
 - API function ddca_report_display_info(): include binary serial number
+- **detect** reports additional EDID information (EDID version, input type, 
+  color related detail) if option ***--verbose*** is set.  This information 
+  of general interest had previously been shown only for undocumented option
+   ***--very-verbose***.
 
 ### Fixed
 - Only write Starting/Terminating messages to the system log if option 
   --syslog is specified.
 - Avoid compilation warnings when assert() statments are disabled (NDEBUG is
   defined).
+- Fixed a segfault in the debug/trace code of ddca_get_display_refs()
 - Memory leaks.
 
 ## [1.2.1] 2021-11-15
