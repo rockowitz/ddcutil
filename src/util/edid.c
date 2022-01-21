@@ -438,7 +438,6 @@ void report_parsed_edid_base(
                rpt_vstring(d2, "Digital display type: RGB 4:4:4 + YCrCb 4:4:4 + YCrCb 4:2:2");
                break;
             default:
-               // should be PROGRAM_LOGIC_ERROR, but that would violate layering
                rpt_vstring(d2, "Invalid digital display type: 0x%02x", display_type);
             }
          }
