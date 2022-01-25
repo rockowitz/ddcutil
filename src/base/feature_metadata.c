@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE     // for asprintf in stdio.h
@@ -286,7 +286,7 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
          free(metadata->feature_name);
          free(metadata->feature_desc);
          free_sl_value_table(metadata->sl_values);
-         free_sl_value_table(metadata->latest_sl_values);
+         // free_sl_value_table(metadata->latest_sl_values);
       }
       metadata->marker[3] = 'x';
    }
@@ -321,7 +321,7 @@ dbgrpt_display_feature_metadata(
       char * s = interpret_feature_flags_t(meta->feature_flags);
       rpt_vstring(d1, "flags:           0x%04x = %s", meta->feature_flags, s);
       dbgrpt_sl_value_table(meta->sl_values, "Feature values", d1);
-      dbgrpt_sl_value_table(meta->latest_sl_values, "Latest feature values", d1);
+      // dbgrpt_sl_value_table(meta->latest_sl_values, "Latest feature values", d1);
       rpt_vstring(d1, "nontable_formatter:           %p - %s",
                       meta->nontable_formatter,
                       rtti_get_func_name_by_addr(meta->nontable_formatter)) ;
@@ -356,7 +356,7 @@ dfm_free(
       free(meta->feature_name);
       free(meta->feature_desc);
       free_sl_value_table(meta->sl_values);
-      free_sl_value_table(meta->latest_sl_values);
+      // free_sl_value_table(meta->latest_sl_values);
       free(meta);
    }
 }
@@ -425,7 +425,7 @@ dfm_to_ddca_feature_metadata(
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
    ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);
    // ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
-   ddca_meta->latest_sl_values = copy_sl_value_table(dfm->latest_sl_values);
+   // ddca_meta->latest_sl_values = copy_sl_value_table(dfm->latest_sl_values);
 
    DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
    return ddca_meta;
@@ -460,7 +460,7 @@ dfm_from_ddca_feature_metadata(
    dfm->table_formatter = NULL;
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
    dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);      // OR DUPLICATE?
-   dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
+   // dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
    DBGMSF(debug, "Done. dfm=%p");
    return dfm;
 }

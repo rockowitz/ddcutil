@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_METADATA_H_
@@ -120,7 +120,7 @@ struct {
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   DDCA_Feature_Value_Entry *              latest_sl_values;
+   // DDCA_Feature_Value_Entry *              latest_sl_values;
    DDCA_Feature_Flags                      feature_flags;
    Format_Normal_Feature_Detail_Function   nontable_formatter;
    Format_Normal_Feature_Detail_Function2  nontable_formatter_sl;
