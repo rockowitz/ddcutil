@@ -3,7 +3,7 @@
  *  Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -328,7 +328,7 @@ finalize_feature(
       g_array_append_val(cur_feature_values, last_entry);
 
       cur_feature_metadata->sl_values = (DDCA_Feature_Value_Entry*) cur_feature_values->data;
-      cur_feature_metadata->latest_sl_values = copy_sl_value_table(cur_feature_metadata->sl_values);
+      // cur_feature_metadata->latest_sl_values = copy_sl_value_table(cur_feature_metadata->sl_values);
       // g_array_free(cur_feature_values, false);
       // cur_feature_values = NULL;
    }
