@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -464,7 +464,7 @@ struct {
    DDCA_MCCS_Version_Spec                vcp_version;    /**< MCCS version    */
    DDCA_Feature_Flags                    feature_flags;  /**< feature type description */
    DDCA_Feature_Value_Entry *            sl_values;      /**< valid when DDCA_SIMPLE_NC set */
-   DDCA_Feature_Value_Entry *            latest_sl_values;
+   DDCA_Feature_Value_Entry *            latest_sl_values;  /** no longer used */
    char *                                feature_name;   /**< feature name */
    char *                                feature_desc;   /**< feature description */
    // possibly add pointers to formatting functions
