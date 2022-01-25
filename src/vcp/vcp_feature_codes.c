@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -462,7 +462,7 @@ get_version_sensitive_sl_values(
    return result;
 }
 
-
+#ifdef UNUSED
 DDCA_Feature_Value_Entry *
 get_highest_version_sl_values(
        VCP_Feature_Table_Entry *  vfte)
@@ -500,7 +500,7 @@ get_highest_version_sl_values(
    }
    return result;
 }
-
+#endif
 
 
 /** Returns the version specific feature name from a feature table entry.
@@ -645,7 +645,7 @@ extract_version_feature_info_from_feature_table_entry(
          // ? get_highest_version_sl_values(vfte)
          : get_version_specific_sl_values(vfte, vspec);
    dfm->sl_values = copy_sl_value_table(sl_values);
-   dfm->latest_sl_values = copy_sl_value_table(get_highest_version_sl_values(vfte));
+   // dfm->latest_sl_values = copy_sl_value_table(get_highest_version_sl_values(vfte));
 
    DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
