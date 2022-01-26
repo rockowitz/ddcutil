@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.2] 2022-01-21
+## [1.2.2] 2022-01-22
 
 ### Added
 - API function ddca_enable_force_slave_address()
@@ -15,27 +15,34 @@
   - Command **environment**: Suggest use of option ***--force-slave-address*** 
     if driver ddcci is detected.
   - Messages re EBUSY errors are always written to the system log.
+- Command **detect**:
+  - Do not report the EDID source unless there is a value to show.
+    This value is set only for USB connected monitors.
+  - Show extended output based on option ***--verbose***, not undocumented
+    option ***--very-verbose***.
+  - Report color bit depth if EDID version >= 1.4
 - Command **environment**: Simplify the exploration of sysfs.
-- When building ddcutil, allow for building a static library if **configure** 
-  option ***--enable-static*** is set. Linux distributions frown on packaging 
-  static libraries, but if a user wants to build it who am I to judge. 
-  By default, static libraries are not built,
-- Delete incomplete, experimental code for asynhronous feature access, 
-  including files src/ddc/ddc_async.c/h. 
-- Remove unused files src/util/output_sink.c/h.
-- Replace use of Linux specific function **__assert_fail()** with **exit()** in
-  traced assertions.  **__assert_fail** is not in the C specification but is 
-  part of the Linux implementation of assert(), and can present a problem in 
-  porting ddcutil.
-- API function ddca_report_display_info(): include binary serial number
-- **detect** reports additional EDID information (EDID version, input type, 
-  color related detail) if option ***--verbose*** is set.  This information 
-  of general interest had previously been shown only for undocumented option
-   ***--very-verbose***.
+- API changes:
+  - Field latest_sl_values in struct DDCA_Feature_Metadata struct is no 
+    longer set,
+  - API function ddca_report_display_info(): include binary serial number
+- Building and porting:
+  - When building ddcutil, allow for building a static library if **configure** 
+    option ***--enable-static*** is set. Linux distributions frown on packaging 
+    static libraries, but if a user wants to build it who am I to judge. 
+    By default, static libraries are not built,
+  - Replace use of Linux specific function **__assert_fail()** with **exit()**
+    in traced assertions.  **__assert_fail** is used in the Linux implementation
+    of **assert()**, but is not in the C specification.  This can present a 
+    problem in porting ddcutil. 
+- Code cleanup:
+  - Delete incomplete, experimental code for asynhronous feature access, 
+    including files src/ddc/ddc_async.c/h. 
+  - Remove unused files src/util/output_sink.c/h.
 
 ### Fixed
 - Only write Starting/Terminating messages to the system log if option 
-  --syslog is specified.
+  ***--syslog*** is specified.
 - Avoid compilation warnings when assert() statments are disabled (NDEBUG is
   defined).
 - Fixed a segfault in the debug/trace code of ddca_get_display_refs()
