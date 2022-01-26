@@ -1,7 +1,7 @@
 /** @file feature_lists.c
  */
 
-// Copyright (C) 2018=2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018=2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "feature_lists.h"
@@ -144,11 +144,22 @@ int feature_list_count(
 }
 
 
+/** Returns a string representation of a #DDCA_Feature_List
+ *
+ *  \param   feature_list  #DDCA_Feature_List value
+ *  \param   value_prefix  string to start each value e.g. "0x", "h", if NULL then ""
+ *  \param   sepstr        separator string between values, if NULL then ""
+ *  \return  string representation
+ *
+ *  \remark
+ *  The returned string is valid until the next call to this function in the
+ *  current thread.
+ */
 char *
 feature_list_string(
       DDCA_Feature_List * feature_list,
-      const char * value_prefix,
-      const char * sepstr)
+      const char *        value_prefix,
+      const char *        sepstr)
 {
    // DBGMSG("Starting. feature_list=%p, value_prefix=|%s|, sepstr=|%s|",
    //        feature_list, value_prefix, sepstr);
