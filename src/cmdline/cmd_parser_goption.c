@@ -481,9 +481,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
    bool ok = g_option_context_parse_strv(context, &temp_argv, &error);
    if (!ok) {
-      fprintf(stderr, "%s option parsing failed: %s\n",
-                      (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil",
-                      error->message);
+      char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
+      if (error)
+         fprintf(stderr, "%s option parsing failed: %s\n", mode_name, error->message);
+      else
+         fprintf(stderr, "%s option parsing failed\n", mode_name);
    }
    ntsa_free(temp_argv, true);
 
@@ -895,7 +897,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          fprintf(stderr, "Unrecognized configuration file options: %s\n", cmd_and_args[0]);
          ok = false;
    }
-   else if (parser_mode == MODE_DDCUTIL && rest_ct == 0) {
+   else if (ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
       fprintf(stderr, "No command specified\n");
       ok = false;
    }
