@@ -6,7 +6,7 @@
  *  the ddcui source tree.
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -83,7 +83,7 @@ int read_ddcutil_config_file(
       verbose = true;
    if (debug)
       printf("(%s) Starting. ddcutil_application=%s, errmsgs=%p, verbose=%s\n",
-             __func__, ddcutil_application, errmsgs, SBOOL(verbose));
+             __func__, ddcutil_application, (void*)errmsgs, SBOOL(verbose));
 
    int result = 0;
    *untokenized_option_string_loc = NULL;
@@ -213,7 +213,7 @@ int merge_command_tokens(
 
    if (debug) {
        printf("(%s) Returning %d, *merged_argv_loc=%p\n",
-              __func__, merged_argc, *merged_argv_loc);
+              __func__, merged_argc, (void*)*merged_argv_loc);
        printf("(%s) *merged_arv_loc tokens:\n", __func__);
        ntsa_show(*merged_argv_loc);
    }
@@ -253,7 +253,7 @@ int apply_config_file(
       GPtrArray *  errmsgs)
 {
    bool debug = false;
-   DBGF(debug, "Starting. application_name=%s, errmsgs=%p", application_name, errmsgs);
+   DBGF(debug, "Starting. application_name=%s, errmsgs=%p", application_name, (void*)errmsgs);
 
    *untokenized_config_options_loc = NULL;
    *configure_fn_loc = NULL;

@@ -2,7 +2,7 @@
  *  String utility functions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -502,10 +502,10 @@ strsplit_maxlength(
    char * start = str_to_split2;
    char * str_to_split2_end = str_to_split2 + strlen(str_to_split);
    if (debug)
-      printf("(%s)x start=%p, str_to_split2_end=%p\n", __func__, start, str_to_split2_end);
+      printf("(%s)x start=%p, str_to_split2_end=%p\n", __func__, (void*)start, (void*)str_to_split2_end);
    while (start < str_to_split2_end) {
       if (debug)
-         printf("(%s) start=%p, str_to_split2_end=%p\n", __func__, start, str_to_split2_end);
+         printf("(%s) start=%p, str_to_split2_end=%p\n", __func__, (void*)start, (void*)str_to_split2_end);
       char * end = start + max_piece_length;
       if (end > str_to_split2_end)
          end = str_to_split2_end;
@@ -554,7 +554,7 @@ strsplit_maxlength(
 void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
    bool debug = false;
    if (debug)
-      printf("(%s) Freeing NTSA %p, free_strings=%s\n", __func__, string_array, sbool(free_strings) );
+      printf("(%s) Freeing NTSA %p, free_strings=%s\n", __func__, (void*) string_array, sbool(free_strings) );
    if (string_array) {
       if (free_strings) {
          int ndx = 0;
@@ -566,7 +566,7 @@ void ntsa_free(Null_Terminated_String_Array string_array, bool free_strings) {
          }
       }
       if (debug)
-         printf("(%s) Freeing string_array=%p\n", __func__, string_array);
+         printf("(%s) Freeing string_array=%p\n", __func__, (void*) string_array);
       free(string_array);
    }
 }

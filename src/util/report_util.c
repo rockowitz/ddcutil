@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -218,7 +218,7 @@ void rpt_debug_output_dest() {
     FILE * dest = rpt_cur_output_dest();
     char * addl = (dest == stdout) ? " (stdout)" : "";
     printf("(%s) output_dest_stack[%d] = %p %s\n",
-          __func__, settings->output_dest_stack_pos, dest, addl);
+          __func__, settings->output_dest_stack_pos, (void)dest, addl);
 }
 
 /** Changes the current output destination, without saving
@@ -266,7 +266,7 @@ void rpt_nl() {
 void rpt_title(const char * title, int depth) {
    bool debug = false;
    if (debug)
-      printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
+      printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
    f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
 }
 
@@ -474,7 +474,7 @@ int rpt_file_contents(const char * fn, bool verbose, int depth) {
 void rpt_str(const char * name, char * info, const char * val, int depth) {
    bool debug = false;
    if (debug)
-      printf("(%s) Writing to %p\n", __func__, rpt_cur_output_dest());
+      printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
 
    char infobuf[100];
    if (info)
