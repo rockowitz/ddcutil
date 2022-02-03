@@ -218,8 +218,9 @@ void rpt_debug_output_dest() {
     FILE * dest = rpt_cur_output_dest();
     char * addl = (dest == stdout) ? " (stdout)" : "";
     printf("(%s) output_dest_stack[%d] = %p %s\n",
-          __func__, settings->output_dest_stack_pos, (void)dest, addl);
+          __func__, settings->output_dest_stack_pos, (void*)dest, addl);
 }
+
 
 /** Changes the current output destination, without saving
  * the current output destination on the destination stack.
