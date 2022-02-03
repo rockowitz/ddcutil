@@ -946,6 +946,17 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 }
 
 
+static bool edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
+   bool result = false;
+   result = streq(edid1->mfg_id,        edid2->mfg_id)        &&
+            streq(edid1->model_name,    edid2->model_name)    &&
+            edid1->product_code      == edid2->product_code   &&
+            streq(edid1->serial_ascii,  edid2->serial_ascii)  &&
+            edid1->serial_binary     == edid2->serial_binary;
+   return result;
+}
+
+
 bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
    char * invalid_repr = strdup(dref_repr_t(invalid_dref));
@@ -956,7 +967,11 @@ bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    free(valid_repr);
 
    bool result = false;
-   if (memcmp(invalid_dref->pedid, valid_dref->pedid, 128) == 0) {
+   // User report has shown that 128 byte EDIDs can differ for the valid and
+   // invalid display.  Specifically, byte 24 was seen to differ, with one
+   // having RGB 4:4:4 and the other RGB 4:4:4 + YCrCb 4:2:2!.  So instead of
+   // simply byte comparing the 2 EDIDs, check the identifiers.
+   if (edid_ids_match(invalid_dref->pedid, valid_dref->pedid)) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDIDs match");
       if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
             valid_dref->io_path.io_mode == DDCA_IO_I2C)
