@@ -4368,37 +4368,35 @@ void dbgrpt_vcp_entry(VCP_Feature_Table_Entry * pfte, int depth) {
 
 
 static void init_func_name_table() {
-#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
-   ADD_FUNC(vcp_format_nontable_feature_detail);
-   ADD_FUNC(vcp_format_table_feature_detail);
-   ADD_FUNC(vcp_format_feature_detail);
-   ADD_FUNC(default_table_feature_detail_function);
-   ADD_FUNC(format_feature_detail_x73_lut_size);
-   ADD_FUNC(format_feature_detail_debug_sl_sh);
-   ADD_FUNC(format_feature_detail_debug_continuous);
-   ADD_FUNC(format_feature_detail_debug_bytes );
-   ADD_FUNC(format_feature_detail_sl_byte);
-   ADD_FUNC(format_feature_detail_sl_lookup);
-   ADD_FUNC(format_feature_detail_standard_continuous);
-   ADD_FUNC(format_feature_detail_ushort);
-   ADD_FUNC(format_feature_detail_x02_new_control_value);
-   ADD_FUNC(format_feature_detail_x0b_color_temperature_increment);
-   ADD_FUNC(format_feature_detail_x0c_color_temperature_request);
-   ADD_FUNC(format_feature_detail_x14_select_color_preset);
-   ADD_FUNC(format_feature_detail_x62_audio_speaker_volume);
-   ADD_FUNC(format_feature_detail_x8d_mute_audio_blank_screen);
-   ADD_FUNC(format_feature_detail_x8f_x91_audio_treble_bass);
-   ADD_FUNC(format_feature_detail_x93_audio_balance);
-   ADD_FUNC(format_feature_detail_xac_horizontal_frequency);
-   ADD_FUNC(format_feature_detail_6_axis_hue);
-   ADD_FUNC(format_feature_detail_xae_vertical_frequency);
-   ADD_FUNC(format_feature_detail_xbe_link_control);
-   ADD_FUNC(format_feature_detail_xc0_display_usage_time);
-   ADD_FUNC(format_feature_detail_xca_osd_button_control);
-   ADD_FUNC(format_feature_detail_x6c_application_enable_key);
-   ADD_FUNC(format_feature_detail_xc8_display_controller_type);
-   ADD_FUNC(format_feature_detail_xc9_xdf_version);
-#undef ADD_FUNC
+   RTTI_ADD_FUNC(vcp_format_nontable_feature_detail);
+   RTTI_ADD_FUNC(vcp_format_table_feature_detail);
+   RTTI_ADD_FUNC(vcp_format_feature_detail);
+   RTTI_ADD_FUNC(default_table_feature_detail_function);
+   RTTI_ADD_FUNC(format_feature_detail_x73_lut_size);
+   RTTI_ADD_FUNC(format_feature_detail_debug_sl_sh);
+   RTTI_ADD_FUNC(format_feature_detail_debug_continuous);
+   RTTI_ADD_FUNC(format_feature_detail_debug_bytes );
+   RTTI_ADD_FUNC(format_feature_detail_sl_byte);
+   RTTI_ADD_FUNC(format_feature_detail_sl_lookup);
+   RTTI_ADD_FUNC(format_feature_detail_standard_continuous);
+   RTTI_ADD_FUNC(format_feature_detail_ushort);
+   RTTI_ADD_FUNC(format_feature_detail_x02_new_control_value);
+   RTTI_ADD_FUNC(format_feature_detail_x0b_color_temperature_increment);
+   RTTI_ADD_FUNC(format_feature_detail_x0c_color_temperature_request);
+   RTTI_ADD_FUNC(format_feature_detail_x14_select_color_preset);
+   RTTI_ADD_FUNC(format_feature_detail_x62_audio_speaker_volume);
+   RTTI_ADD_FUNC(format_feature_detail_x8d_mute_audio_blank_screen);
+   RTTI_ADD_FUNC(format_feature_detail_x8f_x91_audio_treble_bass);
+   RTTI_ADD_FUNC(format_feature_detail_x93_audio_balance);
+   RTTI_ADD_FUNC(format_feature_detail_xac_horizontal_frequency);
+   RTTI_ADD_FUNC(format_feature_detail_6_axis_hue);
+   RTTI_ADD_FUNC(format_feature_detail_xae_vertical_frequency);
+   RTTI_ADD_FUNC(format_feature_detail_xbe_link_control);
+   RTTI_ADD_FUNC(format_feature_detail_xc0_display_usage_time);
+   RTTI_ADD_FUNC(format_feature_detail_xca_osd_button_control);
+   RTTI_ADD_FUNC(format_feature_detail_x6c_application_enable_key);
+   RTTI_ADD_FUNC(format_feature_detail_xc8_display_controller_type);
+   RTTI_ADD_FUNC(format_feature_detail_xc9_xdf_version);
 }
 
 
