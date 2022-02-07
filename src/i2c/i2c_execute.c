@@ -3,7 +3,7 @@
  * Basic functions for writing to and reading from the I2C bus using
  * alternative mechanisms.
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -238,8 +238,14 @@ i2c_fileio_reader(
       // if rc >= 0, number of bytes actually read
       // if rc ==-1, error occurred, errno is set
       if (rc >= 0) {
-         if (rc == bytect)
+         if (rc == bytect) {
+            // DBGMSG("Adding extra 0x6e at start of response to test for duplicate 0x6e quirk");
+            // if (rc > 1) {
+            //    memmove(readbuf+1, readbuf, rc-1);
+            //    readbuf[0] = 0x6e;
+            // }
            rc = 0;
+         }
          else
             rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
       }
