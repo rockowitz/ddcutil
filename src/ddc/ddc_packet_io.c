@@ -388,7 +388,7 @@ DDCA_Status (*Write_Read_Raw_Function)(
  *   -errno if error in write
  *   DDCRC_READ_ALL_ZERO
  */
-// static  // allow function to appear in backtrace
+// not static so that function can appear in backtrace
 DDCA_Status ddc_i2c_write_read_raw(
          Display_Handle * dh,
          DDC_Packet *     request_packet_ptr,
@@ -399,7 +399,8 @@ DDCA_Status ddc_i2c_write_read_raw(
         )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, readbuf=%p",dh_repr_t(dh), readbuf);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d, readbuf=%p",
+                              dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
@@ -475,8 +476,8 @@ DDCA_Status ddc_write_read_raw(
      )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, readbuf=%p, max_read_bytes=%d",
-                              dh_repr_t(dh), readbuf, max_read_bytes);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d, readbuf=%p",
+                              dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
    if (debug) {
       // DBGMSG("request_packet_ptr->raw_bytes:");
       // dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
@@ -500,7 +501,8 @@ DDCA_Status ddc_write_read_raw(
    DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
    if (psc == 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-             "readbuf: %s",
+             "*p_rcvd_bytes_ct=%d, readbuf: %s",
+             *p_rcvd_bytes_ct,
              hexstring3_t(readbuf, *p_rcvd_bytes_ct, " ", 4, false));
    }
    return psc;
@@ -533,9 +535,12 @@ ddc_write_read(
      )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d",
-                 dh_repr_t(dh), sbool(read_bytewise), max_read_bytes );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d,"
+                                       " expected_response_type=0x%02x, expected_subtype=0x%02x",
+          dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
 
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adding 1 to max_read_bytes to allow for quirk");
+   max_read_bytes++;   //allow for quirk of double 0x6e at start
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
    DDCA_Status    psc;
@@ -605,16 +610,6 @@ ddc_write_read(
  *  \param response_packet_ptr_loc  where to write address of response packet received
  *
  *  \return pointer to #Error_Info struct if failure, NULL if success
- *
- *  \remark
- *  status code from #ddc_write_read() may be positive for positive ADL status code ??
- *            status code from #ddc_write_read() if exactly 1 pass through try loop\n
- *            DDCRC_RETRIES, DDCRC_ALL_TRIES_ZERO, DDCRC_ALL_RESPONES_NULL if maximum tries exceeded
- *
- *\remark
- * Issue: positive ADL codes, need to handle?
- * \remark
- * The maximum number of tries is set in global variable max_write_read_exchange_tries.
  */
 Error_Info *
 ddc_write_read_with_retry(
@@ -628,8 +623,9 @@ ddc_write_read_with_retry(
         )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, all_zero_response_ok=%s",
-          dh_repr_t(dh), sbool(all_zero_response_ok)  );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
+                                       "expected_subtype=0x%02x, all_zero_response_ok=%s",
+          dh_repr_t(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
@@ -692,52 +688,52 @@ ddc_write_read_with_retry(
 
          TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
-            // The problem: Does NULL response indicate an error condition, or
-            // is the monitor using NULL response to indicate unsupported?
-            // Acer monitor uses NULL response instead of setting the unsupported
-            // flag in a valid response
-            switch (psc) {
-            case DDCRC_NULL_RESPONSE:
-                  {
-                     retryable = (++ddcrc_null_response_ct < ddcrc_null_response_max);
-                     DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
-                     if (retryable) {
-                        if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
-                           f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-                        tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
-                        sleep_multiplier_incremented = true;
-                        // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
-                     }
+         // The problem: Does NULL response indicate an error condition, or
+         // is the monitor using NULL response to indicate unsupported?
+         // Acer monitor uses NULL response instead of setting the unsupported
+         // flag in a valid response
+         switch (psc) {
+         case DDCRC_NULL_RESPONSE:
+               {
+                  retryable = (++ddcrc_null_response_ct < ddcrc_null_response_max);
+                  DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
+                  if (retryable) {
+                     if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
+                        f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                     tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
+                     sleep_multiplier_incremented = true;
+                     // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                   }
-                  break;
+               }
+               break;
 
-            case (DDCRC_READ_ALL_ZERO):
-                 // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
-                 // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
-                 // But also seen as a bad response
-                 retryable = (all_zero_response_ok) ? false : true;
-                 break;
+         case (DDCRC_READ_ALL_ZERO):
+              // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
+              // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
+              // But also seen as a bad response
+              retryable = (all_zero_response_ok) ? false : true;
+              break;
 
-            case (-EIO):
-                 // retryable = false;     // ??
-                 break;
+         case (-EIO):
+              // retryable = false;     // ??
+              break;
 
-            case (-EBADF):
-                 // DBGMSG("EBADF");
-                 retryable = false;
-                 break;
+         case (-EBADF):
+              // DBGMSG("EBADF");
+              retryable = false;
+              break;
 
-            case (-ENXIO):    // no such device or address, i915 driver
-                 retryable = false;  // have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
-                 break;
+         case (-ENXIO):    // no such device or address, i915 driver
+              retryable = false;  // have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
+              break;
 
-            default:
-                 retryable = true;     // for now
+         default:
+              retryable = true;     // for now
 
-            // try exponential backoff on all errors, not just SE_DDC_NULL
-            // if (retryable)
-            //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
-                  }
+         // try exponential backoff on all errors, not just SE_DDC_NULL
+         // if (retryable)
+         //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
+               }
 
 
          if (psc == DDCRC_READ_ALL_ZERO)
