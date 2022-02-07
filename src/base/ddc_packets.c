@@ -599,6 +599,12 @@ create_ddc_response_packet(
           "response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
           response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
+   if (response_bytes_buffer_size > 2 && i2c_response_bytes[0] == 0x6e && i2c_response_bytes[1] == 0x6e) {
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Quirk: response packet starts with double 0x6e");
+      i2c_response_bytes++;
+      response_bytes_buffer_size--;
+   }
+
    Status_DDC result = create_ddc_base_response_packet(
                           i2c_response_bytes,
                           response_bytes_buffer_size,
