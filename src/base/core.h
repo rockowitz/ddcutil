@@ -89,17 +89,16 @@ extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread i
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 void add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
-void show_traced_functions();
 
 void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
-void show_traced_files();
 
 DDCA_Trace_Group trace_class_name_to_value(char * name);
 void set_trace_groups(DDCA_Trace_Group trace_flags);
 void add_trace_groups(DDCA_Trace_Group trace_flags);
 // char * get_active_trace_group_names();  // unimplemented
-void show_trace_groups();
+
+void report_tracing(int depth);
 
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
 

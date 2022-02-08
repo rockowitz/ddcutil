@@ -172,6 +172,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
        report_build_options(depth);
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
+    report_tracing(depth);
     report_performance_options(depth);
     report_experimental_options(parsed_cmd, depth);
 

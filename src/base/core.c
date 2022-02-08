@@ -327,31 +327,6 @@ static char * get_traced_files_as_joined_string() {
 }
 
 
-/** Outputs a line reporting the traced function list.
- *  Output is written to the current **FOUT** device.
- */
-void show_traced_functions() {
-   char * buf = get_traced_functions_as_joined_string();
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Traced functions: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              (buf && (strlen(buf) > 0)) ? buf : "none");
-   free(buf);
-}
-
-
-/** Outputs a line reporting the traced file list.
- *  Output is written to the current **FOUT** device.
- */
-void show_traced_files() {
-   char * buf = get_traced_files_as_joined_string();
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Traced files: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              (buf && (strlen(buf) > 0)) ? buf : "none");
-   free(buf);
-}
-
 #ifdef UNUSED
 static char * trace_destination = NULL;
 
@@ -402,8 +377,6 @@ void close_syslog() {
 #endif
 
 
-
-
 /** Checks if a tracing is to be performed.
  *
  * Tracing is enabled if any of the following tests pass:
@@ -445,19 +418,6 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
    return result;
 }
 
-
-/** Outputs a line reporting the active trace groups.
- *  Output is written to the current **FOUT** device.
- */
-void show_trace_groups() {
-   // DBGMSG("trace_levels: 0x%04x", trace_levels);
-   char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Trace groups active: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              (strlen(buf) == 0) ? "none" : buf);
-   free(buf);
-}
 
 
 //
@@ -597,6 +557,34 @@ void show_ddcutil_version() {
 }
 
 
+/** Reports the current trace settings.
+ *
+ *  \param depth  logical indentation depth
+ */
+void report_tracing(int depth) {
+   int d1 = depth+1;
+   rpt_label(depth, "Trace Options:");
+
+#ifdef UNUSED
+   show_trace_destination();
+#endif
+
+   char * buf = vnt_interpret_flags(trace_levels, trace_group_table, true /* use title */, ", ");
+   rpt_vstring(d1, "Trace groups active:     %s", (buf && strlen(buf)>0) ? buf : "none");
+   free(buf);
+
+   buf = get_traced_functions_as_joined_string();
+   rpt_vstring(d1, "Traced functions:        %s",  (buf && (strlen(buf) > 0)) ? buf : "none");
+   free(buf);
+
+   buf = get_traced_files_as_joined_string();
+   rpt_vstring(d1, "Traced files:            %s",  (buf && (strlen(buf) > 0)) ? buf : "none");
+   free(buf);
+
+   rpt_vstring(d1, "Trace to syslog:         %s", SBOOL(trace_to_syslog));
+   rpt_nl();
+}
+
 /** Reports output levels for:
  *   - general output level (terse, verbose, etc)
  *   - DDC data errors
@@ -609,16 +597,7 @@ void show_ddcutil_version() {
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
-#ifdef UNUSED
-   show_trace_destination();
-#endif
-   show_trace_groups();
-   show_traced_functions();
-   show_traced_files();
-   print_simple_title_value(SHOW_REPORTING_TITLE_START,
-                              "Trace to syslog: ",
-                              SHOW_REPORTING_MIN_TITLE_SIZE,
-                              SBOOL(trace_to_syslog));
+
 
    // f0puts("", fout());
 }
