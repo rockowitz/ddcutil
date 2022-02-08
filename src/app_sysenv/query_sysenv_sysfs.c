@@ -594,7 +594,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
       bva_sort(accumulator->sys_bus_i2c_device_numbers);
       if (accumulator->sysfs_ddcci_devices_exist) {
          rpt_nl();
-         rpt_vstring(1, "Devices created by driver ddcci found in %s", dname);
+         rpt_vstring(1, "Device(s) possibly created by driver ddcci found in %s", dname);
          rpt_vstring(1, "Use ddcutil option --force-slave-address to recover from EBUSY errors.");
       }
    }
