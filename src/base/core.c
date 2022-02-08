@@ -574,11 +574,11 @@ void report_tracing(int depth) {
    free(buf);
 
    buf = get_traced_functions_as_joined_string();
-   rpt_vstring(d1, "Traced functions:        %s",  (buf && (strlen(buf) > 0)) ? buf : "none");
+   rpt_vstring(d1, "Traced functions:        %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
    buf = get_traced_files_as_joined_string();
-   rpt_vstring(d1, "Traced files:            %s",  (buf && (strlen(buf) > 0)) ? buf : "none");
+   rpt_vstring(d1, "Traced files:            %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
    rpt_vstring(d1, "Trace to syslog:         %s", SBOOL(trace_to_syslog));
