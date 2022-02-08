@@ -20,6 +20,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "pnp_ids.h"
 #include "report_util.h"
 #include "string_util.h"
 
@@ -339,7 +340,7 @@ void report_parsed_edid_base(
    // verbose = true;
    if (edid) {
       rpt_vstring(depth,"EDID synopsis:");
-      rpt_vstring(d1,"Mfg id:               %s",          edid->mfg_id);
+      rpt_vstring(d1,"Mfg id:               %s - %s",     edid->mfg_id, pnp_name(edid->mfg_id));
       rpt_vstring(d1,"Model:                %s",          edid->model_name);
    // rpt_vstring(d1,"Product code:         0x%04x (%u)", edid->product_code, edid->product_code);
       rpt_vstring(d1,"Product code:         %u",          edid->product_code);
