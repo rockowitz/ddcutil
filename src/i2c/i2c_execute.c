@@ -239,11 +239,13 @@ i2c_fileio_reader(
       // if rc ==-1, error occurred, errno is set
       if (rc >= 0) {
          if (rc == bytect) {
-            // DBGMSG("Adding extra 0x6e at start of response to test for duplicate 0x6e quirk");
-            // if (rc > 1) {
-            //    memmove(readbuf+1, readbuf, rc-1);
-            //    readbuf[0] = 0x6e;
-            // }
+#ifdef FOR_TESTING
+            DBGMSG("Adding extra 0x6e at start of response to test for duplicate 0x6e quirk");
+            if (rc > 1) {
+               memmove(readbuf+1, readbuf, rc-1);
+               readbuf[0] = 0x6e;
+            }
+#endif
            rc = 0;
          }
          else
