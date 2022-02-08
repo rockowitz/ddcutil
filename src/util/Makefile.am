@@ -33,6 +33,7 @@ glib_string_util.c         \
 i2c_util.c                 \
 linux_util.c               \
 multi_level_map.c          \
+pnp_ids.c                  \
 report_util.c              \
 simple_ini_file.c          \
 string_util.c              \
