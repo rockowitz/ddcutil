@@ -199,17 +199,36 @@ validate_environment_using_libkmod()
    }
    else {
       int module_status = module_status_using_libkmod("i2c-dev");
-      if (module_status < 0) {
-         fprintf(stderr, "ddcutil cannot determine if module i2c-dev is loaded or built into the kernel.\n");
-         ok = true;  // make this just a warning, we'll fail later if not in kernel
-         fprintf(stderr, "Execution may fail.\n");
-      }
-      else if (module_status == 0) {   // MODULE_STATUS_NOT_FOUND
+      if (module_status == 0) {   // MODULE_STATUS_NOT_FOUND
          ok = false;
          fprintf(stderr, "Module i2c-dev is not loaded and not built into the kernel.\n");
       }
+      else if (module_status == KERNEL_MODULE_BUILTIN) {   // 1
+         ok = true;
+      }
+      else if (module_status == KERNEL_MODULE_LOADABLE_FILE) {   //
+
+         int rc = is_module_loaded_using_libkmod("i2c_dev");
+         if (rc == 0) {
+            fprintf(stderr, "Loadable module i2c-dev exists but is not loaded\n");
+            ok = false;
+         }
+         else if (rc == 1) {
+            ok = true;
+         }
+         else {
+            assert(rc < 0);
+            fprintf(stderr, "ddcutil cannot determine if loadable module i2c-dev is loaded.\n");
+            ok = true;  // make this just a warning, we'll fail later if not in kernel
+            fprintf(stderr, "Execution may fail.\n");
+         }
+      }
+
       else {
-          ok = true;
+         assert(module_status < 0);
+         fprintf(stderr, "ddcutil cannot determine if module i2c-dev is loaded or built into the kernel.\n");
+         ok = true;  // make this just a warning, we'll fail later if not in kernel
+         fprintf(stderr, "Execution may fail.\n");
       }
    }
 
