@@ -1,6 +1,6 @@
 // sysfs_i2c_util.c
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -21,6 +21,8 @@
 
 
 /** Looks in the /sys file system to check if a module is loaded.
+ *  Note that only loadable kernel modules will be found. Those
+ *  built into the kernel will not.
  *
  * \param  module_name    module name
  * \return true if the module is loaded, false if not
@@ -29,7 +31,7 @@ bool
 is_module_loaded_using_sysfs(
       const char * module_name)
 {
-   bool debug = false;
+   bool debug = true;
 
    struct stat statbuf;
    char   module_fn[100];
