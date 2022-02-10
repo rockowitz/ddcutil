@@ -31,7 +31,7 @@ bool
 is_module_loaded_using_sysfs(
       const char * module_name)
 {
-   bool debug = true;
+   bool debug = false;
 
    struct stat statbuf;
    char   module_fn[100];
