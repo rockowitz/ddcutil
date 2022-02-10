@@ -258,7 +258,7 @@ validate_environment()
    if (!ok) {
       fprintf(stderr, "ddcutil requires module i2c-dev\n");
       // DBGMSF(debug, "Forcing ok = true");
-      ok = true;  // make it just a warning in case we're wrong
+      // ok = true;  // make it just a warning in case we're wrong
    }
 
    DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
