@@ -210,7 +210,7 @@ validate_environment_using_libkmod()
 
          int rc = is_module_loaded_using_libkmod("i2c_dev");
          if (rc == 0) {
-            fprintf(stderr, "Loadable module i2c-dev exists but is not loaded\n");
+            fprintf(stderr, "Loadable module i2c-dev exists but is not loaded.\n");
             ok = false;
          }
          else if (rc == 1) {
@@ -256,7 +256,7 @@ validate_environment()
    ok = true;
 #endif
    if (!ok) {
-      fprintf(stderr, "ddcutil requires module i2c-dev\n");
+      fprintf(stderr, "ddcutil requires module i2c-dev.\n");
       // DBGMSF(debug, "Forcing ok = true");
       // ok = true;  // make it just a warning in case we're wrong
    }
