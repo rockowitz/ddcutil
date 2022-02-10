@@ -124,6 +124,7 @@ static bool detect_ddcci(Parsed_Cmd * parsed_cmd) {
    return detected;
 }
 
+
 //
 // Report core settings and command line options
 //
@@ -190,10 +191,10 @@ static bool
 validate_environment_using_libkmod()
 {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    bool ok = false;
-   if (is_module_loaded_using_sysfs("i2c_dev")) {
+   if (is_module_loaded_using_sysfs("i2c_dev")) {  // only finds loadable modules, not those built into kernel
       ok = true;
    }
    else {
@@ -212,7 +213,7 @@ validate_environment_using_libkmod()
       }
    }
 
-   DBGMSF(debug, "Done.    Returning: %s", sbool(ok));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
    return ok;
 }
 #endif
@@ -851,6 +852,9 @@ static void add_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
+#ifdef TARGET_LINUX
+   RTTI_ADD_FUNC(validate_environment_using_libkmod);
+#endif
 #ifdef ENABLE_ENVCMDS
    RTTI_ADD_FUNC(interrogate);
 #endif
