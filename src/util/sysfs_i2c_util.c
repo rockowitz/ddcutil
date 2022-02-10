@@ -49,7 +49,7 @@ is_module_loaded_using_sysfs(
    }
 
    if (debug)
-      printf("(%s) module_name = %s, returning %d", __func__, module_name, found);
+      printf("(%s) module_name = %s, returning %d\n", __func__, module_name, found);
    return found;
 }
 
