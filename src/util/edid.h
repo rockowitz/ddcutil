@@ -4,7 +4,7 @@
  * the bytes of the EDID are obtained.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
@@ -28,8 +28,8 @@
 #define EDID_EXTRA_STRING_FIELD_SIZE 14
 #define EDID_MODEL_NAME_FIELD_SIZE   14
 #define EDID_SERIAL_ASCII_FIELD_SIZE 14
-#define EDID_SOURCE_MAX_LEN           3
-#define EDID_SOURCE_FIELD_SIZE        4
+#define EDID_SOURCE_MAX_LEN           5
+#define EDID_SOURCE_FIELD_SIZE        6
 
 //Calculates checksum for a 128 byte EDID
 Byte edid_checksum(Byte * edid);
