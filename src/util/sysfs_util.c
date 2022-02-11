@@ -3,7 +3,7 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //* \cond */
@@ -300,9 +300,13 @@ assemble_sysfs_path2(
 {
    assert(buffer && bufsz > 0);
    bool debug = false;
+   if (debug)
+      printf("(%s) Starting.  bufsz=%d, fn_segment=|%s|\n", __func__, bufsz, fn_segment);
    STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
       char * segment = va_arg(ap, char*);
+      if (debug)
+         printf("(%s) segment |%s|\n", __func__, segment);
       if (!segment)
          break;
       STRLCAT(buffer, "/", bufsz);
@@ -560,7 +564,6 @@ rpt_attr_realpath_basename(
 
 /** Checks for the first subdirectory of a given directory whose name satisfies
  *  some predicate, and reports whether it is found and if so its name.
- *  is invalid.
  *
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, the address at which to return a pointer to
