@@ -2,7 +2,7 @@
  * Functions for reading /sys file system
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_UTIL_H_
@@ -87,7 +87,7 @@ rpt_attr_edid(
 #define RPT_ATTR_EDID(depth, value_loc, fn_segment, ...) \
    rpt_attr_edid(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-#define GET_ATTR_EDID(depth, value_loc, fn_segment, ...) \
+#define GET_ATTR_EDID(value_loc, fn_segment, ...) \
    rpt_attr_edid(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
