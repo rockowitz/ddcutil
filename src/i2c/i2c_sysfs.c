@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
  
@@ -11,6 +11,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
@@ -443,4 +444,446 @@ void dbgrpt_sys_bus_i2c(int depth) {
    rpt_nl();
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
 }
+
+
+
+
+//
+// Predicate functions
+//
+
+// typedef Dir_Filter_Func
+bool is_drm_connector(const char * dirname, const char * simple_fn) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   bool result = false;
+   if (str_starts_with(simple_fn, "card")) {
+      char * s0 = strdup( simple_fn + 4);   // work around const char *
+      char * s = s0;
+      while (isdigit(*s)) s++;
+      if (*s == '-')
+         result = true;
+      free(s0);
+   }
+   DBGMSF(debug, "Done.     Returning %s", SBOOL(result));
+   return result;
+}
+
+bool fn_starts_with(const char * filename, const char * val) {
+   return str_starts_with(filename, val);
+}
+
+bool fn_n_nnnn(const char * filename, const char * ignore) {
+   bool result = false;
+
+   if (strlen(filename) == 6    &&
+         isdigit(filename[0])  &&
+         filename[1] == '-'   &&
+         filename[2] == '0'   &&
+         filename[3] == '0'   &&
+         isdigit(filename[4]) &&
+         isdigit(filename[5])
+         )
+      result = true;
+   // DBGMSF(true, "filename=%s, ignore=%s: Returning %s", filename, ignore, sbool(result));
+   return result;
+}
+
+bool is_n_nnnn(const char * dirname, const char * simple_fn) {
+   bool result = fn_n_nnnn(simple_fn, NULL);
+   // DBGMSF(true,"filename=%s. ignore=%s, returning %s", dirname, simple_fn, SBOOL(result));
+   return result;
+}
+
+bool fn_any(const char * filename, const char * ignore) {
+   DBGMSF(true, "filename=%s, ignore=%s: Returning true", filename, ignore);
+   return true;
+}
+
+
+//
+//  Scan /sys by drm connector
+//
+
+static GPtrArray * sys_drm_displays = NULL;  // Sys_Drm_Display;
+
+
+
+// from query_sysenv_sysfs
+
+// 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
+
+
+void free_sys_drm_display(void * display) {
+   if (display) {
+      Sys_Drm_Connector * disp = display;
+      free(disp->connector_name);
+      free(disp->edid_bytes);
+      free(disp->name);
+      free(disp->status);
+      free(disp->base_name);
+      free(disp);
+   }
+}
+
+
+void report_one_sys_drm_display(int depth, Sys_Drm_Connector * cur)
+{
+   int d0 = depth;
+   int d1 = depth+1;
+
+   rpt_vstring(d0, "Connector:   %s", cur->connector_name);
+   rpt_vstring(d1, "i2c_busno:   %d", cur->i2c_busno);
+   rpt_vstring(d1, "name:        %s", cur->name);
+   rpt_vstring(d1, "dev:         %s", cur->dev);
+   rpt_vstring(d1, "enabled:     %s", sbool(cur->enabled));
+   rpt_vstring(d1, "status:      %s", cur->status);
+
+   if (cur->is_aux_channel) {
+      rpt_vstring(d1, "base_busno:  %d", cur->base_busno);
+      rpt_vstring(d1, "base_name:   %s", cur->base_name);
+      rpt_vstring(d1, "base dev:    %s", cur->base_dev);
+   }
+   if (cur->edid_size > 0) {
+      rpt_label(d1,   "edid:");
+      rpt_hex_dump(cur->edid_bytes, cur->edid_size, d1);
+   }
+   else
+      rpt_label(d1,"edid:        None");
+
+}
+
+
+// typedef Dir_Foreach_Func
+void one_drm_connector(
+      const char *  dirname,      // /sys/class/drm
+      const char *  fn,           // e.g. card0-DP-1
+      void *        accumulator,
+      int           depth)
+{
+   bool debug = true;
+   DBGMSF(debug, "dirname=%s, fn=%s, depth=%d", dirname, fn, depth);
+   GPtrArray * drm_displays = accumulator;
+
+   Sys_Drm_Connector * cur = calloc(1, sizeof(Sys_Drm_Connector));
+   g_ptr_array_add(drm_displays, cur);
+   cur->connector_name = strdup(fn);   // e.g. card0-DP-1
+   RPT_ATTR_REALPATH(depth, &cur->connector_path,
+                                    dirname, fn);
+   char * b1 = NULL;
+   RPT_ATTR_TEXT(depth,&b1, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
+   cur->enabled = streq(b1, "enabled");
+   RPT_ATTR_TEXT(depth, &cur->status,  dirname, fn, "status"); // e.g. /sys/class/drm/card0-DP-1/status
+
+   GByteArray * edid_byte_array = NULL;
+   RPT_ATTR_EDID(depth, &edid_byte_array, dirname, fn, "edid");   // e.g. /sys/class/drm/card0-DP-1/edid
+   if (edid_byte_array) {
+      cur->edid_bytes = g_byte_array_steal(edid_byte_array, &cur->edid_size);
+   }
+
+
+   bool has_drm_dp_aux_subdir =          // does is exist? /sys/class/drm/card0-DP-1/drm_dp_aux0
+         RPT_ATTR_SINGLE_SUBDIR(
+               depth,
+               NULL,     // char **      value_loc,
+               fn_starts_with,
+               "drm_dp_aux",
+               dirname,
+               fn);
+
+   // does e.g. /sys/class/drm/card0-DP-1/i2c-6 exist?
+   char * i2cN_buf = NULL;   // i2c-N
+   bool has_i2c_subdir =
+         RPT_ATTR_SINGLE_SUBDIR(depth, &i2cN_buf, fn_starts_with,"i2c-",
+                                dirname, fn);
+
+   ASSERT_IFF(has_drm_dp_aux_subdir, has_i2c_subdir);
+   cur->is_aux_channel = has_drm_dp_aux_subdir;
+   if (has_i2c_subdir) {  // DP
+      cur->i2c_busno = i2c_name_to_busno(i2cN_buf);
+      // e.g. /sys/class/drm/card0-DP-1/i2c-6/name:
+      char * buf = NULL;
+      RPT_ATTR_TEXT(depth, &cur->name, dirname, fn, i2cN_buf, "name");
+      RPT_ATTR_TEXT(depth, &buf,       dirname, fn, i2cN_buf, "i2c-dev", i2cN_buf, "name");
+      // DBGMSG("name = |%s|", cur->name);
+      // DBGMSG("buf  = |%s|", buf);
+      assert(streq(cur->name, buf));
+      free(buf);
+      RPT_ATTR_TEXT(depth, &cur->dev,  dirname, fn, i2cN_buf, "i2c-dev", i2cN_buf, "dev");
+
+      // Examine ddc subdirectory
+      rpt_nl();
+      RPT_ATTR_REALPATH(depth, &cur->ddc_dir_path,    dirname, fn, "ddc");
+      // e.g. /sys/class/drm/card0-DP-1/ddc/name:
+      RPT_ATTR_TEXT(depth, &cur->base_name, dirname, fn, "ddc", "name");
+
+      // looking for e.g. /sys/bus/drm/card0-DP-1/ddc/i2c-dev/i2c-1
+      has_i2c_subdir =
+            RPT_ATTR_SINGLE_SUBDIR(depth, &i2cN_buf, fn_starts_with, "i2c-",
+                                   dirname, fn, "ddc", "i2c-dev");
+      if (has_i2c_subdir) {
+         cur->base_busno = i2c_name_to_busno(i2cN_buf);
+         char * buf = NULL;
+         RPT_ATTR_TEXT(depth, &buf, dirname, fn, "ddc", "i2c-dev", i2cN_buf, "name");
+         assert (streq(buf, cur->base_name));
+         free(buf);
+         RPT_ATTR_TEXT(depth, &cur->base_dev, dirname, fn, "ddc", "i2c-dev", i2cN_buf, "dev");
+      }
+
+#ifdef UNNECESSARY
+      // Does e.g. /sys/class/drm/card0-DP-1/i2c-6/6-0050 exist?
+      char * d_dddd = NULL;
+      RPT_ATTR_SINGLE_SUBDIR(depth,
+            &d_dddd,
+            fn_n_nnnn, NULL,  // filter function
+             dirname,  // /sys/bus/drm/
+             fn,       //   card0-DP-1
+             "ddc",
+             "i2c-dev",
+             i2cN_buf);  //   i2c-6
+
+
+      //   IT'S A LINK HOW TO HANDLE?
+      // char * driver = NULL;
+      // RPT_ATTR_TEXT(depth, &driver, "/sys/bus/i2c/devices", i2cN_buf, d_dddd, "driver", "module", "drivers");
+      // rpt_vstring(4, "---------- Conflict device: %s", d_dddd);
+#endif
+   }
+   else {   // not DP
+      rpt_nl();
+      RPT_ATTR_REALPATH(depth, &cur->ddc_dir_path,    dirname, fn, "ddc");
+      // Examine ddc subdirectory
+      // e.g. /sys/class/drm/card0-DP-1/ddc/name:
+      RPT_ATTR_TEXT(depth, &cur->name,    dirname, fn, "ddc", "name");
+
+      char * i2cN_buf = NULL;
+      // looking for e.g. /sys/bus/drm/card0-DVI-D-1/ddc/i2c-dev/i2c-1
+      has_i2c_subdir =
+          RPT_ATTR_SINGLE_SUBDIR(depth, &i2cN_buf, fn_starts_with, "i2c-",
+                                          dirname, fn, "ddc", "i2c-dev");
+
+      if (has_i2c_subdir) {
+      char * buf = NULL;
+         RPT_ATTR_TEXT(depth, &buf,       dirname, fn, "ddc", "i2c-dev", i2cN_buf, "name");
+         assert (streq(buf, cur->name));
+         free(buf);
+         RPT_ATTR_TEXT(depth, &cur->base_dev,
+                                          dirname, fn, "ddc", "i2c-dev", i2cN_buf, "dev");
+      }
+
+#ifdef UNNECESSARY
+      // look for e.g. /sys/class/drm/card0-DVI-D-1/ddc/4-0050
+     char * conflict_subdir_n_nnnn;
+     bool has_conflict_subdir =
+           RPT_ATTR_SINGLE_SUBDIR(
+                    depth,
+                    &conflict_subdir_n_nnnn,
+                    fn_n_nnnn,
+                    "",   // ignore
+                    dirname,      // e.g. /sys/bus/drm
+                    fn,           // e.g. card0-DP1
+                    "ddc");
+     rpt_vstring(depth, "=============== Conflict device: %s", buf);
+
+     if (has_conflict_subdir) {
+        cur->conflicting_device = conflict_subdir_n_nnnn;
+        // look for e.g. /sys/bus/class/card0-DVI-D-1/ddc/4-0050/<anything>
+        // A file name will be a link, the n
+        RPT_ATTR_TEXT(depth, NULL, dirname, fn, "ddc", buf, "name");
+
+
+        char * buf2 = NULL;
+
+        bool has_conflict_driver =
+        RPT_ATTR_SINGLE_SUBDIR(
+              depth,
+              cur->conflicting_driver,
+              fn_any, "",
+              dirname,
+              fn,"ddc", buf, "driver", "module", "drivers") ;
+        if (has_conflict_driver) {
+           rpt_vstring(depth, "=========== Conflict driver: %s", buf2);
+        }
+     }
+#endif
+
+      rpt_nl();
+   }
+   DBGMSF(debug, "Done.");
+}
+
+
+/**
+ *
+ *  \param  depth  logical indentation depth, if < 0 do not emit report
+ *  \return array of #Sys_Drm_Connector structs, one for each connector found
+ */
+
+GPtrArray * scan_sys_drm_connectors(int depth) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
+   // int d1 = depth+1;
+   // rpt_nl();
+   // rpt_label(d0, "Scanning /sys/class/drm for /dev/i2c device numbers and EDIDs");
+   // if (sys_drm_displays) {
+   //    g_ptr_array_free(sys_drm_displays, true);
+   //    sys_drm_displays = NULL;
+   // }
+   GPtrArray * drm_displays = g_ptr_array_new_with_free_func(free_sys_drm_display);
+
+   dir_filtered_ordered_foreach(
+         "/sys/class/drm",
+         is_drm_connector,      // filter function
+         NULL,                    // ordering function
+         one_drm_connector,
+         drm_displays,                    // accumulator
+         depth);
+   sys_drm_displays = drm_displays;
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "size of drm_displays: %d", drm_displays->len);
+   return drm_displays;
+}
+
+
+void report_sys_drm_connectors(int depth) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_nl();
+   rpt_label(d0, "Display connectors reported by DRM:");
+   if (!sys_drm_displays)
+     sys_drm_displays = scan_sys_drm_connectors(2);
+   GPtrArray * displays = sys_drm_displays;
+   if (!displays || displays->len == 0) {
+      rpt_label(d1, "None");
+   }
+   else {
+      for (int ndx = 0; ndx < displays->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(displays, ndx);
+         report_one_sys_drm_display(depth, cur);
+         rpt_nl();
+      }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "");
+}
+
+Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
+   if (!sys_drm_displays)
+     sys_drm_displays = scan_sys_drm_connectors(-1);
+   Sys_Drm_Connector * result = NULL;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C, "After scan_sys_drm_connectors(), sys_drm_displays=%p", (void*) sys_drm_displays);
+   if (sys_drm_displays) {
+      for (int ndx = 0; ndx < sys_drm_displays->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_displays, ndx);
+         if (cur->i2c_busno == busno) {
+            result = cur;
+            break;
+         }
+      }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
+
+//
+//  Scan for conflicting modules/drivers
+//
+
+typedef struct {
+   int i2c_busno;
+   char *  name;
+   char *  n_nnnn;
+   Byte *  eeprom_edid_bytes;
+   gsize   edid_size;
+   char *  driver_name;
+   char *  module_driver;
+} Sys_Conflicting_Driver;
+
+
+void dbgrpt_conflicting_driver(int depth, Sys_Conflicting_Driver * conflict) {
+   int d1 = depth+1;
+   rpt_structure_loc("Sys_Conflicting_Driver", conflict, depth);
+   rpt_vstring(d1, "i2c_busno:     %d", conflict->i2c_busno);
+   rpt_vstring(d1, "n_nnnn:        %s", conflict->n_nnnn);
+   rpt_vstring(d1, "driver_name:   %s", conflict->driver_name);
+   rpt_vstring(d1, "name:          %s", conflict->driver_name);
+   rpt_vstring(d1, "module_driver: %s", conflict->module_driver);
+   if (conflict->eeprom_edid_bytes) {
+      rpt_vstring(d1, "eeprom_edid_bytes:");
+      rpt_hex_dump(conflict->eeprom_edid_bytes, conflict->edid_size, d1);
+   }
+}
+
+
+// typedef Dir_Foreach_Func
+void one_n_nnnn(
+      const char * dir_name,
+      const char * fn,
+      void *       accumulator,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s, depth=%d", dir_name, fn, depth);
+
+   GPtrArray* conflicting_drivers= accumulator;
+   Sys_Conflicting_Driver * conflicting_driver = calloc(1, sizeof(Sys_Conflicting_Driver));
+   conflicting_driver->n_nnnn = strdup(fn);
+
+   RPT_ATTR_TEXT(depth, &conflicting_driver->name, dir_name, fn, "name");
+
+   if (str_ends_with(fn, "0050")) {
+      GByteArray * edid_byte_array = NULL;
+      RPT_ATTR_EDID(depth, &edid_byte_array, dir_name, fn, "eeprom");
+      if (edid_byte_array) {
+         conflicting_driver->edid_size = edid_byte_array->len;
+         conflicting_driver->eeprom_edid_bytes = g_byte_array_steal(edid_byte_array, &conflicting_driver->edid_size);
+      }
+   }
+
+   char * real_module_path = NULL;
+   RPT_ATTR_REALPATH(depth, &real_module_path, dir_name, fn, "driver/module");
+   char * real_module_path_basename = NULL;
+   RPT_ATTR_REALPATH(depth, &real_module_path_basename, dir_name, fn, "driver/module");
+   conflicting_driver->driver_name = real_module_path_basename;
+
+   g_ptr_array_add(conflicting_drivers, conflicting_driver);
+}
+
+
+GPtrArray * check_driver_conflicts(int busno) {
+   char i2c_bus_path[PATH_MAX];
+   g_snprintf(i2c_bus_path, sizeof(i2c_bus_path), "/sys/bus/i2c/devices/i2c-%d", busno);
+
+   GPtrArray * conflicting_drivers = g_ptr_array_new();
+
+   dir_filtered_ordered_foreach(i2c_bus_path,
+                         is_n_nnnn,           // filter function
+                         NULL,                // ordering function
+                         one_n_nnnn,          // process dir named like 4-0050
+                         conflicting_drivers, // accumulator
+                         1);
+
+   for (int ndx=0; ndx < conflicting_drivers->len; ndx++) {
+      Sys_Conflicting_Driver * cur = g_ptr_array_index(conflicting_drivers, ndx);
+      cur->i2c_busno = busno;
+   }
+
+   return conflicting_drivers;
+}
+
+
+void report_conflicting_drivers(GPtrArray * conflicts) {
+   for (int ndx=0; ndx < conflicts->len; ndx++) {
+      Sys_Conflicting_Driver * cur = g_ptr_array_index(conflicts, ndx);
+      dbgrpt_conflicting_driver(1, cur);
+   }
+}
+
+
+void free_driver_conflicts(GPtrArray* conflicts) {
+   // TODO
+}
+
 

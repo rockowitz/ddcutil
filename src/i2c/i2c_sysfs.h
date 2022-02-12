@@ -3,11 +3,13 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_H_
 #define I2C_SYSFS_H_
+
+#include <glib-2.0/glib.h>
 
 typedef struct {
    int     busno;
@@ -32,5 +34,38 @@ void           free_i2c_sys_info(I2C_Sys_Info * info);
 I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
 void           report_i2c_sys_info(I2C_Sys_Info * info, int depth);
 void           dbgrpt_sys_bus_i2c(int depth);
+
+
+typedef struct {
+   char * connector_name;
+   char * connector_path;
+   int    i2c_busno;
+   char * name;
+   char * dev;
+   char * ddc_dir_path;
+   bool   is_aux_channel;
+   int    base_busno;
+   char * base_name;
+   char * base_dev;
+   Byte * edid_bytes;
+   gsize  edid_size;
+   bool   enabled;
+   char * status;
+#ifdef UNNECESSARY
+   // n. can be multiple
+   char * conflicting_device;
+   char * conflicting_driver;
+#endif
+} Sys_Drm_Connector;
+
+
+
+void report_sys_drm_connectors(int depth);
+Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
+
+
+GPtrArray *  check_driver_conflicts(int busno);
+void report_conflicting_drivers(GPtrArray * conflicts);   // for a single busno
+void free_driver_conflicts(GPtrArray* conflicts);
 
 #endif /* I2C_SYSFS_H_ */
