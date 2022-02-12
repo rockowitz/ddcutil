@@ -750,7 +750,7 @@ void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
@@ -791,6 +791,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                    bus_info->flags |= I2C_BUS_BUSY;
              }
           }
+          else if (ddcrc == -EBUSY)
+             bus_info->flags |= I2C_BUS_BUSY;
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
    }   // probing complete
@@ -1017,9 +1019,12 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 
 
 int i2c_detect_buses() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
+
+   report_sys_drm_connectors(0);
+
       // only returns buses with valid name (arg=false)
 #ifdef ENABLE_UDEV
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
@@ -1036,6 +1041,28 @@ int i2c_detect_buses() {
          i2c_check_bus(businfo);
          if (debug || IS_TRACING() )
             i2c_dbgrpt_bus_info(businfo, 0);
+         if (businfo->flags & I2C_BUS_BUSY) {
+            DBGMSG("Getting EDID from sysfs");
+            Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_busno(busno);
+            if (connector_rec && connector_rec->edid_bytes) {
+               businfo->edid = create_parsed_edid(connector_rec->edid_bytes);
+               if (debug) {
+                  if (businfo->edid)
+                     report_parsed_edid(businfo->edid, false /* verbose */, 0);
+                  else
+                     DBGMSG("create_parsed_edid() returned NULL");
+               }
+               if (businfo->edid) {
+                  businfo->flags |= I2C_BUS_ADDR_0X50;  // ???
+                  businfo->flags |= I2C_BUS_SYSFS_EDID;
+                  memcpy(businfo->edid->edid_source, "sysfs", 6);
+               }
+            }
+
+            GPtrArray * conflicts = check_driver_conflicts(busno);
+            report_conflicting_drivers(conflicts);
+            free_driver_conflicts(conflicts);
+         }
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);
       }

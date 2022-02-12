@@ -61,6 +61,7 @@ Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 #define I2C_BUS_VALID_NAME_CHECKED 0x0800
 #define I2C_BUS_HAS_VALID_NAME     0x0400
 #define I2C_BUS_BUSY               0x0200      ///< for possible future use
+#define I2C_BUS_SYSFS_EDID         0x0100
 
 #define I2C_BUS_INFO_MARKER "BINF"
 /** Information about one I2C bus */
