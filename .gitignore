@@ -4,6 +4,9 @@
 *~
 *.swp
 
+# Other temporary files
+*.tmp
+
 # Extensions
 *.o
 *.lo
