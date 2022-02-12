@@ -2,7 +2,7 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DATA_STRUCTURES_H
@@ -76,6 +76,7 @@ int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
 //
 
 bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbf);
+Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva);
 
 /** Function signature for passing function that appends a value to
  * either a #Byte_Bit_Flags or a #Byte_Value_Array

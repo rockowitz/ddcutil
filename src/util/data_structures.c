@@ -2,7 +2,7 @@
  *  General purpose data structures
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -667,6 +667,23 @@ bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbflags) {
    }
    return result;
 }
+
+
+/** Convert a #Byte_Value_Array to a #Byte_Bit_Flags
+ *
+ *  \param  bva  Byte_Value_Array
+ *  \return ByteBitFlags
+ */
+Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva) {
+   Byte_Bit_Flags bbf = bbf_create();
+
+   for (int ndx = 0; ndx < bva_length(bva); ndx++) {
+      Byte b = bva_get(bva, ndx);
+      bbf_set(bbf, b);
+   }
+   return bbf;
+}
+
 
 /** Function matching signature #Byte_Appender that adds a byte
  * to a #Byte_Value_Array.
