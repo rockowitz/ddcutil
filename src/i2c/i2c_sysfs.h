@@ -59,13 +59,19 @@ typedef struct {
 } Sys_Drm_Connector;
 
 
-
+GPtrArray * scan_sys_drm_connectors(int depth);
+GPtrArray* get_sys_drm_connectors(bool rescan);
 void report_sys_drm_connectors(int depth);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
+void free_sys_drm_connectors();
 
 
-GPtrArray *  check_driver_conflicts(int busno);
-void report_conflicting_drivers(GPtrArray * conflicts);   // for a single busno
+GPtrArray * check_driver_conflicts(int busno, int depth);
+GPtrArray * check_driver_conflicts_for_any_bus(int depth);
+void report_conflicting_drivers(GPtrArray * conflicts, int depth);   // for a single busno
 void free_driver_conflicts(GPtrArray* conflicts);
+GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
+char * conflicting_driver_names_string_t(GPtrArray * conflicts);
+
 
 #endif /* I2C_SYSFS_H_ */

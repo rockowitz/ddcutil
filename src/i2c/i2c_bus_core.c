@@ -750,7 +750,7 @@ void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
@@ -891,32 +891,37 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting.  businfo=%p", businfo);
    assert(businfo);
+
+   int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
+   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
+   if (drm_connector)
+      rpt_vstring(depth, "DRM connector:           %s", drm_connector->connector_name);
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
    // The simple X37 test can have both false positives (DDC turned off in monitor but
    // X37 responsive), and false negatives (Dell P2715Q)
    // if (output_level >= DDCA_OL_NORMAL)
-   // rpt_vstring(depth, "Supports DDC:        %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
+   // rpt_vstring(depth, "Supports DDC:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
 #ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(depth+1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(depth+1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(d1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(d1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
-      rpt_vstring(depth+1, "I2C address 0x50 (EDID) responsive: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
-      rpt_vstring(depth+1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
-      rpt_vstring(depth+1, "Is LVDS device:                     %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
+      rpt_vstring(d1, "I2C address 0x50 (EDID) responsive: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(d1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
+      rpt_vstring(d1, "Is LVDS device:                     %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 
       // if ( !(businfo->flags & (I2C_BUS_EDP|I2C_BUS_LVDS)) )
-      // rpt_vstring(depth+1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
+      // rpt_vstring(d1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(depth+1, "%s:   %s", fn, sysattr_name);
+      rpt_vstring(d1, "%s:   %s", fn, sysattr_name);
       free(sysattr_name);
 
 #ifndef TARGET_BSD
@@ -1019,12 +1024,9 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 
 
 int i2c_detect_buses() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
    if (!i2c_buses) {
-
-   report_sys_drm_connectors(0);
-
       // only returns buses with valid name (arg=false)
 #ifdef ENABLE_UDEV
       Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
@@ -1059,9 +1061,12 @@ int i2c_detect_buses() {
                }
             }
 
-            GPtrArray * conflicts = check_driver_conflicts(busno);
-            report_conflicting_drivers(conflicts);
-            free_driver_conflicts(conflicts);
+            if (debug) {
+               GPtrArray * conflicts = check_driver_conflicts(busno, -1);
+               // report_conflicting_drivers(conflicts);
+               DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
+               free_driver_conflicts(conflicts);
+            }
          }
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);

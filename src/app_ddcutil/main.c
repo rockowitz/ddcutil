@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <setjmp.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,8 @@
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
+
+#include "i2c/i2c_sysfs.h"
 
 #include "ddc/common_init.h"
 
@@ -115,11 +118,26 @@ static void add_rtti_functions();
 
 
 static bool detect_ddcci(Parsed_Cmd * parsed_cmd) {
-   bool detected = false;
-   if ( directory_exists("/dev/bus/ddcci") && (!(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR)) ) {
-      f0printf(fout(), "Driver ddcci is loaded. "
-                       "ddcutil may require option --force-slave-address to recover from EBUSY errors.\n");
-      detected = true;
+   bool detected = true;
+
+   if ( !(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR) ) {
+      GPtrArray * conflicts = check_driver_conflicts_for_any_bus(-1);
+      if (conflicts && conflicts->len > 0) {
+         f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
+         free_driver_conflicts(conflicts);
+         detected = true;
+      }
+      else {
+         struct stat stat_buf;
+         int rc = stat("/dev/bus/ddcci", &stat_buf);
+         // DBGMSG("stat returned %d", rc);
+         if (rc == 0) {
+             f0printf(fout(), "Likely conflicting driver found: ddcci\n");
+             detected = true;
+          }
+      }
+      if (detected)
+         f0printf(fout(), "ddcutil may require option --force-slave-address to recover from EBUSY errors.\n");
    }
    return detected;
 }

@@ -41,6 +41,7 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_sysfs.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -529,16 +530,24 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
                 // else if ( curinfo->flags & I2C_BUS_BUSY) {
                 else if ( dref->dispno == DISPNO_BUSY) {
-                   struct stat stat_buf;
-                   char buf[20];
-                   g_snprintf(buf, 20, "/dev/bus/ddcci/%d", dref->io_path.path.i2c_busno);
-                   // DBGMSG("buf: %s", buf);
-                   int rc = stat(buf, &stat_buf);
-                   // DBGMSG("stat returned %d", rc);
-                   if (rc == 0)
-                      rpt_label(d1, "I2C device is busy.  Likely conflict with driver ddcci.");
-                   else
-                      rpt_label(d1, "I2C device is busy");
+                   rpt_label(d1, "I2C device is busy");
+                   int busno = dref->io_path.path.i2c_busno;
+                   GPtrArray * conflicts = check_driver_conflicts(busno, -1);
+                   if (conflicts && conflicts->len > 0) {
+                      // report_conflicting_drivers(conflicts);
+                      rpt_vstring(d1, "Likely conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
+                      free_driver_conflicts(conflicts);
+                   }
+                   else {
+                      struct stat stat_buf;
+                      char buf[20];
+                      g_snprintf(buf, 20, "/dev/bus/ddcci/%d", dref->io_path.path.i2c_busno);
+                      // DBGMSG("buf: %s", buf);
+                      int rc = stat(buf, &stat_buf);
+                      // DBGMSG("stat returned %d", rc);
+                      if (rc == 0)
+                         rpt_label(d1, "I2C device is busy.  Likely conflict with driver ddcci.");
+                   }
                    msg = "Try using option --force-slave-address";
                 }
             }
@@ -1278,6 +1287,7 @@ ddc_discard_detected_displays() {
       g_ptr_array_free(all_displays, true);
       all_displays = NULL;
    }
+   free_sys_drm_connectors();
    i2c_discard_buses();
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }

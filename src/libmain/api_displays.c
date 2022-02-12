@@ -941,6 +941,7 @@ ddca_report_display_info(
 
 
    if (dinfo->dispno == DISPNO_BUSY) {
+#ifdef OLD
       rpt_nl();
       char fn[20];
       int busno =  dinfo->path.path.i2c_busno;
@@ -948,6 +949,25 @@ ddca_report_display_info(
       struct stat statrec;
       if (stat(fn, &statrec) == 0 )
          rpt_vstring(d1, "Driver ddcci is hogging I2C slave address x37 (DDC) on /dev/i2c-%d", busno);
+#endif
+      Display_Ref * dref = (Display_Ref *) dinfo->dref;
+      int busno = dref->io_path.path.i2c_busno;
+      GPtrArray * conflicts = check_driver_conflicts(busno);
+      if (conflicts && conflicts->len > 0) {
+         rpt_vstring(d1, "I2C bus is busy. Likely conflicting driver(s): %s",
+                         conflicting_driver_names_string_t(conflicts));
+         free_driver_conflicts(conflicts);
+      }
+      else {
+         struct stat stat_buf;
+         char buf[20];
+         g_snprintf(buf, 20, "/dev/bus/ddcci/%d", busno);
+         // DBGMSG("buf: %s", buf);
+         int rc = stat(buf, &stat_buf);
+         // DBGMSG("stat returned %d", rc);
+         if (rc == 0)
+            rpt_label(d1, "I2C bus is busy. Likely conflict with driver ddcci.");
+      }
       rpt_vstring(d1, "Consider using option --force-slave-address.");
    }
    DBGMSF(debug, "Done.");
