@@ -849,13 +849,24 @@ void dump_sysfs_i2c() {
    // dump_original_sys_scans();
    // dump_simplified_sys_bus_pci(0);
 
-   report_sys_drm_connectors(0);
+   rpt_label(0, "*** Detailed /sys/class/drm report ***");
+   rpt_nl();
+   report_sys_drm_connectors(1);
+   rpt_nl();
+
+   rpt_label(0, "*** Check for conflicting device drivers ***");
+   rpt_nl();
+   GPtrArray * conflicts = check_driver_conflicts_for_any_bus(1);
+   if (conflicts && conflicts->len > 0) {
+      f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
+      free_driver_conflicts(conflicts);
+   }
+   else
+      f0printf(fout(), "No conflicting drivers found");
 
    // keep?
    dump_detailed_sys_bus_pci(0);
-#ifdef FUTURE
-   report_sys_drm_displays(0);
-#endif
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 

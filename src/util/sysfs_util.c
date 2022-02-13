@@ -261,7 +261,7 @@ get_single_subdir_name(
    DIR* dir2 = opendir(dirname);
    char * result = NULL;
    if (!dir2) {
-      rpt_vstring(d1, "Unexpected error. Unable to open sysfs directory %s: %s\n",
+      rpt_vstring(d1, "Unexpected error. Unable to open sysfs directory %s: %s",
                       dirname, strerror(errno));
      }
      else {

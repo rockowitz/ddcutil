@@ -537,6 +537,11 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                       // report_conflicting_drivers(conflicts);
                       rpt_vstring(d1, "Likely conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
                       free_driver_conflicts(conflicts);
+
+                      char * s = get_conflicting_drivers_for_bus(busno);
+                      rpt_vstring(d1, "Likely conflicting drivers (2): %s", s);
+                      free(s);
+
                    }
                    else {
                       struct stat stat_buf;

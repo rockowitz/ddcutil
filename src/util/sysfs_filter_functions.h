@@ -18,6 +18,7 @@ void free_regex_hash_table();
 bool predicate_cardN(               const char * value);
 bool predicate_cardN_connector(     const char * value);
 bool startswith_i2c(                const char * value);
+bool predicate_exact_D_00hh(const char * value, const char * sbusno);
 
 // Dir_Filter_Func
 

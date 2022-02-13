@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FILE_UTIL_H_
@@ -62,6 +62,9 @@ char * filename_for_fd_t(
 typedef bool (*Filename_Filter_Func)(
       const char *  simple_fn);
 
+typedef bool (*Filename_Filter_Func_With_Arg)(
+      const char *  simple_fn, const char * arg);
+
 /** Signature of the filter function passed to #dir_ordered_foreach,
  *  #dir_filtered_ordered_foreach
  */
@@ -85,6 +88,15 @@ void dir_foreach(
 void dir_ordered_foreach(
       const char *          dirname,
       Filename_Filter_Func  fn_filter,
+      GCompareFunc          compare_func,
+      Dir_Foreach_Func      func,
+      void *                accumulator,
+      int                   depth);
+
+void dir_ordered_foreach_with_arg(
+      const char *          dirname,
+      Filename_Filter_Func_With_Arg  fn_filter,
+      const char *          fn_filter_arg,
       GCompareFunc          compare_func,
       Dir_Foreach_Func      func,
       void *                accumulator,

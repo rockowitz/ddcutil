@@ -952,7 +952,7 @@ ddca_report_display_info(
 #endif
       Display_Ref * dref = (Display_Ref *) dinfo->dref;
       int busno = dref->io_path.path.i2c_busno;
-      GPtrArray * conflicts = check_driver_conflicts(busno);
+      GPtrArray * conflicts = check_driver_conflicts(busno, -1);
       if (conflicts && conflicts->len > 0) {
          rpt_vstring(d1, "I2C bus is busy. Likely conflicting driver(s): %s",
                          conflicting_driver_names_string_t(conflicts));

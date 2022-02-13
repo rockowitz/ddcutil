@@ -105,6 +105,7 @@ regex_t * get_compiled_regex(const char * pattern) {
 
 static const char * cardN_connector_pattern = "^card[0-9]+[-]";
 static const char * cardN_pattern = "^card[0-9]+$";
+static const char * D_00hh_pattern = "^[0-9]+-00[0-9a-fA-F]{2}$";
 
 
 bool eval_regex(regex_t * re, const char * value) {
@@ -186,6 +187,26 @@ bool startswith_i2c(const char * value) {
 bool class_display_device_predicate(const char * value) {
    return str_starts_with(value, "0x03");
 }
+
+
+bool predicate_exact_D_00hh(const char * value, const char * sbusno) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. value=|%s|, sbusno=|%s|\n", __func__, value, sbusno);
+   bool b1 = compile_and_eval_regex(D_00hh_pattern, value);
+   if (b1) {
+
+      // our utilities don't support extracting matching patterns
+      char * hypos = strchr(value, '-'); // must succeed because of regex match
+      char * s = substr(value, 0, (hypos-value));
+      b1 = streq(s, sbusno);
+      free(s);
+   }
+   if (debug)
+      printf("(%s) Returning %s, matched against |%s|\n", __func__, sbool( b1), value);
+   return b1;
+}
+
 
 
 //

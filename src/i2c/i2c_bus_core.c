@@ -1026,6 +1026,12 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 int i2c_detect_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
+
+   rpt_label(0, "*** Temporary code to exercise get_all_i2c_infos() ***");
+   GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
+   dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
+
+
    if (!i2c_buses) {
       // only returns buses with valid name (arg=false)
 #ifdef ENABLE_UDEV

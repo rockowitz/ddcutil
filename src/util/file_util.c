@@ -472,6 +472,61 @@ dir_ordered_foreach(
 }
 
 
+void
+dir_ordered_foreach_with_arg(
+        const char *          dirname,
+        Filename_Filter_Func_With_Arg
+                              fn_filter,
+        const char *          fn_filter_argument,
+        GCompareFunc          compare_func,
+        Dir_Foreach_Func      func,
+        void *                accumulator,
+        int                   depth)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. dirname=%s, fn_filter_argument=|%s|\n", __func__, dirname, fn_filter_argument);
+   GPtrArray * simple_filenames = g_ptr_array_new();
+
+   struct dirent *dent;
+   DIR           *d;
+   d = opendir(dirname);
+   if (!d) {
+      rpt_vstring(depth,"Unable to open directory %s: %s", dirname, strerror(errno));
+   }
+   else {
+      while ((dent = readdir(d)) != NULL) {
+         if (debug)
+            printf("(%s) %s\n", __func__, dent->d_name);
+         if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
+            if (!fn_filter || fn_filter(dent->d_name, fn_filter_argument)) {
+               if (debug)
+                  printf("(%s) Adding simple filename |%s|\n", __func__, dent->d_name);
+               g_ptr_array_add(simple_filenames, strdup(dent->d_name));
+            }
+         }
+      }
+      closedir(d);
+
+      if (compare_func)
+         g_ptr_array_sort(simple_filenames, compare_func);
+      else
+         g_ptr_array_sort(simple_filenames, indirect_strcmp);
+
+      for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
+         char * fn = g_ptr_array_index(simple_filenames, ndx);
+         if (debug)
+         printf("(%s) Calling Dir_Foreach_Func, dirname=%s, fn=%s\n", __func__, dirname, fn);
+         func(dirname, fn, accumulator, depth);
+      }
+   }
+   if (debug)
+      printf("(%s) Done.\n", __func__);
+}
+
+
+
+
 /** Selects files from a directory using a filter function,
  *  then Iterates over the selected files in an ordered manner.
  *

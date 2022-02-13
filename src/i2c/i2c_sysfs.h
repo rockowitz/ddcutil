@@ -49,7 +49,7 @@ typedef struct {
    char * base_dev;
    Byte * edid_bytes;
    gsize  edid_size;
-   bool   enabled;
+   char * enabled;
    char * status;
 #ifdef UNNECESSARY
    // n. can be multiple
@@ -73,5 +73,9 @@ void free_driver_conflicts(GPtrArray* conflicts);
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
 char * conflicting_driver_names_string_t(GPtrArray * conflicts);
 
+GPtrArray * get_all_i2c_info(bool rescan, int depth);
+void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
+
+char * get_conflicting_drivers_for_bus(int busno);
 
 #endif /* I2C_SYSFS_H_ */
