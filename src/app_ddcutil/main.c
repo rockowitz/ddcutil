@@ -117,7 +117,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 static void add_rtti_functions();
 
 
-static bool detect_ddcci(Parsed_Cmd * parsed_cmd) {
+static bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
    bool detected = true;
 
    if ( !(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR) ) {
@@ -754,7 +754,7 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
-      detect_ddcci(parsed_cmd);
+      detect_conflicting_drivers(parsed_cmd);
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
       }
@@ -816,7 +816,7 @@ main(int argc, char *argv[]) {
 
    // *** Commands that may require Display Identifier ***
    else {
-      detect_ddcci(parsed_cmd);
+      detect_conflicting_drivers(parsed_cmd);
 
       Display_Ref * dref = NULL;
       Status_Errno_DDC  rc =
