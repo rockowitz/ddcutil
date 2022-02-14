@@ -1,5 +1,6 @@
 AM_CPPFLAGS =        \
   $(GLIB_CFLAGS)     \
+  $(LIBDRM_CFLAGS)   \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
