@@ -66,16 +66,15 @@ Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 void free_sys_drm_connectors();
 
 
-GPtrArray * check_driver_conflicts(int busno, int depth);
-GPtrArray * check_driver_conflicts_for_any_bus(int depth);
+GPtrArray * collect_conflicting_drivers(int busno, int depth);
+GPtrArray * collect_conflicting_drivers_for_any_bus(int depth);
 void report_conflicting_drivers(GPtrArray * conflicts, int depth);   // for a single busno
-void free_driver_conflicts(GPtrArray* conflicts);
+void free_conflicting_drivers(GPtrArray* conflicts);
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
 char * conflicting_driver_names_string_t(GPtrArray * conflicts);
 
 GPtrArray * get_all_i2c_info(bool rescan, int depth);
 void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
-
 char * get_conflicting_drivers_for_bus(int busno);
 
 #endif /* I2C_SYSFS_H_ */

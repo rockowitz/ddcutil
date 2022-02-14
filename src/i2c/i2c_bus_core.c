@@ -1027,9 +1027,9 @@ int i2c_detect_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
 
-   rpt_label(0, "*** Temporary code to exercise get_all_i2c_infos() ***");
-   GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
-   dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
+   // rpt_label(0, "*** Temporary code to exercise get_all_i2c_infos() ***");
+   // GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
+   // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
 
    if (!i2c_buses) {
@@ -1068,10 +1068,10 @@ int i2c_detect_buses() {
             }
 
             if (debug) {
-               GPtrArray * conflicts = check_driver_conflicts(busno, -1);
+               GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
                // report_conflicting_drivers(conflicts);
                DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
-               free_driver_conflicts(conflicts);
+               free_conflicting_drivers(conflicts);
             }
          }
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);

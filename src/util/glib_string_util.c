@@ -5,7 +5,7 @@
  *  glib_string_util.c/h exists to avoid circular dependencies within directory util.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */

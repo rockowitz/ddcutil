@@ -525,8 +525,6 @@ dir_ordered_foreach_with_arg(
 }
 
 
-
-
 /** Selects files from a directory using a filter function,
  *  then Iterates over the selected files in an ordered manner.
  *
@@ -579,8 +577,6 @@ dir_filtered_ordered_foreach(
    }
    g_ptr_array_free(simple_filenames, true);
 }
-
-
 
 
 /** Reads the contents of a file into a #GPtrArray of lines, optionally keeping only

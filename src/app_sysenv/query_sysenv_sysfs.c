@@ -856,10 +856,10 @@ void dump_sysfs_i2c() {
 
    rpt_label(0, "*** Check for conflicting device drivers ***");
    rpt_nl();
-   GPtrArray * conflicts = check_driver_conflicts_for_any_bus(1);
+   GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(1);
    if (conflicts && conflicts->len > 0) {
       f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
-      free_driver_conflicts(conflicts);
+      free_conflicting_drivers(conflicts);
    }
    else
       f0printf(fout(), "No conflicting drivers found");

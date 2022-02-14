@@ -532,16 +532,16 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                 else if ( dref->dispno == DISPNO_BUSY) {
                    rpt_label(d1, "I2C device is busy");
                    int busno = dref->io_path.path.i2c_busno;
-                   GPtrArray * conflicts = check_driver_conflicts(busno, -1);
+
+                   char * s = get_conflicting_drivers_for_bus(busno);
+                   rpt_vstring(d1, "Likely conflicting drivers (2): %s", s);
+                   free(s);
+
+                   GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
                    if (conflicts && conflicts->len > 0) {
                       // report_conflicting_drivers(conflicts);
                       rpt_vstring(d1, "Likely conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
-                      free_driver_conflicts(conflicts);
-
-                      char * s = get_conflicting_drivers_for_bus(busno);
-                      rpt_vstring(d1, "Likely conflicting drivers (2): %s", s);
-                      free(s);
-
+                      free_conflicting_drivers(conflicts);
                    }
                    else {
                       struct stat stat_buf;
@@ -553,6 +553,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                       if (rc == 0)
                          rpt_label(d1, "I2C device is busy.  Likely conflict with driver ddcci.");
                    }
+
+
+
                    msg = "Try using option --force-slave-address";
                 }
             }
