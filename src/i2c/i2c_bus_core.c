@@ -1050,7 +1050,7 @@ int i2c_detect_buses() {
          if (debug || IS_TRACING() )
             i2c_dbgrpt_bus_info(businfo, 0);
          if (businfo->flags & I2C_BUS_BUSY) {
-            DBGMSG("Getting EDID from sysfs");
+            DBGMSF(debug, "Getting EDID from sysfs");
             Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_busno(busno);
             if (connector_rec && connector_rec->edid_bytes) {
                businfo->edid = create_parsed_edid(connector_rec->edid_bytes);

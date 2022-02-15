@@ -618,7 +618,6 @@ void one_drm_connector(
 {
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s, depth=%d", dirname, fn, depth);
-   int d1 = depth+1;
    GPtrArray * drm_displays = accumulator;
 
    Sys_Drm_Connector * cur = calloc(1, sizeof(Sys_Drm_Connector));
@@ -638,8 +637,8 @@ void one_drm_connector(
    }
 
    // returns 1 if the DRM driver is loaded, 0 otherwise
-     int drm_available = drmAvailable();
-     rpt_vstring(d1, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
+   int drm_available = drmAvailable();
+   DBGMSF(debug, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
                      sbool(drm_available));
 
    char * driver = find_and_get_adapter_driver( cur->connector_path, -1);
@@ -803,7 +802,7 @@ void one_drm_connector(
  */
 
 GPtrArray * scan_sys_drm_connectors(int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
    if (sys_drm_displays) {
       g_ptr_array_free(sys_drm_displays, true);
@@ -1154,7 +1153,7 @@ void simple_one_n_nnnn(
 
 
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. busno=%d, depth=%d", busno, depth);
    char bus_path[40];
    g_snprintf(bus_path, 40, "/sys/bus/i2c/devices/i2c-%d", busno);

@@ -34,6 +34,8 @@
 #include "ddc/common_init.h"
 
 
+bool enable_experimental_sysfs_code;
+
 void
 init_tracing(Parsed_Cmd * parsed_cmd)
 {
@@ -157,6 +159,10 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
       set_i2c_fileio_use_timeout(true);
    }
+}
+
+void init_ddc_experimental_options(Parsed_Cmd * parsed_cmd) {
+   enable_experimental_sysfs_code = parsed_cmd->flags & CMD_FLAG_F2;
 }
 
 
