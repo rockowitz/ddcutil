@@ -24,7 +24,10 @@ the shared library.
 
 For detailed information about **ddcutil**, see the project website: www.ddcutil.com. 
 
-In particular, for instructions on building **ddcutil**, see www.ddcutil.com/building. 
+In particular, for a summary of key post-installation steps, including loading driver
+i2c-dev, see [Post-Installation Checklist](https://www.ddcutil.com/config_steps).
+More generally, for instructions on building and configuring **ddcutil**, see
+]Installation and Configuration](https://www.ddcuti.com/www.ddcutil.com/install_config.main)
 
 Once **ddcutil** is installed, online help is also available.
 Use the --help option or see the man page:
