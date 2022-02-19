@@ -1076,6 +1076,7 @@ typedef struct {
    char * adapter_path;
    char * adapter_class;
    char * driver;
+   char * driver_version;
    GPtrArray * conflicting_driver_names;
 } Sysfs_I2C_Info;
 
@@ -1086,6 +1087,7 @@ void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
       free(info->adapter_path);
       free(info->adapter_class);
       free(info->driver);
+      free(info->driver_version);
       g_ptr_array_free(info->conflicting_driver_names, true);
       free(info);
    }
@@ -1106,6 +1108,7 @@ void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
    rpt_vstring(d1, "adapter_path:              %s", info->adapter_path);
    rpt_vstring(d1, "adapter_class:             %s", info->adapter_class);
    rpt_vstring(d1, "driver:                    %s", info->driver);
+   rpt_vstring(d1, "driver_version:            %s", info->driver_version);
    rpt_vstring(d1, "conflicting_driver_names:  %s",
          join_string_g_ptr_array_t(info->conflicting_driver_names, ", ") );
 }
@@ -1163,8 +1166,9 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    char * adapter_path  = strdup(find_adapter(bus_path, depth));
    if (adapter_path) {
       result->adapter_path = adapter_path;
-      RPT_ATTR_TEXT(depth, &result->adapter_class, adapter_path, "class");
-      RPT_ATTR_REALPATH_BASENAME(depth, &result->driver, adapter_path, "driver");
+      RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
+      RPT_ATTR_REALPATH_BASENAME(depth, &result->driver,         adapter_path, "driver");
+      RPT_ATTR_TEXT(             depth, &result->driver_version, adapter_path, "driver/module/version");
    }
 
    result->conflicting_driver_names = g_ptr_array_new_with_free_func(g_free);
