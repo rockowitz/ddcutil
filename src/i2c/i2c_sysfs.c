@@ -116,6 +116,13 @@ char * find_and_get_adapter_driver(char * path, int depth) {
 }
 
 
+/** Returns the name of the video driver for an I2C bus.
+ *
+ * \param  busno   I2 bus number
+ * \return driver name, NULL if can't determine
+ *
+ * Caller is responsibile for freeing the returned string.
+ */
 char * get_driver_for_busno(int busno) {
    char path[PATH_MAX];
    g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
