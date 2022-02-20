@@ -121,7 +121,7 @@ char * find_and_get_adapter_driver(char * path, int depth) {
  * \param  busno   I2 bus number
  * \return driver name, NULL if can't determine
  *
- * Caller is responsibile for freeing the returned string.
+ * Caller is responsible for freeing the returned string.
  */
 char * get_driver_for_busno(int busno) {
    char path[PATH_MAX];
