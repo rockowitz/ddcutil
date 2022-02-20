@@ -119,7 +119,7 @@ char * find_and_get_adapter_driver(char * path, int depth) {
 char * get_driver_for_busno(int busno) {
    char path[PATH_MAX];
    g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
-   char * result = find_and_get_adapater_driver(path, -1);
+   char * result = find_and_get_adapter_driver(path, -1);
    return result;
 }
 
