@@ -72,6 +72,7 @@ struct {
    unsigned long    functionality;      ///< i2c bus functionality flags
    Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
    uint16_t         flags;              ///< I2C_BUS_* flags
+   char *           driver;             ///* driver name
 } I2C_Bus_Info;
 
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);

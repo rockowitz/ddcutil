@@ -764,6 +764,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGMSF(debug, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
+      bus_info->driver = get_driver_for_busno(bus_info->busno);
       int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
       if (fd >= 0) {
           DBGMSF(debug, "Opened bus /dev/i2c-%d", bus_info->busno);
@@ -812,6 +813,8 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
          assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
          if (bus_info->edid)
             free_parsed_edid(bus_info->edid);
+         if (bus_info->driver)
+            free(bus_info->driver);
          bus_info->marker[3] = 'x';
          free(bus_info);
       }
@@ -847,6 +850,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
+      rpt_vstring(depth, "Driver:                  %s", bus_info->driver);
       rpt_vstring(depth, "Bus accessible:          %s", sbool(bus_info->flags&I2C_BUS_ACCESSIBLE ));
       rpt_vstring(depth, "Bus is eDP:              %s", sbool(bus_info->flags&I2C_BUS_EDP ));
       rpt_vstring(depth, "Bus is LVDS:             %s", sbool(bus_info->flags&I2C_BUS_LVDS));
@@ -907,6 +911,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    // rpt_vstring(depth, "Supports DDC:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
+      rpt_vstring(d1, "Driver:                             %s", (businfo->driver) ? businfo->driver : "Unknown");
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(d1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(d1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
@@ -921,7 +926,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(d1, "%s:   %s", fn, sysattr_name);
+      rpt_vstring(d1, "%s:    %s", fn, sysattr_name);
       free(sysattr_name);
 
 #ifndef TARGET_BSD
