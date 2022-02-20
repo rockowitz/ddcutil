@@ -71,6 +71,19 @@ void gaux_string_ptr_array_include(GPtrArray * arry, char * new_value) {
 // *** Common Functions
 //
 
+/** Given a sysfs node, walk up the driver chain until
+ *  an adapter node is found.
+ *
+ *  \param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  \param  depth  logical indentation depth
+ *  \return sysfs path to adapter
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes reported.
+ *  If depth < -9, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
 char * find_adapter(char * path, int depth) {
    char * devpath = NULL;
    if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
@@ -98,6 +111,15 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
 char * find_and_get_adapter_driver(char * path, int depth) {
    char * adapter_path = find_adapter(path, depth);
    char * result = get_driver_for_adapter(adapter_path, depth);
+   free(adapter_path);
+   return result;
+}
+
+
+char * get_driver_for_busno(int busno) {
+   char path[PATH_MAX];
+   g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
+   char * result = find_and_get_adapater_driver(path, -1);
    return result;
 }
 

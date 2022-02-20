@@ -3,13 +3,15 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_H_
 #define I2C_SYSFS_H_
 
 #include <glib-2.0/glib.h>
+
+char * get_driver_for_busno(int busno);
 
 typedef struct {
    int     busno;
