@@ -367,7 +367,13 @@ one_drm_card(
    DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
-   dir_ordered_foreach(buf, predicate_cardN_connector, gaux_ptr_scomp, read_drm_nondp_card_connector_node, info, depth);
+   dir_ordered_foreach(
+         buf,
+         predicate_cardN_connector,
+         gaux_ptr_scomp,
+         read_drm_nondp_card_connector_node,
+         info,
+         depth);
    DBGMSF(debug, "Done");
 }
 
@@ -740,27 +746,30 @@ void one_drm_connector(
          if (depth >= 0)
             rpt_nl();
 
-         RPT_ATTR_REALPATH(depth, &cur->ddc_dir_path,    dirname, fn, "ddc");
-         // No ddc directory on Nvidia?
-         // Examine ddc subdirectory
-         // e.g. /sys/class/drm/card0-DP-1/ddc/name:
-         RPT_ATTR_TEXT(depth, &cur->name,    dirname, fn, "ddc", "name");
+         bool found_ddc = RPT_ATTR_REALPATH(depth, &cur->ddc_dir_path,    dirname, fn, "ddc");
+         ASSERT_IFF(found_ddc, cur->ddc_dir_path);
+         if (cur->ddc_dir_path) {
+            // No ddc directory on Nvidia?
+            // Examine ddc subdirectory
+            // e.g. /sys/class/drm/card0-DP-1/ddc/name:
+            RPT_ATTR_TEXT(depth, &cur->name,    dirname, fn, "ddc", "name");
 
-         char * i2cN_buf = NULL;
-         // looking for e.g. /sys/bus/drm/card0-DVI-D-1/ddc/i2c-dev/i2c-1
-         has_i2c_subdir =
-             RPT_ATTR_SINGLE_SUBDIR(depth, &i2cN_buf, fn_starts_with, "i2c-",
-                                             dirname, fn, "ddc", "i2c-dev");
+            char * i2cN_buf = NULL;
+            // looking for e.g. /sys/bus/drm/card0-DVI-D-1/ddc/i2c-dev/i2c-1
+            has_i2c_subdir =
+                RPT_ATTR_SINGLE_SUBDIR(depth, &i2cN_buf, fn_starts_with, "i2c-",
+                                                dirname, fn, "ddc", "i2c-dev");
 
-         if (has_i2c_subdir) {
-             cur->i2c_busno = i2c_name_to_busno(i2cN_buf);
-            char * buf = NULL;
-            RPT_ATTR_TEXT(depth, &buf,       dirname, fn, "ddc", "i2c-dev", i2cN_buf, "name");
-            assert (streq(buf, cur->name));
-            free(buf);
-            RPT_ATTR_TEXT(depth, &cur->base_dev,
-                                             dirname, fn, "ddc", "i2c-dev", i2cN_buf, "dev");
-         }
+            if (has_i2c_subdir) {
+                cur->i2c_busno = i2c_name_to_busno(i2cN_buf);
+               char * buf = NULL;
+               RPT_ATTR_TEXT(depth, &buf,       dirname, fn, "ddc", "i2c-dev", i2cN_buf, "name");
+               assert (streq(buf, cur->name));
+               free(buf);
+               RPT_ATTR_TEXT(depth, &cur->base_dev,
+                                                dirname, fn, "ddc", "i2c-dev", i2cN_buf, "dev");
+            }
+         }  // had ddc subdirectory
       }   // not DP
 
    }  // not Nvidia
@@ -870,11 +879,11 @@ void report_sys_drm_connectors(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
    int d0 = depth;
-   int d1 = depth+1;
+   int d1 = (debug) ? 2 : -1;
    rpt_nl();
    rpt_label(d0, "Display connectors reported by DRM:");
    if (!sys_drm_displays)
-     sys_drm_displays = scan_sys_drm_connectors(2);
+     sys_drm_displays = scan_sys_drm_connectors(d1);
    GPtrArray * displays = sys_drm_displays;
    if (!displays || displays->len == 0) {
       rpt_label(d1, "None");
@@ -1261,7 +1270,13 @@ GPtrArray * get_all_i2c_info(bool rescan, int depth) {
 
    GPtrArray * all = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
 
-   dir_ordered_foreach("/sys/bus/i2c/devices", startswith_i2c, NULL, simple_get_i2c_info, all, depth);
+   dir_ordered_foreach(
+         "/sys/bus/i2c/devices",
+         startswith_i2c,
+         i2c_compare,
+         simple_get_i2c_info,
+         all,
+         depth);
    DBGMSF(debug, "Returning array of %d records", all->len);
    all_i2c_info = all;    // its a hack
    return all;
