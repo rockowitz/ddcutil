@@ -109,9 +109,12 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
 
 
 char * find_and_get_adapter_driver(char * path, int depth) {
+   char * result = NULL;
    char * adapter_path = find_adapter(path, depth);
-   char * result = get_driver_for_adapter(adapter_path, depth);
-   free(adapter_path);
+   if (adapter_path) {
+      result = get_driver_for_adapter(adapter_path, depth);
+      free(adapter_path);
+   }
    return result;
 }
 
@@ -1192,7 +1195,7 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    Sysfs_I2C_Info * result = calloc(1, sizeof(Sysfs_I2C_Info));
    result->busno = busno;
    RPT_ATTR_TEXT(depth, &result->name, bus_path, "name");
-   char * adapter_path  = strdup(find_adapter(bus_path, depth));
+   char * adapter_path  = find_adapter(bus_path, depth);
    if (adapter_path) {
       result->adapter_path = adapter_path;
       RPT_ATTR_TEXT(             depth, &result->adapter_class,  adapter_path, "class");
