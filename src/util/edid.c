@@ -342,8 +342,8 @@ void report_parsed_edid_base(
       rpt_vstring(depth,"EDID synopsis:");
       rpt_vstring(d1,"Mfg id:               %s - %s",     edid->mfg_id, pnp_name(edid->mfg_id));
       rpt_vstring(d1,"Model:                %s",          edid->model_name);
-   // rpt_vstring(d1,"Product code:         0x%04x (%u)", edid->product_code, edid->product_code);
-      rpt_vstring(d1,"Product code:         %u",          edid->product_code);
+      rpt_vstring(d1,"Product code:         %u  (0x%04x)", edid->product_code, edid->product_code);
+   // rpt_vstring(d1,"Product code:         %u",          edid->product_code);
       rpt_vstring(d1,"Serial number:        %s",          edid->serial_ascii);
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
