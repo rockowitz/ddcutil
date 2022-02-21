@@ -442,7 +442,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
    char * token;
    // originally token assignment was in while() clause, but valgrind
    // complaining about uninitialized variable, trying to figure out why
-   token = strsep(&rest, delims);      // n. overwrites character found
+   token = strsep(&rest, delims);      // n. overwriteedid.cs character found
    while (token) {
       if (debug)
          printf("(%s) token: |%s|\n", __func__, token);
@@ -745,7 +745,7 @@ int  ntsa_find(  Null_Terminated_String_Array string_array, char * value) {
  */
 void ntsa_show(Null_Terminated_String_Array string_array) {
    assert(string_array);
-   printf("Null_Terminated_String_Array at %p:\n", string_array);
+   printf("Null_Terminated_String_Array at %p:\n", (void*) string_array);
    int ndx = 0;
    while (string_array[ndx]) {
       printf("  %p: |%s|\n", string_array[ndx], string_array[ndx]);
