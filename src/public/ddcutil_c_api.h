@@ -585,6 +585,8 @@ ddca_get_display_refs(
  *
  *  @param  ddca_dref display reference
  *  @param  dinfo_loc where to return pointer to newly allocated #DDCA_Display_Info
+ *  @param  DDCRC_OK  no error
+ *  @retval DDCRC_ARG invalid display reference
  *
  *  @since 1.2.0
  */
