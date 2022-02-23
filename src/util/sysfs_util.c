@@ -589,7 +589,7 @@ rpt_attr_single_subdir(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. depth=%d, value_loc=%p\n", __func__, depth, value_loc);
+      printf("(%s) Starting. depth=%d, value_loc=%p\n", __func__, depth, (void*)value_loc);
 
    char pb1[PATH_MAX];
    va_list ap;

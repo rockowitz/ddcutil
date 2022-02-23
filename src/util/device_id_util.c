@@ -2,7 +2,7 @@
  * Lookup PCI and USB device ids
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -209,7 +209,8 @@ load_simple_id_segment(
    assert(simple_table);
    if (debug) {
       printf("(%s) Starting. simple_table=%p, segment_tag=%s, curpos=%d, -> |%s|\n",
-             __func__, simple_table, segment_tag, cur_pos, (char *) g_ptr_array_index(all_lines,cur_pos));
+             __func__, (void*)simple_table, segment_tag, cur_pos,
+             (char *) g_ptr_array_index(all_lines,cur_pos));
    }
    bool more = true;
    int linect = all_lines->len;
@@ -739,7 +740,7 @@ static void load_id_file(Device_Id_Type id_type){
 
    if (debug)
       printf("(%s) Done. pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
-             __func__, pci_vendors_mlm, usb_vendors_mlm);
+             __func__, (void*)pci_vendors_mlm, (void*)usb_vendors_mlm);
    return;
 }
 
@@ -1027,7 +1028,7 @@ bool devid_ensure_initialized() {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. pci_vendors_mlm=%p, usb_vendors_mlm=%p\n",
-             __func__, pci_vendors_mlm, usb_vendors_mlm);
+             __func__, (void*)pci_vendors_mlm, (void*)usb_vendors_mlm);
    bool ok = (pci_vendors_mlm && usb_vendors_mlm);
 
    if (!ok) {

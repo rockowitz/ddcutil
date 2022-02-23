@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -81,7 +81,7 @@ void
 errinfo_free(Error_Info * erec){
    bool debug = false;
    if (debug) {
-      printf("(%s) Starting. erec=%p\n", __func__, erec);
+      printf("(%s) Starting. erec=%p\n", __func__, (void*)erec);
       show_backtrace(2);
    }
    if (erec) {

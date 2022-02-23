@@ -3,7 +3,7 @@
  *  Reads an INI style configuration file
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -254,7 +254,8 @@ int ini_file_load(
    }
 
    if (debug) {
-      printf("(%s) Done.*parsed_ini_loc=%p, returning %d\n", __func__, *parsed_ini_loc, result);
+      printf("(%s) Done.*parsed_ini_loc=%p, returning %d\n",
+             __func__, (void*)*parsed_ini_loc, result);
       fflush(stdout);
    }
    ASSERT_IFF(result==0, *parsed_ini_loc);
@@ -263,7 +264,7 @@ int ini_file_load(
 
 
 void ini_file_dump(Parsed_Ini_File * parsed_ini_file) {
-   printf("(%s) Parsed_Ini_File at %p:\n", __func__, parsed_ini_file);
+   printf("(%s) Parsed_Ini_File at %p:\n", __func__, (void*)parsed_ini_file);
 
    if (parsed_ini_file) {
       assert(memcmp(parsed_ini_file->marker, PARSED_INI_FILE_MARKER, 4) == 0);

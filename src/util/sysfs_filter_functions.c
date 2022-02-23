@@ -62,7 +62,7 @@ void dbgrpt_regex_hash_table() {
 void free_regex_hash_table() {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. regex_hash_table=%p\n", __func__, regex_hash_table);
+      printf("(%s) Starting. regex_hash_table=%p\n", __func__, (void*)regex_hash_table);
    if (regex_hash_table) {
       if (debug) {
          printf("(%s) Hash table contents:\n", __func__);
@@ -79,7 +79,8 @@ void free_regex_hash_table() {
 void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n", __func__, pattern, compiled_re);
+      printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n",
+             __func__, pattern, (void*)compiled_re);
    GHashTable * regex_hash = get_regex_hash_table();
    g_hash_table_replace(regex_hash, strdup( pattern), compiled_re);
    if (debug)
@@ -94,7 +95,7 @@ regex_t * get_compiled_regex(const char * pattern) {
    GHashTable * regex_hash = get_regex_hash_table();
    regex_t * result = g_hash_table_lookup(regex_hash, pattern);
    if (debug)
-      printf("(%s) Returning %p. pattern = |%s|\n", __func__, result, pattern);
+      printf("(%s) Returning %p. pattern = |%s|\n", __func__, (void*)result, pattern);
    return result;
 }
 
@@ -111,7 +112,7 @@ static const char * D_00hh_pattern = "^[0-9]+-00[0-9a-fA-F]{2}$";
 bool eval_regex(regex_t * re, const char * value) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. re=%p, value=|%s|\n", __func__, re, value);
+      printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
    int rc = regexec(
           re,                   /* the compiled pattern */
           value,                /* the subject string */
@@ -137,7 +138,7 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
    if (!re) {
       re = calloc(1, sizeof(regex_t));
       if (debug)
-         printf("(%s) Allocated regex %p, compiling...\n", __func__, re);
+         printf("(%s) Allocated regex %p, compiling...\n", __func__, (void*)re);
       int rc = regcomp(re, pattern, REG_EXTENDED);
       if (rc != 0) {
          printf("(%s) regcomp() returned %d\n", __func__, rc);
@@ -216,9 +217,6 @@ bool predicate_exact_D_00hh(const char * value, const char * sbusno) {
       printf("(%s) Returning %s\n", __func__, sbool( b1));
    return b1;
 }
-
-
-
 
 
 //

@@ -2,7 +2,7 @@
   * USB specific udev utility functions
   */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -449,7 +449,7 @@ Udev_Usb_Devinfo * get_udev_usb_devinfo(char * subsystem, char * simple_devname)
 
 bye:
    if (debug) {
-      printf("(%s) Returning: %p\n", __func__, result);
+      printf("(%s) Returning: %p\n", __func__, (void*)result);
       if (result)
          report_udev_usb_devinfo(result, 1);
    }

@@ -1,7 +1,7 @@
 /* multi_level_map.c
  *
  * <copyright>
- * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -194,7 +194,7 @@ MLM_Node * mlm_find_child(GPtrArray * nodelist, uint id) {
    }
 
    if (debug)
-      printf("(%s) Returning %p\n", __func__, result);
+      printf("(%s) Returning %p\n", __func__, (void*)result);
    return result;
 }
 

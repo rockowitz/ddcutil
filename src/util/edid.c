@@ -333,7 +333,7 @@ void report_parsed_edid_base(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. edid=%p", __func__, edid);
+      printf("(%s) Starting. edid=%p", __func__, (void*)edid);
 
    int d1 = depth+1;
    int d2 = depth+2;

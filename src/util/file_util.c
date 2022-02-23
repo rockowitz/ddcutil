@@ -613,7 +613,7 @@ int read_file_with_filter(
    bool debug = false;
    if (debug) {
       printf("(%s) line_array=%p, fn=%s, ct(filter_terms)=%d, ignore_case=%s, limit=%d\n",
-             __func__, line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
+             __func__, (void*)line_array, fn, ntsa_length(filter_terms), sbool(ignore_case), limit);
       if (ntsa_length(filter_terms) > 0) {
          printf("(%s) filter_terms:\n", __func__);
          for (char ** term_ptr = filter_terms; *term_ptr; term_ptr++)
@@ -761,7 +761,7 @@ int fopen_mkdir(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. path=%s, mode=%s, fp_loc=%p\n", __func__, path, mode, fp_loc);
+      printf("(%s) Starting. path=%s, mode=%s, fp_loc=%p\n", __func__, path, mode, (void*)fp_loc);
 
    int rc = 0;
    *fp_loc = NULL;
