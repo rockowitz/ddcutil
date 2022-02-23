@@ -2,7 +2,7 @@
  * Linux errno descriptions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -392,7 +392,7 @@ Status_Code_Info * find_errno_description(int errnum) {
       result->description = strdup(strerror(errnum));
    }
    if (debug)
-      printf("(%s) Returning %p\n", __func__, result);
+      printf("(%s) Returning %p\n", __func__, (void*)result);
    return result;
 }
 

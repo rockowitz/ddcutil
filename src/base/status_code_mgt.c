@@ -2,7 +2,7 @@
  *
  *  Status Code Management
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -262,7 +262,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
       pinfo = finder_func(rawrc);
    }
    if (debug) {
-      printf("(%s) Done.  Returning %p\n", __func__, pinfo);
+      printf("(%s) Done.  Returning %p\n", __func__, (void*)pinfo);
       if (pinfo)
          report_status_code_info(pinfo);
    }
@@ -430,7 +430,7 @@ void init_status_code_mgt() {
  * @param pdesc  pointer to #Status_Code_Info struct
  */
 void report_status_code_info(Status_Code_Info * pdesc) {
-   printf("Status_Code_Info struct at %p\n", pdesc);
+   printf("Status_Code_Info struct at %p\n", (void*)pdesc);
    if (pdesc) {
       printf("code:                 %d\n",     pdesc->code);
       printf("name:                 %p: %s\n", pdesc->name, pdesc->name);

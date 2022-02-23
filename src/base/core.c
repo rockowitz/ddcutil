@@ -13,7 +13,7 @@
  * - debug and trace messages
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -993,7 +993,7 @@ bool dbgtrc_returning(
       va_list(args);
       va_start(args, format);
       if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }
@@ -1020,7 +1020,7 @@ bool dbgtrc_returning_errinfo(
                        __func__,
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
-                       errs, format);
+                       (void*)errs, format);
 
    bool msg_emitted = false;
    if ( is_tracing(trace_group, filename, funcname) ) {
@@ -1031,7 +1031,7 @@ bool dbgtrc_returning_errinfo(
       va_list(args);
       va_start(args, format);
       if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
       g_free(pre_prefix);
@@ -1041,7 +1041,6 @@ bool dbgtrc_returning_errinfo(
       printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
    return msg_emitted;
 }
-
 
 
 bool dbgtrc_returning_expression(
@@ -1073,7 +1072,7 @@ bool dbgtrc_returning_expression(
       va_list(args);
       va_start(args, format);
       if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, &args, args);
+         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }

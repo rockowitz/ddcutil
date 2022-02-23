@@ -1,6 +1,6 @@
 /** \f ore_per_thread_settings.c */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -73,7 +73,7 @@ void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
    bool debug = false;
    if (debug)
       printf("(%s) fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-             __func__, fout, ferr, stdout, stderr);
+             __func__, (void*)fout, (void*)ferr, (void*)stdout, (void*)stderr);
    g_mutex_lock(&default_thread_output_settings_mutex);
    if ( !default_thread_output_settings )
       allocate_default_thread_output_settings();
@@ -114,7 +114,8 @@ Thread_Output_Settings *  get_thread_settings() {
       g_private_set(&per_thread_dests_key, settings);
       if (debug)
          printf("(%s) Allocated settings=%p for thread %ld, fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-               __func__, settings, settings->tid, settings->fout, settings->ferr, stdout, stderr);
+               __func__, (void*)settings, settings->tid,
+               (void*)settings->fout, (void*)settings->ferr, (void*)stdout, (void*)stderr);
    }
 
    // printf("(%s) Returning: %p\n", __func__, settings);
@@ -140,7 +141,7 @@ void set_fout(FILE * fout) {
    dests->fout = fout;
    if (debug)
       printf("(%s) tid=%ld, dests=%p, fout=%p, stdout=%p\n",
-             __func__, dests->tid, dests, fout, stdout);
+             __func__, dests->tid, (void*)dests, (void*)fout, (void*)stdout);
    // FOUT = fout;
    rpt_change_output_dest(fout);
 }

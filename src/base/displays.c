@@ -912,7 +912,7 @@ char * dref_repr_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
-      g_snprintf(buf, 100, "Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), dref);
+      g_snprintf(buf, 100, "Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), (void*)dref);
    else
       strcpy(buf, "Display_Ref[NULL]");
    return buf;
@@ -996,7 +996,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       dh->repr = g_strdup_printf(
                      "Display_Handle[i2c: fd=%d, busno=%d @%p]",
-                     dh->fd, dh->dref->io_path.path.i2c_busno, dh);
+                     dh->fd, dh->dref->io_path.path.i2c_busno, (void*)dh);
    }
 #ifdef USE_USB
    else if (dref->io_path.io_mode == DDCA_IO_USB) {
@@ -1005,7 +1005,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
                 // "Display_Handle[usb: %d:%d, %s/hiddev%d]",
                 dh->dref->usb_bus, dh->dref->usb_device,
                 usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno,
-                dh);
+                (void*)dh);
    }
 #endif
    else {
