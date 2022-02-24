@@ -25,6 +25,7 @@
  * Arguments:
  *    data    pointer to Udev_Device_Summary
  */
+static
 void free_udev_device_summary(gpointer data) {
    if (data) {
       Udev_Device_Summary * summary = (Udev_Device_Summary *) data;
@@ -60,6 +61,7 @@ void free_udev_device_summaries(GPtrArray* summaries) {
  * The strings pointed within #Udev_Device_Summary are consts
  * within the UDEV data structures and should not be freed.
  */
+static
 Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
@@ -183,8 +185,7 @@ bye:
  *  - if **summaries** is NULL, returns NULL
  *  - if **summaries** is non_NULL, but keep_func is NULL, returns **summaries**
  */
-GPtrArray *
-filter_device_summaries(
+GPtrArray * filter_device_summaries(
       GPtrArray * summaries,
       Udev_Summary_Filter_Func keep_func)
 {
