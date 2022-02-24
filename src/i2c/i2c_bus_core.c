@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
 #include <i2c/smbus.h>   // TEMP
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -932,13 +933,20 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
       rpt_vstring(d1, "%-*s%s", title_width, fn, sysattr_name);
       free(sysattr_name);
+      sprintf(fn, "/sys/bus/i2c/devices/i2c-%d", businfo->busno);
+      char * path = NULL;
+      GET_ATTR_REALPATH(&path, fn);
+      rpt_vstring(d1, "PCI device path:                    %s", path);
+      free(path);
 
+#ifdef REDUNDANT
 #ifndef TARGET_BSD2
       if (output_level >= DDCA_OL_VV) {
          I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
          report_i2c_sys_info(info, depth);
          free_i2c_sys_info(info);
       }
+#endif
 #endif
    }
 
