@@ -899,9 +899,12 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
+   // will work for amdgpu, maybe others
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
+   if (!drm_connector && businfo->edid)
+      drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
    if (drm_connector)
-      rpt_vstring(depth, "DRM connector:           %s", drm_connector->connector_name);
+      rpt_vstring(d1, "DRM connector:           %s", drm_connector->connector_name);
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
