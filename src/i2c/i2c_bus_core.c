@@ -903,8 +903,9 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
    if (!drm_connector && businfo->edid)
       drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
+   int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
    if (drm_connector)
-      rpt_vstring(d1, "DRM connector:           %s", drm_connector->connector_name);
+      rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth, "%-*s%s", title_width, "DRM connector:", drm_connector->connector_name);
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
@@ -929,10 +930,10 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       char fn[PATH_MAX];     // yes, PATH_MAX is dangerous, but not as used here
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d/name", businfo->busno);
       char * sysattr_name = file_get_first_line(fn, /* verbose*/ false);
-      rpt_vstring(d1, "%s:    %s", fn, sysattr_name);
+      rpt_vstring(d1, "%-*s%s", title_width, fn, sysattr_name);
       free(sysattr_name);
 
-#ifndef TARGET_BSD
+#ifndef TARGET_BSD2
       if (output_level >= DDCA_OL_VV) {
          I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
          report_i2c_sys_info(info, depth);
