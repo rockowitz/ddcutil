@@ -898,25 +898,50 @@ void report_sys_drm_connectors(int depth) {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "");
 }
 
-   Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
-      bool debug = false;
-      DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
-      if (!sys_drm_displays)
-        sys_drm_displays = scan_sys_drm_connectors(-1);
-      Sys_Drm_Connector * result = NULL;
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C, "After scan_sys_drm_connectors(), sys_drm_displays=%p",
-      //                                     (void*) sys_drm_displays);
-      if (sys_drm_displays) {
-         for (int ndx = 0; ndx < sys_drm_displays->len; ndx++) {
-            Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_displays, ndx);
-            // DBGMSG("cur->busno = %d", cur->i2c_busno);
-            if (cur->i2c_busno == busno) {
-               // DBGMSG("Matched");
-               result = cur;
-               break;
-            }
+
+Sys_Drm_Connector *
+find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d, edid=%p", busno, (void*)edid);
+   if (!sys_drm_displays)
+     sys_drm_displays = scan_sys_drm_connectors(-1);
+   Sys_Drm_Connector * result = NULL;
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C, "After scan_sys_drm_connectors(), sys_drm_displays=%p",
+   //                                     (void*) sys_drm_displays);
+   if (sys_drm_displays) {
+      for (int ndx = 0; ndx < sys_drm_displays->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_displays, ndx);
+         // DBGMSG("cur->busno = %d", cur->i2c_busno);
+         if (busno >= 0 && cur->i2c_busno == busno) {
+            // DBGMSG("Matched");
+            result = cur;
+            break;
+         }
+         if (edid && cur->edid_size >= 128 && (memcmp(edid, cur->edid_bytes,128) == 0)) {
+            DBGMSF(debug, "Matched by edid");
+            result = cur;
+            break;
          }
       }
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
+
+
+Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
+   Sys_Drm_Connector * result = find_sys_drm_connector_by_busno_or_edid(busno, NULL);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
+
+
+Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", (void*) raw_edid);
+   Sys_Drm_Connector * result = find_sys_drm_connector_by_busno_or_edid(-1, raw_edid);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }

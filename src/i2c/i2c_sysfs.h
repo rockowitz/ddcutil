@@ -64,7 +64,9 @@ typedef struct {
 GPtrArray * scan_sys_drm_connectors(int depth);
 GPtrArray* get_sys_drm_connectors(bool rescan);
 void report_sys_drm_connectors(int depth);
+Sys_Drm_Connector * find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
+Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
 void free_sys_drm_connectors();
 
 
