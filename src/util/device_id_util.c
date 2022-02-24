@@ -41,8 +41,7 @@ typedef enum {
 } Device_Id_Type;
 
 // keep in order with enum Device_Id_Type
-static
-char * simple_device_fn[] = {
+static char * simple_device_fn[] = {
       "pci.ids",
       "usb.ids"
 };
@@ -57,8 +56,7 @@ char * simple_device_fn[] = {
  *  @remark
  *  It is the responsibility of the caller to free the returned value.
  */
-static
-char * devid_find_file(Device_Id_Type id_type) {
+static char * devid_find_file(Device_Id_Type id_type) {
    bool debug = false;
 
    char * known_pci_ids_dirs[] = {
@@ -142,8 +140,7 @@ sit_add(Simple_Id_Table * simple_table, ushort id, char * name) {
 }
 
 
-void
-report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
+static void report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
    rpt_structure_loc("Simple_Id_Table", simple_table, depth);
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
       Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
@@ -151,7 +148,8 @@ report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
    }
 }
 
-char * get_simple_id_name(Simple_Id_Table * simple_table, ushort id) {
+
+static char * get_simple_id_name(Simple_Id_Table * simple_table, ushort id) {
    char * result = NULL;
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
       Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
@@ -383,7 +381,8 @@ static  Multi_Level_Map * load_multi_level_segment(
  *
  * TODO: eliminate this side effect, apparently left over from refactoring (2/1018)
  */
-int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
+static int
+find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting cur_ndx=%d, segment_tag=|%s|\n", __func__, cur_ndx, segment_tag);
@@ -426,7 +425,8 @@ int find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
 
 
 // returns line number of end of segment
-int load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
+static int
+load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
    bool debug = false;
     int total_vendors = 0;
     int total_devices = 0;
