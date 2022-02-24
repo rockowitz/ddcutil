@@ -477,7 +477,7 @@ get_i2c_sys_info(
       // if (drm_dp_aux_dir) {
       if (has_drm_dp_aux_dir) {
          // pci_i2c_device_parent is a drm connector node
-         result->is_display_port = true;
+         result->is_amdgpu_display_port = true;
          read_drm_dp_card_connector_node(pci_i2c_device_parent, result, d1);
 
          char controller_path[PATH_MAX];
@@ -540,7 +540,7 @@ void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
       rpt_vstring(d1, "Connector:           %s", info->connector);
       rpt_vstring(d1, "Driver:              %s", info->driver);
 
-      if (info->is_display_port) {
+      if (info->is_amdgpu_display_port) {
          rpt_vstring(d1, "DisplayPort only attributes:");
          rpt_vstring(d2, "ddc path:                %s", info->ddc_path);
       // rpt_vstring(d2, "Linked ddc filename:     %s", dp_info->linked_ddc_filename);
@@ -552,9 +552,9 @@ void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
          rpt_vstring(d2, "DP Aux channel dev:      %s", info->drm_dp_aux_dev);
          rpt_vstring(d2, "DP Aux channel name:     %s", info->drm_dp_aux_name);
       }
-      else {
-         rpt_vstring(d1, "Not a DisplayPort connection");
-      }
+      // else {
+      //    rpt_vstring(d1, "Not a DisplayPort connection");
+      // }
    }
 }
 

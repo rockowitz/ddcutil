@@ -15,7 +15,7 @@ char * get_driver_for_busno(int busno);
 
 typedef struct {
    int     busno;
-   bool    is_display_port;
+   bool    is_amdgpu_display_port;
    char *  pci_device_path;
    char *  drm_connector_path;
    char *  connector;
