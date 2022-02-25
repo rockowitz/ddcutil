@@ -574,16 +574,18 @@ static void report_one_bus_i2c(
    }
    else {
       rpt_vstring(depth, "Examining (A) /sys/bus/i2c/devices/i2c-%d...", busno);
-      int d1 = (debug) ? -1 : depth+1;
+      // int d1 = (debug) ? -1 : depth+1;
+      // d1 > 0 => reports as collects, no need to call report_i2c_sys_info()
+      int d1 = depth+1;
       I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
-      report_i2c_sys_info(info, depth+1);
+      // report_i2c_sys_info(info, depth+1);
       free_i2c_sys_info(info);
    }
 }
 
 
 void dbgrpt_sys_bus_i2c(int depth) {
-   rpt_label(depth, "Examining (B) /sys/bus/i2c/devices for MST, duplicate EDIDs:");
+   rpt_label(depth, "Examining (B) /sys/bus/i2c/devices:");
    rpt_nl();
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
 }
