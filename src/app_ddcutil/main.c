@@ -759,10 +759,10 @@ main(int argc, char *argv[]) {
          // *** TESTING ***
          rpt_label(0, "*** Sys_Bus_I2C report ***");
          rpt_nl();
-         rpt_label(0, "Reference report for ENVIRONMENT command.");
-         rpt_nl();
-         dbgrpt_sys_bus_i2c(1);
-         rpt_nl();
+         // rpt_label(0, "Reference report for ENVIRONMENT command.");
+         // rpt_nl();
+         // dbgrpt_sys_bus_i2c(1);
+         // rpt_nl();
          rpt_label(0, "*** Sys_Drm_Connector report ***");
          report_sys_drm_connectors(1);
          rpt_nl();
