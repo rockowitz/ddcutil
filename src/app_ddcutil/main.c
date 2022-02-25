@@ -757,8 +757,8 @@ main(int argc, char *argv[]) {
 
       if (parsed_cmd->flags & CMD_FLAG_F2) {
          // *** TESTING ***
-         rpt_label(0, "*** Sys_Bus_I2C report ***");
-         rpt_nl();
+         // rpt_label(0, "*** Sys_Bus_I2C report ***");
+         // rpt_nl();
          // rpt_label(0, "Reference report for ENVIRONMENT command.");
          // rpt_nl();
          // dbgrpt_sys_bus_i2c(1);
