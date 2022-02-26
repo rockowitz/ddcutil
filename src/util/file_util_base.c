@@ -1,6 +1,10 @@
-// file_util_base.c
+/** \file file_util_base.c
+ *  Core file utility functions.
+ *  Factored out of file_util.h so that includes in directory util form
+ *  a directed graph.
+ */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -8,16 +12,13 @@
 #include <dirent.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
-// #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <sys/stat.h>
 #include <unistd.h>
 /** \endcond */
 
 #include "data_structures.h"
-// #include "report_util.h"
 #include "string_util.h"
 
 #include "file_util_base.h"
