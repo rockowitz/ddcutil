@@ -17,8 +17,7 @@
 extern "C" {
 #endif
 
-int
-file_getlines(
+int file_getlines(
       const char * fn,
       GPtrArray*   line_array,
       bool         verbose)

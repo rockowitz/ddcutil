@@ -38,8 +38,7 @@
  *  Strings are appended to #line_array.  It is not cleared at start of
  *  function execution.
  */
-int
-file_getlines(
+int file_getlines(
       const char * fn,
       GPtrArray*   line_array,
       bool         verbose)
@@ -82,7 +81,7 @@ file_getlines(
       free(line);
 
       // assert(getline_rc < 0);
-      if (errno != 0) {   // was it an error or eof?
+      if (errno != 0) {   // was it an error or eof?file_getlines
          rc = -errno;
          if (verbose || debug)
             fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
