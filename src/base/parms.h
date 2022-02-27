@@ -40,8 +40,8 @@
 //
 
 // One of the following 2 defines must be enabled:
-// #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
-#define DEFAULT_I2C_IO_STRATEGY        I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
+#define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
+// #define DEFAULT_I2C_IO_STRATEGY        I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
 #define DEFAULT_I2C_READ_BYTEWISE      false                   ///< Use single byte reads
 #define DEFAULT_EDID_WRITE_BEFORE_READ true
 #define DEFAULT_EDID_READ_SIZE           0                     ///< 128, 256, 0=>dynamic
