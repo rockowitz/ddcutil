@@ -57,6 +57,7 @@
 #endif
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_execute.h"
 
 #include "i2c/i2c_bus_core.h"
 
@@ -378,6 +379,13 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 //
 
 static Status_Errno_DDC
+i2c_get_edid_bytes_using_i2c_layer(
+      int     fd,
+      Buffer* rawedid,
+      int     edid_read_size,
+      bool    read_bytewise);
+
+static Status_Errno_DDC
 i2c_get_edid_bytes_directly(
       int     fd,
       Buffer* rawedid,
@@ -393,10 +401,19 @@ i2c_get_edid_bytes_directly(
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
+   int rc = 0;
+
+   I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
+   if (strategy == I2C_IO_STRATEGY_IOCTL) {
+      DBGMSG("Forcing i2_get_edid_bytes_using_i2c_layer()");
+      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
+   }
+   else {
+
    bool write_before_read = EDID_Write_Before_Read;
    // write_before_read = false;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
-   int rc = 0;
+   rc = 0;
    if (write_before_read) {
       Byte byte_to_write = 0x00;
       RECORD_IO_EVENTX(
@@ -467,6 +484,9 @@ i2c_get_edid_bytes_directly(
       }
    }
 
+   }
+
+
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
@@ -533,7 +553,7 @@ i2c_get_edid_bytes_using_i2c_layer(
 Status_Errno_DDC
 i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 {
-   bool debug  = false;
+   bool debug  = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
 #ifdef OLD
@@ -544,9 +564,16 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    Status_Errno_DDC rc;
    int tryctr = 0;
 
-   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
-   if (rc < 0) {
-      goto bye;
+   I2C_IO_Strategy_Id  strategy_id = i2c_get_io_strategy();
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "stategy_id = %s(%d)",
+         i2c_io_strategy_name(strategy_id),
+         strategy_id);
+
+   if ( strategy_id == I2C_IO_STRATEGY_FILEIO ) {
+      rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+      if (rc < 0) {
+         goto bye;
+      }
    }
 
 #ifdef OLD
@@ -685,6 +712,8 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 static bool
 i2c_detect_x37(int fd, bool* busy_loc) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, busy_loc=%p", fd, (void*)busy_loc);
+
    bool result = false;
    *busy_loc = false;
 
@@ -693,11 +722,23 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    //   avoided by never calling this function for an eDP screen
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
-   Status_Errno_DDC rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
+   Status_Errno_DDC rc = 0;
+   I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
+         i2c_io_strategy_name(strategy));
+   if (strategy == I2C_IO_STRATEGY_FILEIO) {
+       rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
+   }
+
    if (rc == 0)  {
       // regard either a successful write() or a read() as indication slave address is valid
       Byte    writebuf = {0x00};
-      rc = write(fd, &writebuf, 1);
+      if (strategy == I2C_IO_STRATEGY_FILEIO) {
+         rc = write(fd, &writebuf, 1);
+      }
+      else {
+         rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
+      }
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
       if (rc == 1)
          result = true;
@@ -708,7 +749,13 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       //   ...
 
       Byte    readbuf[4];  //  4 byte buffer
-      rc = read(fd, readbuf, 4);
+      if (strategy == I2C_IO_STRATEGY_FILEIO) {
+         rc = read(fd, readbuf, 4);
+      }
+      else {
+         rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+      }
+
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
       // test doesn't work, buffer contains random bytes (but same random bytes for every
       // display in a single call to i2cdetect_x37
@@ -723,7 +770,7 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    else if (rc == -EBUSY)
       *busy_loc = true;
 
-   DBGMSF(debug, "Returning %s, *busy_loc=%s", SBOOL(result), SBOOL(*busy_loc));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
    return result;
 }
 
