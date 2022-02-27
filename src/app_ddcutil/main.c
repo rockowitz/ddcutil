@@ -756,18 +756,11 @@ main(int argc, char *argv[]) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
 
       if (parsed_cmd->flags & CMD_FLAG_F2) {
-         // *** TESTING ***
-
-         // rpt_label(0, "*** Sys_Bus_I2C report ***");
-         // rpt_nl();
-         // rpt_label(0, "Reference report for ENVIRONMENT command.");
-         // rpt_nl();
-         // dbgrpt_sys_bus_i2c(1);
-         // rpt_nl();
 
          rpt_label(0, "*** Sys_Drm_Connector report ***");
          report_sys_drm_connectors(1);
          rpt_nl();
+
          rpt_label(0, "*** Sysfs_I2C_Info report ***");
          GPtrArray * reports = get_all_i2c_info(true, -1);
          dbgrpt_all_sysfs_i2c_info(reports, 1);
@@ -779,9 +772,12 @@ main(int argc, char *argv[]) {
          free_conflicting_drivers(conflicts);
          rpt_nl();
          rpt_label(0, "*** Tests Done ***");
+         rpt_nl();
       }
 
-      detect_conflicting_drivers(parsed_cmd);
+      if (i2c_get_io_strategy() == I2C_IO_STRATEGY_FILEIO)
+         detect_conflicting_drivers(parsed_cmd);
+
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
       }
