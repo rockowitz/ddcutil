@@ -858,6 +858,7 @@ void dump_sysfs_i2c() {
    rpt_nl();
    GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(1);
    if (conflicts && conflicts->len > 0) {
+      report_conflicting_drivers(conflicts, 1);
       f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
       free_conflicting_drivers(conflicts);
    }
@@ -866,6 +867,17 @@ void dump_sysfs_i2c() {
 
    // keep?
    dump_detailed_sys_bus_pci(0);
+
+   rpt_label(0, "*** Sys_Bus_I2C report ***");
+   rpt_nl();
+   dbgrpt_sys_bus_i2c(1);
+   rpt_nl();
+
+    rpt_label(0, "*** Sysfs_I2C_Info report ***");
+    rpt_nl();
+    GPtrArray * reports = get_all_i2c_info(true, -1);
+    dbgrpt_all_sysfs_i2c_info(reports, 1);
+    rpt_nl();
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
