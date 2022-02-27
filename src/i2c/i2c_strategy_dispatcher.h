@@ -2,7 +2,7 @@
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_STRATEGY_DISPATCHER_H_
@@ -21,6 +21,8 @@ typedef enum {
    I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
 I2C_IO_Strategy_Id;
 
+char * i2c_io_strategy_name(I2C_IO_Strategy_Id id);
+
 /** Describes one I2C IO strategy */
 typedef struct {
    I2C_IO_Strategy_Id strategy_id;       ///< id of strategy
@@ -30,8 +32,8 @@ typedef struct {
    char *             i2c_reader_name;   ///< read function name
 } I2C_IO_Strategy;
 
-I2C_IO_Strategy_Id
-i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
+I2C_IO_Strategy_Id i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
+I2C_IO_Strategy_Id i2c_get_io_strategy();
 
 // quick and dirty for use in testing framework
 // extern I2C_IO_Strategy Default_I2c_Strategy;

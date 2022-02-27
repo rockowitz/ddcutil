@@ -2,7 +2,7 @@
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
  */
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -19,6 +19,20 @@
 #include "base/last_io_event.h"
 
 #include "i2c_strategy_dispatcher.h"
+
+char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
+   char * result = NULL;
+   switch(id) {
+   case I2C_IO_STRATEGY_FILEIO:
+      result = "I2C_IO_STRATEGY_FILEIO";
+      break;
+   case I2C_IO_STRATEGY_IOCTL:
+      result = "I2C_IO_STRATEGY_IOCTL";
+      break;
+   }
+   return result;
+}
+
 
 // I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
@@ -69,6 +83,12 @@ i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
          break;
    }
    return old;
+}
+
+
+I2C_IO_Strategy_Id
+i2c_get_io_strategy() {
+   return i2c_io_strategy->strategy_id;
 }
 
 
