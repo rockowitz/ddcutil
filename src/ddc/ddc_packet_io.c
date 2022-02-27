@@ -199,7 +199,8 @@ ddc_open_display(
                }
             }
 
-            else {
+            if (ddcrc == 0) {
+            // else {
                // Is this needed?
                // 10/24/15, try disabling:
                // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
