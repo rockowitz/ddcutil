@@ -404,11 +404,15 @@ i2c_get_edid_bytes_directly(
    int rc = 0;
 
    I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
+   assert(strategy == I2C_IO_STRATEGY_FILEIO);
+
+#ifdef OUT
    if (strategy == I2C_IO_STRATEGY_IOCTL) {
       DBGMSG("Forcing i2_get_edid_bytes_using_i2c_layer()");
       rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
    }
    else {
+#endif
 
    bool write_before_read = EDID_Write_Before_Read;
    // write_before_read = false;
@@ -482,7 +486,9 @@ i2c_get_edid_bytes_directly(
          }
          DBGMSF(debug, "read() returned %s", psc_desc(rc) );
       }
+#ifdef OUT
    }
+#endif
 
    }
 
@@ -553,7 +559,7 @@ i2c_get_edid_bytes_using_i2c_layer(
 Status_Errno_DDC
 i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 {
-   bool debug  = true;
+   bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
 #ifdef OLD
@@ -603,7 +609,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise),
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
-      if (EDID_Read_Uses_I2C_Layer) {
+      if (EDID_Read_Uses_I2C_Layer || strategy_id == I2C_IO_STRATEGY_IOCTL) {
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
       }
       else {
