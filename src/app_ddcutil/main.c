@@ -117,15 +117,18 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 static void add_rtti_functions();
 
 
-static bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
+// static
+bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
    bool detected = true;
 
    if ( !(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR) ) {
       GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-      if (conflicts && conflicts->len > 0) {
-         f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
+      if (conflicts) {
+         if (conflicts->len > 0) {
+            f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
+            detected = true;
+         }
          free_conflicting_drivers(conflicts);
-         detected = true;
       }
       else {
          struct stat stat_buf;
@@ -725,6 +728,27 @@ main(int argc, char *argv[]) {
       }
    }
 
+   if (parsed_cmd->flags & CMD_FLAG_F2) {
+
+         rpt_label(0, "*** Sys_Drm_Connector report ***");
+         report_sys_drm_connectors(1);
+         rpt_nl();
+
+         rpt_label(0, "*** Sysfs_I2C_Info report ***");
+         GPtrArray * reports = get_all_i2c_info(true, -1);
+         dbgrpt_all_sysfs_i2c_info(reports, 1);
+         rpt_nl();
+
+         rpt_label(0, "*** Sys_Conflicting_Driver report ***");
+         GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
+         report_conflicting_drivers(conflicts, 1);
+         free_conflicting_drivers(conflicts);
+         rpt_nl();
+         rpt_label(0, "*** Tests Done ***");
+         rpt_nl();
+      }
+
+
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
@@ -754,26 +778,6 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
-
-      if (parsed_cmd->flags & CMD_FLAG_F2) {
-
-         rpt_label(0, "*** Sys_Drm_Connector report ***");
-         report_sys_drm_connectors(1);
-         rpt_nl();
-
-         rpt_label(0, "*** Sysfs_I2C_Info report ***");
-         GPtrArray * reports = get_all_i2c_info(true, -1);
-         dbgrpt_all_sysfs_i2c_info(reports, 1);
-         rpt_nl();
-
-         rpt_label(0, "*** Sys_Conflicting_Driver report ***");
-         GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-         report_conflicting_drivers(conflicts, 1);
-         free_conflicting_drivers(conflicts);
-         rpt_nl();
-         rpt_label(0, "*** Tests Done ***");
-         rpt_nl();
-      }
 
       if (i2c_get_io_strategy() == I2C_IO_STRATEGY_FILEIO)
          detect_conflicting_drivers(parsed_cmd);
