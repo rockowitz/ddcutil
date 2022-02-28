@@ -187,8 +187,8 @@ file_get_first_line(
  *  \param  fn        file name
  *  \param  est_size  estimated size
  *  \param  verbose   if open fails, write message to stderr
- *  \return if successful, a **GByteArray** of bytes, caller is responsible for freeing
- *          if failure, then NULL
+ *  \return if file opened, a **GByteArray** of bytes (may be 0 lengh), caller is responsible for freeing
+ *          if file cannot be opened, then NULL
  */
 GByteArray *
 read_binary_file(
@@ -200,7 +200,7 @@ read_binary_file(
 
    bool debug = false;
    if (debug)
-      printf("(%s) fn=%s,est_size=%d\n", __func__, fn, est_size);
+      printf("(%s) Starting. fn=%s,est_size=%d\n", __func__, fn, est_size);
 
    Byte  buf[1];
 
@@ -232,7 +232,8 @@ bye:
    // printf("(%s) bye\n", __func__);
    if (debug) {
       if (gbarray)
-         printf("(%s) Returning GByteArray of size %d\n", __func__, gbarray->len);
+         printf("(%s) Done. Returning GByteArray at %p, gbarray->data=%p, gbarray->len=%d\n",
+                __func__, (void*)gbarray, (void*)gbarray->data, gbarray->len);
       else
          printf("(%s) Returning NULL\n", __func__);
    }
@@ -440,7 +441,7 @@ dir_ordered_foreach(
         void *                accumulator,
         int                   depth)
 {
-   GPtrArray * simple_filenames = g_ptr_array_new();
+   GPtrArray * simple_filenames = g_ptr_array_new_with_free_func(g_free);
 
    struct dirent *dent;
    DIR           *d;
@@ -469,6 +470,7 @@ dir_ordered_foreach(
          func(dirname, fn, accumulator, depth);
       }
    }
+   g_ptr_array_free(simple_filenames, true);
 }
 
 
@@ -486,7 +488,7 @@ dir_ordered_foreach_with_arg(
    bool debug = false;
    if (debug)
       printf("(%s) Starting. dirname=%s, fn_filter_argument=|%s|\n", __func__, dirname, fn_filter_argument);
-   GPtrArray * simple_filenames = g_ptr_array_new();
+   GPtrArray * simple_filenames = g_ptr_array_new_with_free_func(g_free);
 
    struct dirent *dent;
    DIR           *d;
@@ -516,9 +518,10 @@ dir_ordered_foreach_with_arg(
       for (int ndx = 0; ndx < simple_filenames->len; ndx++) {
          char * fn = g_ptr_array_index(simple_filenames, ndx);
          if (debug)
-         printf("(%s) Calling Dir_Foreach_Func, dirname=%s, fn=%s\n", __func__, dirname, fn);
+            printf("(%s) Calling Dir_Foreach_Func, dirname=%s, fn=%s\n", __func__, dirname, fn);
          func(dirname, fn, accumulator, depth);
       }
+      g_ptr_array_free(simple_filenames, true);
    }
    if (debug)
       printf("(%s) Done.\n", __func__);
