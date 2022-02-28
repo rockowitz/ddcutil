@@ -781,63 +781,6 @@ void one_drm_connector(
 }
 
 
-#ifdef UNNECESSARY_DP_FRAGMENT
-           // Does e.g. /sys/class/drm/card0-DP-1/i2c-6/6-0050 exist?
-           char * d_dddd = NULL;
-           RPT_ATTR_SINGLE_SUBDIR(depth,
-                 &d_dddd,
-                 fn_n_nnnn, NULL,  // filter function
-                  dirname,  // /sys/bus/drm/
-                  fn,       //   card0-DP-1
-                  "ddc",
-                  "i2c-dev",
-                  i2cN_buf);  //   i2c-6
-
-
-           //   IT'S A LINK HOW TO HANDLE?
-           // char * driver = NULL;
-           // RPT_ATTR_TEXT(depth, &driver, "/sys/bus/i2c/devices", i2cN_buf, d_dddd, "driver", "module", "drivers");
-           // rpt_vstring(4, "---------- Conflict device: %s", d_dddd);
-#endif
-
-#ifdef UNNECESSARY_NON_DP_FRAGMENT
-      // look for e.g. /sys/class/drm/card0-DVI-D-1/ddc/4-0050
-     char * conflict_subdir_n_nnnn;
-     bool has_conflict_subdir =
-           RPT_ATTR_SINGLE_SUBDIR(
-                    depth,
-                    &conflict_subdir_n_nnnn,
-                    fn_n_nnnn,
-                    "",   // ignore
-                    dirname,      // e.g. /sys/bus/drm
-                    fn,           // e.g. card0-DP1
-                    "ddc");
-     rpt_vstring(depth, "=============== Conflict device: %s", buf);
-
-     if (has_conflict_subdir) {
-        cur->conflicting_device = conflict_subdir_n_nnnn;
-        // look for e.g. /sys/bus/class/card0-DVI-D-1/ddc/4-0050/<anything>
-        // A file name will be a link, the n
-        RPT_ATTR_TEXT(depth, NULL, dirname, fn, "ddc", buf, "name");
-
-
-        char * buf2 = NULL;
-
-        bool has_conflict_driver =
-        RPT_ATTR_SINGLE_SUBDIR(
-              depth,
-              cur->conflicting_driver,
-              NULL, "",  // no filter function
-              dirname,
-              fn,"ddc", buf, "driver", "module", "drivers") ;
-        if (has_conflict_driver) {
-           rpt_vstring(depth, "=========== Conflict driver: %s", buf2);
-        }
-     }
-#endif
-
-
-
 /**
  *
  *  \param  depth  logical indentation depth, if < 0 do not emit report

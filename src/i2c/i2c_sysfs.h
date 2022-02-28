@@ -53,11 +53,6 @@ typedef struct {
    gsize  edid_size;
    char * enabled;
    char * status;
-#ifdef UNNECESSARY
-   // n. can be multiple
-   char * conflicting_device;
-   char * conflicting_driver;
-#endif
 } Sys_Drm_Connector;
 
 
