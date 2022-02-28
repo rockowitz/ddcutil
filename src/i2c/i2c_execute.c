@@ -304,14 +304,6 @@ i2c_ioctl_writer(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
-#ifdef EXPLORING
-   int rc2 = ioctl(fd, I2C_SLAVE, 0x38);
-   if (rc2 < 0) {
-      int errsv = errno;
-      DBGMSG("ioctl(I2C_SLAVE) returned errno %s",  linux_errno_desc(errsv) );
-   }
-#endif
-
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
