@@ -381,7 +381,7 @@ rpt_attr_text(
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, the address at which to return a pointer to
  *                     a GByteArray containing the value. (caller is responsible for freeing).
- *                     If the attribute cannot be read NULL is returned.
+ *                     If the attribute cannot be read, or is 0 length, NULL is returned.
  *  \param  fn_segment first segment of attribute name
  *  \param  ap         remaining segments of name
  *  \return true if attribute found, false if not
@@ -396,6 +396,13 @@ rpt_attr_binary(
       const char *  fn_segment,
       ...)
 {
+   bool debug = false;
+   if (debug) {
+      printf("(%s) Starting.  depth=%d, value_loc=%p\n", __func__, depth, value_loc);
+      if (debug && depth < 0)
+         depth=1;
+   }
+
    char pb1[PATH_MAX];
    va_list ap;
    va_start(ap, fn_segment);
@@ -406,17 +413,27 @@ rpt_attr_binary(
    if (value_loc)
       *value_loc = NULL;
    GByteArray * bytes = read_binary_file(pb1, /*estimated size=*/ 256, true);
-   if (bytes && bytes->len > 0) {
-      found = true;
-      rpt_attr_output(depth, pb1, ":", "Found");
-      // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
-      if (value_loc)
-         *value_loc = bytes;
-      else
+   if (bytes) {
+      if (bytes->len > 0) {
+         found = true;
+         rpt_attr_output(depth, pb1, ":", "Found");
+         // rpt_vstring(depth, "%-*s =  %s", offset, pb1, val);
+         if (value_loc)
+            *value_loc = bytes;
+      }
+      else {
          g_byte_array_free(bytes, true);
+         rpt_attr_output(depth, pb1, ": ", "0 length");
+      }
    }
    else
       rpt_attr_output(depth, pb1, ": ", "Not Found");
+   if (debug) {
+      if (value_loc)
+         printf("(%s) Returning: %s. *value_loc=%p\n", __func__, SBOOL(found), (void*)*value_loc);
+      else
+         printf("(%s) Returning: %s\n", __func__, SBOOL(found));
+   }
    return found;
 }
 
@@ -441,6 +458,13 @@ rpt_attr_edid(
        const char *  fn_segment,
        ...)
  {
+    bool debug = false;
+    if (debug) {
+       printf("(%s) Starting.  depth=%d, value_loc=%p\n", __func__, depth, value_loc);
+       if (debug && depth < 0)
+          depth=1;
+    }
+
     char pb1[PATH_MAX];
     va_list ap;
     va_start(ap, fn_segment);
@@ -453,8 +477,8 @@ rpt_attr_edid(
        *value_loc = NULL;
     GByteArray * edid = NULL;
     found = rpt_attr_binary(depth, &edid, pb1, NULL);
+    assert( (found && edid) || (!found && edid==NULL) );
     if (edid) {
-       assert(found);
        if (depth >= 0)
           rpt_hex_dump(edid->data, edid->len, depth+4);
        if (value_loc)
@@ -464,6 +488,14 @@ rpt_attr_edid(
        }
     }
 
+    if (debug) {
+       printf("(%s) Returning %s. *value_loc=%p\n", __func__, SBOOL(found), *value_loc);
+       if (*value_loc) {
+          GByteArray * gba = *value_loc;
+          printf("(%s)               data=%p, len=%d\n",
+                 __func__, (void*) gba->data, gba->len);
+       }
+    }
     return found;
  }
 
