@@ -896,17 +896,6 @@ Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
 //  Scan for conflicting modules/drivers: Struct Sys_Conflicting_Driver
 //
 
-typedef struct {
-   int     i2c_busno;
-   char *  n_nnnn;
-   char *  name;            // n_nnnn/name
-   char *  driver_module;   // basename(realpath(n_nnnn/driver/module))
-   char *  modalias;        // n_nnnn/modalias
-   Byte *  eeprom_edid_bytes;
-   gsize   eeprom_edid_size;
-} Sys_Conflicting_Driver;
-
-
 void free_sys_conflicting_driver(Sys_Conflicting_Driver * rec) {
    if (rec) {
       free(rec->n_nnnn);
@@ -1080,16 +1069,6 @@ void free_conflicting_drivers(GPtrArray* conflicts) {
 //
 // *** Collect basic /dev/i2c-N information into Sysfs_I2C_Info records ***
 //
-
-typedef struct {
-   int    busno;
-   char * name;
-   char * adapter_path;
-   char * adapter_class;
-   char * driver;
-   char * driver_version;
-   GPtrArray * conflicting_driver_names;
-} Sysfs_I2C_Info;
 
 
 void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
