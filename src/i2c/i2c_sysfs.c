@@ -971,7 +971,7 @@ void one_n_nnnn(
       RPT_ATTR_EDID(depth, &edid_byte_array, dir_name, fn, "eeprom");
       if (edid_byte_array) {
          conflicting_driver->eeprom_edid_size = edid_byte_array->len;
-         conflicting_driver->eeprom_edid_bytes = g_byte_array_steal(edid_byte_array, &conflicting_driver->eeprom_edid_size);
+         conflicting_driver->eeprom_edid_bytes = g_byte_array_free(edid_byte_array, false);
       }
    }
 
