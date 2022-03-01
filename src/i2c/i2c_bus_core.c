@@ -510,8 +510,8 @@ i2c_get_edid_bytes_using_i2c_layer(
       bool    read_bytewise)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor=%d, filename=%s, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), sbool(read_bytewise));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
+                 fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
    bool write_before_read = EDID_Write_Before_Read;
