@@ -1150,6 +1150,7 @@ void simple_one_n_nnnn(
    if (best_name) {
       gaux_string_ptr_array_include(accumulator,best_name );
       DBGMSF(debug, "appending: |%s|", best_name);
+      free(best_name);
    }
    DBGMSF(debug, "Done");
 }
