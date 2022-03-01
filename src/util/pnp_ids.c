@@ -2308,7 +2308,7 @@ static char * pnp_name0(char * id, int first, int last) {
 char * pnp_name(char * id) {
    char * result = NULL;
    strupper(id);      // "inu" is a lower case code
-   return pnp_name0(id, 0, pnp_table_size-1);
+   result = pnp_name0(id, 0, pnp_table_size-1);
    return result;
 }
 
