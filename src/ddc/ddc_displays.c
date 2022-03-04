@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#include "i2c/i2c_strategy_dispatcher.h"
 #include "util/debug_util.h"
 #include "util/edid.h"
 #include "util/error_info.h"
@@ -41,6 +40,7 @@
 #include "vcp/vcp_feature_codes.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
 
 #ifdef USE_USB
