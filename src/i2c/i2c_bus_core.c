@@ -159,6 +159,7 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
 }
 
 
+#ifndef I2C_IO_IOCTL_ONLY
 /** Sets I2C slave address to be used on subsequent calls
  *
  * @param  fd        Linux file descriptor for open /dev/i2c-n
@@ -257,6 +258,7 @@ retry:
    DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
+#endif
 
 
 //
@@ -378,6 +380,7 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 // I2C Bus Inspection - EDID Retrieval
 //
 
+#ifndef I2C_IO_IOCTL_ONLY
 static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
       int     fd,
@@ -500,6 +503,7 @@ i2c_get_edid_bytes_directly(
    DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
    return rc;
 }
+#endif
 
 
 static Status_Errno_DDC
@@ -575,12 +579,14 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
          i2c_io_strategy_name(strategy_id),
          strategy_id);
 
+#ifndef I2C_IO_IOCTL_ONLY
    if ( strategy_id == I2C_IO_STRATEGY_FILEIO ) {
       rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
       if (rc < 0) {
          goto bye;
       }
    }
+#endif
 
 #ifdef OLD
    // need a different call since tuned_sleep_with_tracex() now takes Display_Handle *, not DDCA_IO_Type
@@ -603,6 +609,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
 
+#ifndef I2C_IO_IOCTL_ONLY
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
                     " edid_read_size=%d, read_bytewise=%s, using %s",
@@ -615,6 +622,13 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       else {
          rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
       }
+#else
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                    "Trying EDID read. tryctr=%d, max_tries=%d,"
+                    " edid_read_size=%d, read_bytewise=%s",
+                    tryctr, max_tries, edid_read_size, sbool(read_bytewise) );
+      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
+#endif
       if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {    // removed -EIO 3/4/2021
          // DBGMSG("breaking");
          break;
@@ -729,12 +743,14 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
+#ifndef I2C_IO_IOCTL_ONLY
    I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
          i2c_io_strategy_name(strategy));
    if (strategy == I2C_IO_STRATEGY_FILEIO) {
        rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
    }
+#endif
 
    if (rc == 0)  {
       // regard either a successful write() or a read() as indication slave address is valid
@@ -755,12 +771,16 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       //   ...
 
       Byte    readbuf[4];  //  4 byte buffer
+#ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = read(fd, readbuf, 4);
       }
       else {
          rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
       }
+#else
+      rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+#endif
 
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
       // test doesn't work, buffer contains random bytes (but same random bytes for every
