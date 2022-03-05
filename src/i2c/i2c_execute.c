@@ -307,7 +307,14 @@ i2c_ioctl_writer(
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
-   messages[0].addr  = slave_address;    // was 0x37;
+   // The memset() calls are logically unnecessary, and code works find without them.
+   // However, without the memset() calls, valgrind complains about uninitialized bytes
+   // on the ioctl() call.
+   // See:  https://stackoverflow.com/questions/17859320/valgrind-error-in-ioctl-call-while-sending-an-i2c-message
+   // Also: https://github.com/the-tcpdump-group/libpcap/issues/1083
+   memset(messages,0, sizeof(messages));
+   memset(&msgset,0,sizeof(msgset));
+   messages[0].addr  = slave_address;
    messages[0].flags = 0;
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
@@ -320,7 +327,6 @@ i2c_ioctl_writer(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-   // ioctl works, but valgrind complains about uninitialized parm
    // DBGMSG("messages=%p, messages[0]=%p, messages[0].buf=%p", messages, &messages[0], messages[0].buf);
    // char * s = hexstring_t((unsigned char*)messages[0].buf, messages[0].len);
    // DBGMSG("messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf -> %s",
@@ -356,7 +362,6 @@ i2c_ioctl_writer(
       rc = 0;
    }
    else if (rc < 0) {
-      // rc = modulate_rc(-errno, RR_ERRNO);
       rc = -errsv;
    }
 
@@ -388,8 +393,12 @@ ioctl_reader1(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
 
-   struct i2c_msg              messages[1];
+   // struct i2c_msg              messages[1];
+   struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
    struct i2c_rdwr_ioctl_data  msgset;
+   // See comments in ioctl_writer(), but here need to allocate messages
+   //memset(messages,0, sizeof(messages));
+   memset(&msgset,0,sizeof(msgset));
 
    messages[0].addr  = slave_address;      // this is the slave address currently set
    messages[0].flags = I2C_M_RD;
@@ -438,14 +447,21 @@ ioctl_reader1(
    }
    else if (rc < 0)
       rc = -errsv;
-   // DBGMSF("Done. Returning: %s", ddcrc_desc_t(rc));
+
+   free(messages);
    DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 
 
 Status_Errno_DDC
-i2c_ioctl_reader(int fd, Byte slave_address, bool read_bytewise, int bytect, Byte * readbuf) {
+i2c_ioctl_reader(
+      int    fd,
+      Byte   slave_address,
+      bool   read_bytewise,
+      int    bytect,
+      Byte * readbuf)
+{
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
