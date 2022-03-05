@@ -2,7 +2,7 @@
  * Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -133,7 +133,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
   */
 int module_status_using_libkmod(const char * module_alias)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
 
@@ -227,7 +227,7 @@ bye:
  *  kmod_module_new_from_loaded() instead of kmod_module_new_from_lookup().
  */
 int is_module_loaded_using_libkmod(const char * module_name) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting. module_name=%s\n", __func__, module_name);
 
@@ -250,17 +250,23 @@ int is_module_loaded_using_libkmod(const char * module_name) {
        goto bye;
    }
 
+   char * module_name1 = strdup(module_name);
+   char * module_name2 = strdup(module_name);
+   str_replace_char(module_name1, '-','_');
+   str_replace_char(module_name2, '_', '-');
    struct kmod_list *itr;
    bool found = false;
    kmod_list_foreach(itr, list) {
        struct kmod_module *mod = kmod_module_get_module(itr);
        const char *name = kmod_module_get_name(mod);
        kmod_module_unref(mod);
-       if (streq(name, module_name)) {
+       if (streq(name, module_name1) || streq(name, module_name2)) {
           found = true;
           break;
        }
    }
+   free(module_name1);
+   free(module_name2);
    kmod_module_unref_list(list);
 
    result = (found) ? 1 : 0;
