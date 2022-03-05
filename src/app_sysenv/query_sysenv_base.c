@@ -441,15 +441,16 @@ char * driver_name_list_string(Driver_Name_Node * head) {
  *  returns the bus number.
  *
  *  \param path  fully qualified or simple path name
- *  \return  I2C bus number, -1 if cannot be sxtracted
+ *  \return  I2C bus number, -1 if cannot be extracted
  */
-int  i2c_path_to_busno(char * path) {
+int  i2c_path_to_busno(const char * path) {
    bool debug = false;
 
    int busno = -1;
    if (path) {
-      char * lastslash = strrchr(path, '/');
-      char * basename = (lastslash) ? lastslash+1 : path;
+      char * path2 = strdup(path);    // for const-ness
+      char * lastslash = strrchr(path2, '/');
+      char * basename = (lastslash) ? lastslash+1 : path2;
       // char * basename = basename(path);
       if (basename) {
          if (str_starts_with(basename, "i2c-")) {
@@ -458,6 +459,7 @@ int  i2c_path_to_busno(char * path) {
                busno = ival;
          }
       }
+      free(path2);
    }
 
    DBGMSF(debug, "path=%s, returning: %d", path, busno);

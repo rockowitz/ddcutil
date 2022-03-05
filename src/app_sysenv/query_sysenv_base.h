@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_BASE_H_
@@ -49,7 +49,7 @@ char * driver_name_list_string(Driver_Name_Node * head);
 bool only_fglrx(Driver_Name_Node * driver_list);
 bool only_nvidia_or_fglrx(Driver_Name_Node * driver_list);
 
-int  i2c_path_to_busno(char * path);
+int  i2c_path_to_busno(const char * path);
 
 #define ENV_ACCUMULATOR_MARKER "ENVA"
 /** Collects system environment information */
