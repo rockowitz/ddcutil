@@ -186,6 +186,7 @@ ddc_open_display(
             ddcrc = fd;
          }
          else {
+#ifndef I2C_IO_IOCTL_ONLY
             I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
                   i2c_io_strategy_name(strategy));
@@ -198,6 +199,7 @@ ddc_open_display(
                   close(fd);
                }
             }
+#endif
 
             if (ddcrc == 0) {
             // else {
