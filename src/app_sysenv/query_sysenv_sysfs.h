@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_SYSFS_H_
@@ -24,11 +24,6 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum);
 void query_loaded_modules_using_sysfs();
 void query_sys_bus_i2c(Env_Accumulator * accum);
 void query_sys_amdgpu_parameters(int depth);
-void report_one_connector(
-      const char * dirname,     // <device>/drm/cardN
-      const char * simple_fn,   // card0-HDMI-1 etc
-      void *       data,
-      int          depth);
 void query_drm_using_sysfs();
 void dump_sysfs_i2c();
 void show_relevant_char_major_numbers();

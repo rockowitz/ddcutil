@@ -620,14 +620,13 @@ void query_sys_amdgpu_parameters(int depth) {
                         parmdir, errsv);
       }
       else {
-         GPtrArray * sorted_names = g_ptr_array_new();
+         GPtrArray * sorted_names = g_ptr_array_new_with_free_func(g_free);
          while (true){
-            dp = readdir(dirp);
+            dp = readdir(dirp);   // per man page, do not free
             if (!dp)
                break;
             if (dp->d_type & DT_REG) {
-               char * fn = dp->d_name;
-               g_ptr_array_add(sorted_names, fn);
+               g_ptr_array_add(sorted_names, strdup(dp->d_name));
             }
          }
          g_ptr_array_sort(sorted_names, indirect_strcmp);
@@ -638,8 +637,10 @@ void query_sys_amdgpu_parameters(int depth) {
             char n[100];
             g_snprintf(n, 100, "%s:", fn);
             rpt_vstring(d2, "%-20s  %s", n, value);
+            free(value);
          }
          closedir(dirp);
+         g_ptr_array_free(sorted_names, true);
       }
    }
 }
@@ -648,8 +649,12 @@ void query_sys_amdgpu_parameters(int depth) {
 /** Examines /sys/class/drm
  */
 
-
-void insert_drm_xref(int depth, char * cur_dir_name, char * i2c_node_name, Byte * edidbytes) {
+static
+void insert_drm_xref(
+      int          depth,
+      const char * cur_dir_name,
+      const char * i2c_node_name,
+      const Byte * edidbytes) {
    bool debug = false;
    DBGMSF(debug, "depth=%d, cur_dir_name=%s, i2c_node_name = %s, edidbytes=%p",
                  depth, cur_dir_name, i2c_node_name, edidbytes);
@@ -657,10 +662,9 @@ void insert_drm_xref(int depth, char * cur_dir_name, char * i2c_node_name, Byte 
    // rpt_nl();
 
    int drm_busno =  i2c_path_to_busno(cur_dir_name);
-   DBGMSF(debug, "cur_dir_name=%s, drm_busno=%d", cur_dir_name, drm_busno);
+   DBGMSF(debug, "drm_busno=%d", drm_busno);
 
    Device_Id_Xref * xref = NULL;
-   DBGMSF(debug, "i2c_node_name = %s", i2c_node_name);
    if (i2c_node_name) {
       // DBGMSG("Using i2c_node_name");
 
@@ -691,13 +695,14 @@ void insert_drm_xref(int depth, char * cur_dir_name, char * i2c_node_name, Byte 
       }
       // xref->sysfs_drm_name = strdup(dent->d_name);
       xref->sysfs_drm_name = strdup(cur_dir_name);
-      xref->sysfs_drm_i2c  = i2c_node_name;
+      xref->sysfs_drm_i2c  = strdup(i2c_node_name);
       xref->sysfs_drm_busno = drm_busno;
       DBGMSF(debug, "sysfs_drm_busno = %d", xref->sysfs_drm_busno);
    }
 }
 
 
+static
 void report_one_connector(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
@@ -727,17 +732,21 @@ void report_one_connector(
       rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
       RPT_ATTR_TEXT(d2, &node_name, dirname, simple_fn, i2c_subdir_name, "name");
 
-      i2c_path_to_busno(i2c_subdir_name);
-
       Byte * edid_bytes = NULL;
       if (edid_byte_array) {
          edid_bytes = g_byte_array_free(edid_byte_array, false);
       }
       insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
+      free(i2c_subdir_name);
+      free(node_name);
       free(edid_bytes);
    }
-   else
+   else {
       rpt_vstring(d2, "No i2c-N subdirectory");
+      if (edid_byte_array)
+         g_byte_array_free(edid_byte_array, true);
+   }
+
    DBGMSF(debug, "Done");
 }
 
