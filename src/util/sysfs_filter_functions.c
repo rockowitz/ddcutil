@@ -290,6 +290,7 @@ bool has_class_display_or_docking_station(
    }
    // DBGMSF(debug, "class_val = %s, top_byte = 0x%02x, result=%s",
    //               class_val, top_byte, sbool(result) );
+   free(class_val);
    return result;
 }
 
