@@ -22,21 +22,22 @@
 #define REPORT_FLAG_OPTION(_flagno, _action) \
 rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
      (parsed_cmd->flags & CMD_FLAG_F##_flagno ) ? "enabled: " : "disabled:", _action)
+
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
-      rpt_label(depth, "Experimental Options:");
-      REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
-      REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
-      REPORT_FLAG_OPTION(3, "Unused");
-      REPORT_FLAG_OPTION(4, "Read strategy tests");
-      REPORT_FLAG_OPTION(5, "Unused");
-      REPORT_FLAG_OPTION(6, "Force I2c bus");
+   rpt_label(depth, "Experimental Options:");
+   REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
+   REPORT_FLAG_OPTION(3, "Unused");
+   REPORT_FLAG_OPTION(4, "Read strategy tests");
+   REPORT_FLAG_OPTION(5, "Unused");
+   REPORT_FLAG_OPTION(6, "Force I2c bus");
 
-      rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
-      rpt_nl();
+   rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
+   rpt_nl();
+}
 
- }
 #undef REPORT_FLAG_OPTION
 
 
@@ -67,9 +68,6 @@ bool init_experimental_options(Parsed_Cmd* parsed_cmd)
    }
    return true;
 }
-
-
-
 
 
 //
@@ -273,5 +271,3 @@ void test_display_detection_variants() {
    }
 #endif
 }
-
-
