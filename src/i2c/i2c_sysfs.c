@@ -902,7 +902,7 @@ Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
 //
 
 void free_sys_conflicting_driver(Sys_Conflicting_Driver * rec) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "rec=%p", (void*)rec);
    if (rec) {
       free(rec->n_nnnn);
@@ -956,7 +956,7 @@ void one_n_nnnn(
       void *       accumulator,
       int          depth)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s, depth=%d", dir_name, fn, depth);
 
    GPtrArray* conflicting_drivers= accumulator;
