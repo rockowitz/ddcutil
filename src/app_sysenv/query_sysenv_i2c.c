@@ -3,7 +3,7 @@
  * Check I2C devices using directly coded I2C calls
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -27,9 +27,13 @@
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 #include "base/status_code_mgt.h"
+#include "base/parms.h"
 /** \endcond */
 
 #include "i2c/i2c_bus_core.h"
+#ifdef I2C_IO_IOCTL_ONLY
+#include "i2c/i2c_execute.h"
+#endif
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs.h"
@@ -111,7 +115,11 @@ try_single_getvcp_call(
       ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
    int writect = sizeof(ddc_cmd_bytes)-1;
    rpt_vstring(depth, "Sending Get VCP Feature Command request packet: %s", hexstring_t(ddc_cmd_bytes+1, writect));
+#ifndef I2C_IO_IOCTL_ONLY
    rc = write(fh, ddc_cmd_bytes+1, writect);
+#else
+   rc = i2c_ioctl_writer(fh, 0x37, writect, ddc_cmd_bytes+1);
+#endif
    if (rc < 0) {
       int errsv = errno;
       DBGMSF(debug, "write() failed, errno=%s", linux_errno_desc(errsv));
@@ -130,6 +138,7 @@ try_single_getvcp_call(
 
    rpt_vstring(depth, "Reading Get Feature Reply response packet");
 
+#ifndef I2C_IO_IOCTL_ONLY
    if (use_smbus) {   // FAILS, reads 6e 6e 6e ...
       unsigned long functionality = i2c_get_functionality_flags_by_fd(fh);
        if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
@@ -161,6 +170,9 @@ try_single_getvcp_call(
    }
    else {
       rc = read(fh, ddc_response_bytes+1, readct);
+#else
+      rc = i2c_ioctl_reader(fh, 0x37, false, readct, ddc_response_bytes+1);
+#endif
       if (rc < 0) {
          rc = -errno;
          DBGMSF(debug, "read() failed, errno=%s", linux_errno_desc(-rc));
@@ -173,7 +185,9 @@ try_single_getvcp_call(
          rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
          goto bye;
       }
+#ifndef I2C_IO_IOCTL_ONLY
    }
+#endif
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
@@ -516,7 +530,12 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
          rpt_nl();
          rpt_vstring(d2, "Trying simple VCP read of feature 0x10...");
+#ifndef I2C_IO_IOCTL_ONLY
          rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
+#else
+         uint16_t op = I2C_SLAVE_FORCE;
+         rc = ioctl(fd, op, 0x37);
+#endif
          if (rc == 0) {
             int maxtries = 3;
             psc = -1;
