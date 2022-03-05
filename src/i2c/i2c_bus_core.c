@@ -662,7 +662,9 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       }  // get bytes succeeded
    }
 
+#ifndef I2C_IO_IOCTL_ONLY
 bye:
+#endif
    if (rc < 0)
       rawedid->len = 0;
 
@@ -755,12 +757,16 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    if (rc == 0)  {
       // regard either a successful write() or a read() as indication slave address is valid
       Byte    writebuf = {0x00};
+#ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = write(fd, &writebuf, 1);
       }
       else {
          rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
       }
+#else
+      rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
+#endif
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
       if (rc == 1)
          result = true;
@@ -1387,10 +1393,12 @@ bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
 
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_open_bus);
-   RTTI_ADD_FUNC(i2c_set_addr);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
+#ifndef I2C_IO_IOCTL_ONLY
+   RTTI_ADD_FUNC(i2c_set_addr);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
+#endif
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);

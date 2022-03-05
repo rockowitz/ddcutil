@@ -42,7 +42,9 @@ extern bool i2c_force_bus;
 // Basic I2C bus operations
 int           i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno  i2c_close_bus(int fd, Call_Options callopts);
+#ifndef I2C_IO_IOCTL_ONLY
 Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
+#endif
 
 // EDID inspection
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
