@@ -7,13 +7,13 @@
 #include <stdio.h>
 #include <strings.h>
 
-
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/timestamp.h"
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+
 #include "ddc/ddc_displays.h"
 
 #include "app_experimental.h"
