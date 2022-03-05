@@ -35,21 +35,20 @@ is_module_loaded_using_sysfs(
 
    struct stat statbuf;
    char   module_fn[100];
-   bool   found = false;
 
+   bool   found = true;
    snprintf(module_fn, sizeof(module_fn), "/sys/module/%s", module_name);
    int rc = stat(module_fn, &statbuf);
    if (rc < 0) {
       // will be ENOENT (2) if file not found
-      found = false;
-   }
-   else {
-      // if (S_ISDIR(statbuf.st_mode))   // pointless
-         found = true;
+      str_replace_char(module_fn, '-', '_');
+      rc = stat(module_fn, &statbuf);
+      if (rc < 0)
+         found = false;
    }
 
    if (debug)
-      printf("(%s) module_name = %s, returning %d\n", __func__, module_name, found);
+      printf("(%s) module_name = %s, returning %s\n", __func__, module_name, SBOOL(found));
    return found;
 }
 
