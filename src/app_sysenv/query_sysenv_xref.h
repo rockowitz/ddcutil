@@ -4,7 +4,7 @@
  *  in various Linux subsystems.
  */
 
-// Copyright (C) 2017-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -49,9 +49,9 @@ void device_xref_init();
 void device_xref_set_i2c_bus_scan_complete();
 // bool device_xref_i2c_bus_scan_complete();
 
-char * device_xref_edid_tag(Byte * raw_edid);
+char * device_xref_edid_tag(const Byte * raw_edid);
 
-Device_Id_Xref * device_xref_find_by_edid(Byte * raw_edid);
+Device_Id_Xref * device_xref_find_by_edid(const Byte * raw_edid);
 Device_Id_Xref * device_xref_find_by_busno(int busno);
 Device_Id_Xref * device_xref_new_with_busno(int busno, Byte * raw_edid);
 void device_xref_report(int depth);

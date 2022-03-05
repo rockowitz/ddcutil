@@ -4,7 +4,7 @@
  *  in various Linux subsystems.
  */
 
-// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -104,7 +104,7 @@ bool device_xref_i2c_bus_scan_complete() {
  *  \remark If multiple monitors have the same EDID (e.x. identical LG display monitors)
  *          returns the first entry in the cross-reference list
  */
-Device_Id_Xref * device_xref_find_by_edid(Byte * raw_edid) {
+Device_Id_Xref * device_xref_find_by_edid(const Byte * raw_edid) {
    assert(i2c_bus_scan_complete);
    Device_Id_Xref * result = NULL;
    for (int ndx = 0; ndx < device_xref->len; ndx++) {
@@ -125,7 +125,7 @@ Device_Id_Xref * device_xref_find_by_edid(Byte * raw_edid) {
  *  @param   raw_edid pointer to EDID
  *  @return  bytes 124..127 as a string, caller must free
  */
-char * device_xref_edid_tag(Byte * raw_edid) {
+char * device_xref_edid_tag(const Byte * raw_edid) {
    return  hexstring2(raw_edid+124, 4, NULL, true, NULL, 0);
 }
 
@@ -312,4 +312,3 @@ void device_xref_report(int depth) {
       // }
    }
 }
-
