@@ -3,7 +3,7 @@
  *  System configuration and tuning
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARMS_H_
@@ -38,6 +38,9 @@
 //
 // *** Choose method of low level IC2 communication
 //
+
+
+#define I2C_IO_IOCTL_ONLY    // for development
 
 // One of the following 2 defines must be enabled:
 #define DEFAULT_I2C_IO_STRATEGY  I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
