@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -282,6 +282,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    rpt_nl();
    rpt_vstring(d1, "Retrieving DRM resources...");
    drmModeResPtr res = drmModeGetResources(fd);
+   DBGMSF(debug,"res=%p", (void*)res);
    if (!res) {
       int errsv = errno;
       rpt_vstring(d1, "Failure retrieving DRM resources, errno=%s", linux_errno_desc(errno));
@@ -294,7 +295,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
    int edid_prop_id         = 0;
    int subconnector_prop_id = 0;
-   drmModePropertyPtr edid_prop_ptr   = NULL;
+   drmModePropertyPtr edid_prop_ptr    = NULL;
    drmModePropertyPtr subconn_prop_ptr = NULL;
 
    rpt_nl();
@@ -370,6 +371,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
       if (penc) {
          rpt_vstring(d3, "%-20s %d - %s",    "encoder type (signal format):",
                           penc->encoder_type,  encoder_type_title(penc->encoder_type));
+         free(penc);
       }
       else {
          rpt_vstring(d2, "Encoder with id %d not found", encoder_id);
@@ -485,6 +487,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 #endif
 
       }
+      drmModeFreeConnector(conn);
       rpt_nl();
    }
 
@@ -494,6 +497,8 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    if (subconn_prop_ptr) {
       drmModeFreeProperty(subconn_prop_ptr);
    }
+   DBGMSF(debug, "freeing res=%p", (void*)res);
+   drmModeFreeResources(res);
 
 bye:
    DBGTRC_DONE(debug, TRACE_GROUP, "");
