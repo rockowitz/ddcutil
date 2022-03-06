@@ -59,7 +59,6 @@ bool is_readable_file(const char * filename)
   * \retval    0           configuration parm not found
   * \retval    < 0         error reading configuration file
   */
-
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 {
    bool debug = false;
@@ -282,6 +281,7 @@ bye:
 }
 
 
+#ifdef OLD
 // transitional
 /** Checks if a module is built into the kernel.
   *
@@ -304,8 +304,10 @@ int is_module_builtin(const char * module_name) {
    }
    return result;
 }
+#endif
 
 
+#ifdef OLD
 // transitional
 /** Checks if a loadable module exists
  *
@@ -327,6 +329,6 @@ bool is_module_loadable(const char * module_name) {
    }
    return result;
 }
-
+#endif
 
 
