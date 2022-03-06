@@ -2,7 +2,7 @@
  *  Miscellaneous Linux utiliites
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LINUX_UTIL_H_
@@ -18,7 +18,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
 int module_status_using_libkmod(const char * module_alias);
 
 int is_module_loaded_using_libkmod(const char * module_name);
-
 int is_module_builtin(const char * module_name);
 bool is_module_loadable(const char * module_name);
+
 #endif /* LINUX_UTIL_H_ */
