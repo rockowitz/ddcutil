@@ -126,11 +126,13 @@ try_single_getvcp_call(
       rc = -errsv;
       goto bye;
    }
+#ifndef I2C_IO_IOCTL_ONLY
    if (rc != writect) {
       DBGMSF(debug, "write() returned %d, expected %d", rc, writect );
       rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
       goto bye;
    }
+#endif
    usleep(50000);
 
    unsigned char ddc_response_bytes[12];
@@ -180,11 +182,13 @@ try_single_getvcp_call(
       }
       rpt_vstring(depth, "read() returned %s", hexstring_t(ddc_response_bytes+1,rc) );
 
+#ifndef I2C_IO_IOCTL_ONLY
       if (rc != readct) {
          DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
          rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
          goto bye;
       }
+#endif
 #ifndef I2C_IO_IOCTL_ONLY
    }
 #endif
