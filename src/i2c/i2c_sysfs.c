@@ -570,10 +570,10 @@ static void report_one_bus_i2c(
    rpt_nl();
    int busno = i2c_name_to_busno(fn);  //   catches non-i2cN names
    if (busno < 0) {
-      rpt_vstring(depth, "Ignoring (A) %s/%s", dirname, fn);
+      rpt_vstring(depth, "Ignoring %s/%s", dirname, fn);
    }
    else {
-      rpt_vstring(depth, "Examining (A) /sys/bus/i2c/devices/i2c-%d...", busno);
+      rpt_vstring(depth, "Examining /sys/bus/i2c/devices/i2c-%d...", busno);
       // int d1 = (debug) ? -1 : depth+1;
       // d1 > 0 => reports as collects, no need to call report_i2c_sys_info()
       int d1 = depth+1;
@@ -585,8 +585,7 @@ static void report_one_bus_i2c(
 
 
 void dbgrpt_sys_bus_i2c(int depth) {
-   rpt_label(depth, "Examining (B) /sys/bus/i2c/devices:");
-   rpt_nl();
+   rpt_label(depth, "Examining /sys/bus/i2c/devices:");
    dir_ordered_foreach("/sys/bus/i2c/devices", NULL, i2c_compare, report_one_bus_i2c, NULL, depth);
 }
 
