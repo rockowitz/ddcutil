@@ -944,6 +944,8 @@ void query_sysenv() {
       query_xdg_files(0);
    }
 
+   rpt_label(0, "*** environment command complete ***");
+
    env_accumulator_free(accumulator);     // make Coverity happy
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
