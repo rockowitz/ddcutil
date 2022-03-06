@@ -43,7 +43,8 @@
 
 
 // Auxiliary function for raw_scan_i2c_devices()
-static bool is_i2c_device_rw(int busno) {
+static
+bool is_i2c_device_rw(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
@@ -71,8 +72,8 @@ static bool is_i2c_device_rw(int busno) {
 // Auxiliary function for raw_scan_i2c_devices()
 // adapted from ddc_vcp_tests
 
-static Public_Status_Code
-try_single_getvcp_call(
+static
+Public_Status_Code try_single_getvcp_call(
       int           fh,
       unsigned char vcp_feature_code,
       bool          use_smbus,
