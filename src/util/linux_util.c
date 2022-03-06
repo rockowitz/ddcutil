@@ -133,7 +133,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
   */
 int module_status_using_libkmod(const char * module_alias)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
 
@@ -227,7 +227,7 @@ bye:
  *  kmod_module_new_from_loaded() instead of kmod_module_new_from_lookup().
  */
 int is_module_loaded_using_libkmod(const char * module_name) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. module_name=%s\n", __func__, module_name);
 
