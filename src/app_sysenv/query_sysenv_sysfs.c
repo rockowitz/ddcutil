@@ -735,8 +735,8 @@ void report_one_connector(
       Byte * edid_bytes = NULL;
       if (edid_byte_array) {
          edid_bytes = g_byte_array_free(edid_byte_array, false);
+         insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
       }
-      insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
       free(i2c_subdir_name);
       free(node_name);
       free(edid_bytes);
@@ -859,7 +859,6 @@ void dump_sysfs_i2c() {
    // dump_simplified_sys_bus_pci(0);
 
    rpt_label(0, "*** Detailed /sys/class/drm report ***");
-   rpt_nl();
    report_sys_drm_connectors(1);
    rpt_nl();
 
@@ -876,17 +875,18 @@ void dump_sysfs_i2c() {
 
    // keep?
    dump_detailed_sys_bus_pci(0);
+   rpt_nl();
 
    rpt_label(0, "*** Sys_Bus_I2C report ***");
    rpt_nl();
    dbgrpt_sys_bus_i2c(1);
    rpt_nl();
 
-    rpt_label(0, "*** Sysfs_I2C_Info report ***");
-    rpt_nl();
-    GPtrArray * reports = get_all_i2c_info(true, -1);
-    dbgrpt_all_sysfs_i2c_info(reports, 1);
-    rpt_nl();
+   rpt_label(0, "*** Sysfs_I2C_Info report ***");
+   rpt_nl();
+   GPtrArray * reports = get_all_i2c_info(true, -1);
+   dbgrpt_all_sysfs_i2c_info(reports, 1);
+   rpt_nl();
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
