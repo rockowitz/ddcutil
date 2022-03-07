@@ -46,23 +46,32 @@
 //
 // *** General Utilities ***
 
-void gaux_string_ptr_array_include(GPtrArray * arry, char * new_value) {
+/** Appends a copy of a string to a #GPtrArray of unique strings.
+ *  If the new value already exists in the array, does nothing.
+ *
+ *  \param arry      array of unique strings
+ *  \param new_value string to include, must be non-null
+ */
+void gaux_unique_string_ptr_array_include(GPtrArray * arry, char * new_value) {
    bool debug = false;
    if (debug)
       printf("(%s) new_value=|%s|\n", __func__, new_value);
+   assert(new_value);
    assert(arry);
-   int ndx = 0;
-   for (; ndx < arry->len; ndx++) {
-      char * old_value = g_ptr_array_index(arry, ndx);
-      if (streq(new_value, old_value) ) {
-         if (debug) printf("(%s) Found. ndx=%d\n", __func__, ndx);
-         break;
+   if (new_value) {   // ignore bad argument if asserts disabled
+      int ndx = 0;
+      for (; ndx < arry->len; ndx++) {
+         char * old_value = g_ptr_array_index(arry, ndx);
+         if (streq(new_value, old_value) ) {
+            if (debug) printf("(%s) Found. ndx=%d\n", __func__, ndx);
+            break;
+         }
       }
-   }
-   if (ndx == arry->len) {
-      if (debug)
-         printf("(%s) Appending new value\n", __func__);
-      g_ptr_array_add(arry, strdup(new_value));
+      if (ndx == arry->len) {
+         if (debug)
+            printf("(%s) Appending new value\n", __func__);
+         g_ptr_array_add(arry, strdup(new_value));
+      }
    }
 }
 
@@ -1056,7 +1065,7 @@ GPtrArray * conflicting_driver_names(GPtrArray * conflicts) {
    GPtrArray * result = g_ptr_array_new_with_free_func(g_free);
    for (int ndx = 0; ndx < conflicts->len; ndx++) {
       Sys_Conflicting_Driver * cur = g_ptr_array_index(conflicts, ndx);
-      gaux_string_ptr_array_include(result, best_conflicting_driver_name(cur));
+      gaux_unique_string_ptr_array_include(result, best_conflicting_driver_name(cur));
    }
    DBGMSF(debug, "Returning: %s", join_string_g_ptr_array_t(result, " + ") );
    return result;
@@ -1147,7 +1156,7 @@ void simple_one_n_nnnn(
 
    char * best_name = best_driver_name_for_n_nnnn(dir_name, fn, depth);
    if (best_name) {
-      gaux_string_ptr_array_include(accumulator,best_name );
+      gaux_unique_string_ptr_array_include(accumulator,best_name );
       DBGMSF(debug, "appending: |%s|", best_name);
       free(best_name);
    }
