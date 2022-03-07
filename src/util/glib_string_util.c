@@ -158,3 +158,32 @@ GPtrArray * gaux_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second) {
       return result;
    }
 
+
+/** Appends a copy of a string to a #GPtrArray of unique strings.
+ *  If the new value already exists in the array, does nothing.
+ *
+ *  \param arry      array of unique strings
+ *  \param new_value string to include, must be non-null
+ */
+void gaux_unique_string_ptr_array_include(GPtrArray * arry, char * new_value) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) new_value=|%s|\n", __func__, new_value);
+   assert(new_value);
+   assert(arry);
+   if (new_value) {   // ignore bad argument if asserts disabled
+      int ndx = 0;
+      for (; ndx < arry->len; ndx++) {
+         char * old_value = g_ptr_array_index(arry, ndx);
+         if (streq(new_value, old_value) ) {
+            if (debug) printf("(%s) Found. ndx=%d\n", __func__, ndx);
+            break;
+         }
+      }
+      if (ndx == arry->len) {
+         if (debug)
+            printf("(%s) Appending new value\n", __func__);
+         g_ptr_array_add(arry, strdup(new_value));
+      }
+   }
+}

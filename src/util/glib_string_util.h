@@ -5,7 +5,7 @@
  *  glib_string_util.c/h exist to avoid circular dependencies.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -24,5 +24,7 @@ char * join_string_g_ptr_array_t(GPtrArray* strings, char * sepstr);
 int         gaux_string_ptr_array_find(GPtrArray * haystack, const char * needle);
 bool        gaux_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second);
 GPtrArray * gaux_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second);
+
+void gaux_unique_string_ptr_array_include(GPtrArray * arry, char * new_value);
 
 #endif /* GLIB_STRING_UTIL_H_ */
