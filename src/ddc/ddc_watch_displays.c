@@ -5,6 +5,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
+#include "public/ddcutil_types.h"
+#include "ddc/ddc_watch_displays.h"
 
 /** \cond */
 #include <assert.h>
@@ -35,7 +37,9 @@
 #include "base/rtti.h"
 /** \endcond */
 
-#include "ddc/ddc_watch_displays.h"
+
+
+
 
 // Experimental code
 static bool watch_displays_enabled = true;
@@ -246,21 +250,21 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    Displays_Change_Type change_type = Changed_None;
 
    GPtrArray * cur_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
-   if ( !gaux_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
+   if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
       if ( debug || IS_TRACING() ) {
          DBGMSG("Displays changed!");
          DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
       }
 
-      GPtrArray * removed = gaux_string_ptr_arrays_minus(prev_displays, cur_displays);
+      GPtrArray * removed = gaux_unique_string_ptr_arrays_minus(prev_displays, cur_displays);
       if (removed->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
          change_type = Changed_Removed;
       }
 
-      GPtrArray * added = gaux_string_ptr_arrays_minus(cur_displays, prev_displays);
+      GPtrArray * added = gaux_unique_string_ptr_arrays_minus(cur_displays, prev_displays);
       if (added->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );

@@ -118,7 +118,18 @@ int gaux_string_ptr_array_find(GPtrArray * haystack, const char * needle) {
 }
 
 
-bool gaux_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second) {
+/** Compares two instances of #GPtrArray of pointers to unique strings.
+ *
+ *  @param  first  first array
+ *  @param  second second array
+ *  @return true if they contain the same strings, false if not
+ *
+ *  @remark
+ *  The string values are compared, not the pointers.
+ *  @remark
+ *  Order of the strings does not matter.
+ */
+bool gaux_unique_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second) {
    assert(first);
    assert(second);
    bool result = false;
@@ -139,7 +150,17 @@ bool gaux_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second) {
 }
 
 
-GPtrArray * gaux_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second) {
+/** Creates a new #GPtrArray of unique strings containing only those in the
+ *  first array that are not in the second.
+ *
+ *  @param  first  first array
+ *  @param  second second array
+ *  @result new array containing the difference
+ *
+ *  @remark
+ *  The returned array may have length 0.
+ */
+GPtrArray * gaux_unique_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second) {
    // returns first - second
       assert(first);
       assert(second);
