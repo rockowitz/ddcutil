@@ -913,15 +913,13 @@ void i2c_free_bus_info_gdestroy(gpointer data) {
 
 /** Reports on a single I2C bus.
  *
- * \param   bus_info    pointer to Bus_Info structure describing bus
- * \param   depth       logical indentation depth
+ *  \param   bus_info    pointer to Bus_Info structure describing bus
+ *  \param   depth       logical indentation depth
  *
- * \remark
- * The format of the output as well as its extent is controlled by get_output_level(). - no longer!
+ *  \remark
+ *  Although this is a debug type report, it is called by used (indirectly) by the
+ *  ENVIRONMENT command.
  */
-// used by dbgreport_display_ref() in ddc_displays.c, always OL_VERBOSE
-// used by debug code within this file
-// used by i2c_report_buses() in this file, which is called by query_i2c_buses() in query_sysenv.c, always OL_VERBOSE
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    bool debug = false;
    DBGMSF(debug, "bus_info=%p", bus_info);
@@ -953,7 +951,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
 
 #ifndef TARGET_BSD
    I2C_Sys_Info * info = get_i2c_sys_info(bus_info->busno, -1);
-   report_i2c_sys_info(info, depth);
+   dbgrpt_i2c_sys_info(info, depth);
    free_i2c_sys_info(info);
 #endif
 
@@ -1022,7 +1020,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
 #ifndef TARGET_BSD2
       if (output_level >= DDCA_OL_VV) {
          I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
-         report_i2c_sys_info(info, depth);
+         dbgrpt_i2c_sys_info(info, depth);
          free_i2c_sys_info(info);
       }
 #endif
@@ -1352,9 +1350,9 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
  * @remark
  * Used by query-sysenv.c, always OL_VERBOSE
  */
-int i2c_report_buses(bool report_all, int depth) {
+int i2c_dbgrpt_buses(bool report_all, int depth) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "report_all=%s\n", sbool(report_all));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "report_all=%s", sbool(report_all));
 
    assert(i2c_buses);
    int busct = i2c_buses->len;
@@ -1377,7 +1375,7 @@ int i2c_report_buses(bool report_all, int depth) {
    if (reported_ct == 0)
       rpt_vstring(depth, "   No buses\n");
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d\n", reported_ct);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d", reported_ct);
    return reported_ct;
 }
 

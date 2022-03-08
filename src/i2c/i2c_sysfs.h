@@ -36,7 +36,7 @@ typedef struct {
 
 void           free_i2c_sys_info(I2C_Sys_Info * info);
 I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
-void           report_i2c_sys_info(I2C_Sys_Info * info, int depth);
+void           dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth);
 void           dbgrpt_sys_bus_i2c(int depth);
 
 

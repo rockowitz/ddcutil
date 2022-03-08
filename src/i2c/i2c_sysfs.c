@@ -516,19 +516,16 @@ get_i2c_sys_info(
 }
 
 
-/** Emit detailed /sys report
+/** Emit debug type report of a #I2C_Sys_Info struct
  *
  *  \param  info   pointer to struct with relevant /sys information
  *  \param  depth  logical indentation depth, if < 0 perform no indentation
- *
- *  \remark
- *  This function is used by the DETECT command.
  */
-// report intended for detect command
-
-void report_i2c_sys_info(I2C_Sys_Info * info, int depth) {
-   int d1 = (depth < 0) ? depth : depth + 1;
-   int d2 = (depth < 0) ? depth : depth + 2;
+void dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth) {
+   int d1 = (depth < 0) ? 0 : depth + 1;
+   int d2 = (depth < 0) ? 0 : depth + 2;
+   if (depth < 0)
+      depth = 0;
 
    if (info) {
       rpt_vstring(depth, "Extended information for /sys/bus/i2c/devices/i2c-%d...", info->busno);
