@@ -47,15 +47,15 @@
 // *** Common Functions
 //
 
-/** Given a sysfs node, walk up the driver chain until
- *  an adapter node is found.
+/** Given a sysfs node, walk up the chain of device directory links
+ *  until an adapter node is found.
  *
  *  \param  path   e.g. /sys/bus/i2c/drivers/i2c-5
  *  \param  depth  logical indentation depth
  *  \return sysfs path to adapter
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
- *  If depth >= 0, sysfs attributes reported.
+ *  If depth >= 0, sysfs attributes are reported.
  *  If depth < -9, there is no output
  *
  *  Caller is responsible for freeing the returned value
@@ -76,15 +76,41 @@ char * find_adapter(char * path, int depth) {
 }
 
 
+/** Given the sysfs path to an adapter of some sort, returns
+ *  the name of its driver.
+ *
+ *  \param adapter_path
+ *  \param depth        logical indentation depth
+ *  \return name of driver module, NULL if not found
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth < -9, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
 char * get_driver_for_adapter(char * adapter_path, int depth) {
    char * basename = NULL;
    RPT_ATTR_REALPATH_BASENAME(depth, &basename, adapter_path, "driver", "module");
-   char * retval = (basename) ? basename : NULL;
-   return retval;
+   return basename;
 }
 
 
-char * find_and_get_adapter_driver(char * path, int depth) {
+/** Given a sysfs node, walk up the chain of device directory links
+ *  until an adapter node is found, and return the name of its driver.
+ *
+ *  \param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  \param  depth  logical indentation depth
+ *  \return sysfs path to adapter
+ *
+ *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
+ *  If depth >= 0, sysfs attributes are reported.
+ *  If depth < -9, there is no output
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+static char *
+find_adapter_and_get_driver(char * path, int depth) {
    char * result = NULL;
    char * adapter_path = find_adapter(path, depth);
    if (adapter_path) {
@@ -105,7 +131,7 @@ char * find_and_get_adapter_driver(char * path, int depth) {
 char * get_driver_for_busno(int busno) {
    char path[PATH_MAX];
    g_snprintf(path, PATH_MAX, "/sys/bus/i2c/devices/i2c-%d", busno);
-   char * result = find_and_get_adapter_driver(path, -1);
+   char * result = find_adapter_and_get_driver(path, -1);
    return result;
 }
 
@@ -659,7 +685,7 @@ void one_drm_connector(
    DBGMSF(debug, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
                      sbool(drm_available));
 
-   char * driver = find_and_get_adapter_driver( cur->connector_path, -1);
+   char * driver = find_adapter_and_get_driver( cur->connector_path, -1);
    assert( !(streq(driver, "nvidia") && drm_available) );
    free(driver);
    if (drm_available) {     //  ???

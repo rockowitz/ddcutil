@@ -11,6 +11,8 @@
 
 #include <glib-2.0/glib.h>
 
+char * find_adapter(char * path, int depth);
+char * get_driver_for_adapter(char * adapter_path, int depth);
 char * get_driver_for_busno(int busno);
 
 typedef struct {
