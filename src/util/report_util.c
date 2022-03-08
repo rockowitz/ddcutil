@@ -148,10 +148,12 @@ void rpt_reset_indent_stack() {
 /** Given a logical indentation depth, returns the number of spaces
  *  of indentation to be used.
  *
- *  @param depth logical indentation depth
+ *  @param depth logical indentation depth, if < 0 perform no indentation
  *  @return number of indentation spaces
  */
 int rpt_get_indent(int depth) {
+   if (depth < 0)
+      depth = 0;
    Per_Thread_Settings * settings = get_thread_settings();
    int spaces_ct = DEFAULT_INDENT_SPACES_PER_DEPTH;
    if (settings->indent_spaces_stack_pos >= 0)
