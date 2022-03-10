@@ -12,7 +12,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <i2c/smbus.h>   // TEMP
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
