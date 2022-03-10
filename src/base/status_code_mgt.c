@@ -7,7 +7,6 @@
 
 /** \cond */
 #include <assert.h>
-// #include <base/adl_errors.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,9 +18,7 @@
 
 #include "base/status_code_mgt.h"
 
-
 /*
-
 Notes on status code management.
 
 Status codes in the ddcutil have multiple sources:
