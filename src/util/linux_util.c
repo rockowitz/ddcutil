@@ -293,7 +293,6 @@ bye:
 }
 
 
-
 /** Gets the id number of the current thread
  *
  *  \return  thread number
