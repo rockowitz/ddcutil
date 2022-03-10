@@ -1,4 +1,4 @@
-/** \f ore_per_thread_settings.c */
+/** \f core_per_thread_settings.c */
 
 // Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -8,17 +8,17 @@
 #define GNU_SOURCE    // for syscall()
 
 #include <glib-2.0/glib.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
 #else
-#include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/types.h>
 #include <syslog.h>
 #endif
-#include <unistd.h>
 
 #include "util/report_util.h"
 
@@ -113,9 +113,11 @@ Thread_Output_Settings *  get_thread_settings() {
       settings->tid = get_thread_id();
       g_private_set(&per_thread_dests_key, settings);
       if (debug)
-         printf("(%s) Allocated settings=%p for thread %ld, fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
-               __func__, (void*)settings, settings->tid,
-               (void*)settings->fout, (void*)settings->ferr, (void*)stdout, (void*)stderr);
+         printf("(%s) Allocated settings=%p for thread %ld,"
+                " fout=%p, ferr=%p, stdout=%p, stderr=%p\n",
+                __func__, (void*)settings, settings->tid,
+                (void*)settings->fout, (void*)settings->ferr,
+                (void*)stdout, (void*)stderr);
    }
 
    // printf("(%s) Returning: %p\n", __func__, settings);
