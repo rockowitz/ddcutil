@@ -20,15 +20,14 @@
  *   special initialization handling.
  * */
 
-// Copyright (C)2014 -2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C)2014 -2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef CORE_PER_THREAD_SETTINGS_H_
 #define CORE_PER_THREAD_SETTINGS_H_
 
+#include <inttypes.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
 
 #include "ddcutil_types.h"
 
@@ -55,7 +54,6 @@ void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);
 void set_fout_to_default();
 void set_ferr_to_default();
-
 FILE * fout();
 FILE * ferr();
 
@@ -69,11 +67,5 @@ void set_default_thread_output_level(DDCA_Output_Level ol);
 // const  adding "const" would require api change to ddca_output_level_name()
 char *            output_level_name(DDCA_Output_Level val);
 
-
-// These functions have to go somewhere, They are used by the functions of
-// this module.
-
-intmax_t get_thread_id();
-intmax_t get_process_id();
 
 #endif /* CORE_PER_THREAD_SETTINGS_H_ */

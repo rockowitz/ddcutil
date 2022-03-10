@@ -5,21 +5,15 @@
 
 #include "config.h"
 
-#define GNU_SOURCE    // for syscall()
-
+/** \cond */
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+/** \endcond */
 
-#ifdef TARGET_BSD
-#include <pthread_np.h>
-#else
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <syslog.h>
-#endif
-
+#include "util/linux_util.h"
 #include "util/report_util.h"
 
 #include "ddcutil_types.h"
@@ -302,37 +296,5 @@ char * output_level_name(DDCA_Output_Level val) {
       // default unnecessary, case exhausts enum
    }
    return result;
-}
-
-
-// get_thread_id() and get_process_id() probably should be in a util level file
-
-/** Gets the id number of the current thread
- *
- *  @ return  thread number
- */
-intmax_t get_thread_id() {
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting.\n", __func__);
-#ifdef TARGET_BSD
-   int tid = pthread_getthreadid_np();
-#else
-   pid_t tid = syscall(SYS_gettid);
-#endif
-   if (debug)
-      printf("(%s) Done.    Returning %ld\n", __func__, (intmax_t) tid);
-   return tid;
-}
-
-
-/** Gets the id number of the current process
- *
- *  @ return  process number
- */
-intmax_t get_process_id()
-{
-   pid_t pid = syscall(SYS_getpid);
-   return pid;
 }
 

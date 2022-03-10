@@ -7,10 +7,13 @@
 
 #include "config.h"
 
+/** \cond */
+#define GNU_SOURCE    // for syscall()
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/utsname.h>
@@ -20,6 +23,15 @@
 #else
 #include <libkmod.h>
 #endif
+
+#ifdef TARGET_BSD
+#include <pthread_np.h>
+#else
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <syslog.h>
+#endif
+/** \endcond */
 
 #include "file_util.h"
 #include "string_util.h"
@@ -278,4 +290,35 @@ bye:
    if (debug)
       printf("(%s) Done.     Returning: %d\n", __func__, result);
    return result;
+}
+
+
+
+/** Gets the id number of the current thread
+ *
+ *  \return  thread number
+ */
+intmax_t get_thread_id() {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
+#ifdef TARGET_BSD
+   int tid = pthread_getthreadid_np();
+#else
+   pid_t tid = syscall(SYS_gettid);
+#endif
+   if (debug)
+      printf("(%s) Done.    Returning %ld\n", __func__, (intmax_t) tid);
+   return tid;
+}
+
+
+/** Gets the id number of the current process
+ *
+ *  \return  process number
+ */
+intmax_t get_process_id()
+{
+   pid_t pid = syscall(SYS_getpid);
+   return pid;
 }

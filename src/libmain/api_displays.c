@@ -14,6 +14,7 @@
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
 
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -464,7 +465,6 @@ ddca_open_display2(
    return ddca_open_display3(ddca_dref,
                              (wait) ? DDCA_OPENOPT_WAIT : DDCA_OPENOPT_NONE,
                              dh_loc);
-
 }
 
 

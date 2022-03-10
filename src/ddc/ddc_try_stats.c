@@ -3,11 +3,10 @@
  *  Maintains statistics on DDC retries, along with maxtries settings.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
-
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
@@ -15,6 +14,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 

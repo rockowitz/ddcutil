@@ -8,6 +8,7 @@
 #ifndef LINUX_UTIL_H_
 #define LINUX_UTIL_H_
 
+#include <inttypes.h>
 #include <stdbool.h>
 
 int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
@@ -20,5 +21,8 @@ int module_status_using_libkmod(const char * module_alias);
 int is_module_loaded_using_libkmod(const char * module_name);
 int is_module_builtin(const char * module_name);
 bool is_module_loadable(const char * module_name);
+
+intmax_t get_thread_id();
+intmax_t get_process_id();
 
 #endif /* LINUX_UTIL_H_ */
