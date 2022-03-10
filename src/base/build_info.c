@@ -8,7 +8,7 @@
  *  suffix (e.g. RC1) is appended to the version string.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -19,18 +19,28 @@
 #include "base/build_info.h"
 
 
-// const char * BUILD_VERSION = VERSION;      /**< ddcutil version */
-
+/** Returns the base ddcutil version as a string, e.g. 1.2.3
+ *
+ *  \return  ddcutil version string, do not free
+ */
 const char * get_base_ddcutil_version() {
    return VERSION;
 }
 
 
+/** Returns the ddcutil version suffix, e.g. "dev".
+ *
+ *  \return version suffix, "" if no suffix. Do not free.
+ */
 const char * get_ddcutil_version_suffix() {
    return VERSION_VSUFFIX;
 }
 
 
+/** Returns the full ddcutil version, e.g. "1.2.3", "1.2.3-dev".
+ *
+ *  \return full ddcutil version, no not free.
+ */
 const char * get_full_ddcutil_version() {
    static char full_ddcutil_version[20] = {0};
    if (full_ddcutil_version[0] == '\0') {
@@ -44,6 +54,10 @@ const char * get_full_ddcutil_version() {
 }
 
 
+/** Reports build options used.
+ *
+ *  \depth logical indentation depth
+ */
 void report_build_options(int depth) {
    int d1 = depth+1;
    rpt_label(depth, "General Build Options:");
@@ -128,4 +142,3 @@ void report_build_options(int depth) {
 
    rpt_nl();
 }
-
