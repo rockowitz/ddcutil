@@ -7,7 +7,7 @@
 
 /** \cond */
 #include <assert.h>
-#include <base/adl_errors.h>
+// #include <base/adl_errors.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
