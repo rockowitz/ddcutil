@@ -74,10 +74,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_slave_addr_flag = false;
 
 
-// Another ugly global variable for testing purposes
-
-bool i2c_force_bus = false;
-
 //
 // Basic I2C bus operations
 //

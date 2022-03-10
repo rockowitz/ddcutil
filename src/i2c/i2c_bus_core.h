@@ -37,8 +37,6 @@ extern GPtrArray * i2c_buses;
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
 extern bool i2c_force_slave_addr_flag;
 
-extern bool i2c_force_bus;
-
 // Basic I2C bus operations
 int           i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno  i2c_close_bus(int fd, Call_Options callopts);

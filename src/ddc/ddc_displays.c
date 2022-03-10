@@ -233,16 +233,6 @@ bye:
          set_vcp_version_xdf_by_dh(dh);
       }
    }
-   if (!communication_working && i2c_force_bus) {
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-      communication_working = true;
-      DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-            dh_repr_t(dh) );
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-      dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-      dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
-   }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, communication_working, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
