@@ -1,5 +1,5 @@
 /** \file linux_util.h
- *  Miscellaneous Linux utiliites
+ *  Miscellaneous Linux utilities
  */
 
 // Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
