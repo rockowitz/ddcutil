@@ -1,5 +1,5 @@
 /** @file coredefs.h
- *  Basic definitions.that are not application specific
+ *  Basic definitions that are not application specific
  */
 
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
