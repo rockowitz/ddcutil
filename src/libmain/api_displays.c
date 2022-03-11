@@ -555,6 +555,7 @@ ddca_get_mccs_version_with_default(
 }
 
 
+#ifdef MCCS_VERSION_ID
 //
 // DDCA_MCCS_Version_Id functions - Deprecated
 //
@@ -604,6 +605,7 @@ char *
 ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
    return format_vcp_version_id(version_id);
 }
+#endif
 
 
 //
