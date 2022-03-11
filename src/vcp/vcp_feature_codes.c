@@ -652,7 +652,7 @@ extract_version_feature_info_from_feature_table_entry(
 }
 
 
-#ifdef UNUSED
+#ifdef MCCS_VERSION_ID
 /** Gets information about a VCP feature.
  *
  *  @param feature_code

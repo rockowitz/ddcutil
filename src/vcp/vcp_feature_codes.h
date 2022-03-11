@@ -296,12 +296,14 @@ get_feature_name_by_id_and_vcp_version(
       DDCA_Vcp_Feature_Code      feature_code,
       DDCA_MCCS_Version_Spec     vspec);
 
+#ifdef MCCS_VERSION_ID
 Display_Feature_Metadata *
 get_version_feature_info_by_version_id_dfm(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Id    mccs_version_id,
       bool                    with_default,
       bool                    version_sensitive);
+#endif
 
 Display_Feature_Metadata *
 get_version_feature_info_by_vspec_dfm(
