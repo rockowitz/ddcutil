@@ -31,7 +31,6 @@
 
 #include "ddcutil_types.h"
 
-
 typedef struct {
    FILE *              fout;
    FILE *              ferr;
@@ -47,8 +46,8 @@ Thread_Output_Settings *  get_thread_settings();  // get settings for the curren
 // Output redirection
 //
 // Note: FILE * externs FOUT and FERR were eliminated when output redirection
-// was made thread specific.  Use fout() and ferr().
-// Note these are used within functions that are part of the shared library.
+// was made thread specific.  Use fout() and ferr() instead.
+// These are used within functions that are part of the shared library.
 
 void set_fout(FILE * fout);
 void set_ferr(FILE * ferr);
@@ -66,6 +65,5 @@ DDCA_Output_Level set_output_level(DDCA_Output_Level newval);
 void set_default_thread_output_level(DDCA_Output_Level ol);
 // const  adding "const" would require api change to ddca_output_level_name()
 char *            output_level_name(DDCA_Output_Level val);
-
 
 #endif /* CORE_PER_THREAD_SETTINGS_H_ */

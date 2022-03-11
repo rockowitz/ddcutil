@@ -120,9 +120,9 @@ Thread_Output_Settings *  get_thread_settings() {
 
 
 // Issue: How to specify that output should be discarded vs reset to stdout?
-// issue will resetting report dest cause conflicts?
-// To reset to STDOUT, use constant stdout in stdio.h  - NO - screws up rpt_util
-// problem:
+// Issue: Will resetting report dest cause conflicts?
+// Note: The obvious solution of using constant stdout in studio.h to reset
+// output to STDOUT screws up rpt_util
 
 /** Redirect output on the current thread that would normally go to **stdout**.
  *
@@ -138,7 +138,6 @@ void set_fout(FILE * fout) {
    if (debug)
       printf("(%s) tid=%ld, dests=%p, fout=%p, stdout=%p\n",
              __func__, dests->tid, (void*)dests, (void*)fout, (void*)stdout);
-   // FOUT = fout;
    rpt_change_output_dest(fout);
 }
 
