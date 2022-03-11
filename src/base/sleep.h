@@ -17,7 +17,7 @@
 // Perform sleep
 
 void sleep_millis(int milliseconds);
-void sleep_millis_with_tracex(
+void sleep_millis_with_trace(
         int          milliseconds,
         const char * func,
         int          lineno,

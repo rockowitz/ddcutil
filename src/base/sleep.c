@@ -107,7 +107,7 @@ void sleep_millis(int milliseconds) {
  * \param filename     name of file from which sleep was invoked
  * \param message      text to be appended to trace message
  */
-void sleep_millis_with_tracex(
+void sleep_millis_with_trace(
         int          milliseconds,
         const char * func,
         int          lineno,

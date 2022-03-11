@@ -285,7 +285,7 @@ void tuned_sleep_with_tracex(
          }
       }
       else {
-         sleep_millis_with_tracex(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
+         sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
       }
    }   // !suppress
 
@@ -314,7 +314,7 @@ void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, co
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
       DBGMSF(debug, "Sleeping for %d milliseconds", sleep_time);
       // sleep_millis_with_tracex(sleep_time, func, lineno, filename, "deferred");
-      sleep_millis_with_tracex(sleep_time, __func__, __LINE__, __FILE__, "deferred");
+      sleep_millis_with_trace(sleep_time, __func__, __LINE__, __FILE__, "deferred");
    }
 }
 

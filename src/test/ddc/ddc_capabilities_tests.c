@@ -66,7 +66,7 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
       goto bye;
 
    // usleep(TIMEOUT);
-   sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
+   sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
 
    // rc = perform_i2c_write(file, write_mode, len_packet_bytes-1, packet_bytes+1);
    set_i2c_write_mode(write_mode);

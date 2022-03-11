@@ -72,7 +72,7 @@ void read_edid_ala_libxcm(int busno) {
    }
    else {
       // usleep(TIMEOUT);
-      sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
+      sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
       edidbuf = calloc(256, sizeof(Byte) );
       rc = read(fd, edidbuf, 128);
       printf("(%s) read() returned %d\n", __func__, rc);
@@ -106,7 +106,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
    if (rc < 0)
       goto bye;
    // usleep(TIMEOUT);
-   sleep_millis_with_tracex(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
+   sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, __LINE__, __FILE__, NULL);
 
    Byte byte_to_write = 0x00;
    set_i2c_write_mode(write_mode);
