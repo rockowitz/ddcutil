@@ -3,7 +3,7 @@
  *  VCP (aka MCCS) version specification
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -191,6 +191,7 @@ char * format_vspec_verbose(DDCA_MCCS_Version_Spec vspec) {
 }
 
 
+#ifdef MCCS_VERSION_ID
 Value_Name_Title_Table version_id_table = {
       VNT(DDCA_MCCS_V10,   "1.0"),
       VNT(DDCA_MCCS_V20,   "2.0"),
@@ -241,6 +242,7 @@ char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id) {
    DBGMSF(debug, "Returning: %s", result);
    return result;
 }
+#endif
 
 
 /** Converts a string representation of an MCCS version, e.g. "2.2"
@@ -260,6 +262,7 @@ DDCA_MCCS_Version_Spec parse_vspec(char * s) {
 }
 
 
+#ifdef MCCS_VERSION_SPEC
 /** Converts a MCCS version spec (integer pair) to a version id (enumeration).
  *
  * @param vspec version spec
@@ -319,3 +322,4 @@ DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id) {
    DBGMSF(debug, "Returning: %d.%d", vspec.major, vspec.minor);
    return vspec;
 }
+#endif
