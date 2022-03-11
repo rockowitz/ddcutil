@@ -6,7 +6,7 @@
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_SLEEP_H_
@@ -25,7 +25,7 @@ void sleep_millis_with_trace(
         const char * message);
 
 #define SLEEP_MILLIS_WITH_TRACE(_millis, _msg) \
-   sleep_millis_with_tracex(_millis, __func__, __LINE__, __FILE__, _msg)
+   sleep_millis_with_trace(_millis, __func__, __LINE__, __FILE__, _msg)
 
 // Sleep statistics
 
