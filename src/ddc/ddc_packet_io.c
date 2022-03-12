@@ -256,8 +256,6 @@ ddc_open_display(
    TRACED_ASSERT(!dh || dh->dref->pedid);
 
    if (ddcrc == 0) {
-      if (dref->io_path.io_mode != DDCA_IO_USB)
-         TUNED_SLEEP_WITH_TRACE(dh, SE_POST_OPEN, NULL);
       dref->flags |= DREF_OPEN;
       // protect with lock?
       TRACED_ASSERT(open_displays);
