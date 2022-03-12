@@ -1,6 +1,6 @@
 // per_thread_data.c
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -24,6 +24,7 @@
 #endif
 
 #include "util/debug_util.h"
+#include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -377,23 +378,6 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
    ptd_cross_thread_operation_end();
 }
 
-/** Integer comparison function with signature GCompareFunc
- */
-static gint compare_int_list_entries(
-      gconstpointer a,
-      gconstpointer b)
-{
-   int ia = GPOINTER_TO_INT(a);
-   int ib = GPOINTER_TO_INT(b);
-   gint result = 0;
-   if (ia < ib)
-      result = -1;
-   else if (ia > ib)
-      result = 1;
-   // DBGMSG("a=%p, ia=%d, b=%p, ib=%d, returning %d", a, ia, b, ib, result);
-   return result;
-}
-
 
 /** Apply a given function to all #Per_Thread_Data structs, ordered by thread id.
  *  Note that this report includes structs for threads that have been closed.
@@ -411,7 +395,7 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
 
    DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
    GList * keys = g_hash_table_get_keys (per_thread_data_hash);
-   GList * new_head = g_list_sort(keys, compare_int_list_entries); // not working
+   GList * new_head = g_list_sort(keys, gaux_ptr_intcomp); // not working
    GList * l;
    for (l = new_head; l != NULL; l = l->next) {
       int key = GPOINTER_TO_INT(l->data);

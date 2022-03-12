@@ -106,6 +106,14 @@ g_list_to_g_array(
 }
 
 
+// GCompareFunc functions
+// signature:
+//    gint
+//    (* GCompareFunc) (
+//      gconstpointer a,
+//      gconstpointer b
+//    )
+
 /** String comparison function used by g_ptr_array_sort()
  *
  * @param a pointer to first string
@@ -123,6 +131,27 @@ gaux_ptr_scomp(
    // printf("(%s) bp = %p -> -> %p -> |%s|\n", __func__, bp, *bp, *bp);
    return g_ascii_strcasecmp(*ap,*bp);
 }
+
+
+/** Integer comparison function with signature GCompareFunc
+ */
+gint
+gaux_ptr_intcomp(
+      gconstpointer a,
+      gconstpointer b)
+{
+   int ia = GPOINTER_TO_INT(a);
+   int ib = GPOINTER_TO_INT(b);
+   gint result = 0;
+   if (ia < ib)
+      result = -1;
+   else if (ia > ib)
+      result = 1;
+
+   printf("(%s) a=%p, ia=%d, b=%p, ib=%d, returning %d\n", __func__, a, ia, b, ib, result);
+   return result;
+}
+
 
 
 GPtrArray *

@@ -29,6 +29,11 @@ gaux_ptr_scomp(
       gconstpointer a,
       gconstpointer b);
 
+gint
+gaux_ptr_intcomp(
+      gconstpointer a,
+      gconstpointer b);
+
 void *
 get_thread_dynamic_buffer(
       GPrivate * buf_key_ptr,
