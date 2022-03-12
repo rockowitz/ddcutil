@@ -69,7 +69,6 @@ get_capabilities_into_buffer(
                false,                      // !all_zero_response_ok
                capabilities_buffer_loc);
    Buffer * cap_buffer = *capabilities_buffer_loc;
-   // psc = (ddc_excp) ? ddc_excp->psc: 0;
    psc = ERRINFO_STATUS(ddc_excp);
    assert(psc <= 0);
    if (psc == 0) {
