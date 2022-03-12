@@ -150,14 +150,15 @@ bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
 // Report core settings and command line options
 //
 
-
 static void
 report_performance_options(int depth)
 {
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
+// #ifdef SLEEP_SUPPRESSION
       rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
+// #endif
       bool dsa_enabled =  tsd_get_dsa_enabled_default();
       rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
       if ( dsa_enabled )
