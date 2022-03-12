@@ -1,10 +1,10 @@
-/** @file tuned_sleep.c
+/** \file tuned_sleep.c
  *
  *  Perform sleep. The sleep time is determined by io mode, sleep event time,
  *  and applicable multipliers.
  */
 
-// Copyright (C) 2019-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -25,6 +25,7 @@
 #include "base/sleep.h"
 #include "base/thread_sleep_data.h"
 
+// #ifdef SLEEP_SUPPRESSION
 // Experimental suppression of sleeps after reads
 static bool sleep_suppression_enabled = DEFAULT_SLEEP_LESS;
 
@@ -38,6 +39,7 @@ bool enable_sleep_suppression(bool enable) {
 bool is_sleep_suppression_enabled() {
    return sleep_suppression_enabled;
 }
+// #endif
 
 
 static bool deferred_sleep_enabled = false;
@@ -54,21 +56,18 @@ bool is_deferred_sleep_enabled() {
 }
 
 
-
+//
+// Perform sleep
+//
 
 /* Two multipliers are applied to the sleep time determined from the
  * io mode and event type.
  *
- * sleep_multiplier_factor: set globally, e.g. from arg passed on
- * command line.  Consider making thread specific.
+ * sleep_multiplier_factor: Set globally, e.g. from arg passed on
+ * command line.  (Consider making thread specific.)
  *
- * sleep_multiplier_ct: Per thread adjustment,initiated by io retries.
+ * sleep_multiplier_ct: Per thread adjustment,initiated by IO retries.
  */
-
-
-//
-// Perform sleep
-//
 
 /** Sleep for the period of time required by the DDC protocol, as indicated
  *  by the io mode and sleep event type.
@@ -84,15 +83,13 @@ bool is_deferred_sleep_enabled() {
  *  error statistics be maintained on a per-display basis, either
  *  in the display reference or display handle.
  *
- * \param io_mode     communication mechanism
  * \param event_type  reason for sleep
  * \param func        name of function that invoked sleep
  * \param lineno      line number in file where sleep was invoked
  * \param filename    name of file from which sleep was invoked
  * \param msg         text to append to trace message
  */
-void tuned_sleep_with_tracex(
-      // DDCA_IO_Mode     io_mode,
+void tuned_sleep_with_trace(
       Display_Handle * dh,
       Sleep_Event_Type event_type,
       int              special_sleep_time_millis,
@@ -101,7 +98,7 @@ void tuned_sleep_with_tracex(
       const char *     filename,
       const char *     msg)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. Sleep event type = %s, dh=%s",
                  sleep_event_name(event_type), dh_repr_t(dh));
    assert(dh);
@@ -112,103 +109,88 @@ void tuned_sleep_with_tracex(
 
    int spec_sleep_time_millis = 0;    // should be a default
    bool deferrable_sleep = false;
+// #ifdef SLEEP_SUPPRESSION
    bool suppress = false;
+// #endif
 
-   if (event_type == SE_SPECIAL) {
-      // 4/2020: no current use
-      spec_sleep_time_millis = special_sleep_time_millis;
-   }
-   else {
-      // switch within switch is hard to read, use if else
-      if (io_mode == DDCA_IO_I2C) {
-         switch(event_type) {
 
-         // Sleep events with values defined in DDC/CI spec
+   if (io_mode == DDCA_IO_I2C) {
+      switch(event_type) {
 
-         case (SE_WRITE_TO_READ):
-               // 4.3 Get VCP Feature & VCP Feature Reply:
-               //     The host should wait at least 40 ms in order to enable the decoding and
-               //     and preparation of the reply message by the display
-               // 4.6 Capabilities Request & Reply:
-               //     write to read interval unclear, assume 50 ms
-               //  Use 50 ms for both
-               //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-               break;
-         case (SE_POST_WRITE):  // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
-               // 4.4 Set VCP Feature:
-               //   The host should wait at least 50ms to ensure next message is received by the display
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
-               deferrable_sleep = deferred_sleep_enabled;
-               break;
-         case (SE_POST_READ):
-               deferrable_sleep = deferred_sleep_enabled;
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
-               if (sleep_suppression_enabled) {
-                  suppress = true;
-                  // DBGMSF(debug, "Done.     Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
-                  // return;  // TEMP
-               }
-               break;
-         case (SE_POST_SAVE_SETTINGS):
-               // 4.5 Save Current Settings:
-               // The host should wait at least 200 ms before sending the next message to the display
-               deferrable_sleep = deferred_sleep_enabled;
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS;   // per DDC spec
-               break;
-         case SE_MULTI_PART_WRITE_TO_READ:
-            // Not defined in spec for capabilities or table read. Assume 50 ms.
-            //
-            // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
-            // from one inside a multi part read, and always uses SE_WRITE_TO_READ.
-            // Address this by using 50 ms for SE_WRITE_TO_READ.
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            break;
-         case SE_AFTER_EACH_CAP_TABLE_SEGMENT:
+      // Sleep events with values defined in DDC/CI spec
+
+      case (SE_WRITE_TO_READ):
+            // 4.3 Get VCP Feature & VCP Feature Reply:
+            //     The host should wait at least 40 ms in order to enable the decoding and
+            //     and preparation of the reply message by the display
             // 4.6 Capabilities Request & Reply:
-            //     The host should wait at least 50ms before sending the next message to the display
-            // 4.8.1 Table Write
-            //     The host should wait at least 50ms before sending the next message to the display
-            // 4.8.2 Table Read
-            //     The host should wait at least 50ms before sending the next message to the display
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
+            //     write to read interval unclear, assume 50 ms
+            //  Use 50 ms for both
+            //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
             break;
-         case SE_POST_CAP_TABLE_COMMAND:
-            // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
-            // just between segments
+      case (SE_POST_WRITE):  // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
+            // 4.4 Set VCP Feature:
+            //   The host should wait at least 50ms to ensure next message is received by the display
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
             deferrable_sleep = deferred_sleep_enabled;
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
             break;
+      case (SE_POST_READ):
+            deferrable_sleep = deferred_sleep_enabled;
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+            if (sleep_suppression_enabled) {
+               suppress = true;
+               // DBGMSF(debug, "Done.     Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
+               // return;  // TEMP
+            }
+            break;
+      case (SE_POST_SAVE_SETTINGS):
+            // 4.5 Save Current Settings:
+            // The host should wait at least 200 ms before sending the next message to the display
+            deferrable_sleep = deferred_sleep_enabled;
+            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS;   // per DDC spec
+            break;
+      case SE_MULTI_PART_WRITE_TO_READ:
+         // Not defined in spec for capabilities or table read. Assume 50 ms.
+         //
+         // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
+         // from one inside a multi part read, and always uses SE_WRITE_TO_READ.
+         // Address this by using 50 ms for SE_WRITE_TO_READ.
+         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+         break;
+      case SE_AFTER_EACH_CAP_TABLE_SEGMENT:
+         // 4.6 Capabilities Request & Reply:
+         //     The host should wait at least 50ms before sending the next message to the display
+         // 4.8.1 Table Write
+         //     The host should wait at least 50ms before sending the next message to the display
+         // 4.8.2 Table Read
+         //     The host should wait at least 50ms before sending the next message to the display
+         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
+         break;
+      case SE_POST_CAP_TABLE_COMMAND:
+         // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
+         // just between segments
+         deferrable_sleep = deferred_sleep_enabled;
+         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
+         break;
 
-         // Not in DDC/CI spec
+      // Not in DDC/CI spec
 
-         case (SE_POST_OPEN):   // needed?
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            deferrable_sleep = true;   // ??
-            break;
-         case SE_DDC_NULL:
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-            break;
-         case SE_PRE_EDID:
-             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-             suppress = sleep_suppression_enabled;
-             break;
-         case SE_OTHER:
-            // currently unused
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            // if (sleep_suppression_enabled) {
-            //     suppress = true;
-            break;
-         case SE_PRE_MULTI_PART_READ:
-            // before reading capabilities - this is based on testing, not defined in spec
-            spec_sleep_time_millis = 200;
-            break;
+      case SE_DDC_NULL:
+         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         break;
+      case SE_PRE_MULTI_PART_READ:
+         // before reading capabilities - this is based on testing, not defined in spec
+         spec_sleep_time_millis = 200;
+         break;
+      case SE_SPECIAL:
+         // 4/2020: no current use
+         spec_sleep_time_millis = special_sleep_time_millis;
+         break;
+      }  // switch within DDC_IO_DEVI2C
+   } // end of DDCA_IO_DEVI2C
 
-         default:
-              spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-         }  // switch within DDC_IO_DEVI2C
-      } // end of DDCA_IO_DEVI2C
-
+#ifdef OLD_ADL
       else if (io_mode == DDCA_IO_ADL) {
          switch(event_type) {
          case (SE_WRITE_TO_READ):
@@ -227,18 +209,19 @@ void tuned_sleep_with_tracex(
             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
          }  // switch
       }  // DDCA_IO_ADL
+#endif
 
-      else {
-         assert(io_mode == DDCA_IO_USB);
-         PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
-      }
-   }  // not SE_SPECIAL
+   else {
+      assert(io_mode == DDCA_IO_USB);
+      PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
+   }
 
-
+// #ifdef SLEEP_SUPPRESSION
    if (suppress) {
       DBGMSF(debug, "Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
    }
    else {
+// #endif
       // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
 
       // TODO:
@@ -287,7 +270,9 @@ void tuned_sleep_with_tracex(
       else {
          sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
       }
+// #ifdef SLEEP_SUPPRESSION
    }   // !suppress
+// #endif
 
    DBGMSF(debug, "Done.");
 }
@@ -299,10 +284,10 @@ void tuned_sleep_with_tracex(
  *  The delayed io start time is stored in the display reference associated with
  *  the display handle, so persists across open and close
  *
- *  @param  dh        #Display_Handle
+ *  \param  dh        #Display_Handle
  *  #param  func      name of function performing check
- *  @param  lineno    line number of check
- *  @param  filename  file from which the check is invoked
+ *  \param  lineno    line number of check
+ *  \param  filename  file from which the check is invoked
  */
 void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, const char * filename) {
    bool debug = false;
@@ -317,4 +302,3 @@ void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, co
       sleep_millis_with_trace(sleep_time, __func__, __LINE__, __FILE__, "deferred");
    }
 }
-
