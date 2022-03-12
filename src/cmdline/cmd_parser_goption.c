@@ -181,8 +181,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
    gboolean enable_udf_flag = DEFAULT_ENABLE_UDF;
-   const char * enable_udf_expl = (enable_udf_flag) ? "Enable User Define Features (default)" : "Enable User Define Features";
-   const char * disable_udf_expl = (enable_udf_flag) ? "Disable User Defined Features" : "Disable User Define Features (default)";
+   const char * enable_udf_expl = (enable_udf_flag) ? "Enable User Defined Features (default)" : "Enable User Defined Features";
+   const char * disable_udf_expl = (enable_udf_flag) ? "Disable User Defined Features" : "Disable User Defined Features (default)";
 #ifdef USE_USB
    gboolean enable_usb_flag = DEFAULT_ENABLE_USB;
    const char * enable_usb_expl = (enable_usb_flag) ? "Detect USB devices (default)" : "Detect USB devices";
