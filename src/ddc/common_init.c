@@ -137,7 +137,9 @@ void init_max_tries(Parsed_Cmd * parsed_cmd)
 
 void init_performance_options(Parsed_Cmd * parsed_cmd)
 {
+// #ifdef SLEEP_SUPPRESSION
    enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
+// #endif
    enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
