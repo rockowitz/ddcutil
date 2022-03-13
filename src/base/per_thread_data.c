@@ -395,7 +395,7 @@ void ptd_apply_all_sorted(Ptd_Func func, void * arg) {
 
    DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_thread_data_hash));
    GList * keys = g_hash_table_get_keys (per_thread_data_hash);
-   GList * new_head = g_list_sort(keys, gaux_ptr_intcomp); // not working
+   GList * new_head = g_list_sort(keys, gaux_ptr_intcomp);
    GList * l;
    for (l = new_head; l != NULL; l = l->next) {
       int key = GPOINTER_TO_INT(l->data);
