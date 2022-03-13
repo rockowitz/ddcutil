@@ -995,8 +995,12 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    dh->dref = dref;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       dh->repr = g_strdup_printf(
-                     "Display_Handle[i2c: fd=%d, busno=%d @%p]",
-                     dh->fd, dh->dref->io_path.path.i2c_busno, (void*)dh);
+#ifdef OLD
+                    "Display_Handle[i2c: fd=%d, busno=%d @%p]",
+                    dh->fd, dh->dref->io_path.path.i2c_busno, (void*)dh);
+#endif
+                     "Display_Handle[i2c-%d: fd=%d @%p]",
+                     dh->dref->io_path.path.i2c_busno, dh->fd, (void*)dh);
    }
 #ifdef USE_USB
    else if (dref->io_path.io_mode == DDCA_IO_USB) {
