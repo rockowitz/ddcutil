@@ -98,7 +98,7 @@ void tuned_sleep_with_trace(
       const char *     filename,
       const char *     msg)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. Sleep event type = %s, dh=%s",
                  sleep_event_name(event_type), dh_repr_t(dh));
    assert(dh);
@@ -237,19 +237,18 @@ void tuned_sleep_with_trace(
       int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
       double adjusted_sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
                                           spec_sleep_time_millis * dynamic_sleep_adjustment_factor;
-      if (debug && false) {    // TMI for now
-         DBGMSG("deferrable_sleep = %s,"
-                " sleep_time_millis = %d,"
-                " sleep_multiplier_ct = %d,"
-                " sleep_multiplier_factor = %2.1f, dynamic_sleep_adjustment_factor = %2.1f,"
-                " modified_sleep_time_millis=%5.2f",
-                // sleep_event_name(event_type),
-                sbool(deferrable_sleep),
-                spec_sleep_time_millis,
-                sleep_multiplier_ct,
-                sleep_multiplier_factor, dynamic_sleep_adjustment_factor,
-                adjusted_sleep_time_millis);
-      }
+      DBGMSF(debug,
+             "deferrable_sleep = %s,"
+             " sleep_time_millis = %d,"
+             " sleep_multiplier_ct = %d,"
+             " sleep_multiplier_factor = %2.1f, dynamic_sleep_adjustment_factor = %2.1f,"
+             " modified_sleep_time_millis=%5.2f",
+             // sleep_event_name(event_type),
+             sbool(deferrable_sleep),
+             spec_sleep_time_millis,
+             sleep_multiplier_ct,
+             sleep_multiplier_factor, dynamic_sleep_adjustment_factor,
+             adjusted_sleep_time_millis);
 
       record_sleep_event(event_type);
 
