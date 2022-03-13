@@ -6,7 +6,7 @@
  *  are not unidirectional.  The functionality has been split into 3 files for clarity.
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PER_THREAD_DATA_H_
@@ -52,7 +52,6 @@ typedef struct {
    bool   initialized;
    bool   dynamic_sleep_enabled;
    pid_t  thread_id;
-   // Display_Ref * dref;
    char * description;
 
    // Standard sleep adjustment settings
