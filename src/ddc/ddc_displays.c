@@ -876,7 +876,8 @@ bye:
 }
 
 
-/**
+/** Spawns threads to perform initial checks and waits for them all to complete.
+ *
  *  \param all_displays #GPtrArray of pointers to #Display_Ref
  */
 void ddc_async_scan(GPtrArray * all_displays) {
@@ -890,9 +891,9 @@ void ddc_async_scan(GPtrArray * all_displays) {
 
       GThread * th =
       g_thread_new(
-            dref_repr_t(dref),
+            dref_repr_t(dref),                // thread name
             threaded_initial_checks_by_dref,
-            dref);
+            dref);                            // pass pointer to display ref as data
       g_ptr_array_add(threads, th);
    }
    DBGMSF(debug, "Started %d threads", threads->len);
