@@ -48,8 +48,6 @@ void   tsd_bump_sleep_multiplier_changer_ct();
 
 // Reporting
 void   report_thread_sleep_data(Per_Thread_Data * data, int depth);
-// void   report_all_thread_sleep_data(int depth);
-
-void report_all_thread_sleep_data(int depth);
+void   report_all_thread_sleep_data(int depth);
 
 #endif /* THREAD_SLEEP_DATA_H_ */
