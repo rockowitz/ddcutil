@@ -6,7 +6,7 @@
  *  small functions for managing various fields.
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #include <assert.h>
@@ -43,10 +43,9 @@
 
 // Defaults for new threads.  Default sleep multiplier factor can be adjusted,
 // Default sleep multiplier count cannot.
-static       double default_sleep_multiplier_factor = 1.0;
+static       double default_sleep_multiplier_factor = 1.0; // may be changed by --sleep-multiplier option
 static const int    default_sleep_multiplier_count  = 1;
 static       bool   default_dynamic_sleep_enabled   = false;
-static       double global_sleep_multiplier_factor = 1.0;   // as set by --sleep-multiplier option
 
 
 //
@@ -95,34 +94,6 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
 }
 
 
-
-#ifdef OLD
-// typedef GFunc, invoked by g_hash_table_foreach
-static void
-tsd_report_one_thread_data_hash_table_entry(
-      gpointer key,
-      gpointer value,
-      gpointer user_data)
-{
-   bool debug = false;
-   DBGMSF(debug, "key (thread_id) = %d", GPOINTER_TO_INT(key));
-   Per_Thread_Data * data = value;
-   // This pointer is valid even after a thread goes away, since it
-   // points to a block on the heap.  However, if a copy of the
-   // pointer is stored in thread local memory, Valgrind complains
-   // of an access error when the thread goes away.
-   // DBGMSG("data=%p");
-   // assert(data);
-   // DBGMSG("key in data: %d", (int) data->thread_id);
-   int depth = GPOINTER_TO_INT(user_data);
-   // DBGMSG("depth=%d", depth);
-   // dbgrpt_thread_sleep_data(data, 4);
-   report_thread_sleep_data(data, depth);
-   rpt_nl();
-}
-#endif
-
-
 void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    // rpt_vstring(depth, "Per_Thread_Data:");  // needed?
@@ -152,100 +123,33 @@ void report_all_thread_sleep_data(int depth) {
 }
 
 
-#ifdef OLD
-// Registers a Per_Thread_Data instance in the master hash table for all threads
-static
-void register_thread_sleep_data(Per_Thread_Data * per_thread_data) {
-   bool debug = false;
-   DBGMSF(debug, "per_thread_data=%p", per_thread_data);
-   g_mutex_lock(&thread_sleep_data_mutex);
-   if (!per_thread_data_hash) {
-      per_thread_data_hash = g_hash_table_new(g_direct_hash, NULL);
-   }
-   assert(!g_hash_table_contains(per_thread_data_hash,
-                                 GINT_TO_POINTER(per_thread_data->thread_id)));
-   g_hash_table_insert(per_thread_data_hash,
-                       GINT_TO_POINTER(per_thread_data->thread_id),
-                       per_thread_data);
-   DBGMSF(debug, "Inserted Thead_Sleep_Data for thread id = %d", per_thread_data->thread_id);
-   dbgrpt_thread_sleep_data(per_thread_data, 1);
-   g_mutex_unlock(&thread_sleep_data_mutex);
-}
-#endif
-
-
 //
 // Obtain, initialize, and reset sleep data for current thread
 
-
-#ifdef OLD
-// Retrieves Thead_Sleep_Data for the current thread
-// Creates and initializes a new instance if not found
-// static
-Per_Thread_Data * get_thread_sleep_data0(bool create_if_necessary) {
-   bool debug = false;
-   pid_t cur_thread_id = syscall(SYS_gettid);
-   // DBGMSF(debug, "Starting. create_if_necessary = %s", sbool(create_if_necessary));
-
-   static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
-   // gchar * buf =
-   Per_Thread_Data * data =
-   get_thread_fixed_buffer(
-         &per_thread_key,
-         sizeof(Per_Thread_Data));
-
-   // Per_Thread_Data *data = g_private_get(&per_thread_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, data=%p\n", __func__, this_thread, data);
-
-   // DBGMSF(debug, "data=%p, create_if_necessary=%s", data, sbool(create_if_necessary));
-   assert  ( ((data->thread_id == 0) && !data->initialized)  ||
-             ((data->thread_id != 0) && data->initialized) );
-   if (data->thread_id == 0) {
-  //  if (!data && create_if_necessary) {
-      // DBGMSF(debug, "Creating Per_Thread_Data for thread %d", cur_thread_id);
-     //  data = g_new0(Per_Thread_Data, 1);
-      data->thread_id = cur_thread_id;
-      init_thread_sleep_data(data);
-      //  g_private_set(&per_thread_key, data);
-      // dbgrpt_thread_sleep_data(data,1);
-      register_thread_sleep_data(data);
-   }
-   DBGMSF(debug, "Returning: %p, Per_Thread_Data for thread %d", data, data->thread_id);
-   return data;
-}
-#endif
-
-
 Per_Thread_Data * tsd_get_thread_sleep_data() {
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
+   // n. init_thread_sleep_data() is called from per-thread data initializer
    assert(ptd->thread_sleep_data_defined);
-#ifdef OLD  // init_thread_sleep_data() now called from per-thread data initializer
-   if (!ptd->thread_sleep_data_defined) {
-      // DBGMSG("thread_sleep_data_defined = false");
-      init_thread_sleep_data(ptd);
-      // DBGMSG("After initialization: ");
-      // dbgrpt_per_thread_data(ptd, 4);
-   }
-#endif
    return ptd;
 }
 
 
-// initialize a single instance
+// initialize a single instance, called from init_per_thread_data()
 void init_thread_sleep_data(Per_Thread_Data * data) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. data=%p", (void*)data);
    data->dynamic_sleep_enabled = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
    data->highest_sleep_multiplier_value = 1;
 
    data->current_sleep_adjustment_factor = 1.0;
    data->initialized = true;
-   data->sleep_multiplier_factor = global_sleep_multiplier_factor;    // default
-   data->thread_adjustment_increment = global_sleep_multiplier_factor;
+   data->sleep_multiplier_factor = default_sleep_multiplier_factor;
+   data->thread_adjustment_increment = default_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
 
    data->thread_sleep_data_defined = true;   // vs data->initialized
+   DBGMSF(debug, "Done. sleep_multiplier_factor = %5.2f", data->sleep_multiplier_factor);
 }
 
 
@@ -266,20 +170,15 @@ void wrap_reset_thread_sleep_data(Per_Thread_Data * data, void * arg) {
    reset_thread_sleep_data(data);
 }
 
+//
+// Operations on all instances
+//
 
 void reset_all_thread_sleep_data() {
    if (per_thread_data_hash) {
       ptd_apply_all_sorted(&wrap_reset_thread_sleep_data, NULL );
    }
 }
-
-
-
-
-//
-// Operations on all instances
-//
-
 
 
 //
@@ -343,7 +242,7 @@ double tsd_get_sleep_multiplier_factor() {
 
 /** Sets the sleep multiplier factor for the current thread.
  *
- *  \parsm factor  sleep multiplier factor
+ *  \param factor  sleep multiplier factor
  */
 void tsd_set_sleep_multiplier_factor(double factor) {
    bool debug = false;
@@ -374,8 +273,6 @@ double get_global_sleep_multiplier_factor() {
    return global_sleep_multiplier_factor;
 }
 #endif
-
-
 
 
 //
@@ -505,11 +402,12 @@ bool tsd_dsa_is_enabled() {
    return result;
 }
 
+
 void tsd_set_dsa_enabled_default(bool enabled) {
    default_dynamic_sleep_enabled = enabled;
 }
 
+
 bool tsd_get_dsa_enabled_default() {
    return default_dynamic_sleep_enabled;
 }
-
