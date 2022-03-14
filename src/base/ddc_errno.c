@@ -2,7 +2,7 @@
  * Error codes internal to **ddcutil**.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -141,8 +141,8 @@ bool ddcrc_is_not_error(Public_Status_Code gsc) {
 }
 
 
-/* Returns a sting description of a **ddcutil** status code that is
- * intended for use in error messages.
+/* Returns a sting description of a **ddcutil** status code.
+ * This description is intended for use in error messages.
  *
  * @param rc  ddcutil status code
  * @return status code description
@@ -172,7 +172,7 @@ char * ddcrc_desc_t(int rc) {
 /** Gets the (unmodulated) ddcutil error number for a symbolic name.
  *
  * @param   error_name   symbolic name, e.g. DDCRC_CHECKSUM
- * @param   p_errnum     where to return error number
+ * @param   errnum_loc   where to return error number
  *
  * Returns:         true if found, false if not
  *
@@ -181,12 +181,12 @@ char * ddcrc_desc_t(int rc) {
  * the return value for this function is always identical to
  * ddc_error_name_to_modulated_number().
  */
-bool ddc_error_name_to_number(const char * error_name, Status_DDC * p_errnum) {
+bool ddc_error_name_to_number(const char * error_name, Status_DDC * errnum_loc) {
    int found = false;
-   *p_errnum = 0;
+   *errnum_loc = 0;
    for (int ndx = 0; ndx < ddcrc_desc_ct; ndx++) {
        if ( streq(ddcrc_info[ndx].name, error_name) ) {
-          *p_errnum = ddcrc_info[ndx].code;
+          *errnum_loc = ddcrc_info[ndx].code;
           found = true;
           break;
        }

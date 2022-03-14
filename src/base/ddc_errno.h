@@ -2,7 +2,7 @@
  * Error codes internal to **ddcutil**.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_ERRNO_H_
@@ -15,7 +15,7 @@
 
 Status_Code_Info * ddcrc_find_status_code_info(int rc);
 
-bool ddc_error_name_to_number(const char * errno_name, Status_DDC * perrno);
+bool ddc_error_name_to_number(const char * errno_name, Status_DDC * errnum_loc);
 
 // Returns status code description:
 char * ddcrc_desc_t(int rc);
