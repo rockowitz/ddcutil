@@ -3,11 +3,11 @@
  * Maintains certain output settings on a per-thread basis.
  * These are:
  *   fout - normally stdout
- *   feer  - normally stderr
+ *   ferr - normally stderr
  *   output level (OL_NORMAL etc.)
  *
  *   These are maintained on per-thread basis because they are changeable on
- *   an API thread, and the change should not affect other threads.
+ *   an API thread, and a change in one thread should not affect other threads.
  *   However, output level can be set on the ddcutil command line, and should
  *   apply to all threads.  Hence the ability to set a value for all threads.
  *

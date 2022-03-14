@@ -50,7 +50,7 @@ static void allocate_default_thread_output_settings() {
 
 
 /** Gets all settings to be used for new threads */
-Thread_Output_Settings * get_default_thread_output_settings() {
+static Thread_Output_Settings * get_default_thread_output_settings() {
    g_mutex_lock(&default_thread_output_settings_mutex);
    if ( !default_thread_output_settings )
       allocate_default_thread_output_settings();
@@ -62,7 +62,11 @@ Thread_Output_Settings * get_default_thread_output_settings() {
 }
 
 
-/** Sets the fout and ferr values to be used for newly created threads */
+/** Sets the fout and ferr values to be used for newly created threads
+ *
+ *  \param fout destination for output that would normally be directed to **stdout**
+ *  \param ferr destination for output that would normally be directed to **stderr**
+ */
 void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
    bool debug = false;
    if (debug)
@@ -79,7 +83,10 @@ void set_default_thread_output_settings(FILE * fout, FILE * ferr) {
 }
 
 
-/** Sets the output_level to be used for newly created threads */
+/** Sets the output_level to be used for newly created threads
+ *
+ *  \param ol  output level
+ */
 void set_default_thread_output_level(DDCA_Output_Level ol) {
    bool debug = false;
    if (debug)
@@ -92,7 +99,10 @@ void set_default_thread_output_level(DDCA_Output_Level ol) {
 }
 
 
-/** Gets Thread_Output_Settings struct for the current thread */
+/** Gets Thread_Output_Settings struct for the current thread
+ *
+ *  \return pointer to Thread_Output_Settings struct
+ */
 Thread_Output_Settings *  get_thread_settings() {
    static GPrivate per_thread_dests_key = G_PRIVATE_INIT(g_free);
    bool debug = false;
@@ -124,7 +134,7 @@ Thread_Output_Settings *  get_thread_settings() {
 // Note: The obvious solution of using constant stdout in studio.h to reset
 // output to STDOUT screws up rpt_util
 
-/** Redirect output on the current thread that would normally go to **stdout**.
+/** Redirect output on the current thread that would normally be directed to **stdout**.
  *
  *  @param fout pointer to output stream
  *
@@ -142,7 +152,7 @@ void set_fout(FILE * fout) {
 }
 
 
-/** Redirect output that would normally go to **stdout** back to **stdout**.
+/** Redirect output that would normally be directed to **stdout** back to **stdout**.
  * @ingroup output_redirection
  */
 void set_fout_to_default() {
@@ -155,7 +165,7 @@ void set_fout_to_default() {
 }
 
 
-/** Redirect output that would normally go to **stderr**..
+/** Redirect output that would normally be directed to **stderr**..
  *
  *  @param ferr pointer to output stream
  *
@@ -167,7 +177,7 @@ void set_ferr(FILE * ferr) {
 }
 
 
-/** Redirect output that would normally go to **stderr** back to **stderr**.
+/** Redirect output that would normally be directed to **stderr** back to **stderr**.
  * @ingroup output_redirection
  */
 void set_ferr_to_default() {
@@ -205,26 +215,21 @@ FILE * ferr() {
 
 
 #ifdef OVERKILL
-
 // Functions that allow for temporarily changing the output destination.
-
 
 void push_fout(FILE* new_dest) {
    assert(fout_stack_pos < FOUT_STACK_SIZE-1);
    fout_stack[++fout_stack_pos] = new_dest;
 }
 
-
 void pop_fout() {
    if (fout_stack_pos >= 0)
       fout_stack_pos--;
 }
 
-
 void reset_fout_stack() {
    fout_stack_pos = 0;
 }
-
 
 FILE * cur_fout() {
    // special handling for unpushed case because can't statically initialize
