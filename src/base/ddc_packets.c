@@ -2,7 +2,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -83,7 +83,6 @@ Byte ddc_checksum(Byte * bytes, int len, bool altmode) {
    for (int ndx = 1; ndx < len; ndx++) {
       checksum ^= bytes[ndx];
    }
-   // assert(checksum == ddc_checksum_old(bytes, len, altmode));
    return checksum;
 }
 
@@ -115,6 +114,7 @@ void test_checksum() {
 #endif
 
 
+#ifdef UNUSED
 bool valid_ddc_packet_checksum(Byte * readbuf) {
    bool debug = false;
    bool result = false;
@@ -128,14 +128,15 @@ bool valid_ddc_packet_checksum(Byte * readbuf) {
       readbuf[1] = 0x51;   // dangerous
       unsigned char expected_checksum = ddc_checksum(readbuf, response_size_wo_checksum, false);
       unsigned char actual_checksum   = readbuf[response_size_wo_checksum];
-      DBGMSF(debug, "actual checksum = 0x%02x, expected = 0x%02x",
-                    actual_checksum, expected_checksum);
+      DBGMSF(debug, "data_size=%d, actual checksum = 0x%02x, expected = 0x%02x",
+                    data_size, actual_checksum, expected_checksum);
       result = (expected_checksum == actual_checksum);
    }
 
    DBGMSF(debug, "Returning: %d", result);
    return result;
 }
+#endif
 
 
 //
@@ -209,7 +210,7 @@ void free_ddc_packet(DDC_Packet * packet) {
 
    if (packet) {
       if (packet->parsed.raw_parsed) {
-         DBGMSF(debug, "freeing packet->parsed.raw=%p", packet->parsed.raw_parsed);
+         DBGMSF(debug, "freeing packet->parsed.raw_parsed=%p", packet->parsed.raw_parsed);
          free(packet->parsed.raw_parsed);
       }
 
@@ -599,7 +600,8 @@ create_ddc_response_packet(
           "response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
           response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
-   if (response_bytes_buffer_size > 2 && i2c_response_bytes[0] == 0x6e && i2c_response_bytes[1] == 0x6e) {
+   if (response_bytes_buffer_size > 2 && i2c_response_bytes[0] == 0x6e
+                                      && i2c_response_bytes[1] == 0x6e) {
       DDCMSG(debug, "Quirk: response packet starts with double 0x6e");
       i2c_response_bytes++;
       response_bytes_buffer_size--;
@@ -610,7 +612,8 @@ create_ddc_response_packet(
                           response_bytes_buffer_size,
                           tag,
                           packet_ptr_addr);
-   DBGMSF(debug, "create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p", result, *packet_ptr_addr);
+   DBGMSF(debug, "create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p",
+                 result, *packet_ptr_addr);
    if (result == 0) {
       if (isNullPacket(*packet_ptr_addr)) {
          result = DDCRC_NULL_RESPONSE;
@@ -621,8 +624,6 @@ create_ddc_response_packet(
    }
 
    if (result != DDCRC_OK && *packet_ptr_addr) {
-      // if (debug)
-      //    DBGMSG("failure, freeing response packet at %p", *packet_ptr_addr);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_addr);
       // does this cause the free(readbuf) failure in try_read?
       free_ddc_packet(*packet_ptr_addr);
@@ -921,7 +922,8 @@ create_ddc_typed_response_packet(
       case DDC_PACKET_TYPE_CAPABILITIES_RESPONSE:
       case DDC_PACKET_TYPE_TABLE_READ_RESPONSE:
          {
-            Interpreted_Multi_Part_Read_Fragment * aux_data = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
+            Interpreted_Multi_Part_Read_Fragment * aux_data
+                  = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
             packet->parsed.multi_part_read_fragment = aux_data;
             rc = interpret_multi_part_read_response(
                    expected_type,
@@ -933,7 +935,8 @@ create_ddc_typed_response_packet(
 
       case DDC_PACKET_TYPE_QUERY_VCP_RESPONSE:
          {
-            Parsed_Nontable_Vcp_Response * aux_data = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+            Parsed_Nontable_Vcp_Response * aux_data
+                  = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
             packet->parsed.nontable_response = aux_data;
             rc = interpret_vcp_feature_response_std(
                     get_data_start(packet),
@@ -1019,6 +1022,7 @@ create_ddc_multi_part_read_response_packet(
 }
 #endif
 
+
 // VCP Feature response
 
 // 4/2017: used only in ddc_vcp_tests.c:
@@ -1082,7 +1086,6 @@ create_ddc_getvcp_response_packet(
 // Operations on response packets
 // 
 
-
 // VCP Feature Code
 
 /** Extracts the interpretation of a non-table VCP response from a #DDC_Packet.
@@ -1143,7 +1146,7 @@ Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
 void init_ddc_packets() {
    RTTI_ADD_FUNC(create_ddc_base_response_packet);
    RTTI_ADD_FUNC(create_ddc_getvcp_response_packet);
-// RTTI_ADD_FUNC(create_ddc_multi_part_read_response_packet);
+// RTTI_ADD_FUNC(create_ddc_multi_part_read_response_packet);  // unused
    RTTI_ADD_FUNC(create_ddc_response_packet);
    RTTI_ADD_FUNC(create_ddc_typed_response_packet);
    RTTI_ADD_FUNC(interpret_vcp_feature_response_std);

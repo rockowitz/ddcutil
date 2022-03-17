@@ -2,7 +2,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKETS_H_
@@ -19,8 +19,10 @@
 #include "base/status_code_mgt.h"
 #include "base/core.h"
 
+#ifdef UNUSED
 // was in common.h
 #define MAX_DDCCI_PACKET_SIZE   37    //  32 + 5;
+#endif
 
 // largest packet is capabilities response packet, which has 1 byte for reply op code,
 // 2 for offset, and up to 32 bytes fragment
@@ -126,7 +128,9 @@ bool is_double_byte(Byte * pb);
 
 // Byte xor_bytes(Byte * bytes, int len);
 Byte ddc_checksum(Byte * bytes, int len, bool altmode);
+#ifdef UNUSED
 bool valid_ddc_packet_checksum(Byte * readbuf);
+#endif
 // void test_checksum();
 
 
