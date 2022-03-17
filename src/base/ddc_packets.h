@@ -87,7 +87,7 @@ struct {
 } Interpreted_Multi_Part_Read_Fragment;
 
 
-// TODO: Unify with list in ddc_command_codes.h
+// Keep in sync with list in ddc_command_codes.h
 typedef Byte DDC_Packet_Type;
 #define DDC_PACKET_TYPE_NONE                  0x00
 #define DDC_PACKET_TYPE_QUERY_VCP_REQUEST     0x01
