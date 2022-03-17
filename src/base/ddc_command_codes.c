@@ -5,17 +5,16 @@
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "ddc_command_codes.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "util/string_util.h"
 
-#include "vcp/ddc_command_codes.h"
-
-
 //
-// MCCS Command and Response Codes
+// DDC Command and Response Codes
 //
 
 typedef

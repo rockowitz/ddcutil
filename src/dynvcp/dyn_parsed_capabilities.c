@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -19,9 +19,9 @@
 /** \endcond */
 
 #include "base/core.h"
+#include "base/ddc_command_codes.h"
 #include "base/displays.h"
 
-#include "vcp/ddc_command_codes.h"
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"
 

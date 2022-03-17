@@ -20,12 +20,12 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
+#include "base/ddc_command_codes.h"
 #include "base/displays.h"
 #include "base/feature_metadata.h"
 #include "base/rtti.h"
 #include "base/vcp_version.h"
 
-#include "vcp/ddc_command_codes.h"
 #include "vcp/parse_capabilities.h"
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"

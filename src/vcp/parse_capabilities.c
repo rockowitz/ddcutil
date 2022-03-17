@@ -2,7 +2,7 @@
  *  Parse the capabilities string returned by DDC, query the parsed data structure.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -18,14 +18,15 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/ddc_command_codes.h"
 #include "base/displays.h"
 #include "base/vcp_version.h"
 
-#include "vcp/ddc_command_codes.h"
 #include "vcp/parsed_capabilities_feature.h"
 #include "vcp/vcp_feature_codes.h"
 
 #include "vcp/parse_capabilities.h"
+
 
 #undef CAPABILITIES_TESTS
 // #define CAPABILITIES_TESTS
