@@ -6,7 +6,7 @@
 // Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
- 
+
 #include "config.h"
 
 /** \cond */
@@ -19,8 +19,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <xf86drm.h>
-// #include <xf86drmMode.h>
 /** \endcond */
 
 #include "util/debug_util.h"
@@ -677,15 +675,8 @@ void one_drm_connector(
      // DBGMSF("Setting cur->edid_bytes = %p", (void*)cur->edid_bytes);
    }
 
-   // returns 1 if the DRM driver is loaded, 0 otherwise
-   int drm_available = drmAvailable();
-   DBGMSF(debug, "Has a DRM kernel driver been loaded? (drmAvailable()): %s",
-                     sbool(drm_available));
-
    char * driver = find_adapter_and_get_driver( cur->connector_path, -1);
-   assert( !(streq(driver, "nvidia") && drm_available) );
-   free(driver);
-   if (drm_available) {     //  ???
+   if (!(streq(driver, "nvidia") ))  {
       bool has_drm_dp_aux_subdir =          // does is exist? /sys/class/drm/card0-DP-1/drm_dp_aux0
             RPT_ATTR_SINGLE_SUBDIR(
                   depth,
@@ -779,6 +770,7 @@ void one_drm_connector(
       }   // not DP
 
    }  // not Nvidia
+   free(driver);
    if (depth >= 0)
       rpt_nl();
    DBGMSF(debug, "Done.");
@@ -1258,3 +1250,4 @@ char * get_conflicting_drivers_for_bus(int busno) {
    free_sysfs_i2c_info(info);
    return result;
 }
+
