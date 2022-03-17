@@ -1,27 +1,9 @@
-/* ddc_command_codes.c
- *
- * <copyright>
- * Copyright (C) 2014-2016 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** \file ddc_command_codes.c
+ *  DDC/CI command codes
  */
 
-// Direct writes to sysout/syserr: NO
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,6 +17,12 @@
 //
 // MCCS Command and Response Codes
 //
+
+typedef
+struct {
+   Byte    cmd_code;
+   char *  name;
+} Cmd_Code_Table_Entry;
 
 Cmd_Code_Table_Entry cmd_code_table[] = {
       {CMD_VCP_REQUEST          , "VCP Request" },
@@ -54,16 +42,19 @@ Cmd_Code_Table_Entry cmd_code_table[] = {
       {CMD_ID_REQUEST           , "Identification Request" },
       {CMD_CAPABILITIES_REQUEST , "Capabilities Request" },
       {CMD_ENABLE_APP_REPORT    , "Enable Application Report" }
-
 };
+static
 int ddc_cmd_code_count = sizeof(cmd_code_table)/sizeof(Cmd_Code_Table_Entry);
 
 
+#ifdef UNUSED
+static
 Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_index(int ndx) {
    // DBGMSG("ndx=%d, cmd_code_count=%d  ", ndx, cmd_code_count );
    assert( 0 <= ndx && ndx < ddc_cmd_code_count);
    return &cmd_code_table[ndx];
 }
+#endif
 
 // Commented out as part of removing printf statements from code that
 // is part of library.  This function is not currently used.  If needed,
@@ -79,6 +70,7 @@ Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_index(int ndx) {
 //}
 
 
+static
 Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_id(Byte cmd_id) {
    // DBGMSG("Starting. id=0x%02x ", id );
    int ndx = 0;
