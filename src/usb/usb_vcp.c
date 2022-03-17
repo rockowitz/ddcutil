@@ -3,7 +3,7 @@
  * Get and set VCP feature codes for USB connected monitors.
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -491,8 +491,8 @@ usb_get_nontable_vcp_value(
       parsed_response->vcp_code = feature_code;
       parsed_response->valid_response = true;
       parsed_response->supported_opcode = true;
-      parsed_response->cur_value = curval;
-      parsed_response->max_value = maxval;
+      // parsed_response->cur_value = curval;
+      // parsed_response->max_value = maxval;
       parsed_response->mh = (maxval >> 8) & 0xff;
       parsed_response->ml = maxval & 0xff;
       parsed_response->sh = (curval >> 8) & 0xff;

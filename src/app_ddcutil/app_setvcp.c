@@ -3,7 +3,7 @@
  *  Implement the SETVCP command
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -196,13 +196,17 @@ app_set_vcp_value(
          }
 
          if ( value_type == VALUE_TYPE_RELATIVE_PLUS) {
-            longtemp = parsed_response->cur_value + longtemp;
-            if (longtemp > parsed_response->max_value)
-               longtemp = parsed_response->max_value;
+            // longtemp = parsed_response->cur_value + longtemp;
+            // if (longtemp > parsed_response->max_value)
+            //    longtemp = parsed_response->max_value;
+            longtemp = RESPONSE_CUR_VALUE(parsed_response) + longtemp;
+            if (longtemp > RESPONSE_MAX_VALUE(parsed_response))
+               longtemp = RESPONSE_MAX_VALUE(parsed_response);
          }
          else {
             assert( value_type == VALUE_TYPE_RELATIVE_MINUS);
-            longtemp = parsed_response->cur_value - longtemp;
+            // longtemp = parsed_response->cur_value - longtemp;
+            longtemp = RESPONSE_CUR_VALUE(parsed_response)  - longtemp;
             if (longtemp < 0)
                longtemp = 0;
          }

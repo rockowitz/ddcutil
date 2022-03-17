@@ -766,11 +766,12 @@ interpret_vcp_feature_response_std(
 
    int result = DDCRC_OK;
    // set initial values for failure case:
-   aux_data->vcp_code         = 0x00;
-   aux_data->valid_response   = false;
-   aux_data->supported_opcode = false;
-   aux_data->max_value        = 0;
-   aux_data->cur_value        = 0;
+   memset(aux_data, 0, sizeof(Parsed_Nontable_Vcp_Response));
+   // aux_data->vcp_code         = 0x00;
+   // aux_data->valid_response   = false;
+   // aux_data->supported_opcode = false;
+   // aux_data->max_value        = 0;
+   // aux_data->cur_value        = 0;
 
    if (bytect != 8) {
       DDCMSG(debug, "Invalid response data length: %d, should be 8, response data bytes: %s",
@@ -812,18 +813,20 @@ interpret_vcp_feature_response_std(
       }
 
       else {
-         int max_val = (vcpresp->mh << 8) | vcpresp->ml;
-         int cur_val = (vcpresp->sh << 8) | vcpresp->sl;
+         if (debug) {
+            int max_val = (vcpresp->mh << 8) | vcpresp->ml;
+            int cur_val = (vcpresp->sh << 8) | vcpresp->sl;
 
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "vcp_opcode = 0x%02x, vcp_type_code=0x%02x, max_val=%d (0x%04x), cur_val=%d (0x%04x)",
                 vcpresp->vcp_opcode, vcpresp->vcp_typecode, max_val, max_val, cur_val, cur_val);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "valid_response=%s", sbool(valid_response));
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "valid_response=%s", sbool(valid_response));
+         }
 
          aux_data->valid_response   = true;
          aux_data->supported_opcode = true;
-         aux_data->max_value        = max_val;   // valid only for continuous features
-         aux_data->cur_value        = cur_val;   // valid only for continuous features
+         // aux_data->max_value        = max_val;   // valid only for continuous features
+         // aux_data->cur_value        = cur_val;   // valid only for continuous features
          // for new way
          aux_data->mh = vcpresp->mh;
          aux_data->ml = vcpresp->ml;
@@ -845,8 +848,8 @@ dbgrpt_interpreted_nontable_vcp_response(
    rpt_vstring(depth,"VCP code:         0x%02x", interpreted->vcp_code);
    rpt_vstring(depth,"valid_response:   %d",     interpreted->valid_response);
    rpt_vstring(depth,"supported_opcode: %d",     interpreted->supported_opcode);
-   rpt_vstring(depth,"max_value:        %d",     interpreted->max_value);
-   rpt_vstring(depth,"cur_value:        %d",     interpreted->cur_value);
+   rpt_vstring(depth,"max_value:        %d",     RESPONSE_MAX_VALUE(interpreted));
+   rpt_vstring(depth,"cur_value:        %d",     RESPONSE_CUR_VALUE(interpreted));
    rpt_vstring(depth,"mh:               0x%02x", interpreted->mh);
    rpt_vstring(depth,"ml:               0x%02x", interpreted->ml);
    rpt_vstring(depth,"sh:               0x%02x", interpreted->sh);
@@ -1132,15 +1135,18 @@ get_interpreted_vcp_code(
 }
 
 
+#ifdef UNUSED
 // 12/23/2015: not currently used
 Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
    Parsed_Nontable_Vcp_Response * aux_ptr;
    Status_DDC rc = get_interpreted_vcp_code(packet, false, &aux_ptr);
    if (rc == 0) {
-      *value_ptr = aux_ptr->cur_value;
+      // *value_ptr = aux_ptr->sh<<8 | aux_ptr->sl;  // aux_ptr->cur_value;
+      *value_ptr = RESPONSE_CUR_VALUE(aux_ptr);
    }
    return rc;
 }
+#endif
 
 
 void init_ddc_packets() {

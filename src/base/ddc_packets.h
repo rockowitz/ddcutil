@@ -56,16 +56,16 @@ typedef
 struct {
    Byte   vcp_code;             ///< VCP feature code
    bool   valid_response;       ///<
-   bool   supported_opcode;
-   int    max_value;
-   int    cur_value;
-   // for new way
-   Byte   mh;
-   Byte   ml;
-   Byte   sh;
-   Byte   sl;
+   bool   supported_opcode;     ///< is opcode supported?
+   Byte   mh;                   ///< max value high order byte
+   Byte   ml;                   ///< max value low  order byte
+   Byte   sh;                   ///< current value high order byte
+   Byte   sl;                   ///< current value low  order byte
 } Parsed_Nontable_Vcp_Response;
 
+#define HI_LO_BYTES_TO_SHORT(hi,lo) ( (hi)<<8 | (lo))
+#define RESPONSE_CUR_VALUE(response) (response->sh<<8 | response->sl)
+#define RESPONSE_MAX_VALUE(response) (response->mh<<8 | response->ml)
 
 static inline bool
 value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {

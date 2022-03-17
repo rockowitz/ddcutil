@@ -1,6 +1,6 @@
 // vcp_feature_values.c
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -323,6 +323,7 @@ create_single_vcp_value_by_parsed_vcp_response(
 }
 
 
+#ifdef UNUSED
 // temp for aid in conversion
 
 Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(
@@ -331,16 +332,15 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(
    presp->response_type = valrec->value_type;
    if (valrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       presp->non_table_response = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-      presp->non_table_response->cur_value = VALREC_CUR_VAL(valrec);
-      presp->non_table_response->max_value = VALREC_MAX_VAL(valrec);
+      // presp->non_table_response->cur_value = VALREC_CUR_VAL(valrec);
+      // presp->non_table_response->max_value = VALREC_MAX_VAL(valrec);
       presp->non_table_response->mh  = valrec->val.c_nc.mh;
-      presp->non_table_response->ml   = valrec->val.c_nc.ml;
+      presp->non_table_response->ml  = valrec->val.c_nc.ml;
       presp->non_table_response->sh  = valrec->val.c_nc.sh;
-      presp->non_table_response->sl   = valrec->val.c_nc.sl;
+      presp->non_table_response->sl  = valrec->val.c_nc.sl;
       presp->non_table_response->supported_opcode = true;
       presp->non_table_response->valid_response = true;
       presp->non_table_response->vcp_code = valrec->opcode;
-
    }
    else {
       assert(valrec->value_type == DDCA_TABLE_VCP_VALUE);
@@ -350,6 +350,7 @@ Parsed_Vcp_Response * single_vcp_value_to_parsed_vcp_response(
    }
    return presp;
 }
+#endif
 
 
 Nontable_Vcp_Value * single_vcp_value_to_nontable_vcp_value(DDCA_Any_Vcp_Value * valrec) {

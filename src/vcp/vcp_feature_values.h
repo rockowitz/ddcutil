@@ -1,6 +1,6 @@
 // vcp_feature_values.h
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_VALUES_H_
@@ -88,9 +88,11 @@ create_single_vcp_value_by_parsed_vcp_response(
       Byte feature_id,
       Parsed_Vcp_Response * presp);
 
+#ifdef UNUSED
 Parsed_Vcp_Response *
 single_vcp_value_to_parsed_vcp_response(
             DDCA_Any_Vcp_Value * valrec);
+#endif
 
 #ifdef MOVED_TO_FEATURE_METADATA
 // Simple stripped-down version of Parsed_Nontable_Vcp_Response
