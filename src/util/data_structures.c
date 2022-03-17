@@ -1109,7 +1109,7 @@ void buffer_dump(Buffer * buffer) {
 // Identifier id to name and description lookup
 //
 
-/** Returns the name of an entry in a Value_Nmme_Title table.
+/** Returns the name of an entry in a Value_Name_Title table.
  *
  * @param table  pointer to table
  * @param val    value to lookup
@@ -1132,7 +1132,7 @@ char * vnt_name(Value_Name_Title* table, uint32_t val) {
 }
 
 
-/** Returns the title (description field) of an entry in a Value_Nmme_Title table.
+/** Returns the title (description field) of an entry in a Value_Name_Title table.
  *
  * @param table  pointer to table
  * @param val    value to lookup
