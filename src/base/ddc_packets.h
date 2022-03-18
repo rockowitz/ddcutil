@@ -105,12 +105,9 @@ typedef Byte DDC_Packet_Type;
 /** Packet bytes and interpretation */
 typedef
 struct {
-   Buffer *         raw_bytes;                ///< raw packet bytes
-   char             tag[MAX_DDC_TAG+1]; ///* debug string describing packet, +1 for \0
-   DDC_Packet_Type  type;               ///* packet type
-   // void *           aux_data;           ///* type dependent
-
-   // for a bit more type safety and code clarity:
+   Buffer *         raw_bytes;          ///< raw packet bytes
+   char             tag[MAX_DDC_TAG+1]; ///< debug string describing packet, +1 for \0
+   DDC_Packet_Type  type;               ///< packet type
    union {
       Parsed_Nontable_Vcp_Response *         nontable_response;
       Interpreted_Multi_Part_Read_Fragment * multi_part_read_fragment;
