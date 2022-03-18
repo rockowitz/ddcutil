@@ -27,7 +27,6 @@ dist-hook:
 noinst_LTLIBRARIES = libvcp.la
 
 libvcp_la_SOURCES =           \
-ddc_command_codes.c           \
 parse_capabilities.c          \
 parsed_capabilities_feature.c \
 persistent_capabilities.c     \

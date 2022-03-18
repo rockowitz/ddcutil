@@ -28,6 +28,7 @@ base_init.c               \
 build_info.c              \
 core.c                    \
 core_per_thread_settings.c \
+ddc_command_codes.c       \
 ddc_errno.c               \
 ddc_packets.c             \
 dynamic_features.c        \

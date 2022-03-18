@@ -8,6 +8,8 @@
 #ifndef DDC_COMMAND_CODES_H_
 #define DDC_COMMAND_CODES_H_
 
+#include "util/coredefs.h"
+
 //
 // DDC/CI Command and Response Codes
 //
