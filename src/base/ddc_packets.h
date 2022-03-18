@@ -234,10 +234,12 @@ void
 dbgrpt_interpreted_multi_read_fragment(
       Interpreted_Multi_Part_Read_Fragment * interpreted,
       int depth);
+
 void
 dbgrpt_interpreted_nontable_vcp_response(
       Parsed_Nontable_Vcp_Response * interpreted,
       int depth);
+
 #ifdef OLD
 void   report_interpreted_aux_data(Byte response_type, void * interpreted);
 #endif
