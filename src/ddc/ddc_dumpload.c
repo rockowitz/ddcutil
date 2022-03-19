@@ -3,7 +3,7 @@
  * Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -350,6 +350,9 @@ create_dumpload_data_from_g_ptr_array(
  *
  * This function stops applying values on the first error encountered, and
  * returns the value of that error as its status code.
+ *
+ * @remark
+ * Consider not stopping on error, instead accumulate errors in Error_Info.
  */
 Error_Info *
 ddc_set_multiple(
