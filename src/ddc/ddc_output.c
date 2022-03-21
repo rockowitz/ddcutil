@@ -163,15 +163,9 @@ get_raw_value_for_feature_metadata(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "frec=%p, feature_code=0x%02x", frec, (frec) ? frec->feature_code : 0x00);
 
-   // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
-
-   // DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dh(dh);
-   // char * feature_name = get_version_sensitive_feature_name(frec, vspec);
    char * feature_name = frec->feature_name;
-
    Byte feature_code = frec->feature_code;
-   // bool is_table_feature = is_table_feature_by_dh(frec, dh);
    bool is_table_feature = frec->feature_flags & DDCA_TABLE;
    DDCA_Vcp_Value_Type feature_type = (is_table_feature) ? DDCA_TABLE_VCP_VALUE : DDCA_NON_TABLE_VCP_VALUE;
    DDCA_Output_Level output_level = get_output_level();
@@ -196,10 +190,8 @@ get_raw_value_for_feature_metadata(
               feature_code,
               feature_type,
               &valrec);
-      // psc = ERRINFO_STATUS(ddc_excp);
    }
    ASSERT_IFF( ddc_excp, !valrec);
-   // assert ( (psc==0 && valrec) || (psc!=0 && !valrec) );
 
    // For now, only regard -EIO as unsupported feature for the
    // single model on which this has been observed
@@ -317,7 +309,7 @@ get_raw_value_for_feature_metadata(
 }
 
 
-#ifdef IN_PROGREESS
+#ifdef IN_PROGRESS
 Public_Status_Code
 get_raw_value_for_feature_metadata_dfm(
       Display_Handle *           dh,
@@ -440,7 +432,6 @@ get_raw_value_for_feature_metadata_dfm(
    return psc;
 }
 #endif
-
 
 
 /* Gather values for the features in a feature set.
