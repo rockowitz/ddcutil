@@ -23,9 +23,11 @@
 char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
    char * result = NULL;
    switch(id) {
+#ifndef I2C_IO_IOCTL_ONLY
    case I2C_IO_STRATEGY_FILEIO:
       result = "I2C_IO_STRATEGY_FILEIO";
       break;
+#endif
    case I2C_IO_STRATEGY_IOCTL:
       result = "I2C_IO_STRATEGY_IOCTL";
       break;
@@ -46,7 +48,7 @@ int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-
+#ifndef I2C_IO_IOCTL_ONLY
 I2C_IO_Strategy  i2c_file_io_strategy = {
       I2C_IO_STRATEGY_FILEIO,
       i2c_fileio_writer,
@@ -54,6 +56,7 @@ I2C_IO_Strategy  i2c_file_io_strategy = {
       "fileio_writer",
       "fileio_reader"
 };
+#endif
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
       I2C_IO_STRATEGY_IOCTL,
@@ -63,8 +66,11 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
       "ioctl_reader"
 };
 
-
+#ifdef I2C_IO_IOCTL_ONLY
+static I2C_IO_Strategy * i2c_io_strategy = &i2c_ioctl_io_strategy;
+#else
 static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;  // current strategy
+#endif
 
 /** Sets an alternative I2C IO strategy.
  *
@@ -75,9 +81,11 @@ I2C_IO_Strategy_Id
 i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
    I2C_IO_Strategy_Id old = i2c_io_strategy->strategy_id;
    switch (strategy_id) {
+#ifndef I2C_IO_IOCTL_ONLY
    case (I2C_IO_STRATEGY_FILEIO):
          i2c_io_strategy = &i2c_file_io_strategy;
          break;
+#endif
    case (I2C_IO_STRATEGY_IOCTL):
          i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;

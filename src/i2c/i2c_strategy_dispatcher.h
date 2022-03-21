@@ -17,7 +17,9 @@
 
 /** I2C IO strategy ids */
 typedef enum {
+#ifndef I2C_IO_IOCTL_ONLY
    I2C_IO_STRATEGY_FILEIO,    ///< use file write() and read()
+#endif
    I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
 I2C_IO_Strategy_Id;
 
