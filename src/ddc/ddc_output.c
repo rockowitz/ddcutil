@@ -294,7 +294,7 @@ get_raw_value_for_feature_metadata(
       default:
          {
             char buf[200];
-            snprintf(buf, 200, "Invalid response. status code=%d, %s", psc, dh_repr_t(dh));
+            snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_name_code(psc), dh_repr_t(dh));
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                              feature_code, feature_name, buf);
          }
