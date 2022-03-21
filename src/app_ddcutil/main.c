@@ -116,7 +116,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 static void add_rtti_functions();
 
-
+#ifndef I2C_IO_IOCTL_ONLY
 static
 bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
    bool detected = false;
@@ -144,6 +144,8 @@ bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
    }
    return detected;
 }
+#endif
+
 
 
 //
@@ -846,7 +848,9 @@ main(int argc, char *argv[]) {
 
    // *** Commands that may require Display Identifier ***
    else {
+#ifndef I2C_IO_IOCTL_ONLY
       detect_conflicting_drivers(parsed_cmd);  // ignore retcode, we could be wrong
+#endif
 
       Display_Ref * dref = NULL;
       Status_Errno_DDC  rc =
