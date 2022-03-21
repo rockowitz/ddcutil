@@ -3,7 +3,7 @@
  *  Low level functions for writing to and reading from the I2C bus,
  *  using various mechanisms.
  */
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_EXECUTE_H_
@@ -30,6 +30,7 @@ typedef Status_Errno_DDC (*I2C_Reader)(
       int    bytect,
       Byte * readbuf);
 
+#ifndef I2C_IO_IOCTL_ONLY
 Status_Errno_DDC i2c_fileio_writer(
       int    fd,
       Byte   slave_address,
@@ -42,6 +43,7 @@ Status_Errno_DDC i2c_fileio_reader (
       bool   read_bytewise,
       int    bytect,
       Byte * readbuf);
+#endif
 
 Status_Errno_DDC i2c_ioctl_writer(
       int    fd,

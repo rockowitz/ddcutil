@@ -60,7 +60,7 @@ bool get_i2c_fileio_use_timeout() {
    return read_with_timeout;
 }
 
-
+#ifndef I2C_IO_IOCTL_ONLY
 /** Writes to i2c bus using write()
  *
  * @param  fd             Linux file descriptor
@@ -262,7 +262,7 @@ bye:
    DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
-
+#endif
 
 #ifdef FOR_REFERENCE
    /*
