@@ -780,8 +780,10 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
 
+#ifndef I2C_IO_IOCTL_ONLY
       if (i2c_get_io_strategy() == I2C_IO_STRATEGY_FILEIO)
          detect_conflicting_drivers(parsed_cmd); // ignore retcode, we could be wrong
+#endif
 
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
