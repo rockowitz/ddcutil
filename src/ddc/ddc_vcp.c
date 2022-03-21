@@ -535,7 +535,6 @@ ddc_get_nontable_vcp_value(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
 
-   Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
    *ppInterpretedCode = NULL;
@@ -571,19 +570,19 @@ ddc_get_nontable_vcp_value(
            false,                       // all_zero_response_ok
            &response_packet_ptr
         );
-   assert( (!excp && response_packet_ptr) || (excp && !response_packet_ptr));
+   ASSERT_IFF(excp, !response_packet_ptr);
+//   assert( (!excp && response_packet_ptr) || (excp && !response_packet_ptr));
    if (debug || IS_TRACING() ) {
-      psc = ERRINFO_STATUS(excp);
-      if (psc != 0)
+      if (excp)
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "ddc_write_read_with_retry() returned %s, reponse_packet_ptr=%p",
-                psc_desc(psc), response_packet_ptr);
+                "ddc_write_read_with_retry() returned %s, response_packet_ptr=%p",
+                psc_desc(ERRINFO_STATUS(excp)), response_packet_ptr);
    }
 
    if (!excp) {
       assert(response_packet_ptr);
       // dump_packet(response_packet_ptr);
-      psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
+      Public_Status_Code psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
       if (psc == 0) {
 #ifdef NO_LONGER_NEEDED
          if (parsed_response->vcp_code != feature_code) {
@@ -595,11 +594,9 @@ ddc_get_nontable_vcp_value(
 #endif
 
          if (!parsed_response->valid_response)  {
-            psc = DDCRC_DDC_DATA;             // was DDCRC_INVALID_DATA
-            excp = errinfo_new(DDCRC_DDC_DATA, __func__);
+            excp = errinfo_new(DDCRC_DDC_DATA, __func__);  // was DDCRC_INVALID_DATA
          }
          else if (!parsed_response->supported_opcode) {
-            psc = DDCRC_REPORTED_UNSUPPORTED;
             excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__);
             if (!value_bytes_zero(parsed_response)) {
                // for exploring
@@ -610,12 +607,12 @@ ddc_get_nontable_vcp_value(
                (dh->dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED) )
          {
             // just a messages for now
-            DBGMSG("all value bytes 0, supported_opcode == true, setting DDCRC_DETERMINED_UNSUPPORTED)");
-            psc = DDCRC_DETERMINED_UNSUPPORTED;
-            excp = errinfo_new2(psc, __func__, "MH=ML=SH=SL=0");
+            DBGMSG("all value bytes 0, supported_opcode == true,"
+                   " setting DDCRC_DETERMINED_UNSUPPORTED)");
+            excp = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__, "MH=ML=SH=SL=0");
          }
 
-         if (psc != 0) {
+         if (excp) {
             free(parsed_response);
             parsed_response = NULL;
          }
@@ -633,7 +630,8 @@ ddc_get_nontable_vcp_value(
    // DBGMSG("excp = %s", errinfo_summary(excp));
    // DBGMSG("parsed_response = %p", parsed_response);
 
-   assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
+   ASSERT_IFF(excp, !parsed_response);
+//   assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
    if (excp) {
       DBGTRC_DONE(debug, TRACE_GROUP, "Error reading feature x%02x.  Returning exception: %s",
                                  feature_code, errinfo_summary(excp));
