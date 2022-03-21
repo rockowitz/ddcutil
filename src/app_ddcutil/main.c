@@ -117,9 +117,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 static void add_rtti_functions();
 
 
-// static
+static
 bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
-   bool detected = true;
+   bool detected = false;
 
    if ( !(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR) ) {
       GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
@@ -781,7 +781,7 @@ main(int argc, char *argv[]) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
 
       if (i2c_get_io_strategy() == I2C_IO_STRATEGY_FILEIO)
-         detect_conflicting_drivers(parsed_cmd);
+         detect_conflicting_drivers(parsed_cmd); // ignore retcode, we could be wrong
 
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
@@ -844,7 +844,7 @@ main(int argc, char *argv[]) {
 
    // *** Commands that may require Display Identifier ***
    else {
-      detect_conflicting_drivers(parsed_cmd);
+      detect_conflicting_drivers(parsed_cmd);  // ignore retcode, we could be wrong
 
       Display_Ref * dref = NULL;
       Status_Errno_DDC  rc =
