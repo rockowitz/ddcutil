@@ -722,7 +722,7 @@ ddc_get_table_vcp_value(
  * \param  pvalrec         location where to return newly allocated #Single_Vcp_Value
  * \return NULL if success, pointer to #Error_Info if failure
  *
- * The value pointed to by pvalrec is non-null iff the returned status code is 0.
+ * The value pointed to by pvalrec is non-null iff the return value is null
  *
  * The caller is responsible for freeing the value returned at **valrec_loc**.
  */
@@ -737,7 +737,6 @@ ddc_get_vcp_value(
    DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x, dh=%s, dh->fd=%d",
             feature_code, dh_repr_t(dh), dh->fd);
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    Buffer * buffer = NULL;
    Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
@@ -747,6 +746,7 @@ ddc_get_vcp_value(
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       DBGMSF(debug, "USB case");
+      Public_Status_Code psc = 0;
 
       switch (call_type) {
 
@@ -769,7 +769,6 @@ ddc_get_vcp_value(
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
-                psc = DDCRC_UNIMPLEMENTED;
                 ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
                 break;
           }
@@ -785,7 +784,6 @@ ddc_get_vcp_value(
                           dh,
                           feature_code,
                           &parsed_nontable_response);
-            psc = (ddc_excp) ? ddc_excp->status_code : 0;
             if (!ddc_excp) {
                valrec = create_nontable_vcp_value(
                            feature_code,
@@ -802,7 +800,6 @@ ddc_get_vcp_value(
                     dh,
                     feature_code,
                     &buffer);
-            psc = ERRINFO_STATUS(ddc_excp);
             if (!ddc_excp) {
                valrec = create_table_vcp_value_by_buffer(feature_code, buffer);
                buffer_free(buffer, __func__);
@@ -813,9 +810,9 @@ ddc_get_vcp_value(
    } // non USB
 
    *valrec_loc = valrec;
-   ASSERT_IFF(psc == 0,*valrec_loc);
+   ASSERT_IFF(!ddc_excp,*valrec_loc);
 
-   if (psc == 0)  {
+   if (!ddc_excp)  {
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s, *valrec ->", errinfo_summary(ddc_excp));
       if (debug || IS_TRACING() )
          dbgrpt_single_vcp_value(valrec,2);
