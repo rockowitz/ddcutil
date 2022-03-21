@@ -89,7 +89,7 @@ typedef enum {
    DISP_ID_ADL,        ///< ADL iAdapterIndex/iDisplayIndex pair
    DISP_ID_MONSER,     ///< monitor mfg id, model name, and/or serial number
    DISP_ID_EDID,       ///< 128 byte EDID
-   DISP_ID_DISPNO,     ///< ddcutil assigned sisplay number
+   DISP_ID_DISPNO,     ///< ddcutil assigned display number
    DISP_ID_USB,        ///< USB bus/device number pair
    DISP_ID_HIDDEV      ///< /dev/usb/hiddev device number
 } Display_Id_Type;
@@ -126,7 +126,7 @@ char *              did_repr(Display_Identifier * pdid);
 void                dbgrpt_display_identifier(Display_Identifier * pdid, int depth);
 void                free_display_identifier(Display_Identifier * pdid);
 
-#ifdef FUTURE
+//  #ifdef FUTURE
 // new way
 #define DISPLAY_SELECTOR_MARKER "DSEL"
 typedef struct {
@@ -143,6 +143,7 @@ typedef struct {
    Byte *          edidbytes;   // always 128 bytes
 } Display_Selector;
 
+#ifdef FUTURE
 Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector * dsel);
 Display_Selector * dsel_set_display_number(Display_Selector* dsel, int dispno);
@@ -187,7 +188,7 @@ char * interpret_dref_flags_t(Dref_Flags flags);    // replaces dref_basic_flags
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
- * It can contain an I2C bus number, and ADL adapter/display number pair,
+ * It can contain an I2C bus number, an ADL adapter/display number pair,
  * or a USB bus number/device number pair.
  */
 typedef struct _display_ref {
@@ -259,6 +260,7 @@ void             free_display_handle(Display_Handle * dh);
 
 // *** Video_Card_Info ***
 
+#ifdef ADL
 #define VIDEO_CARD_INFO_MARKER "VIDC"
 /** Video card information */
 typedef struct {
@@ -268,7 +270,9 @@ typedef struct {
    char *   driver_name;
 } Video_Card_Info;
 
+
 Video_Card_Info * create_video_card_info();
+#endif
 
 
 // *** Miscellaneous ***
@@ -293,7 +297,9 @@ bool is_adlno_defined(DDCA_Adlno adlno);
 typedef Byte Display_Selection_Options;
 
 int    hiddev_name_to_number(char * hiddev_name);
+#ifdef UNUSED
 char * hiddev_number_to_name(int hiddev_number);
+#endif
 
 
 bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);

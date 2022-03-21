@@ -526,7 +526,7 @@ void free_display_identifier(Display_Identifier * pdid) {
 }
 
 
-#ifdef FUTURE
+// #ifdef FUTURE
 // *** Display Selector *** (future)
 
 Display_Selector * dsel_new() {
@@ -550,7 +550,9 @@ void dsel_free(Display_Selector * dsel) {
       free(dsel->edidbytes);
    }
 }
-#endif
+
+
+// #endif
 
 
 // *** DDCA_IO_Mode and DDCA_IO_Path ***
@@ -1165,6 +1167,7 @@ void   free_display_handle(Display_Handle * dh) {
 
 // *** Miscellaneous ***
 
+#ifdef ADL
 /** Creates and initializes a #Video_Card_Info struct.
  *
  * \return new instance
@@ -1177,6 +1180,7 @@ Video_Card_Info * create_video_card_info() {
    memcpy(card_info->marker, VIDEO_CARD_INFO_MARKER, 4);
    return card_info;
 }
+#endif
 
 #ifdef USE_USB
 /** Given a hiddev device name, e.g. /dev/usb/hiddev3,
@@ -1205,6 +1209,7 @@ int hiddev_name_to_number(char * hiddev_name) {
 }
 
 
+#ifdef UNUSED
 /** Given a hiddev device number, e.g. 3, return its name, e.g. /dev/usb/hiddev3
  *
  *  \param   hiddev_number device number
@@ -1218,6 +1223,7 @@ char * hiddev_number_to_name(int hiddev_number) {
    // DBGMSG("hiddev_number=%d, returning: %s", hiddev_number, s);
    return s;
 }
+#endif
 #endif
 
 
