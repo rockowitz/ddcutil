@@ -1,7 +1,7 @@
 /** @file parsed_cmd.h
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CMD_H_
@@ -111,6 +111,7 @@ struct {
    DDCA_Stats_Type        stats_types;
    char *                 failsim_control_fn;
    Display_Identifier*    pdid;
+// Display_Selector*      display_selector;   // for future use
    DDCA_Trace_Group       traced_groups;
    gchar **               traced_files;
    gchar **               traced_functions;
