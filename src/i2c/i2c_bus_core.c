@@ -727,13 +727,10 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 #ifdef I2C_IO_IOCTL_ONLY
 
-static bool
-i2c_detect_x37(int fd, bool* busy_loc) {
+static Status_Errno_DDC
+i2c_detect_x37(int fd) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, busy_loc=%p", fd, (void*)busy_loc);
-
-   bool result = false;
-   *busy_loc = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s", fd, filename_for_fd_t(fd) );
 
    // Quirks
    // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
@@ -747,22 +744,13 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
    // rc = 6; // for testing
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
-   if (rc == 0) {
-      result = true;
-   }
-   else {
+   if (rc != 0) {
       Byte    readbuf[4];  //  4 byte buffer
       rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
-
-      if (rc == 0)
-         result = true;
-
-      else if (rc == -EBUSY)
-         *busy_loc = true;
    }
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
-   return result;
+   DBGTRC_RETURNING(debug, TRACE_GROUP, rc,"");
+   return rc;
 }
 
 
@@ -904,11 +892,19 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_LVDS;
              }
              else {
+#ifndef I2C_IO_IOCTL_ONLY
                 bool ebusy = false;
                 if ( i2c_detect_x37(fd, &ebusy) )
                    bus_info->flags |= I2C_BUS_ADDR_0X37;
                 else if (ebusy)
                    bus_info->flags |= I2C_BUS_BUSY;
+#else
+                int rc = i2c_detect_x37(fd);
+                if (rc == 0)
+                   bus_info->flags |= I2C_BUS_ADDR_0X37;
+                else if (rc == -EBUSY)
+                   bus_info->flags |= I2C_BUS_BUSY;
+#endif
              }
           }
           else if (ddcrc == -EBUSY)
