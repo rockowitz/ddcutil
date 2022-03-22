@@ -725,6 +725,48 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
    return businfo;
 }
 
+#ifdef I2C_IO_IOCTL_ONLY
+
+static bool
+i2c_detect_x37(int fd, bool* busy_loc) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, busy_loc=%p", fd, (void*)busy_loc);
+
+   bool result = false;
+   *busy_loc = false;
+
+   // Quirks
+   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
+   //   avoided by never calling this function for an eDP screen
+   // - Dell P2715Q does not respond to single byte read, but does respond to
+   //   a write (7/2018), so this function checks both
+   Status_Errno_DDC rc = 0;
+   // regard either a successful write() or a read() as indication slave address is valid
+   Byte    writebuf = {0x00};
+
+   rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
+   // rc = 6; // for testing
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
+   if (rc == 0) {
+      result = true;
+   }
+   else {
+      Byte    readbuf[4];  //  4 byte buffer
+      rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
+
+      if (rc == 0)
+         result = true;
+
+      else if (rc == -EBUSY)
+         *busy_loc = true;
+   }
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
+   return result;
+}
+
+
+#else
 
 static bool
 i2c_detect_x37(int fd, bool* busy_loc) {
@@ -740,7 +782,6 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    // - Dell P2715Q does not respond to single byte read, but does respond to
    //   a write (7/2018), so this function checks both
    Status_Errno_DDC rc = 0;
-#ifndef I2C_IO_IOCTL_ONLY
    I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
          i2c_io_strategy_name(strategy));
@@ -751,12 +792,10 @@ i2c_detect_x37(int fd, bool* busy_loc) {
              *bus_loc = true;
        }
    }
-#endif
 
    if (rc == 0)  {
       // regard either a successful write() or a read() as indication slave address is valid
       Byte    writebuf = {0x00};
-#ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = write(fd, &writebuf, 1);
          assert(rc == 1 || rc < 0);
@@ -766,9 +805,6 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       else {
          rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
       }
-#else
-      rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
-#endif
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
       if (rc == 0)
          result = true;
@@ -780,7 +816,6 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       //   ...
 
       Byte    readbuf[4];  //  4 byte buffer
-#ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = read(fd, readbuf, 4);
          if (rc == 4)
@@ -789,9 +824,6 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       else {
          rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
       }
-#else
-         rc = i2c_ioctl_reader(fd, 0x37, false, 1, readbuf);
-#endif
 
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s",  psc_name_code(rc));
          if (rc == 0) {
@@ -811,6 +843,7 @@ i2c_detect_x37(int fd, bool* busy_loc) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
    return result;
 }
+#endif
 
 
 // Factored out of i2c_check_bus().  Not needed, since i2c_check_bus() is called
