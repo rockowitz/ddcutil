@@ -153,8 +153,8 @@ bye:
  * @retval -errno           negative Linux errno value from read()
  *
  * @remark
- * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
- * The address has already been by #set_slave_address().
+ * Parameter **slave_addr** is present to satisfy the signature of typedef I2C_Writer.
+ * The address has already been set by #set_slave_address().
  */
 Status_Errno_DDC
 i2c_fileio_reader(
@@ -372,9 +372,10 @@ i2c_ioctl_writer(
 
 /** Reads from I2C bus using ioctl(I2C_RDWR)
  *
- * @param  fd        Linux file descriptor
- * @param  bytect    number of bytes to read
- * @param  readbuf   read bytes into this buffer
+ * @param  fd         Linux file descriptor
+ * @param  slave_addr slave address
+ * @param  bytect     number of bytes to read
+ * @param  readbuf    read bytes into this buffer
  *
  * @retval 0         success
  * @retval <0        negative Linux errno value
@@ -386,12 +387,12 @@ i2c_ioctl_writer(
 Status_Errno_DDC
 ioctl_reader1(
       int    fd,
-      Byte   slave_address,
+      Byte   slave_addr,
       int    bytect,
       Byte * readbuf) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
-                 fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
+                 fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
    // struct i2c_msg              messages[1];
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
@@ -400,7 +401,7 @@ ioctl_reader1(
    //memset(messages,0, sizeof(messages));
    memset(&msgset,0,sizeof(msgset));
 
-   messages[0].addr  = slave_address;      // this is the slave address currently set
+   messages[0].addr  = slave_addr;      // this is the slave address currently set
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
    // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
@@ -454,27 +455,39 @@ ioctl_reader1(
 }
 
 
+/** Reads from I2C bus using ioctl(I2C_RDWR)
+ *
+ * @param  fd         Linux file descriptor
+ * @param  slave_addr slave address
+ * @param  read_bytewise
+ * @param  bytect     number of bytes to read
+ * @param  readbuf    read bytes into this buffer
+ *
+ * @retval 0         success
+ * @retval <0        negative Linux errno value
+ */
+
 Status_Errno_DDC
 i2c_ioctl_reader(
       int    fd,
-      Byte   slave_address,
+      Byte   slave_addr,
       bool   read_bytewise,
       int    bytect,
       Byte * readbuf)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_address=0x%02x, bytect=%d, readbuf=%p",
-                 fd, filename_for_fd_t(fd), slave_address, bytect, readbuf);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
+                 fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
    int rc = 0;
 
    if (read_bytewise) {
       int ndx = 0;
       for (; ndx < bytect && rc == 0; ndx++) {
-         rc = ioctl_reader1(fd, slave_address, 1, readbuf+ndx);
+         rc = ioctl_reader1(fd, slave_addr, 1, readbuf+ndx);
       }
    }
    else {
-      rc = ioctl_reader1(fd, slave_address, bytect, readbuf);
+      rc = ioctl_reader1(fd, slave_addr, bytect, readbuf);
    }
 
    DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
