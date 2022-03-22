@@ -205,8 +205,17 @@ int get_packet_max_size(DDC_Packet * packet) {
  *  The NULL message is used in the following cases:
  *  - To detect that the display is DDC/CI capable (by reading it at the 0x6F slave address)
  *  - To tell the host that the display does not have any answer to give the host
- *    (not ready or not exptected)
+ *    (not ready or not expected)
  *  - The "Enable Application Report" has not been sent before using Application Messages
+ *
+ *  From various NEC monitor manuals:
+ *
+ *  The NULL messages returned from the monitor is used in the following cases:
+ *  - To tell the host that the display does not have any answer to give the host
+ *    (not ready or not expected)
+ *  - Following operations need a certain time for to (sic) execute, so the monitor
+ *    will return this message when another message is received during execution.
+ *    - Power ON, Power OFF, Auto Setup, Input, PIP Input, Auto Setup and Factory reset.
  */
 bool isNullPacket(DDC_Packet * packet) {
    return  (get_data_len(packet) == 0);
