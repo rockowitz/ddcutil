@@ -728,7 +728,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 static bool
 i2c_detect_x37(int fd, bool* busy_loc) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, busy_loc=%p", fd, (void*)busy_loc);
 
    bool result = false;
@@ -746,6 +746,10 @@ i2c_detect_x37(int fd, bool* busy_loc) {
          i2c_io_strategy_name(strategy));
    if (strategy == I2C_IO_STRATEGY_FILEIO) {
        rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
+       if (rc != 0) {
+          if (rc == -EBUSY)
+             *bus_loc = true;
+       }
    }
 #endif
 
@@ -755,6 +759,9 @@ i2c_detect_x37(int fd, bool* busy_loc) {
 #ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = write(fd, &writebuf, 1);
+         assert(rc == 1 || rc < 0);
+         if (rc == 1)
+            rc = 0;
       }
       else {
          rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
@@ -763,8 +770,9 @@ i2c_detect_x37(int fd, bool* busy_loc) {
       rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
 #endif
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
-      if (rc == 1)
+      if (rc == 0)
          result = true;
+      else {
 
       // Per DDC/CI v1.1, section 6.4
       // The NULL message is used in the following cases:
@@ -775,27 +783,30 @@ i2c_detect_x37(int fd, bool* busy_loc) {
 #ifndef I2C_IO_IOCTL_ONLY
       if (strategy == I2C_IO_STRATEGY_FILEIO) {
          rc = read(fd, readbuf, 4);
+         if (rc == 4)
+            rc = 0;
       }
       else {
          rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
       }
 #else
-      rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
+         rc = i2c_ioctl_reader(fd, 0x37, false, 1, readbuf);
 #endif
 
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
-      // test doesn't work, buffer contains random bytes (but same random bytes for every
-      // display in a single call to i2cdetect_x37
-      // Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
-      // if (rc == 4) {
-      //    DBGMSG("read x37 returned: 0x%08x", readbuf);
-      //    result = (memcmp( readbuf, ddc_null_msg, 4) == 0);
-      // }
-      if (rc >= 0)
-         result = true;
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s",  psc_name_code(rc));
+         if (rc == 0) {
+            result = true;
+            // test doesn't work, buffer contains random bytes (but same random bytes for every
+            // display in a single call to i2cdetect_x37
+           //  Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
+            //   bool is_null_msg =  ( memcmp( readbuf, ddc_null_msg, 4) == 0);
+
+           //   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"    readbuf=0x%8x %s Null Message",
+           //                 readbuf, (is_null_msg) ? "IS" : "IS NOT");
+           // }
+         }
+      }
    }
-   else if (rc == -EBUSY)
-      *busy_loc = true;
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
    return result;
@@ -1394,6 +1405,8 @@ static void init_i2c_bus_core_func_name_table() {
 #endif
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
+   RTTI_ADD_FUNC(i2c_check_bus);
+   RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
 }
