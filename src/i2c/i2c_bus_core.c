@@ -834,6 +834,7 @@ i2c_detect_x37(int fd, bool* busy_loc) {
 #endif
 
 
+#ifdef UNUSED
 // Factored out of i2c_check_bus().  Not needed, since i2c_check_bus() is called
 // only when the bus name is valid
 void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
@@ -847,6 +848,7 @@ void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
 
    bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
 }
+#endif
 
 
 /** Inspects an I2C bus.
