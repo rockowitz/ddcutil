@@ -569,12 +569,12 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    Status_Errno_DDC rc;
    int tryctr = 0;
 
+#ifndef I2C_IO_IOCTL_ONLY
    I2C_IO_Strategy_Id  strategy_id = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "stategy_id = %s(%d)",
          i2c_io_strategy_name(strategy_id),
          strategy_id);
 
-#ifndef I2C_IO_IOCTL_ONLY
    if ( strategy_id == I2C_IO_STRATEGY_FILEIO ) {
       rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
       if (rc < 0) {
