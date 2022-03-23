@@ -142,23 +142,25 @@ void test_display_detection_variants() {
      {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _128},
      {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _256},
      {I2C_IO_STRATEGY_FILEIO,  true,    _DNA,        _DNA,      _TRUE,    _DYNAMIC},
-
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _FALSE,   _DYNAMIC},
-
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _FALSE,      _DNA,      _TRUE,    _DYNAMIC},
-
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _FALSE,   _DYNAMIC},
-
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _128},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _256},
-     {I2C_IO_STRATEGY_IOCTL,   false,   _TRUE,       _DNA,      _TRUE,    _DYNAMIC},
 #endif
+
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _FALSE,      _DNA,      _TRUE,    _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _FALSE,   _128},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _FALSE,   _256},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _FALSE,   _DYNAMIC},
+
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _TRUE,    _128},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _TRUE,    _256},
+     {I2C_IO_STRATEGY_IOCTL,   _DNA,    _TRUE,       _DNA,      _TRUE,    _DYNAMIC},
+
+#ifndef I2C_IO_IOCTL_ONLY
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _128},
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _256},
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _FALSE,   _DYNAMIC},
@@ -166,6 +168,7 @@ void test_display_detection_variants() {
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _128},
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _256},
      {I2C_IO_STRATEGY_IOCTL,   true,    _DNA,        _DNA,      _TRUE,    _DYNAMIC},
+#endif
    };
    int choice_ct = ARRAY_SIZE(choices);
 
