@@ -595,8 +595,10 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
+#ifndef I2C_IO_IOCTL_ONLY
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
+#endif
 
    bool read_bytewise = EDID_Read_Bytewise;
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
@@ -639,20 +641,23 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
          if (!is_valid_raw_edid(rawedid->bytes, rawedid->len)) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Invalid EDID");
             rc = DDCRC_INVALID_EDID;
-         }
-         if (rc == DDCRC_INVALID_EDID) {
             if (is_valid_raw_cea861_extension_block(rawedid->bytes, rawedid->len)) {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID appears to start with a CEA 861 extension block");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                               "EDID appears to start with a CEA 861 extension block");
             }
          }
          if (rawedid->len == 256) {
             if (is_valid_raw_cea861_extension_block(rawedid->bytes+128, rawedid->len-128)) {
-                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second physical EDID block appears to be a CEA 861 extension block");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                               "Second physical EDID block appears to be a CEA 861 extension block");
             }
             else if (is_valid_raw_edid(rawedid->bytes+128, rawedid->len-128)) {
-                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Second physical EDID block appears to be an initial EDID header block");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                               "Second physical EDID block read is actually the initial EDID block");
+               memcpy(rawedid->bytes, rawedid->bytes+128, 128);
+               buffer_set_length(rawedid, 128);
+               rc = 0;
             }
-
          }
       }  // get bytes succeeded
    }
@@ -673,7 +678,6 @@ bye:
  * @param fd      file descriptor for open /dev/i2c-n
  * @param edid_ptr_loc where to return pointer to newly allocated #Parsed_Edid,
  *                     or NULL if error
- *
  * @return status code
  */
 Status_Errno_DDC
