@@ -95,7 +95,7 @@ AC_CONFIG_FILES([
 	docs/Makefile
 	docs/doxygen/Makefile
 	src/public/ddcutil_macros.h
-  ddcutil.pc
+   ddcutil.pc
   ],
  )
 dnl AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
@@ -114,7 +114,7 @@ AM_INIT_AUTOMAKE([1.13 -Wall -Wno-extra-portability foreign subdir-objects ])
 
 dnl alternatively, add "silent-rules" to AM_INIT_AUTOMAKE
 dnl Eclipse warns that as of 2.68, AM_SILENT_RULES takes 0 arguments
-dnl but in 2.69 it only defaults to silen with argument "yes"
+dnl but in 2.69 it only defaults to silent with argument "yes"
 dnl with "yes" arg, silent rules is the default
 AM_SILENT_RULES([yes])
 
@@ -770,17 +770,6 @@ AS_IF( [test -n "$DOCBASE_INSTALL_DOCS"],
      )
 AM_CONDITIONAL( [HAVE_DOCBASE], [test -n "$DOCBASE_INSTALL_DOCS"])
 
-
-### GObject
-
-# Vestigial.  GObject interface no longer being developed.
-
-m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [GOBJECT_INTROSPECTION_CHECK([1.30.0])])
-AM_CONDITIONAL(HAVE_INTROSPECTION, test "x$found_introspection" = xyes)
-
-AS_IF([test "x$enable_gobject" = "xyes"],
-     [ PKG_CHECK_MODULES(GOBJECT,  gobject-2.0 >= 2.14)  ],
-     )
 
 ### Library
 
