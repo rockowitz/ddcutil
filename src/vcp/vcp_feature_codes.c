@@ -132,11 +132,7 @@ vcp_interpret_global_feature_flags(
    return buf;
 }
 
-
-
 // End of VCPINFO related functions
-
-
 
 
 //
@@ -785,7 +781,7 @@ get_table_feature_detail_function(
 {
    assert(vfte);
 
-   // TODO:
+   // TODO: REVIEW COMMENT
    // if VCP_V2NC_V3T, then get version id
    // based on version id, choose .formatter or .formatter_v3
    // NO - test needs to be set in caller, this must return a Format_Feature_Detail_Function, which is not for Table
