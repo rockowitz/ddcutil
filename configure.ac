@@ -89,6 +89,7 @@ AC_CONFIG_FILES([
 	src/test/Makefile
 	src/cmdline/Makefile
 	src/app_sysenv/Makefile
+	src/app_ddcutil/Makefile
 	src/sample_clients/Makefile
 	man/Makefile 
 	data/Makefile 

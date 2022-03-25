@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv cmdline .  sample_clients
+SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv app_ddcutil cmdline .  sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -74,27 +74,7 @@ endif
 #
 # Files only in ddcutil executable
 #
-ddcutil_SOURCES = \
-app_ddcutil/main.c \
-app_ddcutil/app_capabilities.c \
-app_ddcutil/app_dumpload.c \
-app_ddcutil/app_dynamic_features.c \
-app_ddcutil/app_experimental.c \
-app_ddcutil/app_getvcp.c \
-app_ddcutil/app_probe.c \
-app_ddcutil/app_setvcp.c \
-app_ddcutil/app_vcpinfo.c
-
-if ENABLE_ENVCMDS_COND
-ddcutil_SOURCES += \
-app_ddcutil/app_interrogate.c
-endif
-
-if INCLUDE_TESTCASES_COND
-ddcutil_SOURCES += app_ddcutil/app_testcases.c
-else
-ddcutil_SOURCES += test/testcase_mock_table.c
-endif
+ddcutil_SOURCES = 
 
 #
 # Files only in libddcutil
@@ -238,6 +218,7 @@ util/libutil.la
 
 # adl/libadl.la 
 
+
 if ENABLE_USB_COND
 libcommon_la_LIBADD += \
   usb_util/libusbutil.la \
@@ -245,6 +226,7 @@ libcommon_la_LIBADD += \
 endif
 
 libapp_la_LIBADD = \
+app_ddcutil/libappddcutil.la \
 util/libutilaux.la
 
 if ENABLE_ENVCMDS_COND

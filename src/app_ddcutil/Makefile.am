@@ -1,0 +1,45 @@
+AM_CPPFLAGS =        \
+  $(GLIB_CFLAGS)     \
+  -I$(top_srcdir)/src \
+  -I$(top_srcdir)/src/public
+
+
+AM_CFLAGS = -Wall 
+AM_CFLAGS += -Werror
+# AM_CFLAGS += -Wpedantic
+
+if ENABLE_CALLGRAPH_COND
+AM_CFLAGS += -fdump-rtl-expand
+endif
+
+CLEANFILES = \
+*expand
+
+# Intermediate Library
+noinst_LTLIBRARIES = libappddcutil.la
+
+libappddcutil_la_SOURCES =     \
+main.c \
+app_capabilities.c \
+app_dumpload.c \
+app_dynamic_features.c \
+app_experimental.c \
+app_getvcp.c \
+app_probe.c \
+app_setvcp.c \
+app_vcpinfo.c
+
+if INCLUDE_TESTCASES_COND
+libappddcutil_la_SOURCES += app_testcases.c
+else
+libappddcutil_la_SOURCES += ../test/testcase_mock_table.c
+endif
+
+
+
+if ENABLE_ENVCMDS_COND
+libappddcutil_la_SOURCES += \
+app_interrogate.c
+endif
+
+
