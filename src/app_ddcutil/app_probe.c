@@ -2,7 +2,7 @@
   * Implement PROBE command
   */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "public/ddcutil_types.h"
@@ -20,6 +20,8 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
+
+#include "dynvcp/dyn_feature_codes.h"
 
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_capabilities.h"
