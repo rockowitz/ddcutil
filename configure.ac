@@ -90,6 +90,7 @@ AC_CONFIG_FILES([
 	src/cmdline/Makefile
 	src/app_sysenv/Makefile
 	src/app_ddcutil/Makefile
+	src/libmain/Makefile
 	src/sample_clients/Makefile
 	man/Makefile 
 	data/Makefile 

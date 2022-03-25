@@ -3,6 +3,9 @@
 SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc
 if INCLUDE_TESTCASES_COND
 SUBDIRS += test
+endif 
+if ENABLE_SHARED_LIB_COND
+SUBDIRS += libmain
 endif
 SUBDIRS += app_sysenv app_ddcutil cmdline .  sample_clients
 
@@ -52,53 +55,26 @@ maintainerclean-local:
 # Execuatables 
 #
 
-bin_PROGRAMS = \
-  ddcutil  
-
-
-#
-# Intermediate Libraries
-#
-
-# Convenience library containing code shared between ddcutil executable and libddcutil shared library
-noinst_LTLIBRARIES = libcommon.la 
-
-# Convenience library to collect code used only in ddcutil executable
-noinst_LTLIBRARIES += libapp.la
-
-
-# Public Shared Library
-#
+bin_PROGRAMS = ddcutil  
+ddcutil_SOURCES = 
 
 if ENABLE_SHARED_LIB_COND
 lib_LTLIBRARIES = libddcutil.la
-# noinst_LTLIBRARIES += libhack.la
+libddcutil_la_SOURCES =
 endif
+  
+#
+# Intermediate libraries built in this directory
+#
 
-#
-# Files only in ddcutil executable
-#
-ddcutil_SOURCES = 
+# Convenience library containing code shared between ddcutil executable and libddcutil shared library
+noinst_LTLIBRARIES = libcommon.la
+libcommon_la_SOURCES = 
 
-#
-# Files only in libddcutil
-#
-libddcutil_la_SOURCES = \
-   libmain/api_base.c \
-   libmain/api_displays.c \
-   libmain/api_error_info_internal.c \
-   libmain/api_metadata.c \
-   libmain/api_feature_access.c \
-   libmain/api_capabilities.c \
-   libmain/api_services_internal.c
-
-#
-# libcommon contains the source files that are 
-# shared between ddcutil and libddcutil: 
-#
-libcommon_la_SOURCES =      	
-
+# Convenience library to collect code used only in ddcutil executable
+noinst_LTLIBRARIES += libapp.la
 libapp_la_SOURCES =
+
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
@@ -205,7 +181,7 @@ AM_CFLAGS_STD=$(AM_CFLAGS)
 export AM_CFLAGS_STD
   
 #
-# Link the libraries 
+# Link convenience library libcommon.la 
 #
 # Be careful about library ordering. 
 # A library must be listed after any libraries that depend on it
@@ -220,14 +196,31 @@ cmdline/libcmdline.la \
 base/libbase.la  \
 util/libutil.la 
 
-# adl/libadl.la 
-
-
 if ENABLE_USB_COND
 libcommon_la_LIBADD += \
   usb_util/libusbutil.la \
   usb/libusb.la
 endif
+
+if USE_X11_COND
+  libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
+endif
+
+# if ENABLE_YAML_COND
+#   libcommon_la_LIBADD += $(YAML_LIBS)
+# endif 
+
+libcommon_la_LIBADD += \
+  $(GLIB_LIBS)   \
+  $(UDEV_LIBS)   \
+  $(LIBUSB_LIBS) \
+  $(KMOD_LIBS)
+
+libcommon_la_LIBADD += -li2c
+
+#
+# Link convenience library libapp
+#
 
 libapp_la_LIBADD = \
 app_ddcutil/libappddcutil.la \
@@ -243,50 +236,13 @@ libapp_la_LIBADD  += \
 test/libtestcases.la
 endif
 
-if USE_X11_COND
-  libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
-endif
 if USE_LIBDRM_COND
   libapp_la_LIBADD += $(LIBDRM_LIBS) 
 endif
-# if ENABLE_YAML_COND
-#   libcommon_la_LIBADD += $(YAML_LIBS)
-# endif 
-
-libcommon_la_LIBADD += \
-  $(GLIB_LIBS)   \
-  $(UDEV_LIBS)   \
-  $(LIBUSB_LIBS) \
-  $(KMOD_LIBS)
-
-libcommon_la_LIBADD += -li2c
-
-# libddcutil_la_LIBADD = -lz
-libddcutil_la_LIBADD = $(ZLIB_LIBS)
-
-libddcutil_la_LIBADD +=  libcommon.la 
-
-libddcutil_la_LDFLAGS = 
-# Note -export-dynamic not required for failsim, don't need to append 
-# libddcutil_la_LDFLAGS += -export-dynamic
-
-libddcutil_la_LDFLAGS += -export-symbols-regex '(^DDCA_|^ddc[ags]_[^_])'
-libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
-libddcutil_la_LDFLAGS += -pie
-
-if ASAN_COND
-   libddcutil_la_LDFLAGS += -fsanitize=address
-   # needed? 
-   libddcutil_la_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
-endif
-
-# doesn't prevent creation of .la 
-# try disabling to create libddcutil.a - doesnt do it
-libddcutil_la_LDFLAGS += --disable-static
 
 
 #
-# Link the executables
+# Link ddcutil executable
 #
 
 # ddcutil statically links libcommon, rather than using libddcutil.so
@@ -308,6 +264,37 @@ if ASAN_COND
    # needed? 
    ddcutil_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
 endif
+
+
+#
+# Link libddcutil executable
+#
+
+if ENABLE_SHARED_LIB_COND
+# libddcutil_la_LIBADD = -lz
+libddcutil_la_LIBADD = $(ZLIB_LIBS)
+
+libddcutil_la_LIBADD +=  libcommon.la libmain/libsharedlib.la 
+
+libddcutil_la_LDFLAGS = 
+# Note -export-dynamic not required for failsim, don't need to append 
+# libddcutil_la_LDFLAGS += -export-dynamic
+libddcutil_la_LDFLAGS += -export-symbols-regex '(^DDCA_|^ddc[ags]_[^_])'
+libddcutil_la_LDFLAGS += -version-info '@LT_CURRENT@:@LT_REVISION@:@LT_AGE@' 
+libddcutil_la_LDFLAGS += -pie
+
+if ASAN_COND
+   libddcutil_la_LDFLAGS += -fsanitize=address
+   # needed? 
+   libddcutil_la_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
+endif
+
+# doesn't prevent creation of .la 
+# try disabling to create libddcutil.a - doesnt do it
+libddcutil_la_LDFLAGS += --disable-static
+
+endif
+
 
 # debug-install-hook:
 #  	ls -ld $(DESTDIR)$(libdir)
