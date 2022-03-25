@@ -645,7 +645,7 @@ ddc_get_formatted_value_for_dfm(
             *formatted_value_loc = formatted;
             free(hexbuf);
          }
-         else {                                // OL_PROGRAM, not table feature
+         else {                                // OL_PROGRAM, not table featdyn_create_feature_set2ure
             DDCA_Version_Feature_Flags vflags = dfm->feature_flags;
             // =   get_version_sensitive_feature_flags(vcp_entry, vspec);
             char buf[200];
@@ -835,7 +835,6 @@ show_feature_set_values2_dfm(
 }
 
 
-
 #ifdef FUTURE
 //typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
 bool hack42(VCP_Feature_Table_Entry * ventry) {
@@ -855,20 +854,16 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
 #endif
 
 
-
-/* Shows the VCP values for all features in a VCP feature subset.
+/** Shows the VCP values for all features in a VCP feature subset.
  *
- * Arguments:
- *    dh         display handle for open display
- *    subset     feature subset id
- *    collector  accumulates output    // if null, write to current stdout device
- *    flags      feature set flags
- *    features_seen   if non-null, collect ids of features that exist
- *
- * Returns:
- *    status code
+ *  @param  dh         display handle for open display
+ *  @param  subset     feature subset id
+ *  @param  collector  accumulates output    // if null, write to current stdout device
+ *  @param  flags      feature set flags
+ *  @param  features_seen   collect ids of features that exist
+ *  @return status code
  */
-// 11/2019: only call is from app_getvcp.c
+// 11/2019: only call is from app_getvcp.c, move there?
 Public_Status_Code
 ddc_show_vcp_values(
         Display_Handle *    dh,
