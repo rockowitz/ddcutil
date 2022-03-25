@@ -44,7 +44,9 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
+#ifdef BUILD_SHARED_LIB
 #include "ddc/ddc_watch_displays.h"
+#endif
 
 #include "ddc/ddc_services.h"
 
@@ -175,7 +177,9 @@ void init_ddc_services() {
    init_ddc_read_capabilities();
    init_ddc_multi_part_io();
    init_ddc_vcp();
+#ifdef BUILD_SHARED_LIB
    init_ddc_watch_displays();
+#endif
 
    // dbgrpt_rtti_func_name_table(1);
    DBGMSF(debug, "Done");
