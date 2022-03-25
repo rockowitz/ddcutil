@@ -1,7 +1,7 @@
 /* ddc_vcp_tests.h
  *
  * <copyright>
- * Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -43,7 +43,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/wrap_i2c-dev.h"
 
-#include "adl/adl_shim.h"
+// #include "adl/adl_shim.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
@@ -55,6 +55,14 @@
 
 
 // #define TIMEOUT 50000
+
+// replaces i2c_set_addr() in i2c_bus_core.c, i2c_set_addr() no longer exists
+int local_set_addr(int fd, int addr) {
+      int rc = ioctl(fd, I2C_SLAVE, addr);
+      if (rc < 0)
+         rc = -errno;
+      return rc;
+}
 
 
 
@@ -260,7 +268,7 @@ void probe_get_luminosity(int busno, char * write_mode, char * read_mode) {
       free_ddc_packet(request_packet_ptr);
       return;
    }
-   rc = i2c_set_addr(file, 0x37, CALLOPT_ERR_MSG);
+   rc = local_set_addr(file, 0x37);
    if (rc < 0) {
       free_ddc_packet(request_packet_ptr);
       goto bye;

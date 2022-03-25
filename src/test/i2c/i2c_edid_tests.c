@@ -1,7 +1,7 @@
 /* i2c_edid_tests.c
  *
  * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -44,6 +44,14 @@
 #include "test/i2c/i2c_io_old.h"
 #include "test/i2c/i2c_edid_tests.h"
 
+// replaces i2c_set_addr() in i2c_bus_core.c, i2c_set_addr() no longer exists
+int local_set_addr(int fd, int addr) {
+      int rc = ioctl(fd, I2C_SLAVE, addr);
+      if (rc < 0)
+         rc = -errno;
+      return rc;
+}
+
 
 // Test reading EDID using essentially the code in libxcm.
 
@@ -59,7 +67,7 @@ void read_edid_ala_libxcm(int busno) {
    if (fd < 0)
       return;
 
-   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   rc = local_set_addr(fd, 0x50);
    if (rc < 0)
       goto bye;
 
@@ -102,7 +110,7 @@ void probe_read_edid(int busno, char * write_mode, char * read_mode) {
    if (fd < 0)
       return;
 
-   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   rc = local_set_addr(fd, 0x50);
    if (rc < 0)
       goto bye;
    // usleep(TIMEOUT);

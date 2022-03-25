@@ -3,7 +3,7 @@
  * Dispatch test cases
  *
  * <copyright>
- * Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -28,7 +28,7 @@
 
 #include "base/core.h"
 
-#include "adl/adl_shim.h"
+// #include "adl/adl_shim.h"
 
 #include "test/testcase_table.h"
 
@@ -74,12 +74,14 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
          }
       }
 
+#ifdef ADL
       if (ok) {
          if (pdid->id_type == DISP_ID_ADL && !adlshim_is_available()) {
             printf("ADL adapter.display numbers specified, but ADL is not available.\n");
             ok = false;
          }
       }
+#endif
 
       if (ok) {
          switch (pDesc->drefType) {
@@ -100,6 +102,7 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
             }
             break;
 
+#ifdef ADL
          case DisplayRefAdl:
              // if (parsedCmd->dref->ddc_io_mode == DDC_IO_DEVI2C) {
              if (pdid->id_type != DISP_ID_ADL) {
@@ -111,6 +114,7 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
                 pDesc->fp_adl(pdid->iAdapterIndex, pdid->iDisplayIndex);
              }
              break;
+#endif
 
          case DisplayRefAny:
             {

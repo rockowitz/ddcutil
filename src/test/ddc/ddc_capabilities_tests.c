@@ -1,7 +1,7 @@
 /* ddc_capabilities_tests.c
  *
  * <copyright>
- * Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -21,7 +21,10 @@
  * </endcopyright>
  */
 
+#include <errno.h>
 #include <unistd.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
 #include "util/string_util.h"
 
@@ -34,6 +37,15 @@
 #include "i2c/i2c_bus_core.h"
 
 #include "test/ddc/ddc_capabilities_tests.h"
+
+// replaces i2c_set_addr() in i2c_bus_core.c, i2c_set_addr() no longer exists
+int local_set_addr(int fd, int addr) {
+      int rc = ioctl(fd, I2C_SLAVE, addr);
+      if (rc < 0)
+         rc = -errno;
+      return rc;
+}
+
 
 
 //
@@ -61,7 +73,7 @@ void probe_get_capabilities(int busno, char* write_mode, char* read_mode, Byte a
       return;
 
    printf("Setting addr to %02x\n", addr);
-   rc = i2c_set_addr(file, addr,CALLOPT_ERR_MSG );
+   rc = local_set_addr(file, addr );
    if (rc < 0)
       goto bye;
 
