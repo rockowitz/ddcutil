@@ -31,8 +31,6 @@ app_vcpinfo.c
 
 if INCLUDE_TESTCASES_COND
 libappddcutil_la_SOURCES += app_testcases.c
-else
-libappddcutil_la_SOURCES += ../test/testcase_mock_table.c
 endif
 
 
