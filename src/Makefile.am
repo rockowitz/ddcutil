@@ -1,6 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc test app_sysenv app_ddcutil cmdline .  sample_clients
+SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc
+if INCLUDE_TESTCASES_COND
+SUBDIRS += test
+endif
+SUBDIRS += app_sysenv app_ddcutil cmdline .  sample_clients
 
 MOSTLYCLEANFILES =   
 
@@ -234,8 +238,10 @@ libapp_la_LIBADD  += \
 app_sysenv/libappsysenv.la 
 endif
 
+if INCLUDE_TESTCASES_COND
 libapp_la_LIBADD  += \
 test/libtestcases.la
+endif
 
 if USE_X11_COND
   libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
