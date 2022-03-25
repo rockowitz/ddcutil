@@ -1,7 +1,7 @@
 /* \file ddc_output.h
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_OUTPUT_H_
@@ -15,11 +15,8 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-#include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_values.h"
-
-#include "dynvcp/dyn_feature_codes.h"
 
 
 // TODO: Should probably be in a more general location
