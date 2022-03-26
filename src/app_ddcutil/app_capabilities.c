@@ -1,9 +1,9 @@
 /** \file app_capabilities.c
  *
- *  Capabilities functions factored out of main.c
+ *  Implement the CAPABILITIES command
  */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -26,9 +26,6 @@
 #include "base/displays.h"
 #include "base/rtti.h"
 /** \endcond */
-
-#include "vcp/parse_capabilities.h"
-#include "vcp/persistent_capabilities.h"
 
 #include "dynvcp/dyn_parsed_capabilities.h"
 
@@ -60,12 +57,10 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
 
    FILE * ferr = stderr;
    Error_Info * ddc_excp = NULL;
-   Public_Status_Code psc = 0;
    *capabilities_string_loc = NULL;
 
    ddc_excp = ddc_get_capabilities_string(dh, capabilities_string_loc);
-   psc =  ERRINFO_STATUS(ddc_excp);
-   ASSERT_IFF(ddc_excp, psc);
+   DDCA_Status psc = ERRINFO_STATUS(ddc_excp);
 
    if (ddc_excp) {
       switch(psc) {
@@ -83,13 +78,12 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
-      // errinfo_free(ddc_excp);
       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
-
    }
 
    DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "*capabilities_string_loc -> %s",
                                              *capabilities_string_loc);
+   ASSERT_IFF(*capabilities_string_loc, psc==0);
    return psc;
 }
 
@@ -107,7 +101,6 @@ app_show_parsed_capabilities(Display_Handle * dh, Parsed_Capabilities * pcap)
    if ( dh->dref->io_path.io_mode == DDCA_IO_USB )
       pcap->raw_value_synthesized = true;
 
-   // report_parsed_capabilities(pcap, dh->dref->io_path.io_mode);    // io_mode no longer needed
    dyn_report_parsed_capabilities(pcap, dh, /* Display_Ref* */ NULL, 0);
 }
 

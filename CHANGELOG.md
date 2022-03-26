@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.2.3] 2022-05-01
+
+### Added
+
+## Changed
+
+- EBUSY
+Avoid most (all?) EBUSY errors.  
+Exclusively use the ioctl() interface for instead of file read() and write().  
+Makes use of ioctl(SLAVE_ADDRESS) unnecssary, which has be the locus of all 
+diagnosed EBUSY errors.  EBUSY errors are still possible within individual drivers, 
+but have never been observed.
+Option --force-slave-address now has no effect. 
+
+- Extensive code cleanup
+  - Source directory ADL removed
+
+Post open sleeps permanently eliminated. Options --sleep-less, ... 
+have no effect.
+
+-- ddcutil detect --verbose: additional information
+   - report product code in hex as well as decimal
+   - EDID source field?   new val SYSFS
+   
+
+-- ddcutil sysenv --verbose: improved sysfs scanning
+
+
+
+
+
+## Fixed
+
+- Sleep multiplier not respected for new API threads
+
+-- miscellaneous memory leaks
+
+-- don't use g_byte_array_steal(), reuires glib 2.60
+
 ## [1.2.2] 2022-01-22
 
 ### Added
