@@ -4,7 +4,7 @@
  * Capabilities.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -166,10 +166,11 @@ try_multi_part_read(
 *  @param  all_zero_response_ok  if true, zero response is not an error
 *  @param  buffer_loc            address at which to return newly allocated #Buffer in which
 *                                result is returned
-*
 *  @retval  NULL    success
 *  @retval  #Ddc_Error containing status DDCRC_UNSUPPORTED does not support Capabilities Request
 *  @retval  #Ddc_Error containing status DDCRC_TRIES  maximum retries exceeded:
+*
+*  *buffer_loc is set iff returned value is NULL
 */
 Error_Info *
 multi_part_read_with_retry(
@@ -186,11 +187,9 @@ multi_part_read_with_retry(
           ", max_multi_part_read_tries=%d",
           request_type, request_subtype, sbool(all_zero_response_ok), max_multi_part_read_tries);
 
-
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;
-   // Public_Status_Code try_status_codes[MAX_MAX_TRIES];
-   Error_Info *        try_errors[MAX_MAX_TRIES];
+   Error_Info * try_errors[MAX_MAX_TRIES];
 
    int tryctr = 0;
    bool can_retry = true;
@@ -250,7 +249,6 @@ multi_part_read_with_retry(
          DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
       }
    }
-
 
    if (rc < 0) {
       buffer_free(accumulator, "capabilities buffer, error");
