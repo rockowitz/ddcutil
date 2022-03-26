@@ -46,9 +46,9 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
  *  form in a Buffer struct.  It is the responsibility of the caller to
  *  free this struct.
  *
- * @param dh                       display handle
- * @param capabilities_buffer_loc  address at which to return pointer to allocated Buffer
- * @return                         status code
+ *  @param dh                       display handle
+ *  @param capabilities_buffer_loc  address at which to return pointer to allocated Buffer
+ *  @return                         pointer to #Error_Info struct, NULL if no error
  */
 static Error_Info *
 get_capabilities_into_buffer(
@@ -57,7 +57,6 @@ get_capabilities_into_buffer(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
-   Public_Status_Code psc;
    Error_Info * ddc_excp = NULL;
 
    TUNED_SLEEP_WITH_TRACE(dh, SE_PRE_MULTI_PART_READ, "Before reading capabilities");
@@ -69,9 +68,8 @@ get_capabilities_into_buffer(
                false,                      // !all_zero_response_ok
                capabilities_buffer_loc);
    Buffer * cap_buffer = *capabilities_buffer_loc;
-   psc = ERRINFO_STATUS(ddc_excp);
-   assert(psc <= 0);
-   if (psc == 0) {
+   ASSERT_IFF(cap_buffer, !ddc_excp);
+   if (!ddc_excp) {
       // trim trailing blanks and nulls
       int len = buffer_length(*capabilities_buffer_loc);
       while ( len > 0 ) {
@@ -85,22 +83,21 @@ get_capabilities_into_buffer(
       buffer_set_byte(cap_buffer, len, '\0');
       buffer_set_length(cap_buffer, len+1);
    }
+
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp,
                        "*capabilities_buffer_loc=%p", *capabilities_buffer_loc);
+   ASSERT_IFF(*capabilities_buffer_loc, !ddc_excp);
    return ddc_excp;
 }
 
 
-/* Gets the capabilities string for a display.
+/** Gets the capabilities string for a display.
  *
- * The value is cached as this is an expensive operation.
+ *  The value is cached as this is an expensive operation.
  *
- * Arguments:
- *   dh       display handle
- *   caps_loc location where to return pointer to capabilities string.
- *
- * Returns:
- *   status code
+ *  @param  dh       display handle
+ *  @param  caps_loc location where to return pointer to capabilities string.
+ *  @return pointer to #Error_Info struct, NULL if no error
  *
  * The returned pointer is to a string that is part of the display reference
  * associated with the display handle.  It should NOT be freed by the caller.
@@ -149,6 +146,8 @@ ddc_get_capabilities_string(
       }
    }
    *caps_loc = dh->dref->capabilities_string;
+
+   ASSERT_IFF(*caps_loc, !ddc_excp);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*caps_loc -> |%s|", *caps_loc);
    return ddc_excp;
 }
