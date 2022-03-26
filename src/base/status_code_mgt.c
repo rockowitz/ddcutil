@@ -271,6 +271,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 #define GSC_WORKBUF_SIZE 300
 
 /** Returns a description string for a #Public_Status_Code.
+ *  Normally this has the form: symbolic-name(numeric-value): description
  *  Synthesizes a description if information for the status code cannot be found.
  *
  *  @param  psc  status code number
@@ -283,9 +284,6 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 char * psc_desc(Public_Status_Code psc) {
    static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
    char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
-   // printf("(%s) workbuf=%p\n", __func__, workbuf);
-   // static char workbuf[GSC_WORKBUF_SIZE];
-   // printf("(%s) status_code=%d\n", __func__, status_code);
    Status_Code_Info * pinfo = find_status_code_info(psc);
    if (pinfo) {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
@@ -299,7 +297,7 @@ char * psc_desc(Public_Status_Code psc) {
 }
 
 
-/** Returns a string containing the name of a #Public_Status_Code,
+/** Returns a string containing the symbolic name of a #Public_Status_Code,
  *  followed by its numeric value.
  *
  *  If the code is not recognized, the string contains only the numeric value.
@@ -314,22 +312,15 @@ char * psc_desc(Public_Status_Code psc) {
 char * psc_name_code(Public_Status_Code psc) {
    static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
    char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
-   // printf("(%s) workbuf=%p\n", __func__, workbuf);
-   // static char workbuf[GSC_WORKBUF_SIZE];
-   // printf("(%s) status_code=%d\n", __func__, status_code);
    Status_Code_Info * pinfo = find_status_code_info(psc);
    if (pinfo) {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d)",
-               pinfo->name, psc);
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d)", pinfo->name, psc);
    }
    else {
-      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d",
-               psc );
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d", psc);
    }
    return workbuf;
 }
-
-
 
 #undef GSC_WORKBUF_SIZE
 
@@ -363,7 +354,6 @@ bool status_name_to_unmodulated_number(
    bool found = false;
 
    for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
-      // printf("ndx=%d, id=%d, base=%d\n", ndx, retcode_range_table[ndx].id, retcode_range_table[ndx].base);
       if (retcode_range_table[ndx].base_number_finder) {
          found = retcode_range_table[ndx].base_number_finder(status_code_name, &status_code);
          if (found)
@@ -392,7 +382,6 @@ status_name_to_modulated_number(
    bool found = false;
 
    for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
-      // printf("ndx=%d, id=%d, base=%d\n", ndx, retcode_range_table[ndx].id, retcode_range_table[ndx].base);
       if (retcode_range_table[ndx].number_finder) {
          found = retcode_range_table[ndx].number_finder(status_code_name, &psc);
          if (found)
@@ -413,10 +402,8 @@ status_name_to_modulated_number(
  */
 void init_status_code_mgt() {
    // N.B called before command line parsed, so command line trace control not in effect
-   // printf("(%s) Starting\n", __func__);
    validate_retcode_range_table();                         // uses asserts to check consistency
    // error_counts_hash = g_hash_table_new(NULL,NULL);
-
    // initialize_ddcrc_desc();
 }
 
