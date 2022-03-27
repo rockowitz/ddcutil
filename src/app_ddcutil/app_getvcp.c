@@ -308,8 +308,9 @@ app_show_feature_set_values_by_dh(
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      char * s0 = feature_set_flag_names_t(parsed_cmd->flags);
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s", dh_repr(dh), fsref_repr_t(parsed_cmd->fref), s0);
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s",
+                             dh_repr(dh), fsref_repr_t(parsed_cmd->fref),
+                             feature_set_flag_names_t(parsed_cmd->flags));
       // dbgrpt_feature_set_ref(parsed_cmd->fref,1);
    }
 
