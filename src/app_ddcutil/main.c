@@ -101,6 +101,7 @@
 #include "app_ddcutil/app_getvcp.h"
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/app_vcpinfo.h"
+#include "app_ddcutil/app_watch.h"
 #ifdef INCLUDE_TESTCASES
 #include "app_ddcutil/app_testcases.h"
 #endif
