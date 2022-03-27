@@ -1,9 +1,9 @@
-/** @file app_dumpload.c
+/** \file app_dumpload.c
  *
  *  Primary file for the DUMPVCP and LOADVCP commands
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -11,7 +11,6 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
 #ifdef TARGET_BSD
 // what goes here?
@@ -23,8 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -35,19 +32,11 @@
 /** \endcond */
 
 #include "base/core.h"
-#include "base/ddc_errno.h"
-#include "base/ddc_packets.h"
 #include "base/rtti.h"
-#include "vcp/vcp_feature_values.h"
 
 #include "i2c/i2c_bus_core.h"
 
-#include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
-#include "ddc/ddc_output.h"
-#include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_read_capabilities.h"
-#include "ddc/ddc_vcp.h"
 
 #include "app_ddcutil/app_dumpload.h"
 
@@ -67,33 +56,36 @@ static const char TRACE_GROUP = DDCA_TRC_TOP;
  * \param  buf          buffer in which to return filename
  * \param  bufsz        buffer size
  */
-char * create_simple_vcp_fn_by_edid(
+static
+void create_simple_vcp_fn_by_edid(
           Parsed_Edid * edid,
           time_t        time_millis,
           char *        buf,
           int           bufsz)
 {
    assert(edid);
-   if (bufsz == 0 || buf == NULL) {
-      bufsz = 128;
-      buf = calloc(1, bufsz);
-   }
+   assert(buf && bufsz > 80);
 
    char timestamp_text[30];
    format_timestamp(time_millis, timestamp_text, 30);
-   snprintf(buf, bufsz, "%s-%s-%s.vcp",
-            edid->model_name,
-            edid->serial_ascii,
-            timestamp_text
-           );
+   g_snprintf(buf, bufsz, "%s-%s-%s.vcp",
+              edid->model_name,
+              edid->serial_ascii,
+              timestamp_text
+             );
    str_replace_char(buf, ' ', '_');     // convert blanks to underscores
-
-   // DBGMSG("Returning %s", buf );
-   return buf;
 }
 
 
-char * create_simple_vcp_fn_by_dh(
+/** Creates a VCP filename from a #Display_Handle and a timestamp.
+ *
+ * \param  edid         pointer to parsed edid
+ * \param  time_millis  timestamp to use
+ * \param  buf          buffer in which to return filename
+ * \param  bufsz        buffer size
+ */
+static
+void create_simple_vcp_fn_by_dh(
           Display_Handle * dh,
           time_t           time_millis,
           char *           buf,
@@ -101,9 +93,8 @@ char * create_simple_vcp_fn_by_dh(
 {
    Parsed_Edid * edid = dh->dref->pedid;
    assert(edid);
-   return create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
+   create_simple_vcp_fn_by_edid(edid, time_millis, buf, bufsz);
 }
-
 
 
 /** Executes the DUMPVCP command, writing the output to a file.
@@ -114,22 +105,19 @@ char * create_simple_vcp_fn_by_dh(
  *  \return status code
  */
 Status_Errno_DDC
-dumpvcp_as_file(Display_Handle * dh, const char * filename)
+app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, filename=%p->%s", dh_repr_t(dh), filename, filename);
-   char * actual_filename = NULL;
 
+   char * actual_filename = NULL;
    FILE * fout = stdout;
    FILE * ferr = stderr;
-   Status_Errno_DDC ddcrc = 0;
-
    Dumpload_Data * data = NULL;
-   ddcrc = dumpvcp_as_dumpload_data(dh, &data);
+   Status_Errno_DDC ddcrc = dumpvcp_as_dumpload_data(dh, &data);
    if (ddcrc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
       FILE * output_fp = NULL;
-
       if (filename) {
          output_fp = fopen(filename, "w+");
          if (!output_fp) {
@@ -141,8 +129,6 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
       else {
          char simple_fn_buf[NAME_MAX+1];
          time_t time_millis = data->timestamp_millis;
-         // avoids coverity warning re leaked memory, but causes gcc warning that always true:
-         // assert(simple_fn_buf && sizeof(simple_fn_buf) > 0);
          create_simple_vcp_fn_by_dh(
                                dh,
                                time_millis,
@@ -172,9 +158,8 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
          fclose(output_fp);
       }
       else {
-         int errsv = errno;
+         ddcrc = -errno;
          f0printf(ferr, "Unable to open %s for writing: %s\n", actual_filename, strerror(errno));
-         ddcrc = -errsv;
       }
 
       g_ptr_array_free(strings, true);
@@ -195,7 +180,7 @@ dumpvcp_as_file(Display_Handle * dh, const char * filename)
  *  \return pointer to newly allocated #Dumpload_Data struct.
  *          Caller is responsible for freeing
  */
-Dumpload_Data *
+static Dumpload_Data *
 read_vcp_file(const char * fn)
 {
    FILE * ferr = stderr;
@@ -239,18 +224,16 @@ read_vcp_file(const char * fn)
  *
  * \param   fn          file name
  * \param   dh          handle for open display
- * \return  true if load succeeded, false if not
+ * \return  status code
  */
-// TODO: convert to Status_Errno_DDC
-bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
-   FILE * fout = stdout;
-   // FILE * ferr = stderr;
+Status_Errno_DDC
+app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting. fn=%s, dh=%p %s", fn, dh, (dh) ? dh_repr(dh):"");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fn=%s, dh=%p %s", fn, dh, (dh) ? dh_repr(dh):"");
+   FILE * fout = stdout;
 
    DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= DDCA_OL_VERBOSE);
-   bool ok = false;
    Status_Errno_DDC ddcrc = 0;
    Error_Info * ddc_excp = NULL;
 
@@ -275,12 +258,12 @@ bool loadvcp_by_file(const char * fn, Display_Handle * dh) {
          ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
       }
       free_dumpload_data(pdata);
-      ok = (ddcrc == 0);
    }
 
-   DBGMSF(debug, "Returning: %s", sbool(ok));
-   return ok;
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
 }
+
 
 #ifdef UNUSED
 bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
@@ -302,7 +285,7 @@ bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
    }
 
    if (loadvcp_ok)
-      loadvcp_ok = loadvcp_by_file(fn, dh);
+      loadvcp_ok = app_loadvcp_by_file(fn, dh);
 
    // if we opened the display, close it
    if (dh)
@@ -315,7 +298,9 @@ bool app_loadvcp(const char * fn, Display_Identifier * pdid) {
 }
 #endif
 
+
 void init_app_dumpload() {
-   RTTI_ADD_FUNC(dumpvcp_as_file);
+   RTTI_ADD_FUNC(app_dumpvcp_as_file);
+   RTTI_ADD_FUNC(app_loadvcp_by_file);
 }
 

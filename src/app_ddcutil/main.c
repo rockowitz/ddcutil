@@ -501,8 +501,8 @@ execute_cmd_with_optional_display_handle(
          // loadvcp will search monitors to find the one matching the
          // identifiers in the record
          ddc_ensure_displays_detected();
-         bool loadvcp_ok = loadvcp_by_file(parsed_cmd->args[0], dh);
-         main_rc = (loadvcp_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+         Status_Errno_DDC ddcrc = app_loadvcp_by_file(parsed_cmd->args[0], dh);
+         main_rc = (ddcrc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
          break;
       }
 
@@ -572,7 +572,7 @@ execute_cmd_with_optional_display_handle(
          ensure_vcp_version_set(dh);
 
          Public_Status_Code psc =
-               dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
+               app_dumpvcp_as_file(dh, (parsed_cmd->argct > 0)
                                       ? parsed_cmd->args[0]
                                       : NULL );
          main_rc = (psc==0) ? EXIT_SUCCESS : EXIT_FAILURE;
