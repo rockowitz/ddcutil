@@ -17,7 +17,6 @@
 #else
 #include <linux/limits.h>    // PATH_MAX, NAME_MAX
 #endif
-#include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +28,7 @@
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
+#include "util/xdg_util.h"
 /** \endcond */
 
 #include "base/core.h"
@@ -40,14 +40,10 @@
 
 #include "app_ddcutil/app_dumpload.h"
 
-
 static const char TRACE_GROUP = DDCA_TRC_TOP;
 
+
 // Filename creation
-
-// TODO: generalize, get default dir following XDG settings
-#define USER_VCP_DATA_DIR ".local/share/ddcutil"
-
 
 /** Uses the identifiers in an EDID and a timestamp to create a VCP filename.
  *
@@ -103,6 +99,9 @@ void create_simple_vcp_fn_by_dh(
  *  \param  filename  name of file to write to,
  *                    if NULL, the file name is generated
  *  \return status code
+ *
+ *  If the file name is generated, it is in the ddcutil subdirectory of the
+ *  user's XDG home data directory, normally $HOME/.local/share/ddcutil/
  */
 Status_Errno_DDC
 app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
@@ -134,10 +133,7 @@ app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
                                time_millis,
                                simple_fn_buf,
                                sizeof(simple_fn_buf));
-         struct passwd * pw = getpwuid(getuid());
-         const char * homedir = pw->pw_dir;
-
-         actual_filename = g_strdup_printf("%s/%s/%s", homedir, USER_VCP_DATA_DIR, simple_fn_buf);
+         actual_filename = xdg_data_home_file("ddcutil",simple_fn_buf);
          // control with MsgLevel?
          f0printf(fout, "Writing file: %s\n", actual_filename);
          ddcrc = fopen_mkdir(actual_filename, "w+", ferr, &output_fp);
