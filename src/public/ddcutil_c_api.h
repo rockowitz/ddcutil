@@ -1367,7 +1367,7 @@ ddca_feature_list_clear(
  *
  *  @param[in]  vcplist   pointer to feature list
  *  @param[in]  vcp_code  VCP feature code
- *  #return     modified feature list
+ *  @return     modified feature list
  *
  *  @remark
  *  The feature list is modified in place and also returned.
