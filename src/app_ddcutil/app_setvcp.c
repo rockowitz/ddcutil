@@ -16,6 +16,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
 
@@ -26,6 +27,9 @@
 #include "dynvcp/dyn_feature_codes.h"
 
 #include "app_setvcp.h"
+
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 
 /** Converts a VCP feature value from string form to internal form.
@@ -95,7 +99,7 @@ parse_vcp_value(
  *   \param  value_type indicates if a relative value
  *   \param  new_value  new feature value (as string)
  *   \param  force      attempt to set feature even if feature code unrecognized
- *   \return NULL if success, Error_Info if error
+ *   \return #Error_Info if error
  */
 Error_Info *
 app_set_vcp_value(
@@ -107,7 +111,7 @@ app_set_vcp_value(
 {
    FILE * errf = ferr();
    bool debug = false;
-   DBGTRC_STARTING(debug,DDCA_TRC_TOP, "feature=0x%02x, new_value=%s, value_type=%s, force=%s",
+   DBGTRC_STARTING(debug,TRACE_GROUP, "feature=0x%02x, new_value=%s, value_type=%s, force=%s",
                 feature_code, new_value, setvcp_value_type_name(value_type), sbool(force));
 
    assert(new_value && strlen(new_value) > 0);
@@ -244,15 +248,18 @@ app_set_vcp_value(
 bye:
    dfm_free(dfm);  // handles dfm == NULL
 
-   DBGTRC_DONE(debug, DDCA_TRC_TOP, "Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
 
-bool app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
+Status_Errno_DDC
+app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
 {
-   bool ok = true;
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    Error_Info * ddc_excp = NULL;
+   Status_Errno_DDC ddcrc = 0;
    for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
       Parsed_Setvcp_Args * cur =
             &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
@@ -266,11 +273,17 @@ bool app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
          f0printf(ferr(), "%s\n", ddc_excp->detail);
          if (ddc_excp->status_code == DDCRC_RETRIES)
             f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-         ERRINFO_FREE_WITH_REPORT(ddc_excp, report_freed_exceptions);
-         ok = false;
+         ddcrc = ERRINFO_STATUS(ddc_excp);
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
          break;
       }
    }
-return ok;
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc,"");
+   return ddcrc;
 }
 
+
+void init_app_setvcp() {
+   RTTI_ADD_FUNC(app_setvcp);
+   RTTI_ADD_FUNC(app_set_vcp_value);
+}

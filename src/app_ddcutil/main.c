@@ -535,8 +535,8 @@ execute_cmd_with_optional_display_handle(
          check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
-         bool ok = app_setvcp(parsed_cmd, dh);
-         main_rc = (ok) ? EXIT_SUCCESS : EXIT_FAILURE;
+         int rc = app_setvcp(parsed_cmd, dh);
+         main_rc = (rc == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
       }
       break;
 
@@ -933,4 +933,5 @@ static void add_rtti_functions() {
    init_app_capabilities();
    init_app_dumpload();
    init_app_probe();
+   init_app_setvcp();
 }
