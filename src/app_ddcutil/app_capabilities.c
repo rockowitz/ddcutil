@@ -1,4 +1,4 @@
-/** \file app_capabilities.c
+/** @file app_capabilities.c
  *
  *  Implement the CAPABILITIES command
  */
@@ -42,8 +42,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
  *
  *  The value is cached as this is an expensive operation.
  *
- *  \param dh       display handle
- *  \param caps_loc location at which to return pointer to capabilities string.
+ *  @param dh       display handle
+ *  @param caps_loc location at which to return pointer to capabilities string.
  *  \return         status code
  *
  *  The returned pointer points to a string that is part of the
@@ -78,7 +78,7 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
                 __func__, dh_repr(dh));
          DBGMSG("Unexpected status code: %s", psc_desc(psc));
       }
-      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
+      ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
    }
 
    DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "*capabilities_string_loc -> %s",
@@ -90,29 +90,34 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
 
 /** Reports a #Parsed_Capabilities record, respecting dynamic feature definitions
  *
- *  \param  dh   display handle
- *  \param  pcap #Parsed_Capabilities to report
+ *  @param  dh   display handle
+ *  @param  pcap #Parsed_Capabilities to report
  */
 void
 app_show_parsed_capabilities(Display_Handle * dh, Parsed_Capabilities * pcap)
 {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    assert(pcap);
 
    if ( dh->dref->io_path.io_mode == DDCA_IO_USB )
       pcap->raw_value_synthesized = true;
 
    dyn_report_parsed_capabilities(pcap, dh, /* Display_Ref* */ NULL, 0);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
 /** Implements the CAPABILITIES command.
  *
- *  \param  dh #Display_Handle
+ *  @param  dh #Display_Handle
  *  \return status code
  */
 DDCA_Status
 app_capabilities(Display_Handle * dh)
 {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    char * capabilities_string;
    DDCA_Status ddcrc;
    FILE * fout = stdout;
@@ -135,10 +140,13 @@ app_capabilities(Display_Handle * dh)
          free_parsed_capabilities(pcaps);
       }
    }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
 void init_app_capabilities() {
    RTTI_ADD_FUNC(app_get_capabilities_string);
+   RTTI_ADD_FUNC(app_show_parsed_capabilities);
+   RTTI_ADD_FUNC(app_capabilities);
 }
 
