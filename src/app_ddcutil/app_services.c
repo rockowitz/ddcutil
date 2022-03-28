@@ -15,6 +15,7 @@
 #endif
 #include "app_probe.h"
 #include "app_setvcp.h"
+#include "app_watch.h"
 #include "app_vcpinfo.h"
 
 void init_app_services() {
@@ -25,4 +26,5 @@ void init_app_services() {
    init_app_dumpload();
    init_app_probe();
    init_app_setvcp();
+   init_app_watch();
 }

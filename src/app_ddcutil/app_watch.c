@@ -26,6 +26,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/vcp_version.h"
 
@@ -45,8 +46,8 @@
 #include "app_ddcutil/app_getvcp.h"
 
 
-// Default trace class for this file (unused)
-// static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 //
 // Watch for changed VCP values
@@ -132,7 +133,7 @@ show_changed_feature(Display_Handle * dh, Byte * p_changed_feature) {
 static Error_Info *
 app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, force_no_fifo = %s", dh_repr(dh), SBOOL(force_no_fifo));
    int MAX_CHANGES = 20;
    *changes_reported = false;
 
@@ -161,17 +162,17 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
    }
    else {
       Byte x02_value = p_nontable_response->sl;
-      DBGMSF(debug, "get_nontable_vcp_value() for feature 0x02 returned value 0x%02x", x02_value );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_nontable_vcp_value() for feature 0x02 returned value 0x%02x", x02_value );
       free(p_nontable_response);
 
       if (x02_value == 0xff) {
-         DBGMSF(debug, "No user controls exist");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No user controls exist");
          result = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__,
                         "Feature x02 (New Control Value) reports No User Controls");
       }
 
       else if (x02_value == 0x01) {
-         DBGMSF(debug, "No new control values found");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No new control values found");
          result = NULL;
       }
 
@@ -182,7 +183,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
       }
 
       else {
-         DBGMSF(debug, "New control values exist. x02 value: 0x%02x", x02_value);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "New control values exist. x02 value: 0x%02x", x02_value);
          Byte changed_feature_id;
 
          if ( vcp_version_le(vspec, DDCA_VSPEC_V21)  || force_no_fifo) {
@@ -225,6 +226,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
    }
 
  bye:
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -233,7 +235,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
 static void
 app_read_changes_usb(Display_Handle * dh) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    // bool new_values_found = false;
 
    assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
@@ -263,7 +265,7 @@ app_read_changes_usb(Display_Handle * dh) {
       }
    }
    else {
-      DBGMSF(debug, "tick");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "tick");
    }
 }
 #endif
@@ -316,4 +318,12 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
       if (!changes_reported)
          sleep_millis( 2500);
    }
+}
+
+
+void init_app_watch() {
+   RTTI_ADD_FUNC(app_read_changes);
+#ifdef USB
+   RTTI_ADD_FUNC(app_read_changes_usb);
+#endif
 }

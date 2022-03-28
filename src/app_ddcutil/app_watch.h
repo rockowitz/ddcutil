@@ -15,4 +15,6 @@ app_read_changes_forever(
       Display_Handle *      dh,
       bool                  force_no_fifo);
 
+void
+init_app_watch();
 #endif /* APP_WATCH_H_ */
