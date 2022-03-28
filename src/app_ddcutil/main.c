@@ -932,4 +932,5 @@ static void add_rtti_functions() {
 #endif
    init_app_capabilities();
    init_app_dumpload();
+   init_app_probe();
 }

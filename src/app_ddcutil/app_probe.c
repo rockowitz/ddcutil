@@ -11,6 +11,7 @@
 
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 
 #include "vcp/parse_capabilities.h"
 
@@ -28,14 +29,16 @@
 
 #include "app_ddcutil/app_probe.h"
 
+// Default trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
+
 void app_probe_display_by_dh(Display_Handle * dh)
 {
    FILE * fout = stdout;
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
-   Public_Status_Code psc = 0;
-   Error_Info * ddc_excp = NULL;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
+   Error_Info * ddc_excp = NULL;
    Parsed_Edid * pedid = dh->dref->pedid;
    f0printf(fout, "\nEDID version: %d.%d", pedid->edid_version_major, pedid->edid_version_minor);
    f0printf(fout, "\nMfg id: %s, model: %s, sn: %s\n",
@@ -62,33 +65,20 @@ void app_probe_display_by_dh(Display_Handle * dh)
    //    printf("VCP (aka MCCS) version for display is less than 2.0. Output may not be accurate.\n");
    // }
 
-   // reports capabilities, and if successful returns Parsed_Capabilities
    DDCA_Output_Level saved_ol = set_output_level(DDCA_OL_VERBOSE);   // affects this thread only
-
-#ifdef OLD
-   Parsed_Capabilities * pcaps =  app_get_capabilities_by_dh(dh);
-   if (pcaps) {
-      app_show_parsed_capabilities(pcaps->raw_value,dh,  pcaps);
-   }
-#endif
-   char * capabilities_string;
-   DDCA_Status ddcrc;
+   char * capabilities_string = NULL;
    Parsed_Capabilities * pcaps = NULL;
-
-
-   ddcrc = app_get_capabilities_string(dh, &capabilities_string);
+   DDCA_Status ddcrc = app_get_capabilities_string(dh, &capabilities_string);
    if (ddcrc == 0) {
-         // pcaps is always set, but may be damaged if there was a parsing error
-         pcaps = parse_capabilities_string(capabilities_string);
-         app_show_parsed_capabilities(dh, pcaps);
+      // pcaps is always set, but may be damaged if there was a parsing error
+      pcaps = parse_capabilities_string(capabilities_string);
+      app_show_parsed_capabilities(dh, pcaps);
 
-         // how to pass this information down into app_show_vcp_subset_values_by_dh()?
-         bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
-         f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
+      // how to pass this information down into app_show_vcp_subset_values_by_dh()?
+      bool table_reads_possible = parsed_capabilities_supports_table_commands(pcaps);
+      f0printf(fout, "\nMay support table reads:   %s\n", sbool(table_reads_possible));
    }
-
    set_output_level(saved_ol);
-
 
    // *** VCP Feature Scan ***
    // printf("\n\nScanning all VCP feature codes for display %d\n", dispno);
@@ -121,10 +111,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
             if (bbf_is_set(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                Display_Feature_Metadata * dfm =
-                     dyn_get_feature_metadata_by_dh(
-                        code,
-                         dh,
-                         true);   //  with_default
+                     dyn_get_feature_metadata_by_dh(code, dh, /*with_default=*/true);
                char * feature_name = get_version_sensitive_feature_name(vfte, pcaps->parsed_mccs_version);
                if (!streq(feature_name, dfm->feature_name)) {
                   rpt_vstring(1, "VCP_Feature_Table_Entry feature name: %s", feature_name);
@@ -133,13 +120,13 @@ void app_probe_display_by_dh(Display_Handle * dh)
                   f0printf(fout, "   Feature x%02x - %s, (alt.) %s\n", code, feature_name, dfm->feature_name);
                }
                else {
-                  // assert( streq(feature_name, ifm->external_metadata->feature_name));
+                  // assert( streq(feature_name, dfm->external_metadata->feature_name));
                   f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
                }
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
                   free_synthetic_vcp_entry(vfte);
                }
-               // need to free ifm?
+               dfm_free(dfm);
             }
          }
       }
@@ -153,10 +140,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
 
                Display_Feature_Metadata * dfm =
-                     dyn_get_feature_metadata_by_dh(
-                        code,
-                         dh,
-                         true);   //  with_default
+                     dyn_get_feature_metadata_by_dh(code, dh, /*with_default=*/ true);
                char * feature_name = get_version_sensitive_feature_name(vfte, vspec);
                f0printf(fout, "   Feature x%02x - %s\n", code, feature_name);
                if (!streq(feature_name, dfm->feature_name)) {
@@ -168,7 +152,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
                if (vfte->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY) {
                   free_synthetic_vcp_entry(vfte);
                }
-               // free ifm
+               dfm_free(dfm);
             }
          }
       }
@@ -186,33 +170,23 @@ void app_probe_display_by_dh(Display_Handle * dh)
    }
    bbf_free(features_seen);
 
-
    puts("");
-   // get VCP 0B
    DDCA_Any_Vcp_Value * valrec;
    int color_temp_increment = 0;
    int color_temp_units = 0;
-   ddc_excp = ddc_get_vcp_value(
-                 dh,
-                 0x0b,              // color temperature increment,
-                 DDCA_NON_TABLE_VCP_VALUE,
-                 &valrec);
-   psc = ERRINFO_STATUS(ddc_excp);
-   if (psc == 0) {
-      if (debug)
-         f0printf(fout, "Value returned for feature x0b: %s\n", summarize_single_vcp_value(valrec) );
+   // get VCP 0B - color temperature increment
+   ddc_excp = ddc_get_vcp_value(dh,0x0b, DDCA_NON_TABLE_VCP_VALUE, &valrec);
+   if (!ddc_excp) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Value returned for feature x0b: %s",
+                                          summarize_single_vcp_value(valrec) );
       color_temp_increment = valrec->val.c_nc.sl;
       free_single_vcp_value(valrec);
 
-      ddc_excp = ddc_get_vcp_value(
-                    dh,
-                    0x0c,              // color temperature request
-                    DDCA_NON_TABLE_VCP_VALUE,
-                    &valrec);
-      psc = ERRINFO_STATUS(ddc_excp);
-      if (psc == 0) {
-         if (debug)
-            f0printf(fout, "Value returned for feature x0c: %s\n", summarize_single_vcp_value(valrec) );
+      // get x0c - color temperature request
+      ddc_excp = ddc_get_vcp_value(dh, 0x0c, DDCA_NON_TABLE_VCP_VALUE, &valrec);
+      if (!ddc_excp) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Value returned for feature x0c: %s",
+                                              summarize_single_vcp_value(valrec) );
          color_temp_units = valrec->val.c_nc.sl;
          int color_temp = 3000 + color_temp_units * color_temp_increment;
          f0printf(fout, "Color temperature increment (x0b) = %d degrees Kelvin\n", color_temp_increment);
@@ -224,15 +198,14 @@ void app_probe_display_by_dh(Display_Handle * dh)
                color_temp);
       }
    }
-   if (psc != 0) {
+   if (ddc_excp) {
       f0printf(fout, "Unable to calculate color temperature from VCP features x0B and x0C\n");
-      // errinfo_free(ddc_excp);
       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
    }
-   // get VCP 14
-   // report color preset
 
-   DBGMSF(debug, "Done.");
+   app_show_single_vcp_value_by_feature_id(dh, 0x14, true);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -249,3 +222,9 @@ void app_probe_display_by_dref(Display_Ref * dref) {
       ddc_close_display(dh);
    }
 }
+
+
+void init_app_probe() {
+   RTTI_ADD_FUNC(app_probe_display_by_dh);
+}
+
