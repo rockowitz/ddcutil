@@ -44,7 +44,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
  *
  *  @param dh       display handle
  *  @param caps_loc location at which to return pointer to capabilities string.
- *  \return         status code
+ *  @return         status code
  *
  *  The returned pointer points to a string that is part of the
  *  display handle.  It should NOT be freed by the caller.
@@ -111,7 +111,7 @@ app_show_parsed_capabilities(Display_Handle * dh, Parsed_Capabilities * pcap)
 /** Implements the CAPABILITIES command.
  *
  *  @param  dh #Display_Handle
- *  \return status code
+ *  @return status code
  */
 DDCA_Status
 app_capabilities(Display_Handle * dh)

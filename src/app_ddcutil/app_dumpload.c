@@ -1,4 +1,4 @@
-/** \file app_dumpload.c
+/** @file app_dumpload.c
  *
  *  Primary file for the DUMPVCP and LOADVCP commands
  */
@@ -47,10 +47,10 @@ static const char TRACE_GROUP = DDCA_TRC_TOP;
 
 /** Uses the identifiers in an EDID and a timestamp to create a VCP filename.
  *
- * \param  edid         pointer to parsed edid
- * \param  time_millis  timestamp to use
- * \param  buf          buffer in which to return filename
- * \param  bufsz        buffer size
+ * @param  edid         pointer to parsed edid
+ * @param  time_millis  timestamp to use
+ * @param  buf          buffer in which to return filename
+ * @param  bufsz        buffer size
  */
 static
 void create_simple_vcp_fn_by_edid(
@@ -75,10 +75,10 @@ void create_simple_vcp_fn_by_edid(
 
 /** Creates a VCP filename from a #Display_Handle and a timestamp.
  *
- * \param  edid         pointer to parsed edid
- * \param  time_millis  timestamp to use
- * \param  buf          buffer in which to return filename
- * \param  bufsz        buffer size
+ * @param  edid         pointer to parsed edid
+ * @param  time_millis  timestamp to use
+ * @param  buf          buffer in which to return filename
+ * @param  bufsz        buffer size
  */
 static
 void create_simple_vcp_fn_by_dh(
@@ -95,10 +95,10 @@ void create_simple_vcp_fn_by_dh(
 
 /** Executes the DUMPVCP command, writing the output to a file.
  *
- *  \param  dh        display handle
- *  \param  filename  name of file to write to,
+ *  @param  dh        display handle
+ *  @param  filename  name of file to write to,
  *                    if NULL, the file name is generated
- *  \return status code
+ *  @return status code
  *
  *  If the file name is generated, it is in the ddcutil subdirectory of the
  *  user's XDG home data directory, normally $HOME/.local/share/ddcutil/
@@ -172,8 +172,8 @@ app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
 
 /** Reads a file into a newly allocated Dumpload_Data struct.
  *
- *  \param  fn  file name
- *  \return pointer to newly allocated #Dumpload_Data struct.
+ *  @param  fn  file name
+ *  @return pointer to newly allocated #Dumpload_Data struct.
  *          Caller is responsible for freeing
  */
 static Dumpload_Data *
@@ -215,12 +215,12 @@ read_vcp_file(const char * fn)
 }
 
 
-/* Apply the VCP settings stored in a file to the monitor
- * indicated in that file.
+/** Apply the VCP settings stored in a file to the monitor
+ *  indicated in that file.
  *
- * \param   fn          file name
- * \param   dh          handle for open display
- * \return  status code
+ *  @param   fn          file name
+ *  @param   dh          handle for open display
+ *  @return  status code
  */
 Status_Errno_DDC
 app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
