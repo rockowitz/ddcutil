@@ -1,6 +1,8 @@
-/** \file app_interrogate.c */
+/** @file app_interrogate.c
+ *  Implement the INTERROGATE command
+ */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -17,6 +19,7 @@
 
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/thread_sleep_data.h"
 
 #include "cmdline/parsed_cmd.h"
@@ -50,7 +53,7 @@ static void reset_stats() {
  *
  *  \param parsed_cmd  parsed command line
  */
-void interrogate(Parsed_Cmd * parsed_cmd)
+void app_interrogate(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -109,4 +112,8 @@ void interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 #endif
+
+void init_app_interrogate() {
+   RTTI_ADD_FUNC(app_interrogate);
+}
 

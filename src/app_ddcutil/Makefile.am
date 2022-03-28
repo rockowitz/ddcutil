@@ -26,6 +26,7 @@ app_dynamic_features.c \
 app_experimental.c \
 app_getvcp.c \
 app_probe.c \
+app_services.c \
 app_setvcp.c \
 app_vcpinfo.c \
 app_watch.c

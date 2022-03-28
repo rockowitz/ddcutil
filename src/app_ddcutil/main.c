@@ -99,6 +99,7 @@
 #include "app_ddcutil/app_interrogate.h"
 #include "app_ddcutil/app_probe.h"
 #include "app_ddcutil/app_getvcp.h"
+#include "app_ddcutil/app_services.h"
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/app_vcpinfo.h"
 #include "app_ddcutil/app_watch.h"
@@ -842,7 +843,7 @@ main(int argc, char *argv[]) {
 
 #ifdef ENABLE_ENVCMDS
    else if (parsed_cmd->cmd_id == CMDID_INTERROGATE) {
-      interrogate(parsed_cmd);
+      app_interrogate(parsed_cmd);
       main_rc = EXIT_SUCCESS;
    }
 #endif
@@ -927,11 +928,5 @@ static void add_rtti_functions() {
 #ifdef TARGET_LINUX
    RTTI_ADD_FUNC(validate_environment_using_libkmod);
 #endif
-#ifdef ENABLE_ENVCMDS
-   RTTI_ADD_FUNC(interrogate);
-#endif
-   init_app_capabilities();
-   init_app_dumpload();
-   init_app_probe();
-   init_app_setvcp();
+   init_app_services();
 }
