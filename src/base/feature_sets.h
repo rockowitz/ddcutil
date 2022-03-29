@@ -45,12 +45,12 @@ typedef enum {
    VCP_SUBSET_TABLE           = 0x00001000,    // is a table feature
 
    // subsets used only on command processing, not in feature descriptor table
-   VCP_SUBSET_SCAN            = 0x00000010,
-// VCP_SUBSET_ALL             = 0x00000010,
-// VCP_SUBSET_SUPPORTED       = 0x00000008,
-   VCP_SUBSET_KNOWN           = 0x00000008,
+   VCP_SUBSET_SCAN            = 0x00000040,
+// VCP_SUBSET_ALL             = 0x00000040,
+// VCP_SUBSET_SUPPORTED       = 0x00000020,
+   VCP_SUBSET_KNOWN           = 0x00000020,
 
-   VCP_SUBSET_MFG             = 0x00000004,    // mfg specific codes
+   VCP_SUBSET_MFG             = 0x00000010,    // mfg specific codes
 
    VCP_SUBSET_UDF             = 0x00000002,    // user defined features
    VCP_SUBSET_SINGLE_FEATURE  = 0x00000001,
