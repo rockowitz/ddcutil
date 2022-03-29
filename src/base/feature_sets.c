@@ -57,7 +57,7 @@ Value_Name_Table vcp_subset_table = {
 
       VNT(VCP_SUBSET_MFG,             "MFG"),
 
-      VNT(VCP_SUBSET_DYNAMIC,         "UDF"),
+      VNT(VCP_SUBSET_UDF,         "UDF"),
       VNT(VCP_SUBSET_SINGLE_FEATURE,  NULL),
       VNT(VCP_SUBSET_NONE,            NULL),
       VNT_END

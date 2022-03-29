@@ -167,8 +167,8 @@ const Feature_Subset_Table_Entry subset_table[] = {
    {VCP_SUBSET_SCAN,      CMDID_GETVCP,               3, "SCAN",      "All feature codes 00..FF, except those known to be WO"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MANUFACTURER", "Manufacturer specific codes"},
    {VCP_SUBSET_MFG,       CMDID_GETVCP,               3, "MFG",        "Same as MANUFACTURER"},
-   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "UDF",        "User defined features"},
-   {VCP_SUBSET_DYNAMIC,   CMDID_GETVCP|CMDID_VCPINFO, 3, "USER",       "User defined features"},
+   {VCP_SUBSET_UDF,   CMDID_GETVCP|CMDID_VCPINFO, 3, "UDF",        "User defined features"},
+   {VCP_SUBSET_UDF,   CMDID_GETVCP|CMDID_VCPINFO, 3, "USER",       "User defined features"},
 
    // ddcutil defined groups
    {VCP_SUBSET_PROFILE,   CMDID_GETVCP|CMDID_VCPINFO, 3, "PROFILE",   "Features for color profile management"},

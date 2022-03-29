@@ -173,8 +173,8 @@ dyn_create_feature_set2(
 
     GPtrArray * members_dfm = g_ptr_array_new();
 
-    if (subset_id == VCP_SUBSET_DYNAMIC) {  // all user defined features
-       DBGMSF(debug, "VCP_SUBSET_DYNAMIC path");
+    if (subset_id == VCP_SUBSET_UDF) {  // all user defined features
+       DBGMSF(debug, "VCP_SUBSET_UDF path");
 
        if (dref->dfr) {
           DBGMSF(debug, "dref->dfr is set");
