@@ -52,8 +52,11 @@ typedef enum {
 
    VCP_SUBSET_MFG             = 0x00000010,    // mfg specific codes
 
-   VCP_SUBSET_UDF             = 0x00000002,    // user defined features
-   VCP_SUBSET_SINGLE_FEATURE  = 0x00000001,
+   VCP_SUBSET_UDF             = 0x00000008,    // user defined features
+   VCP_SUBSET_SINGLE_FEATURE  = 0x00000002,
+#ifdef FUTURE
+   VCP_SUBSET_MULTI_FEATURES  = 0x00000001,    // user defined collection of features
+#endif
    VCP_SUBSET_NONE            = 0x00000000,
 } VCP_Feature_Subset;
 

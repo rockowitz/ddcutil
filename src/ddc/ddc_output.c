@@ -759,6 +759,9 @@ show_feature_set_values2_dfm(
    if ( (flags & FSF_SHOW_UNSUPPORTED)  ||
         output_level >= DDCA_OL_VERBOSE ||
         subset_id == VCP_SUBSET_SINGLE_FEATURE
+#ifdef FUTURE
+        ||        subset_id == VCP_SUBSET_MULTI_FEATURES
+#endif
        )
        show_unsupported = true;
    bool suppress_unsupported = !show_unsupported;
