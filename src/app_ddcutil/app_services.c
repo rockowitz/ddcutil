@@ -9,6 +9,7 @@
 
 #include "app_capabilities.h"
 #include "app_dumpload.h"
+#include "app_dynamic_features.h"
 #include "app_getvcp.h"
 #ifdef ENABLE_ENVCMDS
 #include "app_interrogate.h"
@@ -23,6 +24,7 @@ void init_app_services() {
    init_app_interrogate();
 #endif
    init_app_capabilities();
+   init_app_dynamic_features();
    init_app_dumpload();
    init_app_probe();
    init_app_setvcp();

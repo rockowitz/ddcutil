@@ -18,13 +18,11 @@
 #include "base/core.h"
 #include "base/dynamic_features.h"
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
 
 #include "dynvcp/dyn_feature_files.h"
 
 #include "app_dynamic_features.h"
-
-
-// extern bool enable_dynamic_features;   // *** TEMP ***
 
 
 /** Wraps call to #dfr_check_by_dref(), writing error messages
@@ -32,21 +30,20 @@
  *
  *  \param dref  display reference
  */
-void check_dynamic_features(Display_Ref * dref) {
+void app_check_dynamic_features(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_UDF, "enable_dynamic_features=%s", sbool(enable_dynamic_features));
+   DBGTRC_STARTING(debug, DDCA_TRC_TOP|DDCA_TRC_UDF, "dref=%s, enable_dynamic_features=%s",
+                          dref_repr_t(dref), sbool(enable_dynamic_features));
 
    if (!enable_dynamic_features)    // global variable
       goto bye;
 
-   // bool wrote_output = false;
    Error_Info * errs = dfr_check_by_dref(dref);
    DDCA_Output_Level ol = get_output_level();
    if (errs) {
       if (errs->status_code == DDCRC_NOT_FOUND) {
          if (ol >= DDCA_OL_VERBOSE) {
             f0printf(fout(), "%s\n", errs->detail);
-            // wrote_output = true;
          }
       }
       else {
@@ -55,7 +52,6 @@ void check_dynamic_features(Display_Ref * dref) {
          for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
             f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
          }
-         // wrote_output = true;
       }
       errinfo_free(errs);
    }
@@ -64,7 +60,6 @@ void check_dynamic_features(Display_Ref * dref) {
       if (ol >= DDCA_OL_VERBOSE) {
          f0printf(fout(), "Processed feature definition file: %s\n",
                           dref->dfr->filename);
-         // wrote_output = true;
       }
    }
 
@@ -114,6 +109,8 @@ void check_dynamic_features_old(Display_Ref * dref) {
 }
 #endif
 
+void init_app_dynamic_features() {
+   RTTI_ADD_FUNC(app_check_dynamic_features);
+}
 
-#include <app_ddcutil/app_dynamic_features.h>
 

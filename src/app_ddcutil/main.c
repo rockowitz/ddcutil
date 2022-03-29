@@ -511,7 +511,7 @@ execute_cmd_with_optional_display_handle(
    case CMDID_CAPABILITIES:
       {
          assert(dh);
-         check_dynamic_features(dh->dref);
+         app_check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
          DDCA_Status ddcrc = app_capabilities(dh);
@@ -522,7 +522,7 @@ execute_cmd_with_optional_display_handle(
    case CMDID_GETVCP:
       {
          assert(dh);
-         check_dynamic_features(dh->dref);
+         app_check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
          Public_Status_Code psc = app_show_feature_set_values_by_dh(dh, parsed_cmd);
@@ -533,7 +533,7 @@ execute_cmd_with_optional_display_handle(
    case CMDID_SETVCP:
       {
          assert(dh);
-         check_dynamic_features(dh->dref);
+         app_check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
          int rc = app_setvcp(parsed_cmd, dh);
@@ -570,7 +570,7 @@ execute_cmd_with_optional_display_handle(
       {
          assert(dh);
          // MCCS vspec can affect whether a feature is NC or TABLE
-         check_dynamic_features(dh->dref);
+         app_check_dynamic_features(dh->dref);
          ensure_vcp_version_set(dh);
 
          Public_Status_Code psc =
@@ -583,7 +583,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_READCHANGES:
       assert(dh);
-      check_dynamic_features(dh->dref);
+      app_check_dynamic_features(dh->dref);
       ensure_vcp_version_set(dh);
 
       app_read_changes_forever(dh, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO);     // only returns if fatal error
@@ -592,7 +592,7 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_PROBE:
       assert(dh);
-      check_dynamic_features(dh->dref);
+      app_check_dynamic_features(dh->dref);
       ensure_vcp_version_set(dh);
 
       app_probe_display_by_dh(dh);
