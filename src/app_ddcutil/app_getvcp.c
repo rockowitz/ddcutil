@@ -238,9 +238,12 @@ app_show_vcp_subset_values_by_dh(
 
    if (debug || IS_TRACING()) {
       if (features_seen) {
+#ifdef OLD
         char * s = bbf_to_string(features_seen);
         DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc), s);
         free(s);
+#endif
+        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
       }
       else {
          DBGMSG("Returning: %s", psc_desc(psc));

@@ -91,9 +91,13 @@ void app_probe_display_by_dh(Display_Handle * dh)
       f0printf(fout, "\n\nComparing declared capabilities to observed features...\n");
       Byte_Bit_Flags features_declared =
             get_parsed_capabilities_feature_ids(pcaps, /*readable_only=*/true);
+#ifdef OLD
       char * s0 = bbf_to_string(features_declared);
       f0printf(fout, "\nReadable features declared in capabilities string: %s\n", s0);
       free(s0);
+#endif
+      f0printf(fout, "\nReadable features declared in capabilities string: %s\n",
+                     bbf_to_string(features_declared));
 
       Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
       Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);

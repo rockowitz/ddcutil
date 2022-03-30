@@ -422,12 +422,16 @@ Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2) {
    }
    // return result;
    Byte_Bit_Flags result2 = bbf_from_bs256( bs256_and_not(bs256_from_bbf(bbflags1), bs256_from_bbf(bbflags2)) );
+#ifdef OLD
    char * s = bbf_to_string(result);
    printf("(%s) result  = %s\n", __func__, s);
    free(s);
    s = bbf_to_string(result2);
    printf("(%s) result2 = %s\n", __func__, s);
    free(s);
+#endif
+   printf("(%s) result  = %s\n", __func__, bbf_to_string(result));
+   printf("(%s) result2  = %s\n", __func__, bbf_to_string(result2));
    assert(bbf_eq(result,result2));
    printf("(%s) Done.\n", __func__);
    return result2;
@@ -472,6 +476,7 @@ char * bbf_repr(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
  * @return number of bits set (0..256)
  */
 int bbf_count_set(Byte_Bit_Flags bbflags) {
+
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
    int result = 0;
@@ -484,6 +489,7 @@ int bbf_count_set(Byte_Bit_Flags bbflags) {
             result += 1;
       }
    }
+
    int result2 = bs256_count(bs256_from_bbf(bbflags));
    assert(result == result2);
    printf("(%s) returning: %d\n", __func__, result);
@@ -499,6 +505,7 @@ int bbf_count_set(Byte_Bit_Flags bbflags) {
  *  @return pointer to newly allocated character string, caller must free
  */
 char * bbf_to_string(Byte_Bit_Flags bbflags) {
+
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
    int bit_set_ct = bbf_count_set(flags);
@@ -520,7 +527,14 @@ char * bbf_to_string(Byte_Bit_Flags bbflags) {
          pos += 2;
       }
    }
-   return buffer;
+
+   char * buffer2 = bs256_to_string( bs256_from_bbf(bbflags), "", " ");
+   printf("(%s) buffer  = |%s|\n", __func__, buffer);
+   printf("(%s) buffer2 = |%s|\n", __func__, buffer2);
+   assert( streq(buffer, buffer2) );
+   free(buffer);
+
+   return buffer2;
 }
 
 
@@ -1793,9 +1807,12 @@ bs256_from_bbf(Byte_Bit_Flags bbf) {
    bool debug = false;
    _ByteBitFlags* flags = (_ByteBitFlags*) bbf;
    if (debug) {
+#ifdef OLD
       char * s = bbf_to_string(bbf);
       printf("(%s) bbf->   %s\n", __func__, s);
       free(s);
+#endif
+      printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
    }
    BYTE_BIT_VALIDATE(flags);
    Bit_Set_256 result;
@@ -1818,9 +1835,12 @@ bbf_from_bs256(Bit_Set_256 bitset) {
    _ByteBitFlags * bbf = bbf_create_internal();
    memcpy(bbf->byte, bitset.bytes, 32);
    if (debug) {
+#ifdef OLD
        char * s = bbf_to_string(bbf);
        printf("(%s) bbf->   %s\n", __func__, s);
        free(s);
+#endif
+       printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
    }
    return bbf;
 }
