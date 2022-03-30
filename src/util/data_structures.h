@@ -52,6 +52,7 @@ Byte_Bit_Flags bbf_create();
 void           bbf_free(Byte_Bit_Flags flags);
 void           bbf_set(Byte_Bit_Flags flags, Byte val);
 bool           bbf_is_set(Byte_Bit_Flags flags, Byte val);
+bool           bbf_eq(Byte_Bit_Flags flags1, Byte_Bit_Flags flags2);
 Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
 char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
 int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
@@ -236,6 +237,9 @@ Bit_Set_256_Iterator
 void           bs256_iter_free(Bit_Set_256_Iterator iter);
 void           bs256_iter_reset(Bit_Set_256_Iterator iter);
 int            bs256_iter_next(Bit_Set_256_Iterator  iter);
+
+Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
+Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
 
 #ifdef __cplusplus
 }    // extern "C"
