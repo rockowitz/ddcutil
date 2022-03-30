@@ -59,9 +59,7 @@ Value_Name_Table vcp_subset_table = {
 
       VNT(VCP_SUBSET_UDF,             "UDF"),
       VNT(VCP_SUBSET_SINGLE_FEATURE,  NULL),
-#ifdef FUTURE
       VNT(VCP_SUBSET_MULTI_FEATURES,  NULL),
-#endif
       VNT(VCP_SUBSET_NONE,            NULL),
       VNT_END
 };
@@ -114,6 +112,7 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids) {
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
    rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
+   rpt_vstring(depth, "multi features: %s", bs256_to_string(fsref->features,  "x", " "));
 }
 
 
@@ -126,11 +125,13 @@ void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
 char * fsref_repr_t(Feature_Set_Ref * fsref) {
    static GPrivate  fsref_repr_key = G_PRIVATE_INIT(g_free);
 
-   char * buf = get_thread_fixed_buffer(&fsref_repr_key, 100);
+   char * buf = get_thread_fixed_buffer(&fsref_repr_key, 200);
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE)
-      snprintf(buf, 100, "[VCP_SUBSET_SINGLE_FEATURE, 0x%02x]", fsref->specific_feature);
+      snprintf(buf, 200, "[VCP_SUBSET_SINGLE_FEATURE, 0x%02x]", fsref->specific_feature);
+   else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES)
+      snprintf(buf, 200, "[VCP_SUBSET_MULTI_FEATURES, %s]", bs256_to_string(fsref->features, "x", " "));
    else
-      snprintf(buf, 100, "[%s]",  feature_subset_name(fsref->subset));
+      snprintf(buf, 200, "[%s]",  feature_subset_name(fsref->subset));
    return buf;
 }
 

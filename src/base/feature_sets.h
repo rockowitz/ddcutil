@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #include "util/coredefs.h"
+#include "util/data_structures.h"
 /** \endcond */
 
 
@@ -54,9 +55,7 @@ typedef enum {
 
    VCP_SUBSET_UDF             = 0x00000008,    // user defined features
    VCP_SUBSET_SINGLE_FEATURE  = 0x00000002,
-#ifdef FUTURE
    VCP_SUBSET_MULTI_FEATURES  = 0x00000001,    // user defined collection of features
-#endif
    VCP_SUBSET_NONE            = 0x00000000,
 } VCP_Feature_Subset;
 
@@ -68,6 +67,7 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids);
 typedef struct {
    VCP_Feature_Subset  subset;
    Byte                specific_feature;
+   Bit_Set_256         features;             // for VCP_SUBSET_MULTI_FEATURES
 } Feature_Set_Ref;
 
 typedef enum {
