@@ -15,7 +15,7 @@
 #include <sys/param.h>     // for MIN, MAX
 /** \endcond */
 
-// #include "debug_util.h"
+#include "report_util.h"
 #include "string_util.h"
 
 #include "data_structures.h"
@@ -1684,4 +1684,99 @@ bs256_iter_next(
    // printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
+
+
+// TODO:
+// Extracted from feature_list.cpp in ddcui. parsed_custom_feature_list()
+// should be rewritten to call this function.
+
+/** Parse a string containing a list of hex values.
+ *
+ *  \param unparsed_string
+ *  \error_msgs_loc  if non-null, return null terminated string array of error messages here,
+ *                   caller is responsible for freeing
+ *  \return #Bit_Set_256, will be EMPTY_BIT_SET_256 if errors
+ *
+ *  \remark
+ *  If error_msgs_loc is non-null on entry, on return it is non-null iff there
+ *  are error messages, i.e. a 0 length array is never returned
+ */
+Bit_Set_256 bs256_from_string(
+      char *                         unparsed_string,
+      Null_Terminated_String_Array * error_msgs_loc)
+{
+    assert(unparsed_string);
+    assert(error_msgs_loc);
+    bool debug = true;
+    if (debug)
+       printf("(bs256_from_string) unparsed_string = |%s|\n", unparsed_string );
+
+    Bit_Set_256 result = EMPTY_BIT_SET_256;
+    *error_msgs_loc = NULL;
+    GPtrArray * errors = g_ptr_array_new();
+
+    // convert all commas to blanks
+    char * x = unparsed_string;
+    while (*x) {
+       if (*x == ',')
+          *x = ' ';
+       x++;
+    }
+
+    // gchar ** pieces = g_strsplit(features_work, " ", -1); // doesn't handle multiple blanks
+    Null_Terminated_String_Array pieces = strsplit(unparsed_string, " ");
+    int ntsal = ntsa_length(pieces);
+    if (debug)
+       printf("(bs256_from_string) ntsal=%d\n", ntsal );
+    if (ntsal == 0) {
+       if (debug)
+          printf("(bs256_from_string) Empty string\n");
+    }
+    else {
+       bool ok = true;
+       int ndx = 0;
+       for (; pieces[ndx] != NULL; ndx++) {
+           // char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
+           char * token = g_strstrip(pieces[ndx]);
+           if (debug)
+              printf("(parse_features_list) token= |%s|\n", token);
+           Byte hex_value = 0;
+           if ( any_one_byte_hex_string_to_byte_in_buf(token, &hex_value) ) {
+              result = bs256_add(result, hex_value);
+           }
+           else {
+              if (debug)
+                 printf("(bs256_from_string) Invalid hex value: %s\n", token);
+              char * s = g_strdup_printf("Invalid hex value: %s", token);
+              g_ptr_array_add(errors, s);
+              ok = false;
+           }
+       }
+       assert(ndx == ntsal);
+       ntsa_free(pieces, /* free_strings */ true);
+
+       ASSERT_IFF(ok, errors->len == 0);
+
+       if (ok) {
+          g_ptr_array_free(errors,true);
+          *error_msgs_loc = NULL;
+       }
+       else {
+          result = EMPTY_BIT_SET_256;
+          *error_msgs_loc = g_ptr_array_to_ntsa(errors, false);
+          g_ptr_array_free(errors, false);
+       }
+     }
+
+    if (debug) {
+       const char * s = bs256_to_string(result, /*prefix*/ "x", /*sepstr*/ ",");
+       printf("Returning bit set: %s\n", s);
+       if (*error_msgs_loc) {
+          printf("(bs256_from_string) Returning error messages:\n");
+          ntsa_show(*error_msgs_loc);
+       }
+    }
+    return result;
+}
+
 

@@ -8,20 +8,18 @@
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** \cond */
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdint.h>
 /** \endcond */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// #ifndef Byte
-// #define Byte unsigned char
-// #endif
 #include "coredefs_base.h"   // for Byte
+#include "string_util.h"
 
 
 typedef bool *IFilter(int i);
@@ -228,7 +226,7 @@ Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersec
 Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
 int            bs256_count(Bit_Set_256 set);
 char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);
-
+Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
 
 /** Opaque iterator for Bit_Set_256 */
 typedef void * Bit_Set_256_Iterator;
@@ -242,7 +240,5 @@ int            bs256_iter_next(Bit_Set_256_Iterator  iter);
 #ifdef __cplusplus
 }    // extern "C"
 #endif
-
-
 
 #endif /* DATA_STRUCTURES_H */
