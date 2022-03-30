@@ -918,6 +918,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          // parsedCmd->argCt  = cmdInfo->argct;
          int min_arg_ct = cmdInfo->min_arg_ct;
          int max_arg_ct = cmdInfo->max_arg_ct;
+         DBGMSG("max_arg_ct = %d", max_arg_ct);
          int argctr = 1;
          while ( cmd_and_args[argctr] != NULL) {
             if (argctr > max_arg_ct) {
@@ -944,9 +945,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             )
          {
             Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
-            char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
-            ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
-            DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
+            bool ok = false;
+            if (parsed_cmd->argct <= 1) {
+               char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
+               ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
+               DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
+            }
+            else {
+               ok = parse_feature_ids(parsed_cmd->args, parsed_cmd->argct, parsed_cmd->cmd_id, fsref);
+               DBGMSF(debug, "parse_feature_ids() returned: %d", ok);
+            }
+
             if (ok)
                parsed_cmd->fref = fsref;
             else

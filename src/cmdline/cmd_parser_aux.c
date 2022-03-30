@@ -30,7 +30,7 @@ static Cmd_Desc cmdinfo[] = {
  // cmd_id              cmd_name   minchars min_arg_ct max_arg_ct
    {CMDID_DETECT,       "detect",         3,  0,       0},
    {CMDID_CAPABILITIES, "capabilities",   3,  0,       0},
-   {CMDID_GETVCP,       "getvcp",         3,  1,       1},
+   {CMDID_GETVCP,       "getvcp",         3,  1,       11},
    {CMDID_SETVCP,       "setvcp",         3,  2,       MAX_SETVCP_VALUES*2},
    {CMDID_LISTVCP,      "listvcp",        5,  0,       0},
 #ifdef INCLUDE_TESTCASES
@@ -44,7 +44,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
 #endif
-   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       1},
+   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       11},
 #ifdef WATCH_COMMAND
    {CMDID_READCHANGES,  "watch",          3,  0,       0},
 #endif
@@ -199,11 +199,11 @@ const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Ent
 
 char * assemble_command_argument_help() {
    // quick and dirty check that tables are in sync
-   // +2 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_NONE
+   // +3 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_MULTI_FEATURE, VCP_SUBSET_NONE
    // -2 for triple VCP_SUBSET_KNOWN
    // -1 for double VCP_SUBSET_MFG
    // -1 for double VCP_SUBSET_DYNAMIC
-   assert(subset_table_ct+(2-4) == vcp_subset_count);
+   assert(subset_table_ct+(3-4) == vcp_subset_count);
 
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
@@ -253,7 +253,7 @@ VCP_Feature_Subset find_subset(char * name, int cmd_id) {
 
 
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
-   bool debug = false;
+   bool debug = true;
    bool ok = true;
    VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
    if (subset_id != VCP_SUBSET_NONE)
@@ -269,6 +269,31 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
    DBGMSF(debug, "Returning: %s", sbool(ok));
    if (ok && debug)
       dbgrpt_feature_set_ref(fsref, 0);
+   return ok;
+}
+
+bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * fsref) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. vals_ct=%d, cmd_id=%d, fsref=%p", vals_ct, cmd_id, fsref);
+   bool ok = true;
+   assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
+   assert(vals_ct > 0);
+   fsref->subset = VCP_SUBSET_NONE;
+   for (int ndx = 0; ndx < vals_ct; ndx++) {
+      Byte feature_hexid = 0;   // temp
+      ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
+      DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(ok), feature_hexid);
+      if (ok) {
+         fsref->features = bs256_add(fsref->features, feature_hexid);
+      }
+   }
+   if (ok)
+      fsref->subset = VCP_SUBSET_MULTI_FEATURES;
+
+   DBGMSF(debug, "Returning: %s", sbool(ok));
+   if (ok && debug)
+      dbgrpt_feature_set_ref(fsref, 0);
+
    return ok;
 }
 

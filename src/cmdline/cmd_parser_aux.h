@@ -36,6 +36,7 @@ bool parse_colon_separated_arg(const char * val, int * pv1, int * pv2);
 bool parse_int_arg(char * val, int * pIval);
 
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref);
+bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * fsref);
 
 bool validate_output_level(Parsed_Cmd* parsed_cmd);
 

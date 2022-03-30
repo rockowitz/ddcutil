@@ -306,12 +306,12 @@ app_show_feature_set_values_by_dh(
       Display_Handle *     dh,
       Parsed_Cmd *         parsed_cmd)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s",
                              dh_repr(dh), fsref_repr_t(parsed_cmd->fref),
                              feature_set_flag_names_t(parsed_cmd->flags));
-      // dbgrpt_feature_set_ref(parsed_cmd->fref,1);
+      dbgrpt_feature_set_ref(parsed_cmd->fref,1);
    }
 
    Feature_Set_Ref *    fsref = parsed_cmd->fref;
@@ -342,6 +342,22 @@ app_show_feature_set_values_by_dh(
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
       psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, true);
+   }
+   else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES) {
+      int feature_ct = bs256_count(fsref->features);
+      DBGMSF(debug, "VCP_SUBSET_MULTI_FEATURES, feature_ct=%d", feature_ct);
+      psc = 0;
+      Bit_Set_256_Iterator iter = bs256_iter_new(fsref->features);
+      int bitno = bs256_iter_next(iter);
+      while (bitno >= 0) {
+         DBGMSF(debug, "bitno=0x%02x", bitno);
+         int rc = app_show_single_vcp_value_by_feature_id(
+               dh, bitno, true);
+         if (rc < 0)
+            psc = rc;
+         bitno = bs256_iter_next(iter);
+      }
+      bs256_iter_free(iter);
    }
    else {
       psc = app_show_vcp_subset_values_by_dh(
