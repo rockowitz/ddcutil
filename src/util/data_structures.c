@@ -422,10 +422,10 @@ Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2) {
    }
    // return result;
    Byte_Bit_Flags result2 = bbf_from_bs256( bs256_and_not(bs256_from_bbf(bbflags1), bs256_from_bbf(bbflags2)) );
-   char * s = bbf_to_string(result, NULL, 0);
+   char * s = bbf_to_string(result);
    printf("(%s) result  = %s\n", __func__, s);
    free(s);
-   s = bbf_to_string(result2, NULL, 0);
+   s = bbf_to_string(result2);
    printf("(%s) result2 = %s\n", __func__, s);
    free(s);
    assert(bbf_eq(result,result2));
@@ -492,55 +492,34 @@ int bbf_count_set(Byte_Bit_Flags bbflags) {
 
 
 /** Returns a string of space separated 2 character hex values
- * representing the bits set in the Byte_Bit_Flag,
- * e.g. "03 7F" if bits 0x03 and 0x7F are set
+ *  representing the bits set in the Byte_Bit_Flag,
+ *  e.g. "03 7F" if bits 0x03 and 0x7F are set
  *
- * @param  bbflags  instance handle
- * @param  buffer   pointer to buffer in which to return character string,
- *                  if NULL malloc a new buffer
- * @param  buflen   buffer length
- *
- * @return pointer to character string
- *
- * If a new buffer is allocated, it is the responsibility of the caller to
- * free the string returned.
- *
- * For complete safety in case every bit is set, buflen should be >= 768.
- * (2 chars for every bit (512), 255 separator characters, 1 terminating null)
- * If buflen in insufficiently large to contain the result, an assertion fails.
+ *  @param  bbflags  instance handle
+ *  @return pointer to newly allocated character string, caller must free
  */
-char * bbf_to_string(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
-   // printf("(%s) Starting\n", __func__);
+char * bbf_to_string(Byte_Bit_Flags bbflags) {
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
    int bit_set_ct = bbf_count_set(flags);
    int reqd_size = bit_set_ct * 2     +     // char rep of bytes
                    (bit_set_ct-1) * 1 +     // separating spaces
                    1;                       // trailing null
-   if (buffer)
-      assert(buflen >= reqd_size);
-   else
-      buffer = malloc(reqd_size);
+   char * buffer = malloc(reqd_size);
    char * pos = buffer;
    *pos = '\0';
    unsigned int flagno = 0;
-   // printf("(%s) bbflags->byte=0x%s\n", __func__, hexstring(flags->byte,32));
    for (flagno = 0; flagno < 256; flagno++) {
       Byte flg = (Byte) flagno;
-      // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
       if (bbf_is_set(flags, flg)) {
-         // printf("(%s) Flag is set: %d, 0x%02x\n", __func__, flagno, flg);
          if (pos > buffer) {
             *pos  = ' ';
             pos++;
          }
-         // printf("(%s) flg=%02x\n", __func__, flg);
          sprintf(pos, "%02x", flg);
          pos += 2;
-         // printf("(%s) pos=%p\n", __func__, pos);
       }
    }
-   // printf("(%s) Done.  Returning: %s\n", __func__, buffer);
    return buffer;
 }
 
@@ -1814,7 +1793,7 @@ bs256_from_bbf(Byte_Bit_Flags bbf) {
    bool debug = false;
    _ByteBitFlags* flags = (_ByteBitFlags*) bbf;
    if (debug) {
-      char * s = bbf_to_string(bbf, NULL, 0);
+      char * s = bbf_to_string(bbf);
       printf("(%s) bbf->   %s\n", __func__, s);
       free(s);
    }
@@ -1839,7 +1818,7 @@ bbf_from_bs256(Bit_Set_256 bitset) {
    _ByteBitFlags * bbf = bbf_create_internal();
    memcpy(bbf->byte, bitset.bytes, 32);
    if (debug) {
-       char * s = bbf_to_string(bbf, NULL, 0);
+       char * s = bbf_to_string(bbf);
        printf("(%s) bbf->   %s\n", __func__, s);
        free(s);
    }

@@ -293,7 +293,7 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
          rpt_vstring(d1, "No drm class video cards found in %s", dname);
       }
    }
-   char * s = bbf_to_string(result, NULL, 0);
+   char * s = bbf_to_string(result);
    if (debug)
       printf("(%s) Done.     Returning: %s\n", __func__, s);
    free(s);

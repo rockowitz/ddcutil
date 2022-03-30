@@ -57,7 +57,7 @@ Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
 char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
 int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
 int            bbf_to_bytes(Byte_Bit_Flags  flags, Byte * buffer, int buflen);
-char *         bbf_to_string(Byte_Bit_Flags flags, char * buffer, int buflen);
+char *         bbf_to_string(Byte_Bit_Flags flags);
 bool           bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
 
 /** Opaque iterator for #Byte_Bit_Flags */

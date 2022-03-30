@@ -819,7 +819,7 @@ Byte_Bit_Flags get_parsed_capabilities_feature_ids(
       }
    }
 
-   DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags, NULL, 0));
+   DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags));  // memory leak
    return flags;
 }
 
