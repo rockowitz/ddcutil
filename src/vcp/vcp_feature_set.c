@@ -218,6 +218,7 @@ create_feature_set(
          case VCP_SUBSET_MFG:     // will never happen
          case VCP_SUBSET_UDF: // will never happen
          case VCP_SUBSET_SINGLE_FEATURE:
+         case VCP_SUBSET_MULTI_FEATURES:
          case VCP_SUBSET_NONE:
             break;
          }
