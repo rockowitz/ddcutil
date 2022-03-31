@@ -406,13 +406,12 @@ void dyn_free_feature_set(
 }
 
 
-// or, take DDCA_Feature_List address as parm
 DDCA_Feature_List
 feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
 {
    bool debug = false;
    if (debug || IS_TRACING()) {
-      DBGMSG("Starting. feature_set = %p", fset);
+      DBGMSG("Starting. feature_set = %p -> %s", (void*)fset, feature_subset_name(fset->subset));
       // show_backtrace(2);
       dbgrpt_dyn_feature_set(fset, false, 1);
    }
@@ -421,9 +420,11 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
    assert( fset && memcmp(fset->marker, DYN_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    for (; ndx < fset->members_dfm->len; ndx++) {
-      Display_Feature_Metadata * vcp_entry = NULL;
-      vcp_entry = g_ptr_array_index(fset->members_dfm,ndx);
+      Display_Feature_Metadata * vcp_entry = g_ptr_array_index(fset->members_dfm,ndx);
 
+      feature_list_add(&vcplist, vcp_entry->feature_code);
+
+#ifdef OLD
       uint8_t vcp_code = vcp_entry->feature_code;
       // DBGMSG("Setting feature: 0x%02x", vcp_code);
       int flagndx   = vcp_code >> 3;
@@ -434,6 +435,7 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
       vcplist.bytes[flagndx] |= flagbit;
       // uint8_t bval = vcplist.bytes[flagndx];
       // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
+#endif
    }
 
    if (debug || IS_TRACING()) {
