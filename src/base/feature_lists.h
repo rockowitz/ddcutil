@@ -36,18 +36,16 @@ feature_list_and(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2);
 
-
 DDCA_Feature_List
 feature_list_and_not(
       DDCA_Feature_List* vcplist1,
       DDCA_Feature_List* vcplist2);
 
-
 int
 feature_list_count(
       DDCA_Feature_List* feature_list);
 
-char *
+const char *
 feature_list_string(
       DDCA_Feature_List* feature_list,
       const char *       value_prefix,

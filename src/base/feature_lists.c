@@ -16,6 +16,16 @@
 #include "util/coredefs.h"
 #include "base/core.h"
 
+/*
+This file could be reimplemented using Bit_Set_256 which is an
+identical data structure.  However, the reimplementable functions
+are largely trivial.
+
+Consider eliminating completely, calling Bit_Set_256 functions directly
+from api_metadata.c.
+ */
+
+
 typedef struct {
    char * feature_list_string_buf;
    int    feature_list_buf_size;
@@ -39,6 +49,7 @@ static Thread_Feature_Lists_Data *  get_thread_data() {
 }
 
 
+#ifdef FUTURE
 inline
 Bit_Set_256
 flist_to_bs256(DDCA_Feature_List vcplist) {
@@ -46,7 +57,7 @@ flist_to_bs256(DDCA_Feature_List vcplist) {
    memcpy(result.bytes,vcplist.bytes,32);
    return result;
 }
-
+#endif
 
 
 void feature_list_clear(DDCA_Feature_List* vcplist) {
@@ -71,8 +82,10 @@ bool feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
    //        __func__, val, flagndx, shiftct, flagbit);
    bool result = vcplist->bytes[flagndx] & flagbit;
+#ifdef FUTURE
    bool result2 = bs256_contains( flist_to_bs256(*vcplist), vcp_code);
    assert(result == result2);
+#endif
    return result;
 }
 
@@ -166,7 +179,7 @@ int feature_list_count(
  *  The returned string is valid until the next call to this function in the
  *  current thread.
  */
-char *
+const char *
 feature_list_string(
       DDCA_Feature_List * feature_list,
       const char *        value_prefix,
@@ -205,7 +218,7 @@ feature_list_string(
             sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
       }
       if (feature_ct > 0)
-         buf[ strlen(buf)-strlen(sepstr)] = '\0';
+         buf[strlen(buf)-strlen(sepstr)] = '\0';
    }
 
    // DBGMSG("Returned string length: %d", strlen(buf));
