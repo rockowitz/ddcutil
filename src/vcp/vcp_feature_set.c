@@ -1,7 +1,7 @@
 /** @file vcp_feature_set.c
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -17,9 +17,6 @@
 #include "base/core.h"
 
 #include "vcp/vcp_feature_set.h"
-
-
-
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_VCP;
@@ -409,6 +406,7 @@ get_feature_set_entry(
    return ventry;
 }
 
+
 void replace_feature_set_entry(
       VCP_Feature_Set * fset,
       unsigned          index,
@@ -500,13 +498,15 @@ filter_feature_set(
    }
 }
 
+
+#ifdef UNUSED   // replaced by feature_list_from_dyn_feature_set()
 // or, take DDCA_Feature_List address as parm
 DDCA_Feature_List
 feature_list_from_feature_set(VCP_Feature_Set * fset)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
-      DBGMSG("Starting. feature_set = %p", fset);
+      DBGMSG("Starting. feature_set = %p -> %s", (void*)fset, feature_subset_name(fset->subset));
       show_backtrace(2);
       dbgrpt_feature_set(fset, 1);
    }
@@ -515,11 +515,10 @@ feature_list_from_feature_set(VCP_Feature_Set * fset)
    assert( fset && memcmp(fset->marker, VCP_FEATURE_SET_MARKER, 4) == 0);
    int ndx = 0;
    for (; ndx < fset->members->len; ndx++) {
-      VCP_Feature_Table_Entry * vcp_entry = NULL;
-      vcp_entry = g_ptr_array_index(fset->members,ndx);
-
-      uint8_t vcp_code = vcp_entry->code;
-      // DBGMSG("Setting feature: 0x%02x", vcp_code);
+      VCP_Feature_Table_Entry * vcp_entry = g_ptr_array_index(fset->members,ndx);
+      feature_list_add(&vcplist, vcp_entry->code);
+#ifdef OLD
+      // DBGMSG("Setting feature: 0x%02x", vcp_entry->code);
       int flagndx   = vcp_code >> 3;
       int shiftct   = vcp_code & 0x07;
       Byte flagbit  = 0x01 << shiftct;
@@ -528,13 +527,15 @@ feature_list_from_feature_set(VCP_Feature_Set * fset)
       vcplist.bytes[flagndx] |= flagbit;
       // uint8_t bval = vcplist.bytes[flagndx];
       // printf("(%s) vcplist.bytes[%d] = 0x%02x\n",  __func__, flagndx, bval);
+#endif
    }
 
    if (debug || IS_TRACING()) {
-      DBGMSG("Returning: ");
-      rpt_hex_dump(vcplist.bytes, 32, 1);
+      DBGMSG("Returning: %s", feature_list_string(&vcplist, "", " "));
+      // rpt_hex_dump(vcplist.bytes, 32, 1);
    }
 
    return vcplist;
 }
+#endif
 
