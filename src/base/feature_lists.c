@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "util/data_structures.h"
 #include "util/coredefs.h"
 #include "base/core.h"
 
@@ -38,6 +39,14 @@ static Thread_Feature_Lists_Data *  get_thread_data() {
 }
 
 
+inline
+Bit_Set_256
+flist_to_bs256(DDCA_Feature_List vcplist) {
+   Bit_Set_256 result;
+   memcpy(result.bytes,vcplist.bytes,32);
+   return result;
+}
+
 
 
 void feature_list_clear(DDCA_Feature_List* vcplist) {
@@ -62,6 +71,8 @@ bool feature_list_contains(DDCA_Feature_List * vcplist, uint8_t vcp_code) {
    // printf("(%s) val=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
    //        __func__, val, flagndx, shiftct, flagbit);
    bool result = vcplist->bytes[flagndx] & flagbit;
+   bool result2 = bs256_contains( flist_to_bs256(*vcplist), vcp_code);
+   assert(result == result2);
    return result;
 }
 
