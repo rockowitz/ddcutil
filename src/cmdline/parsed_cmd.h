@@ -63,7 +63,9 @@ typedef enum {
    CMD_FLAG_ENABLE_UDF           = 0x100000,
    CMD_FLAG_ENABLE_USB           = 0x200000,
    CMD_FLAG_TIMEOUT_I2C_IO       = 0x400000,
+#ifdef OLD
    CMD_FLAG_REDUCE_SLEEPS        = 0x800000,
+#endif
    CMD_FLAG_F1                 = 0x01000000,
    CMD_FLAG_F2                 = 0x02000000,
    CMD_FLAG_F3                 = 0x04000000,
