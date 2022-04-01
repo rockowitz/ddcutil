@@ -294,6 +294,8 @@ int tsd_get_sleep_multiplier_ct() {
  *  \parsm multipler_ct  value to set
  */
 void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
+   bool debug = false;
+   DBGMSF(debug, "Setting sleep_multiplier_ct = %d for current thread", multiplier_ct);
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    ptd_cross_thread_operation_start();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
@@ -301,7 +303,7 @@ void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    if (multiplier_ct > data->highest_sleep_multiplier_value)
       data->highest_sleep_multiplier_value = multiplier_ct;
    ptd_cross_thread_operation_end();
-   // DBGMSG("Setting sleep_multiplier_ct = %d", settings->sleep_multiplier_ct);
+;
 }
 
 
