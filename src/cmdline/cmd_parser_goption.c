@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -189,7 +189,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    const char * disable_usb_expl = (enable_usb_flag) ? "Ignore USB devices" : "Ignore USB devices (default)";
 #endif
    gboolean timeout_i2c_io_flag = false;
+   gboolean reduce_sleeps_specified = false;
+#ifdef OLD
    gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
+#endif
    gboolean deferred_sleep_flag = false;
    gboolean per_thread_stats_flag = false;
    gboolean show_settings_flag = false;
@@ -333,6 +336,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"sleep-multiplier", '\0', 0,
                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
 
+#ifdef OLD
       {"less-sleep" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
       {"sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
       {"enable-sleep-less" ,'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps (default)",  NULL},
@@ -341,6 +345,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 //    {"reduce-sleeps",'\0', 0, G_OPTION_ARG_NONE, &reduce_sleeps_flag, "Eliminate some sleeps",  NULL},
 //    {"no-reduce-sleeps",'\0',G_OPTION_FLAG_REVERSE,
 //                               G_OPTION_ARG_NONE,  &reduce_sleeps_flag, "Do not eliminate any sleeps (default)",  NULL},
+#endif
+      {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"sleep-less" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
 
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
@@ -489,6 +498,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
    ntsa_free(temp_argv, true);
 
+   if (reduce_sleeps_specified) {
+      fprintf(stderr, "Deprecated --sleep-less option ignored.\n");
+   }
+
    // DBGMSG("buswork=%d", buswork);
    // DBGMSG("dispwork=%d", dispwork);
    // DBGMSG("stats_flag=%d", stats_flag);
@@ -546,7 +559,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
+#ifdef OLD
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
+#endif
    SET_CMDFLAG(CMD_FLAG_DSA,               dsa_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
