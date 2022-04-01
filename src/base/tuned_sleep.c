@@ -22,6 +22,7 @@
 #include "base/parms.h"
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/thread_sleep_data.h"
 
@@ -300,4 +301,9 @@ void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, co
       // sleep_millis_with_tracex(sleep_time, func, lineno, filename, "deferred");
       sleep_millis_with_trace(sleep_time, __func__, __LINE__, __FILE__, "deferred");
    }
+}
+
+
+void init_tuned_sleep() {
+   RTTI_ADD_FUNC(tuned_sleep_with_trace);
 }

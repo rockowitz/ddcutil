@@ -53,4 +53,6 @@ void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, co
 #define CHECK_DEFERRED_SLEEP(_dh) \
    check_deferred_sleep(_dh, __func__, __LINE__, __FILE__)
 
+void init_tuned_sleep();
+
 #endif /* TUNED_SLEEP_H_ */
