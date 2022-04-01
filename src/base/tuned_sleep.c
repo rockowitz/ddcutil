@@ -229,9 +229,7 @@ void tuned_sleep_with_trace(
       //   adjust by time since last i2c event
 
       double dynamic_sleep_adjustment_factor = dsa_get_sleep_adjustment();
-
-      // DBGMSG("Calling tsd_get_sleep_multiplier_factor()");
-      double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();
+      double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();  // set by --sleep-multiplier
       // DBGMSG("sleep_multiplier_factor = %5.2f", sleep_multiplier_factor);
       // crude, should be sensitive to event type?
       int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
