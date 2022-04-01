@@ -3,7 +3,7 @@
   * Maintains thread specific sleep data
   */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -25,7 +25,9 @@ void   tsd_enable_dynamic_sleep(bool enabled);   // controls field display in re
 void   tsd_dsa_enable_globally(bool enabled);
 void   tsd_dsa_enable(bool enabled);
 bool   tsd_dsa_is_enabled();
+#ifdef UNUSED
 void   tsd_set_dsa_enabled_default(bool enabled);
+#endif
 bool   tsd_get_dsa_enabled_default();
 
 //

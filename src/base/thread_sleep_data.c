@@ -6,7 +6,7 @@
  *  small functions for managing various fields.
  */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #include <assert.h>
@@ -193,7 +193,7 @@ void reset_all_thread_sleep_data() {
  * It can be adjusted on a per thread basis..
  *
  * The sleep multiplier count is intended for short-term dynamic
- * adjustment, typically be retry mechanisms within a single operation.
+ * adjustment, typically by retry mechanisms within a single operation.
  * It is normally 1.
  */
 
@@ -402,10 +402,11 @@ bool tsd_dsa_is_enabled() {
    return result;
 }
 
-
+#ifdef UNUSED
 void tsd_set_dsa_enabled_default(bool enabled) {
    default_dynamic_sleep_enabled = enabled;
 }
+#endif
 
 
 bool tsd_get_dsa_enabled_default() {
