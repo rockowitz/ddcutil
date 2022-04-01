@@ -25,7 +25,7 @@
 #include "base/sleep.h"
 #include "base/thread_sleep_data.h"
 
-// #ifdef SLEEP_SUPPRESSION
+#ifdef OLD
 // Experimental suppression of sleeps after reads
 static bool sleep_suppression_enabled = DEFAULT_SLEEP_LESS;
 
@@ -39,7 +39,7 @@ bool enable_sleep_suppression(bool enable) {
 bool is_sleep_suppression_enabled() {
    return sleep_suppression_enabled;
 }
-// #endif
+#endif
 
 
 static bool deferred_sleep_enabled = false;
@@ -138,11 +138,13 @@ void tuned_sleep_with_trace(
       case (SE_POST_READ):
             deferrable_sleep = deferred_sleep_enabled;
             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+#ifdef OLD
             if (sleep_suppression_enabled) {
                suppress = true;
                // DBGMSF(debug, "Done.     Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
                // return;  // TEMP
             }
+#endif
             break;
       case (SE_POST_SAVE_SETTINGS):
             // 4.5 Save Current Settings:

@@ -17,10 +17,10 @@
 #include "base/displays.h"
 #include "base/execution_stats.h"   // for Sleep_Event_Type
 
-// #ifdef SLEEP_SUPPRESSION
+#ifdef OLD
 bool enable_sleep_suppression(bool enable);
 bool is_sleep_suppression_enabled();
-// #endif
+#endif
 
 bool enable_deferred_sleep(bool enable);
 bool is_deferred_sleep_enabled();
