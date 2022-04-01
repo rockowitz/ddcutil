@@ -682,14 +682,20 @@ void ddca_unlock_sleep_multiplier() {
 
 bool
 ddca_enable_sleep_suppression(bool newval) {
+#ifdef OLD    // SLEEP_SUPPRESSION
    bool old = is_sleep_suppression_enabled();
    enable_sleep_suppression(newval);
    return old;
+#endif
+   return false;
 }
 
 bool
 ddca_is_sleep_suppression_enabled() {
+#ifdef OLD  // Sleep Suppression
    return is_sleep_suppression_enabled();
+#endif
+   return false;
 }
 
 
