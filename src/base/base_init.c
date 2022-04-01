@@ -2,7 +2,7 @@
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "util/error_info.h"
@@ -14,6 +14,7 @@
 #include "linux_errno.h"
 #include "per_thread_data.h"
 #include "sleep.h"
+#include "tuned_sleep.h"
 
 #include "base_init.h"
 
@@ -26,6 +27,7 @@ void init_base_services() {
       printf("(%s) Starting.\n", __func__);
    errinfo_init(psc_name, psc_desc);
    init_sleep_stats();
+   init_tuned_sleep();
    init_execution_stats();
    init_status_code_mgt();
    // init_linux_errno();
