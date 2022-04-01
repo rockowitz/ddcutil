@@ -36,7 +36,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 
 /** Converts a VCP feature value from string form to internal form.
- *  Error messages are written to stderr
+ *  Error messages are written to stderr.
  *
  *  \param   string_value
  *  \param   parsed_value    location where to return result
@@ -50,7 +50,7 @@ parse_vcp_value(
 {
    bool debug = false;
 
-   FILE * ferr = stderr;
+   FILE * errf = stderr;
    assert(string_value);
 
    DBGMSF(debug, "Starting. string_value = |%s|", string_value);
@@ -77,11 +77,11 @@ parse_vcp_value(
    DBGMSF(debug, "errno=%d, string_value=|%s|, &string_value=%p, longtemp = %ld, endptr=0x%02x",
                  errsv, string_value, &string_value, longtemp, *endptr);
    if (*endptr || errsv != 0) {
-      f0printf(ferr, "Not a number: %s\n", string_value);
+      f0printf(errf, "Not a number: %s\n", string_value);
       ok = false;
    }
    else if (longtemp < 0 || longtemp > 65535) {
-      f0printf(ferr, "Number must be in range 0..65535:  %ld\n", longtemp);
+      f0printf(errf, "Number must be in range 0..65535:  %ld\n", longtemp);
       ok = false;
    }
    else {
@@ -93,11 +93,11 @@ parse_vcp_value(
    bool ok = str_to_int(canonical, parsed_value_loc, 0);
    free(canonical);
    if (!ok) {
-      f0printf(ferr, "Not a number: \"%s\"", string_value);
+      f0printf(errf, "Not a number: \"%s\"", string_value);
       ok = false;
    }
    else if (*parsed_value_loc < 0 || *parsed_value_loc > 65535) {
-      f0printf(ferr, "Number must be in range 0..65535:  %ld\n", *parsed_value_loc);
+      f0printf(errf, "Number must be in range 0..65535:  %ld\n", *parsed_value_loc);
       ok = false;
    }
 #endif
