@@ -109,9 +109,9 @@ void tuned_sleep_with_trace(
 
    int spec_sleep_time_millis = 0;    // should be a default
    bool deferrable_sleep = false;
-// #ifdef SLEEP_SUPPRESSION
+#ifdef SLEEP_SUPPRESSION
    bool suppress = false;
-// #endif
+#endif
 
 
    if (io_mode == DDCA_IO_I2C) {
@@ -218,12 +218,12 @@ void tuned_sleep_with_trace(
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
    }
 
-// #ifdef SLEEP_SUPPRESSION
+#ifdef OLD    // SLEEP_SUPPRESSION
    if (suppress) {
       DBGMSF(debug, "Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
    }
    else {
-// #endif
+#endif
       // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
 
       // TODO:
@@ -269,9 +269,9 @@ void tuned_sleep_with_trace(
       else {
          sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
       }
-// #ifdef SLEEP_SUPPRESSION
+#ifdef SLEEP_SUPPRESSION // OLD
    }   // !suppress
-// #endif
+#endif
 
    DBGMSF(debug, "Done.");
 }
