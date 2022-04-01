@@ -14,6 +14,9 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/error_info.h"
+#include "util/string_util.h"
+
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/rtti.h"
@@ -33,28 +36,27 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 
 /** Converts a VCP feature value from string form to internal form.
+ *  Error messages are written to stderr
  *
  *  \param   string_value
  *  \param   parsed_value    location where to return result
  *
  *  \return  true if conversion successful, false if not
- *
- *  \todo
- *  Consider using canonicalize_possible_hex_value()
  */
 bool
 parse_vcp_value(
       char * string_value,
-      long * parsed_value)
+      int * parsed_value_loc)
 {
    bool debug = false;
 
    FILE * ferr = stderr;
    assert(string_value);
-   bool ok = true;
-   char buf[20];
 
    DBGMSF(debug, "Starting. string_value = |%s|", string_value);
+#ifdef OLD
+   bool ok = true;
+   char buf[20];
    strupper(string_value);
    if (*string_value == 'X' ) {
       snprintf(buf, 20, "0%s", string_value);
@@ -86,8 +88,21 @@ parse_vcp_value(
       *parsed_value = longtemp;
       ok = true;
    }
+#else
+   char * canonical = canonicalize_possible_hex_value(string_value);
+   bool ok = str_to_int(canonical, parsed_value_loc, 0);
+   free(canonical);
+   if (!ok) {
+      f0printf(ferr, "Not a number: \"%s\"", string_value);
+      ok = false;
+   }
+   else if (*parsed_value_loc < 0 || *parsed_value_loc > 65535) {
+      f0printf(ferr, "Number must be in range 0..65535:  %ld\n", *parsed_value_loc);
+      ok = false;
+   }
+#endif
 
-   DBGMSF(debug, "Done. *parsed_value=%ld, returning: %s", *parsed_value, sbool(ok));
+   DBGMSF(debug, "Done. *parsed_value_loc=%ld, returning: %s", *parsed_value_loc, SBOOL(ok));
    return ok;
 }
 
@@ -118,7 +133,7 @@ app_set_vcp_value(
 
    DDCA_Status                ddcrc = 0;
    Error_Info *               ddc_excp = NULL;
-   long                       longtemp;
+   int                        itemp;
    Display_Feature_Metadata * dfm = NULL;
    bool                       good_value = false;
    DDCA_Any_Vcp_Value         vrec;
@@ -161,7 +176,7 @@ app_set_vcp_value(
    }
 
    else {  // the usual non-table case
-      good_value = parse_vcp_value(new_value, &longtemp);
+      good_value = parse_vcp_value(new_value, &itemp);
       if (!good_value) {
          f0printf(errf, "Invalid VCP value: %s\n", new_value);
          // what is better status code?
@@ -203,25 +218,25 @@ app_set_vcp_value(
             // longtemp = parsed_response->cur_value + longtemp;
             // if (longtemp > parsed_response->max_value)
             //    longtemp = parsed_response->max_value;
-            longtemp = RESPONSE_CUR_VALUE(parsed_response) + longtemp;
-            if (longtemp > RESPONSE_MAX_VALUE(parsed_response))
-               longtemp = RESPONSE_MAX_VALUE(parsed_response);
+            itemp = RESPONSE_CUR_VALUE(parsed_response) + itemp;
+            if (itemp > RESPONSE_MAX_VALUE(parsed_response))
+               itemp = RESPONSE_MAX_VALUE(parsed_response);
          }
          else {
             assert( value_type == VALUE_TYPE_RELATIVE_MINUS);
             // longtemp = parsed_response->cur_value - longtemp;
-            longtemp = RESPONSE_CUR_VALUE(parsed_response)  - longtemp;
-            if (longtemp < 0)
-               longtemp = 0;
+            itemp = RESPONSE_CUR_VALUE(parsed_response)  - itemp;
+            if (itemp < 0)
+               itemp = 0;
          }
          free(parsed_response);
       }
 
       vrec.opcode        = feature_code;
       vrec.value_type    = DDCA_NON_TABLE_VCP_VALUE;
-      vrec.val.c_nc.sh = (longtemp >> 8) & 0xff;
+      vrec.val.c_nc.sh = (itemp >> 8) & 0xff;
       // assert(vrec.val.c_nc.sh == 0);
-      vrec.val.c_nc.sl = longtemp & 0xff;
+      vrec.val.c_nc.sl = itemp & 0xff;
    }
 
    ddc_excp = ddc_set_vcp_value(dh, &vrec, NULL);
