@@ -27,6 +27,12 @@ have no effect.
 
 -- ddcutil sysenv --verbose: improved sysfs scanning
 
+--options enable-sleep-supression, --disable-sleep-suppression and 
+  synonums have no effect
+
+  Sleep after read has been eliminated
+
+
 
 
 
