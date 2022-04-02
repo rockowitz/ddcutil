@@ -50,7 +50,7 @@ parse_vcp_value(
 {
    bool debug = false;
 
-   FILE * errf = stderr;
+   FILE * errf = ferr();         // at app level will always be stderr
    assert(string_value);
 
    DBGMSF(debug, "Starting. string_value = |%s|", string_value);
@@ -124,7 +124,7 @@ app_set_vcp_value(
       char *           new_value,
       bool             force)
 {
-   FILE * errf = ferr();
+   FILE * errf = ferr();   // at app level will always be stderr()
    bool debug = false;
    DBGTRC_STARTING(debug,TRACE_GROUP, "feature=0x%02x, new_value=%s, value_type=%s, force=%s",
                 feature_code, new_value, setvcp_value_type_name(value_type), sbool(force));
