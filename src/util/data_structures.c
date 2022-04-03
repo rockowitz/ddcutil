@@ -643,7 +643,7 @@ void bbf_iter_reset(Byte_Bit_Flags_Iterator bbf_iter) {
 /** Returns the number of the next bit that is set.
  *
  * \param bbf_iter handle to iterator
- * \return number of next bit that is set
+ * \return number of next bit that is set, -1 if none
  */
 int bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter) {
    _Byte_Bit_Flags_Iterator * iter = (_Byte_Bit_Flags_Iterator *) bbf_iter;
