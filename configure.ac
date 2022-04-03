@@ -233,6 +233,17 @@ AS_IF([test "x$enable_lib" = "xyes"],
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
      )
 
+dnl *** configure option: --enable-smbus
+AC_ARG_ENABLE([smbus],
+              [ AS_HELP_STRING([--enable-smbus=@<:@yes/no@:>@], [Use SMBus@<:@default=yes@:>@] )],
+              [enable_smbus=${enableval}],
+              [enable_smbus=yes] )
+dnl AS_IF([test "x$enable_smbus" = "xyes"],
+dnl         AC_MSG_NOTICE( [smbus...      enabled (provisional) ]  )
+dnl       ,
+dnl         AC_MSG_NOTICE( [smbus...      disabled] )
+dnl      )
+
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
@@ -383,6 +394,16 @@ AS_IF([test "x$enable_targetbsd" = "xyes"],
       AC_DEFINE( [TARGET_LINUX], [1], [If defined, building for Linux.])
      )
 
+AM_CONDITIONAL([ENABLE_SMBUS_COND], [test "x$enable_smbus" = "xyes"] )
+AS_IF([test "x$enable_smbus" = "xyes"],
+      AC_MSG_NOTICE( [smbus...      enabled] )
+      AC_DEFINE( [ENABLE_SMBUS], [1], [If defined, enable smbus.])
+      AC_SUBST(ENABLE_SMBUS_FLAG, 1) 
+     ,
+      AC_MSG_NOTICE( [smbus...      disabled] )
+      AC_SUBST(ENABLE_SMBUS_FLAG, 0)
+     )
+
 AM_CONDITIONAL([ENABLE_ENVCMDS_COND], [test "x$enable_envcmds" = "xyes"] )
 AS_IF([test "x$enable_envcmds" = "xyes"],
       AC_MSG_NOTICE( [envcmds...    enabled] )
@@ -530,10 +551,16 @@ dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
 dnl libi2c and libi2c-dev have no .pc files.  Check for header file instead.
-AC_CHECK_HEADER( [i2c/smbus.h],
-                    AC_MSG_NOTICE( [header file i2c/smbus.h found.] ), 
-                    AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
-					)
+AS_IF([test "x$enable_smbus" = "xyes"],
+         [ AC_CHECK_HEADER( [i2c/smbus.h],
+                               AC_DEFINE([ENABLE_SMBUS], [1], [If defined, enable smbus.])
+                               AC_MSG_NOTICE( [header file i2c/smbus.h found.] )
+                          , 
+                               AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
+                          )
+         ],
+         [ AC_MSG_NOTICE( [smbus disabled, not checking for libi2c] ) ]
+     )
 
 dnl on openSUSE, libkmod.h is found in a subdirectory
 AC_CHECK_HEADER( [kmod/libkmod.h],
@@ -873,6 +900,7 @@ AC_MSG_RESULT([
 	required_packages:      ${required_packages}
 
 	enable_lib:             ${enable_lib}
+	enable_smbus            ${enable_smbus}
 	enable_envcmds          ${enable_envcmds}
 	enable_udev             ${enable_udev}
 	enable_usb:             ${enable_usb}

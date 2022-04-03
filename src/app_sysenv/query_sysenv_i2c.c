@@ -7,11 +7,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include "config.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
+#ifdef ENABLE_SMBUS
 #include <i2c/smbus.h>
+#endif
 #include <limits.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -131,6 +135,7 @@ try_single_getvcp_call(
    rpt_vstring(depth, "Reading Get Feature Reply response packet");
 
    if (use_smbus) {   // FAILS, reads 6e 6e 6e ...
+#ifdef ENABLE_SMBUS
       unsigned long functionality = i2c_get_functionality_flags_by_fd(fh);
        if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
           rpt_vstring(depth, "File descriptor %d does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
@@ -158,6 +163,11 @@ try_single_getvcp_call(
        }
        rpt_vstring(depth+1, "%d bytes were read", actual_ct);
        rpt_vstring(depth, "ddc_response_bytes+1-> %s", hexstring_t(ddc_response_bytes+1,actual_ct) );
+#else
+       rpt_vstring(0, "Not built with libi2c support.  Skipping simple VCP read using SMBus");
+       rc = DDCRC_UNIMPLEMENTED;
+       goto bye;
+#endif
    }
    else {
       rc = read(fh, ddc_response_bytes+1, readct);
@@ -248,7 +258,7 @@ bye:
 }
 
 
-bool simple_read_edid(
+static bool simple_read_edid(
       int  busno,
       int  read_size,
       bool write_before_read,
@@ -301,6 +311,7 @@ bool simple_read_edid(
 
       int actual_ct = 0;
       if (use_smbus) {
+#ifdef ENABLE_SMBUS
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
          if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
             rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", i2cdev);
@@ -328,6 +339,11 @@ bool simple_read_edid(
             rpt_hex_dump(edid_buf, actual_ct, depth+1);
             ok = true;
          }
+#else
+       rpt_vstring(0, "Not built with libi2c support.  Skipping simple EDID read using SMBus");
+       rc = DDCRC_UNIMPLEMENTED;
+       goto close;
+#endif
       }
       else {
          actual_ct = read(fd, edid_buf, read_size);

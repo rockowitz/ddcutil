@@ -273,7 +273,9 @@ libcommon_la_LIBADD += \
   $(LIBUSB_LIBS) \
   $(KMOD_LIBS)
 
+if ENABLE_SMBUS_COND
 libcommon_la_LIBADD += -li2c
+endif
 
 # libddcutil_la_LIBADD = -lz
 libddcutil_la_LIBADD = $(ZLIB_LIBS)

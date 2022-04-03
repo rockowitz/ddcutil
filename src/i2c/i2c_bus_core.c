@@ -12,7 +12,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib-2.0/glib.h>
+#ifdef ENABLE_SMBUS
 #include <i2c/smbus.h>   // TEMP
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -384,7 +386,7 @@ i2c_get_edid_bytes_directly(
       bool    read_bytewise)
 {
    bool debug = false;
-#ifdef USE_SMBUS
+#if defined(ENABLE_SMBUS) && defined(USE_SMBUS)
    read_bytewise = true;   // ** TEMP **
 #endif
 
@@ -417,7 +419,7 @@ i2c_get_edid_bytes_directly(
       if (read_bytewise) {
          int ndx = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
-#ifdef USE_SMBUS
+#if defined(ENABLE_SMBUS) && defined(USE_SMBUS)
             __s32 smbus_result = 0;
             RECORD_IO_EVENTX(
                 fd,
