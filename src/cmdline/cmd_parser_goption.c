@@ -933,7 +933,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          // parsedCmd->argCt  = cmdInfo->argct;
          int min_arg_ct = cmdInfo->min_arg_ct;
          int max_arg_ct = cmdInfo->max_arg_ct;
-         DBGMSG("max_arg_ct = %d", max_arg_ct);
          int argctr = 1;
          while ( cmd_and_args[argctr] != NULL) {
             if (argctr > max_arg_ct) {
