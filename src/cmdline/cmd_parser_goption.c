@@ -142,7 +142,7 @@ stats_arg_func(const    gchar* option_name,
 Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    bool debug = false;
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
-   validate_cmdinfo();   // assertions
+   init_cmd_parser_base();   // assertions
 
    if (debug) {
       DBGMSG("argc=%d", argc);
@@ -959,8 +959,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                parsed_cmd->cmd_id == CMDID_GETVCP)
             )
          {
+#ifdef OLD
             Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
-            bool ok = false;
             if (parsed_cmd->argct <= 1) {
                char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
                ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
@@ -973,11 +973,21 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
             if (ok)
                parsed_cmd->fref = fsref;
-            else
+            else {
+               free(fsref);
                fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
+            }
+#endif
+            parsed_cmd->fref = parse_feature_ids_or_subset(parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
+            if (parsed_cmd->fref) {
+               ok = false;
+               char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
+               fprintf(stderr, "Invalid feature code(s) or subset: %s\n", s);
+               free(s);
+            }
          }
 
-         // Ignore --notable for vcpinfo
+         // Ignore option --notable for vcpinfo
          if ( ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
             parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
          }
