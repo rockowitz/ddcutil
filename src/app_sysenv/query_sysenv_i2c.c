@@ -11,7 +11,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
+#ifndef I2C_IO_IOCTL_ONLY
 #include <i2c/smbus.h>
+#endif
 #include <limits.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -76,14 +78,13 @@ static
 Public_Status_Code try_single_getvcp_call(
       int           fh,
       unsigned char vcp_feature_code,
-      bool          use_smbus,
+//    bool          use_smbus,
       int           depth)
 {
    bool debug = false;
    // rpt_nl();
    // DBGMSF(true, "Starting. vcp_feature_code=0x%02x. use_smbus=%s", vcp_feature_code, sbool(use_smbus) );
-   rpt_vstring(depth, "%s: vcp_feature_code=0x%02x, use_smbus=%s", __func__,
-                       vcp_feature_code, sbool(use_smbus) );
+   rpt_vstring(depth, "%s: vcp_feature_code=0x%02x", __func__, vcp_feature_code );
 
    int ndx;
    Status_Errno rc = 0;
@@ -271,15 +272,15 @@ bool simple_read_edid(
       int  busno,
       int  read_size,
       bool write_before_read,
-      bool use_smbus,
+//    bool use_smbus,
       int  depth)
 {
    assert(read_size == 128 || read_size == 256);
    rpt_nl();
    rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write() using %s",
                   read_size, busno,
-                  (write_before_read) ? "WITH" : "WITHOUT",
-                  (use_smbus) ?  "i2c_smbus_read_byte_data()" : "read()");
+                  (write_before_read) ? "WITH" : "WITHOUT"
+                  );
    int rc = 0;
    char i2cdev[20];
    Byte edid_buf[256];
@@ -319,6 +320,7 @@ bool simple_read_edid(
       }
 
       int actual_ct = 0;
+#ifndef I2C_IO_IOCTL_ONLY
       if (use_smbus) {
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
          if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
@@ -349,6 +351,7 @@ bool simple_read_edid(
          }
       }
       else {
+#endif
          actual_ct = read(fd, edid_buf, read_size);
          if (actual_ct < 0) {
             rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
@@ -357,7 +360,10 @@ bool simple_read_edid(
          rpt_vstring(depth, "read() returned %d bytes", actual_ct);
          rpt_hex_dump(edid_buf, actual_ct, depth+1);
          ok = true;
+
+#ifndef I2C_IO_IOCTL_ONLY
       }
+#endif
 
 close:
       close(fd);
@@ -397,20 +403,20 @@ void test_edid_read_variants(Env_Accumulator * accum) {
          rpt_label(d2, "Tests using read()...");
          bool ok = false;
          rpt_label(d2, "Without write() before read()...");
-         ok = simple_read_edid(busno, 128, false, false, d2);
+         ok = simple_read_edid(busno, 128, false, d2);
          if (!ok)
-            simple_read_edid(busno, 128, false, false, d2);
-         simple_read_edid(busno, 256, false, false, d2);
+            simple_read_edid(busno, 128, false, d2);
+         simple_read_edid(busno, 256, false, d2);
          rpt_nl();
          rpt_label(d2, "Retrying with write() before read()...");
-         ok = simple_read_edid(busno, 128, true, false, d2);
+         ok = simple_read_edid(busno, 128, true, d2);
          if (!ok)
-            simple_read_edid(busno, 128, true, false, d2);
-         simple_read_edid(busno, 256, true, false, d2);
+            simple_read_edid(busno, 128, true, d2);
+         simple_read_edid(busno, 256, true, d2);
          rpt_nl();
 
-         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
 #ifdef FAIL
+         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
          // hang observed w/o write, using i2c_smbus_read_byte_data()
          rpt_label(d2, "Without write() before read()...");
          ok = simple_read_edid(busno, 128, false, true, d2);
@@ -419,12 +425,14 @@ void test_edid_read_variants(Env_Accumulator * accum) {
          simple_read_edid(busno, 256, false, true, d2);
          rpt_nl();
 #endif
+#ifdef OLD
          rpt_label(d2, "Retrying with write() before read()...");
          ok = simple_read_edid(busno, 128, true, true, d2);
          if (!ok)
             simple_read_edid(busno, 128, true, true, d2);
          simple_read_edid(busno, 256, true, true, d2);
          rpt_nl();
+#endif
       }
    }
 }
@@ -545,7 +553,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             int maxtries = 3;
             psc = -1;
             for (int tryctr=0; tryctr<maxtries && psc < 0; tryctr++) {
-               psc = try_single_getvcp_call(fd, 0x10, false, d2);
+               psc = try_single_getvcp_call(fd, 0x10, d2);
                if (psc == 0 || psc == DDCRC_NULL_RESPONSE || psc == DDCRC_REPORTED_UNSUPPORTED) {
                   switch (psc) {
                   case 0:
