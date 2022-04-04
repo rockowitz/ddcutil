@@ -356,6 +356,9 @@ report_vcp_feature_table_entry(
 bool
 app_vcpinfo(Parsed_Cmd * parsed_cmd)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_VCP | DDCA_TRC_TOP, "feature set: %s",
+         fsref_repr_t(parsed_cmd->fref));
    bool vcpinfo_ok = true;
 
    Feature_Set_Flags fsflags = 0;
@@ -370,6 +373,9 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
                                parsed_cmd->fref,
                                parsed_cmd->mccs_vspec,
                                fsflags);
+   if (debug || IS_TRACING_GROUP((DDCA_TRC_TOP | DDCA_TRC_VCP)) )
+      dbgrpt_feature_set(fset, 2);
+
    if (!fset) {
       vcpinfo_ok = false;
    }
@@ -386,5 +392,6 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
       }
       free_vcp_feature_set(fset);
    }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_VCP|DDCA_TRC_TOP, vcpinfo_ok, "");
    return vcpinfo_ok;
 }
