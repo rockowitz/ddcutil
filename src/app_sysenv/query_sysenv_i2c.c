@@ -268,7 +268,7 @@ bye:
 }
 
 
-bool simple_read_edid(
+static bool simple_read_edid(
       int  busno,
       int  read_size,
       bool write_before_read,
