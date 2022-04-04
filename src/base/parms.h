@@ -100,7 +100,10 @@
 // *** Miscellaneous
 //
 
-/** Maximum numbers of values on setvcp command */
+/** Maximum number of values on getvcp or vcpinfo */
+#define MAX_GETVCP_VALUES    50
+
+/** Maximum number of values on setvcp command */
 #define MAX_SETVCP_VALUES    50
 
 /** Maximum command arguments */
