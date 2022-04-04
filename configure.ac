@@ -531,11 +531,11 @@ dnl i2c-dev.h is in linux-headers
 dnl i2c-dev.h not found:
 dnl AC_CHECK_HEADERS([i2c-dev.h])
 
-dnl libi2c and libi2c-dev have no .pc files.  Check for header file instead.
-AC_CHECK_HEADER( [i2c/smbus.h],
-                    AC_MSG_NOTICE( [header file i2c/smbus.h found.] ), 
-                    AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
-					)
+dnl dnl libi2c and libi2c-dev have no .pc files.  Check for header file instead.
+dnl AC_CHECK_HEADER( [i2c/smbus.h],
+dnl                     AC_MSG_NOTICE( [header file i2c/smbus.h found.] ), 
+dnl                     AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
+dnl 					)
 
 dnl on openSUSE, libkmod.h is found in a subdirectory
 AC_CHECK_HEADER( [kmod/libkmod.h],
