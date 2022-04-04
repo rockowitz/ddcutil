@@ -124,7 +124,7 @@ Public_Status_Code try_single_getvcp_call(
 #endif
    if (rc < 0) {
       int errsv = errno;
-      DBGMSF(debug, "write() failed, errno=%s", linux_errno_desc(errsv));
+      DBGMSF(debug, "write failed, errno=%s", linux_errno_desc(errsv));
       rc = -errsv;
       goto bye;
    }
@@ -179,10 +179,10 @@ Public_Status_Code try_single_getvcp_call(
 #endif
       if (rc < 0) {
          rc = -errno;
-         DBGMSF(debug, "read() failed, errno=%s", linux_errno_desc(-rc));
+         DBGMSF(debug, "read failed, errno=%s", linux_errno_desc(-rc));
          goto bye;
       }
-      rpt_vstring(depth, "read() returned %s", hexstring_t(ddc_response_bytes+1,rc) );
+      rpt_vstring(depth, "read returned %s", hexstring_t(ddc_response_bytes+1,rc) );
 
 #ifndef I2C_IO_IOCTL_ONLY
       if (rc != readct) {
@@ -267,7 +267,52 @@ bye:
    return rc;
 }
 
+static bool simple_ioctl_read_edid(
+      int  busno,
+      int  read_size,
+      bool write_before_read,
+      int  depth)
+{
+   assert(read_size == 128 || read_size == 256);
+   rpt_nl();
+   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write",
+                  read_size, busno,
+                  (write_before_read) ? "WITH" : "WITHOUT"
+                  );
+   int rc = 0;
+   char i2cdev[20];
+   Byte edid_buf[256];
+   snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
+   bool ok = false;
+   int fd = open(i2cdev, O_RDWR );
+   if (fd < 0) {
+      rpt_vstring(depth, "Open failed for %s, errno=%s", i2cdev, linux_errno_desc(errno));
+   }
+   else {
+      if (write_before_read) {
+         edid_buf[0] = 0x00;
+         rc = i2c_ioctl_writer(fd, 0x50, 1, edid_buf);
+         if (rc < 0) {
+            rpt_vstring(depth, "write of 1 byte failed, errno = %s", linux_errno_desc(errno));
+            rpt_label(depth, "Continuing");
+         }
+      }
+      rc = i2c_ioctl_reader(fd, 0x50, false, read_size, edid_buf);
+      if (rc < 0) {
+         rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
+      }
+      else {
+         rpt_hex_dump(edid_buf, read_size, depth+1);
+         ok = true;
+      }
 
+      close(fd);
+   }
+   return ok;
+}
+
+
+#ifndef I2C_IO_IOCTL_ONLY
 static bool simple_read_edid(
       int  busno,
       int  read_size,
@@ -277,7 +322,7 @@ static bool simple_read_edid(
 {
    assert(read_size == 128 || read_size == 256);
    rpt_nl();
-   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write() using %s",
+   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write()",
                   read_size, busno,
                   (write_before_read) ? "WITH" : "WITHOUT"
                   );
@@ -320,7 +365,6 @@ static bool simple_read_edid(
       }
 
       int actual_ct = 0;
-#ifndef I2C_IO_IOCTL_ONLY
       if (use_smbus) {
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
          if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
@@ -351,7 +395,6 @@ static bool simple_read_edid(
          }
       }
       else {
-#endif
          actual_ct = read(fd, edid_buf, read_size);
          if (actual_ct < 0) {
             rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
@@ -361,15 +404,14 @@ static bool simple_read_edid(
          rpt_hex_dump(edid_buf, actual_ct, depth+1);
          ok = true;
 
-#ifndef I2C_IO_IOCTL_ONLY
       }
-#endif
 
 close:
       close(fd);
    }
    return ok;
 }
+#endif
 
 
 void test_edid_read_variants(Env_Accumulator * accum) {
@@ -400,19 +442,19 @@ void test_edid_read_variants(Env_Accumulator * accum) {
          if (!is_i2c_device_rw(busno))   // issues message if not RW
             continue;
 
-         rpt_label(d2, "Tests using read()...");
+         rpt_label(d2, "Tests using ioctl write and read...");
          bool ok = false;
-         rpt_label(d2, "Without write() before read()...");
-         ok = simple_read_edid(busno, 128, false, d2);
+         rpt_label(d2, "Without write before read...");
+         ok = simple_ioctl_read_edid(busno, 128, false, d2);
          if (!ok)
-            simple_read_edid(busno, 128, false, d2);
-         simple_read_edid(busno, 256, false, d2);
+            simple_ioctl_read_edid(busno, 128, false, d2);
+         simple_ioctl_read_edid(busno, 256, false, d2);
          rpt_nl();
-         rpt_label(d2, "Retrying with write() before read()...");
-         ok = simple_read_edid(busno, 128, true, d2);
+         rpt_label(d2, "Retrying with write before read...");
+         ok = simple_ioctl_read_edid(busno, 128, true, d2);
          if (!ok)
-            simple_read_edid(busno, 128, true, d2);
-         simple_read_edid(busno, 256, true, d2);
+            simple_ioctl_read_edid(busno, 128, true, d2);
+         simple_ioctl_read_edid(busno, 256, true, d2);
          rpt_nl();
 
 #ifdef FAIL
