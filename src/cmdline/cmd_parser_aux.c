@@ -3,7 +3,7 @@
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -30,7 +30,7 @@ static Cmd_Desc cmdinfo[] = {
  // cmd_id              cmd_name   minchars min_arg_ct max_arg_ct
    {CMDID_DETECT,       "detect",         3,  0,       0},
    {CMDID_CAPABILITIES, "capabilities",   3,  0,       0},
-   {CMDID_GETVCP,       "getvcp",         3,  1,       11},
+   {CMDID_GETVCP,       "getvcp",         3,  1,       MAX_GETVCP_VALUES},
    {CMDID_SETVCP,       "setvcp",         3,  2,       MAX_SETVCP_VALUES*2},
    {CMDID_LISTVCP,      "listvcp",        5,  0,       0},
 #ifdef INCLUDE_TESTCASES
@@ -44,7 +44,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
 #endif
-   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       11},
+   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       MAX_GETVCP_VALUES},
 #ifdef WATCH_COMMAND
    {CMDID_READCHANGES,  "watch",          3,  0,       0},
 #endif
@@ -57,6 +57,9 @@ static Cmd_Desc cmdinfo[] = {
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
 
+/** Validates the Cmd_Desc data structure.
+ *  Called during parser initialization.
+ */
 void validate_cmdinfo() {
    int ndx = 0;
    for (; ndx < cmdct; ndx++) {
@@ -65,6 +68,11 @@ void validate_cmdinfo() {
 }
 
 
+/** Reports the contents of the Cmd_Desc data structure.
+ *  For debugging.
+ *
+ *  @param  cmd_desc pointer to command table
+ */
 void show_cmd_desc(Cmd_Desc * cmd_desc) {
    printf("CmdDesc at %p\n", (void*)cmd_desc);
    printf("   cmd_id:     0x%04x\n", cmd_desc->cmd_id);
@@ -75,6 +83,11 @@ void show_cmd_desc(Cmd_Desc * cmd_desc) {
 }
 
 
+/** Looks for a command in the command table, allowing for valid abbreviations.
+ *
+ *  @param  cmd  pointer to command specified by the user, in lower case
+ *  @return pointer to #Cmd_Desc struct for the command, NULL if not found
+ */
 Cmd_Desc * find_command(char * cmd) {
    Cmd_Desc * result = NULL;
    int ndx = 0;
@@ -84,11 +97,14 @@ Cmd_Desc * find_command(char * cmd) {
          result = &cmdinfo[ndx];
       }
    }
-   // DBGMSG("cmd=|%s|, returning %p", cmd, result);
    return result;
 }
 
 
+/** Looks for a command in the command table by its command id.
+ *  @param  cmdid id number of command
+ *  @return pointer to #Cmd_Desc struct for the command, NULL if not found
+ */
 Cmd_Desc * get_command(int cmdid) {
    bool debug = false;
    Cmd_Desc * result = NULL;
@@ -106,11 +122,12 @@ Cmd_Desc * get_command(int cmdid) {
    return result;
 }
 
+// End of command description data structure
 
-void init_cmd_parser_base() {
-   validate_cmdinfo();
-}
 
+//
+// Parsers for specific argument types
+//
 
 bool all_digits(char * val, int ct) {
    bool debug = false;
@@ -150,6 +167,10 @@ bool parse_int_arg(char * val, int * pIval) {
 }
 
 
+//
+// Feature subset table and functions
+//
+
 typedef struct feature_subset_table_entry_s {
    VCP_Feature_Subset   subset_id;
    Cmd_Id_Type          valid_commands;
@@ -158,6 +179,7 @@ typedef struct feature_subset_table_entry_s {
    char *               subset_desc;
 } Feature_Subset_Table_Entry;
 
+// Valid subset identifiers for commands that can take a subset id as an argument
 const Feature_Subset_Table_Entry subset_table[] = {
    // special handling
    {VCP_SUBSET_KNOWN,     CMDID_GETVCP|CMDID_VCPINFO, 3, "KNOWN",     "All features known to ddcutil that are valid for the display"},
@@ -196,15 +218,19 @@ const Feature_Subset_Table_Entry subset_table[] = {
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
-
-char * assemble_command_argument_help() {
+void validate_subset_table() {
    // quick and dirty check that tables are in sync
    // +3 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_MULTI_FEATURE, VCP_SUBSET_NONE
    // -2 for triple VCP_SUBSET_KNOWN
    // -1 for double VCP_SUBSET_MFG
    // -1 for double VCP_SUBSET_DYNAMIC
    assert(subset_table_ct+(3-4) == vcp_subset_count);
+}
 
+/** Assemble a help message listing valid feature subsets.
+ *  @return multi-line help string
+ */
+char * assemble_command_argument_help() {
    GString * buf = g_string_sized_new(1000);
    g_string_append(buf,
          "Command Arguments\n"
@@ -216,7 +242,6 @@ char * assemble_command_argument_help() {
    for (int ndx = 0; ndx < subset_table_ct; ndx++) {
       g_string_append_printf(buf, "      - %-10s - %s\n",  subset_table[ndx].subset_name, subset_table[ndx].subset_desc);
    }
-
    g_string_append(buf,
    "    Keywords can be abbreviated to the first 3 characters.\n"
    "    Case is ignored.  e.g. \"COL\", \"pro\"\n"
@@ -234,6 +259,10 @@ char * assemble_command_argument_help() {
    return result;
 }
 
+
+/** Finds a subset identifier description.
+ *  Given a command
+ */
 
 VCP_Feature_Subset find_subset(char * name, int cmd_id) {
    assert(name && (cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO));
@@ -297,31 +326,47 @@ bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * 
    return ok;
 }
 
+Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_ct) {
+   Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
+   DBGMSG("cmd_id=%d, vals[0]=%s, vals_ct=%d", cmd_id, vals[0], vals_ct);
+   bool debug = true;
+   bool ok = false;
+   if (vals_ct <= 1) {
+      char * val = (vals_ct > 0) ? vals[0] : "ALL";
+      ok = parse_feature_id_or_subset(val, cmd_id, fsref);
+      DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
+   }
+   else {
+      ok = parse_feature_ids(vals, vals_ct, cmd_id, fsref);
+      DBGMSF(debug, "parse_feature_ids() returned: %d", ok);
+   }
+   if (!ok) {
+      free(fsref);
+      fsref = NULL;
+   }
+   DBGMSG("Done.  Returning: %p", (void*) fsref);
+   return fsref;
+}
 
-// n. this function used to set the default output level based on the command
-// this is no longer necessary
+
+
+/** Checks that the output level, after parsing, is appropriate for a command.
+ *  Writes a message to stdout if not.
+ *
+ *  @param   parsed_cmd  pointer to a #Parsed_Cmd
+ *  @return  true/false
+ */
 bool validate_output_level(Parsed_Cmd* parsed_cmd) {
-   // printf("(%s) parsed_cmd->cmdid = %d, parsed_cmd->output_level = %s\n",
-   //        __func__, parsed_cmd->cmd_id,
-   //        output_level_name(parsed_cmd->output_level));
    bool ok = true;
-   // check that output_level consistent with cmd_id
    Byte valid_output_levels;
-   // Byte default_output_level = OL_NORMAL;
+   // once upon a time the switch statement really had multiple cases
    switch(parsed_cmd->cmd_id) {
-      case (CMDID_DETECT):
-         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
-         break;
-      case (CMDID_GETVCP):
-         valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
-         break;
       case (CMDID_PROBE):
          // don't want to deal with how to report errors, handle write-only features
          // of machine readable output triggered by --terse
          valid_output_levels =                 DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
          break;
       default:
-         // default_output_level = OL_NORMAL;
          valid_output_levels = DDCA_OL_TERSE | DDCA_OL_NORMAL | DDCA_OL_VERBOSE | DDCA_OL_VV;
    }
    if (!(parsed_cmd->output_level & valid_output_levels)) {
@@ -334,6 +379,9 @@ bool validate_output_level(Parsed_Cmd* parsed_cmd) {
 }
 
 
+//
+// Help message fragments
+//
 char * commands_list_help =
        "Commands:\n"
        "   detect                                  Detect monitors\n"
@@ -480,3 +528,13 @@ char * maxtries_option_help =
       "  A value of \"0\" or \".\" leaves the default value unchanged\n"
       "  e.g. --maxtries \".,.,15\" changes only the maximum multi-part-read exchange count"
       ;
+
+//
+// Initialization
+//
+
+void init_cmd_parser_base() {
+   validate_cmdinfo();
+   validate_subset_table();
+}
+
