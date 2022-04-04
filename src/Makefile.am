@@ -216,7 +216,8 @@ libcommon_la_LIBADD += \
   $(LIBUSB_LIBS) \
   $(KMOD_LIBS)
 
-libcommon_la_LIBADD += -li2c
+# for smbus functions:
+# libcommon_la_LIBADD += -li2c
 
 #
 # Link convenience library libapp
