@@ -330,9 +330,10 @@ bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * 
 
 
 Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_ct) {
-   Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
-   DBGMSG("cmd_id=%d, vals[0]=%s, vals_ct=%d", cmd_id, vals[0], vals_ct);
    bool debug = true;
+   DBGMSF(debug, "cmd_id=%d, vals[0]=%s, vals_ct=%d", cmd_id, vals[0], vals_ct);
+
+   Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
    bool ok = false;
    if (vals_ct <= 1) {
       char * val = (vals_ct > 0) ? vals[0] : "ALL";
@@ -371,7 +372,7 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
       free(fsref);
       fsref = NULL;
    }
-   DBGMSG("Done.  Returning: %p", (void*) fsref);
+   DBGMSF(debug, "Done.  Returning: %p", (void*) fsref);
    if (ok && debug)
       dbgrpt_feature_set_ref(fsref, 1);
    return fsref;
