@@ -342,11 +342,16 @@ app_show_feature_set_values_by_dh(
    // free(s0);
 
    Status_Errno_DDC psc = 0;
+#ifdef OLD
    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
       psc = app_show_single_vcp_value_by_feature_id(
             dh, fsref->specific_feature, true);
    }
    else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES) {
+#endif
+   if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE ||
+       fsref->subset == VCP_SUBSET_MULTI_FEATURES)
+   {
       int feature_ct = bs256_count(fsref->features);
       DBGMSF(debug, "VCP_SUBSET_MULTI_FEATURES, feature_ct=%d", feature_ct);
       psc = 0;
