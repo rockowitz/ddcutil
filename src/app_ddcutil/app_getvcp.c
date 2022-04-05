@@ -309,7 +309,7 @@ app_show_feature_set_values_by_dh(
       Display_Handle *     dh,
       Parsed_Cmd *         parsed_cmd)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug || IS_TRACING()) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s",
                              dh_repr(dh), fsref_repr_t(parsed_cmd->fref),
