@@ -211,7 +211,7 @@ dyn_create_feature_set2(
 
     else if (subset_id == VCP_SUBSET_SCAN) {
        VCP_Feature_Set * vcp_feature_set =
-          create_feature_set(
+          create_vcp_feature_set(
              subset_id,
              // dref->vcp_version,
              get_vcp_version_by_dref(dref),
@@ -241,7 +241,7 @@ dyn_create_feature_set2(
 
     else {   // (subset_id != VCP_SUBSET_DYNAMIC, != VCP_SUBSET_SCAN
        VCP_Feature_Set * vcp_feature_set =
-          create_feature_set(
+          create_vcp_feature_set(
              subset_id,
              // dref->vcp_version,
              get_vcp_version_by_dref(dref),
