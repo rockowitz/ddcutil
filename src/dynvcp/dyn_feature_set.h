@@ -72,12 +72,14 @@ dyn_get_feature_set_size2(
 
 // void report_feature_set(VCP_Feature_Set feature_set, int depth);
 
+#ifdef UNUSED
 Dyn_Feature_Set *
 dyn_create_feature_set_from_feature_set_ref2(
    Feature_Set_Ref *       fsref,
    // DDCA_MCCS_Version_Spec  vcp_version,
    DDCA_Display_Ref        dref,
    Feature_Set_Flags       flags);
+#endif
 
 typedef bool (*Dyn_Feature_Set_Filter_Func)(Display_Feature_Metadata * p_metadata);
 
