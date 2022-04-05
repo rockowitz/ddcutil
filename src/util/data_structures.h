@@ -221,6 +221,7 @@ extern const Bit_Set_256 EMPTY_BIT_SET_256;
 
 Bit_Set_256    bs256_add(Bit_Set_256 flags, uint8_t val);
 bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
+int            bs256_first_bit_set(Bit_Set_256 bitset);
 bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
 Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
 Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection

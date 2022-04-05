@@ -1438,6 +1438,25 @@ bool bs256_contains(
 }
 
 
+/** Returns the bit number of the first bit set.
+ *  \param  bitset #Bit_Set_256 to check
+ *  \return number of first bit that is set (0 based),
+ *          -1 if no bits set
+ */
+int bs256_first_bit_set(
+      Bit_Set_256 bitset)
+{
+   int result = -1;
+   for (int ndx = 0; ndx < 256; ndx++) {
+      if (bs256_contains(bitset, ndx)) {
+         result = ndx;
+         break;
+      }
+   }
+   return result;
+}
+
+
 bool bs256_eq(
     Bit_Set_256 set1,
     Bit_Set_256 set2)
@@ -1801,6 +1820,7 @@ Bit_Set_256 bs256_from_string(
     }
     return result;
 }
+
 
 Bit_Set_256
 bs256_from_bbf(Byte_Bit_Flags bbf) {
