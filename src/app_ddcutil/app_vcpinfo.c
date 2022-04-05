@@ -369,7 +369,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->flags & CMD_FLAG_WO_ONLY)
       fsflags |= FSF_WO_ONLY;
 
-   VCP_Feature_Set * fset = create_feature_set_from_feature_set_ref(
+   VCP_Feature_Set * fset = create_vcp_feature_set_from_feature_set_ref(
                                parsed_cmd->fref,
                                parsed_cmd->mccs_vspec,
                                fsflags);
