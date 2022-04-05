@@ -280,7 +280,7 @@ VCP_Feature_Subset find_subset(char * name, int cmd_id) {
    return result;
 }
 
-
+#ifdef OLD
 bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref) {
    bool debug = true;
    bool ok = true;
@@ -293,6 +293,7 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
      if (ok) {
         fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
         fsref->specific_feature = feature_hexid;
+        bs256_add(fsref->features, feature_hexid);     // for future
      }
    }
    DBGMSF(debug, "Returning: %s", sbool(ok));
@@ -325,6 +326,8 @@ bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * 
 
    return ok;
 }
+#endif
+
 
 Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_ct) {
    Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
@@ -333,18 +336,44 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
    bool ok = false;
    if (vals_ct <= 1) {
       char * val = (vals_ct > 0) ? vals[0] : "ALL";
-      ok = parse_feature_id_or_subset(val, cmd_id, fsref);
-      DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
+      VCP_Feature_Subset subset_id = find_subset(val, cmd_id);
+      if (subset_id != VCP_SUBSET_NONE) {
+         fsref->subset = subset_id;
+         ok = true;
+      }
+      else {
+         Byte feature_hexid = 0;   // temp
+         ok = any_one_byte_hex_string_to_byte_in_buf(val, &feature_hexid);
+         if (ok) {
+            fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
+            fsref->specific_feature = feature_hexid;
+            fsref->features = bs256_add(fsref->features, feature_hexid);     // for future
+         }
+      }
    }
-   else {
-      ok = parse_feature_ids(vals, vals_ct, cmd_id, fsref);
-      DBGMSF(debug, "parse_feature_ids() returned: %d", ok);
+   else {   // ct > 1
+      // ok = parse_feature_ids(vals, vals_ct, cmd_id, fsref);
+      assert(cmd_id == CMDID_GETVCP || cmd_id == CMDID_VCPINFO);
+      fsref->subset = VCP_SUBSET_NONE;
+      for (int ndx = 0; ndx < vals_ct; ndx++) {
+         Byte feature_hexid = 0;   // temp
+         ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
+         DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(ok), feature_hexid);
+         if (ok) {
+            fsref->features = bs256_add(fsref->features, feature_hexid);
+         }
+      }
+      if (ok)
+         fsref->subset = VCP_SUBSET_MULTI_FEATURES;
    }
+
    if (!ok) {
       free(fsref);
       fsref = NULL;
    }
    DBGMSG("Done.  Returning: %p", (void*) fsref);
+   if (ok && debug)
+      dbgrpt_feature_set_ref(fsref, 1);
    return fsref;
 }
 
