@@ -330,7 +330,7 @@ bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * 
 
 
 Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_ct) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "cmd_id=%d, vals[0]=%s, vals_ct=%d", cmd_id, vals[0], vals_ct);
 
    Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
