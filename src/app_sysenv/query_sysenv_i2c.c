@@ -509,7 +509,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    Buffer * buf0 = buffer_new(1000, __func__);
    int  busct = 0;
    Public_Status_Code psc;
-   Status_Errno rc;
+   Status_Errno rc = 0;
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
@@ -587,9 +587,6 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
          rpt_vstring(d2, "Trying simple VCP read of feature 0x10...");
 #ifndef I2C_IO_IOCTL_ONLY
          rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
-#else
-         uint16_t op = I2C_SLAVE_FORCE;
-         rc = ioctl(fd, op, 0x37);
 #endif
          if (rc == 0) {
             int maxtries = 3;
