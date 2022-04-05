@@ -978,7 +978,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             }
 #endif
             parsed_cmd->fref = parse_feature_ids_or_subset(parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
-            if (parsed_cmd->fref) {
+            if (!parsed_cmd->fref) {
                ok = false;
                char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
                fprintf(stderr, "Invalid feature code(s) or subset: %s\n", s);
