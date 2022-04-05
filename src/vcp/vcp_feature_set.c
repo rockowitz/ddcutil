@@ -93,7 +93,7 @@ create_feature_set0(
  *    RW, RO, or WO
  */
 VCP_Feature_Set *
-create_feature_set(
+create_vcp_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_MCCS_Version_Spec vcp_version,
       Feature_Set_Flags      feature_setflags)
@@ -331,12 +331,12 @@ create_single_feature_set_by_hexid(Byte id, bool force) {
  *  Used only for VCPINFO
  */
 VCP_Feature_Set *
-create_feature_set_from_feature_set_ref(
+create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Ref *         fsref,
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug || IS_TRACING()) {
       char * flag_names = feature_set_flag_names_t(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
@@ -344,11 +344,18 @@ create_feature_set_from_feature_set_ref(
    }
 
     struct vcp_feature_set * fset = NULL;
+#ifdef OLD
     if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE) {
-       fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
+       // fset = create_single_feature_set_by_hexid(fsref->specific_feature, flags & FSF_FORCE);
+       int feature_code = bs256_first_bit_set(fsref->features);
+       assert(feature_code >= 0);
+       fset = create_single_feature_set_by_hexid((Byte)feature_code, flags & FSF_FORCE);
     }
     else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES) {
-
+#endif
+    if (fsref->subset == VCP_SUBSET_SINGLE_FEATURE ||
+        fsref->subset == VCP_SUBSET_MULTI_FEATURES)
+    {
        fset = calloc(1,sizeof(struct vcp_feature_set));
        assert(fset);     // avoid coverity "Dereference before null check" warning
        memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
@@ -363,7 +370,7 @@ create_feature_set_from_feature_set_ref(
        }
     }
     else {
-       fset = create_feature_set(fsref->subset, vcp_version, flags);
+       fset = create_vcp_feature_set(fsref->subset, vcp_version, flags);
     }
 
     if (debug || IS_TRACING()) {

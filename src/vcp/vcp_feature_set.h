@@ -33,7 +33,7 @@ typedef bool (*VCP_Feature_Set_Filter_Func)(VCP_Feature_Table_Entry * ventry);
 void free_vcp_feature_set(VCP_Feature_Set * fset);
 
 VCP_Feature_Set *
-create_feature_set(
+create_vcp_feature_set(
       VCP_Feature_Subset     subset,
       DDCA_MCCS_Version_Spec vcp_version,
       Feature_Set_Flags      flags);
@@ -71,7 +71,7 @@ void dbgrpt_feature_set(VCP_Feature_Set * feature_set, int depth);
 
 
 VCP_Feature_Set *
-create_feature_set_from_feature_set_ref(
+create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Ref *       fsref,
    DDCA_MCCS_Version_Spec  vcp_version,
    Feature_Set_Flags       flags);
