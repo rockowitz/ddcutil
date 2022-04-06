@@ -524,12 +524,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                    rpt_label(d1, "I2C device is busy");
                    int busno = dref->io_path.path.i2c_busno;
 
-                   if (enable_experimental_sysfs_code) {
-                      char * s = get_conflicting_drivers_for_bus(busno);
-                      rpt_vstring(d1, "Likely conflicting drivers (2): %s", s);
-                      free(s);
-                   }
-
                    GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
                    if (conflicts && conflicts->len > 0) {
                       // report_conflicting_drivers(conflicts);
