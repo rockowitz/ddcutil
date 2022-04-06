@@ -360,7 +360,7 @@ create_vcp_feature_set_from_feature_set_ref(
        assert(fset);     // avoid coverity "Dereference before null check" warning
        memcpy(fset->marker, VCP_FEATURE_SET_MARKER, 4);
        fset->members = g_ptr_array_sized_new(1);
-       fset->subset = VCP_SUBSET_MULTI_FEATURES;
+       fset->subset = fsref->subset;
        Bit_Set_256_Iterator iter = bs256_iter_new(fsref->features);
        int feature_code = -1;
        while ( (feature_code = bs256_iter_next(iter)) >= 0 ) {

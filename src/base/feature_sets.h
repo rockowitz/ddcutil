@@ -66,7 +66,7 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids);
 
 typedef struct {
    VCP_Feature_Subset  subset;
-   Byte                specific_feature;
+//    Byte                specific_feature;
    Bit_Set_256         features;             // for VCP_SUBSET_MULTI_FEATURES
 } Feature_Set_Ref;
 

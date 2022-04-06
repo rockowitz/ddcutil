@@ -347,7 +347,7 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
          ok = any_one_byte_hex_string_to_byte_in_buf(val, &feature_hexid);
          if (ok) {
             fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
-            fsref->specific_feature = feature_hexid;
+            // fsref->specific_feature = feature_hexid;
             fsref->features = bs256_add(fsref->features, feature_hexid);     // for future
          }
       }
