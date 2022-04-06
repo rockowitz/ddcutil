@@ -28,12 +28,12 @@
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
-#include "ddc/ddc_displays.h"
-#include "ddc/ddc_services.h"
-#include "ddc/ddc_try_stats.h"
-#include "ddc/ddc_vcp.h"
+#include "ddc_displays.h"
+#include "ddc_services.h"
+#include "ddc_try_stats.h"
+#include "ddc_vcp.h"
 
-#include "ddc/common_init.h"
+#include "ddc_common_init.h"
 
 
 void init_tracing(Parsed_Cmd * parsed_cmd)

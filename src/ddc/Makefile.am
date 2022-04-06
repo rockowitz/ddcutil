@@ -13,7 +13,7 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libddc.la
 
 libddc_la_SOURCES =         \
-common_init.c               \
+ddc_common_init.c           \
 ddc_displays.c              \
 ddc_display_lock.c          \
 ddc_dumpload.c              \

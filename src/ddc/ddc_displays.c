@@ -51,7 +51,6 @@
 
 #include "public/ddcutil_types.h"
 
-#include "ddc/common_init.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"

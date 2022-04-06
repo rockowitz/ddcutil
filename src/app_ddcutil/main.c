@@ -60,8 +60,6 @@
 
 #include "i2c/i2c_sysfs.h"
 
-#include "ddc/common_init.h"
-
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
 #include "vcp/vcp_feature_codes.h"
@@ -76,6 +74,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"

@@ -39,6 +39,7 @@
 
 // #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
+#include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -46,8 +47,6 @@
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"
-
-#include "ddc/common_init.h"
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
