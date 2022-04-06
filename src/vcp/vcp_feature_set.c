@@ -336,7 +336,7 @@ create_vcp_feature_set_from_feature_set_ref(
    DDCA_MCCS_Version_Spec    vcp_version,
    Feature_Set_Flags         flags)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug || IS_TRACING()) {
       char * flag_names = feature_set_flag_names_t(flags);
       DBGMSG("fsref=%s, vcp_version=%d.%d. flags=%s",
