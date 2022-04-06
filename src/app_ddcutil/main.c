@@ -734,25 +734,24 @@ main(int argc, char *argv[]) {
    }
 
    if (parsed_cmd->flags & CMD_FLAG_F2) {
+      rpt_label(0, "*** Sys_Drm_Connector report ***");
+      report_sys_drm_connectors(1);
+      rpt_nl();
 
-         rpt_label(0, "*** Sys_Drm_Connector report ***");
-         report_sys_drm_connectors(1);
-         rpt_nl();
+      rpt_label(0, "*** Sysfs_I2C_Info report ***");
+      GPtrArray * reports = get_all_i2c_info(true, -1);
+      dbgrpt_all_sysfs_i2c_info(reports, 1);
+      rpt_nl();
 
-         rpt_label(0, "*** Sysfs_I2C_Info report ***");
-         GPtrArray * reports = get_all_i2c_info(true, -1);
-         dbgrpt_all_sysfs_i2c_info(reports, 1);
-         rpt_nl();
+      rpt_label(0, "*** Sys_Conflicting_Driver report ***");
+      GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
+      report_conflicting_drivers(conflicts, 1);
+      free_conflicting_drivers(conflicts);
+      rpt_nl();
 
-         rpt_label(0, "*** Sys_Conflicting_Driver report ***");
-         GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-         report_conflicting_drivers(conflicts, 1);
-         free_conflicting_drivers(conflicts);
-         rpt_nl();
-         rpt_label(0, "*** Tests Done ***");
-         rpt_nl();
-      }
-
+      rpt_label(0, "*** Tests Done ***");
+      rpt_nl();
+   }
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
