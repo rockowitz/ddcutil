@@ -37,7 +37,7 @@ displays.c                \
 execution_stats.c         \
 feature_lists.c           \
 feature_metadata.c        \
-feature_sets.c            \
+feature_set_ref.c         \
 last_io_event.c           \
 linux_errno.c             \
 monitor_model_key.c       \

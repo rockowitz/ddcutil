@@ -21,7 +21,7 @@
 
 #include "core.h"
 #include "dynamic_features.h"
-#include "feature_sets.h"
+#include "feature_set_ref.h"
 #include "vcp_version.h"
 
 typedef void * Global_Display_Lock;

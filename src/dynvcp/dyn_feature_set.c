@@ -12,13 +12,12 @@
 #include "base/displays.h"
 #include "base/feature_lists.h"
 #include "base/feature_metadata.h"
-#include "base/feature_sets.h"
+#include "base/feature_set_ref.h"
 
 #include "vcp/vcp_feature_codes.h"
 #include "dynvcp/dyn_feature_set.h"
 
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_UDF;
-
 
 void dbgrpt_dyn_feature_set(
       Dyn_Feature_Set * fset,

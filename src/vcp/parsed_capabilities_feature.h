@@ -2,7 +2,7 @@
  * Parses the description of a VCP feature extracted from a capabilities string.
  */
 
-// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSED_CAPABILITIES_FEATURE_H
@@ -13,7 +13,7 @@
 #include "util/data_structures.h"
 
 #include "base/core.h"
-#include "base/feature_sets.h"
+#include "base/feature_set_ref.h"
 
 #include "vcp/vcp_feature_codes.h"
 

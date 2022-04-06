@@ -18,7 +18,7 @@
 
 #include "base/core.h"
 
-#include "base/feature_sets.h"
+#include "feature_set_ref.h"
 
 //
 // VCP_Feature_Subset utilities

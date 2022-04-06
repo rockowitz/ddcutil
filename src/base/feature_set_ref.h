@@ -6,8 +6,8 @@
 // Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef FEATURE_SETS_H_
-#define FEATURE_SETS_H_
+#ifndef FEATURE_SET_REF_H_
+#define FEATURE_SET_REF_H_
 
 /** \cond */
 #include <stdbool.h>
@@ -88,4 +88,4 @@ char * feature_set_flag_names_t(Feature_Set_Flags flags);
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth);
 char * fsref_repr_t(Feature_Set_Ref * fsref);
 
-#endif /* FEATURE_SETS_H_ */
+#endif /* FEATURE_SET_REF_H_ */

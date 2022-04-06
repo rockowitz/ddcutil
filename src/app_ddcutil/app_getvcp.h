@@ -20,8 +20,9 @@
 /** \endcond */
 
 #include "base/displays.h"
-#include "base/feature_sets.h"
+#include "base/feature_set_ref.h"
 #include "base/status_code_mgt.h"
+
 #include "cmdline/parsed_cmd.h"
 
 Status_Errno_DDC

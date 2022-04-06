@@ -3,7 +3,7 @@
  *  Tables describing VCP feature codes and functions to interpret those tables
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_CODES_H_
@@ -21,11 +21,10 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/ddc_packets.h"
-#include "base/feature_sets.h"
 #include "base/feature_metadata.h"
+#include "base/feature_set_ref.h"
 
 #include "vcp/vcp_feature_values.h"
-
 
 bool default_table_feature_detail_function(
         Buffer *                data,

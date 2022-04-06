@@ -17,7 +17,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/feature_lists.h"
-#include "base/feature_sets.h"
+#include "base/feature_set_ref.h"
 
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"

@@ -1,7 +1,7 @@
 /** @file vcp_feature_set.h
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef VCP_FEATURE_SET_H_
@@ -16,7 +16,7 @@
 #include "util/coredefs.h"
 /** \endcond */
 
-#include "base/feature_sets.h"
+#include "base/feature_set_ref.h"
 
 #include "vcp/vcp_feature_codes.h"
 
