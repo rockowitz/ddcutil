@@ -1,4 +1,6 @@
-/** \file common_init.c */
+/** @file common_init.c
+ *  Initialization that must be performed very early by both ddcutil and libddcutil
+ */
 
 // Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -34,10 +36,7 @@
 #include "ddc/common_init.h"
 
 
-bool enable_experimental_sysfs_code;
-
-void
-init_tracing(Parsed_Cmd * parsed_cmd)
+void init_tracing(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    if (debug)
@@ -76,7 +75,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
 }
 
 
-bool init_failsim(Parsed_Cmd * parsed_cmd) {
+static bool init_failsim(Parsed_Cmd * parsed_cmd) {
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -96,7 +95,7 @@ bool init_failsim(Parsed_Cmd * parsed_cmd) {
 }
 
 
-void init_max_tries(Parsed_Cmd * parsed_cmd)
+static void init_max_tries(Parsed_Cmd * parsed_cmd)
 {
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
@@ -135,7 +134,7 @@ void init_max_tries(Parsed_Cmd * parsed_cmd)
 }
 
 
-void init_performance_options(Parsed_Cmd * parsed_cmd)
+static void init_performance_options(Parsed_Cmd * parsed_cmd)
 {
 #ifdef SLEEP_SUPPRESSION
    enable_sleep_suppression( parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS );
@@ -163,13 +162,8 @@ void init_performance_options(Parsed_Cmd * parsed_cmd)
    }
 }
 
-void init_ddc_experimental_options(Parsed_Cmd * parsed_cmd) {
-   enable_experimental_sysfs_code = parsed_cmd->flags & CMD_FLAG_F2;
-}
 
-
-bool
-submaster_initializer(Parsed_Cmd * parsed_cmd) {
+bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    bool ok = false;
    DBGMSF(debug, "Starting. parsed_cmd = %p", parsed_cmd);
