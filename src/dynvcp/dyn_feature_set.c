@@ -39,7 +39,7 @@ void dbgrpt_dyn_feature_set(
 }
 
 
-char * dynfs_repr_t(Dyn_Feature_Set * fset) {
+char * dyn_feature_set_repr_t(Dyn_Feature_Set * fset) {
    static GPrivate  dynfs_repr_key = G_PRIVATE_INIT(g_free);
 
    char * buf = get_thread_fixed_buffer(&dynfs_repr_key, 200);
@@ -48,7 +48,7 @@ char * dynfs_repr_t(Dyn_Feature_Set * fset) {
 }
 
 
-Display_Feature_Metadata *
+static Display_Feature_Metadata *
 dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_metadata)
 {
    bool debug = false;
@@ -78,10 +78,11 @@ dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_met
    return dfm;
 }
 
-
-DDCA_Feature_Metadata *
+#ifdef UNUSED
+static DDCA_Feature_Metadata *
 dyn_create_feature_metadata_from_vcp_feature_table_entry(
-      VCP_Feature_Table_Entry * pentry, DDCA_MCCS_Version_Spec vspec)
+      VCP_Feature_Table_Entry * pentry,
+      DDCA_MCCS_Version_Spec    vspec)
 {
    Display_Feature_Metadata * dfm =
      extract_version_feature_info_from_feature_table_entry(pentry, vspec, /*version_sensitive*/ true);
@@ -93,8 +94,10 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
    dfm_free(dfm);
    return meta;
 }
+#endif
 
 
+#ifdef UNUSED
 Display_Feature_Metadata *
 dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
       VCP_Feature_Table_Entry * vfte, DDCA_MCCS_Version_Spec vspec)
@@ -130,6 +133,7 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    }
    return dfm;
 }
+#endif
 
 
 static Dyn_Feature_Set *
@@ -153,7 +157,7 @@ dyn_create_feature_set0(
 
 
 Dyn_Feature_Set *
-dyn_create_feature_set2(
+dyn_create_feature_set(
       VCP_Feature_Subset     subset_id,
       DDCA_Display_Ref       display_ref,
       Feature_Set_Flags      feature_set_flags)
@@ -277,7 +281,6 @@ dyn_create_feature_set2(
     return result;
 }
 
-
 #ifdef UNUSED
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
@@ -298,7 +301,7 @@ dyn_create_single_feature_set_by_hexid2(
    result->members_dfm = g_ptr_array_new();
    Display_Feature_Metadata *  dfm = NULL;
    if (dref->dfr) {
-      DDCA_Feature_Metadata * feature_metadata  =
+      DDCA_Featurfree_dfm_funce_Metadata * feature_metadata  =
          get_dynamic_feature_metadata(dref->dfr, feature_code);
       if (feature_metadata) {
          dfm = dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
@@ -331,9 +334,11 @@ dyn_create_single_feature_set_by_hexid2(
 }
 #endif
 
+// replaces
+// VCP_Feature_Table_Entry * get_feature_set_entry(VCP_Feature_Set feature_set, unsigned index);
 
 Display_Feature_Metadata *
-dyn_get_feature_set_entry2(
+dyn_get_feature_set_entry(
       Dyn_Feature_Set * feature_set,
       unsigned          index)
 {
@@ -345,8 +350,11 @@ dyn_get_feature_set_entry2(
 }
 
 
+// replaces
+// int get_feature_set_size(VCP_Feature_Set feature_set);
+
 int
-dyn_get_feature_set_size2(
+dyn_get_feature_set_size(
       Dyn_Feature_Set * feature_set)
 {
    // show_backtrace(2);
@@ -373,7 +381,7 @@ dyn_create_feature_set_from_feature_set_ref2(
       result = dyn_create_single_feature_set_by_hexid2(fsref->specific_feature, dref, flags & FSF_FORCE);
    }
    else {
-      result = dyn_create_feature_set2(fsref->subset, dref, flags);
+      result = dyn_create_feature_set(fsref->subset, dref, flags);
    }
 
    if (debug || IS_TRACING()) {
@@ -387,7 +395,8 @@ dyn_create_feature_set_from_feature_set_ref2(
 
 
 // wrap dfm_free() in signature of GDestroyNotify()
-void free_dfm_func(gpointer data) {
+static void
+free_dfm_func(gpointer data) {
    dfm_free((Display_Feature_Metadata *) data);
 }
 
@@ -396,12 +405,11 @@ void dyn_free_feature_set(
       Dyn_Feature_Set * feature_set)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. feature_set=%s", dynfs_repr_t(feature_set));
+   DBGMSF(debug, "Starting. feature_set=%s", dyn_feature_set_repr_t(feature_set));
    if (feature_set->members_dfm) {
       g_ptr_array_set_free_func(feature_set->members_dfm, free_dfm_func);
       g_ptr_array_free(feature_set->members_dfm,true);
    }
-
    free(feature_set);
    DBGMSF(debug, "Done");
 }
@@ -446,4 +454,3 @@ feature_list_from_dyn_feature_set(Dyn_Feature_Set * fset)
 
    return vcplist;
 }
-
