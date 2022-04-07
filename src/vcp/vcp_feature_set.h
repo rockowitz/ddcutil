@@ -1,4 +1,6 @@
 /** @file vcp_feature_set.h
+ *  Struct VCP_Feature_Set holds VCP_Feature_Table_Entry(s) for
+ *  some collection of VCP features.
  */
 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -20,7 +22,6 @@
 
 #include "vcp/vcp_feature_codes.h"
 
-
 #define VCP_FEATURE_SET_MARKER "FSET"
 typedef struct vcp_feature_set {
    char                marker[4];
@@ -38,37 +39,12 @@ create_vcp_feature_set(
       DDCA_MCCS_Version_Spec vcp_version,
       Feature_Set_Flags      flags);
 
-#ifdef OLD
-VCP_Feature_Set *
-create_feature_set0(
-      VCP_Feature_Subset   subset_id,
-      GPtrArray *          members);
-#endif
-
-
-VCP_Feature_Set *
-create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
-
-VCP_Feature_Set *
-create_single_feature_set_by_hexid(Byte id, bool force);
-
 VCP_Feature_Table_Entry *
-get_feature_set_entry(VCP_Feature_Set * feature_set, unsigned index);
+get_vcp_feature_set_entry(VCP_Feature_Set * feature_set, unsigned index);
 
-void replace_feature_set_entry(
-      VCP_Feature_Set *   feature_set,
-      unsigned          index,
-      VCP_Feature_Table_Entry * new_entry);
-
-int
-get_feature_set_size(VCP_Feature_Set * feature_set);
-
-VCP_Feature_Subset
-get_feature_set_subset_id(VCP_Feature_Set * feature_set);
-
-void report_feature_set(VCP_Feature_Set * feature_set, int depth);
-void dbgrpt_feature_set(VCP_Feature_Set * feature_set, int depth);
-
+int  get_vcp_feature_set_size(VCP_Feature_Set * feature_set);
+void report_vcp_feature_set(VCP_Feature_Set * feature_set, int depth);
+void dbgrpt_vcp_feature_set(VCP_Feature_Set * feature_set, int depth);
 
 VCP_Feature_Set *
 create_vcp_feature_set_from_feature_set_ref(
@@ -77,8 +53,16 @@ create_vcp_feature_set_from_feature_set_ref(
    Feature_Set_Flags       flags);
  //  bool                    force);
 
+#ifdef UNUSED
+VCP_Feature_Set * create_single_feature_set_by_vcp_entry(VCP_Feature_Table_Entry * vcp_entry);
+VCP_Feature_Set * create_single_feature_set_by_hexid(Byte id, bool force);
+void replace_vcp_feature_set_entry(
+      VCP_Feature_Set * feature_set,
+      unsigned          index,
+      VCP_Feature_Table_Entry * new_entry);
+VCP_Feature_Subset get_feature_set_subset_id(VCP_Feature_Set * feature_set);
 void filter_feature_set(VCP_Feature_Set * fset, VCP_Feature_Set_Filter_Func func);
-
 DDCA_Feature_List feature_list_from_feature_set(VCP_Feature_Set * feature_set);
+#endif
 
 #endif /* VCP_FEATURE_SET_H_ */
