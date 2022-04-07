@@ -458,13 +458,13 @@ collect_raw_feature_set_values2_dfm(
    DBGMSF(debug, "Starting. dh=%s, msg_fh=%p", dh_repr_t(dh), msg_fh);
 
    Public_Status_Code master_status_code = 0;
-   int features_ct = dyn_get_feature_set_size2(feature_set);
+   int features_ct = dyn_get_feature_set_size(feature_set);
    // needed when called from C API, o.w. get get NULL response for first feature
    // DBGMSG("Inserting sleep() before first call to get_raw_value_for_feature_table_entry()");
    // sleep_millis_with_trace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, "initial");
    int ndx;
    for (ndx=0; ndx< features_ct; ndx++) {
-      Display_Feature_Metadata * dfm = dyn_get_feature_set_entry2(feature_set, ndx);
+      Display_Feature_Metadata * dfm = dyn_get_feature_set_entry(feature_set, ndx);
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, dfm->feature_code);
       DDCA_Any_Vcp_Value *  pvalrec;
       // DDCA_Feature_Metadata * ddca_meta = dfm_to_ddca_feature_metadata(dfm);
@@ -533,7 +533,7 @@ ddc_collect_raw_subset_values(
    Feature_Set_Flags flags = FSF_NOTABLE;
    if (subset == VCP_SUBSET_PROFILE)
       flags |= FSF_RW_ONLY;
-   Dyn_Feature_Set * feature_set = dyn_create_feature_set2(
+   Dyn_Feature_Set * feature_set = dyn_create_feature_set(
                                      subset,
                                      dh->dref,          // vcp_version,
                                      flags);
@@ -769,11 +769,11 @@ show_feature_set_values2_dfm(
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    bool prefix_value_with_feature_code = true;    // TO FIX
    FILE * msg_fh = outf;                        // TO FIX
-   int features_ct = dyn_get_feature_set_size2(feature_set);
+   int features_ct = dyn_get_feature_set_size(feature_set);
    DBGMSF(debug, "features_ct=%d", features_ct);
    int ndx;
    for (ndx=0; ndx< features_ct; ndx++) {
-      Display_Feature_Metadata * dfm = dyn_get_feature_set_entry2(feature_set, ndx);
+      Display_Feature_Metadata * dfm = dyn_get_feature_set_entry(feature_set, ndx);
       // DDCA_Feature_Metadata * extmeta = ifm->external_metadata;
       DBGMSF(debug,"ndx=%d, feature = 0x%02x", ndx, dfm->feature_code);
       if ( !(dfm->feature_flags & DDCA_READABLE) ) {
@@ -884,7 +884,7 @@ ddc_show_vcp_values(
    // DDCA_MCCS_Version_Spec vcp_version = get_vcp_version_by_dh(dh);
    // DBGMSG("VCP version = %d.%d", vcp_version.major, vcp_version.minor);
 
-   Dyn_Feature_Set* feature_set = dyn_create_feature_set2(
+   Dyn_Feature_Set* feature_set = dyn_create_feature_set(
                                     subset,
                                     dh->dref,   // vcp_version,
                                     flags);

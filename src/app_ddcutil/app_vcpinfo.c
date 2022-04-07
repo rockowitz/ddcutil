@@ -374,19 +374,19 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
                                parsed_cmd->mccs_vspec,
                                fsflags);
    if (debug || IS_TRACING_GROUP((DDCA_TRC_TOP | DDCA_TRC_VCP)) )
-      dbgrpt_feature_set(fset, 2);
+      dbgrpt_vcp_feature_set(fset, 2);
 
    if (!fset) {
       vcpinfo_ok = false;
    }
    else {
       if ( get_output_level() <= DDCA_OL_TERSE)
-         report_feature_set(fset, 0);
+         report_vcp_feature_set(fset, 0);
       else {
-         int ct =  get_feature_set_size(fset);
+         int ct =  get_vcp_feature_set_size(fset);
          int ndx = 0;
          for (;ndx < ct; ndx++) {
-            VCP_Feature_Table_Entry * pentry = get_feature_set_entry(fset, ndx);
+            VCP_Feature_Table_Entry * pentry = get_vcp_feature_set_entry(fset, ndx);
             report_vcp_feature_table_entry(pentry, 0);
          }
       }
