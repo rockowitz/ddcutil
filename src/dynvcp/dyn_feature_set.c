@@ -278,6 +278,7 @@ dyn_create_feature_set2(
 }
 
 
+#ifdef UNUSED
 Dyn_Feature_Set *
 dyn_create_single_feature_set_by_hexid2(
       DDCA_Vcp_Feature_Code  feature_code,
@@ -328,6 +329,7 @@ dyn_create_single_feature_set_by_hexid2(
    DBGMSF(debug, "Done. Returning %p", result);
    return result;
 }
+#endif
 
 
 Display_Feature_Metadata *

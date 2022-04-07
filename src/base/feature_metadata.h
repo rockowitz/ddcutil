@@ -120,14 +120,13 @@ struct {
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   // DDCA_Feature_Value_Entry *              latest_sl_values;
+   // DDCA_Feature_Value_Entry *           latest_sl_values;
    DDCA_Feature_Flags                      feature_flags;
    Format_Normal_Feature_Detail_Function   nontable_formatter;
    Format_Normal_Feature_Detail_Function2  nontable_formatter_sl;
    Format_Normal_Feature_Detail_Function3  nontable_formatter_universal;   // the future
    Format_Table_Feature_Detail_Function    table_formatter;
 } Display_Feature_Metadata;
-
 
 void
 dbgrpt_display_feature_metadata(Display_Feature_Metadata * meta, int depth);
