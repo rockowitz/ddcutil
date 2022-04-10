@@ -476,23 +476,25 @@ char * bbf_repr(Byte_Bit_Flags bbflags, char * buffer, int buflen) {
  * @return number of bits set (0..256)
  */
 int bbf_count_set(Byte_Bit_Flags bbflags) {
-
+#ifdef OLD
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
-   int result = 0;
+   int result0 = 0;
    int flagndx;
    int bitndx;
    for (flagndx=0; flagndx < BYTE_BIT_BYTE_CT; flagndx++) {
       for (bitndx = 0; bitndx < 8; bitndx++) {
          unsigned char flagbit = (0x80 >> bitndx);
          if (flags->byte[flagndx] & flagbit)
-            result += 1;
+            result0 += 1;
       }
    }
 
    int result2 = bs256_count(bs256_from_bbf(bbflags));
-   assert(result == result2);
-   printf("(%s) returning: %d\n", __func__, result);
+   assert(result0 == result2);
+   printf("(%s) returning: %d\n", __func__, result0);
+#endif
+   int result = bs256_count(bs256_from_bbf(bbflags));
    return result;
 }
 
