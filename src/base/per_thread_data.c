@@ -1,4 +1,5 @@
-// per_thread_data.c
+/** @file per_thread_data.c
+ */
 
 // Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -10,19 +11,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#ifdef OLD
-#ifdef TARGET_BSD
-#include <pthread_np.h>
-#else
-
-// for syscall
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <string.h>
-#endif
-#endif
-
 #include "util/debug_util.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
@@ -33,10 +21,9 @@
 #include "base/parms.h"
 #include "base/sleep.h"
 #include "base/thread_retry_data.h"    // temp circular
+#include "base/thread_sleep_data.h"
 
-#include "thread_sleep_data.h"
-#include "thread_retry_data.h"
-#include "per_thread_data.h"
+#include "base/per_thread_data.h"
 
 // Master table of sleep data for all threads
 GHashTable *    per_thread_data_hash = NULL;
@@ -45,7 +32,7 @@ static GPrivate lock_depth; // GINT_TO_POINTER(0);
 static bool     debug_mutex = false;
        int      ptd_lock_count = 0;
        int      ptd_unlock_count = 0;
-       int cross_thread_operation_blocked_count = 0;
+       int      cross_thread_operation_blocked_count = 0;
 
 void dbgrpt_per_thread_data_locks(int depth) {
    rpt_vstring(depth, "ptd_lock_count:                        %-4d", ptd_lock_count);
@@ -187,9 +174,9 @@ static void init_per_thread_data(Per_Thread_Data * ptd) {
  *  current thread's id number. If the struct does not already exist, it
  *  is allocated and initialized.
  *
- *  \return pointer to #Per_Thread_Data struct
+ *  @return pointer to #Per_Thread_Data struct
  *
- *  \remark
+ *  @remark
  *  The structs are maintained centrally rather than using a thread-local pointer
  *  to a block on the heap because the of a problems when the thread is closed.
  *  Valgrind complains of access errors for closed threads, even though the
@@ -290,8 +277,8 @@ char * int_array_to_string(uint16_t * start, int ct) {
 
 /** Output a debug report of a #Per_Thread_Data struct.
  *
- *  \param  data   pointer to #Per_Thread_Data struct
- *  \param  depth  logical indentation level
+ *  @param  data   pointer to #Per_Thread_Data struct
+ *  @param  depth  logical indentation level
  *
  *  // relies on caller for possible blocking
  */
@@ -299,35 +286,35 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Per_Thread_Data", data, depth);
  //rpt_int( "sizeof(Per_Thread_Data)",  NULL, sizeof(Per_Thread_Data),   d1);
-   rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
    rpt_bool("initialized",                NULL, data->initialized,           d1);
-//    rpt_vstring(d1,"dref:                  %s", dref_repr_t(data->dref) );
+   rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
    rpt_vstring(d1,"description                %s", data->description);
-   rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled, d1);
-
    rpt_bool("sleep data initialized" ,    NULL, data->thread_sleep_data_defined, d1);
 
-   rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
-
    // Sleep multiplier adjustment:
+   rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
    rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
    rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
    rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_value);
 
+   rpt_vstring(d1,"cur_dh:                 %s", dh_repr_t(data->cur_dh) );
+
    // Dynamic sleep adjustment:
-   rpt_int("current_ok_status_count",     NULL, data->current_ok_status_count,    d1);
-   rpt_int("current_error_status_count",  NULL, data->current_error_status_count, d1);
-   rpt_int("total_ok_status_count",       NULL, data->total_ok_status_count,      d1);
-   rpt_int("total_error",                 NULL, data->total_error_status_count,   d1);
-   rpt_int("other_status_ct",             NULL, data->total_other_status_ct,      d1);
-   rpt_int("calls_since_last_check",      NULL, data->calls_since_last_check,     d1);
-   rpt_int("total_adjustment_checks",     NULL, data->total_adjustment_checks,    d1);
-   rpt_int("adjustment_ct",               NULL, data->adjustment_ct,              d1);
-   rpt_int("max_adjustment_ct",           NULL, data->max_adjustment_ct,          d1);
-   rpt_int("non_adjustment_ct",           NULL, data->non_adjustment_ct,          d1);
-   rpt_vstring(d1, "current_sleep_adjustmet_factor     %15.2f", data->current_sleep_adjustment_factor);
-   rpt_vstring(d1, "thread_adjustment_increment        %15.2f", data->thread_adjustment_increment);
-   rpt_int("adjustment_check_interval",   NULL, data->adjustment_check_interval, d1);
+   rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled,     d1);
+   rpt_int("cur_ok_status_count",         NULL, data->cur_ok_status_count,       d1);
+   rpt_int("cur_error_status_count",      NULL, data->cur_error_status_count,    d1);
+   rpt_int("total_ok_status_count",       NULL, data->total_ok_status_count,     d1);
+   rpt_int("total_error",                 NULL, data->total_error_status_count,  d1);
+   rpt_int("other_status_ct",             NULL, data->total_other_status_ct,     d1);
+
+   rpt_int("calls_since_last_check",      NULL, data->calls_since_last_check,    d1);
+   rpt_int("total_adjustment_checks",     NULL, data->total_adjustment_checks,   d1);
+   rpt_int("adjustment_ct",               NULL, data->total_adjustment_ct,       d1);
+// rpt_int("max_adjustment_ct",           NULL, data->total_max_adjustment_ct,   d1);
+// rpt_int("non_adjustment_ct",           NULL, data->total_non_adjustment_ct,   d1);
+
+   rpt_vstring(d1, "cur_sleep_adjustmet_factor     %15.2f", data->cur_sleep_adjustment_factor);
+// rpt_vstring(d1, "thread_adjustment_increment        %15.2f", data->thread_adjustment_increment);
 
    // Maxtries history
    rpt_bool("retry data initialized"    , NULL, data->thread_retry_data_defined, d1);
@@ -356,7 +343,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
 /** Applies a specified function with signature GFunc to all
  *  #Per_Thread_Data instances.
  *
- *  \param  func  function to apply
+ *  @param  func  function to apply
  *  \parm   arg   an arbitrary argument passed as a pointer
  *
  *  This is a multi-instance operation.
@@ -382,8 +369,8 @@ void ptd_apply_all(Ptd_Func func, void * arg) {
 /** Apply a given function to all #Per_Thread_Data structs, ordered by thread id.
  *  Note that this report includes structs for threads that have been closed.
  *
- *  \param func function to apply
- *  \param arg pointer or integer value
+ *  @param func function to apply
+ *  @param arg pointer or integer value
  *
  *  This is a multi-instance operation.
  */
@@ -464,7 +451,7 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
 /** Emits a brief summary (thread id and description) for each
  * #Per_Thread_Data instance.
  *
- *  \param  depth   logical indentation depth
+ *  @param  depth   logical indentation depth
  */
 void ptd_list_threads(int depth) {
    // bool this_function_owns_lock = ptd_lock_if_unlocked();

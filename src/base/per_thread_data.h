@@ -47,43 +47,48 @@ typedef enum{
 #define RETRY_OP_COUNT 4
 typedef uint16_t Retry_Op_Value;
 
-
 typedef struct {
    bool   initialized;
-   bool   dynamic_sleep_enabled;
    pid_t  thread_id;
    char * description;
 
    // Standard sleep adjustment settings
    bool   thread_sleep_data_defined;
    double sleep_multiplier_factor;         // initially set by user
-
    int    sleep_multiplier_ct    ;         // can be changed by retry logic
    int    highest_sleep_multiplier_value;  // high water mark
    int    sleep_multipler_changer_ct;      // number of function calls that adjusted multiplier ct
 
    // For Dynamic Sleep Adjustment
-   int    current_ok_status_count;
-   int    current_error_status_count;
+   bool   dynamic_sleep_enabled;
+   int    cur_ok_status_count;
+   int    cur_error_status_count;
    int    total_ok_status_count;
    int    total_error_status_count;
    int    total_other_status_ct;
    int    calls_since_last_check;
-   int    total_adjustment_checks;
-   int    adjustment_ct;
-   int    non_adjustment_ct;
-   int    max_adjustment_ct;
-   double current_sleep_adjustment_factor;
-   double thread_adjustment_increment;
    int    adjustment_check_interval;
+   int    total_adjustment_checks;
+   int    total_adjustment_ct;
+// int    total_non_adjustment_ct;
+// int    total_max_adjustment_ct;
+// int    spec_sleep_time_millis;
 
+   Display_Handle * cur_dh;
+// double cur_sleep_time_millis;
+// double cur_sleep_multiplier_factor;
+   double cur_sleep_adjustment_factor;
+// double thread_adjustment_increment;
+
+// #ifdef UNUSED
    // Retry management
-   bool thread_retry_data_defined;
-   Retry_Op_Value current_maxtries[4];
-   Retry_Op_Value highest_maxtries[4];
-   Retry_Op_Value lowest_maxtries[4];
+   bool              thread_retry_data_defined;
+   Retry_Op_Value    current_maxtries[4];
+   Retry_Op_Value    highest_maxtries[4];
+   Retry_Op_Value    lowest_maxtries[4];
 
    Per_Thread_Try_Stats  try_stats[4];
+// #endif
 } Per_Thread_Data;
 
 bool ptd_cross_thread_operation_start();
