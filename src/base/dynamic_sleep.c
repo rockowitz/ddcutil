@@ -65,7 +65,7 @@ void dsa_record_ddcrw_status_code(int rc) {
 
 
 static void dsa_reset_cur_status_counts() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Executing");
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
 
@@ -78,7 +78,7 @@ static int dsa_required_status_sample_size = 3;
 
 bool dsa_error_rate_is_high(Per_Thread_Data * tsd) {
    assert(tsd);
-   bool debug = true;
+   bool debug = false;
    bool result = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "current_ok_status_count=%d, current_error_status_count=%d",
          tsd->cur_ok_status_count, tsd->cur_error_status_count);
@@ -121,7 +121,7 @@ bool dsa_error_rate_is_high(Per_Thread_Data * tsd) {
 int dsa_calc_sleep_time(int cur_sleep_time_millis, int spec_sleep_time_millis) {
    double current_sleep_time = cur_sleep_time_millis;
    double spec_sleep_time = spec_sleep_time_millis;
-   bool debug = true;
+   bool debug = false;
    int result;
    if (current_sleep_time <= .2 * spec_sleep_time)
       result = 4.0 * current_sleep_time;
@@ -145,7 +145,7 @@ double dsa_calc_adjustment_factor(
       double multiplier_factor,
       double cur_factor)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
              "spec_sleep_time_millis=%d, multiplier_factor=%4.1f, cur_factor=%4.1f",
              spec_sleep_time_millis, multiplier_factor, cur_factor);
@@ -158,7 +158,7 @@ double dsa_calc_adjustment_factor(
 
 
 double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis) {
-   bool debug = true;
+   bool debug = false;
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dynamic_sleep_enabled for current thread = %s",
                             dh_repr_t(dh),              sbool(tsd->dynamic_sleep_enabled));
