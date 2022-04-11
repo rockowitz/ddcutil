@@ -544,7 +544,7 @@ ddc_write_read(
                                        " expected_response_type=0x%02x, expected_subtype=0x%02x",
           dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
 
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Adding 1 to max_read_bytes to allow for initail double 0x63 quirk");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding 1 to max_read_bytes to allow for initail double 0x63 quirk");
    max_read_bytes++;   //allow for quirk of double 0x6e at start
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
@@ -705,7 +705,7 @@ ddc_write_read_with_retry(
                   if (retryable) {
                      if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                         f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-                     tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct+1);
+                     tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct++);
                      sleep_multiplier_incremented = true;
                      // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                   }
@@ -717,6 +717,7 @@ ddc_write_read_with_retry(
               // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
               // But also seen as a bad response
               retryable = (all_zero_response_ok) ? false : true;
+              ddcrc_read_all_zero_ct++;
               break;
 
          case (-EIO):
@@ -734,15 +735,12 @@ ddc_write_read_with_retry(
 
          default:
               retryable = true;     // for now
+         }
 
          // try exponential backoff on all errors, not just SE_DDC_NULL
          // if (retryable)
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
-               }
 
-
-         if (psc == DDCRC_READ_ALL_ZERO)
-            ddcrc_read_all_zero_ct++;
       }    // rc < 0
       // DBGMSG("Bottom of try loop. psc=%d, tryctr=%d, retryable=%s", psc, tryctr, sbool(retryable));
    }
@@ -766,7 +764,8 @@ ddc_write_read_with_retry(
          char * s0 = (psc == 0) ? "Succeeded" : "Failed";
          char * s1 = (errct == 1) ? "" : "s";
          char * s = errinfo_array_summary(try_errors, errct);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s after %d error%s: %s", s0, errct, s1, s);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s,%s after %d error%s: %s",
+               dh_repr_t(dh), s0, errct, s1, s);
          free(s);
 
    }
