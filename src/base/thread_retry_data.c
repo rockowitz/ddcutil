@@ -382,6 +382,7 @@ void report_all_thread_maxtries_data(int depth) {
 // Try Stats
 //
 
+#ifdef UNUSED
 // n. caller always locks
 static void trd_reset_tries_by_data(Per_Thread_Data * data) {
    ptd_cross_thread_operation_block();
@@ -395,6 +396,7 @@ static void trd_reset_tries_by_data(Per_Thread_Data * data) {
    }
    // ptd_unlock_if_needed(this_function_locked);
 }
+
 
 // reset counts for current thread
 void trd_reset_cur_thread_tries() {
@@ -423,6 +425,7 @@ void trd_reset_all_threads_tries() {
    }
    DBGMSF(debug, "Done");
 }
+#endif
 
 #ifdef NO
 static void trd_record_cur_thread_successful_tries(Retry_Operation type_id, int tryct) {
@@ -489,6 +492,7 @@ int get_thread_total_tries_for_one_type_by_data(Retry_Operation retry_type, Per_
 }
 
 
+#ifdef UNUSED
 /** Calculates the total number of tries for all exchange type on a single thread.
  *
  * \param  data  per-thread data record
@@ -510,6 +514,7 @@ int get_thread_total_tries_for_all_types_by_data(Per_Thread_Data  * data) {
 
    return total_attempts;
 }
+#endif
 
 
 /** Determines the index of the highest try counter, i.e. other than 0 or 1,  with a non-zero value.
@@ -652,5 +657,3 @@ void report_thread_all_types_data_by_data(
       // rpt_nl();
    }
 }
-
-
