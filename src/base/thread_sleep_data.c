@@ -55,8 +55,8 @@ static       bool   default_dynamic_sleep_enabled   = false;
 /** Output a report of the sleep data in a #Per_Thread_Data struct in a form
  * intended to be incorporated in program output.
  *
- *  \param  data   pointer to #Per_Thread_Data struct
- *  \param  depth  logical indentation level
+ *  @param  data   pointer to #Per_Thread_Data struct
+ *  @param  depth  logical indentation level
  */
 void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    ptd_cross_thread_operation_block();
@@ -70,7 +70,7 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
    rpt_vstring(d2,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
 
-   rpt_label(  d1,   "Sleep multiplier adjustment:");
+   rpt_label(  d1,    "Sleep multiplier adjustment:");
    rpt_vstring(d2,    "Current adjustment:                %d", data->sleep_multiplier_ct);
    rpt_vstring(d2,    "Highest adjustment:                %d", data->highest_sleep_multiplier_value);
    rpt_label(  d2,    "Number of function calls");
@@ -81,19 +81,24 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
       rpt_vstring(d2, "Total successful reads:          %5d",   data->total_ok_status_count);
       rpt_vstring(d2, "Total reads with DDC error:      %5d",   data->total_error_status_count);
       rpt_vstring(d2, "Total ignored status codes:      %5d",   data->total_other_status_ct);
-      rpt_vstring(d2, "Current sleep adjustment factor: %5.2f", data->current_sleep_adjustment_factor);
-      rpt_vstring(d2, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
+      rpt_vstring(d2, "Current sleep adjustment factor: %5.2f", data->cur_sleep_adjustment_factor);
+//    rpt_vstring(d2, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
       rpt_vstring(d2, "Adjustment check interval        %5d",   data->adjustment_check_interval);
 
       rpt_vstring(d2, "Calls since last check:          %5d",   data->calls_since_last_check);
       rpt_vstring(d2, "Total adjustment checks:         %5d",   data->total_adjustment_checks);
-      rpt_vstring(d2, "Number of adjustments:           %5d",   data->adjustment_ct);
-      rpt_vstring(d2, "Number of excess adjustments:    %5d",   data->max_adjustment_ct);
-      rpt_vstring(d2, "Final sleep adjustment:          %5.2f", data->current_sleep_adjustment_factor);
+      rpt_vstring(d2, "Number of adjustments:           %5d",   data->total_adjustment_ct);
+//    rpt_vstring(d2, "Number of excess adjustments:    %5d",   data->total_max_adjustment_ct);
+      rpt_vstring(d2, "Final sleep adjustment:          %5.2f", data->cur_sleep_adjustment_factor);
    }
 }
 
 
+/** Wraps #report_thread_sleep_data() in a form usable by #ptd_apply_all_sorted()
+ *
+ *  @param  data pointer to #Per_Thread_Data instance
+ *  @param  arg  an integer holding the depth argument
+ */
 void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    // rpt_vstring(depth, "Per_Thread_Data:");  // needed?
@@ -104,7 +109,7 @@ void wrap_report_thread_sleep_data(Per_Thread_Data * data, void * arg) {
 /** Report all #Per_Thread_Data structs.  Note that this report includes
  *  structs for threads that have been closed.
  *
- *  \param depth  logical indentation depth
+ *  @param depth  logical indentation depth
  */
 void report_all_thread_sleep_data(int depth) {
    // int d1 = depth+1;
@@ -125,6 +130,7 @@ void report_all_thread_sleep_data(int depth) {
 
 //
 // Obtain, initialize, and reset sleep data for current thread
+//
 
 Per_Thread_Data * tsd_get_thread_sleep_data() {
    Per_Thread_Data * ptd = ptd_get_per_thread_data();
@@ -142,10 +148,10 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
    data->highest_sleep_multiplier_value = 1;
 
-   data->current_sleep_adjustment_factor = 1.0;
+   data->cur_sleep_adjustment_factor = 1.0;
    data->initialized = true;
    data->sleep_multiplier_factor = default_sleep_multiplier_factor;
-   data->thread_adjustment_increment = default_sleep_multiplier_factor;
+   // data->thread_adjustment_increment = default_sleep_multiplier_factor;
    data->adjustment_check_interval = 2;
 
    data->thread_sleep_data_defined = true;   // vs data->initialized
@@ -153,6 +159,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
 }
 
 
+#ifdef UNUSED
 void reset_thread_sleep_data(Per_Thread_Data * data) {
    ptd_cross_thread_operation_block();
    data->highest_sleep_multiplier_value = data->sleep_multiplier_ct;
@@ -161,24 +168,28 @@ void reset_thread_sleep_data(Per_Thread_Data * data) {
    data->total_error_status_count = 0;
    data->total_other_status_ct = 0;
    data->total_adjustment_checks = 0;
-   data->adjustment_ct = 0;
-   data->max_adjustment_ct = 0;
+   data->total_adjustment_ct = 0;
+   data->total_max_adjustment_ct = 0;
 }
 
 
 void wrap_reset_thread_sleep_data(Per_Thread_Data * data, void * arg) {
    reset_thread_sleep_data(data);
 }
+#endif
+
 
 //
 // Operations on all instances
 //
 
+#ifdef UNUSED
 void reset_all_thread_sleep_data() {
    if (per_thread_data_hash) {
       ptd_apply_all_sorted(&wrap_reset_thread_sleep_data, NULL );
    }
 }
+#endif
 
 
 //
@@ -204,12 +215,12 @@ void reset_all_thread_sleep_data() {
 /** Sets the default sleep multiplier factor, used for the creation of any new threads.
  * This is a global value and is a floating point number.
  *
- *  \param multiplier
+ *  @param multiplier
  *
- *  \remark Intended for use only during program initialization.  If used
+ *  @remark Intended for use only during program initialization.  If used
  *          more generally, get and set of default sleep multiplier needs to
  *          be protected by a lock.
- *  \todo
+ *  @todo
  *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
  */
 void tsd_set_default_sleep_multiplier_factor(double multiplier) {
@@ -218,9 +229,10 @@ void tsd_set_default_sleep_multiplier_factor(double multiplier) {
    // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
 }
 
+
 /** Gets the default sleep multiplier factor.
  *
- *  \return sleep multiplier factor
+ *  @return sleep multiplier factor
  */
 double tsd_get_default_sleep_multiplier_factor() {
    return default_sleep_multiplier_factor;
@@ -229,7 +241,7 @@ double tsd_get_default_sleep_multiplier_factor() {
 
 /** Gets the sleep multiplier factor for the current thread.
  *
- *  \return sleep mulitiplier factor
+ *  @return sleep mulitiplier factor
  */
 double tsd_get_sleep_multiplier_factor() {
    bool debug = false;
@@ -242,7 +254,7 @@ double tsd_get_sleep_multiplier_factor() {
 
 /** Sets the sleep multiplier factor for the current thread.
  *
- *  \param factor  sleep multiplier factor
+ *  @param factor  sleep multiplier factor
  */
 void tsd_set_sleep_multiplier_factor(double factor) {
    bool debug = false;
@@ -253,7 +265,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
    ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
-   data->thread_adjustment_increment = factor;
+   // data->thread_adjustment_increment = factor;
    DBGMSF(debug, "Done");
 }
 
@@ -281,7 +293,7 @@ double get_global_sleep_multiplier_factor() {
 
 /** Gets the multiplier count for the current thread.
  *
- *  \return multiplier count
+ *  @return multiplier count
  */
 int tsd_get_sleep_multiplier_ct() {
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
@@ -291,7 +303,7 @@ int tsd_get_sleep_multiplier_ct() {
 
 /** Sets the multiplier count for the current thread.
  *
- *  \parsm multipler_ct  value to set
+ *  @param multipler_ct  value to set
  */
 void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    bool debug = false;
@@ -303,11 +315,12 @@ void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    if (multiplier_ct > data->highest_sleep_multiplier_value)
       data->highest_sleep_multiplier_value = multiplier_ct;
    ptd_cross_thread_operation_end();
-;
 }
 
 
-// Number of function executions that changed the multiplier
+/** Increment the number of function executions on this thread
+ *  that changed the sleep multiplier count.
+ */
 void tsd_bump_sleep_multiplier_changer_ct() {
    ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
@@ -340,9 +353,10 @@ void set_sleep_multiplier_factor_all(double factor) {
 // Dynamic Sleep
 //
 
+#ifdef UNUSED
 /** Enable or disable dynamic sleep adjustment on the current thread
  *
- *  \param enabled   true/false i.e. enabled, disabled
+ *  @param enabled   true/false i.e. enabled, disabled
  */
 void tsd_enable_dynamic_sleep(bool enabled) {
    bool debug = false;
@@ -354,9 +368,13 @@ void tsd_enable_dynamic_sleep(bool enabled) {
    ptd_cross_thread_operation_end();
    // ptd_unlock_if_needed(this_function_owns_lock);
 }
+#endif
 
 
-// Enable dynamic sleep on all existing threads
+/** Enable or disable dynamic sleep adjustment on all existing threads
+ *
+ *  @param enable  true/false
+ */
 void tsd_enable_dsa_all(bool enable) {
    // needs mutex
    ptd_cross_thread_operation_start();
@@ -377,6 +395,10 @@ void tsd_enable_dsa_all(bool enable) {
 }
 
 
+/** Enable or disable dynamic sleep adjustment for the current thread.
+ *
+ *  @param true/false
+ */
 void tsd_dsa_enable(bool enabled) {
    ptd_cross_thread_operation_block();
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
@@ -384,7 +406,10 @@ void tsd_dsa_enable(bool enabled) {
 }
 
 
-// Enable or disable dynamic sleep for all current threads and new threads
+/** Enable or disable dynamic sleep adjustment for all current threads and new threads
+ *
+ *  @param enabled  true/false
+ */
 void tsd_dsa_enable_globally(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
@@ -395,6 +420,7 @@ void tsd_dsa_enable_globally(bool enabled) {
 }
 
 
+#ifdef UNUSED
 // Is dynamic sleep enabled on the current thread?
 bool tsd_dsa_is_enabled() {
    ptd_cross_thread_operation_start();     // needed
@@ -403,6 +429,7 @@ bool tsd_dsa_is_enabled() {
    ptd_cross_thread_operation_end();
    return result;
 }
+#endif
 
 #ifdef UNUSED
 void tsd_set_dsa_enabled_default(bool enabled) {
