@@ -727,7 +727,10 @@ void query_sysenv() {
    char * s = getenv("SYSENV_QUICK_TEST");
    if (s && strlen(s) > 0) {
       sysfs_quick_test = true;
-      rpt_label(0, "Environment variable SYSFS_QUICK_TEST is set.  Skipping some tests.");
+      rpt_label(0, "Environment variable SYSENV_QUICK_TEST is set.  Skipping some tests.");
+   }
+   else if (get_output_level() >= DDCA_OL_VERBOSE) {
+      rpt_label(0, "Set environment variable SYSENV_QUICK_TEST to skip some long-running tests.");
    }
 
    i2c_force_slave_addr_flag = true;    // be a bully
