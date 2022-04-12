@@ -287,7 +287,7 @@ attr_keyword(
    else if (streq(keyword, "CCONT"))
       *pflags |= DDCA_COMPLEX_CONT;
    else if (streq(keyword, "NC"))
-      *pflags |= DDCA_COMPLEX_NC;
+      *pflags |= DDCA_SIMPLE_NC;
    else if (streq(keyword, "T"))
       *pflags |= DDCA_TABLE;
 
