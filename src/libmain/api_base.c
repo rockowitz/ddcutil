@@ -40,6 +40,7 @@
 // #include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
 #include "ddc/ddc_common_init.h"
+#include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
@@ -355,6 +356,8 @@ _ddca_terminate(void) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
+      if (debug)
+         dbgrpt_distinct_display_descriptors(2);
       ddc_discard_detected_displays();
       release_base_services();
       ddc_stop_watch_displays();
