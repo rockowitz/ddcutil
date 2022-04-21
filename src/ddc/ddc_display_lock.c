@@ -3,7 +3,7 @@
  *  opened simultaneously from multiple threads.
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -170,10 +170,10 @@ lock_distinct_display(
       Distinct_Display_Ref   id,
       Distinct_Display_Flags flags)
 {
-   DDCA_Status ddcrc = 0;
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
 
+   DDCA_Status ddcrc = 0;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
@@ -233,12 +233,15 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
 }
 
 
+#ifdef BAD
 /** Unlocks all distinct displays.
  *
  *  The function is used during reinitialization.
+ *
+ *  BUG: DO NOT USE
  */
 void unlock_all_distinct_displays() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
    g_mutex_lock(&descriptors_mutex);
@@ -248,12 +251,16 @@ void unlock_all_distinct_displays() {
                                            ndx, cur,
                                            dpath_repr_t(&cur->io_path) );
 
+       // WRONG: Attempt to unlock mutex that was not locked
+       //        Aborted (core dumped)
+       // Calling g_mutex_unlock() on a mutex that is not locked by the current thread leads to undefined behaviour.
        g_mutex_unlock(&cur->display_mutex);
     }
     g_mutex_unlock(&descriptors_mutex);
     g_mutex_unlock(&master_display_lock_mutex);
     DBGTRC_DONE(debug, TRACE_GROUP, "");
  }
+#endif
 
 
 /** Emits a report of all distinct display descriptors.
@@ -274,9 +281,9 @@ void dbgrpt_distinct_display_descriptors(int depth) {
                        cur->edid_model_name,
                        cur->edid_serial_ascii);
 #endif
-      rpt_vstring(d1, "%2d - %p  %-28s",
+      rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p",
                        ndx, cur,
-                       dpath_repr_t(&cur->io_path) );
+                       dpath_repr_t(&cur->io_path), (void*) &cur->display_mutex_thread );
    }
    g_mutex_unlock(&descriptors_mutex);
 }
@@ -289,5 +296,4 @@ void init_ddc_display_lock(void) {
    RTTI_ADD_FUNC(get_distinct_display_ref);
    RTTI_ADD_FUNC(lock_distinct_display);
    RTTI_ADD_FUNC(unlock_distinct_display);
-   RTTI_ADD_FUNC(unlock_all_distinct_displays);
 }
