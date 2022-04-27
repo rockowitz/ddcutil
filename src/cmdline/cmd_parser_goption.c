@@ -76,7 +76,7 @@ stats_arg_func(const    gchar* option_name,
 
    bool ok = true;
    if (value) {
-      char * v2 = strupper(strdup(value));
+      char * v2 = strdup_uc(value);
       if ( streq(v2,"ALL") ) {
          stats_work |= DDCA_STATS_ALL;
       }
