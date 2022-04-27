@@ -296,7 +296,7 @@ bool is_adlno_defined(DDCA_Adlno adlno);
 //* Option flags for display selection functions */
 typedef Byte Display_Selection_Options;
 
-int    hiddev_name_to_number(char * hiddev_name);
+int    hiddev_name_to_number(const char * hiddev_name);
 #ifdef UNUSED
 char * hiddev_number_to_name(int hiddev_number);
 #endif
@@ -304,5 +304,12 @@ char * hiddev_number_to_name(int hiddev_number);
 
 bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);
 void unlock_display_lock(Display_Async_Rec * async_rec);
+
+/** For recording /dev/i2c and hiddev open errors */
+typedef struct {
+   DDCA_IO_Mode io_mode;
+   int devno;   // i2c bus number or hiddev device number
+   int error;
+} Bus_Open_Error;
 
 #endif /* DISPLAYS_H_ */

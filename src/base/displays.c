@@ -1189,7 +1189,7 @@ Video_Card_Info * create_video_card_info() {
  *  \param   hiddev_name device name
  *  \return  device number, -1 if error
  */
-int hiddev_name_to_number(char * hiddev_name) {
+int hiddev_name_to_number(const char * hiddev_name) {
    assert(hiddev_name);
    char * p = strstr(hiddev_name, "hiddev");
 
