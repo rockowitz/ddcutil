@@ -295,7 +295,8 @@ char * ini_file_get_value(
 
    char * result = NULL;
    if (parsed_ini_file->hash_table) {
-      char * full_key = strlower(g_strdup_printf("%s/%s", segment, id));
+      char * full_key = g_strdup_printf("%s/%s", segment, id);
+      strlower(full_key);
       result = g_hash_table_lookup(parsed_ini_file->hash_table, full_key);
       free(full_key);
    }
