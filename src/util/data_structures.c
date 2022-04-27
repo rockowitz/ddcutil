@@ -1593,7 +1593,7 @@ int bs256_count(
  *  \param  bitset value to represent
  *  \param  value_prefix  prefix for each hex number, typically "0x" or ""
  *  \param  sepstr        string to insert between each value, typically "", ",", or " "
- *  \return string representation
+ *  \return string representation, caller should not free
  */
 char *
 bs256_to_string(
