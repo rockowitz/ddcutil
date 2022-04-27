@@ -1185,9 +1185,6 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
          depth);
    DBGMSF(debug, "After collecting %s subdirectories: %s", bus_path,
                      join_string_g_ptr_array_t(result->conflicting_driver_names, ", "));
-
-
-
    DBGMSF(debug, "Done. Returning %p", (void*) result);
    return result;
 }
@@ -1210,6 +1207,7 @@ void simple_get_i2c_info(
 
 static GPtrArray * all_i2c_info;
 
+// returns GPtrArray of Sysfs_I2C_Info*
 GPtrArray * get_all_i2c_info(bool rescan, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. depth=%d", depth);
@@ -1218,18 +1216,20 @@ GPtrArray * get_all_i2c_info(bool rescan, int depth) {
       all_i2c_info = NULL;
     }
 
-   GPtrArray * all = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
+   if (!all_i2c_info) {
+      GPtrArray * all = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
 
-   dir_ordered_foreach(
-         "/sys/bus/i2c/devices",
-         startswith_i2c,
-         i2c_compare,
-         simple_get_i2c_info,
-         all,
-         depth);
-   DBGMSF(debug, "Returning array of %d records", all->len);
-   all_i2c_info = all;    // its a hack
-   return all;
+      dir_ordered_foreach(
+            "/sys/bus/i2c/devices",
+            startswith_i2c,
+            i2c_compare,
+            simple_get_i2c_info,
+            all,
+            depth);
+      DBGMSF(debug, "Returning array of %d records", all->len);
+      all_i2c_info = all;    // its a hack
+   }
+   return all_i2c_info;
 }
 
 
@@ -1250,4 +1250,31 @@ char * get_conflicting_drivers_for_bus(int busno) {
    free_sysfs_i2c_info(info);
    return result;
 }
+
+
+static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
+   assert(info);
+   bool debug = false;
+   char * uname = strdup_uc(info->name);
+   bool result = str_starts_with(info->adapter_class, "0x03") && str_contains(uname, "SMBUS")<0;
+   free(uname);
+   DBGMSF(debug, "busno=%d, adapter_class=%s, name=%s, returning %s",
+                 info->busno, info->adapter_class, info->name, SBOOL(result));
+   return result;
+}
+
+
+Bit_Set_256 get_potential_i2c_buses() {
+   bool debug = false;
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   GPtrArray * allinfo = get_all_i2c_info(true, -1);
+   for (int ndx = 0; ndx < allinfo->len; ndx++) {
+      Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
+      if (is_potential_i2c_display(cur))
+         result = bs256_add(result, cur->busno);
+   }
+   DBGMSF(debug, "Returning: %s", bs256_to_string(result, "0x", ", "));
+   return result;
+}
+
 
