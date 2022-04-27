@@ -1,4 +1,4 @@
-/** \file app_experimental.c */
+/** @file app_experimental.c */
 
 // Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -27,7 +27,7 @@ void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
    rpt_label(depth, "Experimental Options:");
-   REPORT_FLAG_OPTION(1, "EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(1, "Unused");
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3, "Unused");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
@@ -43,20 +43,15 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
 bool init_experimental_options(Parsed_Cmd* parsed_cmd)
 {
-   if (parsed_cmd->flags & CMD_FLAG_F1) {
-      fprintf(stdout, "EDID reads will use normal I2C calls\n");
-      EDID_Read_Uses_I2C_Layer = true;
+#ifdef NOT_NEEDED
+   if (parsed_cmd->flags & CMD_FLAG_F2) {
+      fprintf(stdout, "Experimental /sys analysis\n");
    }
 
-   // if (parsed_cmd->flags & CMD_FLAG_F2) {
-   //    fprintf(stdout, "Filter phantom displays\n");
-   //   check_phantom_displays = true;    // extern in ddc_displays.h
-   // }
-
-   if (parsed_cmd->flags & CMD_FLAG_F3) {
-      fprintf(stdout, "Write trace messages to syslog\n");
+   if (parsed_cmd->flags & CMD_FLAG_F4) {
+      fprintf(stdout, "Read strategy tests\n");
    }
-
+#endif
    return true;
 }
 
