@@ -1,4 +1,4 @@
-/** \file sysfs_i2c_util.h
+/** @file sysfs_i2c_util.h
  *  i2c specific /sys functions
  */
 

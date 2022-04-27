@@ -1,4 +1,6 @@
-// sysfs_i2c_util.c
+/** @file sysfs_i2c_util.c
+ *  i2c specific /sys functions
+ */
 
 // Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -181,10 +183,6 @@ ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
  *
  *  \param  busno  I2C bus number
  *  \return true if ignorable, false if not
- *
- *  \remark
- *  This function avoids unnecessary calls to i2cdetect, which can be
- *  slow for SMBus devices and fills the system logs with errors
  */
 bool
 sysfs_is_ignorable_i2c_device(int busno) {
