@@ -131,6 +131,12 @@ bool str_ends_with(const char * value_to_test, const char * suffix) {
    return result;
 }
 
+
+/** Tests if a string contains a substring.
+ *  @param value to test   string to examine
+ *  @param segment         substring to look for
+ *  @return starting position of substring, -1 if not found
+ */
 int str_contains(const char * value_to_test, const char * segment) {
    int result = -1;
    if (value_to_test && segment) {
@@ -799,9 +805,8 @@ g_ptr_array_to_ntsa(
 /** Converts an ASCII string to upper case.  The original string is converted in place.
  *
  * @param  s string to force to upper case
- * @return converted string
  */
-char * strupper(char * s) {
+void strupper(char * s) {
    if (s) {     // check s not a null pointer
       char * p = s;
       while(*p) {
@@ -809,16 +814,14 @@ char * strupper(char * s) {
          p++;
       }
    }
-   return s;
 }
 
 
 /** Converts an ASCII string to lower case.  The original string is converted in place.
  *
  * @param  s string to force to lower case
- * @return converted string
  */
-char * strlower(char * s) {
+void strlower(char * s) {
    if (s) {     // check s not a null pointer
       char * p = s;
       while(*p) {
@@ -826,7 +829,6 @@ char * strlower(char * s) {
          p++;
       }
    }
-   return s;
 }
 
 
