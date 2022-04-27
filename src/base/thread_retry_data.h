@@ -46,13 +46,14 @@ Global_Maxtries_Accumulator trd_get_all_threads_maxtries_range(Retry_Operation t
 void report_all_thread_maxtries_data(int depth);
 
 // Try Stats
+
+void trd_record_cur_thread_tries(Retry_Operation type_id, int rc, int tryct);
 #ifdef UNUSED
 void trd_reset_cur_thread_tries();
 void trd_reset_all_threads_tries();
 void trd_record_cur_thread_successful_tries(Retry_Operation type_id, int tryct);
 void trd_record_cur_thread_failed_max_tries(Retry_Operation type_id);
 void trd_record_cur_thread_failed_fatally(Retry_Operation type_id);
-void trd_record_cur_thread_tries(Retry_Operation type_id, int rc, int tryct);
 int get_thread_total_tries_for_all_types_by_data(Per_Thread_Data  * data);
 #endif
 void report_thread_try_typed_data_by_data(
