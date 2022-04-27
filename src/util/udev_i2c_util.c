@@ -219,7 +219,7 @@ get_i2c_device_numbers_using_udev(bool include_ignorable_devices) {
  *  \remark
  *  ***keep_func*** takes a bus number as its sole argument,
  *  returning true iff the number should be included
- *  \remark,
+ *  \remark
  *  if the udev sysname value does not have the form i2c-n,
  *  the udev node is ignored
  *  \remark
