@@ -1,9 +1,9 @@
-/** \file i2c_util.c
+/** @file i2c_util.c
  *
  * I2C utility functions
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -24,8 +24,10 @@
 #include <sys/ioctl.h>
 
 #include "data_structures.h"
+#include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "sysfs_filter_functions.h"
 
 #include "i2c_util.h"
 
@@ -212,5 +214,46 @@ void i2c_report_functionality_flags(long functionality, int maxline, int depth) 
    }
    free(buf0);
    ntsa_free(ntsa, /* free_strings */ true);
+}
+
+
+typedef struct {
+   bool found;
+} Boolean_Accumulator;
+
+static void set_true(
+      const char * dirname,
+      const char * fn,
+      void *       accumulator,
+      int          depth)
+{
+   Boolean_Accumulator * accum = (Boolean_Accumulator*) accumulator;
+   if (depth >= 0)
+      rpt_vstring(depth, "dirname=%s, fn=%s", dirname, fn);
+   accum->found = true;
+}
+
+
+/** Checks if any /dev/i2c devices exist.
+ *
+ *  @return true/false
+ *
+ *  If at least one device exists, we know that driver dev-i2c is built into the kernel or has been loaded.
+ */
+bool dev_i2c_devices_exist() {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting.\n", __func__);
+   Boolean_Accumulator accumulator = {false};
+
+   dir_foreach("/dev",
+               startswith_i2c, // Dir_Filter_Func,
+               set_true,       // Dir_Foreach_Func,
+               &accumulator,
+               (debug) ? 1 :  -1);
+
+   if (debug)
+      printf("(%s) Returning: %s", __func__, SBOOL(accumulator.found));
+   return accumulator.found;
 }
 
