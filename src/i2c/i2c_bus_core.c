@@ -1,4 +1,4 @@
-/** \file i2c_bus_core.c
+/** @file i2c_bus_core.c
  *
  * I2C bus detection and inspection
  */
@@ -917,6 +917,9 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
              bus_info->flags |= I2C_BUS_BUSY;
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
+      else {
+         bus_info->open_errno = -errno;
+      }
    }   // probing complete
 
    DBGTRC_DONE(debug, TRACE_GROUP, "flags=0x%04x, bus info:", bus_info->flags );
@@ -981,6 +984,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
+      rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
