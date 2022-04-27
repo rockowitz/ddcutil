@@ -1252,6 +1252,7 @@ char * get_conflicting_drivers_for_bus(int busno) {
 }
 
 
+#ifdef UNUSED
 static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
    assert(info);
    bool debug = false;
@@ -1262,15 +1263,24 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
                  info->busno, info->adapter_class, info->name, SBOOL(result));
    return result;
 }
+#endif
 
 
-Bit_Set_256 get_potential_i2c_buses() {
+/** Return the bus numbers for all video adapter i2c buses, filtering out
+ *  those, such as ones with SMBUS in their name, that are cannot be used
+ *  for DDC/CI communication with a monitor communication.
+ *
+ *  The numbers are determined by examining /sys/bus/i2c.
+ */
+
+Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
    bool debug = false;
    Bit_Set_256 result = EMPTY_BIT_SET_256;
    GPtrArray * allinfo = get_all_i2c_info(true, -1);
    for (int ndx = 0; ndx < allinfo->len; ndx++) {
       Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
-      if (is_potential_i2c_display(cur))
+      if (!sysfs_is_ignorable_i2c_device(cur->busno))
+      // if (is_potential_i2c_display(cur))
          result = bs256_add(result, cur->busno);
    }
    DBGMSF(debug, "Returning: %s", bs256_to_string(result, "0x", ", "));
