@@ -742,6 +742,11 @@ main(int argc, char *argv[]) {
       dbgrpt_all_sysfs_i2c_info(reports, 1);
       rpt_nl();
 
+      rpt_label(0, "*** Sysfs I2C devices possibly associated with displays ***");
+      Bit_Set_256 buses = get_potential_i2c_buses();
+      rpt_vstring(0, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
+      rpt_nl();
+
       rpt_label(0, "*** Sys_Conflicting_Driver report ***");
       GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
       report_conflicting_drivers(conflicts, 1);
