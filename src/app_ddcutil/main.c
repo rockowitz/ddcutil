@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -28,6 +29,7 @@
 #include "util/failsim.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
+#include "util/i2c_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/simple_ini_file.h"
@@ -210,6 +212,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
 // Initialization functions called only once but factored out of main() to clarify mainline
 //
 
+#ifdef UNUSED
 #ifdef TARGET_LINUX
 
 static bool
@@ -261,6 +264,7 @@ validate_environment_using_libkmod()
    return ok;
 }
 #endif
+#endif
 
 
 static bool
@@ -270,6 +274,11 @@ validate_environment()
    DBGMSF(debug, "Starting");
    bool ok;
 
+   ok = dev_i2c_devices_exist();
+   if (!ok)
+      fprintf(stderr, "No /dev/i2c devices exist.\n");
+
+#ifdef OLD
 #ifdef TARGET_LINUX
    if (is_module_loaded_using_sysfs("i2c_dev")) {
       ok = true;
@@ -280,6 +289,8 @@ validate_environment()
 #else
    ok = true;
 #endif
+#endif
+
    if (!ok) {
       fprintf(stderr, "ddcutil requires module i2c-dev.\n");
       // DBGMSF(debug, "Forcing ok = true");
@@ -743,7 +754,7 @@ main(int argc, char *argv[]) {
       rpt_nl();
 
       rpt_label(0, "*** Sysfs I2C devices possibly associated with displays ***");
-      Bit_Set_256 buses = get_potential_i2c_buses();
+      Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();
       rpt_vstring(0, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
       rpt_nl();
 
@@ -928,8 +939,10 @@ static void add_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
+#ifdef UNUSED
 #ifdef TARGET_LINUX
    RTTI_ADD_FUNC(validate_environment_using_libkmod);
+#endif
 #endif
    init_app_services();
 }
