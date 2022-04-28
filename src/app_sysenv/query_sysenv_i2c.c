@@ -6,16 +6,12 @@
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "base/parms.h"    // for I2C_IO_IOCTL_ONLY
-
 /** \cond */
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
-#ifndef I2C_IO_IOCTL_ONLY
-#include <i2c/smbus.h>
-#endif
+
 #include <limits.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -27,11 +23,14 @@
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 
+#include "base/parms.h"
+#ifndef I2C_IO_IOCTL_ONLY
+#include <i2c/smbus.h>
+#endif
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 #include "base/status_code_mgt.h"
-#include "base/parms.h"
 /** \endcond */
 
 #include "i2c/i2c_bus_core.h"
