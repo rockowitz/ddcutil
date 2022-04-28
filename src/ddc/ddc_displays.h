@@ -33,6 +33,9 @@ ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, includin
 GPtrArray *
 ddc_get_filtered_displays(bool include_invalid_displays);
 
+GPtrArray *
+ddc_get_bus_open_errors();
+
 void
 ddc_report_display_by_dref(Display_Ref * dref, int depth);
 
@@ -74,7 +77,6 @@ dbgrpt_dref_ptr_array(char * msg, GPtrArray* ptrarray, int depth);
 void
 dbgrpt_valid_display_refs(int depth);
 
-
 bool
 ddc_displays_already_detected();
 
@@ -86,5 +88,9 @@ ddc_is_usb_display_detection_enabled();
 
 void
 init_ddc_displays();
+
+void
+dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
+
 
 #endif /* DDC_DISPLAYS_H_ */

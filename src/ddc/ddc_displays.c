@@ -62,6 +62,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 static GPtrArray * all_displays = NULL;    // all detected displays
+static GPtrArray * i2c_bus_errors = NULL;  // /dev/i2c-n open errors
 static int dispno_max = 0;                 // highest assigned display number
 static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
 #ifdef USE_USB
@@ -305,6 +306,12 @@ GPtrArray * ddc_get_all_displays() {
    return all_displays;
 }
 
+
+/** Gets a list of all detected displays, optionally excluding those
+ *  that are invalid.
+ *
+ *  @return **GPtrArray of #Display_Ref instances
+ */
 GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
@@ -321,6 +328,15 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
       ddc_dbgrpt_display_refs(result, 2);
    }
    return result;
+}
+
+
+/** Returns list of all open() errors encountered during display detection.
+ *
+ *  @return **GPtrArray of #Bus_Open_Error.
+ */
+GPtrArray * ddc_get_bus_open_errors() {
+   return i2c_bus_errors;
 }
 
 
@@ -1141,17 +1157,42 @@ get_display_ref_for_display_identifier(
 }
 
 
+/** Emits a debug report of a list of #Bus_Open_Error.
+ *
+ *  @param open_errors  array of #Bus_Open_Error
+ *  @param depth        logical indentation depth
+ */
+void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
+   int d1 = depth+1;
+   if (!open_errors || open_errors->len == 0) {
+      rpt_vstring(depth, "Bus open errors:  None");
+   }
+   else {
+      rpt_vstring(depth, "Bus open errors:");
+      for (int ndx = 0; ndx < open_errors->len; ndx++) {
+         Bus_Open_Error * cur = g_ptr_array_index(open_errors, ndx);
+         assert(cur->io_mode != DDCA_IO_ADL);
+         rpt_vstring(d1, "%s bus:  %-2d, error: %d",
+               (cur->io_mode == DDCA_IO_I2C) ? "I2C" : "hiddev",
+               cur->devno, cur->error);
+      }
+   }
+}
+
+
 /** Detects all connected displays by querying the I2C and USB subsystems.
  *
- * \return array of #Display_Ref
+ *  @param  open_errors_loc where to return address of #GPtrArray of #Bus_Open_Error
+ *  @return array of #Display_Ref
+ *
  */
 // static
 GPtrArray *
-ddc_detect_all_displays() {
+ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    dispno_max = 0;
-
+   GPtrArray * bus_open_errors = g_ptr_array_new();
    GPtrArray * display_list = g_ptr_array_new();
 
    int busct = i2c_detect_buses();
@@ -1174,11 +1215,18 @@ ddc_detect_all_displays() {
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
       }
+      else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
+         Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
+         boe->io_mode = DDCA_IO_I2C;
+         boe->devno = businfo->busno;
+         boe->error = businfo->open_errno;
+         g_ptr_array_add(bus_open_errors, boe);
+      }
    }
 
 #ifdef USE_USB
    if (detect_usb_displays) {
-      GPtrArray * usb_monitors = get_usb_monitor_list();
+      GPtrArray * usb_monitors = get_usb_monitor_list();  // array of USB_Monitor_Info
       // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
       for (int ndx=0; ndx<usb_monitors->len; ndx++) {
          Usb_Monitor_Info  * curmon = g_ptr_array_index(usb_monitors,ndx);
@@ -1201,6 +1249,18 @@ ddc_detect_all_displays() {
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
+      }
+
+      GPtrArray * usb_open_errors = get_usb_open_errors();
+      if (usb_open_errors && usb_open_errors->len > 0) {
+         for (int ndx = 0; ndx < usb_open_errors->len; ndx++) {
+            Bus_Open_Error * usb_boe = (Bus_Open_Error *) g_ptr_array_index(usb_open_errors, ndx);
+            Bus_Open_Error * boe_copy = calloc(1, sizeof(Bus_Open_Error));
+            boe_copy->io_mode = DDCA_IO_USB;
+            boe_copy->devno = usb_boe->devno;
+            boe_copy->error = usb_boe->error;
+            g_ptr_array_add(bus_open_errors, boe_copy);
+         }
       }
    }
 #endif
@@ -1236,9 +1296,18 @@ ddc_detect_all_displays() {
 
    filter_phantom_displays(display_list);
 
+   if (bus_open_errors->len > 0) {
+      *i2c_open_errors_loc = bus_open_errors;
+   }
+   else {
+      g_ptr_array_free(bus_open_errors, false);
+      *i2c_open_errors_loc = NULL;
+   }
+
    if (debug) {
       DBGMSG("Displays detected:");
       dbgrpt_dref_ptr_array("display_list:", display_list, 1);
+      dbgrpt_bus_open_errors(*i2c_open_errors_loc, 1);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p, Detected %d valid displays",
                 display_list, dispno_max);
@@ -1256,7 +1325,7 @@ ddc_ensure_displays_detected() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_displays) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
-      all_displays = ddc_detect_all_displays();
+      all_displays = ddc_detect_all_displays(&i2c_bus_errors);
    }
    DBGTRC_DONE(debug, TRACE_GROUP,
                "all_displays=%p, all_displays has %d displays",
@@ -1281,6 +1350,10 @@ ddc_discard_detected_displays() {
       }
       g_ptr_array_free(all_displays, true);
       all_displays = NULL;
+      if (i2c_bus_errors) {
+         g_ptr_array_free(i2c_bus_errors, true);
+         i2c_bus_errors = NULL;
+      }
    }
    free_sys_drm_connectors();
    i2c_discard_buses();
@@ -1294,7 +1367,7 @@ ddc_redetect_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    ddc_discard_detected_displays();
    i2c_detect_buses();
-   all_displays = ddc_detect_all_displays();
+   all_displays = ddc_detect_all_displays(&i2c_bus_errors);
    if (debug) {
       dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
       // dbgrpt_valid_display_refs(1);
