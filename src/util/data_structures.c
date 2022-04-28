@@ -816,6 +816,509 @@ bool bbf_store_bytehex_list(Byte_Bit_Flags bbf, char * start, int len) {
 
 
 //
+// Bit_Set_256 - A data structure containing 256 flags
+//
+// TODO: converge with Byte_Bit_Flags
+//
+
+const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
+
+/** Sets a flag in a #Bit_Set_256
+ *
+ *  \param  flags   existing #Bit_Set_256 value
+ *  \param  flagno  flag number to set (0 based)
+ *  \return updated set
+ */
+Bit_Set_256 bs256_add(
+    Bit_Set_256 bitset,
+    Byte        bitno)
+{
+    bool debug = false;
+
+    Bit_Set_256 result = bitset;
+    int bytendx   = bitno >> 3;
+    int shiftct   = bitno & 0x07;
+    Byte flagbit  = 0x01 << shiftct;
+    if (debug) {
+       printf("(%s) bitno=0x%02x, bytendx=%d, shiftct=%d, flagbit=0x%02x\n",
+              __func__, bitno, bytendx, shiftct, flagbit);
+    }
+    result.bytes[bytendx] |= flagbit;
+
+    if (debug) {
+       char * bs1 = strdup(bs256_to_string(bitset,  "",""));
+       char * bs2 = strdup(bs256_to_string(result, "",""));
+       printf("(%s) old bitstring=%s, value %d, returning: %s\n",
+              __func__, bs1, bitno, bs2);
+       free( bs1);
+       free(bs2);
+    }
+
+    return result;
+}
+
+
+/** Tests if a bit is set in a #Bit_Set_256.
+ *
+ *  \param bitset  #Bit_Set_256 to check
+ *  \param bitno   bit number to test (0 based)
+ *  \return true/false
+ */
+bool bs256_contains(
+    Bit_Set_256 bitset,
+    Byte        bitno)
+{
+    bool debug = false;
+
+    int flagndx   = bitno >> 3;
+    int shiftct   = bitno  & 0x07;
+    Byte flagbit  = 0x01 << shiftct;
+    // printf("(%s) bitno=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
+    //        __func__, bitno, flagndx, shiftct, flagbit);
+    bool result = bitset.bytes[flagndx] & flagbit;
+    if (debug) {
+       printf("(%s) bitset:\n   ",__func__);
+       for (int ndx = 0; ndx < 32; ndx++) {
+          printf("%02x", bitset.bytes[ndx]);
+       }
+       printf("\n");
+       printf("(%s)  bit %d, returning: %d\n",  __func__, bitno, result);
+    }
+    return result;
+}
+
+
+/** Returns the bit number of the first bit set.
+ *  \param  bitset #Bit_Set_256 to check
+ *  \return number of first bit that is set (0 based),
+ *          -1 if no bits set
+ */
+int bs256_first_bit_set(
+      Bit_Set_256 bitset)
+{
+   int result = -1;
+   for (int ndx = 0; ndx < 256; ndx++) {
+      if (bs256_contains(bitset, ndx)) {
+         result = ndx;
+         break;
+      }
+   }
+   return result;
+}
+
+
+bool bs256_eq(
+    Bit_Set_256 set1,
+    Bit_Set_256 set2)
+{
+   return memcmp(&set1, &set2, 32) == 0;
+}
+
+
+Bit_Set_256 bs256_or(
+   Bit_Set_256 set1,
+   Bit_Set_256 set2)
+{
+   Bit_Set_256 result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  set1.bytes[ndx] | set2.bytes[ndx];
+   }
+   return result;
+}
+
+
+Bit_Set_256 bs256_and(
+   Bit_Set_256 set1,
+   Bit_Set_256 set2)
+{
+   Bit_Set_256 result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  set1.bytes[ndx] & set2.bytes[ndx];
+   }
+   return result;
+}
+
+
+Bit_Set_256 bs256_and_not(
+      Bit_Set_256 set1,
+      Bit_Set_256 set2)
+{
+   // DBGMSG("Starting. vcplist1=%p, vcplist2=%p", vcplist1, vcplist2);
+   Bit_Set_256 result;
+   for (int ndx = 0; ndx < 32; ndx++) {
+      result.bytes[ndx] =  set1.bytes[ndx] & ~set2.bytes[ndx];
+   }
+
+   // char * s = ddca_bs256_string(&result, "0x",", ");
+   // DBGMSG("Returning: %s", s);
+   // free(s);
+   return result;
+}
+
+
+#define BB256_REPR_BUF_SZ (3*32+1)
+/** Represents a #Bit_Set_256 value as a sequence of 32 hex values.
+ *
+ *  \param buf   buffer in which to return value
+ *  \param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
+ *  \param bbset value to represent
+ */
+void bb256_repr(char * buf, int bufsz, Bit_Set_256 bbset) {
+   assert(bufsz >= BB256_REPR_BUF_SZ);
+   g_snprintf(buf, bufsz,
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x "
+              "%02x %02x %02x %02x %02x %02x %02x %02x",
+              bbset.bytes[ 0], bbset.bytes[ 1], bbset.bytes[ 2], bbset.bytes[ 3],
+              bbset.bytes[ 4], bbset.bytes[ 5], bbset.bytes[ 6], bbset.bytes[ 7],
+              bbset.bytes[ 8], bbset.bytes[ 9], bbset.bytes[10], bbset.bytes[11],
+              bbset.bytes[12], bbset.bytes[13], bbset.bytes[14], bbset.bytes[15],
+              bbset.bytes[16], bbset.bytes[17], bbset.bytes[18], bbset.bytes[19],
+              bbset.bytes[20], bbset.bytes[21], bbset.bytes[22], bbset.bytes[23],
+              bbset.bytes[24], bbset.bytes[25], bbset.bytes[26], bbset.bytes[27],
+              bbset.bytes[28], bbset.bytes[29], bbset.bytes[30], bbset.bytes[31] );
+}
+
+
+/** Returns the number of bits set in a #Bit_Set_256 instance.
+ *
+ *  \param  bbset  value to examine
+ *  \return number of bits set
+ */
+int bs256_count(
+   Bit_Set_256 bbset)
+{
+   bool debug = false;
+
+   int result = 0;
+   int flagndx;
+   int bitndx;
+   for (flagndx=0; flagndx < 32; flagndx++) {
+      for (bitndx = 0; bitndx < 8; bitndx++) {
+         unsigned char flagbit = (0x80 >> bitndx);
+         if (bbset.bytes[flagndx] & flagbit)
+            result += 1;
+      }
+   }
+   if (debug) {
+      char buf[BB256_REPR_BUF_SZ];
+      bb256_repr(buf, sizeof(buf), bbset);
+      printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
+   }
+   return result;
+}
+
+
+#ifdef COMPILE_ERRORS
+int bs256_count(
+      Bit_Set_256 bbset)
+{
+   // regard the array of 32 bytes as an array of 8 4-byte unsigned integers
+   uint64_t  list2 = (uint64_t) bbset.bytes;
+   unsigned int ct = 0;
+   for (int ndx = 0; ndx < 4; ndx++) {
+      // clever algorithm for counting number of bits per Brian Kernihgan
+      uint64_t v = list2[ndx];
+      for (; v; ct++) {
+        v &= v - 1; // clear the least significant bit set
+      }
+      // DBGMSG("feature_list_count() returning: %d", ct);
+   }
+// #ifdef OLD
+   assert(ct == bs256_count0(bbset));
+// #endif
+   return ct;
+}
+#endif
+
+
+/** Returns a string representation of a #Bit_Set_256 as a list of hex numbers.
+ *
+ *  The value returned is valid until the next call to this function in the
+ *  current thread.
+ *
+ *  \param  bitset value to represent
+ *  \param  value_prefix  prefix for each hex number, typically "0x" or ""
+ *  \param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  \return string representation, caller should not free
+ */
+char *
+bs256_to_string(
+      Bit_Set_256  bitset,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   bool debug = false;
+   if (debug) {
+      printf("(%s) value_prefix=|%s|, sepstr=|%s| bitset: ",
+             __func__, value_prefix, sepstr);
+      for (int ndx = 0; ndx < 32; ndx++) {
+         printf("%02x", bitset.bytes[ndx]);
+      }
+      printf("\n");
+      // rpt_hex_dump((Byte*)feature_list, 32, 2);
+   }
+
+   static GPrivate  key =     G_PRIVATE_INIT(g_free);
+   static GPrivate  len_key = G_PRIVATE_INIT(g_free);
+
+   if (!value_prefix)
+      value_prefix = "";
+   if (!sepstr)
+      sepstr = "";
+   int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
+   int bit_ct = bs256_count(bitset);
+   int reqd_size = (bit_ct*vsize)+1;   // +1 for trailing null
+
+   char * buf = get_thread_dynamic_buffer(&key, &len_key, reqd_size);
+   // char * buf = calloc(1, reqd_size);
+
+   buf[0] = '\0';
+   // printf("(%s) feature_ct=%d, vsize=%d, buf size = %d",
+   //          __func__, feature_ct, vsize, vsize*feature_ct);
+
+   for (int ndx = 0; ndx < 256; ndx++) {
+      if ( bs256_contains(bitset, ndx) )
+         sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
+   }
+
+   if (bit_ct > 0)
+      buf[ strlen(buf)-strlen(sepstr)] = '\0';
+
+   // printf("(%s) wolf 4\n", __func__);
+   // DBGMSG("Returned string length: %d", strlen(buf));
+   // DBGMSG("Returning %p - %s", buf, buf);
+   if (debug)
+   printf("(%s) Returning: len=%d, %s\n", __func__, (int) strlen(buf), buf);
+
+   return buf;
+}
+
+
+#define BS256_ITER_MARKER "BSIM"
+typedef struct {
+   char        marker[4];
+   Bit_Set_256 bbflags;
+   int         lastpos;
+} _Bit_Set_256_Iterator;
+
+
+/** Creates an iterator for a #Bit_Set_256 instance.
+ *  The iterator is an opaque object.
+ */
+Bit_Set_256_Iterator
+bs256_iter_new(Bit_Set_256 bbflags) {
+   _Bit_Set_256_Iterator * result = malloc(sizeof(_Bit_Set_256_Iterator));
+   memcpy(result->marker, BS256_ITER_MARKER, 4);
+   result->bbflags = bbflags;   // TODO: save pointer to unopaque _BitByteFlags
+   result->lastpos = -1;
+   return result;
+}
+
+
+/** Free a #Bit_Set_256_Iterator.
+ *
+ * \param bs256_iter handle to iterator (may be NULL)
+ */
+void
+bs256_iter_free(
+      Bit_Set_256_Iterator bs256_iter)
+{
+   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
+
+   if (bs256_iter) {
+      assert(memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
+      iter->marker[3] = 'x';
+      free(iter);
+   }
+}
+
+
+/** Reinitializes an iterator.  Sets the current position before the first
+ *  value.
+ *
+ * \param bs256_iter handle to iterator
+ */
+void
+bs256_iter_reset(
+      Bit_Set_256_Iterator bs256_iter)
+{
+   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
+   assert(iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
+
+   iter->lastpos = -1;
+}
+
+
+/** Returns the number of the next bit that is set.
+ *
+ * \param bs256_iter handle to iterator
+ * \return number of next bit that is set, -1 if no more
+ */
+int
+bs256_iter_next(
+      Bit_Set_256_Iterator
+      bs256_iter)
+{
+   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
+   assert( iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
+   // printf("(%s) Starting. lastpos = %d\n", __func__, iter->lastpos);
+
+   int result = -1;
+   for (int ndx = iter->lastpos + 1; ndx < 256; ndx++) {
+      if (bs256_contains(iter->bbflags, ndx)) {
+         result = ndx;
+         iter->lastpos = ndx;
+         break;
+      }
+   }
+   // printf("(%s) Returning: %d\n", __func__, result);
+   return result;
+}
+
+
+// TODO:
+// Extracted from feature_list.cpp in ddcui. parse_custom_feature_list()
+// should be rewritten to call this function.
+
+/** Parse a string containing a list of hex values.
+ *
+ *  \param unparsed_string
+ *  \error_msgs_loc  if non-null, return null terminated string array of error messages here,
+ *                   caller is responsible for freeing
+ *  \return #Bit_Set_256, will be EMPTY_BIT_SET_256 if errors
+ *
+ *  \remark
+ *  If error_msgs_loc is non-null on entry, on return it is non-null iff there
+ *  are error messages, i.e. a 0 length array is never returned
+ */
+Bit_Set_256 bs256_from_string(
+      char *                         unparsed_string,
+      Null_Terminated_String_Array * error_msgs_loc)
+{
+    assert(unparsed_string);
+    assert(error_msgs_loc);
+    bool debug = true;
+    if (debug)
+       printf("(bs256_from_string) unparsed_string = |%s|\n", unparsed_string );
+
+    Bit_Set_256 result = EMPTY_BIT_SET_256;
+    *error_msgs_loc = NULL;
+    GPtrArray * errors = g_ptr_array_new();
+
+    // convert all commas to blanks
+    char * x = unparsed_string;
+    while (*x) {
+       if (*x == ',')
+          *x = ' ';
+       x++;
+    }
+
+    // gchar ** pieces = g_strsplit(features_work, " ", -1); // doesn't handle multiple blanks
+    Null_Terminated_String_Array pieces = strsplit(unparsed_string, " ");
+    int ntsal = ntsa_length(pieces);
+    if (debug)
+       printf("(bs256_from_string) ntsal=%d\n", ntsal );
+    if (ntsal == 0) {
+       if (debug)
+          printf("(bs256_from_string) Empty string\n");
+    }
+    else {
+       bool ok = true;
+       int ndx = 0;
+       for (; pieces[ndx] != NULL; ndx++) {
+           // char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
+           char * token = g_strstrip(pieces[ndx]);
+           if (debug)
+              printf("(parse_features_list) token= |%s|\n", token);
+           Byte hex_value = 0;
+           if ( any_one_byte_hex_string_to_byte_in_buf(token, &hex_value) ) {
+              result = bs256_add(result, hex_value);
+           }
+           else {
+              if (debug)
+                 printf("(bs256_from_string) Invalid hex value: %s\n", token);
+              char * s = g_strdup_printf("Invalid hex value: %s", token);
+              g_ptr_array_add(errors, s);
+              ok = false;
+           }
+       }
+       assert(ndx == ntsal);
+       ntsa_free(pieces, /* free_strings */ true);
+
+       ASSERT_IFF(ok, errors->len == 0);
+
+       if (ok) {
+          g_ptr_array_free(errors,true);
+          *error_msgs_loc = NULL;
+       }
+       else {
+          result = EMPTY_BIT_SET_256;
+          *error_msgs_loc = g_ptr_array_to_ntsa(errors, false);
+          g_ptr_array_free(errors, false);
+       }
+     }
+
+    if (debug) {
+       const char * s = bs256_to_string(result, /*prefix*/ "x", /*sepstr*/ ",");
+       printf("Returning bit set: %s\n", s);
+       if (*error_msgs_loc) {
+          printf("(bs256_from_string) Returning error messages:\n");
+          ntsa_show(*error_msgs_loc);
+       }
+    }
+    return result;
+}
+
+
+Bit_Set_256
+bs256_from_bbf(Byte_Bit_Flags bbf) {
+   bool debug = false;
+   _ByteBitFlags* flags = (_ByteBitFlags*) bbf;
+   if (debug) {
+#ifdef OLD
+      char * s = bbf_to_string(bbf);
+      printf("(%s) bbf->   %s\n", __func__, s);
+      free(s);
+#endif
+      printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
+   }
+   BYTE_BIT_VALIDATE(flags);
+   Bit_Set_256 result;
+   memcpy(result.bytes, flags->byte, 32);
+   if (debug) {
+      printf("(%s) Ret:    %s\n", __func__,
+            bs256_to_string(result, "", " ") );
+   }
+   return result;
+}
+
+
+Byte_Bit_Flags
+bbf_from_bs256(Bit_Set_256 bitset) {
+   bool debug = false;
+   if (debug) {
+      printf("(%s) bitset: %s\n", __func__,
+            bs256_to_string(bitset, "", " ") );
+   }
+   _ByteBitFlags * bbf = bbf_create_internal();
+   memcpy(bbf->byte, bitset.bytes, 32);
+   if (debug) {
+#ifdef OLD
+       char * s = bbf_to_string(bbf);
+       printf("(%s) bbf->   %s\n", __func__, s);
+       free(s);
+#endif
+       printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
+   }
+   return bbf;
+}
+
+
+
+
+//
 // Buffer with length management
 //
 
@@ -1365,506 +1868,4 @@ csb_to_g_ptr_array(Circular_String_Buffer * csb) {
    csb->ct = 0;
    return pa;
 }
-
-
-//
-// bs256 - Bit_Set_256
-//
-// A data structure containing 256 flags
-//
-
-const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
-
-/** Sets a flag in a #Bit_Set_256
- *
- *  \param  flags   existing #Bit_Set_256 value
- *  \param  flagno  flag number to set (0 based)
- *  \return updated set
- */
-Bit_Set_256 bs256_add(
-    Bit_Set_256 bitset,
-    Byte        bitno)
-{
-    bool debug = false;
-
-    Bit_Set_256 result = bitset;
-    int bytendx   = bitno >> 3;
-    int shiftct   = bitno & 0x07;
-    Byte flagbit  = 0x01 << shiftct;
-    if (debug) {
-       printf("(%s) bitno=0x%02x, bytendx=%d, shiftct=%d, flagbit=0x%02x\n",
-              __func__, bitno, bytendx, shiftct, flagbit);
-    }
-    result.bytes[bytendx] |= flagbit;
-
-    if (debug) {
-       char * bs1 = strdup(bs256_to_string(bitset,  "",""));
-       char * bs2 = strdup(bs256_to_string(result, "",""));
-       printf("(%s) old bitstring=%s, value %d, returning: %s\n",
-              __func__, bs1, bitno, bs2);
-       free( bs1);
-       free(bs2);
-    }
-
-    return result;
-}
-
-
-/** Tests if a bit is set in a #Bit_Set_256.
- *
- *  \param bitset  #Bit_Set_256 to check
- *  \param bitno   bit number to test (0 based)
- *  \return true/false
- */
-bool bs256_contains(
-    Bit_Set_256 bitset,
-    Byte        bitno)
-{
-    bool debug = false;
-
-    int flagndx   = bitno >> 3;
-    int shiftct   = bitno  & 0x07;
-    Byte flagbit  = 0x01 << shiftct;
-    // printf("(%s) bitno=0x%02x, flagndx=%d, shiftct=%d, flagbit=0x%02x\n",
-    //        __func__, bitno, flagndx, shiftct, flagbit);
-    bool result = bitset.bytes[flagndx] & flagbit;
-    if (debug) {
-       printf("(%s) bitset:\n   ",__func__);
-       for (int ndx = 0; ndx < 32; ndx++) {
-          printf("%02x", bitset.bytes[ndx]);
-       }
-       printf("\n");
-       printf("(%s)  bit %d, returning: %d\n",  __func__, bitno, result);
-    }
-    return result;
-}
-
-
-/** Returns the bit number of the first bit set.
- *  \param  bitset #Bit_Set_256 to check
- *  \return number of first bit that is set (0 based),
- *          -1 if no bits set
- */
-int bs256_first_bit_set(
-      Bit_Set_256 bitset)
-{
-   int result = -1;
-   for (int ndx = 0; ndx < 256; ndx++) {
-      if (bs256_contains(bitset, ndx)) {
-         result = ndx;
-         break;
-      }
-   }
-   return result;
-}
-
-
-bool bs256_eq(
-    Bit_Set_256 set1,
-    Bit_Set_256 set2)
-{
-   return memcmp(&set1, &set2, 32) == 0;
-}
-
-
-Bit_Set_256 bs256_or(
-   Bit_Set_256 set1,
-   Bit_Set_256 set2)
-{
-   Bit_Set_256 result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  set1.bytes[ndx] | set2.bytes[ndx];
-   }
-   return result;
-}
-
-
-Bit_Set_256 bs256_and(
-   Bit_Set_256 set1,
-   Bit_Set_256 set2)
-{
-   Bit_Set_256 result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  set1.bytes[ndx] & set2.bytes[ndx];
-   }
-   return result;
-}
-
-
-Bit_Set_256 bs256_and_not(
-      Bit_Set_256 set1,
-      Bit_Set_256 set2)
-{
-   // DBGMSG("Starting. vcplist1=%p, vcplist2=%p", vcplist1, vcplist2);
-   Bit_Set_256 result;
-   for (int ndx = 0; ndx < 32; ndx++) {
-      result.bytes[ndx] =  set1.bytes[ndx] & ~set2.bytes[ndx];
-   }
-
-   // char * s = ddca_bs256_string(&result, "0x",", ");
-   // DBGMSG("Returning: %s", s);
-   // free(s);
-   return result;
-}
-
-
-#define BB256_REPR_BUF_SZ (3*32+1)
-/** Represents a #Bit_Set_256 value as a sequence of 32 hex values.
- *
- *  \param buf   buffer in which to return value
- *  \param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
- *  \param bbset value to represent
- */
-void bb256_repr(char * buf, int bufsz, Bit_Set_256 bbset) {
-   assert(bufsz >= BB256_REPR_BUF_SZ);
-   g_snprintf(buf, bufsz,
-              "%02x %02x %02x %02x %02x %02x %02x %02x "
-              "%02x %02x %02x %02x %02x %02x %02x %02x "
-              "%02x %02x %02x %02x %02x %02x %02x %02x "
-              "%02x %02x %02x %02x %02x %02x %02x %02x",
-              bbset.bytes[ 0], bbset.bytes[ 1], bbset.bytes[ 2], bbset.bytes[ 3],
-              bbset.bytes[ 4], bbset.bytes[ 5], bbset.bytes[ 6], bbset.bytes[ 7],
-              bbset.bytes[ 8], bbset.bytes[ 9], bbset.bytes[10], bbset.bytes[11],
-              bbset.bytes[12], bbset.bytes[13], bbset.bytes[14], bbset.bytes[15],
-              bbset.bytes[16], bbset.bytes[17], bbset.bytes[18], bbset.bytes[19],
-              bbset.bytes[20], bbset.bytes[21], bbset.bytes[22], bbset.bytes[23],
-              bbset.bytes[24], bbset.bytes[25], bbset.bytes[26], bbset.bytes[27],
-              bbset.bytes[28], bbset.bytes[29], bbset.bytes[30], bbset.bytes[31] );
-}
-
-
-/** Returns the number of bits set in a #Bit_Set_256 instance.
- *
- *  \param  bbset  value to examine
- *  \return number of bits set
- */
-int bs256_count(
-   Bit_Set_256 bbset)
-{
-   bool debug = false;
-
-   int result = 0;
-   int flagndx;
-   int bitndx;
-   for (flagndx=0; flagndx < 32; flagndx++) {
-      for (bitndx = 0; bitndx < 8; bitndx++) {
-         unsigned char flagbit = (0x80 >> bitndx);
-         if (bbset.bytes[flagndx] & flagbit)
-            result += 1;
-      }
-   }
-   if (debug) {
-      char buf[BB256_REPR_BUF_SZ];
-      bb256_repr(buf, sizeof(buf), bbset);
-      printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
-   }
-   return result;
-}
-
-
-#ifdef COMPILE_ERRORS
-int bs256_count(
-      Bit_Set_256 bbset)
-{
-   // regard the array of 32 bytes as an array of 8 4-byte unsigned integers
-   uint64_t  list2 = (uint64_t) bbset.bytes;
-   unsigned int ct = 0;
-   for (int ndx = 0; ndx < 4; ndx++) {
-      // clever algorithm for counting number of bits per Brian Kernihgan
-      uint64_t v = list2[ndx];
-      for (; v; ct++) {
-        v &= v - 1; // clear the least significant bit set
-      }
-      // DBGMSG("feature_list_count() returning: %d", ct);
-   }
-// #ifdef OLD
-   assert(ct == bs256_count0(bbset));
-// #endif
-   return ct;
-}
-#endif
-
-
-/** Returns a string representation of a #Bit_Set_256 as a list of hex numbers.
- *
- *  The value returned is valid until the next call to this function in the
- *  current thread.
- *
- *  \param  bitset value to represent
- *  \param  value_prefix  prefix for each hex number, typically "0x" or ""
- *  \param  sepstr        string to insert between each value, typically "", ",", or " "
- *  \return string representation, caller should not free
- */
-char *
-bs256_to_string(
-      Bit_Set_256  bitset,
-      const char * value_prefix,
-      const char * sepstr)
-{
-   bool debug = false;
-   if (debug) {
-      printf("(%s) value_prefix=|%s|, sepstr=|%s| bitset: ",
-             __func__, value_prefix, sepstr);
-      for (int ndx = 0; ndx < 32; ndx++) {
-         printf("%02x", bitset.bytes[ndx]);
-      }
-      printf("\n");
-      // rpt_hex_dump((Byte*)feature_list, 32, 2);
-   }
-
-   static GPrivate  key =     G_PRIVATE_INIT(g_free);
-   static GPrivate  len_key = G_PRIVATE_INIT(g_free);
-
-   if (!value_prefix)
-      value_prefix = "";
-   if (!sepstr)
-      sepstr = "";
-   int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
-   int bit_ct = bs256_count(bitset);
-   int reqd_size = (bit_ct*vsize)+1;   // +1 for trailing null
-
-   char * buf = get_thread_dynamic_buffer(&key, &len_key, reqd_size);
-   // char * buf = calloc(1, reqd_size);
-
-   buf[0] = '\0';
-   // printf("(%s) feature_ct=%d, vsize=%d, buf size = %d",
-   //          __func__, feature_ct, vsize, vsize*feature_ct);
-
-   for (int ndx = 0; ndx < 256; ndx++) {
-      if ( bs256_contains(bitset, ndx) )
-         sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
-   }
-
-   if (bit_ct > 0)
-      buf[ strlen(buf)-strlen(sepstr)] = '\0';
-
-   // printf("(%s) wolf 4\n", __func__);
-   // DBGMSG("Returned string length: %d", strlen(buf));
-   // DBGMSG("Returning %p - %s", buf, buf);
-   if (debug)
-   printf("(%s) Returning: len=%d, %s\n", __func__, (int) strlen(buf), buf);
-
-   return buf;
-}
-
-
-#define BS256_ITER_MARKER "BSIM"
-typedef struct {
-   char        marker[4];
-   Bit_Set_256 bbflags;
-   int         lastpos;
-} _Bit_Set_256_Iterator;
-
-
-/** Creates an iterator for a #Bit_Set_256 instance.
- *  The iterator is an opaque object.
- */
-Bit_Set_256_Iterator
-bs256_iter_new(Bit_Set_256 bbflags) {
-   _Bit_Set_256_Iterator * result = malloc(sizeof(_Bit_Set_256_Iterator));
-   memcpy(result->marker, BS256_ITER_MARKER, 4);
-   result->bbflags = bbflags;   // TODO: save pointer to unopaque _BitByteFlags
-   result->lastpos = -1;
-   return result;
-}
-
-
-/** Free a #Bit_Set_256_Iterator.
- *
- * \param bs256_iter handle to iterator (may be NULL)
- */
-void
-bs256_iter_free(
-      Bit_Set_256_Iterator bs256_iter)
-{
-   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
-
-   if (bs256_iter) {
-      assert(memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
-      iter->marker[3] = 'x';
-      free(iter);
-   }
-}
-
-
-/** Reinitializes an iterator.  Sets the current position before the first
- *  value.
- *
- * \param bs256_iter handle to iterator
- */
-void
-bs256_iter_reset(
-      Bit_Set_256_Iterator bs256_iter)
-{
-   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
-   assert(iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
-
-   iter->lastpos = -1;
-}
-
-
-/** Returns the number of the next bit that is set.
- *
- * \param bs256_iter handle to iterator
- * \return number of next bit that is set, -1 if no more
- */
-int
-bs256_iter_next(
-      Bit_Set_256_Iterator
-      bs256_iter)
-{
-   _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
-   assert( iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
-   // printf("(%s) Starting. lastpos = %d\n", __func__, iter->lastpos);
-
-   int result = -1;
-   for (int ndx = iter->lastpos + 1; ndx < 256; ndx++) {
-      if (bs256_contains(iter->bbflags, ndx)) {
-         result = ndx;
-         iter->lastpos = ndx;
-         break;
-      }
-   }
-   // printf("(%s) Returning: %d\n", __func__, result);
-   return result;
-}
-
-
-// TODO:
-// Extracted from feature_list.cpp in ddcui. parse_custom_feature_list()
-// should be rewritten to call this function.
-
-/** Parse a string containing a list of hex values.
- *
- *  \param unparsed_string
- *  \error_msgs_loc  if non-null, return null terminated string array of error messages here,
- *                   caller is responsible for freeing
- *  \return #Bit_Set_256, will be EMPTY_BIT_SET_256 if errors
- *
- *  \remark
- *  If error_msgs_loc is non-null on entry, on return it is non-null iff there
- *  are error messages, i.e. a 0 length array is never returned
- */
-Bit_Set_256 bs256_from_string(
-      char *                         unparsed_string,
-      Null_Terminated_String_Array * error_msgs_loc)
-{
-    assert(unparsed_string);
-    assert(error_msgs_loc);
-    bool debug = true;
-    if (debug)
-       printf("(bs256_from_string) unparsed_string = |%s|\n", unparsed_string );
-
-    Bit_Set_256 result = EMPTY_BIT_SET_256;
-    *error_msgs_loc = NULL;
-    GPtrArray * errors = g_ptr_array_new();
-
-    // convert all commas to blanks
-    char * x = unparsed_string;
-    while (*x) {
-       if (*x == ',')
-          *x = ' ';
-       x++;
-    }
-
-    // gchar ** pieces = g_strsplit(features_work, " ", -1); // doesn't handle multiple blanks
-    Null_Terminated_String_Array pieces = strsplit(unparsed_string, " ");
-    int ntsal = ntsa_length(pieces);
-    if (debug)
-       printf("(bs256_from_string) ntsal=%d\n", ntsal );
-    if (ntsal == 0) {
-       if (debug)
-          printf("(bs256_from_string) Empty string\n");
-    }
-    else {
-       bool ok = true;
-       int ndx = 0;
-       for (; pieces[ndx] != NULL; ndx++) {
-           // char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
-           char * token = g_strstrip(pieces[ndx]);
-           if (debug)
-              printf("(parse_features_list) token= |%s|\n", token);
-           Byte hex_value = 0;
-           if ( any_one_byte_hex_string_to_byte_in_buf(token, &hex_value) ) {
-              result = bs256_add(result, hex_value);
-           }
-           else {
-              if (debug)
-                 printf("(bs256_from_string) Invalid hex value: %s\n", token);
-              char * s = g_strdup_printf("Invalid hex value: %s", token);
-              g_ptr_array_add(errors, s);
-              ok = false;
-           }
-       }
-       assert(ndx == ntsal);
-       ntsa_free(pieces, /* free_strings */ true);
-
-       ASSERT_IFF(ok, errors->len == 0);
-
-       if (ok) {
-          g_ptr_array_free(errors,true);
-          *error_msgs_loc = NULL;
-       }
-       else {
-          result = EMPTY_BIT_SET_256;
-          *error_msgs_loc = g_ptr_array_to_ntsa(errors, false);
-          g_ptr_array_free(errors, false);
-       }
-     }
-
-    if (debug) {
-       const char * s = bs256_to_string(result, /*prefix*/ "x", /*sepstr*/ ",");
-       printf("Returning bit set: %s\n", s);
-       if (*error_msgs_loc) {
-          printf("(bs256_from_string) Returning error messages:\n");
-          ntsa_show(*error_msgs_loc);
-       }
-    }
-    return result;
-}
-
-
-Bit_Set_256
-bs256_from_bbf(Byte_Bit_Flags bbf) {
-   bool debug = false;
-   _ByteBitFlags* flags = (_ByteBitFlags*) bbf;
-   if (debug) {
-#ifdef OLD
-      char * s = bbf_to_string(bbf);
-      printf("(%s) bbf->   %s\n", __func__, s);
-      free(s);
-#endif
-      printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
-   }
-   BYTE_BIT_VALIDATE(flags);
-   Bit_Set_256 result;
-   memcpy(result.bytes, flags->byte, 32);
-   if (debug) {
-      printf("(%s) Ret:    %s\n", __func__,
-            bs256_to_string(result, "", " ") );
-   }
-   return result;
-}
-
-
-Byte_Bit_Flags
-bbf_from_bs256(Bit_Set_256 bitset) {
-   bool debug = false;
-   if (debug) {
-      printf("(%s) bitset: %s\n", __func__,
-            bs256_to_string(bitset, "", " ") );
-   }
-   _ByteBitFlags * bbf = bbf_create_internal();
-   memcpy(bbf->byte, bitset.bytes, 32);
-   if (debug) {
-#ifdef OLD
-       char * s = bbf_to_string(bbf);
-       printf("(%s) bbf->   %s\n", __func__, s);
-       free(s);
-#endif
-       printf("(%s) bbf->   %s\n", __func__, bbf_to_string(bbf));
-   }
-   return bbf;
-}
-
 

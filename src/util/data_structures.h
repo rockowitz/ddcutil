@@ -86,6 +86,40 @@ void bbf_appender(void * data_struct, Byte val);
 // Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
 bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
 
+// TODO: Converge Bit_Set_256, Byte_Bit_Flags
+// But note, Bit_Set_256 is an 8 byte data structure, Byte_Bit_Flags is a pointer to
+// an 8 byte data structure.
+
+typedef struct {
+   uint8_t bytes[32];
+} Bit_Set_256;
+
+extern const Bit_Set_256 EMPTY_BIT_SET_256;
+
+Bit_Set_256    bs256_add(Bit_Set_256 flags, uint8_t val);
+bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
+int            bs256_first_bit_set(Bit_Set_256 bitset);
+bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
+Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
+Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
+Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
+int            bs256_count(Bit_Set_256 set);
+char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);
+Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
+
+/** Opaque iterator for Bit_Set_256 */
+typedef void * Bit_Set_256_Iterator;
+
+Bit_Set_256_Iterator
+               bs256_iter_new(Bit_Set_256 bs256lags);
+void           bs256_iter_free(Bit_Set_256_Iterator iter);
+void           bs256_iter_reset(Bit_Set_256_Iterator iter);
+int            bs256_iter_next(Bit_Set_256_Iterator  iter);
+
+Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
+Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
+
+
 
 // test case
 
@@ -212,35 +246,6 @@ Circular_String_Buffer * csb_new(int size);
 void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
 GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
 
-
-typedef struct {
-   uint8_t bytes[32];
-} Bit_Set_256;
-
-extern const Bit_Set_256 EMPTY_BIT_SET_256;
-
-Bit_Set_256    bs256_add(Bit_Set_256 flags, uint8_t val);
-bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
-int            bs256_first_bit_set(Bit_Set_256 bitset);
-bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
-Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
-Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
-Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
-int            bs256_count(Bit_Set_256 set);
-char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);
-Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
-
-/** Opaque iterator for Bit_Set_256 */
-typedef void * Bit_Set_256_Iterator;
-
-Bit_Set_256_Iterator
-               bs256_iter_new(Bit_Set_256 bs256lags);
-void           bs256_iter_free(Bit_Set_256_Iterator iter);
-void           bs256_iter_reset(Bit_Set_256_Iterator iter);
-int            bs256_iter_next(Bit_Set_256_Iterator  iter);
-
-Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
-Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
 
 #ifdef __cplusplus
 }    // extern "C"
