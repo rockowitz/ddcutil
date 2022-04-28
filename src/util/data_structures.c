@@ -1648,7 +1648,7 @@ bs256_to_string(
 }
 
 
-#define BBF_ITER_MARKER "BBFI"
+#define BS256_ITER_MARKER "BSIM"
 typedef struct {
    char        marker[4];
    Bit_Set_256 bbflags;
@@ -1662,7 +1662,7 @@ typedef struct {
 Bit_Set_256_Iterator
 bs256_iter_new(Bit_Set_256 bbflags) {
    _Bit_Set_256_Iterator * result = malloc(sizeof(_Bit_Set_256_Iterator));
-   memcpy(result->marker, BBF_ITER_MARKER, 4);
+   memcpy(result->marker, BS256_ITER_MARKER, 4);
    result->bbflags = bbflags;   // TODO: save pointer to unopaque _BitByteFlags
    result->lastpos = -1;
    return result;
@@ -1680,7 +1680,7 @@ bs256_iter_free(
    _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
 
    if (bs256_iter) {
-      assert(memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+      assert(memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
       iter->marker[3] = 'x';
       free(iter);
    }
@@ -1697,7 +1697,7 @@ bs256_iter_reset(
       Bit_Set_256_Iterator bs256_iter)
 {
    _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
-   assert(iter && memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+   assert(iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
 
    iter->lastpos = -1;
 }
@@ -1714,7 +1714,7 @@ bs256_iter_next(
       bs256_iter)
 {
    _Bit_Set_256_Iterator * iter = (_Bit_Set_256_Iterator *) bs256_iter;
-   assert( iter && memcmp(iter->marker, BBF_ITER_MARKER, 4) == 0);
+   assert( iter && memcmp(iter->marker, BS256_ITER_MARKER, 4) == 0);
    // printf("(%s) Starting. lastpos = %d\n", __func__, iter->lastpos);
 
    int result = -1;
@@ -1731,7 +1731,7 @@ bs256_iter_next(
 
 
 // TODO:
-// Extracted from feature_list.cpp in ddcui. parsed_custom_feature_list()
+// Extracted from feature_list.cpp in ddcui. parse_custom_feature_list()
 // should be rewritten to call this function.
 
 /** Parse a string containing a list of hex values.
