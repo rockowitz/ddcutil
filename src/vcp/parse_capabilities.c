@@ -815,7 +815,7 @@ Byte_Bit_Flags get_parsed_capabilities_feature_ids(
                free_synthetic_vcp_entry(vfte);
          }
          if (add_feature_to_list)
-            bbf_set(flags, frec->feature_id);
+            bbf_insert(flags, frec->feature_id);
       }
    }
 

@@ -1281,7 +1281,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
       Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
       if (!sysfs_is_ignorable_i2c_device(cur->busno))
       // if (is_potential_i2c_display(cur))
-         result = bs256_add(result, cur->busno);
+         result = bs256_insert(result, cur->busno);
    }
    DBGMSF(debug, "Returning: %s", bs256_to_string(result, "0x", ", "));
    return result;

@@ -99,8 +99,8 @@ void app_probe_display_by_dh(Display_Handle * dh)
       f0printf(fout, "\nReadable features declared in capabilities string: %s\n",
                      bbf_to_string(features_declared));
 
-      Byte_Bit_Flags caps_not_seen = bbf_subtract(features_declared, features_seen);
-      Byte_Bit_Flags seen_not_caps = bbf_subtract(features_seen, features_declared);
+      Byte_Bit_Flags caps_not_seen = bbf_and_not(features_declared, features_seen);
+      Byte_Bit_Flags seen_not_caps = bbf_and_not(features_seen, features_declared);
 
       f0printf(fout, "\nMCCS (VCP) version reported by capabilities: %s\n",
                format_vspec(pcaps->parsed_mccs_version));
@@ -112,7 +112,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
       if (bbf_count_set(caps_not_seen) > 0) {
          f0printf(fout, "\nFeatures declared as readable capabilities but not found by scanning:\n");
          for (int code = 0; code < 256; code++) {
-            if (bbf_is_set(caps_not_seen, code)) {
+            if (bbf_contains(caps_not_seen, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
                Display_Feature_Metadata * dfm =
                      dyn_get_feature_metadata_by_dh(code, dh, /*with_default=*/true);
@@ -140,7 +140,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
       if (bbf_count_set(seen_not_caps) > 0) {
          f0printf(fout, "\nFeatures found by scanning but not declared as capabilities:\n");
          for (int code = 0; code < 256; code++) {
-            if (bbf_is_set(seen_not_caps, code)) {
+            if (bbf_contains(seen_not_caps, code)) {
                VCP_Feature_Table_Entry * vfte = vcp_find_feature_by_hexid_w_default(code);
 
                Display_Feature_Metadata * dfm =

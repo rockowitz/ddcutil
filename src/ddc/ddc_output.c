@@ -814,7 +814,7 @@ show_feature_set_values2_dfm(
                   f0printf(outf, "%s\n", formatted_value);
                free(formatted_value);
                if (features_seen)
-                  bbf_set(features_seen, dfm->feature_code);  // note that feature was read
+                  bbf_insert(features_seen, dfm->feature_code);  // note that feature was read
             }
             else {
                // or should I check features_ct == 1?

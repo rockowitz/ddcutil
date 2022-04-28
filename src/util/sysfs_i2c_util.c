@@ -278,7 +278,7 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
          if (debug)
             printf("(%s) dnbuf=%s", __func__, dnbuf);
          if (dir1) {
-            bbf_set(result, cardno);
+            bbf_insert(result, cardno);
             closedir(dir1);
          }
          else {

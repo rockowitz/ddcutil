@@ -354,7 +354,7 @@ void bbf_free(Byte_Bit_Flags bbflags) {
  * @param bbflags instance handle
  * @param val     number of bit to set
  */
-void bbf_set(Byte_Bit_Flags bbflags, Byte val) {
+void bbf_insert(Byte_Bit_Flags bbflags, Byte val) {
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
 
@@ -367,7 +367,7 @@ void bbf_set(Byte_Bit_Flags bbflags, Byte val) {
    flags->byte[flagndx] |= flagbit;
 #endif
 
-   Bit_Set_256 newval =  bs256_add(bs256_from_bbf(bbflags), val);
+   Bit_Set_256 newval =  bs256_insert(bs256_from_bbf(bbflags), val);
    memcpy( flags->byte, newval.bytes, 32);
 }
 
@@ -378,7 +378,7 @@ void bbf_set(Byte_Bit_Flags bbflags, Byte val) {
  * @param val     number of bit to test
  * @return        true/false
  */
-bool bbf_is_set(Byte_Bit_Flags bbflags, Byte val) {
+bool bbf_contains(Byte_Bit_Flags bbflags, Byte val) {
 // #ifdef OLD
    BYTE_BIT_UNOPAQUE(flags, bbflags);
    BYTE_BIT_VALIDATE(flags);
@@ -411,7 +411,7 @@ bool bbf_eq(Byte_Bit_Flags flags1, Byte_Bit_Flags flags2) {
  * @param bbflags2 handle to second instance
  * @return newly created instance with the result
  */
-Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2) {
+Byte_Bit_Flags bbf_and_not(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2) {
    BYTE_BIT_UNOPAQUE(flags1, bbflags1);
    BYTE_BIT_VALIDATE(flags1);
    BYTE_BIT_UNOPAQUE(flags2, bbflags2);
@@ -520,7 +520,7 @@ char * bbf_to_string(Byte_Bit_Flags bbflags) {
    unsigned int flagno = 0;
    for (flagno = 0; flagno < 256; flagno++) {
       Byte flg = (Byte) flagno;
-      if (bbf_is_set(flags, flg)) {
+      if (bbf_contains(flags, flg)) {
          if (pos > buffer) {
             *pos  = ' ';
             pos++;
@@ -556,7 +556,7 @@ int bbf_to_bytes(Byte_Bit_Flags bbflags, Byte * buffer, int buflen) {
    for (flagno = 0; flagno < 256; flagno++) {
       Byte flg = (Byte) flagno;
       // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
-      if (bbf_is_set(flags, flg)) {
+      if (bbf_contains(flags, flg)) {
          // printf("(%s) Flag is set: %d, 0x%02x\n", __func__, flagno, flg);
          buffer[bufpos++] = flg;
       }
@@ -583,7 +583,7 @@ Buffer * bbf_to_buffer(Byte_Bit_Flags bbflags) {
    for (unsigned int flagno = 0; flagno < 256; flagno++) {
       Byte flg = (Byte) flagno;
       // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
-      if (bbf_is_set(flags, flg)) {
+      if (bbf_contains(flags, flg)) {
          buffer_add(buf, flg);
       }
    }
@@ -654,7 +654,7 @@ int bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter) {
 
    int result = -1;
    for (int ndx = iter->lastpos + 1; ndx < 256; ndx++) {
-      if (bbf_is_set(iter->bbflags, ndx)) {
+      if (bbf_contains(iter->bbflags, ndx)) {
          result = ndx;
          iter->lastpos = ndx;
          break;
@@ -686,7 +686,7 @@ bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbflags) {
    for (item = 0; item < 256; item++) {
       // printf("item=%d\n", item);
       bool r1 = bva_contains(bva, item);
-      bool r2 = bbf_is_set(bbflags, item);
+      bool r2 = bbf_contains(bbflags, item);
       if (r1 != r2)
          result = false;
    }
@@ -704,7 +704,7 @@ Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva) {
 
    for (int ndx = 0; ndx < bva_length(bva); ndx++) {
       Byte b = bva_get(bva, ndx);
-      bbf_set(bbf, b);
+      bbf_insert(bbf, b);
    }
    return bbf;
 }
@@ -731,7 +731,7 @@ void bva_appender(void * data_struct, Byte val) {
 void bbf_appender(void * data_struct, Byte val) {
    Byte_Bit_Flags bbf = (Byte_Bit_Flags) data_struct;
    assert(bbf);
-   bbf_set(bbf, val);
+   bbf_insert(bbf, val);
 }
 
 
@@ -829,7 +829,7 @@ const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
  *  @param  flagno  flag number to set (0 based)
  *  @return updated set
  */
-Bit_Set_256 bs256_add(
+Bit_Set_256 bs256_insert(
     Bit_Set_256 bitset,
     Byte        bitno)
 {
@@ -1190,8 +1190,8 @@ bs256_iter_next(
  *  @return #Bit_Set_256, will be EMPTY_BIT_SET_256 if errors
  *
  *  @remark
- *  If error_msgs_loc is non-null on entry, on return it is non-null iff there
- *  are error messages, i.e. a 0 length array is never returned
+ *  If error_msgs_loc is non-null on entry, on return the value it points to
+ *  is non-null iff there are error messages, i.e. a 0 length array is never returned
  */
 Bit_Set_256 bs256_from_string(
       char *                         unparsed_string,
@@ -1234,7 +1234,7 @@ Bit_Set_256 bs256_from_string(
               printf("(parse_features_list) token= |%s|\n", token);
            Byte hex_value = 0;
            if ( any_one_byte_hex_string_to_byte_in_buf(token, &hex_value) ) {
-              result = bs256_add(result, hex_value);
+              result = bs256_insert(result, hex_value);
            }
            else {
               if (debug)

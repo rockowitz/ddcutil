@@ -50,10 +50,10 @@ typedef void * Byte_Bit_Flags;
 
 Byte_Bit_Flags bbf_create();
 void           bbf_free(Byte_Bit_Flags flags);
-void           bbf_set(Byte_Bit_Flags flags, Byte val);
-bool           bbf_is_set(Byte_Bit_Flags flags, Byte val);
+void           bbf_insert(Byte_Bit_Flags flags, Byte val);
+bool           bbf_contains(Byte_Bit_Flags flags, Byte val);
 bool           bbf_eq(Byte_Bit_Flags flags1, Byte_Bit_Flags flags2);
-Byte_Bit_Flags bbf_subtract(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
+Byte_Bit_Flags bbf_and_not(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
 char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
 int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
 int            bbf_to_bytes(Byte_Bit_Flags  flags, Byte * buffer, int buflen);
@@ -86,9 +86,11 @@ void bbf_appender(void * data_struct, Byte val);
 // Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
 bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
 
-// TODO: Converge Bit_Set_256, Byte_Bit_Flags
-// But note, Bit_Set_256 is an 8 byte data structure, Byte_Bit_Flags is a pointer to
-// an 8 byte data structure.
+
+// test case
+
+void test_value_array();
+
 
 typedef struct {
    uint8_t bytes[32];
@@ -96,7 +98,7 @@ typedef struct {
 
 extern const Bit_Set_256 EMPTY_BIT_SET_256;
 
-Bit_Set_256    bs256_add(Bit_Set_256 flags, uint8_t val);
+Bit_Set_256    bs256_insert(Bit_Set_256 flags, uint8_t val);
 bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
 int            bs256_first_bit_set(Bit_Set_256 bitset);
 bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
@@ -118,12 +120,6 @@ int            bs256_iter_next(Bit_Set_256_Iterator  iter);
 
 Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
 Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
-
-
-
-// test case
-
-void test_value_array();
 
 
 //
@@ -245,7 +241,6 @@ typedef struct {
 Circular_String_Buffer * csb_new(int size);
 void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
 GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
-
 
 #ifdef __cplusplus
 }    // extern "C"

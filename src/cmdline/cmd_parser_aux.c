@@ -293,7 +293,7 @@ bool parse_feature_id_or_subset(char * val, int cmd_id, Feature_Set_Ref * fsref)
      if (ok) {
         fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
         fsref->specific_feature = feature_hexid;
-        bs256_add(fsref->features, feature_hexid);     // for future
+        bs256_insert(fsref->features, feature_hexid);     // for future
      }
    }
    DBGMSF(debug, "Returning: %s", sbool(ok));
@@ -314,7 +314,7 @@ bool parse_feature_ids(char ** vals, int vals_ct, int cmd_id, Feature_Set_Ref * 
       ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
       DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(ok), feature_hexid);
       if (ok) {
-         fsref->features = bs256_add(fsref->features, feature_hexid);
+         fsref->features = bs256_insert(fsref->features, feature_hexid);
       }
    }
    if (ok)
@@ -348,7 +348,7 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
          if (ok) {
             fsref->subset = VCP_SUBSET_SINGLE_FEATURE;
             // fsref->specific_feature = feature_hexid;
-            fsref->features = bs256_add(fsref->features, feature_hexid);     // for future
+            fsref->features = bs256_insert(fsref->features, feature_hexid);     // for future
          }
       }
    }
@@ -361,7 +361,7 @@ Feature_Set_Ref * parse_feature_ids_or_subset(int cmd_id, char **vals, int vals_
          ok = any_one_byte_hex_string_to_byte_in_buf(vals[ndx], &feature_hexid);
          DBGMSF(debug, "vals[ndx]=%s, ok=%s, feature_hexid=0x%02x", vals[ndx], sbool(ok), feature_hexid);
          if (ok) {
-            fsref->features = bs256_add(fsref->features, feature_hexid);
+            fsref->features = bs256_insert(fsref->features, feature_hexid);
          }
       }
       if (ok)
