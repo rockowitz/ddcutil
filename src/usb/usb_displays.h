@@ -70,6 +70,7 @@ Usb_Monitor_Info *
             usb_find_monitor_by_dh(Display_Handle * dh);
 bool        is_possible_monitor_by_hiddev_name(const char * hiddev_name);
 GPtrArray * get_usb_monitor_list();
+GPtrArray * get_usb_open_errors();
 void        init_usb_displays();
 
 #endif /* USB_DISPLAYS_H_ */

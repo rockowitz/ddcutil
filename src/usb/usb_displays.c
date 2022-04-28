@@ -49,6 +49,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;  // may be unused if all dia
 
 // Global variables
 static GPtrArray * usb_monitors = NULL;    // array of Usb_Monitor_Info
+static GPtrArray * usb_open_errors = NULL;
 
 
 #define HID_USAGE_PAGE_MASK   0xffff0000
@@ -372,7 +373,7 @@ is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
  */
 GPtrArray *
 get_usb_monitor_list() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "Starting...");
    DDCA_Output_Level ol = get_output_level();
 
@@ -383,6 +384,7 @@ get_usb_monitor_list() {
    }
 
    usb_monitors = g_ptr_array_new();
+   usb_open_errors = g_ptr_array_new();
 
    GPtrArray * hiddev_names = get_hiddev_device_names();
    for (int devname_ndx = 0; devname_ndx < hiddev_names->len; devname_ndx++) {
@@ -417,6 +419,12 @@ get_usb_monitor_list() {
                            devsum->product_name);
                free_usb_detailed_device_summary(devsum);
             }
+
+            Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
+            boe->io_mode = DDCA_IO_USB;
+            boe->devno = hiddev_name_to_number(hiddev_fn);    // is this simple or fully qualified?
+            boe->error = fd;
+            g_ptr_array_add(usb_open_errors, boe);
          }
       }
       else {     // fd == 0 should never occur
@@ -499,6 +507,10 @@ get_usb_monitor_list() {
    return usb_monitors;
 }
 
+
+GPtrArray * get_usb_open_errors() {
+   return usb_open_errors;
+}
 
 
 //
