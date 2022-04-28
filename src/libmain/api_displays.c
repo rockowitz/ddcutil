@@ -750,6 +750,30 @@ ddca_get_display_info(
 }
 
 
+void set_ddca_error_detail_from_open_errors() {
+   bool debug = false;
+   GPtrArray * errs = ddc_get_bus_open_errors();
+   if (errs && errs->len > 0) {
+      Error_Info * master_error = errinfo_new2(DDCRC_OTHER, __func__, "Error(s) opening ddc devices");
+      for (int ndx = 0; ndx < errs->len; ndx++) {
+         Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
+         Error_Info * errinfo = NULL;
+         if (cur->io_mode == DDCA_IO_I2C)
+            errinfo = errinfo_new2(cur->error, __func__, "Error %s opening /dev/i2c-%d",
+                                             psc_desc(cur->error), cur->devno);
+         else
+            errinfo = errinfo_new2(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d",
+                                             psc_desc(cur->error), cur->devno);
+         errinfo_add_cause(master_error, errinfo);
+      }
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
+      errinfo_free_with_report(master_error, debug, __func__);
+      save_thread_error_detail(public_error_detail);
+   }
+}
+
+
+
 DDCA_Status
 ddca_get_display_refs(
       bool                include_invalid_displays,
@@ -788,6 +812,9 @@ ddca_get_display_refs(
 
    *drefs_loc = result_list;
    assert(*drefs_loc);
+
+   set_ddca_error_detail_from_open_errors();
+
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0. Returned list has %d displays", dref_ct);
    return 0;
 }
@@ -834,6 +861,7 @@ ddca_get_display_info_list2(
       dbgrpt_display_info_list(result_list, 2);
    }
 
+   set_ddca_error_detail_from_open_errors();
    *dlist_loc = result_list;
    assert(*dlist_loc);
    DBGTRC_RETURNING(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
