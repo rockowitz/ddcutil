@@ -1,4 +1,4 @@
-/** \file app_probe.c
+/** @file app_probe.c
   * Implement PROBE command
   */
 
@@ -32,6 +32,12 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
+
+/** Probe a display specified by its #Display_Handle.
+ *  Output is written to stdout.
+ *
+ *  @param dh display handle
+ */
 void app_probe_display_by_dh(Display_Handle * dh)
 {
    FILE * fout = stdout;
@@ -213,6 +219,11 @@ void app_probe_display_by_dh(Display_Handle * dh)
 }
 
 
+/** Probe a display specified by a #Display_Ref.
+ *  Output is written to stdout.
+ *
+ *  @param dh display reference
+ */
 void app_probe_display_by_dref(Display_Ref * dref) {
    FILE * fout = stdout;
    Display_Handle * dh = NULL;
