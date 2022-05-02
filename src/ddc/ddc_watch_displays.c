@@ -39,9 +39,6 @@
 /** \endcond */
 
 
-
-
-
 // Experimental code
 static bool watch_displays_enabled = true;
 
@@ -548,6 +545,7 @@ ddc_start_watch_displays()
       if (bbf_count_set(drm_card_numbers) == 0) {
          rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
          ddcrc = DDCRC_INVALID_OPERATION;
+         bbf_free(drm_card_numbers);
       }
       else {
          g_mutex_lock(&watch_thread_mutex);
