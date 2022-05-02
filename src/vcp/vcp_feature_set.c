@@ -291,6 +291,7 @@ create_vcp_feature_set_from_feature_set_ref(
           VCP_Feature_Table_Entry* vcp_entry = vcp_find_feature_by_hexid_w_default(hexid);
           g_ptr_array_add(fset->members, vcp_entry);
        }
+       bs256_iter_free(iter);
     }
     else {
        fset = create_vcp_feature_set(fsref->subset, vcp_version, flags);
