@@ -97,12 +97,12 @@ parse_vcp_value(
       ok = false;
    }
    else if (*parsed_value_loc < 0 || *parsed_value_loc > 65535) {
-      f0printf(errf, "Number must be in range 0..65535:  %ld\n", *parsed_value_loc);
+      f0printf(errf, "Number must be in range 0..65535:  %d\n", *parsed_value_loc);
       ok = false;
    }
 #endif
 
-   DBGMSF(debug, "Done. *parsed_value_loc=%ld, returning: %s", *parsed_value_loc, SBOOL(ok));
+   DBGMSF(debug, "Done. *parsed_value_loc=%d, returning: %s", *parsed_value_loc, SBOOL(ok));
    return ok;
 }
 
