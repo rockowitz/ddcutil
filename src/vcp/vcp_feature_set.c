@@ -120,7 +120,6 @@ create_vcp_feature_set(
                g_ptr_array_add(fset->members, vcp_entry);
             }
          }
-
          else {  // unknown feature or manufacturer specific feature
             g_ptr_array_add(fset->members, vcp_create_dummy_feature_for_hexid(id));
             if (ndx >= 0xe0 && (get_output_level() >= DDCA_OL_VERBOSE && !exclude_table_features) ) {
@@ -213,7 +212,6 @@ create_vcp_feature_set(
                   showit = false;
             }
          }
-
          if ( vflags & DDCA_TABLE)  {
             // DBGMSF(debug, "Before final check for table feature.  showit=%s", bool_repr(showit));
             if (exclude_table_features)
