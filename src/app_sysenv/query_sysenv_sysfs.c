@@ -659,21 +659,18 @@ void insert_drm_xref(
    DBGMSF(debug, "depth=%d, cur_dir_name=%s, i2c_node_name = %s, edidbytes=%p",
                  depth, cur_dir_name, i2c_node_name, edidbytes);
    int d2 = depth;
-   // rpt_nl();
+   assert(cur_dir_name);
+   // i2c_node_name should should always be non-null, but don't assume
+   assert(edidbytes);
 
    int drm_busno =  i2c_path_to_busno(cur_dir_name);
    DBGMSF(debug, "drm_busno=%d", drm_busno);
 
-   Device_Id_Xref * xref = NULL;
-   if (i2c_node_name) {
-      // DBGMSG("Using i2c_node_name");
-
-      xref = device_xref_find_by_busno(drm_busno);
-      if (!xref)
-         DBGMSG("Unexpected. Bus %d not in xref table", drm_busno);
-   }
+   Device_Id_Xref * xref = device_xref_find_by_busno(drm_busno);
+   if (!xref)
+      DBGMSG("Unexpected. Bus %d not in xref table", drm_busno);
    // can we assert that edidbytes != NULL?
-   if (!xref && edidbytes) {   // i.e. if !i2c_node_name or lookup by busno failed
+   if (!xref) {
       // DBGMSG("searching by EDID");
 #ifdef SYSENV_TEST_IDENTICAL_EDIDS
                if (first_edid) {
@@ -693,9 +690,9 @@ void insert_drm_xref(
          rpt_vstring(d2, "Multiple displays have same EDID ...%s", xref->edid_tag);
          rpt_vstring(d2, "drm name, and bus number in device cross reference table may be incorrect");
       }
-      // xref->sysfs_drm_name = strdup(dent->d_name);
       xref->sysfs_drm_name = strdup(cur_dir_name);
-      xref->sysfs_drm_i2c  = strdup(i2c_node_name);
+      if (i2c_node_name)
+         xref->sysfs_drm_i2c  = strdup(i2c_node_name);
       xref->sysfs_drm_busno = drm_busno;
       DBGMSF(debug, "sysfs_drm_busno = %d", xref->sysfs_drm_busno);
    }
@@ -713,6 +710,8 @@ void report_one_connector(
    int d1 = depth+1;
    int d2 = depth+2;
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   assert(dirname);
+   assert(simple_fn);
 
    rpt_nl();
    rpt_vstring(depth, "Connector: %s", simple_fn);
@@ -723,12 +722,12 @@ void report_one_connector(
    RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
    RPT_ATTR_EDID(d1, &edid_byte_array, dirname, simple_fn, "edid");
 
-   char * i2c_subdir_name = NULL;
+   char * i2c_subdir_name = NULL;    // i2c-N
    GET_ATTR_SINGLE_SUBDIR(&i2c_subdir_name, is_i2cN, NULL, dirname, simple_fn);
    // rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
 
    if (i2c_subdir_name) {
-      char * node_name = NULL;
+      char * node_name = NULL;   // e.g. "AMDGPU DM aux hw bus 0"
       rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
       RPT_ATTR_TEXT(d2, &node_name, dirname, simple_fn, i2c_subdir_name, "name");
 
