@@ -144,9 +144,9 @@ void free_parsed_capabilities(Parsed_Capabilities * pcaps) {
 
 /* Point to the first non-space character in a string.
  *
- * \param  s   pointer to string
+ * @param  s   pointer to string
  * \parsm  len length of string
- * \return pointer to first non-space character of string,
+ * @return pointer to first non-space character of string,
  *         end of string if not found
  */
 char * ltrim(char * s, int len) {
@@ -161,10 +161,10 @@ char * ltrim(char * s, int len) {
 /** Finds the matching closing parenthesis for the
  *  current open parenthesis.
  *
- *  \param start    first character to examine (must be '(')
- *  \param end      points to end of string, i.e. the byte
+ *  @param start    first character to examine (must be '(')
+ *  @param end      points to end of string, i.e. the byte
  *                  after the last character to examine
- *  \return pointer pointer to closing parenthesis,
+ *  @return pointer pointer to closing parenthesis,
  *          end if closing parenthesis not found
  */
 
@@ -222,17 +222,17 @@ update_validity(
 /** Parses the value of the cmds segment, which is a list of 2 character values
  *  separated by spaces.
  *
- * \param   start    start of values
- * \param   len      segment length
- * \param   messages accumulates error messages
- * \return  #Byte_Value_Array indicating command values seen,
+ * @param   start    start of values
+ * @param   len      segment length
+ * @param   messages accumulates error messages
+ * @return  #Byte_Value_Array indicating command values seen,
  *          NULL if a parsing error
  *
- *  \remark
+ *  @remark
  *  Alternatively, return a ByteBitFlag value, or pass a
  *  preallocted ByteBitFlag instance
  *
- *  \remark
+ *  @remark
  *  On every monitor tested, the values are separated by spaces.
  *  However, per the Access Bus spec, Section 7, values need not be separated by spaces,
  *  e.g. 010203 is valid
@@ -536,9 +536,9 @@ struct {
 
 /** Extract the next top level segment of the capabilities string.
  *
- *  \param  start   current position in the capabilities string
- *  \param  len     length of remainder of capabilities string
- *  \return pointer to newly allocated Capabilities_Segment describing the segment
+ *  @param  start   current position in the capabilities string
+ *  @param  len     length of remainder of capabilities string
+ *  @return pointer to newly allocated Capabilities_Segment describing the segment
  *          It is the responsibility of the caller to free the returned struct,
  *          BUT NOT THE LOCATIONS IT ADDRESSES
  */
