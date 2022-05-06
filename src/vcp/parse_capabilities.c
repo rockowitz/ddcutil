@@ -20,6 +20,7 @@
 #include "base/core.h"
 #include "base/ddc_command_codes.h"
 #include "base/displays.h"
+#include "base/rtti.h"
 #include "base/vcp_version.h"
 
 #include "vcp/parsed_capabilities_feature.h"
@@ -27,6 +28,8 @@
 
 #include "vcp/parse_capabilities.h"
 
+
+static DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
 #undef CAPABILITIES_TESTS
 // #define CAPABILITIES_TESTS
@@ -633,9 +636,10 @@ Parsed_Capabilities * parse_capabilities(
 {
    assert(buf_start);
    bool debug = false;
-   if (debug) {
-      // hex_dump((Byte*)buf_start, buf_len);
-      DBGMSF(debug, "Starting. buf_len=%d, buf_start->|%.*s|", buf_len, buf_len, buf_start);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "buf_len=%d, buf_start=%p->|%.*s|",
+                                       buf_start, buf_len, buf_len, buf_start);
+   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
+      rpt_hex_dump((Byte*)buf_start, buf_len, 1);
    }
    
    // right trim white space
@@ -752,11 +756,7 @@ Parsed_Capabilities * parse_capabilities(
    }
 
 bye:
-   if (debug) {
-      dbgrpt_parsed_capabilities(pcaps, 0);  // handles NULL
-      DBGMSF(debug, "Done.     Returning %p", pcaps);
-   }
-
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Parsed_Capabilities", dbgrpt_parsed_capabilities, pcaps);
    return pcaps;
 }
 
@@ -877,4 +877,12 @@ void test_parse_caps() {
    free_parsed_capabilities(pcaps);
 }
 #endif
+
+
+/** Module initialization */
+void init_parse_capabilities() {
+   RTTI_ADD_FUNC(parse_capabilities);
+}
+
+
 

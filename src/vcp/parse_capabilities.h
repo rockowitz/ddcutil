@@ -1,7 +1,7 @@
 /** @file parse_capabilities.h
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef PARSE_CAPABILITIES_H_
@@ -47,6 +47,7 @@ Byte_Bit_Flags       get_parsed_capabilities_feature_ids(Parsed_Capabilities * p
 bool                 parsed_capabilities_supports_table_commands(Parsed_Capabilities * pcaps);
 char *               parsed_capabilities_validity_name(Parsed_Capabilities_Validity validity);
 void                 dbgrpt_parsed_capabilities(Parsed_Capabilities * pcaps, int depth);
+void                 init_parse_capabilities();
 
 
 // Tests
