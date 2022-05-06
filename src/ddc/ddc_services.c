@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -23,8 +23,9 @@
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 
-#include "vcp/vcp_feature_codes.h"
+#include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
+#include "vcp/vcp_feature_codes.h"
 
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_files.h"
@@ -166,6 +167,7 @@ void init_ddc_services() {
    // ddc:
    try_data_init();
    init_persistent_capabilities();
+   init_parse_capabilities();
    init_vcp_feature_codes();
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_dyn_feature_files();
