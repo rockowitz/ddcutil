@@ -32,8 +32,24 @@ have no effect.
 
   Sleep after read has been eliminated
 
+getvcp, vcpinfo allows specifiecation of multiple feature codes
 
 
+deprecate --sleep-less family of options, no longer has any effect
+
+building:   don't link libi2c 
+
+libddcutil: 
+- ddca_get_display_refs(), ddca_get_display_info_list2(): 
+  - open errors are stored in ddca_get_error_info() ??
+
+ddcutil: 
+- better reporting of open errors due to permissions
+
+ENVIRONMENT command: 
+- add msg re SYSENV_QUICK_TEST environment variable
+
+rewrote dynamic sleep adjustment (--dsa) algorithm for better adjustment of waits
 
 
 
@@ -44,6 +60,9 @@ have no effect.
 -- miscellaneous memory leaks
 
 -- don't use g_byte_array_steal(), reuires glib 2.60
+
+UDF files: 
+- incorrect flag was set for keyword NC
 
 ## [1.2.2] 2022-01-22
 
