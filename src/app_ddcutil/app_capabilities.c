@@ -96,7 +96,7 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
 void
 app_show_parsed_capabilities(Display_Handle * dh, Parsed_Capabilities * pcap)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    assert(pcap);
 
@@ -116,7 +116,7 @@ app_show_parsed_capabilities(Display_Handle * dh, Parsed_Capabilities * pcap)
 DDCA_Status
 app_capabilities(Display_Handle * dh)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    char * capabilities_string;
    DDCA_Status ddcrc;
