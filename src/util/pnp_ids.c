@@ -827,7 +827,7 @@ Pnp_Id_Table_Entry pnp_id_table[] =   {
    {"GRY","Robert Gray Company"},
    {"GSB","NIPPONDENCHI CO,.LTD"},
    {"GSC","General Standards Corporation"},
-   {"GSM","Goldstar Company Ltd"},
+   {"GSM","Goldstar Company Ltd (LG)"},
    {"GST","Graphic SystemTechnology"},
    {"GSY","Grossenbacher Systeme AG"},
    {"GTC","Graphtec Corporation"},
