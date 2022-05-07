@@ -1633,6 +1633,23 @@ void buffer_dump(Buffer * buffer) {
 }
 
 
+/** Displays all fields of the Buffer using rpt_* functions.
+ *  This is a debugging function.
+ *
+ *  @param buffer   pointer to Buffer instance
+ *  @param depth    logical indentation depth
+ *
+ *  @remark
+ *  Output is written to stdout.
+ */
+void buffer_rpt(Buffer * buffer, int depth) {
+   rpt_vstring(depth, "Buffer at %p, bytes addr=%p, len=%d, max_size=%d",
+         (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
+   if (buffer->bytes)
+      rpt_hex_dump(buffer->bytes, buffer->len, depth);
+}
+
+
 //
 // Identifier id to name and description lookup
 //

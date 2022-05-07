@@ -151,6 +151,7 @@ void     buffer_append(Buffer * buffer, Byte * bytes, int bytect);
 void     buffer_strcat(Buffer * buffer, char * str);
 void     buffer_add(Buffer * buffer, Byte byte);
 void     buffer_dump(Buffer * buffer);
+void     buffer_rpt(Buffer * buffer, int depth);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 void     buffer_extend(Buffer* buf, int addl_bytes);
 
