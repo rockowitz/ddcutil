@@ -243,7 +243,7 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
          }
    );
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
          feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
          subset, feature_subset_name(subset));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -534,7 +534,7 @@ ddca_get_feature_metadata_by_dref(
                *metadata_loc = external_metadata;
          }
    );
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    ASSERT_IFF(psc==0, *metadata_loc);
    return psc;
 }
@@ -572,7 +572,7 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
                ASSERT_IFF(psc == 0, *metadata_loc);
-               DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+               DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
                                         "ddca_dh=%p->%s", ddca_dh, dh_repr_t(ddca_dh));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
@@ -891,7 +891,7 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
             }
       }
    );
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 

@@ -81,7 +81,7 @@ app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc
       ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "*capabilities_string_loc -> %s",
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "*capabilities_string_loc -> %s",
                                              *capabilities_string_loc);
    ASSERT_IFF(*capabilities_string_loc, psc==0);
    return psc;
@@ -140,7 +140,7 @@ app_capabilities(Display_Handle * dh)
          free_parsed_capabilities(pcaps);
       }
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 

@@ -573,7 +573,7 @@ ddc_start_watch_displays()
          g_mutex_unlock(&watch_thread_mutex);
       }
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
                                         watch_displays_enabled, watch_thread);
    return ddcrc;
 }
@@ -618,7 +618,7 @@ ddc_stop_watch_displays()
       g_mutex_unlock(&watch_thread_mutex);
 
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
 

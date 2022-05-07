@@ -161,7 +161,7 @@ app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
       g_ptr_array_free(strings, true);
       free(actual_filename);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
@@ -256,7 +256,7 @@ app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
       free_dumpload_data(pdata);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 

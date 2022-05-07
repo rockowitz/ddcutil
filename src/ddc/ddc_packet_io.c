@@ -273,7 +273,7 @@ bye:
    TRACED_ASSERT(ddcrc <= 0);
    TRACED_ASSERT( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr_t(*dh_loc));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr_t(*dh_loc));
    return ddcrc;
 }
 
@@ -337,7 +337,7 @@ ddc_close_display(Display_Handle * dh) {
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "dref=%s", dref_repr_t(dref));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "dref=%s", dref_repr_t(dref));
    return rc;
 }
 
@@ -464,7 +464,7 @@ DDCA_Status ddc_i2c_write_read_raw(
       COUNT_STATUS_CODE(rc);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -503,7 +503,7 @@ DDCA_Status ddc_write_read_raw(
                  p_rcvd_bytes_ct
               );
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    if (psc == 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
              "*p_rcvd_bytes_ct=%d, readbuf: %s",
@@ -851,7 +851,7 @@ ddc_i2c_write_only(
             : SE_POST_WRITE;
    // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
    TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 

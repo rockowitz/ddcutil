@@ -72,7 +72,7 @@ ddca_get_capabilities_string(
             *pcaps_loc = strdup(p_cap_string);
          }
          ASSERT_IFF(psc==0, *pcaps_loc);
-         DBGTRC_RETURNING(debug, DDCA_TRC_API, psc,
+         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
                "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
                dh_repr_t((Display_Handle *) ddca_dh),
                *pcaps_loc, *pcaps_loc);
@@ -211,7 +211,7 @@ ddca_parse_capabilities_string(
 
    *parsed_capabilities_loc = result;
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
    if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
 

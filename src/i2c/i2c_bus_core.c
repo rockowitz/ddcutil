@@ -149,7 +149,7 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
    return result;
 }
 
@@ -250,7 +250,7 @@ retry:
 
    assert(result <= 0);
    // if (addr == 0x37)  result = -EBUSY;    // for testing
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
 #endif
@@ -495,7 +495,7 @@ i2c_get_edid_bytes_directly(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 #endif
@@ -542,7 +542,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -668,7 +668,7 @@ bye:
    if (rc < 0)
       rawedid->len = 0;
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "tries=%d", tryctr);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "tries=%d", tryctr);
    return rc;
 }
 
@@ -705,10 +705,10 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
    *edid_ptr_loc = edid;
    if (edid)
-      DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*edid_ptr_loc = %p -> ...%s",
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "*edid_ptr_loc = %p -> ...%s",
                                  edid, hexstring3_t(edid->bytes+124, 4, "", 1, false));
    else
-      DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
 
    return rc;
 }
@@ -753,7 +753,7 @@ i2c_detect_x37(int fd) {
       rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc,"");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
    return rc;
 }
 

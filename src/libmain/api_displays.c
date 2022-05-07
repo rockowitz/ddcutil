@@ -300,7 +300,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
          }
       );
    }
-   DBGTRC_RETURNING(debug, DDCA_TRC_API, psc, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
    return psc;
 }
 
@@ -449,7 +449,7 @@ ddca_open_display3(
         *dh_loc = dh;
    }
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s",
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s",
                                              *dh_loc, dh_repr_t(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
@@ -748,7 +748,7 @@ ddca_get_display_info(
          }
    )
 
-   DBGTRC_RETURNING(debug, DDCA_TRC_API, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
    return ddcrc;
 }
 
@@ -867,7 +867,7 @@ ddca_get_display_info_list2(
    set_ddca_error_detail_from_open_errors();
    *dlist_loc = result_list;
    assert(*dlist_loc);
-   DBGTRC_RETURNING(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
                            "Returned list has %d displays", result_list->ct);
    return 0;
 }

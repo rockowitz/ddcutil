@@ -135,7 +135,7 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    }
 
 bye:
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -259,7 +259,7 @@ i2c_fileio_reader(
    }
 
 bye:
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 #endif
@@ -365,7 +365,7 @@ i2c_ioctl_writer(
       rc = -errsv;
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -450,7 +450,7 @@ ioctl_reader1(
       rc = -errsv;
 
    free(messages);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 
@@ -490,7 +490,7 @@ i2c_ioctl_reader(
       rc = ioctl_reader1(fd, slave_addr, bytect, readbuf);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
 

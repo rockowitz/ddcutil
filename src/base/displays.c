@@ -768,7 +768,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
       }
    }
 bye:
-   DBGTRC_RETURNING(debug, DDCA_TRC_BASE, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
 

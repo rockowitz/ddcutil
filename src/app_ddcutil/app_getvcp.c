@@ -156,7 +156,7 @@ app_show_single_vcp_value_by_dfm(
       }
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
 
@@ -205,7 +205,7 @@ app_show_single_vcp_value_by_feature_id(
       dfm_free(dfm);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -249,7 +249,7 @@ app_show_vcp_subset_values_by_dh(
          DBGMSG("Returning: %s", psc_desc(psc));
       }
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -375,6 +375,6 @@ app_show_feature_set_values_by_dh(
             NULL);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }

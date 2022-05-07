@@ -133,7 +133,7 @@ Status_Errno_DDC invoke_i2c_writer(
    assert (rc <= 0);
    RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
 
@@ -177,7 +177,7 @@ Status_Errno_DDC invoke_i2c_reader(
      if (rc == 0) {
         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Bytes read: %s", hexstring_t(readbuf, bytect) );
      }
-     DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "");
+     DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
      return rc;
 }
 

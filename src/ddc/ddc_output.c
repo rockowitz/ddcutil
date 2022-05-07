@@ -727,7 +727,7 @@ ddc_get_formatted_value_for_dfm(
    if (pvalrec)
       free_single_vcp_value(pvalrec);
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc,
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc,
           "*formatted_value_loc=%p -> %s",
           *formatted_value_loc, *formatted_value_loc);
 
@@ -906,7 +906,7 @@ ddc_show_vcp_values(
    psc = show_feature_set_values2_dfm(
             dh, feature_set, collector, flags, features_seen);
    dyn_free_feature_set(feature_set);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, psc, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 

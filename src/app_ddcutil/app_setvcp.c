@@ -293,7 +293,7 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
          break;
       }
    }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc,"");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc,"");
    return ddcrc;
 }
 

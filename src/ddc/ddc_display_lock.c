@@ -200,7 +200,7 @@ lock_distinct_display(
          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    return ddcrc;
 }
 
@@ -228,7 +228,7 @@ DDCA_Status unlock_distinct_display(Distinct_Display_Ref id) {
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RETURNING(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    return ddcrc;
 }
 

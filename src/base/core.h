@@ -312,7 +312,7 @@ bool dbgtrc_returning_expression(
 #define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
-#define DBGTRC_RETURNING(debug_flag, trace_group, rc, format, ...) \
+#define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
     dbgtrc_returning( \
           ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
@@ -330,7 +330,6 @@ bool dbgtrc_returning_expression(
           ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
-
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \

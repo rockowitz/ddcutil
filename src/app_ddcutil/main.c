@@ -466,7 +466,7 @@ find_dref(
    }  // !DISP_ID_BUSNO
 
    *dref_loc = dref;
-   DBGTRC_RETURNING(debug, TRACE_GROUP, final_result,
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, final_result,
                  "*dref_loc = %p -> %s",
                  *dref_loc,
                  dref_repr_t(*dref_loc) );

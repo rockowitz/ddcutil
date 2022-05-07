@@ -589,7 +589,7 @@ create_ddc_base_response_packet(
    else
       *packet_ptr_loc = NULL;
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
    ASSERT_IFF(result==DDCRC_OK, *packet_ptr_loc);
    return result;
 }
@@ -658,7 +658,7 @@ create_ddc_response_packet(
       log_status_code(result, __func__);
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "*packet_ptr_addr=%p", *packet_ptr_addr);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_addr=%p", *packet_ptr_addr);
    assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
    return result;
 }
@@ -860,7 +860,7 @@ interpret_vcp_feature_response_std(
    }
    
    // result = DDCRC_DDC_DATA; // force error for testing
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -985,7 +985,7 @@ create_ddc_typed_response_packet(
       *packet_ptr_loc = NULL;
    }
 
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "*packet_ptr_loc=%p", *packet_ptr_loc);
    if ( (debug || IS_TRACING()) && rc >= 0)
       dbgrpt_packet(*packet_ptr_loc, 2);
 
@@ -1044,7 +1044,7 @@ create_ddc_multi_part_read_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
    return rc;
 }
 #endif
@@ -1104,7 +1104,7 @@ create_ddc_getvcp_response_packet(
    }
    if (rc == 0)
       *packet_ptr = packet;
-   DBGTRC_RETURNING(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "*packet_ptr=%p", *packet_ptr);
    return rc;
 }
 
