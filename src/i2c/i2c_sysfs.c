@@ -1268,11 +1268,13 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
 
 /** Return the bus numbers for all video adapter i2c buses, filtering out
  *  those, such as ones with SMBUS in their name, that are cannot be used
- *  for DDC/CI communication with a monitor communication.
+ *  for DDC/CI communication with a monitor.
  *
  *  The numbers are determined by examining /sys/bus/i2c.
+ *
+ *  This function looks only in /sys. It does not verify that the
+ *  corresponding /dev/i2c-N devices exists.
  */
-
 Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
    bool debug = false;
    Bit_Set_256 result = EMPTY_BIT_SET_256;
@@ -1283,6 +1285,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
       // if (is_potential_i2c_display(cur))
          result = bs256_insert(result, cur->busno);
    }
+   // result = bs256_insert(result, 33); // for testing
    DBGMSF(debug, "Returning: %s", bs256_to_string(result, "0x", ", "));
    return result;
 }
