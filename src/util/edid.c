@@ -1,4 +1,4 @@
-/** \file edid.c
+/** @file edid.c
  *
  *  Functions to interpret the EDID data structure, irrespective of how
  *  the bytes of the EDID are obtained.
@@ -29,16 +29,6 @@
 
 // Direct writes to stdout/stderr: NO
 
-#ifdef UNUSED
-static inline bool all_bytes_zero(Byte * bytes, int len) {
-   for (int ndx = 0; ndx < len; ndx++) {
-      if (bytes[ndx])
-         return false;
-   }
-   return true;
-}
-#endif
-
 
 /** Calculates checksum for a 128 byte EDID
  *
@@ -56,9 +46,11 @@ Byte edid_checksum(Byte * edid) {
    return checksum;
 }
 
+
 bool is_valid_edid_checksum(Byte * edidbytes) {
    return (edid_checksum(edidbytes) == 0);
 }
+
 
 bool is_valid_edid_header(Byte * edidbytes) {
    bool debug = false;
@@ -81,10 +73,9 @@ bool is_valid_raw_edid(Byte * edid, int len) {
    return (len >= 128) && is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
 }
 
-bool is_valid_raw_cea861_extension_block(Byte * edid, int len) {
-   bool result = len >= 128 && edid[0] == 0x02 && is_valid_edid_checksum(edid);
 
-   return result;
+bool is_valid_raw_cea861_extension_block(Byte * edid, int len) {
+   return (len >= 128) && edid[0] == 0x02 && is_valid_edid_checksum(edid);
 }
 
 
@@ -122,7 +113,6 @@ void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
  *  @param  bufsize      buffer size (must be >= 4)
  */
 void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
-   // parse_mfg_id_in_buffer(&edidbytes[8], result, bufsize);
    parse_mfg_id_in_buffer(edidbytes+8, result, bufsize);
 }
 
@@ -199,13 +189,12 @@ static void get_edid_descriptor_strings(
             Byte * textstart = descriptor+5;
             // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
             int    offset = 0;
-            while (*(textstart+offset) != 0x0a && offset < 13) {
-               // DBGMSG("textlen=%d, char=0x%02x", textlen, *(textstart+textlen));
-               nameslot[offset] = *(textstart+offset);
+            while (textstart[offset] != 0x0a && offset < 13) {
+               nameslot[offset] = textstart[offset];
                offset++;
             }
-            // memcpy(nameslot, textstart, offset);
             nameslot[offset] = '\0';
+            rtrim_in_place(nameslot);   // handle no terminating LF but blank padded
             if (debug)
                printf("(%s) name = %s\n", __func__, nameslot);
 
@@ -227,9 +216,6 @@ static void get_edid_descriptor_strings(
 Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    assert(edidbytes);
    // bool debug = false;
-#ifdef UNNEEDED
-   bool ok = true;
-#endif
    Parsed_Edid* parsed_edid = NULL;
 
    if ( !is_valid_edid_header(edidbytes) || !is_valid_edid_checksum(edidbytes) )
@@ -263,12 +249,6 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
    parsed_edid->is_model_year = edidbytes[16] == 0xff;
    parsed_edid->manufacture_week = edidbytes[16];
    parsed_edid->edid_version_major = edidbytes[18];
-#ifdef UNNEEDED
-   if (parsed_edid->edid_version_major != 1 && parsed_edid->edid_version_major != 2) {
-      DBGMSF(debug, "Invalid EDID major version number: %d", parsed_edid->edid_version_major);
-      ok = false;
-   }
-#endif
    parsed_edid->edid_version_minor = edidbytes[19];
 
    parsed_edid->rx = edidbytes[0x1b] << 2 | ( (edidbytes[0x19]&0b11000000)>>6 );
@@ -288,13 +268,6 @@ Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
 
    parsed_edid->supported_features = edidbytes[0x18];
    parsed_edid->extension_flag = edidbytes[0x7e];
-
-#ifdef UNNEEDED
-   if (!ok) {
-      free(parsed_edid);
-      parsed_edid = NULL;
-   }
-#endif
 
 bye:
    return parsed_edid;
