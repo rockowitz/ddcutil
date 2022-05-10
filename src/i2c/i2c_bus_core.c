@@ -74,12 +74,24 @@ bool i2c_force_slave_addr_flag = false;
 
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
+
+
+/** Adds a set of bus numbers to the set of bus numbers
+ *  whose open failure has already been reported.
+ *
+ *  @param failures   set of bus numbers
+ */
 void add_open_failures_reported(Bit_Set_256 failures) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_or(open_failures_reported, failures);
    g_mutex_unlock(&open_failures_mutex);
 }
 
+
+/** Adds a bus number to the set of open failures reported.
+ *
+ *  @param  busno     /dev/i2c-N bus number
+ */
 void include_open_failures_reported(int busno) {
    g_mutex_lock(&open_failures_mutex);
    open_failures_reported = bs256_insert(open_failures_reported, busno);
