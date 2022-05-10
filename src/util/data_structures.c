@@ -1039,13 +1039,16 @@ int bs256_count(
  *  current thread.
  *
  *  @param  bitset value to represent
+ *  @param  decimal_format  if true,  represent values as decimal numbers
+ *                          if false, represent values as hex numbers
  *  @param  value_prefix  prefix for each hex number, typically "0x" or ""
  *  @param  sepstr        string to insert between each value, typically "", ",", or " "
  *  @return string representation, caller should not free
  */
-char *
-bs256_to_string(
+static char *
+bs256_to_string_general(
       Bit_Set_256  bitset,
+      bool         decimal_format,
       const char * value_prefix,
       const char * sepstr)
 {
@@ -1067,7 +1070,9 @@ bs256_to_string(
       value_prefix = "";
    if (!sepstr)
       sepstr = "";
-   int vsize = strlen(value_prefix) + 2 + strlen(sepstr);
+   int vsize = strlen(value_prefix) + 2 + strlen(sepstr);   // for hex
+   if (decimal_format)
+       vsize = strlen(value_prefix) + 3 + strlen(sepstr);   // for decimal
    int bit_ct = bs256_count(bitset);
    int reqd_size = (bit_ct*vsize)+1;   // +1 for trailing null
 
@@ -1079,8 +1084,12 @@ bs256_to_string(
    //          __func__, feature_ct, vsize, vsize*feature_ct);
 
    for (int ndx = 0; ndx < 256; ndx++) {
-      if ( bs256_contains(bitset, ndx) )
-         sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
+      if ( bs256_contains(bitset, ndx) ) {
+         if (decimal_format)
+            sprintf(buf + strlen(buf), "%s%d%s", value_prefix, ndx, sepstr);
+         else
+            sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
+      }
    }
 
    if (bit_ct > 0)
@@ -1093,6 +1102,46 @@ bs256_to_string(
    printf("(%s) Returning: len=%d, %s\n", __func__, (int) strlen(buf), buf);
 
    return buf;
+}
+
+
+/** Returns a string representation of a #Bit_Set_256 as a list of hex numbers.
+ *
+ *  The value returned is valid until the next call to this function or to
+ *  #bs256_to_string_decimal() in the current thread.
+ *
+ *  @param  bitset value to represent
+ *  @param  value_prefix  prefix for each hex number, typically "0x" or ""
+ *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @return string representation, caller should not free
+ */
+char *
+bs256_to_string(
+      Bit_Set_256  bitset,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   return bs256_to_string_general(bitset, false, value_prefix, sepstr);
+}
+
+
+/** Returns a string representation of a #Bit_Set_256 as a list of decimal numbers.
+ *
+ *  The value returned is valid until the next call to this function or to
+ *  #bs256_to_string() in the current thread.
+ *
+ *  @param  bitset value to represent
+ *  @param  value_prefix  prefix for each decimal number
+ *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @return string representation, caller should not free
+ */
+char *
+bs256_to_string_decimal(
+      Bit_Set_256  bitset,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   return bs256_to_string_general(bitset, true, value_prefix, sepstr);
 }
 
 

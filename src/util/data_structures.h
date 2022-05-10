@@ -107,6 +107,7 @@ Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersec
 Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
 int            bs256_count(Bit_Set_256 set);
 char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);
+char *         bs256_to_string_decimal(Bit_Set_256 set, const char * value_prefix, const char * septr);
 Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
 
 /** Opaque iterator for Bit_Set_256 */
