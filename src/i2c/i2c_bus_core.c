@@ -72,6 +72,20 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
  */
 bool i2c_force_slave_addr_flag = false;
 
+static GMutex  open_failures_mutex;
+static Bit_Set_256 open_failures_reported;
+void add_open_failures_reported(Bit_Set_256 failures) {
+   g_mutex_lock(&open_failures_mutex);
+   open_failures_reported = bs256_or(open_failures_reported, failures);
+   g_mutex_unlock(&open_failures_mutex);
+}
+
+void include_open_failures_reported(int busno) {
+   g_mutex_lock(&open_failures_mutex);
+   open_failures_reported = bs256_insert(open_failures_reported, busno);
+   g_mutex_unlock(&open_failures_mutex);
+}
+
 
 //
 // Basic I2C bus operations
@@ -106,7 +120,8 @@ int i2c_open_bus(int busno, Byte callopts) {
    int errsv = errno;
 
    if (fd < 0) {
-      f0printf(ferr(), "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
+      if (!bs256_contains(open_failures_reported, busno))
+         f0printf(ferr(), "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
       fd = -errsv;
    }
    else {
@@ -1454,5 +1469,6 @@ static void init_i2c_bus_core_func_name_table() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    init_i2c_execute_func_name_table();
+   open_failures_reported = EMPTY_BIT_SET_256;
 }
 
