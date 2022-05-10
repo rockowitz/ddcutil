@@ -1036,13 +1036,14 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
 
    int d1 = depth+1;
    DDCA_Output_Level output_level = get_output_level();
-   rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
+   if (output_level >= DDCA_OL_NORMAL)
+      rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
    // will work for amdgpu, maybe others
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
    if (!drm_connector && businfo->edid)
       drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
    int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
-   if (drm_connector)
+   if (drm_connector && output_level >= DDCA_OL_NORMAL)
       rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth, "%-*s%s", title_width, "DRM connector:", drm_connector->connector_name);
 
    // 08/2018 Disable.
@@ -1088,11 +1089,15 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    }
 
    if (businfo->edid) {
-      if (output_level == DDCA_OL_TERSE)
-         rpt_vstring(depth, "Monitor:             %s:%s:%s",
+      if (output_level == DDCA_OL_TERSE) {
+         rpt_vstring(depth, "I2C bus:          /dev/"I2C"-%d", businfo->busno);
+         if (drm_connector)
+            rpt_vstring(depth, "DRM connector:    %s", drm_connector->connector_name);
+         rpt_vstring(depth, "Monitor:          %s:%s:%s",
                             businfo->edid->mfg_id,
                             businfo->edid->model_name,
                             businfo->edid->serial_ascii);
+      }
       else
          report_parsed_edid_base(businfo->edid,
                            (output_level >= DDCA_OL_VERBOSE), // was DDCA_OL_VV
