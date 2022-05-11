@@ -31,6 +31,7 @@
 #include "base/execution_stats.h"
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
+#include "base/parms.h"
 #include "base/rtti.h"
 #include "base/tuned_sleep.h"
 
@@ -496,8 +497,10 @@ i2c_ioctl_reader(
 
 
 void init_i2c_execute_func_name_table() {
+#ifndef I2C_IO_IOCTL_ONLY
    RTTI_ADD_FUNC( i2c_fileio_writer);
    RTTI_ADD_FUNC( i2c_fileio_reader);
+#endif
    RTTI_ADD_FUNC( i2c_ioctl_writer);
    RTTI_ADD_FUNC( i2c_ioctl_reader);
 }
