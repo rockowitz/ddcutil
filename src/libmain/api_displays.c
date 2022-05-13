@@ -1,4 +1,4 @@
-/** \file api_displays.c */
+/** @file api_displays.c */
 
 // Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -948,7 +948,7 @@ ddca_report_display_info(
 
    // binary SN is not part of DDCA_Display_Info
    Parsed_Edid * edid = create_parsed_edid(dinfo->edid_bytes);
-   if (edid) {     // should never fail, but being ultracautios
+   if (edid) {     // should never fail, but being ultra-cautious
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
       rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);

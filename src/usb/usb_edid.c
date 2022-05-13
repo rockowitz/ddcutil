@@ -1,9 +1,9 @@
-/** usb_edid.c
+/** @file usb_edid.c
  *
  *  Functions to get EDID for USB connected monitors
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -237,7 +237,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
       DBGMSF(debug, "Comparing EDID for xrandr output: %s", prec->output_name);
-      parsed_edid = create_parsed_edid(prec->edidbytes);
+      parsed_edid = create_parsed_edid2(prec->edidbytes, "X11");
       if (parsed_edid) {
          if (debug) {
             bool verbose_edid = false;
@@ -246,7 +246,6 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          if (streq(parsed_edid->model_name, model_name) &&
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
-            STRLCPY(parsed_edid->edid_source, "X11", EDID_SOURCE_FIELD_SIZE);
             DBGMSF(debug, "Found matching EDID from X11");
             break;
          }
@@ -380,16 +379,11 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
       buffer_free(edid_buf2, __func__);
 
    if (edid_buffer) {
-       parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
+       parsed_edid = create_parsed_edid2(edid_buffer->bytes, "USB");  // copies bytes
        if (!parsed_edid) {
           DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
-          // if (debug || get_output_level() >= OL_VERBOSE) {
-          // }
        }
-       else
-          STRLCPY(parsed_edid->edid_source, "USB", EDID_SOURCE_FIELD_SIZE);
-
        buffer_free(edid_buffer, __func__);
        edid_buffer = NULL;
     }

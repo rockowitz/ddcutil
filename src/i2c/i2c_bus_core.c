@@ -717,7 +717,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, rawedidbuf);
    if (rc == 0) {
-      edid = create_parsed_edid(rawedidbuf->bytes);
+      edid = create_parsed_edid2(rawedidbuf->bytes, "I2C");
       if (debug) {
          if (edid)
             report_parsed_edid(edid, false /* verbose */, 0);
@@ -1224,7 +1224,7 @@ int i2c_detect_buses() {
             DBGMSF(debug, "Getting EDID from sysfs");
             Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_busno(busno);
             if (connector_rec && connector_rec->edid_bytes) {
-               businfo->edid = create_parsed_edid(connector_rec->edid_bytes);
+               businfo->edid = create_parsed_edid2(connector_rec->edid_bytes, "SYSFS");
                if (debug) {
                   if (businfo->edid)
                      report_parsed_edid(businfo->edid, false /* verbose */, 0);
@@ -1234,7 +1234,7 @@ int i2c_detect_buses() {
                if (businfo->edid) {
                   businfo->flags |= I2C_BUS_ADDR_0X50;  // ???
                   businfo->flags |= I2C_BUS_SYSFS_EDID;
-                  memcpy(businfo->edid->edid_source, "sysfs", 6);
+                  memcpy(businfo->edid->edid_source, "SYSFS", 6);
                }
             }
 

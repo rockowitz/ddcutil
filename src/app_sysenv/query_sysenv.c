@@ -311,7 +311,7 @@ void query_x11() {
 
       rpt_label  (2, "Raw EDID:");
       rpt_hex_dump(edidbytes, 128, 2);
-      Parsed_Edid * parsed_edid = create_parsed_edid(edidbytes);
+      Parsed_Edid * parsed_edid = create_parsed_edid2(edidbytes, "X11");
       if (parsed_edid) {
          report_parsed_edid_base(
                parsed_edid,

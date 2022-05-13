@@ -550,7 +550,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             else {
                rpt_label(d2, "Raw EDID:");
                rpt_hex_dump(buf0->bytes, buf0->len, d2);
-               edid = create_parsed_edid(buf0->bytes);
+               edid = create_parsed_edid2(buf0->bytes, "I2C");
                if (edid) {
                   report_parsed_edid_base(
                      edid,

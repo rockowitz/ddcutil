@@ -1,4 +1,4 @@
-/** \file query_sysenv_usb.c
+/** @file query_sysenv_usb.c
  *  Probe the USB environment
  */
 
@@ -241,7 +241,7 @@ static void probe_hiddev(int depth) {
                 if (b0) {
                    Buffer * edid_buffer = hiddev_get_edid(fd);
                    if (edid_buffer) {
-                      Parsed_Edid * parsed_edid = create_parsed_edid(edid_buffer->bytes);  // copies bytes
+                      Parsed_Edid * parsed_edid = create_parsed_edid2(edid_buffer->bytes, "USB");  // copies bytes
                       if (!parsed_edid) {
                          rpt_label(d1, "get_hiddev_edid() returned invalid EDID");
                          // if debug or verbose, dump the bad edid  ??

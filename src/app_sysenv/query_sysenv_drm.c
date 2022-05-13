@@ -391,7 +391,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                report_drmModePropertyBlob(blob_ptr, d3);
 
                if (blob_ptr->length >= 128) {
-                  Parsed_Edid * parsed_edid = create_parsed_edid(blob_ptr->data);
+                  Parsed_Edid * parsed_edid = create_parsed_edid2(blob_ptr->data, "DRM");
                   if (parsed_edid) {
                      report_parsed_edid_base(
                            parsed_edid,
