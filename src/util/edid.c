@@ -274,6 +274,26 @@ bye:
 }
 
 
+/** Parses an EDID and sets the edid_source field.
+ *
+ * @param edidbytes   pointer to 128 byte EDID block
+ * @param source      source of EDID, typically I2C but may be X11,
+ *                    USB, SYSFS, DRM
+ *
+ * @return pointer to newly allocated Parsed_Edid struct,
+ *         or NULL if the bytes could not be parsed.
+ *         It is the responsibility of the caller to free this memory.
+ */
+Parsed_Edid * create_parsed_edid2(Byte* edidbytes, char * source) {
+   Parsed_Edid * edid = create_parsed_edid(edidbytes);
+   if (edid) {
+      assert(source && strlen(source) < EDID_SOURCE_FIELD_SIZE);
+      STRLCPY(edid->edid_source, source, EDID_SOURCE_FIELD_SIZE);
+   }
+   return edid;
+}
+
+
 /** Frees a Parsed_Edid struct.
  *
  * @param  parsed_edid  pointer to Parsed_Edid struct to free

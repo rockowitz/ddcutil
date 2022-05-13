@@ -80,6 +80,7 @@ struct {
 
 
 Parsed_Edid * create_parsed_edid(Byte* edidbytes);
+Parsed_Edid * create_parsed_edid2(Byte* edidbytes, char * source);
 void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose_synopsis, bool show_raw, int depth);
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);
