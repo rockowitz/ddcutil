@@ -1,68 +1,56 @@
 # Changelog
 
-## [1.2.3] 2022-05-01
+## [1.2.3] 2022-05-13
 
-### Added
-
-## Changed
-
-- EBUSY
-Avoid most (all?) EBUSY errors.  
-Exclusively use the ioctl() interface for instead of file read() and write().  
-Makes use of ioctl(SLAVE_ADDRESS) unnecssary, which has be the locus of all 
-diagnosed EBUSY errors.  EBUSY errors are still possible within individual drivers, 
-but have never been observed.
-Option --force-slave-address now has no effect. 
-
-- Extensive code cleanup
-  - Source directory ADL removed
-
-Post open sleeps permanently eliminated. Options --sleep-less, ... 
-have no effect.
-
--- ddcutil detect --verbose: additional information
-   - report product code in hex as well as decimal
-   - EDID source field?   new val SYSFS
-   
-
--- ddcutil sysenv --verbose: improved sysfs scanning
-
---options enable-sleep-supression, --disable-sleep-suppression and 
-  synonums have no effect
-
-  Sleep after read has been eliminated
-
-getvcp, vcpinfo allows specifiecation of multiple feature codes
-
-
-deprecate --sleep-less family of options, no longer has any effect
-
-building:   don't link libi2c 
-
+### Changed
+- Option ***--force-slave-address*** no longer has any effect. The dev-i2c 
+  ioctl() interface is now used exclusively instead of write() and read()
+  calls for writing to and reading from the I2C bus. As a result, 
+  ioctl(SLAVE_ADDRESS), which has been the source of EBUSY errors from driver
+  i2-dev, is no longer used. In principle, EBUSY errors are still possible from
+  within individual video drivers, but this has never been observed.
+- Sleeps immediately after opening a /dev/i2c device and after completion of a
+  read operation are completely eliminated. The sleep-suppression related 
+  uptions, ***--sleep-less***, ***--less-sleep, ***--enable-sleep-suppression***,
+  and ***--disable-sleep-suppression*** no longer have any effect.
+- Option ***--dca***: The Dynamic Sleep Adjustment algorithm was reqritten to 
+  more sensibly increment sleep times after before each retry. 
+- Commands **getvcp** and **vcpinfo**: 
+  - Allow specification of multiple feature codes, for example 
+    ***ddcutil getvcp 10 12*** , ***ddcutil vcpinfo 14 16 18 1a***
+- Command **detect**: 
+  - Option ***--verbose*** produces addtional information: 
+   - The product code is reported in hex as well as decimal
+   - The EDID source field is set to **I2C** in the normal case where the EDID
+     is read directly from slave address X50.  Alternative values include 
+     **USB**, **X11**, and **SYSFS**.
+- Command **environment**:
+   - Scanning of /sys by option ***--verbose*** has been improved.
+   - Add msg re SYSENV_QUICK_TEST environment variable
+- More user friendly messages at startup regarding /dev/i2c buses that cannont
+  be opened.  If the problem is inadequate permissions (EACCES), the user is 
+  directed to www.ddcutil.com/permissions.
+- Better handle malformed EDIDs
+  - Trailing blanks on model and serial number a stripped.  This affects 
+    commands **detect --terse**, **loadvcp** and **dumpvcp**, and also the 
+    file names of user defined features.
+- Source code has been extensively cleaned up. In particular, directory **adl**
+  containing code for the old proprietary AMD video driver, has been removed.
+- Building ddcutil:
+  - Library **libi2c.so** is no longer linked.  It was needed only for some
+    experimental code.
 libddcutil: 
 - ddca_get_display_refs(), ddca_get_display_info_list2(): 
-  - open errors are stored in ddca_get_error_info() ??
+  - Open errors can be retrieved using ddca_get_error_info(). 
+    Note that the API calls still succeed.
 
-ddcutil: 
-- better reporting of open errors due to permissions
-
-ENVIRONMENT command: 
-- add msg re SYSENV_QUICK_TEST environment variable
-
-rewrote dynamic sleep adjustment (--dsa) algorithm for better adjustment of waits
-
-
-
-## Fixed
-
-- Sleep multiplier not respected for new API threads
-
--- miscellaneous memory leaks
-
--- don't use g_byte_array_steal(), reuires glib 2.60
-
-UDF files: 
-- incorrect flag was set for keyword NC
+### Fixed
+- The sleep multiplier value was not respected for new API threads.
+- User Defined Features: Keyword **NC** set the incorrect flag in a feature
+  descriptor.
+- Do not use glib function g_byte_array_steal(), which requires glib 2.60.
+  ddcutil requires only glib 2.40. 
+- Miscellaneous memory leaks
 
 ## [1.2.2] 2022-01-22
 
