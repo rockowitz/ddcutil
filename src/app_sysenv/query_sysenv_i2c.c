@@ -511,7 +511,9 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
    int  busct = 0;
    Public_Status_Code psc;
    Status_Errno rc = 0;
+#ifndef I2C_IO_IOCTL_ONLY
    bool saved_i2c_force_slave_addr_flag = i2c_force_slave_addr_flag;
+#endif
 
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
@@ -640,7 +642,9 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
       rpt_nl();
    }
 
+#ifndef I2C_IO_IOCTL_ONLY
    i2c_force_slave_addr_flag = saved_i2c_force_slave_addr_flag;
+#endif
    buffer_free(buf0, __func__);
 
    // DBGMSG("setting i2c_bus_scan_complete");
