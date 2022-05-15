@@ -18,6 +18,7 @@
 #include "string_util.h"
 #include "subprocess_util.h"
 #include "sysfs_util.h"
+#include "sysfs_filter_functions.h"
 
 #include "sysfs_i2c_util.h"
 
@@ -207,7 +208,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
    if (!result) {
       uint32_t class = get_i2c_device_sysfs_class(busno);
       if (class) {
-         // printf("(%s) class = 0x%08x\n", __func__, class);get_sysfs_drm_displays
+         // printf("(%s) class = 0x%08x\n", __func__, class);
          uint32_t cl2 = class & 0xffff0000;
          if (debug)
             printf("(%s) cl2 = 0x%08x\n", __func__, cl2);
@@ -222,6 +223,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
 }
 
 
+#ifdef UNUSED
 int get_sysfs_drm_edid_count() {
    int ival = 0;
    GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
@@ -236,8 +238,10 @@ int get_sysfs_drm_edid_count() {
    }
    return ival;
 }
+#endif
 
 
+#ifdef OLD
 // TODO: rewrite using sys functions
 Byte_Bit_Flags get_sysfs_drm_card_numbers()
 {
@@ -302,4 +306,49 @@ Byte_Bit_Flags get_sysfs_drm_card_numbers()
 
    return result;
 }
+#endif
+
+
+static
+void do_sysfs_drm_card_number_dir(
+            const char * dirname,     // <device>/drm
+            const char * simple_fn,   // card0, card1, etc.
+            void *       data,
+            int          depth)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
+   Bit_Set_256 * card_numbers = (Bit_Set_256*) data;
+   const char * s = simple_fn+4;
+   int card_number = atoi(s);
+   *card_numbers = bs256_insert(*card_numbers, card_number);
+   if (debug)
+      printf("(%s) Done.    Added %d\n", __func__, card_number);
+}
+
+
+Bit_Set_256 get_sysfs_drm_card_numbers() {
+   bool debug = false;
+   char * dname =
+ #ifdef TARGET_BSD
+              "/compat/linux/sys/class/drm";
+ #else
+              "/sys/class/drm";
+ #endif
+   if (debug)
+      printf("(%s) Examining %s\n", __func__, dname);
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   dir_foreach(
+                 dname,
+                 predicate_cardN,            // filter function
+                 do_sysfs_drm_card_number_dir,
+                 &result,                 // accumulator
+                 0);
+   if (debug)
+      printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs256_to_string_decimal(result, "", ", "));
+   return result;
+ }
+
+
 
