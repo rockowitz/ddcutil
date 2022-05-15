@@ -243,7 +243,8 @@ app_show_vcp_subset_values_by_dh(
         DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc), s);
         free(s);
 #endif
-        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
+        // DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
+        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bs256_to_string(*features_seen, "x", ", ") );
       }
       else {
          DBGMSG("Returning: %s", psc_desc(psc));
