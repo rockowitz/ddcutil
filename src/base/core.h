@@ -193,42 +193,42 @@ void severemsg(
 extern bool trace_to_syslog;
 
 bool dbgtrc(
-        DDCA_Trace_Group  trace_group,
-        Dbgtrc_Options    options,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
+        DDCA_Trace_Group trace_group,
+        Dbgtrc_Options   options,
+        const char *     funcname,
+        const int        lineno,
+        const char *     fn,
+        char *           format,
         ...);
 
 bool dbgtrc_returning(
-        DDCA_Trace_Group  trace_group,
-        Dbgtrc_Options    options,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        int          rc,
-        char *       format,
+        DDCA_Trace_Group trace_group,
+        Dbgtrc_Options   options,
+        const char *     funcname,
+        const int        lineno,
+        const char *     fn,
+        int              rc,
+        char *           format,
         ...);
 
 bool dbgtrc_returning_errinfo(
-        DDCA_Trace_Group  trace_group,
-        Dbgtrc_Options    options,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        Error_Info * errs,
-        char *       format,
+        DDCA_Trace_Group trace_group,
+        Dbgtrc_Options   options,
+        const char *     funcname,
+        const int        lineno,
+        const char *     fn,
+        Error_Info *     errs,
+        char *           format,
         ...);
 
 bool dbgtrc_returning_expression(
-        DDCA_Trace_Group  trace_group,
-        Dbgtrc_Options    options,
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        const char * retval_expression,
-        char *       format,
+        DDCA_Trace_Group trace_group,
+        Dbgtrc_Options   options,
+        const char *     funcname,
+        const int        lineno,
+        const char *     fn,
+        const char *     retval_expression,
+        char *           format,
         ...);
 
 
