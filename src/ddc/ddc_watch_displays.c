@@ -1,5 +1,4 @@
-/** \file ddc_watch_displays.c - Watch for monitor addition and removal
- */
+/** @file ddc_watch_displays.c  Watch for monitor addition and removal */
 
 // Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -20,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "util/data_structures.h"
 #include "util/file_util.h"
@@ -55,7 +55,7 @@ typedef struct {
    Display_Change_Handler display_change_handler;
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
-   Byte_Bit_Flags         drm_card_numbers;
+   Bit_Set_256            drm_card_numbers;
 } Watch_Displays_Data;
 
 
@@ -211,6 +211,8 @@ void get_sysfs_drm_examine_one_connector(
 }
 
 
+
+
 static
 GPtrArray * get_sysfs_drm_displays() {
    bool debug = false;
@@ -247,7 +249,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
    Displays_Change_Type change_type = Changed_None;
 
-   GPtrArray * cur_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
+   GPtrArray * cur_displays = get_sysfs_drm_displays();
    if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
       if ( debug || IS_TRACING() ) {
          DBGMSG("Displays changed!");
@@ -298,7 +300,7 @@ gpointer watch_displays_using_poll(gpointer data) {
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays(wdd->drm_card_numbers, false);
+   GPtrArray * prev_displays = get_sysfs_drm_displays();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
@@ -530,7 +532,7 @@ void dummy_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays()
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
@@ -541,11 +543,10 @@ ddc_start_watch_displays()
    #else
             "/sys/class/drm";
    #endif
-      Byte_Bit_Flags drm_card_numbers = get_sysfs_drm_card_numbers();
-      if (bbf_count_set(drm_card_numbers) == 0) {
+      Bit_Set_256 drm_card_numbers = get_sysfs_drm_card_numbers();
+      if (bs256_count(drm_card_numbers) == 0) {
          rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
          ddcrc = DDCRC_INVALID_OPERATION;
-         bbf_free(drm_card_numbers);
       }
       else {
          g_mutex_lock(&watch_thread_mutex);
