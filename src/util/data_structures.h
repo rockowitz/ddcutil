@@ -44,7 +44,7 @@ bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int 
 Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
 void             bva_sort(Byte_Value_Array bva);
 
-
+#ifdef BYTE_BIT_FLAGS
 /** An opaque data structure containing 256 flags */
 typedef void * Byte_Bit_Flags;
 
@@ -76,6 +76,7 @@ int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
 
 bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbf);
 Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva);
+#endif
 
 /** Function signature for passing function that appends a value to
  * either a #Byte_Bit_Flags or a #Byte_Value_Array
@@ -119,8 +120,10 @@ void           bs256_iter_free(Bit_Set_256_Iterator iter);
 void           bs256_iter_reset(Bit_Set_256_Iterator iter);
 int            bs256_iter_next(Bit_Set_256_Iterator  iter);
 
+#ifdef BYTE_BIT_FLAGS
 Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
 Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
+#endif
 
 
 //
@@ -156,8 +159,9 @@ void     buffer_rpt(Buffer * buffer, int depth);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 void     buffer_extend(Buffer* buf, int addl_bytes);
 
+#ifdef BYTE_BIT_FLAGS
 Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
-
+#endif
 
 //
 // Identifier id to name and description lookup

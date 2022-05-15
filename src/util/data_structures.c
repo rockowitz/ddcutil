@@ -297,6 +297,7 @@ void test_value_array() {
 #endif
 
 
+#ifdef BYTE_BIT_FLAGS
 //
 // bbf - ByteBitFlags -
 //
@@ -663,7 +664,10 @@ int bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter) {
    // printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
+#endif
 
+
+#ifdef BYTE_BIT_FLAGS
 //
 // Cross functions bba <-> bbf
 //
@@ -708,6 +712,7 @@ Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva) {
    }
    return bbf;
 }
+#endif
 
 
 /** Function matching signature #Byte_Appender that adds a byte
@@ -721,7 +726,7 @@ void bva_appender(void * data_struct, Byte val) {
    bva_append(bva, val);
 }
 
-
+#ifdef BYTE_BIT_FLAGS
 /** Function matching signature #Byte_Appender that sets a bit in
  *  a #Byte_Bit_Flags
  *
@@ -733,6 +738,7 @@ void bbf_appender(void * data_struct, Byte val) {
    assert(bbf);
    bbf_insert(bbf, val);
 }
+#endif
 
 
 /** Stores a list of bytehex values in either a **Byte_Value_Array** or a **Byte_Bit_Flags**.
@@ -802,6 +808,7 @@ bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
 }
 
 
+#ifdef BYTE_BIT_FLAGS
 /** Parses a list of bytehex values and stores the result in a **Byte_Bit_Flags**.
  *
  * @param bbf   handle of **Byte_Bit_Flags** instance
@@ -813,6 +820,7 @@ bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
 bool bbf_store_bytehex_list(Byte_Bit_Flags bbf, char * start, int len) {
    return store_bytehex_list(start, len, bbf, bbf_appender);
 }
+#endif
 
 
 //
@@ -1321,6 +1329,7 @@ Bit_Set_256 bs256_from_string(
 }
 
 
+#ifdef BYTE_BIT_FLAGS
 Bit_Set_256
 bs256_from_bbf(Byte_Bit_Flags bbf) {
    bool debug = false;
@@ -1363,7 +1372,7 @@ bbf_from_bs256(Bit_Set_256 bitset) {
    }
    return bbf;
 }
-
+#endif
 
 
 
