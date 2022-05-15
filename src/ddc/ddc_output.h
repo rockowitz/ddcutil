@@ -64,7 +64,7 @@ ddc_show_vcp_values(
       VCP_Feature_Subset  subset,
       GPtrArray *         collector,
       Feature_Set_Flags   flags,
-      Byte_Bit_Flags      features_seen);
+      Bit_Set_256 *       features_seen);
 
 
 void init_ddc_output();

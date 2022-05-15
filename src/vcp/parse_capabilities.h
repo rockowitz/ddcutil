@@ -43,7 +43,7 @@ typedef struct {
 
 Parsed_Capabilities* parse_capabilities_string(char * capabilities);
 void                 free_parsed_capabilities(Parsed_Capabilities * pcaps);
-Byte_Bit_Flags       get_parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
+Bit_Set_256          get_parsed_capabilities_feature_ids(Parsed_Capabilities * pcaps, bool readable_only);
 bool                 parsed_capabilities_supports_table_commands(Parsed_Capabilities * pcaps);
 char *               parsed_capabilities_validity_name(Parsed_Capabilities_Validity validity);
 void                 dbgrpt_parsed_capabilities(Parsed_Capabilities * pcaps, int depth);

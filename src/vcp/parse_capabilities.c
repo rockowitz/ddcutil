@@ -789,9 +789,9 @@ Parsed_Capabilities* parse_capabilities_string(
  *  @param pcaps           pointer to #Parsed_Capabilities
  *  @param readable_only   restrict returned list to readable features
  *
- *  @return  #Byte_Bit_Flags value indicating features found
+ *  @return  #Bit_Set_256  value indicating features found
  */
-Byte_Bit_Flags get_parsed_capabilities_feature_ids(
+Bit_Set_256 get_parsed_capabilities_feature_ids(
       Parsed_Capabilities * pcaps,
       bool                  readable_only)
 {
@@ -800,7 +800,8 @@ Byte_Bit_Flags get_parsed_capabilities_feature_ids(
    DBGMSF(debug, "Starting. readable_only=%s, feature count=%d",
                  sbool(readable_only), pcaps->vcp_features->len);
 
-   Byte_Bit_Flags flags = bbf_create();
+   // Byte_Bit_Flags flags = bbf_create();
+   Bit_Set_256 flags = EMPTY_BIT_SET_256;
    if (pcaps->vcp_features) {    // pathological case of 0 length capabilities string
       for (int ndx = 0; ndx < pcaps->vcp_features->len; ndx++) {
          Capabilities_Feature_Record * frec = g_ptr_array_index(pcaps->vcp_features, ndx);
@@ -815,11 +816,12 @@ Byte_Bit_Flags get_parsed_capabilities_feature_ids(
                free_synthetic_vcp_entry(vfte);
          }
          if (add_feature_to_list)
-            bbf_insert(flags, frec->feature_id);
+            // bbf_insert(flags, frec->feature_id);
+            flags = bs256_insert(flags, frec->feature_id);
       }
    }
 
-   DBGMSF(debug, "Returning Byte_Bit_Flags: %s", bbf_to_string(flags));  // was a memory leak
+   DBGMSF(debug, "Returning Bit_Set_256: %s", bs256_to_string(flags, "x", ", ") );
    return flags;
 }
 

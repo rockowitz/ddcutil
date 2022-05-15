@@ -226,7 +226,7 @@ app_show_vcp_subset_values_by_dh(
         Display_Handle *    dh,
         VCP_Feature_Subset  subset_id,
         Feature_Set_Flags   flags,
-        Byte_Bit_Flags      features_seen)
+        Bit_Set_256 *       features_seen)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,

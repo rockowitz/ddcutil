@@ -36,7 +36,7 @@ app_show_vcp_subset_values_by_dh(
       Display_Handle *      dh,
       VCP_Feature_Subset    subset,
       Feature_Set_Flags     flags,
-      Byte_Bit_Flags        features_seen);
+      Bit_Set_256 *         features_seen);
 
 Status_Errno_DDC
 app_show_feature_set_values_by_dh(

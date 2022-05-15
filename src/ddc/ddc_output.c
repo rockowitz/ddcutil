@@ -743,7 +743,7 @@ show_feature_set_values2_dfm(
       Dyn_Feature_Set*      feature_set,
       GPtrArray *           collector,     // if null, write to current stdout device
       Feature_Set_Flags     flags,
-      Byte_Value_Array      features_seen)     // if non-null, collect list of features seen
+      Bit_Set_256 *         features_seen)     // if non-null, collect list of features seen
 {
    bool debug = false;
    char * s0 = feature_set_flag_names_t(flags);
@@ -814,7 +814,7 @@ show_feature_set_values2_dfm(
                   f0printf(outf, "%s\n", formatted_value);
                free(formatted_value);
                if (features_seen)
-                  bbf_insert(features_seen, dfm->feature_code);  // note that feature was read
+                  *features_seen = bs256_insert(*features_seen, dfm->feature_code);  // note that feature was read
             }
             else {
                // or should I check features_ct == 1?
@@ -863,7 +863,7 @@ bool hack42(VCP_Feature_Table_Entry * ventry) {
  *  @param  subset     feature subset id
  *  @param  collector  accumulates output    // if null, write to current stdout device
  *  @param  flags      feature set flags
- *  @param  features_seen   collect ids of features that exist
+ *  @param  features_seen   collects ids of features that exist
  *  @return status code
  */
 // 11/2019: only call is from app_getvcp.c, move there?
@@ -873,7 +873,7 @@ ddc_show_vcp_values(
         VCP_Feature_Subset  subset,
         GPtrArray *         collector,    // not used
         Feature_Set_Flags   flags,
-        Byte_Bit_Flags      features_seen)
+        Bit_Set_256 *       features_seen)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "subset=%d, flags=%s,  dh=%s",
