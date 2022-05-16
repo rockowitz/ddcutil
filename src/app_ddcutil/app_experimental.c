@@ -32,7 +32,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(3, "Unused");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
    REPORT_FLAG_OPTION(5, "Unused");
-   REPORT_FLAG_OPTION(6, "Unused");
+   REPORT_FLAG_OPTION(6, "Force I2C bus");
 
    rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
    rpt_nl();
@@ -52,6 +52,17 @@ bool init_experimental_options(Parsed_Cmd* parsed_cmd)
       fprintf(stdout, "Read strategy tests\n");
    }
 #endif
+
+   // HACK FOR TESTING
+   if (parsed_cmd->flags & CMD_FLAG_F6) {
+      fprintf(stdout, "Setting i2c_force_bus\n");
+      if ( !(parsed_cmd->pdid) || parsed_cmd->pdid->id_type != DISP_ID_BUSNO) {
+         fprintf(stdout, "bus number required, use --busno\n");
+         return false;
+      }
+      i2c_force_bus = true;
+   }
+
    return true;
 }
 
