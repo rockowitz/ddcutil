@@ -708,6 +708,10 @@ static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
    STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
 #pragma GCC diagnostic pop
+#else
+   STRLCPY(curinfo->mfg_id,     dref->pedid->mfg_id,       EDID_MFG_ID_FIELD_SIZE);
+   STRLCPY(curinfo->model_name, dref->pedid->model_name,   EDID_MODEL_NAME_FIELD_SIZE);
+   STRLCPY(curinfo->sn,         dref->pedid->serial_ascii, DDCA_EDID_SN_ASCII_FIELD_SIZE);
 #endif
    curinfo->product_code  = dref->pedid->product_code;
    curinfo->vcp_version    = vspec;
@@ -818,7 +822,7 @@ ddca_get_display_refs(
 
    set_ddca_error_detail_from_open_errors();
 
-   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: 0. Returned list has %d displays", dref_ct);
+   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, 0, "Returned list has %d displays", dref_ct);
    return 0;
 }
 
