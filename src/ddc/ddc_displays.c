@@ -134,9 +134,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
-                             //    psc_desc(psc),
-                                 errinfo_summary(ddc_excp),
-                                 pvalrec);
+                             errinfo_summary(ddc_excp), pvalrec);
+      TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
+
       if (psc == DDCRC_RETRIES && debug)
          DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
       if (ddc_excp)
@@ -146,28 +146,13 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       if (io_mode == DDCA_IO_USB) {
          if (psc == 0 || psc == DDCRC_DETERMINED_UNSUPPORTED) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-
          }
-         TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
-
       }
       else {
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
 
          // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
          // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
-
-#ifdef FORCE_SUCCESS
-         // for testing:
-         if (psc == DDCRC_RETRIES) {
-            DBGTRC(debug, TRACE_GROUP, "Forcing DDC communication success");
-            psc = 0;
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-            goto bye;
-         }
-#endif
 
          if ( psc == DDCRC_NULL_RESPONSE        ||
               psc == DDCRC_ALL_RESPONSES_NULL   ||
@@ -184,68 +169,51 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
             else {
                TRACED_ASSERT( psc == 0);
-               TRACED_ASSERT(pvalrec);
-            }
-            TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
-         }
+               TRACED_ASSERT(pvalrec && pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "pvalrec: value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
+                        pvalrec->value_type, pvalrec->val.c_nc.mh, pvalrec->val.c_nc.ml,
+                        pvalrec->val.c_nc.sh, pvalrec->val.c_nc.sl);
 
-         if (psc == 0) {
-            TRACED_ASSERT(pvalrec && pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
-            if (debug || IS_TRACING()) {
-               DBGMSG("pvalrec:");
-               dbgrpt_single_vcp_value(pvalrec, 1);
+               if (value_bytes_zero_for_any_value(pvalrec))
+               {
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
+                  dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+               }
+               else {
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
+                  dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+               }
             }
+         }  // end, communication working
 
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
-                     pvalrec->value_type,
-                     pvalrec->val.c_nc.mh,
-                     pvalrec->val.c_nc.ml,
-                     pvalrec->val.c_nc.sh,
-                     pvalrec->val.c_nc.sl);
-            if (value_bytes_zero_for_any_value(pvalrec))
-            {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
-               dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
-            }
-            else {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
-               dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+         else {   // communication failed
+            if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
+               DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
+                     dh_repr_t(dh) );
+               psc = 0;
+               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+            // dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+               dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
+               dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
             }
          }
       }    // end, io_mode == DDC_IO_I2C
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+
+     if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+        // Would prefer to defer checking version until actually needed to avoid additional DDC io
+        // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
+        // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
+        if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+           set_vcp_version_xdf_by_dh(dh);
+        }
+     }
+
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
-#ifdef FORCE_SUCCESS
-bye:
-   ;   // o.w. error that a label can only be part of a statement
-#endif
-   bool communication_working = dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
-
-   // Would prefer to defer checking version until actually needed to avoid
-   // additional DDC io during monitor detection
-   // Unfortunately, introduces ddc_open_display(), with possible error states,
-   // into other functions, e.g. ddca_get_feature_list_by_dref()
-   if (communication_working) {
-      if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
-         set_vcp_version_xdf_by_dh(dh);
-      }
-   }
-
-   if (!communication_working && i2c_force_bus) {
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-      communication_working = true;
-      DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-            dh_repr_t(dh) );
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-      dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
-      dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-      dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, communication_working, "dh=%s", dh_repr(dh));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP,  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
-   return communication_working;
+   return  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
 }
 
 
