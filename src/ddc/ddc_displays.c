@@ -120,8 +120,8 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-static bool
-ddc_initial_checks_by_dh(Display_Handle * dh) {
+// static   // non-static for backtrace
+bool ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
