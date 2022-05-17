@@ -194,7 +194,8 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             // dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
-               dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
+               if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED))  // may have been forced by option --mccs
+                  dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
             }
          }
       }    // end, io_mode == DDC_IO_I2C
@@ -204,7 +205,7 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
         // Would prefer to defer checking version until actually needed to avoid additional DDC io
         // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
         // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
-        if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+        if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
            set_vcp_version_xdf_by_dh(dh);
         }
      }
