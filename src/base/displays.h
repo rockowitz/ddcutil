@@ -165,7 +165,6 @@ bool               dsel_validate(          Display_Selector * dsel);
 typedef uint16_t Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED                 0x0080
 #define DREF_DDC_COMMUNICATION_WORKING                 0x0040
-#define DREF_DDC_NULL_RESPONSE_CHECKED                 0x0020
 #define DREF_DDC_IS_MONITOR_CHECKED                    0x0010
 #define DREF_DDC_IS_MONITOR                            0x0008
 #define DREF_TRANSIENT                                 0x0004

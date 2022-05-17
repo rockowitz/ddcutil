@@ -165,7 +165,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
             dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-            dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
             goto bye;
          }
 #endif
@@ -213,10 +212,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
             }
          }
-      }
+      }    // end, io_mode == DDC_IO_I2C
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-      dh->dref->flags |= DREF_DDC_NULL_RESPONSE_CHECKED;    // redundant with refactoring
-   }
+   }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
 #ifdef FORCE_SUCCESS
 bye:
