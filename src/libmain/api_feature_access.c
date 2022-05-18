@@ -669,10 +669,8 @@ set_single_vcp_value(
       bool debug = false;
       DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
                                   ddca_dh, valrec, verified_value_loc);
-
-      Error_Info * ddc_excp = NULL;
       WITH_VALIDATED_DH2(ddca_dh,  {
-            ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
+            Error_Info * ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
             psc = (ddc_excp) ? ddc_excp->status_code : 0;
             errinfo_free(ddc_excp);
             DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
