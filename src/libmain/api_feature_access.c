@@ -1,9 +1,9 @@
-/** \file api_feature_access.c
+/** @file api_feature_access.c
  *
  *  Get, set, and format feature values
  */
 
-// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -762,21 +762,21 @@ ddca_set_simple_nc_vcp_value(
 /** Sets a non-table VCP value by specifying it's high and low bytes individually.
  *  Optionally returns the values set by reading the feature code after writing.
  *
- *  \param[in]   ddca_dh             display handle
- *  \param[in]   feature_code        feature code
- *  \param[in]   hi_byte             high byte of new value
- *  \param[in]   lo_byte             low byte of new value
- *  \param[out]  p_verified_hi_byte  where to return high byte of verified value
- *  \param[out]  p_verified_lo_byte  where to return low byte of verified value
- *  \return      status code
+ *  @param[in]   ddca_dh             display handle
+ *  @param[in]   feature_code        feature code
+ *  @param[in]   hi_byte             high byte of new value
+ *  @param[in]   lo_byte             low byte of new value
+ *  @param[out]  p_verified_hi_byte  where to return high byte of verified value
+ *  @param[out]  p_verified_lo_byte  where to return low byte of verified value
+ *  @return      status code
  *
- *  \remark
+ *  @remark
  *  Either both **verified_hi_byte_loc** and **verified_lo_byte_loc** should be
  *  set, or neither. Otherwise, status code **DDCRC_ARG** is returned.
- *  \remark
+ *  @remark
  *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  both **verified_hi_byte** and **verified_lo_byte** are set.
- *  \remark
+ *  @remark
  *  Verified values are returned if the status code is either 0 (success),
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
@@ -835,16 +835,16 @@ ddca_set_non_table_vcp_value(
 /** Sets a table VCP value.
  *  Optionally returns the value set by reading the feature code after writing.
  *
- *  \param[in]   ddca_dh             display handle
- *  \param[in]   feature_code        feature code
- *  \param[in]   new_value           value to set
- *  \param[out]  verified_value_loc  where to return verified value
- *  \return      status code
+ *  @param[in]   ddca_dh             display handle
+ *  @param[in]   feature_code        feature code
+ *  @param[in]   new_value           value to set
+ *  @param[out]  verified_value_loc  where to return verified value
+ *  @return      status code
  *
- *  \remark
+ *  @remark
  *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  **verified_value** is set.
- *  \remark
+ *  @remark
  *  A verified value is returned if either the status code is either 0 (success),
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
@@ -896,16 +896,16 @@ ddca_set_table_vcp_value(
 /** Sets a VCP value of any type.
  *  Optionally returns the values se by reading the feature code after writing.
  *
- *  \param[in]   ddca_dh        display handle
- *  \param[in]   feature_code   feature code
- *  \param[in]   new_value      value to set
- *  \param[out]  verified_value where to return verified value
- *  \return      status code
+ *  @param[in]   ddca_dh        display handle
+ *  @param[in]   feature_code   feature code
+ *  @param[in]   new_value      value to set
+ *  @param[out]  verified_value where to return verified value
+ *  @return      status code
  *
- *  \remark
+ *  @remark
  *  Verification is performed only it has been enabled (see #ddca_enable_verify()) and
  *  **verified_value** is set.
- *  \remark
+ *  @remark
  *  A verified value is returned if either the status code is either 0 (success),
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
@@ -1026,6 +1026,7 @@ ddca_queue_get_non_table_vcp_value(
    return DDCRC_UNIMPLEMENTED;
 }
 
+
 //
 // CFFI
 //
@@ -1039,9 +1040,6 @@ ddca_pass_callback(
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
-
-
-
 
 
 
