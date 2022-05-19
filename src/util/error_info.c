@@ -338,6 +338,7 @@ errinfo_new2(
 }
 
 
+#ifdef UNUSED
 /** Creates a new #Error_Info instance, including a reference to another
  *  instance that is the cause of the current error.
  *
@@ -353,6 +354,7 @@ Error_Info * errinfo_new_with_cause(
 {
    return errinfo_new_with_cause2(code, cause, func, NULL);
 }
+#endif 
 
 
 static
@@ -409,6 +411,7 @@ errinfo_new_with_cause3(
 }
 
 
+#ifdef UNUSED
 /** Creates a new #Error_Info instance, including a reference to another
  *  instance that is the cause of the current error.  The status code
  *  of the new instance is the same as that of the referenced instance.
@@ -425,6 +428,7 @@ Error_Info * errinfo_new_chained(
    Error_Info * erec = errinfo_new_with_cause(cause->status_code, cause, func);
    return erec;
 }
+#endif
 
 
 /** Creates a new #Error_Info instance with a collection of
