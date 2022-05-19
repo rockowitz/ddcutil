@@ -643,7 +643,7 @@ extract_version_feature_info_from_feature_table_entry(
    dfm->sl_values = copy_sl_value_table(sl_values);
    // dfm->latest_sl_values = copy_sl_value_table(get_highest_version_sl_values(vfte));
 
-   DBG_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
+   DBGMSF_RET_STRUCT(debug, Display_Feature_Metadata, dbgrpt_display_feature_metadata, dfm);
    return dfm;
 }
 

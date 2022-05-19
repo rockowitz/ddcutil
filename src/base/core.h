@@ -201,7 +201,7 @@ bool dbgtrc(
         char *           format,
         ...);
 
-bool dbgtrc_returning(
+bool dbgtrc_ret_ddcrc(
         DDCA_Trace_Group trace_group,
         Dbgtrc_Options   options,
         const char *     funcname,
@@ -332,7 +332,7 @@ bool dbgtrc_returning_expression(
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
-#define DBG_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
+#define DBGMSF_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
 if (_flag) { \
    dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, \
          __func__, __LINE__, __FILE__, \

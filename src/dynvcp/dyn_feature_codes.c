@@ -264,7 +264,7 @@ dyn_get_feature_metadata_by_dref(
    if (result)
       result->display_ref = dref;
 
-   DBG_RET_STRUCT(debug || IS_TRACING(), Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
+   DBGMSF_RET_STRUCT(debug || IS_TRACING(), Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
    return result;
 }
 

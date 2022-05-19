@@ -101,9 +101,9 @@ char * interpret_call_options_t(Call_Options calloptions) {
 
 
 static void
-print_simple_title_value(int    offset_start_to_title,
+print_simple_title_value(int          offset_start_to_title,
                          const char * title,
-                         int    offset_title_start_to_value,
+                         int          offset_title_start_to_value,
                          const char * value)
 {
    f0printf(fout(), "%.*s%-*s%s\n",
@@ -112,8 +112,6 @@ print_simple_title_value(int    offset_start_to_title,
             value);
    fflush(fout());
 }
-
-
 
 
 /** Reports the output level for the current thread
@@ -586,21 +584,16 @@ void report_tracing(int depth) {
    rpt_nl();
 }
 
+
 /** Reports output levels for:
  *   - general output level (terse, verbose, etc)
  *   - DDC data errors
- *   - trace groups
- *   - traced functions
- *   - traced files
  *
  * Output is written to the current **FOUT** device.
  */
 void show_reporting() {
    show_output_level();
    show_ddcmsg();
-
-
-   // f0puts("", fout());
 }
 
 
@@ -782,7 +775,7 @@ bool dbgtrc_old(
 
 
 /** Core function for emitting debug or trace messages.
- *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
+ *  Used by the dbgtrc*() function variants.
  *
  *  The message is output if any of the following are true:
  *  - the trace_group specified is currently active
@@ -790,21 +783,21 @@ bool dbgtrc_old(
  *  - funcname is the name of a function being traced
  *  - filename is the name of a file being traced
  *
- *  The message is output to the current FERR device and optionally,
- *  depending on the syslog setting, to the system log.
+ *  The message is written to the fout() device for the current thread and
+ *  optionally, depending on the syslog setting, to the system log.
  *
  *  @param trace_group   trace group of caller, 0xff to always output
  *  @param options       execution option flags
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
  *  @param filename      file name of caller
- *  @param pre_prefix
+ *  @param pre_prefix    initial portion of message to output
  *  @param format        format string for message
  *  @param ap            arguments for format string
  *
  *  @return **true** if message was output, **false** if not
  */
-bool vdbgtrc(
+static bool vdbgtrc(
         DDCA_Trace_Group  trace_group,
         Dbgtrc_Options    options,
         const char *      funcname,
@@ -847,7 +840,7 @@ bool vdbgtrc(
       if (dbgtrc_show_thread_id) {
          // intmax_t tid = get_thread_id();
          // assert(tid == thread_settings->tid);
-         snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);  // is this proper format for pid_t
+         snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
       }
 
       char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
@@ -893,7 +886,6 @@ bool vdbgtrc(
          syslog(LOG_INFO, "%s", syslog_buf);
       }
 
-      // assert(fout() == thread_settings->fout);
       if (is_tracing(trace_group, filename, funcname)) {
          f0puts(buf2, thread_settings->fout);
          f0putc('\n', thread_settings->fout);
@@ -911,7 +903,7 @@ bool vdbgtrc(
 }
 
 
-/** Core function for emitting debug or trace messages.
+/** Primary function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
  *  The message is output if any of the following are true:
@@ -965,7 +957,10 @@ bool dbgtrc(
 }
 
 
-bool dbgtrc_returning(
+/** dbgtrc() variant that reports a numeric return code (normally of
+ *  type #DDCA_Status), in a standardized form.
+ */
+bool dbgtrc_ret_ddcrc(
         DDCA_Trace_Group  trace_group,
         Dbgtrc_Options    options,
         const char *      funcname,
@@ -1004,6 +999,9 @@ bool dbgtrc_returning(
 }
 
 
+/** dbgtrc() variant that reports a return code of type #Error_Info in a
+ *  standarized form.
+ */
 bool dbgtrc_returning_errinfo(
         DDCA_Trace_Group  trace_group,
         Dbgtrc_Options    options,
@@ -1044,6 +1042,8 @@ bool dbgtrc_returning_errinfo(
 }
 
 
+/** dbgtrc() variant that reports a return code specified as a string.
+ */
 bool dbgtrc_returning_expression(
         DDCA_Trace_Group  trace_group,
         Dbgtrc_Options    options,

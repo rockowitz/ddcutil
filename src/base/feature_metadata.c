@@ -427,7 +427,7 @@ dfm_to_ddca_feature_metadata(
    // ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
    // ddca_meta->latest_sl_values = copy_sl_value_table(dfm->latest_sl_values);
 
-   DBG_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
+   DBGMSF_RET_STRUCT(debug, DDCA_Feature_Metadata, dbgrpt_ddca_feature_metadata, ddca_meta);
    return ddca_meta;
 }
 
