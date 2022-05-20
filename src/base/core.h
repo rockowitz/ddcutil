@@ -120,6 +120,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_NONE   0
 #define DBGTRC_OPTIONS_SYSLOG 1
+#define DBGTRC_OPTIONS_SEVERE 2
 
 
 //
@@ -183,12 +184,14 @@ void show_ddcutil_version();
 // Issue messages of various types
 //
 
+#ifdef OLD
 void severemsg(
         const char * funcname,
         const int    lineno,
         const char * fn,
         char *       format,
         ...);
+#endif
 
 extern bool trace_to_syslog;
 
@@ -284,13 +287,15 @@ bool dbgtrc_returning_expression(
 #endif
 
 
-#define SEVEREMSG(          format, ...) \
-   severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 // cannot map to dbgtrc, writes to stderr, not stdout
-// #define SEVEREMSG(format, ...) dbgtrc(DDCA_TRC_ALL,       DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+// #define SEVEREMSG(          format, ...)  severemsg(          __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-#define DBGMSG(            format, ...) dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define SEVEREMSG(format, ...) \
+   dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+#define DBGMSG(            format, ...) \
+   dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #define DBGMSF(debug_flag, format, ...) \
    do { if (debug_flag) dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
@@ -313,7 +318,7 @@ bool dbgtrc_returning_expression(
     dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
-    dbgtrc_returning( \
+    dbgtrc_ret_ddcrc( \
           ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, \

@@ -626,7 +626,7 @@ char * formatted_wall_time() {
 
 bool trace_to_syslog;
 
-
+#ifdef OLD
 /** Issues an error message.
  *  The message is written to the current FERR device and to the system log.
  *
@@ -661,6 +661,7 @@ void severemsg(
 
       syslog(LOG_ERR, "%s", buf2);
 }
+#endif
 
 
 #ifdef OLD
@@ -791,7 +792,7 @@ bool dbgtrc_old(
  *  @param funcname      function name of caller
  *  @param lineno        line number in caller
  *  @param filename      file name of caller
- *  @param pre_prefix    initial portion of message to output
+ *  @param retval_info   return value description
  *  @param format        format string for message
  *  @param ap            arguments for format string
  *
@@ -803,7 +804,7 @@ static bool vdbgtrc(
         const char *      funcname,
         const int         lineno,
         const char *      filename,
-        const char *      pre_prefix,
+        const char *      retval_info,
         char *            format,
         va_list           ap)
 {
@@ -813,42 +814,41 @@ static bool vdbgtrc(
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
                        trace_group, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
-                       pre_prefix, format);
+                       retval_info, format);
    }
 
+   Thread_Output_Settings * thread_settings = get_thread_settings();
    bool msg_emitted = false;
+   // n. trace_group == DDCA_TRC_ALWAYS for SEVEREMSG()
    if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
-      Thread_Output_Settings * thread_settings = get_thread_settings();
-
       char * buffer = g_strdup_vprintf(format, ap);
-      if (debug)
+      if (debug) {
          printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
-
-      if (!pre_prefix)
-         pre_prefix="";
-      if (debug)
-         printf("(%s) pre_prefix=%p->|%s|\n", __func__, pre_prefix, pre_prefix);
-
+         printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
+      }
       char  elapsed_prefix[20]  = "";
       char  walltime_prefix[20] = "";
-      if (dbgtrc_show_time)
-         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
-      if (dbgtrc_show_wall_time)
-         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
-
       char thread_prefix[15] = "";
-      if (dbgtrc_show_thread_id) {
+      if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
+         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
+      if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
+         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
+      if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
          // intmax_t tid = get_thread_id();
          // assert(tid == thread_settings->tid);
          snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
       }
-
-      char * buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
+      char * buf2 = NULL;
+      if (options & DBGTRC_OPTIONS_SEVERE)
+         buf2 = g_strdup_printf("%s%s",
+                       retval_info, buffer);
+      else
+         buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
                        thread_prefix, walltime_prefix, elapsed_prefix, funcname,
-                       pre_prefix, buffer);
+                       retval_info, buffer);
       char * syslog_buf = g_strdup_printf("%s(%-30s) %s%s",
             elapsed_prefix, funcname,
-            pre_prefix, buffer);
+            retval_info, buffer);
       if (debug)
          printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
 #ifdef NO
@@ -887,8 +887,15 @@ static bool vdbgtrc(
       }
 
       if (is_tracing(trace_group, filename, funcname)) {
-         f0puts(buf2, thread_settings->fout);
-         f0putc('\n', thread_settings->fout);
+         FILE * where = NULL;
+         if (options & DBGTRC_OPTIONS_SEVERE) {
+            where = thread_settings->ferr;
+         }
+         else {
+            where = thread_settings->fout;
+         }
+         f0puts(buf2, where);
+         f0putc('\n', where);
          fflush(fout());
       }
       free(buffer);
