@@ -84,12 +84,14 @@ static bool                 debug_sleep_stats_mutex = false;
 static
 IO_Event_Type_Stats io_event_stats[] = {
       // id           name             desc           nanosec  count
-      {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
-      {IE_READ,       "IE_READ",       "read calls",        0, 0},
-//    {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
-      {IE_OPEN,       "IE_OPEN",       "open file calls",   0, 0},
-      {IE_CLOSE,      "IE_CLOSE",      "close file calls",  0, 0},
-      {IE_OTHER,      "IE_OTHER",      "other I/O calls",   0, 0},
+      {IE_WRITE,      "IE_WRITE",      "write calls",            0, 0},
+      {IE_READ,       "IE_READ",       "read calls",             0, 0},
+      {IE_IOCTL_WRITE,"I2_IOCTL_WRITE","i2c writes using ioctl", 0, 0},
+      {IE_IOCTL_READ, "I2_IOCTL_READ", "i2c reads using ioctl",  0, 0},
+//    {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",       0, 0},
+      {IE_OPEN,       "IE_OPEN",       "open file calls",        0, 0},
+      {IE_CLOSE,      "IE_CLOSE",      "close file calls",       0, 0},
+      {IE_OTHER,      "IE_OTHER",      "other I/O calls",        0, 0},
 };
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
 static GMutex io_event_stats_mutex;
