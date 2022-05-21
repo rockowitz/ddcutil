@@ -45,7 +45,7 @@ void report_elapsed_summary(int depth);
 typedef enum {
    IE_WRITE,               ///< write event
    IE_READ,                ///< read event
-   IE_WRITE_READ,          ///< write/read operation, typical for I2C
+// IE_WRITE_READ,          ///< write/read operation, typical for I2C
    IE_OPEN,                ///< device file open
    IE_CLOSE,               ///< device file close
    IE_OTHER                ///< other IO event

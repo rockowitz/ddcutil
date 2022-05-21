@@ -86,7 +86,7 @@ IO_Event_Type_Stats io_event_stats[] = {
       // id           name             desc           nanosec  count
       {IE_WRITE,      "IE_WRITE",      "write calls",       0, 0},
       {IE_READ,       "IE_READ",       "read calls",        0, 0},
-      {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
+//    {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",  0, 0},
       {IE_OPEN,       "IE_OPEN",       "open file calls",   0, 0},
       {IE_CLOSE,      "IE_CLOSE",      "close file calls",  0, 0},
       {IE_OTHER,      "IE_OTHER",      "other I/O calls",   0, 0},
