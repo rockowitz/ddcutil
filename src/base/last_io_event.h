@@ -1,7 +1,7 @@
 /** @file last_io_event.h
  */
 
-// Copyright (C) 2019-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LAST_IO_EVENT_H_
@@ -45,7 +45,7 @@ void record_io_finish(
    record_io_finish(_fd, cur_realtime_nanosec() , _event_type, (char*) __FILE__, __LINE__, (char*) __func__); \
    while(0)
 
-// combines log_io_call() with recrod_io_finish():
+// combines log_io_call() with record_io_finish():
 #define RECORD_IO_EVENTX(_fd, _event_type, _cmd_to_time)  { \
    uint64_t _start_time = cur_realtime_nanosec(); \
    _cmd_to_time; \
