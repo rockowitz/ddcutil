@@ -305,6 +305,39 @@ i2c_ioctl_writer(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
+   int rc = 0;
+
+   if (write_with_timeout) {
+      struct pollfd pfds[1];
+      pfds[0].fd = fd;
+      pfds[0].events = POLLOUT;
+
+      int pollrc;
+      int timeout_msec = 100;
+      RECORD_IO_EVENTX(
+            fd,
+            IE_OTHER,
+            ( pollrc = poll(pfds, 1, timeout_msec) )
+      );
+
+      if (pollrc < 0)  { //  i.e. -1
+         rc = -errno;
+         DBGMSG("poll() returned %d, errno=%d", pollrc, errno);
+         goto bye;
+      }
+      else if (pollrc == 0) {
+         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+         rc = -ETIMEDOUT;
+         goto bye;
+      }
+      else {
+         if ( !( pfds[0].revents & POLLOUT) ) {
+            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+            // just continue, write() will fail and we'll return that status code
+         }
+      }
+   }
+
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -342,7 +375,6 @@ i2c_ioctl_writer(
    // if error:
    //    -1, errno is set
    // 11/15: as seen: always returns 1 for success
-   int rc = 0;
    RECORD_IO_EVENTX(
          fd,
          IE_WRITE,
@@ -366,6 +398,7 @@ i2c_ioctl_writer(
       rc = -errsv;
    }
 
+bye:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
