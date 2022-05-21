@@ -212,7 +212,7 @@ void report_io_call_stats(int depth) {
       if (io_event_stats[ndx].call_count > 0) {
          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
          char buf[100];
-         snprintf(buf, 100, "%-17s (%s)", curstat->desc, curstat->name);
+         snprintf(buf, 100, "%-22s (%s)", curstat->desc, curstat->name);
          rpt_vstring(d1, "%-40s  %4d  %10" PRIu64 "  (%13" PRIu64 ")",
                      buf,
                      curstat->call_count,
