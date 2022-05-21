@@ -428,8 +428,44 @@ ioctl_reader1(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
-   // struct i2c_msg              messages[1];
+   // needs to be allocated, cannot be on stack
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
+
+   int rc = 0;
+   // should timeout be here or in ioctl_reader()?
+   if (read_with_timeout) {
+      struct pollfd pfds[1];
+      pfds[0].fd = fd;
+      pfds[0].events = POLLIN;
+
+      int pollrc;
+      int timeout_msec = 100;
+      RECORD_IO_EVENTX(
+            fd,
+            IE_OTHER,
+            ( pollrc = poll(pfds, 1, timeout_msec) )
+      );
+
+      int errsv = errno;
+      if (pollrc < 0)  { //  i.e. -1
+         DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
+         rc = -errsv;
+         goto bye;
+      }
+      else if (pollrc == 0) {
+         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+         rc = -ETIMEDOUT;
+         goto bye;
+      }
+      else {
+         if ( !(pfds[0].revents & POLLIN) ) {
+            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+            // just continue, read() will fail and we'll return that status code
+         }
+      }
+   }
+
+
    struct i2c_rdwr_ioctl_data  msgset;
    // See comments in ioctl_writer(), but here need to allocate messages
    //memset(messages,0, sizeof(messages));
@@ -454,13 +490,13 @@ ioctl_reader1(
    // DBGMSG("D messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf = %p",
    //         messages[0].addr,          messages[0].flags,          messages[0].len,      messages[0].buf );
 
-   // per ioctl() man page:
+   // per ioctl() man page:  ioctl() return code:
    // if success:
    //    normally:  0
    //    occasionally >0 is output parm
    // if error:
    //    -1, errno is set
-   int rc = 0; // ioctl(fd, I2C_RDWR, &msgset);
+
    RECORD_IO_EVENTX(
       fd,
       IE_READ,
@@ -483,6 +519,7 @@ ioctl_reader1(
    else if (rc < 0)
       rc = -errsv;
 
+bye:
    free(messages);
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
