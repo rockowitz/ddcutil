@@ -48,18 +48,19 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-static bool read_with_timeout  = false;
-static bool write_with_timeout = false;
+// static bool read_with_timeout  = false;
+// static bool write_with_timeout = false;
 
 void set_i2c_fileio_use_timeout(bool yesno) {
    // DBGMSG("Setting  %s", sbool(yesno));
-   read_with_timeout  = yesno;
-   write_with_timeout = yesno;
+   // read_with_timeout  = yesno;
+   // write_with_timeout = yesno;
 }
 
-bool get_i2c_fileio_use_timeout() {
-   return read_with_timeout;
-}
+// bool get_i2c_fileio_use_timeout() {
+//    // return read_with_timeout;
+//    return false;
+// }
 
 #ifndef I2C_IO_IOCTL_ONLY
 /** Writes to i2c bus using write()
@@ -84,40 +85,6 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
    int rc = 0;
-
-   // #ifdef USE_POLL
-   if (write_with_timeout) {
-      struct pollfd pfds[1];
-      pfds[0].fd = fd;
-      pfds[0].events = POLLOUT;
-
-      int pollrc;
-      int timeout_msec = 100;
-      RECORD_IO_EVENTX(
-            fd,
-            IE_OTHER,
-            ( pollrc = poll(pfds, 1, timeout_msec) )
-      );
-
-      int errsv = errno;
-      if (pollrc < 0)  { //  i.e. -1
-         DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
-         rc = -errsv;
-         goto bye;
-      }
-      else if (pollrc == 0) {
-         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
-         rc = -ETIMEDOUT;
-         goto bye;
-      }
-      else {
-         if ( !( pfds[0].revents & POLLOUT) ) {
-            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
-            // just continue, write() will fail and we'll return that status code
-         }
-      }
-   }
-   // #endif
 
    rc = write(fd, pbytes, bytect);
    // per write() man page:
@@ -195,41 +162,6 @@ i2c_fileio_reader(
       }
    }
    else {
-
-// #ifdef USE_POLL
-      if (read_with_timeout) {
-         struct pollfd pfds[1];
-         pfds[0].fd = fd;
-         pfds[0].events = POLLIN;
-
-         int pollrc;
-         int timeout_msec = 100;
-         RECORD_IO_EVENTX(
-               fd,
-               IE_OTHER,
-               ( pollrc = poll(pfds, 1, timeout_msec) )
-         );
-
-         int errsv = errno;
-         if (pollrc < 0)  { //  i.e. -1
-            DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
-            rc = -errsv;
-            goto bye;
-         }
-         else if (pollrc == 0) {
-            DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
-            rc = -ETIMEDOUT;
-            goto bye;
-         }
-         else {
-            if ( !(pfds[0].revents & POLLIN) ) {
-               DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
-               // just continue, read() will fail and we'll return that status code
-            }
-         }
-      }
-// #endif
-
       RECORD_IO_EVENTX(
          fd,
          IE_READ,
@@ -307,37 +239,6 @@ i2c_ioctl_writer(
 
    int rc = 0;
 
-   if (write_with_timeout) {
-      struct pollfd pfds[1];
-      pfds[0].fd = fd;
-      pfds[0].events = POLLOUT;
-
-      int pollrc;
-      int timeout_msec = 100;
-      RECORD_IO_EVENTX(
-            fd,
-            IE_OTHER,
-            ( pollrc = poll(pfds, 1, timeout_msec) )
-      );
-
-      if (pollrc < 0)  { //  i.e. -1
-         rc = -errno;
-         DBGMSG("poll() returned %d, errno=%d", pollrc, errno);
-         goto bye;
-      }
-      else if (pollrc == 0) {
-         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
-         rc = -ETIMEDOUT;
-         goto bye;
-      }
-      else {
-         if ( !( pfds[0].revents & POLLOUT) ) {
-            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
-            // just continue, write() will fail and we'll return that status code
-         }
-      }
-   }
-
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
@@ -398,7 +299,6 @@ i2c_ioctl_writer(
       rc = -errsv;
    }
 
-bye:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
@@ -432,39 +332,6 @@ ioctl_reader1(
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
 
    int rc = 0;
-   // should timeout be here or in ioctl_reader()?
-   if (read_with_timeout) {
-      struct pollfd pfds[1];
-      pfds[0].fd = fd;
-      pfds[0].events = POLLIN;
-
-      int pollrc;
-      int timeout_msec = 100;
-      RECORD_IO_EVENTX(
-            fd,
-            IE_OTHER,
-            ( pollrc = poll(pfds, 1, timeout_msec) )
-      );
-
-      int errsv = errno;
-      if (pollrc < 0)  { //  i.e. -1
-         DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
-         rc = -errsv;
-         goto bye;
-      }
-      else if (pollrc == 0) {
-         DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
-         rc = -ETIMEDOUT;
-         goto bye;
-      }
-      else {
-         if ( !(pfds[0].revents & POLLIN) ) {
-            DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
-            // just continue, read() will fail and we'll return that status code
-         }
-      }
-   }
-
 
    struct i2c_rdwr_ioctl_data  msgset;
    // See comments in ioctl_writer(), but here need to allocate messages
@@ -519,7 +386,6 @@ ioctl_reader1(
    else if (rc < 0)
       rc = -errsv;
 
-bye:
    free(messages);
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
