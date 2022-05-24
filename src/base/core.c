@@ -830,7 +830,7 @@ static bool vdbgtrc(
       char  walltime_prefix[20] = "";
       char thread_prefix[15] = "";
       if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
-         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
+         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time(4));
       if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
          g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
       if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {

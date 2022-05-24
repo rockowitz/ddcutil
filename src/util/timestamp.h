@@ -3,7 +3,7 @@
  *  Timestamp management
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TIMESTAMP_H_
@@ -19,7 +19,7 @@
 uint64_t cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
 void     show_timestamp_history(); // For debugging
 uint64_t elapsed_time_nanosec();   // nanoseconds since start of program, first call initializes
-char *   formatted_elapsed_time(); // printable elapsed time
+char *   formatted_elapsed_time(uint precision); // printable elapsed time
 char *   formatted_time(uint64_t nanos);
 
 #endif /* TIMESTAMP_H_ */

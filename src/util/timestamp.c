@@ -143,23 +143,39 @@ uint64_t elapsed_time_nanosec() {
 }
 
 
+static uint64_t ipow(const uint64_t base, int n)
+{
+   assert(n >= 0);
+    int p = base;
+    if (n == 0)
+       return 1;
+    for (int i = 1; i < n; ++i)
+        p *= base;
+    return p;
+}
+
+
 /** Returns the elapsed time in seconds since start of program execution
  *  as a formatted, printable string.
  *
  *  The string is built in a thread specific private buffer.  The returned
  *  string is valid until the next call of this function in the same thread.
  *
+ *  @param  precision  number of digits after the decimal point
  *  @return formatted elapsed time
  */
-char * formatted_elapsed_time() {
+char * formatted_elapsed_time(uint precision) {
    static GPrivate  formatted_elapsed_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_elapsed_time_key, 40);
 
-   uint64_t et_nanos = elapsed_time_nanosec();
-   uint64_t isecs    = et_nanos/ (1000 * 1000 * 1000);
-   uint64_t imillis  = et_nanos/ (1000 * 1000);
-   // printf("(%s) et_nanos=%"PRIu64", isecs=%"PRIu64", imillis=%"PRIu64"\n", __func__,  et_nanos, isecs, imillis);
-   snprintf(elapsed_buf, 40, "%3"PRIu64".%03"PRIu64"", isecs, imillis - (isecs*1000) );
+   uint64_t et_nanos         = elapsed_time_nanosec();
+   uint64_t isecs            = et_nanos/ (1000 * 1000 * 1000);
+   uint64_t adjusted_isecs   = isecs * ipow(10,precision);
+   uint64_t fractional_units = et_nanos / ipow(10, (9-precision));
+
+   // printf("(%s) et_nanos=%"PRIu64", isecs=%"PRIu64", fractional_units=%"PRIu64", adjusted_isecs=%"PRIu64"\n",
+   //       __func__,  et_nanos,       isecs,                      fractional_units, adjusted_isecs);
+   snprintf(elapsed_buf, 40, "%3"PRIu64".%0*"PRIu64"", isecs, precision, (fractional_units-adjusted_isecs) );
 
    // printf("(%s) |%s|\n", __func__, elapsed_buf);
    return elapsed_buf;
