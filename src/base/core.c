@@ -1007,7 +1007,7 @@ bool dbgtrc_ret_ddcrc(
 
 
 /** dbgtrc() variant that reports a return code of type #Error_Info in a
- *  standarized form.
+ *  standardized form.
  */
 bool dbgtrc_returning_errinfo(
         DDCA_Trace_Group  trace_group,
