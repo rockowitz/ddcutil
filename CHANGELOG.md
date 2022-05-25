@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.3] 2022-05-13
+## [1.2.3] 2022-05-25
 
 ### Changed
 - Option ***--force-slave-address*** no longer has any effect. The dev-i2c 
@@ -34,6 +34,10 @@
   - Trailing blanks on model and serial number a stripped.  This affects 
     commands **detect --terse**, **loadvcp** and **dumpvcp**, and also the 
     file names of user defined features.
+- Option ***--stats***: 
+  - I2C ioctl() calls to read and write are now reported as type IE_IOCTL_WRITE
+    and IE_IOCTL_READ rather than IE_OTHER
+  - IE_WRITE_READ stats are no longer reported, redundant
 - Source code has been extensively cleaned up. In particular, directory **adl**
   containing code for the old proprietary AMD video driver, has been removed.
 - Building ddcutil:
