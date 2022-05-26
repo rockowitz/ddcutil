@@ -304,36 +304,38 @@ bool dbgtrc_returning_expression(
 // For messages that are issued either if tracing is enabled for the appropriate trace group or
 // if a debug flag is set.
 #define DBGTRC(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #define DBGTRC_SYSLOG(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_SYSLOG, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_SYSLOG, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 #define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__)
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__)
 
 #define DBGTRC_DONE(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__)
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__)
 
 #define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
-    dbgtrc( ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
     dbgtrc_ret_ddcrc( \
-          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
+          (debug_flag) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, \
           rc, format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
     dbgtrc_returning_expression( \
-          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
+          (debug_flag) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
     dbgtrc_returning_errinfo( \
-          ( (debug_flag) ) ? DDCA_TRC_ALL : (trace_group), \
+          (debug_flag) ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 
