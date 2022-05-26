@@ -136,20 +136,25 @@ extern bool report_freed_exceptions;
 //
 
 // Controls display of messages regarding I2C error conditions that can be retried.
-// extern bool report_ddc_errors;
+// Applies to all threads.
+bool enable_report_ddc_errors(bool onoff);  // thread safe
 
-// thread specific
-bool enable_report_ddc_errors(bool onoff);
 bool is_report_ddc_errors_enabled();
 
 
-bool is_reporting_ddc(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
+bool is_reporting_ddc(
+      DDCA_Trace_Group trace_group,
+      const char *     filename,
+      const char *     funcname);
 #define IS_REPORTING_DDC() is_reporting_ddc(TRACE_GROUP, __FILE__, __func__)
 
 bool ddcmsg(
       DDCA_Trace_Group trace_group,
-      const char* funcname, const int lineno, const char* fn,
-      char* format, ...);
+      const char*      funcname,
+      const int        lineno,
+      const char*      filename,
+      char*            format,
+      ...);
 // #define DDCMSG0(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 /** Variant of **DDCMSG** that takes an explicit trace group as an argument.
@@ -160,7 +165,8 @@ bool ddcmsg(
  * @param ...
  */
 #define DDCMSGX(debug_flag, trace_group, format, ...) \
-   ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+   ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), \
+            __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
 /** Macro that wrappers function **ddcmsg()**, passing the current TRACE_GROUP,
@@ -171,7 +177,8 @@ bool ddcmsg(
  * @param ...
  */
 #define DDCMSG(debug_flag, format, ...) \
-   ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+   ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), \
+            __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
 // Show report levels for all types
