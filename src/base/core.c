@@ -1095,6 +1095,7 @@ bool dbgtrc_returning_expression(
 // error messages and possible program termination.
 //
 
+#ifdef OLD
 /** Reports an IOCTL error.
  *  The message is written to the current **FERR** device and to the system log.
  *
@@ -1111,7 +1112,6 @@ void report_ioctl_error(
       const char * filename,
       int          lineno)
 {
-   int errsv = errno;
    char buffer[200];
    g_snprintf(buffer, 200, "(%s) Error in ioctl(%s), errno=%s",
                            funcname, ioctl_name, linux_errno_desc(errnum) );
@@ -1120,9 +1120,8 @@ void report_ioctl_error(
    fflush(ferr());
 
    syslog(LOG_ERR, "%s", buffer);
-
-   errno = errsv;
 }
+#endif
 
 
 /** Called when a condition that should be impossible has been detected.
