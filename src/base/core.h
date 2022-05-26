@@ -5,12 +5,9 @@
  * of the **ddcutil** application.
  *
  * These include
- * - message destination redirection
- * - abnormal termination
- * - standard function call options
- * - timestamp generation
- * - message level control
- * - debug and trace messages
+ *  - standard function call options
+ *  - debug and trace messages
+ *  - abnormal termination
  */
 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -155,7 +152,6 @@ bool ddcmsg(
       const char*      filename,
       char*            format,
       ...);
-// #define DDCMSG0(format, ...) ddcmsg(TRACE_GROUP, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 /** Variant of **DDCMSG** that takes an explicit trace group as an argument.
  *
@@ -169,7 +165,7 @@ bool ddcmsg(
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 
-/** Macro that wrappers function **ddcmsg()**, passing the current TRACE_GROUP,
+/** Macro that wrappers function ddcmsg(), passing the current TRACE_GROUP,
  *  file name, line number, and function name as arguments.
  *
  * @param debug_flag
