@@ -149,7 +149,7 @@ typedef bool *IFilter(int i);
 
 /** An opaque structure containing an array of bytes that
  *  can grow dynamically.  Note that the same byte value can
- * appear multiple times.
+ *  appear multiple times.
  */
 typedef void * Byte_Value_Array;
 
@@ -166,20 +166,7 @@ Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
 char *           bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep);
 void             bva_report(Byte_Value_Array ids, char * title);
 bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
-
-/** Function signature for passing function that appends a value to
- * either a #Byte_Bit_Flags or a #Byte_Value_Array
- */
-typedef void (*Byte_Appender) (void * data_struct, Byte val);
-void bva_appender(void * data_struct, Byte val);
-void bs256_appender(void * data_struct, Byte val);
-// Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
-bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
-
-
-// test case
-
-void test_value_array();
+// void test_value_array();  // for testing
 
 
 //
@@ -219,12 +206,22 @@ void           bs256_iter_free( Bit_Set_256_Iterator iter);
 void           bs256_iter_reset(Bit_Set_256_Iterator iter);
 int            bs256_iter_next( Bit_Set_256_Iterator iter);
 
+
 //
-// Byte_Value_Array Bit_Set_256 cross-compatibility functions
+// Byte_Value_Array <-> Bit_Set_256 cross-compatibility functions
 //
 
 bool bva_bs256_same_values( Byte_Value_Array bva , Bit_Set_256 bs256);
 Bit_Set_256 bva_to_bs256(Byte_Value_Array bva);
+
+/** Function signature for passing function that appends a value to
+ * either a #Byte_Bit_Flags or a #Byte_Value_Array
+ */
+typedef void (*Byte_Appender) (void * data_struct, Byte val);
+void bva_appender(void * data_struct, Byte val);
+void bs256_appender(void * data_struct, Byte val);
+// Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
+bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
 
 
 #ifdef __cplusplus
