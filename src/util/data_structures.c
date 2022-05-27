@@ -870,104 +870,8 @@ void test_value_array() {
 
 
 
-
-
-/** Function matching signature #Byte_Appender that adds a byte
- * to a #Byte_Value_Array.
- *
- * @param data_struct pointer to #Byte_Value_Array
- * @param val  byte to append
- */
-void bva_appender(void * data_struct, Byte val) {
-   Byte_Value_Array bva = (Byte_Value_Array) data_struct;
-   bva_append(bva, val);
-}
-
-
-
-void bs256_appender(void * data_struct, Byte val) {
-   assert(data_struct);
-   Bit_Set_256 * bitset = (Bit_Set_256*) data_struct;
-   *bitset = bs256_insert(*bitset, val);
-}
-
-
-/** Stores a list of bytehex values in either a **Byte_Value_Array**, a **Bit_Set_256**.
- *
- * @param start starting address of hex values
- * @param len   length of hex values
- * @param data_struct opaque handle to either a **Byte_Value_Array** or a **Bit_Set_256**
- * @param appender function to add a value to **data_struct**
- *
- * @return false if any input data cannot be parsed, true otherwise
- */
-bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender){
-   bool ok = true;
-
-   char * buf = malloc(len+1);
-   memcpy(buf, start, len);
-   buf[len] = '\0';
-
-   char * curpos = buf;
-   char * nexttok;
-   Byte   byteVal = 0x00;    // initialization logically unnecessary, but makes compiler happy
-   while ( (nexttok = strtok(curpos, " ")) != NULL) {
-      if (curpos)
-         curpos = NULL;     // for all calls after first
-      int ln = strlen(nexttok);
-      bool hexok = false;
-      if (ln == 2) {                // normal case
-         // byteVal = hhc_to_byte(nexttok);
-         hexok = hhc_to_byte_in_buf(nexttok, &byteVal);
-      }
-      else if (ln == 1) {
-         // on old ultrasharp connected to blackrock (pre v2), values in capabilities
-         // string are single digits.  Not clear whether to regard them as decimal or hex,
-         // since all values are < 9.  But in that case decimal and single digit hex
-         // give the same value.
-         char buf[2];
-         buf[0] = '0';
-         buf[1] = *nexttok;
-         // byteVal = hhc_to_byte(buf);
-         hexok = hhc_to_byte_in_buf(buf, &byteVal);
-      }
-      if (!hexok) {
-         // printf("(%s) Invalid hex value in list: %s\n", __func__, nexttok);
-         ok = false;
-      }
-      // printf("(%s) byteVal=0x%02x  \n", __func__, byteVal );
-      if (hexok)
-         appender(data_struct, byteVal);
-   }
-
-   free(buf);
-   // printf("(%s) Returning %s\n", __func__, sbool(ok));
-   return ok;
-}
-
-
-/** Parses a list of bytehex values and stores the result in a **Byte_Value_Array**.
- *
- * @param bva   handle of **Byte_Value_Array** instance
- * @param start starting address of hex values
- * @param len   length of hex values
- *
- * @return false if any input data cannot be parsed, true otherwise
- */
-bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
-   return store_bytehex_list(start, len, bva, bva_appender);
-}
-
-
-
-bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
-   return store_bytehex_list(start, len, pbitset, bs256_appender);
-}
-
 //
 // Bit_Set_256 - A data structure containing 256 flags
-//
-// TODO: converge with Byte_Bit_Flags
 //
 
 const Bit_Set_256 EMPTY_BIT_SET_256 = {{0}};
@@ -1314,7 +1218,6 @@ int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen) {
 }
 
 
-
 /** Converts a **Bit_Set_256** instance to a sequence of bytes whose values
  *  correspond to the bits that are set.
  *  The byte sequence is returned in a newly allocated **Buffer**.
@@ -1335,9 +1238,6 @@ Buffer * bs256_to_buffer(Bit_Set_256 flags) {
    // printf("(%s) Done.  Returning: %s\n", __func__, buffer);
    return buf;
 }
-
-
-
 
 
 #define BS256_ITER_MARKER "BSIM"
@@ -1517,10 +1417,8 @@ Bit_Set_256 bs256_from_string(
 
 
 
-
-
 //
-// Cross functions bba <-> bs256
+// Cross data structure functions bba <-> bs256
 //
 
 
@@ -1564,6 +1462,104 @@ Bit_Set_256 bva_to_bs256(Byte_Value_Array bva) {
       bitset = bs256_insert(bitset, b);
    }
    return bitset;
+}
+
+
+/** Function matching signature #Byte_Appender that adds a byte
+ * to a #Byte_Value_Array.
+ *
+ * @param data_struct pointer to #Byte_Value_Array
+ * @param val  byte to append
+ */
+void bva_appender(void * data_struct, Byte val) {
+   Byte_Value_Array bva = (Byte_Value_Array) data_struct;
+   bva_append(bva, val);
+}
+
+void bs256_appender(void * data_struct, Byte val) {
+   assert(data_struct);
+   Bit_Set_256 * bitset = (Bit_Set_256*) data_struct;
+   *bitset = bs256_insert(*bitset, val);
+}
+
+
+/** Stores a list of bytehex values in either a **Byte_Value_Array**, or a **Bit_Set_256**.
+ *
+ * @param start starting address of hex values
+ * @param len   length of hex values
+ * @param data_struct opaque handle to either a **Byte_Value_Array** or a **Bit_Set_256**
+ * @param appender function to add a value to **data_struct**
+ *
+ * @return false if any input data cannot be parsed, true otherwise
+ */
+bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender){
+   bool ok = true;
+
+   char * buf = malloc(len+1);
+   memcpy(buf, start, len);
+   buf[len] = '\0';
+
+   char * curpos = buf;
+   char * nexttok;
+   Byte   byteVal = 0x00;    // initialization logically unnecessary, but makes compiler happy
+   while ( (nexttok = strtok(curpos, " ")) != NULL) {
+      if (curpos)
+         curpos = NULL;     // for all calls after first
+      int ln = strlen(nexttok);
+      bool hexok = false;
+      if (ln == 2) {                // normal case
+         // byteVal = hhc_to_byte(nexttok);
+         hexok = hhc_to_byte_in_buf(nexttok, &byteVal);
+      }
+      else if (ln == 1) {
+         // on old ultrasharp connected to blackrock (pre v2), values in capabilities
+         // string are single digits.  Not clear whether to regard them as decimal or hex,
+         // since all values are < 9.  But in that case decimal and single digit hex
+         // give the same value.
+         char buf[2];
+         buf[0] = '0';
+         buf[1] = *nexttok;
+         // byteVal = hhc_to_byte(buf);
+         hexok = hhc_to_byte_in_buf(buf, &byteVal);
+      }
+      if (!hexok) {
+         // printf("(%s) Invalid hex value in list: %s\n", __func__, nexttok);
+         ok = false;
+      }
+      // printf("(%s) byteVal=0x%02x  \n", __func__, byteVal );
+      if (hexok)
+         appender(data_struct, byteVal);
+   }
+
+   free(buf);
+   // printf("(%s) Returning %s\n", __func__, sbool(ok));
+   return ok;
+}
+
+
+/** Parses a list of bytehex values and stores the result in a **Byte_Value_Array**.
+ *
+ * @param bva   handle of **Byte_Value_Array** instance
+ * @param start starting address of hex values
+ * @param len   length of hex values
+ *
+ * @return false if any input data cannot be parsed, true otherwise
+ */
+bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
+   return store_bytehex_list(start, len, bva, bva_appender);
+}
+
+
+/** Parses a list of bytehex values and stores the result in a **Bit_Set_256**.
+ *
+ * @param pbitset   where to return result **Bit_Set_256** instance
+ * @param start     starting address of hex values
+ * @param len       length of hex values
+ *
+ * @return false if any input data cannot be parsed, true otherwise
+ */
+bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
+   return store_bytehex_list(start, len, pbitset, bs256_appender);
 }
 
 
