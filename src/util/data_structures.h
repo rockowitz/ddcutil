@@ -55,10 +55,6 @@ void     buffer_rpt(Buffer * buffer, int depth);
 bool     buffer_eq(Buffer* buf1, Buffer* buf2);
 void     buffer_extend(Buffer* buf, int addl_bytes);
 
-#ifdef BYTE_BIT_FLAGS
-Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
-#endif
-
 
 //
 // Circular String Buffer
