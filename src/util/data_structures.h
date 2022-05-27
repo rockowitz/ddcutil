@@ -22,110 +22,6 @@ extern "C" {
 #include "string_util.h"
 
 
-typedef bool *IFilter(int i);
-
-/** An opaque structure containing an array of bytes that
- *  can grow dynamically.  Note that the same byte value can
- * appear multiple times.
- */
-typedef void * Byte_Value_Array;
-
-Byte_Value_Array bva_create();
-int              bva_length(Byte_Value_Array bva);
-void             bva_append(Byte_Value_Array bva, Byte item);
-Byte             bva_get(Byte_Value_Array bva, guint ndx);
-bool             bva_contains(Byte_Value_Array bva, Byte item);
-bool             bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2);
-Byte *           bva_bytes(Byte_Value_Array bva);
-char *           bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep);
-void             bva_free(Byte_Value_Array bva);
-void             bva_report(Byte_Value_Array ids, char * title);
-bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
-Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
-void             bva_sort(Byte_Value_Array bva);
-
-#ifdef BYTE_BIT_FLAGS
-/** An opaque data structure containing 256 flags */
-typedef void * Byte_Bit_Flags;
-
-Byte_Bit_Flags bbf_create();
-void           bbf_free(Byte_Bit_Flags flags);
-void           bbf_insert(Byte_Bit_Flags flags, Byte val);
-bool           bbf_contains(Byte_Bit_Flags flags, Byte val);
-bool           bbf_eq(Byte_Bit_Flags flags1, Byte_Bit_Flags flags2);
-Byte_Bit_Flags bbf_and_not(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
-char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
-int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
-int            bbf_to_bytes(Byte_Bit_Flags  flags, Byte * buffer, int buflen);
-char *         bbf_to_string(Byte_Bit_Flags flags);
-bool           bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
-
-/** Opaque iterator for #Byte_Bit_Flags */
-typedef void * Byte_Bit_Flags_Iterator;
-
-Byte_Bit_Flags_Iterator
-               bbf_iter_new(Byte_Bit_Flags bbflags);
-void           bbf_iter_free(Byte_Bit_Flags_Iterator bbf_iter);
-void           bbf_iter_reset(Byte_Bit_Flags_Iterator bbf_iter);
-int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
-
-
-//
-// Byte_Value_Array Byte_Bit_Flags cross-compatibility functions
-//
-
-bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbf);
-Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva);
-#endif
-
-/** Function signature for passing function that appends a value to
- * either a #Byte_Bit_Flags or a #Byte_Value_Array
- */
-typedef void (*Byte_Appender) (void * data_struct, Byte val);
-void bva_appender(void * data_struct, Byte val);
-void bbf_appender(void * data_struct, Byte val);
-// Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
-bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
-
-
-// test case
-
-void test_value_array();
-
-
-typedef struct {
-   uint8_t bytes[32];
-} Bit_Set_256;
-
-extern const Bit_Set_256 EMPTY_BIT_SET_256;
-
-Bit_Set_256    bs256_insert(Bit_Set_256 flags, uint8_t val);
-bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
-int            bs256_first_bit_set(Bit_Set_256 bitset);
-bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
-Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
-Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
-Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
-int            bs256_count(Bit_Set_256 set);
-char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);
-char *         bs256_to_string_decimal(Bit_Set_256 set, const char * value_prefix, const char * septr);
-Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
-
-/** Opaque iterator for Bit_Set_256 */
-typedef void * Bit_Set_256_Iterator;
-
-Bit_Set_256_Iterator
-               bs256_iter_new(Bit_Set_256 bs256lags);
-void           bs256_iter_free(Bit_Set_256_Iterator iter);
-void           bs256_iter_reset(Bit_Set_256_Iterator iter);
-int            bs256_iter_next(Bit_Set_256_Iterator  iter);
-
-#ifdef BYTE_BIT_FLAGS
-Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
-Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
-#endif
-
-
 //
 // Buffer with length management
 //
@@ -162,6 +58,28 @@ void     buffer_extend(Buffer* buf, int addl_bytes);
 #ifdef BYTE_BIT_FLAGS
 Buffer * bbf_to_buffer(Byte_Bit_Flags flags);
 #endif
+
+
+//
+// Circular String Buffer
+//
+
+typedef struct {
+   char **  lines;
+   int      size;
+   int      ct;
+} Circular_String_Buffer;
+
+
+/** Allocates a new #Circular_String_Buffer
+ *
+ *  @param  size  buffer size (number of entries)
+ *  @return newly allocated #Circular_String_Buffer
+ */
+Circular_String_Buffer * csb_new(int size);
+void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
+GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
+
 
 //
 // Identifier id to name and description lookup
@@ -205,7 +123,6 @@ typedef Value_Name_Title Value_Name_Title_Table[];
 typedef Value_Name_Title       Value_Name;
 typedef Value_Name_Title_Table Value_Name_Table;
 
-
 char * vnt_name( Value_Name_Title* table, uint32_t val);
 #ifdef TRANSITIONAL
 #define vn_name vnt_name
@@ -229,24 +146,136 @@ char * vnt_interpret_flags(
 
 
 //
-// Circular String Buffer
+// Byte Value Array
+//
+
+typedef bool *IFilter(int i);
+
+/** An opaque structure containing an array of bytes that
+ *  can grow dynamically.  Note that the same byte value can
+ * appear multiple times.
+ */
+typedef void * Byte_Value_Array;
+
+Byte_Value_Array bva_create();
+void             bva_free(Byte_Value_Array bva);
+void             bva_sort(Byte_Value_Array bva);
+bool             bva_sorted_eq(Byte_Value_Array bva1, Byte_Value_Array bva2);
+int              bva_length(Byte_Value_Array bva);
+bool             bva_contains(Byte_Value_Array bva, Byte item);
+Byte             bva_get(Byte_Value_Array bva, guint ndx);
+void             bva_append(Byte_Value_Array bva, Byte item);
+Byte *           bva_bytes(Byte_Value_Array bva);
+Byte_Value_Array bva_filter(Byte_Value_Array bva, IFilter filter_func);
+char *           bva_as_string(Byte_Value_Array bva, bool as_hex, char * sep);
+void             bva_report(Byte_Value_Array ids, char * title);
+bool             bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len);
+
+
+#ifdef BYTE_BIT_FLAGS
+/** An opaque data structure containing 256 flags */
+typedef void * Byte_Bit_Flags;
+
+Byte_Bit_Flags bbf_create();
+void           bbf_free(Byte_Bit_Flags flags);
+bool           bbf_eq(Byte_Bit_Flags flags1, Byte_Bit_Flags flags2);
+int            bbf_count_set(Byte_Bit_Flags flags);  // number of bits set
+bool           bbf_contains(Byte_Bit_Flags flags, Byte val);
+void           bbf_insert(Byte_Bit_Flags flags, Byte val);
+
+Byte_Bit_Flags bbf_and_not(Byte_Bit_Flags bbflags1, Byte_Bit_Flags bbflags2);
+
+char *         bbf_repr(Byte_Bit_Flags flags, char * buffer, int buflen);
+int            bbf_to_bytes(Byte_Bit_Flags  flags, Byte * buffer, int buflen);
+char *         bbf_to_string(Byte_Bit_Flags flags);
+bool           bbf_store_bytehex_list(Byte_Bit_Flags flags, char * start, int len);
+
+/** Opaque iterator for #Byte_Bit_Flags */
+typedef void * Byte_Bit_Flags_Iterator;
+
+Byte_Bit_Flags_Iterator
+               bbf_iter_new(Byte_Bit_Flags bbflags);
+void           bbf_iter_free(Byte_Bit_Flags_Iterator bbf_iter);
+void           bbf_iter_reset(Byte_Bit_Flags_Iterator bbf_iter);
+int            bbf_iter_next(Byte_Bit_Flags_Iterator bbf_iter);
+
+
+//
+// Byte_Value_Array Byte_Bit_Flags cross-compatibility functions
+//
+
+bool bva_bbf_same_values( Byte_Value_Array bva , Byte_Bit_Flags bbf);
+Byte_Bit_Flags bva_to_bbf(Byte_Value_Array bva);
+#endif
+
+
+/** Function signature for passing function that appends a value to
+ * either a #Byte_Bit_Flags or a #Byte_Value_Array
+ */
+typedef void (*Byte_Appender) (void * data_struct, Byte val);
+void bva_appender(void * data_struct, Byte val);
+void bs256_appender(void * data_struct, Byte val);
+#ifdef BYTE_BIT_FLAGS
+void bbf_appender(void * data_struct, Byte val);
+#endif
+// Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
+bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
+
+
+// test case
+
+void test_value_array();
+
+
+//
+// Bit_Set_256
 //
 
 typedef struct {
-   char **  lines;
-   int      size;
-   int      ct;
-} Circular_String_Buffer;
+   uint8_t bytes[32];
+} Bit_Set_256;
 
+extern const Bit_Set_256 EMPTY_BIT_SET_256;
 
-/** Allocates a new #Circular_String_Buffer
- *
- *  @param  size  buffer size (number of entries)
- *  @return newly allocated #Circular_String_Buffer
- */
-Circular_String_Buffer * csb_new(int size);
-void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
-GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
+bool           bs256_eq(Bit_Set_256 set1, Bit_Set_256 set2);
+int            bs256_count(Bit_Set_256 set);
+bool           bs256_contains(Bit_Set_256 flags, uint8_t val);
+int            bs256_first_bit_set(Bit_Set_256 bitset);
+Bit_Set_256    bs256_insert(Bit_Set_256 flags, uint8_t val);
+
+Bit_Set_256    bs256_or(Bit_Set_256 set1, Bit_Set_256 set2);         // union
+Bit_Set_256    bs256_and(Bit_Set_256 set1, Bit_Set_256 set2);        // intersection
+Bit_Set_256    bs256_and_not(Bit_Set_256 set1, Bit_Set_256 set2);    // subtract
+
+char *         bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);
+char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);   // provides for bbf_to_string()
+char *         bs256_to_string_decimal(Bit_Set_256 set, const char * value_prefix, const char * septr);
+Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
+
+int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen);
+Buffer * bs256_to_buffer(Bit_Set_256 flags);
+
+/** Opaque iterator for Bit_Set_256 */
+typedef void * Bit_Set_256_Iterator;
+
+Bit_Set_256_Iterator
+               bs256_iter_new(Bit_Set_256 bs256lags);
+void           bs256_iter_free( Bit_Set_256_Iterator iter);
+void           bs256_iter_reset(Bit_Set_256_Iterator iter);
+int            bs256_iter_next( Bit_Set_256_Iterator iter);
+
+#ifdef BYTE_BIT_FLAGS
+Bit_Set_256    bs256_from_bbf(Byte_Bit_Flags bbf);
+Byte_Bit_Flags bbf_from_bs256(Bit_Set_256 bitset);
+#endif
+
+//
+// Byte_Value_Array Bit_Set_256 cross-compatibility functions
+//
+
+bool bva_bs256_same_values( Byte_Value_Array bva , Bit_Set_256 bs256);
+Bit_Set_256 bva_to_bs256(Byte_Value_Array bva);
+
 
 #ifdef __cplusplus
 }    // extern "C"

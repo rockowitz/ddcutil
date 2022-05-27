@@ -21,6 +21,578 @@
 #include "data_structures.h"
 
 
+
+//
+// Buffer with length management
+//
+
+bool trace_buffer_malloc_free = false;
+bool trace_buffer = false;    // controls buffer tracing
+bool trace_buffer_resize = false;
+
+
+/** Allocates a **Buffer** instance
+ *
+ *  @param  size       maximum number of bytes that buffer can hold
+ *  @param  trace_msg  optional trace message
+ *
+ *  @return pointer to newly allocated instance
+ */
+Buffer * buffer_new(int size, const char * trace_msg) {
+   int hacked_size = size+16;     // try allocating extra space see if free failures go away - overruns?
+   // printf("(%s) sizeof(Buffer)=%ld, size=%d\n", __func__, sizeof(Buffer), size);    // sizeof(Buffer) == 16
+   Buffer * buffer = (Buffer *) malloc(sizeof(Buffer));
+   memcpy(buffer->marker, BUFFER_MARKER, 4);
+   buffer->bytes = (Byte *) calloc(1, hacked_size);    // hack
+   buffer->buffer_size = size;
+   buffer->len = 0;
+   buffer->size_increment = 0;
+   if (trace_buffer_malloc_free)
+      printf("(%s) Allocated buffer.  buffer=%p, buffer->bytes=%p, &buffer->bytes=%p, %s\n",
+             __func__, (void*)buffer, buffer->bytes, (void*)&(buffer->bytes), trace_msg);
+   return buffer;
+}
+
+
+/** Sets a size increment for the buffer, allowing it to be dynamically
+ *  resized if necessary.
+ *
+ *  @param buf   pointer to Buffer instance
+ *  @param size_increment if resizing is necessary, the buffer size will be
+ *                         increased by this amount
+ */
+void buffer_set_size_increment(Buffer * buf, uint16_t size_increment) {
+   buf->size_increment = size_increment;
+}
+
+
+/** Allocates a **Buffer** instance and sets an initial value
+ *
+ *  @param  bytes      pointer to initial value
+ *  @param  bytect     length of initial value, the buffer size is
+ *                     also set to this value
+ *  @param  trace_msg  optional trace message
+ *
+ *  @return pointer to newly allocated instance
+ *
+ *  @remark
+ *  Setting the buffer size to the initial value does not allow for
+ *  expansion, unless buffer_set_size_increment() is called
+ */
+Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg) {
+   Buffer* buf = buffer_new(bytect, trace_msg);
+   buffer_put(buf, bytes, bytect);
+   return buf;
+}
+
+
+/** Copies a Buffer.
+ *
+ *  @param srcbuf instance to copy
+ *  @param trace_msg optional trace message
+ *
+ *  @return newly allocated copy
+ *
+ *  @remark
+ *  - The contents of the newly allocated Buffer is identical to
+ *    the original, but the maximum length and size increment are
+ *    not.   Is this an issue?
+ *  - Not currently used. (3/2017)
+ */
+Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
+   return buffer_new_with_value(srcbuf->bytes, srcbuf->len, trace_msg);
+}
+
+
+/** Frees a Buffer instance.  All memory associated with the Buffer is released.
+ *
+ *  @param buffer    pointer to Buffer instance, must be valid
+ *  @param trace_msg optional trace message
+ */
+void buffer_free(Buffer * buffer, const char * trace_msg) {
+   if (trace_buffer_malloc_free)
+      printf("(%s) Starting. buffer = %p\n", __func__, (void*) buffer);
+
+   // ASSERT_WITH_BACKTRACE(buffe#ifdef TEMPr);
+   // ASSERT_WITH_BACKTRACE(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+
+   if (buffer->bytes) {
+     if (trace_buffer_malloc_free)
+         printf("(%s) Freeing buffer->bytes = %p, &buffer->bytes=%p\n",
+                __func__, buffer->bytes, (void*)&(buffer->bytes));
+     free(buffer->bytes);
+   }
+   if (trace_buffer_malloc_free)
+      printf("(%s) Freeing buffer = %p, %s\n", __func__, (void*)buffer, trace_msg);
+   buffer->marker[3] = 'x';
+   free(buffer);
+
+   if (trace_buffer_malloc_free)
+      printf("(%s) Done\n", __func__);
+}
+
+
+/** Returns the length of the data in the Buffer.
+ *
+ *  @param  buffer  pointer to Buffer instance
+ *  @return number of bytes in Buffer
+ */
+int buffer_length(Buffer * buffer) {
+   return buffer->len;
+}
+
+
+/** Adjusts the number of bytes in a Buffer.
+ *
+ *  @param  buffer  pointer to buffer instance
+ *  @param  bytect  new length of buffer contents, must be less that
+ *                  the maximum size of the buffer
+ */
+void buffer_set_length(Buffer * buffer, int bytect) {
+   if (trace_buffer)
+      printf("(%s) bytect=%d, buffer_size=%d\n", __func__, bytect, buffer->buffer_size);
+   assert (bytect <= buffer->buffer_size);
+   buffer->len = bytect;
+}
+
+
+/** Sets the value stored in a Buffer to a range of bytes.
+ *  The buffer length is updated.
+ *
+ *  @param  buffer     pointer to Buffer instance
+ *  @param  bytes      pointer to bytes to store in buffer
+ *  @param  bytect     number of bytes to store
+ */
+void buffer_put(Buffer * buffer, Byte * bytes, int bytect) {
+   if (trace_buffer) {
+      printf("(%s) buffer->bytes = %p, bytes=%p, bytect=%d\n",
+             __func__, buffer->bytes, bytes, bytect);
+      printf("(%s) cur len = %d, storing |%.*s|, bytect=%d\n",
+             __func__, buffer->len, bytect, bytes, bytect);
+   }
+   assert (bytect <= buffer->buffer_size);
+   memcpy(buffer->bytes, bytes, bytect);
+   buffer->len = buffer->len + bytect;
+   // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
+}
+
+
+/** Stores a single byte at a specified offset in the buffer.
+ *  The buffer length is not updated.
+ *
+ *  @param  buf      pointer to Buffer instance
+ *  @param  offset   offset in buffer at which to store byte
+ *  @param  byte     byte value to be stored
+ *
+ *  @remark
+ *  A dangerous function.  Use with care.
+ */
+void buffer_set_byte(Buffer * buf, int offset, Byte byte) {
+   if (trace_buffer)
+      printf("(%s) Storing 0x%02x at offset %d\n", __func__, byte, offset);
+   assert(offset >= 0 && offset < buf->buffer_size);
+   buf->bytes[offset] = byte;
+}
+
+
+/** Sets a range of bytes in a Buffer.
+ *  The logical length of the buffer is not updated.
+ *
+ *  @param  buf      pointer to Buffer instance
+ *  @param  offset   offset in buffer at which to store byte
+ *  @param  bytes    pointer to bytes to store
+ *  @param  bytect   number of bytes to store
+ */
+void buffer_set_bytes(Buffer * buf, int offset, Byte * bytes, int bytect) {
+   if (trace_buffer)
+      printf("(%s) Storing %d bytes at offset %d, buffer_size=%d\n",
+             __func__, bytect, offset, buf->buffer_size);
+   assert(offset >= 0 && (offset + bytect) <= buf->buffer_size);
+
+   memcpy(buf->bytes+offset, bytes, bytect);
+}
+
+
+/** Appends a sequence of bytes to the current contents of a Buffer.
+ *  The buffer length is updated.
+ *
+ *  @param  buffer    pointer to the Buffer object
+ *  @param  bytes     pointer to the bytes to be appended
+ *  @param  bytect    number of bytes to append
+ */
+void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
+   // printf("(%s) Starting. buffer=%p\n", __func__, buffer);
+   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   if (trace_buffer) {
+      printf("(%s) cur len = %d, appending |%.*s|, bytect=%d\n", __func__, buffer->len, bytect, bytes, bytect);
+      printf("(%s) buffer->bytes + buffer->len = %p, bytes=%p, bytect=%d\n",
+             __func__, buffer->bytes+buffer->len, bytes, bytect);
+   }
+   //  buffer->len + 2 + bytect  .. why the  + 2?
+
+   int required_size = buffer->len + 2 + bytect;
+   if (required_size > buffer->buffer_size && buffer->size_increment > 0) {
+      int new_size = MAX(required_size, buffer->buffer_size + buffer->size_increment);
+      if (trace_buffer_resize)
+         printf("(%s) Resizing. old size = %d, new size = %d\n",
+                __func__, buffer->buffer_size, new_size);
+      buffer_extend(buffer, new_size - buffer->buffer_size);
+   }
+
+   assert(buffer->len + 2 + bytect <= buffer->buffer_size);
+
+   memcpy(buffer->bytes + buffer->len, bytes, bytect);
+   buffer->len = buffer->len + bytect;
+
+   // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
+}
+
+
+/** Appends a string to the current string in the buffer.
+ *
+ *  @param  buffer pointer to Buffer
+ *  @param  str    string to append
+ *
+ *  @remark
+ *  If the buffer is not empty, checks by assert that
+ *  the last character stored is '\0';
+ */
+void buffer_strcat(Buffer * buffer, char * str) {
+   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   if (buffer->len == 0) {
+      buffer_append(buffer, (Byte *) str, strlen(str)+1);
+   }
+   else {
+      assert(buffer->bytes[buffer->len - 1] == '\0');
+      buffer_set_length(buffer, buffer->len - 1);     // truncate trailing \0
+      buffer_append(buffer, (Byte *) str, strlen(str) + 1);
+   }
+}
+
+
+/** Appends a single byte to the current value in the buffer.
+ *  The buffer length is updated.
+ *
+ *  @param buffer   pointer to Buffer instance
+ *  @param byte     value to append
+ *
+ *  @todo Increase buffer size if necessary and size_increment > 0
+ */
+void     buffer_add(Buffer * buffer, Byte byte) {
+   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
+   assert(buffer->len + 1 <= buffer->buffer_size);
+   buffer->bytes[buffer->len++] = byte;
+}
+
+
+/** Tests whether 2 Buffer instances have the same
+ *  contents.
+ *
+ *  @param buf1  pointer to first Buffer
+ *  @param buf2  pointer to second Buffer
+ *  @return true if contents are identical, false if not
+ *
+ *  @remark
+ *  - If both buf1==NULL and buf2==NULL, the result is true
+ */
+bool     buffer_eq(Buffer* buf1, Buffer* buf2) {
+   bool result = false;
+   if (!buf1 && !buf2)
+      result = true;
+   else if (buf1 && buf2 &&
+            buf1->len == buf2->len &&
+            memcmp(buf1->bytes, buf2->bytes, buf1->len) == 0
+           )
+      result = true;
+   return result;
+}
+
+
+/** Increases the size of a Buffer
+ *
+ *  @param buf       pointer to Buffer instance
+ *  @param addl_size number of additional bytes
+ */
+void     buffer_extend(Buffer* buf, int addl_size) {
+   int new_size = buf->buffer_size + addl_size;
+   buf->bytes = realloc(buf->bytes, new_size);
+   buf->buffer_size = new_size;
+}
+
+
+/** Displays all fields of the Buffer.
+ *  This is a debugging function.
+ *
+ *  @param buffer   pointer to Buffer instance
+ *
+ *  @remark
+ *  Output is written to stdout.
+ */
+void buffer_dump(Buffer * buffer) {
+   printf("Buffer at %p,  bytes addr=%p, len=%d, max_size=%d\n",
+          (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
+   // printf("  bytes end addr=%p\n", buffer->bytes+buffer->buffer_size);
+   if (buffer->bytes)
+      hex_dump(buffer->bytes, buffer->len);
+}
+
+
+/** Displays all fields of the Buffer using rpt_* functions.
+ *  This is a debugging function.
+ *
+ *  @param buffer   pointer to Buffer instance
+ *  @param depth    logical indentation depth
+ *
+ *  @remark
+ *  Output is written to stdout.
+ */
+void buffer_rpt(Buffer * buffer, int depth) {
+   rpt_vstring(depth, "Buffer at %p, bytes addr=%p, len=%d, max_size=%d",
+         (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
+   if (buffer->bytes)
+      rpt_hex_dump(buffer->bytes, buffer->len, depth);
+}
+
+
+
+//
+// Circular_String_Buffer
+//
+
+/** Allocates a new #Circular_String_Buffer
+ *
+ *  @param  size  buffer size (number of entries)
+ *  @return newly allocated #Circular_String_Buffer
+ */
+Circular_String_Buffer *
+csb_new(int size) {
+   Circular_String_Buffer * csb = calloc(1, sizeof(Circular_String_Buffer));
+   csb->lines = calloc(size, sizeof(char*));
+   csb->size = size;
+   csb->ct = 0;
+   return csb;
+}
+
+
+/** Appends a string to a #Circular_String_Buffer.
+ *
+ *  @param   csb   #Circular_String_Buffer
+ *  @param   line  string to append
+ *  @param   copy  if true, a copy of the string is appended to the buffer
+ *                 if false, the string itself is appended
+ */
+void
+csb_add(Circular_String_Buffer * csb, char * line, bool copy) {
+    int nextpos = csb->ct % csb->size;
+    // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, csb->ct, nextpos, line);
+    if (csb->lines[nextpos])
+       free(csb->lines[nextpos]);
+    if (copy)
+       csb->lines[nextpos] = g_strdup(line);
+    else
+       csb->lines[nextpos] = line;
+    csb->ct++;
+}
+
+
+/** All the strings in a #Circular_String_Buffer are moved to  a newly
+ *  allocated GPtrArray. The count of lines in the now empty #Circular_String_Buffer
+ *  is set to 0.
+ *
+ *   @param csb #Circular_String_Buffer to convert
+ *   @return    newly allocated #GPtrArray
+ */
+GPtrArray *
+csb_to_g_ptr_array(Circular_String_Buffer * csb) {
+   // printf("(%s) csb->size=%d, csb->ct=%d\n", __func__, csb->size, csb->ct);
+   GPtrArray * pa = g_ptr_array_sized_new(csb->ct);
+
+   int first = 0;
+   if (csb->ct > csb->size)
+      first = csb->ct % csb->size;
+   // printf("(%s) first=%d\n", __func__, first);
+
+   for (int ndx = 0; ndx < csb->ct; ndx++) {
+      int pos = (first + ndx) % csb->size;
+      char * s = csb->lines[pos];
+      // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
+
+      g_ptr_array_add(pa, s);
+   }
+   csb->ct = 0;
+   return pa;
+}
+
+
+
+//
+// Identifier id to name and description lookup
+//
+
+/** Returns the name of an entry in a Value_Name_Title table.
+ *
+ * @param table  pointer to table
+ * @param val    value to lookup
+ *
+ * @return name of value, NULL if not found
+ */
+char * vnt_name(Value_Name_Title* table, uint32_t val) {
+   // printf("(%s) val=%d\n", __func__, val);
+   // debug_vnt_table(table);
+   char * result = NULL;
+
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      if (val == cur->value) {
+         result = cur->name;
+         break;
+      }
+   }
+   return result;
+}
+
+
+/** Returns the title (description field) of an entry in a Value_Name_Title table.
+ *
+ * @param table  pointer to table
+ * @param val    value to lookup
+ *
+ * @return title of value, NULL if not found
+ */
+char * vnt_title(Value_Name_Title* table, uint32_t val) {
+   // printf("(%s) val=%d\n", __func__, val);
+   // debug_vnt_table(table);
+   char * result = NULL;
+
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      if (val == cur->value) {
+         result = cur->title;
+         break;
+      }
+   }
+   return result;
+}
+
+
+/** Searches a Value_Name_Title_Table for a specified name or title,
+ *  and returns its id value.
+ *
+ *  @param table a      Value_Name_Title table
+ *  @param s            string to search for
+ *  @param use_title    if false, search name  field\n
+ *                      if true,  search title field
+ *  @param ignore_case  if true, search is case-insensitive
+ *  @param default_id   value to return if not found
+ *
+ *  @result value id
+ */
+uint32_t vnt_find_id(
+           Value_Name_Title_Table table,
+           const char * s,
+           bool use_title,       // if false, search by symbolic name, if true, search by title
+           bool ignore_case,
+           uint32_t default_id)
+{
+   assert(s);
+   uint32_t result = default_id;
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      char * comparand = (use_title) ? cur->title : cur->name;
+      if (comparand) {
+         int comprc = (ignore_case)
+                         ? strcasecmp(s, comparand)
+                         : strcmp(    s, comparand);
+         if (comprc == 0) {
+            result = cur->value;
+            break;
+         }
+      }
+   }
+   return result;
+}
+
+
+/** Interprets an integer whose bits represent named flags.
+ *
+ * @param flags_val      value to interpret
+ * @param bitname_table  pointer to Value_Name table
+ * @param use_title      if **true**, use the **title** field of the table,\n
+ *                       if **false**, use the **name** field of the table
+ * @param sepstr         if non-NULL, separator string to insert between values
+ *
+ * @return newly allocated character string
+ *
+ * @remark
+ * - It is the responsibility of the caller to free the returned string
+ * - If a referenced **title** field is NULL, "missing" is used as the value
+ */
+char * vnt_interpret_flags(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. flags_val=0x%08x, bitname_table=%p, use_title=%s, sepstr=|%s|\n",
+             __func__, flags_val, (void*)bitname_table, sbool(use_title), sepstr);
+
+   GString * sbuf = g_string_sized_new(200);
+   bool first = true;
+   Value_Name_Title * cur_entry = bitname_table;
+     while (cur_entry->name) {
+        if (debug)
+           printf("(%s) cur_entry=%p, Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
+                  __func__, (void*)cur_entry, flags_val, cur_entry->value);
+        if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
+           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
+           if (!sval)
+              sval = "missing";
+           g_string_append(sbuf, sval);
+           break;
+        }
+        if (flags_val & cur_entry->value) {
+           if (first)
+              first = false;
+           else {
+              if (sepstr) {
+                 g_string_append(sbuf, sepstr);
+              }
+           }
+
+           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
+           if (!sval) {
+              sval = "missing";
+           }
+           g_string_append(sbuf, sval);
+        }
+        cur_entry++;
+     }
+     char * result = strdup(sbuf->str);
+     g_string_free(sbuf, true);
+
+     if (debug)
+        printf("(%s) Done. Returning: |%s|\n", __func__, result);
+     return result;
+
+}
+
+
+/** Shows the contents of a **Value_Name_Title table.
+ *  Output is written to stdout.
+ *
+ * @param table pointer to table
+ */
+void vnt_debug_table(Value_Name_Title * table) {
+   printf("Value_Name_Title table:\n");
+   Value_Name_Title * cur = table;
+   for (; cur->name; cur++) {
+      printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
+   }
+}
+
+
 // bva - Byte Value Array
 //
 // An opaque structure containing an array of bytes that
@@ -127,7 +699,6 @@ bool bva_contains(Byte_Value_Array bva, Byte item) {
    // printf("(%s) returning %d\n", __func__, result);
    return result;
 }
-
 
 // Comparison function used by gba_sort()
 static int bva_comp_func(const void * val1, const void * val2) {
@@ -268,7 +839,7 @@ int egmain(int argc, char** argv) {
    list1 = g_list_append(list1, "Hello world!");
    // generates warning:
    // printf("The first item is '%s'\n", g_list_first(list1)->data);
-   g_list_free(list1);
+   g_list_free(list1);bbf_to_string
 
    GSList* list = NULL;
    printf("The list is now %d items long\n", g_slist_length(list));
@@ -740,12 +1311,18 @@ void bbf_appender(void * data_struct, Byte val) {
 }
 #endif
 
+void bs256_appender(void * data_struct, Byte val) {
+   assert(data_struct);
+   Bit_Set_256 * bitset = (Bit_Set_256*) data_struct;
+   *bitset = bs256_insert(*bitset, val);
+}
 
-/** Stores a list of bytehex values in either a **Byte_Value_Array** or a **Byte_Bit_Flags**.
+
+/** Stores a list of bytehex values in either a **Byte_Value_Array**, a **Bit_Set_256**.
  *
  * @param start starting address of hex values
  * @param len   length of hex values
- * @param data_struct opaque handle to either a **Byte_Value_Array** or a **Byte_Bit_Flags**
+ * @param data_struct opaque handle to either a **Byte_Value_Array** or a **Bit_Set_256**
  * @param appender function to add a value to **data_struct**
  *
  * @return false if any input data cannot be parsed, true otherwise
@@ -807,7 +1384,6 @@ bool bva_store_bytehex_list(Byte_Value_Array bva, char * start, int len) {
    return store_bytehex_list(start, len, bva, bva_appender);
 }
 
-
 #ifdef BYTE_BIT_FLAGS
 /** Parses a list of bytehex values and stores the result in a **Byte_Bit_Flags**.
  *
@@ -822,6 +1398,9 @@ bool bbf_store_bytehex_list(Byte_Bit_Flags bbf, char * start, int len) {
 }
 #endif
 
+bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
+   return store_bytehex_list(start, len, pbitset, bs256_appender);
+}
 
 //
 // Bit_Set_256 - A data structure containing 256 flags
@@ -895,7 +1474,6 @@ bool bs256_contains(
     return result;
 }
 
-
 /** Returns the bit number of the first bit set.
  *  @param  bitset #Bit_Set_256 to check
  *  @return number of first bit that is set (0 based),
@@ -945,7 +1523,6 @@ Bit_Set_256 bs256_and(
    }
    return result;
 }
-
 
 Bit_Set_256 bs256_and_not(
       Bit_Set_256 set1,
@@ -1017,7 +1594,6 @@ int bs256_count(
    return result;
 }
 
-
 #ifdef COMPILE_ERRORS
 int bs256_count(
       Bit_Set_256 bbset)
@@ -1039,7 +1615,6 @@ int bs256_count(
    return ct;
 }
 #endif
-
 
 /** Returns a string representation of a #Bit_Set_256 as a list of hex numbers.
  *
@@ -1132,7 +1707,6 @@ bs256_to_string(
    return bs256_to_string_general(bitset, false, value_prefix, sepstr);
 }
 
-
 /** Returns a string representation of a #Bit_Set_256 as a list of decimal numbers.
  *
  *  The value returned is valid until the next call to this function or to
@@ -1151,6 +1725,57 @@ bs256_to_string_decimal(
 {
    return bs256_to_string_general(bitset, true, value_prefix, sepstr);
 }
+
+
+
+int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen) {
+   // printf("(%s) Starting\n", __func__);
+
+#ifndef NDEBUG
+   int bit_set_ct = bs256_count(flags);
+   assert(buflen >= bit_set_ct);
+#endif
+
+   unsigned int bufpos = 0;
+   unsigned int flagno = 0;
+   // printf("(%s) bs256lags->byte=0x%s\n", __func__, hexstring(flags->byte,32));
+   for (flagno = 0; flagno < 256; flagno++) {
+      Byte flg = (Byte) flagno;
+      // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
+      if (bs256_contains(flags, flg)) {
+         // printf("(%s) Flag is set: %d, 0x%02x\n", __func__, flagno, flg);
+         buffer[bufpos++] = flg;
+      }
+   }
+   // printf("(%s) Done.  Returning: %d\n", __func__, bupos);
+   return bufpos;
+}
+
+
+
+/** Converts a **Bit_Set_256** instance to a sequence of bytes whose values
+ *  correspond to the bits that are set.
+ *  The byte sequence is returned in a newly allocated **Buffer**.
+ *
+ * @param  bs256lags  instance handle
+ * @return pointer to newly allocated **Buffer**
+ */
+Buffer * bs256_to_buffer(Bit_Set_256 flags) {
+   int bit_set_ct = bs256_count(flags);
+   Buffer * buf = buffer_new(bit_set_ct, __func__);
+   for (unsigned int flagno = 0; flagno < 256; flagno++) {
+      Byte flg = (Byte) flagno;
+      // printf("(%s) flagno=%d, flg=0x%02x\n", __func__, flagno, flg);
+      if (bs256_contains(flags, flg)) {
+         buffer_add(buf, flg);
+      }
+   }
+   // printf("(%s) Done.  Returning: %s\n", __func__, buffer);
+   return buf;
+}
+
+
+
 
 
 #define BS256_ITER_MARKER "BSIM"
@@ -1190,7 +1815,6 @@ bs256_iter_free(
       free(iter);
    }
 }
-
 
 /** Reinitializes an iterator.  Sets the current position before the first
  *  value.
@@ -1233,6 +1857,7 @@ bs256_iter_next(
    // printf("(%s) Returning: %d\n", __func__, result);
    return result;
 }
+
 
 
 // TODO:
@@ -1329,6 +1954,7 @@ Bit_Set_256 bs256_from_string(
 }
 
 
+
 #ifdef BYTE_BIT_FLAGS
 Bit_Set_256
 bs256_from_bbf(Byte_Bit_Flags bbf) {
@@ -1375,359 +2001,31 @@ bbf_from_bs256(Bit_Set_256 bitset) {
 #endif
 
 
-
 //
-// Buffer with length management
-//
-
-bool trace_buffer_malloc_free = false;
-bool trace_buffer = false;    // controls buffer tracing
-bool trace_buffer_resize = false;
-
-
-/** Allocates a **Buffer** instance
- *
- *  @param  size       maximum number of bytes that buffer can hold
- *  @param  trace_msg  optional trace message
- *
- *  @return pointer to newly allocated instance
- */
-Buffer * buffer_new(int size, const char * trace_msg) {
-   int hacked_size = size+16;     // try allocating extra space see if free failures go away - overruns?
-   // printf("(%s) sizeof(Buffer)=%ld, size=%d\n", __func__, sizeof(Buffer), size);    // sizeof(Buffer) == 16
-   Buffer * buffer = (Buffer *) malloc(sizeof(Buffer));
-   memcpy(buffer->marker, BUFFER_MARKER, 4);
-   buffer->bytes = (Byte *) calloc(1, hacked_size);    // hack
-   buffer->buffer_size = size;
-   buffer->len = 0;
-   buffer->size_increment = 0;
-   if (trace_buffer_malloc_free)
-      printf("(%s) Allocated buffer.  buffer=%p, buffer->bytes=%p, &buffer->bytes=%p, %s\n",
-             __func__, (void*)buffer, buffer->bytes, (void*)&(buffer->bytes), trace_msg);
-   return buffer;
-}
-
-
-/** Sets a size increment for the buffer, allowing it to be dynamically
- *  resized if necessary.
- *
- *  @param buf   pointer to Buffer instance
- *  @param size_increment if resizing is necessary, the buffer size will be
- *                         increased by this amount
- */
-void buffer_set_size_increment(Buffer * buf, uint16_t size_increment) {
-   buf->size_increment = size_increment;
-}
-
-
-/** Allocates a **Buffer** instance and sets an initial value
- *
- *  @param  bytes      pointer to initial value
- *  @param  bytect     length of initial value, the buffer size is
- *                     also set to this value
- *  @param  trace_msg  optional trace message
- *
- *  @return pointer to newly allocated instance
- *
- *  @remark
- *  Setting the buffer size to the initial value does not allow for
- *  expansion, unless buffer_set_size_increment() is called
- */
-Buffer * buffer_new_with_value(Byte * bytes, int bytect, const char * trace_msg) {
-   Buffer* buf = buffer_new(bytect, trace_msg);
-   buffer_put(buf, bytes, bytect);
-   return buf;
-}
-
-
-/** Copies a Buffer.
- *
- *  @param srcbuf instance to copy
- *  @param trace_msg optional trace message
- *
- *  @return newly allocated copy
- *
- *  @remark
- *  - The contents of the newly allocated Buffer is identical to
- *    the original, but the maximum length and size increment are
- *    not.   Is this an issue?
- *  - Not currently used. (3/2017)
- */
-Buffer * buffer_dup(Buffer * srcbuf, const char * trace_msg) {
-   return buffer_new_with_value(srcbuf->bytes, srcbuf->len, trace_msg);
-}
-
-
-/** Frees a Buffer instance.  All memory associated with the Buffer is released.
- *
- *  @param buffer    pointer to Buffer instance, must be valid
- *  @param trace_msg optional trace message
- */
-void buffer_free(Buffer * buffer, const char * trace_msg) {
-   if (trace_buffer_malloc_free)
-      printf("(%s) Starting. buffer = %p\n", __func__, (void*) buffer);
-
-   // ASSERT_WITH_BACKTRACE(buffer);
-   // ASSERT_WITH_BACKTRACE(memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
-
-   if (buffer->bytes) {
-     if (trace_buffer_malloc_free)
-         printf("(%s) Freeing buffer->bytes = %p, &buffer->bytes=%p\n",
-                __func__, buffer->bytes, (void*)&(buffer->bytes));
-     free(buffer->bytes);
-   }
-   if (trace_buffer_malloc_free)
-      printf("(%s) Freeing buffer = %p, %s\n", __func__, (void*)buffer, trace_msg);
-   buffer->marker[3] = 'x';
-   free(buffer);
-
-   if (trace_buffer_malloc_free)
-      printf("(%s) Done\n", __func__);
-}
-
-
-/** Returns the length of the data in the Buffer.
- *
- *  @param  buffer  pointer to Buffer instance
- *  @return number of bytes in Buffer
- */
-int buffer_length(Buffer * buffer) {
-   return buffer->len;
-}
-
-
-/** Adjusts the number of bytes in a Buffer.
- *
- *  @param  buffer  pointer to buffer instance
- *  @param  bytect  new length of buffer contents, must be less that
- *                  the maximum size of the buffer
- */
-void buffer_set_length(Buffer * buffer, int bytect) {
-   if (trace_buffer)
-      printf("(%s) bytect=%d, buffer_size=%d\n", __func__, bytect, buffer->buffer_size);
-   assert (bytect <= buffer->buffer_size);
-   buffer->len = bytect;
-}
-
-
-/** Sets the value stored in a Buffer to a range of bytes.
- *  The buffer length is updated.
- *
- *  @param  buffer     pointer to Buffer instance
- *  @param  bytes      pointer to bytes to store in buffer
- *  @param  bytect     number of bytes to store
- */
-void buffer_put(Buffer * buffer, Byte * bytes, int bytect) {
-   if (trace_buffer) {
-      printf("(%s) buffer->bytes = %p, bytes=%p, bytect=%d\n",
-             __func__, buffer->bytes, bytes, bytect);
-      printf("(%s) cur len = %d, storing |%.*s|, bytect=%d\n",
-             __func__, buffer->len, bytect, bytes, bytect);
-   }
-   assert (bytect <= buffer->buffer_size);
-   memcpy(buffer->bytes, bytes, bytect);
-   buffer->len = buffer->len + bytect;
-   // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
-}
-
-
-/** Stores a single byte at a specified offset in the buffer.
- *  The buffer length is not updated.
- *
- *  @param  buf      pointer to Buffer instance
- *  @param  offset   offset in buffer at which to store byte
- *  @param  byte     byte value to be stored
- *
- *  @remark
- *  A dangerous function.  Use with care.
- */
-void buffer_set_byte(Buffer * buf, int offset, Byte byte) {
-   if (trace_buffer)
-      printf("(%s) Storing 0x%02x at offset %d\n", __func__, byte, offset);
-   assert(offset >= 0 && offset < buf->buffer_size);
-   buf->bytes[offset] = byte;
-}
-
-
-/** Sets a range of bytes in a Buffer.
- *  The logical length of the buffer is not updated.
- *
- *  @param  buf      pointer to Buffer instance
- *  @param  offset   offset in buffer at which to store byte
- *  @param  bytes    pointer to bytes to store
- *  @param  bytect   number of bytes to store
- */
-void buffer_set_bytes(Buffer * buf, int offset, Byte * bytes, int bytect) {
-   if (trace_buffer)
-      printf("(%s) Storing %d bytes at offset %d, buffer_size=%d\n",
-             __func__, bytect, offset, buf->buffer_size);
-   assert(offset >= 0 && (offset + bytect) <= buf->buffer_size);
-
-   memcpy(buf->bytes+offset, bytes, bytect);
-}
-
-
-/** Appends a sequence of bytes to the current contents of a Buffer.
- *  The buffer length is updated.
- *
- *  @param  buffer    pointer to the Buffer object
- *  @param  bytes     pointer to the bytes to be appended
- *  @param  bytect    number of bytes to append
- */
-void buffer_append(Buffer * buffer, Byte * bytes, int bytect) {
-   // printf("(%s) Starting. buffer=%p\n", __func__, buffer);
-   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
-   if (trace_buffer) {
-      printf("(%s) cur len = %d, appending |%.*s|, bytect=%d\n", __func__, buffer->len, bytect, bytes, bytect);
-      printf("(%s) buffer->bytes + buffer->len = %p, bytes=%p, bytect=%d\n",
-             __func__, buffer->bytes+buffer->len, bytes, bytect);
-   }
-   //  buffer->len + 2 + bytect  .. why the  + 2?
-
-   int required_size = buffer->len + 2 + bytect;
-   if (required_size > buffer->buffer_size && buffer->size_increment > 0) {
-      int new_size = MAX(required_size, buffer->buffer_size + buffer->size_increment);
-      if (trace_buffer_resize)
-         printf("(%s) Resizing. old size = %d, new size = %d\n",
-                __func__, buffer->buffer_size, new_size);
-      buffer_extend(buffer, new_size - buffer->buffer_size);
-   }
-
-   assert(buffer->len + 2 + bytect <= buffer->buffer_size);
-
-   memcpy(buffer->bytes + buffer->len, bytes, bytect);
-   buffer->len = buffer->len + bytect;
-
-   // printf("(%s) Returning.  cur len = %d\n", __func__, buffer->len);
-}
-
-
-/** Appends a string to the current string in the buffer.
- *
- *  @param  buffer pointer to Buffer
- *  @param  str    string to append
- *
- *  @remark
- *  If the buffer is not empty, checks by assert that
- *  the last character stored is '\0';
- */
-void buffer_strcat(Buffer * buffer, char * str) {
-   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
-   if (buffer->len == 0) {
-      buffer_append(buffer, (Byte *) str, strlen(str)+1);
-   }
-   else {
-      assert(buffer->bytes[buffer->len - 1] == '\0');
-      buffer_set_length(buffer, buffer->len - 1);     // truncate trailing \0
-      buffer_append(buffer, (Byte *) str, strlen(str) + 1);
-   }
-}
-
-
-/** Appends a single byte to the current value in the buffer.
- *  The buffer length is updated.
- *
- *  @param buffer   pointer to Buffer instance
- *  @param byte     value to append
- *
- *  @todo Increase buffer size if necessary and size_increment > 0
- */
-void     buffer_add(Buffer * buffer, Byte byte) {
-   assert( memcmp(buffer->marker, BUFFER_MARKER, 4) == 0);
-   assert(buffer->len + 1 <= buffer->buffer_size);
-   buffer->bytes[buffer->len++] = byte;
-}
-
-
-/** Tests whether 2 Buffer instances have the same
- *  contents.
- *
- *  @param buf1  pointer to first Buffer
- *  @param buf2  pointer to second Buffer
- *  @return true if contents are identical, false if not
- *
- *  @remark
- *  - If both buf1==NULL and buf2==NULL, the result is true
- */
-bool     buffer_eq(Buffer* buf1, Buffer* buf2) {
-   bool result = false;
-   if (!buf1 && !buf2)
-      result = true;
-   else if (buf1 && buf2 &&
-            buf1->len == buf2->len &&
-            memcmp(buf1->bytes, buf2->bytes, buf1->len) == 0
-           )
-      result = true;
-   return result;
-}
-
-
-/** Increases the size of a Buffer
- *
- *  @param buf       pointer to Buffer instance
- *  @param addl_size number of additional bytes
- */
-void     buffer_extend(Buffer* buf, int addl_size) {
-   int new_size = buf->buffer_size + addl_size;
-   buf->bytes = realloc(buf->bytes, new_size);
-   buf->buffer_size = new_size;
-}
-
-
-/** Displays all fields of the Buffer.
- *  This is a debugging function.
- *
- *  @param buffer   pointer to Buffer instance
- *
- *  @remark
- *  Output is written to stdout.
- */
-void buffer_dump(Buffer * buffer) {
-   printf("Buffer at %p,  bytes addr=%p, len=%d, max_size=%d\n",
-          (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
-   // printf("  bytes end addr=%p\n", buffer->bytes+buffer->buffer_size);
-   if (buffer->bytes)
-      hex_dump(buffer->bytes, buffer->len);
-}
-
-
-/** Displays all fields of the Buffer using rpt_* functions.
- *  This is a debugging function.
- *
- *  @param buffer   pointer to Buffer instance
- *  @param depth    logical indentation depth
- *
- *  @remark
- *  Output is written to stdout.
- */
-void buffer_rpt(Buffer * buffer, int depth) {
-   rpt_vstring(depth, "Buffer at %p, bytes addr=%p, len=%d, max_size=%d",
-         (void*)buffer, buffer->bytes, buffer->len, buffer->buffer_size);
-   if (buffer->bytes)
-      rpt_hex_dump(buffer->bytes, buffer->len, depth);
-}
-
-
-//
-// Identifier id to name and description lookup
+// Cross functions bba <-> bs256
 //
 
-/** Returns the name of an entry in a Value_Name_Title table.
- *
- * @param table  pointer to table
- * @param val    value to lookup
- *
- * @return name of value, NULL if not found
- */
-char * vnt_name(Value_Name_Title* table, uint32_t val) {
-   // printf("(%s) val=%d\n", __func__, val);
-   // debug_vnt_table(table);
-   char * result = NULL;
 
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      if (val == cur->value) {
-         result = cur->name;
+/** Tests if the bit number of every byte in a #Byte_Value_Array is set
+ *  in a #Bit_Set_256, and conversely that for every bit set in the
+ *  #Bit_Set_256 there is a corresponding byte in the #Byte_Value_Array.
+ *
+ *  Note it is possible that the same byte appears more than once in the
+ *  #Byte_Value_Array.
+ *
+ *  @param bva     #Byte_Value_Array to test
+ *  @param bs256   #Bit_Set_256 to test
+ *  @return        true/false
+ */
+bool bva_bs256_same_values( Byte_Value_Array bva , Bit_Set_256 bbflags) {
+   bool result = true;
+   int item;
+   for (item = 0; item < 256; item++) {
+      // printf("item=%d\n", item);
+      bool r1 = bva_contains(bva, item);
+      bool r2 = bs256_contains(bbflags, item);
+      if (r1 != r2) {
+         result = false;
          break;
       }
    }
@@ -1735,212 +2033,19 @@ char * vnt_name(Value_Name_Title* table, uint32_t val) {
 }
 
 
-/** Returns the title (description field) of an entry in a Value_Name_Title table.
+/** Convert a #Byte_Value_Array to a #Bit_Set_256
  *
- * @param table  pointer to table
- * @param val    value to lookup
- *
- * @return title of value, NULL if not found
+ *  @param  bva  Byte_Value_Array
+ *  @return Bit_Set_256
  */
-char * vnt_title(Value_Name_Title* table, uint32_t val) {
-   // printf("(%s) val=%d\n", __func__, val);
-   // debug_vnt_table(table);
-   char * result = NULL;
+Bit_Set_256 bva_to_bs256(Byte_Value_Array bva) {
+   Bit_Set_256 bitset = EMPTY_BIT_SET_256;
 
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      if (val == cur->value) {
-         result = cur->title;
-         break;
-      }
+   for (int ndx = 0; ndx < bva_length(bva); ndx++) {
+      Byte b = bva_get(bva, ndx);
+      bitset = bs256_insert(bitset, b);
    }
-   return result;
+   return bitset;
 }
 
-
-/** Searches a Value_Name_Title_Table for a specified name or title,
- *  and returns its id value.
- *
- *  @param table a      Value_Name_Title table
- *  @param s            string to search for
- *  @param use_title    if false, search name  field\n
- *                      if true,  search title field
- *  @param ignore_case  if true, search is case-insensitive
- *  @param default_id   value to return if not found
- *
- *  @result value id
- */
-uint32_t vnt_find_id(
-           Value_Name_Title_Table table,
-           const char * s,
-           bool use_title,       // if false, search by symbolic name, if true, search by title
-           bool ignore_case,
-           uint32_t default_id)
-{
-   assert(s);
-   uint32_t result = default_id;
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      char * comparand = (use_title) ? cur->title : cur->name;
-      if (comparand) {
-         int comprc = (ignore_case)
-                         ? strcasecmp(s, comparand)
-                         : strcmp(    s, comparand);
-         if (comprc == 0) {
-            result = cur->value;
-            break;
-         }
-      }
-   }
-   return result;
-}
-
-
-/** Interprets an integer whose bits represent named flags.
- *
- * @param flags_val      value to interpret
- * @param bitname_table  pointer to Value_Name table
- * @param use_title      if **true**, use the **title** field of the table,\n
- *                       if **false**, use the **name** field of the table
- * @param sepstr         if non-NULL, separator string to insert between values
- *
- * @return newly allocated character string
- *
- * @remark
- * - It is the responsibility of the caller to free the returned string
- * - If a referenced **title** field is NULL, "missing" is used as the value
- */
-char * vnt_interpret_flags(
-      uint32_t                flags_val,
-      Value_Name_Title_Table  bitname_table,
-      bool                    use_title,
-      char *                  sepstr)
-{
-   bool debug = false;
-   if (debug)
-      printf("(%s) Starting. flags_val=0x%08x, bitname_table=%p, use_title=%s, sepstr=|%s|\n",
-             __func__, flags_val, (void*)bitname_table, sbool(use_title), sepstr);
-
-   GString * sbuf = g_string_sized_new(200);
-   bool first = true;
-   Value_Name_Title * cur_entry = bitname_table;
-     while (cur_entry->name) {
-        if (debug)
-           printf("(%s) cur_entry=%p, Comparing flags_val=0x%08x vs cur_entry->value = 0x%08x\n",
-                  __func__, (void*)cur_entry, flags_val, cur_entry->value);
-        if (!flags_val && cur_entry->value == flags_val) { // special value for no bit set
-           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
-           if (!sval)
-              sval = "missing";
-           g_string_append(sbuf, sval);
-           break;
-        }
-        if (flags_val & cur_entry->value) {
-           if (first)
-              first = false;
-           else {
-              if (sepstr) {
-                 g_string_append(sbuf, sepstr);
-              }
-           }
-
-           char * sval = (use_title) ? cur_entry->title : cur_entry->name;
-           if (!sval) {
-              sval = "missing";
-           }
-           g_string_append(sbuf, sval);
-        }
-        cur_entry++;
-     }
-     char * result = strdup(sbuf->str);
-     g_string_free(sbuf, true);
-
-     if (debug)
-        printf("(%s) Done. Returning: |%s|\n", __func__, result);
-     return result;
-
-}
-
-
-/** Shows the contents of a **Value_Name_Title table.
- *  Output is written to stdout.
- *
- * @param table pointer to table
- */
-void vnt_debug_table(Value_Name_Title * table) {
-   printf("Value_Name_Title table:\n");
-   Value_Name_Title * cur = table;
-   for (; cur->name; cur++) {
-      printf("   %2d %-30s %s\n",  cur->value, cur->name, cur->title);
-   }
-}
-
-
-//
-// Circular_String_Buffer
-//
-
-/** Allocates a new #Circular_String_Buffer
- *
- *  @param  size  buffer size (number of entries)
- *  @return newly allocated #Circular_String_Buffer
- */
-Circular_String_Buffer *
-csb_new(int size) {
-   Circular_String_Buffer * csb = calloc(1, sizeof(Circular_String_Buffer));
-   csb->lines = calloc(size, sizeof(char*));
-   csb->size = size;
-   csb->ct = 0;
-   return csb;
-}
-
-
-/** Appends a string to a #Circular_String_Buffer.
- *
- *  @param   csb   #Circular_String_Buffer
- *  @param   line  string to append
- *  @param   copy  if true, a copy of the string is appended to the buffer
- *                 if false, the string itself is appended
- */
-void
-csb_add(Circular_String_Buffer * csb, char * line, bool copy) {
-    int nextpos = csb->ct % csb->size;
-    // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, csb->ct, nextpos, line);
-    if (csb->lines[nextpos])
-       free(csb->lines[nextpos]);
-    if (copy)
-       csb->lines[nextpos] = g_strdup(line);
-    else
-       csb->lines[nextpos] = line;
-    csb->ct++;
-}
-
-
-/** All the strings in a #Circular_String_Buffer are moved to  a newly
- *  allocated GPtrArray. The count of lines in the now empty #Circular_String_Buffer
- *  is set to 0.
- *
- *   @param csb #Circular_String_Buffer to convert
- *   @return    newly allocated #GPtrArray
- */
-GPtrArray *
-csb_to_g_ptr_array(Circular_String_Buffer * csb) {
-   // printf("(%s) csb->size=%d, csb->ct=%d\n", __func__, csb->size, csb->ct);
-   GPtrArray * pa = g_ptr_array_sized_new(csb->ct);
-
-   int first = 0;
-   if (csb->ct > csb->size)
-      first = csb->ct % csb->size;
-   // printf("(%s) first=%d\n", __func__, first);
-
-   for (int ndx = 0; ndx < csb->ct; ndx++) {
-      int pos = (first + ndx) % csb->size;
-      char * s = csb->lines[pos];
-      // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
-
-      g_ptr_array_add(pa, s);
-   }
-   csb->ct = 0;
-   return pa;
-}
 
