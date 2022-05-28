@@ -169,27 +169,6 @@ void tuned_sleep_with_trace(
       }  // switch within DDC_IO_DEVI2C
    } // end of DDCA_IO_DEVI2C
 
-#ifdef OLD_ADL
-      else if (io_mode == DDCA_IO_ADL) {
-         switch(event_type) {
-         case (SE_WRITE_TO_READ):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-               break;
-         case (SE_POST_WRITE):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-               break;
-         case (SE_POST_OPEN):
-               spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-               break;
-         case (SE_POST_SAVE_SETTINGS):
-               spec_sleep_time_millis = 200;   // per DDC spec
-               break;
-         default:
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-         }  // switch
-      }  // DDCA_IO_ADL
-#endif
-
    else {
       assert(io_mode == DDCA_IO_USB);
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
