@@ -29,23 +29,6 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-#ifdef OLD
-// Experimental suppression of sleeps after reads
-static bool sleep_suppression_enabled = DEFAULT_SLEEP_LESS;
-
-bool enable_sleep_suppression(bool enable) {
-   // DBGMSG("enable = %s", sbool(enable));
-   bool old = sleep_suppression_enabled;
-   sleep_suppression_enabled = enable;
-   return old;
-}
-
-bool is_sleep_suppression_enabled() {
-   return sleep_suppression_enabled;
-}
-#endif
-
-
 static bool deferred_sleep_enabled = false;
 
 bool enable_deferred_sleep(bool enable) {
@@ -114,9 +97,6 @@ void tuned_sleep_with_trace(
 
    int spec_sleep_time_millis = 0;    // should be a default
    bool deferrable_sleep = false;
-#ifdef SLEEP_SUPPRESSION
-   bool suppress = false;
-#endif
 
    if (io_mode == DDCA_IO_I2C) {
       switch(event_type) {
@@ -142,13 +122,6 @@ void tuned_sleep_with_trace(
       case (SE_POST_READ):
             deferrable_sleep = deferred_sleep_enabled;
             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
-#ifdef OLD
-            if (sleep_suppression_enabled) {
-               suppress = true;
-               // DBGMSF(debug, "Done.     Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
-               // return;  // TEMP
-            }
-#endif
             break;
       case (SE_POST_SAVE_SETTINGS):
             // 4.5 Save Current Settings:
@@ -222,12 +195,6 @@ void tuned_sleep_with_trace(
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
    }
 
-#ifdef OLD    // SLEEP_SUPPRESSION
-   if (suppress) {
-      DBGMSF(debug, "Suppressing sleep, sleep event type = %s", sleep_event_name(event_type));
-   }
-   else {
-#endif
       // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
 
       // TODO:
@@ -291,9 +258,6 @@ void tuned_sleep_with_trace(
       else {
          sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
       }
-#ifdef SLEEP_SUPPRESSION // OLD
-   }   // !suppress
-#endif
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
