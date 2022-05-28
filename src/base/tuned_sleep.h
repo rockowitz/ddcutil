@@ -12,7 +12,7 @@
 
 /** \cond */
 #include <stdbool.h>
-#include "public/ddcutil_types.h"
+// #include "public/ddcutil_types.h"
 /** \endcond */
 #include "base/displays.h"
 #include "base/execution_stats.h"   // for Sleep_Event_Type

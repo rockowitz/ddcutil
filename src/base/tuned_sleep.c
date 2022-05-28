@@ -10,16 +10,9 @@
 #include <assert.h>
 #include <sys/types.h>
 
-// for syscall
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
+#include "public/ddcutil_types.h"
 
-#include "util/debug_util.h"
-#include "util/report_util.h"
-#include "util/string_util.h"
-
-#include "base/parms.h"
+#include "base/core.h"
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/rtti.h"
@@ -93,6 +86,7 @@ bool is_deferred_sleep_enabled() {
  *  in the display reference or display handle.
  *
  * @param event_type  reason for sleep
+ * @oaran special_sleep_time_millis  sleep time for event_type SE_SPECIAL
  * @param func        name of function that invoked sleep
  * @param lineno      line number in file where sleep was invoked
  * @param filename    name of file from which sleep was invoked
@@ -296,6 +290,7 @@ void check_deferred_sleep(
 }
 
 
+/** Module initialization */
 void init_tuned_sleep() {
    RTTI_ADD_FUNC(tuned_sleep_with_trace);
 }
