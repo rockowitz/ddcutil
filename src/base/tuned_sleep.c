@@ -1,4 +1,4 @@
-/** \file tuned_sleep.c
+/** @file tuned_sleep.c
  *
  *  Perform sleep. The sleep time is determined by io mode, sleep event time,
  *  and applicable multipliers.
@@ -29,15 +29,37 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
+//
+// Deferred sleep
+//
+// If enabled, sleep is not performed immediately, but instead not until
+// immediately before the next DDC call that requires that a wait has
+// occurred. The elapsed time between when the call is requested and
+// when actually occurs is subtracted from the specified sleep time to
+// obtain the actual sleep time.
+//
+// In testing, this has proven to have a negligable effect on elapsed
+// execution time.
+//
+
 static bool deferred_sleep_enabled = false;
 
-bool enable_deferred_sleep(bool enable) {
+
+/** Enables or disables deferred sleep.
+ *  @param  onoff new  setting
+ *  @return old setting
+ */
+bool enable_deferred_sleep(bool onoff) {
    // DBGMSG("enable = %s", sbool(enable));
    bool old = deferred_sleep_enabled;
-   deferred_sleep_enabled = enable;
+   deferred_sleep_enabled = onoff;
    return old;
 }
 
+
+/** Reports whether deferred sleep ls enabled.
+ *  @return true/false
+ */
 bool is_deferred_sleep_enabled() {
    return deferred_sleep_enabled;
 }
@@ -62,19 +84,19 @@ bool is_deferred_sleep_enabled() {
  *  The time is further adjusted by the sleep factor and sleep multiplier
  *  currently in effect.
  *
- *  \todo
+ *  @todo
  *  Take into account the time since the last monitor return in the
  *  current thread.
- *  \todo
+ *  @todo
  *  Take into account per-display error statistics.  Would require
  *  error statistics be maintained on a per-display basis, either
  *  in the display reference or display handle.
  *
- * \param event_type  reason for sleep
- * \param func        name of function that invoked sleep
- * \param lineno      line number in file where sleep was invoked
- * \param filename    name of file from which sleep was invoked
- * \param msg         text to append to trace message
+ * @param event_type  reason for sleep
+ * @param func        name of function that invoked sleep
+ * @param lineno      line number in file where sleep was invoked
+ * @param filename    name of file from which sleep was invoked
+ * @param msg         text to append to trace message
  */
 void tuned_sleep_with_trace(
       Display_Handle * dh,
@@ -174,69 +196,70 @@ void tuned_sleep_with_trace(
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
    }
 
-      // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
+   // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
 
-      // TODO:
-      //   get error rate (total calls, total errors), current adjustment value
-      //   adjust by time since last i2c event
+   // TODO:
+   //   get error rate (total calls, total errors), current adjustment value
+   //   adjust by time since last i2c event
 
-      Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
+   Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
 
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+          "event type: %s,"
+          " spec_sleep_time_millis = %d,"
+          " sleep_multiplier_factor = %2.1f,"
+          " deferrable sleep: %s",
+          sleep_event_name(event_type),
+          spec_sleep_time_millis,
+          tsd->sleep_multiplier_factor, sbool(deferrable_sleep) );
+
+   int adjusted_sleep_time_millis = spec_sleep_time_millis; // will be changed
+   double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();  // set by --sleep-multiplier
+   if (tsd->dynamic_sleep_enabled) {
+      dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
+      adjusted_sleep_time_millis =
+            tsd->cur_sleep_adjustment_factor * sleep_multiplier_factor * spec_sleep_time_millis;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "event type: %s,"
-             " spec_sleep_time_millis = %d,"
-             " sleep_multiplier_factor = %2.1f,"
-             " deferrable sleep: %s",
-             sleep_event_name(event_type),
-             spec_sleep_time_millis,
-             tsd->sleep_multiplier_factor, sbool(deferrable_sleep) );
-
-      int adjusted_sleep_time_millis = spec_sleep_time_millis; // will be changed
-      double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();  // set by --sleep-multiplier
-      if (tsd->dynamic_sleep_enabled) {
-         dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
-         adjusted_sleep_time_millis =
-               tsd->cur_sleep_adjustment_factor * sleep_multiplier_factor * spec_sleep_time_millis;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                   "using dynamic sleep: true,"
-                   " adjustment factor: %4.2f,"
-                   " adjusted_sleep_time_millis = %d",
-                   tsd->cur_sleep_adjustment_factor,
-                   adjusted_sleep_time_millis);
-      }
-      else {
-         // DBGMSG("sleep_multiplier_factor = %5.2f", sleep_multiplier_factor);
-         // crude, should be sensitive to event type?
-         int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
-         adjusted_sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
-                                             spec_sleep_time_millis;
-         DBGTRC(debug, DDCA_TRC_NONE,
-                "using dynamic sleep: false,"
-                " sleep_multiplier_ct = %d,"
-                " modified_sleep_time_millis=%d",
-                sleep_multiplier_ct,
+                "using dynamic sleep: true,"
+                " adjustment factor: %4.2f,"
+                " adjusted_sleep_time_millis = %d",
+                tsd->cur_sleep_adjustment_factor,
                 adjusted_sleep_time_millis);
-      }
+   }
+   else {
+      // DBGMSG("sleep_multiplier_factor = %5.2f", sleep_multiplier_factor);
+      // crude, should be sensitive to event type?
+      int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
+      adjusted_sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
+                                          spec_sleep_time_millis;
+      DBGTRC(debug, DDCA_TRC_NONE,
+             "using dynamic sleep: false,"
+             " sleep_multiplier_ct = %d,"
+             " modified_sleep_time_millis=%d",
+             sleep_multiplier_ct,
+             adjusted_sleep_time_millis);
+   }
 
-      record_sleep_event(event_type);
+   record_sleep_event(event_type);
 
-      char msg_buf[100];
-      const char * evname = sleep_event_name(event_type);
-      if (msg)
-         g_snprintf(msg_buf, 100, "Event type: %s, %s", evname, msg);
-      else
-         g_snprintf(msg_buf, 100, "Event_type: %s", evname);
+   char msg_buf[100];
+   const char * evname = sleep_event_name(event_type);
+   if (msg)
+      g_snprintf(msg_buf, 100, "Event type: %s, %s", evname, msg);
+   else
+      g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
-      if (deferrable_sleep) {
-         uint64_t new_deferred_time = cur_realtime_nanosec() + (1000 *1000) * (int) adjusted_sleep_time_millis;
-         if (new_deferred_time > dh->dref->next_i2c_io_after) {
-            DBGTRC(debug, DDCA_TRC_NONE, "Setting deferred sleep");
-            dh->dref->next_i2c_io_after = new_deferred_time;
-         }
+   if (deferrable_sleep) {
+      uint64_t new_deferred_time =
+            cur_realtime_nanosec() + (1000 *1000) * (int) adjusted_sleep_time_millis;
+      if (new_deferred_time > dh->dref->next_i2c_io_after) {
+         DBGTRC(debug, DDCA_TRC_NONE, "Setting deferred sleep");
+         dh->dref->next_i2c_io_after = new_deferred_time;
       }
-      else {
-         sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
-      }
+   }
+   else {
+      sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
+   }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -248,12 +271,17 @@ void tuned_sleep_with_trace(
  *  The delayed io start time is stored in the display reference associated with
  *  the display handle, so persists across open and close
  *
- *  \param  dh        #Display_Handle
+ *  @param  dh        #Display_Handle
  *  #param  func      name of function performing check
- *  \param  lineno    line number of check
- *  \param  filename  file from which the check is invoked
+ *  @param  lineno    line number of check
+ *  @param  filename  file from which the check is invoked
  */
-void check_deferred_sleep(Display_Handle * dh, const char * func, int lineno, const char * filename) {
+void check_deferred_sleep(
+      Display_Handle * dh,
+      const char *     func,
+      int              lineno,
+      const char *     filename)
+{
    bool debug = false;
    uint64_t curtime = cur_realtime_nanosec();
    // DBGMSF(debug, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
