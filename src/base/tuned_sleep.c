@@ -50,7 +50,7 @@ bool enable_deferred_sleep(bool onoff) {
 }
 
 
-/** Reports whether deferred sleep ls enabled.
+/** Reports whether deferred sleep is enabled.
  *  @return true/false
  */
 bool is_deferred_sleep_enabled() {
@@ -226,7 +226,7 @@ void tuned_sleep_with_trace(
       int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
       adjusted_sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
                                           spec_sleep_time_millis;
-      DBGTRC(debug, DDCA_TRC_NONE,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "using dynamic sleep: false,"
              " sleep_multiplier_ct = %d,"
              " modified_sleep_time_millis=%d",
@@ -280,17 +280,20 @@ void check_deferred_sleep(
    uint64_t curtime = cur_realtime_nanosec();
    // DBGMSF(debug, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
    //               curtime / (1000*1000), dh->dref->next_i2c_io_after/(1000*1000));
-   DBGMSF(debug, "Checking from %s() at line %d in file %s", func, lineno, filename);
+   DBGTRC(debug, DDCA_TRC_NONE,"Checking from %s() at line %d in file %s", func, lineno, filename);
    if (dh->dref->next_i2c_io_after > curtime) {
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
-      DBGMSF(debug, "Sleeping for %d milliseconds", sleep_time);
-      // sleep_millis_with_tracex(sleep_time, func, lineno, filename, "deferred");
-      sleep_millis_with_trace(sleep_time, __func__, __LINE__, __FILE__, "deferred");
+      DBGTRC(debug, DDCA_TRC_NONE, "Sleeping for %d milliseconds", sleep_time);
+      sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
+   }
+   else {
+      DBGTRC(debug, DDCA_TRC_NONE, "No sleep necessary");
    }
 }
 
 
 /** Module initialization */
 void init_tuned_sleep() {
+   RTTI_ADD_FUNC(check_deferred_sleep);
    RTTI_ADD_FUNC(tuned_sleep_with_trace);
 }
