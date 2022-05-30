@@ -61,18 +61,14 @@ dyn_create_single_feature_set_by_hexid2(
       bool                   force);
 #endif
 
-
-
 Display_Feature_Metadata *
 dyn_get_feature_set_entry(
       Dyn_Feature_Set * feature_set,
       unsigned          index);
 
-
 int
 dyn_get_feature_set_size(
       Dyn_Feature_Set * feature_set);
-
 
 #ifdef UNUSED
 Dyn_Feature_Set *
@@ -91,10 +87,6 @@ filter_feature_set(
       Dyn_Feature_Set_Filter_Func func);
 
 void dyn_free_feature_set(
-      Dyn_Feature_Set *  feature_set);
-
-DDCA_Feature_List
-feature_list_from_dyn_feature_set(
       Dyn_Feature_Set *  feature_set);
 
 #endif /* DYN_FEATURE_SET_H_ */
