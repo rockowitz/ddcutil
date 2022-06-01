@@ -76,4 +76,6 @@ void dbgrpt_dynamic_features_rec(
       Dynamic_Features_Rec*   dfr,
       int                     depth);
 
+void init_base_dynamic_features();
+
 #endif /* BASE_DYNAMIC_FEATURES_H_ */
