@@ -30,7 +30,7 @@
 // Trace control
 //
 
-DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
+static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 
 //
