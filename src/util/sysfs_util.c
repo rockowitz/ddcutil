@@ -372,6 +372,9 @@ rpt_attr_text(
 
   if (debug)
      printf("(%s) Done.\n", __func__);
+
+  if (value_loc)
+     ASSERT_IFF(found, *value_loc);
   return found;
 }
 
@@ -443,7 +446,7 @@ rpt_attr_binary(
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, the address at which to return a pointer to
  *                     a GByteArray containing the value. (caller is responsible for freeing).
- *                     If the attribute cannot be read NULL is returned.
+ *                     If the attribute cannot be read NULL is set.
  *  \param  fn_segment first segment of attribute name
  *  \param  ...        remaining segments of name
  *  \return true if attribute found, false if not
@@ -496,6 +499,9 @@ rpt_attr_edid(
                  __func__, (void*) gba->data, gba->len);
        }
     }
+
+    if (value_loc)
+       ASSERT_IFF(found, *value_loc);
     return found;
  }
 
@@ -542,6 +548,9 @@ rpt_attr_realpath(
    else {
       rpt_attr_output(depth, pb1, "->", "Invalid path");
    }
+
+   if (value_loc)
+      ASSERT_IFF(found, *value_loc);
    return found;
 }
 
@@ -590,6 +599,9 @@ rpt_attr_realpath_basename(
    if (!found) {
       rpt_attr_output(depth, pb1, "->", "Invalid path");
    }
+
+   if (value_loc)
+      ASSERT_IFF(found, *value_loc);
    return found;
 }
 
@@ -652,6 +664,9 @@ rpt_attr_single_subdir(
    }
    if (debug)
       printf("(%s) Done.    Returning %s\n", __func__, SBOOL(found));
+
+   if (value_loc)
+      ASSERT_IFF(found, *value_loc);
    return found;
 }
 
