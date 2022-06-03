@@ -266,6 +266,10 @@ bool library_initialized = false;
 void __attribute__ ((constructor))
 _ddca_init(void) {
    bool debug = false;
+   char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
+   if (s && strlen(s) > 0)
+      debug = true;
+
    if (debug)
       printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
