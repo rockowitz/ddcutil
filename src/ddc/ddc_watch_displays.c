@@ -532,7 +532,7 @@ void dummy_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays()
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
