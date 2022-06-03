@@ -703,6 +703,10 @@ execute_cmd_with_optional_display_handle(
 int
 main(int argc, char *argv[]) {
    bool main_debug = false;
+   char * s = getenv("DDCUTIL_DEBUG_MAIN");
+   if (s && strlen(s) > 0)
+      main_debug = true;
+
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 
