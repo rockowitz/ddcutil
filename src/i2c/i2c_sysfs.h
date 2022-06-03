@@ -98,4 +98,6 @@ GPtrArray * get_all_i2c_info(bool rescan, int depth);
 void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 char * get_conflicting_drivers_for_bus(int busno);
 
+void init_i2c_sysfs();
+
 #endif /* I2C_SYSFS_H_ */
