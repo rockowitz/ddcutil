@@ -209,7 +209,8 @@ void free_i2c_sys_info(I2C_Sys_Info * info) {
 //    /sys/bus/i2c/devices/i2c-N
 //    /sys/devices/pci0000:00/0000:00:02.0/0000:01:00.0/drm/card0/card0-DP-1/i2c-N
 
-static void
+// static
+void
 read_i2cN_device_node(
       const char *   device_path,
       I2C_Sys_Info * info,
@@ -218,16 +219,18 @@ read_i2cN_device_node(
    assert(device_path);
    assert(info);
    bool debug = false;
-   DBGMSF(debug, "Starting. device_path=%s", device_path);
-   char * i2c_N = g_path_get_basename(device_path);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "device_path=%s", device_path);
    int d0 = depth;
    if (debug && d0 < 0)
       d0 = 2;
+
+   char * i2c_N = g_path_get_basename(device_path);
    RPT_ATTR_TEXT( d0, &info->device_name,    device_path, "name");
    RPT_ATTR_TEXT( d0, &info->i2c_dev_dev,    device_path, "i2c-dev", i2c_N, "dev");
    RPT_ATTR_TEXT( d0, &info->i2c_dev_name,   device_path, "i2c-dev", i2c_N, "name");
    free(i2c_N);
-   DBGMSF(debug, "Done.");
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 #ifdef IN_PROGRESS
@@ -276,14 +279,15 @@ read_drm_card_connector_node_common(
 // Process <controller>/drm/cardN/cardN-<connector> for case that
 // cardN-<connector> is a DisplayPort connector
 
-static void
+// static
+void
 read_drm_dp_card_connector_node(
       const char *   connector_path,
       I2C_Sys_Info * info,
       int            depth)
 {
    bool debug = false;
-   DBGMSF(debug, "connector_path=%s", connector_path);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_path=%s", connector_path);
    int d0 = depth;
    if (debug && d0 < 0)
       d0 = 2;
@@ -310,6 +314,8 @@ read_drm_dp_card_connector_node(
    RPT_ATTR_EDID(d0, NULL, connector_path, "edid");
    RPT_ATTR_TEXT(d0, NULL, connector_path, "enabled");
    RPT_ATTR_TEXT(d0, NULL, connector_path, "status");
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -317,7 +323,8 @@ read_drm_dp_card_connector_node(
 // Process a <controller>/drm/cardN/cardN-<connector> for case when
 // cardN-<connector> is not a DisplayPort connector
 
-static void
+// static
+void
 read_drm_nondp_card_connector_node(
       const char * dirname,                // e.g /sys/devices/pci.../card0
       const char * connector,              // e.g card0-DP-1
@@ -325,35 +332,36 @@ read_drm_nondp_card_connector_node(
       int          depth)
 {
    bool debug = false;
-   DBGMSF(debug, "dirname=%s, connector=%s", dirname, connector);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, connector=%s", dirname, connector);
    int d1 = (depth < 0) ? -1 : depth + 1;
    if (debug && d1 < 0)
       d1 = 2;
    I2C_Sys_Info * info = accumulator;
 
    if (info->connector) {  // already handled by read_drm_dp_card_connector_node()
-      DBGMSF(debug, "Connector already found, skipping");
+      DBGTRC_DONE(debug, TRACE_GROUP, "Connector already found, skipping");
       return;
    }
 
    bool is_dp = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, str_starts_with, "drm_dp_aux", dirname, connector);
    if (is_dp) {
-      DBGMSF(debug, "Is display port connector, skipping");
+      DBGTRC_DONE(debug, TRACE_GROUP, "Is display port connector, skipping");
       return;
    }
 
    char i2cN[20];
    g_snprintf(i2cN, 20, "i2c-%d", info->busno);
    bool found_i2c = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, streq, i2cN, dirname, connector, "ddc/i2c-dev");
-   if (!found_i2c)
-      return;
-   info->connector = strdup(connector);
-   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
-   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
-   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");
-   RPT_ATTR_EDID(d1, NULL, dirname, connector, "edid");
-   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
-   RPT_ATTR_TEXT(d1, NULL, dirname, connector, "status");
+   if (found_i2c) {
+      info->connector = strdup(connector);
+      RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
+      RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
+      RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");
+      RPT_ATTR_EDID(d1, NULL, dirname, connector, "edid");
+      RPT_ATTR_TEXT(d1, NULL, dirname, connector, "enabled");
+      RPT_ATTR_TEXT(d1, NULL, dirname, connector, "status");
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
    return;
 }
 
@@ -361,7 +369,8 @@ read_drm_nondp_card_connector_node(
 // Dir_Foreach_Func
 // Process a <controller>/drm/cardN node
 
-static void
+// static
+void
 one_drm_card(
       const char * dirname,     // e.g /sys/devices/pci
       const char * fn,          // card0, card1 ...
@@ -369,7 +378,7 @@ one_drm_card(
       int          depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dirname=%s, fn=%s", dirname, fn);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s", dirname, fn);
    char buf[PATH_MAX];
    g_snprintf(buf, PATH_MAX, "%s/%s", dirname, fn);
    dir_ordered_foreach(
@@ -379,7 +388,7 @@ one_drm_card(
          read_drm_nondp_card_connector_node,
          info,
          depth);
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -401,7 +410,8 @@ read_controller_driver(
 
 // called only if not DisplayPort
 
-static void
+// static
+void
 read_pci_display_controller_node(
       const char *   nodepath,
       int            busno,
@@ -409,7 +419,7 @@ read_pci_display_controller_node(
       int            depth)
 {
    bool debug = false;
-   DBGMSF(debug, "busno=%d, nodepath=%s", busno, nodepath);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, nodepath=%s", busno, nodepath);
    int d0 = depth;                              // for this function
    if (debug && d0 < 0)
       d0 = 2;
@@ -436,10 +446,11 @@ read_pci_display_controller_node(
       // examine all drm/cardN subnodes
       char buf[PATH_MAX];
       g_snprintf(buf, PATH_MAX, "%s/%s", nodepath, "drm");
-      DBGMSF(debug, "Calling dir_ordered_foreach, buf=%s, predicate predicate_cardN_connector()", buf);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling dir_ordered_foreach, buf=%s, predicate predicate_cardN_connector()", buf);
       dir_ordered_foreach(buf, predicate_cardN_connector, i2c_compare, one_drm_card, info, depth1);
    }
    free(class);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -449,7 +460,7 @@ get_i2c_sys_info(
       int depth)
 {
    bool debug = false;
-   DBGMSF(debug, "busno=%d. depth=%d", busno, depth);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d. depth=%d", busno, depth);
    I2C_Sys_Info * result = NULL;
    int d1 = (depth < 0) ? -1 : depth+1;
 
@@ -470,11 +481,11 @@ get_i2c_sys_info(
       // real path is in /sys/devices tree
       RPT_ATTR_REALPATH(d1, &pci_i2c_device_path, i2c_device_path);
       result->pci_device_path = pci_i2c_device_path;
-      DBGMSF(debug, "pci_i2c_device_path=%s", pci_i2c_device_path);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "pci_i2c_device_path=%s", pci_i2c_device_path);
       read_i2cN_device_node(pci_i2c_device_path, result, d1);
 
       RPT_ATTR_REALPATH(d1, &pci_i2c_device_parent, pci_i2c_device_path, "..");
-      DBGMSF(debug, "pci_i2c_device_parent=%s", pci_i2c_device_parent);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "pci_i2c_device_parent=%s", pci_i2c_device_parent);
 
       bool has_drm_dp_aux_dir =
               RPT_ATTR_SINGLE_SUBDIR(d1, NULL, str_starts_with, "drm_dp_aux", pci_i2c_device_parent);
@@ -515,6 +526,7 @@ get_i2c_sys_info(
    }
 
    // ASSERT_IFF(drm_dp_aux_dir, ddc_path_fn);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", result);
    return result;
 }
 
@@ -1322,8 +1334,16 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
 
 
 void init_i2c_sysfs() {
-   RTTI_ADD_FUNC(best_driver_name_for_n_nnnn);
 
+   // I2C_Sys_Info
+   RTTI_ADD_FUNC(read_i2cN_device_node);
+   RTTI_ADD_FUNC(read_drm_dp_card_connector_node);
+   RTTI_ADD_FUNC(read_drm_nondp_card_connector_node);
+   RTTI_ADD_FUNC(one_drm_card);
+   RTTI_ADD_FUNC(read_pci_display_controller_node);
+   RTTI_ADD_FUNC(get_i2c_sys_info);
+
+   // Sys_Drm_Connector
    RTTI_ADD_FUNC(one_drm_connector);
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
@@ -1339,6 +1359,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(conflicting_driver_names);
 
    // Sysfs_I2C_Info
+   RTTI_ADD_FUNC(best_driver_name_for_n_nnnn);
    RTTI_ADD_FUNC(simple_one_n_nnnn);
    RTTI_ADD_FUNC(get_i2c_info);
    RTTI_ADD_FUNC(simple_get_i2c_info);
