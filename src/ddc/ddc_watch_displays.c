@@ -575,7 +575,7 @@ ddc_start_watch_displays()
       }
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
-                                        watch_displays_enabled, watch_thread);
+                                        SBOOL(watch_displays_enabled), watch_thread);
    return ddcrc;
 }
 
