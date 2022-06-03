@@ -141,6 +141,10 @@ stats_arg_func(const    gchar* option_name,
  */
 Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    bool debug = false;
+   char * s = getenv("DDCUTIL_DEBUG_PARSE");
+   if (s && strlen(s) > 0)
+      debug = true;
+
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
    init_cmd_parser_base();   // assertions
 
