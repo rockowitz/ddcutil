@@ -56,7 +56,7 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
- *  If depth < -9, there is no output
+ *  If depth <  0, there is no output
  *
  *  Caller is responsible for freeing the returned value
  */
@@ -85,7 +85,7 @@ char * find_adapter(char * path, int depth) {
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
- *  If depth < -9, there is no output
+ *  If depth <  0, there is no output
  *
  *  Caller is responsible for freeing the returned value
  */
@@ -105,7 +105,7 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
- *  If depth < -9, there is no output
+ *  If depth <  0, there is no output
  *
  *  Caller is responsible for freeing the returned value
  */
