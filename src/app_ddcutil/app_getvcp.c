@@ -48,62 +48,6 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
-#ifdef PRE_UDF
-/* Shows a single VCP value specified by its feature table entry.
- *
- * Arguments:
- *    dh          handle of open display
- *    entry       hex feature id
- *
- * Returns:
- *    status code 0 = normal
- *                DDCRC_INVALID_OPERATION - feature is deprecated or write-only
- *                from get_formatted_value_for_feature_table_entry()
- */
-Status_Errno_DDC
-app_show_single_vcp_value_by_feature_table_entry(
-      Display_Handle *           dh,
-      VCP_Feature_Table_Entry *  entry)
-{
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP,
-         "Starting. Getting feature 0x%02x for %s", entry->code, dh_repr(dh) );
-
-   DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
-   Status_Errno_DDC     psc        = 0;
-   DDCA_Vcp_Feature_Code  feature_id = entry->code;
-
-   if (!is_feature_readable_by_vcp_version(entry, vspec)) {
-      char * feature_name =  get_version_sensitive_feature_name(entry, vspec);
-      DDCA_Version_Feature_Flags vflags = get_version_sensitive_feature_flags(entry, vspec);
-      if (vflags & DDCA_DEPRECATED)
-         printf("Feature %02x (%s) is deprecated in MCCS %d.%d\n",
-                feature_id, feature_name, vspec.major, vspec.minor);
-      else
-         printf("Feature %02x (%s) is not readable\n", feature_id, feature_name);
-      psc = DDCRC_INVALID_OPERATION;
-   }
-
-   if (psc == 0) {
-      char * formatted_value = NULL;
-      psc = get_formatted_value_for_feature_table_entry(
-               dh,
-               entry,
-               false,      /* suppress_unsupported */
-               true,       /* prefix_value_with_feature_code */
-               &formatted_value,
-               stdout);    /* msg_fh */
-      if (formatted_value) {
-         printf("%s\n", formatted_value);
-         free(formatted_value);
-      }
-   }
-
-   DBGTRC(debug, TRACE_GROUP, "Done.  Returning: %s", psc_desc(psc));
-   return psc;
-}
-#endif
-
 
 /**  Shows a single VCP value specified by its #Display_Feature_Metadata
  *
