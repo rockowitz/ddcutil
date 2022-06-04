@@ -48,7 +48,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
-#ifdef OLD
+#ifdef PRE_UDF
 /* Shows a single VCP value specified by its feature table entry.
  *
  * Arguments:
@@ -210,16 +210,13 @@ app_show_single_vcp_value_by_feature_id(
 }
 
 
-/* Shows the VCP values for all features in a VCP feature subset.
+/** Shows the VCP values for all features in a VCP feature subset.
  *
- * Arguments:
- *    dh                display handle
- *    subset_id         feature subset
- *    flags             option flags
- *    features_seen     if non-null, collect list of features found
- *
- * Returns:
- *    status code       from show_vcp_values()
+ *  @param  dh                display handle
+ *  @param  subset_id         feature subset
+ *  @param  flags             option flags
+ *  @param  features_seen     if non-null, collect list of features found
+ *  @return from #show_vcp_values()
  */
 Status_Errno_DDC
 app_show_vcp_subset_values_by_dh(
@@ -238,13 +235,8 @@ app_show_vcp_subset_values_by_dh(
 
    if (debug || IS_TRACING()) {
       if (features_seen) {
-#ifdef OLD
-        char * s = bbf_to_string(features_seen);
-        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc), s);
-        free(s);
-#endif
-        // DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
-        DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bs256_to_string(*features_seen, "x", ", ") );
+         // DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
+         DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bs256_to_string(*features_seen, "x", ", ") );
       }
       else {
          DBGMSG("Returning: %s", psc_desc(psc));
