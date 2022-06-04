@@ -1,4 +1,4 @@
-/** \file i2c_sysfs.c
+/** @file i2c_sysfs.c
  *
  *  Query /sys file system for information on I2C devices
  */
@@ -50,9 +50,9 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 /** Given a sysfs node, walk up the chain of device directory links
  *  until an adapter node is found.
  *
- *  \param  path   e.g. /sys/bus/i2c/drivers/i2c-5
- *  \param  depth  logical indentation depth
- *  \return sysfs path to adapter
+ *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  @param  depth  logical indentation depth
+ *  @return sysfs path to adapter
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
@@ -79,9 +79,9 @@ char * find_adapter(char * path, int depth) {
 /** Given the sysfs path to an adapter of some sort, returns
  *  the name of its driver.
  *
- *  \param adapter_path
- *  \param depth        logical indentation depth
- *  \return name of driver module, NULL if not found
+ *  @param adapter_path
+ *  @param depth        logical indentation depth
+ *  @return name of driver module, NULL if not found
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
@@ -99,9 +99,9 @@ char * get_driver_for_adapter(char * adapter_path, int depth) {
 /** Given a sysfs node, walk up the chain of device directory links
  *  until an adapter node is found, and return the name of its driver.
  *
- *  \param  path   e.g. /sys/bus/i2c/drivers/i2c-5
- *  \param  depth  logical indentation depth
- *  \return sysfs path to adapter
+ *  @param  path   e.g. /sys/bus/i2c/drivers/i2c-5
+ *  @param  depth  logical indentation depth
+ *  @return sysfs path to adapter
  *
  *  Parameter **depth** behaves as usual for sysfs RPT_... functions.
  *  If depth >= 0, sysfs attributes are reported.
@@ -123,8 +123,8 @@ find_adapter_and_get_driver(char * path, int depth) {
 
 /** Returns the name of the video driver for an I2C bus.
  *
- * \param  busno   I2 bus number
- * \return driver name, NULL if can't determine
+ * @param  busno   I2 bus number
+ * @return driver name, NULL if can't determine
  *
  * Caller is responsible for freeing the returned string.
  */
@@ -530,8 +530,8 @@ get_i2c_sys_info(
 
 /** Emit debug type report of a #I2C_Sys_Info struct
  *
- *  \param  info   pointer to struct with relevant /sys information
- *  \param  depth  logical indentation depth, if < 0 perform no indentation
+ *  @param  info   pointer to struct with relevant /sys information
+ *  @param  depth  logical indentation depth, if < 0 perform no indentation
  */
 void dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth) {
    int d1 = (depth < 0) ? 0 : depth + 1;
@@ -816,8 +816,8 @@ void one_drm_connector(
 
 /**
  *
- *  \param  depth  logical indentation depth, if < 0 do not emit report
- *  \return array of #Sys_Drm_Connector structs, one for each connector found
+ *  @param  depth  logical indentation depth, if < 0 do not emit report
+ *  @return array of #Sys_Drm_Connector structs, one for each connector found
  */
 
 GPtrArray * scan_sys_drm_connectors(int depth) {
