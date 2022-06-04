@@ -32,9 +32,6 @@
 #include "util/sysfs_util.h"
 #include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
-#ifdef ENABLE_UDEV
-#include "util/udev_i2c_util.h"
-#endif
 #include "util/utilrpt.h"
 
 #include "public/ddcutil_types.h"
@@ -42,7 +39,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
-#include "i2c_sysfs.h"
+#include "i2c/i2c_sysfs.h"
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
 
@@ -692,7 +689,7 @@ void one_drm_connector(
    if (edid_byte_array) {
      cur->edid_size = edid_byte_array->len;
      cur->edid_bytes = g_byte_array_free(edid_byte_array, false);
-     // DBGMSF("Setting cur->edid_bytes = %p", (void*)cur->edid_bytes);
+     // DBGMSG("Setting cur->edid_bytes = %p", (void*)cur->edid_bytes);
    }
 
    char * driver = find_adapter_and_get_driver( cur->connector_path, -1);
