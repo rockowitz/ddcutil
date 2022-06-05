@@ -9,8 +9,6 @@
 #ifndef APP_SETVCP_H_
 #define APP_SETVCP_H_
 
-#include "util/error_info.h"
-
 #include "cmdline/parsed_cmd.h"
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
