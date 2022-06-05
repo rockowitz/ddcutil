@@ -1,35 +1,32 @@
 /** @file app_getvcp.c
- *  Implement the GETVCP command
+ *  Implement command GETVCP
  */
 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "app_ddcutil/app_getvcp.h"
+#include "config.h"
 
 /** \cond */
-#include <config.h>
-
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 
+#include "util/data_structures.h"
 #include "util/error_info.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
-/** \endcond */
 
 #ifdef USE_USB
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 #endif
+/** \endcond */
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/sleep.h"
-#include "base/vcp_version.h"
+#include "base/rtti.h"
 
 #include "cmdline/parsed_cmd.h"
 
@@ -37,12 +34,8 @@
 
 #include "dynvcp/dyn_feature_codes.h"
 
-#include "i2c/i2c_bus_core.h"
-
 #include "ddc/ddc_output.h"
-#include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
-#include "ddc/ddc_vcp.h"
 
 
 // Default trace class for this file
@@ -172,21 +165,17 @@ app_show_vcp_subset_values_by_dh(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "dh=%s, subset_id=%s, flags=%s, features_seen=%p",
-          dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names_t(flags), features_seen );
+          dh_repr(dh), feature_subset_name(subset_id), feature_set_flag_names_t(flags),
+          features_seen );
 
    GPtrArray * collector = NULL;
    Status_Errno_DDC psc = ddc_show_vcp_values(dh, subset_id, collector, flags, features_seen);
 
-   if (debug || IS_TRACING()) {
-      if (features_seen) {
-         // DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bbf_to_string(features_seen) );
-         DBGMSG("Returning: %s. features_seen=%s",  psc_desc(psc),  bs256_to_string(*features_seen, "x", ", ") );
-      }
-      else {
-         DBGMSG("Returning: %s", psc_desc(psc));
-      }
-   }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
+   if (features_seen)
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "features_seen=%s",
+                                           bs256_to_string(*features_seen, "x", ", ") );
+   else
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -315,3 +304,12 @@ app_show_feature_set_values_by_dh(
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
+
+
+void init_app_getvcp() {
+   RTTI_ADD_FUNC(app_show_feature_set_values_by_dh);
+   RTTI_ADD_FUNC(app_show_vcp_subset_values_by_dh);
+   RTTI_ADD_FUNC(app_show_single_vcp_value_by_feature_id);
+   RTTI_ADD_FUNC(app_show_single_vcp_value_by_dfm);
+}
+

@@ -12,11 +12,6 @@
 
 /** \cond */
 #include <stdbool.h>
-
-#include "util/data_structures.h"
-#include "util/error_info.h"
-#include "util/string_util.h"
-#include "util/report_util.h"
 /** \endcond */
 
 #include "base/displays.h"
@@ -42,5 +37,8 @@ Status_Errno_DDC
 app_show_feature_set_values_by_dh(
       Display_Handle *      dh,
       Parsed_Cmd *          parsed_cmd);
+
+void
+init_app_getvcp();
 
 #endif /* APP_GETVCP_H_ */
