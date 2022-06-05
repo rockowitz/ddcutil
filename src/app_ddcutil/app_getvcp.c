@@ -180,48 +180,6 @@ app_show_vcp_subset_values_by_dh(
 }
 
 
-#ifdef UNUSED
-/* Shows the VCP values for all features in a VCP feature subset.
- *
- * Arguments:
- *    pdisp      display reference
- *    subset_id  feature subset
- *    collector  accumulates output
- *    show_unsupported
- *
- * Returns:
- *    nothing
- */
-void app_show_vcp_subset_values_by_dref(
-        Display_Ref *       dref,
-        VCP_Feature_Subset  subset_id,
-        bool                show_unsupported)
-{
-   // DBGMSG("Starting.  subset=%d   ", subset );
-   // need to ensure that bus info initialized
-   bool validDisp = true;
-   if (dref->ddc_io_mode == DDC_IO_DEVI2C) {
-      // Is this needed?  or checked by openDisplay?
-      Bus_Info * bus_info = i2c_get_bus_info(dref->busno);
-      if (!bus_info ||  !(bus_info->feature_flags & I2C_BUS_ADDR_0X37) ) {
-         printf("Address 0x37 not detected on bus %d. I2C communication not available.\n", dref->busno );
-         validDisp = false;
-      }
-   }
-   else {
-      validDisp = true;    // already checked
-   }
-
-   if (validDisp) {
-      GPtrArray * collector = NULL;
-      Display_Handle * pDispHandle = ddc_open_display(dref, EXIT_IF_FAILURE);
-      ddc_show_vcp_values(pDispHandle, subset_id, collector, show_unsupported);
-      ddc_close_display(pDispHandle);
-   }
-}
-#endif
-
-
 /**  Shows the VCP values for all features indicated by a #Feature_Set_Ref
  *
  *   @param  dh      display handle
