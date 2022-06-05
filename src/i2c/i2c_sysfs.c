@@ -585,9 +585,8 @@ static void report_one_bus_i2c(
    }
    else {
       rpt_vstring(depth, "Examining /sys/bus/i2c/devices/i2c-%d...", busno);
-      // int d1 = (debug) ? -1 : depth+1;
-      // d1 > 0 => reports as collects, no need to call report_i2c_sys_info()
       int d1 = depth+1;
+      // d1 > 0 => get_i2c_sys_info() reports as it collects, no need to call report_i2c_sys_info()
       I2C_Sys_Info * info = get_i2c_sys_info(busno, d1);
       // report_i2c_sys_info(info, depth+1);
       free_i2c_sys_info(info);
