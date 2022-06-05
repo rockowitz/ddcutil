@@ -38,10 +38,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 /** Converts a VCP feature value from string form to internal form.
  *  Error messages are written to stderr.
  *
- *  \param   string_value
- *  \param   parsed_value    location where to return result
+ *  @param   string_value
+ *  @param   parsed_value    location where to return result
  *
- *  \return  true if conversion successful, false if not
+ *  @return  true if conversion successful, false if not
  */
 bool
 parse_vcp_value(
@@ -72,12 +72,12 @@ parse_vcp_value(
 
 /** Parses the arguments passed for a single feature and sets the new value.
  *
- *   \param  dh          display handle
- *   \param  feature     feature code
- *   \param  value_type  indicates if a relative value
- *   \param  new_value   new feature value (as string)
- *   \param  force       attempt to set feature even if feature code unrecognized
- *   \return #Error_Info if error
+ *   @param  dh          display handle
+ *   @param  feature     feature code
+ *   @param  value_type  indicates if a relative value
+ *   @param  new_value   new feature value (as string)
+ *   @param  force       attempt to set feature even if feature code unrecognized
+ *   @return #Error_Info if error
  */
 Error_Info *
 app_set_vcp_value(
