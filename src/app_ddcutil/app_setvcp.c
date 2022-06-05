@@ -48,47 +48,11 @@ parse_vcp_value(
       char * string_value,
       int * parsed_value_loc)
 {
+   assert(string_value);
    bool debug = false;
+   DBGMSF(debug, "Starting. string_value = |%s|", string_value);
 
    FILE * errf = ferr();         // at app level will always be stderr
-   assert(string_value);
-
-   DBGMSF(debug, "Starting. string_value = |%s|", string_value);
-#ifdef OLD
-   bool ok = true;
-   char buf[20];
-   strupper(string_value);
-   if (*string_value == 'X' ) {
-      snprintf(buf, 20, "0%s", string_value);
-      string_value = buf;
-      DBGMSF(debug, "Adjusted value: |%s|", string_value);
-   }
-   else if (*(string_value + strlen(string_value)-1) == 'H') {
-      int newlen = strlen(string_value)-1;
-      snprintf(buf, 20, "0x%.*s", newlen, string_value);
-      string_value = buf;
-      DBGMSF(debug, "Adjusted value: |%s|", string_value);
-   }
-
-   char * endptr = NULL;
-   errno = 0;
-   long longtemp = strtol(string_value, &endptr, 0 );  // allow 0xdd  for hex values
-   int errsv = errno;
-   DBGMSF(debug, "errno=%d, string_value=|%s|, &string_value=%p, longtemp = %ld, endptr=0x%02x",
-                 errsv, string_value, &string_value, longtemp, *endptr);
-   if (*endptr || errsv != 0) {
-      f0printf(errf, "Not a number: %s\n", string_value);
-      ok = false;
-   }
-   else if (longtemp < 0 || longtemp > 65535) {
-      f0printf(errf, "Number must be in range 0..65535:  %ld\n", longtemp);
-      ok = false;
-   }
-   else {
-      *parsed_value = longtemp;
-      ok = true;
-   }
-#else
    char * canonical = canonicalize_possible_hex_value(string_value);
    bool ok = str_to_int(canonical, parsed_value_loc, 0);
    free(canonical);
@@ -100,7 +64,6 @@ parse_vcp_value(
       f0printf(errf, "Number must be in range 0..65535:  %d\n", *parsed_value_loc);
       ok = false;
    }
-#endif
 
    DBGMSF(debug, "Done. *parsed_value_loc=%d, returning: %s", *parsed_value_loc, SBOOL(ok));
    return ok;
