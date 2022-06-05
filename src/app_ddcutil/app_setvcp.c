@@ -19,13 +19,13 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
+#include "base/feature_metadata.h"
 #include "base/rtti.h"
 
-#include "vcp/vcp_feature_codes.h"
+#include "cmdline/parsed_cmd.h"
 
-#include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
-#include "ddc/ddc_vcp_version.h"
 
 #include "dynvcp/dyn_feature_codes.h"
 
@@ -81,11 +81,11 @@ parse_vcp_value(
  */
 Error_Info *
 app_set_vcp_value(
-      Display_Handle * dh,
-      Byte             feature_code,
+      Display_Handle *  dh,
+      Byte              feature_code,
       Setvcp_Value_Type value_type,
-      char *           new_value,
-      bool             force)
+      char *            new_value,
+      bool              force)
 {
    assert(new_value && strlen(new_value) > 0);
    FILE * errf = ferr();   // at app level will always be stderr()
