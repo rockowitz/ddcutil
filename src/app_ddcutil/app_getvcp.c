@@ -59,8 +59,6 @@ app_show_single_vcp_value_by_dfm(
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting feature 0x%02x for %s",
                                dfm->feature_code, dh_repr(dh) );
 
-   // DDCA_Feature_Metadata * extmeta = dfm_to_ddca_feature_metadata(meta);
-
    DDCA_MCCS_Version_Spec vspec      = get_vcp_version_by_dh(dh);
    DDCA_Status            ddcrc      = 0;
    DDCA_Vcp_Feature_Code  feature_id = dfm->feature_code;
@@ -125,14 +123,10 @@ app_show_single_vcp_value_by_feature_id(
                               feature_id, dh_repr(dh), sbool(force) );
 
    Status_Errno_DDC         psc = 0;
-
-   Display_Feature_Metadata * dfm =
-   dyn_get_feature_metadata_by_dh(
-         feature_id,
-         dh,
-         force || feature_id >= 0xe0    // with_default
-         );
-
+   Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh(
+                                       feature_id,
+                                       dh,
+                                       force || feature_id >= 0xe0);  // with_default
    if (!dfm) {
       printf("Unrecognized VCP feature code: 0x%02x\n", feature_id);
       psc = DDCRC_UNKNOWN_FEATURE;
