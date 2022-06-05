@@ -20,12 +20,13 @@
 #include "app_vcpinfo.h"
 
 void init_app_services() {
+   init_app_capabilities();
+   init_app_dumpload();
+   init_app_dynamic_features();
+   init_app_getvcp();
 #ifdef ENABLE_ENVCMDS
    init_app_interrogate();
 #endif
-   init_app_capabilities();
-   init_app_dynamic_features();
-   init_app_dumpload();
    init_app_probe();
    init_app_setvcp();
    init_app_watch();
