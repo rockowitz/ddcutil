@@ -1,6 +1,6 @@
 /** @file app_dumpload.c
  *
- *  Primary file for the DUMPVCP and LOADVCP commands
+ *  Implement commands DUMPVCP and LOADVCP
  */
 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -75,7 +75,7 @@ void create_simple_vcp_fn_by_edid(
 
 /** Creates a VCP filename from a #Display_Handle and a timestamp.
  *
- * @param  edid         pointer to parsed edid
+ * @param  dh           display handle
  * @param  time_millis  timestamp to use
  * @param  buf          buffer in which to return filename
  * @param  bufsz        buffer size
