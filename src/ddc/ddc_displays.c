@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
-#include <config.h>
+#include "config.h"
 
 /** \cond */
 #include <assert.h>
@@ -29,6 +29,10 @@
 #endif
 /** \endcond */
 
+#include "public/ddcutil_types.h"
+#include "private/ddcutil_types_private.h"
+
+#include "base/monitor_quirks.h"
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/feature_metadata.h"
@@ -533,10 +537,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                       if (rc == 0)
                          rpt_label(d1, "I2C device is busy.  Likely conflict with driver ddcci.");
                    }
-
-
-
+// #ifndef I2C_IO_IOCTL_ONLY
                    msg = "Try using option --force-slave-address";
+// #endif
                 }
             }
             if (output_level >= DDCA_OL_VERBOSE) {
@@ -549,7 +552,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             rpt_vstring(d1, msg);
          }
       }
-      else {
+      else {    // communication working
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);
          if ( vspec.major   == 0)
@@ -578,6 +581,26 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                // rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
                //                    sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
             }
+         }
+         DDCA_Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+         // DBGMSG("mmk = %s", mmk_repr(mmk) );
+         Monitor_Quirk_Data * quirk = get_monitor_quirks(&mmk);
+         if (quirk) {
+            char * msg = NULL;
+            switch(quirk->quirk_type) {
+            case  MQ_NONE:
+               break;
+            case MQ_NO_SETTING:
+               msg = "WARNING: Setting feature values has been reported to permanently cripple this monitor!";
+               break;
+            case MQ_NO_MFG_RANGE:
+               msg = "WARNING: Setting manufacturer reserved features has been reported to permanently cripple this monitor!";
+               break;
+            case MQ_OTHER:
+               msg = quirk->quirk_msg;
+            }
+            if (msg)
+               rpt_vstring(d1, msg);
          }
       }
    }
