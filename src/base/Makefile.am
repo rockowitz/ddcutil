@@ -41,6 +41,7 @@ feature_set_ref.c         \
 last_io_event.c           \
 linux_errno.c             \
 monitor_model_key.c       \
+monitor_quirks.c          \
 per_thread_data.c         \
 rtti.c                    \
 sleep.c                   \
