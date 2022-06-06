@@ -14,6 +14,8 @@
 #include "public/ddcutil_types.h"
 #include "private/ddcutil_types_private.h"
 
+#include "util/edid.h"
+
 DDCA_Monitor_Model_Key
 monitor_model_key_value(
       const char *   mfg_id,
@@ -22,6 +24,9 @@ monitor_model_key_value(
 
 DDCA_Monitor_Model_Key
 monitor_model_key_undefined_value();
+
+DDCA_Monitor_Model_Key
+monitor_model_key_value_from_edid(Parsed_Edid * edid);
 
 DDCA_Monitor_Model_Key *
 monitor_model_key_new(
