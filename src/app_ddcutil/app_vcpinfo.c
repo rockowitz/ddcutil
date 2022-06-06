@@ -1,9 +1,9 @@
-/** \file app_vcpinfo.c
+/** @file app_vcpinfo.c
  *
- *  vcpinfo and (deprecated) listvcp commands
+ *  Implement VCPINFO and (deprecated) LISTVCP commands
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -16,6 +16,8 @@
 
 #include "util/report_util.h"
 
+#include "base/core.h"
+
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_codes.h"
 
@@ -25,9 +27,9 @@
 /** Creates humanly readable interpretation of VCP feature flags.
  *  The result is returned in a buffer supplied by the caller.
  *
- *  \param  flags   version specific feature flags
- *  \param  buf     pointer to buffer
- *  \param  buflen  buffer size
+ *  @param  flags   version specific feature flags
+ *  @param  buf     pointer to buffer
+ *  @param  buflen  buffer size
  *
  * Returns:   buf
  */
@@ -75,7 +77,7 @@ vcp_interpret_version_feature_flags(
 
 /** Mainline for deprecated command LISTVCP
  *
- *  \param fh  where to write output
+ *  @param fh  where to write output
  */
 void
 app_listvcp(FILE * fh) {
@@ -108,10 +110,10 @@ app_listvcp(FILE * fh) {
 /** Returns a byte of flags indicating those MCCS versions for which the
  *  specified VCP feature is defined.
  *
- *  \param  pentry pointer to VCP_Feature_Table_Entry for VCP feature
- *  \return byte of flags
+ *  @param  pentry pointer to VCP_Feature_Table_Entry for VCP feature
+ *  @return byte of flags
  *
- * \remark
+ * @remark
  * Move back to vcp_feature_codes.c?
  */
 static Byte
@@ -261,6 +263,7 @@ interpret_feature_flags_r(
 {
    bool debug = false;
    DBGMSF(debug, "vflags=0x%04x", vflags);
+
    assert(bufsz >= 100);     //  bigger than we'll need
    *workbuf = '\0';
    if (vflags & DDCA_DEPRECATED) {
@@ -301,10 +304,10 @@ report_feature_table_entry_flags(
 /** Emits a report on a VCP_Feature_Table_Entry.  This function is used by the
  *  VCPINFO command.  The report is written to the current report destination.
  *
- *  \param   pentry   pointer to feature table entry
- *  \param   depth    logical indentation depth
+ *  @param   pentry   pointer to feature table entry
+ *  @param   depth    logical indentation depth
  *
- *  \remark
+ *  @remark
  *  More properly in vcp_feature_codes.c?
  */
 void
@@ -350,8 +353,8 @@ report_vcp_feature_table_entry(
 
 /** Mainline for VCPINFO command
  *
- *  \param  parsed_cmd  parsed command line
- *  \return false if no features shown, true otherwise
+ *  @param  parsed_cmd  parsed command line
+ *  @return false if no features shown, true otherwise
  */
 bool
 app_vcpinfo(Parsed_Cmd * parsed_cmd)
@@ -359,6 +362,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_VCP | DDCA_TRC_TOP, "feature set: %s",
          fsref_repr_t(parsed_cmd->fref));
+
    bool vcpinfo_ok = true;
 
    Feature_Set_Flags fsflags = 0;
@@ -392,6 +396,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
       }
       free_vcp_feature_set(fset);
    }
+
    DBGTRC_RET_BOOL(debug, DDCA_TRC_VCP|DDCA_TRC_TOP, vcpinfo_ok, "");
    return vcpinfo_ok;
 }
