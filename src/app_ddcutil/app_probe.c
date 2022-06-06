@@ -218,7 +218,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
 /** Probe a display specified by a #Display_Ref.
  *  Output is written to stdout.
  *
- *  @param dh display reference
+ *  @param dref display reference
  */
 void app_probe_display_by_dref(Display_Ref * dref) {
    FILE * fout = stdout;
