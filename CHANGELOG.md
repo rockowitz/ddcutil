@@ -1,6 +1,15 @@
 # Changelog
 
-## [1.2.3] 2022-05-25
+## [1.2.3] 2022-06-06
+
+### Added
+- Command **detect**: 
+  - Issue warning for monitors known to cripple monitors
+    - Currently only entry is Xaomi model "Mi Monitor"
+- Debug messages.  Environment variables DDCUTIL_DEBUG_PARSE, 
+  DDCUTIL_DEBUG_MAIN, DDCUTIL_DEBUG_LIBINIT can be set to enable trace messages
+  in command line **ddcutil** or shared library **libddcutil.so** during 
+  initialization and before command options.
 
 ### Changed
 - Option ***--force-slave-address*** no longer has any effect. The dev-i2c 
@@ -52,6 +61,11 @@ libddcutil:
 - The sleep multiplier value was not respected for new API threads.
 - User Defined Features: Keyword **NC** set the incorrect flag in a feature
   descriptor.
+- Fixed a segfault that occurred at **ddcui** startup.  The fault was in a 
+  trace message for function ddc_start_watch_displays() which watches for
+  that are added or removed.
+- Fixed a segfault in **ddcutil** initialization because of unexpected
+  contents in sysfs.
 - Do not use glib function g_byte_array_steal(), which requires glib 2.60.
   ddcutil requires only glib 2.40. 
 - Miscellaneous memory leaks
