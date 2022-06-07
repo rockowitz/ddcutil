@@ -311,10 +311,7 @@ static void verify_i2c_access() {
 
    Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();  //sysfs bus numbers, not dev-i2c
    DBGMSF(debug, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
-   if (bs256_count(buses) == 0) {
-      // printf("No display adapters with i2c buses exist.\n");
-   }
-   else {
+   if (bs256_count(buses) > 0) {
       Bit_Set_256_Iterator iter = bs256_iter_new(buses);
       int busno;
       while ( (busno = bs256_iter_next(iter)) >= 0)  {
@@ -357,8 +354,7 @@ static void verify_i2c_access() {
          printf("Driver i2c_dev must be loaded or builtin\n");
          printf("See https://www.ddcutil.com/kernel_module\n");
       }
-      // else
-         if (bs256_count(inaccessible_devices) > 0) {
+      if (bs256_count(inaccessible_devices) > 0) {
          printf("Devices possibly used for DDC/CCI communication cannot be opened: %s\n",
                 bs256_to_string_decimal(inaccessible_devices, "/dev/i2c-", " "));
          printf("See https://www.ddcutil.com/i2c_permissions\n");
