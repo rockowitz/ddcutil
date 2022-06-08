@@ -33,9 +33,11 @@
 // shared with i2c_bus_selector.c
 extern GPtrArray * i2c_buses;
 
+#ifndef I2C_IO_IOCTL_ONLY
 // Controls whether function #i2c_set_addr() retries from EBUSY error by
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
 extern bool i2c_force_slave_addr_flag;
+#endif
 
 extern bool i2c_force_bus;
 

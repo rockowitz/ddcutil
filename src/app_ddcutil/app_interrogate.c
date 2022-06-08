@@ -68,8 +68,10 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
    f0printf(fout(), "Forcing --stats...\n");
    parsed_cmd->stats_types = DDCA_STATS_ALL;
+#ifndef I2C_IO_IOCTL_ONLY
    f0printf(fout(), "Forcing --force-slave-address..\n");
    i2c_force_slave_addr_flag = true;
+#endif
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???

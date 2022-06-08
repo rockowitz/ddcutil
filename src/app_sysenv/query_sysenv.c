@@ -9,7 +9,7 @@
 // #define SYSENV_QUICK_TEST_RUN 1
 
 /** \cond */
-#include <config.h>
+#include "config.h"
 
 // #define _GNU_SOURCE 1       // for function group_member
 #include <assert.h>
@@ -44,6 +44,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/linux_errno.h"
+#include "base/parms.h"
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
@@ -733,7 +734,9 @@ void query_sysenv() {
       rpt_label(0, "Set environment variable SYSENV_QUICK_TEST to skip some long-running tests.");
    }
 
+#ifndef I2C_IO_IOCTL_ONLY
    i2c_force_slave_addr_flag = true;    // be a bully
+#endif
 
    ddc_ensure_displays_detected();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
