@@ -813,7 +813,7 @@ main(int argc, char *argv[]) {
    }
 
    if (parsed_cmd->flags & CMD_FLAG_F2) {
-      master_i2c_sysfs_report(0);
+      consolidated_i2c_sysfs_report(0);
       // rpt_label(0, "*** Tests Done ***");
       // rpt_nl();
    }

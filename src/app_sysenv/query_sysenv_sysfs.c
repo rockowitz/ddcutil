@@ -865,7 +865,7 @@ void dump_sysfs_i2c() {
    dbgrpt_sys_bus_i2c(1);
    rpt_nl();
 
-   master_i2c_sysfs_report(0);
+   consolidated_i2c_sysfs_report(0);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }

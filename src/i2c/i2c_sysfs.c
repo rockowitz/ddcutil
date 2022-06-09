@@ -1334,7 +1334,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
 }
 
 
-void master_i2c_sysfs_report(int depth) {
+void consolidated_i2c_sysfs_report(int depth) {
    int d0 = depth;
    int d1 = depth+1;
 
