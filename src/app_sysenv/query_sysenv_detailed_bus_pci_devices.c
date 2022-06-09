@@ -352,8 +352,6 @@ void one_pci_device(
 
 void
 dump_detailed_sys_bus_pci(int depth) {
-   rpt_nl();
-   rpt_nl();
    rpt_label(depth, "*** Detailed /sys/bus/pci/devices scan ***");
    // rpt_nl();
    dir_filtered_ordered_foreach("/sys/bus/pci/devices",
