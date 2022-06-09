@@ -813,28 +813,9 @@ main(int argc, char *argv[]) {
    }
 
    if (parsed_cmd->flags & CMD_FLAG_F2) {
-      rpt_label(0, "*** Sys_Drm_Connector report ***");
-      report_sys_drm_connectors(1);
-      rpt_nl();
-
-      rpt_label(0, "*** Sysfs_I2C_Info report ***");
-      GPtrArray * reports = get_all_i2c_info(true, -1);
-      dbgrpt_all_sysfs_i2c_info(reports, 1);
-      rpt_nl();
-
-      rpt_label(0, "*** Sysfs I2C devices possibly associated with displays ***");
-      Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();
-      rpt_vstring(0, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
-      rpt_nl();
-
-      rpt_label(0, "*** Sys_Conflicting_Driver report ***");
-      GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-      report_conflicting_drivers(conflicts, 1);
-      free_conflicting_drivers(conflicts);
-      rpt_nl();
-
-      rpt_label(0, "*** Tests Done ***");
-      rpt_nl();
+      master_i2c_sysfs_report(0);
+      // rpt_label(0, "*** Tests Done ***");
+      // rpt_nl();
    }
 
    Call_Options callopts = CALLOPT_NONE;
