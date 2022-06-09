@@ -35,6 +35,7 @@
 #include "util/coredefs.h"
 #include "util/error_info.h"
 
+#include "base/parms.h"      // ensure available to any file that includes core.h
 #include "base/core_per_thread_settings.h"
 #include "base/linux_errno.h"
 
