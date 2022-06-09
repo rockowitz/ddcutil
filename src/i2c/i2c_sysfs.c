@@ -1099,7 +1099,8 @@ char * conflicting_driver_names_string_t(GPtrArray * conflicts) {
 
 
 void free_conflicting_drivers(GPtrArray* conflicts) {
-   g_ptr_array_free(conflicts, true);
+   if (conflicts)
+      g_ptr_array_free(conflicts, true);
 }
 
 
@@ -1349,8 +1350,18 @@ void master_i2c_sysfs_report(int depth) {
 
    rpt_label(d0, "*** Sys_Conflicting_Driver report ***");
    GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-   report_conflicting_drivers(conflicts, 1);
+   report_conflicting_drivers(conflicts, d1);
    free_conflicting_drivers(conflicts);
+
+   if (conflicts && conflicts->len > 0) {
+      report_conflicting_drivers(conflicts, d1);
+      rpt_vstring(d1, "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
+      free_conflicting_drivers(conflicts);
+   }
+   else
+      rpt_label(d1, "No conflicting drivers found");
+
+
    rpt_nl();
 
    rpt_label(0, "*** Sysfs Reports Done ***");
