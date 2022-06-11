@@ -242,8 +242,6 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    memcpy(pIdent->marker, DISPLAY_IDENTIFIER_MARKER, 4);
    pIdent->id_type = id_type;
    pIdent->busno  = -1;
-   pIdent->iAdapterIndex = -1;
-   pIdent->iDisplayIndex = -1;
    pIdent->usb_bus = -1;
    pIdent->usb_device = -1;
    memset(pIdent->edidbytes, '\0', 128);
@@ -395,8 +393,6 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
    rpt_mapped_int("ddc_io_mode",   NULL, pdid->id_type, (Value_To_Name_Function) display_id_type_name, d1);
    rpt_int( "dispno",        NULL, pdid->dispno,        d1);
    rpt_int( "busno",         NULL, pdid->busno,         d1);
-   rpt_int( "iAdapterIndex", NULL, pdid->iAdapterIndex, d1);
-   rpt_int( "iDisplayIndex", NULL, pdid->iDisplayIndex, d1);
    rpt_int( "usb_bus",       NULL, pdid->usb_bus,       d1);
    rpt_int( "usb_device",    NULL, pdid->usb_device,    d1);
    rpt_int( "hiddev_devno",  NULL, pdid->hiddev_devno,  d1);
