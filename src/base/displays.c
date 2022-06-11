@@ -287,27 +287,6 @@ Display_Identifier* create_busno_display_identifier(int busno) {
 }
 
 
-/** Creates a #Display_Identifier using an ADL adapter number/display number pair.
- *
- * \param  iAdapterIndex ADL adapter number
- * \param  iDisplayIndex ADL display number
- * \return pointer to newly allocated #Display_Identifier
- *
- * \remark
- * It is the responsibility of the caller to free the allocated
- * #Display_Identifier using #free_display_identifier().
- */
-Display_Identifier* create_adlno_display_identifier(
-      int    iAdapterIndex,
-      int    iDisplayIndex)
-{
-   Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_ADL);
-   pIdent->iAdapterIndex = iAdapterIndex;
-   pIdent->iDisplayIndex = iDisplayIndex;
-   return pIdent;
-}
-
-
 /** Creates a #Display_Identifier using an EDID value
  *
  * \param  edidbytes  pointer to 128 byte EDID value
@@ -535,7 +514,6 @@ void dsel_free(Display_Selector * dsel) {
       free(dsel->edidbytes);
    }
 }
-
 
 // #endif
 
