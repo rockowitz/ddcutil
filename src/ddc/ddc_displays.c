@@ -1451,16 +1451,16 @@ ddc_is_usb_display_detection_enabled() {
 void
 init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_async_scan);
-   RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
-   RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
-   RTTI_ADD_FUNC(is_phantom_display);
-   RTTI_ADD_FUNC(ddc_non_async_scan);
-   RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
+   RTTI_ADD_FUNC(ddc_non_async_scan);
+   RTTI_ADD_FUNC(ddc_redetect_displays);
+   RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(get_controller_mfg_string_t);
    RTTI_ADD_FUNC(get_firmware_version_string_t);
+   RTTI_ADD_FUNC(is_phantom_display);
+   RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 }
 
