@@ -256,24 +256,6 @@ char *           dh_repr(Display_Handle * dh);
 char *           dh_repr_t(Display_Handle * dh);
 void             free_display_handle(Display_Handle * dh);
 
-
-// *** Video_Card_Info ***
-
-#ifdef ADL
-#define VIDEO_CARD_INFO_MARKER "VIDC"
-/** Video card information */
-typedef struct {
-   char     marker[4];
-   int      vendor_id;
-   char *   adapter_name;
-   char *   driver_name;
-} Video_Card_Info;
-
-
-Video_Card_Info * create_video_card_info();
-#endif
-
-
 // For internal display selection functions
 
 #define DISPSEL_NONE       0x00
