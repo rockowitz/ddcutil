@@ -4,7 +4,7 @@
  * hiddev ioctl() calls.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -29,7 +29,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
 // In keeping with the style of Linux USB code, this file prefers
-// "struct xxx {}" to "typedef {} xxx"
+// "struct xxx {}" to "typedef struct {} xxx"
 
 
 //
