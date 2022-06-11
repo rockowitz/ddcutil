@@ -612,27 +612,6 @@ Display_Ref * create_bus_display_ref(int busno) {
 }
 
 
-/** Creates a #Display_Ref for IO mode #DDCA_IO_ADL
- *
- * @param  iAdapterIndex   ADL adapter index
- * @param  iDisplayIndex   ADL display index
- * \return pointer to newly allocated #Display_Ref
- */
-Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex) {
-   bool debug = false;
-   DDCA_IO_Path io_path;
-   io_path.io_mode   = DDCA_IO_ADL;
-   io_path.path.adlno.iAdapterIndex = iAdapterIndex;
-   io_path.path.adlno.iDisplayIndex = iDisplayIndex;
-   Display_Ref * dref = create_base_display_ref(io_path);
-   if (debug) {
-      DBGMSG("Done.  Constructed ADL display ref:");
-      dbgrpt_display_ref(dref,0);
-   }
-   return dref;
-}
-
-
 #ifdef USE_USB
 /** Creates a #Display_Ref for IO mode #DDCA_IO_USB
  *

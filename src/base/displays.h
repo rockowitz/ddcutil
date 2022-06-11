@@ -210,7 +210,6 @@ typedef struct _display_ref {
           _dref->io_path.io_mode == _mode)
 
 Display_Ref * create_bus_display_ref(int busno);
-Display_Ref * create_adl_display_ref(int iAdapterIndex, int iDisplayIndex);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
 void          dbgrpt_dref_flags(Dref_Flags flags, int depth);
 void          dbgrpt_display_ref(Display_Ref * dref, int depth);
