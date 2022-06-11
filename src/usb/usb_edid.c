@@ -39,9 +39,6 @@
 
 #include "i2c/i2c_bus_core.h"     // for EDID fallback
 #include "i2c/i2c_bus_selector.h" // for EDID fallback
-#ifdef ADL
-#include "adl/adl_shim.h"         // for EDID fallback
-#endif
 
 #include "usb/usb_base.h"
 
