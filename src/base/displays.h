@@ -274,13 +274,6 @@ Video_Card_Info * create_video_card_info();
 #endif
 
 
-// *** Miscellaneous ***
-
-bool is_adlno_defined(DDCA_Adlno adlno);
-
-/** Reserved #DDCA_Adlno value indicating undefined */
-#define ADLNO_UNDEFINED {-1,-1}
-
 // For internal display selection functions
 
 #define DISPSEL_NONE       0x00

@@ -60,19 +60,6 @@ static Thread_Displays_Data *  get_thread_displays_data() {
 #endif
 
 
-// *** Miscellaneous ***
-
-/** Reports whether a #DDCA_Adlno value is set or is currently undefined.
- *  \param adlno ADL adapter/index number pair
- *
- *  \remark
- *  Used to hide the magic number for "undefined"
- */
-bool is_adlno_defined(DDCA_Adlno adlno) {
-   return adlno.iAdapterIndex >= 0 && adlno.iDisplayIndex >= 0;
-}
-
-
 // *** DDCA_IO_Path ***
 
 /** Tests 2 #DDCA_IO_Path instances for equality
