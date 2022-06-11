@@ -34,16 +34,15 @@ Monitors are specified in different ways in different contexts:
 
 1) Display_Identifier contains the identifiers specified on the command line.
 
-2) Display_Ref is a logical display identifier.   It can be an I2C identifier,
-an ADL identifier, or a USB identifier.
+2) Display_Ref is a logical display identifier.   It can be an I2C identifier
+or a USB identifier.
 
-For Display_Identifiers containing either busno (for I2C) or ADL
-adapter.display numbers the translation from Display_Identier to Display_Ref
-is direct.   Otherwise, displays are searched to find the monitor.
+For Display_Identifiers containing a busno (for I2C) or hiddev device number (USB),
+the translation from Display_Identier to Display_Ref is direct.
+Otherwise, displays are searched to find the monitor.
 
 3) Display_Handle is passed as an argument to "open" displays.
 
-For ADL displays, the translation from Display_Ref to Display_Handle is direct.
 For I2C displays, the device must be opened.  Display_Handle then contains the open file handle.
 */
 
@@ -142,7 +141,6 @@ Display_Selector * dsel_new();
 void               dsel_free(              Display_Selector * dsel);
 Display_Selector * dsel_set_display_number(Display_Selector* dsel, int dispno);
 Display_Selector * dsel_set_i2c_busno(     Display_Selector* dsel, int busno);
-Display_Selector * dsel_set_adl_numbers(   Display_Selector* dsel, int iAdapterIndex, int iDisplayIndex);
 Display_Selector * dsel_set_usb_numbers(   Display_Selector* dsel, int bus, int device);
 Display_Selector * dsel_set_mfg_id(        Display_Selector* dsel, char*  mfg_id);
 Display_Selector * dsel_set_model_name(    Display_Selector* dsel, char* model_name);
@@ -181,8 +179,7 @@ char * interpret_dref_flags_t(Dref_Flags flags);    // replaces dref_basic_flags
 
 #define DISPLAY_REF_MARKER "DREF"
 /** A **Display_Ref** is a logical display identifier.
- * It can contain an I2C bus number, an ADL adapter/display number pair,
- * or a USB bus number/device number pair.
+ * It can contain an I2C bus number or a USB bus number/device number pair.
  */
 typedef struct _display_ref {
    char                     marker[4];
@@ -252,9 +249,8 @@ void             free_display_handle(Display_Handle * dh);
 #define DISPSEL_VALID_ONLY 0x80
 #ifdef FUTURE
 #define DISPSEL_I2C        0x40
-#define DISPSEL_ADL        0x20
 #define DISPSEL_USB        0x10
-#define DISPSEL_ANY        (DISPSEL_I2C | DISPSEL_ADL | DISPSEL_USB)
+#define DISPSEL_ANY        (DISPSEL_I2C | DISPSEL_USB)
 #endif
 
 //* Option flags for display selection functions */
