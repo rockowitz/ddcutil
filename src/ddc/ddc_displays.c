@@ -65,9 +65,9 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
-static GPtrArray * all_displays = NULL;    // all detected displays
-static GPtrArray * i2c_bus_errors = NULL;  // /dev/i2c-n open errors
-static int dispno_max = 0;                 // highest assigned display number
+static GPtrArray * all_displays = NULL;         // all detected displays
+static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
+static int dispno_max = 0;                      // highest assigned display number
 static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
 #ifdef USE_USB
 static bool detect_usb_displays = true;
@@ -318,7 +318,7 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
  *  @return **GPtrArray of #Bus_Open_Error.
  */
 GPtrArray * ddc_get_bus_open_errors() {
-   return i2c_bus_errors;
+   return display_open_errors;
 }
 
 
@@ -1323,7 +1323,7 @@ ddc_ensure_displays_detected() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (!all_displays) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
-      all_displays = ddc_detect_all_displays(&i2c_bus_errors);
+      all_displays = ddc_detect_all_displays(&display_open_errors);
    }
    DBGTRC_DONE(debug, TRACE_GROUP,
                "all_displays=%p, all_displays has %d displays",
@@ -1351,9 +1351,9 @@ ddc_discard_detected_displays() {
       }
       g_ptr_array_free(all_displays, true);
       all_displays = NULL;
-      if (i2c_bus_errors) {
-         g_ptr_array_free(i2c_bus_errors, true);
-         i2c_bus_errors = NULL;
+      if (display_open_errors) {
+         g_ptr_array_free(display_open_errors, true);
+         display_open_errors = NULL;
       }
    }
    free_sys_drm_connectors();
@@ -1368,7 +1368,7 @@ ddc_redetect_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    ddc_discard_detected_displays();
    i2c_detect_buses();
-   all_displays = ddc_detect_all_displays(&i2c_bus_errors);
+   all_displays = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
       dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
       // dbgrpt_valid_display_refs(1);
