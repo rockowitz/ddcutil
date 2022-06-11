@@ -914,18 +914,6 @@ void ddc_async_scan(GPtrArray * all_displays) {
    DBGMSF(debug, "Threads joined");
    g_ptr_array_free(threads, true);
 
-#ifdef OLD
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
-         dref->dispno = ++dispno_max;
-      }
-      else {
-         dref->dispno = -1;
-      }
-   }
-#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -938,15 +926,6 @@ void ddc_non_async_scan(GPtrArray * all_displays) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       ddc_initial_checks_by_dref(dref);
-
-#ifdef OLD
-      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
-         dref->dispno = ++dispno_max;
-      }
-      else {
-         dref->dispno = -1;
-      }
-#endif
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
