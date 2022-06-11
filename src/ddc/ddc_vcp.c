@@ -30,10 +30,6 @@
 
 #include "i2c/i2c_bus_core.h"
 
-#ifdef ADL
-#include "adl/adl_shim.h"
-#endif
-
 #ifdef USE_USB
 #include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
