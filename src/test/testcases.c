@@ -74,15 +74,6 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
          }
       }
 
-#ifdef ADL
-      if (ok) {
-         if (pdid->id_type == DISP_ID_ADL && !adlshim_is_available()) {
-            printf("ADL adapter.display numbers specified, but ADL is not available.\n");
-            ok = false;
-         }
-      }
-#endif
-
       if (ok) {
          switch (pDesc->drefType) {
 
@@ -101,20 +92,6 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
                pDesc->fp_bus(pdid->busno);
             }
             break;
-
-#ifdef ADL
-         case DisplayRefAdl:
-             // if (parsedCmd->dref->ddc_io_mode == DDC_IO_DEVI2C) {
-             if (pdid->id_type != DISP_ID_ADL) {
-                printf("Test %d requires ADL adapter.display numbers\n", testnum);
-                ok = false;
-             }
-             else {
-                // pDesc->fp_adl(parsedCmd->dref->iAdapterIndex, parsedCmd->dref->iDisplayIndex);
-                pDesc->fp_adl(pdid->iAdapterIndex, pdid->iDisplayIndex);
-             }
-             break;
-#endif
 
          case DisplayRefAny:
             {
