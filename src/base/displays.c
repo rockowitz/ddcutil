@@ -1154,21 +1154,6 @@ void   free_display_handle(Display_Handle * dh) {
 
 // *** Miscellaneous ***
 
-#ifdef ADL
-/** Creates and initializes a #Video_Card_Info struct.
- *
- * \return new instance
- *
- * \remark
- * Currently unused.  Struct Video_Card_Info is referenced only in ADL code.
- */
-Video_Card_Info * create_video_card_info() {
-   Video_Card_Info * card_info = calloc(1, sizeof(Video_Card_Info));
-   memcpy(card_info->marker, VIDEO_CARD_INFO_MARKER, 4);
-   return card_info;
-}
-#endif
-
 #ifdef USE_USB
 /** Given a hiddev device name, e.g. /dev/usb/hiddev3,
  *  extract its number, e.g. 3.
