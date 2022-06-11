@@ -1340,6 +1340,9 @@ ddc_discard_detected_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // grab locks to prevent any opens?
    ddc_close_all_displays();
+#ifdef USE_USB
+   discard_usb_monitor_list();
+#endif
    if (all_displays) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
