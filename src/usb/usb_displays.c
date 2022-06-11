@@ -1,7 +1,7 @@
 /** @file usb_displays.c
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -70,13 +70,11 @@ static GPtrArray * usb_open_errors = NULL;
 // Some data structures are defined here, others in usb_core.h
 //
 
-/* Reports contents of usb_monitor_vcp_rec struct
+/** Emits a debugging report of a #Usb_Monitor_Vcp_Rec struct describing
+ *  a single USB "report"
  *
- * Arguments:
- *   vcprec
- *   depth
- *
- * Returns:   nothing
+ *  @param vcprec  pointer to struct
+ *  @param depth   logical indentation depth
  */
 static void
 dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
@@ -95,13 +93,23 @@ dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
 }
 
 
-/* Reports contents of Usb_Monitor_Info struct
+void free_usb_monitor_vcp_rec(gpointer p) {
+   struct usb_monitor_vcp_rec * vrec = p;
+   if (vrec) {
+      assert(memcmp(vrec->marker, USB_MONITOR_VCP_REC_MARKER, 4) == 0);
+      // n. no need to free rinfo, finfo, uref?? - returned by API
+      // free_hiddev_report_info(vrec->rinfo);
+      // free_hiddev_field_info(vrec->finfo);
+      // free_hiddev_usage_ref(vrec->uref);
+      free(vrec);
+   }
+}
+
+
+/** Emits a debugging report of a #Usb_Monitor_Info struct
  *
- * Arguments:
- *    moninfo     pointer to Monitor_Info
- *    depth       logical indentation depth
- *
- * Returns:       nothing
+ *  @param  moninfo     pointer to instance
+ *  @param  depth       logical indentation depth
  */
 void
 dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
@@ -126,16 +134,28 @@ dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 }
 
 
-/* Reports on an array of Usb_Monitor_info structs
+void free_usb_monitor_info(gpointer p) {
+   struct usb_monitor_info * moninfo = p;
+   if (moninfo) {
+      assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      free(moninfo->hiddev_device_name);
+      free_parsed_edid(moninfo->edid);
+      free(moninfo->hiddev_devinfo);
+      for (int ndx = 0; ndx < 256; ndx++) {
+         if (moninfo->vcp_codes[ndx])
+            free_usb_monitor_vcp_rec(moninfo->vcp_codes[ndx]);
+      }
+      free(moninfo);
+   }
+}
+
+
+/** Reports on an array of #Usb_Monitor_info structs
  *
- * Arguments:
- *   monitors    pointer to GPtrArray of pointer to struct Usb_Monitor_Info
- *   depth       logical indentation depth
- *
- * Returns:      nothing
+ *  @param monitors    pointer to GPtrArray of pointer to struct #Usb_Monitor_Info
+ *  @param depth       logical indentation depth
  */
-// static
-void
+static void
 report_usb_monitors(GPtrArray * monitors, int depth) {
    const int d1 = depth+1;
 
@@ -150,9 +170,11 @@ report_usb_monitors(GPtrArray * monitors, int depth) {
 // HID Report Inquiry
 //
 
-/* Locates all USB HID reports relating to querying and setting VCP feature values.
+/** Locates all USB HID reports for a device that relate to querying and
+ *  setting VCP feature values.
  *
- * Returns:  array of Usb_Monitor_Vcp_Rec for each usage
+ *  @param  fd  file descriptor of open HID device
+ *  @return array of #Usb_Monitor_Vcp_Rec for each usage
  */
 GPtrArray *
 collect_vcp_reports(int fd) {
@@ -251,11 +273,13 @@ collect_vcp_reports(int fd) {
 
 /** Creates a capabilities string for the USB device.
  *
- *  Returns:   synthesized capabilities string, containing only a vcp segment
+ *  @param  pointer to #Usb_Monitor_Info instance
+ *  @return synthesized capabilities string, containing only a vcp segment
  *
+ *  It is the responsibility of the caller to free the returned string
+ *
+ *  @remark
  *  Note that the USB HID Monitor spec does not define a capabilities report.
- *
- *  It is the responsibility of the caller to free the returned string.
  */
 static char *
 usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
@@ -282,12 +306,17 @@ usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
 }
 
 
+/** Checks the interfaces for a device to determine if it may
+ *  be a keyboard or mouse, in which case it should not be probed.
+ *
+ *  @param  interfaces interface ids, separated by ":"
+ *  @return true/false
+ */
 static bool
 avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
    bool debug = false;
-
    DBGTRC(debug, TRACE_GROUP, "Starting. interfaces = |%s|", interfaces);
-   fflush(stdout);
+
    Null_Terminated_String_Array pieces = strsplit(interfaces, ":");
    // if (debug)
    //    ntsa_show(pieces);
@@ -318,6 +347,7 @@ avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
        ndx++;
     }
     ntsa_free(pieces, true);
+
     DBGTRC(debug, TRACE_GROUP, "Returning: %s", sbool(avoid));
     return avoid;
 }
@@ -363,17 +393,20 @@ is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
 // Probe HID devices, create USB_Mon_Info data stuctures
 //
 
-/*  Examines all hiddev devices to see if they are USB HID compliant monitors.
- *  If so, obtains the EDID, determines which reports to use for VCP feature
- *  values, etc.
+/**  Examines all hiddev devices to see if they are USB HID compliant monitors.
+ *   If so, obtains the EDID, determines which reports to use for VCP feature
+ *   values, etc.
  *
- *  Returns:   array of pointers to USB_Mon_Info records
+ *   @return:  array of pointers to USB_Mon_Info records
  *
- *  The result is cached in global variable usb_monitors
+ *   As a side effect, collects a GPtrArray of errors in global variable
+ *   usb_open_errors.
+ *
+ *  The result is cached in global variables usb_monitors and usb_open_errors.
  */
 GPtrArray *
 get_usb_monitor_list() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting...");
    DDCA_Output_Level ol = get_output_level();
 
@@ -513,6 +546,17 @@ GPtrArray * get_usb_open_errors() {
 }
 
 
+void
+discard_usb_monitor_list() {
+   if (usb_monitors) {
+      g_ptr_array_set_free_func(usb_monitors, free_usb_monitor_info);
+      g_ptr_array_free(usb_monitors, true);
+      g_ptr_array_free(usb_open_errors, true);  // array of Bus_Open_Error *, no special free function needed
+   }
+}
+
+
+
 //
 // Functions to find Usb_Monitor_Info for a display
 //
@@ -549,15 +593,21 @@ usb_find_monitor_by_dref(Display_Ref * dref) {
 }
 
 
+/** Gets the #Usb_Monitor_Info struct for a display
+ *
+ *  @param  dh  display handle
+ *  @return pointer to #Usb_Monitor_Info struct, NULL if not found
+ */
 Usb_Monitor_Info *
 usb_find_monitor_by_dh(Display_Handle * dh) {
-   // printf("(%s) Starting. dh=%p\n", __func__, dh);
    bool debug = false;
    DBGMSF(debug, "Starting. dh = %s", dh_repr(dh));
    assert(dh && dh->dref);
    assert(dh->dref->io_path.io_mode == DDCA_IO_USB);
-   Usb_Monitor_Info * result = NULL;
-   result = usb_find_monitor_by_busnum_devnum(dh->dref->usb_bus, dh->dref->usb_device);
+
+   Usb_Monitor_Info * result =
+         usb_find_monitor_by_busnum_devnum(dh->dref->usb_bus, dh->dref->usb_device);
+
    DBGMSF(debug, "Returning %p", result);
    return result;
 }
@@ -623,6 +673,7 @@ Display_Info_List usb_get_valid_displays() {
 
 //  *** Functions to return a Display_Ref for a USB monitor ***
 
+#ifdef UNUSED
 bool
 usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    bool result = true;
@@ -633,8 +684,14 @@ usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
    }
    return result;
 }
+#endif
 
 
+/** Output of DETECT command for a USB connected monitor.
+ *
+ *  @param dref  display reference
+ *  @param depth logical indentation depth
+ */
 void
 usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    DDCA_Output_Level output_level = get_output_level();
@@ -642,34 +699,32 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
 
    Usb_Monitor_Info * moninfo = usb_find_monitor_by_dref(dref);
 
-#ifdef OLD
-   if (output_level == DDCA_OL_TERSE || output_level == OL_PROGRAM)
-#else
-   if (output_level == DDCA_OL_TERSE)
-#endif
+   if (output_level == DDCA_OL_TERSE) {
       rpt_vstring(depth, "Monitor:             %s:%s:%s",
                          moninfo->edid->mfg_id,
                          moninfo->edid->model_name,
                          moninfo->edid->serial_ascii);
-   Pci_Usb_Id_Names usb_names =  devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
+   }
+   else {
+      assert(output_level >= DDCA_OL_NORMAL);
+      Pci_Usb_Id_Names usb_names =  devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
                                                      moninfo->hiddev_devinfo->product,
                                                      0,
                                                      2);
+      char vname[80] = {'\0'};
+      char dname[80] = {'\0'};
+      if (usb_names.vendor_name)
+         snprintf(vname, 80, "(%s)", usb_names.vendor_name);
+      if (usb_names.device_name)
+         snprintf(dname, 80, "(%s)", usb_names.device_name);
 
-   char vname[80] = {'\0'};
-   char dname[80] = {'\0'};
-   if (usb_names.vendor_name)
-      snprintf(vname, 80, "(%s)", usb_names.vendor_name);
-   if (usb_names.device_name)
-      snprintf(dname, 80, "(%s)", usb_names.device_name);
-   if (output_level >= DDCA_OL_NORMAL) {
       rpt_vstring(depth, "Device name:         %s",    dref->usb_hiddev_name);
       rpt_vstring(depth, "Vendor id:           %04x  %s",
                          moninfo->hiddev_devinfo->vendor  & 0xffff, vname);
       rpt_vstring(depth, "Product id:          %04x  %s",
                          moninfo->hiddev_devinfo->product & 0xffff, dname);
-      bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
 
+      bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
       report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);
    }
 }
@@ -706,18 +761,17 @@ usb_get_capabilities_string_by_dh(Display_Handle * dh) {
 // *** Miscellaneous services ***
 //
 
-/* Tests if a hiddev device (specified by its name) appears to
- * be a USB HID compliant monitor.
+/** Tests if a hiddev device (specified by its name) appears to
+ *  be a USB HID compliant monitor.
  *
- * This stripped down test implements the ddcutil chkusbmon command,
- * which is intended for use in a udev rules test.
+ *  This stripped down test implements the ddcutil chkusbmon command,
+ *  which is intended for use in a udev rules test.
  *
- * Arguments:
- *    device_name        e.g. /dev/usb/hiddev3
+ *  @param  device_name   e.g. /dev/usb/hiddev3
+ *  @retval true  device is a monitor,
+ *  @retval false device is not a monitor, or unable to open device
  *
- * Returns:              true if device is a monitor,
- *                       false if not, or unable to open device
- *
+ * @remark
  * Note that messages will not appear when this function runs as part
  * of normal udev execution.  They are intended to aid in debugging.
  */
@@ -757,10 +811,9 @@ check_usb_monitor( char * device_name ) {
 
 void
 init_usb_displays() {
-   rtti_func_name_table_add(get_usb_monitor_list, "get_usb_monitor_list");
-   rtti_func_name_table_add(avoid_device_by_usb_interfaces_property_string,
-                            "avoid_device_by_usb_interfaces_property_string");
-   rtti_func_name_table_add(is_possible_monitor_by_hiddev_name,
-                            "is_possible_monitor_by_hiddev_name");
+   RTTI_ADD_FUNC(collect_vcp_reports);
+   RTTI_ADD_FUNC(get_usb_monitor_list);
+   RTTI_ADD_FUNC(avoid_device_by_usb_interfaces_property_string);
+   RTTI_ADD_FUNC(is_possible_monitor_by_hiddev_name);
    // dbgrpt_func_name_table(0);
 }

@@ -1,7 +1,7 @@
 /** @file usb_displays.h
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef USB_DISPLAYS_H_
@@ -71,6 +71,7 @@ Usb_Monitor_Info *
 bool        is_possible_monitor_by_hiddev_name(const char * hiddev_name);
 GPtrArray * get_usb_monitor_list();
 GPtrArray * get_usb_open_errors();
+void        discard_usb_monitor_list();
 void        init_usb_displays();
 
 #endif /* USB_DISPLAYS_H_ */
