@@ -86,7 +86,6 @@ typedef struct Display_Async {
 /** Display_Identifier type */
 typedef enum {
    DISP_ID_BUSNO,      ///< /dev/i2c bus number
-   DISP_ID_ADL,        ///< ADL iAdapterIndex/iDisplayIndex pair
    DISP_ID_MONSER,     ///< monitor mfg id, model name, and/or serial number
    DISP_ID_EDID,       ///< 128 byte EDID
    DISP_ID_DISPNO,     ///< ddcutil assigned display number

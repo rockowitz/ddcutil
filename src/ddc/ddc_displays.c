@@ -1087,9 +1087,6 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    case DISP_ID_BUSNO:
       criteria->i2c_busno = did->busno;
       break;
-   case DISP_ID_ADL:
-      PROGRAM_LOGIC_ERROR("ADL implementation removed");
-      break;
    case DISP_ID_MONSER:
       criteria->mfg_id = did->mfg_id;
       criteria->model_name = did->model_name;

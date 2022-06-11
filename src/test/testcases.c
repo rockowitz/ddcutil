@@ -97,12 +97,7 @@ bool execute_testcase(int testnum, Display_Identifier* pdid) {
             {
                // pDesc->fp_dr(parsedCmd->dref);
                Display_Ref* pdref = NULL;
-               if (pdid->id_type == DISP_ID_ADL) {
-                  pdref = create_adl_display_ref(pdid->iAdapterIndex, pdid->iDisplayIndex);
-               }
-               else {
                   pdref = create_bus_display_ref(pdid->busno);
-               }
                pDesc->fp_dr(pdref);
             }
             break;

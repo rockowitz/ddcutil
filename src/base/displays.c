@@ -439,10 +439,6 @@ char * did_repr(Display_Identifier * pdid) {
                pdid->repr = g_strdup_printf(
                         "Display Id[type=%s, bus=/dev/i2c-%d]", did_type_name, pdid->busno);
                break;
-         case(DISP_ID_ADL):
-               pdid->repr = g_strdup_printf(
-                        "Display Id[type=%s, adlno=%d.%d]", did_type_name, pdid->iAdapterIndex, pdid->iDisplayIndex);
-               break;
          case(DISP_ID_MONSER):
                pdid->repr = g_strdup_printf(
                         "Display Id[type=%s, mfg=%s, model=%s, sn=%s]",
