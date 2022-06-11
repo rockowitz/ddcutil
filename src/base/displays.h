@@ -102,8 +102,6 @@ typedef struct {
    Display_Id_Type id_type;
    int             dispno;
    int             busno;
-   int             iAdapterIndex;
-   int             iDisplayIndex;
    char            mfg_id[EDID_MFG_ID_FIELD_SIZE];
    char            model_name[EDID_MODEL_NAME_FIELD_SIZE];
    char            serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];
