@@ -215,13 +215,10 @@ void unlock_display_lock(Display_Async_Rec * async_rec) {
 }
 
 
-
-
 // *** Display_Identifier ***
 
 static char * Display_Id_Type_Names[] = {
       "DISP_ID_BUSNO",
-      "DISP_ID_ADL",
       "DISP_ID_MONSER",
       "DISP_ID_EDID",
       "DISP_ID_DISPNO",
