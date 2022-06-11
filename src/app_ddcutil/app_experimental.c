@@ -188,7 +188,7 @@ void test_display_detection_variants() {
 
       rpt_nl();
       rpt_vstring(0, "===========> IO STRATEGY %d:", ndx+1);
-       char * s = (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL";
+       char * s = (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_IOCTL) ? "IOCTL" : "FILEIO";
        rpt_vstring(d, "i2c_io_strategy:          %s", s);
 
        rpt_vstring(d, "EDID read uses I2C layer: %s", (cur.edid_uses_i2c_layer) ? "I2C Layer" : "Directly"); // SBOOL(cur.edid_uses_i2c_layer));
@@ -240,7 +240,7 @@ void test_display_detection_variants() {
 
       rpt_vstring(d, "%2d %-7s   %-9s   %-7s     %-5s    %-7s %3d      %s",
             ndx+1,
-            (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_FILEIO) ? "FILEIO" : "IOCTL",
+            (cur.i2c_io_strategy_id == I2C_IO_STRATEGY_IOCTL) ? "IOCTL" : "FILEIO",
             (cur.edid_uses_i2c_layer) ? "I2C Layer" : "Directly",
         //    choice_name[cur.i2c_read_bytewise],
             choice_name[cur.edid_read_bytewise],
