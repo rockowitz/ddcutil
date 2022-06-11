@@ -521,8 +521,6 @@ Display_Selector * dsel_new() {
    memcpy(dsel->marker, DISPLAY_SELECTOR_MARKER, 4);
    dsel->dispno        = -1;
    dsel->busno         = -1;
-   dsel->iAdapterIndex = -1;
-   dsel->iDisplayIndex = -1;
    dsel->usb_bus       = -1;
    dsel->usb_device    = -1;
    return dsel;

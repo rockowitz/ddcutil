@@ -133,8 +133,6 @@ typedef struct {
    char            marker[4];         // always "DSEL"
    int             dispno;
    int             busno;
-   int             iAdapterIndex;
-   int             iDisplayIndex;
    char *          mfg_id;
    char *          model_name;
    char *          serial_ascii;
