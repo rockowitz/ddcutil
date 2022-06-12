@@ -41,8 +41,6 @@
 typedef struct {
    int     dispno;
    int     i2c_busno;
-   int     iAdapterIndex;
-   int     iDisplayIndex;
    int     hiddev;
    int     usb_busno;
    int     usb_devno;
@@ -64,8 +62,6 @@ new_display_criteria() {
    Display_Criteria * criteria = calloc(1, sizeof(Display_Criteria));
    criteria->dispno = -1;
    criteria->i2c_busno  = -1;
-   criteria->iAdapterIndex = -1;
-   criteria->iDisplayIndex = -1;
    criteria->hiddev = -1;
    criteria->usb_busno = -1;
    criteria->usb_devno = -1;
