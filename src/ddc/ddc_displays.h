@@ -45,11 +45,6 @@ ddc_get_display_count(bool include_invalid_displays);
 int
 ddc_report_displays(bool include_invalid_displays, int depth);
 
-Display_Ref*
-get_display_ref_for_display_identifier(
-   Display_Identifier* pdid,
-   Call_Options        callopts);
-
 void
 ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
 

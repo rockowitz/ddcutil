@@ -25,6 +25,7 @@
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
 
