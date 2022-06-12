@@ -1,10 +1,9 @@
-/** \file ddc_displays.c
- * Access displays, whether DDC or USB
+/** @file ddc_displays.c
+ *  Access displays, whether DDC or USB
  */
 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #include "config.h"
 
@@ -61,7 +60,6 @@
 
 #include "ddc/ddc_displays.h"
 
-
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
@@ -75,8 +73,12 @@ static bool detect_usb_displays = true;
 static bool detect_usb_displays = false;
 #endif
 
+//
+// Functions to perform initial checks
+//
 
-void ddc_set_async_threshold(int threshold) {
+void
+ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
    async_threshold = threshold;
 }
@@ -101,31 +103,32 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  *  - Checks if the monitor uses DDC Null Response to indicate invalid VCP code
  *  - Checks if the monitor uses mh=ml=sh=sl=0 to indicate invalid VCP code
  *
- *  \param dh  pointer to #Display_Handle for open monitor device
- *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
+ *  @param dh  pointer to #Display_Handle for open monitor device
+ *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
  *
- *  \remark
+ *  @remark
  *  Sets bits in dh->dref->flags
- *   *  \remark
+ *   *  @remark
  *  It has been observed that DDC communication can fail even if slave address x37
  *  is valid on the I2C bus.
- *  \remark
+ *  @remark
  *  ADL does not notice that a reported display, e.g. Dell 1905FP, does not support
  *  DDC.
- *  \remark
+ *  @remark
  *  Monitors are supposed to set the unsupported feFFature bit in a valid DDC
  *  response, but a few monitors (mis)use the Null Response instead to indicate
  *  an unsupported feature. Others return with the unsupported feature bit not
  *  set, but all bytes (mh, ml, sh, sl) zero.
- *  \remark
+ *  @remark
  *  Note that the test here is not perfect, as a Null Response might
  *  in fact indicate a transient error, but that is rare.
- *  \remark
+ *  @remark
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
 // static   // non-static for backtrace
-bool ddc_initial_checks_by_dh(Display_Handle * dh) {
+bool
+ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
@@ -225,10 +228,11 @@ bool ddc_initial_checks_by_dh(Display_Handle * dh) {
 /** Given a #Display_Ref, opens the monitor device and calls #initial_checks_by_dh()
  *  to perform initial monitor checks.
  *
- *  \param dref pointer to #Display_Ref for monitor
- *  \return **true** if DDC communication with the display succeeded, **false** otherwise.
+ *  @param dref pointer to #Display_Ref for monitor
+ *  @return **true** if DDC communication with the display succeeded, **false** otherwise.
  */
-bool ddc_initial_checks_by_dref(Display_Ref * dref) {
+bool
+ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref->flags: %s", interpret_dref_flags_t(dref->flags));
@@ -256,9 +260,10 @@ bool ddc_initial_checks_by_dref(Display_Ref * dref) {
 
 /** Performs initial checks in a thread
  *
- *  \param data display reference
+ *  @param data display reference
  */
-void * threaded_initial_checks_by_dref(gpointer data) {
+void *
+threaded_initial_checks_by_dref(gpointer data) {
    bool debug = false;
 
    Display_Ref * dref = data;
@@ -272,6 +277,56 @@ void * threaded_initial_checks_by_dref(gpointer data) {
 }
 
 
+/** Spawns threads to perform initial checks and waits for them all to complete.
+ *
+ *  @param all_displays #GPtrArray of pointers to #Display_Ref
+ */
+void ddc_async_scan(GPtrArray * all_displays) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d", all_displays, all_displays->len);
+
+   GPtrArray * threads = g_ptr_array_new();
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+
+      GThread * th =
+      g_thread_new(
+            dref_repr_t(dref),                // thread name
+            threaded_initial_checks_by_dref,
+            dref);                            // pass pointer to display ref as data
+      g_ptr_array_add(threads, th);
+   }
+   DBGMSF(debug, "Started %d threads", threads->len);
+   for (int ndx = 0; ndx < threads->len; ndx++) {
+      GThread * thread = g_ptr_array_index(threads, ndx);
+      g_thread_join(thread);  // implicitly unrefs the GThread
+   }
+   DBGMSF(debug, "Threads joined");
+   g_ptr_array_free(threads, true);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+/** Loops through a list of display refs, performing  initial checks on each.
+ *
+ *  @param all_displays #GPtrArray of pointers to #Display_Ref
+ */
+void
+ddc_non_async_scan(GPtrArray * all_displays) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
+
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      ddc_initial_checks_by_dref(dref);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
 //
 // Functions to get display information
 //
@@ -280,9 +335,10 @@ void * threaded_initial_checks_by_dref(gpointer data) {
  *
  *  Detection must already have occurred.
  *
- *  \return **GPtrArray of #Display_Ref instances
+ *  @return **GPtrArray of #Display_Ref instances
  */
-GPtrArray * ddc_get_all_displays() {
+GPtrArray *
+ddc_get_all_displays() {
    // ddc_ensure_displays_detected();
    TRACED_ASSERT(all_displays);
    return all_displays;
@@ -294,7 +350,8 @@ GPtrArray * ddc_get_all_displays() {
  *
  *  @return **GPtrArray of #Display_Ref instances
  */
-GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
+GPtrArray *
+ddc_get_filtered_displays(bool include_invalid_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
    TRACED_ASSERT(all_displays);
@@ -313,25 +370,54 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays) {
 }
 
 
+/** Returns the number of detected displays.
+ *
+ *  @param  include_invalid_displays
+ *  @return number of displays, 0 if display detection has not yet occurred.
+ */
+int
+ddc_get_display_count(bool include_invalid_displays) {
+   int display_ct = -1;
+   if (all_displays) {
+      display_ct = 0;
+      for (int ndx=0; ndx<all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+         if (dref->dispno > 0 || include_invalid_displays) {
+            display_ct++;
+         }
+      }
+   }
+   return display_ct;
+}
+
+
 /** Returns list of all open() errors encountered during display detection.
  *
  *  @return **GPtrArray of #Bus_Open_Error.
  */
-GPtrArray * ddc_get_bus_open_errors() {
+GPtrArray *
+ddc_get_bus_open_errors() {
    return display_open_errors;
 }
 
 
+//
+// Display_Ref reports
+//
+
 /** Gets the controller firmware version as a string
  *
- * \param dh  pointer to display handle
- * \return    pointer to character string, which is valid until the next
+ * @param dh  pointer to display handle
+ * @return    pointer to character string, which is valid until the next
  *            call to this function.
  *
- * \remark
+ * @remark
  * Consider caching the value in dh->dref
  */
-static char * get_firmware_version_string_t(Display_Handle * dh) {
+// static
+char *
+get_firmware_version_string_t(Display_Handle * dh) {
    bool debug = false;
 
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
@@ -367,14 +453,15 @@ static char * get_firmware_version_string_t(Display_Handle * dh) {
 
 /** Gets the controller manufacturer name for an open display.
  *
- * \param dh  pointer to display handle
- * \return pointer to character string, which is valid until the next
+ * @param dh  pointer to display handle
+ * @return pointer to character string, which is valid until the next
  * call to this function.
  *
- * \remark
+ * @remark
  * Consider caching the value in dh->dref
  */
-static char * get_controller_mfg_string_t(Display_Handle * dh) {
+static char *
+get_controller_mfg_string_t(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh = %s", dh_repr(dh));
 
@@ -428,10 +515,10 @@ static char * get_controller_mfg_string_t(Display_Handle * dh) {
  *
  *  Output is written using report functions
  *
- * \param dref   pointer to display reference
- * \param depth  logical indentation depth
+ * @param dref   pointer to display reference
+ * @param depth  logical indentation depth
  *
- * \remark
+ * @remark
  * The detail level shown is controlled by the output level setting
  * for the current thread.
  */
@@ -609,28 +696,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 }
 
 
-/** Returns the number of detected displays.
- *
- *  \param  include_invalid_displays
- *  \return number of displays, 0 if display detection has not yet occurred.
- */
-int
-ddc_get_display_count(bool include_invalid_displays) {
-   int display_ct = -1;
-   if (all_displays) {
-      display_ct = 0;
-      for (int ndx=0; ndx<all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
-         if (dref->dispno > 0 || include_invalid_displays) {
-            display_ct++;
-         }
-      }
-   }
-   return display_ct;
-}
-
-
 /** Reports all displays found.
  *
  * Output is written to the current report destination using report functions.
@@ -673,10 +738,11 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
 
 /** Debugging function to display the contents of a #Display_Ref.
  *
- * \param dref  pointer to #Display_Ref
- * \param depth logical indentation depth
+ * @param dref  pointer to #Display_Ref
+ * @param depth logical indentation depth
  */
-void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
+void
+ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
    // no longer needed for i2c_dbgreport_bus_info()
@@ -723,10 +789,11 @@ void ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
 /** Debugging function to report a collection of #Display_Ref.
  *
- * \param recs    pointer to collection of #Display_Ref
- * \param depth   logical indentation depth
+ * @param recs    pointer to collection of #Display_Ref
+ * @param depth   logical indentation depth
  */
-void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
+void
+ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
    TRACED_ASSERT(recs);
    rpt_vstring(depth, "Reporting %d Display_Ref instances", recs->len);
    for (int ndx = 0; ndx < recs->len; ndx++) {
@@ -740,11 +807,12 @@ void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
 
 /** Emits a debug report a GPtrArray of display references
  *
- *  \param msg       initial message line
- *  \param ptrarray  array of pointers to #Display_Ref
- *  \param depth     logical indentation depth
+ *  @param msg       initial message line
+ *  @param ptrarray  array of pointers to #Display_Ref
+ *  @param depth     logical indentation depth
  */
-void dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
+void
+dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
    int d1 = depth + 1;
    rpt_vstring(depth, "%s", msg);
    if (ptrarray->len == 0)
@@ -758,9 +826,8 @@ void dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
 }
 
 
-
 //
-// Monitor selection
+// Display Selection
 //
 
 /** Display selection criteria */
@@ -781,7 +848,7 @@ typedef struct {
 
 /** Allocates a new #Display_Criteria and initializes it to contain no criteria.
  *
- * \return initialized #Display_Criteria
+ * @return initialized #Display_Criteria
  */
 static Display_Criteria *
 new_display_criteria() {
@@ -803,16 +870,16 @@ new_display_criteria() {
 /** Checks if a given #Display_Ref satisfies all the criteria specified in a
  *  #Display_Criteria struct.
  *
- *  \param  drec     pointer to #Display_Ref to test
- *  \param  criteria pointer to criteria
- *  \retval true     all specified criteria match
- *  \retval false    at least one specified criterion does not match
+ *  @param  drec     pointer to #Display_Ref to test
+ *  @param  criteria pointer to criteria
+ *  @retval true     all specified criteria match
+ *  @retval false    at least one specified criterion does not match
  *
- *  \remark
+ *  @remark
  *  In the degenerate case that no criteria are set in **criteria**, returns true.
  */
 static bool
-ddc_check_display_ref(Display_Ref * dref, Display_Criteria * criteria) {
+ddc_test_display_ref_criteria(Display_Ref * dref, Display_Criteria * criteria) {
    TRACED_ASSERT(dref && criteria);
    bool result = false;
 
@@ -886,58 +953,13 @@ bye:
 }
 
 
-/** Spawns threads to perform initial checks and waits for them all to complete.
- *
- *  \param all_displays #GPtrArray of pointers to #Display_Ref
- */
-void ddc_async_scan(GPtrArray * all_displays) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d", all_displays, all_displays->len);
-
-   GPtrArray * threads = g_ptr_array_new();
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-
-      GThread * th =
-      g_thread_new(
-            dref_repr_t(dref),                // thread name
-            threaded_initial_checks_by_dref,
-            dref);                            // pass pointer to display ref as data
-      g_ptr_array_add(threads, th);
-   }
-   DBGMSF(debug, "Started %d threads", threads->len);
-   for (int ndx = 0; ndx < threads->len; ndx++) {
-      GThread * thread = g_ptr_array_index(threads, ndx);
-      g_thread_join(thread);  // implicitly unrefs the GThread
-   }
-   DBGMSF(debug, "Threads joined");
-   g_ptr_array_free(threads, true);
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
-void ddc_non_async_scan(GPtrArray * all_displays) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
-
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      ddc_initial_checks_by_dref(dref);
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
 static Display_Ref *
 ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
    Display_Ref * result = NULL;
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
-      if (ddc_check_display_ref(drec, criteria)) {
+      if (ddc_test_display_ref_criteria(drec, criteria)) {
          result = drec;
          break;
       }
@@ -946,108 +968,14 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 }
 
 
-static bool edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
-   bool result = false;
-   result = streq(edid1->mfg_id,        edid2->mfg_id)        &&
-            streq(edid1->model_name,    edid2->model_name)    &&
-            edid1->product_code      == edid2->product_code   &&
-            streq(edid1->serial_ascii,  edid2->serial_ascii)  &&
-            edid1->serial_binary     == edid2->serial_binary;
-   return result;
-}
-
-
-bool is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
-   bool debug = false;
-   char * invalid_repr = strdup(dref_repr_t(invalid_dref));
-   char *   valid_repr = strdup(dref_repr_t(valid_dref));
-   DBGTRC_STARTING(debug, TRACE_GROUP, "invalid_dref=%s, valid_dref=%s",
-                 invalid_repr, valid_repr);
-   free(invalid_repr);
-   free(valid_repr);
-
-   bool result = false;
-   // User report has shown that 128 byte EDIDs can differ for the valid and
-   // invalid display.  Specifically, byte 24 was seen to differ, with one
-   // having RGB 4:4:4 and the other RGB 4:4:4 + YCrCb 4:2:2!.  So instead of
-   // simply byte comparing the 2 EDIDs, check the identifiers.
-   if (edid_ids_match(invalid_dref->pedid, valid_dref->pedid)) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDIDs match");
-      if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
-            valid_dref->io_path.io_mode == DDCA_IO_I2C)
-      {
-         int busno = invalid_dref->io_path.path.i2c_busno;
-         // int valid_busno = valid_dref->io_path.path.i2c_busno;
-         char buf0[40];
-         snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
-         bool old_silent = set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
-         char * rpath = NULL;
-         bool ok = RPT_ATTR_REALPATH(0, &rpath, buf0, "device");
-         if (ok) {
-            result = true;
-            char * attr_value = NULL;
-            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "status");
-            if (!ok  || !streq(attr_value, "disconnected"))
-               result = false;
-            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "enabled");
-            if (!ok  || !streq(attr_value, "disabled"))
-               result = false;
-            GByteArray * edid;
-            ok = RPT_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
-            if (ok) {
-               result = false;
-               g_byte_array_free(edid, true);
-            }
-         }
-         set_rpt_sysfs_attr_silent(old_silent);
-      }
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP,    "Returning: %s", sbool(result) );
-   return result;
-}
-
-
-void filter_phantom_displays(GPtrArray * all_displays) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
-   GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
-   GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      if (dref->dispno < 0)     // DISPNO_INVALID, DISPNO_PHANTOM, DISPNO_REMOVED
-         g_ptr_array_add(invalid_displays, dref);
-      else
-         g_ptr_array_add(valid_displays, dref);
-   }
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
-                              valid_displays->len, invalid_displays->len);
-   if (invalid_displays->len > 0 || valid_displays->len == 0 ) {
-      for (int invalid_ndx = 0; invalid_ndx < invalid_displays->len; invalid_ndx++) {
-         Display_Ref * invalid_ref = g_ptr_array_index(invalid_displays, invalid_ndx);
-         for (int valid_ndx = 0; valid_ndx < valid_displays->len; valid_ndx++) {
-            Display_Ref *  valid_ref = g_ptr_array_index(valid_displays, valid_ndx);
-            if (is_phantom_display(invalid_ref, valid_ref)) {
-               invalid_ref->dispno = DISPNO_PHANTOM;    // -2
-               invalid_ref->actual_display = valid_ref;
-            }
-         }
-      }
-   }
-   g_ptr_array_free(invalid_displays, true);
-   g_ptr_array_free(valid_displays, true);
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
 /** Searches the master display list for a display matching the
  *  specified #Display_Identifier, returning its #Display_Ref
  *
- *  \param did display identifier to search for
- *  \return #Display_Ref for the display, NULL if not found or
+ *  @param did display identifier to search for
+ *  @return #Display_Ref for the display, NULL if not found or
  *          display doesn't support DDC
  *
- * \remark
+ * @remark
  * The returned value is a pointer into an internal data structure
  * and should not be freed by the caller.
  */
@@ -1111,9 +1039,9 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 /** Searches the detected displays for one matching the criteria in a
  *  #Display_Identifier.
  *
- *  \param pdid  pointer to a #Display_Identifier
- *  \param callopts  standard call options
- *  \return pointer to #Display_Ref for the display, NULL if not found
+ *  @param pdid  pointer to a #Display_Identifier
+ *  @param callopts  standard call options
+ *  @return pointer to #Display_Ref for the display, NULL if not found
  *
  *  \todo
  *  If the criteria directly specify an access path
@@ -1133,6 +1061,111 @@ get_display_ref_for_display_identifier(
    return dref;
 }
 
+
+//
+// Phantom displays
+//
+
+static bool
+edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
+   bool result = false;
+   result = streq(edid1->mfg_id,        edid2->mfg_id)        &&
+            streq(edid1->model_name,    edid2->model_name)    &&
+            edid1->product_code      == edid2->product_code   &&
+            streq(edid1->serial_ascii,  edid2->serial_ascii)  &&
+            edid1->serial_binary     == edid2->serial_binary;
+   return result;
+}
+
+
+bool
+is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
+   bool debug = false;
+   char * invalid_repr = strdup(dref_repr_t(invalid_dref));
+   char *   valid_repr = strdup(dref_repr_t(valid_dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "invalid_dref=%s, valid_dref=%s",
+                 invalid_repr, valid_repr);
+   free(invalid_repr);
+   free(valid_repr);
+
+   bool result = false;
+   // User report has shown that 128 byte EDIDs can differ for the valid and
+   // invalid display.  Specifically, byte 24 was seen to differ, with one
+   // having RGB 4:4:4 and the other RGB 4:4:4 + YCrCb 4:2:2!.  So instead of
+   // simply byte comparing the 2 EDIDs, check the identifiers.
+   if (edid_ids_match(invalid_dref->pedid, valid_dref->pedid)) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDIDs match");
+      if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
+            valid_dref->io_path.io_mode == DDCA_IO_I2C)
+      {
+         int busno = invalid_dref->io_path.path.i2c_busno;
+         // int valid_busno = valid_dref->io_path.path.i2c_busno;
+         char buf0[40];
+         snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
+         bool old_silent = set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
+         char * rpath = NULL;
+         bool ok = RPT_ATTR_REALPATH(0, &rpath, buf0, "device");
+         if (ok) {
+            result = true;
+            char * attr_value = NULL;
+            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "status");
+            if (!ok  || !streq(attr_value, "disconnected"))
+               result = false;
+            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "enabled");
+            if (!ok  || !streq(attr_value, "disabled"))
+               result = false;
+            GByteArray * edid;
+            ok = RPT_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
+            if (ok) {
+               result = false;
+               g_byte_array_free(edid, true);
+            }
+         }
+         set_rpt_sysfs_attr_silent(old_silent);
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP,    "Returning: %s", sbool(result) );
+   return result;
+}
+
+
+void
+filter_phantom_displays(GPtrArray * all_displays) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
+   GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
+   GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      if (dref->dispno < 0)     // DISPNO_INVALID, DISPNO_PHANTOM, DISPNO_REMOVED
+         g_ptr_array_add(invalid_displays, dref);
+      else
+         g_ptr_array_add(valid_displays, dref);
+   }
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
+                              valid_displays->len, invalid_displays->len);
+   if (invalid_displays->len > 0 || valid_displays->len == 0 ) {
+      for (int invalid_ndx = 0; invalid_ndx < invalid_displays->len; invalid_ndx++) {
+         Display_Ref * invalid_ref = g_ptr_array_index(invalid_displays, invalid_ndx);
+         for (int valid_ndx = 0; valid_ndx < valid_displays->len; valid_ndx++) {
+            Display_Ref *  valid_ref = g_ptr_array_index(valid_displays, valid_ndx);
+            if (is_phantom_display(invalid_ref, valid_ref)) {
+               invalid_ref->dispno = DISPNO_PHANTOM;    // -2
+               invalid_ref->actual_display = valid_ref;
+            }
+         }
+      }
+   }
+   g_ptr_array_free(invalid_displays, true);
+   g_ptr_array_free(valid_displays, true);
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+//
+// Display Detection
+//
 
 /** Emits a debug report of a list of #Bus_Open_Error.
  *
@@ -1161,7 +1194,6 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
  *
  *  @param  open_errors_loc where to return address of #GPtrArray of #Bus_Open_Error
  *  @return array of #Display_Ref
- *
  */
 // static
 GPtrArray *
@@ -1292,7 +1324,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 }
 
 
-/** Initializes the master display list.
+/** Initializes the master display list in global variable #all_displays and
+ *  records open errors in global variable #display_open_errors.
  *
  *  Does nothing if the list has already been initialized.
  */
@@ -1310,6 +1343,14 @@ ddc_ensure_displays_detected() {
 }
 
 
+/** Discards all detected displays.
+ *
+ *  - All open displays are closed
+ *  - The list of open displays in #all_displays is discarded
+ *  - The list of errors in #display_open_errors is discarded
+ *  - The list of detected I2C buses is discarded
+ *  - The USB monitor list is discarded
+ */
 void
 ddc_discard_detected_displays() {
    bool debug = false;
@@ -1346,7 +1387,7 @@ ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    ddc_discard_detected_displays();
-   i2c_detect_buses();
+   // i2c_detect_buses(); // called in ddc_detect_all_displays()
    all_displays = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
       dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
@@ -1357,6 +1398,12 @@ ddc_redetect_displays() {
 }
 
 
+/** Checks that a #Display_Ref is in array **all_displays**
+ *  of all valid #Display_Ref values.
+ *
+ *  @param  dref  #Display_Ref
+ *  @return true/false
+ */
 bool
 ddc_is_valid_display_ref(Display_Ref * dref) {
    bool debug = false;
@@ -1378,6 +1425,8 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
    return result;
 }
 
+
+#ifdef UNUSED
 void dbgrpt_valid_display_refs(int depth) {
    rpt_vstring(depth, "Valid display refs = all_displays:");
    if (all_displays) {
@@ -1393,6 +1442,7 @@ void dbgrpt_valid_display_refs(int depth) {
    else
       rpt_vstring(depth+1, "all_displays == NULL");
 }
+#endif
 
 
 /** Indicates whether displays have already been detected
