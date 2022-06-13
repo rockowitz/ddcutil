@@ -270,12 +270,8 @@ dfr_load_by_mmk(
    dfr_save(dfr);
 #endif
 
-   if (debug && errs) {
-      DBGMSG("Returning errs: ");
-      errinfo_report(errs, 2);
-   }
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. *dfr_loc=%p", errinfo_summary(errs), *dfr_loc);
+   ASSERT_IFF(errs, (*dfr_loc)->flags & DFR_FLAGS_NOT_FOUND);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "*dfr_loc=%p", *dfr_loc);
    return errs;
 }
 
