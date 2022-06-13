@@ -420,6 +420,20 @@ edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
 }
 
 
+/** Check if an invalid #Display_Reference can be regarded as a phantom
+ *  of a given valid #Display_Reference.
+ *
+ *  @param  invalid_dref
+ *  @param  valid_dref
+ *  @return true/false
+ *
+ *  - Both are /dev/i2c devices
+ *  - The EDID id fields must match
+ *  - For the invalid #Display_Reference:
+ *    - attribute status must exist and equal "disconnected"
+ *    - attribute enabled must exist and equal "disabled"
+ *    - attribute edid must not exist
+ */
 bool
 is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
@@ -440,24 +454,24 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
       if (invalid_dref->io_path.io_mode == DDCA_IO_I2C &&
             valid_dref->io_path.io_mode == DDCA_IO_I2C)
       {
-         int busno = invalid_dref->io_path.path.i2c_busno;
+         int invalid_busno = invalid_dref->io_path.path.i2c_busno;
          // int valid_busno = valid_dref->io_path.path.i2c_busno;
          char buf0[40];
-         snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
+         snprintf(buf0, 40, "/sys/bus/i2c/devices/i2c-%d", invalid_busno);
          bool old_silent = set_rpt_sysfs_attr_silent(!(debug|| IS_TRACING()));
-         char * rpath = NULL;
-         bool ok = RPT_ATTR_REALPATH(0, &rpath, buf0, "device");
+         char * invalid_rpath = NULL;
+         bool ok = RPT_ATTR_REALPATH(0, &invalid_rpath, buf0, "device");
          if (ok) {
             result = true;
             char * attr_value = NULL;
-            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "status");
+            ok = RPT_ATTR_TEXT(0, &attr_value, invalid_rpath, "status");
             if (!ok  || !streq(attr_value, "disconnected"))
                result = false;
-            ok = RPT_ATTR_TEXT(0, &attr_value, rpath, "enabled");
+            ok = RPT_ATTR_TEXT(0, &attr_value, invalid_rpath, "enabled");
             if (!ok  || !streq(attr_value, "disabled"))
                result = false;
             GByteArray * edid;
-            ok = RPT_ATTR_EDID(0, &edid, rpath, "edid");    // is "edid" needed
+            ok = RPT_ATTR_EDID(0, &edid, invalid_rpath, "edid");    // is "edid" needed
             if (ok) {
                result = false;
                g_byte_array_free(edid, true);
