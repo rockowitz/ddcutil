@@ -499,18 +499,6 @@ mock_get_nontable_vcp_value(
 // Get VCP values
 //
 
-
-#ifdef MOVED
-static inline bool
-value_bytes_zero(Parsed_Nontable_Vcp_Response * parsed_val) {
-   return (parsed_val->mh == 0 &&
-           parsed_val->ml == 0 &&
-           parsed_val->sh == 0 &&
-           parsed_val->sl == 0);
-}
-#endif
-
-
 /** Gets the value for a non-table feature.
  *
  *  \param  dh                 handle for open display
