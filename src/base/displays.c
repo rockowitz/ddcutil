@@ -747,45 +747,6 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 }
 
 
-#ifdef OLD
-/** Creates a short description of a #Display_Ref in a buffer provided
- *  by the caller.
- *
- *  \param  dref   pointer to #Display_Ref
- *  \param  buf    pointer to buffer
- *  \param  bufsz  buffer size
- */
-static
-char * dref_short_name_r(Display_Ref * dref, char * buf, int bufsz) {
-   assert(buf);
-   assert(bufsz > 0);
-
-   switch (dref->io_mode) {
-
-   case DDCA_IO_I2C:
-      SAFE_SNPRINTF(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
-
-      // snprintf(buf, bufsz, "bus /dev/i2c-%d", dref->busno);
-      // buf[bufsz-1] = '\0';  // ensure null terminated
-      break;
-
-   case DDCA_IO_ADL:
-      SAFE_SNPRINTF(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
-      // snprintf(buf, bufsz, "adl display %d.%d", dref->iAdapterIndex, dref->iDisplayIndex);
-      // buf[bufsz-1] = '\0';  // ensure null terminated
-      break;
-
-   case DDCA_IO_USB:
-      SAFE_SNPRINTF(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
-      // snprintf(buf, bufsz, "usb %d:%d", dref->usb_bus, dref->usb_device);
-      buf[bufsz-1] = '\0';  // ensure null terminated
-      break;
-
-   }
-   return buf;
-}
-#endif
-
 /** Thread safe function that returns a short description of a #Display_Ref.
  *  The returned value is valid until the next call to this function on
  *  the current thread.
