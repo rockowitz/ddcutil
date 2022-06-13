@@ -887,15 +887,14 @@ char * dh_repr_t(Display_Handle * dh) {
 /** Returns a string summarizing the specified #Display_Handle.
  *
  * \param  dh    display handle
- *
  * \return  string representation of handle
+ *
+ * \remark
+ * The value is calculated when the Display_Handle is created.
  */
 char * dh_repr(Display_Handle * dh) {
-   assert(dh);
-   assert(dh->dref);
-   assert(dh->repr);
-   // Do not calculate and memoize dh->repr here, due to possible race condition between threads
-   // Instead precalculate at time of Display_Handle creation
+   if (!dh)
+      return "Display_Handle[NULL]";
    return dh->repr;
 }
 
