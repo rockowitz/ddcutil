@@ -77,6 +77,13 @@ static bool detect_usb_displays = false;
 // Functions to perform initial checks
 //
 
+/** Sets the threshold for async display examination.
+ *  If the number of /dev/i2c devices for which DDC communication is to be
+ *  checked is greater than or equal to the threshold value, examine each
+ *  device in a separate thread.
+ *
+ *  @param threshold  threshold value
+ */
 void
 ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
@@ -485,6 +492,23 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
 }
 
 
+/** Mark phantom displays.
+ *
+ *  Solit the #Display_Ref's in a GPtrArray into those that have
+ *  already been determined to be valid (dispno > 0) and those
+ *  that are invalid (dispno < 0).
+ *
+ *  For each invalid array, check to see if it is a phantom display
+ *  corresponding to one of the valid displays.  If so, set its dispno
+ *  to DISPNO_INVALID and save a pointer to the valid display ref.
+ *
+ *  @param all_displays array of pointers to #Display_Ref
+ *
+ *  @remark
+ *  This handles the case where DDC communication works for one
+ *  /dev/i2c bus but not another.  It does not handle the case where
+ *  communication succeeds on both /dev/i2c devices.
+ */
 void
 filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
