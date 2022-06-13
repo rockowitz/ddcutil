@@ -881,51 +881,6 @@ char * dh_repr_t(Display_Handle * dh) {
    if (!dh)
       return "Display_Handle[NULL]";
    return dh->repr;
-
-#ifdef UNNECESSARY
-   static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
-   const int bufsz = 100;
-   char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
-
-   if (dh) {
-      if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
-         assert(dh->dref);
-
-         switch (dh->dref->io_path.io_mode) {
-         case DDCA_IO_I2C:
-              snprintf(buf, bufsz,
-                       "Display_Handle[i2c: fd=%d, busno=%d @%p]",
-                       dh->fd, dh->dref->io_path.path.i2c_busno, dh);
-              break;
-          case DDCA_IO_ADL:
-              snprintf(buf, bufsz,
-                       "Display_Handle[adl: display %d.%d]",
-                       dh->dref->io_path.path.adlno.iAdapterIndex, dh->dref->io_path.path.adlno.iDisplayIndex);
-              break;
-          case DDCA_IO_USB:
-#ifdef ENABLE_USB
-              snprintf(buf, bufsz,
-                       "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
-                       dh->dref->usb_bus, dh->dref->usb_device,
-                       usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno, dh);
-#else
-              PROGRAM_LOGIC_ERROR("io_path.io_mode == DDCA_IO_USB");
-#endif
-              break;
-          }
-          buf[bufsz-1] = '\0';
-      }
-      else {
-         snprintf(buf, bufsz, "Invalid Display_Handle@%p", dh);
-         //  strcpy(buf, "Invalid Display_Handle");
-      }
-   }
-   else {
-      strcpy(buf, "Display_Handle[NULL]");
-   }
-
-   return buf;
-#endif
 }
 
 
