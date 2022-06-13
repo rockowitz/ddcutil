@@ -780,63 +780,6 @@ char * dref_repr_t(Display_Ref * dref) {
 
 // *** Display_Handle ***
 
-#ifdef OLD
-
-/** Creates a #Display_Handle for an I2C #Display_Ref.
- *
- *  \param  fd   Linux file descriptor of open display
- *  \param  dref pointer to #Display_Ref
- *  \return newly allocated #Display_Handle
- *
- *  \remark
- *  This functions handles the boilerplate of creating a #Display_Handle.
- */
-Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref * dref) {
-   // assert(dref->io_mode == DDCA_IO_DEVI2C);
-   assert(dref->io_path.io_mode == DDCA_IO_I2C);
-   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
-   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->fd = fd;
-   dh->dref = dref;
-   // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
-   dh->repr = g_strdup_printf(
-                "[i2c: fd=%d, busno=%d @%p]",
-                dh->fd, dh->dref->io_path.path.i2c_busno, dh);
-   return dh;
-}
-
-
-#ifdef USE_USB
-/** Creates a #Display_Handle for a USB #Display_Ref.
- *
- *  \param  fh    Linux file descriptor of open display
- *  \param  dref  pointer to #Display_Ref
- *  \return newly allocated #Display_Handle
- *
- *  \remark
- *  This functions handles to boilerplate of creating a #Display_Handle.
- */
-Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref * dref) {
-   // assert(dref->io_mode == DDCA_IO_USB);
-   assert(dref->io_path.io_mode == DDCA_IO_USB);
-   Display_Handle * dh = calloc(1, sizeof(Display_Handle));
-   memcpy(dh->marker, DISPLAY_HANDLE_MARKER, 4);
-   dh->fd = fd;
-   dh->dref = dref;
-   dh->repr = g_strdup_printf(
-                "[usb: %d:%d, %s/hiddev%d @%p]",
-                // "Display_Handle[usb: %d:%d, %s/hiddev%d]",
-                dh->dref->usb_bus, dh->dref->usb_device,
-                usb_hiddev_directory(), dh->dref->io_path.path.hiddev_devno,
-                dh);
-   // dref->vcp_version = DDCA_VSPEC_UNQUERIED;
-   return dh;
-}
-#endif
-
-#endif
-
-
 /** Creates a #Display_Handle for a #Display_Ref.
  *
  *  \param  fd    Linux file descriptor of open display
