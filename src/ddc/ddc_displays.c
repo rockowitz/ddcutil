@@ -33,7 +33,6 @@
 #include "public/ddcutil_types.h"
 #include "private/ddcutil_types_private.h"
 
-
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/feature_metadata.h"
@@ -53,8 +52,6 @@
 #endif
 
 #include "dynvcp/dyn_feature_files.h"
-
-#include "public/ddcutil_types.h"
 
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp.h"
