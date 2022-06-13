@@ -426,26 +426,6 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
 }
 
 
-// TODO: consolidate
-
-/** Debugging function to report a collection of #Display_Ref.
- *
- * @param recs    pointer to collection of #Display_Ref
- * @param depth   logical indentation depth
- */
-void
-ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
-   TRACED_ASSERT(recs);
-   rpt_vstring(depth, "Reporting %d Display_Ref instances", recs->len);
-   for (int ndx = 0; ndx < recs->len; ndx++) {
-      Display_Ref * drec = g_ptr_array_index(recs, ndx);
-      TRACED_ASSERT( memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);
-      rpt_nl();
-      ddc_dbgrpt_display_ref(drec, depth+1);
-   }
-}
-
-
 /** Emits a debug report a GPtrArray of display references
  *
  *  @param msg       initial message line
@@ -453,7 +433,7 @@ ddc_dbgrpt_display_refs(GPtrArray * recs, int depth) {
  *  @param depth     logical indentation depth
  */
 void
-dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
+ddc_dbgrpt_drefs(char * msg, GPtrArray * ptrarray, int depth) {
    int d1 = depth + 1;
    rpt_vstring(depth, "%s", msg);
    if (ptrarray->len == 0)
@@ -461,6 +441,7 @@ dbgrpt_dref_ptr_array(char * msg, GPtrArray * ptrarray, int depth) {
    else {
       for (int ndx = 0; ndx < ptrarray->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(ptrarray, ndx);
+         TRACED_ASSERT(dref);
          dbgrpt_display_ref(dref, d1);
       }
    }

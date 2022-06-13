@@ -15,8 +15,7 @@
 void ddc_report_display_by_dref(Display_Ref * dref, int depth);
 int  ddc_report_displays(bool include_invalid_displays, int depth);
 void ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
-void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth);
-void dbgrpt_dref_ptr_array(char * msg, GPtrArray* ptrarray, int depth);
+void ddc_dbgrpt_drefs(char * msg, GPtrArray* ptrarray, int depth);
 
 // Initialization
 void init_ddc_display_ref_reports();

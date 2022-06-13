@@ -371,7 +371,7 @@ ddc_get_filtered_displays(bool include_invalid_displays) {
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of size %d", result->len);
    if (debug || IS_TRACING()) {
-      ddc_dbgrpt_display_refs(result, 2);
+      ddc_dbgrpt_drefs("Display_Refs:", result, 2);
    }
    return result;
 }
@@ -695,7 +695,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 
    if (debug) {
       DBGMSG("Displays detected:");
-      dbgrpt_dref_ptr_array("display_list:", display_list, 1);
+      ddc_dbgrpt_drefs("display_list:", display_list, 1);
       dbgrpt_bus_open_errors(*i2c_open_errors_loc, 1);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p, Detected %d valid displays",
@@ -770,7 +770,7 @@ ddc_redetect_displays() {
    // i2c_detect_buses(); // called in ddc_detect_all_displays()
    all_displays = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
-      dbgrpt_dref_ptr_array("all_displays:", all_displays, 1);
+      ddc_dbgrpt_drefs("all_displays:", all_displays, 1);
       // dbgrpt_valid_display_refs(1);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
