@@ -730,36 +730,8 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    DBGMSF(debug, "Starting. dref=%p", dref);
    rpt_structure_loc("Display_Ref", dref, depth );
    int d1 = depth+1;
-   // int d2 = depth+2;
 
-#ifdef OLD
-   // old
-   rpt_mapped_int("ddc_io_mode", NULL, dref->io_mode, (Value_To_Name_Function) io_mode_name, d1);
-
-   switch (dref->io_mode) {
-
-   case DDCA_IO_I2C:
-      rpt_int("busno", NULL, dref->busno, d1);
-      break;
-
-   case DDCA_IO_ADL:
-      rpt_int("iAdapterIndex", NULL, dref->iAdapterIndex, d1);
-      rpt_int("iDisplayIndex", NULL, dref->iDisplayIndex, d1);
-      break;
-
-   case DDCA_IO_USB:
-      rpt_int("usb_bus",    NULL, dref->usb_bus,    d1);
-      rpt_int("usb_device", NULL, dref->usb_device, d1);
-      rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
-      rpt_int("usb_hiddev_devno", NULL, dref->usb_hiddev_devno, d1);
-      break;
-
-   }
-#endif
-
-   // alt:
    rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
-
    if (dref->io_path.io_mode == DDCA_IO_USB) {
       rpt_int("usb_bus",         NULL, dref->usb_bus,         d1);
       rpt_int("usb_device",      NULL, dref->usb_device,      d1);
