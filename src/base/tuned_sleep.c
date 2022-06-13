@@ -104,7 +104,7 @@ void tuned_sleep_with_trace(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "Sleep event type = %s, dh=%s, special_sleep_time_millis=%d",
-         sleep_event_name(event_type), dh_repr_t(dh), special_sleep_time_millis);
+         sleep_event_name(event_type), dh_repr(dh), special_sleep_time_millis);
    assert(dh);
    assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
            (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );

@@ -297,7 +297,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
    rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_value);
 
-   rpt_vstring(d1,"cur_dh:                 %s", dh_repr_t(data->cur_dh) );
+   rpt_vstring(d1,"cur_dh:                 %s", dh_repr(data->cur_dh) );
 
    // Dynamic sleep adjustment:
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled,     d1);

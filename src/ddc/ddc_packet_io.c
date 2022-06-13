@@ -105,7 +105,7 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
    if (g_list_length(display_handles) > 0) {
       for (GList * cur = display_handles; cur; cur = cur->next) {
          Display_Handle * dh = cur->data;
-         rpt_vstring(depth+1, "%p -> %s", dh, dh_repr_t(dh));
+         rpt_vstring(depth+1, "%p -> %s", dh, dh_repr(dh));
       }
    }
    else {
@@ -273,7 +273,7 @@ bye:
    TRACED_ASSERT(ddcrc <= 0);
    TRACED_ASSERT( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr_t(*dh_loc));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr(*dh_loc));
    return ddcrc;
 }
 
@@ -290,7 +290,7 @@ Status_Errno
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, fd=%d, dpath=%s",
-              dh_repr_t(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
+              dh_repr(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Display_Ref * dref = dh->dref;
    Status_Errno rc = 0;
    if (dh->fd == -1) {
@@ -405,7 +405,7 @@ DDCA_Status ddc_i2c_write_read_raw(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d, readbuf=%p",
-                              dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
+                              dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
    // DBGMSG("request_packet_ptr=%p", request_packet_ptr);
    // dump_packet(request_packet_ptr);
 
@@ -482,7 +482,7 @@ DDCA_Status ddc_write_read_raw(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d, readbuf=%p",
-                              dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
+                              dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
    if (debug) {
       // DBGMSG("request_packet_ptr->raw_bytes:");
       // dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
@@ -542,7 +542,7 @@ ddc_write_read(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d,"
                                        " expected_response_type=0x%02x, expected_subtype=0x%02x",
-          dh_repr_t(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
+          dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding 1 to max_read_bytes to allow for initail double 0x63 quirk");
    max_read_bytes++;   //allow for quirk of double 0x6e at start
@@ -630,7 +630,7 @@ ddc_write_read_with_retry(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
                                        "expected_subtype=0x%02x, all_zero_response_ok=%s",
-          dh_repr_t(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
+          dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
 
@@ -683,7 +683,7 @@ ddc_write_read_with_retry(
       if (psc == 0 && ddcrc_null_response_ct > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
                 "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
-                dh_repr_t(dh),
+                dh_repr(dh),
                 ddcrc_null_response_ct);
       }
 
@@ -765,7 +765,7 @@ ddc_write_read_with_retry(
          char * s1 = (errct == 1) ? "" : "s";
          char * s = errinfo_array_summary(try_errors, errct);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s,%s after %d error%s: %s",
-               dh_repr_t(dh), s0, errct, s1, s);
+               dh_repr(dh), s0, errct, s1, s);
          free(s);
 
    }

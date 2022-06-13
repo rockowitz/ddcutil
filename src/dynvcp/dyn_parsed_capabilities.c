@@ -532,7 +532,7 @@ void dyn_report_parsed_capabilities(
    assert(pcaps && memcmp(pcaps->marker, PARSED_CAPABILITIES_MARKER, 4) == 0);
    DBGMSF(debug, "Starting. dh-%s, dref=%s, pcaps->raw_cmds_segment_seen=%s, "
                  "pcaps->commands=%p, pcaps->vcp_features=%p",
-                 dh_repr_t(dh), dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen),
+                 dh_repr(dh), dref_repr_t(dref), sbool(pcaps->raw_cmds_segment_seen),
                  pcaps->commands, pcaps->vcp_features);
 
    if (dh)

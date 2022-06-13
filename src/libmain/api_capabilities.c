@@ -74,7 +74,7 @@ ddca_get_capabilities_string(
          ASSERT_IFF(psc==0, *pcaps_loc);
          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
                "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
-               dh_repr_t((Display_Handle *) ddca_dh),
+               dh_repr((Display_Handle *) ddca_dh),
                *pcaps_loc, *pcaps_loc);
       }
    );

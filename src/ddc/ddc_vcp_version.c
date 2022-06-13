@@ -40,7 +40,7 @@ DDCA_MCCS_Version_Spec
 set_vcp_version_xdf_by_dh(Display_Handle * dh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr_t(dh));
+   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
 
    dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
 

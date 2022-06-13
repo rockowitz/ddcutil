@@ -452,7 +452,7 @@ ddca_open_display3(
    }
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s",
-                                             *dh_loc, dh_repr_t(*dh_loc));
+                                             *dh_loc, dh_repr(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
 }
@@ -477,7 +477,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    assert(library_initialized);
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "dh = %s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "dh = %s", dh_repr(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          rc = DDCRC_ARG;

@@ -161,7 +161,7 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
    bool debug = false;
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dynamic_sleep_enabled for current thread = %s",
-                            dh_repr_t(dh),              sbool(tsd->dynamic_sleep_enabled));
+                            dh_repr(dh),              sbool(tsd->dynamic_sleep_enabled));
    if (!tsd->dynamic_sleep_enabled) {
       int result = tsd->sleep_multiplier_factor;
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa disabled, returning %7.1f", result);

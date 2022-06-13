@@ -357,7 +357,7 @@ multi_part_write_with_retry(
    if (IS_TRACING())
       puts("");
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, vcp_code=0x%02x",
-                              dh_repr_t(dh), vcp_code);
+                              dh_repr(dh), vcp_code);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;

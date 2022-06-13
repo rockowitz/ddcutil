@@ -616,7 +616,7 @@ ddca_get_feature_metadata_by_dh(
                *metadata_loc = external_metadata;
                ASSERT_IFF(psc == 0, *metadata_loc);
                DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
-                                        "ddca_dh=%p->%s", ddca_dh, dh_repr_t(ddca_dh));
+                                        "ddca_dh=%p->%s", ddca_dh, dh_repr(ddca_dh));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
@@ -945,12 +945,12 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
    DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p", ddca_dh);
    WITH_VALIDATED_DH2(ddca_dh,
       {
-            DBGMSF(debug, "dref=%s", dh_repr_t(dh));
+            DBGMSF(debug, "dref=%s", dh_repr(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
 
             DBGTRC_DONE(debug, DDCA_TRC_API, "ddca_dh=%p->%s. Returning: %s(%d)",
-                   ddca_dh, dh_repr_t(ddca_dh), ddca_rc_name(psc), psc);
+                   ddca_dh, dh_repr(ddca_dh), ddca_rc_name(psc), psc);
       }
    );
 }

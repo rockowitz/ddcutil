@@ -289,7 +289,7 @@ dyn_get_feature_metadata_by_dh(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                  "id=0x%02x, dh=%s, with_default=%s",
-                 id, dh_repr_t(dh), sbool(with_default) );
+                 id, dh_repr(dh), sbool(with_default) );
 
    // ensure dh->dref->vcp_version set without incurring additional open/close
    DDCA_MCCS_Version_Spec vspec =

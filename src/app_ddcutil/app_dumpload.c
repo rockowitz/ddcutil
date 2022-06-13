@@ -107,7 +107,7 @@ Status_Errno_DDC
 app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, filename=%p->%s", dh_repr_t(dh), filename, filename);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, filename=%p->%s", dh_repr(dh), filename, filename);
 
    char * actual_filename = NULL;
    FILE * fout = stdout;

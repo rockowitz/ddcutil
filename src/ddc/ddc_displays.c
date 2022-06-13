@@ -196,7 +196,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          else {   // communication failed
             if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-                     dh_repr_t(dh) );
+                     dh_repr(dh) );
                psc = 0;
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             // dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;

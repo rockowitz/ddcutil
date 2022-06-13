@@ -56,7 +56,7 @@ get_capabilities_into_buffer(
       Buffer**         capabilities_buffer_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    Error_Info * ddc_excp = NULL;
 
    TUNED_SLEEP_WITH_TRACE(dh, SE_PRE_MULTI_PART_READ, "Before reading capabilities");
@@ -110,7 +110,7 @@ ddc_get_capabilities_string(
    bool debug = false;
    assert(dh);
    assert(dh->dref);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
    // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;

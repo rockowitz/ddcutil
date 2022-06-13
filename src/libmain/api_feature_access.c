@@ -155,7 +155,7 @@ ddca_get_table_vcp_value(
          TRACED_ASSERT( (psc==0 && *table_value_loc) || (psc!=0 && !*table_value_loc));
          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
                 "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
-                ddca_dh, dh_repr_t(ddca_dh), feature_code, *table_value_loc);
+                ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
       }
    );
 }

@@ -867,25 +867,6 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
 
 /** Returns a string summarizing the specified #Display_Handle.
  *
- *  The string is valid until the next call to this function
- *  from within the current thread.
- *
- *  This variant of #dh_repr() is thread safe.
- *
- * \param   dh      display handle
- * \return  string  representation of handle
- */
-char * dh_repr_t(Display_Handle * dh) {
-   // dh_repr is precalculated when display handle is created, returning the
-   // value is thread safe
-   if (!dh)
-      return "Display_Handle[NULL]";
-   return dh->repr;
-}
-
-
-/** Returns a string summarizing the specified #Display_Handle.
- *
  * \param  dh    display handle
  * \return  string representation of handle
  *
@@ -905,7 +886,7 @@ char * dh_repr(Display_Handle * dh) {
  */
 void   free_display_handle(Display_Handle * dh) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dh=%p -> %s", dh, dh_repr_t(dh));
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dh=%p -> %s", dh, dh_repr(dh));
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0) {
       dh->marker[3] = 'x';
       free(dh->repr);

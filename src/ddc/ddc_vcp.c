@@ -90,7 +90,7 @@ ddc_save_current_settings(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-          "Invoking DDC Save Current Settings command. dh=%s", dh_repr_t(dh));
+          "Invoking DDC Save Current Settings command. dh=%s", dh_repr(dh));
    Error_Info * ddc_excp = NULL;
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
@@ -138,7 +138,7 @@ ddc_set_nontable_vcp_value(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
-          feature_code, new_value, dh_repr_t(dh) );
+          feature_code, new_value, dh_repr(dh) );
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
 
@@ -529,7 +529,7 @@ ddc_get_nontable_vcp_value(
        Parsed_Nontable_Vcp_Response** ppInterpretedCode)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr_t(dh), feature_code);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
@@ -729,7 +729,7 @@ ddc_get_vcp_value(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x, dh=%s, dh->fd=%d",
-            feature_code, dh_repr_t(dh), dh->fd);
+            feature_code, dh_repr(dh), dh->fd);
 
    Error_Info * ddc_excp = NULL;
    Buffer * buffer = NULL;

@@ -286,7 +286,7 @@ get_raw_value_for_feature_metadata(
       default:
          {
             char buf[200];
-            snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_name_code(psc), dh_repr_t(dh));
+            snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_name_code(psc), dh_repr(dh));
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                              feature_code, feature_name, buf);
          }
@@ -407,7 +407,7 @@ get_raw_value_for_feature_metadata_dfm(
    default:
    {
       char buf[200];
-      snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr_t(dh));
+      snprintf(buf, 200, "Invalid response. status code=%s, %s", psc_desc(psc), dh_repr(dh));
       f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                        feature_code, feature_name, buf);
    }
@@ -455,7 +455,7 @@ collect_raw_feature_set_values2_dfm(
       FILE *                msg_fh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, msg_fh=%p", dh_repr_t(dh), msg_fh);
+   DBGMSF(debug, "Starting. dh=%s, msg_fh=%p", dh_repr(dh), msg_fh);
 
    Public_Status_Code master_status_code = 0;
    int features_ct = dyn_get_feature_set_size(feature_set);

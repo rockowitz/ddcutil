@@ -60,7 +60,7 @@ char *
 get_firmware_version_string_t(Display_Handle * dh) {
    bool debug = false;
 
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    static GPrivate  firmware_version_key = G_PRIVATE_INIT(g_free);
    char * version = get_thread_fixed_buffer(&firmware_version_key, 40);
 

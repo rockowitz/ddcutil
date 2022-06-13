@@ -53,7 +53,7 @@ DDCA_Status
 app_get_capabilities_string(Display_Handle * dh, char ** capabilities_string_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr_t(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
    FILE * ferr = stderr;
    Error_Info * ddc_excp = NULL;
