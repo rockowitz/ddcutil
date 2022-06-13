@@ -28,6 +28,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 
 #include "ddc/ddc_display_selection.h"

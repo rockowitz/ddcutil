@@ -61,7 +61,7 @@
 #include "ddc/ddc_displays.h"
 
 // Default trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 static GPtrArray * all_displays = NULL;         // all detected displays
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
