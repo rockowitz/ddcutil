@@ -233,10 +233,6 @@ typedef struct {
    char *       repr;
 } Display_Handle;
 
-#ifdef OLD
-Display_Handle * create_bus_display_handle_from_display_ref(int fd, Display_Ref * dref);
-Display_Handle * create_usb_display_handle_from_display_ref(int fd, Display_Ref * dref);
-#endif
 Display_Handle * create_base_display_handle(int fd, Display_Ref * dref);
 void             dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth);
 char *           dh_repr(Display_Handle * dh);
