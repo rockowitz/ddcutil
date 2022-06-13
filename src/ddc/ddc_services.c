@@ -39,6 +39,7 @@
 
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
@@ -174,6 +175,7 @@ void init_ddc_services() {
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_dyn_feature_files();
    init_ddc_display_lock();
+   init_ddc_display_ref_reports();
    init_ddc_displays();
    init_ddc_dumpload();
    init_ddc_output();

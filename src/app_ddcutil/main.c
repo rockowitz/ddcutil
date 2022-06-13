@@ -78,6 +78,7 @@
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"

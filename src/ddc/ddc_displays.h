@@ -14,12 +14,7 @@
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
-#include "config.h"
-
-#include "base/core.h"
 #include "base/displays.h"
-
-#include "i2c/i2c_bus_core.h"
 
 #ifdef ENABLE_USB
 #include "usb/usb_displays.h"
@@ -35,13 +30,6 @@ GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays);
 GPtrArray * ddc_get_bus_open_errors();
 int ddc_get_display_count(bool include_invalid_displays);
 
-// Display_Ref Reports
-void ddc_report_display_by_dref(Display_Ref * dref, int depth);
-int  ddc_report_displays(bool include_invalid_displays, int depth);
-void ddc_dbgrpt_display_ref(Display_Ref * drec, int depth);
-void ddc_dbgrpt_display_refs(GPtrArray * recs, int depth);
-void dbgrpt_dref_ptr_array(char * msg, GPtrArray* ptrarray, int depth);
-void dbgrpt_valid_display_refs(int depth);
 
 // Display Detection
 void ddc_ensure_displays_detected();

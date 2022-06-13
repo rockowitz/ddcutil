@@ -50,6 +50,7 @@
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_watch_displays.h"
 
 #include "query_sysenv_access.h"
