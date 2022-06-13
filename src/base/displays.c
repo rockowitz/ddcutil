@@ -756,13 +756,6 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
  */
 char * dref_short_name_t(Display_Ref * dref) {
    return dpath_short_name_t(&dref->io_path);
-#ifdef OLD
-   static GPrivate  dref_short_name_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&dref_short_name_key, 100);
-   char buf2[80];
-   snprintf(buf, 100, "Display_Ref[%s]", dref_short_name_r(dref, buf2, 80) );
-   return buf;
-#endif
 }
 
 
