@@ -336,6 +336,7 @@ single_vcp_value_equal(
                      (memcmp(vrec1->val.t.bytes, vrec2->val.t.bytes, vrec1->val.t.bytect) == 0 );
       }
    }
+
    DBGMSF(debug, "Returning: %s", sbool(result));
    return result;
 }
@@ -806,15 +807,13 @@ ddc_get_vcp_value(
 }
 
 
-static void init_ddc_vcp_func_name_table() {
-#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
-   ADD_FUNC(ddc_get_nontable_vcp_value);
-   ADD_FUNC(ddc_get_table_vcp_value);
-   ADD_FUNC(ddc_get_vcp_value);
-#undef ADD_FUNC
-}
-
 void init_ddc_vcp() {
-   init_ddc_vcp_func_name_table();
+   RTTI_ADD_FUNC(ddc_save_current_settings);
+   RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
+   RTTI_ADD_FUNC(set_table_vcp_value);
+   RTTI_ADD_FUNC(ddc_set_vcp_value);
+   RTTI_ADD_FUNC(ddc_get_nontable_vcp_value);
+   RTTI_ADD_FUNC(ddc_get_table_vcp_value);
+   RTTI_ADD_FUNC(ddc_get_vcp_value);
 }
 
