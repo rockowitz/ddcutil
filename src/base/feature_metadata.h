@@ -32,6 +32,7 @@ struct {
    Byte   sl;
 } Nontable_Vcp_Value;
 
+char * nontable_vcp_value_repr_t(Nontable_Vcp_Value * vcp_value);
 
 // Prototypes for functions that format feature values
 

@@ -30,6 +30,29 @@
 // #include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
 
 
+/** Thread safe function that returns a string representation of a #Nontable_Vcp_Value
+ *  suitable for diagnostic messages. The returned value is valid until the
+ *  next call to this function on the current thread.
+ *
+ *  \param  vcp_value  pointer to #Nontable_Vcp_Value
+ *  \return string representation of value
+ */
+char * nontable_vcp_value_repr_t(Nontable_Vcp_Value * vcp_value) {
+   static GPrivate  nontable_value_repr_key = G_PRIVATE_INIT(g_free);
+
+   char * buf = get_thread_fixed_buffer(&nontable_value_repr_key, 100);
+   if (vcp_value)
+      g_snprintf(buf, 100,
+          "Nontable_Vcp_Value[vcp_code: 0x%02x, max=%d, cur=%d, mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x]",
+          vcp_value->vcp_code, vcp_value->max_value, vcp_value->cur_value,
+          vcp_value->mh, vcp_value->ml, vcp_value->sh, vcp_value->sl);
+   else
+      strcpy(buf, "Nontable_Vcp_Value[NULL]");
+   return buf;
+}
+
+
+
 // Feature flags
 
 /** Creates a string representation of DDCA_Feature_Flags bitfield.
