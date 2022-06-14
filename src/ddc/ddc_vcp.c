@@ -110,9 +110,7 @@ ddc_save_current_settings(
          free_ddc_packet(request_packet_ptr);
    }
 
-   if ( (debug||IS_TRACING()) && ddc_excp)
-      errinfo_report(ddc_excp, 0);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -164,7 +162,7 @@ ddc_set_nontable_vcp_value(
 
    if ( psc==DDCRC_RETRIES )
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));  // needed?
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -214,7 +212,7 @@ set_table_vcp_value(
 
    if ( psc == DDCRC_RETRIES )
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Try errors: %s", errinfo_causes_string(ddc_excp));
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -367,7 +365,7 @@ ddc_set_vcp_value(
       DDCA_Any_Vcp_Value ** newval_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. ");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    FILE * verbose_msg_dest = fout();
    if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
       verbose_msg_dest = NULL;
@@ -437,9 +435,10 @@ ddc_set_vcp_value(
       }
    }
 
-   DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
+
 
 /** Possibly returns a mock value for a non-table feature
  *
@@ -612,18 +611,9 @@ ddc_get_nontable_vcp_value(
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
-   // DBGMSG("excp = %s", errinfo_summary(excp));
-   // DBGMSG("parsed_response = %p", parsed_response);
-
-   ASSERT_IFF(excp, !parsed_response);
-//   assert( (!excp && parsed_response) || (excp && !parsed_response)); // needed to avoid clang warning
-   if (excp) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Error reading feature x%02x.  Returning exception: %s",
-                                 feature_code, errinfo_summary(excp));
-      // errinfo_report(excp, 1);
-   }
-   else {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Success reading feature x%02x. *ppinterpreted_code=%p",
+   ASSERT_IFF(excp, !parsed_response); // needed to avoid clang warning
+   if (!excp) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Success reading feature x%02x. *ppinterpreted_code=%p",
                                       feature_code, parsed_response);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                       "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x, max value=%d, cur value=%d",
@@ -634,6 +624,7 @@ ddc_get_nontable_vcp_value(
    }
    *ppInterpretedCode = parsed_response;
 
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, excp, "");
    return excp;
 }
 
@@ -687,12 +678,11 @@ ddc_get_table_vcp_value(
       Error_Info * wrapped_exception = ddc_excp;
       ddc_excp = errinfo_new_with_cause2(
             DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__, "DDC NULL Message");
-
    }
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "rc=%s, *pp_table_bytes=%p", psc_name_code(psc), *pp_table_bytes);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -793,15 +783,13 @@ ddc_get_vcp_value(
    } // non USB
 
    *valrec_loc = valrec;
-   ASSERT_IFF(!ddc_excp,*valrec_loc);
 
-   if (!ddc_excp)  {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s, *valrec ->", errinfo_summary(ddc_excp));
-      if (debug || IS_TRACING() )
-         dbgrpt_single_vcp_value(valrec,2);
+   ASSERT_IFF(!ddc_excp,*valrec_loc);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp,"");
+   if (!ddc_excp && (debug || IS_TRACING())) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "*valrec_loc ->");
+      dbgrpt_single_vcp_value(*valrec_loc,2);
    }
-   else
-      DBGTRC_DONE(debug, TRACE_GROUP, "ddc_excp = %s", errinfo_summary(ddc_excp));
 
    return ddc_excp;
 }
