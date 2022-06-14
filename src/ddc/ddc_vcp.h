@@ -1,8 +1,9 @@
-/** \file ddc_vcp.c
+/** \file ddc_vcp.h
  *  Virtual Control Panel access
+ *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_VCP_H_

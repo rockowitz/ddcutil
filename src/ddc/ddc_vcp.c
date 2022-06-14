@@ -1,5 +1,6 @@
 /** \file ddc_vcp.c
  *  Virtual Control Panel access
+ *  Basic functions to get and set single values and save current settings.
  */
 
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -45,11 +46,8 @@
 
 #include "ddc/ddc_vcp.h"
 
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
-
-
 
 typedef struct {
    bool   verify_setvcp;
