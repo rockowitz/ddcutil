@@ -42,8 +42,8 @@ ddc_set_nontable_vcp_value(
 Error_Info *
 ddc_set_vcp_value(
       Display_Handle *          dh,
-      DDCA_Any_Vcp_Value *        vrec,
-      DDCA_Any_Vcp_Value **       newval_loc);
+      DDCA_Any_Vcp_Value *      vrec,
+      DDCA_Any_Vcp_Value **     newval_loc);
 
 Error_Info *
 ddc_get_table_vcp_value(
