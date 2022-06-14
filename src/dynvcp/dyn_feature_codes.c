@@ -47,7 +47,7 @@ bool dyn_format_feature_detail_sl_lookup(
         int                        bufsz)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "code_info=%s", nontable_vcp_value_repr_t(code_info));
 
    if (value_table) {
       char * s = sl_value_table_lookup(value_table, code_info->sl);
@@ -58,7 +58,7 @@ bool dyn_format_feature_detail_sl_lookup(
    else
       snprintf(buffer, bufsz, "0x%02x", code_info->sl);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning true..  *buffer=|%s|", buffer);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, true, "*buffer=|%s|", buffer);
    return true;
 }
 
@@ -222,12 +222,7 @@ dyn_get_feature_metadata_by_mmk_and_vspec(
     if (dfr)
        dfr_free(dfr);
 
-    if (debug || IS_TRACING()) {
-       DBGTRC_DONE(debug, TRACE_GROUP, "Returning Display_Feature_Metadata at %p", result);
-       if (result)
-          dbgrpt_display_feature_metadata(result, 1);
-    }
-
+    DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Display_Feature_Metadata", dbgrpt_display_feature_metadata, result);
     return result;
  }
 
@@ -250,12 +245,9 @@ dyn_get_feature_metadata_by_dref(
       bool                  with_default)
 {
    bool debug = false;
-   if (debug  || IS_TRACING()) {
-      DBGMSG("Starting. feature_code=0x%02x, dref=%s, with_default=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x, dref=%s, with_default=%s",
                  feature_code, dref_repr_t(dref), sbool(with_default));
-      DBGMSG("dref->dfr=%p", dref->dfr);
-      DBGMSG("DREF_OPEN: %s", sbool(dref->flags & DREF_OPEN));
-   }
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"dref->dfr=%p, DREF_OPEN: %s", dref->dfr, sbool(dref->flags & DREF_OPEN));
 
    DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
 
@@ -264,7 +256,7 @@ dyn_get_feature_metadata_by_dref(
    if (result)
       result->display_ref = dref;
 
-   DBGMSF_RET_STRUCT(debug || IS_TRACING(), Display_Feature_Metadata, dbgrpt_display_feature_metadata, result);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Display_Feature_Metadata", dbgrpt_display_feature_metadata, result);
    return result;
 }
 
