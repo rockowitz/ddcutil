@@ -292,10 +292,7 @@ dyn_get_feature_metadata_by_dh(
    if (result)
       result->display_ref = dh->dref;    // needed?
 
-   if (debug || IS_TRACING()) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", result);
-      dbgrpt_display_feature_metadata(result, 2);
-   }
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Display_Feature_Metadata", dbgrpt_display_feature_metadata, result);
    return result;
 }
 
