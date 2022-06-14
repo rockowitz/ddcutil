@@ -122,6 +122,13 @@ dfr_repr_t(Dynamic_Features_Rec * dfr) {
 }
 
 
+/** Gets a #DDCA_Feature_Metadata record from the features hash table
+ *  of a #Dynamic_Features_Rec.
+ *
+ *  @param  dfr          pointer to dynamic feature record
+ *  @param  feature_code feature code
+ *  @return pointer to feature metadata, NULL if not found
+ */
 DDCA_Feature_Metadata *
 get_dynamic_feature_metadata(
       Dynamic_Features_Rec * dfr,
@@ -139,6 +146,12 @@ get_dynamic_feature_metadata(
 }
 
 
+/** Free a #DDCA_Feature_Metadata record.
+ *
+ *  @param data pointer to record
+ *
+ *  This function has signature GDestroyNotify()
+ */
 void
 free_feature_metadata(
       gpointer data)    // i.e. DDCA_Feature_Metadata *
