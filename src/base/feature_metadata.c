@@ -7,8 +7,6 @@
 // Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#define _GNU_SOURCE     // for asprintf in stdio.h
-
 /** \cond */
 #include <assert.h>
 #include <glib-2.0/glib.h>
