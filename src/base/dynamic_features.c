@@ -204,7 +204,10 @@ dfr_new(
 }
 
 
-// has signature GDestroyFunc()
+/** Free a #Dynamic_Features_Rec
+ *
+ *  @param frec pointer to record to free
+ */
 void
 dfr_free(
       Dynamic_Features_Rec * frec)
@@ -229,6 +232,20 @@ dfr_free(
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+/** Wrap a $dfr_free() call in the signature GDestroyNofify.
+ *
+ *  @param p pointer to record to free
+ */
+void
+dfr_gdestroy(gpointer p) {
+   if (p) {
+      Dynamic_Features_Rec * frec = p;
+      assert(memcmp(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4) == 0);
+      dfr_free(frec);
+   }
 }
 
 

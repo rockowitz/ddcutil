@@ -3,7 +3,7 @@
  * Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -52,6 +52,10 @@ dfr_new(
 void
 dfr_free(
       Dynamic_Features_Rec *  frec);
+
+void
+dfr_gdestroy(
+      gpointer p);
 
 Error_Info *
 create_monitor_dynamic_features(
