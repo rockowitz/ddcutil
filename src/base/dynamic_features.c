@@ -219,7 +219,7 @@ dfr_new(
 
 /** Free a #Dynamic_Features_Rec
  *
- *  @param frec pointer to record to free
+ *  @param frec pointer to record to free, if NULL no operation is performed
  */
 void
 dfr_free(
