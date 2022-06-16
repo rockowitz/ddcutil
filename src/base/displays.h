@@ -211,7 +211,6 @@ Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname)
 void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
-// Display_Ref * clone_display_ref(Display_Ref * old);
 DDCA_Status   free_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
