@@ -216,9 +216,6 @@ DDCA_Status   free_display_ref(Display_Ref * dref);
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);
 
-// n. returned on stack
-// DDCA_IO_Path dpath_from_dref(Display_Ref * dref);
-
 
 // *** Display_Handle ***
 
