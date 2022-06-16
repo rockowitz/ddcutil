@@ -224,7 +224,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that);
 typedef struct {
    char         marker[4];
    Display_Ref* dref;
-   int          fd;     // Linux file descriptor if ddc_io_mode == DDC_IO_DEVI2C or USB_IO                           // added 7/2016
+   int          fd;     // file descriptor
    char *       repr;
 } Display_Handle;
 
