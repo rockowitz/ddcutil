@@ -250,6 +250,7 @@ Display_Identifier* common_create_display_identifier(Display_Id_Type id_type) {
    return pIdent;
 }
 
+
 /** Creates a #Display_Identifier using a **ddcutil** display number
  *
  * \param  dispno display number (1 based)
@@ -291,14 +292,12 @@ Display_Identifier* create_busno_display_identifier(int busno) {
  * It is the responsibility of the caller to free the allocated
  * #Display_Identifier using #free_display_identifier().
  */
-Display_Identifier* create_edid_display_identifier(
-      const Byte* edidbytes
-      )
-{
+Display_Identifier* create_edid_display_identifier(const Byte* edidbytes) {
    Display_Identifier* pIdent = common_create_display_identifier(DISP_ID_EDID);
    memcpy(pIdent->edidbytes, edidbytes, 128);
    return pIdent;
 }
+
 
 /** Creates a #Display_Identifier using one or more of
  *  manufacturer id, model name, and/or serial number string
@@ -320,8 +319,7 @@ Display_Identifier* create_edid_display_identifier(
 Display_Identifier* create_mfg_model_sn_display_identifier(
       const char* mfg_id,
       const char* model_name,
-      const char* serial_ascii
-      )
+      const char* serial_ascii)
 {
    assert(!mfg_id       || strlen(mfg_id)       < EDID_MFG_ID_FIELD_SIZE);
    assert(!model_name   || strlen(model_name)   < EDID_MODEL_NAME_FIELD_SIZE);
@@ -660,9 +658,9 @@ Display_Ref * clone_display_ref(Display_Ref * old) {
 #endif
 
 
-/** Free a display reference.
+/** Frees a display reference.
  *
- *  \param dref  display reference to free
+ *  \param  dref  ptr to display reference to free, if NULL no operation is performed
  *  \retval DDCRC_OK       success
  *  \retval DDCRC_ARG      invalid display reference
  *  \retval DDCRC_LOCKED   display reference not marked as transient
@@ -671,31 +669,31 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p -> %s", dref, dref_repr_t(dref));
    DDCA_Status ddcrc = 0;
-   if (!dref || memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
-      ddcrc = DDCRC_ARG;
-      DBGMSG("Invalid dref.");
-      if (dref)
+   if (dref) {
+      if ( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+         ddcrc = DDCRC_ARG;
+         DBGMSG("Invalid dref.");
          rpt_hex_dump((Byte*) dref->marker, 4, 2);
-      goto bye;
-   }
-   if (dref && (dref->flags & DREF_TRANSIENT) ) {
-      if (dref->flags & DREF_OPEN) {
-         ddcrc = DDCRC_LOCKED;
+         goto bye;
       }
-      else {
-         dref->marker[3] = 'x';
-         if (dref->usb_hiddev_name)       // always set using strdup()
-            free(dref->usb_hiddev_name);
-         if (dref->capabilities_string)   // always a private copy
-            free(dref->capabilities_string);
-         if (dref->mmid)                  // always a private copy
-            free(dref->mmid);
-         // 9/2017: what about pedid, detail2?
-         // what to do with gdl, request_queue?
-         if (dref->dfr)
-            dfr_free(dref->dfr);
-         dref->marker[3] = 'x';
-         free(dref);
+      if (dref->flags & DREF_TRANSIENT)  {
+         if (dref->flags & DREF_OPEN) {
+            ddcrc = DDCRC_LOCKED;
+         }
+         else {
+            if (dref->usb_hiddev_name)       // always set using strdup()
+               free(dref->usb_hiddev_name);
+            if (dref->capabilities_string)   // always a private copy
+               free(dref->capabilities_string);
+            if (dref->mmid)                  // always a private copy
+               free(dref->mmid);
+            // 9/2017: what about pedid, detail2?
+            // what to do with gdl, request_queue?
+            if (dref->dfr)
+               dfr_free(dref->dfr);
+            dref->marker[3] = 'x';
+            free(dref);
+         }
       }
    }
 bye:
@@ -720,7 +718,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
-/** Reports the contents of a #Display_Ref in a format appropriate for debugging.
+/** Reports the contents of a #Display_Ref in a format useful for debugging.
  *
  *  \param  dref  pointer to #Display_Ref instance
  *  \param  depth logical indentation depth
@@ -728,6 +726,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting. dref=%p", dref);
+
    rpt_structure_loc("Display_Ref", dref, depth );
    int d1 = depth+1;
 
@@ -739,7 +738,6 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    }
 
    rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
-   // dbgrpt_dref_flags(dref->flags, d1);
    rpt_vstring(d1, "flags:            %s", interpret_dref_flags_t(dref->flags) );
    rpt_vstring(d1, "mmid:             %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
 
