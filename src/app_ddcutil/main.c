@@ -121,37 +121,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
 static void add_rtti_functions();
 
-#ifndef I2C_IO_IOCTL_ONLY
-static
-bool detect_conflicting_drivers(Parsed_Cmd * parsed_cmd) {
-   bool detected = false;
-
-   if ( !(parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR) ) {
-      GPtrArray * conflicts = collect_conflicting_drivers_for_any_bus(-1);
-      if (conflicts) {
-         if (conflicts->len > 0) {
-            f0printf(fout(), "Likely conflicting drivers found: %s\n", conflicting_driver_names_string_t(conflicts));
-            detected = true;
-         }
-         free_conflicting_drivers(conflicts);
-      }
-      else {
-         struct stat stat_buf;
-         int rc = stat("/dev/bus/ddcci", &stat_buf);
-         // DBGMSG("stat returned %d", rc);
-         if (rc == 0) {
-             f0printf(fout(), "Likely conflicting driver found: ddcci\n");
-             detected = true;
-          }
-      }
-      if (detected)
-         f0printf(fout(), "ddcutil may require option --force-slave-address to recover from EBUSY errors.\n");
-   }
-   return detected;
-}
-#endif
-
-
 
 //
 // Report core settings and command line options
@@ -176,10 +145,6 @@ report_performance_options(int depth)
 
 static void
 report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
-#ifndef I2C_IO_IOCTL_ONLY
-   rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "Force I2C slave address:",
-                       sbool(i2c_force_slave_addr_flag));
-#endif
    rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "User defined features:",
                        (enable_dynamic_features) ? "enabled" : "disabled" );
                        // "Enable user defined features" is too long a title
@@ -821,9 +786,6 @@ main(int argc, char *argv[]) {
    }
 
    Call_Options callopts = CALLOPT_NONE;
-#ifndef I2C_IO_IOCTL_ONLY
-   i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
-#endif
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
@@ -852,11 +814,6 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_DETECT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Detecting displays...");
       verify_i2c_access();
-
-#ifndef I2C_IO_IOCTL_ONLY
-      if (i2c_get_io_strategy() == I2C_IO_STRATEGY_FILEIO)
-         detect_conflicting_drivers(parsed_cmd); // ignore retcode, we could be wrong
-#endif
 
       if ( parsed_cmd->flags & CMD_FLAG_F4) {
          test_display_detection_variants();
@@ -919,10 +876,6 @@ main(int argc, char *argv[]) {
 
    // *** Commands that may require Display Identifier ***
    else {
-#ifndef I2C_IO_IOCTL_ONLY
-      detect_conflicting_drivers(parsed_cmd);  // ignore retcode, we could be wrong
-#endif
-
       verify_i2c_access();
       Display_Ref * dref = NULL;
       Status_Errno_DDC  rc =
