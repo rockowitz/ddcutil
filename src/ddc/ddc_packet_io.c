@@ -186,21 +186,6 @@ ddc_open_display(
             ddcrc = fd;
          }
          else {
-#ifndef I2C_IO_IOCTL_ONLY
-            I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
-                  i2c_io_strategy_name(strategy));
-            if (strategy == I2C_IO_STRATEGY_FILEIO) {
-               ddcrc =  i2c_set_addr(fd, 0x37, callopts);
-               if (ddcrc != 0) {
-                  TRACED_ASSERT(ddcrc < 0);
-                  if (ddcrc == -EBUSY)
-                     bus_info->flags |= I2C_BUS_BUSY;
-                  close(fd);
-               }
-            }
-#endif
-
             if (ddcrc == 0) {
             // else {
                // Is this needed?
