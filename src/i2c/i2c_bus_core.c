@@ -431,24 +431,6 @@ i2c_detect_x37(int fd) {
 }
 
 
-
-#ifdef UNUSED
-// Factored out of i2c_check_bus().  Not needed, since i2c_check_bus() is called
-// only when the bus name is valid
-void i2c_bus_check_valid_name(I2C_Bus_Info * bus_info) {
-  assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
-
-  if ( !(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) ) {
-      bus_info->flags |= I2C_BUS_VALID_NAME_CHECKED;
-      if ( !sysfs_is_ignorable_i2c_device(bus_info->busno) )
-         bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
-   }
-
-   bus_info->flags |= I2C_BUS_HAS_VALID_NAME;
-}
-#endif
-
-
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
