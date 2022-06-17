@@ -110,7 +110,7 @@ Status_Errno_DDC invoke_i2c_writer(
    //   );
    rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write );
    assert (rc <= 0);
-   RECORD_IO_FINISH_NOW(fd, IE_WRITE);
+   // RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
