@@ -783,25 +783,14 @@ ddca_set_timeout_millis(
 
 bool
 ddca_enable_force_slave_address(bool onoff) {
-#ifdef I2C_IO_IOCTL_ONLY
    return false;
-#else
-   bool old = i2c_force_slave_addr_flag;
-   i2c_force_slave_addr_flag = onoff;
-   return old;
-#endif
 }
 
 
 bool
 ddca_is_force_slave_address_enabled(void) {
-#ifdef I2C_IO_IOCTL_ONLY
    return false;
-#else
-   return i2c_force_slave_addr_flag;
-#endif
 }
-
 
 
 //
