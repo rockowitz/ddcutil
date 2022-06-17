@@ -181,26 +181,4 @@ Status_Errno_DDC invoke_i2c_reader(
 }
 
 
-#ifdef TEST_THAT_DIDNT_WORK
-// fails
-Status_Errno_DDC invoke_single_byte_i2c_reader(
-      int        fd,
-      Byte       slave_address,
-      int        bytect,
-      Byte *     readbuf)
-{
-   bool debug = false;
-   DBGMSF(debug, "bytect=%d", bytect);
-   Status_Errno_DDC psc = 0;
-   int ndx = 0;
-   for (;ndx < bytect; ndx++) {
-      psc = invoke_i2c_reader(fd, slave_address, 1, readbuf+ndx);
-      if (psc != 0)
-         break;
-      // call_tuned_sleep_i2c(SE_POST_READ);
-   }
-   DBGMSF(debug, "Returning psc=%s", psc_desc(psc));
-   return psc;
-}
-#endif
 
