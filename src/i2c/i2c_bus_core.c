@@ -848,10 +848,7 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx) {
    DBGMSF(debug, "Starting.  busndx=%d", busndx );
 
    I2C_Bus_Info * bus_info = NULL;
-#ifndef NDEBUG
-   int busct = i2c_buses->len;
-   assert(busndx < busct);
-#endif
+   assert(busndx < i2c_buses->len);
    bus_info = g_ptr_array_index(i2c_buses, busndx);
    // report_businfo(busInfo);
    if (debug) {
