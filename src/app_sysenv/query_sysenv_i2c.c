@@ -24,9 +24,6 @@
 #include "util/sysfs_util.h"
 
 #include "base/parms.h"
-#ifndef I2C_IO_IOCTL_ONLY
-#include <i2c/smbus.h>
-#endif
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
@@ -34,9 +31,7 @@
 /** \endcond */
 
 #include "i2c/i2c_bus_core.h"
-#ifdef I2C_IO_IOCTL_ONLY
 #include "i2c/i2c_execute.h"
-#endif
 
 #include "query_sysenv_base.h"
 #include "query_sysenv_sysfs.h"
@@ -118,83 +113,27 @@ Public_Status_Code try_single_getvcp_call(
       ddc_cmd_bytes[5] ^= ddc_cmd_bytes[ndx];    // calculate checksum
    int writect = sizeof(ddc_cmd_bytes)-1;
    rpt_vstring(depth, "Sending Get VCP Feature Command request packet: %s", hexstring_t(ddc_cmd_bytes+1, writect));
-#ifndef I2C_IO_IOCTL_ONLY
-   rc = write(fh, ddc_cmd_bytes+1, writect);
-#else
    rc = i2c_ioctl_writer(fh, 0x37, writect, ddc_cmd_bytes+1);
-#endif
    if (rc < 0) {
       int errsv = errno;
       DBGMSF(debug, "write failed, errno=%s", linux_errno_desc(errsv));
       rc = -errsv;
       goto bye;
    }
-#ifndef I2C_IO_IOCTL_ONLY
-   if (rc != writect) {
-      DBGMSF(debug, "write() returned %d, expected %d", rc, writect );
-      rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
-      goto bye;
-   }
-#endif
    usleep(50000);
 
    unsigned char ddc_response_bytes[12];
    int readct = sizeof(ddc_response_bytes)-1;
 
    rpt_vstring(depth, "Reading Get Feature Reply response packet");
-
-#ifndef I2C_IO_IOCTL_ONLY
-   if (use_smbus) {   // FAILS, reads 6e 6e 6e ...
-      unsigned long functionality = i2c_get_functionality_flags_by_fd(fh);
-       if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
-          rpt_vstring(depth, "File descriptor %d does not support I2C_FUNC_SMBUS_READ_BYTE", fh);
-          rc = DDCRC_UNIMPLEMENTED;
-          goto bye;
-       }
-       int actual_ct = 0;
-       rc = 0;
-       int ndx = 0;
-       __s32 smbus_result = 0;
-       for (; ndx < readct && rc == 0; ndx++) {
-          smbus_result = i2c_smbus_read_byte_data(fh, ndx);
-          DBGMSF(debug, "ndx=%d, smbus_result = 0x%08x, %d", ndx, smbus_result, smbus_result);
-          if (smbus_result < 0)
-             rc = -errno;
-          else {
-             ddc_response_bytes[ndx+1] = smbus_result;
-             actual_ct = ndx+1;
-          }
-       }
-       if (rc < 0) {
-          rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
-                            linux_errno_desc(errno));
-          goto bye;
-       }
-       rpt_vstring(depth+1, "%d bytes were read", actual_ct);
-       rpt_vstring(depth, "ddc_response_bytes+1-> %s", hexstring_t(ddc_response_bytes+1,actual_ct) );
+   rc = i2c_ioctl_reader(fh, 0x37, false, readct, ddc_response_bytes+1);
+   if (rc < 0) {
+      rc = -errno;
+      DBGMSF(debug, "read failed, errno=%s", linux_errno_desc(-rc));
+      goto bye;
    }
-   else {
-      rc = read(fh, ddc_response_bytes+1, readct);
-#else
-      rc = i2c_ioctl_reader(fh, 0x37, false, readct, ddc_response_bytes+1);
-#endif
-      if (rc < 0) {
-         rc = -errno;
-         DBGMSF(debug, "read failed, errno=%s", linux_errno_desc(-rc));
-         goto bye;
-      }
-      rpt_vstring(depth, "read returned %s", hexstring_t(ddc_response_bytes+1,rc) );
+   rpt_vstring(depth, "read returned %s", hexstring_t(ddc_response_bytes+1,rc) );
 
-#ifndef I2C_IO_IOCTL_ONLY
-      if (rc != readct) {
-         DBGMSF(debug, "read() returned %d, should be %d", rc, readct );
-         rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
-         goto bye;
-      }
-#endif
-#ifndef I2C_IO_IOCTL_ONLY
-   }
-#endif
    if ( all_bytes_zero( ddc_response_bytes+1, readct) ) {
       DBGMSF(debug, "All bytes zero");
       rc = DDCRC_READ_ALL_ZERO;
@@ -313,107 +252,6 @@ static bool simple_ioctl_read_edid(
 }
 
 
-#ifndef I2C_IO_IOCTL_ONLY
-static bool simple_read_edid(
-      int  busno,
-      int  read_size,
-      bool write_before_read,
-//    bool use_smbus,
-      int  depth)
-{
-   assert(read_size == 128 || read_size == 256);
-   rpt_nl();
-   rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write()",
-                  read_size, busno,
-                  (write_before_read) ? "WITH" : "WITHOUT"
-                  );
-   int rc = 0;
-   char i2cdev[20];
-   Byte edid_buf[256];
-   snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
-   bool ok = false;
-   int fd = open(i2cdev, O_RDWR );
-   if (fd < 0) {
-      rpt_vstring(depth, "Open failed for %s, errno=%s", i2cdev, linux_errno_desc(errno));
-   }
-   else {
-      uint16_t op = I2C_SLAVE;
-      rc = ioctl(fd, op, 0x50);
-      int errsv = 0;
-      if (rc < 0) {
-         errsv = errno;
-         rpt_vstring(depth, "ioctl I2C_SLAVE returned errno=%s", linux_errno_desc(errno));
-         if (errsv == EBUSY) {
-            rpt_label(depth, "Retrying ioctl I2C_SLAVE_FORCE...");
-            errno = 0;
-            op = I2C_SLAVE_FORCE;
-            rc = ioctl(fd, op, 0x50);
-            if (rc < 0) {
-               rpt_vstring(depth, "ioctl(I2C_FORCE_SLACE) returned %s", linux_errno_desc(errno));
-            }
-         }
-         if (rc < 0) {
-            goto close;
-         }
-      }
-      if (write_before_read) {
-         edid_buf[0] = 0x00;
-         rc = write(fd, edid_buf, 1);
-         if (rc < 0) {
-            rpt_vstring(depth, "write() of 1 byte failed, errno = %s", linux_errno_desc(errno));
-            rpt_label(depth, "Continuing");
-         }
-      }
-
-      int actual_ct = 0;
-      if (use_smbus) {
-         unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
-         if (!(functionality & I2C_FUNC_SMBUS_READ_BYTE)) {
-            rpt_vstring(depth, "%s does not support I2C_FUNC_SMBUS_READ_BYTE", i2cdev);
-         }
-         else {
-            rc = 0;
-            int ndx = 0;
-            __s32 smbus_result = 0;
-            for (; ndx < read_size && rc == 0; ndx++) {
-               smbus_result = i2c_smbus_read_byte_data(fd, ndx);
-               // DBGMSG("smbus_result = 0x%08x, %d", smbus_result, smbus_result);
-               if (smbus_result < 0)
-                  rc = -errno;
-               else {
-                  edid_buf[ndx] = smbus_result;
-                  actual_ct = ndx+1;
-               }
-            }
-            if (rc < 0) {
-               rpt_vstring(depth,"i2c_smbus_read_byte_data() failed. errno = %s",
-                                 linux_errno_desc(errno));
-               goto close;
-            }
-            rpt_vstring(depth+1, "%d bytes were read", actual_ct);
-            rpt_hex_dump(edid_buf, actual_ct, depth+1);
-            ok = true;
-         }
-      }
-      else {
-         actual_ct = read(fd, edid_buf, read_size);
-         if (actual_ct < 0) {
-            rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
-            goto close;
-         }
-         rpt_vstring(depth, "read() returned %d bytes", actual_ct);
-         rpt_hex_dump(edid_buf, actual_ct, depth+1);
-         ok = true;
-
-      }
-
-close:
-      close(fd);
-   }
-   return ok;
-}
-#endif
-
 
 void test_edid_read_variants(Env_Accumulator * accum) {
    bool debug = false;
@@ -457,25 +295,6 @@ void test_edid_read_variants(Env_Accumulator * accum) {
             simple_ioctl_read_edid(busno, 128, true, d2);
          simple_ioctl_read_edid(busno, 256, true, d2);
          rpt_nl();
-
-#ifdef FAIL
-         rpt_label(d2, "Tests using i2c_smbus_read_byte_data()...");
-         // hang observed w/o write, using i2c_smbus_read_byte_data()
-         rpt_label(d2, "Without write() before read()...");
-         ok = simple_read_edid(busno, 128, false, true, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, false, true, d2);
-         simple_read_edid(busno, 256, false, true, d2);
-         rpt_nl();
-#endif
-#ifdef OLD
-         rpt_label(d2, "Retrying with write() before read()...");
-         ok = simple_read_edid(busno, 128, true, true, d2);
-         if (!ok)
-            simple_read_edid(busno, 128, true, true, d2);
-         simple_read_edid(busno, 256, true, true, d2);
-         rpt_nl();
-#endif
       }
    }
 }
