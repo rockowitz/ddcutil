@@ -165,7 +165,6 @@ void test_display_detection_variants() {
        rpt_vstring(d, "write before read:        %s", SBOOL(cur.write_before_read));
        rpt_vstring(d, "EDID read size:           %s", read_size_name(cur.edid_read_size));
 
-       i2c_set_io_strategy(       cur.i2c_io_strategy_id);
        I2C_Read_Bytewise        = false;       //      cur.i2c_read_bytewise;
        EDID_Read_Bytewise       = cur.edid_read_bytewise;
        EDID_Read_Size           = cur.edid_read_size;
