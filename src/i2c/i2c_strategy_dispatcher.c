@@ -37,7 +37,6 @@ char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
 
 
 // I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
-bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
 bool I2C_Read_Bytewise               = DEFAULT_I2C_READ_BYTEWISE;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;

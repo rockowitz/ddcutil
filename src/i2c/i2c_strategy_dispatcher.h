@@ -40,7 +40,6 @@ I2C_IO_Strategy_Id i2c_get_io_strategy();
 // quick and dirty for use in testing framework
 // extern I2C_IO_Strategy Default_I2c_Strategy;
 extern bool I2C_Read_Bytewise;
-extern bool EDID_Read_Uses_I2C_Layer;
 extern bool EDID_Read_Bytewise;
 extern bool EDID_Write_Before_Read;
 extern int  EDID_Read_Size;
