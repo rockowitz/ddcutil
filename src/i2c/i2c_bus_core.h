@@ -33,20 +33,11 @@
 // shared with i2c_bus_selector.c
 extern GPtrArray * i2c_buses;
 
-#ifndef I2C_IO_IOCTL_ONLY
-// Controls whether function #i2c_set_addr() retries from EBUSY error by
-// changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
-extern bool i2c_force_slave_addr_flag;
-#endif
-
 extern bool i2c_force_bus;
 
 // Basic I2C bus operations
 int           i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno  i2c_close_bus(int fd, Call_Options callopts);
-#ifndef I2C_IO_IOCTL_ONLY
-Status_Errno  i2c_set_addr(int fd, int addr, Call_Options callopts);
-#endif
 
 // EDID inspection
 Status_Errno_DDC i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid);
