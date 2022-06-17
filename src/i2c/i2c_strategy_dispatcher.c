@@ -16,7 +16,6 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
-#include "base/last_io_event.h"
 
 #include "i2c_strategy_dispatcher.h"
 
