@@ -127,7 +127,6 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
  *  \return status code     as from #i2c_open_bus(), #usb_open_hiddev_device()
  *  \retval DDCRC_LOCKED    display open in another thread
  *  \retval DDCRC_ALREADY_OPEN display already open in current thread
- *  \retval -EBUSY          from i2c_set_addr()
  *
  *  **Call_Option** flags recognized:
  *  - CALLOPT_WAIT
