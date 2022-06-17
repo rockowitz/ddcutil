@@ -222,81 +222,9 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 }
 
 
-#ifdef UNUSED
-/* Checks each address on an I2C bus to see if a device exists.
- * The bus device has already been opened.
- *
- * Arguments:
- *   fd  file descriptor for open bus object
- *
- * Returns:
- *   128 byte array of booleans, byte n is true iff a device is
- *   detected at bus address n
- *
- * This "exploratory" function is not currently used but is
- * retained for diagnostic purposes.
- *
- * TODO: exclude reserved I2C bus addresses from check
- */
-static
-bool * i2c_detect_all_slave_addrs_by_fd(int fd) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. fd=%d", fd);
-   assert (fd >= 0);
-   bool * addrmap = NULL;
-
-   unsigned char byte_to_write = 0x00;
-   int addr;
-   addrmap = calloc(I2C_SLAVE_ADDR_MAX, sizeof(bool));
-   //bool addrmap[128] = {0};
-
-   for (addr = 3; addr < I2C_SLAVE_ADDR_MAX; addr++) {
-      int rc;
-      i2c_set_addr(fd, addr, CALLOPT_ERR_MSG);
-      rc = invoke_i2c_reader(fd, 1, &byte_to_write);
-      if (rc >= 0)
-         addrmap[addr] = true;
-   }
-
-   DBGMSF(debug, "Returning %p", addrmap);
-   return addrmap;
-}
-
-
-/* Examines all possible addresses on an I2C bus.
- *
- * Arguments:
- *    busno    bus number
- *
- * Returns:
- *   128 byte boolean array,
- *   NULL if unable to open I2C bus
- *
- * This "exploratory" function is not currently used but is
- * retained for diagnostic purposes.
- */
-bool * i2c_detect_all_slave_addrs(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno);
-
-   int file = i2c_open_bus(busno, CALLOPT_ERR_MSG);  // return if failure
-   bool * addrmap = NULL;
-
-   if (file >= 0) {
-      addrmap = i2c_detect_all_slave_addrs_by_fd(file);
-      i2c_close_bus(file, busno, CALLOPT_NONE);
-   }
-
-   DBGMSF(debug, "Returning %p", addrmap);
-   return addrmap;
-}
-#endif
-
-
 //
 // I2C Bus Inspection - EDID Retrieval
 //
-
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
