@@ -61,13 +61,5 @@ invoke_i2c_reader(
        int        bytect,
        Byte *     readbuf);
 
-#ifdef TEST_THAT_DIDNT_WORK
-Status_Errno_DDC
-invoke_single_byte_i2c_reader(
-       int        fd,
-       Byte       slave_address,
-       int        bytect,
-       Byte *     readbuf);
-#endif
 
 #endif /* I2C_STRATEGY_DISPATCHER_H_ */
