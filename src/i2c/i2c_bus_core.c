@@ -995,15 +995,6 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
 }
 
 
-#ifdef UNUSED
-bool is_probably_laptop_display(I2C_Bus_Info * businfo) {
-   assert(businfo);
-   bool result = (businfo->flags & I2C_BUS_EDP) || is_embedded_parsed_edid(businfo->edid);
-   return result;
-}
-#endif
-
-
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_close_bus);
