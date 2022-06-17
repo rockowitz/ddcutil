@@ -48,19 +48,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-// static bool read_with_timeout  = false;
-// static bool write_with_timeout = false;
 
-void set_i2c_fileio_use_timeout(bool yesno) {
-   // DBGMSG("Setting  %s", sbool(yesno));
-   // read_with_timeout  = yesno;
-   // write_with_timeout = yesno;
-}
-
-// bool get_i2c_fileio_use_timeout() {
-//    // return read_with_timeout;
-//    return false;
-// }
 
 #ifndef I2C_IO_IOCTL_ONLY
 /** Writes to i2c bus using write()

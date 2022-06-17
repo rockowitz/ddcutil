@@ -12,9 +12,6 @@
 #include "util/coredefs.h"
 #include "base/status_code_mgt.h"
 
-void set_i2c_fileio_use_timeout(bool yesno);
-bool get_i2c_fileio_use_timeout();
-
 /** Function template for I2C write function */
 typedef Status_Errno_DDC (*I2C_Writer)(
       int    fd,

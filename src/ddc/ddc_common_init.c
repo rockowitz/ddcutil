@@ -156,11 +156,6 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
          tsd_dsa_enable_globally(true);
       }
    }
-
-   // experimental timeout of i2c read()
-   if (parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO) {
-      set_i2c_fileio_use_timeout(true);
-   }
 }
 
 
