@@ -39,7 +39,6 @@
 // *** Choose method of low level IC2 communication
 //
 
-
 #define DEFAULT_I2C_READ_BYTEWISE      false                   ///< Use single byte reads
 #define DEFAULT_EDID_WRITE_BEFORE_READ true
 #define DEFAULT_EDID_READ_SIZE           0                     ///< 128, 256, 0=>dynamic
@@ -48,35 +47,12 @@
 #define DEFAULT_EDID_READ_USES_I2C_LAYER  false
 #define DEFAULT_EDID_READ_BYTEWISE        false
 
-
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
 // FILEIO      true        on P2411h and Acer, reads byes 0. 2, 4 of response EDID ok, getvcp fails
 // IOCTL       false       ok                                                 All ok
 // IOCTL       true        on P2411h and Acer, returns corrupt data           EDID ok, getvcp fails
 
-// Parms used only within testcase portion of code:
-
-// #define DEFAULT_I2C_WRITE_MODE "write"
-// #define DEFAULT_I2C_WRITE_MODE "ioctl_write"
-//#define DEFAULT_I2C_WRITE_MODE  "i2c_smbus_write_i2c_block_data"
-
-// #define DEFAULT_I2C_READ_MODE  "read"
-// #define DEFAULT_I2C_READ_MODE  "ioctl_read"
-// i2c_smbus_read_i2c_block_data can't handle capabilities fragments 32 bytes in size, since with
-// "envelope" the packet exceeds the i2c_smbus_read_i2c_block_data 32 byte limit
-
-// Notes on I2C IO strategies
-//
-// TODO: move comments re smbus problems to low level smbus functions (currently in i2c_base_io.c)
-//
-// Default settings in i2c_io.c
-// valid write modes: "write", "ioctl_write", "i2c_smbus_write_i2c_block_data"
-// valid read modes:  "read",  "ioctl_read",  "i2c_smbus_read_i2c_block_data"
-// 11/2015: write modes "write" and "ioctl_write" both work
-//          "i2c_smbus_write_i2c_block_data" returns ERRNO EINVAL, invalid argument
-//          "read" and "ioctl_read" both work, appear comparable
-//          fails: "i2c_smb_read_i2c_block_data"
 
 //
 // *** Retry Management ***
