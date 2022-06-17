@@ -104,10 +104,11 @@ Status_Errno_DDC invoke_i2c_writer(
                  hexstring_t(bytes_to_write, bytect));
 
    Status_Errno_DDC rc;
-   RECORD_IO_EVENT(
-      IE_WRITE,
-      ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
-     );
+   // RECORD_IO_EVENT(
+   //    IE_WRITE,
+   //    ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
+   //   );
+   rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write );
    assert (rc <= 0);
    RECORD_IO_FINISH_NOW(fd, IE_WRITE);
 
