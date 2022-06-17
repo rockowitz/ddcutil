@@ -67,13 +67,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 /** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info - shared with i2c_bus_selector.c */
 /* static */ GPtrArray * i2c_buses = NULL;
 
-#ifndef I2C_IO_IOCTL_ONLY
-/** Global variable.  Controls whether function #i2c_set_addr() attempts retry
- *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
- */
-bool i2c_force_slave_addr_flag = false;
-#endif
-
 bool i2c_force_bus = false;
 
 static GMutex  open_failures_mutex;
@@ -183,108 +176,6 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
    return result;
 }
-
-
-#ifndef I2C_IO_IOCTL_ONLY
-/** Sets I2C slave address to be used on subsequent calls
- *
- * @param  fd        Linux file descriptor for open /dev/i2c-n
- * @param  addr      slave address
- * @param  callopts  call option flags, controlling failure action\n
- *                   if CALLOPT_FORCE set, use IOCTL op I2C_SLAVE_FORCE
- *                   to take control even if address is in use by another driver
- *
- * @retval  0 if success
- * @retval <0 negative Linux errno, if ioctl call fails
- *
- * \remark
- * Errors which are recovered are counted here using COUNT_STATUS_CODE().
- * The final status code is left for the caller to count
- */
-Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
-   bool debug = false;
-#ifdef FOR_TESTING
-   bool force_i2c_slave_failure = false;
-#endif
-   // callopts |= CALLOPT_ERR_MSG;    // temporary
-   DBGTRC_STARTING(debug, TRACE_GROUP,
-                 "fd=%d, addr=0x%02x, filename=%s, i2c_force_slave_addr_flag=%s, callopts=%s",
-                 fd, addr,
-                 filename_for_fd_t(fd),
-                 sbool(i2c_force_slave_addr_flag),
-                 interpret_call_options_t(callopts) );
-   // FAILSIM;
-
-   Status_Errno result = 0;
-   int rc = 0;
-   int errsv = 0;
-   uint16_t op = (callopts & CALLOPT_FORCE_SLAVE_ADDR) ? I2C_SLAVE_FORCE : I2C_SLAVE;
-
-retry:
-   errno = 0;
-   RECORD_IO_EVENT( IE_OTHER, ( rc = ioctl(fd, op, addr) ) );
-#ifdef FOR_TESTING
-   if (force_i2c_slave_failure) {
-      if (op == I2C_SLAVE) {
-         DBGMSG("Forcing pseudo failure");
-         rc = -1;
-         errno=EBUSY;
-      }
-   }
-#endif
-   errsv = errno;
-
-   if (rc < 0) {
-      if (errsv == EBUSY) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
-                   filename_for_fd_t(fd), addr);
-
-         if (op == I2C_SLAVE &&
-               i2c_force_slave_addr_flag )  // global setting
-             // future?: (i2c_force_slave_addr_flag || (callopts & CALLOPT_FORCE_SLAVE_ADDR)) )
-         {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
-                   filename_for_fd_t(fd), addr );
-            // normally errors counted at higher level, but in this case it would be
-            // lost because of retry
-            COUNT_STATUS_CODE(-errsv);
-            op = I2C_SLAVE_FORCE;
-            // debug = true;   // force final message for clarity
-            goto retry;
-         }
-      }
-      else {
-         REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errsv);
-      }
-
-      result = -errsv;
-   }
-   if (result == -EBUSY) {
-      char msgbuf[60];
-      g_snprintf(msgbuf, 60, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
-                             filename_for_fd_t(fd),
-                             (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
-                             addr);
-      DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
-      syslog(LOG_ERR, "%s", msgbuf);
-
-   }
-   else if (result == 0 && op == I2C_SLAVE_FORCE) {
-      char msgbuf[80];
-      g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
-            filename_for_fd_t(fd),
-            addr);
-      DBGTRC(debug || get_output_level() > DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      syslog(LOG_INFO, "%s", msgbuf);
-   }
-
-   assert(result <= 0);
-   // if (addr == 0x37)  result = -EBUSY;    // for testing
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
-   return result;
-}
-#endif
 
 
 //
@@ -406,131 +297,6 @@ bool * i2c_detect_all_slave_addrs(int busno) {
 // I2C Bus Inspection - EDID Retrieval
 //
 
-#ifndef I2C_IO_IOCTL_ONLY
-static Status_Errno_DDC
-i2c_get_edid_bytes_using_i2c_layer(
-      int     fd,
-      Buffer* rawedid,
-      int     edid_read_size,
-      bool    read_bytewise);
-
-static Status_Errno_DDC
-i2c_get_edid_bytes_directly(
-      int     fd,
-      Buffer* rawedid,
-      int     edid_read_size,
-      bool    read_bytewise)
-{
-   bool debug = false;
-#ifdef USE_SMBUS
-   read_bytewise = true;   // ** TEMP **
-#endif
-
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
-                 fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
-   assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
-
-   int rc = 0;
-
-   I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
-   assert(strategy == I2C_IO_STRATEGY_FILEIO);
-
-#ifdef OUT
-   if (strategy == I2C_IO_STRATEGY_IOCTL) {
-      DBGMSG("Forcing i2_get_edid_bytes_using_i2c_layer()");
-      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
-   }
-   else {
-#endif
-
-   bool write_before_read = EDID_Write_Before_Read;
-   // write_before_read = false;
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
-   rc = 0;
-   if (write_before_read) {
-      Byte byte_to_write = 0x00;
-      RECORD_IO_EVENTX(
-          fd,
-          IE_WRITE,
-          ( rc = write(fd, &byte_to_write, 1) )
-         );
-      if (rc < 0) {
-         rc = -errno;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() failed.  rc = %s", psc_name_code(rc));
-      }
-      else {
-         rc = 0;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() succeeded");
-      }
-   }
-
-   if (rc == 0) {
-      if (read_bytewise) {
-         int ndx = 0;
-         for (; ndx < edid_read_size && rc == 0; ndx++) {
-#ifdef USE_SMBUS
-            __s32 smbus_result = 0;
-            RECORD_IO_EVENTX(
-                fd,
-                IE_READ,
-                ( smbus_result = i2c_smbus_read_byte_data(fd, ndx) )
-               );
-            // DBGMSG("smbus_result = 0x%08x, %d", smbus_result, smbus_result);
-            if (smbus_result < 0) {
-               rc = -errno;
-               break;
-            }
-            rawedid->bytes[ndx] = smbus_result;
-#else
-            RECORD_IO_EVENTX(
-                fd,
-                IE_READ,
-                ( rc = read(fd, &rawedid->bytes[ndx], 1) )
-               );
-            if (rc < 0) {
-               rc = -errno;
-               break;
-            }
-            assert(rc == 1);
-            rc = 0;
-#endif
-          }
-          rawedid->len = ndx;
-          DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
-      }
-      else {
-         RECORD_IO_EVENTX(
-             fd,
-             IE_READ,
-             ( rc = read(fd, rawedid->bytes, edid_read_size) )
-            );
-         if (rc >= 0) {
-            DBGMSF(debug, "read() returned %d", rc);
-            rawedid->len = rc;
-            // assert(rc == 128 || rc == 256);
-            rc = 0;
-         }
-         else {
-            rc = -errno;
-         }
-         DBGMSF(debug, "read() returned %s", psc_desc(rc) );
-      }
-#ifdef OUT
-   }
-#endif
-
-   }
-
-
-   if ( (debug || IS_TRACING()) && rc == 0) {
-      DBGMSG("Returning buffer:");
-      rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
-   }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
-   return rc;
-}
-#endif
-
 
 static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
@@ -600,20 +366,6 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    Status_Errno_DDC rc;
    int tryctr = 0;
 
-#ifndef I2C_IO_IOCTL_ONLY
-   I2C_IO_Strategy_Id  strategy_id = i2c_get_io_strategy();
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "stategy_id = %s(%d)",
-         i2c_io_strategy_name(strategy_id),
-         strategy_id);
-
-   if ( strategy_id == I2C_IO_STRATEGY_FILEIO ) {
-      rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
-      if (rc < 0) {
-         goto bye;
-      }
-   }
-#endif
-
 #ifdef OLD
    // need a different call since tuned_sleep_with_tracex() now takes Display_Handle *, not DDCA_IO_Type
    // 10/23/15, try disabling sleep before write
@@ -626,37 +378,17 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
-#ifndef I2C_IO_IOCTL_ONLY
-   // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
-   //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
-#endif
 
    bool read_bytewise = EDID_Read_Bytewise;
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
-
-#ifndef I2C_IO_IOCTL_ONLY
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                    "Trying EDID read. tryctr=%d, max_tries=%d,"
-                    " edid_read_size=%d, read_bytewise=%s, using %s",
-                    tryctr, max_tries, edid_read_size, sbool(read_bytewise),
-                    (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
-
-      if (EDID_Read_Uses_I2C_Layer || strategy_id == I2C_IO_STRATEGY_IOCTL) {
-         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
-      }
-      else {
-         rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
-      }
-#else
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
                     " edid_read_size=%d, read_bytewise=%s",
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise) );
       rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
-#endif
       if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {    // removed -EIO 3/4/2021
          // DBGMSG("breaking");
          break;
@@ -693,9 +425,6 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       }  // get bytes succeeded
    }
 
-#ifndef I2C_IO_IOCTL_ONLY
-bye:
-#endif
    if (rc < 0)
       rawedid->len = 0;
 
@@ -760,7 +489,6 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
    return businfo;
 }
 
-#ifdef I2C_IO_IOCTL_ONLY
 
 static Status_Errno_DDC
 i2c_detect_x37(int fd) {
@@ -788,85 +516,6 @@ i2c_detect_x37(int fd) {
    return rc;
 }
 
-
-#else
-
-static bool
-i2c_detect_x37(int fd, bool* busy_loc) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, busy_loc=%p", fd, (void*)busy_loc);
-
-   bool result = false;
-   *busy_loc = false;
-
-   // Quirks
-   // - i2c_set_addr() Causes screen corruption on Dell XPS 13, which has a QHD+ eDP screen
-   //   avoided by never calling this function for an eDP screen
-   // - Dell P2715Q does not respond to single byte read, but does respond to
-   //   a write (7/2018), so this function checks both
-   Status_Errno_DDC rc = 0;
-   I2C_IO_Strategy_Id strategy = i2c_get_io_strategy();
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy=%s",
-         i2c_io_strategy_name(strategy));
-   if (strategy == I2C_IO_STRATEGY_FILEIO) {
-       rc = i2c_set_addr(fd, 0x37, CALLOPT_NONE);
-       if (rc != 0) {
-          if (rc == -EBUSY)
-             *bus_loc = true;
-       }
-   }
-
-   if (rc == 0)  {
-      // regard either a successful write() or a read() as indication slave address is valid
-      Byte    writebuf = {0x00};
-      if (strategy == I2C_IO_STRATEGY_FILEIO) {
-         rc = write(fd, &writebuf, 1);
-         assert(rc == 1 || rc < 0);
-         if (rc == 1)
-            rc = 0;
-      }
-      else {
-         rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
-      }
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
-      if (rc == 0)
-         result = true;
-      else {
-
-      // Per DDC/CI v1.1, section 6.4
-      // The NULL message is used in the following cases:
-      //   To detect that the display is DDC/CI capable (by reading it at 0x6Fh I2c slave address)
-      //   ...
-
-      Byte    readbuf[4];  //  4 byte buffer
-      if (strategy == I2C_IO_STRATEGY_FILEIO) {
-         rc = read(fd, readbuf, 4);
-         if (rc == 4)
-            rc = 0;
-      }
-      else {
-         rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
-      }
-
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s",  psc_name_code(rc));
-         if (rc == 0) {
-            result = true;
-            // test doesn't work, buffer contains random bytes (but same random bytes for every
-            // display in a single call to i2cdetect_x37
-           //  Byte ddc_null_msg[4] = {0x6f, 0x6e, 0x80, 0xbe};
-            //   bool is_null_msg =  ( memcmp( readbuf, ddc_null_msg, 4) == 0);
-
-           //   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"    readbuf=0x%8x %s Null Message",
-           //                 readbuf, (is_null_msg) ? "IS" : "IS NOT");
-           // }
-         }
-      }
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, debug, "busy_loc=%s", SBOOL(*busy_loc));
-   return result;
-}
-#endif
 
 
 #ifdef UNUSED
@@ -929,19 +578,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_LVDS;
              }
              else {
-#ifndef I2C_IO_IOCTL_ONLY
-                bool ebusy = false;
-                if ( i2c_detect_x37(fd, &ebusy) )
-                   bus_info->flags |= I2C_BUS_ADDR_0X37;
-                else if (ebusy)
-                   bus_info->flags |= I2C_BUS_BUSY;
-#else
                 int rc = i2c_detect_x37(fd);
                 if (rc == 0)
                    bus_info->flags |= I2C_BUS_ADDR_0X37;
                 else if (rc == -EBUSY)
                    bus_info->flags |= I2C_BUS_BUSY;
-#endif
              }
           }
           else if (ddcrc == -EBUSY)
@@ -1474,10 +1115,6 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
-#ifndef I2C_IO_IOCTL_ONLY
-   RTTI_ADD_FUNC(i2c_set_addr);
-   RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
-#endif
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_check_bus);
