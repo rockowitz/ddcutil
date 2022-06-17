@@ -358,23 +358,9 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    bool debug  = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
-#ifdef OLD
-   bool conservative = false;
-#endif
-
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
    Status_Errno_DDC rc;
    int tryctr = 0;
-
-#ifdef OLD
-   // need a different call since tuned_sleep_with_tracex() now takes Display_Handle *, not DDCA_IO_Type
-   // 10/23/15, try disabling sleep before write
-   if (conservative) {
-      TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_PRE_EDID, "Before write");
-   }
-#endif
-
-
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
