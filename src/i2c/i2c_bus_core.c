@@ -72,6 +72,62 @@ bool i2c_force_bus = false;
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
 
+//
+// Local utility functions
+//
+
+/** Creates a string interpretation of I2C_Bus_Info.flags.
+ *
+ *  @param  flags flags value
+ *  @return string interpretation, caller must free
+ *
+ *  @remark
+ *  Keep the names in sync with flag definitions
+ */
+static char * interpret_i2c_bus_flags(uint16_t flags) {
+   GPtrArray * names = g_ptr_array_new();
+
+#define ADD_NAME(_name) \
+   if (_name & flags) g_ptr_array_add(names, #_name)
+
+   ADD_NAME(I2C_BUS_EXISTS             );
+   ADD_NAME(I2C_BUS_ACCESSIBLE         );
+   ADD_NAME(I2C_BUS_ADDR_0X50          );
+   ADD_NAME(I2C_BUS_ADDR_0X37          );
+   ADD_NAME(I2C_BUS_ADDR_0X30          );
+   ADD_NAME(I2C_BUS_EDP                );
+   ADD_NAME(I2C_BUS_LVDS               );
+   ADD_NAME(I2C_BUS_PROBED             );
+   ADD_NAME(I2C_BUS_VALID_NAME_CHECKED );
+   ADD_NAME(I2C_BUS_HAS_VALID_NAME     );
+   ADD_NAME(I2C_BUS_BUSY               );
+   ADD_NAME(I2C_BUS_SYSFS_EDID         );
+
+#undef ADD_NAME
+
+   char * joined =  join_string_g_ptr_array(names, " | ");
+   return joined;
+}
+
+
+#ifdef NOT_WORTH_THE_SPACE
+char * interpret_i2c_bus_flags_t(uint16_t flags) {
+   static GPrivate  buffer_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  buffer_len_key = G_PRIVATE_INIT(g_free);
+
+   char * sflags = interpret_i2c_bus_flags(flags);
+   int required_size = strlen(sflags) + 1;
+   char * buf = get_thread_dynamic_buffer(&buffer_key, &buffer_len_key, required_size);
+   strncpy(buf, sflags, required_size);
+   free(sflags);
+   return buf;
+}
+#endif
+
+
+//
+// Bus open errors
+//
 
 /** Adds a set of bus numbers to the set of bus numbers
  *  whose open failure has already been reported.
@@ -390,6 +446,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 
 //
 // I2C Bus Inspection - Fill in and report Bus_Info
+//
 
 /** Allocates and initializes a new #I2C_Bus_Info struct
  *
@@ -420,11 +477,13 @@ i2c_detect_x37(int fd) {
 
    rc = i2c_ioctl_writer(fd, 0x37, 1, &writebuf);
    // rc = 6; // for testing
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,"write() for slave address x37 returned %s", psc_name_code(rc));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                   "i2c_ioctl_writer() for slave address x37 returned %s", psc_name_code(rc));
    if (rc != 0) {
       Byte    readbuf[4];  //  4 byte buffer
       rc = i2c_ioctl_reader(fd, 0x37, false, 4, readbuf);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"read() for slave address x37 returned %s", psc_name_code(rc));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "i2c_ioctl_reader() for slave address x37 returned %s", psc_name_code(rc));
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc,"");
    return rc;
@@ -490,8 +549,13 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       }
    }   // probing complete
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "flags=0x%04x, bus info:", bus_info->flags );
+   // DBGTRC_DONE(debug, TRACE_GROUP, "flags=0x%04x, bus info:", bus_info->flags );
    if (debug || IS_TRACING() ) {
+      char * sflags = interpret_i2c_bus_flags(bus_info->flags);
+      DBGTRC_DONE(true, TRACE_GROUP, "flags = 0x%04x = %s", bus_info->flags, sflags);
+      // DBGTRC_NOPREFIX(true, TRACE_GROUP, "flags = %s", interpret_i2c_bus_flags_t(bus_info->flags));
+      free(sflags);
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "bus_info:");
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
 }
@@ -514,7 +578,7 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
 }
 
 // satisfies GDestroyNotify()
-void i2c_free_bus_info_gdestroy(gpointer data) {
+void i2c_gdestroy_bus_info(gpointer data) {
    i2c_free_bus_info((I2C_Bus_Info*) data);
 }
 
@@ -752,7 +816,7 @@ int i2c_detect_buses() {
       Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
 #endif
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
-      g_ptr_array_set_free_func(i2c_buses, i2c_free_bus_info_gdestroy);
+      g_ptr_array_set_free_func(i2c_buses, i2c_gdestroy_bus_info);
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
          int busno = bva_get(i2c_bus_bva, ndx);
          DBGMSF(debug, "Checking busno = %d", busno);
@@ -841,28 +905,20 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
  *          NULL if invalid index
  */
 I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx) {
-   // assert(busndx >= 0);
    assert(i2c_buses);
+   assert(busndx < i2c_buses->len);
 
    bool debug = false;
    DBGMSF(debug, "Starting.  busndx=%d", busndx );
-
-   I2C_Bus_Info * bus_info = NULL;
-   assert(busndx < i2c_buses->len);
-   bus_info = g_ptr_array_index(i2c_buses, busndx);
+   I2C_Bus_Info * bus_info = g_ptr_array_index(i2c_buses, busndx);
    // report_businfo(busInfo);
    if (debug) {
-      DBGMSG("flags=0x%04x", bus_info->flags);
-      DBGMSG("flags & I2C_BUS_PROBED = 0x%02x", (bus_info->flags & I2C_BUS_PROBED) );
+      char * s = interpret_i2c_bus_flags(bus_info->flags);
+      DBGMSG("busno=%d, flags = 0x%04x = %s", bus_info->busno, bus_info->flags, s);
+      free(s);
    }
    assert( bus_info->flags & I2C_BUS_PROBED );
-#ifdef OLD
-   if (!(bus_info->flags & I2C_BUS_PROBED)) {
-      // DBGMSG("Calling check_i2c_bus()");
-      i2c_check_bus(bus_info);
-   }
-#endif
-   DBGMSF(debug, "busndx=%d, returning %p", busndx, bus_info );
+   DBGMSF(debug, "busndx=%d, busno=%d, returning %p", busndx, bus_info->busno, bus_info );
    return bus_info;
 }
 

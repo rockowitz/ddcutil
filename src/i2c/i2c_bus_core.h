@@ -45,6 +45,7 @@ Status_Errno_DDC i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc);
 
 // Retrieve and inspect bus information
 
+// Keep interpret_i2c_bus_flags() in sync with these definitions
 #define I2C_BUS_EXISTS               0x80
 #define I2C_BUS_ACCESSIBLE           0x40
 #define I2C_BUS_ADDR_0X50            0x20      ///< detected I2C bus address 0x50
