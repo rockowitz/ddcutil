@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.3] 2022-06-06
+## [1.2.3] 2022-06-17
 
 ### Added
 - Command **detect**: 
@@ -56,6 +56,8 @@ libddcutil:
 - ddca_get_display_refs(), ddca_get_display_info_list2(): 
   - Open errors can be retrieved using ddca_get_error_info(). 
     Note that the API calls still succeed.
+  - Deprecated API functions have no effect:
+    - ddca_enable_force_slave_address(), ddca_is_force_slave_address_enabled()
 
 ### Fixed
 - The sleep multiplier value was not respected for new API threads.
@@ -69,6 +71,7 @@ libddcutil:
 - Do not use glib function g_byte_array_steal(), which requires glib 2.60.
   ddcutil requires only glib 2.40. 
 - Miscellaneous memory leaks
+- Double count I2C writes in stats. 
 
 ## [1.2.2] 2022-01-22
 
