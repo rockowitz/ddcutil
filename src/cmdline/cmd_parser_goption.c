@@ -177,7 +177,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean syslog_flag    = false;
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
+#ifdef OLD
    gboolean nodetect_flag  = false;
+#endif
    gboolean async_flag     = false;
    gboolean report_freed_excp_flag = false;
    gboolean notable_flag   = true;
@@ -288,16 +290,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    GOptionEntry common_options[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
 
-
-
       // Diagnostic output
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"per-thread-stats",
                   '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
-
-
 
       // Behavior options
 #ifdef USE_USB
@@ -310,12 +308,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
 #endif
       {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
-      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Wrap I2C IO in timeout",  NULL},
+      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
 //                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
 
       {"force-slave-address",
-                  '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
+                  '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Deprecated",         NULL},
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
       {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
@@ -353,7 +351,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
       {"sleep-less" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
       {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-      {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"disable-sleep-less",'\0', G_OPTION_FLAG_REVERSE,G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
 
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
@@ -523,6 +521,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       ok = false;
    }
 
+   if (reduce_sleeps_specified)
+      fprintf(stderr, "Deprecated option ignored: --enable-sleep-less, --disable-sleep-less, etc.\n");
+   if (force_slave_flag)
+      fprintf(stderr, "Deprecated option ignored: --force_slave_address\n");
+   if (timeout_i2c_io_flag)
+      fprintf(stderr, "Deprecated option ignored: --timeout-i2c-io\n");
+
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
       if (_flag) \
@@ -541,7 +546,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->i1               = i1_work;
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
+#ifdef OLD
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
+#endif
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
@@ -549,7 +556,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
    //    parsed_cmd->flags |= CMD_FLAG_VERIFY;
+#ifdef OLD
    SET_CMDFLAG(CMD_FLAG_NODETECT,          nodetect_flag);
+#endif
    SET_CMDFLAG(CMD_FLAG_ASYNC,             async_flag);
    SET_CMDFLAG(CMD_FLAG_REPORT_FREED_EXCP, report_freed_excp_flag);
    SET_CMDFLAG(CMD_FLAG_NOTABLE,           notable_flag);
@@ -562,8 +571,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 #ifdef USE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
-   SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
 #ifdef OLD
+   SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_DSA,               dsa_flag);

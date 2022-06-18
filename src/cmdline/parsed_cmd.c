@@ -115,8 +115,9 @@ Parsed_Cmd *  new_parsed_cmd() {
    parsed_cmd->output_level = DDCA_OL_NORMAL;
    parsed_cmd->edid_read_size = -1;   // if set, values are >= 0
    parsed_cmd->i1 = -1;               // if set, values are >= 0
-   // parsed_cmd->nodetect = true;
+#ifdef OLD
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
+#endif
    parsed_cmd->setvcp_values = g_array_new(false,         // not null-terminated
                                            true,          // clear to 0's
                                            sizeof(Parsed_Setvcp_Args));
@@ -185,7 +186,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                "stats",            NULL, parsed_cmd->stats_types,                       d1);
       rpt_bool("ddcdata",          NULL, parsed_cmd->flags & CMD_FLAG_DDCDATA,          d1);
       rpt_str( "output_level",     NULL, output_level_name(parsed_cmd->output_level),   d1);
+#ifdef OLD
       rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR, d1);
+#endif
       rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
       rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,  d1);
       rpt_int_as_hex(
@@ -218,7 +221,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
       rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
+#ifdef OLD
       rpt_bool("nodetect",          NULL, parsed_cmd->flags & CMD_FLAG_NODETECT,                 d1);
+#endif
       rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,                    d1);
       rpt_bool("report_freed_exceptions", NULL, parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP,  d1);
       rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE,                    d1);
@@ -247,8 +252,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
 
       rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
-      rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
 #ifdef OLD
+      rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
       rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
 #endif
       rpt_bool("defer sleeps:",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
