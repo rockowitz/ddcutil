@@ -961,7 +961,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                parsed_cmd->cmd_id == CMDID_GETVCP)
             )
          {
-            parsed_cmd->fref = parse_feature_ids_or_subset(parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
+            parsed_cmd->fref = parse_feature_ids_or_subset(
+                                  parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
             if (!parsed_cmd->fref) {
                parsing_ok = false;
                char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
@@ -975,12 +976,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
          }
 
-         if (parsing_ok && parsed_cmd->cmd_id == CMDID_GETVCP && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
+         if (parsing_ok && parsed_cmd->cmd_id == CMDID_GETVCP
+                        && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
             fprintf(stdout, "Ignoring option --wo-only\n");
             parsed_cmd->flags &= ~CMD_FLAG_WO_ONLY;
          }
 
-         // new way
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
             // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
             int argpos = 0;
@@ -994,7 +995,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                   parsing_ok = false;
                   break;
                }
-
                argpos++;
                if (argpos >= parsed_cmd->argct) {
                   fprintf(stderr, "Missing feature value\n");
@@ -1015,7 +1015,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                      break;
                   }
                }
-
                psv.feature_value = strdup(parsed_cmd->args[argpos]);
                g_array_append_val(parsed_cmd->setvcp_values, psv);
                argpos++;
