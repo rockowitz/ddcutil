@@ -490,8 +490,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       Pass a mangleable copy of argv to g_option_context_parse_strv().
    */
    Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
-   bool ok = g_option_context_parse_strv(context, &temp_argv, &error);
-   if (!ok) {
+   bool parsing_ok = g_option_context_parse_strv(context, &temp_argv, &error);
+   if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
       if (error)
          fprintf(stderr, "%s option parsing failed: %s\n", mode_name, error->message);
@@ -499,16 +499,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          fprintf(stderr, "%s option parsing failed\n", mode_name);
    }
    ntsa_free(temp_argv, true);
-
-   if (reduce_sleeps_specified) {
-      fprintf(stderr, "Deprecated --sleep-less option ignored.\n");
-   }
-
-   // DBGMSG("buswork=%d", buswork);
-   // DBGMSG("dispwork=%d", dispwork);
-   // DBGMSG("stats_flag=%d", stats_flag);
-   // DBGMSG("output_level=%d", output_level);
-   // DBGMSG("stats3=0x%02x",stats_work);
 
    int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
 
@@ -518,7 +508,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    if (wo_only_flag)   rwo_flag_ct++;
    if (rwo_flag_ct > 1) {
       fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive\n");
-      ok = false;
+      parsing_ok = false;
    }
 
    if (reduce_sleeps_specified)
@@ -596,7 +586,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       parsed_cmd->failsim_control_fn = failsim_fn_work;
 #else
       fprintf(stderr, "ddcutil not built with failure simulation support.  --failsim option invalid.\n");
-      ok = false;
+      parsing_ok = false;
 #endif
    }
 
@@ -620,8 +610,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
       if (!arg_ok) {
           fprintf(stderr, "Invalid USB argument: %s\n", usbwork );
-          ok = false;
-          // DBGMSG("After USB parse, ok=%d", ok);
+          parsing_ok = false;
+          // DBGMSG("After USB parse, parsing_ok=%d", parsing_ok);
       }
       else {
          // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
@@ -633,7 +623,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       explicit_display_spec_ct++;
 #else
       fprintf(stderr, "ddcutil not built with support for USB connected monitors.  --usb option invalid.\n");
-      ok = false;
+      parsing_ok = false;
 #endif
    }
 
@@ -664,14 +654,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    if (edidwork) {
       if (strlen(edidwork) != 256) {
          fprintf(stderr, "EDID hex string not 256 characters\n");
-         ok = false;
+         parsing_ok = false;
       }
       else {
          Byte * pba = NULL;
          int bytect = hhs_to_byte_array(edidwork, &pba);
          if (bytect < 0 || bytect != 128) {
             fprintf(stderr, "Invalid EDID hex string\n");
-            ok = false;
+            parsing_ok = false;
          }
          else {
             // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
@@ -706,7 +696,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
        DBGMSF(debug, "ntsal=%d", ntsal );
        if (ntsa_length(pieces) != 3) {
           fprintf(stderr, "--retries requires 3 values\n");
-          ok = false;
+          parsing_ok = false;
        }
        else {
           int ndx = 0;
@@ -719,15 +709,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                 int ct = sscanf(token, "%ud", &ival);
                 if (ct != 1) {
                    fprintf(stderr, "Invalid --maxtries value: %s\n", token);
-                   ok = false;
+                   parsing_ok = false;
                 }
                 else if (ival > MAX_MAX_TRIES) {
                    fprintf(stderr, "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
-                   ok = false;
+                   parsing_ok = false;
                 }
                 else if (ival < 0) {
                    fprintf(stderr, "negative --maxtries value: %d\n", ival);
-                   ok = false;
+                   parsing_ok = false;
                 }
 
                 else {
@@ -757,7 +747,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       }
       if (!arg_ok) {
           fprintf(stderr, "Invalid MCCS spec: %s\n", mccswork );
-          ok = false;
+          parsing_ok = false;
       }
       else {
          parsed_cmd->mccs_vspec = vspec;
@@ -776,7 +766,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
       if (!arg_ok) {
           fprintf(stderr, "Invalid sleep-multiplier: %s\n", sleep_multiplier_work );
-          ok = false;
+          parsing_ok = false;
       }
       else {
          parsed_cmd->sleep_multiplier = multiplier;
@@ -790,7 +780,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
        edid_read_size_work != 256)
    {
       fprintf(stderr, "Invalid EDID read size: %d\n", edid_read_size_work);
-      ok = false;
+      parsing_ok = false;
    }
    else
       parsed_cmd->edid_read_size = edid_read_size_work;
@@ -821,7 +811,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
              }
              else {
                 fprintf(stderr, "Invalid trace group: %s\n", token);
-                ok = false;
+                parsing_ok = false;
              }
           }
        }
@@ -856,7 +846,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             }
             else {
                fprintf(stderr, "Invalid trace group: %s\n", token);
-               ok = false;
+               parsing_ok = false;
             }
         }
       }
@@ -916,27 +906,27 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       fprintf(stderr, "Monitor specified in more than one way\n");
       free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = NULL;
-      ok = false;
+      parsing_ok = false;
    }
    // else if (explicit_display_spec_ct == 0)
    //   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
 
    if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
          fprintf(stderr, "Unrecognized configuration file options: %s\n", cmd_and_args[0]);
-         ok = false;
+         parsing_ok = false;
    }
-   else if (ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
+   else if (parsing_ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
       fprintf(stderr, "No command specified\n");
-      ok = false;
+      parsing_ok = false;
    }
-   if (ok && parser_mode == MODE_DDCUTIL) {
+   if (parsing_ok && parser_mode == MODE_DDCUTIL) {
       char * cmd = cmd_and_args[0];
       if (debug)
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
       if (cmdInfo == NULL) {
          fprintf(stderr, "Unrecognized command: %s\n", cmd);
-         ok = false;
+         parsing_ok = false;
       }
       else {
          if (debug)
@@ -950,7 +940,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          while ( cmd_and_args[argctr] != NULL) {
             if (argctr > max_arg_ct) {
                fprintf(stderr, "Too many arguments\n");
-               ok = false;
+               parsing_ok = false;
                break;
             }
             char * thisarg = (char *) cmd_and_args[argctr];
@@ -963,10 +953,10 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          // no more arguments specified
          if (argctr <= min_arg_ct) {
             fprintf(stderr, "Missing argument(s)\n");
-            ok = false;
+            parsing_ok = false;
          }
 
-         if ( ok &&
+         if ( parsing_ok &&
               (parsed_cmd->cmd_id == CMDID_VCPINFO ||
                parsed_cmd->cmd_id == CMDID_GETVCP)
             )
@@ -975,15 +965,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
             if (parsed_cmd->argct <= 1) {
                char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
-               ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
-               DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", ok);
+               parsing_ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
+               DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", parsing_ok);
             }
             else {
-               ok = parse_feature_ids(parsed_cmd->args, parsed_cmd->argct, parsed_cmd->cmd_id, fsref);
-               DBGMSF(debug, "parse_feature_ids() returned: %d", ok);
+               parsing_ok = parse_feature_ids(parsed_cmd->args, parsed_cmd->argct, parsed_cmd->cmd_id, fsref);
+               DBGMSF(debug, "parse_feature_ids() returned: %d", parsing_ok);
             }
 
-            if (ok)
+            if (parsing_ok)
                parsed_cmd->fref = fsref;
             else {
                free(fsref);
@@ -992,7 +982,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 #endif
             parsed_cmd->fref = parse_feature_ids_or_subset(parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
             if (!parsed_cmd->fref) {
-               ok = false;
+               parsing_ok = false;
                char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
                fprintf(stderr, "Invalid feature code(s) or subset: %s\n", s);
                free(s);
@@ -1000,17 +990,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          }
 
          // Ignore option --notable for vcpinfo
-         if ( ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
+         if ( parsing_ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
             parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
          }
 
-         if (ok && parsed_cmd->cmd_id == CMDID_GETVCP && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
+         if (parsing_ok && parsed_cmd->cmd_id == CMDID_GETVCP && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
             fprintf(stdout, "Ignoring option --wo-only\n");
             parsed_cmd->flags &= ~CMD_FLAG_WO_ONLY;
          }
 
          // new way
-         if (ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
+         if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
             // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
             int argpos = 0;
             while(argpos < parsed_cmd->argct) {
@@ -1020,14 +1010,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                              &psv.feature_code);
                if (!feature_code_ok) {
                   fprintf(stderr, "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
-                  ok = false;
+                  parsing_ok = false;
                   break;
                }
 
                argpos++;
                if (argpos >= parsed_cmd->argct) {
                   fprintf(stderr, "Missing feature value\n");
-                  ok = false;
+                  parsing_ok = false;
                   break;
                }
                psv.feature_value_type = VALUE_TYPE_ABSOLUTE;
@@ -1040,7 +1030,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                   argpos++;
                   if (argpos >= parsed_cmd->argct) {
                      fprintf(stderr, "Missing feature value\n");
-                     ok = false;
+                     parsing_ok = false;
                      break;
                   }
                }
@@ -1057,14 +1047,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                // DBGMSG("argpos=%d, argct=%d", argpos, parsed_cmd->argct);
                if ( (argpos+1) == parsed_cmd->argct) {
                   fprintf(stderr, "Missing feature value\n");
-                  ok = false;
+                  parsing_ok = false;
                   break;
                }
                char * a1 = parsed_cmd->args[argpos+1];
                if ( streq(a1,"+") || streq(a1,"-") ) {
                   if ( (argpos+2) == parsed_cmd->argct) {
                        fprintf(stderr, "Missing relative feature value\n");
-                       ok = false;
+                       parsing_ok = false;
                        break;
                   }
                   char * a2 = parsed_cmd->args[argpos+2];
@@ -1088,22 +1078,18 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       }  // recognized command
    }
 
-   if (ok)
-      ok = validate_output_level(parsed_cmd);
+   if (parsing_ok)
+      parsing_ok = validate_output_level(parsed_cmd);
 
    DBGMSF(debug, "Calling g_option_context_free(), context=%p...", context);
    g_option_context_free(context);
-   // if (trace_classes) {
-   //    DBGMSG("Freeing trace_classes=%p", trace_classes);
-   //    free(trace_classes);   // trying to avoid valgrind error re g_option_context_parse() - doesn't solve it
-   // }
 
    if (debug || debug_parse_flag) {
-      DBGMSG("ok=%s", sbool(ok));
+      DBGMSG("parsing_ok=%s", sbool(parsing_ok));
       dbgrpt_parsed_cmd(parsed_cmd, 0);
    }
 
-   if (!ok) {
+   if (!parsing_ok) {
       free_parsed_cmd(parsed_cmd);
       parsed_cmd = NULL;
    }
