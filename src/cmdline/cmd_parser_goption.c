@@ -961,25 +961,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                parsed_cmd->cmd_id == CMDID_GETVCP)
             )
          {
-#ifdef OLD
-            Feature_Set_Ref * fsref = calloc(1, sizeof(Feature_Set_Ref));
-            if (parsed_cmd->argct <= 1) {
-               char * val = (parsed_cmd->argct > 0) ? parsed_cmd->args[0] : "ALL";
-               parsing_ok = parse_feature_id_or_subset(val, parsed_cmd->cmd_id, fsref);
-               DBGMSF(debug, "parse_feature_id_or_subset() returned: %d", parsing_ok);
-            }
-            else {
-               parsing_ok = parse_feature_ids(parsed_cmd->args, parsed_cmd->argct, parsed_cmd->cmd_id, fsref);
-               DBGMSF(debug, "parse_feature_ids() returned: %d", parsing_ok);
-            }
-
-            if (parsing_ok)
-               parsed_cmd->fref = fsref;
-            else {
-               free(fsref);
-               fprintf(stderr, "Invalid feature code or subset: %s\n", parsed_cmd->args[0]);
-            }
-#endif
             parsed_cmd->fref = parse_feature_ids_or_subset(parsed_cmd->cmd_id,  parsed_cmd->args, parsed_cmd->argct);
             if (!parsed_cmd->fref) {
                parsing_ok = false;
