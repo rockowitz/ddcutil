@@ -111,9 +111,9 @@ bool dsa_error_rate_is_high(Per_Thread_Data * tsd) {
                     error_rate, dsa_error_rate_threshold);
       result = (error_rate > dsa_error_rate_threshold);
    }
-   // DBGMSF(debug, "%s", sbool(result));
-   DBGTRC_DONE(debug, TRACE_GROUP, "total_count=%d, error_rate=%4.2f, returning %s",
-                 current_total_count, error_rate, sbool(result));
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "total_count=%d, error_rate=%4.2f",
+                          current_total_count, error_rate);
    return result;
 }
 
@@ -141,7 +141,7 @@ int dsa_calc_sleep_time(int cur_sleep_time_millis, int spec_sleep_time_millis) {
 
 
 double dsa_calc_adjustment_factor(
-      int spec_sleep_time_millis,
+      int    spec_sleep_time_millis,
       double multiplier_factor,
       double cur_factor)
 {
@@ -149,9 +149,11 @@ double dsa_calc_adjustment_factor(
    DBGTRC_STARTING(debug, TRACE_GROUP,
              "spec_sleep_time_millis=%d, multiplier_factor=%4.1f, cur_factor=%4.1f",
              spec_sleep_time_millis, multiplier_factor, cur_factor);
+
    int cur_sleep_time_millis = spec_sleep_time_millis * multiplier_factor * cur_factor;
    int new_sleep_time_millis = dsa_calc_sleep_time(cur_sleep_time_millis, spec_sleep_time_millis);
    double new_factor = new_sleep_time_millis / (spec_sleep_time_millis * multiplier_factor);
+
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %4.1f", new_factor);
    return new_factor;
 }
@@ -162,8 +164,9 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dynamic_sleep_enabled for current thread = %s",
                             dh_repr(dh),              sbool(tsd->dynamic_sleep_enabled));
+
    if (!tsd->dynamic_sleep_enabled) {
-      int result = tsd->sleep_multiplier_factor;
+      double result = tsd->sleep_multiplier_factor;
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa disabled, returning %7.1f", result);
       return result;
    }
@@ -189,7 +192,7 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
 
       int current_total_count = tsd->cur_ok_status_count + tsd->cur_error_status_count;
 
-      if ( current_total_count >= dsa_required_status_sample_size) {
+      if (current_total_count >= dsa_required_status_sample_size) {
          if (dsa_error_rate_is_high(tsd)) {
             if (tsd->cur_sleep_adjustment_factor < max_factor) {
                // double d = 2 * tsd->current_sleep_adjustment_factor;
