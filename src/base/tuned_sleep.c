@@ -43,7 +43,7 @@ static bool deferred_sleep_enabled = false;
  *  @return old setting
  */
 bool enable_deferred_sleep(bool onoff) {
-   // DBGMSG("enable = %s", sbool(enable));
+   // DBGMSG("enable = %s", sbool(onoff));
    bool old = deferred_sleep_enabled;
    deferred_sleep_enabled = onoff;
    return old;
@@ -105,6 +105,9 @@ void tuned_sleep_with_trace(
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "Sleep event type = %s, dh=%s, special_sleep_time_millis=%d",
          sleep_event_name(event_type), dh_repr(dh), special_sleep_time_millis);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         "func=%s, filename=%s, lineno=%d, msg=|%s|",
+         func, filename, lineno, msg);
    assert(dh);
    assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
            (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );
@@ -128,6 +131,7 @@ void tuned_sleep_with_trace(
             //  Use 50 ms for both
             //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
             spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+            deferrable_sleep = deferred_sleep_enabled;
             break;
       case (SE_POST_WRITE):  // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
             // 4.4 Set VCP Feature:
@@ -190,8 +194,6 @@ void tuned_sleep_with_trace(
       PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
    }
 
-   // DBGMSF(debug, "deferrable_sleep=%s", sbool(deferrable_sleep));
-
    // TODO:
    //   get error rate (total calls, total errors), current adjustment value
    //   adjust by time since last i2c event
@@ -199,38 +201,41 @@ void tuned_sleep_with_trace(
    Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-          "event type: %s,"
+          "using dynamic_sleep: %s,"
+          " event type: %s,"
           " spec_sleep_time_millis = %d,"
-          " sleep_multiplier_factor = %2.1f,"
-          " deferrable sleep: %s",
+          " deferrable sleep: %s,"
+          " sleep_multiplier_factor = %2.1f,",
+          SBOOL(tsd->dynamic_sleep_enabled),
           sleep_event_name(event_type),
           spec_sleep_time_millis,
-          tsd->sleep_multiplier_factor, sbool(deferrable_sleep) );
+          SBOOL(deferrable_sleep),
+          tsd->sleep_multiplier_factor     // set by --sleep-multiplier
+        );
 
-   int adjusted_sleep_time_millis = spec_sleep_time_millis; // will be changed
-   double sleep_multiplier_factor = tsd_get_sleep_multiplier_factor();  // set by --sleep-multiplier
+   int adjusted_sleep_time_millis; //  = spec_sleep_time_millis; // will be changed
    if (tsd->dynamic_sleep_enabled) {
       dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
       adjusted_sleep_time_millis =
-            tsd->cur_sleep_adjustment_factor * sleep_multiplier_factor * spec_sleep_time_millis;
+            tsd->cur_sleep_adjustment_factor * tsd->sleep_multiplier_factor *
+            spec_sleep_time_millis;
+
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "using dynamic sleep: true,"
-                " adjustment factor: %4.2f,"
+                "updated adjustment factor: %4.2f,"
                 " adjusted_sleep_time_millis = %d",
                 tsd->cur_sleep_adjustment_factor,
                 adjusted_sleep_time_millis);
    }
    else {
-      // DBGMSG("sleep_multiplier_factor = %5.2f", sleep_multiplier_factor);
       // crude, should be sensitive to event type?
-      int sleep_multiplier_ct = tsd_get_sleep_multiplier_ct();  // per thread
-      adjusted_sleep_time_millis = sleep_multiplier_ct * sleep_multiplier_factor *
-                                          spec_sleep_time_millis;
+      adjusted_sleep_time_millis =
+            tsd->sleep_multiplier_ct * tsd->sleep_multiplier_factor *
+            spec_sleep_time_millis;
+
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "using dynamic sleep: false,"
-             " sleep_multiplier_ct = %d,"
-             " modified_sleep_time_millis=%d",
-             sleep_multiplier_ct,
+             "sleep_multiplier_ct = %d,"
+             " adjusted_sleep_time_millis=%d",
+             tsd->sleep_multiplier_ct,
              adjusted_sleep_time_millis);
    }
 
@@ -247,8 +252,9 @@ void tuned_sleep_with_trace(
       uint64_t new_deferred_time =
             cur_realtime_nanosec() + (1000 *1000) * (int) adjusted_sleep_time_millis;
       if (new_deferred_time > dh->dref->next_i2c_io_after) {
-         DBGTRC(debug, DDCA_TRC_NONE, "Setting deferred sleep");
          dh->dref->next_i2c_io_after = new_deferred_time;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "Updated deferred sleep time, new_deferred_time=%"PRIu64"", new_deferred_time);
       }
    }
    else {
