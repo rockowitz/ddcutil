@@ -429,9 +429,11 @@ DDCA_Status ddc_i2c_write_read_raw(
 
       CHECK_DEFERRED_SLEEP(dh);
       rc = invoke_i2c_reader(dh->fd, 0x37, read_bytewise, max_read_bytes, readbuf);
+
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
       TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, NULL);
+
       if (rc == 0)
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Response bytes: %s",
                                 hexstring3_t(readbuf, max_read_bytes, " ", 1, false) );
