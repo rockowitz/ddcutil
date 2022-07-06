@@ -31,7 +31,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 // when actually occurs is subtracted from the specified sleep time to
 // obtain the actual sleep time.
 //
-// In testing, this has proven to have a negligable effect on elapsed
+// In testing, this has proven to have a negligible effect on elapsed
 // execution time.
 //
 

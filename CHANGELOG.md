@@ -4,7 +4,8 @@
 
 ### Added
 - Command **detect**: 
-  - Issue warning for monitors known to cripple monitors
+  - Issue warning for monitors for which **ddcutil** should not be used to
+    change settings.
     - Currently only entry is Xaomi model "Mi Monitor"
 - Debug messages.  Environment variables DDCUTIL_DEBUG_PARSE, 
   DDCUTIL_DEBUG_MAIN, DDCUTIL_DEBUG_LIBINIT can be set to enable trace messages
@@ -22,7 +23,7 @@
   read operation are completely eliminated. The sleep-suppression related 
   uptions, ***--sleep-less***, ***--less-sleep, ***--enable-sleep-suppression***,
   and ***--disable-sleep-suppression*** no longer have any effect.
-- Option ***--dca***: The Dynamic Sleep Adjustment algorithm was reqritten to 
+- Option ***--dca***: The Dynamic Sleep Adjustment algorithm was rewritten to 
   more sensibly increment sleep times after before each retry. 
 - Commands **getvcp** and **vcpinfo**: 
   - Allow specification of multiple feature codes, for example 
@@ -40,13 +41,13 @@
   be opened.  If the problem is inadequate permissions (EACCES), the user is 
   directed to www.ddcutil.com/permissions.
 - Better handle malformed EDIDs
-  - Trailing blanks on model and serial number a stripped.  This affects 
+  - Trailing blanks on model and serial number are stripped.  This affects 
     commands **detect --terse**, **loadvcp** and **dumpvcp**, and also the 
     file names of user defined features.
 - Option ***--stats***: 
-  - I2C ioctl() calls to read and write are now reported as type IE_IOCTL_WRITE
+  - I2C ioctl() calls for reading and writing are now reported as type IE_IOCTL_WRITE
     and IE_IOCTL_READ rather than IE_OTHER
-  - IE_WRITE_READ stats are no longer reported, redundant
+  - IE_WRITE_READ stats are no longer reported, as they are redundant
 - Source code has been extensively cleaned up. In particular, directory **adl**
   containing code for the old proprietary AMD video driver, has been removed.
 - Building ddcutil:
@@ -65,7 +66,7 @@ libddcutil:
   descriptor.
 - Fixed a segfault that occurred at **ddcui** startup.  The fault was in a 
   trace message for function ddc_start_watch_displays() which watches for
-  that are added or removed.
+  displays that are added or removed.
 - Fixed a segfault in **ddcutil** initialization because of unexpected
   contents in sysfs.
 - Do not use glib function g_byte_array_steal(), which requires glib 2.60.
