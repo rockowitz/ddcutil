@@ -25,11 +25,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 //
 // Deferred sleep
 //
-// If enabled, sleep is not performed immediately, but instead not until
-// immediately before the next DDC call that requires that a wait has
-// occurred. The elapsed time between when the call is requested and
-// when actually occurs is subtracted from the specified sleep time to
-// obtain the actual sleep time.
+// If enabled, sleep is not performed immediately, but instead before the next
+// DDC call that requires that a wait has occurred. The elapsed time between
+// when the call is requested and when it actually occurs is subtracted from
+// the specified sleep time to obtain the actual sleep time.
 //
 // In testing, this has proven to have a negligible effect on elapsed
 // execution time.
