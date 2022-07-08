@@ -57,32 +57,158 @@ bool is_deferred_sleep_enabled() {
 }
 
 
-//
-// Perform sleep
-//
-
-/* Two multipliers are applied to the sleep time determined from the
- * io mode and event type.
+/** Given a sleep event type, return its sleep time in milliseconds as per the
+ *  DDC/CI spec, and also whether the sleep can be deferred.
  *
- * sleep_multiplier_factor: Set globally, e.g. from arg passed on
- * command line.  (Consider making thread specific.)
- *
- * sleep_multiplier_ct: Per thread adjustment,initiated by IO retries.
+ *  @param event_type
+ *  @param special_sleep_time_millis sleep time for SE_SPECIAL
+ *  @param is_deferrable_loc where to return flag indicating whether the sleep
+ *                           can be deferred or must be performed immiediately
  */
+int get_sleep_time(
+      Sleep_Event_Type event_type,
+      int              special_sleep_time_millis,
+      bool*            is_deferrable_loc)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "Sleep event type = %s, special_sleep_time_millis=%d",
+         sleep_event_name(event_type),  special_sleep_time_millis);
 
-/** Sleep for the period of time required by the DDC protocol, as indicated
- *  by the io mode and sleep event type.
+   int spec_sleep_time_millis = 0;
+   bool deferrable_sleep = false;
+
+   switch (event_type) {
+   // Sleep events with values defined in DDC/CI spec
+   case SE_WRITE_TO_READ:
+      // 4.3 Get VCP Feature & VCP Feature Reply:
+      //     The host should wait at least 40 ms in order to enable the decoding and
+      //     and preparation of the reply message by the display
+      // 4.6 Capabilities Request & Reply:
+      //     write to read interval unclear, assume 50 ms
+      //  Use 50 ms for both
+      //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+      deferrable_sleep = deferred_sleep_enabled;
+      break;
+   case SE_POST_WRITE: // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
+      // 4.4 Set VCP Feature:
+      //   The host should wait at least 50ms to ensure next message is received by the display
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+      deferrable_sleep = deferred_sleep_enabled;
+      break;
+   case SE_POST_READ:
+      deferrable_sleep = deferred_sleep_enabled;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+      break;
+   case SE_POST_SAVE_SETTINGS:
+      // 4.5 Save Current Settings:
+      // The host should wait at least 200 ms before sending the next message to the display
+      deferrable_sleep = deferred_sleep_enabled;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS; // per DDC spec
+      break;
+   case SE_MULTI_PART_WRITE_TO_READ:
+      // Not defined in spec for capabilities or table read. Assume 50 ms.
+      //
+      // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
+      // from one inside a multi part read, and always uses SE_WRITE_TO_READ.
+      // Address this by using 50 ms for SE_WRITE_TO_READ.
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+      break;
+   case SE_AFTER_EACH_CAP_TABLE_SEGMENT:
+      // 4.6 Capabilities Request & Reply:
+      //     The host should wait at least 50ms before sending the next message to the display
+      // 4.8.1 Table Write
+      //     The host should wait at least 50ms before sending the next message to the display
+      // 4.8.2 Table Read
+      //     The host should wait at least 50ms before sending the next message to the display
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
+      break;
+   case SE_POST_CAP_TABLE_COMMAND:
+      // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
+      // just between segments
+      deferrable_sleep = deferred_sleep_enabled;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
+      break;
+      // Not in DDC/CI spec
+   case SE_DDC_NULL:
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+      break;
+   case SE_PRE_MULTI_PART_READ:
+      // before reading capabilities - this is based on testing, not defined in spec
+      spec_sleep_time_millis = 200;
+      break;
+   case SE_SPECIAL:
+      // 4/2020: no current use
+      spec_sleep_time_millis = special_sleep_time_millis;
+      break;
+   }
+
+   *is_deferrable_loc = deferrable_sleep;
+   DBGTRC_DONE(debug, TRACE_GROUP,
+         "Returning: %d, *is_deferrable_loc = %s", spec_sleep_time_millis, SBOOL(*is_deferrable_loc));
+   return spec_sleep_time_millis;
+}
+
+
+/** Adjusts the sleep time.
  *
- *  The time is further adjusted by the sleep factor and sleep multiplier
- *  currently in effect.
+ *  First the sleep multiplier is applied.
  *
- *  @todo
- *  Take into account the time since the last monitor return in the
- *  current thread.
- *  @todo
- *  Take into account per-display error statistics.  Would require
- *  error statistics be maintained on a per-display basis, either
- *  in the display reference or display handle.
+ *  Then, if dynamic sleep is not enabled (the usual case) the sleep time is
+ *  multiplied by the per thread sleep multiplier count. This count is
+ *  maintained by the IO retry logic.
+ *
+ *  If dynamic sleep is enabled, the sleep time is multiplied by the value
+ *  returned from dsa_update_adjustment_factor().
+ *
+ */
+int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                          "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
+
+   Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
+   int adjusted_sleep_time_millis = spec_sleep_time_millis * tsd->sleep_multiplier_factor;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "tsd->sleep_multiplier_factor=%2.1f, adjusted_sleep_time_millis=%d",
+         tsd->sleep_multiplier_factor, adjusted_sleep_time_millis);
+
+   if (tsd->dynamic_sleep_enabled) {
+      dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
+      adjusted_sleep_time_millis =
+            tsd->cur_sleep_adjustment_factor * adjusted_sleep_time_millis;
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "Dynamic sleep enabled. Updated adjustment factor: %4.2f",
+                tsd->cur_sleep_adjustment_factor);
+   }
+   else {
+      adjusted_sleep_time_millis =
+            tsd->sleep_multiplier_ct * adjusted_sleep_time_millis;
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+             "Dynamic sleep disabled. sleep_multiplier_ct = %d",
+             tsd->sleep_multiplier_ct);
+   }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d milliseconds", adjusted_sleep_time_millis);
+   return adjusted_sleep_time_millis;
+}
+
+
+/** Determine the for the period of time to sleep after a DDC IO operation, then
+ *  either sleep immediately or, if deferrable sleep is in effect, queue
+ *  the sleep for later execution.
+ *
+ *  Steps:
+ *  - Determine the spec sleep time for the event type.
+ *  - Call adjust_sleep_time() to modify the sleep time based on the
+ *    sleep multiplier and the error rate.
+ *  - If deferrable sleep is not in effect (normal case) sleep for the
+ *    calculated time.
+ *  - If deferrable sleep is in effect, note in the thread-specific data the
+ *    earliest possible time for the next DDC operation in the current thread.
  *
  * @param event_type  reason for sleep
  * @oaran special_sleep_time_millis  sleep time for event_type SE_SPECIAL
@@ -102,150 +228,27 @@ void tuned_sleep_with_trace(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-         "Sleep event type = %s, dh=%s, special_sleep_time_millis=%d",
-         sleep_event_name(event_type), dh_repr(dh), special_sleep_time_millis);
+         "dh=%s, sleep event type=%s, special_sleep_time_millis=%d",
+         dh_repr(dh), sleep_event_name(event_type),special_sleep_time_millis);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-         "func=%s, filename=%s, lineno=%d, msg=|%s|",
+         "Called from func=%s, filename=%s, lineno=%d, msg=|%s|",
          func, filename, lineno, msg);
    assert(dh);
    assert( (event_type != SE_SPECIAL && special_sleep_time_millis == 0) ||
            (event_type == SE_SPECIAL && special_sleep_time_millis >  0) );
+   assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
-   DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
-
-   int spec_sleep_time_millis = 0;    // should be a default
    bool deferrable_sleep = false;
-
-   if (io_mode == DDCA_IO_I2C) {
-      switch(event_type) {
-
-      // Sleep events with values defined in DDC/CI spec
-
-      case (SE_WRITE_TO_READ):
-            // 4.3 Get VCP Feature & VCP Feature Reply:
-            //     The host should wait at least 40 ms in order to enable the decoding and
-            //     and preparation of the reply message by the display
-            // 4.6 Capabilities Request & Reply:
-            //     write to read interval unclear, assume 50 ms
-            //  Use 50 ms for both
-            //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-            deferrable_sleep = deferred_sleep_enabled;
-            break;
-      case (SE_POST_WRITE):  // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
-            // 4.4 Set VCP Feature:
-            //   The host should wait at least 50ms to ensure next message is received by the display
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
-            deferrable_sleep = deferred_sleep_enabled;
-            break;
-      case (SE_POST_READ):
-            deferrable_sleep = deferred_sleep_enabled;
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
-            break;
-      case (SE_POST_SAVE_SETTINGS):
-            // 4.5 Save Current Settings:
-            // The host should wait at least 200 ms before sending the next message to the display
-            deferrable_sleep = deferred_sleep_enabled;
-            spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS;   // per DDC spec
-            break;
-      case SE_MULTI_PART_WRITE_TO_READ:
-         // Not defined in spec for capabilities or table read. Assume 50 ms.
-         //
-         // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
-         // from one inside a multi part read, and always uses SE_WRITE_TO_READ.
-         // Address this by using 50 ms for SE_WRITE_TO_READ.
-         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-         break;
-      case SE_AFTER_EACH_CAP_TABLE_SEGMENT:
-         // 4.6 Capabilities Request & Reply:
-         //     The host should wait at least 50ms before sending the next message to the display
-         // 4.8.1 Table Write
-         //     The host should wait at least 50ms before sending the next message to the display
-         // 4.8.2 Table Read
-         //     The host should wait at least 50ms before sending the next message to the display
-         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
-         break;
-      case SE_POST_CAP_TABLE_COMMAND:
-         // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
-         // just between segments
-         deferrable_sleep = deferred_sleep_enabled;
-         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
-         break;
-
-      // Not in DDC/CI spec
-
-      case SE_DDC_NULL:
-         spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-         break;
-      case SE_PRE_MULTI_PART_READ:
-         // before reading capabilities - this is based on testing, not defined in spec
-         spec_sleep_time_millis = 200;
-         break;
-      case SE_SPECIAL:
-         // 4/2020: no current use
-         spec_sleep_time_millis = special_sleep_time_millis;
-         break;
-      }  // switch within DDC_IO_DEVI2C
-   } // end of DDCA_IO_DEVI2C
-
-   else {
-      assert(io_mode == DDCA_IO_USB);
-      PROGRAM_LOGIC_ERROR("call_tuned_sleep() called for USB_IO\n");
-   }
-
-   // TODO:
-   //   get error rate (total calls, total errors), current adjustment value
-   //   adjust by time since last i2c event
-
-   Per_Thread_Data * tsd = tsd_get_thread_sleep_data();
-
+   int spec_sleep_time_millis = get_sleep_time(event_type, special_sleep_time_millis, &deferrable_sleep);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-          "using dynamic_sleep: %s,"
-          " event type: %s,"
-          " spec_sleep_time_millis = %d,"
-          " deferrable sleep: %s,"
-          " sleep_multiplier_factor = %2.1f,",
-          SBOOL(tsd->dynamic_sleep_enabled),
-          sleep_event_name(event_type),
-          spec_sleep_time_millis,
-          SBOOL(deferrable_sleep),
-          tsd->sleep_multiplier_factor     // set by --sleep-multiplier
-        );
+          "After get_sleep_time(). spec_sleep_time_millis = %d, deferrable sleep: %s",
+          spec_sleep_time_millis,SBOOL(deferrable_sleep));
 
-   int adjusted_sleep_time_millis; //  = spec_sleep_time_millis; // will be changed
-   if (tsd->dynamic_sleep_enabled) {
-      dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
-      adjusted_sleep_time_millis =
-            tsd->cur_sleep_adjustment_factor * tsd->sleep_multiplier_factor *
-            spec_sleep_time_millis;
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "updated adjustment factor: %4.2f,"
-                " adjusted_sleep_time_millis = %d",
-                tsd->cur_sleep_adjustment_factor,
-                adjusted_sleep_time_millis);
-   }
-   else {
-      // crude, should be sensitive to event type?
-      adjusted_sleep_time_millis =
-            tsd->sleep_multiplier_ct * tsd->sleep_multiplier_factor *
-            spec_sleep_time_millis;
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "sleep_multiplier_ct = %d,"
-             " adjusted_sleep_time_millis=%d",
-             tsd->sleep_multiplier_ct,
-             adjusted_sleep_time_millis);
-   }
+   int adjusted_sleep_time_millis = adjust_sleep_time(dh, spec_sleep_time_millis);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
 
    record_sleep_event(event_type);
-
-   char msg_buf[100];
-   const char * evname = sleep_event_name(event_type);
-   if (msg)
-      g_snprintf(msg_buf, 100, "Event type: %s, %s", evname, msg);
-   else
-      g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
    if (deferrable_sleep) {
       uint64_t new_deferred_time =
@@ -257,6 +260,13 @@ void tuned_sleep_with_trace(
       }
    }
    else {
+      char msg_buf[100];
+      const char * evname = sleep_event_name(event_type);
+      if (msg)
+         g_snprintf(msg_buf, 100, "Event type: %s, %s", evname, msg);
+      else
+         g_snprintf(msg_buf, 100, "Event_type: %s", evname);
+
       sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
    }
 
@@ -283,22 +293,26 @@ void check_deferred_sleep(
 {
    bool debug = false;
    uint64_t curtime = cur_realtime_nanosec();
-   // DBGMSF(debug, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
-   //               curtime / (1000*1000), dh->dref->next_i2c_io_after/(1000*1000));
-   DBGTRC(debug, DDCA_TRC_NONE,"Checking from %s() at line %d in file %s", func, lineno, filename);
+
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,"Checking from %s() at line %d in file %s", func, lineno, filename);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
+                                curtime / (1000*1000), dh->dref->next_i2c_io_after/(1000*1000));
    if (dh->dref->next_i2c_io_after > curtime) {
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
-      DBGTRC(debug, DDCA_TRC_NONE, "Sleeping for %d milliseconds", sleep_time);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d milliseconds", sleep_time);
       sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
+      DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
    }
    else {
-      DBGTRC(debug, DDCA_TRC_NONE, "No sleep necessary");
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "No sleep necessary");
    }
 }
 
 
 /** Module initialization */
 void init_tuned_sleep() {
+   RTTI_ADD_FUNC(get_sleep_time);
+   RTTI_ADD_FUNC(adjust_sleep_time);
    RTTI_ADD_FUNC(check_deferred_sleep);
    RTTI_ADD_FUNC(tuned_sleep_with_trace);
 }
