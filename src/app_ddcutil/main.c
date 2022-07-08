@@ -789,6 +789,9 @@ main(int argc, char *argv[]) {
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
+   // affects all current threads and new threads
+   tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
 
@@ -899,8 +902,7 @@ main(int argc, char *argv[]) {
          }  // dref
 
          if (main_rc == EXIT_SUCCESS) {
-            // affects all current threads and new threads
-            tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+
             main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
          }
 
