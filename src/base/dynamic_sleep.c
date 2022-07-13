@@ -33,7 +33,7 @@
 #include "base/dynamic_sleep.h"
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 
 void dsa_record_ddcrw_status_code(int rc) {
@@ -222,7 +222,7 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
             dsa_reset_cur_status_counts();
       }
       else
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Inadequate sample size");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Inadequate sample size");
    }
    else
       tsd->calls_since_last_check++;

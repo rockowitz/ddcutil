@@ -20,7 +20,7 @@
 #include "base/thread_sleep_data.h"
 
 // Trace class for this file
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 //
 // Deferred sleep
@@ -294,17 +294,17 @@ void check_deferred_sleep(
    bool debug = false;
    uint64_t curtime = cur_realtime_nanosec();
 
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,"Checking from %s() at line %d in file %s", func, lineno, filename);
+   DBGTRC_STARTING(debug, TRACE_GROUP,"Checking from %s() at line %d in file %s", func, lineno, filename);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
                                 curtime / (1000*1000), dh->dref->next_i2c_io_after/(1000*1000));
    if (dh->dref->next_i2c_io_after > curtime) {
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d milliseconds", sleep_time);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Sleeping for %d milliseconds", sleep_time);
       sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
-      DBGTRC_DONE(debug, DDCA_TRC_NONE,"");
+      DBGTRC_DONE(debug, TRACE_GROUP,"");
    }
    else {
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "No sleep necessary");
+      DBGTRC_DONE(debug, TRACE_GROUP, "No sleep necessary");
    }
 }
 
