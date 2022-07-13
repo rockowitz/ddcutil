@@ -24,6 +24,8 @@
 
 #include "cmdline/parsed_cmd.h"
 
+#include "vcp/persistent_capabilities.h"
+
 #include "i2c/i2c_bus_core.h"
 
 #include "ddc/ddc_displays.h"
@@ -68,6 +70,8 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    try_data_set_maxtries2(MULTI_PART_WRITE_OP, MAX_MAX_TRIES);
    f0printf(fout(), "Forcing --stats...\n");
    parsed_cmd->stats_types = DDCA_STATS_ALL;
+   f0printf(fout(), "Forcing --disable-capabilities-cache\n");
+   enable_capabilities_cache(false);
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???
