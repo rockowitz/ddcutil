@@ -49,34 +49,15 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
-#ifdef FOR_REFERENCE
-   /*
-    * I2C Message - used for pure i2c transaction, also from /dev interface
-    */
-   struct i2c_msg {
-      __u16 addr; /* slave address        */
-      unsigned short flags;
-   #define I2C_M_TEN 0x10  /* we have a ten bit chip address   */
-   #define I2C_M_RD  0x01
-   #define I2C_M_NOSTART   0x4000
-   #define I2C_M_REV_DIR_ADDR 0x2000
-   #define I2C_M_IGNORE_NAK   0x1000
-   #define I2C_M_NO_RD_ACK    0x0800
-      short len;     /* msg length           */
-      char *buf;     /* pointer to msg data        */
-   };
-#endif
-
-
 /** Writes to I2C bus using ioctl(I2C_RDWR)
  *
  * @param  fd             Linux file descriptor
- * @param  slave_address
+ * @param  slave_address  slave address to write to
  * @param  bytect         number of bytes to write
  * @param  pbytes         pointer to bytes to write
  *
- * @retval 0       success
- * @retval <0      negative Linux errno value
+ * @retval 0    success
+ * @retval <0   negative Linux errno value
  */
 Status_Errno_DDC
 i2c_ioctl_writer(
@@ -94,22 +75,18 @@ i2c_ioctl_writer(
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
-   // The memset() calls are logically unnecessary, and code works find without them.
+   // The memset() calls are logically unnecessary, and code works fine without them.
    // However, without the memset() calls, valgrind complains about uninitialized bytes
    // on the ioctl() call.
    // See:  https://stackoverflow.com/questions/17859320/valgrind-error-in-ioctl-call-while-sending-an-i2c-message
    // Also: https://github.com/the-tcpdump-group/libpcap/issues/1083
    memset(messages,0, sizeof(messages));
    memset(&msgset,0,sizeof(msgset));
+
    messages[0].addr  = slave_address;
    messages[0].flags = 0;
    messages[0].len   = bytect;
-   // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
-   // On Fedora, i2c_msg is defined in i2c.h, and it's __u8 * buf
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wpointer-sign"
-   messages[0].buf   =  pbytes;
-// #pragma GCC diagnostic pop
+   messages[0].buf   = pbytes;
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
@@ -159,19 +136,16 @@ i2c_ioctl_writer(
 /** Reads from I2C bus using ioctl(I2C_RDWR)
  *
  * @param  fd         Linux file descriptor
- * @param  slave_addr slave address
+ * @param  slave_addr slave address to read from
  * @param  bytect     number of bytes to read
  * @param  readbuf    read bytes into this buffer
  *
- * @retval 0         success
- * @retval <0        negative Linux errno value
+ * @retval 0    success
+ * @retval <0   negative Linux errno value
  */
-
-// FAILING
-
 // static  // disable to allow name in back trace
 Status_Errno_DDC
-ioctl_reader1(
+i2c_ioctl_reader1(
       int    fd,
       Byte   slave_addr,
       int    bytect,
@@ -193,12 +167,7 @@ ioctl_reader1(
    messages[0].addr  = slave_addr;      // this is the slave address currently set
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
-   // On Ubuntu and SuSE?, i2c_msg is defined in i2c-dev.h, with char *buf
-   // On Fedora, i2c_msg is defined in i2c.h, and it's __u8 * buf
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wpointer-sign"
    messages[0].buf   = readbuf;
-// #pragma GCC diagnostic pop
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
@@ -246,16 +215,15 @@ ioctl_reader1(
 
 /** Reads from I2C bus using ioctl(I2C_RDWR)
  *
- * @param  fd         Linux file descriptor
- * @param  slave_addr slave address
- * @param  read_bytewise
- * @param  bytect     number of bytes to read
- * @param  readbuf    read bytes into this buffer
+ * @param  fd            Linux file descriptor
+ * @param  slave_addr    slave address to read from
+ * @param  read_bytewise if true, read single byte at a time
+ * @param  bytect        number of bytes to read
+ * @param  readbuf       read bytes into this buffer
  *
- * @retval 0         success
- * @retval <0        negative Linux errno value
+ * @retval 0    success
+ * @retval <0   negative Linux errno value
  */
-
 Status_Errno_DDC
 i2c_ioctl_reader(
       int    fd,
@@ -272,11 +240,11 @@ i2c_ioctl_reader(
    if (read_bytewise) {
       int ndx = 0;
       for (; ndx < bytect && rc == 0; ndx++) {
-         rc = ioctl_reader1(fd, slave_addr, 1, readbuf+ndx);
+         rc = i2c_ioctl_reader1(fd, slave_addr, 1, readbuf+ndx);
       }
    }
    else {
-      rc = ioctl_reader1(fd, slave_addr, bytect, readbuf);
+      rc = i2c_ioctl_reader1(fd, slave_addr, bytect, readbuf);
    }
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
@@ -285,6 +253,7 @@ i2c_ioctl_reader(
 
 
 void init_i2c_execute_func_name_table() {
-   RTTI_ADD_FUNC( i2c_ioctl_writer);
    RTTI_ADD_FUNC( i2c_ioctl_reader);
+   RTTI_ADD_FUNC( i2c_ioctl_reader1);
+   RTTI_ADD_FUNC( i2c_ioctl_writer);
 }
