@@ -71,7 +71,6 @@ i2c_ioctl_writer(
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
    int rc = 0;
-
    struct i2c_msg              messages[1];
    struct i2c_rdwr_ioctl_data  msgset;
 
