@@ -147,26 +147,18 @@ i2c_ioctl_reader1(
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
    int rc = 0;
-
    // messages needs to be allocated, cannot be on stack:
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
    struct i2c_rdwr_ioctl_data  msgset;
-   memset(&msgset,0,sizeof(msgset));
+   memset(&msgset,0,sizeof(msgset));  // see comment in is2_ioctl_writer()
 
-   messages[0].addr  = slave_addr;      // this is the slave address currently set
+   messages[0].addr  = slave_addr;
    messages[0].flags = I2C_M_RD;
    messages[0].len   = bytect;
    messages[0].buf   = readbuf;
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
-
-   // per ioctl() man page:  ioctl() return code:
-   // if success:
-   //    normally:  0
-   //    occasionally >0 is output parm
-   // if error:
-   //    -1, errno is set
 
    RECORD_IO_EVENTX(
       fd,
