@@ -91,13 +91,6 @@ i2c_ioctl_writer(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-   // DBGMSG("messages=%p, messages[0]=%p, messages[0].buf=%p", messages, &messages[0], messages[0].buf);
-   // char * s = hexstring_t((unsigned char*)messages[0].buf, messages[0].len);
-   // DBGMSG("messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf -> %s",
-   //         messages[0].addr,          messages[0].flags,        messages[0].len,    s);
-   // DBGMSG("msgset=%p, msgset.nmsgs=%d, msgset.msgs[0]=%p",
-   //        &msgset, msgset.nmsgs, msgset.msgs[0]);
-
    // per ioctl() man page:
    // if success:
    //    normally:  0
@@ -118,10 +111,9 @@ i2c_ioctl_writer(
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
 
-   if (rc > 0) {
-      // what should a positive value be equal to?  not bytect
-      if (rc != 1)
-         DBGMSG("ioctl() write returned %d", rc);
+   if (rc >= 0) {
+      if (rc != 1)      // expected success value
+         DBGMSG("Unexpected: ioctl() write returned %d", rc);
       rc = 0;
    }
    else if (rc < 0) {
@@ -154,14 +146,11 @@ i2c_ioctl_reader1(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
-   // needs to be allocated, cannot be on stack
-   struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
-
    int rc = 0;
 
+   // messages needs to be allocated, cannot be on stack:
+   struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
    struct i2c_rdwr_ioctl_data  msgset;
-   // See comments in ioctl_writer(), but here need to allocate messages
-   //memset(messages,0, sizeof(messages));
    memset(&msgset,0,sizeof(msgset));
 
    messages[0].addr  = slave_addr;      // this is the slave address currently set
@@ -171,12 +160,6 @@ i2c_ioctl_reader1(
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
-
-   // DBGMSG("B msgset=%p, msgset.nmsgs=%d, msgset.msgs[0]=%p",
-   //         &msgset, msgset.nmsgs, msgset.msgs[0]);
-   // DBGMSG("C messages=%p, messages[0]=%p, messages[0].buf=%p", messages, &messages[0], messages[0].buf);
-   // DBGMSG("D messages[0].addr = 0x%04x, messages[0].flags=0x%04x, messages[0].len=%d, messages[0].buf = %p",
-   //         messages[0].addr,          messages[0].flags,          messages[0].len,      messages[0].buf );
 
    // per ioctl() man page:  ioctl() return code:
    // if success:
@@ -197,10 +180,10 @@ i2c_ioctl_reader1(
       }
    }
    // DBGMSG("ioctl(..I2C_RDWR..) returned %d", rc);
-   if (rc > 0) {
+   if (rc >= 0) {
       // always see rc == 1
       if (rc != 1) {
-         DBGMSG("ioctl rc = %d, bytect =%d", rc, bytect);
+         DBGMSG("Unexpected ioctl rc = %d, bytect =%d", rc, bytect);
       }
       rc = 0;
    }
