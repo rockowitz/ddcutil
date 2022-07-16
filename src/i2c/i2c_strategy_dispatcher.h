@@ -34,12 +34,6 @@ typedef struct {
 I2C_IO_Strategy_Id i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id);
 I2C_IO_Strategy_Id i2c_get_io_strategy();
 
-// quick and dirty for use in testing framework
-// extern I2C_IO_Strategy Default_I2c_Strategy;
-
-
-
-
 Status_Errno_DDC
 invoke_i2c_writer(
       int    fd,
@@ -54,6 +48,5 @@ invoke_i2c_reader(
        bool       read_bytewise,
        int        bytect,
        Byte *     readbuf);
-
 
 #endif /* I2C_STRATEGY_DISPATCHER_H_ */

@@ -30,16 +30,8 @@ char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
 }
 
 
-// I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
-
-
-
-
-
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
-
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
       I2C_IO_STRATEGY_IOCTL,
@@ -147,6 +139,4 @@ Status_Errno_DDC invoke_i2c_reader(
      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
      return rc;
 }
-
-
 
