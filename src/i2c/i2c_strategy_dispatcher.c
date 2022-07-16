@@ -1,6 +1,9 @@
 /** \file i2c_strategy_dispatcher.c
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
+ *
+ *  This is vestigial code that was used to to select alternative functions
+ *  for I2C IO.
  */
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later

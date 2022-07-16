@@ -1,6 +1,7 @@
 /** \file i2c_strategy_dispatcher.h
  *
- *  Allows for alternative mechanisms to read and write to the IC2 bus.
+ *  Vestigial code for testing alternative mechanisms to read from and write to
+ *  the IC2 bus.
  */
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
