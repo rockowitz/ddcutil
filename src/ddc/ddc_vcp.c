@@ -408,7 +408,6 @@ ddc_set_vcp_value(
             // dbgrpt_ddca_single_vcp_value(newval, 3);
 
             if (! single_vcp_value_equal(vrec,newval)) {
-               psc = DDCRC_VERIFY;
                ddc_excp = errinfo_new(DDCRC_VERIFY, __func__);
                f0printf(verbose_msg_dest, "Current value does not match value set.\n");
             }
