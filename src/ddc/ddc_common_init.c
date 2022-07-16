@@ -25,8 +25,8 @@
 
 #include "dynvcp/dyn_feature_files.h"
 
+#include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_execute.h"
-#include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc_displays.h"
 #include "ddc_services.h"

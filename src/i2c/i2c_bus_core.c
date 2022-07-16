@@ -64,6 +64,10 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
+int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
+bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
+
 /** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info - shared with i2c_bus_selector.c */
 /* static */ GPtrArray * i2c_buses = NULL;
 

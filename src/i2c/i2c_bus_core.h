@@ -24,6 +24,10 @@
 #include "base/status_code_mgt.h"
 
 
+extern bool EDID_Read_Bytewise;
+extern bool EDID_Write_Before_Read;
+extern int  EDID_Read_Size;
+
 /** \def I2C_BUS_MAX maximum number of i2c buses this code supports */
 #define I2C_BUS_MAX 32
 
