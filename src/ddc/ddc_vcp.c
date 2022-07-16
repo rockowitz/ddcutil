@@ -368,21 +368,19 @@ ddc_set_vcp_value(
    if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
       verbose_msg_dest = NULL;
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (newval_loc)
       *newval_loc = NULL;
    if (vrec->value_type == DDCA_NON_TABLE_VCP_VALUE) {
       ddc_excp = ddc_set_nontable_vcp_value(dh, vrec->opcode, VALREC_CUR_VAL(vrec));
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
    else {
       assert(vrec->value_type == DDCA_TABLE_VCP_VALUE);
       ddc_excp = set_table_vcp_value(dh, vrec->opcode, vrec->val.t.bytes, vrec->val.t.bytect);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
    }
 
    if (!ddc_excp && ddc_get_verify_setvcp()) {
+      Public_Status_Code psc = 0;
       if ( is_rereadable_feature(dh, vrec->opcode) &&
            ( vrec->value_type != DDCA_NON_TABLE_VCP_VALUE ||
              !is_unreadable_sl_value(vrec->opcode, vrec->val.c_nc.sl)
