@@ -32,7 +32,7 @@ char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
 
 // I2C_IO_Strategy_Id Default_I2c_Strategy = DEFAULT_I2C_IO_STRATEGY;
 
-bool DDC_Read_Bytewise               = DEFAULT_DDC_READ_BYTEWISE;
+
 
 
 

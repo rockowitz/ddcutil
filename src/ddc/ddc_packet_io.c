@@ -57,6 +57,8 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
+bool DDC_Read_Bytewise               = DEFAULT_DDC_READ_BYTEWISE;
+
 static GHashTable * open_displays = NULL;
 
 #ifdef DEPRECATED

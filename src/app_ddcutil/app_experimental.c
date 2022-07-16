@@ -16,6 +16,7 @@
 
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
+#include "ddc/ddc_packet_io.h"
 
 #include "app_experimental.h"
 
