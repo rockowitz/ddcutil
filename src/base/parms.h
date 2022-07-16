@@ -39,7 +39,7 @@
 // *** Choose method of low level IC2 communication
 //
 
-#define DEFAULT_I2C_READ_BYTEWISE      false                   ///< Use single byte reads
+#define DEFAULT_DDC_READ_BYTEWISE      false                   ///< Use single byte reads
 #define DEFAULT_EDID_WRITE_BEFORE_READ true
 #define DEFAULT_EDID_READ_SIZE           0                     ///< 128, 256, 0=>dynamic
 #define EDID_BUFFER_SIZE               256                     ///< always 256
