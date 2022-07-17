@@ -272,9 +272,12 @@ multi_part_read_with_retry(
 
    *buffer_loc = accumulator;
    ASSERT_IFF(ddc_excp, !*buffer_loc);
+   DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, ddc_excp, buffer_loc, buffer_rpt);
+#ifdef OLD
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*buffer_loc=%p", *buffer_loc);
    if (IS_DBGTRC(debug, TRACE_GROUP) && *buffer_loc)
      buffer_rpt(*buffer_loc, 2);
+#endif
    return ddc_excp;
 }
 
