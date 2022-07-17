@@ -377,7 +377,7 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
                                parsed_cmd->fref,
                                parsed_cmd->mccs_vspec,
                                fsflags);
-   if (debug || IS_TRACING_GROUP((DDCA_TRC_TOP | DDCA_TRC_VCP)) )
+   if (IS_DBGTRC(debug, (DDCA_TRC_TOP | DDCA_TRC_VCP)) )
       dbgrpt_vcp_feature_set(fset, 2);
 
    if (!fset) {
