@@ -370,7 +370,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       assert(rc <= 0);
       if (rc == 0) {
          // rawedid->len = 128;
-         if (debug || IS_TRACING_GROUP(DDCA_TRC_NONE) ) {    // only show if explicitly tracing this function
+         if (IS_DBGTRC(debug, DDCA_TRC_NONE) ) {  // only show if explicitly tracing this function
             DBGMSG("get bytes returned:");
             dbgrpt_buffer(rawedid, 1);
             DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
