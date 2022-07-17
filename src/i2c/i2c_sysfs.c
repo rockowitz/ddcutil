@@ -668,7 +668,7 @@ void one_drm_connector(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dirname=%s, fn=%s, depth=%d", dirname, fn, depth);
    int d0 = depth;
-   if (depth < 0 && (debug || IS_TRACING_GROUP(TRACE_GROUP)))
+   if (depth < 0 && (IS_DBGTRC(debug, TRACE_GROUP)))
       d0 = 2;
    GPtrArray * drm_displays = accumulator;
 
