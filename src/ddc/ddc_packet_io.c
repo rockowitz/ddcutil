@@ -95,7 +95,7 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
    bool result = g_hash_table_contains(open_displays, dh);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Rreturning %s. dh=%p", sbool(result), dh);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
 
@@ -561,6 +561,7 @@ ddc_write_read(
               "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
               ddcrc_desc_t(psc), *response_packet_ptr_loc );
 
+       // psc = -5;    // *** FOR TESTING ***
        if (psc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
           *response_packet_ptr_loc = NULL;
@@ -579,6 +580,8 @@ ddc_write_read(
    if (psc < 0)
       excp = errinfo_new(psc, __func__);
 
+   DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, excp, response_packet_ptr_loc, dbgrpt_packet);
+#ifdef OLD
    if (excp) {
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(excp)  );
    }
@@ -587,6 +590,7 @@ ddc_write_read(
       if (debug || IS_TRACING())
          dbgrpt_packet(*response_packet_ptr_loc, 2);
    }
+#endif
 
    return excp;
 }
