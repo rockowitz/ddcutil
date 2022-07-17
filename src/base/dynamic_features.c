@@ -614,11 +614,15 @@ create_monitor_dynamic_features(
       *dynamic_features_loc = frec;
    }
 
+   ASSERT_IFF(master_err, !*dynamic_features_loc);
+   DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, master_err, dynamic_features_loc, dbgrpt_dynamic_features_rec);
+
+#ifdef OLD
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, master_err,
                       "*dynamic_features_loc=%p", *dynamic_features_loc);
-   ASSERT_IFF(master_err, !*dynamic_features_loc);
    if ( (debug || IS_TRACING()) && *dynamic_features_loc )
       dbgrpt_dynamic_features_rec(*dynamic_features_loc, 1);
+#endif
 
    return master_err;
 }
