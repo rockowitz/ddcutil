@@ -1,9 +1,9 @@
-/** \file ddc_vcp.c
+/** @file ddc_vcp.c
  *  Virtual Control Panel access
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -53,7 +53,7 @@ typedef struct {
    bool   verify_setvcp;
 } Thread_Vcp_Settings;
 
-static Thread_Vcp_Settings *  get_thread_vcp_settings() {
+static Thread_Vcp_Settings * get_thread_vcp_settings() {
    static GPrivate per_thread_key = G_PRIVATE_INIT(g_free);
 
    Thread_Vcp_Settings *settings = g_private_get(&per_thread_key);
@@ -79,8 +79,8 @@ static Thread_Vcp_Settings *  get_thread_vcp_settings() {
 
 /** Executes the DDC Save Control Settings command.
  *
- * \param  dh handle of open display device
- * \return NULL if success, pointer to #Error_Info if failure
+ * @param  dh handle of open display device
+ * @return NULL if success, pointer to #Error_Info if failure
  */
 Error_Info *
 ddc_save_current_settings(
@@ -89,8 +89,8 @@ ddc_save_current_settings(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "Invoking DDC Save Current Settings command. dh=%s", dh_repr(dh));
-   Error_Info * ddc_excp = NULL;
 
+   Error_Info * ddc_excp = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
@@ -119,10 +119,10 @@ ddc_save_current_settings(
 
 /** Sets a non-table VCP feature value.
  *
- *  \param  dh            display handle for open display
- *  \param  feature_code  VCP feature code
- *  \param  new_value     new value
- *  \return NULL if success,
+ *  @param  dh            display handle for open display
+ *  @param  feature_code  VCP feature code
+ *  @param  new_value     new value
+ *  @return NULL if success,
  *          pointer to #Error_Info from #ddc_write_only_with_retry() if failure
  */
 Error_Info *
@@ -135,9 +135,9 @@ ddc_set_nontable_vcp_value(
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "Writing feature 0x%02x , new value = %d, dh=%s",
           feature_code, new_value, dh_repr(dh) );
+
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
-
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
@@ -167,11 +167,11 @@ ddc_set_nontable_vcp_value(
 
 /** Sets a table VCP feature value.
  *
- *  \param  dh            display handle for open display
- *  \param  feature_code  VCP feature code
- *  \param  bytes         pointer to table bytes
- *  \param  bytect        number of bytes
- *  \return NULL  if success
+ *  @param  dh            display handle for open display
+ *  @param  feature_code  VCP feature code
+ *  @param  bytes         pointer to table bytes
+ *  @param  bytect        number of bytes
+ *  @return NULL  if success
  *          DDCRC_UNIMPLEMENTED if io mode is USB
  *          #Error_Info from #multi_part_write_with_retry() otherwise
  */
@@ -185,9 +185,9 @@ set_table_vcp_value(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Writing feature 0x%02x , bytect = %d",
                                        feature_code, bytect);
+
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
-
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
 #ifdef USE_USB
       psc = DDCRC_UNIMPLEMENTED;
@@ -220,12 +220,14 @@ set_table_vcp_value(
  *  If enabled, setvcp will read the feature value from the monitor after
  *  writing it, to ensure the monitor has actually changed the feature value.
  *
- *  \param onoff  **true** for enabled, **false** for disabled.
- *  \return prior setting
+ *  @param onoff  **true** for enabled, **false** for disabled.
+ *  @return prior setting
  */
-bool ddc_set_verify_setvcp(bool onoff) {
+bool
+ddc_set_verify_setvcp(bool onoff) {
    bool debug = false;
    DBGMSF(debug, "Setting verify_setvcp = %s", sbool(onoff));
+
    Thread_Vcp_Settings * settings = get_thread_vcp_settings();
    bool old_value = settings->verify_setvcp;
    settings->verify_setvcp = onoff;
@@ -235,10 +237,11 @@ bool ddc_set_verify_setvcp(bool onoff) {
 
 /** Gets the current setvcp verification setting for the current thread.
  *
- *  \return **true** if setvcp verification enabled\n
+ *  @return **true** if setvcp verification enabled\n
  *          **false** if not
  */
-bool ddc_get_verify_setvcp() {
+bool
+ddc_get_verify_setvcp() {
    Thread_Vcp_Settings * settings = get_thread_vcp_settings();
    return settings->verify_setvcp;
 }
@@ -270,11 +273,8 @@ is_rereadable_feature(
    }
 
    if (result) {
-      Display_Feature_Metadata * dfm = dyn_get_feature_metadata_by_dh(
-            opcode,
-            dh,
-            false    //                  with_default
-            );
+      Display_Feature_Metadata * dfm =
+            dyn_get_feature_metadata_by_dh(opcode, dh, /*with_default*/false);
       // if not found, assume readable  ??
       if (dfm) {
          result = dfm->feature_flags & DDCA_READABLE;
@@ -296,8 +296,7 @@ is_unreadable_sl_value(
    DBGMSF(debug, "opcode=0x%02x, sl_value=0x%02x", opcode, sl_value);
 
    bool result = false;
-   switch(opcode)
-   {
+   switch(opcode) {
    case 0xd6:
       if (sl_value == 5)        // turn off display, trying to read from it will fail
          result = true;
@@ -305,6 +304,7 @@ is_unreadable_sl_value(
    default:
       break;
    }
+
    DBGMSF(debug, "Done.     Returning: %s", sbool(result));
    return result;
 }
@@ -343,16 +343,16 @@ single_vcp_value_equal(
 
 /** Sets a VCP feature value.
  *
- *  \param  dh            display handle for open display
- *  \param  vrec          pointer to value record
- *  \param  newval_loc    if non-null, address at which to return verified value
- *  \return NULL if success, pointer to #Error_Info if failure
+ *  @param  dh            display handle for open display
+ *  @param  vrec          pointer to value record
+ *  @param  newval_loc    if non-null, address at which to return verified value
+ *  @return NULL if success, pointer to #Error_Info if failure
  *
  *  If write verification is turned on, reads the feature value after writing it
  *  to ensure the display has actually changed the value.
  *
  * The caller is responsible for freeing the value returned at **newval_loc**.
- *  \remark
+ *  @remark
  *  If verbose messages are in effect, writes detailed messages to the current
  *  stdout device.
  */
@@ -364,6 +364,7 @@ ddc_set_vcp_value(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
    FILE * verbose_msg_dest = fout();
    if ( get_output_level() < DDCA_OL_VERBOSE && !debug )
       verbose_msg_dest = NULL;
@@ -437,12 +438,12 @@ ddc_set_vcp_value(
 
 /** Possibly returns a mock value for a non-table feature
  *
- *  \param  feature_code  VCP Feature Code
- *  \param  resp_loc      where to return pointer to pseudo-response,
+ *  @param  feature_code  VCP Feature Code
+ *  @param  resp_loc      where to return pointer to pseudo-response,
  *                        NULL if no pseudo-response
- *  \return pseudo error information, if simulating a failure
+ *  @return pseudo error information, if simulating a failure
  *
- *  \remark
+ *  @remark
  *  If return NULL and *resp_loc == NULL, then no pseudo response was generated
  */
 Error_Info *
@@ -490,36 +491,37 @@ mock_get_nontable_vcp_value(
    return pseudo_errinfo;
 }
 
+
 //
 // Get VCP values
 //
 
 /** Gets the value for a non-table feature.
  *
- *  \param  dh                 handle for open display
- *  \param  feature_code       VCP feature code
- *  \param  ppInterpretedCode  where to return parsed response
- *  \return NULL if success, pointer to #Error_Info if failure
+ *  @param  dh                   handle for open display
+ *  @param  feature_code         VCP feature code
+ *  @param  parsed_response_loc  where to return parsed response
+ *  @return NULL if success, pointer to #Error_Info if failure
  *
  * It is the responsibility of the caller to free the parsed response.
  *
- * The value pointed to by ppInterpretedCode is non-null iff the returned status code is 0.
+ * The value pointed to by parsed_response_loc is non-null iff the returned value is null.
  */
 Error_Info *
 ddc_get_nontable_vcp_value(
        Display_Handle *               dh,
        DDCA_Vcp_Feature_Code          feature_code,
-       Parsed_Nontable_Vcp_Response** ppInterpretedCode)
+       Parsed_Nontable_Vcp_Response** parsed_response_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
-   *ppInterpretedCode = NULL;
+   *parsed_response_loc = NULL;
 
-   Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, ppInterpretedCode);
-   if (mock_errinfo || *ppInterpretedCode) {
+   Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, parsed_response_loc);
+   if (mock_errinfo || *parsed_response_loc) {
       DBGMSF(debug, "Returning mock response for feature 0x%02x", feature_code);
       return mock_errinfo;
    }
@@ -617,7 +619,7 @@ ddc_get_nontable_vcp_value(
                       (parsed_response->mh<<8) | parsed_response->ml,
                       (parsed_response->sh<<8) | parsed_response->sl);
    }
-   *ppInterpretedCode = parsed_response;
+   *parsed_response_loc = parsed_response;
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, excp, "");
    return excp;
@@ -627,21 +629,20 @@ ddc_get_nontable_vcp_value(
 /** Gets the value of a table feature in a newly allocated Buffer struct.
  *  It is the responsibility of the caller to free the Buffer.
  *
- *  \param  dh              display handle
- *  \param  feature_code    VCP feature code
- *  \param  pp_table_bytes  location at which to save address of newly allocated Buffer
- *  \return NULL if success, pointer to #Error_Info if failure
+ *  @param  dh              display handle
+ *  @param  feature_code    VCP feature code
+ *  @param  table_bytes_loc location at which to save address of newly allocated Buffer
+ *  @return NULL if success, pointer to #Error_Info if failure
  */
 Error_Info *
 ddc_get_table_vcp_value(
        Display_Handle *       dh,
        Byte                   feature_code,
-       Buffer**               pp_table_bytes)
+       Buffer**               table_bytes_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x", feature_code);
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    DDCA_Output_Level output_level = get_output_level();
    Buffer * paccumulator =  NULL;
@@ -652,14 +653,13 @@ ddc_get_table_vcp_value(
             feature_code,
             true,                      // all_zero_response_ok
             &paccumulator);
-   psc = (ddc_excp) ? ddc_excp->status_code : 0;
-   if (debug || psc != 0) {
+   if (debug || ddc_excp) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-             "multi_part_read_with_retry() returned %s", psc_desc(psc));
+             "multi_part_read_with_retry() returned %s", psc_desc(ddc_excp->status_code));
    }
 
-   if (psc == 0) {
-      *pp_table_bytes = paccumulator;
+   if (!ddc_excp) {
+      *table_bytes_loc = paccumulator;
       if (output_level >= DDCA_OL_VERBOSE) {
          DBGMSG("Bytes returned on table read:");
          dbgrpt_buffer(paccumulator, 1);
@@ -675,20 +675,18 @@ ddc_get_table_vcp_value(
             DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__, "DDC NULL Message");
    }
 
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-          "rc=%s, *pp_table_bytes=%p", psc_name_code(psc), *pp_table_bytes);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*table_bytes_loc=%p", *table_bytes_loc);
    return ddc_excp;
 }
 
 
 /** Gets the value of a VCP feature.
  *
- * \param  dh              handle for open display
- * \param  feature_code    feature code id
- * \param  call_type       indicates whether table or non-table
- * \param  pvalrec         location where to return newly allocated #Single_Vcp_Value
- * \return NULL if success, pointer to #Error_Info if failure
+ * @param  dh              handle for open display
+ * @param  feature_code    feature code id
+ * @param  call_type       indicates whether table or non-table
+ * @param  valrec_loc      location where to return newly allocated #Single_Vcp_Value
+ * @return NULL if success, pointer to #Error_Info if failure
  *
  * The value pointed to by pvalrec is non-null iff the return value is null
  *
@@ -780,12 +778,7 @@ ddc_get_vcp_value(
    *valrec_loc = valrec;
 
    ASSERT_IFF(!ddc_excp,*valrec_loc);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp,"");
-   if (!ddc_excp && (debug || IS_TRACING())) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "*valrec_loc ->");
-      dbgrpt_single_vcp_value(*valrec_loc,2);
-   }
-
+   DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, ddc_excp, valrec_loc, dbgrpt_single_vcp_value);
    return ddc_excp;
 }
 
