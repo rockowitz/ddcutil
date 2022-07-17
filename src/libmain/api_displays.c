@@ -808,7 +808,7 @@ ddca_get_display_refs(
    g_ptr_array_free(filtered_displays, true);
 
    int dref_ct = 0;
-   if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
+   if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("          *drefs_loc=%p");
       DDCA_Display_Ref * cur_ddca_dref = result_list;
       while (*cur_ddca_dref) {
@@ -865,7 +865,7 @@ ddca_get_display_info_list2(
    }
    g_ptr_array_free(filtered_displays, true);
 
-   if (debug || IS_TRACING_GROUP( DDCA_TRC_API|DDCA_TRC_DDC )) {
+   if (IS_DBGTRC(debug, DDCA_TRC_API|DDCA_TRC_DDC )) {
       DBGMSG("Final result list %p", result_list);
       dbgrpt_display_info_list(result_list, 2);
    }
