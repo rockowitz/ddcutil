@@ -362,16 +362,15 @@ if ( (_flag) || is_tracing(_trace_group, __FILE__, __func__) )  { \
    } \
 }
 
-#define DBGTRC_RET_ERRINFO_STRUCT( \
-              _debug_flag, _trace_group, _errinfo_result, \
-              _structptr_loc, _dbgfunc) \
-   if ( (_debug_flag) || is_tracing(_trace_group, __FILE__, __func__) )  { \
-      dbgtrc_returning_errinfo(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE,          \
-              __func__, __LINE__, __FILE__,                                \
-              _errinfo_result, "*%s = %p", #_structptr_loc, *_structptr_loc);         \
-      if (*_structptr_loc) {                                                    \
-         _dbgfunc(*_structptr_loc, 1);                                          \
-      }                                                                    \
+#define DBGTRC_RET_ERRINFO_STRUCT(_debug_flag, _trace_group, _errinfo_result, \
+                                  _structptr_loc, _dbgfunc)                   \
+   if ( (_debug_flag) || is_tracing(_trace_group, __FILE__, __func__) )  {    \
+      dbgtrc_returning_errinfo(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE,             \
+              __func__, __LINE__, __FILE__,                                   \
+              _errinfo_result, "*%s = %p", #_structptr_loc, *_structptr_loc); \
+      if (*_structptr_loc) {                                                  \
+         _dbgfunc(*_structptr_loc, 1);                                        \
+      }                                                                       \
    }
 
 //
