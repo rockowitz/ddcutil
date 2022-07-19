@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.3] 2022-06-17
+## [1.2.3] 2022-07-19
 
 ### Added
 - Command **detect**: 
@@ -37,6 +37,8 @@
 - Command **environment**:
    - Scanning of /sys by option ***--verbose*** has been improved.
    - Add msg re SYSENV_QUICK_TEST environment variable
+- Command **interrogate**: 
+   - Set --disable-capabilities-cache
 - More user friendly messages at startup regarding /dev/i2c buses that cannont
   be opened.  If the problem is inadequate permissions (EACCES), the user is 
   directed to www.ddcutil.com/permissions.
@@ -64,6 +66,8 @@ libddcutil:
 - The sleep multiplier value was not respected for new API threads.
 - User Defined Features: Keyword **NC** set the incorrect flag in a feature
   descriptor.
+- Option **--dsa**: Fix adjustment factor calculation due to incorrect variable
+  type.
 - Fixed a segfault that occurred at **ddcui** startup.  The fault was in a 
   trace message for function ddc_start_watch_displays() which watches for
   displays that are added or removed.
