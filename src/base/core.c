@@ -910,7 +910,7 @@ static bool vdbgtrc(
 }
 
 
-/** Primary function for emitting debug or trace messages.
+/** Basic function for emitting debug or trace messages.
  *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
  *
  *  The message is output if any of the following are true:
@@ -995,8 +995,9 @@ bool dbgtrc_ret_ddcrc(
 
       va_list(args);
       va_start(args, format);
-      if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
+      // arm7l, aarch64: "on  error: cannot convert to a pointer type"
+      // if (debug)
+      //    printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }
@@ -1036,8 +1037,9 @@ bool dbgtrc_returning_errinfo(
 
       va_list(args);
       va_start(args, format);
-      if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
+      // arm7l, aarch64: "on  error: cannot convert to a pointer type"
+      // if (debug)
+      //    printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
       g_free(pre_prefix);
@@ -1079,8 +1081,9 @@ bool dbgtrc_returning_expression(
 
       va_list(args);
       va_start(args, format);
-      if (debug)
-         printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
+      // arm7l, aarch64: "on  error: cannot convert to a pointer type"
+      // if (debug)
+      //    printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
    }
