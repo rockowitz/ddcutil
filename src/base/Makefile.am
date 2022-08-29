@@ -1,3 +1,5 @@
+# src/base/Makefile.am
+
 AM_CPPFLAGS =        \
   $(GLIB_CFLAGS)     \
   -I$(top_srcdir)/src \
