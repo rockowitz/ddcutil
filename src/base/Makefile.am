@@ -53,7 +53,7 @@ tuned_sleep.c             \
 status_code_mgt.c         \
 vcp_version.c
 
-
+nodist_libbase_la_SOURCES = adl_errors.h
 
 # Rename to "all=local" for development 
 all-local-disabled:
