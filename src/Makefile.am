@@ -1,4 +1,10 @@
+# src/Makefile.am
+
 ## Process this file with automake to produce Makefile.in
+
+DIST_SUBDIRS = app_ddcutil app_sysenv base cmdline ddc dynvcp i2c libmain  sample_clients test usb usb_util util vcp
+# contain only header files:
+EXTRA_DIST = bsd private public
 
 SUBDIRS = util usb_util base vcp i2c usb dynvcp ddc
 if INCLUDE_TESTCASES_COND
@@ -10,11 +16,8 @@ endif
 SUBDIRS += app_sysenv app_ddcutil cmdline .  sample_clients
 
 MOSTLYCLEANFILES =   
-
 CLEANFILES =
-
 DISTCLEANFILES = publc/ddcutil_macros.h
-
 
 # todo: factor out swig 
 # todo: fails if swig/.libs doesn't exist
@@ -26,26 +29,26 @@ DISTCLEANFILES = publc/ddcutil_macros.h
 # Fails: test: too many arguments:
 # test -z `find . -name "*lo" -type f` || rm `find . -name "*lo" -type f`
 
-clean-local: 
+# distclean-local => clean-local => mostlyclean->local
+
+mostlyclean-local:
+	@echo "(src/Makefile) mostlyclean-local"
+
+clean-local:
 	@echo "(src/Makefile) clean-local"
 	find . -name "*plist" -type d  -exec ls -ld {} \;
 	rm -rf `find . -name "*plist" -type d`
 	find . -name ".libs"   -type d  -exec ls -ld {} \;
 	test -z `find . -name "*expand" -type f` || rm `find . -name "*expand" -type f`
-	find . -name "*.lo" -type f -exec ls -l {} \;
-	find . -name "*.lo" -type f -exec rm -f {} \;
-	find . -name "*.o" -type f -exec ls -l {} \;
-	find . -name "*.o" -type f -exec rm -f {} \;
-	find . -name ".deps" -type d 
+	find . -name "*.lo" -type f -exec rm -fv {} \;
+	find . -name "*.o" -type f -exec rm -fv {} \;
 	find . -name ".deps" -type d -exec ls -ld  {} \;
 	find . -path "*/.deps/*" -exec ls -l {} \;    
-
-mostlyclean-local:
-	@echo "(src/Makefile) mostlyclean-local"
 
 distclean-local:
 	@echo "(src/Makefile) distclean-local"
 	find . -name ".libs"   -type d  -exec ls -ld {} \;
+	rm -rf `find . -name "*plist" -type d`
 
 maintainerclean-local:
 	@echo "(src/Makefile) maintainerclean-local"
@@ -62,7 +65,7 @@ if ENABLE_SHARED_LIB_COND
 lib_LTLIBRARIES = libddcutil.la
 libddcutil_la_SOURCES =
 endif
-  
+
 #
 # Intermediate libraries built in this directory
 #
@@ -71,10 +74,10 @@ endif
 noinst_LTLIBRARIES = libcommon.la
 libcommon_la_SOURCES = 
 
+
 # Convenience library to collect code used only in ddcutil executable
 noinst_LTLIBRARIES += libapp.la
 libapp_la_SOURCES =
-
 
 if ENABLE_SHARED_LIB_COND
 include_HEADERS = \
@@ -84,28 +87,28 @@ public/ddcutil_types.h \
 public/ddcutil_c_api.h 
 endif
 
-
 # Notes: 
 # 1) Without -prune option, the following line fails because list of file is archived internally, get file not found errors after remove
 #	find $(top_distdir) -name ".deps" -exec rm -rf {} \;
-# 2) Piping to xargs fails on if there are no files, which occurs if "make dist" is invoked without anything having bee built.
+# 2) Piping to xargs fails if there are no files, which occurs if "make dist" is invoked without anything having been built.
 #    find $(top_distdir) -name ".deps" | xargs rm
 # 3) Why explicit copy of .h files?
 # 4) find statements in src/usb_util/Makefile.am find nothing, but those here work.  why?
 
-
 dist-hook:
 	@echo "(src/Makefile) Executing hook dist-hook. top_distdir=$(top_distdir) distdir=$(distdir).."
 	find .  -type f | grep  \.h$ | xargs -i cp --parents "{}" $(distdir)
-	find $(distdir) -name ".deps" -prune -exec rm -rf {} \;  
-	find $(distdir) -name ".libs" -prune -exec rm -rf {} \;  
-	find $(distdir) -name "*.lo"  -exec rm {} \;  
-	find $(distdir) -name "*.o"   -exec rm {} \;  
-	rm -rf $(distdir)/swig/pyenv
-	rm -rf $(distdir)/swig/__pycache__
-	rm -f ${distdir}/public/ddcutil_macros.h
-
-
+	find $(distdir) -name ".deps" -type d -prune -exec rm -rfv {} \;  
+	find $(distdir) -name ".libs" -type d -prune -exec rm -rfv {} \;  
+	find $(distdir) -name "*.lo"  -exec rm -v {} \;  
+	find $(distdir) -name "*.o"   -exec rm -v {} \;  
+	rm -rfv $(distdir)/swig/pyenv
+	rm -rfv $(distdir)/swig/__pycache__
+	rm -fv ${distdir}/public/ddcutil_macros.h
+	find ${distdir} -name adl_archived -type d -prune -exec rm -rfv {} \;
+	find ${distdir}  -name "*old"  -type d -prune -exec rm -rfv {} \;
+	find ${distdir}  -name "*new"  -type d -prune -exec rm -rfv {} \;
+	
 #
 # C Pre-Processor Flags
 #
@@ -168,9 +171,8 @@ endif
 
 AM_CFLAGS += -fPIC
 
-# ddcutil_CFLAGS                 = $(AM_CFLAGS)  -fPIC
-
 # unnessary, will use AM_CFLAGS if xxx_CFLAGS undefined
+# ddcutil_CFLAGS          = $(AM_CFLAGS)
 # libcommon_la_CFLAGS     = $(AM_CFLAGS)
 # libddcutil_la_CFLAGS    = $(AM_CFLAGS)
 
