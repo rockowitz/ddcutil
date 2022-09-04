@@ -16,7 +16,7 @@ AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [1])
 m4_define([ddcutil_minor_version], [3])
-m4_define([ddcutil_micro_version], [1])
+m4_define([ddcutil_micro_version], [2])
 dnl ddcutil_version_suffix does not begin with hyphen, e.g. "dev", not "-dev"
 m4_define([ddcutil_version_suffix], [""])
 # m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
