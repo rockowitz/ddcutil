@@ -1,4 +1,6 @@
-# to automatically update libtool script if it becomes out of date
+# Top level Makefile.am
+
+# To automatically update libtool script if it becomes out of date
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
 # From autoconf manual: 
@@ -10,13 +12,16 @@ LIBTOOL_DEPS = @LIBTOOL_DEPS@
 # Introspection does this. 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
-
+DIST_SUBDIRS = src man data docs 
 EXTRA_DIST =  README.md NEWS.md CHANGELOG.md
+EXTRA_DIST += m4/ax_prog_doxygen.m4 
+
+SUBDIRS = src man data  $(DOXYDIR)
 
 # if ENABLE_GOBJECT_COND
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
-EXTRA_DIST += m4/introspection.m4 
 # endif
+EXTRA_DIST += m4/introspection.m4 
 
 if USE_DOXYGEN
 DOXYDIR = docs
@@ -52,9 +57,7 @@ endif
 ## nobase_dist_pixmaps_DATA = \
 ##    pixmaps/ddcutil.png
 
-# doc_DATA = AUTHORS COPYING NEWS.md README.md ChangeLog 
 
-SUBDIRS = src man data  $(DOXYDIR)
 
 
 # The proper location for pkgconfig files is ambiguous, and the 
@@ -93,14 +96,22 @@ libddcdocdir = $(datarootdir)/doc/libddcutil
 # libddcdoc_DATA = AUTHORS
 endif
 
-
 # install_data_hook:
 #	cp -r icons/hicolor $(datadir)/icons/hicolor  
 
 dist-hook:
 	echo "(Makefile) Executing dist-hook..."
-	chmod a-x AUTHORS COPYING README.md
-
+	chmod a-x ${distdir}/AUTHORS ${distdir}/COPYING ${distdir}/README.md
+	find ${distdir}  -name "*~"    -exec rm -v {} \;
+	find ${distdir}  -name "*.ctl" -exec rm -v {} \;
+	find ${distdir}  -name "*.lst" -exec rm -v {} \;
+	find ${distdir}  -name "*.la"  -exec rm -v {} \;
+	find ${distdir}  -name "*.old" -exec rm -v {} \;
+	find ${distdir}  -name "*.new" -exec rm -v {} \;
+	find ${distdir}  -name "*.tmp" -exec rm -v {} \;
+	find ${distdir}  -name "*old"  -type d -prune -exec rm -fv {} \;
+	find ${distdir}  -name "*new"  -type d -prune -exec rm -fv {} \;
+	find ${distdir}  -name ".gitignore"    -exec rm -v {} \;
 
 # Too many false positives: 
 #  alpha.clone.CloneChecker
