@@ -287,6 +287,86 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 //
 
 static Status_Errno_DDC
+i2c_get_edid_bytes_directly(
+   int     fd,
+   Buffer* rawedid,
+   int     edid_read_size,
+   bool    read_bytewise)
+{
+bool debug = false;
+DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
+              fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
+assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
+bool write_before_read = EDID_Write_Before_Read;
+// write_before_read = false;
+DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
+int rc = 0;
+if (write_before_read) {
+   Byte byte_to_write = 0x00;
+   RECORD_IO_EVENTX(
+       fd,
+       IE_WRITE,
+       ( rc = write(fd, &byte_to_write, 1) )
+      );
+   if (rc < 0) {
+      rc = -errno;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() failed.  rc = %s", psc_name_code(rc));
+   }
+   else {
+      rc = 0;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write() succeeded");
+   }
+}
+
+if (rc == 0) {
+   if (read_bytewise) {
+      int ndx = 0;
+      for (; ndx < edid_read_size && rc == 0; ndx++) {
+         RECORD_IO_EVENTX(
+             fd,
+             IE_READ,
+             ( rc = read(fd, &rawedid->bytes[ndx], 1) )
+            );
+         if (rc < 0) {
+            rc = -errno;
+            break;
+         }
+         assert(rc == 1);
+         rc = 0;
+       }
+       rawedid->len = ndx;
+       DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
+   }
+   else {
+      RECORD_IO_EVENTX(
+          fd,
+          IE_READ,
+          ( rc = read(fd, rawedid->bytes, edid_read_size) )
+         );
+      if (rc >= 0) {
+         DBGMSF(debug, "read() returned %d", rc);
+         rawedid->len = rc;
+         // assert(rc == 128 || rc == 256);
+         rc = 0;
+      }
+      else {
+         rc = -errno;
+      }
+      DBGMSF(debug, "read() returned %s", psc_desc(rc) );
+   }
+}
+
+if ( (debug || IS_TRACING()) && rc == 0) {
+   DBGMSG("Returning buffer:");
+   rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
+}
+DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+return rc;
+}
+
+
+static Status_Errno_DDC
 i2c_get_edid_bytes_using_i2c_layer(
       int     fd,
       Buffer* rawedid,
@@ -1063,6 +1143,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
+   RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
 }
