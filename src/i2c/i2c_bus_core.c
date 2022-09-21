@@ -427,22 +427,37 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
+
    Status_Errno_DDC rc;
    int tryctr = 0;
+
+   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   if (rc < 0) {
+      goto bye;
+   }
+
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
-
    bool read_bytewise = EDID_Read_Bytewise;
+   // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
+   //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
-                    " edid_read_size=%d, read_bytewise=%s",
-                    tryctr, max_tries, edid_read_size, sbool(read_bytewise) );
-      rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
+                    " edid_read_size=%d, read_bytewise=%s, using %s",
+                    tryctr, max_tries, edid_read_size, sbool(read_bytewise),
+                    (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
+
+      if (EDID_Read_Uses_I2C_Layer) {
+         rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
+      }
+      else {
+         rc = i2c_get_edid_bytes_directly(fd, rawedid, edid_read_size, read_bytewise);
+      }
       if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT) {    // removed -EIO 3/4/2021
          // DBGMSG("breaking");
          break;
@@ -479,6 +494,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       }  // get bytes succeeded
    }
 
+bye:
    if (rc < 0)
       rawedid->len = 0;
 
