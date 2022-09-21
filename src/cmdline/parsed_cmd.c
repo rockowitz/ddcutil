@@ -186,9 +186,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                "stats",            NULL, parsed_cmd->stats_types,                       d1);
       rpt_bool("ddcdata",          NULL, parsed_cmd->flags & CMD_FLAG_DDCDATA,          d1);
       rpt_str( "output_level",     NULL, output_level_name(parsed_cmd->output_level),   d1);
-#ifdef OLD
       rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR, d1);
-#endif
       rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
       rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,  d1);
       rpt_int_as_hex(
