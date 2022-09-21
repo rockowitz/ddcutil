@@ -37,6 +37,13 @@ extern int  EDID_Read_Size;
 // shared with i2c_bus_selector.c
 extern GPtrArray * i2c_buses;
 
+// shared with i2c_bus_selector.c
+extern GPtrArray * i2c_buses;
+
+// Controls whether function #i2c_set_addr() retries from EBUSY error by
+// changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
+extern bool i2c_force_slave_addr_flag;
+
 extern bool i2c_force_bus;
 
 // Basic I2C bus operations
