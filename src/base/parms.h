@@ -43,8 +43,9 @@
 #define DEFAULT_EDID_WRITE_BEFORE_READ true
 #define DEFAULT_EDID_READ_SIZE           0                     ///< 128, 256, 0=>dynamic
 #define EDID_BUFFER_SIZE               256                     ///< always 256
-
+#define DEFAULT_EDID_READ_USES_I2C_LAYER  false
 #define DEFAULT_EDID_READ_BYTEWISE        false
+#define DEFAULT_I2C_READ_BYTEWISE         false
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
