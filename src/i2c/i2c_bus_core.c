@@ -409,6 +409,12 @@ bool write_before_read = EDID_Write_Before_Read;
 // write_before_read = false;
 DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
 int rc = 0;
+
+rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+if (rc < 0) {
+   goto bye;
+}
+
 if (write_before_read) {
    Byte byte_to_write = 0x00;
    RECORD_IO_EVENTX(
@@ -464,6 +470,7 @@ if (rc == 0) {
    }
 }
 
+bye:
 if ( (debug || IS_TRACING()) && rc == 0) {
    DBGMSG("Returning buffer:");
    rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
@@ -538,15 +545,12 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    Status_Errno_DDC rc;
    int tryctr = 0;
 
-   rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
-   if (rc < 0) {
-      goto bye;
-   }
-
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size);
    rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
+   char * called_func_name = (EDID_Read_Uses_I2C_Layer)
+             ? "i2c_get_edid_bytes_using_i2c_layer()" : "i2c_get_edid_bytes_directly()";
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    for (tryctr = 0; tryctr < max_tries && rc != 0; tryctr++) {
@@ -573,7 +577,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       if (rc == 0) {
          // rawedid->len = 128;
          if (IS_DBGTRC(debug, DDCA_TRC_NONE) ) {  // only show if explicitly tracing this function
-            DBGMSG("get bytes returned:");
+            DBGMSG("%s returned:", called_func_name);
             dbgrpt_buffer(rawedid, 1);
             DBGMSG("edid checksum = %d", edid_checksum(rawedid->bytes) );
          }
@@ -601,7 +605,6 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       }  // get bytes succeeded
    }
 
-bye:
    if (rc < 0)
       rawedid->len = 0;
 
