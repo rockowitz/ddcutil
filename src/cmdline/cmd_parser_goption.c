@@ -536,9 +536,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->i1               = i1_work;
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
-#ifdef OLD
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
-#endif
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
