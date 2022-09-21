@@ -22,6 +22,10 @@
 
 #include "i2c_strategy_dispatcher.h"
 
+bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
+
+
+
 char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
    char * result = NULL;
    switch(id) {

@@ -16,6 +16,9 @@
 
 #include "i2c_execute.h"
 
+extern bool EDID_Read_Uses_I2C_Layer;
+
+
 /** I2C IO strategy ids  - currently only 1 option*/
 typedef enum {
    I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
