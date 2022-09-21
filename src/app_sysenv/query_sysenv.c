@@ -47,6 +47,7 @@
 #include "base/parms.h"
 #include "base/rtti.h"
 
+#include "i2c/i2c_bus_core.h"   // for i2c_force_slave_addr_flag
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
