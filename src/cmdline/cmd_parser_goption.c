@@ -312,8 +312,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
 //                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
 
+#ifdef FUTURE
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Deprecated",         NULL},
+#endif
+      {"force-slave-address",
+                  '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
       {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
