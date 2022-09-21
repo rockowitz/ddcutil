@@ -735,6 +735,8 @@ void query_sysenv() {
       rpt_label(0, "Set environment variable SYSENV_QUICK_TEST to skip some long-running tests.");
    }
 
+   i2c_force_slave_addr_flag = true;    // be a bully
+
    ddc_ensure_displays_detected();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
    device_xref_init();
