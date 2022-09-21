@@ -145,6 +145,8 @@ report_performance_options(int depth)
 
 static void
 report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
+   rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "Force I2C slave address:",
+                       sbool(i2c_force_slave_addr_flag));
    rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "User defined features:",
                        (enable_dynamic_features) ? "enabled" : "disabled" );
                        // "Enable user defined features" is too long a title
@@ -786,6 +788,7 @@ main(int argc, char *argv[]) {
    }
 
    Call_Options callopts = CALLOPT_NONE;
+   i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
