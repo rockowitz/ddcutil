@@ -37,7 +37,7 @@
 #include "cmdline/cmd_parser.h"
 #include "cmdline/parsed_cmd.h"
 
-// #include "i2c/i2c_bus_core.h"   // for testing watch_devices
+#include "i2c/i2c_bus_core.h"   // for testing watch_devices
 
 #include "ddc/ddc_common_init.h"
 #include "ddc/ddc_display_lock.h"
