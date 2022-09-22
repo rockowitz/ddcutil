@@ -16,6 +16,7 @@
 
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
 #include "i2c_strategy_dispatcher.h"
@@ -109,6 +110,7 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytect,
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_io_strategy = %s", i2c_io_strategy_name(i2c_io_strategy->strategy_id));
 
    Status_Errno_DDC rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
    assert (rc <= 0);
@@ -154,5 +156,11 @@ Status_Errno_DDC invoke_i2c_reader(
      }
      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
      return rc;
+}
+
+
+void init_i2c_strategy_func_name_table() {
+   RTTI_ADD_FUNC(invoke_i2c_reader);
+   RTTI_ADD_FUNC(invoke_i2c_writer);
 }
 

@@ -52,4 +52,6 @@ invoke_i2c_reader(
        int        bytect,
        Byte *     readbuf);
 
+void init_i2c_strategy_func_name_table();
+
 #endif /* I2C_STRATEGY_DISPATCHER_H_ */
