@@ -48,6 +48,214 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+static bool read_with_timeout  = false;
+static bool write_with_timeout = false;
+
+void set_i2c_fileio_use_timeout(bool yesno) {
+   // DBGMSG("Setting  %s", sbool(yesno));
+   read_with_timeout  = yesno;
+   write_with_timeout = yesno;
+}
+
+bool get_i2c_fileio_use_timeout() {
+   return read_with_timeout;
+}
+
+
+/** Writes to i2c bus using write()
+ *
+ * @param  fd             Linux file descriptor
+ * @param  slave_address  I2C slave address being written to (unused)
+ * @param  bytect         number of bytes to write
+ * @param  pbytes         pointer to bytes to write
+ *
+ * @retval 0                 success
+ * @retval DDCRC_DDC_DATA   incorrect number of bytes read
+ * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
+ * @retval -errno            negative Linux error number
+ *
+ * @remark
+ * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
+ * The address has already been by #set_slave_address().
+ */
+Status_Errno_DDC
+i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+                 fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
+   int rc = 0;
+
+   // #ifdef USE_POLL
+     if (write_with_timeout) {
+        struct pollfd pfds[1];
+        pfds[0].fd = fd;
+        pfds[0].events = POLLOUT;
+
+        int pollrc;
+        int timeout_msec = 100;
+        RECORD_IO_EVENTX(
+              fd,
+              IE_OTHER,
+              ( pollrc = poll(pfds, 1, timeout_msec) )
+        );
+
+        int errsv = errno;
+        if (pollrc < 0)  { //  i.e. -1
+           DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
+           rc = -errsv;
+           goto bye;
+        }
+        else if (pollrc == 0) {
+           DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+           rc = -ETIMEDOUT;
+           goto bye;
+        }
+        else {
+           if ( !( pfds[0].revents & POLLOUT) ) {
+              DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+              // just continue, write() will fail and we'll return that status code
+           }
+        }
+     }
+     // #endif
+
+     rc = write(fd, pbytes, bytect);
+     // per write() man page:
+     // if >= 0, number of bytes actually written, must be <= bytect
+     // if -1,   error occurred, errno is set
+     if (rc >= 0) {
+        if (rc == bytect)
+           rc = 0;
+        else
+           rc = DDCRC_DDC_DATA;    // was  DDCRC_BAD_BYTECT
+     }
+     else  {       // rc < 0
+        int errsv = errno;
+        DBGMSF(debug, "write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
+        rc = -errsv;
+     }
+
+  bye:
+     DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
+     return rc;
+  }
+
+
+/** Reads from I2C bus using read()
+ *
+ * @param  fd            Linux file descriptor
+ * @param  slave_address I2C slave address being read from (unused)
+ * @param  read_bytewise if true, use single byte reads
+ * @param  bytect        number of bytes to read
+ * @param  readbuf       read bytes into this buffer
+ *
+ * @retval 0                success
+ * @retval DDCRC_DDC_DATA   incorrect number of bytes read
+ * @retval -errno           negative Linux errno value from read()
+ *
+ * @remark
+ * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
+ * The address has already been by #set_slave_address().
+ */
+Status_Errno_DDC
+i2c_fileio_reader(
+      int    fd,
+      Byte   slave_address,
+      bool   single_byte_reads,
+      int    bytect,
+      Byte * readbuf)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+                 fd, filename_for_fd_t(fd),
+                 bytect, slave_address, sbool(single_byte_reads));
+
+   int rc = 0;
+   if (single_byte_reads) {
+      // for Acer and P2411h, reads bytes 1,3,5,7 ..
+      for (int ndx=0; ndx < bytect && rc == 0; ndx++) {
+         // DBGMSF(debug, "Calling read() for 1 byte, ndx=%d", ndx);
+         RECORD_IO_EVENTX(
+            fd,
+            IE_READ,
+            ( rc = read(fd, readbuf+ndx, 1) )
+           );
+         // DBGMSF(debug, "Byte read: readbuf[%d] = 0x%02x", ndx, readbuf[ndx]);
+         // rc = read(fd, readbuf+ndx, 1);
+
+         if (rc >= 0) {
+            if (rc == 1) {
+               rc = 0;
+               // does not solve problem of every other byte read on some monitors
+               // TUNED_SLEEP_WITH_TRACE(DDCA_IO_I2C, SE_POST_READ, "After 1 byte read");
+            }
+            else
+               rc = DDCRC_DDC_DATA;
+         }
+      }
+   }
+   else {
+
+// #ifdef USE_POLL
+      if (read_with_timeout) {
+         struct pollfd pfds[1];
+         pfds[0].fd = fd;
+         pfds[0].events = POLLIN;
+
+         int pollrc;
+         int timeout_msec = 100;
+         RECORD_IO_EVENTX(
+               fd,
+               IE_OTHER,
+               ( pollrc = poll(pfds, 1, timeout_msec) )
+         );
+
+         int errsv = errno;
+         if (pollrc < 0)  { //  i.e. -1
+            DBGMSG("poll() returned %d, errno=%d", pollrc, errsv);
+            rc = -errsv;
+            goto bye;
+         }
+         else if (pollrc == 0) {
+            DBGMSG("poll() timed out after %d milliseconds", timeout_msec);
+            rc = -ETIMEDOUT;
+            goto bye;
+         }
+         else {
+            if ( !(pfds[0].revents & POLLIN) ) {
+               DBGMSG("pfds[0].revents: 0x%04x", pfds[0].revents);
+               // just continue, read() will fail and we'll return that status code
+            }
+         }
+      }
+// #endif
+
+      RECORD_IO_EVENTX(
+         fd,
+         IE_READ,
+         ( rc = read(fd, readbuf, bytect) )
+      );
+      // per read() man page:
+      // if rc >= 0, number of bytes actually read
+      // if rc ==-1, error occurred, errno is set
+      if (rc >= 0) {
+         if (rc == bytect)
+           rc = 0;
+         else
+            rc = DDCRC_DDC_DATA;    // was DDCRC_BAD_BYTECT
+      }
+   }
+   if (rc < 0) {
+      int errsv = errno;
+      DBGMSF(debug, "read() returned %d, errno=%s", rc, linux_errno_desc(errsv));
+      rc = -errsv;
+   }
+
+bye:
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
+   return rc;
+}
+
 
 /** Writes to I2C bus using ioctl(I2C_RDWR)
  *
@@ -227,7 +435,9 @@ i2c_ioctl_reader(
 
 
 void init_i2c_execute_func_name_table() {
-   RTTI_ADD_FUNC( i2c_ioctl_reader);
-   RTTI_ADD_FUNC( i2c_ioctl_reader1);
-   RTTI_ADD_FUNC( i2c_ioctl_writer);
+   RTTI_ADD_FUNC(i2c_ioctl_reader);
+   RTTI_ADD_FUNC(i2c_ioctl_reader1);
+   RTTI_ADD_FUNC(i2c_ioctl_writer);
+   RTTI_ADD_FUNC(i2c_fileio_reader);
+   RTTI_ADD_FUNC(i2c_fileio_writer);
 }
