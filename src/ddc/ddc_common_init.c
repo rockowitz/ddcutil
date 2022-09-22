@@ -27,6 +27,7 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_execute.h"
+#include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc_displays.h"
 #include "ddc_services.h"
@@ -171,6 +172,11 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
+
+   if (parsed_cmd->flags & CMD_FLAG_F1)
+      i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);
+   else
+      i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);
 
     init_ddc_services();   // n. initializes start timestamp
     // overrides setting in init_ddc_services():
