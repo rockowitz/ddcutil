@@ -27,6 +27,19 @@ typedef Status_Errno_DDC (*I2C_Reader)(
       int    bytect,
       Byte * readbuf);
 
+Status_Errno_DDC i2c_fileio_writer(
+      int    fd,
+      Byte   slave_address,
+      int    bytect,
+      Byte * pbytes);
+
+Status_Errno_DDC i2c_fileio_reader (
+      int    fd,
+      Byte   slave_address,
+      bool   read_bytewise,
+      int    bytect,
+      Byte * readbuf);
+
 Status_Errno_DDC i2c_ioctl_writer(
       int    fd,
       Byte   slave_address,
