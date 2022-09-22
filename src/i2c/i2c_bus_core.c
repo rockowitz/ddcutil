@@ -470,6 +470,10 @@ if (rc == 0) {
       DBGMSF(debug, "read() returned %s", psc_desc(rc) );
    }
 }
+rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);  // hack
+if (rc < 0) {
+   goto bye;
+}
 
 bye:
 if ( (debug || IS_TRACING()) && rc == 0) {
@@ -493,8 +497,13 @@ i2c_get_edid_bytes_using_i2c_layer(
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
+   int rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
+   if (rc < 0) {
+      goto bye;
+   }
+
    bool write_before_read = EDID_Write_Before_Read;
-   int rc = 0;
+   rc = 0;
    if (write_before_read) {
       Byte byte_to_write = 0x00;
       rc = invoke_i2c_writer(fd, 0x50, 1, &byte_to_write);
@@ -518,6 +527,13 @@ i2c_get_edid_bytes_using_i2c_layer(
          rawedid->len = edid_read_size;
       }
    }  // write succeeded
+
+   rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
+   if (rc < 0) {
+      goto bye;
+   }
+
+bye:
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
