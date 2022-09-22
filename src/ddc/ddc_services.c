@@ -158,6 +158,7 @@ void init_ddc_services() {
    DBGMSF(debug, "Starting");
 
    // i2c:
+   i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
    init_i2c_bus_core();
    init_i2c_sysfs();
 
