@@ -1289,12 +1289,14 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
+   RTTI_ADD_FUNC(i2c_set_addr);
 }
 
 
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    init_i2c_execute_func_name_table();
+   init_i2c_strategy_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
 }
 
