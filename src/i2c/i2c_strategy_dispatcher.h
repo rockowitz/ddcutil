@@ -16,8 +16,6 @@
 
 #include "i2c_execute.h"
 
-extern bool EDID_Read_Uses_I2C_Layer;  // should be in i2c_core
-
 
 /** I2C IO strategy ids  */
 typedef enum {

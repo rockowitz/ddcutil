@@ -23,7 +23,7 @@
 #include "base/execution_stats.h"
 #include "base/status_code_mgt.h"
 
-
+extern bool EDID_Read_Uses_I2C_Layer;
 extern bool EDID_Read_Bytewise;
 extern bool EDID_Write_Before_Read;
 extern int  EDID_Read_Size;

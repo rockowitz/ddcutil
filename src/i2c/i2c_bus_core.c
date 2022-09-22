@@ -64,6 +64,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
