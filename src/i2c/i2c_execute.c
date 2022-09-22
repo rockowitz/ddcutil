@@ -119,7 +119,11 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
      }
      // #endif
 
-     rc = write(fd, pbytes, bytect);
+     RECORD_IO_EVENTX(
+           fd,
+           IE_WRITE,
+           ( rc = write(fd, pbytes, bytect) )
+           );
      // per write() man page:
      // if >= 0, number of bytes actually written, must be <= bytect
      // if -1,   error occurred, errno is set

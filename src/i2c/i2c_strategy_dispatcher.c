@@ -17,7 +17,6 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
-#include "base/last_io_event.h"
 
 #include "i2c_strategy_dispatcher.h"
 
@@ -114,17 +113,9 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
 
-   Status_Errno_DDC rc;
-   RECORD_IO_EVENT(
-      IE_WRITE,
-      ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
-     );
+   Status_Errno_DDC rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
    assert (rc <= 0);
-   RECORD_IO_FINISH_NOW(fd, IE_WRITE);
    
-//   rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write );
-//   assert (rc <= 0);
-
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
