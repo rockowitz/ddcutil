@@ -36,16 +36,22 @@
 
 
 //
-// *** Choose method of low level IC2 communication
+// *** Method of low level IC2 communication
 //
 
-#define DEFAULT_DDC_READ_BYTEWISE      false                   ///< Use single byte reads
-#define DEFAULT_EDID_WRITE_BEFORE_READ true
-#define DEFAULT_EDID_READ_SIZE           0                     ///< 128, 256, 0=>dynamic
-#define EDID_BUFFER_SIZE               256                     ///< always 256
+// One of the following 2 defines must be enabled:
+#define DEFAULT_I2C_IO_STRATEGY           I2C_IO_STRATEGY_IOCTL ///< Use ioctl() calls
+// #define DEFAULT_I2C_IO_STRATEGY           I2C_IO_STRATEGY_FILEIO  ///< Use read() and write()
+
+#define DEFAULT_DDC_READ_BYTEWISE         false       ///< Use single byte reads
+#define DEFAULT_I2C_READ_BYTEWISE         false
+
+#define EDID_BUFFER_SIZE                  256         ///< always 256
+#define DEFAULT_EDID_WRITE_BEFORE_READ    true
+#define DEFAULT_EDID_READ_SIZE            0           ///< 128, 256, 0=>dynamic
 #define DEFAULT_EDID_READ_USES_I2C_LAYER  false
 #define DEFAULT_EDID_READ_BYTEWISE        false
-#define DEFAULT_I2C_READ_BYTEWISE         false
+
 
 // Strategy    Bytewise    read edid uses local i2c call                      read edid uses i2c layer
 // FILEIO      false       ok                                                 ok
