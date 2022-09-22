@@ -1,10 +1,8 @@
 /** \file i2c_strategy_dispatcher.c
  *
  *  Allows for alternative mechanisms to read and write to the IC2 bus.
- *
- *  This is vestigial code that was used to to select alternative functions
- *  for I2C IO.
  */
+ 
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -19,16 +17,20 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
+#include "base/last_io_event.h"
 
 #include "i2c_strategy_dispatcher.h"
 
+// belongs in i2c_core.c:
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
-
 
 
 char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
    char * result = NULL;
    switch(id) {
+   case I2C_IO_STRATEGY_FILEIO:
+      result = "I2C_IO_STRATEGY_FILEIO";
+      break;
    case I2C_IO_STRATEGY_IOCTL:
       result = "I2C_IO_STRATEGY_IOCTL";
       break;
@@ -40,6 +42,16 @@ char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+
+I2C_IO_Strategy  i2c_file_io_strategy = {
+      I2C_IO_STRATEGY_FILEIO,
+      i2c_fileio_writer,
+      i2c_fileio_reader,
+      "fileio_writer",
+      "fileio_reader"
+};
+
+
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
       I2C_IO_STRATEGY_IOCTL,
       i2c_ioctl_writer,
@@ -48,7 +60,7 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
       "ioctl_reader"
 };
 
-static I2C_IO_Strategy * i2c_io_strategy = &i2c_ioctl_io_strategy;
+static I2C_IO_Strategy * i2c_io_strategy = &i2c_file_io_strategy;
 
 
 /** Sets an alternative I2C IO strategy.
@@ -60,7 +72,9 @@ I2C_IO_Strategy_Id
 i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
    I2C_IO_Strategy_Id old = i2c_io_strategy->strategy_id;
    switch (strategy_id) {
-
+   case (I2C_IO_STRATEGY_FILEIO):
+         i2c_io_strategy = &i2c_file_io_strategy;
+         break;
    case (I2C_IO_STRATEGY_IOCTL):
          i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;
@@ -101,8 +115,15 @@ Status_Errno_DDC invoke_i2c_writer(
                  hexstring_t(bytes_to_write, bytect));
 
    Status_Errno_DDC rc;
-   rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write );
+   RECORD_IO_EVENT(
+      IE_WRITE,
+      ( rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write ) )
+     );
    assert (rc <= 0);
+   RECORD_IO_FINISH_NOW(fd, IE_WRITE);
+   
+//   rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write );
+//   assert (rc <= 0);
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
