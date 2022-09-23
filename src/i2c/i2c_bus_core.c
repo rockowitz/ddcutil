@@ -72,10 +72,12 @@ bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
 /** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info - shared with i2c_bus_selector.c */
 /* static */ GPtrArray * i2c_buses = NULL;
 
+#ifdef OLD
 /** Global variable.  Controls whether function #i2c_set_addr() attempts retry
  *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
  */
 bool i2c_force_slave_addr_flag = false;
+#endif
 
 // Another ugly global variable for testing purposes
 
@@ -245,7 +247,7 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    return result;
 }
 
-
+#ifdef OLD
 /** Sets I2C slave address to be used on subsequent calls
  *
  * @param  fd        Linux file descriptor for open /dev/i2c-n
@@ -344,6 +346,7 @@ retry:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
+#endif
 
 
 //
@@ -470,10 +473,12 @@ if (rc == 0) {
       DBGMSF(debug, "read() returned %s", psc_desc(rc) );
    }
 }
+#ifdef OLD
 rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);  // hack
 if (rc < 0) {
    goto bye;
 }
+#endif
 
 bye:
 if ( (debug || IS_TRACING()) && rc == 0) {
@@ -497,11 +502,14 @@ i2c_get_edid_bytes_using_i2c_layer(
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
+#ifdef OLD
    int rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
    if (rc < 0) {
       goto bye;
    }
+#endif
 
+   int rc = 0;
    bool write_before_read = EDID_Write_Before_Read;
    rc = 0;
    if (write_before_read) {
@@ -528,12 +536,14 @@ i2c_get_edid_bytes_using_i2c_layer(
       }
    }  // write succeeded
 
+#ifdef OLD
    rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
    if (rc < 0) {
       goto bye;
    }
 
 bye:
+#endif
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
@@ -1291,7 +1301,9 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
+#ifdef OLD
    RTTI_ADD_FUNC(i2c_set_addr);
+#endif
 }
 
 
