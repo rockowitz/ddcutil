@@ -22,26 +22,13 @@
 #include "i2c_strategy_dispatcher.h"
 
 
-char * i2c_io_strategy_name(I2C_IO_Strategy_Id id) {
-   char * result = NULL;
-   switch(id) {
-   case I2C_IO_STRATEGY_FILEIO:
-      result = "I2C_IO_STRATEGY_FILEIO";
-      break;
-   case I2C_IO_STRATEGY_IOCTL:
-      result = "I2C_IO_STRATEGY_IOCTL";
-      break;
-   }
-   return result;
-}
-
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
 I2C_IO_Strategy  i2c_file_io_strategy = {
       I2C_IO_STRATEGY_FILEIO,
+      "I2C_IO_STRATEGY_FILEIO",
       i2c_fileio_writer,
       i2c_fileio_reader,
       "fileio_writer",
@@ -51,6 +38,7 @@ I2C_IO_Strategy  i2c_file_io_strategy = {
 
 I2C_IO_Strategy i2c_ioctl_io_strategy = {
       I2C_IO_STRATEGY_IOCTL,
+      "I2C_IO_STRATEGY_IOCTL",
       i2c_ioctl_writer,
       i2c_ioctl_reader,
       "ioctl_writer",
@@ -110,7 +98,7 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytect,
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_io_strategy = %s", i2c_io_strategy_name(i2c_io_strategy->strategy_id));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_io_strategy = %s", i2c_io_strategy->strategy_name);
 
    Status_Errno_DDC rc = i2c_io_strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
    assert (rc <= 0);

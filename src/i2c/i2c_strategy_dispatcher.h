@@ -23,11 +23,10 @@ typedef enum {
    I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
 I2C_IO_Strategy_Id;
 
-char * i2c_io_strategy_name(I2C_IO_Strategy_Id id);
-
 /** Describes one I2C IO strategy */
 typedef struct {
    I2C_IO_Strategy_Id strategy_id;       ///< id of strategy
+   char *             strategy_name;     ///< name of strategy
    I2C_Writer         i2c_writer;        ///< writer function
    I2C_Reader         i2c_reader;        ///< read function
    char *             i2c_writer_name;   ///< write function name
