@@ -725,6 +725,10 @@ ddc_write_read_with_retry(
               retryable = false;  // have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
               break;
 
+         case (-EBUSY):
+               retryable = false;
+               break;
+
          default:
               retryable = true;     // for now
          }
@@ -915,6 +919,8 @@ ddc_write_only_with_retry(
       Error_Info * cur_excp = ddc_write_only(dh, request_packet_ptr);
       psc = (cur_excp) ? cur_excp->status_code : 0;
       try_errors[tryctr] = cur_excp;
+      if (psc == -EBUSY)
+         retryable = false;
 
       // try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
    }
@@ -933,13 +939,18 @@ ddc_write_only_with_retry(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s",
                                            tryctr, sbool(retryable));
 
-      if (retryable)
+      if (retryable) {
          psc = DDCRC_RETRIES;
 
-      ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
+         ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
 
-      if (psc != try_errors[tryctr-1]->status_code)
-         COUNT_STATUS_CODE(psc);     // new status code, count it
+         if (psc != try_errors[tryctr-1]->status_code)
+            COUNT_STATUS_CODE(psc);     // new status code, count it
+      }
+      else {
+         assert (tryctr == 1);
+         ddc_excp = try_errors[0];
+      }
    }
    else {
       // 2 possibilities:
