@@ -134,6 +134,7 @@ Status_Errno_DDC invoke_i2c_reader(
                    bytect,
                    sbool(read_bytewise),
                    readbuf);
+     DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_io_strategy = %s", i2c_io_strategy->strategy_name);
 
      Status_Errno_DDC rc;
      rc = i2c_io_strategy->i2c_reader(fd, slave_address, read_bytewise, bytect, readbuf);
