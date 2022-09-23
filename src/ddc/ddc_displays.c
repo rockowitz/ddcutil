@@ -122,7 +122,7 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
  *  ADL does not notice that a reported display, e.g. Dell 1905FP, does not support
  *  DDC.
  *  @remark
- *  Monitors are supposed to set the unsupported feFFature bit in a valid DDC
+ *  Monitors are supposed to set the unsupported feature bit in a valid DDC
  *  response, but a few monitors (mis)use the Null Response instead to indicate
  *  an unsupported feature. Others return with the unsupported feature bit not
  *  set, but all bytes (mh, ml, sh, sl) zero.
@@ -201,7 +201,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          }  // end, communication working
 
          else {   // communication failed
-            if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
+            if (psc == -EBUSY) {
+               dh->dref->flags |= DREF_DDC_BUSY;
+            }
+            else if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
                      dh_repr(dh) );
                psc = 0;
