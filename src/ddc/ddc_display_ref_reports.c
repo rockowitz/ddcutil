@@ -269,11 +269,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 // #endif
                 }
             }
+#ifdef TMI
             if (output_level >= DDCA_OL_VERBOSE) {
                if (!msg) {
                   msg = "Is DDC/CI enabled in the monitor's on-screen display?";
                }
             }
+#endif
          }
          if (msg) {
             rpt_vstring(d1, msg);
