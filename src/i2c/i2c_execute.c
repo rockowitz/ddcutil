@@ -52,9 +52,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 /** Global variable.  Controls whether function #i2c_set_addr() attempts retry
  *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
  */
-bool i2c_force_slave_addr_flag = false;
+bool i2c_forceable_slave_addr_flag = false;
 
 
+#ifdef OLD
 /** Sets I2C slave address to be used on subsequent write() and read() calls
  *
  * @param  fd        Linux file descriptor for open /dev/i2c-n
@@ -155,7 +156,106 @@ retry:
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
+#endif
 
+
+Status_Errno i2c_set_addr0(int fd, uint16_t op, int addr) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                 "fd=%d, addr=0x%02x, filename=%s, op=%s",
+                 fd, addr,
+                 filename_for_fd_t(fd),
+                 (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE");
+
+   // FAILSIM;
+   bool force_pseudo_failure = false;
+
+   Status_Errno result = 0;
+   int ioctl_rc = 0;
+   int errsv = 0;
+
+   if (force_pseudo_failure && op == I2C_SLAVE) {
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Forcing pseudo failure");
+      ioctl_rc = -1;
+      errno=EBUSY;
+   }
+   else {
+      RECORD_IO_EVENT( IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
+   }
+
+   if (ioctl_rc < 0) {
+      errsv = errno;
+      if (errsv == EBUSY) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ioctl(%s, I2C_SLAVE, 0x%02x) returned EBUSY",
+                   filename_for_fd_t(fd), addr);
+      }
+      else {
+         REPORT_IOCTL_ERROR( (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE", errsv);
+      }
+      result = -errsv;
+   }
+
+   assert(result <= 0);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
+
+Status_Errno i2c_set_addr(int fd, int addr) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                 "fd=%d, addr=0x%02x, filename=%s, i2c_forceable_slave_addr_flag=%s",
+                 fd, addr,
+                 filename_for_fd_t(fd),
+                 sbool(i2c_forceable_slave_addr_flag) );
+
+   Status_Errno result = 0;
+   uint16_t op = I2C_SLAVE;
+   bool done = false;
+
+   while (!done) {
+      done = true;
+      result = i2c_set_addr0(fd, op, addr);
+      if (result < 0) {
+         if (result == -EBUSY) {
+            if (op == I2C_SLAVE && i2c_forceable_slave_addr_flag) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "Retrying using IOCTL op I2C_SLAVE_FORCE for %s, slave address 0x%02x",
+                      filename_for_fd_t(fd), addr );
+               // normally errors counted at higher level, but in this case it would be
+               // lost because of retry
+               COUNT_STATUS_CODE(result);
+               op = I2C_SLAVE_FORCE;
+               done = false;
+            }
+         }
+      }
+   }
+   if (result == -EBUSY) {
+      char msgbuf[60];
+      g_snprintf(msgbuf, 60, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
+                             filename_for_fd_t(fd),
+                             (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
+                             addr);
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", msgbuf);
+      syslog(LOG_ERR, "%s", msgbuf);
+
+   }
+   else if (result == 0 && op == I2C_SLAVE_FORCE) {
+      char msgbuf[80];
+      g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
+            filename_for_fd_t(fd),
+            addr);
+      DBGTRC(debug || get_output_level() > DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
+      syslog(LOG_INFO, "%s", msgbuf);
+   }
+
+   assert(result <= 0);
+   // if (addr == 0x37)  result = -EBUSY;    // for testing
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
+}
 
 
 
@@ -192,7 +292,7 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
    int rc = 0;
 
-   rc = i2c_set_addr(fd, slave_address, CALLOPT_NONE);
+   rc = i2c_set_addr(fd, slave_address);
    if (rc < 0)
       goto bye;
 
@@ -244,7 +344,7 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
         else
            rc = DDCRC_DDC_DATA;    // was  DDCRC_BAD_BYTECT
      }
-     else  {       // rc < 0
+     else  {       // ioctl_rc < 0
         int errsv = errno;
         DBGMSF(debug, "write() returned %d, errno=%s", rc, linux_errno_desc(errsv));
         rc = -errsv;
@@ -288,7 +388,7 @@ i2c_fileio_reader(
 
    int rc = 0;
 
-   rc = i2c_set_addr(fd, slave_address, CALLOPT_NONE);
+   rc = i2c_set_addr(fd, slave_address);
    if (rc < 0)
       goto bye;
 
@@ -396,8 +496,9 @@ i2c_ioctl_writer(
       Byte * pbytes)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
-                 fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+         fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
 
    int rc = 0;
    struct i2c_msg              messages[1];
@@ -557,6 +658,7 @@ i2c_ioctl_reader(
 
 void init_i2c_execute_func_name_table() {
    RTTI_ADD_FUNC(i2c_set_addr);
+   RTTI_ADD_FUNC(i2c_set_addr0);
    RTTI_ADD_FUNC(i2c_ioctl_reader);
    RTTI_ADD_FUNC(i2c_ioctl_reader1);
    RTTI_ADD_FUNC(i2c_ioctl_writer);

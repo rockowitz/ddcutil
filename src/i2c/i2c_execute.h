@@ -14,9 +14,9 @@
 
 // Controls whether function #i2c_set_addr() retries from EBUSY error by
 // changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
-extern bool i2c_force_slave_addr_flag;
+extern bool i2c_forceable_slave_addr_flag;
 
-Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts);
+Status_Errno i2c_set_addr(int fd, int addr);
 
 /** Function template for I2C write function */
 typedef Status_Errno_DDC (*I2C_Writer)(
