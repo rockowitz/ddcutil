@@ -606,6 +606,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
+         // dbgrpt_display_ref(dref,5);
+
       }
       else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
          Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
