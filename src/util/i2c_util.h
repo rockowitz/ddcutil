@@ -12,6 +12,7 @@
 #include <stdbool.h>
 
 int           i2c_name_to_busno(const char * name);
+int           extract_number_after_hyphen(const char * name);
 int           i2c_compare(const void * v1, const void * v2);
 
 unsigned long i2c_get_functionality_flags_by_fd(int fd);
