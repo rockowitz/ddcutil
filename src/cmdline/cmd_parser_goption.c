@@ -203,6 +203,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    gboolean per_thread_stats_flag = false;
    gboolean show_settings_flag = false;
    gboolean dsa_flag       = false;
+   gboolean i2c_io_fileio_flag = false;
+   gboolean i2c_io_ioctl_flag  = false;
    gboolean f1_flag        = false;
    gboolean f2_flag        = false;
    gboolean f3_flag        = false;
@@ -328,6 +330,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
+      {"i2c-file-io",
+                  '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
+      {"i2c-ioctl-io",
+                  '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
+
 
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
       {"enable-udf",'\0',0,G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
@@ -517,8 +524,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
    if (reduce_sleeps_specified)
       fprintf(stderr, "Deprecated option ignored: --enable-sleep-less, --disable-sleep-less, etc.\n");
-   if (force_slave_flag)
-      fprintf(stderr, "Deprecated option ignored: --force_slave_address\n");
+   // if (force_slave_flag)
+   //    fprintf(stderr, "Deprecated option ignored: --force_slave_address\n");
    if (timeout_i2c_io_flag)
       fprintf(stderr, "Deprecated option ignored: --timeout-i2c-io\n");
 
@@ -578,6 +585,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
+   SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
+   SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 
