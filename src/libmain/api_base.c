@@ -791,15 +791,15 @@ ddca_is_force_slave_address_enabled(void) {
 
 bool
 ddca_enable_force_slave_address(bool onoff) {
-   bool old = i2c_force_slave_addr_flag;
-   i2c_force_slave_addr_flag = onoff;
+   bool old = i2c_forceable_slave_addr_flag;
+   i2c_forceable_slave_addr_flag = onoff;
    return old;
 }
 
 
 bool
 ddca_is_force_slave_address_enabled(void) {
-   return i2c_force_slave_addr_flag;
+   return i2c_forceable_slave_addr_flag;
 }
 
 
