@@ -47,7 +47,7 @@
 #include "base/parms.h"
 #include "base/rtti.h"
 
-#include "i2c/i2c_execute.h"   // for i2c_force_slave_addr_flag
+#include "i2c/i2c_execute.h"   // for i2c_forceable_slave_addr_flag
 #include "i2c/i2c_sysfs.h"
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
@@ -736,7 +736,7 @@ void query_sysenv() {
       rpt_label(0, "Set environment variable SYSENV_QUICK_TEST to skip some long-running tests.");
    }
 
-   i2c_force_slave_addr_flag = true;    // be a bully
+   i2c_forceable_slave_addr_flag = true;    // be a bully
 
    ddc_ensure_displays_detected();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
