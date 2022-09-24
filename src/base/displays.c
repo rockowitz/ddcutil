@@ -17,8 +17,9 @@
 
 #include "util/data_structures.h"
 #include "util/glib_util.h"
-#include "util/string_util.h"
 #include "util/report_util.h"
+#include "util/string_util.h"
+#include "util/sysfs_i2c_util.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_util.h"
 #include "util/udev_usb_util.h"
@@ -602,6 +603,8 @@ Display_Ref * create_bus_display_ref(int busno) {
    io_path.io_mode   = DDCA_IO_I2C;
    io_path.path.i2c_busno = busno;
    Display_Ref * dref = create_base_display_ref(io_path);
+
+   dref->driver_name = get_i2c_device_sysfs_driver(busno);   // set but not used
    if (debug) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref,0);
@@ -691,6 +694,8 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             // what to do with gdl, request_queue?
             if (dref->dfr)
                dfr_free(dref->dfr);
+            if (dref->driver_name)
+               free(dref->driver_name);
             dref->marker[3] = 'x';
             free(dref);
          }
@@ -740,6 +745,8 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
    rpt_vstring(d1, "flags:            %s", interpret_dref_flags_t(dref->flags) );
    rpt_vstring(d1, "mmid:             %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+
+   rpt_vstring(d1, "driver:           %s", dref->driver_name);   // set but not used
 
    DBGMSF(debug, "Done");
 }
