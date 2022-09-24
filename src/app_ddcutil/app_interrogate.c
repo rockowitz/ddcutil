@@ -73,7 +73,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    f0printf(fout(), "Forcing --disable-capabilities-cache\n");
    enable_capabilities_cache(false);
    f0printf(fout(), "Forcing --force-slave-address..\n");
-   i2c_force_slave_addr_flag = true;
+   i2c_forceable_slave_addr_flag = true;
    f0printf(fout(), "This command will take a while to run...\n\n");
 
    ddc_ensure_displays_detected();    // *** ???
