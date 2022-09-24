@@ -55,7 +55,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_slave_addr_flag = false;
 
 
-/** Sets I2C slave address to be used on subsequent calls
+/** Sets I2C slave address to be used on subsequent write() and read() calls
  *
  * @param  fd        Linux file descriptor for open /dev/i2c-n
  * @param  addr      slave address
@@ -72,23 +72,23 @@ bool i2c_force_slave_addr_flag = false;
  */
 Status_Errno i2c_set_addr(int fd, int addr, Call_Options callopts) {
    bool debug = false;
-#ifdef FOR_TESTING
-   bool force_i2c_slave_failure = false;
-#endif
-   // callopts |= CALLOPT_ERR_MSG;    // temporary
-
    DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, addr=0x%02x, filename=%s, i2c_force_slave_addr_flag=%s, callopts=%s",
                  fd, addr,
                  filename_for_fd_t(fd),
                  sbool(i2c_force_slave_addr_flag),
                  interpret_call_options_t(callopts) );
+
+#ifdef FOR_TESTING
+   bool force_i2c_slave_failure = false;
+#endif
    // FAILSIM;
 
    Status_Errno result = 0;
    int rc = 0;
    int errsv = 0;
    uint16_t op = (i2c_force_slave_addr_flag) ? I2C_SLAVE_FORCE : I2C_SLAVE;
+   bool retried = false;
 
 retry:
    errno = 0;
@@ -121,6 +121,7 @@ retry:
             COUNT_STATUS_CODE(-errsv);
             op = I2C_SLAVE_FORCE;
             // debug = true;   // force final message for clarity
+            retried = true;
             goto retry;
          }
       }
@@ -136,11 +137,11 @@ retry:
                              filename_for_fd_t(fd),
                              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
                              addr);
-      DBGTRC(true, TRACE_GROUP, "%s", msgbuf);
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", msgbuf);
       syslog(LOG_ERR, "%s", msgbuf);
 
    }
-   else if (result == 0 && op == I2C_SLAVE_FORCE) {
+   else if (result == 0 && op == I2C_SLAVE_FORCE && retried) {
       char msgbuf[80];
       g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
             filename_for_fd_t(fd),
@@ -183,10 +184,6 @@ bool get_i2c_fileio_use_timeout() {
  * @retval DDCRC_DDC_DATA   incorrect number of bytes read
  * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
  * @retval -errno            negative Linux error number
- *
- * @remark
- * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
- * The address has already been by #set_slave_address().
  */
 Status_Errno_DDC
 i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
@@ -272,6 +269,7 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
  * @retval -errno           negative Linux errno value from read()
  *
  * @remark
+ * read_bytewise == true fails on some monitors, should generally be false
  * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
  * The address has already been by #set_slave_address().
  */
