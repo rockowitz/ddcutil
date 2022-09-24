@@ -36,7 +36,7 @@
 
 
 //
-// *** Method of low level IC2 communication
+// *** Method of low level I2C communication
 //
 
 // One of the following 2 defines must be enabled:
