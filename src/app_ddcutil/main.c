@@ -71,6 +71,7 @@
 
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_strategy_dispatcher.h"
+#include "i2c/i2c_sysfs.h"
 
 #ifdef USE_USB
 #include "usb/usb_displays.h"
@@ -146,7 +147,7 @@ report_performance_options(int depth)
 static void
 report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "Force I2C slave address:",
-                       sbool(i2c_force_slave_addr_flag));
+                       sbool(i2c_forceable_slave_addr_flag));
    rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "User defined features:",
                        (enable_dynamic_features) ? "enabled" : "disabled" );
                        // "Enable user defined features" is too long a title
@@ -446,6 +447,8 @@ find_dref(
                              dref->pedid->mfg_id,
                              dref->pedid->model_name,
                              dref->pedid->product_code);
+            // dref->driver_name = get_i2c_device_sysfs_driver(busno);
+            // DBGMSG("driver_name = %p -> %s", dref->driver_name, dref->driver_name);
 
             // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
             dref->detail = businfo;
@@ -788,7 +791,7 @@ main(int argc, char *argv[]) {
    }
 
    Call_Options callopts = CALLOPT_NONE;
-   i2c_force_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
+   i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
 
