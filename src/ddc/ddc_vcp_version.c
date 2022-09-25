@@ -222,15 +222,19 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       Display_Handle * dh = NULL;
       // ddc_open_display() should not fail
       // 2/2020: but it can return -EBUSY
+      // DBGMSF(debug, "Calling ddc_open_display() ...");
       Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
       if (psc == 0) {
          result = set_vcp_version_xdf_by_dh(dh);
          assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
+         // DBGMSF(debug, "Calling ddc_close_display() ...");
+         ddc_close_display(dh);
       }
       else {
+         // DBGMSF(debug, "ddc_open_display() failed");
          dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
       }
-      ddc_close_display(dh);
+
    }
 
    assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );
