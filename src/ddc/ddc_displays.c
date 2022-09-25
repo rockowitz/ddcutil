@@ -216,6 +216,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             }
          }
       }    // end, io_mode == DDC_IO_I2C
+
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
      if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
