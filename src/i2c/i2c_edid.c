@@ -216,7 +216,7 @@ i2c_get_edid_bytes_directly_using_fileio(
    int     edid_read_size,
    bool    read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -384,7 +384,7 @@ bye:
 Status_Errno_DDC
 i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s",
                               fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -444,7 +444,6 @@ retry:
                   }
                }
             }
-
          }
          else {
             DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_fileio()...");
@@ -507,7 +506,7 @@ retry:
 Status_Errno_DDC
 i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s", fd, filename_for_fd_t(fd));
    Parsed_Edid * edid = NULL;
    Buffer * rawedidbuf = buffer_new(EDID_BUFFER_SIZE, NULL);
