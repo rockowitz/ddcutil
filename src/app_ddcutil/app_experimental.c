@@ -12,6 +12,7 @@
 #include "util/timestamp.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc/ddc_display_ref_reports.h"
