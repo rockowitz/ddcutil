@@ -178,7 +178,7 @@ void include_open_failures_reported(int busno) {
  *  - CALLOPT_ERR_MSG
  */
 int i2c_open_bus(int busno, Byte callopts) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
@@ -218,7 +218,7 @@ int i2c_open_bus(int busno, Byte callopts) {
  * @retval <0 negative Linux errno value if close fails
  */
 Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "fd=%d - %s, callopts=%s",
           fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
@@ -408,7 +408,7 @@ static I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 static Status_Errno_DDC
 i2c_detect_x37(int fd) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d - %s", fd, filename_for_fd_t(fd) );
 
    // Quirks
@@ -445,7 +445,7 @@ i2c_detect_x37(int fd) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
