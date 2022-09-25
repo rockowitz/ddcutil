@@ -54,7 +54,7 @@ char * strategy_names[] = {"I2C_IO_STRATEGY_NOT_SET", "I2C_IO_STRATEGY_FILEIO", 
 
 char * i2c_io_strategy_name_from_id(I2C_IO_Strategy_Id id) {
    char * result = strategy_names[id];
-   printf("(%s) id=%d, returning %s\n", __func__, id, result);
+   // printf("(%s) id=%d, returning %s\n", __func__, id, result);
    return result;
 }
 
@@ -67,21 +67,20 @@ static I2C_IO_Strategy * i2c_io_strategy = NULL;    //&i2c_file_io_strategy;
 bool nvidia_einval_bug_encountered = false;
 
 bool check_nvidia_einval_bug_encountered(I2C_IO_Strategy_Id strategy_id,  int busno, int rc) {
-   bool encountered = true;
+   bool encountered = false;
    char * driver_name = get_i2c_device_sysfs_driver(busno);
    if (streq(driver_name, "nvidia") && rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {
+   // if ( rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {  // ***TESTING***
       nvidia_einval_bug_encountered = true;
-      i2c_io_strategy = &i2c_file_io_strategy;  // set the persistent io strategy
-      // strategy = i2c_io_strategy;  // set the current io strategy
+      i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);   // the new normal
       free(driver_name);
-      DBGTRC(true, TRACE_GROUP, "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying");
-      syslog(LOG_WARNING,  "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying");
+      char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
+      DBGTRC(true, TRACE_GROUP, msg);
+      syslog(LOG_WARNING,  msg);
       encountered = true;
    }
    return encountered;
 }
-
-
 
 
 
@@ -91,11 +90,12 @@ bool check_nvidia_einval_bug_encountered(I2C_IO_Strategy_Id strategy_id,  int bu
  */
 void
 i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
-   bool debug = true;
+   bool debug = false;
    assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
 
    switch (strategy_id) {
    case (I2C_IO_STRATEGY_NOT_SET):
+         PROGRAM_LOGIC_ERROR("Impossible case");
          i2c_io_strategy = NULL;
          break;
    case (I2C_IO_STRATEGY_FILEIO):
@@ -160,8 +160,11 @@ calc_i2c_io_strategy(char * device_name) {
       char * driver_name = driver_from_dev_name(device_name);
       if (driver_name) {
          // special handling for nvida:
-         if (streq(driver_name, "nvidia") && nvidia_einval_bug_encountered)
+         if (streq(driver_name, "nvidia") && nvidia_einval_bug_encountered) {
+         // if ( nvidia_einval_bug_encountered)  {  // ***TESTING***
+            i2c_io_strategy = &i2c_file_io_strategy;
             result = &i2c_file_io_strategy;
+         }
          free(driver_name);
       }
    }
@@ -174,17 +177,16 @@ I2C_IO_Strategy *
 calc_i2c_io_strategy_for_fd(int fd) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d", fd);
-   I2C_IO_Strategy * strategy = NULL;
    char * device_name = filename_for_fd_t(fd);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "device_name = %s", device_name);
-   strategy = calc_i2c_io_strategy(device_name);
+   I2C_IO_Strategy * strategy = calc_i2c_io_strategy(device_name);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", strategy->strategy_name);
    return strategy;
 }
 
 
 I2C_IO_Strategy_Id i2c_get_calculated_io_strategy_id(char * device_name) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "device_name = %s", device_name);
    I2C_IO_Strategy_Id id =  calc_i2c_io_strategy(device_name)->strategy_id;
    DBGTRC_DONE(debug, TRACE_GROUP, "Done.  Returning %s", i2c_io_strategy_name_from_id(id));
