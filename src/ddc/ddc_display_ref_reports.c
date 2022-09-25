@@ -292,6 +292,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          if (output_level >= DDCA_OL_VERBOSE) {
             // n. requires write access since may call get_vcp_value(), which does a write
             Display_Handle * dh = NULL;
+            DBGMSF(debug, "Calling ddc_open_display() ...");
             Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
             if (psc != 0) {
                rpt_vstring(d1, "Error opening display %s, error = %s",
@@ -300,7 +301,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             else {
                // display controller mfg, firmware version
                rpt_vstring(d1, "Controller mfg:      %s", get_controller_mfg_string_t(dh) );
-               rpt_vstring(d1, "Firmware version:    %s", get_firmware_version_string_t(dh));;
+               rpt_vstring(d1, "Firmware version:    %s", get_firmware_version_string_t(dh));
+               DBGMSF(debug, "Calling ddc_close_display()...");
                ddc_close_display(dh);
             }
 
