@@ -80,7 +80,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
    int     edid_read_size,
    bool    read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -199,6 +199,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
       }
    }
 
+   // rc = -EINVAL;    // ***TESTING***
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
@@ -224,20 +225,8 @@ i2c_get_edid_bytes_directly_using_fileio(
    bool write_before_read = EDID_Write_Before_Read;
    // write_before_read = false;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "write_before_read = %s", sbool(write_before_read));
-   int rc = 0;
 
-   #ifdef FILEIO_ONLY
-   I2C_IO_Strategy_Id strategy_id = i2c_get_io_strategy_id(filename_for_fd_t(fd));
-   DBGMSF(debug, "Ignoring strategy %d", strategy_id);
-   // always = use I2C_IO_STRATEGY_FILEIO, it's safe
-   strategy_id = I2C_IO_STRATEGY_FILEIO;
-   if (strategy_id ==  I2C_IO_STRATEGY_IOCTL) {
-      assert(false);
-   }
-   else {
-   #endif
-
-   rc = i2c_set_addr(fd, 0x50);
+   int rc = i2c_set_addr(fd, 0x50);
    if (rc < 0) {
       goto bye;
    }
@@ -296,9 +285,6 @@ i2c_get_edid_bytes_directly_using_fileio(
          DBGMSF(debug, "read() returned %s", psc_desc(rc) );
       }
    }
-#ifdef FILEIO_ONLY
-}
-#endif
 
 bye:
    if ( (debug || IS_TRACING()) && rc == 0) {
@@ -317,7 +303,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       int     edid_read_size,
       bool    read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -393,11 +379,11 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
    DBGMSF(debug, "i2c_get_io_strategy_id() returned %d", cur_strategy);
    if (cur_strategy == I2C_IO_STRATEGY_NOT_SET )
    {
-      cur_strategy = I2C_IO_STRATEGY_IOCTL;
+      i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);
       DBGMSF(debug, "Applied default strategy...");
    }
-   DBGMSF(debug, "Using strategy %d - %s",
-                 cur_strategy,  i2c_io_strategy_name_from_id(cur_strategy));
+   I2C_IO_Strategy_Id adjusted_strategy = i2c_get_io_strategy_id();
+   DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_name_from_id(adjusted_strategy) );
 
    // char * called_func_name = NULL;
    Status_Errno_DDC rc;
@@ -427,7 +413,7 @@ retry:
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {
-         if (cur_strategy == I2C_IO_STRATEGY_IOCTL) {
+         if (i2c_get_io_strategy_id() == I2C_IO_STRATEGY_IOCTL) {
             DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_ioctl";
             rc = i2c_get_edid_bytes_directly_using_ioctl(
