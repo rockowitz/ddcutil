@@ -232,13 +232,14 @@ Status_Errno i2c_set_addr(int fd, int addr) {
          }
       }
    }
+
    if (result == -EBUSY) {
-      char msgbuf[60];
+      char msgbuf[80];
       g_snprintf(msgbuf, 60, "set_addr(%s,%s,0x%02x) failed, error = EBUSY",
                              filename_for_fd_t(fd),
                              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
                              addr);
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", msgbuf);
+      DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
       syslog(LOG_ERR, "%s", msgbuf);
 
    }
@@ -247,7 +248,7 @@ Status_Errno i2c_set_addr(int fd, int addr) {
       g_snprintf(msgbuf, 80, "set_addr(%s,I2C_SLAVE_FORCE,0x%02x) succeeded on retry after EBUSY error",
             filename_for_fd_t(fd),
             addr);
-      DBGTRC(debug || get_output_level() > DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
+      DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
       syslog(LOG_INFO, "%s", msgbuf);
    }
 
