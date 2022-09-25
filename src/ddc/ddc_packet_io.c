@@ -182,6 +182,7 @@ ddc_open_display(
          TRACED_ASSERT(bus_info);   // need to convert to a test?
          TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
+         DBGMSF(debug, "Calling i2c_open_bus() ...");
          int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
          if (fd < 0) {
             ddcrc = fd;
@@ -286,6 +287,7 @@ ddc_close_display(Display_Handle * dh) {
       switch(dh->dref->io_path.io_mode) {
       case DDCA_IO_I2C:
          {
+            DBGMSF(debug, "Calling is2_close_bus() ...");
             rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
