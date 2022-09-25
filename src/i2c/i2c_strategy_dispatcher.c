@@ -228,7 +228,7 @@ retry:
       if (busno >= 0) {    // guard against pathological case
          bool encountered =  check_nvidia_einval_bug_encountered(strategy->strategy_id, busno, rc);
          if (encountered) {
-            strategy = i2c_io_strategy;  // set the current io strategy
+            strategy = i2c_io_strategy;  // updated by check_nvidia_einval_bug_encountered()
             goto retry;
          }
       }
