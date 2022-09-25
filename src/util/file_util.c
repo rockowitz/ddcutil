@@ -21,6 +21,7 @@
 #include "data_structures.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "subprocess_util.h"
 
 #include "file_util.h"
 
@@ -336,11 +337,22 @@ get_filenames_by_filter(
  */
 int
 filename_for_fd(int fd, char** filename_loc) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. fd=%d, filname_loc=%p\n", __func__, fd, filename_loc);
    char * result = calloc(1, PATH_MAX+1);
    char workbuf[40];
    int rc = 0;
    snprintf(workbuf, 40, "/proc/self/fd/%d", fd);
+   if (debug)
+      printf("(%s) workbuf = |%s|\n", __func__, workbuf);
+
    ssize_t ct = readlink(workbuf, result, PATH_MAX);
+   if (debug) {
+      char b0[100];
+      snprintf(b0, 100, "ls -l %s", workbuf);
+      execute_shell_cmd(b0);
+   }
    if (ct < 0) {
       rc = -errno;
       free(result);
@@ -351,8 +363,9 @@ filename_for_fd(int fd, char** filename_loc) {
       result[ct] = '\0';
       *filename_loc = result;
    }
-   // printf("(%s) fd=%d, ct=%ld, returning: %d, *filename_loc=%p -> |%s|\n",
-   //        __func__, fd, ct, rc, *filename_loc, *filename_loc);
+   if (debug)
+      printf("(%s) fd=%d, ct=%ld, returning: %d, *filename_loc=%p -> |%s|\n",
+          __func__, fd, ct, rc, *filename_loc, *filename_loc);
    return rc;
 }
 
@@ -367,6 +380,9 @@ filename_for_fd(int fd, char** filename_loc) {
  */
 char *
 filename_for_fd_t(int fd) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. fd=%d\n", __func__, fd);
    static GPrivate  key = G_PRIVATE_INIT(g_free);
    char * fn_buf = get_thread_fixed_buffer(&key, PATH_MAX);
 
@@ -374,13 +390,17 @@ filename_for_fd_t(int fd) {
 
    char * filename;
    int rc = filename_for_fd(fd, &filename);
-   // printf("(%s) filename_for_fd() returned rc=%d filename->|%s|\n", __func__, rc, filename);
+   if (debug)
+      printf("(%s) filename_for_fd() returned rc=%d filename->|%s|\n", __func__, rc, filename);
    if (rc == 0) {
-      (void) g_strlcpy(fn_buf, filename, PATH_MAX);
+      int ct = g_strlcpy(fn_buf, filename, PATH_MAX);
+      if (debug)
+         printf("(%s) ct=%d\n", __func__, ct);
       free(filename);
       result = fn_buf;
    }
-   // printf("(%s) Returning: |%s|\n", __func__, result);
+   if (debug)
+      printf("(%s) Returning: |%s|\n", __func__, result);
    return result;
 }
 
