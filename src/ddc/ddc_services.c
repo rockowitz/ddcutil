@@ -31,11 +31,10 @@
 #include "dynvcp/dyn_feature_files.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_edid.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
-#ifdef USE_USB
 #include "usb/usb_displays.h"
-#endif
 
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
@@ -160,6 +159,7 @@ void init_ddc_services() {
    // i2c:
    // i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
    init_i2c_bus_core();
+   init_i2c_edid();
    init_i2c_sysfs();
 
    // usb
