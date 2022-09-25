@@ -330,9 +330,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
-      {"i2c-file-io",
+      {"use-file-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
-      {"i2c-ioctl-io",
+      {"use-ioctl-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
 
 
