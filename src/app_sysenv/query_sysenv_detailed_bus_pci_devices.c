@@ -340,7 +340,7 @@ void one_pci_device(
     // Process i2c-N subdirectories:
     dir_ordered_foreach(
           dir_fn,
-          startswith_i2c,       // only subdirectories named i2c-N
+          predicate_i2c_N,      // only subdirectories named i2c-N
           i2c_compare,          // order by i2c device number, handles names not of form "i2c-N"
           sysfs_dir_i2cN,
           accumulator,
