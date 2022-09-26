@@ -249,7 +249,7 @@ bool is_i2cN_dir(const char * dirname, const char * fn_ignored) {
 }
 
 
-bool is_drm_dp_aux_subdir(const char * dirname, const char * val) {
+bool is_drm_dp_aux_subdir(const char * dirname, const char * fn_ignored) {
    bool debug = false;
    bool result = str_starts_with(dirname, "drm_dp_aux");
    if (debug)
