@@ -21,6 +21,7 @@
 #include <unistd.h>
 /** \endcond */
 
+#include "util/coredefs_base.h"
 #include "util/debug_util.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
