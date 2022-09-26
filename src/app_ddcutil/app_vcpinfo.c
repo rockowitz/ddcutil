@@ -323,30 +323,37 @@ report_vcp_feature_table_entry(
    DDCA_Version_Feature_Flags vflags = get_version_specific_feature_flags(pentry, vspec);
    char * feature_name = get_non_version_specific_feature_name(pentry);
    rpt_vstring(depth, "VCP code %02X: %s", pentry->code, feature_name);
-   rpt_vstring(d1, "%s", pentry->desc);
-   valid_version_names_r(valid_versions(pentry), workbuf, sizeof(workbuf));
-   rpt_vstring(d1, "MCCS versions: %s", workbuf);
-   if (output_level >= DDCA_OL_VERBOSE)
-      rpt_vstring(d1, "MCCS specification groups: %s",
-                      spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
-   char * subset_names = feature_subset_names(pentry->vcp_subsets);
-   rpt_vstring(d1, "ddcutil feature subsets: %s", subset_names);
-   free(subset_names);
-   if (has_version_specific_features(pentry)) {
-      // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
-      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V20, d1);
-      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V21, d1);
-      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V30, d1);
-      report_feature_table_entry_flags(pentry, DDCA_VSPEC_V22, d1);
-   }
-   else {
-      interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
-      rpt_vstring(d1, "Attributes: %s", workbuf);
-   }
+   if (!(pentry->vcp_global_flags & DDCA_SYNTHETIC)) {
+      rpt_vstring(d1, "%s", pentry->desc);
+      valid_version_names_r(valid_versions(pentry), workbuf, sizeof(workbuf));
+      rpt_vstring(d1, "MCCS versions: %s", workbuf);
+      if (output_level >= DDCA_OL_VERBOSE)
+         rpt_vstring(d1, "MCCS specification groups: %s",
+                         spec_group_names_r(pentry, workbuf, sizeof(workbuf)));
+      char * subset_names = feature_subset_names(pentry->vcp_subsets);
+      rpt_vstring(d1, "ddcutil feature subsets: %s", subset_names);
+      free(subset_names);
+      if (has_version_specific_features(pentry)) {
+         // rpt_vstring(d1, "VERSION SPECIFIC FLAGS");
+         report_feature_table_entry_flags(pentry, DDCA_VSPEC_V20, d1);
+         report_feature_table_entry_flags(pentry, DDCA_VSPEC_V21, d1);
+         report_feature_table_entry_flags(pentry, DDCA_VSPEC_V30, d1);
+         report_feature_table_entry_flags(pentry, DDCA_VSPEC_V22, d1);
+      }
+      else {
+         interpret_feature_flags_r(vflags, workbuf, sizeof(workbuf));
+         rpt_vstring(d1, "Attributes: %s", workbuf);
+      }
 
-   if (pentry->default_sl_values && output_level >= DDCA_OL_VERBOSE) {
-      rpt_vstring(d1, "Simple NC values:");
-      report_sl_values(pentry->default_sl_values, d1+1);
+      if (pentry->default_sl_values && output_level >= DDCA_OL_VERBOSE) {
+         rpt_vstring(d1, "Simple NC values:");
+         report_sl_values(pentry->default_sl_values, d1+1);
+      }
+
+      if (pentry->default_sl_values && output_level >= DDCA_OL_VERBOSE) {
+         rpt_vstring(d1, "Simple NC values:");
+         report_sl_values(pentry->default_sl_values, d1+1);
+      }
    }
 }
 
