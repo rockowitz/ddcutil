@@ -107,6 +107,7 @@ regex_t * get_compiled_regex(const char * pattern) {
 static const char * cardN_connector_pattern = "^card[0-9]+[-]";
 static const char * cardN_pattern = "^card[0-9]+$";
 static const char * D_00hh_pattern = "^[0-9]+-00[0-9a-fA-F]{2}$";
+static const char * i2c_N_pattern = "^i2c-[0-9]+$";
 
 
 bool eval_regex(regex_t * re, const char * value) {
@@ -181,9 +182,14 @@ bool predicate_cardN_connector(const char * value) {
 }
 
 
-bool startswith_i2c(const char * value) {
-   return str_starts_with(value, "i2c-");
+bool predicate_i2c_N(const char * value) {
+   bool debug = false;
+   bool b1 = compile_and_eval_regex(i2c_N_pattern, value);
+   if (debug)
+      printf("(%s) value=|%s|, returning %s\n", __func__, value, sbool( b1));
+   return b1;
 }
+
 
 bool class_display_device_predicate(const char * value) {
    return str_starts_with(value, "0x03");
@@ -232,20 +238,22 @@ bool dirname_starts_with(const char * dirname, const char * val) {
    return result;
 #endif
 
+
 // for e.g. i2c-3
-bool is_i2cN(const char * dirname, const char * val) {
-   // bool debug = false;
-   // DBGMSF(debug, "dirname=%s, val_fn=%s", dirname, val);
-   bool result = str_starts_with(dirname, "i2c-");
-   // DBGMSF(debug, "Returning %s", sbool(result));
+bool is_i2cN_dir(const char * dirname, const char * fn_ignored) {
+   bool debug = false;
+   bool result = predicate_i2c_N(dirname);
+   if (debug)
+      printf("(%s) dirname=%s, fn_ignored=%s, returning %s\n", __func__, dirname, fn_ignored, sbool(result));
    return result;
 }
 
+
 bool is_drm_dp_aux_subdir(const char * dirname, const char * val) {
-   // bool debug = false;
-   // DBGMSF(debug, "dirname=%s, val=%s", dirname, val);
+   bool debug = false;
    bool result = str_starts_with(dirname, "drm_dp_aux");
-   // DBGMSF(debug, "Returning %s", sbool(result));
+   if (debug)
+      printf("(%s) dirname=%s, fn_ignored=%s, returning %s\n", __func__, dirname, fn_ignored, sbool(result));
    return result;
 }
 
@@ -257,17 +265,14 @@ bool is_card_connector_dir(const char * dirname, const char * simple_fn) {
 
 // for e.g. card0
 bool is_cardN_dir(const char * dirname, const char * simple_fn) {
-   bool result = str_starts_with(simple_fn, "card");
+   bool result = predicate_cardN(simple_fn);
+// bool result = str_starts_with(simple_fn, "card");
    return result;
 }
+
 
 bool is_drm_dir(const char * dirname, const char * simple_fn) {
    bool result = streq(simple_fn, "drm");
-   return result;
-}
-
-bool is_i2cN_dir(const char * dirname, const char * simple_fn) {
-   bool result = str_starts_with(simple_fn, "i2c-");
    return result;
 }
 
@@ -275,9 +280,10 @@ bool is_i2cN_dir(const char * dirname, const char * simple_fn) {
 bool has_class_display_or_docking_station(
       const char * dirname, const char * simple_fn)
 {
-   // bool debug = false;
+   bool debug = false;
    bool result = false;
-   // DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   if (debug)
+      printf("(%s) Starting. dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
    char * class_val = NULL;
    int    iclass = 0;
    int    top_byte = 0;
@@ -288,8 +294,8 @@ bool has_class_display_or_docking_station(
             result = true;
       }
    }
-   // DBGMSF(debug, "class_val = %s, top_byte = 0x%02x, result=%s",
-   //               class_val, top_byte, sbool(result) );
+   if (debug)
+      printf("(%s) class_val = %s, top_byte = 0x%02x, result=%s\n", __func__, class_val, top_byte, sbool(result) );
    free(class_val);
    return result;
 }
