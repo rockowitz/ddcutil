@@ -534,7 +534,7 @@ ddc_write_read(
                                        " expected_response_type=0x%02x, expected_subtype=0x%02x",
           dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding 1 to max_read_bytes to allow for initail double 0x63 quirk");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding 1 to max_read_bytes to allow for initial double 0x63 quirk");
    max_read_bytes++;   //allow for quirk of double 0x6e at start
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
