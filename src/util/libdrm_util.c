@@ -2,7 +2,7 @@
  * Utilities for interpreting libdrm data structures
  */
 
-// Copyright (C) 2017-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -14,6 +14,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "coredefs_base.h"
 #include "data_structures.h"
 #include "report_util.h"
 #include "string_util.h"
