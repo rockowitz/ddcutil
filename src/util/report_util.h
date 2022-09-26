@@ -3,7 +3,7 @@
  *  Report utility package
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef REPORT_UTIL_H_
@@ -15,7 +15,7 @@
 #include <stdbool.h>
 /** \endcond */
 
-#include "coredefs.h"
+#include "coredefs_base.h"
 #include "string_util.h"
 
 void rpt_set_default_output_dest(FILE* output_dest);
