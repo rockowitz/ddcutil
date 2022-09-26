@@ -249,6 +249,17 @@ static void query_packages() {
 #endif
 
 
+static void execute_cmd(int depth, const char * cmd) {
+   char * msgbuf = g_strdup_printf("Executing: %s", cmd);
+   rpt_label(depth, msgbuf);
+   free(msgbuf);
+   // bool ok =
+   execute_shell_cmd_rpt(cmd, depth+1);
+   // if (!ok)
+   //    rpt_label(depth, "Command failed");
+}
+
+
 /* Performs checks specific to the nvidia and fglrx proprietary video drivers.
  *
  * Arguments:
@@ -266,6 +277,8 @@ static void driver_specific_tests(struct driver_name_node * driver_list) {
       rpt_vstring(0,"Checking for special settings for proprietary Nvidia driver ");
       rpt_vstring(0,"(Needed for some newer Nvidia cards).");
       execute_shell_cmd_rpt("grep -iH i2c /etc/X11/xorg.conf /etc/X11/xorg.conf.d/*", 1);
+      execute_cmd(1,"grep -iH nvidia modprobe.conf modprobe.d/*");
+      execute_cmd(1,"grep RegistryDwords /proc/driver/nvidia/params");
    }
 
    if (driver_name_list_find_prefix(driver_list, "fglrx")) {
