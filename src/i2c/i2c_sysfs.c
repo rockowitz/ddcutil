@@ -1188,9 +1188,18 @@ void simple_one_n_nnnn(
 }
 
 
+/** Returns a newly allocated #Sys_I2c_Info struct describing
+ *  a /sys/bus/i2c/devices/i2c-N instance, and optionally reports the
+ *  result of examining the instance
+ *
+ *  @param  busno  i2c bus number
+ *  @param  depth  logical indentation depth, if < 0 do not emit report
+ *  @result newly allocated #Sys_I2c_Info struct
+ */
 Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
+
    char bus_path[40];
    g_snprintf(bus_path, 40, "/sys/bus/i2c/devices/i2c-%d", busno);
    Sysfs_I2C_Info * result = calloc(1, sizeof(Sysfs_I2C_Info));
@@ -1220,7 +1229,7 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
                       join_string_g_ptr_array_t(result->conflicting_driver_names, ", "));
 
    dir_filtered_ordered_foreach(
-         bus_path,
+         bus_path,              // e.g. /sys/bus/i2c/devices/i2c-0
          is_n_nnnn, NULL,
          simple_one_n_nnnn,
          result->conflicting_driver_names,
@@ -1232,45 +1241,66 @@ Sysfs_I2C_Info *  get_i2c_info(int busno, int depth) {
 }
 
 
+/** Function of typedef Dir_Foreach_Func, called from #get_all_i2c_info()
+ *  for each i2c-N device in /sys/bus/i2c/devices
+ *
+ *  @param  dir_name     always /sys/bus/i2c/devices
+ *  @param  fn           i2c-N
+ *  @param  accumulator  GPtrArray to which to add newly allocated Sysfs_I2c_Info
+ *                       instance
+ */
 // typedef Dir_Foreach_Func
-void simple_get_i2c_info(
-      const char * dir_name,  // e.g. /sys/bus/i2c/devices/i2c-4
-      const char * fn,        // e.g. 4-0037
+void get_single_i2c_info(
+      const char * dir_name,  // e.g. /sys/bus/i2c/devices
+      const char * fn,        // e.g. i2c-3
       void *       accumulator,
       int          depth)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dir_name=%s, fn=%s, depth=%d", dir_name, fn, depth);
+
    int busno = i2c_name_to_busno(fn);
-   Sysfs_I2C_Info * info = get_i2c_info(busno, depth);
-   g_ptr_array_add(accumulator, info);
+   if (busno >= 0) {
+      Sysfs_I2C_Info * info = get_i2c_info(busno, depth);
+      g_ptr_array_add(accumulator, info);
+   }
+   
    DBGTRC_DONE(debug, TRACE_GROUP, "accumulator now has %d records", ((GPtrArray*)accumulator)->len);
 }
 
-static GPtrArray * all_i2c_info;
 
-// returns GPtrArray of Sysfs_I2C_Info*
+/** Returns an array of #Sysfs_I2C_Info describing each i2c-N device in
+ *  directory /sys/bus/i2c/devices, and optionally reports the contents
+ *
+ *  @param rescan  if true, discard cached array and rescan
+ *  @param depth   logical indentation depth, if < 0 do not emit report
+ *  @return pointer to array containing one #Sysfs_I2C_Info for each i2c-N device
+ *
+ *  The returned array is cached.  Caller should not free.
+ */
 GPtrArray * get_all_i2c_info(bool rescan, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
+
+   static GPtrArray * all_i2c_info;
    if (all_i2c_info && rescan)  {
       g_ptr_array_free(all_i2c_info, true);
       all_i2c_info = NULL;
-    }
-
+   }
    if (!all_i2c_info) {
-      GPtrArray * all = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
-
+      all_i2c_info = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "newly allocated all_i2c_info=%p", all_i2c_info);
       dir_ordered_foreach(
             "/sys/bus/i2c/devices",
-            startswith_i2c,
+            predicate_i2c_N,
             i2c_compare,
-            simple_get_i2c_info,
-            all,
+            get_single_i2c_info,
+            all_i2c_info,
             depth);
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning array of %d records", all->len);
-      all_i2c_info = all;    // its a hack
    }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning pointer to GPtrArray=%p, containing %d records",
+                                   (void*)all_i2c_info, all_i2c_info->len);
    return all_i2c_info;
 }
 
@@ -1397,7 +1427,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(best_driver_name_for_n_nnnn);
    RTTI_ADD_FUNC(simple_one_n_nnnn);
    RTTI_ADD_FUNC(get_i2c_info);
-   RTTI_ADD_FUNC(simple_get_i2c_info);
+   RTTI_ADD_FUNC(get_single_i2c_info);
    RTTI_ADD_FUNC(get_all_i2c_info);
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 }
