@@ -274,66 +274,67 @@ validate_environment()
 }
 
 
-static void verify_i2c_access() {
+int verify_i2c_access() {   // non-static to enable tracing
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Bit_Set_256 buses_without_devices = EMPTY_BIT_SET_256;
    Bit_Set_256 inaccessible_devices  = EMPTY_BIT_SET_256;
+   int buses_ct = 0;
+   int buses_without_devices_ct = 0;
+   int inaccessible_devices_ct = 0;
 
    Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();  //sysfs bus numbers, not dev-i2c
-   DBGMSF(debug, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
-   if (bs256_count(buses) > 0) {
+   buses_ct = bs256_count(buses);
+   DBGTRC(debug, TRACE_GROUP, "/sys/bus/i2c/devices to check: %s",
+                              bs256_to_string_decimal(buses, "i2c-", ", "));
+   if (buses_ct == 0) {
+      fprintf(stderr, "No /sys/bus/i2c buses that might be used for DDC/CI communication found.\n");
+      fprintf(stderr, "No display adapters with i2c buses appear to exist.\n");
+   }
+   else {
       Bit_Set_256_Iterator iter = bs256_iter_new(buses);
       int busno;
       while ( (busno = bs256_iter_next(iter)) >= 0)  {
          char fnbuf[20];   // oversize to avoid -Wformat-truncation error
          snprintf(fnbuf, sizeof(fnbuf), "/dev/i2c-%d", busno);
-         int rc;
-         int errsv;
-         // DBGMSF(debug, "Calling access() for %s", fnbuf);
-         rc = access(fnbuf, R_OK|W_OK);
-         if (rc < 0) {
-            errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
+         if ( access(fnbuf, R_OK|W_OK) < 0 ) {
+            int errsv = errno;   // EACCESS if lack permissions, ENOENT if file doesn't exist
             if (errsv == ENOENT) {
                buses_without_devices = bs256_insert(buses_without_devices, busno);
-               rpt_vstring(0, "Device %s does not exist. Error = %s",
+               fprintf(stderr, "Device %s does not exist. Error = %s\n",
                               fnbuf, linux_errno_desc(errsv));
             }
             else {
-               assert(errsv == EACCES);
                inaccessible_devices = bs256_insert(inaccessible_devices, busno);
-               rpt_vstring(0,"Device %s is not readable and writable.  Error = %s",
+               fprintf(stderr, "Device %s is not readable and writable.  Error = %s\n",
                            fnbuf, linux_errno_desc(errsv) );
                include_open_failures_reported(busno);
             }
          }
       }
       bs256_iter_free(iter);
-   }
+      buses_without_devices_ct = bs256_count(buses_without_devices);
+      inaccessible_devices_ct = bs256_count(inaccessible_devices);
 
-   // DBGMSF(debug, "buses: %d", bs256_count(buses));
-   // DBGMSF(debug, "buses_without_devices: %d", bs256_count(buses_without_devices));
-   // DBGMSF(debug, "inaccessible_devices: %d",  bs256_count(inaccessible_devices));
-   if (bs256_count(buses) == 0) {
-      printf("No display adapters with i2c buses exist.\n");
-      printf("No /sys/bus/i2c buses that might be used for DDC/CI communication exist.\n");
-   }
-   else {
-      if (bs256_count(buses_without_devices) > 0) {
-         printf("/sys/bus/i2c buses without /dev/i2c-N devices: %s\n",
+      if (buses_without_devices_ct > 0) {
+         fprintf(stderr, "/sys/bus/i2c buses without /dev/i2c-N devices: %s\n",
                 bs256_to_string_decimal(buses_without_devices, "/sys/bus/i2c/devices/i2c-", " ") );
-         printf("Driver i2c_dev must be loaded or builtin\n");
-         printf("See https://www.ddcutil.com/kernel_module\n");
+         fprintf(stderr, "Driver i2c_dev must be loaded or builtin\n");
+         fprintf(stderr, "See https://www.ddcutil.com/kernel_module\n");
       }
-      if (bs256_count(inaccessible_devices) > 0) {
-         printf("Devices possibly used for DDC/CCI communication cannot be opened: %s\n",
+      if (inaccessible_devices_ct > 0) {
+         fprintf(stderr, "Devices possibly used for DDC/CI communication cannot be opened: %s\n",
                 bs256_to_string_decimal(inaccessible_devices, "/dev/i2c-", " "));
-         printf("See https://www.ddcutil.com/i2c_permissions\n");
+         fprintf(stderr, "See https://www.ddcutil.com/i2c_permissions\n");
       }
    }
 
-   DBGMSF(debug, "Done");
+   int result = buses_ct - (buses_without_devices_ct + inaccessible_devices_ct);
+   DBGTRC_DONE(debug, TRACE_GROUP,
+         "Returning %d. Total potential buses: %d, buses without devices: %d, inaccessible devices: %d",
+         result, buses_ct, buses_without_devices_ct, inaccessible_devices_ct);
+   return result;
 }
 
 
@@ -759,7 +760,6 @@ main(int argc, char *argv[]) {
               LOG_PID,            // include caller's process id
               LOG_USER);          // generic user program, syslogger can use to determine how to handle
       syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
-
    }
 
    bool ok = master_initializer(parsed_cmd);
@@ -956,6 +956,7 @@ static void add_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
+      RTTI_ADD_FUNC(verify_i2c_access);
 #ifdef UNUSED
 #ifdef TARGET_LINUX
    RTTI_ADD_FUNC(validate_environment_using_libkmod);
