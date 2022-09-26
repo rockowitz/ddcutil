@@ -36,15 +36,13 @@
 #endif
 #include "util/utilrpt.h"
 
+#include "base/parms.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
-#include "base/parms.h"
 #include "base/rtti.h"
-#include "base/sleep.h"
 #include "base/status_code_mgt.h"
-#include "base/tuned_sleep.h"
 #include "base/per_thread_data.h"
 
 #ifdef TARGET_BSD
@@ -53,8 +51,6 @@
 #include "i2c/wrap_i2c-dev.h"
 #endif
 #include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sysfs.h"
-#include "i2c/i2c_execute.h"
 
 #include "i2c/i2c_edid.h"
 
