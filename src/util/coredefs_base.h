@@ -1,13 +1,12 @@
 /** \file coredefs_base.h
- *  Portion of coredef.h shared with ddcui
+ *  Portion of coredefs.h shared with ddcui
  */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef COREDEFS_BASE_H_
 #define COREDEFS_BASE_H_
-
 
 /** Raw byte
  */
