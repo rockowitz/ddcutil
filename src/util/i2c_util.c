@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 
+#include "coredefs_base.h"
 #include "data_structures.h"
 #include "file_util.h"
 #include "report_util.h"
