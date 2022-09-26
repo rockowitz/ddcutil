@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "coredefs_base.h"
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
