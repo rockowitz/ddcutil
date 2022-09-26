@@ -16,6 +16,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "coredefs_base.h"
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
