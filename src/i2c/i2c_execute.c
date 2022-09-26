@@ -24,7 +24,10 @@
 
 #include "util/coredefs.h"
 #include "util/file_util.h"
+#include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/i2c_util.h"
+#include "util/sysfs_i2c_util.h"
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
@@ -479,6 +482,40 @@ bye:
 }
 
 
+void
+dbgrpt_i2c_msg(int depth, struct i2c_msg message) {
+    rpt_vstring(depth, "addr:     0x%04x", message.addr);   //      __u16 addr;
+    rpt_vstring(depth, "flags:    0x%04x", message.flags);
+   // #define I2C_M_RD     0x0001   /* guaranteed to be 0x0001! */
+   // #define I2C_M_TEN    0x0010   /* use only if I2C_FUNC_10BIT_ADDR */
+   // #define I2C_M_DMA_SAFE     0x0200   /* use only in kernel space */
+   // #define I2C_M_RECV_LEN     0x0400   /* use only if I2C_FUNC_SMBUS_READ_BLOCK_DATA */
+   // #define I2C_M_NO_RD_ACK    0x0800   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
+   // #define I2C_M_IGNORE_NAK   0x1000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
+   // #define I2C_M_REV_DIR_ADDR 0x2000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
+   // #define I2C_M_NOSTART      0x4000   /* use only if I2C_FUNC_NOSTART */
+   // #define I2C_M_STOP      0x8000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
+     rpt_vstring(depth, "len:    0x%04x (%d)", message.len, message.len);  // __u16
+     rpt_vstring(depth, "buf:    %p ->  %s", message.buf, hexstring_t(message.buf, message.len)); // __u8 *buf;
+}
+
+
+void
+dbgrpt_i2c_rdwr_ioctl_data(int depth, struct i2c_rdwr_ioctl_data * data) {
+   rpt_structure_loc("i2c_rdwr_ioctl_data", data, depth);
+   int d1 = depth+1;
+   int d2 = depth+2;
+   rpt_vstring(d1, "nmsgs:    %d", data->nmsgs);
+   for (int ndx = 0; ndx < data->nmsgs; ndx++) {
+      struct i2c_msg  cur = data->msgs[ndx];
+      rpt_vstring(d1, "i2c_msg[%d]", ndx);
+      // rpt_structure_loc("i2c_msg", cur, depth);
+      dbgrpt_i2c_msg(d2, cur);
+   }
+}
+
+
+
 /** Writes to I2C bus using ioctl(I2C_RDWR)
  *
  * @param  fd             Linux file descriptor
@@ -520,6 +557,9 @@ i2c_ioctl_writer(
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
+
+  if (debug)
+      dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    // per ioctl() man page:
    // if success:
@@ -589,6 +629,9 @@ i2c_ioctl_reader1(
 
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
+
+   if (debug)
+      dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    RECORD_IO_EVENTX(
       fd,
