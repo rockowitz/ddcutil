@@ -88,7 +88,6 @@ app_set_vcp_value(
       bool              force)
 {
    assert(new_value && strlen(new_value) > 0);
-   FILE * errf = ferr();   // at app level will always be stderr()
    bool debug = false;
    DBGTRC_STARTING(debug,TRACE_GROUP, "feature=0x%02x, new_value=%s, value_type=%s, force=%s",
                 feature_code, new_value, setvcp_value_type_name(value_type), sbool(force));
@@ -102,14 +101,12 @@ app_set_vcp_value(
 
    dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, (force || feature_code >= 0xe0) );
    if (!dfm) {
-      f0printf(errf, "Unrecognized VCP feature code: 0x%02x\n", feature_code);
       ddc_excp = errinfo_new2(DDCRC_UNKNOWN_FEATURE, __func__,
                               "Unrecognized VCP feature code: 0x%02x", feature_code);
       goto bye;
    }
 
    if (!(dfm->feature_flags & DDCA_WRITABLE)) {
-      f0printf(errf, "Feature 0x%02x (%s) is not writable\n", feature_code, dfm->feature_name);
       ddc_excp = errinfo_new2(DDCRC_INVALID_OPERATION, __func__,
                  "Feature 0x%02x (%s) is not writable", feature_code, dfm->feature_name);
       goto bye;
@@ -117,7 +114,6 @@ app_set_vcp_value(
 
    if (dfm->feature_flags & DDCA_TABLE) {
       if (value_type != VALUE_TYPE_ABSOLUTE) {
-         f0printf(errf, "Relative VCP values valid only for Continuous VCP features\n");
          ddc_excp = errinfo_new2(DDCRC_INVALID_OPERATION, __func__,
                                  "Relative VCP values valid only for Continuous VCP features");
          goto bye;
@@ -126,7 +122,6 @@ app_set_vcp_value(
       Byte * value_bytes;
       int bytect = hhs_to_byte_array(new_value, &value_bytes);
       if (bytect < 0) {    // bad hex string
-         f0printf(errf, "Invalid hex value\n");
          ddc_excp = errinfo_new2(DDCRC_ARG, __func__, "Invalid hex value");
          goto bye;
       }
@@ -140,7 +135,6 @@ app_set_vcp_value(
    else {  // the usual non-table case
       good_value = parse_vcp_value(new_value, &itemp);
       if (!good_value) {
-         f0printf(errf, "Invalid VCP value: %s\n", new_value);
          // what is better status code?
          ddc_excp = errinfo_new2(DDCRC_ARG, __func__,  "Invalid VCP value: %s", new_value);
          goto bye;
@@ -148,7 +142,6 @@ app_set_vcp_value(
 
       if (value_type != VALUE_TYPE_ABSOLUTE) {
          if ( !(dfm->feature_flags & DDCA_CONT) ) {
-            f0printf(errf, "Relative VCP values valid only for Continuous VCP features\n");
             ddc_excp = errinfo_new2(DDCRC_INVALID_OPERATION, __func__,
                            "Relative VCP values valid only for Continuous VCP features");
             goto bye;
@@ -163,11 +156,6 @@ app_set_vcp_value(
                        &parsed_response);
          if (ddc_excp) {
             ddcrc = ERRINFO_STATUS(ddc_excp);
-            // is message needed?
-            f0printf(errf, "Getting value failed for feature %02x. rc=%s\n",
-                           feature_code, psc_desc(ddcrc));
-            if (ddcrc == DDCRC_RETRIES)
-               f0printf(errf, "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
             ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
                           "Getting value failed for feature %02x, rc=%s",
                           feature_code, psc_desc(ddcrc));
