@@ -248,8 +248,8 @@ bool dev_i2c_devices_exist() {
    Boolean_Accumulator accumulator = {false};
 
    dir_foreach("/dev",
-               startswith_i2c, // Dir_Filter_Func,
-               set_true,       // Dir_Foreach_Func,
+               predicate_i2c_N, // Dir_Filter_Func,
+               set_true,        // Dir_Foreach_Func,
                &accumulator,
                (debug) ? 1 :  -1);
 
