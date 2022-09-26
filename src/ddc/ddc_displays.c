@@ -144,9 +144,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    DDCA_Any_Vcp_Value * pvalrec;
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-      Public_Status_Code psc = 0;
       Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
+      Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
                              errinfo_summary(ddc_excp), pvalrec);
       TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
@@ -207,7 +206,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             else if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
                      dh_repr(dh) );
-               psc = 0;
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             // dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
@@ -216,7 +214,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             }
          }
       }    // end, io_mode == DDC_IO_I2C
-
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
      if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
@@ -608,7 +605,6 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          dref->flags |= DREF_DDC_IS_MONITOR;
          g_ptr_array_add(display_list, dref);
          // dbgrpt_display_ref(dref,5);
-
       }
       else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
          Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
