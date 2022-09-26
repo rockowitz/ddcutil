@@ -595,7 +595,7 @@ void query_sys_bus_i2c(Env_Accumulator * accumulator) {
       if (accumulator->sysfs_ddcci_devices_exist) {
          rpt_nl();
          rpt_vstring(1, "Device(s) possibly created by driver ddcci found in %s", dname);
-         rpt_vstring(1, "Use ddcutil option --force-slave-address to recover from EBUSY errors.");
+         rpt_vstring(1, "May require option --force-slave-address to recover from EBUSY errors.");
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -616,8 +616,8 @@ void query_sys_amdgpu_parameters(int depth) {
 
       if ((dirp = opendir(parmdir)) == NULL) {
          int errsv = errno;
-         rpt_vstring(d2, "Couldn't open %s. errmp = %d",
-                        parmdir, errsv);
+         rpt_vstring(d2, "Couldn't open %s. errno = %d (%s)",
+                         parmdir, errsv, linux_errno_name(errsv));
       }
       else {
          GPtrArray * sorted_names = g_ptr_array_new_with_free_func(g_free);
@@ -715,15 +715,12 @@ void report_one_connector(
 
    rpt_nl();
    rpt_vstring(depth, "Connector: %s", simple_fn);
-
-   // rpt_nl();
    GByteArray * edid_byte_array;
+   char * i2c_subdir_name = NULL;    // i2c-N
    RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "enabled");
    RPT_ATTR_TEXT(d1, NULL, dirname, simple_fn, "status");
    RPT_ATTR_EDID(d1, &edid_byte_array, dirname, simple_fn, "edid");
-
-   char * i2c_subdir_name = NULL;    // i2c-N
-   GET_ATTR_SINGLE_SUBDIR(&i2c_subdir_name, is_i2cN, NULL, dirname, simple_fn);
+   GET_ATTR_SINGLE_SUBDIR(&i2c_subdir_name, is_i2cN_dir, NULL, dirname, simple_fn);
    // rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
 
    if (i2c_subdir_name) {
@@ -731,20 +728,17 @@ void report_one_connector(
       rpt_vstring(d1, "i2c_device: %s", i2c_subdir_name);
       RPT_ATTR_TEXT(d2, &node_name, dirname, simple_fn, i2c_subdir_name, "name");
 
-      Byte * edid_bytes = NULL;
       if (edid_byte_array) {
-         edid_bytes = g_byte_array_free(edid_byte_array, false);
-         insert_drm_xref(d2, i2c_subdir_name, node_name, edid_bytes);
+         insert_drm_xref(d2, i2c_subdir_name, node_name, edid_byte_array->data);
       }
       free(i2c_subdir_name);
       free(node_name);
-      free(edid_bytes);
    }
    else {
       rpt_vstring(d2, "No i2c-N subdirectory");
-      if (edid_byte_array)
-         g_byte_array_free(edid_byte_array, true);
    }
+   if (edid_byte_array)
+      g_byte_array_free(edid_byte_array, true);
 
    DBGMSF(debug, "Done");
 }
