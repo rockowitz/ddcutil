@@ -199,7 +199,7 @@ typedef struct _display_ref {
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
-   char *                   driver_name;           // set but not used
+   char *                   driver_name;           //
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

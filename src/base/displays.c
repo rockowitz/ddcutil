@@ -604,7 +604,7 @@ Display_Ref * create_bus_display_ref(int busno) {
    io_path.path.i2c_busno = busno;
    Display_Ref * dref = create_base_display_ref(io_path);
 
-   dref->driver_name = get_i2c_device_sysfs_driver(busno);   // set but not used
+   dref->driver_name = get_i2c_sysfs_driver_by_busno(busno);
    if (debug) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref,0);
@@ -746,7 +746,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "flags:            %s", interpret_dref_flags_t(dref->flags) );
    rpt_vstring(d1, "mmid:             %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
 
-   rpt_vstring(d1, "driver:           %s", dref->driver_name);   // set but not used
+   rpt_vstring(d1, "driver:           %s", dref->driver_name);
 
    DBGMSF(debug, "Done");
 }
