@@ -49,10 +49,13 @@ I2C_IO_Strategy i2c_ioctl_io_strategy = {
       "ioctl_reader"
 };
 
-char * strategy_names[] = {"I2C_IO_STRATEGY_NOT_SET", "I2C_IO_STRATEGY_FILEIO", "I2C_IO_STRATEGY_IOCTL"};
+static char * strategy_names[] = {
+      "I2C_IO_STRATEGY_NOT_SET",
+      "I2C_IO_STRATEGY_FILEIO",
+      "I2C_IO_STRATEGY_IOCTL"};
 
 
-char * i2c_io_strategy_name_from_id(I2C_IO_Strategy_Id id) {
+char * i2c_io_strategy_id_name(I2C_IO_Strategy_Id id) {
    char * result = strategy_names[id];
    // printf("(%s) id=%d, returning %s\n", __func__, id, result);
    return result;
@@ -64,15 +67,70 @@ char * i2c_io_strategy_name_from_id(I2C_IO_Strategy_Id id) {
 static I2C_IO_Strategy * i2c_io_strategy = NULL;    //&i2c_file_io_strategy;
 
 
-bool nvidia_einval_bug_encountered = false;
+#ifdef FUTURE
+typedef struct {
+   int    busno;
+   char * driver_name;
+} Per_Driver_Info;
 
+
+// void (*GDestroyNotify) (gpointer data)
+
+void per_driver_info_destroy_key(gpointer data) {
+}
+
+void per_driver_info_destroy_data(gpointer data) {
+   Per_Driver_Info * info = data;
+   free(data->driver_name);
+}
+
+
+GHashTable * per_driver_hash =NULL;
+
+Per_Driver_Info * get_per_driver_info(int busno) {
+   if (!per_driver_hash) {
+      per_driver_hash = g_hash_table_new(g_direct_hash, g_int_equal, NULL, per_driver_info_destroy_data);
+   }
+   Per_Driver_Info * info = g_hash_table_get(GINT_TO_POINTER(busno));
+   if (!info) {
+      info = calloc(1,sizeof(Per_Driver_Info));
+      g_hash_table_insert(per_driver_hash, GINT_TO_POINTER(busno), info);
+   }
+   return info;
+}
+
+Per_Driver_Info * retrieve_driver_for_bus(int busno) {
+}
+
+void save_driver_for_bus
+
+#endif
+
+
+static bool nvidia_einval_bug_encountered = false;
+
+/** Checks a status code to see if it indicates the nvida/i2c-dev driver bug.
+ *
+ *  It is if the following 3 tests are met:
+ *  - the status code is -EINVAL
+ *  - the driver name is "nvidia"
+ *  - the current io strategy is I2C_IO_STRATEGY_FILEIO
+ *
+ *  If it is, the current strategy is set to I2C_IO_STRATEGY_FILEIO and the
+ *  fact that the bug  has been seen is recorded by setting variable
+ *  nvidia_einval_bug_encountered.
+ *
+ *  @param strategy_id  current strategy
+ *  @param busno        i2c bus number
+ *  #param rc           status code
+ */
 bool check_nvidia_einval_bug_encountered(I2C_IO_Strategy_Id strategy_id,  int busno, int rc) {
    bool encountered = false;
-   char * driver_name = get_i2c_device_sysfs_driver(busno);
+   char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
    if (streq(driver_name, "nvidia") && rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {
    // if ( rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {  // ***TESTING***
       nvidia_einval_bug_encountered = true;
-      i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);   // the new normal
+      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
       free(driver_name);
       char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
       DBGTRC(true, TRACE_GROUP, msg);
@@ -83,13 +141,12 @@ bool check_nvidia_einval_bug_encountered(I2C_IO_Strategy_Id strategy_id,  int bu
 }
 
 
-
 /** Sets an alternative I2C IO strategy.
  *
  * @param strategy_id  I2C IO strategy id
  */
 void
-i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
+i2c_set_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
    bool debug = false;
    assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
 
@@ -108,56 +165,39 @@ i2c_set_io_strategy(I2C_IO_Strategy_Id strategy_id) {
    DBGMSF(debug, "Set strategy: %s", i2c_io_strategy->strategy_name);
 }
 
-I2C_IO_Strategy_Id i2c_get_io_strategy_id() {
-   I2C_IO_Strategy_Id result = I2C_IO_STRATEGY_NOT_SET;
-   if (i2c_io_strategy)
-      result = i2c_io_strategy->strategy_id;
+
+/** Gets the current io strategy.
+ *  Assigns the default strategy if not already set
+ */
+I2C_IO_Strategy_Id i2c_get_current_io_strategy_id() {
+   bool debug = true;
+   if (i2c_io_strategy == I2C_IO_STRATEGY_NOT_SET )
+   {
+      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
+      DBGMSF(debug, "Applied default strategy I2C_IO_STRATEGY_IOCTL...");
+   }
+   I2C_IO_Strategy_Id result = i2c_io_strategy->strategy_id;
    return result;
 }
 
 
-// caller responsible for freeing returned value
-char * driver_from_dev_name(char * device_name) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. device_name = %s", device_name);
-   char * driver_name = NULL;
-   int busno = extract_number_after_hyphen(device_name);
-   if (busno >= 0) {
-      driver_name = get_i2c_device_sysfs_driver(busno);
-   }
-   DBGMSF(debug, "Returning: %s", driver_name);
-   return driver_name;
-}
-
-
-// caller responsible for freeing returned value
-char * driver_from_fd(int fd) {
-   char * driver_name = NULL;
-   int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-   if (busno >= 0) {
-      driver_name = get_i2c_device_sysfs_driver(busno);
-   }
-   printf("($s) Returning %s\n", driver_name);
-   return driver_name;
-}
-
-
+#ifdef UNUSED
+// unused, this has be a duplicate of some other code
 int busno_from_fd(int fd) {
    int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
    return busno;
 }
-
-
+#endif
 
 
 I2C_IO_Strategy *
 calc_i2c_io_strategy(char * device_name) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. device_name = %s", device_name);
    I2C_IO_Strategy * result = i2c_io_strategy;      // explicit strategy if one has been set
    if (!result) {
       result = &i2c_ioctl_io_strategy;   // the default if no explicit strategy
-      char * driver_name = driver_from_dev_name(device_name);
+      char * driver_name = get_i2c_sysfs_driver_by_device_name(device_name);
       if (driver_name) {
          // special handling for nvida:
          if (streq(driver_name, "nvidia") && nvidia_einval_bug_encountered) {
@@ -185,13 +225,16 @@ calc_i2c_io_strategy_for_fd(int fd) {
 }
 
 
-I2C_IO_Strategy_Id i2c_get_calculated_io_strategy_id(char * device_name) {
+#ifdef UNUSED
+I2C_IO_Strategy_Id
+i2c_get_calculated_io_strategy_id(char * device_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "device_name = %s", device_name);
    I2C_IO_Strategy_Id id =  calc_i2c_io_strategy(device_name)->strategy_id;
-   DBGTRC_DONE(debug, TRACE_GROUP, "Done.  Returning %s", i2c_io_strategy_name_from_id(id));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Done.  Returning %s", i2c_io_strategy_id_name(id));
    return id;
 }
+#endif
 
 
 /** Writes to the I2C bus, using the function specified in the
