@@ -176,9 +176,9 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
 
     init_ddc_services();   // n. initializes start timestamp
     if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
-       i2c_set_io_strategy(I2C_IO_STRATEGY_FILEIO);
+       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
     if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
-       i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);
+       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
 
     ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
 
