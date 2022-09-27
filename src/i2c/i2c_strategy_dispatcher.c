@@ -192,7 +192,7 @@ int busno_from_fd(int fd) {
 
 I2C_IO_Strategy *
 calc_i2c_io_strategy(char * device_name) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. device_name = %s", device_name);
    I2C_IO_Strategy * result = i2c_io_strategy;      // explicit strategy if one has been set
    if (!result) {
