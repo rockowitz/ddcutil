@@ -13,8 +13,16 @@
 #include "data_structures.h"
 
 char *
-get_i2c_device_sysfs_driver(
+get_i2c_sysfs_driver_by_busno(
       int busno);
+
+char *
+get_i2c_sysfs_driver_by_device_name(
+      char * device_name);
+
+char *
+get_i2c_sysfs_driver_by_fd(
+      int fd);
 
 uint32_t
 get_i2c_device_sysfs_class(

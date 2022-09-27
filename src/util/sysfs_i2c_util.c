@@ -72,8 +72,7 @@ is_module_loaded_using_sysfs(
  *  Caller is responsible for freeing returned value
  */
 char *
-get_i2c_device_sysfs_name(
-      int busno)
+get_i2c_device_sysfs_name(int busno)
 {
    char workbuf[50];
    snprintf(workbuf, 50, "/sys/bus/i2c/devices/i2c-%d/name", busno);
@@ -94,7 +93,7 @@ get_i2c_device_sysfs_name(
  *  Caller is responsible for freeing returned value
  */
 char *
-get_i2c_device_sysfs_driver(int busno) {
+get_i2c_sysfs_driver_by_busno(int busno) {
    char * driver_name = NULL;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device/driver/module", busno);
@@ -104,6 +103,55 @@ get_i2c_device_sysfs_driver(int busno) {
       driver_name = get_rpath_basename(workbuf);
    }
    // printf("(%s) busno=%d, returning %s\n", __func__, busno, driver_name);
+   return driver_name;
+}
+
+
+/** Gets the name of the driver for a /dev/i2c-N device,
+ *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
+ *
+ *  \param  device_name   e.g. /dev/i2c-n
+ *  \return newly allocated string containing driver name
+ *          NULL if not found
+ *
+ *  \remark
+ *  Caller is responsible for freeing returned value
+ */
+char * get_i2c_sysfs_driver_by_device_name(char * device_name) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. device_name = %s", __func__, device_name);
+   char * driver_name = NULL;
+   int busno = extract_number_after_hyphen(device_name);
+   if (busno >= 0) {
+      driver_name = get_i2c_sysfs_driver_by_busno(busno);
+   }
+   if (debug)
+      printf("(%s%) Done. Returning: %s", __func__, driver_name);
+   return driver_name;
+}
+
+
+/** Gets the name of the driver for a /dev/i2c-N device, specified by its file descriptor.
+ *  i.e. the basename of /sys/bus/i2c/devices/i2c-n/device/driver/module
+ *
+ *  \param  fd   file descriptor
+ *  \return newly allocated string containing driver name
+ *          NULL if not found
+ *
+ *  \remark
+ *  Caller is responsible for freeing returned value
+ */
+char *
+get_i2c_sysfs_driver_by_fd(int fd) {
+   bool debug = true;
+   char * driver_name = NULL;
+   int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
+   if (busno >= 0) {
+      driver_name = get_i2c_sysfs_driver_by_busno(busno);
+   }
+   if (debug)
+      printf("(%s) fd=%d, returning %s\n", __func__, fd, driver_name);
    return driver_name;
 }
 
@@ -198,7 +246,7 @@ sysfs_is_ignorable_i2c_device(int busno) {
    // If not found, then base the result on the device's class.
 
    char * name = get_i2c_device_sysfs_name(busno);
-   char * driver = get_i2c_device_sysfs_driver(busno);
+   char * driver = get_i2c_sysfs_driver_by_busno(busno);
    if (name)
       result = ignorable_i2c_device_sysfs_name(name, driver);
    if (debug)
