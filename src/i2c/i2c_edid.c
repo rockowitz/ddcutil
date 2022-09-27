@@ -371,6 +371,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
                               fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
+#ifdef OUT
    I2C_IO_Strategy_Id cur_strategy = i2c_get_io_strategy_id();
    DBGMSF(debug, "i2c_get_io_strategy_id() returned %d", cur_strategy);
    if (cur_strategy == I2C_IO_STRATEGY_NOT_SET )
@@ -378,8 +379,8 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);
       DBGMSF(debug, "Applied default strategy...");
    }
-   I2C_IO_Strategy_Id adjusted_strategy = i2c_get_io_strategy_id();
-   DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_name_from_id(adjusted_strategy) );
+#endif
+   DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(i2c_get_current_io_strategy_id()) );
 
    // char * called_func_name = NULL;
    Status_Errno_DDC rc;
@@ -409,7 +410,7 @@ retry:
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {
-         if (i2c_get_io_strategy_id() == I2C_IO_STRATEGY_IOCTL) {
+         if (i2c_get_current_io_strategy_id() == I2C_IO_STRATEGY_IOCTL) {
             DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_ioctl";
             rc = i2c_get_edid_bytes_directly_using_ioctl(
