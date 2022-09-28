@@ -24,7 +24,8 @@ typedef enum {
    I2C_IO_STRATEGY_IOCTL}     ///< use ioctl(I2C_RDWR)
 I2C_IO_Strategy_Id;
 
-char * i2c_io_strategy_id_name(I2C_IO_Strategy_Id id);
+char *
+i2c_io_strategy_id_name(I2C_IO_Strategy_Id id);
 
 /** Describes one I2C IO strategy */
 typedef struct {
@@ -36,16 +37,17 @@ typedef struct {
    char *             i2c_reader_name;   ///< read function name
 } I2C_IO_Strategy;
 
-// extern bool nvidia_einval_bug_encountered;
+bool
+is_nvidia_einval_bug(I2C_IO_Strategy_Id strategy_id, int busno, int rc);
 
-bool check_nvidia_einval_bug_encountered(I2C_IO_Strategy_Id strategy_id, int busno, int rc);
+void
+i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id);
 
-void                  i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id);
-// I2C_IO_Strategy_Id i2c_get_current_io_strategy_id();
-I2C_IO_Strategy_Id    i2c_get_io_strategy_id_by_device_name(char * device_name);
-I2C_IO_Strategy *     i2c_get_i2c_io_strategy_by_device_name(char * device_name);
+I2C_IO_Strategy_Id
+i2c_get_io_strategy_id_by_device_name(char * device_name);
 
-I2C_IO_Strategy_Id i2c_get_calculated_io_strategy_id(char * device_name);
+I2C_IO_Strategy_Id
+i2c_get_calculated_io_strategy_id(char * device_name);
 
 Status_Errno_DDC
 invoke_i2c_writer(

@@ -423,7 +423,7 @@ retry:
             if (rc == -EINVAL) {
                int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
                if (busno >= 0) {    // guard against pathological case
-                  bool encountered =  check_nvidia_einval_bug_encountered(I2C_IO_STRATEGY_IOCTL, busno, rc);
+                  bool encountered =  is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc);
                   if (encountered) {
                      goto retry;
                   }

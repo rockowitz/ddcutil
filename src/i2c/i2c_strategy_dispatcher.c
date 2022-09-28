@@ -28,6 +28,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+#define I2C_STRATEGY_BUSCT_MAX 32
 
 
 I2C_IO_Strategy  i2c_file_io_strategy = {
@@ -62,9 +63,7 @@ char * i2c_io_strategy_id_name(I2C_IO_Strategy_Id id) {
 }
 
 
-// the default strategy is now the one set by the user
-// if not set it is determined by the driver
-static I2C_IO_Strategy * i2c_io_strategy[16];
+static I2C_IO_Strategy * i2c_io_strategy[I2C_STRATEGY_BUSCT_MAX];    // per bus strategy
 
 
 #ifdef FUTURE
@@ -126,7 +125,7 @@ static bool nvidia_einval_bug_encountered = false;
  *  - the current IO strategy is set to I2C_IO_STRATEGY_FILEIO
  */
 bool
-check_nvidia_einval_bug_encountered(
+is_nvidia_einval_bug(
       I2C_IO_Strategy_Id  strategy_id,
       int                 busno,
       int                 rc)
@@ -171,9 +170,10 @@ i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
          initial_i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;
    }
-   DBGMSF(debug, "Done. Set strategy: %p", initial_i2c_io_strategy);
+
    DBGMSF(debug, "Done. Set strategy: %s", initial_i2c_io_strategy->strategy_name);
 }
+
 
 void i2c_set_io_strategy_for_device(
       int busno,
@@ -198,11 +198,9 @@ void i2c_set_io_strategy_for_device(
          break;
    }
    i2c_io_strategy[busno] = strategy;
-   DBGMSF(debug, "Done. Set strategy for busno %d: %p", busno, initial_i2c_io_strategy);
+
    DBGMSF(debug, "Done. Set strategy: for busno %d %s", busno, initial_i2c_io_strategy->strategy_name);
 }
-
-
 
 
 #ifdef UNUSED
@@ -231,26 +229,35 @@ int busno_from_fd(int fd) {
 }
 #endif
 
-// TODO: maintain separate current strategy for each driver
 
-I2C_IO_Strategy*
+/** Gets the strategy to be used on the next read or write
+ *
+ *  @param device-name   e.g. /dev/i2c-1
+ *  @return              pointer to strategy record
+ */
+I2C_IO_Strategy *
 i2c_get_io_strategy_by_device_name(char * device_name) {
    bool debug = true;
    DBGMSF(debug, "Starting. device_name = %s", device_name);
 
    int busno = extract_number_after_hyphen(device_name);
-   assert(busno >= 0 && busno < 16);
+   assert(busno >= 0 && busno < I2C_STRATEGY_BUSCT_MAX);
 
    if (!i2c_io_strategy[busno]) {
       i2c_set_io_strategy_for_device(busno, initial_i2c_io_strategy->strategy_id);
       DBGMSF(debug, "Applied default strategy: %s", initial_i2c_io_strategy->strategy_name);
    }
 
-   DBGMSF(debug, "Returning strategy %p", i2c_io_strategy[busno]);
    DBGMSF(debug, "Returning strategy %s", i2c_io_strategy[busno]->strategy_name);
    return i2c_io_strategy[busno];
 }
 
+
+/** Gets the strategy to be used on the next read or write
+ *
+ *  @param device-name   e.g. /dev/i2c-1
+ *  @return              strategy id
+ */
 I2C_IO_Strategy_Id
 i2c_get_io_strategy_id_by_device_name(char * device_name) {
    bool debug = true;
@@ -259,10 +266,6 @@ i2c_get_io_strategy_id_by_device_name(char * device_name) {
    DBGMSF(debug, "Returning %d", id);
    return id;
 }
-
-
-
-
 
 
 #ifdef UNUSED
@@ -309,7 +312,7 @@ retry:
    if (rc == -EINVAL) {
       int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
       if (busno >= 0) {    // guard against pathological case
-         if (check_nvidia_einval_bug_encountered(strategy->strategy_id, busno, rc)) {
+         if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
             goto retry;
          }
       }
@@ -357,7 +360,7 @@ retry:
      if (rc == -EINVAL) {
         int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
         if (busno >= 0) {    // guard against pathological case
-           if (check_nvidia_einval_bug_encountered(strategy->strategy_id, busno, rc)) {
+           if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
               goto retry;
            }
         }
@@ -375,7 +378,7 @@ void init_i2c_strategy_func_name_table() {
    RTTI_ADD_FUNC(invoke_i2c_writer);
 
    // quick and dirty
-   for (int ndx = 0; ndx < 16; ndx++) {
+   for (int ndx = 0; ndx < I2C_STRATEGY_BUSCT_MAX; ndx++) {
       i2c_io_strategy[ndx] = NULL;
    }
 }
