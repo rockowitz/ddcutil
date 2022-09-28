@@ -76,7 +76,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
    int     edid_read_size,
    bool    read_bytewise)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -299,7 +299,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       int     edid_read_size,
       bool    read_bytewise)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -380,13 +380,15 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
       DBGMSF(debug, "Applied default strategy...");
    }
 #endif
-   DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(i2c_get_current_io_strategy_id()) );
-
+   DBGMSF(debug, "Using strategy  %s",
+                i2c_io_strategy_id_name(i2c_get_io_strategy_id_by_device_name(filename_for_fd_t(fd))) );
    // char * called_func_name = NULL;
    Status_Errno_DDC rc;
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
 retry:
+   I2C_IO_Strategy_Id cur_strategy_id = i2c_get_io_strategy_id_by_device_name(filename_for_fd_t(fd));
+   DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
    rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
    char * called_func_name = (EDID_Read_Uses_I2C_Layer)
@@ -410,7 +412,7 @@ retry:
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {
-         if (i2c_get_current_io_strategy_id() == I2C_IO_STRATEGY_IOCTL) {
+         if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL) {
             DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_ioctl";
             rc = i2c_get_edid_bytes_directly_using_ioctl(
