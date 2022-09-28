@@ -64,7 +64,7 @@ char * i2c_io_strategy_id_name(I2C_IO_Strategy_Id id) {
 
 // the default strategy is now the one set by the user
 // if not set it is determined by the driver
-static I2C_IO_Strategy * i2c_io_strategy = NULL;    //&i2c_file_io_strategy;
+static I2C_IO_Strategy * i2c_io_strategy[16];
 
 
 #ifdef FUTURE
@@ -136,7 +136,7 @@ check_nvidia_einval_bug_encountered(
       char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
-         i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
+         i2c_set_initial_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
          char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
          DBGTRC(true, TRACE_GROUP, msg);
          syslog(LOG_WARNING, msg);
@@ -147,13 +147,14 @@ check_nvidia_einval_bug_encountered(
    return result;
 }
 
+static I2C_IO_Strategy * initial_i2c_io_strategy = &i2c_ioctl_io_strategy;
 
 /** Sets an alternative I2C IO strategy.
  *
  * @param strategy_id  I2C IO strategy id
  */
 void
-i2c_set_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
+i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
    bool debug = true;
    assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
    DBGMSF(debug, "Starting. id=%d", strategy_id);
@@ -161,18 +162,48 @@ i2c_set_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
    switch (strategy_id) {
    case (I2C_IO_STRATEGY_NOT_SET):
          PROGRAM_LOGIC_ERROR("Impossible case");
-         i2c_io_strategy = NULL;
+         initial_i2c_io_strategy = NULL;
          break;
    case (I2C_IO_STRATEGY_FILEIO):
-         i2c_io_strategy = &i2c_file_io_strategy;
+         initial_i2c_io_strategy = &i2c_file_io_strategy;
          break;
    case (I2C_IO_STRATEGY_IOCTL):
-         i2c_io_strategy= &i2c_ioctl_io_strategy;
+         initial_i2c_io_strategy= &i2c_ioctl_io_strategy;
          break;
    }
-   DBGMSF(debug, "Done. Set strategy: %p", i2c_io_strategy);
-   DBGMSF(debug, "Done. Set strategy: %s", i2c_io_strategy->strategy_name);
+   DBGMSF(debug, "Done. Set strategy: %p", initial_i2c_io_strategy);
+   DBGMSF(debug, "Done. Set strategy: %s", initial_i2c_io_strategy->strategy_name);
 }
+
+void i2c_set_io_strategy_for_device(
+      int busno,
+      I2C_IO_Strategy_Id strategy_id)
+{
+   bool debug = true;
+   assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
+   DBGMSF(debug, "Starting. id=%d", strategy_id);
+
+   I2C_IO_Strategy * strategy = NULL;
+
+   switch (strategy_id) {
+   case (I2C_IO_STRATEGY_NOT_SET):
+         PROGRAM_LOGIC_ERROR("Impossible case");
+         strategy = NULL;
+         break;
+   case (I2C_IO_STRATEGY_FILEIO):
+         strategy = &i2c_file_io_strategy;
+         break;
+   case (I2C_IO_STRATEGY_IOCTL):
+         strategy= &i2c_ioctl_io_strategy;
+         break;
+   }
+   i2c_io_strategy[busno] = strategy;
+   DBGMSF(debug, "Done. Set strategy for busno %d: %p", busno, initial_i2c_io_strategy);
+   DBGMSF(debug, "Done. Set strategy: for busno %d %s", busno, initial_i2c_io_strategy->strategy_name);
+}
+
+
+
 
 #ifdef UNUSED
 /** Gets the current io strategy.
@@ -183,7 +214,7 @@ i2c_get_current_io_strategy_id() {
    bool debug = true;
    if (i2c_io_strategy == I2C_IO_STRATEGY_NOT_SET )
    {
-      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
+      i2c_set_initial_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
       DBGMSF(debug, "Applied default strategy I2C_IO_STRATEGY_IOCTL...");
    }
    I2C_IO_Strategy_Id result = i2c_io_strategy->strategy_id;
@@ -207,14 +238,17 @@ i2c_get_io_strategy_by_device_name(char * device_name) {
    bool debug = true;
    DBGMSF(debug, "Starting. device_name = %s", device_name);
 
-   if (!i2c_io_strategy) {
-      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
-      DBGMSF(debug, "Applied default strategy I2C_IO_STRATEGY_IOCTL...");
+   int busno = extract_number_after_hyphen(device_name);
+   assert(busno >= 0 && busno < 16);
+
+   if (!i2c_io_strategy[busno]) {
+      i2c_set_io_strategy_for_device(busno, initial_i2c_io_strategy->strategy_id);
+      DBGMSF(debug, "Applied default strategy: %s", initial_i2c_io_strategy->strategy_name);
    }
 
-   DBGMSF(debug, "Returning strategy %p", i2c_io_strategy);
-   DBGMSF(debug, "Returning strategy %s", i2c_io_strategy->strategy_name);
-   return i2c_io_strategy;
+   DBGMSF(debug, "Returning strategy %p", i2c_io_strategy[busno]);
+   DBGMSF(debug, "Returning strategy %s", i2c_io_strategy[busno]->strategy_name);
+   return i2c_io_strategy[busno];
 }
 
 I2C_IO_Strategy_Id
@@ -339,5 +373,10 @@ retry:
 void init_i2c_strategy_func_name_table() {
    RTTI_ADD_FUNC(invoke_i2c_reader);
    RTTI_ADD_FUNC(invoke_i2c_writer);
+
+   // quick and dirty
+   for (int ndx = 0; ndx < 16; ndx++) {
+      i2c_io_strategy[ndx] = NULL;
+   }
 }
 
