@@ -146,9 +146,9 @@ is_nvidia_einval_bug(
    return result;
 }
 
-static I2C_IO_Strategy * initial_i2c_io_strategy = &i2c_ioctl_io_strategy;
+static I2C_IO_Strategy * initial_i2c_io_strategy = NULL;
 
-/** Sets an alternative I2C IO strategy.
+/** Sets the initial I2C IO strategy
  *
  * @param strategy_id  I2C IO strategy id
  */
@@ -377,6 +377,7 @@ void init_i2c_strategy_func_name_table() {
    RTTI_ADD_FUNC(invoke_i2c_reader);
    RTTI_ADD_FUNC(invoke_i2c_writer);
 
+   i2c_set_initial_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);
    // quick and dirty
    for (int ndx = 0; ndx < I2C_STRATEGY_BUSCT_MAX; ndx++) {
       i2c_io_strategy[ndx] = NULL;
