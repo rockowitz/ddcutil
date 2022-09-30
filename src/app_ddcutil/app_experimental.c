@@ -34,7 +34,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3, "Unused");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
-   REPORT_FLAG_OPTION(5, "EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
    REPORT_FLAG_OPTION(6, "Force I2C bus");
 
    rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
