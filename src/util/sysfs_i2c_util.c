@@ -15,6 +15,7 @@
 
 #include "coredefs_base.h"
 #include "file_util.h"
+#include "i2c_util.h"
 #include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
@@ -127,7 +128,7 @@ char * get_i2c_sysfs_driver_by_device_name(char * device_name) {
       driver_name = get_i2c_sysfs_driver_by_busno(busno);
    }
    if (debug)
-      printf("(%s%) Done. Returning: %s", __func__, driver_name);
+      printf("(%s) Done. Returning: %s", __func__, driver_name);
    return driver_name;
 }
 
@@ -144,7 +145,7 @@ char * get_i2c_sysfs_driver_by_device_name(char * device_name) {
  */
 char *
 get_i2c_sysfs_driver_by_fd(int fd) {
-   bool debug = true;
+   bool debug = false;
    char * driver_name = NULL;
    int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
    if (busno >= 0) {
