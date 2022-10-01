@@ -58,7 +58,7 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-bool EDID_Read_Uses_I2C_Layer        = false; // DEFAULT_EDID_READ_USES_I2C_LAYER;
+bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
@@ -76,7 +76,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
    int     edid_read_size,
    bool    read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting EDID. File descriptor = %d, filename=%s, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -299,7 +299,7 @@ i2c_get_edid_bytes_using_i2c_layer(
       int     edid_read_size,
       bool    read_bytewise)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, filename=%s, rawedid=%p, edid_read_size=%d, read_bytewise=%s",
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
@@ -371,25 +371,12 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
                               fd, filename_for_fd_t(fd));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-#ifdef OUT
-   I2C_IO_Strategy_Id cur_strategy = i2c_get_io_strategy_id();
-   DBGMSF(debug, "i2c_get_io_strategy_id() returned %d", cur_strategy);
-   if (cur_strategy == I2C_IO_STRATEGY_NOT_SET )
-   {
-      i2c_set_io_strategy(I2C_IO_STRATEGY_IOCTL);
-      DBGMSF(debug, "Applied default strategy...");
-   }
-#endif
-   DBGMSF(debug, "Using strategy  %s",
-                i2c_io_strategy_id_name(i2c_get_io_strategy_id_by_device_name(filename_for_fd_t(fd))) );
-   // char * called_func_name = NULL;
-   Status_Errno_DDC rc;
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
 retry:
-   I2C_IO_Strategy_Id cur_strategy_id = i2c_get_io_strategy_id_by_device_name(filename_for_fd_t(fd));
+   I2C_IO_Strategy_Id cur_strategy_id = i2c_get_io_strategy_id();
    DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
-   rc = -1;
+   int rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
    char * called_func_name = (EDID_Read_Uses_I2C_Layer)
              ? "i2c_get_edid_bytes_using_i2c_layer()" : "i2c_get_edid_bytes_directly()";
@@ -411,7 +398,7 @@ retry:
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
-      else {
+      else {   // use local functions
          if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL) {
             DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_ioctl";
@@ -422,12 +409,9 @@ retry:
                read_bytewise);
             if (rc == -EINVAL) {
                int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-               if (busno >= 0) {    // guard against pathological case
-                  bool encountered =  is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc);
-                  if (encountered) {
-                     goto retry;
-                  }
-               }
+               assert(busno >= 0);
+               if ( is_nvidia_einval_bug(I2C_IO_STRATEGY_IOCTL, busno, rc))
+                   goto retry;
             }
          }
          else {
@@ -435,7 +419,7 @@ retry:
             called_func_name = "i2c_get_edid_bytes_directly_using_fileio";
             rc = i2c_get_edid_bytes_directly_using_fileio(fd, rawedid, edid_read_size, read_bytewise);
          }
-      }
+      }  // use local functions
       tryctr++;
       if (rc == -ENXIO || rc == -EOPNOTSUPP || rc == -ETIMEDOUT || rc == -EBUSY) {    // removed -EIO 3/4/2021
          // DBGMSG("breaking");
