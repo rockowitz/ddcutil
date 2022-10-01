@@ -11,8 +11,10 @@ AM_CPPFLAGS += \
 endif
 
 
-AM_CFLAGS = -Wall 
+AM_CFLAGS = -Wall
+if WARNINGS_ARE_ERRORS_COND
 AM_CFLAGS += -Werror
+endif
 # AM_CFLAGS += -Wpedantic
 
 if ENABLE_CALLGRAPH_COND

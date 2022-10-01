@@ -132,7 +132,9 @@ AM_CFLAGS = -Wall
 # on an external site having a different compiler, compiler version, or configuration. 
 # See comments and answers in
 # https://stackoverflow.com/questions/10275554/how-to-disable-specified-warning-for-specified-file-while-using-autotools
+# 10/1/2022: now enabled by WARNINGS_ARE_ERRORS_COND in individual Makefile.am
 # AM_CFLAGS += -Werror
+# AM_CFLAGS += -Wpedantic
 
 # -pedantic issues warnings re code that doesn't conform to ISO C
 # In particular, -m modifier on sscanf is a POSIX extension, not ISO C

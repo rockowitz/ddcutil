@@ -4,8 +4,10 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src/public
 
 
-AM_CFLAGS = -Wall 
+AM_CFLAGS = -Wall
+if WARNINGS_ARE_ERRORS_COND
 AM_CFLAGS += -Werror
+endif
 # AM_CFLAGS += -Wpedantic
 
 if ENABLE_CALLGRAPH_COND

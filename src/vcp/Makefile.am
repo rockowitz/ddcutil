@@ -5,6 +5,10 @@ AM_CPPFLAGS =        \
 
 AM_CFLAGS = $(AM_CFLAGS_STD)
 
+if WARNINGS_ARE_ERRORS_COND
+AM_CFLAGS += "-Werror"
+endif
+
 # vcp_feature_codes.c requires extensive changes if -Wpedantic
 # AM_CFLAGS += -Wpedantic
 

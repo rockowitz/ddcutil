@@ -63,6 +63,8 @@ dnl AC_SUBST( PACKAGE_VSUFFIX, [ddcutil_version_suffix] )
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
 
+AM_CONDITIONAL(WARNINGS_ARE_ERRORS_COND, [test "x$ddcutil_version_suffix" != "x"] )
+
 AS_IF( [test 0$DBG -ne 0], 
    AC_MSG_NOTICE([debug messages enabled]),
    AC_MSG_NOTICE([debug messages disabled])
