@@ -41,13 +41,10 @@ bool
 is_nvidia_einval_bug(I2C_IO_Strategy_Id strategy_id, int busno, int rc);
 
 void
-i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id);
+i2c_set_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id);
 
 I2C_IO_Strategy_Id
-i2c_get_io_strategy_id_by_device_name(char * device_name);
-
-I2C_IO_Strategy_Id
-i2c_get_calculated_io_strategy_id(char * device_name);
+i2c_get_io_strategy_id();
 
 Status_Errno_DDC
 invoke_i2c_writer(
@@ -64,6 +61,6 @@ invoke_i2c_reader(
        int        bytect,
        Byte *     readbuf);
 
-void init_i2c_strategy_func_name_table();
+void init_i2c_strategy_dispatcher();
 
 #endif /* I2C_STRATEGY_DISPATCHER_H_ */

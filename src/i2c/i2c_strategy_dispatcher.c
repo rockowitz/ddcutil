@@ -57,56 +57,64 @@ static char * strategy_names[] = {
 
 
 char * i2c_io_strategy_id_name(I2C_IO_Strategy_Id id) {
+   assert(id < ARRAY_SIZE(strategy_names));
    char * result = strategy_names[id];
-   // printf("(%s) id=%d, returning %s\n", __func__, id, result);
    return result;
 }
 
 
-static I2C_IO_Strategy * i2c_io_strategy[I2C_STRATEGY_BUSCT_MAX];    // per bus strategy
+static I2C_IO_Strategy * active_i2c_io_strategy = NULL;
+static bool              nvidia_einval_bug_encountered = false;
 
 
-#ifdef FUTURE
-typedef struct {
-   int    busno;
-   char * driver_name;
-} Per_Driver_Info;
+/** Sets the active I2C IO strategy
+ *
+ * @param strategy_id  I2C IO strategy id
+ */
+void
+i2c_set_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
+   bool debug = false;
+   assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
+   DBGMSF(debug, "Starting. id=%d", strategy_id);
 
-
-// void (*GDestroyNotify) (gpointer data)
-
-void per_driver_info_destroy_key(gpointer data) {
-}
-
-void per_driver_info_destroy_data(gpointer data) {
-   Per_Driver_Info * info = data;
-   free(data->driver_name);
-}
-
-
-GHashTable * per_driver_hash =NULL;
-
-Per_Driver_Info * get_per_driver_info(int busno) {
-   if (!per_driver_hash) {
-      per_driver_hash = g_hash_table_new(g_direct_hash, g_int_equal, NULL, per_driver_info_destroy_data);
+   switch (strategy_id) {
+   case (I2C_IO_STRATEGY_NOT_SET):
+         PROGRAM_LOGIC_ERROR("Impossible case");
+         active_i2c_io_strategy = NULL;
+         break;
+   case (I2C_IO_STRATEGY_FILEIO):
+         active_i2c_io_strategy = &i2c_file_io_strategy;
+         break;
+   case (I2C_IO_STRATEGY_IOCTL):
+         active_i2c_io_strategy= &i2c_ioctl_io_strategy;
+         break;
    }
-   Per_Driver_Info * info = g_hash_table_get(GINT_TO_POINTER(busno));
-   if (!info) {
-      info = calloc(1,sizeof(Per_Driver_Info));
-      g_hash_table_insert(per_driver_hash, GINT_TO_POINTER(busno), info);
-   }
-   return info;
+
+   DBGMSF(debug, "Done. Set strategy: %s", active_i2c_io_strategy->strategy_name);
 }
 
-Per_Driver_Info * retrieve_driver_for_bus(int busno) {
+
+/** Gets the strategy to be used on the next read or write
+ *
+ *  @return              pointer to strategy record
+ */
+static I2C_IO_Strategy *
+i2c_get_io_strategy() {
+   bool debug = false;
+   DBGMSF(debug, "Executing. Returning strategy %s", active_i2c_io_strategy->strategy_name);
+   return active_i2c_io_strategy;
 }
 
-void save_driver_for_bus
 
-#endif
+I2C_IO_Strategy_Id
+i2c_get_io_strategy_id() {
+   bool debug = false;
+   I2C_IO_Strategy_Id result =
+         (active_i2c_io_strategy) ? active_i2c_io_strategy->strategy_id : I2C_IO_STRATEGY_NOT_SET;
+   DBGMSF(debug, "Returning %s", i2c_io_strategy_id_name(result));
+   return result;
+}
 
-
-static bool nvidia_einval_bug_encountered = false;
 
 /** Checks a status code to see if it indicates the nvida/i2c-dev driver bug.
  *
@@ -135,7 +143,7 @@ is_nvidia_einval_bug(
       char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
-         i2c_set_initial_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
+         i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
          char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
          DBGTRC(true, TRACE_GROUP, msg);
          syslog(LOG_WARNING, msg);
@@ -145,139 +153,6 @@ is_nvidia_einval_bug(
    }
    return result;
 }
-
-static I2C_IO_Strategy * initial_i2c_io_strategy = NULL;
-
-/** Sets the initial I2C IO strategy
- *
- * @param strategy_id  I2C IO strategy id
- */
-void
-i2c_set_initial_io_strategy_by_id(I2C_IO_Strategy_Id strategy_id) {
-   bool debug = true;
-   assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
-   DBGMSF(debug, "Starting. id=%d", strategy_id);
-
-   switch (strategy_id) {
-   case (I2C_IO_STRATEGY_NOT_SET):
-         PROGRAM_LOGIC_ERROR("Impossible case");
-         initial_i2c_io_strategy = NULL;
-         break;
-   case (I2C_IO_STRATEGY_FILEIO):
-         initial_i2c_io_strategy = &i2c_file_io_strategy;
-         break;
-   case (I2C_IO_STRATEGY_IOCTL):
-         initial_i2c_io_strategy= &i2c_ioctl_io_strategy;
-         break;
-   }
-
-   DBGMSF(debug, "Done. Set strategy: %s", initial_i2c_io_strategy->strategy_name);
-}
-
-
-void i2c_set_io_strategy_for_device(
-      int busno,
-      I2C_IO_Strategy_Id strategy_id)
-{
-   bool debug = true;
-   assert(strategy_id != I2C_IO_STRATEGY_NOT_SET);
-   DBGMSF(debug, "Starting. id=%d", strategy_id);
-
-   I2C_IO_Strategy * strategy = NULL;
-
-   switch (strategy_id) {
-   case (I2C_IO_STRATEGY_NOT_SET):
-         PROGRAM_LOGIC_ERROR("Impossible case");
-         strategy = NULL;
-         break;
-   case (I2C_IO_STRATEGY_FILEIO):
-         strategy = &i2c_file_io_strategy;
-         break;
-   case (I2C_IO_STRATEGY_IOCTL):
-         strategy= &i2c_ioctl_io_strategy;
-         break;
-   }
-   i2c_io_strategy[busno] = strategy;
-
-   DBGMSF(debug, "Done. Set strategy: for busno %d %s", busno, initial_i2c_io_strategy->strategy_name);
-}
-
-
-#ifdef UNUSED
-/** Gets the current io strategy.
- *  Assigns the default strategy if not already set
- */
-I2C_IO_Strategy_Id
-i2c_get_current_io_strategy_id() {
-   bool debug = true;
-   if (i2c_io_strategy == I2C_IO_STRATEGY_NOT_SET )
-   {
-      i2c_set_initial_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
-      DBGMSF(debug, "Applied default strategy I2C_IO_STRATEGY_IOCTL...");
-   }
-   I2C_IO_Strategy_Id result = i2c_io_strategy->strategy_id;
-   return result;
-}
-#endif
-
-
-#ifdef UNUSED
-// unused, this has be a duplicate of some other code
-int busno_from_fd(int fd) {
-   int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-   return busno;
-}
-#endif
-
-
-/** Gets the strategy to be used on the next read or write
- *
- *  @param device-name   e.g. /dev/i2c-1
- *  @return              pointer to strategy record
- */
-I2C_IO_Strategy *
-i2c_get_io_strategy_by_device_name(char * device_name) {
-   bool debug = true;
-   DBGMSF(debug, "Starting. device_name = %s", device_name);
-
-   int busno = extract_number_after_hyphen(device_name);
-   assert(busno >= 0 && busno < I2C_STRATEGY_BUSCT_MAX);
-
-   if (!i2c_io_strategy[busno]) {
-      i2c_set_io_strategy_for_device(busno, initial_i2c_io_strategy->strategy_id);
-      DBGMSF(debug, "Applied default strategy: %s", initial_i2c_io_strategy->strategy_name);
-   }
-
-   DBGMSF(debug, "Returning strategy %s", i2c_io_strategy[busno]->strategy_name);
-   return i2c_io_strategy[busno];
-}
-
-
-/** Gets the strategy to be used on the next read or write
- *
- *  @param device-name   e.g. /dev/i2c-1
- *  @return              strategy id
- */
-I2C_IO_Strategy_Id
-i2c_get_io_strategy_id_by_device_name(char * device_name) {
-   bool debug = true;
-   DBGMSF(debug, "device_name=|%s|", device_name);
-   I2C_IO_Strategy_Id id = i2c_get_io_strategy_by_device_name(device_name)->strategy_id;
-   DBGMSF(debug, "Returning %d", id);
-   return id;
-}
-
-
-#ifdef UNUSED
-I2C_IO_Strategy_Id
-i2c_get_calculated_io_strategy_id(char * device_name) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "device_name = %s", device_name);
-   I2C_IO_Strategy_Id id =  get_i2c_io_strategy_by_device_name(device_name)->strategy_id;
-   DBGTRC_DONE(debug, TRACE_GROUP, "Done.  Returning %s", i2c_io_strategy_id_name(id));
-   return id;
-}
-#endif
 
 
 /** Writes to the I2C bus, using the function specified in the
@@ -295,7 +170,7 @@ Status_Errno_DDC invoke_i2c_writer(
       int    bytect,
       Byte * bytes_to_write)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, bytes_to_write=%p -> %s",
                  fd,
@@ -306,15 +181,14 @@ Status_Errno_DDC invoke_i2c_writer(
                  hexstring_t(bytes_to_write, bytect));
 
 retry:
-   I2C_IO_Strategy * strategy = i2c_get_io_strategy_by_device_name(filename_for_fd_t(fd));
+   I2C_IO_Strategy * strategy = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
    Status_Errno_DDC rc = strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
    if (rc == -EINVAL) {
       int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-      if (busno >= 0) {    // guard against pathological case
-         if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
-            goto retry;
-         }
+      assert(busno >= 0);
+      if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
+         goto retry;
       }
    }
    assert (rc <= 0);
@@ -352,17 +226,16 @@ Status_Errno_DDC invoke_i2c_reader(
                    readbuf);
 
 retry:
-     I2C_IO_Strategy * strategy = i2c_get_io_strategy_by_device_name(filename_for_fd_t(fd));
+     I2C_IO_Strategy * strategy = i2c_get_io_strategy();
      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
      Status_Errno_DDC rc = strategy->i2c_reader(fd, slave_address, read_bytewise, bytect, readbuf);
      assert (rc <= 0);
 
      if (rc == -EINVAL) {
         int busno = extract_number_after_hyphen(filename_for_fd_t(fd));
-        if (busno >= 0) {    // guard against pathological case
-           if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
-              goto retry;
-           }
+        assert(busno >= 0);
+        if (is_nvidia_einval_bug(strategy->strategy_id, busno, rc)) {
+           goto retry;
         }
      }
      if (rc == 0) {
@@ -373,14 +246,10 @@ retry:
 }
 
 
-void init_i2c_strategy_func_name_table() {
+void init_i2c_strategy_dispatcher() {
+   i2c_set_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);
+
    RTTI_ADD_FUNC(invoke_i2c_reader);
    RTTI_ADD_FUNC(invoke_i2c_writer);
-
-   i2c_set_initial_io_strategy_by_id(DEFAULT_I2C_IO_STRATEGY);
-   // quick and dirty
-   for (int ndx = 0; ndx < I2C_STRATEGY_BUSCT_MAX; ndx++) {
-      i2c_io_strategy[ndx] = NULL;
-   }
 }
 
