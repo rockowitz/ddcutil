@@ -1017,7 +1017,7 @@ static void init_i2c_bus_core_func_name_table() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    init_i2c_execute_func_name_table();
-   init_i2c_strategy_func_name_table();
+   init_i2c_strategy_dispatcher();
    open_failures_reported = EMPTY_BIT_SET_256;
 }
 
