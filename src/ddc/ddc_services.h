@@ -3,7 +3,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-20 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_SERVICES_H_
