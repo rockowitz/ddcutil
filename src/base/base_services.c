@@ -1,4 +1,4 @@
-/** @file base_init.c
+/** @file base_services.c
  *  Initialize and release base services.
  */
 
@@ -18,8 +18,7 @@
 #include "sleep.h"
 #include "tuned_sleep.h"
 
-#include "base_init.h"
-
+#include <base_services.h>
 
 /** Master initialization function for files in subdirectory base
  */
@@ -41,6 +40,7 @@ void init_base_services() {
    if (debug)
       printf("(%s) Done\n", __func__);
 }
+
 
 void release_base_services() {
    release_thread_data_module();

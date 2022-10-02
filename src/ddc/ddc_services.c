@@ -1,4 +1,5 @@
 /** @file ddc_services.c
+#include <base/base_services.h>
  *
  * ddc layer initialization and configuration, statistics management
  */
@@ -14,7 +15,6 @@
 #include "util/report_util.h"
 /** \endcond */
 
-#include "base/base_init.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/rtti.h"

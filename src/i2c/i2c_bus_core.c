@@ -907,9 +907,6 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
-#ifdef OLD
-   RTTI_ADD_FUNC(i2c_set_addr);
-#endif
 }
 
 

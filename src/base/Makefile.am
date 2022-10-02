@@ -26,7 +26,7 @@ dist-hook:
 noinst_LTLIBRARIES = libbase.la
 
 libbase_la_SOURCES =      \
-base_init.c               \
+base_services.c           \
 build_info.c              \
 core.c                    \
 core_per_thread_settings.c \

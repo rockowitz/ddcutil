@@ -1,8 +1,8 @@
-/** \file base_init.h"
+/** \file base_services.h"
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_SERVICES_H_

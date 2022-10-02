@@ -10,6 +10,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/base_services.h>
 #include <ctype.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
@@ -43,7 +44,6 @@
 
 #include "public/ddcutil_types.h"
 
-#include "base/base_init.h"
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/ddc_errno.h"
