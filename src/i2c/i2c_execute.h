@@ -59,6 +59,6 @@ Status_Errno_DDC i2c_ioctl_reader(
       int    bytect,
       Byte * readbuf);
 
-void init_i2c_execute_func_name_table();
+void init_i2c_execute();
 
 #endif /* I2C_EXECUTE_H_ */

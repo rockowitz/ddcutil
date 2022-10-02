@@ -14,7 +14,7 @@
 void init_i2c_services() {
    init_i2c_bus_core();
    init_i2c_edid();
-   init_i2c_execute_func_name_table();
+   init_i2c_execute();
    init_i2c_strategy_dispatcher();
    init_i2c_sysfs();
 }

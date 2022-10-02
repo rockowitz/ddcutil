@@ -603,7 +603,7 @@ i2c_ioctl_reader(
 }
 
 
-void init_i2c_execute_func_name_table() {
+void init_i2c_execute() {
    RTTI_ADD_FUNC(i2c_set_addr);
    RTTI_ADD_FUNC(i2c_set_addr0);
    RTTI_ADD_FUNC(i2c_ioctl_reader);
