@@ -1,6 +1,9 @@
-// i2c_edid.c
+/** @file i2c_edid.c   Read and parse EDID
+ *  Implements multiple methods to read an EDID, attempting to work around
+ *  various quirks.
+ */
 
-// Copyright (C) 2018 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -58,18 +61,17 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
+//
+// I2C Bus Inspection - EDID Retrieval
+//
+
+// Globals:
 bool EDID_Read_Uses_I2C_Layer        = DEFAULT_EDID_READ_USES_I2C_LAYER;
 bool EDID_Read_Bytewise              = DEFAULT_EDID_READ_BYTEWISE;
 int  EDID_Read_Size                  = DEFAULT_EDID_READ_SIZE;
 bool EDID_Write_Before_Read          = DEFAULT_EDID_WRITE_BEFORE_READ;
 
-//
-// I2C Bus Inspection - EDID Retrieval
-//
-
-
-// static
-Status_Errno_DDC
+static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_ioctl(
    int     fd,
    Buffer* rawedid,
@@ -205,7 +207,6 @@ i2c_get_edid_bytes_directly_using_ioctl(
 }
 
 
-
 static Status_Errno_DDC
 i2c_get_edid_bytes_directly_using_fileio(
    int     fd,
@@ -304,13 +305,6 @@ i2c_get_edid_bytes_using_i2c_layer(
                  fd, filename_for_fd_t(fd), (void*)rawedid, edid_read_size, sbool(read_bytewise));
    assert(rawedid && rawedid->buffer_size >= EDID_BUFFER_SIZE);
 
-#ifdef OLD
-   int rc = i2c_set_addr(fd, 0x50, CALLOPT_ERR_MSG);
-   if (rc < 0) {
-      goto bye;
-   }
-#endif
-
    int rc = 0;
    bool write_before_read = EDID_Write_Before_Read;
    rc = 0;
@@ -338,14 +332,6 @@ i2c_get_edid_bytes_using_i2c_layer(
       }
    }  // write succeeded
 
-#ifdef OLD
-   rc = i2c_set_addr(fd, 0x37, CALLOPT_ERR_MSG);
-   if (rc < 0) {
-      goto bye;
-   }
-
-bye:
-#endif
    if ( (debug || IS_TRACING()) && rc == 0) {
       DBGMSG("Returning buffer:");
       rpt_hex_dump(rawedid->bytes, rawedid->len, 2);
@@ -509,6 +495,7 @@ i2c_get_parsed_edid_by_fd(int fd, Parsed_Edid ** edid_ptr_loc)
 void init_i2c_edid() {
    RTTI_ADD_FUNC(i2c_get_edid_bytes_using_i2c_layer);
    RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_fileio);
+   RTTI_ADD_FUNC(i2c_get_edid_bytes_directly_using_ioctl);
    RTTI_ADD_FUNC(i2c_get_raw_edid_by_fd);
    RTTI_ADD_FUNC(i2c_get_parsed_edid_by_fd);
 }
