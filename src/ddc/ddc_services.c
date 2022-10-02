@@ -30,10 +30,8 @@
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_files.h"
 
-#include "i2c/i2c_bus_core.h"
-#include "i2c/i2c_edid.h"
-#include "i2c/i2c_strategy_dispatcher.h"
-#include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_services.h"
+
 #include "usb/usb_displays.h"
 
 #include "ddc/ddc_display_lock.h"
@@ -157,10 +155,7 @@ void init_ddc_services() {
    DBGMSF(debug, "Starting");
 
    // i2c:
-   // i2c_set_io_strategy(DEFAULT_I2C_IO_STRATEGY);
-   init_i2c_bus_core();
-   init_i2c_edid();
-   init_i2c_sysfs();
+   init_i2c_services();
 
    // usb
 #ifdef USE_USB

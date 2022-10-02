@@ -97,7 +97,6 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info);
 I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx);
 I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
 
-
 // Reports all detected i2c buses:
 int  i2c_dbgrpt_buses(bool report_all, int depth);
 
