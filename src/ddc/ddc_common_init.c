@@ -159,6 +159,12 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 }
 
 
+/** Initialization code common to the standalone program ddcutil and
+ *  the shared library libddcutil. Called from both main.c and api.base.c.
+ *
+ *  @param  parsed_cmd   parsed command
+ *  @return ok if initialization succeeded, false if not
+ */
 bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    bool ok = false;
@@ -167,32 +173,28 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
 
+   init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
    DBGMSF(debug, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
-
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
+   EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
+   if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
+      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
+   if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
+      i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
+   ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
+   set_output_level(parsed_cmd->output_level);  // current thread
+   set_default_thread_output_level(parsed_cmd->output_level); // for future threads
+   enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
+   // TMI:
+   // if (show_recoverable_errors)
+   //    parsed_cmd->stats = true;
 
-    init_ddc_services();   // n. initializes start timestamp
-    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
-       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
-    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
-       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
-    EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
+   init_max_tries(parsed_cmd);
 
-    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
-
-    set_output_level(parsed_cmd->output_level);  // current thread
-    set_default_thread_output_level(parsed_cmd->output_level); // for future threads
-    enable_report_ddc_errors( parsed_cmd->flags & CMD_FLAG_DDCDATA );
-    // TMI:
-    // if (show_recoverable_errors)
-    //    parsed_cmd->stats = true;
-
-    init_max_tries(parsed_cmd);
-
- #ifdef USE_USB
+#ifdef USE_USB
 #ifndef NDEBUG
    DDCA_Status rc =
 #endif
