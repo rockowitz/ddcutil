@@ -2,9 +2,8 @@
  * Runtime trace information
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #include <glib-2.0/glib.h>
 #include <string.h>
@@ -33,6 +32,7 @@ char * rtti_get_func_name_by_addr(void * ptr) {
    }
    return result;
 }
+
 
 void * rtti_get_func_addr_by_name(char * name) {
    void * result = NULL;
@@ -64,4 +64,3 @@ void dbgrpt_rtti_func_name_table(int depth) {
       }
    }
 }
-
