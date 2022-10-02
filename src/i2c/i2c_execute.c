@@ -58,7 +58,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_forceable_slave_addr_flag = false;
 
 
-Status_Errno i2c_set_addr0(int fd, uint16_t op, int addr) {
+Status_Errno
+i2c_set_addr0(int fd, uint16_t op, int addr) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, addr=0x%02x, filename=%s, op=%s",
@@ -100,8 +101,15 @@ Status_Errno i2c_set_addr0(int fd, uint16_t op, int addr) {
 }
 
 
-
-Status_Errno i2c_set_addr(int fd, int addr) {
+/** Sets the slave address to be used in subsequent i2c-dev write() and read()
+ *  operations.
+ *
+ *  @param fd   file descriptor
+ *  @param addr slave address
+ *  @return     status code
+ */
+Status_Errno
+i2c_set_addr(int fd, int addr) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                  "fd=%d, addr=0x%02x, filename=%s, i2c_forceable_slave_addr_flag=%s",
@@ -158,7 +166,6 @@ Status_Errno i2c_set_addr(int fd, int addr) {
 }
 
 
-
 static bool read_with_timeout  = false;
 static bool write_with_timeout = false;
 
@@ -175,18 +182,21 @@ bool get_i2c_fileio_use_timeout() {
 
 /** Writes to i2c bus using write()
  *
- * @param  fd             Linux file descriptor
- * @param  slave_address  I2C slave address being written to (unused)
- * @param  bytect         number of bytes to write
- * @param  pbytes         pointer to bytes to write
+ * @param  fd              Linux file descriptor
+ * @param  slave_address   I2C slave address being written to (unused)
+ * @param  bytect          number of bytes to write
+ * @param  pbytes          pointer to bytes to write
  *
- * @retval 0                 success
- * @retval DDCRC_DDC_DATA   incorrect number of bytes read
- * @retval DDCRC_BAD_BYTECT incorrect number of bytes read (deprecated)
- * @retval -errno            negative Linux error number
+ * @retval 0               success
+ * @retval DDCRC_DDC_DATA  incorrect number of bytes read
+ * @retval -errno          negative Linux error number
  */
 Status_Errno_DDC
-i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
+i2c_fileio_writer(
+      int    fd,
+      Byte   slave_address,
+      int    bytect,
+      Byte * pbytes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
                  fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
@@ -270,8 +280,6 @@ i2c_fileio_writer(int fd, Byte slave_address, int bytect, Byte * pbytes) {
  *
  * @remark
  * read_bytewise == true fails on some monitors, should generally be false
- * Parameter **slave_address** is present to satisfy the signature of typedef I2C_Writer.
- * The address has already been by #set_slave_address().
  */
 Status_Errno_DDC
 i2c_fileio_reader(
@@ -409,7 +417,6 @@ dbgrpt_i2c_rdwr_ioctl_data(int depth, struct i2c_rdwr_ioctl_data * data) {
       dbgrpt_i2c_msg(d2, cur);
    }
 }
-
 
 
 /** Writes to I2C bus using ioctl(I2C_RDWR)
