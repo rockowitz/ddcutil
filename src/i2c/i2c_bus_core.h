@@ -36,17 +36,7 @@ extern GPtrArray * i2c_buses;
 // shared with i2c_bus_selector.c
 extern GPtrArray * i2c_buses;
 
-#ifdef OLD
-// Controls whether function #i2c_set_addr() retries from EBUSY error by
-// changing ioctl op I2C_SLAVE to op I2C_SLAVE_FORCE.
-extern bool i2c_force_slave_addr_flag;
-#endif
-
 extern bool i2c_force_bus;
-
-// Basic I2C bus operations
-int           i2c_open_bus(int busno, Call_Options callopts);
-Status_Errno  i2c_close_bus(int fd, Call_Options callopts);
 
 // Retrieve and inspect bus information
 
@@ -77,29 +67,33 @@ struct {
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
 } I2C_Bus_Info;
 
-void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
-void i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
+// Basic I2C bus operations
+int              i2c_open_bus(int busno, Call_Options callopts);
+Status_Errno     i2c_close_bus(int fd, Call_Options callopts);
 
-// Simple bus detection, no side effects
-bool i2c_device_exists(int busno);
-int  i2c_device_count();           // simple /dev/i2c-n count, no side effects
+void             i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
+void             i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
+
+bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
+int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
 Byte_Value_Array get_i2c_devices_by_existence_test();
-void add_open_failures_reported(Bit_Set_256 failures);
-void include_open_failures_reported(int busno);
+
+void             add_open_failures_reported(Bit_Set_256 failures);
+void             include_open_failures_reported(int busno);
 
 // Bus inventory - detect and probe buses
-int i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
-void i2c_discard_buses();
-I2C_Bus_Info * i2c_detect_single_bus(int busno);
-void i2c_free_bus_info(I2C_Bus_Info * bus_info);
+int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
+void             i2c_discard_buses();
+I2C_Bus_Info *   i2c_detect_single_bus(int busno);
+void             i2c_free_bus_info(I2C_Bus_Info * bus_info);
 
 // Simple Bus_Info retrieval
-I2C_Bus_Info * i2c_get_bus_info_by_index(uint busndx);
-I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno);
+I2C_Bus_Info *   i2c_get_bus_info_by_index(uint busndx);
+I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
 // Reports all detected i2c buses:
-int  i2c_dbgrpt_buses(bool report_all, int depth);
+int              i2c_dbgrpt_buses(bool report_all, int depth);
 
-void init_i2c_bus_core();
+void             init_i2c_bus_core();
 
 #endif /* I2C_BUS_CORE_H_ */
