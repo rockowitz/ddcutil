@@ -69,15 +69,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 /** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info - shared with i2c_bus_selector.c */
 /* static */ GPtrArray * i2c_buses = NULL;
 
-#ifdef OLD
-/** Global variable.  Controls whether function #i2c_set_addr() attempts retry
- *  after EBUSY error by changing ioctl op I2C_SLAVE to I2C_SLAVE_FORCE.
- */
-bool i2c_force_slave_addr_flag = false;
-#endif
-
 // Another ugly global variable for testing purposes
-
 bool i2c_force_bus = false;
 
 static GMutex  open_failures_mutex;
