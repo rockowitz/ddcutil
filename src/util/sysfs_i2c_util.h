@@ -40,11 +40,6 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
-#ifdef UNUSED
-int
-get_sysfs_drm_edid_count();
-#endif
-
 Bit_Set_256
 get_sysfs_drm_card_numbers();
 
