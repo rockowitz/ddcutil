@@ -118,7 +118,8 @@ get_i2c_sysfs_driver_by_busno(int busno) {
  *  \remark
  *  Caller is responsible for freeing returned value
  */
-char * get_i2c_sysfs_driver_by_device_name(char * device_name) {
+char *
+get_i2c_sysfs_driver_by_device_name(char * device_name) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. device_name = %s", __func__, device_name);
@@ -165,7 +166,8 @@ get_i2c_sysfs_driver_by_fd(int fd) {
  *  \return device class
  *          0 if not found (should never occur)
  */
-uint32_t get_i2c_device_sysfs_class(int busno) {
+uint32_t
+get_i2c_device_sysfs_class(int busno) {
    uint32_t result = 0;
    char workbuf[100];
    snprintf(workbuf, 100, "/sys/bus/i2c/devices/i2c-%d/device", busno);
@@ -259,8 +261,8 @@ sysfs_is_ignorable_i2c_device(int busno) {
 }
 
 
-static
-void do_sysfs_drm_card_number_dir(
+static void
+do_sysfs_drm_card_number_dir(
             const char * dirname,     // <device>/drm
             const char * simple_fn,   // card0, card1, etc.
             void *       data,
@@ -278,7 +280,8 @@ void do_sysfs_drm_card_number_dir(
 }
 
 
-Bit_Set_256 get_sysfs_drm_card_numbers() {
+Bit_Set_256
+get_sysfs_drm_card_numbers() {
    bool debug = false;
    char * dname =
  #ifdef TARGET_BSD
@@ -299,6 +302,3 @@ Bit_Set_256 get_sysfs_drm_card_numbers() {
       printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs256_to_string_decimal(result, "", ", "));
    return result;
  }
-
-
-
