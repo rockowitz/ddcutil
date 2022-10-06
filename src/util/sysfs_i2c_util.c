@@ -259,24 +259,6 @@ sysfs_is_ignorable_i2c_device(int busno) {
 }
 
 
-#ifdef UNUSED
-int get_sysfs_drm_edid_count() {
-   int ival = 0;
-   GPtrArray * output = execute_shell_cmd_collect("ls /sys/class/drm/card*-*/edid | wc -w");
-   if (output) {
-      char * s = g_ptr_array_index(output, 0);
-#ifndef NDEBUG
-      bool ok =
-#endif
-      str_to_int(s, &ival, 10);
-      assert(ok);
-      g_ptr_array_free(output, true);
-   }
-   return ival;
-}
-#endif
-
-
 #ifdef OLD
 // TODO: rewrite using sys functions
 Byte_Bit_Flags get_sysfs_drm_card_numbers()
