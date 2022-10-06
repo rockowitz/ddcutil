@@ -188,20 +188,6 @@ uint32_t get_i2c_device_sysfs_class(int busno) {
 }
 
 
-#ifdef UNUSED
-static bool is_smbus_device_using_sysfs(int busno) {
-   char * name = get_i2c_device_sysfs_name(busno);
-
-   bool result = false;
-   if (name && str_starts_with(name, "SMBus"))
-      result = true;
-   free(name);
-   // DBGMSG("busno=%d, returning: %s", busno, bool_repr(result));
-   return result;
-}
-#endif
-
-
 static bool
 ignorable_i2c_device_sysfs_name(const char * name, const char * driver) {
    bool result = false;
