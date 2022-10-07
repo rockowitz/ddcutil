@@ -322,25 +322,6 @@ errinfo_new2(
 }
 
 
-#ifdef UNUSED
-/** Creates a new #Error_Info instance, including a reference to another
- *  instance that is the cause of the current error.
- *
- *  \param  code   status code
- *  \param  cause  pointer to another #Error_Info that is included as a cause
- *  \param  func   name of function creating new instance
- *  \return pointer to new instance
- */
-Error_Info * errinfo_new_with_cause(
-      int            code,
-      Error_Info *   cause,
-      const char *   func)
-{
-   return errinfo_new_with_cause2(code, cause, func, NULL);
-}
-#endif 
-
-
 static
 Error_Info *
 errinfo_new_with_causev(
@@ -419,7 +400,7 @@ errinfo_new_with_causes(
       int             cause_ct,
       const char *    func)
 {
-   return errinfo_new_with_causes2(code, causes, cause_ct, func, NULL);
+   return errinfo_new_with_causes3(code, causes, cause_ct, func, NULL);
 }
 
 Error_Info *

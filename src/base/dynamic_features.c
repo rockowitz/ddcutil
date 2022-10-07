@@ -598,7 +598,7 @@ create_monitor_dynamic_features(
 
    if (errors->len > 0) {
       char * detail = g_strdup_printf("Error(s) processing monitor definition file: %s", filename);
-      master_err = errinfo_new_with_causes2(
+      master_err = errinfo_new_with_causes3(
                             DDCRC_BAD_DATA,
                             (Error_Info**) errors->pdata,
                             errors->len,
