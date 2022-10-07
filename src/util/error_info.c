@@ -362,22 +362,10 @@ errinfo_new_with_causev(
  *  \param  status_code  status code
  *  \param  cause        pointer to another #Error_Info that is included as a cause
  *  \param  func         name of function creating new instance
- *  \param  detail       optional detail string
+ *  \param  detail_fmt   optional detail format string
+ *  \param  ...          optional arguments for detail_fmt
  *  \return pointer to new instance
  */
-Error_Info *
-errinfo_new_with_cause2(
-      int            status_code,
-      Error_Info *   cause,
-      const char *   func,
-      char *         detail)
-{
-   VALID_DDC_ERROR_PTR(cause);
-   Error_Info * erec = errinfo_new2(status_code, func, detail);
-   errinfo_add_cause(erec, cause);
-   return erec;
-}
-
 Error_Info *
 errinfo_new_with_cause3(
       int            status_code,
