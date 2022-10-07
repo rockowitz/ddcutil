@@ -83,13 +83,6 @@ Error_Info * errinfo_new_with_causes(
       int            cause_ct,
       const char *   func);
 
-Error_Info * errinfo_new_with_causes2(
-      int            status_code,
-      Error_Info **  causes,
-      int            cause_ct,
-      const char *   func,
-      char *         detail);
-
 Error_Info *
 errinfo_new_with_causes3(
       int            status_code,

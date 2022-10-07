@@ -404,22 +404,6 @@ errinfo_new_with_causes(
 }
 
 Error_Info *
-errinfo_new_with_causes2(
-      int            status_code,
-      Error_Info **  causes,
-      int            cause_ct,
-      const char *   func,
-      char *         detail)
-{
-   Error_Info * result = errinfo_new2(status_code, func, detail);
-   for (int ndx = 0; ndx < cause_ct; ndx++) {
-      errinfo_add_cause(result, causes[ndx]);
-   }
-   return result;
-}
-
-
-Error_Info *
 errinfo_new_with_causes3(
       int            status_code,
       Error_Info **  causes,
