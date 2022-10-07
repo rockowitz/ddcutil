@@ -125,7 +125,7 @@ try_multi_part_read(
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                 "display_current_offset %d != cur_offset %d", display_current_offset, cur_offset);
          psc = DDCRC_MULTI_PART_READ_FRAGMENT;
-         excp = errinfo_new(psc, __func__);
+         excp = errinfo_new2(psc, __func__, NULL);
          COUNT_STATUS_CODE(psc);
       }
       else {

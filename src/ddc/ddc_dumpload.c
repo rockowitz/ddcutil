@@ -116,7 +116,7 @@ create_dumpload_data_from_g_ptr_array(
    bool debug = false;
    DBGMSF(debug, "Starting.");
 
-   Error_Info * errs = errinfo_new(DDCRC_BAD_DATA, __func__);
+   Error_Info * errs = errinfo_new2(DDCRC_BAD_DATA, __func__, NULL);
    *dumpload_data_loc = NULL;
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));

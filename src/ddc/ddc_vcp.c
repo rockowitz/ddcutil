@@ -94,7 +94,8 @@ ddc_save_current_settings(
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
-      ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
+      ddc_excp = errinfo_new2(DDCRC_UNIMPLEMENTED, __func__,
+                              "MCCS over USB does not have Save Current Settings command" );
    }
    else {
       DDC_Packet * request_packet_ptr =
@@ -195,7 +196,7 @@ set_table_vcp_value(
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
       psc = DDCRC_INTERNAL_ERROR;
 #endif
-      ddc_excp = ERRINFO_NEW(psc);
+      ddc_excp = errinfo_new2(psc, __func__, "Error setting feature value");
    }
    else {
       // TODO: clean up function signatures
@@ -409,7 +410,7 @@ ddc_set_vcp_value(
             // dbgrpt_ddca_single_vcp_value(newval, 3);
 
             if (! single_vcp_value_equal(vrec,newval)) {
-               ddc_excp = errinfo_new(DDCRC_VERIFY, __func__);
+               ddc_excp = errinfo_new2(DDCRC_VERIFY, __func__, "Current value does not match value set");
                f0printf(verbose_msg_dest, "Current value does not match value set.\n");
             }
             else {
@@ -575,10 +576,10 @@ ddc_get_nontable_vcp_value(
 #endif
 
          if (!parsed_response->valid_response)  {
-            excp = errinfo_new(DDCRC_DDC_DATA, __func__);  // was DDCRC_INVALID_DATA
+            excp = errinfo_new2(DDCRC_DDC_DATA, __func__, "Invalid getvcp response");  // was DDCRC_INVALID_DATA
          }
          else if (!parsed_response->supported_opcode) {
-            excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__);
+            excp = errinfo_new2(DDCRC_REPORTED_UNSUPPORTED, __func__, "Unsupported feature");
             if (!value_bytes_zero(parsed_response)) {
                // for exploring
                DBGMSG("supported_opcode == false, but not all value bytes 0");
@@ -599,7 +600,7 @@ ddc_get_nontable_vcp_value(
          }
       }
       else {
-         excp = errinfo_new(psc, __func__);
+         excp = errinfo_new2(psc, __func__, NULL);
       }
    }
 
@@ -731,11 +732,12 @@ ddc_get_vcp_value(
                    free(parsed_nontable_response);
                 }
                 else
-                   ddc_excp = errinfo_new(psc, __func__);
+                   ddc_excp = errinfo_new2(psc, __func__, NULL);
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
-                ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__);
+                ddc_excp = errinfo_new2(DDCRC_UNIMPLEMENTED, __func__,
+                                        "Table features not supported for USB connection");
                 break;
           }
 #else

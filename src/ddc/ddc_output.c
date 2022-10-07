@@ -179,7 +179,7 @@ get_raw_value_for_feature_metadata(
               feature_type,
               &valrec);
      if (psc != 0)
-        ddc_excp = errinfo_new(psc, __func__);
+        ddc_excp = errinfo_new2(psc, __func__, NULL);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
