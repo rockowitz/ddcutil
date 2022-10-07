@@ -296,22 +296,6 @@ errinfo_newv(
 }
 
 
-/** Creates a new #Error_Info instance with the specified status code
- *  and function name.
- *
- *  \param  status_code  status code
- *  \param  func         name of function generating status code
- *  \return pointer to new instance
- */
-Error_Info *
-errinfo_new(
-      int          status_code,
-      const char * func)
-{
-   return errinfo_new2(status_code, func, NULL);
-}
-
-
 /** Creates a new #Error_Info instance with the specified status code,
  *  function name, and detail string.
  *
