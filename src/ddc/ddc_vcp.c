@@ -672,7 +672,7 @@ ddc_get_table_vcp_value(
             ddc_excp->status_code == DDCRC_ALL_RESPONSES_NULL)
    {
       Error_Info * wrapped_exception = ddc_excp;
-      ddc_excp = errinfo_new_with_cause2(
+      ddc_excp = errinfo_new_with_cause3(
             DDCRC_DETERMINED_UNSUPPORTED, wrapped_exception, __func__, "DDC NULL Message");
    }
 

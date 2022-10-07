@@ -98,7 +98,7 @@ show_changed_feature(Display_Handle * dh, Byte * p_changed_feature) {
       }
       else {
          // DBGMSG("get_nontable_vcp_value() for VCP feature x52 returned %s", errinfo_summary(x52_error) );
-         result = errinfo_new_with_cause2(
+         result = errinfo_new_with_cause3(
                   x52_error->status_code, x52_error, __func__, "Error reading feature x02");
       }
    }
@@ -157,7 +157,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
    if (x02_error) {
       DBGMSG("get_nontable_vcp_value() for feature 0x02 returned error %s", errinfo_summary(x02_error) );
       // errinfo_free(ddc_excp);
-      result = errinfo_new_with_cause2(x02_error->status_code, x02_error, __func__,
+      result = errinfo_new_with_cause3(x02_error->status_code, x02_error, __func__,
                                        "Error reading feature x02");
    }
    else {
