@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -74,8 +74,7 @@ Error_Info * errinfo_new_chained(
       const char *   func);
 #endif
 
-Error_Info *
-errinfo_new_with_causes(
+Error_Info * errinfo_new_with_causes(
       int            status_code,
       Error_Info **  causes,
       int            cause_ct,
@@ -120,9 +119,7 @@ void errinfo_report(
       Error_Info *   erec,
       int            depth);
 
-
-void
-errinfo_report_details(Error_Info * erec, int depth);
+void errinfo_report_details(Error_Info * erec, int depth);
 
 char * errinfo_summary(
       Error_Info *   erec);
