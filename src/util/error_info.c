@@ -31,7 +31,7 @@
 
 
 // Validates a pointer to an #Error_Info, using asserts
-#define VALID_DDC_ERROR_PTR(ptr) \
+#define VALID_ERROR_INFO_PTR(ptr) \
    assert(ptr); \
    assert(memcmp(ptr->marker, ERROR_INFO_MARKER, 4) == 0);
 
@@ -85,7 +85,7 @@ errinfo_free(Error_Info * erec){
       show_backtrace(2);
    }
    if (erec) {
-      VALID_DDC_ERROR_PTR(erec);
+      VALID_ERROR_INFO_PTR(erec);
 
       if (debug) {
          printf("(%s) Freeing exception: \n", __func__);
@@ -145,7 +145,7 @@ errinfo_free_with_report(
 
 static void ddc_error_free2(void * erec) {
    Error_Info* erec2 = (Error_Info *) erec;
-   VALID_DDC_ERROR_PTR(erec2);
+   VALID_ERROR_INFO_PTR(erec2);
    errinfo_free(erec2);
 }
 #endif
@@ -161,7 +161,7 @@ static void ddc_error_free2(void * erec) {
  */
 void
 errinfo_set_status(Error_Info * erec, int code) {
-   VALID_DDC_ERROR_PTR(erec);
+   VALID_ERROR_INFO_PTR(erec);
    erec->status_code = code;
 }
 
@@ -176,7 +176,7 @@ errinfo_set_detail(
       Error_Info *   erec,
       char *         detail)
 {
-   VALID_DDC_ERROR_PTR(erec);
+   VALID_ERROR_INFO_PTR(erec);
    if (erec->detail) {
       free(erec->detail);
       erec->detail = NULL;
@@ -203,7 +203,7 @@ void errinfo_set_detail3(
       const char *  detail_fmt,
       ...)
 {
-   VALID_DDC_ERROR_PTR(erec);
+   VALID_ERROR_INFO_PTR(erec);
    if (erec->detail) {
       free(erec->detail);
       erec->detail = NULL;
@@ -227,8 +227,8 @@ errinfo_add_cause(
       Error_Info * cause)
 {
    // printf("(%s) cause=%p\n", __func__, cause);
-   VALID_DDC_ERROR_PTR(parent);
-   VALID_DDC_ERROR_PTR(cause);
+   VALID_ERROR_INFO_PTR(parent);
+   VALID_ERROR_INFO_PTR(cause);
 
    // printf("(%s) parent->cause_ct = %d, parent->max_causes = %d\n",
    //         __func__, parent->cause_ct, parent->max_causes);
@@ -386,7 +386,7 @@ Error_Info * errinfo_new_chained(
       Error_Info * cause,
       const char * func)
 {
-   VALID_DDC_ERROR_PTR(cause);
+   VALID_ERROR_INFO_PTR(cause);
    Error_Info * erec = errinfo_new_with_cause(cause->status_code, cause, func);
    return erec;
 }
@@ -755,7 +755,7 @@ char *
 errinfo_summary(Error_Info * erec) {
    if (!erec)
       return "NULL";
-   VALID_DDC_ERROR_PTR(erec);
+   VALID_ERROR_INFO_PTR(erec);
 
    static GPrivate  esumm_key     = G_PRIVATE_INIT(g_free);
    static GPrivate  esumm_len_key = G_PRIVATE_INIT(g_free);
