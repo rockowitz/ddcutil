@@ -302,7 +302,7 @@ errinfo_newv(
  *  \return pointer to new instance
  */
 Error_Info *
-errinfo_new2(
+errinfo_new(
       int            status_code,
       const char *   func,
       const char *   detail,

@@ -292,7 +292,7 @@ add_error(
       else {
          final_detail = detail;
       }
-      Error_Info *  err = errinfo_new2(DDCRC_BAD_DATA, caller, final_detail);
+      Error_Info *  err = errinfo_new(DDCRC_BAD_DATA, caller, final_detail);
       g_ptr_array_add(errors, err);
       va_end(args);
 }

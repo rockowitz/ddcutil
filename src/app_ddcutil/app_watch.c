@@ -92,7 +92,7 @@ show_changed_feature(Display_Handle * dh, Byte * p_changed_feature) {
           x52_error->status_code == DDCRC_DETERMINED_UNSUPPORTED)
       {
          // printf("Feature x02 (New Control Value) reports new control values exist, but feature x52 (Active Control) unsupported\n");
-         result = errinfo_new2(x52_error->status_code, __func__,
+         result = errinfo_new(x52_error->status_code, __func__,
                "Feature x02 (New Control Value) reports that changed VCP feature values exist, but feature x52 (Active Control) is unsupported");
          errinfo_free(x52_error);
       }
@@ -167,7 +167,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
 
       if (x02_value == 0xff) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "No user controls exist");
-         result = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__,
+         result = errinfo_new(DDCRC_DETERMINED_UNSUPPORTED, __func__,
                         "Feature x02 (New Control Value) reports No User Controls");
       }
 
@@ -178,7 +178,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
 
       else if (x02_value != 0x02){
          DBGMSF(debug, "x02 value = 0x%02x", x02_value);
-         result = errinfo_new2(DDCRC_DETERMINED_UNSUPPORTED, __func__,
+         result = errinfo_new(DDCRC_DETERMINED_UNSUPPORTED, __func__,
                "Feature x02 (New Control Value) reports unexpected value 0x%02", x02_value);
       }
 

@@ -95,7 +95,7 @@ void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
 #define ADD_DATA_ERROR(_expl) \
       errinfo_add_cause(  \
          errs,            \
-         errinfo_new2(    \
+         errinfo_new(    \
             DDCRC_BAD_DATA, __func__, \
             _expl " at line %d: %s", linectr, line) );
 
@@ -116,7 +116,7 @@ create_dumpload_data_from_g_ptr_array(
    bool debug = false;
    DBGMSF(debug, "Starting.");
 
-   Error_Info * errs = errinfo_new2(DDCRC_BAD_DATA, __func__, NULL);
+   Error_Info * errs = errinfo_new(DDCRC_BAD_DATA, __func__, NULL);
    *dumpload_data_loc = NULL;
 
    Dumpload_Data * data = calloc(1, sizeof(Dumpload_Data));
@@ -313,7 +313,7 @@ create_dumpload_data_from_g_ptr_array(
                // f0printf(ferr(), "Unexpected field \"%s\" at line %d: %s\n", s0, linectr, line );
                errinfo_add_cause(
                           errs,
-                          errinfo_new2(
+                          errinfo_new(
                                 DDCRC_BAD_DATA, __func__,
                                 "Unexpected field \"%s\" at line %d: %s", s0, linectr, line) );
 #ifndef NDEBUG

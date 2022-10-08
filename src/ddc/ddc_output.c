@@ -179,7 +179,7 @@ get_raw_value_for_feature_metadata(
               feature_type,
               &valrec);
      if (psc != 0)
-        ddc_excp = errinfo_new2(psc, __func__, NULL);
+        ddc_excp = errinfo_new(psc, __func__, NULL);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
 #endif
@@ -698,7 +698,7 @@ ddc_get_formatted_value_for_dfm(
             f0printf(msg_fh, FMT_CODE_NAME_DETAIL_W_NL,
                             feature_code, feature_name, msg);
             psc = DDCRC_INTERPRETATION_FAILED;
-            ddc_excp = errinfo_new2(DDCRC_INTERPRETATION_FAILED, __func__, msg);
+            ddc_excp = errinfo_new(DDCRC_INTERPRETATION_FAILED, __func__, msg);
             // TODO: retry with default output function
          }
 

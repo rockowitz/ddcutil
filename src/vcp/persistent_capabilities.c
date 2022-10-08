@@ -104,8 +104,8 @@ static Error_Info * load_persistent_capabilities_file() {
                char * colon = strchr(aline, ':');
                if (!colon) {
                   if (!errs)
-                     errs = errinfo_new2(DDCRC_BAD_DATA, __func__, "Invalid capabilities record");
-                  errinfo_add_cause(errs, errinfo_new2(DDCRC_BAD_DATA, __func__,
+                     errs = errinfo_new(DDCRC_BAD_DATA, __func__, "Invalid capabilities record");
+                  errinfo_add_cause(errs, errinfo_new(DDCRC_BAD_DATA, __func__,
                                                        "Line %d, No colon in %s",
                                                         ndx+1, aline));
                }

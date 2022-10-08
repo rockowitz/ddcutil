@@ -55,7 +55,7 @@ void errinfo_free_with_report(
       bool          report,
       const char *  func);
 
-Error_Info * errinfo_new2(
+Error_Info * errinfo_new(
       int            status_code,
       const char *   func,
       const char *   detail,

@@ -251,7 +251,7 @@ dfr_load_by_mmk(
       free(fqfn);
    }
    else {
-      errs = errinfo_new2(DDCRC_NOT_FOUND, __func__,
+      errs = errinfo_new(DDCRC_NOT_FOUND, __func__,
                           "Feature definition file not found: %s.mccs", simple_fn);
    }
    assert( (errs && !dfr) || (!errs && dfr));   // avoid clang warning

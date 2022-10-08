@@ -50,7 +50,7 @@ file_getlines_errinfo(
    int rc = file_getlines(filename,  lines, false);
    if (rc < 0) {
       char * detail = g_strdup_printf("Error reading file %s", filename);
-      errs = errinfo_new2(
+      errs = errinfo_new(
             rc,
             __func__,
             detail);

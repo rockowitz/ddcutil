@@ -580,7 +580,7 @@ ddc_write_read(
    // Convert status code to Error_Info *
    Error_Info * excp = NULL;
    if (psc < 0)
-      excp = errinfo_new2(psc, __func__, NULL);
+      excp = errinfo_new(psc, __func__, NULL);
 
    DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, excp, response_packet_ptr_loc, dbgrpt_packet);
 #ifdef OLD
@@ -877,7 +877,7 @@ ddc_write_only(
    DDCA_Status psc = ddc_i2c_write_only(dh, request_packet_ptr);
    Error_Info *  ddc_excp = NULL;
    if (psc)
-      ddc_excp = errinfo_new2(psc, __func__, NULL);
+      ddc_excp = errinfo_new(psc, __func__, NULL);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;

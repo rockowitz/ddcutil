@@ -763,15 +763,15 @@ void set_ddca_error_detail_from_open_errors() {
    bool debug = false;
    GPtrArray * errs = ddc_get_bus_open_errors();
    if (errs && errs->len > 0) {
-      Error_Info * master_error = errinfo_new2(DDCRC_OTHER, __func__, "Error(s) opening ddc devices");
+      Error_Info * master_error = errinfo_new(DDCRC_OTHER, __func__, "Error(s) opening ddc devices");
       for (int ndx = 0; ndx < errs->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(errs, ndx);
          Error_Info * errinfo = NULL;
          if (cur->io_mode == DDCA_IO_I2C)
-            errinfo = errinfo_new2(cur->error, __func__, "Error %s opening /dev/i2c-%d",
+            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
          else
-            errinfo = errinfo_new2(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d",
+            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d",
                                              psc_desc(cur->error), cur->devno);
          errinfo_add_cause(master_error, errinfo);
       }
