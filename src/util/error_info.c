@@ -165,26 +165,6 @@ errinfo_set_status(Error_Info * erec, int code) {
    erec->status_code = code;
 }
 
-/** Sets the detail string in a existing #Error_Info instance.
- *  If there is already a detail string in the instance, it is replaced.
- *
- *  \param  erec   pointer to instance
- *  \param  detail detail string
- */
-void
-errinfo_set_detail(
-      Error_Info *   erec,
-      char *         detail)
-{
-   VALID_ERROR_INFO_PTR(erec);
-   if (erec->detail) {
-      free(erec->detail);
-      erec->detail = NULL;
-   }
-
-   if (detail)
-      erec->detail = strdup(detail);
-}
 
 static void
 errinfo_set_detailv(
@@ -198,6 +178,13 @@ errinfo_set_detailv(
 }
 
 
+/** Sets the detail string in a existing #Error_Info instance.
+ *  If there is already a detail string in the instance, it is replaced.
+ *
+ *  \param  erec   pointer to instance
+ *  \param  detail detail format string
+ *  \param  ...    arguments for format string
+ */
 void errinfo_set_detail3(
       Error_Info *  erec,
       const char *  detail_fmt,
