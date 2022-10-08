@@ -77,12 +77,6 @@ Error_Info * errinfo_new_chained(
       const char *   func);
 #endif
 
-Error_Info * errinfo_new_with_causes(
-      int            status_code,
-      Error_Info **  causes,
-      int            cause_ct,
-      const char *   func);
-
 Error_Info *
 errinfo_new_with_causes3(
       int            status_code,

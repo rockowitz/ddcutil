@@ -391,18 +391,10 @@ Error_Info * errinfo_new_chained(
  *  \param  causes          array of #Error_Info instances
  *  \param  cause_ct        number of causes
  *  \param  func            name of function creating the new #Error_Info
+ *  \param  detail          detail format string
+ *  \param  ...             optional arguments for detail format string
  *  \return pointer to new instance
  */
-Error_Info *
-errinfo_new_with_causes(
-      int             code,
-      Error_Info **   causes,
-      int             cause_ct,
-      const char *    func)
-{
-   return errinfo_new_with_causes3(code, causes, cause_ct, func, NULL);
-}
-
 Error_Info *
 errinfo_new_with_causes3(
       int            status_code,
