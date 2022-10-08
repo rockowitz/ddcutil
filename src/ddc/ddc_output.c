@@ -208,7 +208,7 @@ get_raw_value_for_feature_metadata(
       }
       // psc = DDCRC_DETERMINED_UNSUPPORTED;
       COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-      ddc_excp = errinfo_new_with_cause3(
+      ddc_excp = errinfo_new_with_cause(
                    DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "EIO");
    }
 
@@ -233,7 +233,7 @@ get_raw_value_for_feature_metadata(
          }
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
          // psc = DDCRC_DETERMINED_UNSUPPORTED;
-         ddc_excp = errinfo_new_with_cause3(
+         ddc_excp = errinfo_new_with_cause(
                      DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "DDC NULL Response");
          break;
 
@@ -245,7 +245,7 @@ get_raw_value_for_feature_metadata(
          }
          // psc = DDCRC_DETERMINED_UNSUPPORTED;
          COUNT_STATUS_CODE(DDCRC_DETERMINED_UNSUPPORTED);
-         ddc_excp = errinfo_new_with_cause3(
+         ddc_excp = errinfo_new_with_cause(
                      DDCRC_DETERMINED_UNSUPPORTED, ddc_excp, __func__, "MH=ML=SH=SL=0");
          break;
 

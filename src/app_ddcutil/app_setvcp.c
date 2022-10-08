@@ -156,7 +156,7 @@ app_set_vcp_value(
                        &parsed_response);
          if (ddc_excp) {
             ddcrc = ERRINFO_STATUS(ddc_excp);
-            ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
+            ddc_excp = errinfo_new_with_cause(ddcrc, ddc_excp, __func__,
                           "Getting value failed for feature %02x, rc=%s",
                           feature_code, psc_desc(ddcrc));
             goto bye;
@@ -187,10 +187,10 @@ app_set_vcp_value(
    if (ddc_excp) {
       ddcrc = ERRINFO_STATUS(ddc_excp);
       if (ddcrc == DDCRC_VERIFY)
-         ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
+         ddc_excp = errinfo_new_with_cause(ddcrc, ddc_excp, __func__,
                        "Verification failed for feature %02x", feature_code);
       else
-         ddc_excp = errinfo_new_with_cause3(ddcrc, ddc_excp, __func__,
+         ddc_excp = errinfo_new_with_cause(ddcrc, ddc_excp, __func__,
                        "Setting value failed for feature %02x, rc=%s",
                        feature_code, psc_desc(ddcrc));
    }

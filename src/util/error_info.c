@@ -344,7 +344,7 @@ errinfo_new_with_causev(
  *  \return pointer to new instance
  */
 Error_Info *
-errinfo_new_with_cause3(
+errinfo_new_with_cause(
       int            status_code,
       Error_Info *   cause,
       const char *   func,

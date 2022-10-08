@@ -61,7 +61,7 @@ Error_Info * errinfo_new(
       const char *   detail,
       ...);
 
-Error_Info * errinfo_new_with_cause3(
+Error_Info * errinfo_new_with_cause(
       int            status_code,
       Error_Info *   cause,
       const char *   func,
