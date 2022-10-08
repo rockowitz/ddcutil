@@ -101,10 +101,6 @@ void errinfo_set_status(
 
 void errinfo_set_detail(
       Error_Info *   erec,
-      char *         detail);
-
-void errinfo_set_detail3(
-      Error_Info *   erec,
       const char *  detail_fmt,
       ...);
 

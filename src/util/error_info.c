@@ -185,7 +185,7 @@ errinfo_set_detailv(
  *  \param  detail detail format string
  *  \param  ...    arguments for format string
  */
-void errinfo_set_detail3(
+void errinfo_set_detail(
       Error_Info *  erec,
       const char *  detail_fmt,
       ...)
