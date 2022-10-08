@@ -150,9 +150,8 @@ static void ddc_error_free2(void * erec) {
 }
 #endif
 
-
 //
-// Instance creation
+// Instance modification
 //
 
 /** Sets the status code in a existing #Error_Info instance.
@@ -167,6 +166,7 @@ errinfo_set_status(Error_Info * erec, int code) {
 }
 
 /** Sets the detail string in a existing #Error_Info instance.
+ *  If there is already a detail string in the instance, it is replaced.
  *
  *  \param  erec   pointer to instance
  *  \param  detail detail string
@@ -181,13 +181,14 @@ errinfo_set_detail(
       free(erec->detail);
       erec->detail = NULL;
    }
+
    if (detail)
       erec->detail = strdup(detail);
 }
 
 static void
 errinfo_set_detailv(
-      Error_Info *  erec,
+      Error_Info * erec,
       const char * detail,
       va_list      args)
 {
@@ -198,13 +199,17 @@ errinfo_set_detailv(
 
 
 void errinfo_set_detail3(
-      Error_Info *   erec,
+      Error_Info *  erec,
       const char *  detail_fmt,
       ...)
 {
+   VALID_DDC_ERROR_PTR(erec);
+   if (erec->detail) {
+      free(erec->detail);
+      erec->detail = NULL;
+   }
    va_list ap;
-      va_start(ap, detail_fmt);
-
+   va_start(ap, detail_fmt);
 
    errinfo_set_detailv(erec, detail_fmt, ap);
    va_end(ap);
@@ -265,6 +270,10 @@ errinfo_add_cause(
 #endif
 }
 
+
+//
+// Instance creation
+//
 
 /** Creates a new #Error_Info instance with the specified status code,
  *  function name, and detail string.  The substitution values for the
@@ -476,12 +485,11 @@ default_status_code_desc(int rc) {
 }
 
 
-
 GString *
 errinfo_array_summary_gs(
       struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
-      int                   error_ct,
-      GString *             gs)     ///<  number of causal errors
+      int                   error_ct,  ///<  number of causal errors
+      GString *             gs)        ///<  number of causal errors
 {
       bool first = true;
 
@@ -542,7 +550,7 @@ errinfo_array_summary(
 }
 
 
-/** Returns a comma separated string of the status code names in the
+/** Returns a comma separated string of the names of the status codes in the
  *  causes of the specified #Error_Info.
  *  Multiple consecutive identical names are replaced with a
  *  single name and a parenthesized instance count.
@@ -566,8 +574,6 @@ errinfo_causes_string(Error_Info * erec) {
 
    // DBGMSF(debug, "Done.  Returning: |%s|", result);
    return result;
-
-
 
 
 
@@ -711,6 +717,7 @@ errinfo_report(Error_Info * erec, int depth) {
 #endif
    // rpt_vstring(depth, "(%s) Done", __func__);
 }
+
 
 void
 errinfo_report_details(Error_Info * erec, int depth) {
