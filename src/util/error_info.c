@@ -59,7 +59,8 @@ static ErrInfo_Status_String errinfo_name_func =  NULL;
  *   \param   name_func  function returning the name of a status code
  *   \param   desc_func  function returning a description of a status code
  */
-void errinfo_init(
+void
+errinfo_init(
       ErrInfo_Status_String name_func,
       ErrInfo_Status_String desc_func)
 {
@@ -185,7 +186,8 @@ errinfo_set_detailv(
  *  \param  detail detail format string
  *  \param  ...    arguments for format string
  */
-void errinfo_set_detail(
+void
+errinfo_set_detail(
       Error_Info *  erec,
       const char *  detail_fmt,
       ...)
@@ -318,8 +320,7 @@ errinfo_new(
 }
 
 
-static
-Error_Info *
+static Error_Info *
 errinfo_new_with_causev(
       int            status_code,
       Error_Info *   cause,
