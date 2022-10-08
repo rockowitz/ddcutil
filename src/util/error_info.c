@@ -450,7 +450,7 @@ Error_Info * errinfo_new_with_callee_status_codes(
 // Reporting
 //
 
-/** Status code description function to be used if none is set
+/** Status code description function to be used if none was set
  *  by #errinfo_init()
  *
  *  \param  code  status code
@@ -472,11 +472,11 @@ default_status_code_desc(int rc) {
 }
 
 
-GString *
+static GString *
 errinfo_array_summary_gs(
       struct error_info **  errors,    ///<  pointer to array of pointers to Error_Info
       int                   error_ct,  ///<  number of causal errors
-      GString *             gs)        ///<  number of causal errors
+      GString *             gs)        ///<  append result here
 {
       bool first = true;
 
@@ -561,8 +561,6 @@ errinfo_causes_string(Error_Info * erec) {
 
    // DBGMSF(debug, "Done.  Returning: |%s|", result);
    return result;
-
-
 
 #ifdef OLD
    GString * gs = g_string_new(NULL);
