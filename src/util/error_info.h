@@ -55,9 +55,6 @@ void errinfo_free_with_report(
       bool          report,
       const char *  func);
 
-#define ERRINFO_NEW(_status_code) \
-   errinfo_new(_status_code, __func__, NULL)
-
 Error_Info * errinfo_new2(
       int            status_code,
       const char *   func,
