@@ -785,7 +785,7 @@ ddc_write_read_with_retry(
       else if (ddcrc_null_response_ct > ddcrc_null_response_max)
          psc = DDCRC_ALL_RESPONSES_NULL;
 
-      ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
+      ddc_excp = errinfo_new_with_causes3(psc, try_errors, tryctr, __func__, NULL);
 
       if (psc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(psc);     // new status code, count it
@@ -944,7 +944,7 @@ ddc_write_only_with_retry(
       if (retryable) {
          psc = DDCRC_RETRIES;
 
-         ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__);
+         ddc_excp = errinfo_new_with_causes3(psc, try_errors, tryctr, __func__, NULL);
 
          if (psc != try_errors[tryctr-1]->status_code)
             COUNT_STATUS_CODE(psc);     // new status code, count it

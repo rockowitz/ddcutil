@@ -255,7 +255,7 @@ multi_part_read_with_retry(
       accumulator = NULL;
       if (tryctr >= max_multi_part_read_tries)
          rc = DDCRC_RETRIES;
-      ddc_excp = errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
+      ddc_excp = errinfo_new_with_causes3(rc, try_errors, tryctr, __func__, NULL);
 
       if (rc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(rc);     // new status code, count it
@@ -392,7 +392,7 @@ multi_part_write_with_retry(
    if (rc < 0) {
       if (can_retry)
          rc = DDCRC_RETRIES;
-      ddc_excp= errinfo_new_with_causes(rc, try_errors, tryctr, __func__);
+      ddc_excp= errinfo_new_with_causes3(rc, try_errors, tryctr, __func__, NULL);
 
       if (rc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(rc);     // new status code, count it
