@@ -75,7 +75,7 @@ Error_Info * errinfo_new_chained(
 #endif
 
 Error_Info *
-errinfo_new_with_causes3(
+errinfo_new_with_causes(
       int            status_code,
       Error_Info **  causes,
       int            cause_ct,
