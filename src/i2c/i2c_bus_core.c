@@ -413,6 +413,8 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
             free_parsed_edid(bus_info->edid);
          if (bus_info->driver)
             free(bus_info->driver);
+         if (bus_info->drm_connector_name)
+            free(bus_info->drm_connector_name);
          bus_info->marker[3] = 'x';
          free(bus_info);
       }
@@ -459,6 +461,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
       rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
+      rpt_vstring(depth, "drm_connecotor_name:     %s", bus_info->drm_connector_name);
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
@@ -490,7 +493,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
  */
 void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  businfo=%p", businfo);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p", businfo);
    assert(businfo);
 
    int d1 = depth+1;
@@ -498,12 +501,30 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    if (output_level >= DDCA_OL_NORMAL)
       rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
    // will work for amdgpu, maybe others
+
+   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
-   if (!drm_connector && businfo->edid)
+   if (drm_connector) {
+      businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+      businfo->drm_connector_name = strdup(drm_connector->connector_name);
+   }
+   else if (businfo->edid) {
       drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
+      if (drm_connector) {
+         businfo->drm_connector_name = strdup(drm_connector->connector_name);
+         businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+      }
+   }
+   businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+
    int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
    if (drm_connector && output_level >= DDCA_OL_NORMAL)
-      rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth, "%-*s%s", title_width, "DRM connector:", drm_connector->connector_name);
+      rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth,
+                          "%-*s%s", title_width, "DRM connector:",
+                          (businfo->drm_connector_name)
+                               ? businfo->drm_connector_name
+                               : "Not found"
+                 );
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
@@ -563,7 +584,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                            (output_level >= DDCA_OL_VERBOSE),
                            depth);
    }
-   DBGMSF(debug, "Done.");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -899,6 +920,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
+   RTTI_ADD_FUNC(i2c_report_active_display);
 }
 
 

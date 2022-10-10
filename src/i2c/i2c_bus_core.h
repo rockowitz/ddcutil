@@ -53,6 +53,16 @@ extern bool i2c_force_bus;
 #define I2C_BUS_HAS_VALID_NAME     0x0400
 #define I2C_BUS_BUSY               0x0200      ///< for possible future use
 #define I2C_BUS_SYSFS_EDID         0x0100
+#define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
+
+
+typedef enum {
+   DRM_CONNECTOR_NOT_FOUND      = 0,
+   DRM_CONNECTOR_FOUND_BY_BUSNO = 1,
+   DRM_CONNECTOR_FOUND_BY_EDID  = 2
+} Drm_Connector_Found_By;
+
+
 
 #define I2C_BUS_INFO_MARKER "BINF"
 /** Information about one I2C bus */
@@ -65,6 +75,9 @@ struct {
    uint16_t         flags;              ///< I2C_BUS_* flags
    char *           driver;             ///< driver name
    int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
+   char *           drm_connector_name; ///< from /sys
+   Drm_Connector_Found_By
+                    drm_connector_found_by;
 } I2C_Bus_Info;
 
 // Basic I2C bus operations
