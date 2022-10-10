@@ -58,12 +58,12 @@ typedef struct {
    char * status;
 } Sys_Drm_Connector;
 
-GPtrArray* get_sys_drm_connectors(bool rescan);
-void report_sys_drm_connectors(int depth);
+GPtrArray*          get_sys_drm_connectors(bool rescan);
+void                report_sys_drm_connectors(int depth);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno_or_edid(int busno, Byte * raw_edid);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
-void free_sys_drm_connectors();
+void                free_sys_drm_connectors();
 
 
 typedef struct {
@@ -78,10 +78,10 @@ typedef struct {
 
 GPtrArray * collect_conflicting_drivers(int busno, int depth);
 GPtrArray * collect_conflicting_drivers_for_any_bus(int depth);
-void report_conflicting_drivers(GPtrArray * conflicts, int depth);   // for a single busno
-void free_conflicting_drivers(GPtrArray* conflicts);
+void        report_conflicting_drivers(GPtrArray * conflicts, int depth);   // for a single busno
+void        free_conflicting_drivers(GPtrArray* conflicts);
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
-char * conflicting_driver_names_string_t(GPtrArray * conflicts);
+char *      conflicting_driver_names_string_t(GPtrArray * conflicts);
 
 
 typedef struct {
@@ -95,8 +95,8 @@ typedef struct {
 } Sysfs_I2C_Info;
 
 GPtrArray * get_all_i2c_info(bool rescan, int depth);
-void dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
-char * get_conflicting_drivers_for_bus(int busno);
+void        dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
+char *      get_conflicting_drivers_for_bus(int busno);
 
 void consolidated_i2c_sysfs_report(int depth);
 
