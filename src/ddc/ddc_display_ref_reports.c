@@ -14,6 +14,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "util/data_structures.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -340,6 +341,114 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 }
 
 
+/** The following set of definitions and functions, called from ddc_report_displays(),
+ *  address a highly unlikely corner case, but one which has been reported.
+ *  (See https://github.com/rockowitz/ddcutil/issues/280)
+ *
+ *  Normally, the drm connector associated with an I2C bus, e.g. CARD0-DP-1,
+ *  is obtained by traversing /sys, starting with /sys/bus/i2c,
+ *  using function find_sys_drm_connector_by_busion().
+ *
+ *  However, it is possible that a driver does not put sufficient information
+ *  in /sys. This is the case with the proprietary nvidia driver. In this
+ *  situation function find_sys_drm_connector_by_edid() is used  instead.
+ *  However, this method can give the wrong answer if two monitor shave the same
+ *  EDID, i.e. the EDID inadequately distinguishes monitors.
+ *
+ *  In issue #280, there were two identical Asus PG239Q monitors.  The EDID
+ *  contains neither an ASCII or binary serial number, and the monitors had the
+ *  same manufacture year/week, so the EDIDs were identical. In this case the
+ *  wrong connector name was reported for one monitor.
+ *
+ *  It is at least possible in this situation to warn the user that the
+ *  DRM connector name may be incorrect.
+ */
+typedef struct {
+   Byte * edid;                     ///< 128 byte EDID
+   Bit_Set_256 bus_numbers;         ///< numbers of the busses whose monitor has this EDID
+} EDID_Use_Record;
+
+
+/** Create array of #Edid_Use_Record
+ */
+static GPtrArray *
+create_edid_use_table() {
+   GPtrArray * result = g_ptr_array_new();
+   return result;
+}
+
+
+/** Frees an array of #Edid_Use_Record
+ */
+static void
+free_edid_use_table(GPtrArray* table) {
+      // free's each Edid_Use_Record, but not the edid the records point to
+      g_ptr_array_free(table, true);
+   }
+
+
+/** Returns the EDID_Use_Record for a particular EDID.
+ *  If one does not yet exist, it is created.
+ *
+ *  @param records #GPtrArray of #Edid_Use_Record
+ *  @param edid    edid to search for
+ *  @return #EDID_Use_Record
+ */
+static EDID_Use_Record *
+get_edid_use_record(GPtrArray * records, Byte * edid) {
+   EDID_Use_Record * result = NULL;
+   for (int ndx = 0; ndx < records->len; ndx++) {
+      EDID_Use_Record * cur = g_ptr_array_index(records, ndx);
+      if (memcmp(cur,edid,128) == 0) {
+         result = cur;
+         break;
+      }
+   }
+   if (!result) {
+      result = calloc(1, sizeof(EDID_Use_Record));
+      g_ptr_array_add(records, result);
+   }
+   return result;
+ }
+
+
+static void
+record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
+      if (binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
+         EDID_Use_Record * cur = get_edid_use_record(
+                                    edid_use_records, binfo->edid->bytes);
+         cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
+      }
+   }
+}
+
+
+/** Report i2c buses having identical EDID, for which the DRM
+ *  connector name was found using the EDID
+ *
+ *  @param  edid_use_records  GPtrArray of #EDID_Use_Record
+ *  @param  depth             logical indentation depth
+ */
+static void
+report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth)
+{
+   for (int ndx = 0; ndx < edid_use_records->len; ndx++) {
+      EDID_Use_Record * cur_use_record = g_ptr_array_index(edid_use_records, ndx);
+      if (bs256_count(cur_use_record->bus_numbers) > 1) {
+         rpt_vstring(depth+1,"Displays with I2C bus numbers %s have identical EDIDs.",
+                             bs256_to_string_decimal(cur_use_record->bus_numbers, NULL, ", "));
+         rpt_label(depth+1, "DRM connector names may not be accurate.");
+      }
+   }
+}
+
+
+
+
+
+
 /** Reports all displays found.
  *
  * Output is written to the current report destination using report functions.
@@ -353,12 +462,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 int
 ddc_report_displays(bool include_invalid_displays, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    ddc_ensure_displays_detected();
 
    int display_ct = 0;
    GPtrArray * all_displays = ddc_get_all_displays();
+   GPtrArray * edid_connector_records = create_edid_use_table();
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -366,17 +476,24 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
          display_ct++;
          ddc_report_display_by_dref(dref, depth);
          rpt_title("",0);
+
+         // Note the EDID for each bus
+         record_i2c_edid_use(edid_connector_records, dref);
       }
    }
    if (display_ct == 0) {
       rpt_vstring(depth, "No %sdisplays found.", (!include_invalid_displays) ? "active " : "");
       if ( get_output_level() >= DDCA_OL_NORMAL ) {
-         rpt_label(depth, "Is DDC/CI enabled in the monitor's on screen display?");
+         // rpt_label(depth, "Is DDC/CI enabled in the monitor's on screen display?");
          rpt_label(depth, "Run \"ddcutil environment\" to check for system configuration problems.");
       }
    }
+   else if (get_output_level() >= DDCA_OL_VERBOSE && display_ct > 1) {
+      report_ambiguous_connector_for_edid(edid_connector_records, depth+1);
+   }
+   free_edid_use_table(edid_connector_records);
 
-   DBGMSF(debug, "Done.     Returning: %d", display_ct);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %d", display_ct);
    return display_ct;
 }
 
