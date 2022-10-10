@@ -105,6 +105,7 @@ static char * interpret_i2c_bus_flags(uint16_t flags) {
    ADD_NAME(I2C_BUS_HAS_VALID_NAME     );
    ADD_NAME(I2C_BUS_BUSY               );
    ADD_NAME(I2C_BUS_SYSFS_EDID         );
+   ADD_NAME(I2C_BUS_DRM_CONNECTOR_CHECKED);
 
 #undef ADD_NAME
 
