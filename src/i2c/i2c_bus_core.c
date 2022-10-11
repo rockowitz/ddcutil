@@ -395,7 +395,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
    // DBGTRC_DONE(debug, TRACE_GROUP, "flags=0x%04x, bus info:", bus_info->flags );
    if (debug || IS_TRACING() ) {
       char * sflags = interpret_i2c_bus_flags(bus_info->flags);
-      DBGTRC_DONE(true, TRACE_GROUP, "flags = 0x%04x = %s", bus_info->flags, sflags);
+      DBGTRC_DONE(true, TRACE_GROUP, "flags = 0x%08x = %s", bus_info->flags, sflags);
       // DBGTRC_NOPREFIX(true, TRACE_GROUP, "flags = %s", interpret_i2c_bus_flags_t(bus_info->flags));
       free(sflags);
       DBGTRC_NOPREFIX(true, TRACE_GROUP, "bus_info:");
@@ -438,7 +438,7 @@ void i2c_gdestroy_bus_info(gpointer data) {
  *  \param   depth       logical indentation depth
  *
  *  \remark
- *  Although this is a debug type report, it is called by used (indirectly) by the
+ *  Although this is a debug type report, it is called (indirectly) by the
  *  ENVIRONMENT command.
  */
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
@@ -462,7 +462,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
       rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
-      rpt_vstring(depth, "drm_connecotor_name:     %s", bus_info->drm_connector_name);
+      rpt_vstring(depth, "drm_connector_name:      %s", bus_info->drm_connector_name);
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
