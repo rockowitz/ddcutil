@@ -445,10 +445,6 @@ report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth)
 }
 
 
-
-
-
-
 /** Reports all displays found.
  *
  * Output is written to the current report destination using report functions.
@@ -505,22 +501,18 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
  */
 void
 ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
+   assert(dref);
+   bool debug = false;
+   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
    int d2 = depth+2;
-   // no longer needed for i2c_dbgreport_bus_info()
-   // DDCA_Output_Level saved_output_level = get_output_level();
-   // set_output_level(DDCA_OL_VERBOSE);
+
    rpt_structure_loc("Display_Ref", dref, depth);
    rpt_int("dispno", NULL, dref->dispno, d1);
 
-   // rpt_vstring(d1, "dref: %p:", dref->dref);
    dbgrpt_display_ref(dref, d1);
 
-   rpt_vstring(d1, "edid: %p (Skipping report)", dref->pedid);
-   // report_parsed_edid(drec->edid, false, d1);
-
    rpt_vstring(d1, "io_mode: %s", io_mode_name(dref->io_path.io_mode));
-   // rpt_vstring(d1, "flags:   0x%02x", drec->flags);
    switch(dref->io_path.io_mode) {
    case(DDCA_IO_I2C):
          rpt_vstring(d1, "I2C bus information: ");
@@ -544,6 +536,7 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
    }
 
    // set_output_level(saved_output_level);
+   DBGMSF(debug, "Done");
 }
 
 
