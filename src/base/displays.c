@@ -730,11 +730,10 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    bool debug = false;
-   DBGMSF(debug, "Starting. dref=%p", dref);
-
-   rpt_structure_loc("Display_Ref", dref, depth );
+   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
 
+   rpt_structure_loc("Display_Ref", dref, depth);
    rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
    if (dref->io_path.io_mode == DDCA_IO_USB) {
       rpt_int("usb_bus",         NULL, dref->usb_bus,         d1);
