@@ -326,7 +326,8 @@ void report_parsed_edid_base(
 {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. edid=%p", __func__, (void*)edid);
+      printf("(%s) Starting. edid=%p, verbose_synopsis=%s, show_raw=%s\n",
+             __func__, (void*)edid, SBOOL(verbose_synopsis), sbool(show_raw));
 
    int d1 = depth+1;
    int d2 = depth+2;
@@ -492,7 +493,12 @@ void report_parsed_edid_base(
  *  @param  depth      logical indentation depth
  */
 void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. verbose=%s\n", __func__, SBOOL(verbose));
    report_parsed_edid_base(edid, verbose, verbose, depth);
+   if (debug)
+      printf("(%s) Done.\n", __func__);
 }
 
 
