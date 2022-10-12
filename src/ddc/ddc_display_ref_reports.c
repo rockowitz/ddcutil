@@ -402,7 +402,7 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
    EDID_Use_Record * result = NULL;
    for (int ndx = 0; ndx < records->len; ndx++) {
       EDID_Use_Record * cur = g_ptr_array_index(records, ndx);
-      if (memcmp(cur,edid,128) == 0) {
+      if (memcmp(cur->edid,edid,128) == 0) {
          result = cur;
          DBGTRC(debug, DDCA_TRC_NONE, "Returning existing EDID_Use_Record %p for edid %s",
                        cur, hexstring_t(edid+122,6));
