@@ -425,11 +425,11 @@ record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
       if (binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
-         EDID_Use_Record * cur = get_edid_use_record(
-                                    edid_use_records, binfo->edid->bytes);
+         EDID_Use_Record * cur = get_edid_use_record(edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
          DBGTRC(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
-               bs256_to_string_decimal(cur->bus_numbers, NULL, ", "), hexstring_t(binfo->edid->bytes+122,6));
+                         bs256_to_string_decimal(cur->bus_numbers, NULL, ", "),
+                         hexstring_t(binfo->edid->bytes+122,6));
       }
    }
 }
