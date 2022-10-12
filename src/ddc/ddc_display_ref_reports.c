@@ -351,7 +351,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
  *
  *  However, it is possible that a driver does not put sufficient information
  *  in /sys. This is the case with the proprietary nvidia driver. In this
- *  situation function find_sys_drm_connector_by_edid() is used  instead.
+ *  situation function find_sys_drm_connector_by_edid() is used instead.
  *  However, this method can give the wrong answer if two monitor shave the same
  *  EDID, i.e. the EDID inadequately distinguishes monitors.
  *
@@ -396,16 +396,23 @@ free_edid_use_table(GPtrArray* table) {
  */
 static EDID_Use_Record *
 get_edid_use_record(GPtrArray * records, Byte * edid) {
+   assert(edid);
+   bool debug = false;
+
    EDID_Use_Record * result = NULL;
    for (int ndx = 0; ndx < records->len; ndx++) {
       EDID_Use_Record * cur = g_ptr_array_index(records, ndx);
       if (memcmp(cur,edid,128) == 0) {
          result = cur;
+         DBGTRC(debug, DDCA_TRC_NONE, "Returning existing EDID_Use_Record %p for edid %s",
+                       cur, hexstring_t(edid+122,6));
          break;
       }
    }
    if (!result) {
       result = calloc(1, sizeof(EDID_Use_Record));
+      DBGTRC(debug, DDCA_TRC_NONE, "Created newg EDID_Use_Record %p for edid %s",
+                    result, hexstring_t(edid+122,6) );
       g_ptr_array_add(records, result);
    }
    return result;
@@ -414,12 +421,15 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
 
 static void
 record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
+   bool debug = false;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
       if (binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
          EDID_Use_Record * cur = get_edid_use_record(
                                     edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
+         DBGTRC(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
+               bs256_to_string_decimal(cur->bus_numbers, NULL, ", "), hexstring_t(binfo->edid->bytes+122,6));
       }
    }
 }
@@ -585,6 +595,7 @@ void init_ddc_display_ref_reports() {
    RTTI_ADD_FUNC(get_controller_mfg_string_t);
    RTTI_ADD_FUNC(get_firmware_version_string_t);
    RTTI_ADD_FUNC(ddc_report_display_by_dref);
+   RTTI_ADD_FUNC(get_edid_use_record)
 }
 
 
