@@ -390,7 +390,7 @@ free_edid_use_table(GPtrArray* table) {
 /** Returns the EDID_Use_Record for a particular EDID.
  *  If one does not yet exist, it is created.
  *
- *  @param records #GPtrArray of #Edid_Use_Record
+ *  @param records #GPtrArray of #EDID_Use_Record
  *  @param edid    edid to search for
  *  @return #EDID_Use_Record
  */
@@ -419,6 +419,16 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
  }
 
 
+/** Record the #Display_Ref's I2C bus number in the #EDID_Use_Record
+ *  for the display.
+ *
+ *  @param records  #GPtrArray of #EDID_Use_Record
+ *  @param dref     display reference
+ *
+ *  @remark
+ *  Does nothing unless the display reference is for an I2C device and the
+ *  drm connector was found using the EDID.
+ */
 static void
 record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
    bool debug = false;
