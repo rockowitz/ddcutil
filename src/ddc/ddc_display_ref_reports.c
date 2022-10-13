@@ -352,13 +352,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
  *  However, it is possible that a driver does not put sufficient information
  *  in /sys. This is the case with the proprietary nvidia driver. In this
  *  situation function find_sys_drm_connector_by_edid() is used instead.
- *  However, this method can give the wrong answer if two monitor shave the same
+ *  However, this method can give the wrong answer if two monitors have the same
  *  EDID, i.e. the EDID inadequately distinguishes monitors.
  *
- *  In issue #280, there were two identical Asus PG239Q monitors.  The EDID
- *  contains neither an ASCII or binary serial number, and the monitors had the
- *  same manufacture year/week, so the EDIDs were identical. In this case the
- *  wrong connector name was reported for one monitor.
+ *  In issue #280, the nvidia proprietary driver was in use, and there were two
+ *  identical Asus PG239Q monitors.  The EDID contained neither an ASCII nor a
+ *  binary serial number, and the monitors had the same manufacture year/week,
+ *  so the EDIDs were identical. In this case the wrong connector name was
+ *  reported for one monitor.
  *
  *  It is at least possible in this situation to warn the user that the
  *  DRM connector name may be incorrect.
@@ -398,20 +399,23 @@ static EDID_Use_Record *
 get_edid_use_record(GPtrArray * records, Byte * edid) {
    assert(edid);
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "records = %p, records->len = %d, edid -> ...%s",
+         records, records->len, hexstring_t(edid+122,6));
 
    EDID_Use_Record * result = NULL;
    for (int ndx = 0; ndx < records->len; ndx++) {
       EDID_Use_Record * cur = g_ptr_array_index(records, ndx);
-      if (memcmp(cur->edid,edid,128) == 0) {
+      if (true || memcmp(cur->edid,edid,128) == 0) {
          result = cur;
-         DBGTRC(debug, DDCA_TRC_NONE, "Returning existing EDID_Use_Record %p for edid %s",
+         DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning existing EDID_Use_Record %p for edid %s",
                        cur, hexstring_t(edid+122,6));
          break;
       }
    }
    if (!result) {
       result = calloc(1, sizeof(EDID_Use_Record));
-      DBGTRC(debug, DDCA_TRC_NONE, "Created newg EDID_Use_Record %p for edid %s",
+      result->edid = edid;
+      DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning new EDID_Use_Record %p for edid %s",
                     result, hexstring_t(edid+122,6) );
       g_ptr_array_add(records, result);
    }
@@ -432,12 +436,13 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
 static void
 record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records=%p, dref=%s", edid_use_records, dref_repr_t(dref));
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
-      if (binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
+      if (true || binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
          EDID_Use_Record * cur = get_edid_use_record(edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
-         DBGTRC(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
+         DBGTRC_DONE(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
                          bs256_to_string_decimal(cur->bus_numbers, NULL, ", "),
                          hexstring_t(binfo->edid->bytes+122,6));
       }
@@ -454,14 +459,17 @@ record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
 static void
 report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records->len = %d", edid_use_records->len);
    for (int ndx = 0; ndx < edid_use_records->len; ndx++) {
       EDID_Use_Record * cur_use_record = g_ptr_array_index(edid_use_records, ndx);
       if (bs256_count(cur_use_record->bus_numbers) > 1) {
-         rpt_vstring(depth+1,"Displays with I2C bus numbers %s have identical EDIDs.",
+         rpt_vstring(depth,"Displays with I2C bus numbers %s have identical EDIDs.",
                              bs256_to_string_decimal(cur_use_record->bus_numbers, NULL, ", "));
-         rpt_label(depth+1, "DRM connector names may not be accurate.");
+         rpt_label(depth, "DRM connector names may not be accurate.");
       }
    }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -484,7 +492,8 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
 
    int display_ct = 0;
    GPtrArray * all_displays = ddc_get_all_displays();
-   GPtrArray * edid_connector_records = create_edid_use_table();
+   GPtrArray * edid_use_records = create_edid_use_table();
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Created edid_use_records = %p", edid_use_records);
    for (int ndx=0; ndx<all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
@@ -494,7 +503,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
          rpt_title("",0);
 
          // Note the EDID for each bus
-         record_i2c_edid_use(edid_connector_records, dref);
+         record_i2c_edid_use(edid_use_records, dref);
       }
    }
    if (display_ct == 0) {
@@ -505,9 +514,9 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
       }
    }
    else if (get_output_level() >= DDCA_OL_VERBOSE && display_ct > 1) {
-      report_ambiguous_connector_for_edid(edid_connector_records, depth+1);
+      report_ambiguous_connector_for_edid(edid_use_records, depth);
    }
-   free_edid_use_table(edid_connector_records);
+   free_edid_use_table(edid_use_records);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %d", display_ct);
    return display_ct;
@@ -602,10 +611,14 @@ void dbgrpt_valid_display_refs(int depth) {
 
 
 void init_ddc_display_ref_reports() {
-   RTTI_ADD_FUNC(get_controller_mfg_string_t);
-   RTTI_ADD_FUNC(get_firmware_version_string_t);
+
    RTTI_ADD_FUNC(ddc_report_display_by_dref);
-   RTTI_ADD_FUNC(get_edid_use_record)
+   RTTI_ADD_FUNC(ddc_report_displays);
+   RTTI_ADD_FUNC(get_controller_mfg_string_t);
+   RTTI_ADD_FUNC(get_edid_use_record);
+   RTTI_ADD_FUNC(get_firmware_version_string_t);
+   RTTI_ADD_FUNC(record_i2c_edid_use);
+   RTTI_ADD_FUNC(report_ambiguous_connector_for_edid);
 }
 
 
