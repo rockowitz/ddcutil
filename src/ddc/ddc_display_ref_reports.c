@@ -398,7 +398,7 @@ free_edid_use_table(GPtrArray* table) {
 static EDID_Use_Record *
 get_edid_use_record(GPtrArray * records, Byte * edid) {
    assert(edid);
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "records = %p, records->len = %d, edid -> ...%s",
          records, records->len, hexstring_t(edid+122,6));
 
@@ -435,7 +435,7 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
  */
 static void
 record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records=%p, dref=%s", edid_use_records, dref_repr_t(dref));
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
