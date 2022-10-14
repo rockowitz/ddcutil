@@ -398,14 +398,14 @@ free_edid_use_table(GPtrArray* table) {
 static EDID_Use_Record *
 get_edid_use_record(GPtrArray * records, Byte * edid) {
    assert(edid);
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "records = %p, records->len = %d, edid -> ...%s",
          records, records->len, hexstring_t(edid+122,6));
 
    EDID_Use_Record * result = NULL;
    for (int ndx = 0; ndx < records->len; ndx++) {
       EDID_Use_Record * cur = g_ptr_array_index(records, ndx);
-      if (true || memcmp(cur->edid,edid,128) == 0) {
+      if (memcmp(cur->edid,edid,128) == 0) {
          result = cur;
          DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning existing EDID_Use_Record %p for edid %s",
                        cur, hexstring_t(edid+122,6));
@@ -435,11 +435,11 @@ get_edid_use_record(GPtrArray * records, Byte * edid) {
  */
 static void
 record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records=%p, dref=%s", edid_use_records, dref_repr_t(dref));
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       I2C_Bus_Info * binfo = (I2C_Bus_Info *) dref->detail;
-      if (true || binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
+      if (binfo -> drm_connector_found_by == DRM_CONNECTOR_FOUND_BY_EDID) {
          EDID_Use_Record * cur = get_edid_use_record(edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
          DBGTRC_DONE(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
@@ -457,8 +457,7 @@ record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
  *  @param  depth             logical indentation depth
  */
 static void
-report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth)
-{
+report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "edid_use_records->len = %d", edid_use_records->len);
    for (int ndx = 0; ndx < edid_use_records->len; ndx++) {
