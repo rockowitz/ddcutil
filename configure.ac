@@ -130,7 +130,8 @@ required_packages=
 
 dnl Determines C compiler to use, sets output variable cc, ac_cv_prog_cc_c89
 dnl Called by other macros, but must be called explicitly at top level for proper initialization
-AC_PROG_CC
+# AC_PROG_C99 for CENTOS 7 in OBS, EOL 6/30/2024
+m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
 
 dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
 dnl Note that, since Automake 1.14, the AC_PROG_CC is rewritten to implement such checks itself, and thus 
@@ -145,8 +146,6 @@ dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C
 dnl needed for OBS
 dnl AC_PROG_CC_STDC
 
-# for CENTOS 7 in OBS, EOL 6/30/2024
-AC_PROG_CC_C99
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
