@@ -359,8 +359,10 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
+   I2C_IO_Strategy_Id cur_strategy_id = I2C_IO_STRATEGY_NOT_SET;
 retry:
-   I2C_IO_Strategy_Id cur_strategy_id = i2c_get_io_strategy_id();
+   cur_strategy_id = i2c_get_io_strategy_id();
+   assert(cur_strategy_id != I2C_IO_STRATEGY_NOT_SET);
    DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
    int rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
