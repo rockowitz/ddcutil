@@ -8,6 +8,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <syslog.h>
 /** \endcond */
@@ -180,7 +181,7 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
 
-retry:
+retry: ;
    I2C_IO_Strategy * strategy = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
    Status_Errno_DDC rc = strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
@@ -225,7 +226,7 @@ Status_Errno_DDC invoke_i2c_reader(
                    sbool(read_bytewise),
                    readbuf);
 
-retry:
+retry: ;
      I2C_IO_Strategy * strategy = i2c_get_io_strategy();
      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
      Status_Errno_DDC rc = strategy->i2c_reader(fd, slave_address, read_bytewise, bytect, readbuf);
