@@ -180,8 +180,9 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
 
+   I2C_IO_Strategy * strategy = I2C_IO_STRATEGY_NOT_SET;
 retry:
-   I2C_IO_Strategy * strategy = i2c_get_io_strategy();
+   strategy = i2c_get_io_strategy();
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
    Status_Errno_DDC rc = strategy->i2c_writer(fd, slave_address, bytect, bytes_to_write);
    if (rc == -EINVAL) {
@@ -225,8 +226,9 @@ Status_Errno_DDC invoke_i2c_reader(
                    sbool(read_bytewise),
                    readbuf);
 
+     I2C_IO_Strategy * strategy = I2C_IO_STRATEGY_NOT_SET;
 retry:
-     I2C_IO_Strategy * strategy = i2c_get_io_strategy();
+     strategy = i2c_get_io_strategy();
      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "strategy = %s", strategy->strategy_name);
      Status_Errno_DDC rc = strategy->i2c_reader(fd, slave_address, read_bytewise, bytect, readbuf);
      assert (rc <= 0);
