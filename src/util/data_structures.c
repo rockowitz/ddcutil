@@ -11,7 +11,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h>        // C standard library
+#include <strings.h>      
 #include <sys/param.h>     // for MIN, MAX
 /** \endcond */
 
