@@ -53,7 +53,7 @@ struct {
    char         marker[4];                                   ///< always "EDID"
    Byte         bytes[128];                                  ///< raw bytes of EDID
    char         mfg_id[EDID_MFG_ID_FIELD_SIZE];              ///< 3 character mfg id, null terminated
-   ushort       product_code;                                ///< product code number
+   uint16_t       product_code;                                ///< product code number
    char         model_name[EDID_MODEL_NAME_FIELD_SIZE];      ///< model name (tag 0xfc)
    uint32_t     serial_binary;                               ///< binary serial number
    char         serial_ascii[EDID_SERIAL_ASCII_FIELD_SIZE];  ///< serial number string (tag 0xff)
@@ -63,14 +63,14 @@ struct {
    uint8_t      manufacture_week;        ///< xFF if is_model_year == true
    Byte         edid_version_major;      ///< EDID major version number
    Byte         edid_version_minor;      ///< EDID minor version number
-   ushort       wx;                      ///< whitepoint x coordinate
-   ushort       wy;                      ///< whitepoint y coordinate
-   ushort       rx;                      ///< red   x coordinate
-   ushort       ry;                      ///< red   y coordinate
-   ushort       gx;                      ///< green x coordinate
-   ushort       gy;                      ///< green y coordinate
-   ushort       bx;                      ///< blue  x coordinate
-   ushort       by;                      ///< blue  y coordinate
+   uint16_t       wx;                      ///< whitepoint x coordinate
+   uint16_t       wy;                      ///< whitepoint y coordinate
+   uint16_t       rx;                      ///< red   x coordinate
+   uint16_t       ry;                      ///< red   y coordinate
+   uint16_t       gx;                      ///< green x coordinate
+   uint16_t       gy;                      ///< green y coordinate
+   uint16_t       bx;                      ///< blue  x coordinate
+   uint16_t       by;                      ///< blue  y coordinate
    Byte         video_input_definition;  /// EDID byte 20 (x14)
    // bool         is_digital_input;      // from byte 20 (x14), bit 7
    Byte         supported_features;      ///< EDID byte 24 (x18) supported features bitmap
