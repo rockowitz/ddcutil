@@ -359,6 +359,7 @@ i2c_get_raw_edid_by_fd(int fd, Buffer * rawedid)
 
    int max_tries = (EDID_Read_Size == 0) ?  4 : 2;
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID_Read_Size=%d, max_tries=%d", EDID_Read_Size, max_tries);
+   // n. prior to gcc 11, declaration cannot immediately follow label
    I2C_IO_Strategy_Id cur_strategy_id = I2C_IO_STRATEGY_NOT_SET;
 retry:
    cur_strategy_id = i2c_get_io_strategy_id();

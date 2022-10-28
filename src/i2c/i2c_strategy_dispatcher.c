@@ -180,6 +180,7 @@ Status_Errno_DDC invoke_i2c_writer(
                  bytes_to_write,
                  hexstring_t(bytes_to_write, bytect));
 
+   // n. prior to gcc 11, declaration cannot immediately follow label
    I2C_IO_Strategy * strategy = I2C_IO_STRATEGY_NOT_SET;
 retry:
    strategy = i2c_get_io_strategy();
@@ -226,6 +227,7 @@ Status_Errno_DDC invoke_i2c_reader(
                    sbool(read_bytewise),
                    readbuf);
 
+     // n. prior to gcc 11, declaration cannot immediately follow label
      I2C_IO_Strategy * strategy = I2C_IO_STRATEGY_NOT_SET;
 retry:
      strategy = i2c_get_io_strategy();
