@@ -8,9 +8,7 @@
 #define I2C_EDID_H_
 
 /** \cond */
-#include <glib-2.0/glib.h>
 #include <stdbool.h>
-#include <stdio.h>
 /** \endcond */
 
 #include "util/edid.h"

@@ -11,42 +11,31 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib-2.0/glib.h>
-#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 /** \endcond */
 
-#include "util/debug_util.h"
-#include "util/failsim.h"
+#include "public/ddcutil_status_codes.h"
+#include "public/ddcutil_types.h"
+
+#include "util/coredefs.h"
 #include "util/file_util.h"
-#include "util/glib_string_util.h"
 #include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "util/subprocess_util.h"
-#include "util/sysfs_i2c_util.h"
-#include "util/sysfs_util.h"
-#ifdef ENABLE_UDEV
-#include "util/udev_i2c_util.h"
-#endif
 #include "util/utilrpt.h"
 
 #include "base/parms.h"
 #include "base/core.h"
-#include "base/ddc_errno.h"
+#include "base/execution_stats.h"
 #include "base/last_io_event.h"
-#include "base/linux_errno.h"
 #include "base/rtti.h"
-#include "base/status_code_mgt.h"
-#include "base/per_thread_data.h"
 
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
@@ -373,7 +362,6 @@ retry:
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    int tryctr = 0;
    while (tryctr < max_tries && rc != 0) {
-
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
          edid_read_size = (tryctr < 2) ? 128 : 256;
