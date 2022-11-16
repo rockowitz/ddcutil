@@ -18,10 +18,10 @@ extern "C"
 {
 #endif
 
-/** \cond */
+/** @cond */
 #include <stdbool.h>
 #include <stdint.h>                // for uint8_t, unit16_t
-/** \endcond */
+/** @endcond */
 
 
 //
@@ -195,7 +195,7 @@ typedef enum {
 //  Display Specification
 //
 
-/** \defgroup api_display_spec API Display Specification */
+/** @defgroup api_display_spec API Display Specification */
 
 /** Opaque display identifier
  *
@@ -210,7 +210,7 @@ typedef enum {
  * - an EDID
  * - manufacturer, model, and serial number strings
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  * */
 typedef void * DDCA_Display_Identifier;
 
@@ -230,7 +230,7 @@ typedef void * DDCA_Display_Identifier;
  * - From the DDCA_Display_List returned by #ddca_get_display_info_list2()
  * - Searching based on #DDCA_Display_Identifier using #ddca_get_display_ref()
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 typedef void * DDCA_Display_Ref;
 
@@ -248,7 +248,7 @@ typedef void * DDCA_Display_Ref;
  * a DDCA_Display_Handle.  The adapter number.device number pair are simply copied
  * from the #DDCA_Display_Ref.
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 typedef void * DDCA_Display_Handle;
 
