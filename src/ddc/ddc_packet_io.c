@@ -132,7 +132,6 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
  *
  *  **Call_Option** flags recognized:
  *  - CALLOPT_WAIT
- *  - CALLOPT_ERR_MSG
  */
 DDCA_Status
 ddc_open_display(
