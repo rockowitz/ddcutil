@@ -9,10 +9,10 @@
 #ifndef DDCUTIL_C_API_H_
 #define DDCUTIL_C_API_H_
 
-/** \cond */
+/** @cond */
 #include <stdbool.h>
 #include <stdio.h>
-/** \endcond */
+/** @endcond */
 
 #ifdef __cplusplus
 extern "C" {
@@ -223,20 +223,20 @@ ddca_set_max_tries(
 
 /** Controls whether VCP values are read after being set.
  *
- * \param[in] onoff true/false
- * \return  prior value
+ * @param[in] onoff true/false
+ * @return  prior value
  *
- * \remark This setting is thread-specific.
+ * @remark This setting is thread-specific.
  */
 bool
 ddca_enable_verify(
       bool onoff);
 
 /** Query whether VCP values are read after being set.
- * \retval true values are verified after being set
- * \retval false values are not verified
+ * @retval true values are verified after being set
+ * @retval false values are not verified
  *
- * \remark This setting is thread-specific.
+ * @remark This setting is thread-specific.
  */
 bool
 ddca_is_verify_enabled(void);
@@ -248,17 +248,17 @@ ddca_is_verify_enabled(void);
  *  If that returns EBUSY and this setting is in effect, slave address setting
  *  is retried using operation I2C_SLAVE_FORCE.
  *
- *  \param[in] onoff true/false
- *  \return  prior value
- *  \since 1.2.2
+ *  @param[in] onoff true/false
+ *  @return  prior value
+ *  @since 1.2.2
  */
 bool
 ddca_enable_force_slave_address(bool onoff);
 
 /** Query the force I2C slave address setting.
  *
- *  \return true/false
- *  \since 1.2.2
+ *  @return true/false
+ *  @since 1.2.2
  */
 bool
 ddca_is_force_slave_address_enabled(void);
@@ -266,10 +266,10 @@ ddca_is_force_slave_address_enabled(void);
 
 /** Sets the sleep multiplier factor to be used for new threads.
  *
- *  \param[in]  multiplier
- *  \return     old multiplier
+ *  @param[in]  multiplier
+ *  @return     old multiplier
  *
- *  \remark
+ *  @remark
  *  This function is intended for use only during program initialization,
  *  typically from a value passed on the command line.
  *  Consequently there are no associated lock/unlock functions for the value.
@@ -279,18 +279,18 @@ ddca_set_default_sleep_multiplier(double multiplier);
 
 /** Gets the sleep multiplier factor used for new threads
  *
- * \return multiplier
+ * @return multiplier
  */
 double
 ddca_get_default_sleep_multiplier();
 
-/** \deprecated use #ddca_set_default_sleep_multiplier()
+/** @deprecated use #ddca_set_default_sleep_multiplier()
  */
 __attribute__ ((deprecated ("use ddca_set_default_sleep_multiplier")))
 void
 ddca_set_global_sleep_multiplier(double multiplier);
 
-/** \deprecated use #ddca_get_default_display_multiplier()
+/** @deprecated use #ddca_get_default_display_multiplier()
  */
 __attribute__ ((deprecated ("use ddca_get_default_sleep_multiplier")))
 double
@@ -421,9 +421,9 @@ ddca_is_report_ddc_errors_enabled(void);
 
 /** Turn on tracing for a specific function.
  *
- *  \param[in]  funcname   function name
+ *  @param[in]  funcname   function name
  *
- *  \remark
+ *  @remark
  *  The function must include trace calls.
  */
 void
@@ -432,7 +432,7 @@ ddca_add_traced_function(
 
 /** Turn on all tracing in a specific source file.
  *
- *  \param[in] filename  simple file name, with or without the ".c" extension,
+ *  @param[in] filename  simple file name, with or without the ".c" extension,
  *                        e.g. vcp_feature_set.c, vcp_feature_set
  */
 void
@@ -441,7 +441,7 @@ ddca_add_traced_file(
 
 /** Replaces the groups being traced
  *
- *  \param[in] trace_flags  bitfield indicating groups to trace
+ *  @param[in] trace_flags  bitfield indicating groups to trace
  */
 void
 ddca_set_trace_groups(
@@ -450,7 +450,7 @@ ddca_set_trace_groups(
 
 /** Adds to the groups being traced
  *
- *  \param[in] trace_flags  bitfield indicating groups to trace
+ *  @param[in] trace_flags  bitfield indicating groups to trace
  *
  *  @since 1.2.0
  */
@@ -462,16 +462,16 @@ ddca_add_trace_groups(
 /** Given a trace group name, returns its identifier.
  *  Case is ignored.
  *
- *  \param[in] name trace group name
- *  \return    trace group identifier
- *  \retval    TRC_NEVER unrecognized name
+ *  @param[in] name trace group name
+ *  @return    trace group identifier
+ *  @retval    TRC_NEVER unrecognized name
  */
 DDCA_Trace_Group
 ddca_trace_group_name_to_value(char * name);
 
 /** Sets tracing options
  *
- *  \param[in] options  enum that can be used as bit flags
+ *  @param[in] options  enum that can be used as bit flags
  */
 void
 ddca_set_trace_options(DDCA_Trace_Options  options);
@@ -501,14 +501,14 @@ ddca_reset_stats(void);
 
 /** Assigns a description to the the current thread.
  *
- *  \param[in] description
+ *  @param[in] description
  */
 void
 ddca_set_thread_description(const char * description);
 
 /** Appends text to the current thread description.
  *
- *  \param[in] description]
+ *  @param[in] description]
  */
 void
 ddca_append_thread_description(const char * description);
@@ -516,9 +516,9 @@ const char * ddca_get_thread_descripton();
 
 /** Show execution statistics.
  *
- *  \param[in] stats  bitflags of statistics types to show
- *  \param[in] include_per_thread_data include per thread detail
- *  \param[in] depth  logical indentation depth
+ *  @param[in] stats  bitflags of statistics types to show
+ *  @param[in] include_per_thread_data include per thread detail
+ *  @param[in] depth  logical indentation depth
  */
 void
 ddca_show_stats(
@@ -627,7 +627,7 @@ ddca_get_display_info_list2(
  *  contains no pointers and is copied to the client, so the
  *  list can simply be free'd by the client.
  *
- *  \param[in] dlist pointer to #DDCA_Display_Info_List
+ *  @param[in] dlist pointer to #DDCA_Display_Info_List
  */
 void
 ddca_free_display_info_list(
@@ -694,7 +694,7 @@ ddca_redetect_displays();
  * @param[in]  dispno  display number
  * @param[out] did_loc    where to return display identifier handle
  * @retval     0
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  * */
 DDCA_Status
 ddca_create_dispno_display_identifier(
@@ -706,7 +706,7 @@ ddca_create_dispno_display_identifier(
  * @param[out] did_loc   where to return display identifier handle
  * @retval     0
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_busno_display_identifier(
@@ -722,7 +722,7 @@ ddca_create_busno_display_identifier(
  * @retval     0         success
  * @retval     DDCRC_ARG all arguments NULL, or at least 1 too long
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_mfg_model_sn_display_identifier(
@@ -737,7 +737,7 @@ ddca_create_mfg_model_sn_display_identifier(
  * @retval      0          success
  * @retval      DDCRC_ARG  edid==NULL
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_edid_display_identifier(
@@ -750,7 +750,7 @@ ddca_create_edid_display_identifier(
  * @param[out] did_loc   where to return display identifier handle
  * @retval 0 success
  *
- *  \ingroup api_display_spec
+ *  @ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_usb_display_identifier(
@@ -763,7 +763,7 @@ ddca_create_usb_display_identifier(
  * @param[out] did_loc   where to return display identifier handle
  * @retval 0  success
  *
- *  \ingroup api_display_spec
+ *  @ingroup api_display_spec
  */
 DDCA_Status
 ddca_create_usb_hiddev_display_identifier(
@@ -787,10 +787,10 @@ ddca_free_display_identifier(
  *
  *  The string is valid until the display identifier is freed.
  *
- *  \param[in]  did    display identifier
- *  \return     string representation of display identifier, NULL if invalid
+ *  @param[in]  did    display identifier
+ *  @return     string representation of display identifier, NULL if invalid
  *
- *  \ingroup api_display_spec
+ *  @ingroup api_display_spec
  */
 const char *
 ddca_did_repr(
@@ -801,7 +801,7 @@ ddca_did_repr(
 // Display Reference
 //
 
-/**  \deprecated use #ddca_get_display_ref()
+/**  @deprecated use #ddca_get_display_ref()
  *  Gets a display reference for a display identifier.
  *  Normally, this is a permanently allocated #DDCA_Display_Ref
  *  created by monitor detection and does not need to be freed.
@@ -812,7 +812,7 @@ ddca_did_repr(
  * @retval     DDCRC_ARG             did is not a valid display identifier handle
  * @retval     DDCRC_INVALID_DISPLAY display not found
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 // __attribute__ ((deprecated ("use ddca_get_display_ref()")))
 DDCA_Status
@@ -830,15 +830,15 @@ ddca_create_display_ref(
  * @retval     DDCRC_ARG             did is not a valid display identifier handle
  * @retval     DDCRC_INVALID_DISPLAY display not found
  *
- * \since 0.9.5
- * \ingroup api_display_spec
+ * @since 0.9.5
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc);
 
-/**  \deprecated All display references are persistent
+/**  @deprecated All display references are persistent
  *
  * Frees a display reference.
  *
@@ -851,7 +851,7 @@ ddca_get_display_ref(
  * @retval DDCRC_LOCKED dref is to a transient instance, and it is referenced
  *                      by an open display handle
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 // __attribute__ ((deprecated ("DDCA_Display_Refs are always persistent")))
 DDCA_Status
@@ -874,7 +874,7 @@ ddca_dref_repr(
  * @param[in] dref   display reference
  * @param[in] depth  logical indentation depth
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 void
 ddca_dbgrpt_display_ref(
@@ -893,7 +893,7 @@ ddca_dbgrpt_display_ref(
  * @return     status code
  *
  * Fails if display is already opened by another thread.
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_open_display2(
@@ -907,7 +907,7 @@ ddca_open_display2(
  * @retval     DDCRC_ARG invalid handle
  * @return     -errno    from underlying OS close()
  *
- * \ingroup api_display_spec
+ * @ingroup api_display_spec
  */
 DDCA_Status
 ddca_close_display(
@@ -920,7 +920,7 @@ ddca_close_display(
  * @return string  representation of display handle, NULL if
  *                 argument is NULL or not a display handle
  *
- *  \ingroup api_display_spec
+ *  @ingroup api_display_spec
  */
 const char *
 ddca_dh_repr(
@@ -1279,9 +1279,9 @@ ddca_get_simple_nc_feature_value_name_by_table(
       uint8_t                     feature_value,
       char**                      value_name_loc);
 
-/** Outputs a debugging report of the \DDCA_Feature_Metadata data structure.
+/** Outputs a debugging report of the @DDCA_Feature_Metadata data structure.
  *
- *  @param[in] md    pointer to \DDCA_Feature_Metadata instance
+ *  @param[in] md    pointer to @DDCA_Feature_Metadata instance
  *  @param[in] depth logical indentation depth
  */
 void
@@ -1298,12 +1298,12 @@ ddca_dbgrpt_feature_metadata(
  *
  * Output is written using report functions
  *
- * \param[in] dref       pointer to display reference
- * \param[in] depth      logical indentation depth
- * \retval DDCRC_ARG invalid display ref
- * \retval 0         success
+ * @param[in] dref       pointer to display reference
+ * @param[in] depth      logical indentation depth
+ * @retval DDCRC_ARG invalid display ref
+ * @retval 0         success
  *
- * \remark
+ * @remark
  * The detail level shown is controlled by the output level setting
  * for the current thread.
  *
@@ -1716,11 +1716,11 @@ ddca_format_any_vcp_value_by_dref(
 
 /** Sets a non-table VCP value by specifying it's high and low bytes individually.
  *
- *  \param[in]   ddca_dh             display handle
- *  \param[in]   feature_code        feature code
- *  \param[in]   hi_byte             high byte of new value
- *  \param[in]   lo_byte             low byte of new value
- *  \return      status code
+ *  @param[in]   ddca_dh             display handle
+ *  @param[in]   feature_code        feature code
+ *  @param[in]   hi_byte             high byte of new value
+ *  @param[in]   lo_byte             low byte of new value
+ *  @return      status code
  */
 DDCA_Status
 ddca_set_non_table_vcp_value(
@@ -1732,11 +1732,11 @@ ddca_set_non_table_vcp_value(
 
 /** Sets a Table VCP value.
  *
- *  \param[in]   ddca_dh             display handle
- *  \param[in]   feature_code        feature code
- *  \param[in]   new_value           value to set
- *  \return      status code
- *  \since 0.9.0
+ *  @param[in]   ddca_dh             display handle
+ *  @param[in]   feature_code        feature code
+ *  @param[in]   new_value           value to set
+ *  @return      status code
+ *  @since 0.9.0
  */
 DDCA_Status
 ddca_set_table_vcp_value(
@@ -1746,11 +1746,11 @@ ddca_set_table_vcp_value(
 
 /** Sets a VCP value of any type.
  *
- *  \param[in]   ddca_dh        display handle
- *  \param[in]   feature_code   feature code
- *  \param[in]   new_value      value to set
- *  \return      status code
- *  \since 0.9.0
+ *  @param[in]   ddca_dh        display handle
+ *  @param[in]   feature_code   feature code
+ *  @param[in]   new_value      value to set
+ *  @return      status code
+ *  @since 0.9.0
  */
 DDCA_Status
 ddca_set_any_vcp_value(
