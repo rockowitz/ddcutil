@@ -3,15 +3,12 @@
  * This file defines the DDC specific status codes that can be returned in #DDCA_Status.
  * In addition to these codes, #DDCA_Status can contain:
  *   - negative Linux errno values
- *   - modulated ADL status codes
- *     (i.e. ADL status codes with a constant added or subtracted so as not to overlap
- *      with Linux errno values)
  *
- * Because the DDC specific status codes are merged with the Linux and ADL status codes
+ * Because the DDC specific status codes are merged with the Linux status codes
  * (which are \#defines), they are specified as \#defines rather than enum values.
  */
 
-// Copyright (C) 2014-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
