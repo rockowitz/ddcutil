@@ -494,8 +494,6 @@ ddca_is_sleep_suppression_enabled();
 //
 // Statistics and Diagnostics
 //
-// Statistics are global to all threads.
-//
 
 /** Resets all **ddcutil** statistics */
 void
@@ -541,7 +539,7 @@ ddca_enable_error_info(
 
 
 //
-// Display Descriptions
+// Display Detection
 //
 
 /** Controls whether USB devices are checked during display detection
