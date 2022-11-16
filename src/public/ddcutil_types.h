@@ -34,19 +34,19 @@ extern "C"
  *  Most public **ddcutil** functions return a status code.
  *  These status codes have 3 sources:
  *  - Linux
- *  - ADL (AMD Display Library)
+ *  - ADL (AMD Display Library) (no longer used)
  *  - **ddcutil** itself
  *
  *  These multiple status code sources are consolidated by "modulating"
  *  the raw values into non-overlapping ranges.
  *  - Linux errno values are returned as negative numbers (e.g. -EIO)
  *  - ADL values are modulated by 2000 (i.e., 2000 subtracted from negative ADL status codes,
- *         or added to positive ADL status codes)
+ *         or added to positive ADL status codes) (no longer used)
  *  - ddcutil errors are always in the -3000 range
  *
  *  In summary:
  *  - 0 always indicates a normal successful status
- *  - Positive values (possible with ADL) represent qualified success of some sort
+ *  - Positive values (possible with ADL) represent qualified success of some sort (no longer used)
  *  - Negative values indicate an error condition.
  */
 typedef int DDCA_Status;
@@ -67,7 +67,7 @@ typedef struct {
 //! Build option flags, as returned by #ddca_build_options()
 //! The enum values are defined as 1,2,4 etc so that they can be or'd.
 typedef enum {
-   /** @brief ddcutil was built with support for AMD Display Library connected monitors */
+   /** @deprecated @brief ddcutil was built with support for AMD Display Library connected monitors */
    DDCA_BUILT_WITH_ADL     = 0x01,
    /** @brief ddcutil was built with support for USB connected monitors */
    DDCA_BUILT_WITH_USB     = 0x02,
@@ -136,7 +136,7 @@ typedef enum {
 typedef enum {
    DDCA_TRC_BASE  = 0x0080,       /**< base functions          */
    DDCA_TRC_I2C   = 0x0040,       /**< I2C layer               */
-   DDCA_TRC_ADL   = 0x0020,       /**< ADL layer               */
+   DDCA_TRC_ADL   = 0x0020,       /**< @deprecated ADL layer   */
    DDCA_TRC_DDC   = 0x0010,       /**< DDC layer               */
    DDCA_TRC_USB   = 0x0008,       /**< USB connected display functions */
    DDCA_TRC_TOP   = 0x0004,       /**< ddcutil mainline        */
@@ -205,7 +205,7 @@ typedef enum {
  * It can take several forms:
  * - the display number assigned by **dccutil**
  * - an I2C bus number
- * - an ADL (adapter index, display index) pair
+ * - an ADL (adapter index, display index) pair (deprecated)
  * - a  USB (bus number, device number) pair or USB device number
  * - an EDID
  * - manufacturer, model, and serial number strings
@@ -218,8 +218,8 @@ typedef void * DDCA_Display_Identifier;
  *
  * A #DDCA_Display_Ref describes a monitor.  It contains 3 kinds of information:
  * - Assigned ddcutil display number
- * - The operating system path to the monitor, which is an I2C bus number, an
- *   ADL identifier, or a USB device number.
+ * - The operating system path to the monitor, which is an I2C bus number or
+ *   a USB device number.
  * - Accumulated information about the monitor, such as the EDID or capabilities string.
  *
  * @remark
@@ -244,9 +244,6 @@ typedef void * DDCA_Display_Ref;
  * For I2C and USB connected displays, an operating system open is performed by
  * # ddca_open_display2().  #DDCA_Display_Handle then contains the file handle
  * returned by the operating system.
- * For ADL displays, no actual operating system open is performed when creating
- * a DDCA_Display_Handle.  The adapter number.device number pair are simply copied
- * from the #DDCA_Display_Ref.
  *
  * @ingroup api_display_spec
  */
@@ -255,7 +252,7 @@ typedef void * DDCA_Display_Handle;
 ///@}
 
 
-/** ADL adapter number/display number pair, which identifies a display */
+/** @deprecated ADL adapter number/display number pair, which identifies a display */
 typedef struct {
    int iAdapterIndex;  /**< adapter number */
    int iDisplayIndex;  /**< display number */
@@ -324,7 +321,7 @@ typedef enum {
 /** Indicates how MCCS communication is performed */
 typedef enum {
    DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
-   DDCA_IO_ADL,     /**< Use ADL API */
+   DDCA_IO_ADL,     /**< @deprecated Use ADL API */
    DDCA_IO_USB      /**< Use USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
@@ -334,7 +331,7 @@ typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
       int        i2c_busno;     ///< I2C bus number
-      DDCA_Adlno adlno;         ///< ADL iAdapterIndex/iDisplayIndex pair
+      DDCA_Adlno adlno;         ///< @deprecated ADL iAdapterIndex/iDisplayIndex pair
       int        hiddev_devno;  ///* USB hiddev device  number
    } path;
 } DDCA_IO_Path;
