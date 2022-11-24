@@ -277,6 +277,8 @@ int apply_config_file(
       result = 0;
    }
    else if (read_config_rc < 0) {
+      *new_argv_loc = ntsa_copy(old_argv, true);
+      *new_argc_loc = old_argc;
       result = read_config_rc;
    }
    else {
