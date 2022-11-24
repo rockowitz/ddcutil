@@ -196,15 +196,18 @@ Parsed_Cmd * get_parsed_libmain_config() {
       ntsa_show(new_argv);
 
    if (errmsgs->len > 0) {
-      f0printf(ferr(), "Errors reading libddcutil configuration file %s:\n", config_fn);
+      f0printf(ferr(),    "Errors reading libddcutil configuration file %s:\n", config_fn);
+      syslog(LOG_WARNING, "Errors reading libddcutil configuration file %s:",   config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         f0printf(fout(), "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
+         f0printf(fout(),     "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
+         syslog(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
       }
    }
    g_ptr_array_free(errmsgs, true);
-   if (untokenized_option_string && strlen(untokenized_option_string) > 0)
-      fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn,
-            untokenized_option_string);
+   if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
+      fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
+      syslog(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+   }
 
    // Continue even if config file errors
    // if (apply_config_rc < 0)
@@ -215,10 +218,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
    DBGF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
-      syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",
-            untokenized_option_string);
-      fprintf(ferr(), "Ignoring invalid configuration file options: %s\n",
-                      untokenized_option_string);
+      syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",  untokenized_option_string);
+      fprintf(ferr(),     "Ignoring invalid configuration file options: %s\n",untokenized_option_string);
       DBGF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
@@ -269,7 +270,7 @@ _ddca_init(void) {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
-      debug = true;
+      debug = false;
 
    if (debug)
       printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
@@ -314,6 +315,8 @@ _ddca_init(void) {
          else {
             fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
                             trace_file, strerror(errno));
+            syslog(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
+                            trace_file, strerror(errno));
          }
          free(trace_file);
       }
@@ -346,6 +349,7 @@ _ddca_init(void) {
    }
    else {
       DBGTRC_DONE (debug, DDCA_TRC_API, "library was already initialized");
+      syslog(LOG_INFO, "Library was already initialized.");
    }
    // TRACED_ASSERT(1==5); for testing
 }
