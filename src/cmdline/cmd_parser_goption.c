@@ -196,9 +196,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 #endif
    gboolean timeout_i2c_io_flag = false;
    gboolean reduce_sleeps_specified = false;
-#ifdef OLD
-   gboolean reduce_sleeps_flag  = DEFAULT_SLEEP_LESS;
-#endif
    gboolean deferred_sleep_flag = false;
    gboolean per_thread_stats_flag = false;
    gboolean show_settings_flag = false;
