@@ -224,9 +224,11 @@ void reset_all_thread_sleep_data() {
  *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
  */
 void tsd_set_default_sleep_multiplier_factor(double multiplier) {
+   bool debug = false;
+
    assert(multiplier > 0 && multiplier < 100);
    default_sleep_multiplier_factor = multiplier;
-   // DBGMSG("Setting sleep_multiplier_factor = %6.1f",set_sleep_multiplier_ct sleep_multiplier_factor);
+   DBGMSF(debug, "Setting sleep_multiplier_factor = %6.3f", multiplier);
 }
 
 
@@ -241,13 +243,13 @@ double tsd_get_default_sleep_multiplier_factor() {
 
 /** Gets the sleep multiplier factor for the current thread.
  *
- *  @return sleep mulitiplier factor
+ *  @return sleep multiplier factor
  */
 double tsd_get_sleep_multiplier_factor() {
    bool debug = false;
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    double result = data->sleep_multiplier_factor;
-   DBGMSF(debug, "Returning %5.2f", result );
+   DBGMSF(debug, "Returning %6.3f", result );
    return result;
 }
 
@@ -261,7 +263,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
 
    // Need to guard with mutex!
 
-   DBGMSF(debug, "Executing. factor = %5.2f", factor);
+   DBGMSF(debug, "Executing. factor = %6.3f", factor);
    ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
