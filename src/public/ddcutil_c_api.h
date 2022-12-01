@@ -290,7 +290,7 @@ __attribute__ ((deprecated ("use ddca_set_default_sleep_multiplier")))
 void
 ddca_set_global_sleep_multiplier(double multiplier);
 
-/** @deprecated use #ddca_get_default_display_multiplier()
+/** @deprecated use #ddca_get_default_sleep_multiplier()
  */
 __attribute__ ((deprecated ("use ddca_get_default_sleep_multiplier")))
 double
