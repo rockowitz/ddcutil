@@ -57,39 +57,39 @@ void init_linux_errno() {
 // Errors 1-34 defined in <asm-generic/errno-base.h>
 
 static Status_Code_Info errno_desc[] = {
-      EDENTRY(0,        "success"),
-      EDENTRY(EPERM,    "Operation not permitted"),
-      EDENTRY(ENOENT,   "No such file or directory"),
-      EDENTRY(ESRCH,    "No such process"),                      //  3
-      EDENTRY(EINTR,    "Interrupted system call"),              //  4
-      EDENTRY(EIO,      "I/O error"),                            //  5
-      EDENTRY(ENXIO,    "No such device or address"),            // 6
-      EDENTRY(E2BIG,    "Argument list too long"),
-      EDENTRY(ENOEXEC,  "Exec format error"),
-      EDENTRY(EBADF,    "Bad file number"),                      //  9
-      EDENTRY(ECHILD,   "No child processes"),                   // 10
+      EDENTRY(0,        "success"),                               //  0
+      EDENTRY(EPERM,    "Operation not permitted"),               //  1
+      EDENTRY(ENOENT,   "No such file or directory"),             //  2
+      EDENTRY(ESRCH,    "No such process"),                       //  3
+      EDENTRY(EINTR,    "Interrupted system call"),               //  4
+      EDENTRY(EIO,      "I/O error"),                             //  5
+      EDENTRY(ENXIO,    "No such device or address"),             //  6
+      EDENTRY(E2BIG,    "Argument list too long"),                //  7
+      EDENTRY(ENOEXEC,  "Exec format error"),                     //  8
+      EDENTRY(EBADF,    "Bad file number"),                       //  9
+      EDENTRY(ECHILD,   "No child processes"),                    // 10
 #ifdef TARGET_BSD
-      EDENTRY(EDEADLK,  "Deadlock"),         // was EAGAIN       // 11
+      EDENTRY(EDEADLK,  "Deadlock"),         // was EAGAIN        // 11
 #else
-      EDENTRY(EAGAIN,   "Try again"),                            // 11
+      EDENTRY(EAGAIN,   "Try again"),                             // 11
 #endif
-      EDENTRY(ENOMEM,   "Out of memory"),                        // 12
-      EDENTRY(EACCES,   "Permission denied"),                    // 13
-      EDENTRY(EFAULT,   "Bad address"),                          // 14
-      EDENTRY(ENOTBLK,  "Block device required"),                // 15
-      EDENTRY(EBUSY,    "Device or resource busy"),              // 16
-      EDENTRY(EEXIST,   "File exists"),                          // 17
-      EDENTRY(EXDEV,    "Cross-device link"),                    // 18
-      EDENTRY(ENODEV,   "No such device"),                       // 19
-      EDENTRY(ENOTDIR,  "Not a directory"),                      // 21
-      EDENTRY(EISDIR,   "Is a directory"),                       // 22
+      EDENTRY(ENOMEM,   "Out of memory"),                         // 12
+      EDENTRY(EACCES,   "Permission denied"),                     // 13
+      EDENTRY(EFAULT,   "Bad address"),                           // 14
+      EDENTRY(ENOTBLK,  "Block device required"),                 // 15
+      EDENTRY(EBUSY,    "Device or resource busy"),               // 16
+      EDENTRY(EEXIST,   "File exists"),                           // 17
+      EDENTRY(EXDEV,    "Cross-device link"),                     // 18
+      EDENTRY(ENODEV,   "No such device"),                        // 19
+      EDENTRY(ENOTDIR,  "Not a directory"),                       // 21
+      EDENTRY(EISDIR,   "Is a directory"),                        // 22
       EDENTRY(EINVAL,   "Invalid argument"),                      // 22
       EDENTRY(ENFILE,   "File table overflow"),                   // 23
       EDENTRY(EMFILE,   "Too many open files"),                   // 24
       EDENTRY(ENOTTY,   "Not a typewriter"),                      // 25
       EDENTRY(ETXTBSY,  "Text file busy"),                        // 26
       EDENTRY(EFBIG,    "File too large"),                        // 27
-      EDENTRY(ENOSPC,   "No space left on device"),                //28
+      EDENTRY(ENOSPC,   "No space left on device"),               // 28
       EDENTRY(ESPIPE,   "Illegal seek"),                          // 29
       EDENTRY(EROFS,    "Read-only file system"),                 // 30
       EDENTRY(EMLINK,   "Too many links"),                        // 31
@@ -135,7 +135,6 @@ static Status_Code_Info errno_desc[] = {
      EDENTRY(EADV,      "Advertise error"),                       // 68
      EDENTRY(ESRMNT,    "Srmount error"),                         // 69
      EDENTRY(ECOMM,     "Communication error on send"),           // 70
-
 #endif
 
 #ifdef TARGET_BSD
@@ -235,23 +234,23 @@ static Status_Code_Info errno_desc[] = {
 
 #else
 
-      EDENTRY(EPROTO,         "Protocol error"),    //  71
-      EDENTRY(EMULTIHOP,      "Multihop attempted"),    //  72
-      EDENTRY(EDOTDOT,        "RFS specific error"),    // 73
-      EDENTRY(EBADMSG,        "Not a data message"),    // 74
-      EDENTRY(EOVERFLOW,      "Value too large for defined data type"),    // 75
-      EDENTRY(ENOTUNIQ,       "Name not unique on network"),    // 76
-      EDENTRY(EBADFD,         "File descriptor in bad state"),    // 77
-      EDENTRY(EREMCHG,        "Remote address changed"),    // 78
-      EDENTRY(ELIBACC,        "Can not access a needed shared library"),    // 79
-      EDENTRY(ELIBBAD,        "Accessing a corrupted shared library"),    // 80
-      EDENTRY(ELIBSCN,        ".lib section in a.out corrupted"),    // 81
-      EDENTRY(ELIBMAX,        "Attempting to link in too many shared libraries"),    // 82
-      EDENTRY(ELIBEXEC,       "Cannot exec a shared library directly"),    // 83
-      EDENTRY(EILSEQ,         "Illegal byte sequence"),    // 84
-      EDENTRY(ERESTART,       "Interrupted system call should be restarted"),    // 85
-      EDENTRY(ESTRPIPE,       "Streams pipe error"),    // 86
-      EDENTRY(EUSERS,         "Too many users"),    // 87
+      EDENTRY(EPROTO,         "Protocol error"),                                  //  71
+      EDENTRY(EMULTIHOP,      "Multihop attempted"),                              //  72
+      EDENTRY(EDOTDOT,        "RFS specific error"),                              //  73
+      EDENTRY(EBADMSG,        "Not a data message"),                              //  74
+      EDENTRY(EOVERFLOW,      "Value too large for defined data type"),           //  75
+      EDENTRY(ENOTUNIQ,       "Name not unique on network"),                      //  76
+      EDENTRY(EBADFD,         "File descriptor in bad state"),                    //  77
+      EDENTRY(EREMCHG,        "Remote address changed"),                          //  78
+      EDENTRY(ELIBACC,        "Can not access a needed shared library"),          //  79
+      EDENTRY(ELIBBAD,        "Accessing a corrupted shared library"),            //  80
+      EDENTRY(ELIBSCN,        ".lib section in a.out corrupted"),                 //  81
+      EDENTRY(ELIBMAX,        "Attempting to link in too many shared libraries"), //  82
+      EDENTRY(ELIBEXEC,       "Cannot exec a shared library directly"),           //  83
+      EDENTRY(EILSEQ,         "Illegal byte sequence"),                           //  84
+      EDENTRY(ERESTART,       "Interrupted system call should be restarted"),     //  85
+      EDENTRY(ESTRPIPE,       "Streams pipe error"),                              //  86
+      EDENTRY(EUSERS,         "Too many users"),                                  //  87
 
       EDENTRY(ENOTSOCK,          "Socket operation on non-socket"),               //  88
       EDENTRY(EDESTADDRREQ,      "Destination address required"),                 //  89
