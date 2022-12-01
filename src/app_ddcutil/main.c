@@ -714,7 +714,7 @@ main(int argc, char *argv[]) {
 #endif
    DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
    if (config_file_errs->len > 0) {
-      f0printf(ferr(), "Errors processing ddcutil configuration file %s:\n", configure_fn);
+      f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
          char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
          f0printf(ferr(), s);
