@@ -196,8 +196,8 @@ Parsed_Cmd * get_parsed_libmain_config() {
       ntsa_show(new_argv);
 
    if (errmsgs->len > 0) {
-      f0printf(ferr(),    "Errors reading libddcutil configuration file %s:\n", config_fn);
-      syslog(LOG_WARNING, "Errors reading libddcutil configuration file %s:",   config_fn);
+      f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
+      syslog(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
          f0printf(fout(),     "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
          syslog(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
@@ -352,6 +352,9 @@ _ddca_init(void) {
       syslog(LOG_INFO, "Library was already initialized.");
    }
    // TRACED_ASSERT(1==5); for testing
+
+   // Not really necessary, but seeing errno == 2 has perplexed some library users
+   errno = 0;
 }
 
 
@@ -707,10 +710,20 @@ ddca_is_sleep_suppression_enabled() {
 double
 ddca_set_default_sleep_multiplier(double multiplier)
 {
-   double result = tsd_get_default_sleep_multiplier_factor();
-   tsd_set_default_sleep_multiplier_factor(multiplier);
-   return result;
+   bool debug = true;
+
+   double old_value = -1.0;
+   if (multiplier > 0.0 && multiplier <= 10.0)
+      old_value = -1.0;
+   else {
+      old_value = tsd_get_default_sleep_multiplier_factor();
+       tsd_set_default_sleep_multiplier_factor(multiplier);
+    }
+
+   DBGTRC(debug, DDCA_TRC_API, "Setting %6.3f, returning previous value %6.3f", multiplier, old_value);
+   return old_value;
 }
+
 
 double
 ddca_get_default_sleep_multiplier()
@@ -735,12 +748,18 @@ ddca_get_global_sleep_multiplier()
 double
 ddca_set_sleep_multiplier(double multiplier)
 {
-   // bool debug = false;
-   double result = tsd_get_sleep_multiplier_factor();
-   // DBGMSF(debug, "Setting %5.2f", multiplier);
-   tsd_set_sleep_multiplier_factor(multiplier);
-   // DBGMSF(debug, "Done");
-   return result;
+   bool debug = true;
+
+   double old_value = -1.0;
+   if (multiplier > 0.0 && multiplier <= 10.0)
+      old_value = -1.0;
+   else {
+      old_value = tsd_get_sleep_multiplier_factor();
+      tsd_set_sleep_multiplier_factor(multiplier);
+   }
+
+   DBGTRC(debug, DDCA_TRC_API, "Setting %6.3f, returning previous value %6.3f", multiplier, old_value);
+   return old_value;
 }
 
 double

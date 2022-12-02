@@ -266,8 +266,8 @@ ddca_is_force_slave_address_enabled(void);
 
 /** Sets the sleep multiplier factor to be used for new threads.
  *
- *  @param[in]  multiplier
- *  @return     old multiplier
+ *  @param[in]  multiplier, must be > 0 and <= 10
+ *  @return     old multiplier, -1.0f if invalid multiplier specified
  *
  *  @remark
  *  This function is intended for use only during program initialization,
@@ -299,8 +299,8 @@ ddca_get_global_sleep_multiplier();
 
 /** Sets the sleep multiplier factor for the current thread.
  *
- *  @param[in] multiplier
- *  @return    old multiplier
+ *  @param[in]  multiplier, must be > 0 and <= 10
+ *  @return     old multiplier, -1.0f if invalid multiplier specified
  */
 double
 ddca_set_sleep_multiplier(double multiplier);
