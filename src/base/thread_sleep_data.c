@@ -232,10 +232,9 @@ void reset_all_thread_sleep_data() {
  */
 void tsd_set_default_sleep_multiplier_factor(double multiplier) {
    bool debug = false;
-
-   assert(multiplier > 0 && multiplier < 100);
-   default_sleep_multiplier_factor = multiplier;
    DBGMSF(debug, "Setting sleep_multiplier_factor = %6.3f", multiplier);
+   assert(multiplier >= 0);
+   default_sleep_multiplier_factor = multiplier;
 }
 
 
@@ -272,6 +271,7 @@ void tsd_set_sleep_multiplier_factor(double factor) {
    // Need to guard with mutex!
 
    DBGMSF(debug, "Executing. factor = %6.3f", factor);
+   assert(factor >= 0);
    ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
