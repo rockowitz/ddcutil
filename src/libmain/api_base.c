@@ -30,6 +30,7 @@
 #include "base/core_per_thread_settings.h"
 #include "base/parms.h"
 #include "base/per_thread_data.h"
+#include "base/rtti.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
@@ -53,6 +54,12 @@
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"
 #include "libmain/api_services_internal.h"
+
+//
+// Forward Declarations
+//
+
+void init_api_base();
 
 
 //
@@ -157,7 +164,6 @@ char * get_library_filename() {
 // Initialization
 //
 
-
 static
 Parsed_Cmd * get_parsed_libmain_config() {
    bool debug = false;
@@ -218,14 +224,14 @@ Parsed_Cmd * get_parsed_libmain_config() {
    DBGF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
-      syslog(LOG_WARNING, "Ignoring invalid configuration file options: %s",  untokenized_option_string);
-      fprintf(ferr(),     "Ignoring invalid configuration file options: %s\n",untokenized_option_string);
+      syslog(LOG_WARNING, "Ignoring invalid configuration file option string: %s",  untokenized_option_string);
+      fprintf(ferr(),     "Ignoring invalid configuration file option string: %s\n",untokenized_option_string);
       DBGF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
    }
    if (debug)
       dbgrpt_parsed_cmd(parsed_cmd, 1);
-   DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
+   // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
    ntsa_free(cmd_name_array, false);
    ntsa_free(new_argv, true);
    free(untokenized_option_string);
@@ -281,6 +287,7 @@ _ddca_init(void) {
       // signal(SIGTERM, dummy_sigterm_handler);
       // atexit(atexit_func);  // TESTING CLAEANUP
 #endif
+      init_api_base();
       init_base_services();
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
@@ -710,17 +717,18 @@ ddca_is_sleep_suppression_enabled() {
 double
 ddca_set_default_sleep_multiplier(double multiplier)
 {
-   bool debug = true;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
    if (multiplier > 0.0 && multiplier <= 10.0)
       old_value = -1.0;
    else {
       old_value = tsd_get_default_sleep_multiplier_factor();
-       tsd_set_default_sleep_multiplier_factor(multiplier);
+      tsd_set_default_sleep_multiplier_factor(multiplier);
     }
 
-   DBGTRC(debug, DDCA_TRC_API, "Setting %6.3f, returning previous value %6.3f", multiplier, old_value);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %6.3f", old_value);
    return old_value;
 }
 
@@ -728,7 +736,11 @@ ddca_set_default_sleep_multiplier(double multiplier)
 double
 ddca_get_default_sleep_multiplier()
 {
-   return tsd_get_default_sleep_multiplier_factor();
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "");
+   double result = tsd_get_default_sleep_multiplier_factor();
+   DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
+   return result;
 }
 
 void
@@ -748,27 +760,26 @@ ddca_get_global_sleep_multiplier()
 double
 ddca_set_sleep_multiplier(double multiplier)
 {
-   bool debug = true;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
-   if (multiplier > 0.0 && multiplier <= 10.0)
-      old_value = -1.0;
-   else {
+   if (multiplier > 0.0 && multiplier <= 10.0) {
       old_value = tsd_get_sleep_multiplier_factor();
       tsd_set_sleep_multiplier_factor(multiplier);
    }
 
-   DBGTRC(debug, DDCA_TRC_API, "Setting %6.3f, returning previous value %6.3f", multiplier, old_value);
+   DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %6.3f", old_value);
    return old_value;
 }
 
 double
 ddca_get_sleep_multiplier()
 {
-   // bool debug = false;
-   // DBGMSF(debug, "Starting");
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_API, "");
    double result = tsd_get_sleep_multiplier_factor();
-   // DBGMSF(debug, "Returning %5.2f", result);
+   DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
 
@@ -925,4 +936,9 @@ ddca_show_stats(
       ddc_report_stats_main( stats_types, by_thread, depth);
 }
 
+
+void init_api_base() {
+   RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
+   RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
+}
 
