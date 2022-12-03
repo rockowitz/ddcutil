@@ -15,6 +15,7 @@
 #include "base/core.h"
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
+#include "base/per_thread_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/thread_sleep_data.h"
@@ -107,7 +108,7 @@ int get_sleep_time(
       deferrable_sleep = deferred_sleep_enabled;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS; // per DDC spec
       break;
-   case SE_MULTI_PART_WRITE_TO_READ:
+   case SE_MULTI_PART_WRITE_TO_READ:     // UNUSED
       // Not defined in spec for capabilities or table read. Assume 50 ms.
       //
       // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
@@ -124,21 +125,21 @@ int get_sleep_time(
       //     The host should wait at least 50ms before sending the next message to the display
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
       break;
-   case SE_POST_CAP_TABLE_COMMAND:
+   case SE_POST_CAP_TABLE_COMMAND:    // UNUSED
       // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
       // just between segments
       deferrable_sleep = deferred_sleep_enabled;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
       break;
       // Not in DDC/CI spec
-   case SE_DDC_NULL:
+   case SE_DDC_NULL:      // UNUSED
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
       break;
    case SE_PRE_MULTI_PART_READ:
       // before reading capabilities - this is based on testing, not defined in spec
       spec_sleep_time_millis = 200;
       break;
-   case SE_SPECIAL:
+   case SE_SPECIAL:    // UNUSED
       // 4/2020: no current use
       spec_sleep_time_millis = special_sleep_time_millis;
       break;
@@ -268,6 +269,8 @@ void tuned_sleep_with_trace(
          g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
       sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
+      Per_Thread_Data * ptd = ptd_get_per_thread_data();
+      ptd->total_sleep_time_millis += adjusted_sleep_time_millis;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");

@@ -79,6 +79,7 @@ typedef struct {
 // double cur_sleep_multiplier_factor;
    double cur_sleep_adjustment_factor;
 // double thread_adjustment_increment;
+   int    total_sleep_time_millis;
 
 // #ifdef UNUSED
    // Retry management

@@ -68,30 +68,31 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
    rpt_label(  d1,   "General:");
    // if (data->dref)
    //    rpt_vstring(d2,    "Display:                           %s", dref_repr_t(data->dref) );
-   rpt_vstring(d2,    "Description:                       %s", (data->description) ? data->description : "Not set");
+   rpt_vstring(d2,    "Description:                       %s",   (data->description) ? data->description : "Not set");
+   rpt_vstring(d2,    "Total sleep time (millis):         %d",   data->total_sleep_time_millis);
    rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d2,    "Dynamic sleep enabled:             %s",  sbool(data->dynamic_sleep_enabled));
+   rpt_vstring(d2,    "Dynamic sleep enabled:             %s",   sbool(data->dynamic_sleep_enabled));
 
    rpt_label(  d1,    "Sleep multiplier adjustment:");
-   rpt_vstring(d2,    "Current adjustment:                %d", data->sleep_multiplier_ct);
-   rpt_vstring(d2,    "Highest adjustment:                %d", data->highest_sleep_multiplier_ct);
+   rpt_vstring(d2,    "Current adjustment:                %d",   data->sleep_multiplier_ct);
+   rpt_vstring(d2,    "Highest adjustment:                %d",   data->highest_sleep_multiplier_ct);
    rpt_label(  d2,    "Number of function calls");
-   rpt_vstring(d2,    "   that performed adjustment:      %d", data->sleep_multipler_changer_ct);
+   rpt_vstring(d2,    "   that performed adjustment:      %d",   data->sleep_multipler_changer_ct);
 
    if ( data->dynamic_sleep_enabled ) {
       rpt_label(  d1, "Dynamic Sleep Adjustment:  ");
-      rpt_vstring(d2, "Total successful reads:          %5d",   data->total_ok_status_count);
-      rpt_vstring(d2, "Total reads with DDC error:      %5d",   data->total_error_status_count);
-      rpt_vstring(d2, "Total ignored status codes:      %5d",   data->total_other_status_ct);
-      rpt_vstring(d2, "Current sleep adjustment factor: %5.2f", data->cur_sleep_adjustment_factor);
-//    rpt_vstring(d2, "Thread adjustment increment:     %5.2f", data->thread_adjustment_increment);
-      rpt_vstring(d2, "Adjustment check interval        %5d",   data->adjustment_check_interval);
+      rpt_vstring(d2, "Total successful reads:           %5d",   data->total_ok_status_count);
+      rpt_vstring(d2, "Total reads with DDC error:       %5d",   data->total_error_status_count);
+      rpt_vstring(d2, "Total ignored status codes:       %5d",   data->total_other_status_ct);
+      rpt_vstring(d2, "Current sleep adjustment factor:  %5.2f", data->cur_sleep_adjustment_factor);
+//    rpt_vstring(d2, "Thread adjustment increment:      %5.2f", data->thread_adjustment_increment);
+      rpt_vstring(d2, "Adjustment check interval         %5d",   data->adjustment_check_interval);
 
-      rpt_vstring(d2, "Calls since last check:          %5d",   data->calls_since_last_check);
-      rpt_vstring(d2, "Total adjustment checks:         %5d",   data->total_adjustment_checks);
-      rpt_vstring(d2, "Number of adjustments:           %5d",   data->total_adjustment_ct);
-//    rpt_vstring(d2, "Number of excess adjustments:    %5d",   data->total_max_adjustment_ct);
-      rpt_vstring(d2, "Final sleep adjustment:          %5.2f", data->cur_sleep_adjustment_factor);
+      rpt_vstring(d2, "Calls since last check:           %5d",   data->calls_since_last_check);
+      rpt_vstring(d2, "Total adjustment checks:          %5d",   data->total_adjustment_checks);
+      rpt_vstring(d2, "Number of adjustments:            %5d",   data->total_adjustment_ct);
+//    rpt_vstring(d2, "Number of excess adjustments:     %5d",   data->total_max_adjustment_ct);
+      rpt_vstring(d2, "Final sleep adjustment:           %5.2f", data->cur_sleep_adjustment_factor);
    }
 }
 
@@ -159,6 +160,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
          "Setting data->sleep_multiplier_factor = default_sleep_multiplier_factor = %6.3f",
          default_sleep_multiplier_factor);
    data->adjustment_check_interval = 2;
+   data->total_sleep_time_millis = 0;
 
    data->thread_sleep_data_defined = true;   // vs data->initialized
 
@@ -177,6 +179,7 @@ void reset_thread_sleep_data(Per_Thread_Data * data) {
    data->total_adjustment_checks = 0;
    data->total_adjustment_ct = 0;
    data->total_max_adjustment_ct = 0;
+   data->total_sleep_time_millis = 0;
 }
 
 
