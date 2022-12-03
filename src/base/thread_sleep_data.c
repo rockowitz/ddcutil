@@ -28,6 +28,8 @@
 #include "base/per_thread_data.h"
 #include "base/thread_sleep_data.h"
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
+
 //
 // Sleep time adjustment
 //
@@ -144,6 +146,7 @@ Per_Thread_Data * tsd_get_thread_sleep_data() {
 void init_thread_sleep_data(Per_Thread_Data * data) {
    bool debug = false;
    DBGMSF(debug, "Starting. data=%p", (void*)data);
+
    data->dynamic_sleep_enabled = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
    data->highest_sleep_multiplier_value = 1;
@@ -152,9 +155,13 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
    data->initialized = true;
    data->sleep_multiplier_factor = default_sleep_multiplier_factor;
    // data->thread_adjustment_increment = default_sleep_multiplier_factor;
+   DBGMSF(debug,
+         "Setting data->sleep_multiplier_factor = default_sleep_multiplier_factor = %6.3f",
+         default_sleep_multiplier_factor);
    data->adjustment_check_interval = 2;
 
    data->thread_sleep_data_defined = true;   // vs data->initialized
+
    DBGMSF(debug, "Done. sleep_multiplier_factor = %5.2f", data->sleep_multiplier_factor);
 }
 
@@ -247,9 +254,10 @@ double tsd_get_default_sleep_multiplier_factor() {
  */
 double tsd_get_sleep_multiplier_factor() {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    double result = data->sleep_multiplier_factor;
-   DBGMSF(debug, "Returning %6.3f", result );
+   DBGTRC(debug, TRACE_GROUP, "Returning %6.3f", result );
    return result;
 }
 
