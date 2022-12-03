@@ -264,6 +264,8 @@ void atexit_func() {
 static FILE * flog = NULL;
 
 bool library_initialized = false;
+DDCA_Stats_Type requested_stats = 0;
+bool per_thread_stats = false;
 
 /** Initializes the ddcutil library module.
  *
@@ -330,6 +332,8 @@ _ddca_init(void) {
          free(trace_file);
       }
 
+      requested_stats = parsed_cmd->stats_types;
+      per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS;
       init_api_services();
       submaster_initializer(parsed_cmd);
       free_parsed_cmd(parsed_cmd);
@@ -380,6 +384,8 @@ _ddca_terminate(void) {
       if (debug)
          dbgrpt_distinct_display_descriptors(2);
       ddc_discard_detected_displays();
+      if (requested_stats)
+         ddc_report_stats_main(requested_stats, per_thread_stats, 0);
       release_base_services();
       ddc_stop_watch_displays();
       free_regex_hash_table();
@@ -723,9 +729,7 @@ ddca_set_default_sleep_multiplier(double multiplier)
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
-   if (multiplier > 0.0 && multiplier <= 10.0)
-      old_value = -1.0;
-   else {
+   if (multiplier > 0.0 && multiplier <= 10.0) {
       old_value = tsd_get_default_sleep_multiplier_factor();
       tsd_set_default_sleep_multiplier_factor(multiplier);
     }
