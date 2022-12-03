@@ -7,6 +7,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include "config.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <syslog.h>
@@ -146,7 +148,7 @@ is_nvidia_einval_bug(
          i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
          char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
          DBGTRC(true, TRACE_GROUP, msg);
-         syslog(LOG_WARNING, "%s", msg);
+         SYSLOG(LOG_WARNING, "%s", msg);
          result = true;
       }
       free(driver_name);

@@ -27,7 +27,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef ENABLE_SYSLOG
 #include <syslog.h>
+#endif
 /** \endcond */
 
 #include "public/ddcutil_types.h"
@@ -80,6 +82,13 @@ typedef struct {
 //
 // Trace message control
 //
+
+#ifdef ENABLE_SYSLOG
+#define SYSLOG(priority, format, ...) syslog(priority, format, ##__VA_ARGS__)
+#else
+#define SYSLOG(priority, format, ...) do {} while (0)
+#endif
+
 
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
@@ -198,7 +207,9 @@ void severemsg(
         ...);
 #endif
 
+#ifdef ENABLE_SYSLOG
 extern bool trace_to_syslog;
+#endif
 
 bool dbgtrc(
         DDCA_Trace_Group trace_group,
@@ -262,7 +273,7 @@ bool dbgtrc_returning_expression(
          dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
-         syslog(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
+         SYSLOG(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
          /* assert(#_assertion); */ \
          /*  __assert_fail(#_assertion, __FILE__, line, __func__); */  \
@@ -310,9 +321,11 @@ bool dbgtrc_returning_expression(
     dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
+#ifdef UNUSED
 #define DBGTRC_SYSLOG(debug_flag, trace_group, format, ...) \
     dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_SYSLOG, \
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+#endif
 
 #define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
     dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \

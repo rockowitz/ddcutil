@@ -33,7 +33,9 @@
 #else
 #include <sys/types.h>
 #include <sys/syscall.h>
+#ifdef ENABLE_SYSLOG
 #include <syslog.h>
+#endif
 #endif
 
 #include <unistd.h>
@@ -526,10 +528,12 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
       else {
          f0printf(fout(), "DDC: %s\n", buffer);
 
+#ifdef ENABLE_SYSLOG
          // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
          if (trace_to_syslog) {    // HACK
             syslog(LOG_INFO, "%s", buffer);
          }
+#endif
       }
       fflush(fout());
       va_end(args);
@@ -580,8 +584,10 @@ void report_tracing(int depth) {
    rpt_vstring(d1, "Traced files:            %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
+#ifdef ENABLE_SYSLOG
    rpt_vstring(d1, "Trace to syslog:         %s", SBOOL(trace_to_syslog));
    rpt_nl();
+#endif
 }
 
 
@@ -882,9 +888,11 @@ static bool vdbgtrc(
    }
 #endif
 
+#ifdef ENABLE_SYSLOG
       if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
          syslog(LOG_INFO, "%s", syslog_buf);
       }
+#endif
 
       if (is_tracing(trace_group, filename, funcname)) {
          FILE * where = NULL;
@@ -1165,8 +1173,8 @@ void program_logic_error(
    f0printf(f, "%s\n", buffer);
    fflush(f);
 
-   syslog(LOG_ERR, "%s", buf2);
-   syslog(LOG_ERR, "%s", buffer);
+   SYSLOG(LOG_ERR, "%s", buf2);
+   SYSLOG(LOG_ERR, "%s", buffer);
 }
 
 

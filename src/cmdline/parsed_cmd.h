@@ -86,7 +86,9 @@ typedef enum {
 // CMD_FLAG_CLEAR_PERSISTENT_CACHE
 //                           = 0x1000000000,
    CMD_FLAG_WALLTIME_TRACE   = 0x2000000000,
+#ifdef ENABLE_SYSLOG
    CMD_FLAG_SYSLOG           = 0x4000000000,
+#endif
    CMD_FLAG_I2C_IO_FILEIO  = 0x010000000000,
    CMD_FLAG_I2C_IO_IOCTL   = 0x020000000000,
 } Parsed_Cmd_Flags;

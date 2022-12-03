@@ -3,15 +3,19 @@
  *  For use only by other api_... files
  */
 
-// Copyright (C) 2015-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_BASE_INTERNAL_H_
 #define API_BASE_INTERNAL_H_
 
+#include "config.h"
+
 #include <assert.h>
 #include <stdbool.h>
+#ifdef ENABLE_SYSLOG
 #include <syslog.h>
+#endif
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -33,7 +37,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 #define API_PRECOND(expr) \
    do { \
       if (!(expr)) { \
-         syslog(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
@@ -52,7 +56,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 #define API_PRECOND_NORC(expr) \
    do { \
       if (!(expr)) { \
-         syslog(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
                             #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCA_PRECOND_STDERR) \
              fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \

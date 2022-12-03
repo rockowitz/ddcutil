@@ -203,16 +203,16 @@ Parsed_Cmd * get_parsed_libmain_config() {
 
    if (errmsgs->len > 0) {
       f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
-      syslog(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
+      SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
          f0printf(fout(),     "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
-         syslog(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
+         SYSLOG(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
       }
    }
    g_ptr_array_free(errmsgs, true);
    if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
       fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
-      syslog(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+      SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
    }
 
    // Continue even if config file errors
@@ -224,7 +224,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
    DBGF(debug, "Calling parse_command()");
    parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
    if (!parsed_cmd) {
-      syslog(LOG_WARNING, "Ignoring invalid configuration file option string: %s",  untokenized_option_string);
+      SYSLOG(LOG_WARNING, "Ignoring invalid configuration file option string: %s",  untokenized_option_string);
       fprintf(ferr(),     "Ignoring invalid configuration file option string: %s\n",untokenized_option_string);
       DBGF(debug, "Retrying parse_command() with no options");
       parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
@@ -246,7 +246,7 @@ Parsed_Cmd * get_parsed_libmain_config() {
 void done() {
    printf("(%s) Starting\n", __func__);
    _ddca_terminate();
-   syslog(LOG_INFO, "(%s) executing done()", __func__);
+   SYSLOG(LOG_INFO, "(%s) executing done()", __func__);
    printf("(%s) Done.\n", __func__);
 }
 
@@ -281,8 +281,10 @@ _ddca_init(void) {
    if (debug)
       printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
+#ifdef ENABLE_SYSLOG
       openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
       syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
+#endif
 #ifdef TESTING_CLEANUP
       // signal(SIGTERM, dummy_sigterm_handler);
       // atexit(atexit_func);  // TESTING CLAEANUP
@@ -298,7 +300,7 @@ _ddca_init(void) {
                 : strdup(parsed_cmd->library_trace_file);
          if (debug)
             printf("(%s) Setting trace destination %s\n", __func__, trace_file);
-         syslog(LOG_INFO, "Trace destination: %s", trace_file);
+         SYSLOG(LOG_INFO, "Trace destination: %s", trace_file);
 
          fopen_mkdir(trace_file, "a", stderr, &flog);
 
@@ -322,7 +324,7 @@ _ddca_init(void) {
          else {
             fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
                             trace_file, strerror(errno));
-            syslog(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
+            SYSLOG(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
                             trace_file, strerror(errno));
          }
          free(trace_file);
@@ -352,11 +354,11 @@ _ddca_init(void) {
 #endif
 
       DBGTRC_DONE(debug, DDCA_TRC_API, "library initialization executed");
-      syslog(LOG_INFO, "Library initialization complete.");
+      SYSLOG(LOG_INFO, "Library initialization complete.");
    }
    else {
       DBGTRC_DONE (debug, DDCA_TRC_API, "library was already initialized");
-      syslog(LOG_INFO, "Library was already initialized.");
+      SYSLOG(LOG_INFO, "Library was already initialized.");
    }
    // TRACED_ASSERT(1==5); for testing
 
@@ -389,7 +391,7 @@ _ddca_terminate(void) {
    else {
       DBGTRC_DONE(debug, DDCA_TRC_API, "library was already terminated");   // should be impossible
    }
-   syslog(LOG_INFO, "Terminating.");
+   SYSLOG(LOG_INFO, "Terminating.");
    closelog();
 }
 
