@@ -74,7 +74,7 @@ void report_thread_sleep_data(Per_Thread_Data * data, int depth) {
 
    rpt_label(  d1,    "Sleep multiplier adjustment:");
    rpt_vstring(d2,    "Current adjustment:                %d", data->sleep_multiplier_ct);
-   rpt_vstring(d2,    "Highest adjustment:                %d", data->highest_sleep_multiplier_value);
+   rpt_vstring(d2,    "Highest adjustment:                %d", data->highest_sleep_multiplier_ct);
    rpt_label(  d2,    "Number of function calls");
    rpt_vstring(d2,    "   that performed adjustment:      %d", data->sleep_multipler_changer_ct);
 
@@ -149,7 +149,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
 
    data->dynamic_sleep_enabled = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
-   data->highest_sleep_multiplier_value = 1;
+   data->highest_sleep_multiplier_ct = 1;
 
    data->cur_sleep_adjustment_factor = 1.0;
    data->initialized = true;
@@ -169,7 +169,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
 #ifdef UNUSED
 void reset_thread_sleep_data(Per_Thread_Data * data) {
    ptd_cross_thread_operation_block();
-   data->highest_sleep_multiplier_value = data->sleep_multiplier_ct;
+   data->highest_sleep_multiplier_ct = data->sleep_multiplier_ct;
    data->sleep_multipler_changer_ct = 0;
    data->total_ok_status_count = 0;
    data->total_error_status_count = 0;
@@ -322,8 +322,8 @@ void tsd_set_sleep_multiplier_ct(int multiplier_ct) {
    ptd_cross_thread_operation_start();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_ct = multiplier_ct;
-   if (multiplier_ct > data->highest_sleep_multiplier_value)
-      data->highest_sleep_multiplier_value = multiplier_ct;
+   if (multiplier_ct > data->highest_sleep_multiplier_ct)
+      data->highest_sleep_multiplier_ct = multiplier_ct;
    ptd_cross_thread_operation_end();
 }
 

@@ -56,7 +56,7 @@ typedef struct {
    bool   thread_sleep_data_defined;
    double sleep_multiplier_factor;         // initially set by user
    int    sleep_multiplier_ct    ;         // can be changed by retry logic
-   int    highest_sleep_multiplier_value;  // high water mark
+   int    highest_sleep_multiplier_ct;     // high water mark
    int    sleep_multipler_changer_ct;      // number of function calls that adjusted multiplier ct
 
    // For Dynamic Sleep Adjustment

@@ -295,7 +295,7 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
    rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
    rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
-   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_value);
+   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_ct);
 
    rpt_vstring(d1,"cur_dh:                 %s", dh_repr(data->cur_dh) );
 
