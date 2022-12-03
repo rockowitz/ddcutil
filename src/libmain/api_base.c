@@ -729,7 +729,7 @@ ddca_set_default_sleep_multiplier(double multiplier)
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
-   if (multiplier > 0.0 && multiplier <= 10.0) {
+   if (multiplier >= 0.0 && multiplier <= 10.0) {
       old_value = tsd_get_default_sleep_multiplier_factor();
       tsd_set_default_sleep_multiplier_factor(multiplier);
     }
@@ -770,7 +770,7 @@ ddca_set_sleep_multiplier(double multiplier)
    DBGTRC_STARTING(debug, DDCA_TRC_API, "Setting multiplier = %6.3f", multiplier);
 
    double old_value = -1.0;
-   if (multiplier > 0.0 && multiplier <= 10.0) {
+   if (multiplier >= 0.0 && multiplier <= 10.0) {
       old_value = tsd_get_sleep_multiplier_factor();
       tsd_set_sleep_multiplier_factor(multiplier);
    }
