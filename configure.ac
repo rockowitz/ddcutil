@@ -280,6 +280,9 @@ AS_IF([test "x$enable_drm" = "xyes"],
         AC_MSG_NOTICE( [drm...        disabled] )
      )
              
+
+              
+             
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
@@ -303,6 +306,19 @@ AS_IF( [test "x$enable_asan" = "xyes"],
       ,
          AC_MSG_NOTICE( [asan..........disabled] )
      )
+
+dnl *** configure option: --enable-syslog
+AC_ARG_ENABLE([syslog],
+              [ AS_HELP_STRING( [--enable-syslog=@<:@yes/no@:>@], [Write to system log@<:@default=yes@:>@] )],
+              [enable_syslog=${enableval}],
+              [enable_syslog=yes] )
+AS_IF([test "x$enable_syslog" = "xyes"],
+        AC_MSG_NOTICE( [syslog...     enabled]  )
+        AC_DEFINE([ENABLE_SYSLOG], [1], [If defined, write to system log.])
+      ,
+        AC_MSG_NOTICE( [syslog...     disabled] )
+     )
+          
 
 
 dnl *** configure option: --enable-targetbsd
