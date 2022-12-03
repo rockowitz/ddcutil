@@ -40,7 +40,7 @@
 
 void init_tracing(Parsed_Cmd * parsed_cmd)
 {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting.\n",__func__);
    if (parsed_cmd->flags & (CMD_FLAG_SYSLOG))
