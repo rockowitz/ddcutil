@@ -86,12 +86,9 @@ typedef enum {
    SE_WRITE_TO_READ,         ///< between I2C write and read
    SE_POST_WRITE,            ///< after I2C write without subsequent read
    SE_POST_READ,             ///< after I2C read
-   SE_DDC_NULL,              ///< after DDC Null response
    SE_POST_SAVE_SETTINGS,    ///< after DDC Save Current Settings command
-   SE_PRE_MULTI_PART_READ,      ///< before reading capabilities
-   SE_MULTI_PART_WRITE_TO_READ, ///< within segments of multi-part read
-   SE_AFTER_EACH_CAP_TABLE_SEGMENT,  ///< between segments of Capabilities or a Table command
-   SE_POST_CAP_TABLE_COMMAND,
+   SE_PRE_MULTI_PART_READ,   ///< before reading capabilities or table
+   SE_POST_CAP_TABLE_SEGMENT,///< after each segment of Capabilities or a Table command
    SE_SPECIAL                ///< explicit time specified
 } Sleep_Event_Type;
 const char * sleep_event_name(Sleep_Event_Type event_type);

@@ -87,9 +87,13 @@ int get_sleep_time(
       //     and preparation of the reply message by the display
       // 4.6 Capabilities Request & Reply:
       //     write to read interval unclear, assume 50 ms
-      //  Use 50 ms for both
+      // Note: ddc_i2c_write_read_raw() is used for both normal VCP feature reads
+      // and reads within a capabilities or table command.  It can't distinguish a
+      // normal write/read from one inside a multi part read.  So this sleep time
+      // is used for both.
       //  spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+      // spec_sleep_time_millis = 0; // *** TEMP ***
       deferrable_sleep = deferred_sleep_enabled;
       break;
    case SE_POST_WRITE: // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
@@ -101,6 +105,7 @@ int get_sleep_time(
    case SE_POST_READ:
       deferrable_sleep = deferred_sleep_enabled;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+      // spec_sleep_time_millis = 0;   // *** TMEP ***
       break;
    case SE_POST_SAVE_SETTINGS:
       // 4.5 Save Current Settings:
@@ -108,15 +113,11 @@ int get_sleep_time(
       deferrable_sleep = deferred_sleep_enabled;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS; // per DDC spec
       break;
-   case SE_MULTI_PART_WRITE_TO_READ:     // UNUSED
-      // Not defined in spec for capabilities or table read. Assume 50 ms.
-      //
-      // Note: This constant is not used.  ddc_i2c_write_read_raw() can't distinguish a normal write/read
-      // from one inside a multi part read, and always uses SE_WRITE_TO_READ.
-      // Address this by using 50 ms for SE_WRITE_TO_READ.
-      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
+   case SE_PRE_MULTI_PART_READ:
+      // before reading capabilities - this is based on testing, not defined in spec
+      spec_sleep_time_millis = 200;
       break;
-   case SE_AFTER_EACH_CAP_TABLE_SEGMENT:
+   case SE_POST_CAP_TABLE_SEGMENT:
       // 4.6 Capabilities Request & Reply:
       //     The host should wait at least 50ms before sending the next message to the display
       // 4.8.1 Table Write
@@ -124,20 +125,6 @@ int get_sleep_time(
       // 4.8.2 Table Read
       //     The host should wait at least 50ms before sending the next message to the display
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_BETWEEN_CAP_TABLE_FRAGMENTS;
-      break;
-   case SE_POST_CAP_TABLE_COMMAND:    // UNUSED
-      // unused, SE_AFTER_EACH_CAP_TABLE_SEGMENT called after each segment, not
-      // just between segments
-      deferrable_sleep = deferred_sleep_enabled;
-      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_CAP_TABLE_COMMAND;
-      break;
-      // Not in DDC/CI spec
-   case SE_DDC_NULL:      // UNUSED
-      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-      break;
-   case SE_PRE_MULTI_PART_READ:
-      // before reading capabilities - this is based on testing, not defined in spec
-      spec_sleep_time_millis = 200;
       break;
    case SE_SPECIAL:    // UNUSED
       // 4/2020: no current use
