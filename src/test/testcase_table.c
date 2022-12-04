@@ -1,7 +1,7 @@
 /* testcase_table.c
  *
  * <copyright>
- * Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -23,9 +23,7 @@
 
 #include <config.h>
 
-#include "ddc/ddc_capabilities_tests.h"
 #include "ddc/ddc_vcp_tests.h"
-#include "i2c/i2c_edid_tests.h"
 
 #include "testcase_table.h"
 
