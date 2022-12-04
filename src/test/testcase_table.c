@@ -21,17 +21,13 @@
  * </endcopyright>
  */
 
-#include <config.h>
-
-#include "ddc/ddc_vcp_tests.h"
+#include "config.h"
 
 #include "testcase_table.h"
 
 Testcase_Descriptor testcase_catalog[] = {
-      {"get_luminosity_sample_code",        DisplayRefBus,  NULL, get_luminosity_sample_code, NULL, NULL},
-      {"get_luminosity_using_single_ioctl", DisplayRefBus,  NULL, get_luminosity_using_single_ioctl, NULL, NULL},
-      {"demo_nvidia_bug_sample_code",       DisplayRefBus,  NULL, demo_nvidia_bug_sample_code, NULL, NULL},
-      {"demo_p2411_problem",                DisplayRefBus,  NULL, demo_p2411_problem, NULL, NULL}
+ //   {"get_luminosity_sample_code",        DisplayRefBus,  NULL, get_luminosity_sample_code, NULL, NULL},
+ //     {"demo_p2411_problem",                DisplayRefBus,  NULL, demo_p2411_problem, NULL, NULL}
 };
 int testcase_catalog_ct = sizeof(testcase_catalog)/sizeof(Testcase_Descriptor);
 
