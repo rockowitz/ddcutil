@@ -99,12 +99,12 @@ int get_sleep_time(
    case SE_POST_WRITE: // post SET VCP FEATURE write, between SET TABLE write fragments, after final?
       // 4.4 Set VCP Feature:
       //   The host should wait at least 50ms to ensure next message is received by the display
-      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
       deferrable_sleep = deferred_sleep_enabled;
       break;
    case SE_POST_READ:
       deferrable_sleep = deferred_sleep_enabled;
-      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_POST_NORMAL_COMMAND;
+      spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
       // spec_sleep_time_millis = 0;   // *** TMEP ***
       break;
    case SE_POST_SAVE_SETTINGS:
