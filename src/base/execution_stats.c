@@ -87,7 +87,6 @@ IO_Event_Type_Stats io_event_stats[] = {
       {IE_READ,       "IE_READ",       "read calls",             0, 0},
       {IE_IOCTL_WRITE,"I2_IOCTL_WRITE","i2c writes using ioctl", 0, 0},
       {IE_IOCTL_READ, "I2_IOCTL_READ", "i2c reads using ioctl",  0, 0},
-//    {IE_WRITE_READ, "IE_WRITE_READ", "write/read calls",       0, 0},
       {IE_OPEN,       "IE_OPEN",       "open file calls",        0, 0},
       {IE_CLOSE,      "IE_CLOSE",      "close file calls",       0, 0},
       {IE_OTHER,      "IE_OTHER",      "other I/O calls",        0, 0},
