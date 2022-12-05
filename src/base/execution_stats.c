@@ -2,7 +2,7 @@
  *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -71,7 +71,6 @@ static Status_Code_Counts * retryable_error_code_counts;
 static GMutex               status_code_counts_mutex;
 static GMutex               global_stats_mutex;
 
-
 static bool                 debug_status_code_counts_mutex  = false;
 static bool                 debug_global_stats_mutex = false;
 static bool                 debug_sleep_stats_mutex = false;
@@ -96,6 +95,7 @@ IO_Event_Type_Stats io_event_stats[] = {
 #define IO_EVENT_TYPE_CT (sizeof(io_event_stats)/sizeof(IO_Event_Type_Stats))
 static GMutex io_event_stats_mutex;
 static bool   debug_io_event_stats_mutex;
+
 
 static
 void reset_io_event_stats() {
@@ -146,7 +146,8 @@ static int total_io_event_count() {
    return total;
 }
 
-// unused
+
+#ifdef UNUSED
 uint64_t total_io_event_nanosec() {
    uint64_t total = 0;
    int ndx = 0;
@@ -154,6 +155,7 @@ uint64_t total_io_event_nanosec() {
       total += io_event_stats[ndx].call_nanosec;
    return total;
 }
+#endif
 
 
 // No effect on program logic, but makes debug messages easier to scan
@@ -237,6 +239,7 @@ typedef struct {
    uint64_t nanos;
 } Non_Sleep_Call_Totals;
 
+
 Non_Sleep_Call_Totals
 get_non_sleep_call_totals () {
    Non_Sleep_Call_Totals totals;
@@ -285,6 +288,7 @@ Status_Code_Counts * new_status_code_counts(char * name) {
    return pcounts;
 }
 
+
 static void
 reset_status_code_counts_struct(Status_Code_Counts * pcounts) {
    bool debug = false || debug_status_code_counts_mutex;
@@ -301,13 +305,11 @@ reset_status_code_counts_struct(Status_Code_Counts * pcounts) {
 }
 
 
-
 static void
 reset_status_code_counts() {
    reset_status_code_counts_struct(primary_error_code_counts);
    reset_status_code_counts_struct(retryable_error_code_counts);
 }
-
 
 
 static
@@ -360,6 +362,7 @@ log_status_code(Public_Status_Code rc, const char * caller_name) {
    log_any_status_code(pcounts, rc, caller_name);
    return rc;
 }
+
 
 /** Log a status code that occurs in a retry loop
  *
@@ -497,18 +500,14 @@ int get_true_io_error_count(Status_Code_Counts * pcounts) {
 // Sleep Strategy
 //
 
-
 // Names for Sleep_Event enum values
 static const char * sleep_event_names[] = {
       "SE_WRITE_TO_READ",
       "SE_POST_WRITE",
       "SE_POST_READ",
-      "SE_DDC_NULL",
       "SE_POST_SAVE_SETTINGS",
       "SE_PRE_MULTI_PART_READ",
-      "SE_MULTI_PART_READ_TO_WRITE",
-      "SE_BETWEEN_CAP_TABLE_SEGMENTS",
-      "SE_POST_CAP_TABLE_COMMAND",
+      "SE_POST_CAP_TABLE_SEGMENT",
       "SE_SPECIAL",
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
