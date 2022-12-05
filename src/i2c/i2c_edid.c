@@ -101,7 +101,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
 
       RECORD_IO_EVENTX(
             fd,
-            IE_WRITE,
+            IE_IOCTL_WRITE,
             ( rc = ioctl(fd, I2C_RDWR, &msgset) )
             );
       int errsv = errno;
@@ -161,7 +161,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
 
          RECORD_IO_EVENTX(
             fd,
-            IE_READ,
+            IE_IOCTL_READ,
             ( rc = ioctl(fd, I2C_RDWR, &msgset))
            );
          int errsv = errno;
