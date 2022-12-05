@@ -131,7 +131,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
          for (; ndx < edid_read_size && rc == 0; ndx++) {
             RECORD_IO_EVENTX(
                 fd,
-                IE_READ,
+                IE_FILEIO_READ,
                 ( rc = read(fd, &rawedid->bytes[ndx], 1) )
                );
             if (rc < 0) {
@@ -221,7 +221,7 @@ i2c_get_edid_bytes_directly_using_fileio(
       Byte byte_to_write = 0x00;
       RECORD_IO_EVENTX(
           fd,
-          IE_WRITE,
+          IE_FILEIO_WRITE,
           ( rc = write(fd, &byte_to_write, 1) )
          );
       if (rc < 0) {
@@ -240,7 +240,7 @@ i2c_get_edid_bytes_directly_using_fileio(
          for (; ndx < edid_read_size && rc == 0; ndx++) {
             RECORD_IO_EVENTX(
                 fd,
-                IE_READ,
+                IE_FILEIO_READ,
                 ( rc = read(fd, &rawedid->bytes[ndx], 1) )
                );
             if (rc < 0) {
@@ -256,7 +256,7 @@ i2c_get_edid_bytes_directly_using_fileio(
       else {
          RECORD_IO_EVENTX(
              fd,
-             IE_READ,
+             IE_FILEIO_READ,
              ( rc = read(fd, rawedid->bytes, edid_read_size) )
             );
          if (rc >= 0) {

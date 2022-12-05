@@ -43,8 +43,8 @@ void report_elapsed_summary(int depth);
  * Statistics for each event type are recorded separately.
  */
 typedef enum {
-   IE_WRITE,               ///< write event
-   IE_READ,                ///< read event
+   IE_FILEIO_WRITE,               ///< write event
+   IE_FILEIO_READ,                ///< read event
    IE_IOCTL_WRITE,         ///< i2c writes using ioctl()
    IE_IOCTL_READ,          ///< i2c reads using ioctl()
    IE_OPEN,                ///< device file open

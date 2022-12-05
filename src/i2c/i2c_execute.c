@@ -244,7 +244,7 @@ i2c_fileio_writer(
 
      RECORD_IO_EVENTX(
            fd,
-           IE_WRITE,
+           IE_FILEIO_WRITE,
            ( rc = write(fd, pbytes, bytect) )
            );
      // per write() man page:
@@ -307,7 +307,7 @@ i2c_fileio_reader(
          // DBGMSF(debug, "Calling read() for 1 byte, ndx=%d", ndx);
          RECORD_IO_EVENTX(
             fd,
-            IE_READ,
+            IE_FILEIO_READ,
             ( rc = read(fd, readbuf+ndx, 1) )
            );
          // DBGMSF(debug, "Byte read: readbuf[%d] = 0x%02x", ndx, readbuf[ndx]);
@@ -362,7 +362,7 @@ i2c_fileio_reader(
 
       RECORD_IO_EVENTX(
          fd,
-         IE_READ,
+         IE_FILEIO_READ,
          ( rc = read(fd, readbuf, bytect) )
       );
       // per read() man page:
