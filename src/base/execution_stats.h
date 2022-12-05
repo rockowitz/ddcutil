@@ -47,7 +47,6 @@ typedef enum {
    IE_READ,                ///< read event
    IE_IOCTL_WRITE,         ///< i2c writes using ioctl()
    IE_IOCTL_READ,          ///< i2c reads using ioctl()
-// IE_WRITE_READ,          ///< write/read operation, typical for I2C
    IE_OPEN,                ///< device file open
    IE_CLOSE,               ///< device file close
    IE_OTHER                ///< other IO event
