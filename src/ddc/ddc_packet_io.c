@@ -829,9 +829,6 @@ ddc_i2c_write_only(
                               hexstring3_t(request_packet_ptr->raw_bytes->bytes,
                                            request_packet_ptr->raw_bytes->len,
                                            " ", 1, false) );
-
-   // Byte slave_address = request_packet_ptr[0];
-   // assert(slave_address == 0x37);
    Byte slave_address = 0x37;
 
    CHECK_DEFERRED_SLEEP(dh);
@@ -846,7 +843,6 @@ ddc_i2c_write_only(
          (request_packet_ptr->type == DDC_PACKET_TYPE_SAVE_CURRENT_SETTINGS )
             ? SE_POST_SAVE_SETTINGS
             : SE_POST_WRITE;
-   // tuned_sleep_i2c_with_trace(sleep_type, __func__, NULL);
    TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
