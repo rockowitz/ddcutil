@@ -198,8 +198,10 @@ i2c_fileio_writer(
       int    bytect,
       Byte * pbytes) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fh=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
-                 fd, filename_for_fd_t(fd), slave_address, bytect, pbytes, hexstring_t(pbytes, bytect));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                   "fd=%d, filename=%s, slave_address=0x%02x, bytect=%d, pbytes=%p -> %s",
+                   fd, filename_for_fd_t(fd), slave_address,
+                   bytect, pbytes, hexstring_t(pbytes, bytect));
    int rc = 0;
 
    rc = i2c_set_addr(fd, slave_address);
@@ -269,7 +271,7 @@ i2c_fileio_writer(
 /** Reads from I2C bus using read()
  *
  * @param  fd            Linux file descriptor
- * @param  slave_address I2C slave address being read from (unused)
+ * @param  slave_address I2C slave address being read from
  * @param  read_bytewise if true, use single byte reads
  * @param  bytect        number of bytes to read
  * @param  readbuf       read bytes into this buffer
@@ -290,13 +292,12 @@ i2c_fileio_reader(
       Byte * readbuf)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
-                 fd, filename_for_fd_t(fd),
-                 bytect, slave_address, sbool(single_byte_reads));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+                   "fd=%d, fn=%s, bytect=%d, slave_address=0x%02x, single_byte_reads=%s",
+                   fd, filename_for_fd_t(fd),
+                   bytect, slave_address, sbool(single_byte_reads));
 
-   int rc = 0;
-
-   rc = i2c_set_addr(fd, slave_address);
+   int rc = i2c_set_addr(fd, slave_address);
    if (rc < 0)
       goto bye;
 
@@ -473,7 +474,7 @@ i2c_ioctl_writer(
    // 11/15: as seen: always returns 1 for success
    RECORD_IO_EVENTX(
          fd,
-         IE_WRITE,
+         IE_IOCTL_WRITE,
          ( rc = ioctl(fd, I2C_RDWR, &msgset) )
          );
    int errsv = errno;
@@ -538,7 +539,7 @@ i2c_ioctl_reader1(
 
    RECORD_IO_EVENTX(
       fd,
-      IE_READ,
+      IE_IOCTL_READ,
       ( rc = ioctl(fd, I2C_RDWR, &msgset))
      );
    int errsv = errno;
