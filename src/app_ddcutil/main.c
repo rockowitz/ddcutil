@@ -170,7 +170,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
        rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
 
 
-    if (parsed_cmd->output_level >= DDCA_OL_VV)
+    // if (parsed_cmd->output_level >= DDCA_OL_VV)
        report_build_options(depth);
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
