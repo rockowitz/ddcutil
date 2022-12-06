@@ -114,7 +114,7 @@ void sleep_millis_with_trace(
         const char * filename,
         const char * message)
 {
-   bool debug = true;
+   bool debug = false;
 
    if (!message)
       message = "";
