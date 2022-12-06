@@ -11,7 +11,7 @@
 // Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <config.h>
+#include "config.h"
 
 #include <glib-2.0/glib.h>
 
@@ -110,6 +110,12 @@ void report_build_options(int depth) {
    IS_SET(USE_USB);
 #else
    NOT_SET(USE_USB);
+#endif
+
+#ifdef ENABLE_SYSLOG
+   IS_SET(ENABLE_SYSLOG);
+#else
+   NOT_SET(ENABLE_SYSLOG);
 #endif
 
 #ifdef WITH_ASAN
