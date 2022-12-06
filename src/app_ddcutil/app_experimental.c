@@ -30,7 +30,7 @@ void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
    rpt_label(depth, "Experimental Options:");
-   REPORT_FLAG_OPTION(1, "");
+   REPORT_FLAG_OPTION(1, "Suppress SE_POST_READ");
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3, "Unused");
    REPORT_FLAG_OPTION(4, "Read strategy tests");

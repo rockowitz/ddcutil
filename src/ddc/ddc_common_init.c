@@ -181,6 +181,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGMSF(debug, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
+   suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
    EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);

@@ -36,6 +36,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 //
 
 static bool deferred_sleep_enabled = false;
+bool suppress_se_post_read = false;
 
 
 /** Enables or disables deferred sleep.
@@ -66,7 +67,7 @@ bool is_deferred_sleep_enabled() {
  *  @param is_deferrable_loc where to return flag indicating whether the sleep
  *                           can be deferred or must be performed immiediately
  */
-int get_sleep_time(
+static int get_sleep_time(
       Sleep_Event_Type event_type,
       int              special_sleep_time_millis,
       bool*            is_deferrable_loc)
@@ -105,7 +106,10 @@ int get_sleep_time(
    case SE_POST_READ:
       deferrable_sleep = deferred_sleep_enabled;
       spec_sleep_time_millis = DDC_TIMEOUT_MILLIS_DEFAULT;
-      // spec_sleep_time_millis = 0;   // *** TMEP ***
+      if (suppress_se_post_read) {
+         DBGMSG("Suppressing SE_POST_READ");
+         spec_sleep_time_millis = 0;
+      }
       break;
    case SE_POST_SAVE_SETTINGS:
       // 4.5 Save Current Settings:
@@ -151,7 +155,7 @@ int get_sleep_time(
  *  returned from dsa_update_adjustment_factor().
  *
  */
-int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
+static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                           "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);

@@ -118,7 +118,6 @@ void reset_io_event_stats() {
  * @return symbolic name
  */
 const char * io_event_name(IO_Event_Type event_type) {
-   // return io_event_names[event_type];
    return io_event_stats[event_type].name;
 }
 
@@ -166,7 +165,7 @@ uint64_t normalize_timestamp(uint64_t timestamp) {
 /** Called immediately after an I2C IO call, this function updates the total
  *  number of calls and elapsed time for categories of calls.
  *
- *  @param  event_type        e.g. IE_WRITE
+ *  @param  event_type        e.g. IE_IOCTL_WRITE
  *  @param  location          function name
  *  @param  start_time_nanos  starting time of the event in nanoseconds
  *  @param  end_time_nanos    ending time of the event in nanoseconds
@@ -244,18 +243,14 @@ get_non_sleep_call_totals () {
    Non_Sleep_Call_Totals totals;
    totals.count = 0;
    totals.nanos = 0;
-    int ndx = 0;
-    // int max_name_length = max_event_name_length();
-
-    for (;ndx < IO_EVENT_TYPE_CT; ndx++) {
-       if (io_event_stats[ndx].call_count > 0) {
-          IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
-
-          totals.count += curstat->call_count;
-          totals.nanos += curstat->call_nanosec;
-       }
-    }
-    return totals;
+   for (int ndx = 0; ndx < IO_EVENT_TYPE_CT; ndx++) {
+      if (io_event_stats[ndx].call_count > 0) {
+         IO_Event_Type_Stats* curstat = &io_event_stats[ndx];
+         totals.count += curstat->call_count;
+         totals.nanos += curstat->call_nanosec;
+      }
+   }
+   return totals;
  }
 
 
@@ -455,6 +450,8 @@ void report_specific_status_counts(Status_Code_Counts * pcounts, int depth) {
 
 
 /** Master function to display status counts
+ *
+ *  @param depth logical_indentation_depth
  */
 void report_all_status_counts(int depth) {
    report_specific_status_counts(primary_error_code_counts, 0);
@@ -511,7 +508,8 @@ static const char * sleep_event_names[] = {
      };
 #define SLEEP_EVENT_ID_CT (sizeof(sleep_event_names)/sizeof(char *))
 
-int max_sleep_event_name_size() {
+static int
+max_sleep_event_name_size() {
    int result = 0;
    for (int ndx = 0; ndx < SLEEP_EVENT_ID_CT; ndx++) {
       if (strlen(sleep_event_names[ndx]) > result)
@@ -520,7 +518,11 @@ int max_sleep_event_name_size() {
    return result;
 }
 
-/** Returns the name of sleep event type */
+/** Returns the name of a sleep event type
+ *
+ *  @param event_type sleep event type, e.g. SE_WRITE_TO_READ
+ *  @result
+ * */
 const char * sleep_event_name(Sleep_Event_Type event_type) {
    // ensure sleep_event_names stays in sync with Sync_Event_Type
 #ifndef NDEBUG
@@ -530,9 +532,8 @@ const char * sleep_event_name(Sleep_Event_Type event_type) {
    return sleep_event_names[event_type];
 }
 
-static int sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
-static int total_sleep_event_ct = 0;
-
+static int    sleep_event_cts_by_id[SLEEP_EVENT_ID_CT];
+static int    total_sleep_event_ct = 0;
 static GMutex sleep_stats_mutex;
 
 
@@ -548,6 +549,7 @@ void reset_sleep_event_counts() {
 
    DBGMSF(debug, "Done");
 }
+
 
 void record_sleep_event(Sleep_Event_Type event_type) {
    // For better performance, separate mutex for each index in array

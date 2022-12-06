@@ -114,7 +114,7 @@ void sleep_millis_with_trace(
         const char * filename,
         const char * message)
 {
-   bool debug = false;
+   bool debug = true;
 
    if (!message)
       message = "";
@@ -122,5 +122,6 @@ void sleep_millis_with_trace(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_SLEEP,
                    "Sleeping for %d milliseconds. %s", milliseconds, message);
 
-   sleep_millis(milliseconds);
+   if (milliseconds > 0)
+      sleep_millis(milliseconds);
 }
