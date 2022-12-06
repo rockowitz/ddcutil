@@ -329,6 +329,8 @@ void probe_logs(Env_Accumulator * accum) {
    // Null_Terminated_String_Array log_terms = all_terms;
    char * rasp_log_terms[] = {
          "i2c",
+         "ddcutil",
+         "ddcui",
          NULL
    };
 
