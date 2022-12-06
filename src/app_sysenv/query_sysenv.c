@@ -762,8 +762,8 @@ void query_sysenv() {
       rpt_nl();
    }
 
-   if (output_level >= DDCA_OL_VV) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: report_build_options()");
+   if (output_level >= DDCA_OL_VERBOSE) {
+      // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: report_build_options()");
       report_build_options(0);
       rpt_nl();
    }
