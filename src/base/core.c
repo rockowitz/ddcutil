@@ -408,11 +408,12 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
    if (debug)
       printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
               __func__, trace_group, filename, funcname);
-
-   bool result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
+   bool result = false;
+#ifdef ENABLE_TRACE
+   result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
-
+#endif
    if (debug)
       printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
               __func__, trace_group, filename, funcname, trace_levels, result);
@@ -822,94 +823,102 @@ static bool vdbgtrc(
                        (fout() == stdout) ? "==" : "!=",
                        retval_info, format);
    }
-
-   Thread_Output_Settings * thread_settings = get_thread_settings();
    bool msg_emitted = false;
-   // n. trace_group == DDCA_TRC_ALWAYS for SEVEREMSG()
-   if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
-      char * buffer = g_strdup_vprintf(format, ap);
-      if (debug) {
-         printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
-         printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
-      }
-      char  elapsed_prefix[20]  = "";
-      char  walltime_prefix[20] = "";
-      char thread_prefix[15] = "";
-      if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
-         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time(4));
-      if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
-         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
-      if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
-         // intmax_t tid = get_thread_id();
-         // assert(tid == thread_settings->tid);
-         snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
-      }
-      char * buf2 = NULL;
-      if (options & DBGTRC_OPTIONS_SEVERE)
-         buf2 = g_strdup_printf("%s%s",
-                       retval_info, buffer);
-      else
-         buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
-                       thread_prefix, walltime_prefix, elapsed_prefix, funcname,
-                       retval_info, buffer);
-      char * syslog_buf = g_strdup_printf("%s(%-30s) %s%s",
-            elapsed_prefix, funcname,
-            retval_info, buffer);
-      if (debug)
-         printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
+
+   bool perform_emit = true;
+#ifndef ENABLE_TRACE
+   if (!(options & DBGTRC_OPTIONS_SEVERE))
+      perform_emit = false;
+#endif
+
+   if (perform_emit) {
+      Thread_Output_Settings * thread_settings = get_thread_settings();
+
+      // n. trace_group == DDCA_TRC_ALWAYS for SEVEREMSG()
+      if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
+         char * buffer = g_strdup_vprintf(format, ap);
+         if (debug) {
+            printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
+            printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
+         }
+         char  elapsed_prefix[20]  = "";
+         char  walltime_prefix[20] = "";
+         char thread_prefix[15] = "";
+         if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
+            g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time(4));
+         if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
+            g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
+         if (dbgtrc_show_thread_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
+            // intmax_t tid = get_thread_id();
+            // assert(tid == thread_settings->tid);
+            snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
+         }
+         char * buf2 = NULL;
+         if (options & DBGTRC_OPTIONS_SEVERE)
+            buf2 = g_strdup_printf("%s%s",
+                          retval_info, buffer);
+         else
+            buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
+                          thread_prefix, walltime_prefix, elapsed_prefix, funcname,
+                          retval_info, buffer);
+         char * syslog_buf = g_strdup_printf("%s(%-30s) %s%s",
+               elapsed_prefix, funcname,
+               retval_info, buffer);
+         if (debug)
+            printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
 #ifdef NO
-      if (trace_destination) {
-         FILE * f = fopen(trace_destination, "a");
-         if (f) {
-            int status = fputs(buf2, f);
-            if (status < 0) {    // per doc it's -1 = EOF
-               fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
-               free(trace_destination);
-               trace_destination = NULL;
+         if (trace_destination) {
+            FILE * f = fopen(trace_destination, "a");
+            if (f) {
+               int status = fputs(buf2, f);
+               if (status < 0) {    // per doc it's -1 = EOF
+                  fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
+                  free(trace_destination);
+                  trace_destination = NULL;
+               }
+               else {
+                  fflush(f);
+               }
+               fclose(f);
             }
             else {
-               fflush(f);
+               fprintf(stderr, "Error opening %s: %s\n", trace_destination, strerror(errno));
+               trace_destination = NULL;
             }
-            fclose(f);
          }
-         else {
-            fprintf(stderr, "Error opening %s: %s\n", trace_destination, strerror(errno));
-            trace_destination = NULL;
+         if (!trace_destination) {
+            f0puts(buf2, fout());    // no automatic terminating null
+            fflush(fout());
          }
-      }
-      if (!trace_destination) {
-         f0puts(buf2, fout());    // no automatic terminating null
-         fflush(fout());
-      }
 
-      free(pre_prefix_buffer);
-      free(buf2);
-      msg_emitted = true;
-   }
+         free(pre_prefix_buffer);
+         free(buf2);
+         msg_emitted = true;
 #endif
 
 #ifdef ENABLE_SYSLOG
-      if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         syslog(LOG_INFO, "%s", syslog_buf);
+         if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
+            syslog(LOG_INFO, "%s", syslog_buf);
       }
 #endif
 
-      if (is_tracing(trace_group, filename, funcname)) {
-         FILE * where = NULL;
-         if (options & DBGTRC_OPTIONS_SEVERE) {
-            where = thread_settings->ferr;
+         if (is_tracing(trace_group, filename, funcname)) {
+            FILE * where = NULL;
+            if (options & DBGTRC_OPTIONS_SEVERE) {
+               where = thread_settings->ferr;
+            }
+            else {
+               where = thread_settings->fout;
+            }
+            f0puts(buf2, where);
+            f0putc('\n', where);
+            fflush(fout());
          }
-         else {
-            where = thread_settings->fout;
-         }
-         f0puts(buf2, where);
-         f0putc('\n', where);
-         fflush(fout());
+         free(buffer);
+         free(buf2);
+         free(syslog_buf);
+         msg_emitted = true;
       }
-      free(buffer);
-      free(buf2);
-      free(syslog_buf);
-      msg_emitted = true;
    }
 
    if (debug)

@@ -118,6 +118,12 @@ void report_build_options(int depth) {
    NOT_SET(ENABLE_SYSLOG);
 #endif
 
+#ifdef ENABLE_TRACE
+   IS_SET(ENABLE_TRACE);
+#else
+   NOT_SET(ENABLE_TRACE);
+#endif
+
 #ifdef WITH_ASAN
    IS_SET(WITH_ASAN);
 #else
