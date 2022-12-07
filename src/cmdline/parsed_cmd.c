@@ -235,8 +235,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
       rpt_bool("walltime prefix:",  NULL, parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE,           d1);
       rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
-      rpt_bool("show settings:",    NULL, parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS,            d1);
-      rpt_bool("enable cached capabilities:",
+      rpt_bool("show settings",     NULL, parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS,            d1);
+      rpt_bool("enable cached capabilities",
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
    // rpt_bool("clear persistent cache:",
    //                               NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE,   d1);
@@ -249,13 +249,13 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       free(interpreted_flags);
 #endif
 
-      rpt_vstring(d1, "sleep multiplier: %9.1f", parsed_cmd->sleep_multiplier);
+      rpt_vstring(d1, "sleep multiplier                                         : %.3f", parsed_cmd->sleep_multiplier);
 #ifdef OLD
       rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
       rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
 #endif
-      rpt_bool("defer sleeps:",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
-      rpt_bool("dynamic_sleep_adjustment:", NULL, parsed_cmd->flags & CMD_FLAG_DSA,             d1);
+      rpt_bool("defer sleeps",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
+      rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA,             d1);
       rpt_bool("per_thread_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS,        d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
       rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
