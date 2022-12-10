@@ -184,9 +184,8 @@ There are 3 retry contexts:
 - An I2C write without a subsequent read.  DDC operations to set a VCP feature
   value are in this category.
 - Some DDC operations, such as reading the capabilities string, reading table
-  feature and writing table features require multiple
-  write/read exchanges.  These multi-part exchanges have a separate retry count
-  for the entire operation.
+  feature and writing table features require multiple write/read exchanges.
+  These multi-part exchanges have a separate retry count for the entire operation.
 */
 ///@{
 /** Gets the upper limit on a max tries value that can be set.
@@ -196,9 +195,9 @@ There are 3 retry contexts:
 int
 ddca_max_max_tries(void);
 
-/** Gets the maximum number of I2C retries for the specified operation type.
+/** Gets the maximum number of I2C tries for the specified operation type.
  * @param[in]  retry_type   I2C operation type
- * @return maximum number of retries
+ * @return maximum number of tries
  *
  * @remark
  * This setting is global, not thread-specific.
