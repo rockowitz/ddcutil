@@ -4,7 +4,7 @@
  *  This file and ddc_display_ref_reports.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -317,7 +317,7 @@ void ddc_async_scan(GPtrArray * all_displays) {
 }
 
 
-/** Loops through a list of display refs, performing  initial checks on each.
+/** Loops through a list of display refs, performing initial checks on each.
  *
  *  @param all_displays #GPtrArray of pointers to #Display_Ref
  */
@@ -865,6 +865,7 @@ void
 init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
+   RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
