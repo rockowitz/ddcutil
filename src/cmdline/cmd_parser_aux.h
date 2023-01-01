@@ -1,9 +1,9 @@
-/** \file cmd_parser_aux.h
+/** \file cmd_parser_aux.c
  *
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 20014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 20014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -16,6 +16,12 @@
 
 void init_cmd_parser_base();
 
+typedef enum {
+   Option_None            =  0,
+   Option_Explicit_Display = 1
+} Cmd_Supported_Options;
+
+
 typedef
 struct {
    int          cmd_id;
@@ -23,6 +29,8 @@ struct {
    int          minchars;
    int          min_arg_ct;
    int          max_arg_ct;
+   Cmd_Supported_Options
+                supported_options;
 } Cmd_Desc;
 
 Cmd_Desc * find_command(char * cmd);

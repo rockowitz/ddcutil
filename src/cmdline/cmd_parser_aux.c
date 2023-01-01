@@ -3,7 +3,7 @@
  *  Functions and strings that are independent of the parser package used.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -27,36 +27,37 @@
 //
 
 static Cmd_Desc cmdinfo[] = {
- // cmd_id              cmd_name   minchars min_arg_ct max_arg_ct
-   {CMDID_DETECT,       "detect",         3,  0,       0},
-   {CMDID_CAPABILITIES, "capabilities",   3,  0,       0},
-   {CMDID_GETVCP,       "getvcp",         3,  1,       MAX_GETVCP_VALUES},
-   {CMDID_SETVCP,       "setvcp",         3,  2,       MAX_SETVCP_VALUES*2},
-   {CMDID_LISTVCP,      "listvcp",        5,  0,       0},
+ // cmd_id              cmd_name   minchars min_arg_ct max_arg_ct          supported_options
+   {CMDID_DETECT,       "detect",         3,  0,       0,                  Option_None},
+   {CMDID_CAPABILITIES, "capabilities",   3,  0,       0,                  Option_Explicit_Display},
+   {CMDID_GETVCP,       "getvcp",         3,  1,       MAX_GETVCP_VALUES,  Option_Explicit_Display},
+   {CMDID_SETVCP,       "setvcp",         3,  2,       MAX_SETVCP_VALUES*2,Option_Explicit_Display},
+   {CMDID_LISTVCP,      "listvcp",        5,  0,       0,                  Option_None},
 #ifdef INCLUDE_TESTCASES
-   {CMDID_TESTCASE,     "testcase",       3,  1,       1},
-   {CMDID_LISTTESTS,    "listtests",      5,  0,       0},
+   {CMDID_TESTCASE,     "testcase",       3,  1,       1,                  Option_None},
+   {CMDID_LISTTESTS,    "listtests",      5,  0,       0,                  Option_None},
 #endif
-   {CMDID_LOADVCP,      "loadvcp",        3,  1,       1},
-   {CMDID_DUMPVCP,      "dumpvcp",        3,  0,       1},
+   {CMDID_LOADVCP,      "loadvcp",        3,  1,       1,                  Option_Explicit_Display},
+   {CMDID_DUMPVCP,      "dumpvcp",        3,  0,       1,                  Option_Explicit_Display},
 #ifdef ENABLE_ENVCMDS
-   {CMDID_INTERROGATE,  "interrogate",    3,  0,       0},
-   {CMDID_ENVIRONMENT,  "environment",    3,  0,       0},
-   {CMDID_USBENV,       "usbenvironment", 6,  0,       0},
+   {CMDID_INTERROGATE,  "interrogate",    3,  0,       0,                  Option_None},
+   {CMDID_ENVIRONMENT,  "environment",    3,  0,       0,                  Option_None},
+   {CMDID_USBENV,       "usbenvironment", 6,  0,       0,                  Option_None},
 #endif
-   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       MAX_GETVCP_VALUES},
+   {CMDID_VCPINFO,      "vcpinfo",        5,  0,       MAX_GETVCP_VALUES,  Option_None},
 #ifdef WATCH_COMMAND
-   {CMDID_READCHANGES,  "watch",          3,  0,       0},
+   {CMDID_READCHANGES,  "watch",          3,  0,       0,                  Option_Explicit_Display},
 #endif
 #ifdef USE_USB
-   {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1},
+   {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1,                  Option_None},
 #endif
-   {CMDID_PROBE,        "probe",          5,  0,       0},
-   {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0},
+   {CMDID_PROBE,        "probe",          5,  0,       0,                  Option_Explicit_Display},
+   {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0,                  Option_Explicit_Display},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
 
+#ifndef NDEBUG
 /** Validates the Cmd_Desc data structure.
  *  Called during parser initialization.
  */
@@ -66,6 +67,7 @@ void validate_cmdinfo() {
       assert( cmdinfo[ndx].max_arg_ct <= MAX_ARGS);
    }
 }
+#endif
 
 
 /** Reports the contents of the Cmd_Desc data structure.
@@ -218,6 +220,7 @@ const Feature_Subset_Table_Entry subset_table[] = {
 };
 const int subset_table_ct = sizeof(subset_table)/sizeof(Feature_Subset_Table_Entry);
 
+#ifndef NDEBUG
 void validate_subset_table() {
    // quick and dirty check that tables are in sync
    // +3 for VCP_SUBSET_SINGLE_FEATURE, VCP_SUBSET_MULTI_FEATURE, VCP_SUBSET_NONE
@@ -226,6 +229,7 @@ void validate_subset_table() {
    // -1 for double VCP_SUBSET_DYNAMIC
    assert(subset_table_ct+(3-4) == vcp_subset_count);
 }
+#endif
 
 /** Assemble a help message listing valid feature subsets.
  *  @return multi-line help string
@@ -563,8 +567,11 @@ char * maxtries_option_help =
 // Initialization
 //
 
+#ifndef NDEBUG
 void init_cmd_parser_base() {
    validate_cmdinfo();
    validate_subset_table();
 }
+#endif
+
 
