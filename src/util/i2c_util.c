@@ -3,7 +3,7 @@
  * I2C utility functions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -42,7 +42,7 @@ int i2c_name_to_busno(const char * name) {
    int result = -1;
    if (name && str_starts_with(name, I2C"-")) {
       int ival;
-      if ( str_to_int(name+4, &ival, 10) )
+      if (name[4] != '-' && str_to_int(name+4, &ival, 10) )
          result = ival;
    }
    return result;
