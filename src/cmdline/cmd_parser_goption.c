@@ -3,7 +3,7 @@
  *  Parse the command line using the glib goption functions.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -143,10 +143,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
    if (s && strlen(s) > 0)
-      debug = true;
-
+      debug = false;
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
+#ifndef NDEBUG
    init_cmd_parser_base();   // assertions
+#endif
 
    if (debug) {
       DBGMSG("argc=%d", argc);
@@ -906,7 +907,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       puts("");
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
-         puts("Copyright (C) 2015-2022 Sanford Rockowitz");
+         puts("Copyright (C) 2015-2023 Sanford Rockowitz");
          puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
          puts("This is free software: you are free to change and redistribute it.");
          puts("There is NO WARRANTY, to the extent permitted by law.");
@@ -1032,6 +1033,13 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                psv.feature_value = strdup(parsed_cmd->args[argpos]);
                g_array_append_val(parsed_cmd->setvcp_values, psv);
                argpos++;
+            }
+         }
+
+         if (parsing_ok && explicit_display_spec_ct == 1) {
+            if (!cmdInfo->supported_options & Option_Explicit_Display) {
+               fprintf(stderr, "%s does not support explicit display option\n", cmdInfo->cmd_name);
+               parsing_ok = false;
             }
          }
 
