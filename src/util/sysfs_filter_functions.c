@@ -1,6 +1,6 @@
 /** \file sysfs_filter_functions.c */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -107,8 +107,28 @@ regex_t * get_compiled_regex(const char * pattern) {
 static const char * cardN_connector_pattern = "^card[0-9]+[-]";
 static const char * cardN_pattern = "^card[0-9]+$";
 static const char * D_00hh_pattern = "^[0-9]+-00[0-9a-fA-F]{2}$";
-static const char * i2c_N_pattern = "^i2c-[0-9]+$";
+static const char * i2c_N_pattern = "^i2c-([0-9]+)$";
 
+#ifdef FUTURE
+// requires testing
+bool eval_regex_with_matches(regex_t * re, const char * value, size_t max_matches, regmatch_t * pm ) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. re=%p, value=|%s|\n", __func__, (void*)re, value);
+   int rc = regexec(
+          re,                   /* the compiled pattern */
+          value,                /* the subject string */
+          max_matches,
+          pm,
+          0
+       );
+   bool result = (rc  == 0) ? true : false;
+   if (debug)
+       printf("(%s) Returning %s. value=|%s|, regexec() returned %d\n",
+             __func__, sbool(result), value, rc);
+   return result;
+}
+#endif
 
 bool eval_regex(regex_t * re, const char * value) {
    bool debug = false;
@@ -154,6 +174,40 @@ bool compile_and_eval_regex(const char * pattern, const char * value) {
 }
 
 
+#ifdef FUTURE
+// to test
+bool compile_and_eval_regex_with_matches(
+      const char * pattern,
+      const char * value,
+      size_t       max_matches,
+      regmatch_t * pm)
+{
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. pattern=|%s|, value=|%s|\n", __func__, pattern, value);
+   regex_t * re = get_compiled_regex(pattern);
+   // printf("(%s) forcing re = NULL\n", __func__);
+   // re = NULL;
+   if (!re) {
+      re = calloc(1, sizeof(regex_t));
+      if (debug)
+         printf("(%s) Allocated regex %p, compiling...\n", __func__, (void*)re);
+      int rc = regcomp(re, pattern, REG_EXTENDED);
+      if (rc != 0) {
+         printf("(%s) regcomp() returned %d\n", __func__, rc);
+         assert(rc == 0);
+      }
+      save_compiled_regex(pattern, re);
+   }
+   bool result = eval_regex_with_matches(re, value, max_matches, pm);
+   if (debug)
+      printf("(%s) Done. Returning %s\n", __func__, sbool(result));
+   return result;
+}
+#endif
+
+
+
 bool predicate_cardN(const char * value) {
    bool debug = false;
    if (debug)
@@ -190,6 +244,35 @@ bool predicate_i2c_N(const char * value) {
    return b1;
 }
 
+
+#ifdef FUTURE
+// untested
+int match_i2c_N(const char * value) {
+   bool debug = true;
+   regmatch_t matchpos;
+   int result = -1;
+   if (compile_and_eval_regex(i2c_N_pattern, value, &matchpos)) {
+      // pattern match ensures that the character after the end of the match is NULL,
+      // and that atoi always succeeds
+      result = atoi(value + matchpos.rm_so);
+   }
+   if (debug)
+      printf("(%s) value=|%s|, returning %d\n", __func__, value, result);
+   return result;
+}
+
+
+int match_dev_i2c_N(const char * value) {
+   bool debug = true;
+   int result = -1;
+   if (str_starts_with(value,  "/dev/")) {
+      result = match_i2c_N(value+5);
+   }
+   if (debug)
+      printf("(%s) value=|%s|, returning %d\n", __func__, value, result);
+   return result;
+}
+#endif
 
 bool class_display_device_predicate(const char * value) {
    return str_starts_with(value, "0x03");
