@@ -3,7 +3,7 @@
  *  Primary file for the ENVIRONMENT command
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // #define SYSENV_QUICK_TEST_RUN 1
@@ -763,7 +763,6 @@ void query_sysenv() {
    }
 
    if (output_level >= DDCA_OL_VERBOSE) {
-      // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: report_build_options()");
       report_build_options(0);
       rpt_nl();
    }
