@@ -3,7 +3,7 @@
  *  ddcutil standalone application mainline
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -912,7 +912,6 @@ main(int argc, char *argv[]) {
          }  // dref
 
          if (main_rc == EXIT_SUCCESS) {
-
             main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
          }
 
