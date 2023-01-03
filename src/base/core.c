@@ -409,11 +409,11 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
       printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
               __func__, trace_group, filename, funcname);
    bool result = false;
-#ifdef ENABLE_TRACE
+// #ifdef ENABLE_TRACE
    result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
    result = result || is_traced_function(funcname) || is_traced_file(filename);
-#endif
+// #endif
    if (debug)
       printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
               __func__, trace_group, filename, funcname, trace_levels, result);
@@ -826,10 +826,10 @@ static bool vdbgtrc(
    bool msg_emitted = false;
 
    bool perform_emit = true;
-#ifndef ENABLE_TRACE
-   if (!(options & DBGTRC_OPTIONS_SEVERE))
-      perform_emit = false;
-#endif
+// #ifndef ENABLE_TRACE
+//    if (!(options & DBGTRC_OPTIONS_SEVERE))
+//       perform_emit = false;
+// #endif
 
    if (perform_emit) {
       Thread_Output_Settings * thread_settings = get_thread_settings();
