@@ -319,17 +319,17 @@ AS_IF([test "x$enable_syslog" = "xyes"],
         AC_MSG_NOTICE( [syslog...     disabled] )
      )
           
-dnl *** configure option: --enable-trace
-AC_ARG_ENABLE([trace],
-              [ AS_HELP_STRING( [--enable-trace=@<:@yes/no@:>@], [Output trace messages@<:@default=yes@:>@] )],
-              [enable_trace=${enableval}],
-              [enable_trace=yes] )
-AS_IF([test "x$enable_trace" = "xyes"],
-        AC_MSG_NOTICE( [trace...     enabled]  )
-        AC_DEFINE([ENABLE_TRACE], [1], [If defined, write to system log.])
-      ,
-        AC_MSG_NOTICE( [TRACE...     disabled] )
-     )
+dnl dnl *** configure option: --enable-trace
+dnl AC_ARG_ENABLE([trace],
+dnl               [ AS_HELP_STRING( [--enable-trace=@<:@yes/no@:>@], [Output trace messages@<:@default=yes@:>@] )],
+dnl               [enable_trace=${enableval}],
+dnl               [enable_trace=yes] )
+dnl AS_IF([test "x$enable_trace" = "xyes"],
+dnl         AC_MSG_NOTICE( [trace...     enabled]  )
+dnl         AC_DEFINE([ENABLE_TRACE], [1], [If defined, enable trace messages.])
+dnl       ,
+dnl         AC_MSG_NOTICE( [TRACE...     disabled] )
+dnl      )
 
 dnl *** configure option: --enable-targetbsd
 AC_ARG_ENABLE([targetbsd],
@@ -896,7 +896,7 @@ AC_MSG_RESULT([
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   
 	enable_x11:             ${enable_x11}   
-	enable_trace:           ${enable_trace}  
+dnl	enable_trace:           ${enable_trace}  
 	enable_syslog:          ${enable_syslog}  
 	enable_asan:            ${enable_asan}
 
