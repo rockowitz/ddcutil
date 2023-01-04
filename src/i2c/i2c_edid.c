@@ -3,7 +3,7 @@
  *  various quirks.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -356,8 +356,6 @@ retry:
    DBGMSF(debug, "Using strategy  %s", i2c_io_strategy_id_name(cur_strategy_id) );
    int rc = -1;
    bool read_bytewise = EDID_Read_Bytewise;
-   char * called_func_name = (EDID_Read_Uses_I2C_Layer)
-             ? "i2c_get_edid_bytes_using_i2c_layer()" : "i2c_get_edid_bytes_directly()";
    // DBGMSF(debug, "EDID read performed using %s,read_bytewise=%s",
    //               (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io", sbool(read_bytewise));
    int tryctr = 0;
@@ -371,6 +369,7 @@ retry:
                     tryctr, max_tries, edid_read_size, sbool(read_bytewise),
                     (EDID_Read_Uses_I2C_Layer) ? "I2C layer" : "local io");
 
+      char * called_func_name = NULL;
       if (EDID_Read_Uses_I2C_Layer) {
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
