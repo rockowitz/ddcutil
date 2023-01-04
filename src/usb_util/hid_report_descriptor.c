@@ -1,7 +1,7 @@
 /** @file hid_report_descriptor.c
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -581,7 +581,7 @@ static int32_t maybe_signed_data(uint32_t data, int bytect) {
 
    assert(bytect == 0 || bytect == 1 || bytect==2 || bytect==4);
    if (bytect > 0) {
-      int sign_bitno = (bytect * 8) - 1;
+      unsigned int sign_bitno = (bytect * 8) - 1;
       uint32_t sign_mask = 1 << sign_bitno;
       // printf("     sign_bitno = %d, sign_mask=0x%08x\n", sign_bitno, sign_mask);
       if (data & sign_mask)
