@@ -2,7 +2,7 @@
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Contains initialization functions extracted from main.c so they can
@@ -13,6 +13,9 @@
 
 #include "config.h"
 
+#ifdef ENABLE_FAILSIM
+#include "util/failsim.h"
+#endif
 #include "util/string_util.h"
 
 #include "base/core.h"
