@@ -2,7 +2,7 @@
  * Lookup PCI and USB device ids
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -200,8 +200,8 @@ load_simple_id_segment(
       Simple_Id_Table * simple_table,      // empty GPtrArray, will be filled in w Simple_Id_Table_Entry *
       GPtrArray *       all_lines,         // array of pointers to lines
       char *            segment_tag,
-      int               cur_pos,
-      int *             end_pos)
+      guint             cur_pos,
+      guint *           end_pos)
 {
    bool debug = false;
    assert(simple_table);
@@ -258,7 +258,7 @@ static  Multi_Level_Map * load_multi_level_segment(
       Multi_Level_Map * header,
       char *            segment_tag,
       GPtrArray *       all_lines,
-      int*              curpos)
+      guint *           curpos)
 {
    bool debug = false;
    guint linendx = *curpos;  // guint to avoid warning re implicit conversion on while() test below
@@ -379,7 +379,7 @@ static  Multi_Level_Map * load_multi_level_segment(
  * The buffer pointed to by segment_tag is updated with the newly
  * found tag.
  *
- * TODO: eliminate this side effect, apparently left over from refactoring (2/1018)
+ * TODO: eliminate this side effect, apparently left over from refactoring (2/2018)
  */
 static int
 find_next_segment_start(GPtrArray* lines, int cur_ndx, char* segment_tag) {
@@ -600,7 +600,7 @@ static void load_file_lines(Device_Id_Type id_type, GPtrArray * all_lines) {
    if (debug)
       printf("(%s) Starting.  id_type=%d\n", __func__, id_type);
 
-   int linendx;
+   guint linendx;
    // char * a_line;
 
    linendx = load_device_ids(id_type, all_lines);
