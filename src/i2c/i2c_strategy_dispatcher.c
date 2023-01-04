@@ -10,6 +10,7 @@
 #include "config.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <syslog.h>
 /** \endcond */
