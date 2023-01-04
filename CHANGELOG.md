@@ -1,6 +1,46 @@
 # Changelog
 
-## [1.2.3] 2022-07-19
+## [1.4.0] 2023-01-04
+
+### Added
+- **ddcutil** installation installs file /usr/lib/udev/rules.c/60-ddcutil.rules.
+  This udev rule uses tag uaccess to  give the logged on user read/write access
+  to /dev/i2c devices associated with video adapters. Configuring use of group 
+  i2c is no longer necessary.
+- configure options ***--enable-syslog*** and ***--disable-syslog*** control 
+  whether messages are written to the system log.  The default is enabled.
+
+### Changed
+- The ability to use the write()/read() interface of i2c-dev has been restored.
+  It is needed to work around a bug in the proprietary nvidia driver.  By
+   default,  the write()/read() interface is used for the nvidia driver, the
+   ioctl() interface is used for all other drivers. Command line options 
+  ***--use-file-io*** and ***--use-ioctl-io*** affect his default behavior. 
+  When i2c-dev's file io interface is used, option ***--force-slave-address***
+  is again meaningful.
+- Option ***--sleep-multiplier*** and API functions **ddca_set_sleep_multiplier_value()**, 
+  **ddca_set_default_sleep_multiplier_value()** now accept 0 as a valid 
+  argument.
+- The ddcutil command parser reports an error if a display selection option 
+  (e.g. ***--bus***) is given on a command to which it does not apply.
+- Write additional error and information messages to the system log.
+- Eliminate message "Is DDC/CI enabled in the monitor's on-screen display?"
+  It's rarely the cause of communication failures.
+
+### Fixed
+- Warn of a possibly invalid DRM connector name in **detect** output if 
+  monitors with identical EDIDs are used with the proprietary nvidia driver.
+- Handle /dev/i2c device names with a double hyphen, e.g. /dev/i2c--3. 
+- Better libddcutil handling of configuration file errors.  Do not abort
+  initialization in case of errors.
+- Miscellaneous segfaults.
+
+## [1.3.2] 2022-09-04
+
+### Changed
+- Modify tarball creation to eliminate garbage and otherwise unneeded files.
+
+## [1.3.0] 2022-07-19
 
 ### Added
 - Command **detect**: 
