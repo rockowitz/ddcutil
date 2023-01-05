@@ -10,7 +10,7 @@
  *  to **ddcutil** are interpreted.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -417,7 +417,9 @@ void report_parsed_edid_base(
             rpt_vstring(d2, "DPMS suspend");
          if (edid->supported_features & 0x20)
             rpt_vstring(d2, "DPMS active-off");
-         Byte display_type = (edid->supported_features & 0x14) >> 3;     // bits 4-3
+         Byte display_type = (edid->supported_features & 0x18) >> 3;     // bits 4-3
+         // printf("(%s) supported_features = 0x%02x, display_type = 0x%02x=%d\n",
+         //       __func__, edid->supported_features, display_type, display_type);
          if (edid->video_input_definition & 0x80) {   // digital input
             switch(display_type) {
             case 0:
