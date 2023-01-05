@@ -33,6 +33,7 @@
 - Handle /dev/i2c device names with a double hyphen, e.g. /dev/i2c--3. 
 - Better libddcutil handling of configuration file errors.  Do not abort
   initialization in case of errors.
+- Fix interpretation of digital display type bits for EDID version 1.4
 - Miscellaneous segfaults.
 
 ## [1.3.2] 2022-09-04
