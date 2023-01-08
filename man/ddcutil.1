@@ -296,13 +296,24 @@ This option can be specified more than once.
 .TQ
 .B --timestamp, --ts
 Preface trace messages with the time since program start.
+.TQ
+.B --wall-timestamp, --wts 
+Preface trace messages with the current wall time.
 .BR --thread-id , --tid
 Preface trace messages with the thread number.
 .TQ
-.B excp
+.B --syslog
+Write trace messages to the system log.
+.TQ
+.B --excp
 Report freed exceptions
-
-
+.TQ
+.B "--use-file-io"
+Use the write()/read() interface of driver i2c-dev to send and receive I2C packets.  This is the default for the nvidia proprietary driver.
+.TQ
+.B "--use-ioctl-io"
+Use the ioctl() interface of driver i2c-dev to send and receive I2C packets.  This is the default for
+video drivers other than the proprietary nvidia driver.
 
 
 .PP
@@ -313,6 +324,9 @@ Show program help.
 .TQ
 .B "-V, --version"
 Show program version.
+.TQ
+.B "--settings"
+Report option settings in effect.
 
 .SH EXECUTION ENVIRONMENT 
 
@@ -322,19 +336,7 @@ Requires read/write access to /dev/i2c devices.  See
 
 .SH NVIDIA PROPRIETARY DRIVER
 
-Some Nvidia cards using the proprietary Nvidia driver require special settings to properly enable I2C support.  If you are using this driver and \fBddccutil\fP does not 
-work with your Nvidia card, you can try the following:
-
-Copy file /usr/share/ddcutil/data/90-nvidia-i2c.conf to directory /etc/X11/xorg.conf.d: 
-
-.B sudo cp /usr/share/ddcutil/data/90-nvidia-i2c.conf /etc/X11/xorg.conf.d 
-
-This file will work "out of the box" if you do not have an /etc/X11/xorg.conf file.   If you do, 
-adjust the \fBIdentifier\fP value in the file to correspond to the value in the master xorg.conf file.
-
-(The above instructions assume that the normal location of the \fBddcutil\fP data directory.  YMMV.)
-
-For further discussion of Nvidia driver settings, see 
+Some Nvidia cards using the proprietary Nvidia driver require special settings to properly enable I2C support.  See 
 .UR http://www.ddcutil.com/nvidia
 .UE .
 
