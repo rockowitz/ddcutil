@@ -1,5 +1,8 @@
 # Top level Makefile.am
 
+# Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # To automatically update libtool script if it becomes out of date
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 
@@ -16,17 +19,16 @@ DIST_SUBDIRS = src man data docs
 EXTRA_DIST =  README.md NEWS.md CHANGELOG.md
 EXTRA_DIST += m4/ax_prog_doxygen.m4 
 
+if USE_DOXYGEN
+DOXYDIR = docs
+endif
+
 SUBDIRS = src man data  $(DOXYDIR)
 
 # if ENABLE_GOBJECT_COND
 DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 # endif
 EXTRA_DIST += m4/introspection.m4 
-
-if USE_DOXYGEN
-DOXYDIR = docs
-endif
-
 
 ## Defer installation of appstream related files
 ## EXTRA_DIST += ddcutil.desktop  
@@ -71,7 +73,7 @@ endif
 #   usr/*/pkgconfig
 # or 
 #   usr/lib/x86_64-linux-gnu/pkgconfig
-# but there's no way to or these two statements. 
+# but there's no way to "or" these two statements. 
 #
 # When building on OBS, the same libddcutil-dev.install is used for all (Debian based) builds, 
 # and if using $(libdir) the location of ddcutil.pc will depend on platform, e.g. 
@@ -85,14 +87,7 @@ if ENABLE_SHARED_LIB_COND
    pkgconfigdir = ${libdir}/pkgconfig
    pkgconfig_DATA = ddcutil.pc
 
-   # cmakedir = $(datadir)/cmake/Modules
-   # cmake_DATA = FindDDCUtil.cmake
-   # EXTRA_DIST += FindDDCUtil.cmake
-   # cmake_DATA = data/usr/share/cmake/Modules/FindDDCUtil.cmake
-endif
-
-if ENABLE_SHARED_LIB_COND
-libddcdocdir = $(datarootdir)/doc/libddcutil
+  libddcdocdir = $(datarootdir)/doc/libddcutil
 # libddcdoc_DATA = AUTHORS
 endif
 
@@ -184,13 +179,6 @@ install-data-local:
 	@echo "(Makefile) install-data-local):"
 	@echo "  docdir                 = $(docdir)"
 
-
-
-install-cmake-local:
-	@echo "(Makefile) install-cmake-local):"
-	@echo "  cmakedir                 = $(cmakedir)"
-
-
 # Rename to "all-local" for development
 all-local-disabled:
 	@echo ""
@@ -206,11 +194,3 @@ all-local-disabled:
 	@echo "   V:                $(V)"
 	@echo "   AM_CFLAGS_STD:    $(AM_CFLAGS_STD)"
 	@echo ""
-
-
-# rpmarch=`$(RPM) --showrc | grep "^build arc" | \
-# 	sed 's/\(.*: \)\(.*\)/\2/'`; \
-#	echo "$$rpmarch" ;\
-#test -z "obs/$$rpmarch" || \
-#	( mv obs/$$rpmarch/* . && rm -rf /obs/$$rpmarch )
-#rm -rf obs/$(distdir)
