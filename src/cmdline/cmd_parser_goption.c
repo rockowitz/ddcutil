@@ -777,6 +777,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       if (arg_ok) {
          if (multiplier < 0.0f || multiplier >= 100.0)
             arg_ok = false;
+         if (parser_mode == MODE_DDCUTIL && multiplier == 0.0f)
+            arg_ok = false;
       }
 
       if (!arg_ok) {
