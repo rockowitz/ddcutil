@@ -2,7 +2,7 @@
  *  Initialize and release base services.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "util/error_info.h"
@@ -16,6 +16,7 @@
 #include "linux_errno.h"
 #include "per_thread_data.h"
 #include "sleep.h"
+#include "thread_sleep_data.h"
 #include "tuned_sleep.h"
 
 #include <base_services.h>
@@ -37,6 +38,7 @@ void init_base_services() {
    init_ddc_packets();
    init_dynamic_sleep();
    init_base_dynamic_features();
+   init_thread_sleep_data();
    if (debug)
       printf("(%s) Done\n", __func__);
 }
