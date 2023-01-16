@@ -1,7 +1,7 @@
 /** @file parsed_cmd.c
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -114,6 +114,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    // parsed_cmd->output_level = OL_DEFAULT;
    parsed_cmd->output_level = DDCA_OL_NORMAL;
    parsed_cmd->edid_read_size = -1;   // if set, values are >= 0
+   parsed_cmd->sleep_multiplier = 1.0;
    parsed_cmd->i1 = -1;               // if set, values are >= 0
 #ifdef OLD
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
