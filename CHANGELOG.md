@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1] 2023-01-16
+
+### Fixed
+- The default sleep-multipler value was 0, instead of 1. This resulted in failure of
+  most DDC/CI operations, including display detection.
+  
 ## [1.4.0] 2023-01-04
 
 ### Added
@@ -12,10 +18,10 @@
 
 ### Changed
 - The ability to use the write()/read() interface of i2c-dev has been restored.
-  It is needed to work around a bug in the proprietary nvidia driver.  By
-   default,  the write()/read() interface is used for the nvidia driver, the
-   ioctl() interface is used for all other drivers. Command line options 
-  ***--use-file-io*** and ***--use-ioctl-io*** affect his default behavior. 
+  It is needed to work around a bug in the proprietary Nvidia driver.  By
+  default,  ioctl() interface is used for all drivers.  If the Nvidia bug is 
+  detected, the write()/read() interface is used instead. Command line options 
+  ***--use-file-io*** and ***--use-ioctl-io*** affect this default behavior. 
   When i2c-dev's file io interface is used, option ***--force-slave-address***
   is again meaningful.
 - Option ***--sleep-multiplier*** and API functions **ddca_set_sleep_multiplier_value()**, 
