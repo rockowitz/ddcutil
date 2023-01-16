@@ -1,4 +1,4 @@
-/** @file common_init.c
+/** @file ddc_common_init.c
  *  Initialization that must be performed very early by both ddcutil and libddcutil
  */
 
@@ -143,7 +143,10 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
 
 static void init_performance_options(Parsed_Cmd * parsed_cmd)
 {
-   // DBGMSG("deferred sleeps: %s", SBOOL(parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS));
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+                         "deferred sleeps: %s", SBOOL(parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS),
+                         "sleep_multiplier: %5.2f", parsed_cmd->sleep_multiplier);
    enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
@@ -161,6 +164,7 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
          tsd_dsa_enable_globally(true);
       }
    }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -173,7 +177,7 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    bool ok = false;
-   DBGMSF(debug, "Starting. parsed_cmd = %p", parsed_cmd);
+   DBGMSF(debug, "Starting  parsed_cmd = %p", parsed_cmd);
 
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
@@ -181,7 +185,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
-   DBGMSF(debug, "Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
+   DBGMSF(debug, "          Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
    suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
@@ -214,7 +218,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    ok = true;
 
 bye:
-   DBGMSF(debug, "Done. Returning %s", sbool(ok));
+   DBGMSF(debug, "Done      Returning %s", sbool(ok));
    return ok;
 }
 
