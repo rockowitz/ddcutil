@@ -311,15 +311,6 @@ trd_get_all_threads_maxtries_range(Retry_Operation typeid) {
  */
 static void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
    assert(data->thread_retry_data_defined);
-#ifdef OLD
-   if (!data->thread_retry_data_defined) {
-      bool debug = false;
-       DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
-       trd_init(data);
-       if (debug)
-          dbgrpt_per_thread_data(data, 2);
-    }
-#endif
 
    ptd_cross_thread_operation_block();
    //bool this_function_locked = ptd_lock_if_unlocked();
