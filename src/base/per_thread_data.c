@@ -164,9 +164,9 @@ void release_thread_data_module() {
 // Locking
 //
 
-static void init_per_thread_data(Per_Thread_Data * ptd) {
-   init_thread_sleep_data(ptd);
-   init_thread_retry_data(ptd);
+static void ptd_init(Per_Thread_Data * ptd) {
+   tsd_init_thread_sleep_data(ptd);
+   trd_init(ptd);
 }
 
 
@@ -200,7 +200,7 @@ Per_Thread_Data * ptd_get_per_thread_data() {
       data = g_new0(Per_Thread_Data, 1);
       data->thread_id = cur_thread_id;
       g_private_set(&lock_depth, GINT_TO_POINTER(0));
-      init_per_thread_data(data);
+      ptd_init(data);
       DBGMSF(debug, "Initialized: %s. thread_sleep_data_defined: %s. thread_retry_data_defined; %s",
            sbool(data->initialized),
            sbool( data->thread_sleep_data_defined), sbool( data->thread_retry_data_defined));
