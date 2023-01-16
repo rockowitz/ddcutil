@@ -6,7 +6,7 @@
  *  small functions for managing various fields.
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 #include <assert.h>
@@ -23,6 +23,7 @@
 
 #include "base/parms.h"
 #include "base/core.h"
+#include "base/rtti.h"
 #include "base/sleep.h"
 
 #include "base/per_thread_data.h"
@@ -144,9 +145,9 @@ Per_Thread_Data * tsd_get_thread_sleep_data() {
 
 
 // initialize a single instance, called from init_per_thread_data()
-void init_thread_sleep_data(Per_Thread_Data * data) {
+void tsd_init_thread_sleep_data(Per_Thread_Data * data) {
    bool debug = false;
-   DBGMSF(debug, "Starting. data=%p", (void*)data);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data=%p", (void*)data);
 
    data->dynamic_sleep_enabled = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct = default_sleep_multiplier_count;
@@ -156,7 +157,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
    data->initialized = true;
    data->sleep_multiplier_factor = default_sleep_multiplier_factor;
    // data->thread_adjustment_increment = default_sleep_multiplier_factor;
-   DBGMSF(debug,
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "Setting data->sleep_multiplier_factor = default_sleep_multiplier_factor = %6.3f",
          default_sleep_multiplier_factor);
    data->adjustment_check_interval = 2;
@@ -164,7 +165,7 @@ void init_thread_sleep_data(Per_Thread_Data * data) {
 
    data->thread_sleep_data_defined = true;   // vs data->initialized
 
-   DBGMSF(debug, "Done. sleep_multiplier_factor = %5.2f", data->sleep_multiplier_factor);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "sleep_multiplier_factor = %5.2f", data->sleep_multiplier_factor);
 }
 
 
@@ -235,7 +236,8 @@ void reset_all_thread_sleep_data() {
  */
 void tsd_set_default_sleep_multiplier_factor(double multiplier) {
    bool debug = false;
-   DBGMSF(debug, "Setting sleep_multiplier_factor = %6.3f", multiplier);
+   DBGTRC(debug, DDCA_TRC_NONE,
+                    "Executing. Setting default_sleep_multiplier_factor = %6.3f", multiplier);
    assert(multiplier >= 0);
    default_sleep_multiplier_factor = multiplier;
 }
@@ -246,6 +248,9 @@ void tsd_set_default_sleep_multiplier_factor(double multiplier) {
  *  @return sleep multiplier factor
  */
 double tsd_get_default_sleep_multiplier_factor() {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_NONE,
+          "Returning default_sleep_multiplier_factor = %6.3f", default_sleep_multiplier_factor);
    return default_sleep_multiplier_factor;
 }
 
@@ -256,7 +261,6 @@ double tsd_get_default_sleep_multiplier_factor() {
  */
 double tsd_get_sleep_multiplier_factor() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    double result = data->sleep_multiplier_factor;
    DBGTRC(debug, TRACE_GROUP, "Returning %6.3f", result );
@@ -273,13 +277,13 @@ void tsd_set_sleep_multiplier_factor(double factor) {
 
    // Need to guard with mutex!
 
-   DBGMSF(debug, "Executing. factor = %6.3f", factor);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "factor = %6.3f", factor);
    assert(factor >= 0);
    ptd_cross_thread_operation_block();
    Per_Thread_Data * data = tsd_get_thread_sleep_data();
    data->sleep_multiplier_factor = factor;
    // data->thread_adjustment_increment = factor;
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -454,3 +458,13 @@ void tsd_set_dsa_enabled_default(bool enabled) {
 bool tsd_get_dsa_enabled_default() {
    return default_dynamic_sleep_enabled;
 }
+
+
+void init_thread_sleep_data() {
+   RTTI_ADD_FUNC(tsd_init_thread_sleep_data);
+   RTTI_ADD_FUNC(tsd_get_default_sleep_multiplier_factor);
+   RTTI_ADD_FUNC(tsd_set_default_sleep_multiplier_factor);
+   RTTI_ADD_FUNC(tsd_get_sleep_multiplier_factor);
+   RTTI_ADD_FUNC(tsd_set_sleep_multiplier_factor);
+}
+

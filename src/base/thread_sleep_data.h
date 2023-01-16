@@ -3,7 +3,7 @@
   * Maintains thread specific sleep data
   */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -14,7 +14,7 @@
 #include "base/per_thread_data.h"
 
 
-void init_thread_sleep_data(Per_Thread_Data * data);
+void tsd_init_thread_sleep_data(Per_Thread_Data * data);
 
 Per_Thread_Data * tsd_get_thread_sleep_data();
 
@@ -51,5 +51,8 @@ void   tsd_bump_sleep_multiplier_changer_ct();
 // Reporting
 void   report_thread_sleep_data(Per_Thread_Data * data, int depth);
 void   report_all_thread_sleep_data(int depth);
+
+// Module Initialization
+void   init_thread_sleep_data();
 
 #endif /* THREAD_SLEEP_DATA_H_ */
