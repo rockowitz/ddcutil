@@ -3,7 +3,7 @@
  *  Maintains retry counts and max try settings on a per thread basis.
  */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "public/ddcutil_status_codes.h"
@@ -62,7 +62,7 @@ int default_maxtries[] = {
  *
  *  \param  data
  */
-void init_thread_retry_data(Per_Thread_Data * data) {
+void trd_init(Per_Thread_Data * data) {
    bool debug = false;
 
    for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
@@ -315,7 +315,7 @@ static void report_thread_maxtries_data(Per_Thread_Data * data, int depth) {
    if (!data->thread_retry_data_defined) {
       bool debug = false;
        DBGMSF(debug, "==> thread_retry_data_defined not set.  Perform initialization:");
-       init_thread_retry_data(data);
+       trd_init(data);
        if (debug)
           dbgrpt_per_thread_data(data, 2);
     }

@@ -1,6 +1,6 @@
 /** \file thread_retry_data.h */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef THREAD_RETRY_DATA_H_
@@ -26,7 +26,7 @@ typedef struct {
 const char * retry_type_name(Retry_Operation stat_id);
 const char * retry_type_description(Retry_Operation retry_class);
 
-void init_thread_retry_data(Per_Thread_Data * data);
+void trd_init(Per_Thread_Data * data);
 
 // These functions manage retry counts on a per-thread basis
 
