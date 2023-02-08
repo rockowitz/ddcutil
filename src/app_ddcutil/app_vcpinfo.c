@@ -349,11 +349,6 @@ report_vcp_feature_table_entry(
          rpt_vstring(d1, "Simple NC values:");
          report_sl_values(pentry->default_sl_values, d1+1);
       }
-
-      if (pentry->default_sl_values && output_level >= DDCA_OL_VERBOSE) {
-         rpt_vstring(d1, "Simple NC values:");
-         report_sl_values(pentry->default_sl_values, d1+1);
-      }
    }
 }
 
