@@ -34,12 +34,6 @@ dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
 
-dnl old unused cruft
-dnl AC_DEFINE( [PACKAGE_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version] )
-dnl AC_DEFINE( [PACKAGE_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
-dnl AC_DEFINE( [PACKAGE_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
-dnl AC_DEFINE( [PACKAGE_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
-
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
 dnl         symbol             value set by               comment 
@@ -47,18 +41,12 @@ AC_DEFINE( [VERSION_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version]
 AC_DEFINE( [VERSION_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
 AC_DEFINE( [VERSION_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
 AC_DEFINE( [VERSION_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
-dnl AC_DEFINE( [VERSION_SUFFIX], [ ddcutil_version_suffix ], [version suffix] )
 
 dnl substitute @PACKAGE_MAJOR@ etc. in Makefile.am with the value of the environment variable
 AC_SUBST( VERSION_VMAJOR,  [ddcutil_major_version] )
 AC_SUBST( VERSION_VMINOR,  [ddcutil_minor_version] )
 AC_SUBST( VERSION_VMICRO,  [ddcutil_micro_version] )
 AC_SUBST( VERSION_VSUFFIX, [ddcutil_version_suffix] )
-dnl old: 
-dnl AC_SUBST( PACKAGE_VMAJOR,  [ddcutil_major_version] )
-dnl AC_SUBST( PACKAGE_VMINOR,  [ddcutil_minor_version] )
-dnl AC_SUBST( PACKAGE_VMICRO,  [ddcutil_micro_version] )
-dnl AC_SUBST( PACKAGE_VSUFFIX, [ddcutil_version_suffix] )
 
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
