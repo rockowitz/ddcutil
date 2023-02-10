@@ -102,7 +102,7 @@ dnl Automake options to be applied to every Makefile.am in the tree:
 dnl The effect is as if each option were listed in AUTOMAKE_OPTIONS
 dnl removed -Werror from AM_INIT_AUTOMAKE to allow compilation to proceed
 dnl n. first option in our list is the required automake version
-AM_INIT_AUTOMAKE([1.13 -Wall -Wno-extra-portability foreign subdir-objects ])
+AM_INIT_AUTOMAKE([1.14 -Wall -Wno-extra-portability foreign subdir-objects ])
 
 dnl alternatively, add "silent-rules" to AM_INIT_AUTOMAKE
 dnl Eclipse warns that as of 2.68, AM_SILENT_RULES takes 0 arguments
