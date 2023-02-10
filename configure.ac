@@ -121,20 +121,6 @@ dnl Called by other macros, but must be called explicitly at top level for prope
 # AC_PROG_C99 for CENTOS 7 in OBS, EOL 6/30/2024
 m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
 
-dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
-dnl Note that, since Automake 1.14, the AC_PROG_CC is rewritten to implement such checks itself, and thus 
-dnl the explicit use of AM_PROG_CC_C_O should no longer be required.
-dnl included in case running Automake 1.13, which is the case for SuSE 13.2
-dnl but causes warning: macro 'AM_PROG_CC_C_0' not found in library on SUSE if included:
-dnl AM_PROG_CC_C_0
-
-dnl but on Suse 13.2 w automake 1.13.4, get msg that 
-dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
-
-dnl needed for OBS
-dnl AC_PROG_CC_STDC
-
-
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
 LT_INIT([disable-static])
