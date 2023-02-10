@@ -15,8 +15,8 @@ dnl - Macro names in comments are written in lower case to avoid processing as a
 AC_PREREQ([2.69])
 
 m4_define([ddcutil_major_version], [1])
-m4_define([ddcutil_minor_version], [4])
-m4_define([ddcutil_micro_version], [2])
+m4_define([ddcutil_minor_version], [5])
+m4_define([ddcutil_micro_version], [0])
 dnl ddcutil_version_suffix does not begin with hyphen, e.g. "dev", not "-dev"
 m4_define([ddcutil_version_suffix], ["dev"])
 # m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
