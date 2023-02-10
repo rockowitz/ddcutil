@@ -312,7 +312,7 @@ get_filenames_by_filter(
       }
       for (int j = 0; j < count; j++) {
          snprintf(path, PATH_MAX, "%s%s", dirnames[i], filelist[j]->d_name);
-         g_ptr_array_add(devnames, strdup(path));
+         g_ptr_array_add(devnames, g_strdup(path));
          free(filelist[j]);
       }
       free(filelist);
@@ -475,7 +475,7 @@ dir_ordered_foreach(
          // DBGMSG("%s", dent->d_name);
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
             if (!fn_filter || fn_filter(dent->d_name)) {
-               g_ptr_array_add(simple_filenames, strdup(dent->d_name));
+               g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
       }
@@ -525,7 +525,7 @@ dir_ordered_foreach_with_arg(
             if (!fn_filter || fn_filter(dent->d_name, fn_filter_argument)) {
                if (debug)
                   printf("(%s) Adding simple filename |%s|\n", __func__, dent->d_name);
-               g_ptr_array_add(simple_filenames, strdup(dent->d_name));
+               g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
       }
@@ -583,7 +583,7 @@ dir_filtered_ordered_foreach(
          // DBGMSG("%s", dent->d_name);
          if (!streq(dent->d_name, ".") && !streq(dent->d_name, "..") ) {
             if (!dir_filter || dir_filter(dirname, dent->d_name)) {
-               g_ptr_array_add(simple_filenames, strdup(dent->d_name));
+               g_ptr_array_add(simple_filenames, g_strdup(dent->d_name));
             }
          }
       }
@@ -791,7 +791,7 @@ int fopen_mkdir(
    *fp_loc = NULL;
    char *sep = strrchr(path, '/');
    if (sep) {
-      char *path0 = strdup(path);
+      char *path0 = g_strdup(path);
       path0[ sep - path ] = 0;
       rc = rek_mkdir(path0, ferr);
       free(path0);
