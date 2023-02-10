@@ -1,7 +1,7 @@
 /* multi_level_map.h
  *
  * <copyright>
- * Copyright (C) 2015-2016 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -30,6 +30,7 @@
 
 /** \cond */
 #include <glib-2.0/glib.h>
+#include <sys/types.h>
 /** \endcond */
 
 
