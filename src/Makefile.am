@@ -126,7 +126,7 @@ $(LIBUSB_CFLAGS) \
 # Compiler flags
 #
 
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall -std=c11
 
 # Distributing -Werror is bad programming practice.  It can result in build failure
 # on an external site having a different compiler, compiler version, or configuration. 
