@@ -554,7 +554,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
 #ifdef ENABLE_SYSLOG
-   SET_CMDFLAG(CMD_FLAG_SYSLOG,            syslog_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,            syslog_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)

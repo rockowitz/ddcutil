@@ -47,7 +47,7 @@ void init_tracing(Parsed_Cmd * parsed_cmd)
    if (debug)
       printf("(%s) Starting.\n",__func__);
 #ifdef ENABLE_SYSLOG
-   if (parsed_cmd->flags & (CMD_FLAG_SYSLOG))
+   if (parsed_cmd->flags & (CMD_FLAG_TRACE_TO_SYSLOG))
       trace_to_syslog = true;
 #endif
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)      // timestamps on debug and trace messages?
