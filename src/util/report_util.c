@@ -11,7 +11,7 @@
  * - destination stack
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -25,8 +25,8 @@
 #include <unistd.h>
 /** \endcond */
 
-#include "coredefs.h"
-#include "file_util.h"
+#include "coredefs_base.h"
+#include "file_util_base.h"
 #include "string_util.h"
 
 #include "report_util.h"
