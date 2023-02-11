@@ -1,6 +1,6 @@
-/** \file ddc_read_capabilities.c */
+/** @file ddc_read_capabilities.c */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -138,7 +138,7 @@ ddc_get_capabilities_string(
             Buffer * pcaps_buffer;
             ddc_excp = get_capabilities_into_buffer(dh, &pcaps_buffer);
             if (!ddc_excp) {
-               dh->dref->capabilities_string = strdup((char *) pcaps_buffer->bytes);
+               dh->dref->capabilities_string = g_strdup((char *) pcaps_buffer->bytes);
                buffer_free(pcaps_buffer,__func__);
                set_persistent_capabilites(dh->dref->mmid, dh->dref->capabilities_string);
             }

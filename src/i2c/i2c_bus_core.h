@@ -1,8 +1,8 @@
-/** \file i2c_bus_core.h
+/** @file i2c_bus_core.h
  *
  *  I2C bus detection and inspection
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_BUS_CORE_H_
@@ -10,7 +10,6 @@
 
 /** \cond */
 #include <glib-2.0/glib.h>
-// #include <glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 /** \endcond */
@@ -98,7 +97,7 @@ I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 void             i2c_free_bus_info(I2C_Bus_Info * bus_info);
 
 // Simple Bus_Info retrieval
-I2C_Bus_Info *   i2c_get_bus_info_by_index(uint busndx);
+I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
 // Reports all detected i2c buses:

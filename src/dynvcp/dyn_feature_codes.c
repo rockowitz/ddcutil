@@ -4,11 +4,12 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2020Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 
 #include "util/report_util.h"
@@ -398,7 +399,7 @@ dyn_format_feature_detail(
               200);
       free(nontable_value);
       if (ok) {
-         *aformatted_data = strdup(workbuf);
+         *aformatted_data = g_strdup(workbuf);
       }
    }
    else {        // TABLE_VCP_CALL

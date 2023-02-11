@@ -4,6 +4,7 @@
 // Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +40,7 @@ char *make_path(int bus_number, int device_address, int interface_number)
       interface_number);
    str[sizeof(str)-1] = '\0';
 
-   return strdup(str);
+   return g_strdup(str);
 }
 
 
@@ -308,8 +309,8 @@ bool possible_monitor_dev(libusb_device * dev, bool check_forced_monitor, Descri
          REPORT_LIBUSB_ERROR_NOEXIT("libusb_device_descriptor", rc);
          goto bye;
       }
-      // ushort vid = desc.idVendor;
-      // ushort pid = desc.idProduct;
+      // gushort vid = desc.idVendor;
+      // gushort pid = desc.idProduct;
 
       if (debug)
            printf("(%s) Callling force_hid_monitor_by_vid_pid(0x%04x, 0x%04x)\n",
@@ -344,8 +345,8 @@ alt_possible_monitor_dev(
    // report_dev(dev, NULL, false /* show hubs */, 0);
    int bus            = libusb_get_bus_number(dev);
    int device_address = libusb_get_device_address(dev);
-   ushort vid = 0;
-   ushort pid = 0;
+   gushort vid = 0;
+   gushort pid = 0;
 
    struct libusb_device_descriptor desc;
    int rc = libusb_get_device_descriptor(dev, &desc);
@@ -425,9 +426,9 @@ alt_possible_monitor_dev(
                                              lookup_libusb_string(dh, desc.iSerialNumber) );
                      }
 
-                     new_node->manufacturer_name = strdup(lookup_libusb_string(dh, desc.iManufacturer));
-                     new_node->product_name      = strdup(lookup_libusb_string(dh, desc.iProduct));
-                     new_node->serial_number     = strdup(lookup_libusb_string(dh, desc.iSerialNumber));
+                     new_node->manufacturer_name = g_strdup(lookup_libusb_string(dh, desc.iManufacturer));
+                     new_node->product_name      = g_strdup(lookup_libusb_string(dh, desc.iProduct));
+                     new_node->serial_number     = g_strdup(lookup_libusb_string(dh, desc.iSerialNumber));
                   // new_node->serial_number_wide = wcsdup(lookup_libusb_string_wide(dh, desc.iSerialNumber));
                      // printf("(%s) serial_number_wide = |%S|\n", __func__, new_node->serial_number_wide);
 
@@ -623,7 +624,7 @@ bye:
 }
 
 
-bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno) {
+bool libusb_is_monitor_by_path(gushort busno, gushort devno, gushort intfno) {
    bool debug = false;
    printf("(%s) Starting. busno=%d 0x%04x, devno=%d 0x%04x, intfno=%d 0x%02x\n",
          __func__, busno, busno, devno, devno, intfno, intfno);

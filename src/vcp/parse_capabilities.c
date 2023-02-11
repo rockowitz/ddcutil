@@ -360,7 +360,7 @@ parse_vcp_segment(
          // find matching )
          char * value_end = find_closing_paren(pos, end);
          if (value_end == end) {
-            g_ptr_array_add(messages, strdup("Value parse terminated without closing parenthesis") );
+            g_ptr_array_add(messages, g_strdup("Value parse terminated without closing parenthesis") );
             // TODO: recover from error, this is bad data from the monitor
             result = CAPABILITIES_INVALID;
             goto bye;  // Error is fatal
@@ -669,7 +669,7 @@ Parsed_Capabilities * parse_capabilities(
    if (buf_start[0] == '(') {
       if (buf_start[buf_len-1] != ')') {
             g_ptr_array_add(pcaps->messages,
-                            strdup("Capabilities string lacks closing parenthesis"));
+                            g_strdup("Capabilities string lacks closing parenthesis"));
             pcaps->caps_validity = CAPABILITIES_INVALID;
             goto bye;
       }

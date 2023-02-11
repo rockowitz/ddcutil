@@ -3,7 +3,7 @@
  * Base structures and functions for subsystem that diagnoses user configuration
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #define _GNU_SOURCE   // for asprintf() in stdio.h
@@ -11,6 +11,7 @@
 /** \cond */
 #include <assert.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -334,7 +335,7 @@ void driver_name_list_add(Driver_Name_Node ** headptr, const char * driver_name)
    // printf("(%s) Adding driver |%s|\n", __func__, driver_name);
    if (!driver_name_list_find_exact(*headptr, driver_name)) {
       Driver_Name_Node * newnode = calloc(1, sizeof(Driver_Name_Node));
-      newnode->driver_name = strdup(driver_name);
+      newnode->driver_name = g_strdup(driver_name);
       newnode->next = *headptr;
       *headptr = newnode;
    }
@@ -448,7 +449,7 @@ int  i2c_path_to_busno(const char * path) {
 
    int busno = -1;
    if (path) {
-      char * path2 = strdup(path);    // for const-ness
+      char * path2 = g_strdup(path);    // for const-ness
       char * lastslash = strrchr(path2, '/');
       char * basename = (lastslash) ? lastslash+1 : path2;
       // char * basename = basename(path);

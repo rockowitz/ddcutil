@@ -3,12 +3,13 @@
  *  Capabilities related functions of the API
  */
 
-// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -69,7 +70,7 @@ ddca_get_capabilities_string(
          if (psc == 0) {
             // make copy to prevent caller from mucking around in ddcutil's
             // internal data structures
-            *pcaps_loc = strdup(p_cap_string);
+            *pcaps_loc = g_strdup(p_cap_string);
          }
          ASSERT_IFF(psc==0, *pcaps_loc);
          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
@@ -148,7 +149,7 @@ ddca_parse_capabilities_string(
       }
       result = calloc(1, sizeof(DDCA_Capabilities));
       memcpy(result->marker, DDCA_CAPABILITIES_MARKER, 4);
-      result->unparsed_string = strdup(capabilities_string);     // needed?
+      result->unparsed_string = g_strdup(capabilities_string);     // needed?
       result->version_spec = pcaps->parsed_mccs_version;
       DBGMSF(debug, "version: %d.%d", result->version_spec.major,  result->version_spec.minor);
       Byte_Value_Array bva = pcaps->commands;
@@ -175,7 +176,7 @@ ddca_parse_capabilities_string(
             cur_cap_vcp->feature_code = cur_cfr->feature_id;
             DBGMSF(debug, "cur_cfr = %p, feature_code - 0x%02x", cur_cfr, cur_cfr->feature_id);
 
-            // cur_cap_vcp->raw_values = strdup(cur_cfr->value_string);
+            // cur_cap_vcp->raw_values = g_strdup(cur_cfr->value_string);
             // TODO: get values from Byte_Bit_Flags cur_cfr->bbflags
 #ifdef CFR_BVA
             Byte_Value_Array bva = cur_cfr->values;

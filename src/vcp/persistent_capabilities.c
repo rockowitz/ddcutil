@@ -1,6 +1,6 @@
-/** \file persistent_capabilities.c */
+/** @file persistent_capabilities.c */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -111,7 +111,7 @@ static Error_Info * load_persistent_capabilities_file() {
                }
                else {
                   *colon = '\0';
-                  g_hash_table_insert(capabilities_hash, strdup(aline), strdup(colon+1));
+                  g_hash_table_insert(capabilities_hash, g_strdup(aline), g_strdup(colon+1));
                }
             }
             free(aline);
@@ -287,7 +287,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
       }
 
       if (mmk) {
-         char * mms = strdup(monitor_model_string(mmk));
+         char * mms = g_strdup(monitor_model_string(mmk));
 
          if (debug) {
             DBGMSG("Hash table before lookup:");
@@ -331,8 +331,8 @@ void set_persistent_capabilites(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                          "Not saving capabilities for non-unique Monitor_Model_Key.");
       else {
-         char * mms = strdup(monitor_model_string(mmk));
-         g_hash_table_insert(capabilities_hash, mms, strdup(capabilities));
+         char * mms = g_strdup(monitor_model_string(mmk));
+         g_hash_table_insert(capabilities_hash, mms, g_strdup(capabilities));
          if (debug || IS_TRACING())
             dbgrpt_capabilities_hash0(2, "Capabilities hash after insert and before saving");
          save_persistent_capabilities_file();

@@ -1,9 +1,9 @@
-/** \file dumpload.c
+/** @file dumpload.c
  *
- * Load/store VCP settings from/to file.
+ *  Load/store VCP settings from/to file.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -281,7 +281,7 @@ create_dumpload_data_from_g_ptr_array(
                         }
                      }
                      else {   // non-table feature
-                        ushort feature_value;
+                        gushort feature_value;
                         ct = sscanf(s2, "%hu", &feature_value);
                         if (ct == 0) {
                            // f0printf(ferr(), "Invalid value for opcode at line %d: %s\n", linectr, line);
@@ -622,11 +622,11 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
 
    Parsed_Edid * edid = ddc_get_parsed_edid_by_dh(dh);
    snprintf(buf, bufsz, "MFG_ID  %s",  edid->mfg_id);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(vals, g_strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  edid->model_name);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(vals, g_strdup(buf));
    snprintf(buf, bufsz, "SN      %s",  edid->serial_ascii);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(vals, g_strdup(buf));
 
    char hexbuf[257];
    hexstring2(edid->bytes, 128,
@@ -634,7 +634,7 @@ void collect_machine_readable_monitor_id(Display_Handle * dh, GPtrArray * vals) 
               true /* uppercase */,
               hexbuf, 257);
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(vals, g_strdup(buf));
 }
 #endif
 
@@ -657,13 +657,13 @@ collect_machine_readable_timestamp(time_t time_millis, GPtrArray* vals) {
    char buf[400];
    int bufsz = sizeof(buf)/sizeof(char);
    snprintf(buf, bufsz, "TIMESTAMP_TEXT %s", timestamp_buf );
-   g_ptr_array_add(vals, strdup(buf));
+   g_ptr_array_add(vals, g_strdup(buf));
 
    // time_t is problematic.  %jd handles x32_abi where time_t is of type long long
    // but per the c11 spec time_t can be a real type
    // Value is ignored on input, so just don't output it and avoid the issues. (11/2018)
    // snprintf(buf, bufsz, "TIMESTAMP_MILLIS %jd", time_millis);
-   // g_ptr_array_add(vals, strdup(buf));
+   // g_ptr_array_add(vals, g_strdup(buf));
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Appended %s", buf);
 }
@@ -809,13 +809,13 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
    char buf[300];
    int bufsz = sizeof(buf)/sizeof(char);
    snprintf(buf, bufsz, "MFG_ID  %s",  data->mfg_id);
-   g_ptr_array_add(strings, strdup(buf));
+   g_ptr_array_add(strings, g_strdup(buf));
    snprintf(buf, bufsz, "MODEL   %s",  data->model);
-   g_ptr_array_add(strings, strdup(buf));
+   g_ptr_array_add(strings, g_strdup(buf));
    snprintf(buf, bufsz, "PRODUCT_CODE  %d", data->product_code);
-   g_ptr_array_add(strings, strdup(buf));
+   g_ptr_array_add(strings, g_strdup(buf));
    snprintf(buf, bufsz, "SN      %s",  data->serial_ascii);
-   g_ptr_array_add(strings, strdup(buf));
+   g_ptr_array_add(strings, g_strdup(buf));
 
    char hexbuf[257];
    hexstring2(data->edidbytes, 128,
@@ -823,11 +823,11 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
               true /* uppercase */,
               hexbuf, 257);
    snprintf(buf, bufsz, "EDID    %s", hexbuf);
-   g_ptr_array_add(strings, strdup(buf));
+   g_ptr_array_add(strings, g_strdup(buf));
 
    if (!vcp_version_eq(data->vcp_version, DDCA_VSPEC_UNKNOWN)) {
       snprintf(buf, bufsz, "VCP_VERSION %d.%d", data->vcp_version.major, data->vcp_version.minor);
-      g_ptr_array_add(strings, strdup(buf));
+      g_ptr_array_add(strings, g_strdup(buf));
    }
 
    for (int ndx=0; ndx < data->vcp_values->len; ndx++) {
@@ -837,7 +837,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
       snprintf(buf, 200, "VCP %02X %5d",
                          vrec->opcode,
                          VALREC_CUR_VAL(vrec));
-      g_ptr_array_add(strings, strdup(buf));
+      g_ptr_array_add(strings, g_strdup(buf));
    }
    return strings;
 }

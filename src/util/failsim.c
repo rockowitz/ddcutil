@@ -2,7 +2,7 @@
  * Functions that provide a simple failure simulation framework.
  */
 
-// Copyright (C) 2017-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -154,7 +154,7 @@ static Fsim_Func_Rec * fsim_get_or_create_func_rec(char * funcname) {
    if (!frec) {
       frec = calloc(1, sizeof(Fsim_Func_Rec));
       memcpy(frec->marker, FSIM_FUNC_REC_MARKER, 4);
-      frec->func_name = strdup(funcname);
+      frec->func_name = g_strdup(funcname);
       frec->callct = 0;
       frec->call_occ_recs = g_array_new(
                               false,        // zero_terminated

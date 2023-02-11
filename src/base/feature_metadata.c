@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -181,7 +181,7 @@ copy_sl_value_table(DDCA_Feature_Value_Entry * oldtable)
          ct++;
          newentry->value_code = oldentry->value_code;
          if (oldentry->value_name)
-            newentry->value_name = strdup(oldentry->value_name);
+            newentry->value_name = g_strdup(oldentry->value_name);
          else
             break;
          oldentry++;
@@ -406,7 +406,7 @@ void dfm_set_feature_name(Display_Feature_Metadata * meta, const char * feature_
    assert(meta);
    if (meta->feature_name)
       free(meta->feature_name);
-   meta->feature_name = strdup(feature_name);
+   meta->feature_name = g_strdup(feature_name);
 }
 
 void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_desc)
@@ -414,7 +414,7 @@ void dfm_set_feature_desc(Display_Feature_Metadata * meta, const char * feature_
    assert(meta);
    if (meta->feature_desc)
       free(meta->feature_desc);
-   meta->feature_desc = strdup(feature_desc);
+   meta->feature_desc = g_strdup(feature_desc);
 }
 #endif
 
@@ -441,8 +441,8 @@ dfm_to_ddca_feature_metadata(
    ddca_meta->feature_code  = dfm->feature_code;
    ddca_meta->vcp_version   = dfm->vcp_version;
    ddca_meta->feature_flags = dfm->feature_flags;
-   ddca_meta->feature_name = (dfm->feature_name) ? strdup(dfm->feature_name) : NULL;
-   ddca_meta->feature_desc = (dfm->feature_desc) ? strdup(dfm->feature_desc) : NULL;
+   ddca_meta->feature_name = (dfm->feature_name) ? g_strdup(dfm->feature_name) : NULL;
+   ddca_meta->feature_desc = (dfm->feature_desc) ? g_strdup(dfm->feature_desc) : NULL;
    DBGMSF(debug, "** dfm->sl_values = %p", dfm->sl_values);
    ddca_meta->sl_values = copy_sl_value_table(dfm->sl_values);
    // ddca_meta->feature_flags |= DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
@@ -472,8 +472,8 @@ dfm_from_ddca_feature_metadata(
 
    Display_Feature_Metadata * dfm = dfm_new(ddca_meta->feature_code);
    dfm->display_ref = NULL;
-   dfm->feature_desc = (ddca_meta->feature_desc) ? strdup(ddca_meta->feature_desc) : NULL;
-   dfm->feature_name = (ddca_meta->feature_name) ? strdup(ddca_meta->feature_name) : NULL;
+   dfm->feature_desc = (ddca_meta->feature_desc) ? g_strdup(ddca_meta->feature_desc) : NULL;
+   dfm->feature_name = (ddca_meta->feature_name) ? g_strdup(ddca_meta->feature_name) : NULL;
    // dfm->feature_flags = ddca_meta->feature_flags & ~DDCA_SYNTHETIC_DDCA_FEATURE_METADATA;
    dfm->feature_flags = ddca_meta->feature_flags & ~DDCA_PERSISTENT_METADATA;
    dfm->nontable_formatter = NULL;

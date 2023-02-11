@@ -10,7 +10,7 @@
 #define TIMESTAMP_H_
 
 /** \cond */
-#include <stdint.h>
+#include <glib-2.0/glib.h>
 /** \endcond */
 
 //
@@ -19,7 +19,7 @@
 uint64_t cur_realtime_nanosec();   // Returns the current value of the realtime clock in nanoseconds
 void     show_timestamp_history(); // For debugging
 uint64_t elapsed_time_nanosec();   // nanoseconds since start of program, first call initializes
-char *   formatted_elapsed_time(uint precision); // printable elapsed time
+char *   formatted_elapsed_time(guint precision); // printable elapsed time
 char *   formatted_time(uint64_t nanos);
 
 #endif /* TIMESTAMP_H_ */

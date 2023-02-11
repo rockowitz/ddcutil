@@ -1,11 +1,14 @@
-/** \file file_util_base.c
+/** @file file_util_base.c
+ *
  *  Core file utility functions.
  *  Factored out of file_util.h so that includes in directory util form
  *  a directed graph.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
+
+#define _GNU_SOURCE  // for getline()
 
 /** \cond */
 #include <assert.h>

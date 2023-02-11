@@ -1,7 +1,7 @@
 /** @file usb_displays.c
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -301,7 +301,7 @@ usb_synthesize_capabilities_string(Usb_Monitor_Info * moninfo) {
       }
    }
    strcpy(buf+curlen, "))");
-   char * result = strdup(buf);
+   char * result = g_strdup(buf);
    return result;
 }
 
@@ -495,7 +495,7 @@ get_usb_monitor_list() {
 
          moninfo = calloc(1,sizeof(Usb_Monitor_Info));
          memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
-         moninfo-> hiddev_device_name = strdup(hiddev_fn);
+         moninfo-> hiddev_device_name = g_strdup(hiddev_fn);
          moninfo->edid = parsed_edid;
          moninfo->hiddev_devinfo = devinfo;
          devinfo = NULL;        // so that struct not freed

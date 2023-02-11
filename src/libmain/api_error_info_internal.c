@@ -1,8 +1,9 @@
-// api_error_info_internal.c
+/** @file api_error_info_internal.c */
 
-// Copyright (C) 2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
@@ -97,7 +98,7 @@ dup_error_detail(DDCA_Error_Detail * old) {
       memcpy(result->marker, DDCA_ERROR_DETAIL_MARKER, 4);
       result->status_code = old->status_code;
       if (old->detail)
-         result->detail = strdup(old->detail);
+         result->detail = g_strdup(old->detail);
       for (int ndx = 0; ndx < old->cause_ct; ndx++) {
          DDCA_Error_Detail * cause = dup_error_detail(old->causes[ndx]);
          result->causes[ndx] = cause;

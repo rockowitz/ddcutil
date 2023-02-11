@@ -11,6 +11,7 @@
 #define FEATURE_METADATA_H_
 
 /** \cond */
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 /** \endcond */
 
@@ -23,8 +24,8 @@
 typedef
 struct {
    DDCA_Vcp_Feature_Code   vcp_code;
-   ushort max_value;
-   ushort cur_value;
+   gushort max_value;
+   gushort cur_value;
    // for new way
    Byte   mh;
    Byte   ml;

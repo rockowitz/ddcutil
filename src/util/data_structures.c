@@ -1,8 +1,6 @@
-/** @file data_structures.c
- *  General purpose data structures
- */
+/** @file data_structures.c  General purpose data structures */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -569,7 +567,7 @@ char * vnt_interpret_flags(
         }
         cur_entry++;
      }
-     char * result = strdup(sbuf->str);
+     char * result = g_strdup(sbuf->str);
      g_string_free(sbuf, true);
 
      if (debug)
@@ -900,8 +898,8 @@ Bit_Set_256 bs256_insert(
     result.bytes[bytendx] |= flagbit;
 
     if (debug) {
-       char * bs1 = strdup(bs256_to_string(bitset,  "",""));
-       char * bs2 = strdup(bs256_to_string(result, "",""));
+       char * bs1 = g_strdup(bs256_to_string(bitset,  "",""));
+       char * bs2 = g_strdup(bs256_to_string(result, "",""));
        printf("(%s) old bitstring=%s, value %d, returning: %s\n",
               __func__, bs1, bitno, bs2);
        free( bs1);

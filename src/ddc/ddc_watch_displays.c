@@ -1,7 +1,12 @@
-/** @file ddc_watch_displays.c  Watch for monitor addition and removal */
+/** @file ddc_watch_displays.c
+ *
+ *  Watch for monitor addition and removal
+ */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
+
+#define _GNU_SOURCE    // for usleep()
 
 #include "config.h"
 #include "public/ddcutil_types.h"
@@ -167,7 +172,7 @@ GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verb
                      }
                   }
 
-                  g_ptr_array_add(connected_displays, strdup(dent->d_name));
+                  g_ptr_array_add(connected_displays, g_strdup(dent->d_name));
                }
                free(s_status);
                if (verbose)
@@ -203,7 +208,7 @@ void get_sysfs_drm_examine_one_connector(
    char * status = NULL;
    bool found_status = RPT_ATTR_TEXT(-1, &status, dirname, simple_fn, "status");
    if (found_status && streq(status,"connected")) {
-         g_ptr_array_add(connected_displays, strdup(simple_fn));
+         g_ptr_array_add(connected_displays, g_strdup(simple_fn));
       }
    g_free(status);
 
@@ -354,7 +359,7 @@ void show_sysattr_list_entries(
       if (attr_value2 && strchr(attr_value2, '\n')) {
       // if (streq(attr_name, "uevent")) {
          // output is annoying to visually scan since it contains newlines
-         char * av = strdup(attr_value2);
+         char * av = g_strdup(attr_value2);
          char * p = av;
          while (*p) {
             if (*p == 0x0a)

@@ -1,14 +1,14 @@
-/** \file sleep.c
- * Basic Sleep Services
+/** @file sleep.c Basic Sleep Services
  *
  * Most of **ddcutil's** elapsed time is spent in sleeps mandated by the
  * DDC protocol. Basic sleep invocation is centralized here to perform sleep
  * tracing and and maintain sleep statistics.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#define _GNU_SOURCE  // for usleep()
 
 /** \cond */
 #include <glib-2.0/glib.h>

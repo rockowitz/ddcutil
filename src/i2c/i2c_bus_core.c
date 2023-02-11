@@ -2,7 +2,7 @@
  *
  * I2C bus detection and inspection
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -507,12 +507,12 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
    if (drm_connector) {
       businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-      businfo->drm_connector_name = strdup(drm_connector->connector_name);
+      businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
    }
    else if (businfo->edid) {
       drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
       if (drm_connector) {
-         businfo->drm_connector_name = strdup(drm_connector->connector_name);
+         businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
          businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
       }
    }

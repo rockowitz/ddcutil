@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -146,7 +146,7 @@ bool is_drm_connector(const char * dirname, const char * simple_fn) {
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
    bool result = false;
    if (str_starts_with(simple_fn, "card")) {
-      char * s0 = strdup( simple_fn + 4);   // work around const char *
+      char * s0 = g_strdup( simple_fn + 4);   // work around const char *
       char * s = s0;
       while (isdigit(*s)) s++;
       if (*s == '-')
@@ -350,7 +350,7 @@ read_drm_nondp_card_connector_node(
    g_snprintf(i2cN, 20, "i2c-%d", info->busno);
    bool found_i2c = RPT_ATTR_SINGLE_SUBDIR(depth, NULL, streq, i2cN, dirname, connector, "ddc/i2c-dev");
    if (found_i2c) {
-      info->connector = strdup(connector);
+      info->connector = g_strdup(connector);
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc", "name");
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "dev");
       RPT_ATTR_TEXT(d1, NULL, dirname, connector, "ddc/i2c-dev", i2cN, "name");
@@ -676,7 +676,7 @@ void one_drm_connector(
    cur->i2c_busno = -1;      // 0 is valid bus number
    cur->base_busno = -1;
    g_ptr_array_add(drm_displays, cur);
-   cur->connector_name = strdup(fn);   // e.g. card0-DP-1
+   cur->connector_name = g_strdup(fn);   // e.g. card0-DP-1
    RPT_ATTR_REALPATH(d0, &cur->connector_path,
                                        dirname, fn);
    RPT_ATTR_TEXT(d0, &cur->enabled, dirname, fn, "enabled");   // e.g. /sys/class/drm/card0-DP-1/enabled
@@ -988,7 +988,7 @@ void one_n_nnnn(
    GPtrArray* conflicting_drivers= accumulator;
    Sys_Conflicting_Driver * conflicting_driver = calloc(1, sizeof(Sys_Conflicting_Driver));
    DBGMSF(debug, "Allocated Sys_Conflicting_Driver %p", (void*) conflicting_driver);
-   conflicting_driver->n_nnnn = strdup(fn);
+   conflicting_driver->n_nnnn = g_strdup(fn);
 
    RPT_ATTR_TEXT(depth, &conflicting_driver->name, dir_name, fn, "name");
 

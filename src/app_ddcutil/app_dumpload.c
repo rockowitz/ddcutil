@@ -3,7 +3,7 @@
  *  Implement commands DUMPVCP and LOADVCP
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -123,7 +123,7 @@ app_dumpvcp_as_file(Display_Handle * dh, const char * filename)
             ddcrc = -errno;
             f0printf(ferr, "Unable to open %s for writing: %s\n", filename, strerror(errno));
          }
-         actual_filename = strdup(filename);
+         actual_filename = g_strdup(filename);
       }
       else {
          char simple_fn_buf[NAME_MAX+1];

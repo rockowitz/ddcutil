@@ -1,8 +1,9 @@
- /** \file udev_usb_util.c
+ /** @file udev_usb_util.c
+  *
   * USB specific udev utility functions
   */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -57,17 +58,17 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    rpt_structure_loc("Usb_Detailed_Device_Summary", devsum, depth);
    int d1 = depth+1;
 
-   rpt_str("devname",    NULL, devsum->devname,    d1);
+   rpt_str("devname",       NULL, devsum->devname,    d1);
    // rpt_int("usb_busnum", NULL, devsum->usb_busnum, d1);
    // rpt_int("usb_devnum", NULL, devsum->usb_devnum, d1);
    // rpt_int("vid",        NULL, devsum->vid, d1);
    // rpt_int("pid",        NULL, devsum->pid, d1);
-   rpt_str("vendor_id",  NULL, devsum->vendor_id, d1);
-   rpt_str("product_id",  "", devsum->product_id, d1);
-   rpt_str("vendor_name", NULL,  devsum->vendor_name, d1);
+   rpt_str("vendor_id",     NULL, devsum->vendor_id, d1);
+   rpt_str("product_id",    "",   devsum->product_id, d1);
+   rpt_str("vendor_name",   NULL, devsum->vendor_name, d1);
    rpt_str("product_name",  NULL, devsum->product_name, d1);
-   rpt_str("busnum_s",  NULL, devsum->busnum_s, d1);
-   rpt_str("devnum_s",  NULL, devsum->devnum_s, d1);
+   rpt_str("busnum_s",      NULL, devsum->busnum_s, d1);
+   rpt_str("devnum_s",      NULL, devsum->devnum_s, d1);
 
    rpt_str("prop_busnum ",        NULL, devsum->prop_busnum, d1);
    rpt_str("prop_devnum ",        NULL, devsum->prop_devnum, d1);
@@ -79,14 +80,13 @@ void report_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum, in
    rpt_str("prop_vendor_id",      NULL, devsum->prop_vendor_id, d1);
    rpt_str("prop_major",          NULL, devsum->prop_major, d1);
    rpt_str("prop_minor",          NULL, devsum->prop_minor, d1);
-
-
 }
 
-static __inline__
-char * safe_strdup(const char * s) {
-   return (s) ? strdup(s) : NULL;
-}
+// made unnecessary by g_strdup()
+// static __inline__
+// char * safe_strdup(const char * s) {
+//    return (s) ? strdup(s) : NULL;
+// }
 
 
 /** Look up information for a device name.
@@ -116,7 +116,7 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(const char * dev
    }
 
    Usb_Detailed_Device_Summary * devsum = new_usb_detailed_device_summary();
-   devsum->devname = strdup(devname);
+   devsum->devname = g_strdup(devname);
 
    /* Create a list of matching devices. */
    enumerate = udev_enumerate_new(udev);
@@ -176,22 +176,22 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(const char * dev
       if (verbose)
          report_udev_device(dev, d1);
 
-      devsum->vendor_id    = safe_strdup( udev_device_get_sysattr_value(dev,"idVendor") );
-      devsum->product_id   = safe_strdup( udev_device_get_sysattr_value(dev,"idProduct") );
-      devsum->vendor_name  = safe_strdup( udev_device_get_sysattr_value(dev,"manufacturer") );  // have seen null
-      devsum->product_name = safe_strdup( udev_device_get_sysattr_value(dev,"product") );
-      devsum->busnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"busnum") );
-      devsum->devnum_s     = safe_strdup( udev_device_get_sysattr_value(dev,"devnum") );
-      devsum->prop_busnum  = safe_strdup(udev_device_get_property_value(dev, "BUSNUM") );
-      devsum->prop_devnum  = safe_strdup(udev_device_get_property_value(dev, "DEVNUM") );
-      devsum->prop_model  = safe_strdup(udev_device_get_property_value(dev, "ID_MODEL") );
-      devsum->prop_model_id  = safe_strdup(udev_device_get_property_value(dev, "ID_MODEL_ID") );
-      devsum->prop_usb_interfaces  = safe_strdup(udev_device_get_property_value(dev, "ID_USB_INTERFACES") );
-      devsum->prop_vendor  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR") );
-      devsum->prop_vendor_from_database  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR_FROM_DATABASE") );
-      devsum->prop_vendor_id  = safe_strdup(udev_device_get_property_value(dev, "ID_VENDOR_ID") );
-      devsum->prop_major = safe_strdup(udev_device_get_property_value(dev, "MAJOR") );
-      devsum->prop_minor  = safe_strdup(udev_device_get_property_value(dev, "MINOR") );
+      devsum->vendor_id    = g_strdup( udev_device_get_sysattr_value(dev,"idVendor") );
+      devsum->product_id   = g_strdup( udev_device_get_sysattr_value(dev,"idProduct") );
+      devsum->vendor_name  = g_strdup( udev_device_get_sysattr_value(dev,"manufacturer") );  // have seen null
+      devsum->product_name = g_strdup( udev_device_get_sysattr_value(dev,"product") );
+      devsum->busnum_s     = g_strdup( udev_device_get_sysattr_value(dev,"busnum") );
+      devsum->devnum_s     = g_strdup( udev_device_get_sysattr_value(dev,"devnum") );
+      devsum->prop_busnum  = g_strdup(udev_device_get_property_value(dev, "BUSNUM") );
+      devsum->prop_devnum  = g_strdup(udev_device_get_property_value(dev, "DEVNUM") );
+      devsum->prop_model  = g_strdup(udev_device_get_property_value(dev, "ID_MODEL") );
+      devsum->prop_model_id  = g_strdup(udev_device_get_property_value(dev, "ID_MODEL_ID") );
+      devsum->prop_usb_interfaces  = g_strdup(udev_device_get_property_value(dev, "ID_USB_INTERFACES") );
+      devsum->prop_vendor  = g_strdup(udev_device_get_property_value(dev, "ID_VENDOR") );
+      devsum->prop_vendor_from_database  = g_strdup(udev_device_get_property_value(dev, "ID_VENDOR_FROM_DATABASE") );
+      devsum->prop_vendor_id  = g_strdup(udev_device_get_property_value(dev, "ID_VENDOR_ID") );
+      devsum->prop_major = g_strdup(udev_device_get_property_value(dev, "MAJOR") );
+      devsum->prop_minor  = g_strdup(udev_device_get_property_value(dev, "MINOR") );
 
 
       // udev_device_unref(dev);

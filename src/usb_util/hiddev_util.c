@@ -1,7 +1,6 @@
-/** @file hiddev_util.c
- */
+/** @file hiddev_util.c */
 
-// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -140,7 +139,7 @@ get_hiddev_device_names_using_udev() {
        dev = udev_device_new_from_syspath(udev, path);
        const char * sysname = udev_device_get_sysname(dev);
        if (str_starts_with(sysname, "hiddev")) {
-          g_ptr_array_add(dev_names, strdup(udev_device_get_devnode(dev)));
+          g_ptr_array_add(dev_names, g_strdup(udev_device_get_devnode(dev)));
        }
        udev_device_unref(dev);
     }
@@ -946,7 +945,7 @@ char * get_hiddev_name(int fd) {
    // hex_dump(buf1,64);
    char * result = NULL;
    if (rc >= 0)
-      result = strdup(buf1);
+      result = g_strdup(buf1);
    // printf("(%s) Returning |%s|\n", __func__, result);
    return result;
 }

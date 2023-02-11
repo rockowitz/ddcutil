@@ -3,12 +3,13 @@
  *  Get, set, and format feature values
  */
 
-// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 
 #include "public/ddcutil_c_api.h"
@@ -443,7 +444,7 @@ ddca_format_any_vcp_value(
    Display_Feature_Metadata * dfm = NULL;
 
    if (!mmid) {
-      *formatted_value_loc = strdup("Programming error. mmid not specified");
+      *formatted_value_loc = g_strdup("Programming error. mmid not specified");
       ddcrc = DDCRC_ARG;
       goto bye;
    }

@@ -80,7 +80,7 @@ static char * devid_find_file(Device_Id_Type id_type) {
       struct stat stat_buf;
       int rc = stat(fnbuf, &stat_buf);
       if (rc == 0) {
-         result = strdup(fnbuf);
+         result = g_strdup(fnbuf);
          break;
       }
    }
@@ -98,7 +98,7 @@ static char * devid_find_file(Device_Id_Type id_type) {
 // level of lookup
 
 typedef struct {
-   ushort  id;
+   gushort  id;
    char *  name;
 } Simple_Id_Table_Entry;
 
@@ -131,10 +131,10 @@ create_simple_id_table(int initial_size) {
  *   name          value of entry
  */
 static Simple_Id_Table_Entry *
-sit_add(Simple_Id_Table * simple_table, ushort id, char * name) {
+sit_add(Simple_Id_Table * simple_table, gushort id, char * name) {
    Simple_Id_Table_Entry * new_entry = calloc(1, sizeof(Simple_Id_Table_Entry));
    new_entry->id = id;
-   new_entry->name = strdup(name);
+   new_entry->name = g_strdup(name);
    g_ptr_array_add(simple_table, new_entry);
    return new_entry;
 }
@@ -149,7 +149,7 @@ static void report_simple_id_table(Simple_Id_Table * simple_table, int depth) {
 }
 
 
-static char * get_simple_id_name(Simple_Id_Table * simple_table, ushort id) {
+static char * get_simple_id_name(Simple_Id_Table * simple_table, gushort id) {
    char * result = NULL;
    for (int ndx = 0; ndx < simple_table->len; ndx++) {
       Simple_Id_Table_Entry * cur_entry = g_ptr_array_index(simple_table, ndx);
@@ -222,7 +222,7 @@ load_simple_id_segment(
       }
       // split into: tag hexvalue  name
       char   atag[40];
-      ushort acode;
+      gushort acode;
       char*  aname = NULL;
 #ifndef NDEBUG
       int ct =
@@ -273,7 +273,7 @@ static  Multi_Level_Map * load_multi_level_segment(
       header->level_detail[ndx].cur_entry = NULL;
    }
 
-   ushort cur_code;
+   gushort cur_code;
    char * cur_name;
 
    bool more = true;
@@ -479,7 +479,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
 
        case (0):
           {
-             ushort cur_id = 0;
+             gushort cur_id = 0;
              char * cur_name = NULL;
              int ct = sscanf(a_line+tabct, "%4hx %m[^\n]",
                              &cur_id,
@@ -508,7 +508,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
        case (1):
           {
              if (cur_node[tabct-1])  {
-                ushort cur_id;
+                gushort cur_id;
                 char * cur_name;
                 int ct = sscanf(a_line+tabct, "%4hx %m[^\n]", &cur_id, &cur_name);
 
@@ -534,8 +534,8 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
           {
              if (cur_node[tabct-1]) {
                 if (id_type == ID_TYPE_PCI) {
-                   ushort this_subvendor_id = 0;
-                   ushort this_subdevice_id = 0;
+                   gushort this_subvendor_id = 0;
+                   gushort this_subdevice_id = 0;
                    char * this_name = NULL;
                    int ct = sscanf(a_line+tabct, "%4hx %4hx %m[^\n]",
                                    &this_subvendor_id,
@@ -543,7 +543,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                                    &this_name);
                    // transitional:
 
-                   uint   this_id = this_subvendor_id << 16 | this_subdevice_id;
+                   guint this_id = this_subvendor_id << 16 | this_subdevice_id;
 
                    if (ct != 3) {
                       printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
@@ -554,7 +554,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                    }
                 }  // ID_TYPE_PCI
                 else {     // ID_TYPE_USB
-                   ushort this_id = 0;
+                   gushort this_id = 0;
                    char * this_name = NULL;
                    int ct = sscanf(a_line+tabct, "%4hx  %m[^\n]",
                                    &this_id,
@@ -818,10 +818,10 @@ void report_device_ids_mlm(Device_Id_Type id_type) {
  *  arguments to indicate "not set".  Hence the argct parm.
  */
 Pci_Usb_Id_Names devid_get_pci_names(
-                ushort vendor_id,
-                ushort device_id,
-                ushort subvendor_id,
-                ushort subdevice_id,
+                gushort vendor_id,
+                gushort device_id,
+                gushort subvendor_id,
+                gushort subdevice_id,
                 int    argct)
 {
    bool debug = false;
@@ -832,7 +832,7 @@ Pci_Usb_Id_Names devid_get_pci_names(
    }
    assert( argct==1 || argct==2 || argct==4);
    devid_ensure_initialized();
-   uint ids[3] = {vendor_id, device_id, subvendor_id << 16 | subdevice_id};   // only diff from usb_id_get_names
+   guint ids[3] = {vendor_id, device_id, subvendor_id << 16 | subdevice_id};   // only diff from usb_id_get_names
    int levelct = (argct == 4) ? 3 : argct;              // also this
    Multi_Level_Names mlm_names =  mlm_get_names2(pci_vendors_mlm, levelct, ids);  // and this
    Pci_Usb_Id_Names names2;
@@ -841,7 +841,7 @@ Pci_Usb_Id_Names devid_get_pci_names(
    names2.subsys_or_interface_name = mlm_names.names[2];
    if (levelct == 3 && mlm_names.levels == 2) {
       // couldn't find the subsystem, see if at least we can look up the subsystem vendor
-      uint ids[1] = {subvendor_id};
+      guint ids[1] = {subvendor_id};
       Multi_Level_Names mlm_names3 = mlm_get_names2(pci_vendors_mlm, 1, ids);
       if (mlm_names3.levels == 1) {
          names2.subsys_or_interface_name = mlm_names3.names[0];
@@ -870,9 +870,9 @@ Pci_Usb_Id_Names devid_get_pci_names(
  *  @return names for the ids
  */
 Pci_Usb_Id_Names devid_get_usb_names(
-                ushort vendor_id,
-                ushort device_id,
-                ushort interface_id,
+                gushort vendor_id,
+                gushort device_id,
+                gushort interface_id,
                 int     argct)
 {
    bool debug = false;
@@ -883,7 +883,7 @@ Pci_Usb_Id_Names devid_get_usb_names(
    }
    assert( argct==1 || argct==2 || argct==3);
    devid_ensure_initialized();
-   uint ids[3] = {vendor_id, device_id, interface_id};
+   guint ids[3] = {vendor_id, device_id, interface_id};
    Multi_Level_Names mlm_names =  mlm_get_names2(usb_vendors_mlm, argct, ids);
    Pci_Usb_Id_Names names2;
    names2.vendor_name = mlm_names.names[0];
@@ -910,7 +910,7 @@ Pci_Usb_Id_Names devid_get_usb_names(
  * - Is top level field in HUT entry of usb.ids
  * - Corresponds to names_huts() in names.c
  */
-char * devid_usage_code_page_name(ushort usage_page_code) {
+char * devid_usage_code_page_name(gushort usage_page_code) {
    devid_ensure_initialized();
    // Per USB HID Usage Tables spec v1.12, section 3.0,
    // Usage page ID xff00..xffff are vendor defined
@@ -925,7 +925,7 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
    if (usage_page_code > 0xff00)
       result = "Vendor-defined";
    else {
-      // ushort * args = {usage_page_code};
+      // gushort * args = {usage_page_code};
       Multi_Level_Names names_found = mlm_get_names(hid_usages_table, /*argct=*/ 1, usage_page_code);
       if (names_found.levels == 1)
          result = names_found.names[0];
@@ -945,7 +945,7 @@ char * devid_usage_code_page_name(ushort usage_page_code) {
  * - First and second fields of HUT entry in usb.ids
  * - Corresponds to names_hutus() in names.c
  */
-char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) {
+char * devid_usage_code_id_name(gushort usage_page_code, gushort usage_simple_id) {
    static char resultbuf[12] = {0};
    bool debug = false;
    if (debug) {
@@ -959,7 +959,7 @@ char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id) 
       result = resultbuf;
    }
    else {
-      // ushort * args = {usage_page_code, usage_simple_id};
+      // gushort * args = {usage_page_code, usage_simple_id};
       Multi_Level_Names names_found = mlm_get_names(hid_usages_table, 2, usage_page_code, usage_simple_id);
       if (names_found.levels == 2)
          result = names_found.names[1];
@@ -992,7 +992,7 @@ char * devid_usage_code_name_by_extended_id(uint32_t extended_usage) {
  * - The value is actually 1 byte.
  * - This function corresponds to names.c function names_reporttag()
  */
-char * devid_hid_descriptor_item_type(ushort id) {
+char * devid_hid_descriptor_item_type(gushort id) {
    devid_ensure_initialized();
    char * result = NULL;
    result = get_simple_id_name(hid_descriptor_item_types, id);
@@ -1001,7 +1001,7 @@ char * devid_hid_descriptor_item_type(ushort id) {
 
 
 // not used, but without this valgrind complains of memory leak
-char * devid_hid_descriptor_type(ushort id) {
+char * devid_hid_descriptor_type(gushort id) {
    devid_ensure_initialized();
    char * result = NULL;
    result = get_simple_id_name(hid_descriptor_types, id);
@@ -1009,7 +1009,7 @@ char * devid_hid_descriptor_type(ushort id) {
 }
 
 // not used, but without this valgrind complains of memory leak
-char * devid_hid_descriptor_country_code(ushort id) {
+char * devid_hid_descriptor_country_code(gushort id) {
    devid_ensure_initialized();
    char * result = NULL;
    result = get_simple_id_name(hid_country_codes, id);

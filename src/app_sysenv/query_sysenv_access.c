@@ -3,7 +3,7 @@
  *  Checks on the the existence of and access to /dev/i2c devices
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -146,7 +146,7 @@ get_username(Env_Accumulator * accum) {
    struct passwd *  pwd = getpwuid(uid);
    rpt_vstring(0,"Current user: %s (%u)", pwd->pw_name, uid);
    rpt_nl();
-   accum->cur_uname = strdup(pwd->pw_name);
+   accum->cur_uname = g_strdup(pwd->pw_name);
    accum->cur_uid = uid;
 }
 
@@ -221,11 +221,11 @@ static void check_dev_i2c_access(Env_Accumulator * accum) {
                   if (accum->dev_i2c_common_group_name) {
                      if (!streq(accum->dev_i2c_common_group_name, gr_name)) {
                         free(accum->dev_i2c_common_group_name);
-                        accum->dev_i2c_common_group_name = strdup("MIXED");
+                        accum->dev_i2c_common_group_name = g_strdup("MIXED");
                      }
                   }
                   else
-                     accum->dev_i2c_common_group_name = strdup(gr_name);
+                     accum->dev_i2c_common_group_name = g_strdup(gr_name);
                   if (streq(gr_name, "i2c"))
                      accum->any_dev_i2c_has_group_i2c = true;
                   else
@@ -327,7 +327,7 @@ static void check_group_i2c(Env_Accumulator * accum, bool verbose) {
       gid_t gid = getegid();
       struct passwd * pw = getpwuid(uid);
       printf("Effective uid %d: %s\n", uid, pw->pw_name);
-      char * uname = strdup(pw->pw_name);
+      char * uname = g_strdup(pw->pw_name);
       struct group * pguser = getgrgid(gid);
       printf("Effective gid %d: %s\n", gid, pguser->gr_name);
       if (group_member(gid_i2c)) {

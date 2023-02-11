@@ -227,7 +227,7 @@ void ptd_set_thread_description(const char * description) {
    // DBGMSG("thread: %d, description: %s", ptd->thread_id, description);
    if (ptd->description)
       free(ptd->description);
-   ptd->description = strdup(description);
+   ptd->description = g_strdup(description);
 }
 
 
@@ -236,7 +236,7 @@ void ptd_append_thread_description(const char * addl_description) {
    Per_Thread_Data *  ptd = ptd_get_per_thread_data();
    // DBGMSG("ptd->description = %s, addl_descripton = %s", ptd->description, addl_description);
    if (!ptd->description)
-      ptd->description = strdup(addl_description);
+      ptd->description = g_strdup(addl_description);
    else if (str_contains(ptd->description, addl_description) < 0) {
       char * s = ptd->description;
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);

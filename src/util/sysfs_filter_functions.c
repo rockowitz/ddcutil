@@ -1,4 +1,4 @@
-/** \file sysfs_filter_functions.c */
+/** @file sysfs_filter_functions.c */
 
 // Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -82,7 +82,7 @@ void save_compiled_regex(const char * pattern, regex_t * compiled_re) {
       printf("(%s) Starting. pattern = |%s|, compiled_re=%p\n",
              __func__, pattern, (void*)compiled_re);
    GHashTable * regex_hash = get_regex_hash_table();
-   g_hash_table_replace(regex_hash, strdup( pattern), compiled_re);
+   g_hash_table_replace(regex_hash, g_strdup( pattern), compiled_re);
    if (debug)
       printf("(%s) Done.\n", __func__);
 }

@@ -9,6 +9,7 @@
 /** \cond */
 #include <assert.h>
 #include <ctype.h>
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
 /** \endcond */
@@ -205,12 +206,12 @@ dfr_new(
    Dynamic_Features_Rec * frec = calloc(1, sizeof(Dynamic_Features_Rec));
    memcpy(frec->marker, DYNAMIC_FEATURES_REC_MARKER, 4);
 
-   frec->mfg_id       = strdup(mfg_id);
-   frec->model_name   = strdup(model_name);
+   frec->mfg_id       = g_strdup(mfg_id);
+   frec->model_name   = g_strdup(model_name);
    frec->product_code = product_code;
    frec->vspec        = DDCA_VSPEC_UNKNOWN;   // redundant, since set by calloc(), but be explicit
    if (filename)
-      frec->filename  = strdup(filename);
+      frec->filename  = g_strdup(filename);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", frec);
    return frec;
@@ -532,7 +533,7 @@ create_monitor_dynamic_features(
                   }
                   else {     // valid opcode
                      cur_feature_metadata->feature_code = feature_id;
-                     cur_feature_metadata->feature_name = strdup(feature_name);
+                     cur_feature_metadata->feature_name = g_strdup(feature_name);
                      cur_feature_metadata->feature_desc = NULL;   // ignore for now
                   }
                }
@@ -555,7 +556,7 @@ create_monitor_dynamic_features(
                         cur_feature_values = g_array_new(false, false, sizeof(DDCA_Feature_Value_Entry));
                      DDCA_Feature_Value_Entry entry;
                      entry.value_code = feature_value;
-                     entry.value_name = strdup(t2.rest);
+                     entry.value_name = g_strdup(t2.rest);
                      g_array_append_val(cur_feature_values, entry);
                   }
                }

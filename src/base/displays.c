@@ -1,8 +1,9 @@
 /** @file displays.c
+ *
  * Monitor identifier, reference, handle
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -124,7 +125,7 @@ Display_Async_Rec * display_async_rec_new(DDCA_IO_Path dpath) {
 #ifdef FUTURE
    newrec->request_execution_thread =
          g_thread_new(
-               strdup(dpath_repr_t(dref)),       // thread name
+               g_strdup(dpath_repr_t(dref)),       // thread name
                NULL,                             // GThreadFunc    *** TEMP ***
                dref->request_queue);             // or just dref?, how to pass dh?
 #endif
@@ -631,7 +632,7 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
 
    dref->usb_bus     = usb_bus;
    dref->usb_device  = usb_device;
-   dref->usb_hiddev_name = strdup(hiddev_devname);
+   dref->usb_hiddev_name = g_strdup(hiddev_devname);
 
    if (debug) {
       DBGMSG("Done.  Constructed USB display ref:");
@@ -684,7 +685,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             ddcrc = DDCRC_LOCKED;
          }
          else {
-            if (dref->usb_hiddev_name)       // always set using strdup()
+            if (dref->usb_hiddev_name)       // always set using g_strdup()
                free(dref->usb_hiddev_name);
             if (dref->capabilities_string)   // always a private copy
                free(dref->capabilities_string);

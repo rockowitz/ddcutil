@@ -3,7 +3,7 @@
  * Report parsed capabilities, taking into account dynamic feature definitions.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -260,7 +260,7 @@ report_gamma_capabilities(
    }
    else if (gamma_mode == gspecific_presets) {
       // process specific_gammas
-      char * buf = strdup("");
+      char * buf = g_strdup("");
       char bgamma[10];
       char * sgamma = NULL;
       for (int ndx = 0; ndx < specific_gamma_ct; ndx++) {

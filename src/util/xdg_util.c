@@ -1,10 +1,11 @@
 /** \file xdg_util.c
+ *
  *  Implement XDG Base Directory Specification
  *
  *  See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
  */
 
-// Copyright (C) 2020-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -57,7 +58,7 @@ static char * xdg_home_dir(
    char * xdg_home = getenv(envvar_name);  // do not free
    if (xdg_home && strlen(xdg_home) > 0) {
       xdg_home = (xdg_home[strlen(xdg_home)-1] == '/')
-                    ? strdup(xdg_home)
+                    ? g_strdup(xdg_home)
                     : g_strdup_printf("%s/", xdg_home);
    }
    else {
@@ -139,9 +140,9 @@ static char * xdg_dirs(
 
    char * xdg_dirs = getenv(envvar_name);  // do not free
    if (xdg_dirs && strlen(xdg_dirs) > 0)
-      xdg_dirs = strdup(xdg_dirs);
+      xdg_dirs = g_strdup(xdg_dirs);
    else {
-      xdg_dirs = strdup(default_dirs);
+      xdg_dirs = g_strdup(default_dirs);
    }
    if (debug)
       printf("(%s) Returning: %s\n", __func__, xdg_dirs);
@@ -344,7 +345,7 @@ static char * find_xdg_path_file(
    Iter_State iter_state;
    char * next_dir = NULL;
    char * fqfn = NULL;
-   char *path2 = strdup(path);
+   char *path2 = g_strdup(path);
    xdg_dirs_iter_init(path2, &iter_state);
    while ( !fqfn && (next_dir = xdg_dirs_iter_next(&iter_state)) ) {
       int lastndx = strlen(next_dir) - 1;

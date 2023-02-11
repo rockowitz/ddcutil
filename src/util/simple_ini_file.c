@@ -1,9 +1,9 @@
-/** \file simple_ini_file.c
+/** @file simple_ini_file.c
  *
  *  Reads an INI style configuration file
  */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -248,7 +248,7 @@ int ini_file_load(
    if (result == 0) {
       Parsed_Ini_File * ini_file = calloc(1, sizeof(Parsed_Ini_File));
       memcpy(ini_file->marker, PARSED_INI_FILE_MARKER, 4);
-      ini_file->config_fn  = strdup(ini_file_name);
+      ini_file->config_fn  = g_strdup(ini_file_name);
       ini_file->hash_table = ini_file_hash;
       *parsed_ini_loc = ini_file;
    }

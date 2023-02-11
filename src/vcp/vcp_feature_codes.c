@@ -3,7 +3,7 @@
  *  VCP Feature Code Table and related functions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -628,12 +628,12 @@ extract_version_feature_info_from_feature_table_entry(
          ? get_version_sensitive_feature_flags(vfte, vspec)
          : get_version_specific_feature_flags(vfte, vspec);
 
-   dfm->feature_desc = (dfm->feature_desc) ? strdup(vfte->desc) : NULL;
+   dfm->feature_desc = (dfm->feature_desc) ? g_strdup(vfte->desc) : NULL;
 
    char * feature_name = (version_sensitive)
            ? get_version_sensitive_feature_name(vfte, vspec)
            : get_version_specific_feature_name(vfte, vspec);
-   dfm->feature_name = strdup(feature_name);
+   dfm->feature_name = g_strdup(feature_name);
 
    dfm->feature_flags |= vfte->vcp_global_flags;
    DDCA_Feature_Value_Entry * sl_values = (version_sensitive)
@@ -886,7 +886,7 @@ vcp_format_feature_detail(
               200);
       free(nontable_value);
       if (ok)
-         formatted_data = strdup(workbuf);
+         formatted_data = g_strdup(workbuf);
    }
    else {        // TABLE_VCP_CALL
       DBGMSF(debug, "DDCA_TABLE_VCP_VALUE");
@@ -1176,9 +1176,9 @@ format_feature_detail_x73_lut_size(
    }
    else {
       Byte * bytes = data_bytes->bytes;
-      ushort red_entry_ct   = bytes[0] << 8 | bytes[1];
-      ushort green_entry_ct = bytes[2] << 8 | bytes[3];
-      ushort blue_entry_ct  = bytes[4] << 8 | bytes[5];
+      gushort red_entry_ct   = bytes[0] << 8 | bytes[1];
+      gushort green_entry_ct = bytes[2] << 8 | bytes[3];
+      gushort blue_entry_ct  = bytes[4] << 8 | bytes[5];
       int    red_bits_per_entry   = bytes[6];
       int    green_bits_per_entry = bytes[7];
       int    blue_bits_per_entry  = bytes[8];
@@ -1187,7 +1187,7 @@ format_feature_detail_x73_lut_size(
                "Number of entries: %d red, %d green, %d blue,  Bits per entry: %d red, %d green, %d blue",
                red_entry_ct,       green_entry_ct,       blue_entry_ct,
                red_bits_per_entry, green_bits_per_entry, blue_bits_per_entry);
-      *pformatted_result = strdup(buf);
+      *pformatted_result = g_strdup(buf);
    }
    return ok;
 }
@@ -2021,7 +2021,7 @@ format_feature_detail_xc0_display_usage_time(
         Nontable_Vcp_Value * code_info, DDCA_MCCS_Version_Spec vcp_version, char * buffer, int bufsz)
 {
    assert (code_info->vcp_code == 0xc0);
-   uint usage_time;
+   guint usage_time;
    // DBGMSG("vcp_version=%d.%d", vcp_version.major, vcp_version.minor);
 
    // TODO: Control with Output_Level
@@ -2072,7 +2072,7 @@ format_feature_detail_xc8_display_controller_type(
       ok = true;
    }
 
-   // ushort controller_number = info->ml << 8 | info->sh;
+   // gushort controller_number = info->ml << 8 | info->sh;
    // spec is inconsistent, controller number can either be ML/SH or MH/ML
    // observation suggests it's ml and sh
    snprintf(buffer, bufsz,
@@ -4282,7 +4282,7 @@ struct {
    Format_Normal_Feature_Detail_Function nontable_formatter;
    Format_Table_Feature_Detail_Function  table_formatter;
    DDCA_Global_Feature_Flags             vcp_global_flags;
-   ushort                                vcp_spec_groups;
+   gushort                               vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
    char *                                v20_name;
    char *                                v21_name;

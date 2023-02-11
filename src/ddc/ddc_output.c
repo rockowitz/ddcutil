@@ -1,7 +1,7 @@
-/** \file ddc_output.c
+/** @file ddc_output.c
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -669,7 +669,7 @@ ddc_get_formatted_value_for_dfm(
                                   pvalrec->val.c_nc.sl
                                   );
             }
-            *formatted_value_loc = strdup(buf);
+            *formatted_value_loc = g_strdup(buf);
          }
       }
 

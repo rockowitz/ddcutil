@@ -6,8 +6,11 @@
 // Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#define _GNU_SOURCE
+
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,13 +48,11 @@ bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
    snprintf(cmdbuf, bufsz, "(%s) 2>&1", shell_cmd);
    // printf("(%s) cmdbuf=|%s|\n", __func__, cmdbuf);
    fp = popen(cmdbuf, "r");
-   // printf("(%s) open. errno=%d\n", __func__, errno);
-    if (!fp) {
-       // int errsv = errno;
-       printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
-       ok = false;
-    }
-    else {
+   if (!fp) {
+      printf("Unable to execute command \"%s\": %s\n", shell_cmd, strerror(errno));
+      ok = false;
+   }
+   else {
        char * a_line = NULL;
        size_t len = 0;
        bool first_line = true;
@@ -95,7 +96,7 @@ bool execute_shell_cmd_rpt(const char * shell_cmd, int depth) {
           a_line = NULL;
           len = 0;
        }
-       // per getline() doc, buffer is allocated even if getline(),
+       // per getline() doc, buffer is allocated even if getline() fails
        free(a_line);
        int pclose_rc = pclose(fp);
        int errsv = errno;
@@ -160,7 +161,7 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
              }
              first_line = false;
           }
-          g_ptr_array_add(result, strdup(a_line));
+          g_ptr_array_add(result, g_strdup(a_line));
           free(a_line);
           a_line = NULL;
           len = 0;
@@ -245,7 +246,7 @@ char * execute_shell_cmd_one_line_result(const char * shell_cmd) {
    char * result = NULL;
    GPtrArray * response = execute_shell_cmd_collect(shell_cmd);
    if (response) {
-      result = strdup(g_ptr_array_index(response, 0));
+      result = g_strdup(g_ptr_array_index(response, 0));
       g_ptr_array_free(response, true);
    }
    return result;

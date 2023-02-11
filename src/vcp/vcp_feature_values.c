@@ -1,6 +1,6 @@
 // vcp_feature_values.c
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -256,9 +256,9 @@ void free_single_vcp_value_func(gpointer data) {
 
 DDCA_Any_Vcp_Value *
 create_cont_vcp_value(
-      Byte feature_code,
-      ushort max_val,
-      ushort cur_val)
+      Byte    feature_code,
+      gushort max_val,
+      gushort cur_val)
 {
    DDCA_Any_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Any_Vcp_Value));
    valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
@@ -273,9 +273,9 @@ create_cont_vcp_value(
 
 DDCA_Any_Vcp_Value *
 create_table_vcp_value_by_bytes(
-      Byte   feature_code,
-      Byte * bytes,
-      ushort bytect)
+      Byte    feature_code,
+      Byte *  bytes,
+      gushort bytect)
 {
    DDCA_Any_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Any_Vcp_Value));
    valrec->value_type = DDCA_TABLE_VCP_VALUE;

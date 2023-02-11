@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,7 +51,7 @@ char * get_hiddev_string(int fd, __s32 index) {
    //     REPORT_IOCTL_ERROR("HIDIOCGSTRING", rc);
    char * result = NULL;
    if (rc > 0)
-      result = strdup(desc.value);
+      result = g_strdup(desc.value);
    return result;
 }
 

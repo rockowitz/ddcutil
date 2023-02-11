@@ -3,7 +3,7 @@
  *  drm reporting for the environment command
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -423,9 +423,9 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                   Device_Id_Xref * xref = device_xref_find_by_edid(edidbytes);
                   if (xref) {
                   // TODO check for multiple entries with same edid
-                  xref->drm_connector_name = strdup(connector_name);
+                  xref->drm_connector_name = g_strdup(connector_name);
                   xref->drm_connector_type = conn->connector_type;
-                  // xref->drm_device_path    = strdup(conn->
+                  // xref->drm_device_path    = g_strdup(conn->
 
                   if (xref->ambiguous_edid) {
                      rpt_vstring(d3, "Multiple displays have same EDID ...%s", xref->edid_tag);

@@ -10,8 +10,6 @@
 
 
 /** \cond */
-#include <assert.h>
-#include <stdbool.h>
 #include <glib-2.0/glib.h>
 /** \endcond */
 

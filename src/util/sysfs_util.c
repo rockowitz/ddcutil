@@ -3,12 +3,13 @@
   * Functions for reading /sys file system
   */
 
-// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 //* \cond */
 #include <assert.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdio.h>
@@ -69,7 +70,7 @@ read_sysfs_attr_w_default(
    sprintf(fn, "%s/%s", dirname, attrname);
    char * result = file_get_first_line(fn, verbose);
    if (!result)
-      result = strdup(default_value);  // strdup() so caller can free any result
+      result = g_strdup(default_value);  // g_strdup() so caller can free any result
    return result;
 }
 
@@ -271,7 +272,7 @@ get_single_subdir_name(
            // DBGMSF(debug, "%s", dent2->d_name);
            if (!str_starts_with(dent2->d_name, ".")) {
               if (!filter || filter(dent2->d_name, val)) {
-                 result = strdup(dent2->d_name);
+                 result = g_strdup(dent2->d_name);
                  break;
               }
            }
@@ -594,7 +595,7 @@ rpt_attr_realpath_basename(
          found = true;
          rpt_attr_output(depth, pb1, "->", bpath);
          if (value_loc)
-            *value_loc = strdup(bpath);
+            *value_loc = g_strdup(bpath);
       }
    }
    if (!found) {

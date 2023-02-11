@@ -1,8 +1,9 @@
 /** @file string_util.c
+ *
  *  String utility functions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -443,7 +444,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
    char** workstruct = calloc(sizeof(char *), max_pieces+1);
    int piecect = 0;
 
-   char * str_to_split_dup = strdup(str_to_split);
+   char * str_to_split_dup = g_strdup(str_to_split);
    char * rest = str_to_split_dup;
    char * token;
    // originally token assignment was in while() clause, but valgrind
@@ -453,7 +454,7 @@ Null_Terminated_String_Array strsplit(const char * str_to_split, const char * de
       if (debug)
          printf("(%s) token: |%s|\n", __func__, token);
       if (strlen(token) > 0)
-         workstruct[piecect++] = strdup(token);
+         workstruct[piecect++] = g_strdup(token);
       token = strsep(&rest, delims);
    }
    if (debug)
@@ -504,7 +505,7 @@ strsplit_maxlength(
              __func__, max_piece_length, delims, str_to_split);
 
    GPtrArray * pieces = g_ptr_array_sized_new(20);
-   char * str_to_split2 = strdup(str_to_split);   // work around constness
+   char * str_to_split2 = g_strdup(str_to_split);   // work around constness
    char * start = str_to_split2;
    char * str_to_split2_end = str_to_split2 + strlen(str_to_split);
    if (debug)
@@ -622,7 +623,7 @@ Null_Terminated_String_Array ntsa_join(
    char ** from = a1;
    while (*from) {
       if (dup)
-         *to = strdup(*from);
+         *to = g_strdup(*from);
       else
          *to = *from;
       to++;
@@ -631,7 +632,7 @@ Null_Terminated_String_Array ntsa_join(
    from = a2;
    while (*from) {
       if (dup)
-         *to = strdup(*from);
+         *to = g_strdup(*from);
       else
          *to = *from;
       to++;
@@ -660,7 +661,7 @@ Null_Terminated_String_Array ntsa_copy(Null_Terminated_String_Array a1, bool dup
    char ** from = a1;
    while (*from) {
       if (dup)
-         *to = strdup(*from);
+         *to = g_strdup(*from);
       else
          *to = *from;
       to++;
@@ -679,10 +680,10 @@ Null_Terminated_String_Array  ntsa_prepend(
    int new_ct = old_ct + 1;
    Null_Terminated_String_Array new_array = calloc((new_ct+1), sizeof(char *));
    char ** to = new_array;
-   *to++ = (dup) ? strdup(value) : value;
+   *to++ = (dup) ? g_strdup(value) : value;
    char ** from = old_array;
    while (*from) {
-      *to++ = (dup) ? strdup(*from) : *from;
+      *to++ = (dup) ? g_strdup(*from) : *from;
       from++;
    }
    *to = NULL;
@@ -794,7 +795,7 @@ g_ptr_array_to_ntsa(
    Null_Terminated_String_Array ntsa = calloc(gparray->len+1, sizeof(char *));
    for (guint ndx=0; ndx < gparray->len; ndx++) {
       if (duplicate)
-         ntsa[ndx] = strdup(g_ptr_array_index(gparray,ndx));
+         ntsa[ndx] = g_strdup(g_ptr_array_index(gparray,ndx));
       else
          ntsa[ndx] = g_ptr_array_index(gparray,ndx);
    }
@@ -840,7 +841,7 @@ void strlower(char * s) {
 char * strdup_uc(const char* s) {
    if (!s)
       return NULL;
-   char * us = strdup( s );
+   char * us = g_strdup( s );
    char * p = us;
    while (*p) {*p=toupper(*p); p++; }
    return us;

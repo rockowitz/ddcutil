@@ -1,4 +1,5 @@
 /** @file ddc_displays.c
+ *
  *  Access displays, whether DDC or USB
  *
  *  This file and ddc_display_ref_reports.c cross-reference each other.
@@ -445,8 +446,8 @@ edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
 bool
 is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
-   char * invalid_repr = strdup(dref_repr_t(invalid_dref));
-   char *   valid_repr = strdup(dref_repr_t(valid_dref));
+   char * invalid_repr = g_strdup(dref_repr_t(invalid_dref));
+   char *   valid_repr = g_strdup(dref_repr_t(valid_dref));
    DBGTRC_STARTING(debug, TRACE_GROUP, "invalid_dref=%s, valid_dref=%s",
                  invalid_repr, valid_repr);
    free(invalid_repr);
@@ -587,7 +588,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 
    int busct = i2c_detect_buses();
    DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
-   uint busndx = 0;
+   guint busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {

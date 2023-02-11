@@ -1,25 +1,7 @@
-/* multi_level_map.h
- *
- * <copyright>
- * Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
+/** @file multi_level_map.h */
+
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /** @file multi_level_map.h
  * Multi_Level_Map data structure
@@ -30,9 +12,7 @@
 
 /** \cond */
 #include <glib-2.0/glib.h>
-#include <sys/types.h>
 /** \endcond */
-
 
 #define MLT_MAX_LEVELS 4
 
@@ -43,13 +23,13 @@ typedef struct {
 
 typedef struct {
    int   levels;
-   uint  ids[MLT_MAX_LEVELS];
+   guint  ids[MLT_MAX_LEVELS];
 } Multi_Level_Ids;
 
 
 typedef struct {
-   ushort   level;
-   uint     code;
+   gushort   level;
+   guint     code;
    char *   name;
    GPtrArray * children;
 } MLM_Node;
@@ -66,8 +46,6 @@ typedef struct {
 
 void report_mlm_level(MLM_Level * level_desc, int depth);
 
-
-
 typedef struct {
    char*       table_name;
    char*       segment_tag;
@@ -79,13 +57,12 @@ typedef struct {
 
 
 Multi_Level_Map * mlm_create(char * table_name, int levels, MLM_Level* level_detail);
-MLM_Node * mlm_add_node(Multi_Level_Map * mlm, MLM_Node * parent, uint key, char * value);
+MLM_Node * mlm_add_node(Multi_Level_Map * mlm, MLM_Node * parent, guint key, char * value);
 
 void report_multi_level_map(Multi_Level_Map * mlm, int depth);
 
 Multi_Level_Names mlm_get_names(Multi_Level_Map * mlm, int argct, ...);
 
-Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, uint* ids);
-
+Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, guint* ids);
 
 #endif /* MULTI_LEVEL_TABLE_H_ */

@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -394,7 +394,7 @@ void each_video_pci_device(
       else {
          // printf("realpath returned %s\n", rpath);
          // printf("%s --> %s\n",workfn, resolved_path);
-         char * rp2 = strdup(rpath);
+         char * rp2 = g_strdup(rpath);
          // DBGMSF(debug, "Driver name path: rp2 = rpath = %s", rp2);
          char * driver_name = g_path_get_basename(rp2);
          rpt_vstring(d1, "Driver name:         %s", driver_name);
@@ -626,7 +626,7 @@ void query_sys_amdgpu_parameters(int depth) {
             if (!dp)
                break;
             if (dp->d_type & DT_REG) {
-               g_ptr_array_add(sorted_names, strdup(dp->d_name));
+               g_ptr_array_add(sorted_names, g_strdup(dp->d_name));
             }
          }
          g_ptr_array_sort(sorted_names, indirect_strcmp);
@@ -690,9 +690,9 @@ void insert_drm_xref(
          rpt_vstring(d2, "Multiple displays have same EDID ...%s", xref->edid_tag);
          rpt_vstring(d2, "drm name, and bus number in device cross reference table may be incorrect");
       }
-      xref->sysfs_drm_name = strdup(cur_dir_name);
+      xref->sysfs_drm_name = g_strdup(cur_dir_name);
       if (i2c_node_name)
-         xref->sysfs_drm_i2c  = strdup(i2c_node_name);
+         xref->sysfs_drm_i2c  = g_strdup(i2c_node_name);
       xref->sysfs_drm_busno = drm_busno;
       DBGMSF(debug, "sysfs_drm_busno = %d", xref->sysfs_drm_busno);
    }

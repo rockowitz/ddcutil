@@ -69,14 +69,14 @@ create_nontable_vcp_value(
 DDCA_Any_Vcp_Value *
 create_cont_vcp_value(
       Byte     feature_code,
-      ushort   max_val,
-      ushort   cur_val);
+      gushort   max_val,
+      gushort   cur_val);
 
 DDCA_Any_Vcp_Value *
 create_table_vcp_value_by_bytes(
       Byte   feature_code,
       Byte * bytes,
-      ushort bytect);
+      gushort bytect);
 
 DDCA_Any_Vcp_Value *
 create_table_vcp_value_by_buffer(
@@ -101,8 +101,8 @@ single_vcp_value_to_parsed_vcp_response(
 typedef
 struct {
    Byte   vcp_code;
-   ushort max_value;
-   ushort cur_value;
+   gushort max_value;
+   gushort cur_value;
    // for new way
    Byte   mh;
    Byte   ml;

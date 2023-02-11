@@ -1,7 +1,9 @@
 /** @file udev_util.c
+ *
  * UDEV utility functions
  */
-// Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+
+// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Adapted from source code at http://www.signal11.us/oss/udev/
@@ -66,10 +68,10 @@ Udev_Device_Summary * get_udev_device_summary(struct udev_device * dev) {
   Udev_Device_Summary * summary = calloc(1,sizeof(struct udev_device_summary));
   memcpy(summary->marker, UDEV_DEVICE_SUMMARY_MARKER, 4);
   // n. all strings returned are const char *
-  summary->devpath      = strdup(udev_device_get_devpath(dev));
-  summary->sysname      = strdup(udev_device_get_sysname(dev));
-  summary->sysattr_name = strdup(udev_device_get_sysattr_value(dev, "name"));
-  summary->subsystem    = strdup(udev_device_get_subsystem(dev));
+  summary->devpath      = g_strdup(udev_device_get_devpath(dev));
+  summary->sysname      = g_strdup(udev_device_get_sysname(dev));
+  summary->sysattr_name = g_strdup(udev_device_get_sysattr_value(dev, "name"));
+  summary->subsystem    = g_strdup(udev_device_get_subsystem(dev));
   return summary;
 }
 
@@ -265,7 +267,7 @@ void report_udev_device(struct udev_device * dev, int depth) {
 
 #ifdef ALTERNATIVE
          // simpler, works
-         char * av = strdup(attr_value2);
+         char * av = g_strdup(attr_value2);
          char * p = av;
          while (*p) {
             if (*p == 0x0a)

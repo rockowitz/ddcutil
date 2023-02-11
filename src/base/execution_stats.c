@@ -1,8 +1,9 @@
-/** \file execution_stats.c
+/** @file execution_stats.c
+ *
  *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -275,7 +276,7 @@ Status_Code_Counts * new_status_code_counts(char * name) {
    pcounts->error_counts_hash =  g_hash_table_new(NULL,NULL);
    pcounts->total_status_counts = 0;
    if (name)
-      pcounts->name = strdup(name);
+      pcounts->name = g_strdup(name);
    g_mutex_unlock(&status_code_counts_mutex);
 
    DBGMSF(debug, "Done");

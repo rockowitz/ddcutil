@@ -143,7 +143,7 @@ uint64_t elapsed_time_nanosec() {
 }
 
 
-static uint64_t ipow(const uint64_t base, int n)
+static uint64_t ipow(const uint64_t base, guint n)
 {
    assert(n >= 0);
     int p = base;
@@ -164,7 +164,7 @@ static uint64_t ipow(const uint64_t base, int n)
  *  @param  precision  number of digits after the decimal point
  *  @return formatted elapsed time
  */
-char * formatted_elapsed_time(uint precision) {
+char * formatted_elapsed_time(guint precision) {
    static GPrivate  formatted_elapsed_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_elapsed_time_key, 40);
 

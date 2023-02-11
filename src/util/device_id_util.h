@@ -52,32 +52,32 @@ typedef struct {
 } Pci_Usb_Id_Names;
 
 Pci_Usb_Id_Names devid_get_pci_names(
-                ushort vendor_id,
-                ushort device_id,
-                ushort subvendor_id,
-                ushort subdevice_id,
+                gushort vendor_id,
+                gushort device_id,
+                gushort subvendor_id,
+                gushort subdevice_id,
                 int argct);
 
 Pci_Usb_Id_Names devid_get_usb_names(
-                ushort vendor_id,
-                ushort device_id,
-                ushort interface_id,
+                gushort vendor_id,
+                gushort device_id,
+                gushort interface_id,
                 int argct);
 
 
 // *** HID Descriptor Item Types ***
 // "item type" is the term used in usb.ids
 // "item tag"  is the term used in USB HID documentation
-char * devid_hid_descriptor_item_type(ushort id);  // R entry in usb.ids, corresponds to names_reporttag()
+char * devid_hid_descriptor_item_type(gushort id);  // R entry in usb.ids, corresponds to names_reporttag()
 
 // *** HID Descriptor Type ***
 // declared here but not defined
-// char * devid_hid_descriptor_type(ushort id);       // HID   entry in usb.ids
+// char * devid_hid_descriptor_type(gushort id);       // HID   entry in usb.ids
 
 
 // *** HUT table ***
-char * devid_usage_code_page_name(ushort usage_page_code);  // corresponds to names_huts()
-char * devid_usage_code_id_name(ushort usage_page_code, ushort usage_simple_id);  // corresponds to names_hutus()
+char * devid_usage_code_page_name(gushort usage_page_code);  // corresponds to names_huts()
+char * devid_usage_code_id_name(gushort usage_page_code, gushort usage_simple_id);  // corresponds to names_hutus()
 char * devid_usage_code_name_by_extended_id(uint32_t extended_usage);
 
 #endif /* DEVICE_ID_UTIL_H_ */

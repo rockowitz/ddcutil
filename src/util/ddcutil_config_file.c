@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -183,20 +184,20 @@ int merge_command_tokens(
       DBGF(debug, "config_token_ct = %d, argc=%d, new_ct=%d", config_token_ct, old_argc, new_ct);
       char ** combined = calloc(new_ct, sizeof(char *));
       DBGF(debug, "Allocated combined=%p", combined);
-      combined[0] = strdup(old_argv[0]);   // command
+      combined[0] = g_strdup(old_argv[0]);   // command
       if (debug)
          printf("%s) Allocated combined[0] = %p -> |%s|\n", __func__, combined[0], combined[0] );
       DBGF(debug, "Copying config_token_ct=%d config file tokens", config_token_ct);
       int new_ndx = 1;
       for (int prefix_ndx = 0; prefix_ndx < config_token_ct; prefix_ndx++, new_ndx++) {
-         combined[new_ndx] = strdup(config_tokens[prefix_ndx]);
+         combined[new_ndx] = g_strdup(config_tokens[prefix_ndx]);
          if(debug)
             printf("(%s) Allocated combined[%d]=%p -> |%s|\n",
                    __func__, new_ndx, combined[new_ndx], combined[new_ndx]);
       }
       DBGF(debug, "Copying %d arguments from old_argv", old_argc-1);
       for (int old_ndx = 1; old_ndx < old_argc; old_ndx++, new_ndx++) {
-         combined[new_ndx] = strdup(old_argv[old_ndx]);
+         combined[new_ndx] = g_strdup(old_argv[old_ndx]);
          if (debug) printf("(%s) Allocated combined[%d] = %p -> |%s|\n",
                __func__, new_ndx, combined[new_ndx], combined[new_ndx]);
       }

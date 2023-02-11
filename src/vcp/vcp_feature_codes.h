@@ -10,6 +10,7 @@
 #define VCP_FEATURE_CODES_H_
 
 /** \cond */
+#include <glib-2.0/glib.h>
 #include <stdio.h>
 
 #include "util/data_structures.h"
@@ -145,7 +146,7 @@ struct {
    Format_Table_Feature_Detail_Function  table_formatter;
    // Format_Normal_Feature_Detail_Function2 dynamic_nc_formatter;   // only set for synthetic, udf features
    DDCA_Global_Feature_Flags             vcp_global_flags;
-   ushort                                vcp_spec_groups;
+   gushort                                vcp_spec_groups;
    VCP_Feature_Subset                    vcp_subsets;
    char *                                v20_name;
    char *                                v21_name;

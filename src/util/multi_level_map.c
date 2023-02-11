@@ -1,7 +1,7 @@
 /* multi_level_map.c
  *
  * <copyright>
- * Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -27,6 +27,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -56,7 +57,7 @@ Multi_Level_Map * mlm_create(char * table_name, int levels, MLM_Level* level_det
    //    report_mlm_level(level_detail+lvlndx, 1);
    // }
    Multi_Level_Map * mlm =  calloc(1, sizeof(Multi_Level_Map) + levels * sizeof(MLM_Level));
-   mlm->table_name = strdup(table_name);
+   mlm->table_name = g_strdup(table_name);
    mlm->levels = levels;
    // MLM_Level* lvldesc = level_detail;
    int initial_size = level_detail[0].initial_size;
@@ -76,7 +77,7 @@ Multi_Level_Map * mlm_create(char * table_name, int levels, MLM_Level* level_det
  * @param key    key of node
  * @param value  value of node
  */
-MLM_Node * mlm_add_node(Multi_Level_Map * map, MLM_Node * parent, uint key, char * value) {
+MLM_Node * mlm_add_node(Multi_Level_Map * map, MLM_Node * parent, guint key, char * value) {
    // printf("(%s) parent=%p, key=0x%04x, value=|%s|\n", __func__, parent, key, value);
    MLM_Node * new_node = calloc(1,sizeof(MLM_Node));
    new_node->code = key;
@@ -177,7 +178,7 @@ void report_multi_level_map(Multi_Level_Map * header, int depth) {
 //
 
 static
-MLM_Node * mlm_find_child(GPtrArray * nodelist, uint id) {
+MLM_Node * mlm_find_child(GPtrArray * nodelist, guint id) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting, id=0x%08x\n", __func__, id);
@@ -219,7 +220,7 @@ void report_multi_level_names(Multi_Level_Names * mln, int depth) {
  * @return pointer to **Multi_Level_Names** struct containing the
  *         names for the ids at each level
  */
-Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, uint* ids) {
+Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, guint* ids) {
    bool debug = false;
    assert(levelct >= 1 && levelct <= MLT_MAX_LEVELS);
    // pciusb_id_ensure_initialized();       // <==  WHAT TO DO?
@@ -262,7 +263,7 @@ Multi_Level_Names mlm_get_names2(Multi_Level_Map * mlm, int levelct, uint* ids) 
  *
  * @param table    pointer  to **Multi_Level_Map** table
  * @param argct    number of ids
- * @param ..       node ids, of type uint
+ * @param ..       node ids, of type guint
  *
  * @return pointer to **Multi_Level_Names** struct containing the
  *         names for the ids at each level
@@ -272,7 +273,7 @@ Multi_Level_Names mlm_get_names(Multi_Level_Map * table, int argct, ...) {
   assert(argct >= 1 && argct <= MLT_MAX_LEVELS);
   // pciusb_id_ensure_initialized();       // <==  WHAT TO DO?
 
-  uint args[MLT_MAX_LEVELS];
+  guint args[MLT_MAX_LEVELS];
 
   va_list ap;
   int ndx;

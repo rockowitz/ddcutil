@@ -1,9 +1,9 @@
-/** \file api_base.c
+/** @file api_base.c
  *
  *  C API base functions.
  */
 
-// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -299,7 +299,7 @@ _ddca_init(void) {
       if (parsed_cmd->library_trace_file) {
          char * trace_file = (parsed_cmd->library_trace_file[0] != '/')
                 ? xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file)
-                : strdup(parsed_cmd->library_trace_file);
+                : g_strdup(parsed_cmd->library_trace_file);
          if (debug)
             printf("(%s) Setting trace destination %s\n", __func__, trace_file);
          SYSLOG(LOG_INFO, "Trace destination: %s", trace_file);
@@ -559,10 +559,10 @@ ddca_end_capture(void) {
    if (fflush(fdesc->in_memory_file) < 0) {
       ddca_set_ferr_to_default();
       SEVEREMSG("flush() failed. errno=%d", errno);
-      return strdup(result);
+      return g_strdup(result);
    }
    // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   result = strdup(fdesc->in_memory_bufstart);
+   result = g_strdup(fdesc->in_memory_bufstart);
    if (fclose(fdesc->in_memory_file) < 0) {
       ddca_set_ferr_to_default();
       SEVEREMSG("fclose() failed. errno=%d", errno);

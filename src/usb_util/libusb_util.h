@@ -7,8 +7,9 @@
 #ifndef LIBUSB_UTIL_H_
 #define LIBUSB_UTIL_H_
 
+#include <glib-2.0/glib.h>
 #include <libusb-1.0/libusb.h>
-#include <stdint.h>
+// #include <stdint.h>
 
 #include "usb_util/libusb_reports.h"
 
@@ -26,8 +27,8 @@ struct possible_monitor_device {
    int             device_address;
    int             alt_setting;
    int             interface;
-   ushort          vid;
-   ushort          pid;
+   gushort          vid;
+   gushort          pid;
    char *          manufacturer_name;
    char *          product_name;
    // conversion is annoying, just retrieve both ascii and wchar version of the serial number
@@ -46,6 +47,6 @@ void free_possible_monitor_device_list(struct possible_monitor_device * head);
 
 void probe_libusb(bool possible_monitors_only,int depth);
 
-bool libusb_is_monitor_by_path(ushort busno, ushort devno, ushort intfno);
+bool libusb_is_monitor_by_path(gushort busno, gushort devno, gushort intfno);
 
 #endif /* LIBUSB_UTIL_H_ */

@@ -1,4 +1,4 @@
-/** \f error_info.c
+/** @f error_info.c
  *
  *  Struct for reporting errors.
  *
@@ -9,7 +9,7 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -285,7 +285,7 @@ errinfo_newv(
    memcpy(erec->marker, ERROR_INFO_MARKER, 4);
    erec->status_code = status_code;
    erec->causes = empty_list;
-   erec->func = strdup(func);   // strdup to avoid constness warning, must free
+   erec->func = g_strdup(func);   // g_strdup to avoid constness warning, must free
 
    if (detail) {
       erec->detail = g_strdup_vprintf(detail, args);

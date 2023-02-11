@@ -1,9 +1,10 @@
-/** \file monitor_model_key.c
+/** @file monitor_model_key.c
+ *
  *  Uniquely identifies a monitor model using its manufacturer id,
  *  model name, and product code, as listed in the EDID.
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -168,7 +169,7 @@ model_id_string(
 
    assert(mfg);
    assert(model_name);
-   char * model_name2 = strdup(model_name);
+   char * model_name2 = g_strdup(model_name);
    for (int ndx = 0; ndx < strlen(model_name2); ndx++) {
       if ( !isalnum(model_name2[ndx]) )
          model_name2[ndx] = '_';

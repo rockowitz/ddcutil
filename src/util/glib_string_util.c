@@ -9,6 +9,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,7 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
       free(pieces);
    }
    else
-      catenated = strdup("");
+      catenated = g_strdup("");
    return catenated;
 }
 
@@ -173,7 +174,7 @@ GPtrArray * gaux_unique_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* sec
          // instead use our own implementation
          bool found = gaux_ptr_array_find_with_equal_func(second, cur, g_str_equal, &found_index);
          if (!found) {
-            g_ptr_array_add(result, strdup(cur));
+            g_ptr_array_add(result, g_strdup(cur));
          }
       }
       return result;
@@ -204,7 +205,7 @@ void gaux_unique_string_ptr_array_include(GPtrArray * arry, char * new_value) {
       if (ndx == arry->len) {
          if (debug)
             printf("(%s) Appending new value\n", __func__);
-         g_ptr_array_add(arry, strdup(new_value));
+         g_ptr_array_add(arry, g_strdup(new_value));
       }
    }
 }

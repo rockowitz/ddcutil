@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
+#include <glib-2.0/glib.h>
 #include <string.h>
 #include <sys/utsname.h>
 
@@ -345,7 +346,7 @@ void query_x11() {
       // Device_Id_Xref * xref = device_xref_get(prec->edidbytes);
       Device_Id_Xref * xref = device_xref_find_by_edid(edidbytes);
       if (xref) {
-         xref->xrandr_name = strdup(prec->output_name);
+         xref->xrandr_name = g_strdup(prec->output_name);
          if (xref->ambiguous_edid) {
             rpt_vstring(2, "Multiple displays have same EDID ...%s", xref->edid_tag);
             rpt_vstring(2, "xrandr name in device cross reference table may be incorrect.");
@@ -430,8 +431,8 @@ static void probe_i2c_devices_using_udev() {
       int busno = udev_i2c_device_summary_busno(summary);
       Device_Id_Xref * xref = device_xref_find_by_busno(busno);
       if (xref) {
-         xref->udev_name = strdup(summary->sysattr_name);
-         xref->udev_syspath = strdup(summary->devpath);
+         xref->udev_name = g_strdup(summary->sysattr_name);
+         xref->udev_syspath = g_strdup(summary->devpath);
          xref->udev_busno = busno;
       }
       else {

@@ -961,7 +961,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                break;
             }
             char * thisarg = (char *) cmd_and_args[argctr];
-            char * argcopy = strdup(thisarg);
+            char * argcopy = g_strdup(thisarg);
             parsed_cmd->args[argctr-1] = argcopy;
             argctr++;
          }
@@ -1032,7 +1032,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
                      break;
                   }
                }
-               psv.feature_value = strdup(parsed_cmd->args[argpos]);
+               psv.feature_value = g_strdup(parsed_cmd->args[argpos]);
                g_array_append_val(parsed_cmd->setvcp_values, psv);
                argpos++;
             }

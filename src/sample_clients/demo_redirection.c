@@ -1,12 +1,13 @@
-/* demo_redirection.c
+/** @file demo_redirection.c
  *
  * Sample program illustrating the use of libddcutil's functions for
  * redirecting and capturing program output.
  */
 
-// Copyright (C) 2018-2019 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#define _GNU_SOURCE
 
 #include <assert.h>
 #include <errno.h>

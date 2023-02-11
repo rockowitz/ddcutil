@@ -54,7 +54,7 @@ static char * extract_function(char * bt_line, bool name_only) {
    char * result = NULL;
    char * start = strchr(bt_line, '(');
    if (!start) {
-      result = strdup("???");
+      result = g_strdup("???");
    }
    else {
       start++;          // character after paren

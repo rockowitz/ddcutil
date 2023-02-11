@@ -1,8 +1,9 @@
 /* @file rtti.c
+ *
  * Runtime trace information
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
@@ -19,7 +20,7 @@ static GHashTable * func_name_table = NULL;
 void rtti_func_name_table_add(void * func_addr, const char * func_name) {
    if (!func_name_table)
       func_name_table =  g_hash_table_new(g_direct_hash, g_direct_equal);
-   g_hash_table_insert(func_name_table, func_addr, strdup(func_name));
+   g_hash_table_insert(func_name_table, func_addr, g_strdup(func_name));
 }
 
 

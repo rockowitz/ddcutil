@@ -1,14 +1,15 @@
-/** \file linux_util.c
- * Miscellaneous Linux utilities
+/** @file linux_util.c
+ *
+ *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
 
 /** \cond */
-#define GNU_SOURCE    // for syscall()
+#define _GNU_SOURCE    // for syscall()
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -261,8 +262,8 @@ int is_module_loaded_using_libkmod(const char * module_name) {
        goto bye;
    }
 
-   char * module_name1 = strdup(module_name);
-   char * module_name2 = strdup(module_name);
+   char * module_name1 = g_strdup(module_name);
+   char * module_name2 = g_strdup(module_name);
    str_replace_char(module_name1, '-','_');
    str_replace_char(module_name2, '_', '-');
    struct kmod_list *itr;

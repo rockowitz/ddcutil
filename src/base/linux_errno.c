@@ -1,8 +1,9 @@
-/** \file linux_errno.c
+/** @file linux_errno.c
+ *
  * Linux errno descriptions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -388,7 +389,7 @@ Status_Code_Info * find_errno_description(int errnum) {
       // char * desc = strerror(errnum);
       // result->description  = malloc(strlen(desc)+1);
       // strcpy(result->description, desc);
-      result->description = strdup(strerror(errnum));
+      result->description = g_strdup(strerror(errnum));
    }
    if (debug)
       printf("(%s) Returning %p\n", __func__, (void*)result);
