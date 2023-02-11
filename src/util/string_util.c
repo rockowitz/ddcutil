@@ -8,8 +8,7 @@
 
 
 /** \cond */
-// for strcasestr()
-// #define _GNU_SOURCE
+#define _GNU_SOURCE
 
 #include <assert.h>
 #include <ctype.h>
