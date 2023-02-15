@@ -18,10 +18,9 @@
 
 #include "config.h"
 
-#define GNU_SOURCE    // for syscall()
+#define _GNU_SOURCE    // for syscall(), localtime_r()
 
 //* \cond */
-#include <assert.h>
 #include <glib-2.0/glib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -626,12 +625,14 @@ char * formatted_wall_time() {
 }
 
 
-
 //
 // Issue messages of various types
 //
 
-bool trace_to_syslog;
+#ifdef ENABLE_SYSLOG
+bool enable_syslog = true;
+bool trace_to_syslog = false;  // write trace output to the system log as well as terminal
+#endif
 
 #ifdef OLD
 /** Issues an error message.
