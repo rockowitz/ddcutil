@@ -17,6 +17,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include "debug_util.h"
+#include "error_info.h"
 #include "file_util_base.h"
 #include "string_util.h"
 #include "xdg_util.h"
@@ -34,12 +36,10 @@ bool is_comment(char * s) {
       // DBGMSF(debug, "ch=%c=%d, 0x%02x", ch, (int)ch, ch);
       // DBGMSF(debug, " %c=%d 0x%02x", ';', (int)';', ';');
       if (ch == ';' || ch == '*' || ch == '#') {
-         // DBGMSF(debug, "WTF!");
          result = true;
       }
    }
-   if (debug)
-      printf("(%s) s: %s, Returning %s\n", __func__, s, SBOOL(result));
+   DBGF(debug, "s: %s, Returning %s", s, SBOOL(result));
    return result;
 }
 
@@ -62,8 +62,7 @@ bool is_segment(char * s, char ** seg_name_loc) {
          free(seg_name);
       free(untrimmed);
    }
-   if (debug)
-      printf("(%s) s: %s, Returning %s\n", __func__, s, SBOOL(result));
+   DBGF(debug, "s: %s, Returning %s", s, SBOOL(result));
    return result;
 }
 
@@ -71,8 +70,7 @@ bool is_segment(char * s, char ** seg_name_loc) {
 static
 bool is_kv(char * s, char ** key_loc, char ** value_loc) {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. s->|%s|\n", __func__, s);
+   DBGF(debug, "Starting. s->|%s|\n", s);
    bool result = false;
    char * colon = strchr(s,':');
    if (!colon)
@@ -101,16 +99,18 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
       free(untrimmed_key);
       free(untrimmed_value);
    }
-   if (debug)
-      printf("(%s) s: |%s|, Returning %s\n", __func__, s, SBOOL(result));
+   DBGF(debug, "s: |%s|, Returning %s", s, SBOOL(result));
    return result;
 }
 
 
 static
-void emit_error_msg(char * msg, GPtrArray * errmsgs, bool verbose) {
+void emit_error_msg(char * msg, GPtrArray * errmsgs, GPtrArray* errinfo_accum, bool verbose) {
    if (verbose)
       printf("%s\n", msg);
+
+   if (errinfo_accum)
+      g_ptr_array_add(errinfo_accum, errinfo_new(-ENOENT, __func__, msg));
 
    if (errmsgs)
       g_ptr_array_add(errmsgs, msg);
@@ -122,14 +122,14 @@ void emit_error_msg(char * msg, GPtrArray * errmsgs, bool verbose) {
 /** Loads an INI style configuration file into a newly allocated #Parsed_Ini_File.
  *  Keys of the hash table in the struct have the form <segment name>/<key>.
  *
- * \param   config_file_name  file name
- * \param   errmsgs           if non-null, collects per-line error messages
- * \param   verbose           if true, write error messages to terminal
- * \param   parsed_ini_loc    where to return newly allocated parsed ini file
- * \retval  0                 success
- * \retval -ENOENT            configuration file not found
- * \retval -EBADMSG           errors parsing configuration file
- * \retval < 0                errors reading configuration file
+ * @param   ini_file_name     file name
+ * @param   errmsgs           if non-null, collects per-line error messages
+ * @param   verbose           if true, write error messages to terminal
+ * @param   parsed_ini_loc    where to return newly allocated parsed ini file
+ * @retval  0                 success
+ * @retval -ENOENT            configuration file not found
+ * @retval -EBADMSG           errors parsing configuration file
+ * @retval < 0                errors reading configuration file
  *
  * If the configuration file is not found (-ENOENT), or there are errors reading
  * or parsing the configuration file, *hash_table_loc is NULL.
@@ -145,6 +145,7 @@ int ini_file_load(
            const char *      ini_file_name,
            GPtrArray*        errmsgs,
            bool              verbose,
+           GPtrArray *       errinfo_accum,
            Parsed_Ini_File** parsed_ini_loc)
 {
    bool debug = false;
@@ -160,26 +161,23 @@ int ini_file_load(
 
    GPtrArray * config_lines = g_ptr_array_new_with_free_func(g_free);
    int getlines_rc = file_getlines(ini_file_name, config_lines, verbose);
-   if (debug)
-      printf("(%s) file_getlines() returned %d\n", __func__, getlines_rc);
+   DBGF(debug, "file_getlines() returned %d", getlines_rc);
    if (getlines_rc < 0) {
       result = getlines_rc;
       if (getlines_rc != -ENOENT) {
          char * msg = g_strdup_printf("Error reading configuration file %s: %s",
                ini_file_name,
                strerror(-getlines_rc) );
-         emit_error_msg(msg, errmsgs, verbose);
+         emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
       }
    }  // error reading lines
    else {  //process the lines
       ini_file_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
       int error_ct = 0;
-      if (debug)
-         printf("(%s) config_lines->len = %d\n", __func__, config_lines->len);
+      DBGF(debug, "config_lines->len = %d", config_lines->len);
       for (guint ndx = 0; ndx < config_lines->len; ndx++) {
          char * line = g_ptr_array_index(config_lines, ndx);
-         if (debug)
-            printf("(%s) Processing line %d: |%s|\n", __func__, ndx+1, line);
+         DBGF(debug, "Processing line %d: |%s|\n", ndx+1, line);
          char * trimmed = trim_in_place(line);
          // DBGMSF(debug, "line=%d. trimmed=|%s|", ndx+1, trimmed);
 
@@ -199,16 +197,14 @@ int ini_file_load(
          else if ( is_kv(trimmed, &key, &value) ) {
             if (cur_segment) {
                char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
-               if (debug)
-                  printf("(%s) Inserting %s -> %s\n", __func__, full_key, value);
+               DBGF(debug, "Inserting %s -> %s", full_key, value);
                g_hash_table_insert(ini_file_hash, full_key, value);
             }
             else {
-               if (debug)
-                  printf("(%s) trimmed: |%s|\n", __func__, trimmed);
+               DBGF(debug, "trimmed: |%s|", trimmed);
                char * msg = g_strdup_printf("Line %d: Invalid before section header: %s",
                                        ndx+1, trimmed);
-               emit_error_msg(msg, errmsgs, verbose);
+               emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
                error_ct++;
                free(value);
             }
@@ -220,16 +216,24 @@ int ini_file_load(
                          ? g_strdup_printf("Line %d: invalid: %s", ndx+1, trimmed)
                          : g_strdup_printf("Line %d: invalid before section header: %s",
                                            ndx+1, trimmed);
-            emit_error_msg(msg, errmsgs, verbose);
+            emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
             error_ct++;
          }
       } // for loop
-      if (debug)
-         printf("(%s) Freeing config_lines\n", __func__);
+      DBGF(debug, "Freeing config_lines");
       g_ptr_array_free(config_lines, true);
       if (cur_segment)
          free(cur_segment);
       if ( error_ct > 0 ) {
+         if (errinfo_accum) {
+            Error_Info * master_err = errinfo_new(-EBADMSG, __func__,
+                                        "Errors processing configuration file %s", ini_file_name);
+            for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+               errinfo_add_cause(master_err,
+                                 errinfo_new(-EBADMSG, __func__, g_ptr_array_index(errmsgs, ndx)));
+            }
+            g_ptr_array_add(errinfo_accum, master_err);
+         }
          result = -EBADMSG;
          g_hash_table_destroy(ini_file_hash);
          ini_file_hash = NULL;
@@ -263,6 +267,10 @@ int ini_file_load(
 }
 
 
+/** Debugging function that reports the contents of a #Parsed_Ini_File.
+ *
+ *  @param parsed_ini_file
+ */
 void ini_file_dump(Parsed_Ini_File * parsed_ini_file) {
    printf("(%s) Parsed_Ini_File at %p:\n", __func__, (void*)parsed_ini_file);
 
@@ -300,8 +308,7 @@ char * ini_file_get_value(
       result = g_hash_table_lookup(parsed_ini_file->hash_table, full_key);
       free(full_key);
    }
-   if (debug)
-      printf("(%s) segment=%s, id=%s, returning: %s\n", __func__, segment, id, result);
+   DBGF(debug, "segment=%s, id=%s, returning: %s", segment, id, result);
    return result;
 }
 
