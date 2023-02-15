@@ -150,6 +150,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    free(parsed_cmd->fref);
    ntsa_free(parsed_cmd->traced_files, true);
    ntsa_free(parsed_cmd->traced_functions, true);
+   ntsa_free(parsed_cmd->traced_api_calls, true);
    g_array_free(parsed_cmd->setvcp_values, true);
    free(parsed_cmd->s1);
    free(parsed_cmd->s2);
@@ -268,7 +269,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                          elem->feature_value);
       }
       rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
-      rpt_str ("library trace file:", NULL, parsed_cmd->library_trace_file,          d1);
+      rpt_str ("library trace file:", NULL, parsed_cmd->trace_destination,          d1);
 #ifdef ENABLE_SYSLOG
       rpt_bool("write to syslog:",  NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG,       d1);
 #endif

@@ -87,7 +87,7 @@ typedef enum {
 //                           = 0x1000000000,
    CMD_FLAG_WALLTIME_TRACE   = 0x2000000000,
 #ifdef ENABLE_SYSLOG
-   CMD_FLAG_TRACE_TO_SYSLOG           = 0x4000000000,
+   CMD_FLAG_TRACE_TO_SYSLOG  = 0x4000000000,
 #endif
    CMD_FLAG_I2C_IO_FILEIO  = 0x010000000000,
    CMD_FLAG_I2C_IO_IOCTL   = 0x020000000000,
@@ -122,9 +122,15 @@ struct {
    char *                 failsim_control_fn;
    Display_Identifier*    pdid;
 // Display_Selector*      display_selector;   // for future use
+
    DDCA_Trace_Group       traced_groups;
    gchar **               traced_files;
    gchar **               traced_functions;
+   gchar **               traced_api_calls;
+   bool                   enable_syslog_specified;
+   bool                   disable_syslog_specified;
+   char *                 trace_destination;
+
    DDCA_Output_Level      output_level;
    uint16_t               max_tries[3];
    float                  sleep_multiplier;
@@ -132,7 +138,7 @@ struct {
 // DDCA_MCCS_Version_Id   mccs_version_id;
    int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
-   char *                 library_trace_file;
+
    int                    i1;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
