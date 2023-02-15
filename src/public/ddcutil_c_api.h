@@ -172,6 +172,13 @@ ddca_rc_desc(
 
 
 //
+// Initialization
+//
+
+DDCA_Status ddca_init(DDCA_Init_Options opts);
+
+
+//
 // Global Settings
 //
 
