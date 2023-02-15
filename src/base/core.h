@@ -10,7 +10,7 @@
  *  - abnormal termination
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef BASE_CORE_H_
@@ -80,15 +80,21 @@ typedef struct {
 
 
 //
-// Trace message control
+// Use of system log
 //
 
 #ifdef ENABLE_SYSLOG
-#define SYSLOG(priority, format, ...) syslog(priority, format, ##__VA_ARGS__)
+extern bool trace_to_syslog;
+extern bool enable_syslog;
+#define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
 #else
 #define SYSLOG(priority, format, ...) do {} while (0)
 #endif
 
+
+//
+// Trace message control
+//
 
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
@@ -205,10 +211,6 @@ void severemsg(
         const char * fn,
         char *       format,
         ...);
-#endif
-
-#ifdef ENABLE_SYSLOG
-extern bool trace_to_syslog;
 #endif
 
 bool dbgtrc(
