@@ -8,7 +8,7 @@
  * (which are \#defines), they are specified as \#defines rather than enum values.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -46,6 +46,7 @@
 #define DDCRC_LOCKED                 (-(RCRANGE_DDC_START+25) ) ///< resource locked
 #define DDCRC_ALREADY_OPEN           (-(RCRANGE_DDC_START+26) ) ///< already open in current thread
 #define DDCRC_BAD_DATA               (-(RCRANGE_DDC_START+27) ) ///< invalid data
+#define DDCRC_INVALID_CONFIG_FILE    (-(RCRANGE_DDC_START+28) ) ///< config file syntax
 // #define DDCRC_CAP_FATAL              (-(RCRANGE_DDC_START+28) ) ///< invalid, unusable capabilities string"
 // #define DDCRC_CAP_WARNING            (-(RCRANGE_DDC_START+29) ) ///< capabilities string has errors but is beautiful
 
