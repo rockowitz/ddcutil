@@ -92,6 +92,18 @@ typedef struct ddca_error_detail {
 
 
 //
+// Initialization
+//
+
+typedef enum {
+   DDCA_Init_Options_None = 0,
+   DDCA_Init_Options_Disable_Syslog = 1,
+   DDCA_Init_Options_Disable_Config_File = 2,
+   DDCA_Init_Options_All = 255
+} DDCA_Init_Options;
+
+
+//
 // I2C Protocol Control
 //
 
