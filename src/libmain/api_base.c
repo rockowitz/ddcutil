@@ -165,9 +165,10 @@ char * get_library_filename() {
 //
 
 static
-Parsed_Cmd * get_parsed_libmain_config() {
-   bool debug = false;
+Parsed_Cmd * get_parsed_libmain_config(GPtrArray * errinfo_accumulator) {
+   bool debug = true;
    DBGF(debug, "Starting");
+   assert(errinfo_accumulator);
 
    Parsed_Cmd * parsed_cmd = NULL;
 
@@ -191,22 +192,33 @@ Parsed_Cmd * get_parsed_libmain_config() {
                                  &new_argv,
                                  &untokenized_option_string,
                                  &config_fn,
-                                 errmsgs);
+                                 errmsgs,
+                                 errinfo_accumulator);
+
    // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
    // ntsa_free(cmd_name_array, false);
-   DBGF(debug, "apply_config_file() returned: %d, new_argc=%d, new_argv=%p: ",
-                 apply_config_rc, new_argc, new_argv);
+   DBGF(debug, "apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:",
+                 apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
+   if (apply_config_rc == -EBADMSG) {
+      apply_config_rc = DDCRC_INVALID_CONFIG_FILE;
+      assert (errinfo_accumulator->len >= 0);
+      Error_Info* erec = g_ptr_array_index(errinfo_accumulator,0);
+      assert (erec->status_code == -EBADMSG);
+      erec->status_code = DDCRC_INVALID_CONFIG_FILE;
+   }
    assert(apply_config_rc <= 0);
    assert( new_argc == ntsa_length(new_argv) );
    if (debug)
       ntsa_show(new_argv);
 
-   if (errmsgs->len > 0) {
+
+   // TODO: set msgs in Error_Info records
+   if (errinfo_accumulator->len > 0) {
       f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
       SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
-      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         f0printf(fout(),     "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
-         SYSLOG(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
+      for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
+         f0printf(fout(),     "   %s\n", errinfo_summary( g_ptr_array_index(errmsgs, ndx)));
+         SYSLOG(LOG_WARNING,  "   %s",   errinfo_summary( g_ptr_array_index(errmsgs, ndx)));
       }
    }
    g_ptr_array_free(errmsgs, true);
@@ -215,6 +227,11 @@ Parsed_Cmd * get_parsed_libmain_config() {
       SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
    }
 
+   // if (debug) {
+   //    ERRINFO_FREE_WITH_REEPORT(*errinfo_loc, true);   // temp location
+   //    *errinfo_loc = NULL;
+   // }
+
    // Continue even if config file errors
    // if (apply_config_rc < 0)
    //    goto bye;
@@ -222,22 +239,51 @@ Parsed_Cmd * get_parsed_libmain_config() {
 
    assert(new_argc >= 1);
    DBGF(debug, "Calling parse_command()");
-   parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errinfo_accumulator);
    if (!parsed_cmd) {
-      SYSLOG(LOG_WARNING, "Ignoring invalid configuration file option string: %s",  untokenized_option_string);
-      fprintf(ferr(),     "Ignoring invalid configuration file option string: %s\n",untokenized_option_string);
-      DBGF(debug, "Retrying parse_command() with no options");
-      parsed_cmd = parse_command(1, cmd_name_array, MODE_LIBDDCUTIL);
+      SYSLOG(LOG_ERR, "Invalid configuration file option string: %s",  untokenized_option_string);
+      for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
+         Error_Info* erec = g_ptr_array_index(errinfo_accumulator, ndx);
+          SYSLOG(LOG_ERR, "%s", erec->detail);
+      }
    }
-   if (debug)
+   else if (debug && parsed_cmd) {
       dbgrpt_parsed_cmd(parsed_cmd, 1);
+   }
    // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
    ntsa_free(cmd_name_array, false);
    ntsa_free(new_argv, true);
    free(untokenized_option_string);
    free(config_fn);
 
+
+
+   if (debug) {
+      printf("(%s) Contents of errinfo_accumulator:\n", __func__);
+      for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
+         Error_Info * err = g_ptr_array_index(errinfo_accumulator, ndx);
+         errinfo_report(err, 1);
+      }
+   }
+
+#ifdef OUT
+   if (errinfo_accumulator->len > 0) {
+      free_parsed_cmd(parsed_cmd);
+      parsed_cmd = NULL;
+   }
+#endif
+
+
+
+      DBGMSG("Before return");
+      if (errinfo_accumulator) {
+         DBGMSG("errinf_accum: len=%d", errinfo_accumulator->len);
+         for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++)
+            printf("   %s\n", errinfo_summary(g_ptr_array_index(errinfo_accumulator, ndx)));
+      }
+
    DBGF(debug, "Done.     Returning %p", parsed_cmd);
+
    return parsed_cmd;
 }
 
@@ -267,14 +313,85 @@ bool library_initialized = false;
 DDCA_Stats_Type requested_stats = 0;
 bool per_thread_stats = false;
 
+
+/** Initializes the ddcutil library module.
+ *
+ *  Called automatically when the shared library is loaded.
+ */
+void  __attribute__ ((constructor))
+_ddca_new_init(void) {
+   bool debug = true;
+   char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
+   if (s && strlen(s) > 0)
+      debug = true;
+
+   if (debug)
+      printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
+
+   init_api_base();
+   init_base_services();
+
+#ifdef TESTING_CLEANUP
+   // int atexit_rc = atexit(done);   // TESTING CLEANUP
+   // printf("(%s) atexit() returned %d\n", __func__, atexit_rc);
+#endif
+
+   if (debug)
+      printf("(%s) Done.\n", __func__);
+}
+
+
+void init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debug) {
+   if (debug)
+      printf("(%s) library_trace_file = \"%s\", enable_syslog = %s\n", __func__, library_trace_file, sbool(enable_syslog));
+
+   char * trace_file = (library_trace_file[0] != '/')
+          ? xdg_state_home_file("ddcutil", library_trace_file)
+          : g_strdup(library_trace_file);
+   if (debug)
+      printf("(%s) Setting trace destination %s\n", __func__, trace_file);
+   if (enable_syslog)
+      SYSLOG(LOG_INFO, "Trace destination: %s", trace_file);
+
+   fopen_mkdir(trace_file, "a", stderr, &flog);
+   if (flog) {
+      time_t trace_start_time = time(NULL);
+      char * trace_start_time_s = asctime(localtime(&trace_start_time));
+      if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
+           trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
+      fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
+      if (debug) {
+         fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",trace_file);
+      }
+      set_default_thread_output_settings(flog, flog);
+      set_fout(flog);
+      set_ferr(flog);
+
+      rpt_set_default_output_dest(flog);    // for future threads
+      rpt_push_output_dest(flog);           // for this thread
+   }
+   else {
+      fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
+                      trace_file, strerror(errno));
+      if (enable_syslog)
+         SYSLOG(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
+                             trace_file, strerror(errno));
+   }
+   free(trace_file);
+   if (debug)
+      printf("(%s) Done.\n", __func__);
+}
+
+
+#ifdef OLD
 /** Initializes the ddcutil library module.
  *
  *  Normally called automatically when the shared library is loaded.
  *
  *  It is not an error if this function is called more than once.
  */
-void __attribute__ ((constructor))
-_ddca_init(void) {
+void // __attribute__ ((constructor))
+_ddca_init_old(void) {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
@@ -283,9 +400,11 @@ _ddca_init(void) {
    if (debug)
       printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
    if (!library_initialized) {
+      bool enable_syslog = false;
 #ifdef ENABLE_SYSLOG
       openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
       syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
+      enable_syslog = true;
 #endif
 #ifdef TESTING_CLEANUP
       // signal(SIGTERM, dummy_sigterm_handler);
@@ -296,40 +415,8 @@ _ddca_init(void) {
       Parsed_Cmd* parsed_cmd = get_parsed_libmain_config();
       init_tracing(parsed_cmd);
 
-      if (parsed_cmd->library_trace_file) {
-         char * trace_file = (parsed_cmd->library_trace_file[0] != '/')
-                ? xdg_state_home_file("ddcutil", parsed_cmd->library_trace_file)
-                : g_strdup(parsed_cmd->library_trace_file);
-         if (debug)
-            printf("(%s) Setting trace destination %s\n", __func__, trace_file);
-         SYSLOG(LOG_INFO, "Trace destination: %s", trace_file);
-
-         fopen_mkdir(trace_file, "a", stderr, &flog);
-
-         // flog = fopen(trace_file, "a");
-         if (flog) {
-            time_t trace_start_time = time(NULL);
-            char * trace_start_time_s = asctime(localtime(&trace_start_time));
-            if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
-                 trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
-            fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
-            if (debug) {
-               fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",trace_file);
-            }
-            set_default_thread_output_settings(flog, flog);
-            set_fout(flog);
-            set_ferr(flog);
-
-            rpt_set_default_output_dest(flog);    // for future threads
-            rpt_push_output_dest(flog);           // for this thread
-         }
-         else {
-            fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
-                            trace_file, strerror(errno));
-            SYSLOG(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
-                            trace_file, strerror(errno));
-         }
-         free(trace_file);
+      if (parsed_cmd->trace_destination) {
+         init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
       }
 
       requested_stats = parsed_cmd->stats_types;
@@ -369,7 +456,7 @@ _ddca_init(void) {
    // Not really necessary, but seeing errno == 2 has perplexed some library users
    errno = 0;
 }
-
+#endif
 
 /** Cleanup at library termination
  *
@@ -399,6 +486,121 @@ _ddca_terminate(void) {
    }
    SYSLOG(LOG_INFO, "Terminating.");
    closelog();
+}
+
+
+
+Error_Info * set_master_errinfo_from_init_errors(
+      GPtrArray * errs) // array of Error_Info *
+{
+   bool debug = true;
+   DBGF(debug, "Starting. errs=%p", errs);
+   Error_Info * master_error = NULL;
+   if (errs && errs->len > 0) {
+      master_error = errinfo_new(DDCRC_BAD_DATA, __func__, "Invalid configuration options");
+      for (int ndx = 0; ndx < errs->len; ndx++) {
+         Error_Info * cur = g_ptr_array_index(errs, ndx);
+         errinfo_add_cause(master_error, cur);
+      }
+      g_ptr_array_free(errs, false);
+   }
+   DBGF(debug, "Done.  Returning %p");
+   return master_error;
+}
+
+
+DDCA_Status set_ddca_error_detail_from_init_errors(
+      GPtrArray * errs) // array of Error_Info *
+{
+   bool debug = false;
+   DDCA_Status ddcrc = 0;
+   if (errs && errs->len > 0) {
+      Error_Info * master_error = errinfo_new(DDCRC_BAD_DATA, __func__, "Invalid configuration options");
+      ddcrc = DDCRC_BAD_DATA;
+      for (int ndx = 0; ndx < errs->len; ndx++) {
+         Error_Info * cur = g_ptr_array_index(errs, ndx);
+         errinfo_add_cause(master_error, cur);
+      }
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
+      errinfo_free_with_report(master_error, debug, __func__);
+      save_thread_error_detail(public_error_detail);
+   }
+   // clear if no errors?
+   return ddcrc;
+}
+
+
+
+DDCA_Status ddca_init(DDCA_Init_Options opts) {
+   bool debug = true;
+   char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
+   if (s && strlen(s) > 0)
+      debug = true;
+
+   if (debug)
+      printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
+
+   enable_syslog = false;   // global in core.c
+#ifdef ENABLE_SYSLOG
+   if (!(opts & DDCA_Init_Options_Disable_Syslog)) {
+      enable_syslog = true;
+      openlog("libddcutil", LOG_CONS|LOG_PID, LOG_USER);
+      syslog(LOG_INFO, "Initializing.  ddcutil version %s", get_full_ddcutil_version());
+   }
+#endif
+
+   Error_Info * master_error = NULL;
+   if (library_initialized) {
+      master_error = errinfo_new(DDCRC_INVALID_OPERATION, __func__, "Library already initialized");
+   }
+   else {
+      GPtrArray* errinfo_accumulator = g_ptr_array_new();
+      Parsed_Cmd * parsed_cmd = NULL;
+      if (opts & DDCA_Init_Options_Disable_Config_File) {
+         parsed_cmd = new_parsed_cmd();
+      }
+      else {
+         parsed_cmd = get_parsed_libmain_config(errinfo_accumulator);
+      }
+      // DBGF(debug, "Wolf 1, parset)dne=%p, errinfo_accumulator len = %d", parsed_cmd, errinfo_accumulator->len);
+      ASSERT_IFF(errinfo_accumulator->len == 0, parsed_cmd);
+
+      master_error = set_master_errinfo_from_init_errors(errinfo_accumulator);
+      // DBGF(debug, "post set_master_errinfo");
+      // errinfo_report(master_error, 2);
+      ASSERT_IFF(master_error, !parsed_cmd);
+
+      if (parsed_cmd) {
+         init_tracing(parsed_cmd);
+         if (parsed_cmd->trace_destination) {
+            init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
+         }
+         requested_stats = parsed_cmd->stats_types;
+         per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS;
+         init_api_services();
+         submaster_initializer(parsed_cmd);
+         free_parsed_cmd(parsed_cmd);
+         ddc_start_watch_displays();
+      }
+   }
+
+   DDCA_Status ddcrc = 0;
+   if (master_error) {
+      ddcrc = master_error->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
+      save_thread_error_detail(public_error_detail);
+      SYSLOG(LOG_ERR, "Library initialization failed: %s", errinfo_summary(master_error));
+      errinfo_free_with_report(master_error, debug, __func__);
+   }
+   else {
+      library_initialized = true;
+      SYSLOG(LOG_INFO, "Library initialization complete.");
+   }
+
+   if (debug)
+      printf("(%s) Done.    Returning: %s\n", __func__, ddca_rc_desc(ddcrc));
+
+   return ddcrc;
 }
 
 
