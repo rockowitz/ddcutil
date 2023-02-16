@@ -708,7 +708,8 @@ main(int argc, char *argv[]) {
                     &new_argv,
                     &untokenized_cmd_prefix,
                     &configure_fn,
-                    config_file_errs);
+                    config_file_errs,
+                    NULL);
 #ifdef LATER
    if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
       fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
@@ -735,7 +736,7 @@ main(int argc, char *argv[]) {
       rpt_ntsa(new_argv, 1);
    }
 
-   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
 
