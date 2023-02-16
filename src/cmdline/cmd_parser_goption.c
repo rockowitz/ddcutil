@@ -17,6 +17,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/error_info.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
 
@@ -130,16 +131,412 @@ stats_arg_func(const    gchar* option_name,
 #endif
 
 
+static void emit_parser_error(GPtrArray * errinfo_accum, char * msg, ...) {
+   char buffer[100];
+   va_list(args);
+   va_start(args, msg);
+   vsnprintf(buffer, 100, msg, args);
+   va_end(args);
+
+   fprintf(stderr, "%s\n", buffer);
+   if (errinfo_accum) {
+      Error_Info * erec =  errinfo_new(DDCRC_ARG, "parse_command", buffer);
+      fprintf(stderr, "(%s) Adding %s\n", __func__, errinfo_summary(erec));
+      g_ptr_array_add(errinfo_accum, erec);
+   }
+}
+
+
+
+static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) {
+    bool debug = true;
+    DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
+    bool parsing_ok = true;
+
+    Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
+    int ntsal = ntsa_length(pieces);
+    DBGMSF(debug, "ntsal=%d", ntsal );
+    if (ntsa_length(pieces) != 3) {
+       emit_parser_error(errinf_accum,  "--retries requires 3 values\n");
+       parsing_ok = false;
+    }
+    else {
+       int ndx = 0;
+       char trimmed_piece[10];
+       for (; pieces[ndx] != NULL; ndx++) {
+          char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
+          // DBGMSG("token=|%s|", token);
+          if (strlen(token) > 0 && !streq(token,".")) {
+             int ival;
+             int ct = sscanf(token, "%ud", &ival);
+             if (ct != 1) {
+                emit_parser_error(errinf_accum,  "Invalid --maxtries value: %s\n", token);
+                parsing_ok = false;
+             }
+             else if (ival > MAX_MAX_TRIES) {
+                emit_parser_error(errinf_accum,  "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
+                parsing_ok = false;
+             }
+             else if (ival < 0) {
+                emit_parser_error(errinf_accum,  "negative --maxtries value: %d\n", ival);
+                parsing_ok = false;
+             }
+
+             else {
+                parsed_cmd->max_tries[ndx] = ival;
+             }
+          }
+          // split max multipart exchange into read and write
+          // not here, do it in main
+          // parsed_cmd->max_tries[3] = parsed_cmd->max_tries[2];
+       }
+       assert(ndx == ntsal);
+    }
+    ntsa_free(pieces, /* free_strings */ true);
+
+    DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0],
+                                        parsed_cmd->max_tries[1],
+                                        parsed_cmd->max_tries[2]);
+    DBGMSF(debug, "returning %s", sbool(parsing_ok));
+    return parsing_ok;
+ }
+
+
+static bool parse_display_identifier(
+      Parsed_Cmd *  parsed_cmd,
+      GPtrArray  *  errinf_accum,
+      int           dispwork,
+      int           buswork,
+      int           hidwork,
+      char *        usbwork,
+
+      char *        edidwork,
+      char *        mfg_id_work,
+      char *        modelwork,
+      char *        snwork)
+{
+   bool debug = true;
+   bool parsing_ok = true;
+   int  explicit_display_spec_ct = 0;
+
+   if (usbwork) {
+#ifdef USE_USB
+      DBGMSF(debug, "usbwork = |%s|", usbwork);
+      int busnum;
+      int devicenum;
+      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok)
+         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
+      if (!arg_ok) {
+         emit_parser_error(errinf_accum, "Invalid USB argument: %s\n", usbwork );
+         parsing_ok = false;
+      }
+      else {
+         // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+         if (parsed_cmd->pdid) {
+            free_display_identifier(parsed_cmd->pdid);
+         }
+         parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
+      }
+      explicit_display_spec_ct++;
+#else
+      emit_parser_error(errinf_accum, "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
+      parsing_ok = false;
+#endif
+   }
+
+   if (buswork >= 0) {
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = create_busno_display_identifier(buswork);
+      explicit_display_spec_ct++;
+   }
+
+   if (hidwork >= 0) {
+#ifdef USE_USB
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
+      explicit_display_spec_ct++;
+#else
+      emit_parser_error(errinf_accum, "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
+      parsing_ok = false;
+#endif
+   }
+
+   if (dispwork >= 0) {
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
+      explicit_display_spec_ct++;
+   }
+
+   if (edidwork) {
+      if (strlen(edidwork) != 256) {
+         emit_parser_error(errinf_accum,  "EDID hex string not 256 characters\n");
+         parsing_ok = false;
+      }
+      else {
+         Byte * pba = NULL;
+         int bytect = hhs_to_byte_array(edidwork, &pba);
+         if (bytect < 0 || bytect != 128) {
+            emit_parser_error(errinf_accum,  "Invalid EDID hex string\n");
+            parsing_ok = false;
+         }
+         else {
+            // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+            if (parsed_cmd->pdid)
+               free_display_identifier(parsed_cmd->pdid);
+            parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
+         }
+         if (pba)
+            free(pba);
+      }
+      explicit_display_spec_ct++;
+   }
+
+   if (mfg_id_work || modelwork || snwork) {
+      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
+                          mfg_id_work,
+                          modelwork,
+                          snwork);
+      explicit_display_spec_ct++;
+   }
+
+   if (explicit_display_spec_ct > 1) {
+      emit_parser_error(errinf_accum, "Monitor specified in more than one way");
+      free_display_identifier(parsed_cmd->pdid);
+      parsed_cmd->pdid = NULL;
+      parsing_ok = false;
+   }
+
+   return parsing_ok;
+}
+
+
+static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errinf_accum) {
+   bool debug = true;
+   bool arg_ok = false;
+   if (mccswork) {
+      DBGMSF(debug, "mccswork = |%s|", mccswork);
+      DDCA_MCCS_Version_Spec vspec = parse_vspec(mccswork);
+      if (!vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)) {
+         arg_ok = vcp_version_is_valid(vspec, false);
+      }
+      if (!arg_ok) {
+         emit_parser_error(errinf_accum, "Invalid MCCS spec: %s", mccswork );
+      }
+      else {
+         parsed_cmd->mccs_vspec = vspec;
+         // parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
+      }
+   }
+   return arg_ok;
+}
+
+static bool parse_sleep_multiplier(
+      const char*  sleep_multiplier_work,
+      Parsed_Cmd*  parsed_cmd,
+      GPtrArray*   errinf_accum)
+{
+   bool debug = true;
+   bool arg_ok = false;
+
+   if (sleep_multiplier_work) {
+      DBGMSF(debug, "sleep_multiplier_work = |%s|", sleep_multiplier_work);
+      float multiplier = 0.0f;
+      arg_ok = str_to_float(sleep_multiplier_work, &multiplier);
+      if (arg_ok) {
+         if (multiplier < 0.0f || multiplier >= 100.0)
+            arg_ok = false;
+         if (parsed_cmd->parser_mode == MODE_DDCUTIL && multiplier == 0.0f)
+            arg_ok = false;
+      }
+
+      if (!arg_ok) {
+         emit_parser_error(errinf_accum, "Invalid sleep-multiplier: %s", sleep_multiplier_work );
+      }
+      else {
+         parsed_cmd->sleep_multiplier = multiplier;
+      }
+   }
+   return arg_ok;
+}
+
+
+static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, GPtrArray* errinf_accum)
+{
+#ifdef COMMA_DELIMITED_TRACE
+   if (tracework) {
+       bool saved_debug = debug;
+       debug = false;
+       if (debug)
+          DBGMSG("tracework, argument = |%s|", tracework );
+       strupper(tracework);
+       DDCA_Trace_Group traceClasses = 0x00;
+
+       Null_Terminated_String_Array pieces = strsplit(tracework, ',');
+       int ndx = 0;
+       for (; pieces[ndx] != NULL; ndx++) {
+          char * token = pieces[ndx];
+          // TODO: deal with leading or trailing whitespace
+          DBGMSG("token=|%s|", token);
+          if (streq(token, "ALL") || streq(token, "*"))
+             traceClasses = 0xff;
+          else {
+             // DBGMSG("token: |%s|", token);
+             DDCA_Trace_Group tg = trace_class_name_to_value(token);
+             // DBGMSG("tg=0x%02x", tg);
+             if (tg) {
+                traceClasses |= tg;
+             }
+             else {
+                fprintf(stderr, "Invalid trace group: %s\n", token);
+                parsing_ok = false;
+             }
+          }
+       }
+       DBGMSG("ndx=%d", ndx);
+       DBGMSG("ntsal=%d", ntsa_length(pieces) );
+       assert(ndx == ntsa_length(pieces));
+       ntsa_free(pieces);
+
+       DBGMSG("traceClasses = 0x%02x", traceClasses);
+       parsed_cmd->traced_groups = traceClasses;
+       debug = saved_debug;
+    }
+#endif
+
+   bool parsing_ok = true;
+   if (trace_classes) {
+      DDCA_Trace_Group traceClasses = 0x00;
+      int ndx = 0;
+      for (;trace_classes[ndx] != NULL; ndx++) {
+         char * token = trace_classes[ndx];
+         strupper(token);
+         // DBGMSG("token=|%s|", token);
+         if (streq(token, "ALL") || streq(token, "*")) {
+            traceClasses = DDCA_TRC_ALL;   // 0xff
+         }
+         else {
+            // DBGMSG("token: |%s|", token);
+            DDCA_Trace_Group tg = trace_class_name_to_value(token);
+            // DBGMSG("tg=0x%02x", tg);
+            if (tg) {
+               traceClasses |= tg;
+            }
+            else {
+               emit_parser_error(errinf_accum,  "Invalid trace group: %s\n", token);
+               parsing_ok = false;
+            }
+        }
+      }
+      // DBGMSG("traceClasses = 0x%02x", traceClasses);
+      parsed_cmd->traced_groups = traceClasses;
+   }
+   return parsing_ok;
+}
+
+
+static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) {
+   bool parsing_ok = true;
+   // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
+   int argpos = 0;
+   while(argpos < parsed_cmd->argct) {
+      Parsed_Setvcp_Args psv;
+      bool feature_code_ok = any_one_byte_hex_string_to_byte_in_buf(
+                    parsed_cmd->args[argpos],
+                    &psv.feature_code);
+      if (!feature_code_ok) {
+         emit_parser_error(errinf_accum,  "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
+         parsing_ok = false;
+         break;
+      }
+      argpos++;
+      if (argpos >= parsed_cmd->argct) {
+         emit_parser_error(errinf_accum, "Missing feature value\n");
+         parsing_ok = false;
+         break;
+      }
+      psv.feature_value_type = VALUE_TYPE_ABSOLUTE;
+      if ( streq(parsed_cmd->args[argpos], "+") || streq(parsed_cmd->args[argpos], "-") )
+      {
+         if ( streq(parsed_cmd->args[argpos], "+") )
+            psv.feature_value_type = VALUE_TYPE_RELATIVE_PLUS;
+         else
+            psv.feature_value_type = VALUE_TYPE_RELATIVE_MINUS;
+         argpos++;
+         if (argpos >= parsed_cmd->argct) {
+            emit_parser_error(errinf_accum,  "Missing feature value\n");
+            parsing_ok = false;
+            break;
+         }
+      }
+      psv.feature_value = g_strdup(parsed_cmd->args[argpos]);
+      g_array_append_val(parsed_cmd->setvcp_values, psv);
+      argpos++;
+   }
+   return parsing_ok;
+}
+
+
+
+static void report_ddcutil_version() {
+      printf("ddcutil %s\n", get_full_ddcutil_version());
+      // TODO: patch values at link time
+      // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
+#ifdef USE_USB
+      printf("Built with support for USB connected displays.\n");
+#else
+      printf("Built without support for USB connected displays.\n");
+#endif
+#ifdef ENABLE_FAILSIM
+      printf("Built with function failure simulation.\n");
+#else
+      printf("Built without function failure simulation.\n");
+#endif
+#ifdef USE_LIBDRM
+      printf("Built with libdrm services.\n");
+#else
+      printf("Built without libdrm services.\n");
+#endif
+      puts("");
+}
+
+
+void parser_status(bool parsing_ok, GPtrArray* errinf_accum, const char * msg)
+{
+   bool debug = false;
+   if (debug) {
+      DBGMSG("At %s", msg);
+      DBGMSG("parsing_ok = %s", sbool(parsing_ok));
+      if (errinf_accum) {
+         DBGMSG("errinf_accum: len=%d", errinf_accum->len);
+         for (int ndx = 0; ndx < errinf_accum->len; ndx++)
+            printf("   %s\n", errinfo_summary(g_ptr_array_index(errinf_accum, ndx)));
+      }
+   }
+}
+
 
 /* Primary parsing function
  *
  * \param   argc  number of command line arguments
  * \param   argv  array of pointers to command line arguments
  * \param   parser_mode called for ddcutil or libddcutil?
+ * \param   errinf_accum if non-null collect Error_Info structs for each error msg
  * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
  *          NULL if execution should be terminated
  */
-Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
+Parsed_Cmd * parse_command(int argc, char * argv[],
+                           Parser_Mode parser_mode, GPtrArray * errinf_accum)
+{
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
    if (s && strlen(s) > 0)
@@ -230,11 +627,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    char**   cmd_and_args   = NULL;
    gchar**  trace_classes  = NULL;
    gchar**  trace_functions = NULL;
+   gchar**  trace_api_calls = NULL;
    gchar**  trace_filenames = NULL;
+// gboolean enable_syslog_flag  = false;
+// gboolean disable_syslog_flag = false;
    gint     buswork        = -1;
    gint     hidwork        = -1;
    gint     dispwork       = -1;
    char *   maxtrywork      = NULL;
+   char *   trace_destination = NULL;
    gint     edid_read_size_work = -1;
    gint     i1_work = -1;
    char *   failsim_fn_work = NULL;
@@ -243,7 +644,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
    GOptionEntry libddcutil_only_options[] = {
          {"libddcutil-trace-file",
-                     '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->library_trace_file,  "libddcutil trace file",  "file name"},
+                     '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
          {NULL},
    };
 
@@ -381,6 +782,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_functions,      "Trace functions","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,      "Trace files",    "file name" },
+      {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_api_calls,      "Trace API call", "function name"},
+
       {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"wall-timestamp",
@@ -388,8 +791,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       {"wts",        '\0', 0, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
 #ifdef ENABLE_SYSLOG
-      {"syslog",     '\0', 0, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log",  NULL},
+      {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,     &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
+      {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,     &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
+
+      {"syslog",     '\0', 0, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
 #endif
       {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
@@ -487,7 +894,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    free(help_description);
 
    g_option_context_set_help_enabled(context, true);
-   // bool ok = false;
 
    /* From g_option_parse_documentation():
       If the parsing is successful, any parsed arguments are removed from the
@@ -507,9 +913,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
       if (error)
-         fprintf(stderr, "%s option parsing failed: %s\n", mode_name, error->message);
+         emit_parser_error(errinf_accum,  "%s option parsing failed: %s", mode_name, error->message);
       else
-         fprintf(stderr, "%s option parsing failed\n", mode_name);
+         emit_parser_error(errinf_accum,  "%s option parsing failed", mode_name);
    }
    ntsa_free(temp_argv, true);
 
@@ -520,14 +926,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    if (ro_only_flag)   rwo_flag_ct++;
    if (wo_only_flag)   rwo_flag_ct++;
    if (rwo_flag_ct > 1) {
-      fprintf(stderr, "Options -rw-only, --ro-only, --wo-only are mutually exclusive\n");
+      emit_parser_error(errinf_accum, "Options -rw-only, --ro-only, --wo-only are mutually exclusive");
       parsing_ok = false;
    }
 
    if (reduce_sleeps_specified)
       fprintf(stderr, "Deprecated option ignored: --enable-sleep-less, --disable-sleep-less, etc.\n");
-   // if (force_slave_flag)
-   //    fprintf(stderr, "Deprecated option ignored: --force_slave_address\n");
    if (timeout_i2c_io_flag)
       fprintf(stderr, "Deprecated option ignored: --timeout-i2c-io\n");
 
@@ -554,7 +958,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
 #ifdef ENABLE_SYSLOG
-   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,            syslog_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   syslog_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
@@ -600,7 +1004,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       parsed_cmd->flags |= CMD_FLAG_ENABLE_FAILSIM;
       parsed_cmd->failsim_control_fn = failsim_fn_work;
 #else
-      fprintf(stderr, "ddcutil not built with failure simulation support.  --failsim option invalid.\n");
+      emit_parser_error(errinf_accum, "ddcutil not built with failure simulation support.  --failsim option invalid.");
       parsing_ok = false;
 #endif
    }
@@ -608,187 +1012,34 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 #undef SET_CMDFLAG
 #undef SET_CLR_CMDFLAG
 
-     // rpt_vstring(1, "(%s) show settings: %s",
-   //                             __func__, sbool(parsed_cmd->flags & CMD_FLAG_SHOW_SETTINGS));
 
    // Create display identifier
    //
    // n. at this point parsed_cmd->pdid == NULL
 
-   if (usbwork) {
-#ifdef USE_USB
-      DBGMSF(debug, "usbwork = |%s|", usbwork);
-      int busnum;
-      int devicenum;
-      bool arg_ok = parse_dot_separated_arg(usbwork, &busnum, &devicenum);
-      if (!arg_ok)
-         arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
-      if (!arg_ok) {
-          fprintf(stderr, "Invalid USB argument: %s\n", usbwork );
-          parsing_ok = false;
-          // DBGMSG("After USB parse, parsing_ok=%d", parsing_ok);
-      }
-      else {
-         // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-         if (parsed_cmd->pdid) {
-            free_display_identifier(parsed_cmd->pdid);
-         }
-         parsed_cmd->pdid = create_usb_display_identifier(busnum, devicenum);
-      }
-      explicit_display_spec_ct++;
-#else
-      fprintf(stderr, "ddcutil not built with support for USB connected monitors.  --usb option invalid.\n");
-      parsing_ok = false;
-#endif
-   }
 
-   if (buswork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_busno_display_identifier(buswork);
-      explicit_display_spec_ct++;
-   }
+   parsing_ok &= parse_display_identifier(
+                    parsed_cmd,
+                    errinf_accum,
+                    dispwork,
+                    buswork,
+                    hidwork,
+                    usbwork,
+                    edidwork,
+                    mfg_id_work,
+                    modelwork,
+                    snwork);
 
-   if (hidwork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
-      explicit_display_spec_ct++;
-   }
+   if (maxtrywork)
+      parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errinf_accum);
 
-   if (dispwork >= 0) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_dispno_display_identifier(dispwork);
-      explicit_display_spec_ct++;
-   }
+   if (mccswork)
+      parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errinf_accum);
 
-   if (edidwork) {
-      if (strlen(edidwork) != 256) {
-         fprintf(stderr, "EDID hex string not 256 characters\n");
-         parsing_ok = false;
-      }
-      else {
-         Byte * pba = NULL;
-         int bytect = hhs_to_byte_array(edidwork, &pba);
-         if (bytect < 0 || bytect != 128) {
-            fprintf(stderr, "Invalid EDID hex string\n");
-            parsing_ok = false;
-         }
-         else {
-            // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-            if (parsed_cmd->pdid)
-               free_display_identifier(parsed_cmd->pdid);
-            parsed_cmd->pdid = create_edid_display_identifier(pba);  // new way
-         }
-         if (pba)
-            free(pba);
-      }
-      explicit_display_spec_ct++;
-   }
 
-   if (mfg_id_work || modelwork || snwork) {
-      // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
-      if (parsed_cmd->pdid)
-         free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = create_mfg_model_sn_display_identifier(
-                          mfg_id_work,
-                          modelwork,
-                          snwork);
-      explicit_display_spec_ct++;
-   }
+   if (sleep_multiplier_work)
+      parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errinf_accum);
 
-   if (maxtrywork) {
-       bool saved_debug = debug;
-       debug = false;
-       DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
-
-       Null_Terminated_String_Array pieces = strsplit(maxtrywork, ",");
-       int ntsal = ntsa_length(pieces);
-       DBGMSF(debug, "ntsal=%d", ntsal );
-       if (ntsa_length(pieces) != 3) {
-          fprintf(stderr, "--retries requires 3 values\n");
-          parsing_ok = false;
-       }
-       else {
-          int ndx = 0;
-          char trimmed_piece[10];
-          for (; pieces[ndx] != NULL; ndx++) {
-             char * token = strtrim_r(pieces[ndx], trimmed_piece, 10);
-             // DBGMSG("token=|%s|", token);
-             if (strlen(token) > 0 && !streq(token,".")) {
-                int ival;
-                int ct = sscanf(token, "%ud", &ival);
-                if (ct != 1) {
-                   fprintf(stderr, "Invalid --maxtries value: %s\n", token);
-                   parsing_ok = false;
-                }
-                else if (ival > MAX_MAX_TRIES) {
-                   fprintf(stderr, "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
-                   parsing_ok = false;
-                }
-                else if (ival < 0) {
-                   fprintf(stderr, "negative --maxtries value: %d\n", ival);
-                   parsing_ok = false;
-                }
-
-                else {
-                   parsed_cmd->max_tries[ndx] = ival;
-                }
-             }
-             // split max multipart exchange into read and write
-             // not here, do it in main
-             // parsed_cmd->max_tries[3] = parsed_cmd->max_tries[2];
-          }
-          assert(ndx == ntsal);
-       }
-       ntsa_free(pieces, /* free_strings */ true);
-
-       DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0],
-                                           parsed_cmd->max_tries[1],
-                                           parsed_cmd->max_tries[2]);
-       debug = saved_debug;
-    }
-
-   if (mccswork) {
-      DBGMSF(debug, "mccswork = |%s|", mccswork);
-      bool arg_ok = false;
-      DDCA_MCCS_Version_Spec vspec = parse_vspec(mccswork);
-      if (!vcp_version_eq(vspec, DDCA_VSPEC_UNKNOWN)) {
-         arg_ok = vcp_version_is_valid(vspec, false);
-      }
-      if (!arg_ok) {
-          fprintf(stderr, "Invalid MCCS spec: %s\n", mccswork );
-          parsing_ok = false;
-      }
-      else {
-         parsed_cmd->mccs_vspec = vspec;
-         // parsed_cmd->mccs_version_id = mccs_version_spec_to_id(vspec);
-      }
-   }
-
-   if (sleep_multiplier_work) {
-      DBGMSF(debug, "sleep_multiplier_work = |%s|", sleep_multiplier_work);
-      float multiplier = 0.0f;
-      bool arg_ok = str_to_float(sleep_multiplier_work, &multiplier);
-      if (arg_ok) {
-         if (multiplier < 0.0f || multiplier >= 100.0)
-            arg_ok = false;
-         if (parser_mode == MODE_DDCUTIL && multiplier == 0.0f)
-            arg_ok = false;
-      }
-
-      if (!arg_ok) {
-          fprintf(stderr, "Invalid sleep-multiplier: %s\n", sleep_multiplier_work );
-          parsing_ok = false;
-      }
-      else {
-         parsed_cmd->sleep_multiplier = multiplier;
-      }
-   }
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
@@ -796,87 +1047,25 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
        edid_read_size_work !=   0 &&
        edid_read_size_work != 256)
    {
-      fprintf(stderr, "Invalid EDID read size: %d\n", edid_read_size_work);
+       emit_parser_error(errinf_accum, "Invalid EDID read size: %d\n", edid_read_size_work);
       parsing_ok = false;
    }
    else
       parsed_cmd->edid_read_size = edid_read_size_work;
 
-#ifdef COMMA_DELIMITED_TRACE
-   if (tracework) {
-       bool saved_debug = debug;
-       debug = false;
-       if (debug)
-          DBGMSG("tracework, argument = |%s|", tracework );
-       strupper(tracework);
-       DDCA_Trace_Group traceClasses = 0x00;
+   if (trace_classes)
+      parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errinf_accum);
 
-       Null_Terminated_String_Array pieces = strsplit(tracework, ',');
-       int ndx = 0;
-       for (; pieces[ndx] != NULL; ndx++) {
-          char * token = pieces[ndx];
-          // TODO: deal with leading or trailing whitespace
-          DBGMSG("token=|%s|", token);
-          if (streq(token, "ALL") || streq(token, "*"))
-             traceClasses = 0xff;
-          else {
-             // DBGMSG("token: |%s|", token);
-             DDCA_Trace_Group tg = trace_class_name_to_value(token);
-             // DBGMSG("tg=0x%02x", tg);
-             if (tg) {
-                traceClasses |= tg;
-             }
-             else {
-                fprintf(stderr, "Invalid trace group: %s\n", token);
-                parsing_ok = false;
-             }
-          }
-       }
-       DBGMSG("ndx=%d", ndx);
-       DBGMSG("ntsal=%d", ntsa_length(pieces) );
-       assert(ndx == ntsa_length(pieces));
-       ntsa_free(pieces);
 
-       DBGMSG("traceClasses = 0x%02x", traceClasses);
-       parsed_cmd->traced_groups = traceClasses;
-       debug = saved_debug;
-    }
-#endif
-
-// #ifdef MULTIPLE_TRACE
-   if (trace_classes) {
-      DDCA_Trace_Group traceClasses = 0x00;
-      int ndx = 0;
-      for (;trace_classes[ndx] != NULL; ndx++) {
-         char * token = trace_classes[ndx];
-         strupper(token);
-         // DBGMSG("token=|%s|", token);
-         if (streq(token, "ALL") || streq(token, "*")) {
-            traceClasses = DDCA_TRC_ALL;   // 0xff
-         }
-         else {
-            // DBGMSG("token: |%s|", token);
-            DDCA_Trace_Group tg = trace_class_name_to_value(token);
-            // DBGMSG("tg=0x%02x", tg);
-            if (tg) {
-               traceClasses |= tg;
-            }
-            else {
-               fprintf(stderr, "Invalid trace group: %s\n", token);
-               parsing_ok = false;
-            }
-        }
-      }
-      // DBGMSG("traceClasses = 0x%02x", traceClasses);
-      parsed_cmd->traced_groups = traceClasses;
-   }
-// #endif
 
    if (trace_functions) {
       parsed_cmd->traced_functions = trace_functions;
    }
    if (trace_filenames) {
       parsed_cmd->traced_files = trace_filenames;
+   }
+   if (trace_api_calls) {
+      parsed_cmd->traced_api_calls = trace_api_calls;
    }
 
    int rest_ct = 0;
@@ -888,25 +1077,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
 
    if (version_flag) {
-      printf("ddcutil %s\n", get_full_ddcutil_version());
-      // TODO: patch values at link time
-      // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
-#ifdef USE_USB
-      printf("Built with support for USB connected displays.\n");
-#else
-      printf("Built without support for USB connected displays.\n");
-#endif
-#ifdef ENABLE_FAILSIM
-      printf("Built with function failure simulation.\n");
-#else
-      printf("Built without function failure simulation.\n");
-#endif
-#ifdef USE_LIBDRM
-      printf("Built with libdrm services.\n");
-#else
-      printf("Built without libdrm services.\n");
-#endif
-      puts("");
+      report_ddcutil_version();
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
          puts("Copyright (C) 2015-2023 Sanford Rockowitz");
@@ -919,21 +1090,15 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
    }
 
    // All options processed.  Check for consistency, set defaults
-   if (explicit_display_spec_ct > 1) {
-      fprintf(stderr, "Monitor specified in more than one way\n");
-      free_display_identifier(parsed_cmd->pdid);
-      parsed_cmd->pdid = NULL;
-      parsing_ok = false;
-   }
-   // else if (explicit_display_spec_ct == 0)
-   //   parsed_cmd->pdid = create_dispno_display_identifier(1);   // default monitor
+   parser_status(parsing_ok, errinf_accum, "All options processed");
+
 
    if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
-         fprintf(stderr, "Unrecognized configuration file options: %s\n", cmd_and_args[0]);
+      emit_parser_error(errinf_accum, "Unrecognized configuration file options: %s", cmd_and_args[0]);
          parsing_ok = false;
    }
    else if (parsing_ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
-      fprintf(stderr, "No command specified\n");
+      emit_parser_error(errinf_accum,  "No command specified");
       parsing_ok = false;
    }
    if (parsing_ok && parser_mode == MODE_DDCUTIL) {
@@ -942,7 +1107,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
       if (cmdInfo == NULL) {
-         fprintf(stderr, "Unrecognized command: %s\n", cmd);
+         emit_parser_error(errinf_accum,  "Unrecognized command: %s\n", cmd);
          parsing_ok = false;
       }
       else {
@@ -956,7 +1121,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
          int argctr = 1;
          while ( cmd_and_args[argctr] != NULL) {
             if (argctr > max_arg_ct) {
-               fprintf(stderr, "Too many arguments\n");
+               emit_parser_error(errinf_accum,  "Too many arguments\n");
                parsing_ok = false;
                break;
             }
@@ -969,7 +1134,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
 
          // no more arguments specified
          if (argctr <= min_arg_ct) {
-            fprintf(stderr, "Missing argument(s)\n");
+            emit_parser_error(errinf_accum,  "Missing argument(s)\n");
             parsing_ok = false;
          }
 
@@ -983,7 +1148,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             if (!parsed_cmd->fref) {
                parsing_ok = false;
                char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
-               fprintf(stderr, "Invalid feature code(s) or subset: %s\n", s);
+               emit_parser_error(errinf_accum, "Invalid feature code(s) or subset: %s\n", s);
                free(s);
             }
          }
@@ -999,48 +1164,12 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
             parsed_cmd->flags &= ~CMD_FLAG_WO_ONLY;
          }
 
-         if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP) {
-            // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
-            int argpos = 0;
-            while(argpos < parsed_cmd->argct) {
-               Parsed_Setvcp_Args psv;
-               bool feature_code_ok = any_one_byte_hex_string_to_byte_in_buf(
-                             parsed_cmd->args[argpos],
-                             &psv.feature_code);
-               if (!feature_code_ok) {
-                  fprintf(stderr, "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
-                  parsing_ok = false;
-                  break;
-               }
-               argpos++;
-               if (argpos >= parsed_cmd->argct) {
-                  fprintf(stderr, "Missing feature value\n");
-                  parsing_ok = false;
-                  break;
-               }
-               psv.feature_value_type = VALUE_TYPE_ABSOLUTE;
-               if ( streq(parsed_cmd->args[argpos], "+") || streq(parsed_cmd->args[argpos], "-") )
-               {
-                  if ( streq(parsed_cmd->args[argpos], "+") )
-                     psv.feature_value_type = VALUE_TYPE_RELATIVE_PLUS;
-                  else
-                     psv.feature_value_type = VALUE_TYPE_RELATIVE_MINUS;
-                  argpos++;
-                  if (argpos >= parsed_cmd->argct) {
-                     fprintf(stderr, "Missing feature value\n");
-                     parsing_ok = false;
-                     break;
-                  }
-               }
-               psv.feature_value = g_strdup(parsed_cmd->args[argpos]);
-               g_array_append_val(parsed_cmd->setvcp_values, psv);
-               argpos++;
-            }
-         }
+         if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
+            parsing_ok &= parse_setvcp_args(parsed_cmd, errinf_accum);
 
          if (parsing_ok && explicit_display_spec_ct == 1) {
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
-               fprintf(stderr, "%s does not support explicit display option\n", cmdInfo->cmd_name);
+               emit_parser_error(errinf_accum,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
          }
@@ -1048,8 +1177,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       }  // recognized command
    }
 
-   if (parsing_ok)
-      parsing_ok = validate_output_level(parsed_cmd);
+   parsing_ok &= validate_output_level(parsed_cmd);
 
    DBGMSF(debug, "Calling g_option_context_free(), context=%p...", context);
    g_option_context_free(context);
@@ -1058,6 +1186,8 @@ Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode) {
       DBGMSG("parsing_ok=%s", sbool(parsing_ok));
       dbgrpt_parsed_cmd(parsed_cmd, 0);
    }
+
+   parser_status(parsing_ok, errinf_accum, "At end");
 
    if (!parsing_ok) {
       free_parsed_cmd(parsed_cmd);
