@@ -13,13 +13,11 @@ rulesfiles = \
 
 distributed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf \
-    usr/lib/modules-load.d/ddcutil.conf
+    usr/lib/modules-load.d/libddcutil.conf
 
-installed_modulesfiles = \
-    usr/lib/modules-load.d/ddcutil.conf 
-
+installed_modulesfiles  =  usr/lib/modules-load.d/ddcutil.conf 
 if ENABLE_SHARED_LIB_COND
-    installed_modulesfiles += usr/lib/modules-load.d/libddcutil.conf
+ installed_modulesfiles += usr/lib/modules-load.d/libddcutil.conf
 endif
 
 # Causes files (with directory structure) to be included in tarball:
@@ -37,11 +35,7 @@ rules_DATA = $(rulesfiles)
 
 # Similar comment for modules-load.d
 installed_modulesdir = $(prefix)/lib/modules-load.d
-installed_modules_DATA = usr/lib/modules-load.d/ddcutil.conf
-
-if ENABLE_SHARED_LIB_COND
-   installed_modules_DATA += usr/lib/modules-load.d/libddcutil.conf
-endif
+installed_modules_DATA  = $(installed_modulesfiles)
 
 # include FindDDCUtil.cmake in tarball:
 EXTRA_DIST += cmake/ddcutil/FindDDCUtil.cmake
