@@ -2,7 +2,7 @@
  *  Implement command GETVCP
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "app_ddcutil/app_getvcp.h"
@@ -194,6 +194,9 @@ app_show_feature_set_values_by_dh(
                              feature_set_flag_names_t(parsed_cmd->flags));
       dbgrpt_feature_set_ref(parsed_cmd->fref,1);
    }
+
+   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+      alt_source_addr = parsed_cmd->i1;
 
    Feature_Set_Ref *    fsref = parsed_cmd->fref;
 
