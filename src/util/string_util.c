@@ -997,7 +997,13 @@ bool str_to_int(const char * sval, int * p_ival, int base)
    bool ok = false;
    if (sval) {
       if ( *sval != '\0') {
-         long result = strtol(sval, &endptr, base); // allow hex
+         char * work = (sval[0] == 'x' || sval[0] == 'X')
+                          ? g_strdup_printf("0%s", sval)
+                          : strdup(sval);
+         if (debug)
+            printf("(%s) work = %s\n", __func__, work);
+
+         long result = strtol(work, &endptr, base); // allow hex
          // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
          //        __func__, sval, endptr, *endptr, *endptr, result);
          if (*endptr == '\0') {
