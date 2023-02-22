@@ -292,18 +292,20 @@ create_empty_ddc_packet(int max_size, const char * tag) {
  */
 DDC_Packet *
 create_ddc_base_request_packet(
+      Byte         source_addr,
       Byte *       data_bytes,
       int          data_bytect,
       const char*  tag)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.  bytes=%s, tag=%s", hexstring_t(data_bytes,data_bytect), tag);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "source_addr=0x%02x, data_bytes=%s, tag=%s",
+                                       source_addr, hexstring_t(data_bytes,data_bytect), tag);
 
    assert( data_bytect <= 32 );
 
    DDC_Packet * packet = create_empty_ddc_packet(3+data_bytect+1, tag);
    buffer_set_byte( packet->raw_bytes, 0, 0x6e);   // x37<<1 + 0   destination address, write
-   buffer_set_byte( packet->raw_bytes, 1, 0x51);   // x28<<1 + 1   source address
+   buffer_set_byte( packet->raw_bytes, 1, source_addr);   // x28<<1 + 1   source address
    buffer_set_byte( packet->raw_bytes, 2, data_bytect | 0x80);
    buffer_set_bytes(packet->raw_bytes, 3, data_bytes, data_bytect);
    int packet_size_wo_checksum = 3 + data_bytect;
@@ -316,7 +318,9 @@ create_ddc_base_request_packet(
       packet->type = 0x00;
    // dump_buffer(packet->buf);
 
-   DBGMSF(debug, "Done. packet=%p", packet);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning packet=%p", packet);
+   if ( (debug || IS_TRACING()) && packet)
+      dbgrpt_packet(packet, 2);
    return packet;
 }
 
@@ -349,7 +353,7 @@ create_ddc_multi_part_read_request_packet(
                               ofs_hi_byte,
                               ofs_lo_byte
                             };
-        packet_ptr = create_ddc_base_request_packet(data_bytes, 3, tag);
+        packet_ptr = create_ddc_base_request_packet(0x51, data_bytes, 3, tag);
    }
    else {
       Byte data_bytes[] = { DDC_PACKET_TYPE_TABLE_READ_REQUEST,
@@ -357,7 +361,7 @@ create_ddc_multi_part_read_request_packet(
                             ofs_hi_byte,
                             ofs_lo_byte
                           };
-      packet_ptr = create_ddc_base_request_packet(data_bytes, 4, tag);
+      packet_ptr = create_ddc_base_request_packet(0x51, data_bytes, 4, tag);
    }
 
    // DBGMSG("Done. packet_ptr=%p", packet_ptr);
@@ -438,12 +442,15 @@ create_ddc_multi_part_write_request_packet(
                            ofs_lo_byte
                          };
    memcpy(data_bytes+4, bytes_to_write, bytect);
-   packet_ptr = create_ddc_base_request_packet(data_bytes, 4+bytect, tag);
+   packet_ptr = create_ddc_base_request_packet(0x51, data_bytes, 4+bytect, tag);
 
    // DBGMSG("Done. packet_ptr=%p", packet_ptr);
    // dump_packet(packet_ptr);
    return packet_ptr;
 }
+
+
+Byte alt_source_addr = 0x00;
 
 
 /** Creates a Get VCP request packet
@@ -455,12 +462,19 @@ create_ddc_multi_part_write_request_packet(
 DDC_Packet *
 create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag)
 {
-   Byte data_bytes[] = { DDC_PACKET_TYPE_QUERY_VCP_REQUEST,  // 0x01
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "vcp_code = 0x%02x, tag = %s", vcp_code, tag);
+   Byte cmd_code = DDC_PACKET_TYPE_QUERY_VCP_REQUEST;   // 0x01
+   // if (alt_cmd_code)
+   //   cmd_code = alt_cmd_code;
+   Byte data_bytes[] = { cmd_code,
                          vcp_code  // VCP opcode
                        };
-   DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 2, tag);
+   DDC_Packet * pkt = create_ddc_base_request_packet(0x51, data_bytes, 2, tag);
 
-   // DBGMSG("Done. rc=%d, packet_ptr=%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Done. Returning %p", pkt);
+   if ( (debug || IS_TRACING()) && pkt)
+      dbgrpt_packet(pkt, 2);
    return pkt;
 }
 
@@ -475,14 +489,24 @@ create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag)
 DDC_Packet *
 create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
 {
-   Byte data_bytes[] = { DDC_PACKET_TYPE_SET_VCP_REQUEST,   // 0x03
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "vcp_code=0x%02x, new_value=%d, tag=%s",
+                          vcp_code, new_value, tag);
+   Byte cmd_code = DDC_PACKET_TYPE_SET_VCP_REQUEST;   // 0x03
+   Byte source_addr = 0x51;
+   if (alt_source_addr)
+     source_addr = alt_source_addr;
+   Byte data_bytes[] = { cmd_code,
                          vcp_code,  // VCP opcode
                          (new_value >> 8) & 0xff,
                          new_value & 0xff
                        };
-   DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 4, tag);
+   DDC_Packet * pkt = create_ddc_base_request_packet(source_addr, data_bytes, 4, tag);
 
    // DBGMSG("Done. rc=%d, packet_ptr%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning packet=%p", pkt);
+   if ( (debug || IS_TRACING()) && pkt)
+      dbgrpt_packet(pkt, 2);
    return pkt;
 }
 
@@ -497,7 +521,7 @@ create_ddc_save_settings_request_packet(const char * tag)
 {
    Byte data_bytes[] = { DDC_PACKET_TYPE_SAVE_CURRENT_SETTINGS   // 0x0C
                        };
-   DDC_Packet * pkt = create_ddc_base_request_packet(data_bytes, 1, tag);
+   DDC_Packet * pkt = create_ddc_base_request_packet(0x51, data_bytes, 1, tag);
 
    // DBGMSG("Done. rc=%d, packet_ptr=%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
    return pkt;
@@ -1202,10 +1226,13 @@ Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
 
 
 void init_ddc_packets() {
+   RTTI_ADD_FUNC(create_ddc_base_request_packet);
    RTTI_ADD_FUNC(create_ddc_base_response_packet);
+   RTTI_ADD_FUNC(create_ddc_getvcp_request_packet);
    RTTI_ADD_FUNC(create_ddc_getvcp_response_packet);
 // RTTI_ADD_FUNC(create_ddc_multi_part_read_response_packet);  // unused
    RTTI_ADD_FUNC(create_ddc_response_packet);
+   RTTI_ADD_FUNC(create_ddc_setvcp_request_packet);
    RTTI_ADD_FUNC(create_ddc_typed_response_packet);
    RTTI_ADD_FUNC(interpret_vcp_feature_response_std);
 }

@@ -1,8 +1,9 @@
-/** \file ddc_packets.h
+/** @file ddc_packets.h
+ *
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKETS_H_
@@ -200,6 +201,8 @@ interpret_capabilities_response(
       int           bytect,
       Interpreted_Multi_Part_Read_Fragment * aux_data,
       bool          debug);
+
+extern Byte alt_source_addr;
 
 DDC_Packet *
 create_ddc_getvcp_request_packet(
