@@ -256,8 +256,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
       rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
 #endif
-      rpt_bool("defer sleeps",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
-      rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA,             d1);
+      rpt_bool("defer sleeps",     NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,             d1);
+      rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA,              d1);
       rpt_bool("per_thread_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS,        d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
       rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
@@ -269,13 +269,19 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                          elem->feature_value);
       }
       rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
-      rpt_str ("library trace file:", NULL, parsed_cmd->trace_destination,          d1);
+      rpt_str ("library trace file:", NULL, parsed_cmd->trace_destination,           d1);
 #ifdef ENABLE_SYSLOG
       rpt_bool("write to syslog:",  NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG,       d1);
 #endif
       rpt_bool("i2c_io_fileio:",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
       rpt_bool("i2c_io_ioctl:",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
-      rpt_int( "i1",                NULL, parsed_cmd->i1,                            d1);
+
+      rpt_bool("i1 set:",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
+      if (parsed_cmd->flags & CMD_FLAG_I1_SET) {
+         rpt_int( "i1",             NULL, parsed_cmd->i1,                            d1);
+         rpt_int_as_hex(
+                  "i1 as hex",      NULL, parsed_cmd->i1,                            d1);
+      }
       rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
       rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
       rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);

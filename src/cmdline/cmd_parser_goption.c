@@ -149,7 +149,7 @@ static void emit_parser_error(GPtrArray * errinfo_accum, char * msg, ...) {
 
 
 static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) {
-    bool debug = true;
+    bool debug = false;
     DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
     bool parsing_ok = true;
 
@@ -215,7 +215,7 @@ static bool parse_display_identifier(
       char *        modelwork,
       char *        snwork)
 {
-   bool debug = true;
+   bool debug = false;
    bool parsing_ok = true;
    int  explicit_display_spec_ct = 0;
 
@@ -340,12 +340,28 @@ static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray *
    return arg_ok;
 }
 
+
+static bool parse_int_work(char * sval, int * result_loc, GPtrArray* errinf_accum) {
+   bool debug = false;
+   bool ok = true;
+   DBGMSF(debug, "sval: %s", sval);
+   if (sval) {
+     ok = str_to_int(sval, result_loc, 0);
+     if (!ok)
+        emit_parser_error(errinf_accum, "Invalid integer or hex number: %s", sval);
+   }
+   DBGMSF(debug, "Done.  Returning: %s. result_loc -> %d (0x%08x)",
+         sbool(ok), *result_loc, *result_loc);
+   return ok;
+}
+
+
 static bool parse_sleep_multiplier(
       const char*  sleep_multiplier_work,
       Parsed_Cmd*  parsed_cmd,
       GPtrArray*   errinf_accum)
 {
-   bool debug = true;
+   bool debug = false;
    bool arg_ok = false;
 
    if (sleep_multiplier_work) {
@@ -486,7 +502,6 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) 
 }
 
 
-
 static void report_ddcutil_version() {
       printf("ddcutil %s\n", get_full_ddcutil_version());
       // TODO: patch values at link time
@@ -609,6 +624,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    gboolean f5_flag        = false;
    gboolean f6_flag        = false;
    gboolean debug_parse_flag  = false;
+   gboolean parse_only_flag   = false;
    gboolean x52_no_fifo_flag  = false;
 
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
@@ -618,26 +634,26 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    // gboolean disable_cc_flag_set = false;
 
    // gboolean ignore_cc_flag = false;
-   char *   mfg_id_work    = NULL;
-   char *   modelwork      = NULL;
-   char *   snwork         = NULL;
-   char *   edidwork       = NULL;
-   char *   mccswork       = NULL;   // MCCS version
-// char *   tracework      = NULL;
-   char**   cmd_and_args   = NULL;
-   gchar**  trace_classes  = NULL;
+   char *   mfg_id_work     = NULL;
+   char *   modelwork       = NULL;
+   char *   snwork          = NULL;
+   char *   edidwork        = NULL;
+   char *   mccswork        = NULL;   // MCCS version
+// char *   tracework       = NULL;
+   char**   cmd_and_args    = NULL;
+   gchar**  trace_classes   = NULL;
    gchar**  trace_functions = NULL;
    gchar**  trace_api_calls = NULL;
    gchar**  trace_filenames = NULL;
 // gboolean enable_syslog_flag  = false;
 // gboolean disable_syslog_flag = false;
-   gint     buswork        = -1;
-   gint     hidwork        = -1;
-   gint     dispwork       = -1;
+   gint     buswork         = -1;
+   gint     hidwork         = -1;
+   gint     dispwork        = -1;
    char *   maxtrywork      = NULL;
    char *   trace_destination = NULL;
    gint     edid_read_size_work = -1;
-   gint     i1_work = -1;
+   char *   i1_work         = NULL;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
@@ -793,17 +809,17 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
 #ifdef ENABLE_SYSLOG
-      {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,     &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
-      {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,     &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
+      {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,         &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
+      {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,        &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
 
       {"syslog",     '\0', 0, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
 #endif
       {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
+      {"parse-only", '\0', 0,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",    NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
 
-
       // Generic options to aid development
-      {"i1",      '\0', 0,  G_OPTION_ARG_INT,      &i1_work,         "special", "non-negative number" },
+      {"i1",      '\0', 0,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer",   "decimal or hex number" },
       {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
       {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
@@ -951,7 +967,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
-   parsed_cmd->i1               = i1_work;
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
@@ -1036,10 +1051,16 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    if (mccswork)
       parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errinf_accum);
 
+   DBGMSG("i1_work: %s", i1_work);
+   if (i1_work) {
+      bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errinf_accum);
+      if (ok)
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
+      parsing_ok &= ok;
+   }
 
    if (sleep_multiplier_work)
       parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errinf_accum);
-
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
@@ -1055,8 +1076,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 
    if (trace_classes)
       parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errinf_accum);
-
-
 
    if (trace_functions) {
       parsed_cmd->traced_functions = trace_functions;
@@ -1193,13 +1212,16 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
       free_parsed_cmd(parsed_cmd);
       parsed_cmd = NULL;
    }
-
    if (debug) {
       DBGMSG("Before return: argc=%d", argc);
       int ndx = 0;
       for (; ndx < argc; ndx++) {
          DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
       }
+   }
+   if (parse_only_flag && parsing_ok) {
+      free_parsed_cmd(parsed_cmd);
+      parsed_cmd = NULL;
    }
    DBGMSF(debug, "Returning: %p", parsed_cmd);
    return parsed_cmd;
