@@ -3,7 +3,7 @@
  *  Implement the SETVCP command
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -26,6 +26,7 @@
 #include "cmdline/parsed_cmd.h"
 
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_packet_io.h"      // for alt_source_addr
 
 #include "dynvcp/dyn_feature_codes.h"
 
@@ -219,6 +220,8 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
    for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
       Parsed_Setvcp_Args * cur =
             &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
+      if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+         alt_source_addr = parsed_cmd->i1;
       ddc_excp = app_set_vcp_value(
             dh,
             cur->feature_code,
