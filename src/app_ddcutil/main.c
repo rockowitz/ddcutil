@@ -748,7 +748,9 @@ main(int argc, char *argv[]) {
 
    // tracing is sufficiently initialized, can report start time
    start_time_reported = parsed_cmd->traced_groups    ||
-                         parsed_cmd->traced_functions ||
+#ifdef MEANINGLESS_FOR_CMDLINE_PROGRAM
+                         parsed_cmd->traced_api_calls ||
+#endif
                          parsed_cmd->traced_files     ||
                          IS_TRACING()                 ||
                          main_debug;
@@ -788,6 +790,19 @@ main(int argc, char *argv[]) {
          }
       }
    }
+
+#ifdef MEANINGLESS_FOR_CMDLINE_PROGRAM
+   if (parsed_cmd->traced_api_calls) {
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
+         char * func_name = parsed_cmd->traced_api_calls[ndx];
+         // DBGMSG("Verifying: %s", func_name);
+         if (!rtti_get_func_addr_by_name(func_name)) {
+            rpt_vstring(0, "Traced API call not found: %s", func_name);
+            goto bye;
+         }
+      }
+   }
+#endif
 
    if (parsed_cmd->flags & CMD_FLAG_F2) {
       consolidated_i2c_sysfs_report(0);
