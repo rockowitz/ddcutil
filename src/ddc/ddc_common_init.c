@@ -68,6 +68,14 @@ void init_tracing(Parsed_Cmd * parsed_cmd)
           add_traced_function(parsed_cmd->traced_functions[ndx]);
        }
     }
+    if (parsed_cmd->traced_api_calls) {
+       for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
+          if (debug)
+                printf("(%s) Adding traced api_call: %s\n",
+                       __func__, parsed_cmd->traced_api_calls[ndx]);
+          add_traced_api_call(parsed_cmd->traced_api_calls[ndx]);
+       }
+    }
     if (parsed_cmd->traced_files) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++) {
           if (debug)
