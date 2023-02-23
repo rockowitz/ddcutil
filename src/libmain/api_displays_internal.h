@@ -3,16 +3,16 @@
  *  For use only by other api_... files.
  */
 
-// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
 
 #ifndef API_DISPLAYS_INTERNAL_H_
 #define API_DISPLAYS_INTERNAL_H_
 
+#include "base/displays.h"
 #include "public/ddcutil_types.h"
 #include "private/ddcutil_types_private.h"
-
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
@@ -73,6 +73,22 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       } \
       /* DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, ""); */ \
       return psc; \
+   } while(0);
+
+#define WITH_VALIDATED_DH3(ddca_dh, _ddcrc, action) \
+   do { \
+      assert(library_initialized); \
+      _ddcrc = 0; \
+      free_thread_error_detail(); \
+      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
+      if (!dh)  { \
+         _ddcrc = DDCRC_ARG; \
+         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, _ddcrc, "ddca_dh=%p", ddca_dh); \
+      } \
+      else { \
+         (action); \
+      } \
+      /* DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, ""); */ \
    } while(0);
 
 
@@ -208,6 +224,9 @@ DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
       DDCA_Display_Handle * ddca_dh_loc);
+
+
+void init_api_displays();
 
 
 
