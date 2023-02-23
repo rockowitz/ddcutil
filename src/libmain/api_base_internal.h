@@ -80,6 +80,15 @@ DDCA_Api_Precondition_Failure_Mode
 ddca_get_precondition_failure_mode();
 
 
+#define ENSURE_LIBRARY_INITIALIZED() \
+      do { \
+         if (!library_initialized)  { \
+            ddca_init(DDCA_Init_Options_Disable_Config_File); \
+         } \
+      } while (0)
+
+
+
 //
 // Unpublished
 //
