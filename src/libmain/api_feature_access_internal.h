@@ -4,7 +4,7 @@
  *  and of otherwise unpublished and archived functions.
  */
 
-// Copyright (C) 2015-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_FEATURE_ACCESS_INTERNAL_H_
@@ -77,5 +77,7 @@ ddca_format_any_vcp_value(
       DDCA_Any_Vcp_Value *    valrec,
       char **                 formatted_value_loc);
 
+
+void init_api_feature_access();
 
 #endif /* API_FEATURE_ACCESS_INTERNAL_H_ */
