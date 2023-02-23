@@ -208,6 +208,14 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       else
          rpt_str("traced_files", NULL, "none", d1);
 
+      if (parsed_cmd->traced_api_calls) {
+         char * joined = g_strjoinv(", ", parsed_cmd->traced_api_calls);
+         rpt_str("traced_api_calls", NULL, joined, d1);
+         free(joined);
+      }
+      else
+         rpt_str("traced_files", NULL, "none", d1);
+
       rpt_int( "argct",       NULL,  parsed_cmd->argct, d1);
       int ndx = 0;
       for (ndx = 0; ndx < parsed_cmd->argct; ndx++) {
