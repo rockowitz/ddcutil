@@ -100,9 +100,39 @@ extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed 
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
 
+extern __thread  bool tracing_cur_api_call;
+
+
+#define ENABLE_API_CALL_TRACING() \
+   do { if (is_traced_api_call(__func__)) {\
+         tracing_cur_api_call = true; \
+         /* printf("(%s) Setting tracing_cur_api_call = %s\n", __func__,  sbool(tracing_cur_api_call) ); */ \
+      } \
+   } while(0)
+
+#define FINISH_API_CALL_TRACING(_final_debug_var) \
+   do { \
+      if (tracing_cur_api_call) { \
+          _final_debug_var = true; \
+          tracing_cur_api_call = false; \
+      } \
+   } while(0)
+
+
+#define DISABLE_API_CALL_TRACING() \
+   do { \
+      if (tracing_cur_api_call) { \
+          printf("(%s) Setting tracing_cur_api_call = false\n", __func__);  \
+          tracing_cur_api_call = false; \
+      } \
+   } while(0)
+
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 void add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
+
+void add_traced_api_call(const char * funcname);
+bool is_traced_api_call( const char * funcname);
 
 void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
@@ -135,6 +165,7 @@ typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_NONE   0
 #define DBGTRC_OPTIONS_SYSLOG 1
 #define DBGTRC_OPTIONS_SEVERE 2
+#define DBGTRC_OPTIONS_API_CALL 4       // used for tracing API
 
 
 //

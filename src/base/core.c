@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <threads.h>
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
@@ -160,6 +161,8 @@ Value_Name_Title_Table trace_group_table = {
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
 
 
+_Thread_local  bool tracing_cur_api_call = false;
+
 /** Given a trace group name, returns its identifier.
  *  Case is ignored.
  *
@@ -215,6 +218,7 @@ void add_trace_groups(DDCA_Trace_Group trace_flags) {
 
 static GPtrArray  * traced_function_table = NULL;
 static GPtrArray  * traced_file_table     = NULL;
+static GPtrArray  * traced_api_call_table = NULL;
 
 
 /** Adds a function to the list of functions to be traced.
@@ -232,6 +236,24 @@ void add_traced_function(const char * funcname) {
    bool missing = (gaux_string_ptr_array_find(traced_function_table, funcname) < 0);
    if (missing)
       g_ptr_array_add(traced_function_table, g_strdup(funcname));
+
+   if (debug)
+      printf("(%s) Done. funcname=|%s|, missing=%s\n",
+             __func__, funcname, SBOOL(missing));
+}
+
+
+void add_traced_api_call(const char * funcname) {
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+
+   if (!traced_api_call_table)
+      traced_api_call_table = g_ptr_array_new();
+   // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+   bool missing = (gaux_string_ptr_array_find(traced_api_call_table, funcname) < 0);
+   if (missing)
+      g_ptr_array_add(traced_api_call_table, g_strdup(funcname));
 
    if (debug)
       printf("(%s) Done. funcname=|%s|, missing=%s\n",
@@ -278,6 +300,36 @@ void add_traced_file(const char * filename) {
 }
 
 
+static char * get_traced_functions_as_joined_string() {
+   char * result = NULL;
+   if (traced_function_table) {
+      g_ptr_array_sort(traced_function_table, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(traced_function_table, ", ");
+   }
+   return result;
+}
+
+
+static char * get_traced_api_calls_as_joined_string() {
+   char * result = NULL;
+   if (traced_api_call_table) {
+      g_ptr_array_sort(traced_api_call_table, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(traced_api_call_table, ", ");
+   }
+   return result;
+}
+
+
+static char * get_traced_files_as_joined_string() {
+   char * result = NULL;
+   if (traced_file_table) {
+      g_ptr_array_sort(traced_file_table, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(traced_file_table, ", ");
+   }
+   return result;
+}
+
+
 /** Checks if a function is being traced.
  *
  *  @param funcname function name
@@ -286,6 +338,21 @@ void add_traced_file(const char * filename) {
 bool is_traced_function(const char * funcname) {
    bool result = (traced_function_table && gaux_string_ptr_array_find(traced_function_table, funcname) >= 0);
    // printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, SBOOL(result2));
+   return result;
+}
+
+
+bool is_traced_api_call(const char * funcname) {
+   bool debug = false;
+   if (debug) {
+      printf("(%s) Starting. funcname = %s\n", __func__, funcname);
+      printf("(%s) traced_api_calls: %s\n", __func__, get_traced_api_calls_as_joined_string() );
+   }
+
+   bool result = (traced_api_call_table && gaux_string_ptr_array_find(traced_api_call_table, funcname) >= 0);
+
+   if (debug)
+      printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, SBOOL(result));
    return result;
 }
 
@@ -307,24 +374,6 @@ bool is_traced_file(const char * filename) {
 }
 
 
-static char * get_traced_functions_as_joined_string() {
-   char * result = NULL;
-   if (traced_function_table) {
-      g_ptr_array_sort(traced_function_table, gaux_ptr_scomp);
-      result = join_string_g_ptr_array(traced_function_table, ", ");
-   }
-   return result;
-}
-
-
-static char * get_traced_files_as_joined_string() {
-   char * result = NULL;
-   if (traced_file_table) {
-      g_ptr_array_sort(traced_file_table, gaux_ptr_scomp);
-      result = join_string_g_ptr_array(traced_file_table, ", ");
-   }
-   return result;
-}
 
 
 #ifdef UNUSED
@@ -403,7 +452,7 @@ void close_syslog() {
  *
  */
 bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
-   bool debug = false;
+   bool debug = false;  //str_starts_with(funcname, "ddca_");
    if (debug)
       printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
               __func__, trace_group, filename, funcname);
@@ -411,7 +460,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 // #ifdef ENABLE_TRACE
    result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
-   result = result || is_traced_function(funcname) || is_traced_file(filename);
+   result = result || is_traced_function(funcname) || is_traced_file(filename) || tracing_cur_api_call;
 // #endif
    if (debug)
       printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
@@ -578,6 +627,10 @@ void report_tracing(int depth) {
 
    buf = get_traced_functions_as_joined_string();
    rpt_vstring(d1, "Traced functions:        %s", (buf && strlen(buf)>0) ? buf : "none");
+   free(buf);
+
+   buf = get_traced_api_calls_as_joined_string();
+   rpt_vstring(d1, "Traced API calls:        %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
    buf = get_traced_files_as_joined_string();
@@ -783,7 +836,7 @@ bool dbgtrc_old(
 #endif
 
 
-/** Core function for emitting debug or trace messages.
+/** Core function for emitting debug and trace messages.
  *  Used by the dbgtrc*() function variants.
  *
  *  The message is output if any of the following are true:
@@ -818,13 +871,17 @@ static bool vdbgtrc(
 {
    bool debug = false;
    if (debug) {
-      printf("(vdbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
+      printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%o2x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
-                       trace_group, funcname, filename, lineno, get_thread_id(),
+                       trace_group, options, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        retval_info, format);
+      printf("(vdbgtrc) tracing_cur_api_call == %s\n", sbool(tracing_cur_api_call));
    }
    bool msg_emitted = false;
+
+   if (tracing_cur_api_call)
+      trace_group = DDCA_TRC_ALL;
 
    bool perform_emit = true;
 // #ifndef ENABLE_TRACE
@@ -832,11 +889,13 @@ static bool vdbgtrc(
 //       perform_emit = false;
 // #endif
 
+   if (debug)
+      printf("(%s) Adjusted trace_group == 0x%02x\n", __func__, trace_group);
    if (perform_emit) {
       Thread_Output_Settings * thread_settings = get_thread_settings();
 
-      // n. trace_group == DDCA_TRC_ALWAYS for SEVEREMSG()
-      if ( is_tracing(trace_group, filename, funcname) || (options & DBGTRC_OPTIONS_SYSLOG) ) {
+      // n. trace_group == DDCA_TRC_ALL for SEVEREMSG()
+      if ( is_tracing(trace_group, filename, funcname)  ) {
          char * buffer = g_strdup_vprintf(format, ap);
          if (debug) {
             printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
@@ -911,6 +970,8 @@ static bool vdbgtrc(
             else {
                where = thread_settings->fout;
             }
+            if (debug)
+               printf("(%s) writing to %p, stdout=%p, stderr=%p\n", __func__, where, stdout, stderr);
             f0puts(buf2, where);
             f0putc('\n', where);
             fflush(fout());
@@ -961,9 +1022,9 @@ bool dbgtrc(
 {
    bool debug = false;
    if (debug)
-      printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
+      printf("(dbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
-                       trace_group, funcname, filename, lineno, get_thread_id(),
+                       trace_group, options, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=");
 
    bool msg_emitted = false;
