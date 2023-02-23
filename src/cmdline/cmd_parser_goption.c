@@ -321,7 +321,7 @@ static bool parse_display_identifier(
 
 
 static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errinf_accum) {
-   bool debug = true;
+   bool debug = false;
    bool arg_ok = false;
    if (mccswork) {
       DBGMSF(debug, "mccswork = |%s|", mccswork);
@@ -1051,7 +1051,6 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    if (mccswork)
       parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errinf_accum);
 
-   DBGMSG("i1_work: %s", i1_work);
    if (i1_work) {
       bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errinf_accum);
       if (ok)
