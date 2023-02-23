@@ -21,6 +21,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
 
@@ -249,6 +250,8 @@ ddca_get_display_ref(
 {
    free_thread_error_detail();
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
    API_PRECOND(dref_loc);
@@ -274,6 +277,7 @@ ddca_get_display_ref(
 
    TRACED_ASSERT( (rc==0 && *dref_loc) || (rc!=0 && !*dref_loc) );
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %s, *dref_loc=%p", psc_name_code(rc), *dref_loc);
+   DISABLE_API_CALL_TRACING();
    return rc;
 }
 
@@ -291,6 +295,8 @@ ddca_create_display_ref(
 DDCA_Status
 ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
    DDCA_Status psc = 0;
    free_thread_error_detail();
@@ -303,16 +309,20 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
       );
    }
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
+   DISABLE_API_CALL_TRACING();
    return psc;
 }
 
 
 DDCA_Status
 ddca_redetect_displays() {
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
    ddc_redetect_displays();
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning 0");
+   DISABLE_API_CALL_TRACING();
    return 0;
 }
 
@@ -367,6 +377,8 @@ ddca_report_display_by_dref(
       DDCA_Display_Ref ddca_dref,
       int              depth)
 {
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(false, DDCA_TRC_API, "ddca_dref=%p", ddca_dref);
    free_thread_error_detail();
    DDCA_Status rc = 0;
@@ -379,6 +391,7 @@ ddca_report_display_by_dref(
    ddc_report_display_by_dref(dref, depth);
 
    DBGTRC_DONE(false, DDCA_TRC_API, "Returning %s", psc_name_code(rc));
+   DISABLE_API_CALL_TRACING();
    return rc;
 }
 
@@ -417,6 +430,8 @@ ddca_open_display3(
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dref=%p, options=0x%02x, dh_loc=%p, on thread %d",
           ddca_dref, options, dh_loc, get_thread_id());
@@ -453,6 +468,7 @@ ddca_open_display3(
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "*dh_loc=%p -> %s",
                                              *dh_loc, dh_repr(*dh_loc));
+   DISABLE_API_CALL_TRACING();
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
 }
@@ -474,7 +490,9 @@ DDCA_Status
 ddca_close_display(DDCA_Display_Handle ddca_dh) {
    bool debug = false;
    free_thread_error_detail();
+   ENSURE_LIBRARY_INITIALIZED();
    assert(library_initialized);
+   ENABLE_API_CALL_TRACING();
    DDCA_Status rc = 0;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "dh = %s", dh_repr(dh));
@@ -488,6 +506,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning %s(%d)", psc_name(rc), rc);
+   DISABLE_API_CALL_TRACING();
    return rc;
 }
 
@@ -741,6 +760,8 @@ ddca_get_display_info(
       DDCA_Display_Info ** dinfo_loc)
 {
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API,  "ddca_dref=%p", ddca_dref);
    DDCA_Status ddcrc = 0;
 
@@ -755,6 +776,7 @@ ddca_get_display_info(
    )
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "");
+   DISABLE_API_CALL_TRACING();
    return ddcrc;
 }
 
@@ -789,6 +811,8 @@ ddca_get_display_refs(
       DDCA_Display_Ref**  drefs_loc)
 {
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API|DDCA_TRC_DDC,
                  "include_invalid_displays=%s", SBOOL(include_invalid_displays));
    free_thread_error_detail();
@@ -825,6 +849,7 @@ ddca_get_display_refs(
    set_ddca_error_detail_from_open_errors();
 
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, 0, "Returned list has %d displays", dref_ct);
+   DISABLE_API_CALL_TRACING();
    return 0;
 }
 
@@ -835,6 +860,8 @@ ddca_get_display_info_list2(
       DDCA_Display_Info_List**  dlist_loc)
 {
    bool debug = false;
+   ENSURE_LIBRARY_INITIALIZED();
+   ENABLE_API_CALL_TRACING();
    DBGTRC_STARTING(debug, DDCA_TRC_API|DDCA_TRC_DDC, "");
    free_thread_error_detail();
    API_PRECOND(dlist_loc);
@@ -875,6 +902,7 @@ ddca_get_display_info_list2(
    assert(*dlist_loc);
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API|DDCA_TRC_DDC, 0,
                            "Returned list has %d displays", result_list->ct);
+   DISABLE_API_CALL_TRACING();
    return 0;
 }
 
@@ -1120,5 +1148,18 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
    return ddc_report_displays(include_invalid_displays, depth);
 }
 
-
+void init_api_displays() {
+      DBGMSG("Executing");
+      RTTI_ADD_FUNC(ddca_close_display);
+      RTTI_ADD_FUNC(ddca_free_display_ref);
+      RTTI_ADD_FUNC(ddca_get_display_info_list2);
+      RTTI_ADD_FUNC(ddca_get_display_info);
+      RTTI_ADD_FUNC(ddca_get_display_ref);
+      RTTI_ADD_FUNC(ddca_get_display_refs);
+      RTTI_ADD_FUNC(ddca_open_display);
+      RTTI_ADD_FUNC(ddca_open_display2);
+      RTTI_ADD_FUNC(ddca_open_display3);
+      RTTI_ADD_FUNC(ddca_redetect_displays);
+      RTTI_ADD_FUNC(ddca_report_display_by_dref);
+}
 
