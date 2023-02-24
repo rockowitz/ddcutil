@@ -1,6 +1,6 @@
 // api_metadata.c
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -18,6 +18,7 @@
 #include "base/displays.h"
 #include "base/feature_lists.h"
 #include "base/feature_set_ref.h"
+#include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_set.h"
@@ -221,7 +222,7 @@ ddca_get_feature_list_by_dref(
       DDCA_Feature_List*      feature_list_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
+   API_PROLOG(debug, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
               "include_table_features=%s, feature_list_loc=%p",
               feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
           ddca_dref,
@@ -286,13 +287,13 @@ ddca_get_feature_list_by_dref(
                dyn_free_feature_set(fset);
          }
    );
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
-         feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
-         subset, feature_subset_name(subset));
+
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Feature list: %s", feature_list_string(feature_list_loc, "", ","));
       // rpt_hex_dump((Byte*) p_feature_list, 32, 1);
-   return psc;
+   API_EPILOG(debug, psc, "feature_set_id=%d=0x%08x=%s, subset=%d=%s",
+         feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
+         subset, feature_subset_name(subset));
 }
 
 
@@ -440,10 +441,12 @@ ddca_get_feature_flags_by_vspec(
       DDCA_MCCS_Version_Spec        vspec,
       DDCA_Feature_Flags *          feature_flags)
 {
+   bool debug = false;
+   API_PROLOG(debug, "");
    free_thread_error_detail();
    DDCA_Status psc = DDCRC_ARG;
    // assert(feature_flags);
-   API_PRECOND(feature_flags);
+   API_PRECOND_W_EPILOG(feature_flags);
    if (vcp_version_is_valid(vspec, /*unknown_ok*/ true)) {
 //    DDCA_Version_Feature_Info * full_info =  get_version_feature_info_by_vspec(
       Display_Feature_Metadata * dfm =  get_version_feature_info_by_vspec_dfm(
@@ -461,7 +464,7 @@ ddca_get_feature_flags_by_vspec(
          psc = DDCRC_UNKNOWN_FEATURE;
       }
    }
-   return psc;
+   API_EPILOG(debug, psc, "");
 }
 
 
@@ -517,7 +520,7 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Feature_Metadata **    info_loc) //
 {
    bool debug = false;
-   DBGMSF(debug, "feature_code=0x%02x, vspec=%s, create_default_if_not_found=%s, info_loc=%p",
+   API_PROLOG(debug, "feature_code=0x%02x, vspec=%s, create_default_if_not_found=%s, info_loc=%p",
                  feature_code, format_vspec_verbose(vspec), sbool(create_default_if_not_found), info_loc);
    assert(info_loc);
    free_thread_error_detail();
@@ -544,7 +547,7 @@ ddca_get_feature_metadata_by_vspec(
    *info_loc = meta;
 
    assert( (psc==0 && *info_loc) || (psc!=0 &&!*info_loc) );
-   return psc;
+   API_EPILOG(debug, psc, "");
 }
 
 
@@ -556,8 +559,8 @@ ddca_get_feature_metadata_by_dref(
       DDCA_Feature_Metadata **    metadata_loc)
 {
    bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "feature_code=0x%02x, ddca_dref=%p, create_default_if_not_found=%s, meta_loc=%p",
-                 feature_code, ddca_dref, sbool(create_default_if_not_found), metadata_loc);
+   API_PROLOG(debug, "feature_code=0x%02x, ddca_dref=%p, create_default_if_not_found=%s, meta_loc=%p",
+                     feature_code, ddca_dref, sbool(create_default_if_not_found), metadata_loc);
    assert(metadata_loc);
 
    DDCA_Status psc = 0;
@@ -577,8 +580,8 @@ ddca_get_feature_metadata_by_dref(
                *metadata_loc = external_metadata;
          }
    );
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    ASSERT_IFF(psc==0, *metadata_loc);
+   API_EPILOG(debug, psc, "");
    return psc;
 }
 
@@ -593,12 +596,13 @@ ddca_get_feature_metadata_by_dh(
    bool debug = false;
    // if (feature_code == 0xca)
    //    debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_API,
-          "feature_code=0x%02x, ddca_dh=%p, create_default_if_not_found=%s, metadata_loc=%p",
-          feature_code, ddca_dh, sbool(create_default_if_not_found), metadata_loc);
-   API_PRECOND(metadata_loc);
-   WITH_VALIDATED_DH2(
-         ddca_dh,
+   API_PROLOG(debug,
+          "feature_code=0x%02x, ddca_dh=%p->%s, create_default_if_not_found=%s, metadata_loc=%p",
+          feature_code, ddca_dh, dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
+   API_PRECOND_W_EPILOG(metadata_loc);
+   DDCA_Status psc = 0;
+   WITH_VALIDATED_DH3(
+         ddca_dh, psc,
          {
                if (debug)
                   dbgrpt_display_ref(dh->dref, 1);
@@ -615,13 +619,12 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
                ASSERT_IFF(psc == 0, *metadata_loc);
-               DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
-                                        "ddca_dh=%p->%s", ddca_dh, dh_repr(ddca_dh));
                 if (psc == 0 && debug) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
          }
       );
+   API_EPILOG(debug, psc, "");
 }
 
 
@@ -694,6 +697,8 @@ ddca_get_feature_name_by_dref(
       DDCA_Display_Ref       ddca_dref,
       char **                name_loc)
 {
+   bool debug = false;
+   API_PROLOG(debug, "feature_code = 0x%02x", feature_code);
    DDCA_Status psc = 0;
    WITH_VALIDATED_DR3(ddca_dref, psc,
          {
@@ -705,7 +710,7 @@ ddca_get_feature_name_by_dref(
                   psc = DDCRC_ARG;
          }
    )
-   return psc;
+   API_EPILOG(debug, psc, "");
 }
 
 
@@ -824,6 +829,8 @@ ddca_get_simple_nc_feature_value_name_by_table(
       uint8_t                     feature_value,
       char**                      value_name_loc)
 {
+   bool debug = false;
+   API_PROLOG(debug, "feature_value_table = %p, feature_value = 0x%02x", feature_value_table, feature_value);
    // DBGMSG("feature_value_table=%p", feature_value_table);
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
@@ -834,7 +841,7 @@ ddca_get_simple_nc_feature_value_name_by_table(
    if (!*value_name_loc)
       rc = DDCRC_NOT_FOUND;               // correct handling for value not found?
    assert ( (rc==0 && *value_name_loc) || (rc!=0 && !*value_name_loc) );
-   return rc;
+   API_EPILOG(debug, rc, "");
 }
 
 
@@ -920,7 +927,7 @@ DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "ddca_dref=%p", ddca_dref);
+   API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
 
    DDCA_Status psc = 0;
    WITH_VALIDATED_DR3(ddca_dref, psc,
@@ -934,24 +941,37 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
             }
       }
    );
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
-   return psc;
+   API_EPILOG(debug, psc, "");
 }
 
 DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p", ddca_dh);
-   WITH_VALIDATED_DH2(ddca_dh,
+   API_PROLOG(debug, "ddca_dh=%p", ddca_dh);
+   DDCA_Status psc = 0;
+   WITH_VALIDATED_DH3(ddca_dh, psc,
       {
             DBGMSF(debug, "dref=%s", dh_repr(dh));
 
             psc = ddca_dfr_check_by_dref(dh->dref);
 
-            DBGTRC_DONE(debug, DDCA_TRC_API, "ddca_dh=%p->%s. Returning: %s(%d)",
-                   ddca_dh, dh_repr(ddca_dh), ddca_rc_name(psc), psc);
+
       }
    );
+   API_EPILOG(debug, psc, "ddca_dh=%p->%s.",
+          ddca_dh, dh_repr(ddca_dh) );
+}
+
+
+void init_api_metadata() {
+   RTTI_ADD_FUNC(ddca_get_feature_list_by_dref);
+   RTTI_ADD_FUNC(ddca_get_feature_metadata_by_vspec);
+   RTTI_ADD_FUNC(ddca_get_feature_metadata_by_dref);
+   RTTI_ADD_FUNC(ddca_get_feature_metadata_by_dh);
+   // RTTI_ADD_FUNC(ddca_get_feature_name_by_dref); // error because deprecated
+   RTTI_ADD_FUNC(ddca_get_simple_nc_feature_value_name_by_table);
+   // RTTI_ADD_FUNC(ddca_dfr_check_by_dref);   // error because deprecated
+   RTTI_ADD_FUNC(ddca_dfr_check_by_dh);
 }
 
