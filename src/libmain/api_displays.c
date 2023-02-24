@@ -1135,7 +1135,7 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
 
 
 void init_api_displays() {
-      DBGMSG("Executing");
+      // DBGMSG("Executing");
       RTTI_ADD_FUNC(ddca_close_display);
       RTTI_ADD_FUNC(ddca_free_display_ref);
       RTTI_ADD_FUNC(ddca_get_display_info_list2);
