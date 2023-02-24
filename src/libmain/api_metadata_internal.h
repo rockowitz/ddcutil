@@ -1,6 +1,6 @@
 // api_metadata.h
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -184,7 +184,7 @@ ddca_get_simple_nc_feature_value_name_by_display(
       char**                 feature_name_loc);
 #endif
 
-
+void init_api_metadata();
 
 
 #endif /* API_METADATA_INTERNAL_H_ */
