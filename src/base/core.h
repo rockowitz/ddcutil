@@ -103,10 +103,10 @@ extern __thread  int  trace_api_call_depth;
 
 
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
-void add_traced_function(const char * funcname);
+bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
 
-void add_traced_api_call(const char * funcname);
+bool add_traced_api_call(const char * funcname);
 bool is_traced_api_call( const char * funcname);
 
 void add_traced_file(const char * filename);

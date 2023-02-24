@@ -23,6 +23,7 @@
 //* \cond */
 #include <glib-2.0/glib.h>
 #include <errno.h>
+#include <rtti.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -190,7 +191,7 @@ static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
  * @ingroup dbgtrace
  */
 void set_trace_groups(DDCA_Trace_Group trace_flags) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "trace_flags=0x%04x\n", trace_flags);
 
    trace_levels = trace_flags;
@@ -225,10 +226,13 @@ static GPtrArray  * traced_api_call_table = NULL;
  *
  *  @param funcname function name
  */
-void add_traced_function(const char * funcname) {
+bool add_traced_function(const char * funcname) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+
+   if (!rtti_get_func_addr_by_name(funcname))
+      return false;
 
    if (!traced_function_table)
       traced_function_table = g_ptr_array_new();
@@ -240,13 +244,17 @@ void add_traced_function(const char * funcname) {
    if (debug)
       printf("(%s) Done. funcname=|%s|, missing=%s\n",
              __func__, funcname, SBOOL(missing));
+   return true;
 }
 
 
-void add_traced_api_call(const char * funcname) {
-   bool debug = true;
+bool add_traced_api_call(const char * funcname) {
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+
+   if (!rtti_get_func_addr_by_name(funcname))
+      return false;
 
    if (!traced_api_call_table)
       traced_api_call_table = g_ptr_array_new();
@@ -258,6 +266,7 @@ void add_traced_api_call(const char * funcname) {
    if (debug)
       printf("(%s) Done. funcname=|%s|, missing=%s\n",
              __func__, funcname, SBOOL(missing));
+   return true;
 }
 
 
