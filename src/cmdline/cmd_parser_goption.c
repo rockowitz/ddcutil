@@ -141,7 +141,7 @@ static void emit_parser_error(GPtrArray * errinfo_accum, char * msg, ...) {
    fprintf(stderr, "%s\n", buffer);
    if (errinfo_accum) {
       Error_Info * erec =  errinfo_new(DDCRC_ARG, "parse_command", buffer);
-      fprintf(stderr, "(%s) Adding %s\n", __func__, errinfo_summary(erec));
+      // fprintf(stderr, "(%s) Adding %s\n", __func__, errinfo_summary(erec));
       g_ptr_array_add(errinfo_accum, erec);
    }
 }
