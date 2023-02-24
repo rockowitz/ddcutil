@@ -140,6 +140,7 @@ ddca_get_precondition_failure_mode();
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
   } while(0)
 
+#ifdef UNUSED
 #define API_PROLOGX(debug_flag, _trace_groups, format, ...) \
    do { \
       if (!library_initialized)  { \
@@ -149,6 +150,7 @@ ddca_get_precondition_failure_mode();
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (_trace_groups), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
   } while(0)
+#endif
 
 
 #define API_EPILOG(_debug_flag, _rc, _format, ...) \
@@ -169,7 +171,7 @@ ddca_get_precondition_failure_mode();
         trace_api_call_depth--; \
    } while(0)
 
-
+#ifdef UNUSED
 #define API_EPILOGX(_debug_flag, _trace_groups, _rc, _format, ...) \
    do { \
         dbgtrc_ret_ddcrc( \
@@ -178,6 +180,7 @@ ddca_get_precondition_failure_mode();
         trace_api_call_depth--; \
         return rc; \
    } while(0)
+#endif
 
 
 #ifdef UNUSED
@@ -201,7 +204,7 @@ ddca_get_precondition_failure_mode();
    } while(0)
 #endif
 
-      #define DISABLE_API_CALL_TRACING() \
+#define DISABLE_API_CALL_TRACING() \
    do { \
       trace_api_call_depth--; \
    } while(0)
