@@ -8,9 +8,11 @@
 #ifndef DDC_COMMON_INIT_H_
 #define DDC_COMMON_INIT_H_
 
+#include <glib-2.0/glib.h>
+
 #include "cmdline/parsed_cmd.h"
 
-void init_tracing(Parsed_Cmd * parsed_cmd);
+void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator);
 bool submaster_initializer(Parsed_Cmd * parsed_cmd);
 
 #endif /* DDC_COMMON_INIT_H_ */

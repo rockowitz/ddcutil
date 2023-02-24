@@ -16,10 +16,12 @@
 #ifdef ENABLE_FAILSIM
 #include "util/failsim.h"
 #endif
+#include "util/report_util.h"
 #include "util/string_util.h"
 
 #include "base/core.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
@@ -41,7 +43,7 @@
 #include "ddc_common_init.h"
 
 
-void init_tracing(Parsed_Cmd * parsed_cmd)
+void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator)
 {
    bool debug = false;
    if (debug)
@@ -65,15 +67,29 @@ void init_tracing(Parsed_Cmd * parsed_cmd)
           if (debug)
                 printf("(%s) Adding traced function: %s\n",
                        __func__, parsed_cmd->traced_functions[ndx]);
-          add_traced_function(parsed_cmd->traced_functions[ndx]);
+          char * curfunc = parsed_cmd->traced_functions[ndx];
+          bool found = add_traced_function(curfunc);
+          if (!found) {
+             rpt_vstring(0, "Traced function not found: %s", curfunc);   // *** TEMP ***
+             if (errinfo_accumulator)
+                   g_ptr_array_add(errinfo_accumulator,
+                                   errinfo_new(-ENOENT, __func__, "Traced function not found: %s", curfunc));
+          }
        }
     }
     if (parsed_cmd->traced_api_calls) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
+          char * curfunc = parsed_cmd->traced_api_calls[ndx];
           if (debug)
-                printf("(%s) Adding traced api_call: %s\n",
-                       __func__, parsed_cmd->traced_api_calls[ndx]);
-          add_traced_api_call(parsed_cmd->traced_api_calls[ndx]);
+                printf("(%s) Adding traced api_call: %s\n", __func__, curfunc);
+
+          bool found = add_traced_api_call(curfunc);
+          if (!found) {
+             rpt_vstring(0, "Traced API call not found: %s", curfunc);   // *** TEMP ***
+             if (errinfo_accumulator)
+                   g_ptr_array_add(errinfo_accumulator,
+                                   errinfo_new(-ENOENT, __func__, "Traced API call not found: %s", curfunc));
+          }
        }
     }
     if (parsed_cmd->traced_files) {
