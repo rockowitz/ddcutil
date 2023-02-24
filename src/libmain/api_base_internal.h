@@ -135,7 +135,8 @@ ddca_get_precondition_failure_mode();
       if (!library_initialized)  { \
          ddca_init(DDCA_Init_Options_Disable_Config_File); \
       } \
-      trace_api_call_depth++; \
+      if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
+         trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
   } while(0)
@@ -158,7 +159,8 @@ ddca_get_precondition_failure_mode();
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
-        trace_api_call_depth--; \
+        if (trace_api_call_depth > 0) \
+           trace_api_call_depth--; \
         return _rc; \
    } while(0)
 
@@ -168,7 +170,8 @@ ddca_get_precondition_failure_mode();
         dbgtrc_ret_ddcrc( \
           (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
-        trace_api_call_depth--; \
+        if (trace_api_call_depth > 0) \
+           trace_api_call_depth--; \
    } while(0)
 
 #ifdef UNUSED
@@ -206,7 +209,8 @@ ddca_get_precondition_failure_mode();
 
 #define DISABLE_API_CALL_TRACING() \
    do { \
-      trace_api_call_depth--; \
+      if (trace_api_call_depth > 0) \
+         trace_api_call_depth--; \
    } while(0)
 
 
