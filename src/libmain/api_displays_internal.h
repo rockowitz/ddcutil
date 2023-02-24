@@ -17,6 +17,7 @@
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
 
+#ifdef UNUSED
 #define VALIDATE_DDCA_DREF(_ddca_dref, _dref, _debug) \
    do { \
       _dref = validated_ddca_display_ref(_ddca_dref); \
@@ -25,6 +26,17 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
          return DDCRC_ARG; \
       } \
    } while(0)
+#endif
+
+
+#define VALIDATE_DDCA_DREF2(_ddca_dref, _dref, _rc, _debug) \
+   do { \
+      _dref = validated_ddca_display_ref(_ddca_dref); \
+      if (!_dref) { \
+         _rc = DDCRC_ARG; \
+      } \
+   } while(0)
+
 
 #ifdef OLD
 #define WITH_VALIDATED_DR(ddca_dref, action) \
@@ -58,6 +70,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
    } while(0);
 
 
+#ifdef UNUSED
 #define WITH_VALIDATED_DH2(ddca_dh, action) \
    do { \
       assert(library_initialized); \
@@ -74,6 +87,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       /* DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, ""); */ \
       return psc; \
    } while(0);
+#endif
 
 #define WITH_VALIDATED_DH3(ddca_dh, _ddcrc, action) \
    do { \
