@@ -3,7 +3,7 @@
  *  For use only by other api_... files
  */
 
-// Copyright (C) 2015-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef API_BASE_INTERNAL_H_
@@ -16,6 +16,7 @@
 #ifdef ENABLE_SYSLOG
 #include <syslog.h>
 #endif
+#include <threads.h>
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
@@ -52,7 +53,45 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
       } \
    } while (0)
 
+#define API_PRECOND_W_EPILOG(expr) \
+   do { \
+      if (!(expr)) { \
+         SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+                         #expr, __FILE__,  __LINE__);   \
+         if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
+            DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+                         #expr, __func__, __LINE__, __FILE__); \
+            fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
+                             #expr, __func__, __LINE__, __FILE__); \
+         } \
+         if (!(api_failure_mode & DDCA_PRECOND_RETURN))  \
+            abort();  \
+         trace_api_call_depth--; \
+         DBGTRC_RET_DDCRC(true, DDCA_TRC_ALL, DDCRC_ARG, "Precondition failure: %s=NULL", (expr)); \
+         return DDCRC_ARG;  \
+      } \
+   } while (0)
 
+
+#define API_PRECOND_RVALUE(expr) \
+   ( { DDCA_Status ddcrc = 0; \
+       if (!(expr)) { \
+          SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+                          #expr, __FILE__,  __LINE__);   \
+          if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
+             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
+                          #expr, __func__, __LINE__, __FILE__); \
+             fprintf(stderr, "Precondition failure (%s) in function %s at line %d of file %s\n", \
+                             #expr, __func__, __LINE__, __FILE__); \
+          } \
+          if (!(api_failure_mode & DDCA_PRECOND_RETURN))  \
+             abort(); \
+          ddcrc = DDCRC_ARG;  \
+       } \
+       ddcrc; \
+    } )
+
+#ifdef UNUSED
 #define API_PRECOND_NORC(expr) \
    do { \
       if (!(expr)) { \
@@ -66,6 +105,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
          abort(); \
       } \
    } while (0)
+#endif
 
 
 //
@@ -80,12 +120,91 @@ DDCA_Api_Precondition_Failure_Mode
 ddca_get_precondition_failure_mode();
 
 
+
+#ifdef UNUSED
 #define ENSURE_LIBRARY_INITIALIZED() \
       do { \
          if (!library_initialized)  { \
             ddca_init(DDCA_Init_Options_Disable_Config_File); \
          } \
       } while (0)
+#endif
+
+#define API_PROLOG(debug_flag, format, ...) \
+   do { \
+      if (!library_initialized)  { \
+         ddca_init(DDCA_Init_Options_Disable_Config_File); \
+      } \
+      trace_api_call_depth++; \
+      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
+  } while(0)
+
+#define API_PROLOGX(debug_flag, _trace_groups, format, ...) \
+   do { \
+      if (!library_initialized)  { \
+         ddca_init(DDCA_Init_Options_Disable_Config_File); \
+      } \
+      trace_api_call_depth++; \
+      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (_trace_groups), DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
+  } while(0)
+
+
+#define API_EPILOG(_debug_flag, _rc, _format, ...) \
+   do { \
+        dbgtrc_ret_ddcrc( \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
+        trace_api_call_depth--; \
+        return _rc; \
+   } while(0)
+
+
+#define API_EPILOG_WO_RETURN(_debug_flag, _rc, _format, ...) \
+   do { \
+        dbgtrc_ret_ddcrc( \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
+        trace_api_call_depth--; \
+   } while(0)
+
+
+#define API_EPILOGX(_debug_flag, _trace_groups, _rc, _format, ...) \
+   do { \
+        dbgtrc_ret_ddcrc( \
+          (_debug_flag) ? DDCA_TRC_ALL : _trace_groups, DBGTRC_OPTIONS_NONE, \
+          __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
+        trace_api_call_depth--; \
+        return rc; \
+   } while(0)
+
+
+#ifdef UNUSED
+#define ENABLE_API_CALL_TRACING() \
+   do { if (is_traced_api_call(__func__)) {\
+         tracing_cur_api_call = true; \
+         trace_api_call_depth++; \
+         /* printf("(%s) Setting tracing_cur_api_call = %s\n", __func__,  sbool(tracing_cur_api_call) ); */ \
+      } \
+   } while(0)
+#endif
+
+#ifdef OLD
+#define DISABLE_API_CALL_TRACING() \
+   do { \
+      if (tracing_cur_api_call) { \
+          printf("(%s) Setting tracing_cur_api_call = false\n", __func__);  \
+          tracing_cur_api_call = false; \
+      } \
+      trace_api_call_depth--; \
+   } while(0)
+#endif
+
+      #define DISABLE_API_CALL_TRACING() \
+   do { \
+      trace_api_call_depth--; \
+   } while(0)
 
 
 
