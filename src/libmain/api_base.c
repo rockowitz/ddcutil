@@ -338,6 +338,11 @@ _ddca_new_init(void) {
 }
 
 
+//
+// Tracing
+//
+
+
 static void
 init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debug) {
    if (debug)
