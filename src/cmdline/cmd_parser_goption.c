@@ -651,7 +651,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    gint     hidwork         = -1;
    gint     dispwork        = -1;
    char *   maxtrywork      = NULL;
-   char *   trace_destination = NULL;
+// char *   trace_destination = NULL;
    gint     edid_read_size_work = -1;
    char *   i1_work         = NULL;
    char *   failsim_fn_work = NULL;
@@ -807,7 +807,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
       {"wts",        '\0', 0, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
-      {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
+      {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
 #ifdef ENABLE_SYSLOG
       {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,         &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
       {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,        &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
