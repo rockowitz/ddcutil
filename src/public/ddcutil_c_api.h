@@ -644,12 +644,14 @@ ddca_free_display_info_list(
  *
  *  @param[in]  dinfo  pointer to a DDCA_Display_Info struct
  *  @param[in]  depth  logical indentation depth
+ *  @retval     DDCRC_ARG if precondition failure and precondition failures do not abort
+ *  @retval     0         normal
  *
  *  @remark
  *  For a report intended for users, apply #ddca_report_display_by_dref()
  *  to **dinfo->dref**.
  */
-void
+DDCA_Status
 ddca_report_display_info(
       DDCA_Display_Info * dinfo,
       int                 depth);
@@ -1810,6 +1812,9 @@ DDCA_Status
 ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
+
+
+void init_api_metadata();
 
 
 #ifdef __cplusplus
