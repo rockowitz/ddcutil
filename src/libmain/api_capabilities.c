@@ -55,12 +55,14 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
+   API_PROLOG(debug, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    free_thread_error_detail();
-   API_PRECOND(pcaps_loc);
+   API_PRECOND_W_EPILOG(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
-   WITH_VALIDATED_DH2(ddca_dh,
+   DDCA_Status psc = 0;
+
+   WITH_VALIDATED_DH3(ddca_dh, psc,
       {
          char * p_cap_string = NULL;
          ddc_excp = ddc_get_capabilities_string(dh, &p_cap_string);
@@ -73,12 +75,12 @@ ddca_get_capabilities_string(
             *pcaps_loc = g_strdup(p_cap_string);
          }
          ASSERT_IFF(psc==0, *pcaps_loc);
-         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
-               "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
-               dh_repr((Display_Handle *) ddca_dh),
-               *pcaps_loc, *pcaps_loc);
       }
    );
+
+   API_EPILOG(debug, psc, "ddca_dh=%s, *pcaps_loc=%p -> |%s|",
+                     dh_repr((Display_Handle *) ddca_dh),
+                     *pcaps_loc, *pcaps_loc );
 }
 
 
@@ -130,13 +132,11 @@ ddca_parse_capabilities_string(
       DDCA_Capabilities **     parsed_capabilities_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_API, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
-                                       parsed_capabilities_loc, capabilities_string);
-   // assert(parsed_capabilities_loc);
+   API_PROLOG(debug, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
+                     parsed_capabilities_loc, capabilities_string);
    free_thread_error_detail();
-   API_PRECOND(parsed_capabilities_loc);
+   API_PRECOND_W_EPILOG(parsed_capabilities_loc);
    DDCA_Status ddcrc = DDCRC_BAD_DATA;
-   DBGMSF(debug, "ddcrc initialized to %s", psc_desc(ddcrc));
    DDCA_Capabilities * result = NULL;
 
    // need to control messages?
@@ -209,14 +209,11 @@ ddca_parse_capabilities_string(
       ddcrc = 0;
       free_parsed_capabilities(pcaps);
    }
-
    *parsed_capabilities_loc = result;
-
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
+   API_EPILOG_WO_RETURN(debug, ddcrc, "*parsed_capabilities_loc=%p", *parsed_capabilities_loc);
+   ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    if ( IS_DBGTRC(debug, DDCA_TRC_API) && *parsed_capabilities_loc)
       dbgrpt_ddca_capabilities(*parsed_capabilities_loc, 2);
-
-   ASSERT_IFF(ddcrc==0, *parsed_capabilities_loc);
    return ddcrc;
 }
 
@@ -254,12 +251,11 @@ ddca_report_parsed_capabilities_by_dref(
       int                      depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. p_caps=%p, ddca_dref=%s", p_caps, dref_repr_t((Display_Ref*) ddca_dref));
-
-   free_thread_error_detail();
    DDCA_Status ddcrc = 0;
-
-   API_PRECOND(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
+   API_PROLOG(debug, "Starting. p_caps=%p, ddca_dref=%s",
+                      p_caps, dref_repr_t((Display_Ref*) ddca_dref));
+   free_thread_error_detail();
+   API_PRECOND_W_EPILOG(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
    Display_Ref * dref = NULL;
    // dref may be NULL, but if not it must be valid
@@ -347,7 +343,7 @@ ddca_report_parsed_capabilities_by_dref(
    }
 
 bye:
-   return ddcrc;
+   API_EPILOG(debug, ddcrc, "");
 }
 
 
@@ -367,10 +363,11 @@ ddca_report_parsed_capabilities_by_dh(
       int                      depth)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. p_caps=%p, ddca_dh=%s, depth=%d", p_caps, ddca_dh_repr(ddca_dh), depth);
+   API_PROLOG(debug, "p_caps=%p, ddca_dh=%s, depth=%d",
+                      p_caps, ddca_dh_repr(ddca_dh), depth);
+
    DDCA_Status ddcrc = 0;
    free_thread_error_detail();
-   assert(library_initialized);
 
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {
@@ -387,8 +384,7 @@ ddca_report_parsed_capabilities_by_dh(
    ddca_report_parsed_capabilities_by_dref(p_caps, dh->dref, depth);
 
 bye:
-   DBGMSF(debug, "Done.     Returning %s", ddca_rc_desc(ddcrc));
-   return ddcrc;
+   API_EPILOG(debug, ddcrc, "");
 }
 
 
@@ -417,9 +413,10 @@ ddca_feature_list_from_capabilities(
    return result;
 }
 
-#ifdef NOT_NEEDED
 void init_api_capabilities() {
    printf("(%s) Executing\n", __func__);
    RTTI_ADD_FUNC(ddca_get_capabilities_string);
+   RTTI_ADD_FUNC(ddca_parse_capabilities_string);
+   RTTI_ADD_FUNC(ddca_report_parsed_capabilities_by_dref);
+   RTTI_ADD_FUNC(ddca_report_parsed_capabilities_by_dh);
 }
-#endif
