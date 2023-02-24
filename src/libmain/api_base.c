@@ -273,7 +273,7 @@ Parsed_Cmd * get_parsed_libmain_config(GPtrArray * errinfo_accumulator) {
 
    DBGF(debug, "Before return");
    if (errinfo_accumulator) {
-      DBGMSG("errinf_accum: len=%d", errinfo_accumulator->len);
+      DBGF(debug, "errinf_accum: len=%d", errinfo_accumulator->len);
       for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++)
          printf("   %s\n", errinfo_summary(g_ptr_array_index(errinfo_accumulator, ndx)));
    }
@@ -316,7 +316,7 @@ bool per_thread_stats = false;
  */
 void  __attribute__ ((constructor))
 _ddca_new_init(void) {
-   bool debug = true;
+   bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -497,7 +497,7 @@ Error_Info *
 set_master_errinfo_from_init_errors(
       GPtrArray * errs) // array of Error_Info *
 {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting. errs=%p", errs);
    Error_Info * master_error = NULL;
    if (errs && errs->len > 0) {
@@ -538,7 +538,7 @@ set_ddca_error_detail_from_init_errors(
 
 DDCA_Status
 ddca_init(DDCA_Init_Options opts) {
-   bool debug = true;
+   bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -571,14 +571,17 @@ ddca_init(DDCA_Init_Options opts) {
       // DBGF(debug, "Wolf 1, parset)dne=%p, errinfo_accumulator len = %d", parsed_cmd, errinfo_accumulator->len);
       ASSERT_IFF(errinfo_accumulator->len == 0, parsed_cmd);
 
-      master_error = set_master_errinfo_from_init_errors(errinfo_accumulator);
+
+      // master_error = set_master_errinfo_from_init_errors(errinfo_accumulator);
       // DBGF(debug, "post set_master_errinfo");
       // errinfo_report(master_error, 2);
-      ASSERT_IFF(master_error, !parsed_cmd);
+      // ASSERT_IFF(master_error, !parsed_cmd);
 
       if (parsed_cmd) {
-         init_tracing(parsed_cmd);
+         init_tracing(parsed_cmd, errinfo_accumulator);
+
          if (parsed_cmd->trace_destination) {
+            DBGF(debug, "Setting library trace file: %s", parsed_cmd->trace_destination);
             init_library_trace_file(parsed_cmd->trace_destination, enable_syslog, debug);
          }
          requested_stats = parsed_cmd->stats_types;
@@ -587,6 +590,7 @@ ddca_init(DDCA_Init_Options opts) {
          free_parsed_cmd(parsed_cmd);
          ddc_start_watch_displays();
       }
+      master_error = set_master_errinfo_from_init_errors(errinfo_accumulator);
    }
 
    DDCA_Status ddcrc = 0;
@@ -1056,14 +1060,14 @@ ddca_is_force_slave_address_enabled(void) {
 // Tracing
 //
 
-void
+bool
 ddca_add_traced_function(const char * funcname) {
-   add_traced_function(funcname);
+   return add_traced_function(funcname);
 }
 
-void
+bool
 ddca_add_traced_api_call(const char * funcname) {
-   add_traced_api_call(funcname);
+   return add_traced_api_call(funcname);
 }
 
 
@@ -1157,7 +1161,7 @@ ddca_show_stats(
 
 
 void init_api_base() {
-   DBGMSG("Executing");
+   // DBGMSG("Executing");
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
 
