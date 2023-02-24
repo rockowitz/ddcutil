@@ -1123,7 +1123,7 @@ void init_api_access_feature_codes() {
 
 
 void init_api_feature_access() {
-   DBGMSG("Executing");
+   // DBGMSG("Executing");
    RTTI_ADD_FUNC(ddca_get_non_table_vcp_value);
 }
 
