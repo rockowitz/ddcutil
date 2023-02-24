@@ -141,6 +141,7 @@ void show_output_level() {
 bool dbgtrc_show_time      = false;   ///< include elapsed time in debug/trace output
 bool dbgtrc_show_wall_time = false;   ///< include wall time in debug/trace output
 bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace output
+_Thread_local  int  trace_api_call_depth = 0;
 
 static
 Value_Name_Title_Table trace_group_table = {
@@ -161,7 +162,6 @@ Value_Name_Title_Table trace_group_table = {
 const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
 
 
-_Thread_local  bool tracing_cur_api_call = false;
 
 /** Given a trace group name, returns its identifier.
  *  Case is ignored.
@@ -460,7 +460,7 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 // #ifdef ENABLE_TRACE
    result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
 
-   result = result || is_traced_function(funcname) || is_traced_file(filename) || tracing_cur_api_call;
+   result = result || is_traced_function(funcname) || is_traced_file(filename) || trace_api_call_depth > 0;
 // #endif
    if (debug)
       printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
@@ -876,11 +876,11 @@ static bool vdbgtrc(
                        trace_group, options, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
                        retval_info, format);
-      printf("(vdbgtrc) tracing_cur_api_call == %s\n", sbool(tracing_cur_api_call));
+      printf("(vdbgtrc) trace_api_call_depth=%d\n", trace_api_call_depth);
    }
    bool msg_emitted = false;
 
-   if (tracing_cur_api_call)
+   if (trace_api_call_depth > 0)
       trace_group = DDCA_TRC_ALL;
 
    bool perform_emit = true;
