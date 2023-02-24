@@ -99,33 +99,8 @@ extern bool enable_syslog;
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
+extern __thread  int  trace_api_call_depth;
 
-extern __thread  bool tracing_cur_api_call;
-
-
-#define ENABLE_API_CALL_TRACING() \
-   do { if (is_traced_api_call(__func__)) {\
-         tracing_cur_api_call = true; \
-         /* printf("(%s) Setting tracing_cur_api_call = %s\n", __func__,  sbool(tracing_cur_api_call) ); */ \
-      } \
-   } while(0)
-
-#define FINISH_API_CALL_TRACING(_final_debug_var) \
-   do { \
-      if (tracing_cur_api_call) { \
-          _final_debug_var = true; \
-          tracing_cur_api_call = false; \
-      } \
-   } while(0)
-
-
-#define DISABLE_API_CALL_TRACING() \
-   do { \
-      if (tracing_cur_api_call) { \
-          printf("(%s) Setting tracing_cur_api_call = false\n", __func__);  \
-          tracing_cur_api_call = false; \
-      } \
-   } while(0)
 
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 void add_traced_function(const char * funcname);
@@ -334,6 +309,8 @@ bool dbgtrc_returning_expression(
       __assert_fail(#_assertion, __FILE__, line, __func__); \
    } while (0)
 #endif
+
+
 
 
 #define SEVEREMSG(format, ...) \
