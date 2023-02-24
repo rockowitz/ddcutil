@@ -35,7 +35,7 @@ char * rtti_get_func_name_by_addr(void * ptr) {
 }
 
 
-void * rtti_get_func_addr_by_name(char * name) {
+void * rtti_get_func_addr_by_name(const char * name) {
    void * result = NULL;
    if (func_name_table) {
       GHashTableIter iter;
