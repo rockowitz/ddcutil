@@ -428,12 +428,25 @@ ddca_is_report_ddc_errors_enabled(void);
 /** Turn on tracing for a specific function.
  *
  *  @param[in]  funcname   function name
+ *  @return true if function is traceable, false if not
  *
  *  @remark
  *  The function must include trace calls.
  */
-void
+bool
 ddca_add_traced_function(
+      const char * funcname);
+
+/** Turn on call stack tracing for a specific API function.
+ *
+ *  @param[in]  funcname   function name
+ *  @return true if function is traceable, false if not
+ *
+ *  @remark
+ *  The function must include trace calls.
+ */
+bool
+ddca_add_traced_api_call(
       const char * funcname);
 
 /** Turn on all tracing in a specific source file.
