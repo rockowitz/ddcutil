@@ -414,7 +414,7 @@ ddca_feature_list_from_capabilities(
 }
 
 void init_api_capabilities() {
-   printf("(%s) Executing\n", __func__);
+   // printf("(%s) Executing\n", __func__);
    RTTI_ADD_FUNC(ddca_get_capabilities_string);
    RTTI_ADD_FUNC(ddca_parse_capabilities_string);
    RTTI_ADD_FUNC(ddca_report_parsed_capabilities_by_dref);
