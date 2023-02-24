@@ -44,10 +44,6 @@ if ENABLE_SHARED_LIB_COND
    cmake_DATA = cmake/ddcutil/FindDDCUtil.cmake
    # where FindDDCUtil.cmake will installed:
    cmakedir = $(libdir)/cmake/ddcutil
-
-   EXTRA_DIST+=usr/modules-load-d/libi2cutil.conf
-   modules_DATA += usr/lib/modules-load.d/libddcutil.conf
-
 endif
 
 
