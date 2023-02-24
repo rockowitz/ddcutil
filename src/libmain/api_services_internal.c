@@ -16,11 +16,8 @@
 
 
 void init_api_services() {
-   DBGMSG("Starting");
-   init_api_feature_access();
-   init_api_displays();
    init_api_capabilities();
+   init_api_displays();
+   init_api_feature_access();
    init_api_metadata();
-   DBGMSG("Done");
 }
-
