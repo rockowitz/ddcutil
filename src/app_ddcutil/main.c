@@ -744,7 +744,7 @@ main(int argc, char *argv[]) {
       goto bye;      // main_rc == EXIT_FAILURE
    }
 
-   init_tracing(parsed_cmd);
+   init_tracing(parsed_cmd, NULL);
 
    // tracing is sufficiently initialized, can report start time
    start_time_reported = parsed_cmd->traced_groups    ||
