@@ -400,8 +400,8 @@ dbgrpt_i2c_msg(int depth, struct i2c_msg message) {
    // #define I2C_M_REV_DIR_ADDR 0x2000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
    // #define I2C_M_NOSTART      0x4000   /* use only if I2C_FUNC_NOSTART */
    // #define I2C_M_STOP      0x8000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
-     rpt_vstring(depth, "len:    0x%04x (%d)", message.len, message.len);  // __u16
-     rpt_vstring(depth, "buf:    %p ->  %s", message.buf, hexstring_t(message.buf, message.len)); // __u8 *buf;
+     rpt_vstring(depth, "len:     0x%04x (%d)", message.len, message.len);  // __u16
+     rpt_vstring(depth, "buf:     %p ->  %s", message.buf, hexstring_t(message.buf, message.len)); // __u8 *buf;
 }
 
 
@@ -462,7 +462,7 @@ i2c_ioctl_writer(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-  if (debug)
+   if (IS_TRACING())
       dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    // per ioctl() man page:
@@ -534,7 +534,7 @@ i2c_ioctl_reader1(
    msgset.msgs  = messages;
    msgset.nmsgs = 1;
 
-   if (debug)
+   if (IS_TRACING())
       dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
    RECORD_IO_EVENTX(
