@@ -705,9 +705,10 @@ bool trace_to_syslog = false;  // write trace output to the system log as well a
  *  - the value is trace group is 0xff
  *  - funcname is the name of a function being traced
  *  - filename is the name of a file being traced
+ *  - api stack call depth > 0
  *
- *  The message is written to the fout() device for the current thread and
- *  optionally, depending on the syslog setting, to the system log.
+ *  The message is written to the fout() or ferr() device for the current thread
+ *  and optionally, depending on the syslog setting, to the system log.
  *
  *  @param trace_group   trace group of caller, 0xff to always output
  *  @param options       execution option flags
@@ -783,9 +784,7 @@ static bool vdbgtrc(
          if (debug)
             printf("(%s) decorated_msg=%p->|%s|\n", __func__, decorated_msg, decorated_msg);
 
-         char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
-               elapsed_prefix, funcname,
-               retval_info, base_msg);
+
 
 #ifdef NO
          if (trace_destination) {
@@ -819,26 +818,22 @@ static bool vdbgtrc(
 
 #ifdef ENABLE_SYSLOG
          if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
+            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
+                                     elapsed_prefix, funcname, retval_info, base_msg);
             syslog(LOG_INFO, "%s", syslog_msg);
-      }
-#endif
-         if (is_tracing(trace_group, filename, funcname)) {
-            FILE * where = NULL;
-            if (options & DBGTRC_OPTIONS_SEVERE) {
-               where = thread_settings->ferr;
-            }
-            else {
-               where = thread_settings->fout;
-            }
-            if (debug)
-               printf("(%s) writing to %p, stdout=%p, stderr=%p\n", __func__, where, stdout, stderr);
-            f0puts(decorated_msg, where);
-            f0putc('\n', where);
-            fflush(fout());
+            free(syslog_msg);
          }
+#endif
+         FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
+                           ? thread_settings->ferr
+                           : thread_settings->fout;
+         f0puts(decorated_msg, where);
+         f0putc('\n', where);
+         fflush(where);
+
          free(base_msg);
          free(decorated_msg);
-         free(syslog_msg);
+
          msg_emitted = true;
       }
    }
