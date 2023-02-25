@@ -1,6 +1,6 @@
 /** @file app_experimental.c */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -37,7 +37,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
    REPORT_FLAG_OPTION(6, "Force I2C bus");
 
-   rpt_vstring(depth+1, "Utility option --i1 = %d:     Unused", parsed_cmd->i1);
+   rpt_vstring(depth+1, "Utility option --i1 = %d:     Set source address byte in feature set packet", parsed_cmd->i1);
    rpt_nl();
 }
 
