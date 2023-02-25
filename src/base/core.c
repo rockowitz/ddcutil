@@ -435,7 +435,7 @@ void close_syslog() {
 #endif
 
 
-/** Checks if a tracing is to be performed.
+/** Checks if tracing is to be performed.
  *
  * Tracing is enabled if any of the following tests pass:
  * - trace group
@@ -696,154 +696,6 @@ bool enable_syslog = true;
 bool trace_to_syslog = false;  // write trace output to the system log as well as terminal
 #endif
 
-#ifdef OLD
-/** Issues an error message.
- *  The message is written to the current FERR device and to the system log.
- *
- *  @param funcname      function name of caller
- *  @param lineno        line number in caller
- *  @param filename      file name of caller
- *  @param format        format string for message
- *  @param ...           arguments for format string
- *
- *  @remark
- *  This function cannot map to dbgtrc(), since it writes to stderr, not stdout
- *  @remark
- *  n. used within macro **LOADFUNC** of adl_intf.c
- */
-void severemsg(
-        const char * funcname,
-        const int    lineno,
-        const char * filename,
-        char *       format,
-        ...)
-{
-      char buffer[200];
-      char buf2[250];
-      va_list(args);
-      va_start(args, format);
-      vsnprintf(buffer, 200, format, args);
-      g_snprintf(buf2, 250, "(%s) %s", funcname, buffer);
-      f0puts(buf2, ferr());
-      f0putc('\n', ferr());
-      fflush(ferr());
-      va_end(args);
-
-      syslog(LOG_ERR, "%s", buf2);
-}
-#endif
-
-
-#ifdef OLD
-/** Core function for emitting debug or trace messages.
- *  Normally wrapped in a DBGMSG or TRCMSG macro to simplify calling.
- *
- *  The message is output if any of the following are true:
- *  - the trace_group specified is currently active
- *  - the value is trace group is 0xff
- *  - funcname is the name of a function being traced
- *  - filename is the name of a file being traced
- *
- *  The message is output to the current FERR device and optionally,
- *  depending on the syslog setting, to the system log.
- *
- *  @param trace_group   trace group of caller, 0xff to always output
- *  @param funcname      function name of caller
- *  @param lineno        line number in caller
- *  @param filename      file name of caller
- *  @param format        format string for message
- *  @param ...           arguments for format string
- *
- *  @return **true** if message was output, **false** if not
- */
-bool dbgtrc_old(
-        DDCA_Trace_Group  trace_group,
-        const char *      funcname,
-        const int         lineno,
-        const char *      filename,
-        char *            format,
-        ...)
-{
-   bool debug = false;
-   if (debug)
-      printf("(dbgtrc) Starting. trace_group = 0x%04x, funcname=%s"
-             " filename=%s, lineno=%d, thread=%ld, fout() %s sysout\n",
-                       trace_group, funcname, filename, lineno, syscall(SYS_gettid),
-                       (fout() == stdout) ? "==" : "!=");
-
-   bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
-      va_list(args);
-      va_start(args, format);
-      char * buffer = g_strdup_vprintf(format, args);
-      va_end(args);
-
-      char  elapsed_prefix[20]  = "";
-      char  walltime_prefix[20] = "";
-      if (dbgtrc_show_time)
-         g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time());
-      if (dbgtrc_show_wall_time)
-         g_snprintf(walltime_prefix, 20, "[%s]", formatted_wall_time());
-
-      char thread_prefix[15] = "";
-      if (dbgtrc_show_thread_id) {
-#ifdef TARGET_BSD
-      int tid = pthread_getthreadid_np();
-#else
-         pid_t tid = syscall(SYS_gettid);
-#endif
-         snprintf(thread_prefix, 15, "[%7jd]", (intmax_t) tid);  // is this proper format for pid_t
-      }
-
-      char * buf2 = g_strdup_printf("%s%s%s(%-32s) %s",
-                                    thread_prefix, walltime_prefix, elapsed_prefix, funcname, buffer);
-#ifdef NO
-      if (trace_destination) {
-         FILE * f = fopen(trace_destination, "a");
-         if (f) {
-            int status = fputs(buf2, f);
-            if (status < 0) {    // per doc it's -1 = EOF
-               fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
-               free(trace_destination);
-               trace_destination = NULL;
-            }
-            else {
-               fflush(f);
-            }
-            fclose(f);
-         }
-         else {
-            fprintf(stderr, "Error opening %s: %s\n", trace_destination, strerror(errno));
-            trace_destination = NULL;
-         }
-      }
-      if (!trace_destination) {
-         f0puts(buf2, fout());    // no automatic terminating null
-         fflush(fout());
-      }
-
-      free(buffer);
-      free(buf2);
-      msg_emitted = true;
-   }
-#endif
-
-      if (trace_to_syslog) {
-         syslog(LOG_INFO, "%s", buf2);
-      }
-
-      f0puts(buf2, fout());
-      f0putc('\n', fout());
-      fflush(fout());
-      free(buffer);
-      free(buf2);
-      msg_emitted = true;
-   }
-
-   return msg_emitted;
-}
-#endif
-
 
 /** Core function for emitting debug and trace messages.
  *  Used by the dbgtrc*() function variants.
@@ -903,7 +755,7 @@ static bool vdbgtrc(
    if (perform_emit) {
       Thread_Output_Settings * thread_settings = get_thread_settings();
 
-      // n. trace_group == DDCA_TRC_ALL for SEVEREMSG()
+      // n. trace_group == DDCA_TRC_ALL for SEVEREMSG() or API call tracing
       if ( is_tracing(trace_group, filename, funcname)  ) {
          char * buffer = g_strdup_vprintf(format, ap);
          if (debug) {
