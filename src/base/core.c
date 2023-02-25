@@ -739,10 +739,13 @@ static bool vdbgtrc(
                        retval_info, format);
       printf("(vdbgtrc) trace_api_call_depth=%d\n", trace_api_call_depth);
    }
+
    bool msg_emitted = false;
 
    if (trace_api_call_depth > 0)
       trace_group = DDCA_TRC_ALL;
+   if (debug)
+      printf("(%s) Adjusted trace_group == 0x%02x\n", __func__, trace_group);
 
    bool perform_emit = true;
 // #ifndef ENABLE_TRACE
@@ -750,16 +753,13 @@ static bool vdbgtrc(
 //       perform_emit = false;
 // #endif
 
-   if (debug)
-      printf("(%s) Adjusted trace_group == 0x%02x\n", __func__, trace_group);
    if (perform_emit) {
       Thread_Output_Settings * thread_settings = get_thread_settings();
-
       // n. trace_group == DDCA_TRC_ALL for SEVEREMSG() or API call tracing
       if ( is_tracing(trace_group, filename, funcname)  ) {
-         char * buffer = g_strdup_vprintf(format, ap);
+         char * base_msg = g_strdup_vprintf(format, ap);
          if (debug) {
-            printf("(%s) buffer=%p->|%s|\n", __func__, buffer, buffer);
+            printf("(%s) base_msg=%p->|%s|\n", __func__, base_msg, base_msg);
             printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
          }
          char  elapsed_prefix[20]  = "";
@@ -774,24 +774,24 @@ static bool vdbgtrc(
             // assert(tid == thread_settings->tid);
             snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
          }
-         char * buf2 = NULL;
-         if (options & DBGTRC_OPTIONS_SEVERE)
-            buf2 = g_strdup_printf("%s%s",
-                          retval_info, buffer);
-         else
-            buf2 = g_strdup_printf("%s%s%s(%-30s) %s%s",
+         char * decorated_msg = (options & DBGTRC_OPTIONS_SEVERE)
+                   ? g_strdup_printf("%s%s",
+                          retval_info, base_msg)
+                   : g_strdup_printf("%s%s%s(%-30s) %s%s",
                           thread_prefix, walltime_prefix, elapsed_prefix, funcname,
-                          retval_info, buffer);
-         char * syslog_buf = g_strdup_printf("%s(%-30s) %s%s",
-               elapsed_prefix, funcname,
-               retval_info, buffer);
+                          retval_info, base_msg);
          if (debug)
-            printf("(%s) buf2=%p->|%s|\n", __func__, buf2, buf2);
+            printf("(%s) decorated_msg=%p->|%s|\n", __func__, decorated_msg, decorated_msg);
+
+         char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
+               elapsed_prefix, funcname,
+               retval_info, base_msg);
+
 #ifdef NO
          if (trace_destination) {
             FILE * f = fopen(trace_destination, "a");
             if (f) {
-               int status = fputs(buf2, f);
+               int status = fputs(decorated_msg, f);
                if (status < 0) {    // per doc it's -1 = EOF
                   fprintf(stderr, "Error writing to %s: %s\n", trace_destination, strerror(errno));
                   free(trace_destination);
@@ -808,21 +808,20 @@ static bool vdbgtrc(
             }
          }
          if (!trace_destination) {
-            f0puts(buf2, fout());    // no automatic terminating null
+            f0puts(decorated_msg, fout());    // no automatic terminating null
             fflush(fout());
          }
 
          free(pre_prefix_buffer);
-         free(buf2);
+         free(decorated_msg);
          msg_emitted = true;
 #endif
 
 #ifdef ENABLE_SYSLOG
          if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-            syslog(LOG_INFO, "%s", syslog_buf);
+            syslog(LOG_INFO, "%s", syslog_msg);
       }
 #endif
-
          if (is_tracing(trace_group, filename, funcname)) {
             FILE * where = NULL;
             if (options & DBGTRC_OPTIONS_SEVERE) {
@@ -833,13 +832,13 @@ static bool vdbgtrc(
             }
             if (debug)
                printf("(%s) writing to %p, stdout=%p, stderr=%p\n", __func__, where, stdout, stderr);
-            f0puts(buf2, where);
+            f0puts(decorated_msg, where);
             f0putc('\n', where);
             fflush(fout());
          }
-         free(buffer);
-         free(buf2);
-         free(syslog_buf);
+         free(base_msg);
+         free(decorated_msg);
+         free(syslog_msg);
          msg_emitted = true;
       }
    }
