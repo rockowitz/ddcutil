@@ -3,7 +3,6 @@ AM_CPPFLAGS =        \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
-
 AM_CFLAGS = -Wall
 if WARNINGS_ARE_ERRORS_COND
 AM_CFLAGS += -Werror
@@ -28,7 +27,7 @@ app_dynamic_features.c \
 app_experimental.c \
 app_getvcp.c \
 app_probe.c \
-app_services.c \
+app_ddcutil_services.c \
 app_setvcp.c \
 app_vcpinfo.c \
 app_watch.c
@@ -37,10 +36,7 @@ if INCLUDE_TESTCASES_COND
 libappddcutil_la_SOURCES += app_testcases.c
 endif
 
-
 if ENABLE_ENVCMDS_COND
 libappddcutil_la_SOURCES += \
 app_interrogate.c
 endif
-
-

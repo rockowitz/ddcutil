@@ -19,7 +19,7 @@
 #include "app_watch.h"
 #include "app_vcpinfo.h"
 
-void init_app_services() {
+void init_app_ddcutil_services() {
    init_app_capabilities();
    init_app_dumpload();
    init_app_dynamic_features();
@@ -30,4 +30,5 @@ void init_app_services() {
    init_app_probe();
    init_app_setvcp();
    init_app_watch();
+   // main initialized by local init call
 }

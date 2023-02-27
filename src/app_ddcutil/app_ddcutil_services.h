@@ -8,6 +8,6 @@
 #ifndef APP_SERVICES_H_
 #define APP_SERVICES_H_
 
-void init_app_services();
+void init_app_ddcutil_services();
 
-#endif /* APP_SERVICES_H_ */
+#endif /* APP_DDCUTIL_SERVICES_H_ */
