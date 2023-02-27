@@ -6,6 +6,9 @@
  *
  * Because the DDC specific status codes are merged with the Linux status codes
  * (which are \#defines), they are specified as \#defines rather than enum values.
+ *
+ * If status codes are added, an entry must also be added to the description table
+ * in base/ddc_errno.c.
  */
 
 // Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
