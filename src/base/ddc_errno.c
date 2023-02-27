@@ -2,7 +2,7 @@
  * Error codes internal to **ddcutil**.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -18,6 +18,8 @@
 
 //
 // DDCRC status code descriptions
+//
+// Keep in sync with status codes in ddcutil_status_codes.h
 //
 
 // TODO: Consider modifying EDENTRY generate doxygen comment as well using description field
@@ -58,6 +60,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_LOCKED                   , "display locked"),
       EDENTRY(DDCRC_ALREADY_OPEN             , "already open in current thread"),
       EDENTRY(DDCRC_BAD_DATA                 , "invalid data"),
+      EDENTRY(DDCRC_INVALID_CONFIG_FILE      , "configuration file error"),
    // EDENTRY(DDCRC_CAP_FATAL                , "incorrect, unusable capabilities string"),
    // EDENTRY(DDCRC_CAP_WARNING              , "errors in capabilities string, but usable")
     };
