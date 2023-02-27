@@ -9,13 +9,14 @@
  *  error is retained for use by higher levels in the call stack.
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
 #ifndef ERROR_INFO_H_
 #define ERROR_INFO_H_
 
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #define ERRINFO_STATUS(_erec)  ( (_erec) ? _erec->status_code : 0 )
@@ -82,6 +83,14 @@ Error_Info * errinfo_new_with_causes(
       char *         detail,
       ...);
 
+Error_Info * errinfo_new_with_causes_gptr(
+      int            status_code,
+      GPtrArray*     causes,
+      const char *   func,
+      char *         detail,
+      ...);
+
+
 #ifdef UNUSED
 Error_Info * errinfo_new_with_callee_status_codes(
       int            status_code,
@@ -119,5 +128,15 @@ void errinfo_report_details(Error_Info * erec, int depth);
 
 char * errinfo_summary(
       Error_Info *   erec);
+
+#ifdef ELSEWHERE
+void basic_errmsg_emitter(
+      GPtrArray*   errmsgs,
+      GPtrArray *  errinfo_accum,
+      bool         verbose,
+      int          rc,
+      const char * func,
+      const char * msg, ...);
+#endif
 
 #endif /* ERROR_INFO_H_ */

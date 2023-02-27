@@ -412,6 +412,27 @@ errinfo_new_with_causes(
 }
 
 
+Error_Info * errinfo_new_with_causes_gptr(
+      int            status_code,
+      GPtrArray*     causes,
+      const char *   func,
+      char *         detail,
+      ...)
+{
+   va_list ap;
+   va_start(ap, detail);
+   Error_Info * result = errinfo_newv(status_code, func, detail, ap);
+   va_end(ap);
+   for (int ndx = 0; ndx < causes->len; ndx++) {
+      errinfo_add_cause(result, g_ptr_array_index(causes,ndx));
+   }
+   return result;
+}
+
+
+
+
+
 #ifdef UNUSED
 
 // For creating a new Ddc_Error when the called functions
@@ -769,3 +790,33 @@ errinfo_summary(Error_Info * erec) {
    free(buf1);
    return buf;
 }
+
+#ifdef ELSEWHERE
+// belongs elsewhere, but where?
+
+void basic_errmsg_emitter(
+      GPtrArray*   errmsgs,
+      GPtrArray *  errinfo_accum,
+      bool         verbose,
+      int          rc,
+      const char * func,
+      const char * msg, ...)
+{
+   char buffer[200];
+   va_list(args);
+   va_start(args, msg);
+   vsnprintf(buffer, 100, msg, args);
+   va_end(args);
+
+   if (verbose || (!errmsgs && !errinfo_accum))
+      fprintf(stderr, "%s\n", buffer);
+   if (errinfo_accum) {
+      Error_Info * erec =  errinfo_new(rc, func, buffer);
+      g_ptr_array_add(errinfo_accum, erec);
+   }
+   if (errmsgs) {
+      g_ptr_array_add(errmsgs, g_strdup(buffer));
+   }
+}
+#endif
+
