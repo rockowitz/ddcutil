@@ -1,9 +1,10 @@
 /** @file ddc_display_ref_reports.c
+ *
  *  Report functions factored out of ddc_displays.c due to size of that file.
  *  ddc_display_ref_reports.c and ddc_displays.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -610,7 +611,6 @@ void dbgrpt_valid_display_refs(int depth) {
 
 
 void init_ddc_display_ref_reports() {
-
    RTTI_ADD_FUNC(ddc_report_display_by_dref);
    RTTI_ADD_FUNC(ddc_report_displays);
    RTTI_ADD_FUNC(get_controller_mfg_string_t);
