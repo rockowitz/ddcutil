@@ -970,11 +970,10 @@ void query_sysenv() {
 }
 
 
-void init_sysenv() {
+void init_query_sysenv() {
    RTTI_ADD_FUNC(query_sysenv);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(probe_i2c_devices_using_udev);
 #endif
-   init_query_sysfs();
 }
 

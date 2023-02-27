@@ -865,7 +865,7 @@ void dump_sysfs_i2c() {
 }
 
 
-void init_query_sysfs() {
+void init_query_sysenv_sysfs() {
    RTTI_ADD_FUNC(query_drm_using_sysfs);
    RTTI_ADD_FUNC(query_sys_bus_i2c);
    RTTI_ADD_FUNC(each_i2c_device);

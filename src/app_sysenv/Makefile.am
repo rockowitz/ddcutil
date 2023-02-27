@@ -28,6 +28,7 @@ CLEANFILES = \
 noinst_LTLIBRARIES = libappsysenv.la
 
 libappsysenv_la_SOURCES =     \
+app_sysenv_services.c \
 query_sysenv.c \
 query_sysenv_access.c \
 query_sysenv_base.c \

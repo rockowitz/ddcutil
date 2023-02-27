@@ -28,6 +28,6 @@ void query_drm_using_sysfs();
 void dump_sysfs_i2c();
 void show_relevant_char_major_numbers();
 
-void init_query_sysfs();
+void init_query_sysenv_sysfs();
 
 #endif /* QUERY_SYSENV_SYSFS_H_ */
