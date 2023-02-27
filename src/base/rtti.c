@@ -6,9 +6,11 @@
 // Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <stdbool.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
  
+#include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "base/rtti.h"
@@ -36,6 +38,9 @@ char * rtti_get_func_name_by_addr(void * ptr) {
 
 
 void * rtti_get_func_addr_by_name(const char * name) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) func_name_table=%p, name=|%s|\n", __func__, func_name_table, name);
    void * result = NULL;
    if (func_name_table) {
       GHashTableIter iter;
@@ -48,7 +53,8 @@ void * rtti_get_func_addr_by_name(const char * name) {
          }
       }
    }
-   // printf("(%s) name=%s, returning %s\n", __func__, name, SBOOL(result));
+   if (debug)
+      printf("(%s) name=%s, returning %s\n", __func__, name, SBOOL(result));
    return result;
 }
 
@@ -59,9 +65,17 @@ void dbgrpt_rtti_func_name_table(int depth) {
    if (func_name_table) {
       GHashTableIter iter;
       gpointer key, value;
+      GPtrArray * values = g_ptr_array_new();
       g_hash_table_iter_init(&iter, func_name_table);
       while (g_hash_table_iter_next(&iter, &key, &value)) {
          rpt_vstring(d1, "%p: %s", key, (char *) value);
+         g_ptr_array_add(values, value);
       }
+      g_ptr_array_sort(values, gaux_ptr_scomp);
+      for (int ndx = 0; ndx < values->len; ndx++) {
+         rpt_vstring(d1, "   %s", (char *) g_ptr_array_index(values, ndx));
+      }
+
    }
 }
+
