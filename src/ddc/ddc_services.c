@@ -4,7 +4,7 @@
  * ddc layer initialization and configuration, statistics management
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -120,7 +120,6 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
       rpt_nl();
    }
 
-
    if (show_per_thread_stats) {
       rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
       rpt_nl();
@@ -182,6 +181,7 @@ void init_ddc_services() {
    init_ddc_watch_displays();
 #endif
 
-   // dbgrpt_rtti_func_name_table(1);
+   if (debug)
+      dbgrpt_rtti_func_name_table(1);
    DBGMSF(debug, "Done");
 }
