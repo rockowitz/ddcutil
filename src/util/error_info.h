@@ -129,14 +129,4 @@ void errinfo_report_details(Error_Info * erec, int depth);
 char * errinfo_summary(
       Error_Info *   erec);
 
-#ifdef ELSEWHERE
-void basic_errmsg_emitter(
-      GPtrArray*   errmsgs,
-      GPtrArray *  errinfo_accum,
-      bool         verbose,
-      int          rc,
-      const char * func,
-      const char * msg, ...);
-#endif
-
 #endif /* ERROR_INFO_H_ */

@@ -747,7 +747,6 @@ errinfo_report_details(Error_Info * erec, int depth) {
          errinfo_report_details(erec->causes[ndx], d1);
       }
    }
-
 }
 
 
@@ -790,33 +789,3 @@ errinfo_summary(Error_Info * erec) {
    free(buf1);
    return buf;
 }
-
-#ifdef ELSEWHERE
-// belongs elsewhere, but where?
-
-void basic_errmsg_emitter(
-      GPtrArray*   errmsgs,
-      GPtrArray *  errinfo_accum,
-      bool         verbose,
-      int          rc,
-      const char * func,
-      const char * msg, ...)
-{
-   char buffer[200];
-   va_list(args);
-   va_start(args, msg);
-   vsnprintf(buffer, 100, msg, args);
-   va_end(args);
-
-   if (verbose || (!errmsgs && !errinfo_accum))
-      fprintf(stderr, "%s\n", buffer);
-   if (errinfo_accum) {
-      Error_Info * erec =  errinfo_new(rc, func, buffer);
-      g_ptr_array_add(errinfo_accum, erec);
-   }
-   if (errmsgs) {
-      g_ptr_array_add(errmsgs, g_strdup(buffer));
-   }
-}
-#endif
-
