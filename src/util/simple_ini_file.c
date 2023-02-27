@@ -104,18 +104,18 @@ bool is_kv(char * s, char ** key_loc, char ** value_loc) {
 }
 
 
-static
-void emit_error_msg(char * msg, GPtrArray * errmsgs, GPtrArray* errinfo_accum, bool verbose) {
-   if (verbose)
-      printf("%s\n", msg);
-
-   if (errinfo_accum)
-      g_ptr_array_add(errinfo_accum, errinfo_new(-ENOENT, __func__, msg));
+static void emit_error_msg(GPtrArray * errmsgs, bool debug, char * format, ...)
+{
+   char buffer[200];
+   va_list(args);
+   va_start(args, format);
+   vsnprintf(buffer, 100, format, args);
+   va_end(args);
 
    if (errmsgs)
-      g_ptr_array_add(errmsgs, msg);
-   else
-      free(msg);
+      g_ptr_array_add(errmsgs, g_strdup(buffer));
+   if (!errmsgs)
+      fprintf(stderr, "%s\n", buffer);
 }
 
 
@@ -124,7 +124,6 @@ void emit_error_msg(char * msg, GPtrArray * errmsgs, GPtrArray* errinfo_accum, b
  *
  * @param   ini_file_name     file name
  * @param   errmsgs           if non-null, collects per-line error messages
- * @param   verbose           if true, write error messages to terminal
  * @param   parsed_ini_loc    where to return newly allocated parsed ini file
  * @retval  0                 success
  * @retval -ENOENT            configuration file not found
@@ -132,7 +131,7 @@ void emit_error_msg(char * msg, GPtrArray * errmsgs, GPtrArray* errinfo_accum, b
  * @retval < 0                errors reading configuration file
  *
  * If the configuration file is not found (-ENOENT), or there are errors reading
- * or parsing the configuration file, *hash_table_loc is NULL.
+ * or parsing the configuration file, *parsed_ini_loc is NULL.
  *
  * If errors occur reading or interpreting the file, messages will be added
  * to **errmsgs**.
@@ -143,14 +142,10 @@ void emit_error_msg(char * msg, GPtrArray * errmsgs, GPtrArray* errinfo_accum, b
  */
 int ini_file_load(
            const char *      ini_file_name,
-           GPtrArray*        errmsgs,
-           bool              verbose,
-           GPtrArray *       errinfo_accum,
+           GPtrArray *       errmsgs,
            Parsed_Ini_File** parsed_ini_loc)
 {
    bool debug = false;
-   if (debug)
-      verbose = true;
    assert(ini_file_name);
 
    int result = 0;
@@ -160,15 +155,14 @@ int ini_file_load(
    GHashTable * ini_file_hash = NULL;
 
    GPtrArray * config_lines = g_ptr_array_new_with_free_func(g_free);
-   int getlines_rc = file_getlines(ini_file_name, config_lines, verbose);
+   int getlines_rc = file_getlines(ini_file_name, config_lines, debug);
    DBGF(debug, "file_getlines() returned %d", getlines_rc);
    if (getlines_rc < 0) {
       result = getlines_rc;
       if (getlines_rc != -ENOENT) {
-         char * msg = g_strdup_printf("Error reading configuration file %s: %s",
-               ini_file_name,
-               strerror(-getlines_rc) );
-         emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
+         emit_error_msg(errmsgs, debug,
+               "Error reading configuration file %s: %s", ini_file_name, strerror(-getlines_rc));
+         result = -getlines_rc;
       }
    }  // error reading lines
    else {  //process the lines
@@ -202,9 +196,8 @@ int ini_file_load(
             }
             else {
                DBGF(debug, "trimmed: |%s|", trimmed);
-               char * msg = g_strdup_printf("Line %d: Invalid before section header: %s",
-                                       ndx+1, trimmed);
-               emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
+               emit_error_msg(errmsgs, debug,
+                   "Line %d: Invalid before section header: %s", ndx+1, trimmed);
                error_ct++;
                free(value);
             }
@@ -216,7 +209,8 @@ int ini_file_load(
                          ? g_strdup_printf("Line %d: invalid: %s", ndx+1, trimmed)
                          : g_strdup_printf("Line %d: invalid before section header: %s",
                                            ndx+1, trimmed);
-            emit_error_msg(msg, errmsgs, errinfo_accum, verbose);
+            emit_error_msg(errmsgs, debug, msg);
+            free(msg);
             error_ct++;
          }
       } // for loop
@@ -225,6 +219,7 @@ int ini_file_load(
       if (cur_segment)
          free(cur_segment);
       if ( error_ct > 0 ) {
+#ifdef NO
          if (errinfo_accum) {
             Error_Info * master_err = errinfo_new(-EBADMSG, __func__,
                                         "Errors processing configuration file %s", ini_file_name);
@@ -234,12 +229,13 @@ int ini_file_load(
             }
             g_ptr_array_add(errinfo_accum, master_err);
          }
+#endif
          result = -EBADMSG;
          g_hash_table_destroy(ini_file_hash);
          ini_file_hash = NULL;
       }
    } // process the lines
-
+   // DBGF(true, "(ini_file_load) done");
    if (debug) {
       if (errmsgs && errmsgs->len > 0) {
          for (guint ndx = 0; ndx < errmsgs->len; ndx++)

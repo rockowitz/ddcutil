@@ -24,8 +24,6 @@ typedef struct {
 int    ini_file_load(
            const char *      ini_filename,
            GPtrArray*        errmsgs,
-           bool              verbose,
-           GPtrArray*        errinfo_accumulator,
            Parsed_Ini_File** ini_file_loc);
 
 char * ini_file_get_value(
