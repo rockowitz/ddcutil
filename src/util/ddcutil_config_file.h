@@ -15,7 +15,6 @@ int read_ddcutil_config_file(
       char **        config_fn_loc,
       char **        untokenized_option_string_loc,
       GPtrArray *    errmsgs,
-      GPtrArray *    errinfo_accumulator,
       bool           verbose);
 
 int apply_config_file(
@@ -26,7 +25,6 @@ int apply_config_file(
       char ***     new_argv_loc,
       char **      untokenized_option_string_loc,
       char **      configure_fn_loc,
-      GPtrArray *  errmsgs,
-      GPtrArray *  errinfo_accumulator);
+      GPtrArray *  errmsgs);
 
 #endif /* DDCUTIL_CONFIG_FILE_H_ */

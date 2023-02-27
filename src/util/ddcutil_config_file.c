@@ -84,7 +84,6 @@ int read_ddcutil_config_file(
       char **        config_fn_loc,
       char **        untokenized_option_string_loc,
       GPtrArray *    errmsgs,
-      GPtrArray *    errinfo_accumulator,
       bool           verbose)
 {
    bool debug = false;
@@ -97,7 +96,6 @@ int read_ddcutil_config_file(
    *untokenized_option_string_loc = NULL;
    *config_fn_loc = NULL;
 
-
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    if (!config_fn) {
       DBGF(debug, "Configuration file not found");
@@ -108,12 +106,12 @@ int read_ddcutil_config_file(
    *config_fn_loc = config_fn;
 
    Parsed_Ini_File * ini_file = NULL;
-   int load_rc = ini_file_load(config_fn, errmsgs, verbose, errinfo_accumulator, &ini_file);
+   int load_rc = ini_file_load(config_fn, errmsgs, &ini_file);
    ASSERT_IFF(load_rc==0, ini_file);
-   DBGF(debug, "ini_file_load() returned %d\n", load_rc);
-   if (verbose) {
+   DBGF(debug, "ini_file_load() returned %d", load_rc);
+   if (debug || verbose) {
       if (errmsgs && errmsgs->len > 0) {
-         fprintf(stderr, "Error(s) processing configuration file: %s\n", config_fn);
+         fprintf(stderr, "(read_ddcutil_config_file) Error(s) processing configuration file: %s\n", config_fn);
          for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
             fprintf(stderr, "   %s\n", (char*) g_ptr_array_index(errmsgs, ndx));
          }
@@ -237,7 +235,6 @@ int merge_command_tokens(
  *  @param  configure_fn_loc  where to return name of configuration file,
  *                            NULL if not found
  *  @param  errmsgs           if non-NULL, collects error messages as text strings
- *  @param  errinfo_accum     if non-NULL, collects error messages as Error_Info structs
  *  @retval 0                 success.
  *  @retval -EBADMSG          config file syntax error
  *  @retval < 0               error reading or parsing the configuration file.
@@ -251,8 +248,7 @@ int apply_config_file(
       char ***     new_argv_loc,
       char**       untokenized_config_options_loc,
       char**       configure_fn_loc,
-      GPtrArray *  errmsgs,
-      GPtrArray *  errinfo_accum)
+      GPtrArray *  errmsgs)
 {
    bool debug = false;
    DBGF(debug, "Starting. application_name=%s, errmsgs=%p", application_name, (void*)errmsgs);
@@ -268,7 +264,6 @@ int apply_config_file(
                            configure_fn_loc,
                            untokenized_config_options_loc,
                            errmsgs,
-                           errinfo_accum,
                            debug);   // verbose
    ASSERT_IFF(read_config_rc==0, *untokenized_config_options_loc);
    DBGF(debug, "read_ddcutil_config_file() returned %d, configure_fn: %s",
