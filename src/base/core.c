@@ -44,6 +44,7 @@
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
+#include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/glib_string_util.h"
@@ -222,8 +223,21 @@ static GPtrArray  * traced_file_table     = NULL;
 static GPtrArray  * traced_api_call_table = NULL;
 
 
+void dbgrpt_traced_function_table(int depth) {
+   if (traced_function_table) {
+      rpt_vstring(depth, "traced_function_table:");
+      if (traced_function_table) {
+         for (int ndx = 0; ndx < traced_function_table->len; ndx++) {
+            rpt_vstring(depth+1, g_ptr_array_index(traced_function_table, ndx));
+         }
+      }
+   }
+   else
+      rpt_vstring(depth, "traced_function_table: NULL");
+}
+
+
 /** Adds a function to the list of functions to be traced.
- *
  *  @param funcname function name
  */
 bool add_traced_function(const char * funcname) {
@@ -1102,6 +1116,33 @@ void program_logic_error(
    SYSLOG(LOG_ERR, "%s", buf2);
    SYSLOG(LOG_ERR, "%s", buffer);
 }
+
+
+void core_errmsg_emitter(
+      GPtrArray*   errmsgs,
+      GPtrArray *  errinfo_accum,
+      bool         verbose,
+      int          rc,
+      const char * func,
+      const char * msg, ...)
+{
+   char buffer[200];
+   va_list(args);
+   va_start(args, msg);
+   vsnprintf(buffer, 100, msg, args);
+   va_end(args);
+
+   if (verbose || (!errmsgs && !errinfo_accum))
+      fprintf(ferr(), "%s\n", buffer);
+   if (errinfo_accum) {
+      Error_Info * erec =  errinfo_new(rc, func, buffer);
+      g_ptr_array_add(errinfo_accum, erec);
+   }
+   if (errmsgs) {
+      g_ptr_array_add(errmsgs, g_strdup(buffer));
+   }
+}
+
 
 
 void init_core() {

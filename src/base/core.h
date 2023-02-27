@@ -105,6 +105,7 @@ extern __thread  int  trace_api_call_depth;
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
+void dbgrpt_traced_function_table(int depth);
 
 bool add_traced_api_call(const char * funcname);
 bool is_traced_api_call( const char * funcname);
@@ -434,6 +435,17 @@ void program_logic_error(
    program_logic_error(__func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
 void set_default_thread_output_settings(FILE * fout, FILE * ferr);
+
+void core_errmsg_emitter(
+      GPtrArray*   errmsgs,
+      GPtrArray *  errinfo_accum,
+      bool         verbose,
+      int          rc,
+      const char * func,
+      const char * msg, ...);
+
+
+
 void init_core();
 
 #endif /* BASE_CORE_H_ */
