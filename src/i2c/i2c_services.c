@@ -1,7 +1,7 @@
 /** @file i2c_services.c
  */
 
-// Copyright (C) 2012 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "i2c_bus_core.h"
