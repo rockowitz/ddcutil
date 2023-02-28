@@ -9,6 +9,7 @@
 // be shared with libmain/api.base.c
 
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <stdbool.h>
 
 #include "config.h"
@@ -43,9 +44,29 @@
 #include "ddc_common_init.h"
 
 
-void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator)
+void emit_init_tracing_error(
+      GPtrArray*   errinfo_accumulator,
+      const char * func,
+      DDCA_Status  errcode,
+      const char * format, ...)
+{
+   assert(errinfo_accumulator);
+   va_list(args);
+   va_start(args, format);
+   char buffer[200];
+   vsnprintf(buffer, 200, format, args);
+   va_end(args);
+   va_end(args);
+
+   g_ptr_array_add(errinfo_accumulator, errinfo_new(errcode, func, buffer));
+}
+
+
+Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
+   Error_Info * result = NULL;
+   GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func(g_free);
    if (debug)
       printf("(%s) Starting.\n",__func__);
 #ifdef ENABLE_SYSLOG
@@ -56,13 +77,14 @@ void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator)
        dbgtrc_show_time = true;                           // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)       // wall timestamps on debug and trace messages?
        dbgtrc_show_wall_time = true;                      // extern in core.h
-    if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
+   if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)     // timestamps on debug and trace messages?
        dbgtrc_show_thread_id = true;                      // extern in core.h
-    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
-    add_trace_groups(parsed_cmd->traced_groups);
-    // if (parsed_cmd->s1)
-    //    set_trace_destination(parsed_cmd->s1, parser_mode_name(parsed_cmd->parser_mode));
-    if (parsed_cmd->traced_functions) {
+   report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
+   add_trace_groups(parsed_cmd->traced_groups);
+   // if (parsed_cmd->s1)
+   //    set_trace_destination(parsed_cmd->s1, parser_mode_name(parsed_cmd->parser_mode));
+
+   if (parsed_cmd->traced_functions) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
           if (debug)
                 printf("(%s) Adding traced function: %s\n",
@@ -70,10 +92,8 @@ void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator)
           char * curfunc = parsed_cmd->traced_functions[ndx];
           bool found = add_traced_function(curfunc);
           if (!found) {
-             rpt_vstring(0, "Traced function not found: %s", curfunc);   // *** TEMP ***
-             if (errinfo_accumulator)
-                   g_ptr_array_add(errinfo_accumulator,
-                                   errinfo_new(-ENOENT, __func__, "Traced function not found: %s", curfunc));
+             emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
+                                     "Traced function not found: %s", curfunc);
           }
        }
     }
@@ -85,24 +105,27 @@ void init_tracing(Parsed_Cmd * parsed_cmd, GPtrArray* errinfo_accumulator)
 
           bool found = add_traced_api_call(curfunc);
           if (!found) {
-             rpt_vstring(0, "Traced API call not found: %s", curfunc);   // *** TEMP ***
-             if (errinfo_accumulator)
-                   g_ptr_array_add(errinfo_accumulator,
-                                   errinfo_new(-ENOENT, __func__, "Traced API call not found: %s", curfunc));
+             emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
+                                     "Traced API call not found: %s", curfunc);
           }
        }
-    }
-    if (parsed_cmd->traced_files) {
+   }
+   if (parsed_cmd->traced_files) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++) {
           if (debug)
              printf("(%s) Adding traced file: %s\n",
                     __func__, parsed_cmd->traced_files[ndx]);
           add_traced_file(parsed_cmd->traced_files[ndx]);
        }
-    }
-    
-    if (debug)
-       printf("(%s) Done.\n", __func__);
+   }
+
+   // if (debug)
+   //    printf("(%s) Done. Returning: %s\n", __func__, sbool(ok));
+
+   // dbgrpt_traced_function_table(2);
+   if (errinfo_accumulator->len > 0)
+      result = errinfo_new_with_causes_gptr(-EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
+   return result;
 }
 
 
@@ -206,7 +229,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
 
-   init_ddc_services();   // n. initializes start timestamp
+   // init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
    DBGMSF(debug, "          Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
