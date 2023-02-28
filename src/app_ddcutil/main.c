@@ -105,7 +105,7 @@
 #include "app_ddcutil/app_interrogate.h"
 #include "app_ddcutil/app_probe.h"
 #include "app_ddcutil/app_getvcp.h"
-#include "app_ddcutil/app_services.h"
+#include <app_ddcutil/app_ddcutil_services.h>
 #include "app_ddcutil/app_setvcp.h"
 #include "app_ddcutil/app_vcpinfo.h"
 #include "app_ddcutil/app_watch.h"
@@ -113,16 +113,19 @@
 #include "app_ddcutil/app_testcases.h"
 #endif
 
+#ifdef ENABLE_ENVCMDS
+#include "app_sysenv/app_sysenv_services.h"
 #include "app_sysenv/query_sysenv.h"
 #ifdef USE_USB
 #include "app_sysenv/query_sysenv_usb.h"
+#endif
 #endif
 
 
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_TOP;
 
-static void add_rtti_functions();
+static void add_local_rtti_functions();
 
 
 //
@@ -358,8 +361,6 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
       if (!validate_environment())
          goto bye;
    }
-
-   init_sysenv();
 #else
    if (!validate_environment())
       goto bye;
@@ -689,17 +690,23 @@ main(int argc, char *argv[]) {
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
 
    Parsed_Cmd * parsed_cmd = NULL;
-   add_rtti_functions();      // add entries for this file
+   add_local_rtti_functions();      // add entries for this file
    init_base_services();      // so tracing related modules are initialized
+   init_ddc_services();  // initializes i2c, usb, ddc, vcp, dynvcp
+   init_app_ddcutil_services();
+#ifdef ENABLE_ENVCMDS
+   init_app_sysenv_services();
+#endif
    DBGMSF(main_debug, "init_base_services() complete, ol = %s",
                       output_level_name(get_output_level()) );
+   // dbgrpt_rtti_func_name_table(3);
 
-   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(g_free);
    char ** new_argv = NULL;
    int     new_argc = 9;
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
+   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(g_free);
    int apply_config_rc = apply_config_file(
                     "ddcutil",     // use this section of config file
                     argc,
@@ -708,8 +715,7 @@ main(int argc, char *argv[]) {
                     &new_argv,
                     &untokenized_cmd_prefix,
                     &configure_fn,
-                    config_file_errs,
-                    NULL);
+                    config_file_errs);
 #ifdef LATER
    if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
       fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
@@ -717,7 +723,7 @@ main(int argc, char *argv[]) {
 #endif
    DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
    if (config_file_errs->len > 0) {
-      f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
+      f0printf(ferr(), "(main) Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
       for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
          char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
          f0printf(ferr(), s);
@@ -736,15 +742,21 @@ main(int argc, char *argv[]) {
       rpt_ntsa(new_argv, 1);
    }
 
-   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL, NULL);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
 
-   if (!parsed_cmd) {
+   if (!parsed_cmd)
       goto bye;      // main_rc == EXIT_FAILURE
-   }
 
-   init_tracing(parsed_cmd, NULL);
+   Error_Info * errs = init_tracing(parsed_cmd);
+   if (errs) {
+      for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
+         Error_Info * cur = errs->causes[ndx];
+         fprintf(stderr, "%s\n", cur->detail);
+      }
+      goto bye;
+   }
 
    // tracing is sufficiently initialized, can report start time
    start_time_reported = parsed_cmd->traced_groups    ||
@@ -760,7 +772,7 @@ main(int argc, char *argv[]) {
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 #ifdef ENABLE_SYSLOG
-   if (trace_to_syslog) {
+   if (trace_to_syslog) {   // global
       openlog("ddcutil",          // prepended to every log message
               LOG_CONS |          // write to system console if error sending to system logger
               LOG_PID,            // include caller's process id
@@ -769,40 +781,12 @@ main(int argc, char *argv[]) {
    }
 #endif
 
-   bool ok = master_initializer(parsed_cmd);
-   if (!ok)
+   if (!master_initializer(parsed_cmd))
       goto bye;
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
 
    // xdg_tests(); // for development
-
-   // Initialization complete, rtti now contains entries for all traced functions
-   // Check that any functions specified on --trcfunc are actually traced.
-   // dbgrpt_rtti_func_name_table(0);
-   if (parsed_cmd->traced_functions) {
-      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_functions); ndx++) {
-         char * func_name = parsed_cmd->traced_functions[ndx];
-         // DBGMSG("Verifying: %s", func_name);
-         if (!rtti_get_func_addr_by_name(func_name)) {
-            rpt_vstring(0, "Traced function not found: %s", func_name);
-            goto bye;
-         }
-      }
-   }
-
-#ifdef MEANINGLESS_FOR_CMDLINE_PROGRAM
-   if (parsed_cmd->traced_api_calls) {
-      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
-         char * func_name = parsed_cmd->traced_api_calls[ndx];
-         // DBGMSG("Verifying: %s", func_name);
-         if (!rtti_get_func_addr_by_name(func_name)) {
-            rpt_vstring(0, "Traced API call not found: %s", func_name);
-            goto bye;
-         }
-      }
-   }
-#endif
 
    if (parsed_cmd->flags & CMD_FLAG_F2) {
       consolidated_i2c_sysfs_report(0);
@@ -973,15 +957,14 @@ bye:
 }
 
 
-static void add_rtti_functions() {
+static void add_local_rtti_functions() {
    RTTI_ADD_FUNC(main);
    RTTI_ADD_FUNC(execute_cmd_with_optional_display_handle);
    RTTI_ADD_FUNC(find_dref);
-      RTTI_ADD_FUNC(verify_i2c_access);
+   RTTI_ADD_FUNC(verify_i2c_access);
 #ifdef UNUSED
 #ifdef TARGET_LINUX
    RTTI_ADD_FUNC(validate_environment_using_libkmod);
 #endif
 #endif
-   init_app_services();
 }
