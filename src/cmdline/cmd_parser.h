@@ -12,6 +12,8 @@
 #ifndef CMD_PARSER_H_
 #define CMD_PARSER_H_
 
+#include <glib-2.0/glib.h>
+
 #include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
 
@@ -19,7 +21,6 @@ Parsed_Cmd * parse_command(
       int         argc,
       char *      argv[],
       Parser_Mode parser_mode,
-      GPtrArray * errmsgs,
-      GPtrArray * errinfo_accum);
+      GPtrArray * errmsgs);
 
 #endif /* CMD_PARSER_H_ */

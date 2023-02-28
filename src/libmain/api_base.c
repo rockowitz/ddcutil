@@ -253,7 +253,7 @@ Error_Info * get_parsed_libmain_config(Parsed_Cmd** parsed_cmd_loc) {
 
       assert(new_argc >= 1);
       DBGF(debug, "Calling parse_command()");
-       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs, NULL);
+       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
       if (!*parsed_cmd_loc) {
          SYSLOG(LOG_ERR, "Invalid configuration file option string: %s",  untokenized_option_string);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {

@@ -742,7 +742,7 @@ main(int argc, char *argv[]) {
       rpt_ntsa(new_argv, 1);
    }
 
-   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL, NULL);
+   parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
 
