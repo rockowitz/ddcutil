@@ -2,7 +2,7 @@
  * Display Specification
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DISPLAYS_H_
@@ -22,6 +22,7 @@
 #include "core.h"
 #include "dynamic_features.h"
 #include "feature_set_ref.h"
+#include "per_display_data.h"
 #include "vcp_version.h"
 
 typedef void * Global_Display_Lock;
@@ -200,6 +201,7 @@ typedef struct _display_ref {
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
    char *                   driver_name;           //
+   Per_Display_Data *       pdd;
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

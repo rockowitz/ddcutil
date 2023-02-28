@@ -1,4 +1,4 @@
-/** \file per_display_data.h
+/** @file per_display_data.h
  *
  *  Maintains per-display settings and statistics.
  *
@@ -18,7 +18,8 @@
 #include <inttypes.h>
 
 #include "base/parms.h"
-#include "base/displays.h"
+#include "base/stats.h"
+// #include "base/displays.h"
 
 extern GHashTable *  per_display_data_hash;
 extern GMutex        per_display_data_mutex;    // temp, replace by function calls
@@ -37,16 +38,6 @@ struct {
    uint16_t       counters[MAX_MAX_TRIES+2];
 } Per_Display_Try_Stats;
 
-
-//! I2C retry limit types
-typedef enum{
-   DD_WRITE_ONLY_TRIES_OP,       /**< Maximum write-only operation tries */
-   DD_WRITE_READ_TRIES_OP,       /**< Maximum read-write operation tries */
-   DD_MULTI_PART_READ_OP,        /**< Maximum multi-part read operation tries */
-   DD_MULTI_PART_WRITE_OP        /**< Maximum multi-part write operation tries */
-} Display_Retry_Operation;
-#define RETRY_OP_COUNT 4
-typedef uint16_t Retry_Op_Value;
 
 typedef struct {
    bool   initialized;
@@ -75,7 +66,7 @@ typedef struct {
 // int    total_max_adjustment_ct;
 // int    spec_sleep_time_millis;
 
-   Display_Handle * cur_dh;
+// Display_Handle * cur_dh;
 // double cur_sleep_time_millis;
 // double cur_sleep_multiplier_factor;
    double cur_sleep_adjustment_factor;
