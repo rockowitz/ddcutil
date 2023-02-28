@@ -131,24 +131,27 @@ stats_arg_func(const    gchar* option_name,
 #endif
 
 
-static void emit_parser_error(GPtrArray * errinfo_accum, char * msg, ...) {
+static void emit_parser_error(GPtrArray* errmsgs, GPtrArray * errinfo_accum, const char * func, const char * msg, ...) {
    char buffer[100];
    va_list(args);
    va_start(args, msg);
    vsnprintf(buffer, 100, msg, args);
    va_end(args);
 
-   fprintf(stderr, "%s\n", buffer);
+   if (!errmsgs && !errinfo_accum)
+      fprintf(stderr, "%s\n", buffer);
    if (errinfo_accum) {
-      Error_Info * erec =  errinfo_new(DDCRC_ARG, "parse_command", buffer);
-      // fprintf(stderr, "(%s) Adding %s\n", __func__, errinfo_summary(erec));
+      Error_Info * erec =  errinfo_new(DDCRC_ARG, func, buffer);
       g_ptr_array_add(errinfo_accum, erec);
+   }
+   if (errmsgs) {
+      g_ptr_array_add(errmsgs, g_strdup(buffer));
    }
 }
 
 
 
-static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) {
+static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs, GPtrArray* errinf_accum) {
     bool debug = false;
     DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
     bool parsing_ok = true;
@@ -157,7 +160,7 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
     int ntsal = ntsa_length(pieces);
     DBGMSF(debug, "ntsal=%d", ntsal );
     if (ntsa_length(pieces) != 3) {
-       emit_parser_error(errinf_accum,  "--retries requires 3 values\n");
+       emit_parser_error(errmsgs, errinf_accum, __func__,  "Option --maxtries requires 3 values");
        parsing_ok = false;
     }
     else {
@@ -170,15 +173,15 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
              int ival;
              int ct = sscanf(token, "%ud", &ival);
              if (ct != 1) {
-                emit_parser_error(errinf_accum,  "Invalid --maxtries value: %s\n", token);
+                emit_parser_error(errmsgs, errinf_accum, __func__,  "Invalid --maxtries value: %s", token);
                 parsing_ok = false;
              }
              else if (ival > MAX_MAX_TRIES) {
-                emit_parser_error(errinf_accum,  "--maxtries value %d exceeds %d\n", ival, MAX_MAX_TRIES);
+                emit_parser_error(errmsgs, errinf_accum, __func__,  "--maxtries value %d exceeds %d", ival, MAX_MAX_TRIES);
                 parsing_ok = false;
              }
              else if (ival < 0) {
-                emit_parser_error(errinf_accum,  "negative --maxtries value: %d\n", ival);
+                emit_parser_error(errmsgs, errinf_accum, __func__,  "negative --maxtries value: %d", ival);
                 parsing_ok = false;
              }
 
@@ -194,7 +197,7 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
     }
     ntsa_free(pieces, /* free_strings */ true);
 
-    DBGMSF(debug, "retries = %d,%d,%d", parsed_cmd->max_tries[0],
+    DBGMSF(debug, "maxtries = %d,%d,%d", parsed_cmd->max_tries[0],
                                         parsed_cmd->max_tries[1],
                                         parsed_cmd->max_tries[2]);
     DBGMSF(debug, "returning %s", sbool(parsing_ok));
@@ -204,12 +207,12 @@ static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArr
 
 static bool parse_display_identifier(
       Parsed_Cmd *  parsed_cmd,
+      GPtrArray *   errmsgs,
       GPtrArray  *  errinf_accum,
       int           dispwork,
       int           buswork,
       int           hidwork,
       char *        usbwork,
-
       char *        edidwork,
       char *        mfg_id_work,
       char *        modelwork,
@@ -228,7 +231,7 @@ static bool parse_display_identifier(
       if (!arg_ok)
          arg_ok = parse_colon_separated_arg(usbwork, &busnum, &devicenum);
       if (!arg_ok) {
-         emit_parser_error(errinf_accum, "Invalid USB argument: %s\n", usbwork );
+         emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid USB argument: %s", usbwork );
          parsing_ok = false;
       }
       else {
@@ -240,7 +243,8 @@ static bool parse_display_identifier(
       }
       explicit_display_spec_ct++;
 #else
-      emit_parser_error(errinf_accum, "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
+      emit_parser_error(errmsgs, errinf_accum, __func__,
+            "ddcutil not built with support for USB connected monitors.  --usb option invalid.");
       parsing_ok = false;
 #endif
    }
@@ -261,7 +265,8 @@ static bool parse_display_identifier(
       parsed_cmd->pdid = create_usb_hiddev_display_identifier(hidwork);
       explicit_display_spec_ct++;
 #else
-      emit_parser_error(errinf_accum, "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
+      emit_parser_error(errmsgs, errinf_accum, __func__,
+            "ddcutil not built with support for USB connected monitors.  --hid option invalid.");
       parsing_ok = false;
 #endif
    }
@@ -276,14 +281,14 @@ static bool parse_display_identifier(
 
    if (edidwork) {
       if (strlen(edidwork) != 256) {
-         emit_parser_error(errinf_accum,  "EDID hex string not 256 characters\n");
+         emit_parser_error(errmsgs, errinf_accum, __func__,  "EDID hex string not 256 characters");
          parsing_ok = false;
       }
       else {
          Byte * pba = NULL;
          int bytect = hhs_to_byte_array(edidwork, &pba);
          if (bytect < 0 || bytect != 128) {
-            emit_parser_error(errinf_accum,  "Invalid EDID hex string\n");
+            emit_parser_error(errmsgs, errinf_accum, __func__,  "Invalid EDID hex string");
             parsing_ok = false;
          }
          else {
@@ -310,7 +315,7 @@ static bool parse_display_identifier(
    }
 
    if (explicit_display_spec_ct > 1) {
-      emit_parser_error(errinf_accum, "Monitor specified in more than one way");
+      emit_parser_error(errmsgs, errinf_accum, __func__, "Monitor specified in more than one way");
       free_display_identifier(parsed_cmd->pdid);
       parsed_cmd->pdid = NULL;
       parsing_ok = false;
@@ -320,7 +325,7 @@ static bool parse_display_identifier(
 }
 
 
-static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errinf_accum) {
+static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray * errmsgs, GPtrArray * errinf_accum) {
    bool debug = false;
    bool arg_ok = false;
    if (mccswork) {
@@ -330,7 +335,7 @@ static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray *
          arg_ok = vcp_version_is_valid(vspec, false);
       }
       if (!arg_ok) {
-         emit_parser_error(errinf_accum, "Invalid MCCS spec: %s", mccswork );
+         emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid MCCS spec: %s", mccswork );
       }
       else {
          parsed_cmd->mccs_vspec = vspec;
@@ -341,14 +346,14 @@ static bool parse_mccswork(char * mccswork, Parsed_Cmd * parsed_cmd, GPtrArray *
 }
 
 
-static bool parse_int_work(char * sval, int * result_loc, GPtrArray* errinf_accum) {
+static bool parse_int_work(char * sval, int * result_loc, GPtrArray * errmsgs, GPtrArray* errinf_accum) {
    bool debug = false;
    bool ok = true;
    DBGMSF(debug, "sval: %s", sval);
    if (sval) {
      ok = str_to_int(sval, result_loc, 0);
      if (!ok)
-        emit_parser_error(errinf_accum, "Invalid integer or hex number: %s", sval);
+        emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid integer or hex number: %s", sval);
    }
    DBGMSF(debug, "Done.  Returning: %s. result_loc -> %d (0x%08x)",
          sbool(ok), *result_loc, *result_loc);
@@ -359,6 +364,7 @@ static bool parse_int_work(char * sval, int * result_loc, GPtrArray* errinf_accu
 static bool parse_sleep_multiplier(
       const char*  sleep_multiplier_work,
       Parsed_Cmd*  parsed_cmd,
+      GPtrArray*   errmsgs,
       GPtrArray*   errinf_accum)
 {
    bool debug = false;
@@ -376,7 +382,7 @@ static bool parse_sleep_multiplier(
       }
 
       if (!arg_ok) {
-         emit_parser_error(errinf_accum, "Invalid sleep-multiplier: %s", sleep_multiplier_work );
+         emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid sleep-multiplier: %s", sleep_multiplier_work );
       }
       else {
          parsed_cmd->sleep_multiplier = multiplier;
@@ -386,7 +392,7 @@ static bool parse_sleep_multiplier(
 }
 
 
-static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, GPtrArray* errinf_accum)
+static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, GPtrArray* errmsgs, GPtrArray* errinf_accum)
 {
 #ifdef COMMA_DELIMITED_TRACE
    if (tracework) {
@@ -448,7 +454,7 @@ static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, G
                traceClasses |= tg;
             }
             else {
-               emit_parser_error(errinf_accum,  "Invalid trace group: %s\n", token);
+               emit_parser_error(errmsgs, errinf_accum, __func__,  "Invalid trace group: %s\n", token);
                parsing_ok = false;
             }
         }
@@ -460,7 +466,7 @@ static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, G
 }
 
 
-static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) {
+static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs, GPtrArray* errinf_accum) {
    bool parsing_ok = true;
    // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
    int argpos = 0;
@@ -470,13 +476,13 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) 
                     parsed_cmd->args[argpos],
                     &psv.feature_code);
       if (!feature_code_ok) {
-         emit_parser_error(errinf_accum,  "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
+         emit_parser_error(errmsgs, errinf_accum, __func__,  "Invalid feature code: %s\n", parsed_cmd->args[argpos]);
          parsing_ok = false;
          break;
       }
       argpos++;
       if (argpos >= parsed_cmd->argct) {
-         emit_parser_error(errinf_accum, "Missing feature value\n");
+         emit_parser_error(errmsgs, errinf_accum, __func__, "Missing feature value\n");
          parsing_ok = false;
          break;
       }
@@ -489,7 +495,7 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errinf_accum) 
             psv.feature_value_type = VALUE_TYPE_RELATIVE_MINUS;
          argpos++;
          if (argpos >= parsed_cmd->argct) {
-            emit_parser_error(errinf_accum,  "Missing feature value\n");
+            emit_parser_error(errmsgs, errinf_accum, __func__,  "Missing feature value\n");
             parsing_ok = false;
             break;
          }
@@ -542,15 +548,20 @@ void parser_status(bool parsing_ok, GPtrArray* errinf_accum, const char * msg)
 
 /* Primary parsing function
  *
- * \param   argc  number of command line arguments
- * \param   argv  array of pointers to command line arguments
- * \param   parser_mode called for ddcutil or libddcutil?
+ * \param   argc         number of command line arguments
+ * \param   argv         array of pointers to command line arguments
+ * \param   parser_mode  indicate whether called for ddcutil or libddcutil
+ * \param   errmsgs      if non-null collect error messages
  * \param   errinf_accum if non-null collect Error_Info structs for each error msg
  * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
  *          NULL if execution should be terminated
  */
-Parsed_Cmd * parse_command(int argc, char * argv[],
-                           Parser_Mode parser_mode, GPtrArray * errinf_accum)
+Parsed_Cmd *
+parse_command(
+      int argc, char * argv[],
+      Parser_Mode parser_mode,
+      GPtrArray * errmsgs,
+      GPtrArray * errinf_accum)
 {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
@@ -659,6 +670,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    char *   sleep_multiplier_work = NULL;
 
    GOptionEntry libddcutil_only_options[] = {
+         {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_api_calls,      "Trace API call", "function name"},
          {"libddcutil-trace-file",
                      '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
          {NULL},
@@ -798,7 +810,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_functions,      "Trace functions","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,      "Trace files",    "file name" },
-      {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_api_calls,      "Trace API call", "function name"},
+
 
       {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
@@ -929,9 +941,9 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
       if (error)
-         emit_parser_error(errinf_accum,  "%s option parsing failed: %s", mode_name, error->message);
+         emit_parser_error(errmsgs, errinf_accum, __func__,  "%s option parsing failed: %s", mode_name, error->message);
       else
-         emit_parser_error(errinf_accum,  "%s option parsing failed", mode_name);
+         emit_parser_error(errmsgs, errinf_accum, __func__,  "%s option parsing failed", mode_name);
    }
    ntsa_free(temp_argv, true);
 
@@ -942,7 +954,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
    if (ro_only_flag)   rwo_flag_ct++;
    if (wo_only_flag)   rwo_flag_ct++;
    if (rwo_flag_ct > 1) {
-      emit_parser_error(errinf_accum, "Options -rw-only, --ro-only, --wo-only are mutually exclusive");
+      emit_parser_error(errmsgs, errinf_accum, __func__, "Options -rw-only, --ro-only, --wo-only are mutually exclusive");
       parsing_ok = false;
    }
 
@@ -1019,7 +1031,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
       parsed_cmd->flags |= CMD_FLAG_ENABLE_FAILSIM;
       parsed_cmd->failsim_control_fn = failsim_fn_work;
 #else
-      emit_parser_error(errinf_accum, "ddcutil not built with failure simulation support.  --failsim option invalid.");
+      emit_parser_error(errmsgs, errinf_accum, __func__, "ddcutil not built with failure simulation support.  --failsim option invalid.");
       parsing_ok = false;
 #endif
    }
@@ -1035,6 +1047,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 
    parsing_ok &= parse_display_identifier(
                     parsed_cmd,
+                    errmsgs,
                     errinf_accum,
                     dispwork,
                     buswork,
@@ -1046,20 +1059,20 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
                     snwork);
 
    if (maxtrywork)
-      parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errinf_accum);
+      parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs, errinf_accum);
 
    if (mccswork)
-      parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errinf_accum);
+      parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errmsgs, errinf_accum);
 
    if (i1_work) {
-      bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errinf_accum);
+      bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errmsgs, errinf_accum);
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
       parsing_ok &= ok;
    }
 
    if (sleep_multiplier_work)
-      parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errinf_accum);
+      parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errmsgs, errinf_accum);
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
@@ -1067,14 +1080,14 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
        edid_read_size_work !=   0 &&
        edid_read_size_work != 256)
    {
-       emit_parser_error(errinf_accum, "Invalid EDID read size: %d\n", edid_read_size_work);
+       emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid EDID read size: %d\n", edid_read_size_work);
       parsing_ok = false;
    }
    else
       parsed_cmd->edid_read_size = edid_read_size_work;
 
    if (trace_classes)
-      parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errinf_accum);
+      parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errmsgs, errinf_accum);
 
    if (trace_functions) {
       parsed_cmd->traced_functions = trace_functions;
@@ -1112,11 +1125,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 
 
    if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
-      emit_parser_error(errinf_accum, "Unrecognized configuration file options: %s", cmd_and_args[0]);
+      emit_parser_error(errmsgs, errinf_accum, __func__, "Unrecognized configuration file options: %s", cmd_and_args[0]);
          parsing_ok = false;
    }
    else if (parsing_ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
-      emit_parser_error(errinf_accum,  "No command specified");
+      emit_parser_error(errmsgs, errinf_accum, __func__,  "No command specified");
       parsing_ok = false;
    }
    if (parsing_ok && parser_mode == MODE_DDCUTIL) {
@@ -1125,7 +1138,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
          printf("cmd=|%s|\n", cmd);
       Cmd_Desc * cmdInfo = find_command(cmd);
       if (cmdInfo == NULL) {
-         emit_parser_error(errinf_accum,  "Unrecognized command: %s\n", cmd);
+         emit_parser_error(errmsgs, errinf_accum, __func__,  "Unrecognized ddcutil command: %s", cmd);
          parsing_ok = false;
       }
       else {
@@ -1139,7 +1152,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
          int argctr = 1;
          while ( cmd_and_args[argctr] != NULL) {
             if (argctr > max_arg_ct) {
-               emit_parser_error(errinf_accum,  "Too many arguments\n");
+               emit_parser_error(errmsgs, errinf_accum, __func__,  "Too many arguments\n");
                parsing_ok = false;
                break;
             }
@@ -1152,7 +1165,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
 
          // no more arguments specified
          if (argctr <= min_arg_ct) {
-            emit_parser_error(errinf_accum,  "Missing argument(s)\n");
+            emit_parser_error(errmsgs, errinf_accum, __func__,  "Missing argument(s)\n");
             parsing_ok = false;
          }
 
@@ -1166,7 +1179,7 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
             if (!parsed_cmd->fref) {
                parsing_ok = false;
                char * s = strjoin((const char **)parsed_cmd->args, parsed_cmd->argct, " ");
-               emit_parser_error(errinf_accum, "Invalid feature code(s) or subset: %s\n", s);
+               emit_parser_error(errmsgs, errinf_accum, __func__, "Invalid feature code(s) or subset: %s\n", s);
                free(s);
             }
          }
@@ -1183,11 +1196,11 @@ Parsed_Cmd * parse_command(int argc, char * argv[],
          }
 
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
-            parsing_ok &= parse_setvcp_args(parsed_cmd, errinf_accum);
+            parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs, errinf_accum);
 
          if (parsing_ok && explicit_display_spec_ct == 1) {
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
-               emit_parser_error(errinf_accum,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
+               emit_parser_error(errmsgs, errinf_accum, __func__,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
          }
