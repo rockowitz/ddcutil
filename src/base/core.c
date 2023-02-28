@@ -759,6 +759,7 @@ void program_logic_error(
 }
 
 
+#ifdef UNUSED
 void core_errmsg_emitter(
       GPtrArray*   errmsgs,
       GPtrArray *  errinfo_accum,
@@ -783,6 +784,7 @@ void core_errmsg_emitter(
       g_ptr_array_add(errmsgs, g_strdup(buffer));
    }
 }
+#endif
 
 
 void init_core() {

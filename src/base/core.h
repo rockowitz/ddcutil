@@ -380,6 +380,7 @@ void program_logic_error(
 
 void set_default_thread_output_settings(FILE * fout, FILE * ferr);
 
+#ifdef UNUSED
 void core_errmsg_emitter(
       GPtrArray*   errmsgs,
       GPtrArray *  errinfo_accum,
@@ -387,7 +388,7 @@ void core_errmsg_emitter(
       int          rc,
       const char * func,
       const char * msg, ...);
-
+#endif
 
 
 void init_core();
