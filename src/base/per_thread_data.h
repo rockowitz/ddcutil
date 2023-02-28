@@ -19,6 +19,7 @@
 
 #include "base/parms.h"
 #include "base/displays.h"
+#include "base/stats.h"
 
 extern GHashTable *  per_thread_data_hash;
 extern GMutex        per_thread_data_mutex;    // temp, replace by function calls
@@ -37,15 +38,6 @@ struct {
    uint16_t       counters[MAX_MAX_TRIES+2];
 } Per_Thread_Try_Stats;
 
-//! I2C retry limit types
-typedef enum{
-   WRITE_ONLY_TRIES_OP,       /**< Maximum write-only operation tries */
-   WRITE_READ_TRIES_OP,       /**< Maximum read-write operation tries */
-   MULTI_PART_READ_OP,        /**< Maximum multi-part read operation tries */
-   MULTI_PART_WRITE_OP        /**< Maximum multi-part write operation tries */
-} Retry_Operation;
-#define RETRY_OP_COUNT 4
-typedef uint16_t Retry_Op_Value;
 
 typedef struct {
    bool   initialized;

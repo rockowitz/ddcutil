@@ -334,7 +334,7 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
       assert(upper_bound <= MAX_MAX_TRIES + 1);
       char * buf = dd_int_array_to_string( data->try_stats[retry_type].counters, upper_bound);
       rpt_vstring(d1, "try_stats[%d=%-27s].counters = %s",
-                      retry_type, display_retry_type_name(retry_type), buf);
+                      retry_type, retry_type_name(retry_type), buf);
       free(buf);
    }
 }

@@ -20,6 +20,7 @@
 #include "base/displays.h"
 #include "base/parms.h"
 #include "base/sleep.h"
+#include "base/stats.h"
 #include "base/thread_retry_data.h"    // temp circular
 #include "base/thread_sleep_data.h"
 

@@ -7,6 +7,8 @@
 #define DISPLAY_RETRY_DATA_H_
 
 #include "public/ddcutil_types.h"
+#include "base/stats.h"
+
 #include "base/per_display_data.h"
 
 
@@ -17,14 +19,6 @@ typedef struct {
    uint16_t        min_lowest_maxtries;
 } Global_Maxtries_Accumulator;
 
-
-//
-// Retry management
-//
-
-// These functions probably belong elsewhere
-const char * display_retry_type_name(Display_Retry_Operation stat_id);
-const char * display_retry_type_description(Display_Retry_Operation retry_class);
 
 void drd_init(Per_Display_Data * data);
 

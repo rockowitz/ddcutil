@@ -24,28 +24,6 @@
 // Maxtries
 //
 
-static char * retry_type_descriptions[] = {
-      "write only",
-      "write-read",
-      "multi-part read",
-      "multi-part write"
-};
-
-static char * retry_type_names[] = {
-      "WRITE_ONLY_TRIES_OP",
-      "WRITE_READ_TRIES_OP",
-      "MULTI_PART_READ_OP",
-      "MULTI_PART_WRITE_OP"
-};
-
-const char * display_retry_type_name(Display_Retry_Operation type_id) {
-   return retry_type_names[type_id];
-}
-
-const char * display_retry_type_description(Display_Retry_Operation type_id) {
-   return retry_type_descriptions[type_id];
-}
-
 
 // Initial values are ddcutil default values, then can be changed
 // to different user default values

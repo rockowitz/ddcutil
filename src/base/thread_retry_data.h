@@ -18,13 +18,6 @@ typedef struct {
 } Global_Maxtries_Accumulator;
 
 
-//
-// Retry management
-//
-
-// These functions probably belong elsewhere
-const char * retry_type_name(Retry_Operation stat_id);
-const char * retry_type_description(Retry_Operation retry_class);
 
 void trd_init(Per_Thread_Data * data);
 
