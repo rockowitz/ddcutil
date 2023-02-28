@@ -65,6 +65,8 @@ int matches_by_func(    const char * word, const char ** match_list, String_Comp
 int exactly_matches_any(const char * word, const char ** match_list);
 int starts_with_any(    const char * word, const char ** match_list);
 
+char * int_array_to_string(uint16_t * start, int ct);
+
 /** pointer to null-terminated array of strings */
 typedef char** Null_Terminated_String_Array;    // equivalent to GStrv
 void ntsa_free(  Null_Terminated_String_Array string_array, bool free_strings);

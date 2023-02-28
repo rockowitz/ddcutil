@@ -88,8 +88,6 @@ bool ptd_cross_thread_operation_start();
 void ptd_cross_thread_operation_end();
 void ptd_cross_thread_operation_block();
 
-char * int_array_to_string(uint16_t * start, int ct);
-
 Per_Thread_Data * ptd_get_per_thread_data();
 
 void         ptd_set_thread_description(const char * description);

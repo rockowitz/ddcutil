@@ -97,8 +97,6 @@ bool pdd_cross_display_operation_start();
 void pdd_cross_display_operation_end();
 void pdd_cross_display_operation_block();
 
-char * dd_int_array_to_string(uint16_t * start, int ct);
-
 Per_Display_Data * pdd_get_per_display_data();
 
 void         pdd_set_display_description(const char * description);

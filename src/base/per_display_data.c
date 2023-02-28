@@ -262,18 +262,6 @@ const char * pdd_get_display_description_t() {
 }
 
 
-char * dd_int_array_to_string(uint16_t * start, int ct) {
-   int bufsz = ct*10;
-   char * buf = calloc(1, bufsz);
-   int next = 0;
-   for (int ctr =0; ctr < ct && next < bufsz; ctr++) {
-      g_snprintf(buf+next, bufsz-next,"%s%d", (next > 0) ? ", " : "", *(start+ctr) );
-      next = strlen(buf);
-   }
-   // DBGMSG("start=%p, ct=%d, returning %s", start, ct, buf);
-   return buf;
-}
-
 
 /** Output a debug report of a #Per_Display_Data struct.
  *
@@ -332,7 +320,7 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    for (int retry_type = 0; retry_type < 4; retry_type++) {
       int upper_bound = data->highest_maxtries[retry_type] + 1;
       assert(upper_bound <= MAX_MAX_TRIES + 1);
-      char * buf = dd_int_array_to_string( data->try_stats[retry_type].counters, upper_bound);
+      char * buf = int_array_to_string( data->try_stats[retry_type].counters, upper_bound);
       rpt_vstring(d1, "try_stats[%d=%-27s].counters = %s",
                       retry_type, retry_type_name(retry_type), buf);
       free(buf);

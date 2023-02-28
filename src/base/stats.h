@@ -29,4 +29,6 @@ typedef uint16_t Retry_Op_Value;
 const char * retry_type_name(Retry_Operation stat_id);
 const char * retry_type_description(Retry_Operation retry_class);
 
+char * int_array_to_string(uint16_t * start, int ct);
+
 #endif /* STATS_H_ */

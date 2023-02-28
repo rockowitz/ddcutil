@@ -404,6 +404,23 @@ char * strjoin( const char ** pieces, const int ct0, const char * sepstr) {
    return result;
 }
 
+
+// TO DO: generalize
+char * int_array_to_string(uint16_t * start, int ct) {
+   int bufsz = ct*10;
+   char * buf = calloc(1, bufsz);
+   int next = 0;
+   for (int ctr =0; ctr < ct && next < bufsz; ctr++) {
+      g_snprintf(buf+next, bufsz-next,"%s%d", (next > 0) ? ", " : "", *(start+ctr) );
+      next = strlen(buf);
+   }
+   // DBGMSG("start=%p, ct=%d, returning %s", start, ct, buf);
+   return buf;
+}
+
+
+
+
 #ifdef FUTURE
 // YAGNI: String_Array
 
