@@ -54,6 +54,11 @@ tuned_sleep.c             \
 status_code_mgt.c         \
 vcp_version.c
 
+libbase_la_SOURCES +=     \
+per_display_data.c        \
+display_retry_data.c      \
+display_sleep_data.c      
+
 nodist_libbase_la_SOURCES = adl_errors.h
 
 # Rename to "all=local" for development 
