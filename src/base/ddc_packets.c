@@ -1,4 +1,5 @@
-/** \file ddc_packets.c
+/** @file ddc_packets.c
+ *
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
