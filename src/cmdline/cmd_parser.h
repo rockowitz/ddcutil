@@ -15,6 +15,11 @@
 #include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
 
-Parsed_Cmd * parse_command(int argc, char * argv[], Parser_Mode parser_mode, GPtrArray * errinfo_accum);
+Parsed_Cmd * parse_command(
+      int         argc,
+      char *      argv[],
+      Parser_Mode parser_mode,
+      GPtrArray * errmsgs,
+      GPtrArray * errinfo_accum);
 
 #endif /* CMD_PARSER_H_ */
