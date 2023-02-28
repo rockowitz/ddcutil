@@ -216,7 +216,6 @@ Error_Info * get_parsed_libmain_config(Parsed_Cmd** parsed_cmd_loc) {
          ntsa_show(new_argv);
 
 
-
 #ifdef OUT
    // TODO: set msgs in Error_Info records
    if (errmsgs->len > 0) {
@@ -240,15 +239,6 @@ Error_Info * get_parsed_libmain_config(Parsed_Cmd** parsed_cmd_loc) {
       fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
       SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
    }
-
-   // if (debug) {
-   //    ERRINFO_FREE_WITH_REEPORT(*errinfo_loc, true);   // temp location
-   //    *errinfo_loc = NULL;
-   // }
-
-   // Continue even if config file errors
-   // if (apply_config_rc < 0)
-   //    goto bye;
 #endif
 
       assert(new_argc >= 1);
