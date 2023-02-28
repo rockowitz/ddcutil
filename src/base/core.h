@@ -40,6 +40,7 @@
 #include "base/parms.h"      // ensure available to any file that includes core.h
 #include "base/core_per_thread_settings.h"
 #include "base/linux_errno.h"
+#include "base/trace_control.h"  // so don't need to repeatedly include trace_control.h
 
 //
 // Common macros
@@ -79,17 +80,6 @@ typedef struct {
 #endif
 
 
-//
-// Use of system log
-//
-
-#ifdef ENABLE_SYSLOG
-extern bool trace_to_syslog;
-extern bool enable_syslog;
-#define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
-#else
-#define SYSLOG(priority, format, ...) do {} while (0)
-#endif
 
 
 //
@@ -99,43 +89,9 @@ extern bool enable_syslog;
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
-extern __thread  int  trace_api_call_depth;
 
 
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
-bool add_traced_function(const char * funcname);
-bool is_traced_function( const char * funcname);
-void dbgrpt_traced_function_table(int depth);
-
-bool add_traced_api_call(const char * funcname);
-bool is_traced_api_call( const char * funcname);
-
-void add_traced_file(const char * filename);
-bool is_traced_file( const char * filename);
-
-DDCA_Trace_Group trace_class_name_to_value(char * name);
-void set_trace_groups(DDCA_Trace_Group trace_flags);
-void add_trace_groups(DDCA_Trace_Group trace_flags);
-// char * get_active_trace_group_names();  // unimplemented
-
-void report_tracing(int depth);
-
-bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname);
-
-/** Checks if tracking is currently active for the globally defined TRACE_GROUP value,
- *  current file and function.
- *
- *  Wrappers call to **is_tracing()**, using the current **TRACE_GROUP** value,
- *  filename, and function as implicit arguments.
- */
-#define IS_TRACING() is_tracing(TRACE_GROUP, __FILE__, __func__)
-
-#define IS_TRACING_GROUP(grp) is_tracing((grp), __FILE__, __func__)
-
-#define IS_TRACING_BY_FUNC_OR_FILE() is_tracing(DDCA_TRC_NONE, __FILE__, __func__)
-
-#define IS_DBGTRC(debug_flag, group) \
-    ( (debug_flag)  || is_tracing((group), __FILE__, __func__) )
 
 typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_NONE   0

@@ -49,6 +49,7 @@ rtti.c                    \
 sleep.c                   \
 thread_retry_data.c       \
 thread_sleep_data.c       \
+trace_control.c           \
 tuned_sleep.c             \
 status_code_mgt.c         \
 vcp_version.c
