@@ -715,34 +715,6 @@ bool dbgtrc_returning_expression(
 // error messages and possible program termination.
 //
 
-#ifdef OLD
-/** Reports an IOCTL error.
- *  The message is written to the current **FERR** device and to the system log.
- *
- * @param  ioctl_name  ioctl name
- * @param  errnum      errno value
- * @param  funcname    function name of error
- * @param  filename    file name of error
- * @param  lineno      line number of error
- */
-void report_ioctl_error(
-      const char * ioctl_name,
-      int          errnum,
-      const char * funcname,
-      const char * filename,
-      int          lineno)
-{
-   char buffer[200];
-   g_snprintf(buffer, 200, "(%s) Error in ioctl(%s), errno=%s",
-                           funcname, ioctl_name, linux_errno_desc(errnum) );
-   f0puts(buffer, ferr());
-   f0putc('\n',   ferr());
-   fflush(ferr());
-
-   syslog(LOG_ERR, "%s", buffer);
-}
-#endif
-
 
 /** Called when a condition that should be impossible has been detected.
  *  Issues messages to the current **FERR** device and the system log.
@@ -811,7 +783,6 @@ void core_errmsg_emitter(
       g_ptr_array_add(errmsgs, g_strdup(buffer));
    }
 }
-
 
 
 void init_core() {

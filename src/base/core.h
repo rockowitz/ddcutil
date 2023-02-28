@@ -357,18 +357,6 @@ if ( (_flag) || is_tracing(_trace_group, __FILE__, __func__) )  { \
 // Error handling
 //
 
-#ifdef OLD
-void report_ioctl_error(
-      const char * ioctl_name,
-      int          errnum,
-      const char * funcname,
-      const char * filename,
-      int          lineno);
-
-#define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
-   report_ioctl_error(_ioctl_name, _errnum, __func__, __FILE__, __LINE__);
-#endif
-
 #define REPORT_IOCTL_ERROR(_ioctl_name, _errnum) \
       dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, __func__, __LINE__, __FILE__, \
              "Error in ioctl(%s), %s", _ioctl_name, linux_errno_desc(_errnum));
