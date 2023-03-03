@@ -89,6 +89,17 @@ bool dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2) {
 }
 
 
+/** Creates a unique integer number from a #DDCA_IO_Path, suitable
+ *  for use as a hash key.
+ *
+ *  \param  path   io path
+ *  \return integer value
+ */
+int dpath_hash(DDCA_IO_Path path) {
+   return path.io_mode * 100 + path.path.i2c_busno;   // fails for ADL, but that not longer exists
+}
+
+
 // *** Display_Async_Rec ***
 
 // At least temporarily for development, base all async operations for a display
@@ -580,6 +591,7 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 // *** Display_Ref ***
 
 static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
+   bool debug = false;
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
@@ -587,6 +599,13 @@ static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
 
    dref->async_rec  = get_display_async_rec(io_path);    // keep?
+
+   Per_Display_Data * pdd = pdd_get_per_display_data(io_path);
+   dref->pdd = pdd;
+
+   DBGMSF(debug, "Initialized: %s. display_sleep_data_defined: %s.display_retry_data_defined; %s",
+   sbool(dref->pdd->initialized),
+   sbool( dref->pdd->display_sleep_data_defined), sbool( dref->pdd->display_retry_data_defined));
 
    return dref;
 }

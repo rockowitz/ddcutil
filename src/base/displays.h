@@ -52,16 +52,16 @@ For I2C displays, the device must be opened.  Display_Handle then contains the o
 void init_displays();
 
 
-// *** DDCA_Display_Path ***
+// *** DDCA_IO_Path ***
 
 char *  io_mode_name(DDCA_IO_Mode val);
 bool    dpath_eq(DDCA_IO_Path p1, DDCA_IO_Path p2);
-char * dpath_short_name_t(DDCA_IO_Path * dpath);
+char *  dpath_short_name_t(DDCA_IO_Path * dpath);
 char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
+int     dpath_hash(DDCA_IO_Path path);
 
 
 // *** Display_Async ***
-
 
 #define DISPLAY_ASYNC_REC_MARKER "DSNC"
 /** Async processing  for display */
@@ -150,7 +150,6 @@ Display_Selector * dsel_set_edid_bytes(    Display_Selector* dsel, Byte * edidby
 Display_Selector * dsel_set_edid_hex(      Display_Selector* dsel, char * hexstring);
 bool               dsel_validate(          Display_Selector * dsel);
 #endif
-
 
 
 // *** Display_Ref ***
