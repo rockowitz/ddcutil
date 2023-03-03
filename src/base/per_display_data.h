@@ -24,25 +24,25 @@
 extern GHashTable *  per_display_data_hash;
 extern GMutex        per_display_data_mutex;    // temp, replace by function calls
 
-void init_display_data_module();     // module initialization
-void release_display_data_module();  // release all resources
+void pdd_init_display_data_module();     // module initialization
+void pdd_release_display_data_module();  // release all resources
+
+
 
 extern int  pdd_lock_count;
 extern int  pdd_unlock_count;
-extern int  cross_display_operation_blocked_count;
+extern int  pdd_cross_thread_operation_blocked_count;
 
 typedef
 struct {
-   // Display_Retry_Operation  stat_id;    // nice as a consistency check, but has to be initialized to non-zero value
-//   int          maxtries;
-   uint16_t       counters[MAX_MAX_TRIES+2];
+    Retry_Operation  retry_op;    // nice as a consistency check, but has to be initialized to non-zero value
+    uint16_t         counters[MAX_MAX_TRIES+2];
 } Per_Display_Try_Stats;
 
 
 typedef struct {
-   bool   initialized;
-   pid_t  display_id;    // TO FIX
-   char * description;
+   bool          initialized;
+   DDCA_IO_Path  dpath;
 
    // Standard sleep adjustment settings
    bool   display_sleep_data_defined;
@@ -66,11 +66,7 @@ typedef struct {
 // int    total_max_adjustment_ct;
 // int    spec_sleep_time_millis;
 
-// Display_Handle * cur_dh;
-// double cur_sleep_time_millis;
-// double cur_sleep_multiplier_factor;
    double cur_sleep_adjustment_factor;
-// double display_adjustment_increment;
    int    total_sleep_time_millis;
 
 // #ifdef UNUSED
@@ -83,6 +79,8 @@ typedef struct {
    Per_Display_Try_Stats  try_stats[4];
 // #endif
 } Per_Display_Data;
+
+void pdd_init(Per_Display_Data * pdd);
 
 bool pdd_cross_display_operation_start();
 void pdd_cross_display_operation_end();
@@ -105,4 +103,6 @@ void pdd_list_displays(int depth);
 void dbgrpt_per_display_data_locks(int depth);
 
 void report_all_display_status_counts(int depth);
+
+void init_per_display_data();
 #endif /* PER_DISPLAY_DATA_H_ */

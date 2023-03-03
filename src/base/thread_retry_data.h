@@ -8,18 +8,12 @@
 
 #include "public/ddcutil_types.h"
 #include "base/per_thread_data.h"
+#include "base/stats.h"
 
 
 
-typedef struct {
-   Retry_Operation retry_type;
-   uint16_t        max_highest_maxtries;
-   uint16_t        min_lowest_maxtries;
-} Global_Maxtries_Accumulator;
 
-
-
-void trd_init(Per_Thread_Data * data);
+void trd_init_thread_data(Per_Thread_Data * data);
 
 // These functions manage retry counts on a per-thread basis
 

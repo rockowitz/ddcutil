@@ -268,7 +268,7 @@ multi_part_read_with_retry(
    }
 
    // if counts for DDCRC_ALL_TRIES_ZERO?
-   try_data_record_tries2(MULTI_PART_READ_OP, rc, tryctr);
+   try_data_record_tries2(dh, MULTI_PART_READ_OP, rc, tryctr);
 
    *buffer_loc = accumulator;
    ASSERT_IFF(ddc_excp, !*buffer_loc);

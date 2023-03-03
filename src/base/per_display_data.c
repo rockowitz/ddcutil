@@ -13,6 +13,7 @@
 
 #include "util/debug_util.h"
 #include "util/glib_util.h"
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -22,38 +23,109 @@
 #include "base/sleep.h"
 #include "base/display_retry_data.h"    // temp circular
 #include "base/display_sleep_data.h"
+#include "base/per_thread_data.h"
+#include "base/rtti.h"
 
 #include "base/per_display_data.h"
 
-// Master table of sleep data for all threads
+#define TRACE_GROUP  DDCA_TRC_NONE
+
+
+// Master table of sleep data for all displays
 GHashTable *    per_display_data_hash = NULL;
-static GPrivate this_display_has_lock;
-static GPrivate lock_depth; // GINT_TO_POINTER(0);
+
+//
+// Locking
+//
+static GPrivate pdd_this_thread_has_lock;
+static GPrivate pdd_lock_depth; // GINT_TO_POINTER(0);
 static bool     debug_mutex = false;
        int      pdd_lock_count = 0;
        int      pdd_unlock_count = 0;
-       int      cross_display_operation_blocked_count = 0;
+       int      pdd_cross_thread_operation_blocked_count = 0;
 
 void dbgrpt_per_display_data_locks(int depth) {
-   rpt_vstring(depth, "pdd_lock_count:                        %-4d", pdd_lock_count);
-   rpt_vstring(depth, "pdd_unlock_count:                      %-4d", pdd_unlock_count);
-   rpt_vstring(depth, "cross_display_operation_blocked_count:  %-4d", cross_display_operation_blocked_count);
+   rpt_vstring(depth, "pdd_lock_count:                            %-4d", pdd_lock_count);
+   rpt_vstring(depth, "pdd_unlock_count:                          %-4d", pdd_unlock_count);
+   rpt_vstring(depth, "pdd_cross_thread_operation_blocked_count:  %-4d", pdd_cross_thread_operation_blocked_count);
 }
 
-static bool    cross_display_operation_active = false;
-static GMutex  cross_display_operation_mutex;
-static pid_t   cross_display_operation_owner;
+static GMutex try_data_mutex;
+
+
+/** If **try_data_mutex** is not already locked by the current thread,
+ *  lock it.
+ *
+ *  \remark
+ *  This function is necessary because the behavior if a GLib mutex is
+ *  relocked by the current thread is undefined.
+ */
+
+// avoids locking if this thread already owns the lock, since behavior undefined
+bool pdd_lock_if_unlocked() {
+   bool debug = false;
+   debug = debug || debug_mutex;
+
+   bool lock_performed = false;
+   bool thread_has_lock = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
+   DBGMSF(debug, "Already locked: %s", sbool(thread_has_lock));
+   if (!thread_has_lock) {
+      g_mutex_lock(&try_data_mutex);
+      lock_performed = true;
+      // should this be a depth counter rather than a boolean?
+      g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(true));
+      if (debug) {
+         intmax_t cur_thread_id = get_thread_id();
+         DBGMSG("Locked by thread %d", cur_thread_id);
+      }
+   }
+
+   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
+   return lock_performed;
+}
+
+
+/** Unlocks the **try_data_mutex** set by a call to #lock_if_unlocked
+ *
+ *  \param  unlock_requested perform unlock
+ */
+void pdd_unlock_if_needed(bool unlock_requested) {
+   bool debug = false;
+   debug = debug || debug_mutex;
+   DBGMSF(debug, "unlock_requested=%s", sbool(unlock_requested));
+
+   if (unlock_requested) {
+      // is it actually locked?
+      bool currently_locked = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
+      DBGMSF(debug, "currently_locked = %s", sbool(currently_locked));
+      if (currently_locked) {
+         g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(false));
+         if (debug) {
+            intmax_t cur_thread_id = get_thread_id();
+            DBGMSG("Unlocked by thread %d", cur_thread_id);
+         }
+         g_mutex_unlock(&try_data_mutex);
+      }
+   }
+
+   DBGMSF(debug, "Done");
+}
+
+
+
+static bool    cross_thread_operation_active = false;
+static GMutex  cross_thread_operation_mutex;
+static pid_t   cross_thread_operation_owner;
 
 // The locking strategy relies on the fact that in practice conflicts
 // will be rare, and critical sections short.
-// Operations that occur on the
-// are blocked only using a spin-lock.
+// Operations are blocked only using a spin-lock.
 
 // The groups of operations:
 // - Operations that operate on the single Per_Display_Data instance
 //   associated with the currently executing thread.
 // - Operations that operate on a single Per_Display_Data instance,
-//   but possibly not from the thread associated with the Per_Display_Data instance.
+//   but possibly not from the thread associated with the Per_Display_Data instance.  ???
 // - Operations that operate on multiple Per_Display_Data instances.
 //   These are referred to as cross thread operations.
 //   Alt, perhaps clearer, refer to them as multi-thread data instances.
@@ -67,57 +139,65 @@ bool pdd_cross_display_operation_start() {
    bool debug = false;
    debug = debug || debug_mutex;
 
-   bool lock_performed = false;
+   bool lock_performed = true;
 
    // which way is better?
-   bool display_has_lock  = GPOINTER_TO_INT(g_private_get(&this_display_has_lock));
-   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&lock_depth));
-   assert ( ( display_has_lock && display_lock_depth  > 0) ||
-            (!display_has_lock && display_lock_depth == 0) );
-   DBGMSF(debug, "Already locked: %s", sbool(display_has_lock));
+   bool thread_has_lock  = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
+   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "thread_has_lock: %s, lock depth: %d",
+                                         sbool(thread_has_lock), display_lock_depth);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
+   ASSERT_IFF( thread_has_lock, display_lock_depth  > 0);
 
    if (display_lock_depth == 0) {    // (A)
-   // if (!display_has_lock) {
-      // display_lock_depth is per-display, so must be unchanged from (A)
-      g_mutex_lock(&cross_display_operation_mutex);
+   // if (!thread_has_lock) {
+      // display_lock_depth is per-thread, so must be unchanged from (A)
+      g_mutex_lock(&cross_thread_operation_mutex);
       lock_performed = true;
-      cross_display_operation_active = true;
+      cross_thread_operation_active = true;
 
       pdd_lock_count++;
 
       // should this be a depth counter rather than a boolean?
-      g_private_set(&this_display_has_lock, GINT_TO_POINTER(true));
+      g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(true));
 
       Thread_Output_Settings * thread_settings = get_thread_settings();
       // intmax_t cur_display_id = get_display_id();
-      intmax_t cur_display_id = thread_settings->tid;
-      cross_display_operation_owner = cur_display_id;
-      DBGMSF(debug, "Locked by thread %d", cur_display_id);
+      intmax_t cur_thread_id = thread_settings->tid;
+      cross_thread_operation_owner = cur_thread_id;
+      DBGMSF(debug, "Locked by thread %d", cur_thread_id);
       sleep_millis(10);   // give all per-thread functions time to finish
    }
-   g_private_set(&lock_depth, GINT_TO_POINTER(display_lock_depth+1));
-   DBGMSF(debug, "Returning: %s", sbool(lock_performed) );
+   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth+1));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "thread_has_lock=%s, pdd_lock_count=%d, Returning lock_performed: %s",
+         sbool(thread_has_lock), pdd_lock_count, sbool(lock_performed) );
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
    return lock_performed;
 }
 
 
 void pdd_cross_display_operation_end() {
-   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&lock_depth));
-   g_private_set(&lock_depth, GINT_TO_POINTER(display_lock_depth-1));
+   bool debug = false;
+   int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "display_lock_depth=%d", display_lock_depth);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
    assert(display_lock_depth >= 1);
+   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth-1));
 
    if (display_lock_depth == 1) {
-   // if (unlock_requested) {
-      cross_display_operation_active = false;
-      cross_display_operation_owner = 0;
-      g_private_set(&this_display_has_lock, false);
+      cross_thread_operation_active = false;
+      cross_thread_operation_owner = 0;
+      g_private_set(&pdd_this_thread_has_lock, false);
       pdd_unlock_count++;
       assert(pdd_lock_count == pdd_unlock_count);
-      g_mutex_unlock(&cross_display_operation_mutex);
+      g_mutex_unlock(&cross_thread_operation_mutex);
    }
    else {
       assert( pdd_lock_count > pdd_unlock_count );
    }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d",
+         pdd_lock_count, pdd_unlock_count);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
 }
 
 
@@ -129,11 +209,11 @@ void pdd_cross_display_operation_block() {
    // intmax_t cur_displayid = get_display_id();
    Thread_Output_Settings * thread_settings = get_thread_settings();
    intmax_t cur_displayid = thread_settings->tid;
-   if (cross_display_operation_active && cur_displayid != cross_display_operation_owner) {
-      __sync_fetch_and_add(&cross_display_operation_blocked_count, 1);
+   if (cross_thread_operation_active && cur_displayid != cross_thread_operation_owner) {
+      __sync_fetch_and_add(&pdd_cross_thread_operation_blocked_count, 1);
       do {
          sleep_millis(10);
-      } while (cross_display_operation_active);
+      } while (cross_thread_operation_active);
    }
 }
 
@@ -143,84 +223,89 @@ void pdd_cross_display_operation_block() {
 void per_display_data_destroy(void * data) {
    if (data) {
       Per_Display_Data * pdd = data;
-      free(pdd->description);
       free(pdd);
    }
 }
 
-/** Initialize per_display_data.c at program startup */
-void init_display_data_module() {
-   per_display_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_display_data_destroy);
-   // DBGMSG("per_thead_data_hash = %p", per_display_data_hash);
-}
-
-void release_display_data_module() {
-   if (per_display_data_hash) {
-      g_hash_table_destroy(per_display_data_hash);
-   }
-}
 
 //
 // Locking
 //
 
-static void pdd_init(Per_Display_Data * pdd) {
-   init_display_sleep_data(pdd);
-   drd_init(pdd);
+void pdd_init(Per_Display_Data * pdd) {
+   bool debug = false;
+   DBGMSF(debug, "Initializing Per_Display_Data for %s", dpath_repr_t(&pdd->dpath));
+   dsd_init_display_sleep_data(pdd);    // initialize dsa section of Per_Display_Data
+   drd_init_display_data(pdd);   // initialize the retry data section of Per_Display_Data
+   DBGMSF(debug, "Done.  Device = %s", dpath_repr_t(&pdd->dpath));
 }
 
 
-/** Gets the #Per_Display_Data struct for the current thread, using the
- *  current thread's id number. If the struct does not already exist, it
- *  is allocated and initialized.
+#ifdef NO
+Per_Display_Data * pdd_get_per_display_data() {
+   // bool debug = false;
+   // intmax_t cur_thread_id = get_thread_id();
+   Per_Thread_Data * ptd = ptd_get_per_thread_data();
+   Per_Display_Data * pdd = NULL;
+   if (ptd->cur_dh) {
+      pdd = ptd->cur_dh->dref->pdd;
+      assert(pdd->display_sleep_data_defined);
+   }
+   return pdd;
+}
+#endif
+
+
+
+/** Gets the #Per_Display_Data struct for a specified display.
+ *  If the struct does not already exist, it is allocated and initialized.
  *
+ *  @param  dpath  device access path
  *  @return pointer to #Per_Display_Data struct
  *
  *  @remark
+ *  Historical comment from per-thread data.  Does this still matter?
  *  The structs are maintained centrally rather than using a thread-local pointer
  *  to a block on the heap because the of a problems when the thread is closed.
  *  Valgrind complains of access errors for closed threads, even though the
  *  struct is on the heap and still readable.
  */
-Per_Display_Data * pdd_get_per_display_data() {
+Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath) {
    bool debug = false;
-   // intmax_t cur_display_id = get_display_id();
-   Thread_Output_Settings * thread_settings = get_thread_settings();
-   intmax_t cur_display_id = thread_settings->tid;
-   // DBGMSF(debug, "Getting thread sleep data for thread %d", cur_display_id);
-   // bool this_function_owns_lock = pdd_lock_if_unlocked();
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Getting per display data for %s", dpath_repr_t(&dpath));
+
+   bool this_function_owns_lock = pdd_lock_if_unlocked();
    assert(per_display_data_hash);    // allocated by init_display_data_module()
-   // DBGMSG("per_display_data_hash = %p", per_display_data_hash);
-   // n. data hash for current thread can only be looked up from current thread,
-   // so there's nothing can happen to per_display_data_hash before g_hash_table_insert()
-   Per_Display_Data * data = g_hash_table_lookup(per_display_data_hash,
-                                            GINT_TO_POINTER(cur_display_id));
+   int hval = dpath_hash(dpath);
+   Per_Display_Data * data = g_hash_table_lookup(per_display_data_hash, GINT_TO_POINTER(hval));
    if (!data) {
-      DBGMSF(debug, "==> Per_Display_Data not found for thread %d", cur_display_id);
+      DBGTRC(debug, TRACE_GROUP, "Per_Display_Data not found for %s", dpath_repr_t(&dpath));
       data = g_new0(Per_Display_Data, 1);
-      data->display_id = cur_display_id;
-      g_private_set(&lock_depth, GINT_TO_POINTER(0));
+      data->dpath = dpath;
+      g_private_set(&pdd_lock_depth, GINT_TO_POINTER(0));
       pdd_init(data);
       DBGMSF(debug, "Initialized: %s. display_sleep_data_defined: %s.display_retry_data_defined; %s",
            sbool(data->initialized),
            sbool( data->display_sleep_data_defined), sbool( data->display_retry_data_defined));
 
-      g_hash_table_insert(per_display_data_hash,
-                          GINT_TO_POINTER(cur_display_id),
-                          data);
-      DBGMSF(debug, "Created Per_Display_Data struct for thread id = %d", data->display_id);
+      g_hash_table_insert(per_display_data_hash, GINT_TO_POINTER(hval), data);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Created Per_Display_Data struct for %s", dpath_repr_t(&data->dpath));
       DBGMSF(debug, "per_display_data_hash size=%d", g_hash_table_size(per_display_data_hash));
       // if (debug)
-      //   dbgrpt_per_display_data(data, 1);
+      //    dbgrpt_per_display_data(data, 1);
    }
-   // pdd_unlock_if_needed(this_function_owns_lock);
+   pdd_unlock_if_needed(this_function_owns_lock);
+   DBGTRC_NOPREFIX(  debug, TRACE_GROUP, "Device dpath:%s, data->dpath: %s", dpath_repr_t(&dpath), dpath_repr_t(&data->dpath));
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Per_Display_Data, dbgrpt_per_display_data, data);
    return data;
 }
+
 
 
 // Thread description operations always operate on the Per_Display_Data
 // instance for the currently executing thread.
 
+#ifdef OUT
 void pdd_set_display_description(const char * description) {
    pdd_cross_display_operation_block();
    Per_Display_Data *  pdd = pdd_get_per_display_data();
@@ -260,7 +345,7 @@ const char * pdd_get_display_description_t() {
    }
    return buf;
 }
-
+#endif
 
 
 /** Output a debug report of a #Per_Display_Data struct.
@@ -272,20 +357,17 @@ const char * pdd_get_display_description_t() {
  */
 void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    int d1 = depth+1;
-   rpt_structure_loc("Per_Display_Data", data, depth);
- //rpt_int( "sizeof(Per_Display_Data)",  NULL, sizeof(Per_Display_Data),   d1);
-   rpt_bool("initialized",                NULL, data->initialized,           d1);
-   rpt_int( "display_id",                  NULL, data->display_id,             d1);
-   rpt_vstring(d1,"description                %s", data->description);
+   rpt_structure_loc("Per_Display_Data",  data, depth);
+ //rpt_int( "sizeof(Per_Display_Data)",   NULL, sizeof(Per_Display_Data),          d1);
+   rpt_bool("initialized",                NULL, data->initialized,                d1);
+   rpt_vstring(d1, "dpath                                                    : %s", dpath_repr_t(&data->dpath) );
    rpt_bool("sleep data initialized" ,    NULL, data->display_sleep_data_defined, d1);
 
    // Sleep multiplier adjustment:
-   rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
+   rpt_vstring(d1, "sleep-multiplier value                                   : %3.2f", data->sleep_multiplier_factor);
    rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
-   rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
-   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_ct);
-
-// rpt_vstring(d1,"cur_dh:                 %s", dh_repr(data->cur_dh) );
+   rpt_int("sleep_multiplier_changer_ct", NULL, data->sleep_multipler_changer_ct, d1);
+   rpt_int("highest_sleep_multiplier_ct", NULL, data->highest_sleep_multiplier_ct, d1);
 
    // Dynamic sleep adjustment:
    rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled,     d1);
@@ -301,19 +383,19 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
 // rpt_int("max_adjustment_ct",           NULL, data->total_max_adjustment_ct,   d1);
 // rpt_int("non_adjustment_ct",           NULL, data->total_non_adjustment_ct,   d1);
 
-   rpt_vstring(d1, "cur_sleep_adjustmet_factor     %15.2f", data->cur_sleep_adjustment_factor);
+   rpt_vstring(d1, "cur_sleep_adjustmet_factor                               : %3.2f", data->cur_sleep_adjustment_factor);
 // rpt_vstring(d1, "display_adjustment_increment        %15.2f", data->display_adjustment_increment);
 
    // Maxtries history
-   rpt_bool("retry data initialized"    , NULL, data->display_retry_data_defined, d1);
+   rpt_bool("display_retry_data_defined", NULL, data->display_retry_data_defined, d1);
 
-   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
+   rpt_vstring(d1, "Highest maxtries                                         : %d,%d,%d,%d",
                     data->highest_maxtries[0], data->highest_maxtries[1],
                     data->highest_maxtries[2], data->highest_maxtries[3]);
-   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
+   rpt_vstring(d1, "Current maxtries                                         : %d,%d,%d,%d",
                     data->current_maxtries[0], data->current_maxtries[1],
                     data->current_maxtries[2], data->current_maxtries[3]);
-   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
+   rpt_vstring(d1, "Lowest maxtries                                          : %d,%d,%d,%d",
                     data->lowest_maxtries[0], data->lowest_maxtries[1],
                     data->lowest_maxtries[2], data->lowest_maxtries[3]);
 
@@ -346,7 +428,7 @@ void pdd_apply_all(Dtd_Func func, void * arg) {
       g_hash_table_iter_init (&iter,per_display_data_hash);
       while (g_hash_table_iter_next (&iter, &key, &value)) {
          Per_Display_Data * data = value;
-         DBGMSF(debug, "Thread id: %d", data->display_id);
+         DBGMSF(debug, "Thread id: %d", data->dpath);
          func(data, arg);
       }
 
@@ -411,28 +493,8 @@ void pdd_display_summary(Per_Display_Data * pdd, void * arg) {
    // char * header = "Description: ";
 
    char header[100];
-   g_snprintf(header, 100, "Thread %d: ", pdd->display_id);
-
-   int hdrlen = strlen(header);
-   if (!pdd->description)
-      rpt_vstring(d1, "%s", header);
-   else {
-      Null_Terminated_String_Array pieces =
-            strsplit_maxlength(pdd->description, 60, " ");
-      int ntsa_ndx = 0;
-      while (true) {
-         char * s = pieces[ntsa_ndx++];
-         if (!s)
-            break;
-         rpt_vstring(d1, "%-*s%s", hdrlen, header, s);
-         if (strlen(header) > 0) {
-            // *header = '\0';    // better, test it next time working with this function
-            strcpy(header, "");
-            // header = "";
-         }
-      }
-      ntsa_free(pieces, true);
-   }
+   g_snprintf(header, 100, "Display path %s: ", dpath_repr_t(&pdd->dpath));
+   rpt_vstring(d1, "%s", header);
 }
 
 
@@ -458,5 +520,26 @@ void report_all_display_status_counts(int depth) {
    rpt_label(depth, "No per-display status code statistics are collected");
    rpt_nl();
    DBGMSF(debug, "Done");
+}
+
+
+/** Initialize per_display_data.c at program startup */
+void pdd_init_display_data_module() {
+   per_display_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_display_data_destroy);
+   // DBGMSG("per_display_data_hash = %p", per_display_data_hash);
+}
+
+void pdd_release_display_data_module() {
+   if (per_display_data_hash) {
+      g_hash_table_destroy(per_display_data_hash);
+   }
+}
+
+
+void init_per_display_data() {
+   RTTI_ADD_FUNC(pdd_get_per_display_data);
+   RTTI_ADD_FUNC(pdd_cross_display_operation_start);
+   RTTI_ADD_FUNC(pdd_cross_display_operation_end);
+   pdd_init_display_data_module();
 }
 

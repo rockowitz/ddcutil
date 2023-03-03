@@ -568,7 +568,7 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-   dsa_record_ddcrw_status_code(psc);
+   dsa_record_ddcrw_status_code(dh, psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 
@@ -796,7 +796,7 @@ ddc_write_read_with_retry(
       }
    }
 
-   try_data_record_tries2(WRITE_READ_TRIES_OP, psc, tryctr);
+   try_data_record_tries2(dh, WRITE_READ_TRIES_OP, psc, tryctr);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
@@ -959,7 +959,7 @@ ddc_write_only_with_retry(
       }
    }
 
-   try_data_record_tries2(WRITE_ONLY_TRIES_OP, psc, tryctr);
+   try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;

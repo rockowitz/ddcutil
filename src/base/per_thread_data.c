@@ -149,11 +149,6 @@ void per_thread_data_destroy(void * data) {
    }
 }
 
-/** Initialize per_thread_data.c at program startup */
-void init_thread_data_module() {
-   per_thread_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_thread_data_destroy);
-   // DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
-}
 
 void release_thread_data_module() {
    if (per_thread_data_hash) {
@@ -167,7 +162,7 @@ void release_thread_data_module() {
 
 static void ptd_init(Per_Thread_Data * ptd) {
    tsd_init_thread_sleep_data(ptd);
-   trd_init(ptd);
+   trd_init_thread_data(ptd);
 }
 
 
@@ -211,8 +206,8 @@ Per_Thread_Data * ptd_get_per_thread_data() {
                           data);
       DBGMSF(debug, "Created Per_Thread_Data struct for thread id = %d", data->thread_id);
       DBGMSF(debug, "per_thread_data_hash size=%d", g_hash_table_size(per_thread_data_hash));
-      // if (debug)
-      //   dbgrpt_per_thread_data(data, 1);
+      if (debug)
+        dbgrpt_per_thread_data(data, 1);
    }
    // ptd_unlock_if_needed(this_function_owns_lock);
    return data;
@@ -460,4 +455,13 @@ void report_all_thread_status_counts(int depth) {
    rpt_nl();
    DBGMSF(debug, "Done");
 }
+
+
+/** Initialize per_thread_data.c at program startup */
+void init_per_thread_data() {
+   per_thread_data_hash = g_hash_table_new_full(g_direct_hash, NULL, NULL, per_thread_data_destroy);
+   // DBGMSG("per_thead_data_hash = %p", per_thread_data_hash);
+}
+
+
 

@@ -3,7 +3,7 @@
  *  Experimental dynamic sleep adjustment
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYNAMIC_SLEEP_H_
@@ -19,7 +19,7 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-void   dsa_record_ddcrw_status_code(int rc);
+void   dsa_record_ddcrw_status_code(Display_Handle * dh, int rc);
 double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis);
 int    dsa_get_sleep_time(Display_Handle * dh, int spec_sleep_time_millis);
 void   init_dynamic_sleep();

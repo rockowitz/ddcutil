@@ -24,7 +24,7 @@
 extern GHashTable *  per_thread_data_hash;
 extern GMutex        per_thread_data_mutex;    // temp, replace by function calls
 
-void init_thread_data_module();     // module initialization
+void init_per_thread_data();     // module initialization
 void release_thread_data_module();  // release all resources
 
 extern int  ptd_lock_count;

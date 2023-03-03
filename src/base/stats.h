@@ -29,4 +29,14 @@ const char * retry_type_description(Retry_Operation retry_class);
 
 char * int_array_to_string(uint16_t * start, int ct);
 
+
+
+typedef struct {
+   Retry_Operation retry_type;
+   uint16_t        max_highest_maxtries;
+   uint16_t        min_lowest_maxtries;
+} Global_Maxtries_Accumulator;
+
+
+
 #endif /* STATS_H_ */

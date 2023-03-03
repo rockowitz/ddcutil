@@ -235,11 +235,11 @@ Error_Info * get_parsed_libmain_config(Parsed_Cmd** parsed_cmd_loc) {
          SYSLOG(LOG_WARNING,  "   %s",   errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
       }
    }
+#endif
    if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
       fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
       SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
    }
-#endif
 
       assert(new_argc >= 1);
       DBGF(debug, "Calling parse_command()");
@@ -503,7 +503,10 @@ ddca_init(DDCA_Init_Options opts) {
       ddcrc = master_error->status_code;
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
       save_thread_error_detail(public_error_detail);
-      SYSLOG(LOG_ERR, "Library initialization failed: %s", errinfo_summary(master_error));
+      SYSLOG(LOG_ERR, "Library initialization failed: %s", psc_desc(master_error->status_code));
+      for (int ndx = 0; ndx < master_error->cause_ct; ndx++) {
+         SYSLOG(LOG_ERR, "%s", master_error->causes[ndx]->detail);
+      }
       errinfo_free(master_error);
    }
    else {

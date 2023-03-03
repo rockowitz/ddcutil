@@ -39,14 +39,14 @@ void   dsd_set_default_sleep_multiplier_factor(double multiplier);
 double dsd_get_default_sleep_multiplier_factor();
 
 //  Per thread sleep-multiplier
-double dsd_get_sleep_multiplier_factor();
-void   dsd_set_sleep_multiplier_factor(double factor);
+double dsd_get_sleep_multiplier_factor(Per_Display_Data * pdd);
+void   dsd_set_sleep_multiplier_factor(Per_Display_Data * pdd, double factor);
 
 //  sleep_multiplier_ct is set by functions performing I2C retry
 //  Per thread
-int    dsd_get_sleep_multiplier_ct();
-void   dsd_set_sleep_multiplier_ct(int multiplier_ct);
-void   dsd_bump_sleep_multiplier_changer_ct();
+int    dsd_get_sleep_multiplier_ct(Per_Display_Data * pdd);
+void   dsd_set_sleep_multiplier_ct(Per_Display_Data * pdd, int multiplier_ct);
+void   dsd_bump_sleep_multiplier_changer_ct(Per_Display_Data * pdd);
 
 // Reporting
 void   report_display_sleep_data(Per_Display_Data * data, int depth);

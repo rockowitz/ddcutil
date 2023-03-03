@@ -15,6 +15,7 @@
 #include "base/core.h"
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
+#include "base/per_display_data.h"
 #include "base/per_thread_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
@@ -262,6 +263,10 @@ void tuned_sleep_with_trace(
       sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
       Per_Thread_Data * ptd = ptd_get_per_thread_data();
       ptd->total_sleep_time_millis += adjusted_sleep_time_millis;
+      Per_Display_Data * pdd   = pdd_get_per_display_data(dh->dref->io_path);
+      Per_Display_Data * pdd2  = dh->dref->pdd;
+      assert (pdd == pdd2);
+      pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");

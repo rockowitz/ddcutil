@@ -62,6 +62,9 @@
 #include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
 
+#include "base/display_retry_data.h"
+#include "base/display_sleep_data.h"
+
 #include "i2c/i2c_sysfs.h"
 
 #include "vcp/parse_capabilities.h"
@@ -801,6 +804,7 @@ main(int argc, char *argv[]) {
 
    // affects all current threads and new threads
    tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+   dsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");

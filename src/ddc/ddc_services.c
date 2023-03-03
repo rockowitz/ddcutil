@@ -22,6 +22,8 @@
 #include "base/tuned_sleep.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
+#include "base/display_retry_data.h"
+#include "base/display_sleep_data.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
@@ -140,6 +142,24 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
           //   rpt_nl();
       }
 
+      rpt_label(depth, "PER-DISPLAY EXECUTION STATISTICS");
+      rpt_nl();
+      // ptd_list_threads(depth);
+       if (stats & DDCA_STATS_TRIES) {
+           drd_report_all_display_maxtries_data(depth);
+      }
+      if (stats & DDCA_STATS_ERRORS) {
+          report_all_display_status_counts(depth);
+          rpt_nl();
+      }
+      if (stats & DDCA_STATS_CALLS) {
+          report_all_display_sleep_data(depth);
+      }
+      if (stats & (DDCA_STATS_ELAPSED)) {
+          // need a report_all_thread_elapsed_summary()
+          report_elapsed_summary(depth);     // temp?
+      }
+          //   rpt_nl();
       // Reports locks held by per_thread_data() to confirm that locking has
       // trivial affect on performance.
       //dbgrpt_per_thread_data_locks(depth+1);

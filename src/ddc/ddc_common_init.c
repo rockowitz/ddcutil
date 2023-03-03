@@ -25,6 +25,8 @@
 #include "base/rtti.h"
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
+#include "base/display_retry_data.h"
+#include "base/display_sleep_data.h"
 #include "base/tuned_sleep.h"
 
 #include "vcp/persistent_capabilities.h"
@@ -159,7 +161,10 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
 
       // redundant
       trd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
-      trd_set_initial_thread_max_tries(0, parsed_cmd->max_tries[0]);
+      // trd_set_initial_thread_max_tries(0, parsed_cmd->max_tries[0]);
+
+      drd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
+      // drd_set_initial_display_max_tries(0, parsed_cmd->max_tries[0]);
    }
 
    if (parsed_cmd->max_tries[1] > 0) {
@@ -168,7 +173,10 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       try_data_init_retry_type(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
 
       trd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
-      trd_set_initial_thread_max_tries(1, parsed_cmd->max_tries[1]);
+      // trd_set_initial_thread_max_tries(1, parsed_cmd->max_tries[1]);
+
+      drd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
+      // drd_set_initial_display_max_tries(1, parsed_cmd->max_tries[1]);
    }
 
    if (parsed_cmd->max_tries[2] > 0) {
@@ -184,6 +192,13 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       // impedance match
       trd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
       trd_set_initial_thread_max_tries(3, parsed_cmd->max_tries[2]);
+
+      drd_set_default_max_tries(2, parsed_cmd->max_tries[2]);
+      // drd_set_initial_display_max_tries(2, parsed_cmd->max_tries[2]);
+      // impedance match
+      drd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
+      // drd_set_initial_display_max_tries(3, parsed_cmd->max_tries[2]);
+
    }
 }
 
@@ -205,10 +220,14 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->sleep_multiplier >= 0 && parsed_cmd->sleep_multiplier != 1) {
       tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
       tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
+
+      // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
+      dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
       // if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
       if (parsed_cmd->flags & CMD_FLAG_DSA)
       {
          tsd_dsa_enable_globally(true);
+         dsd_dsa_enable_globally(true);
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");

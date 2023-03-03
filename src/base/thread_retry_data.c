@@ -42,7 +42,7 @@ int default_maxtries[] = {
  *
  *  \param  data
  */
-void trd_init(Per_Thread_Data * data) {
+void trd_init_thread_data(Per_Thread_Data * data) {
    bool debug = false;
 
    for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {

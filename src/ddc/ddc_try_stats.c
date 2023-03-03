@@ -24,6 +24,8 @@
 #include "base/per_thread_data.h"    // for retry_type_name()
 #include "base/thread_retry_data.h"
 #include "base/thread_sleep_data.h"
+#include "base/display_retry_data.h"
+#include "base/display_sleep_data.h"
 
 #include "ddc/ddc_try_stats.h"
 
@@ -313,12 +315,14 @@ static void record_failed_fatally2(Retry_Operation retry_type) {
  *  Also calls #trd_record_cur_thread_ties() to record the transaction status
  *  in the per-thread data structure.
  */
-void try_data_record_tries2(Retry_Operation retry_type, DDCA_Status ddcrc, int tryct) {
+void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDCA_Status ddcrc, int tryct) {
    bool debug = false;
    DBGMSF(debug, "retry_type = %d - %s,  ddcrc=%d, tryct=%d",
                  retry_type, retry_type_name(retry_type), ddcrc, tryct);
 
    trd_record_cur_thread_tries(retry_type, ddcrc, tryct);
+   Per_Display_Data * pdd = dh->dref->pdd;
+   drd_record_display_tries(pdd, retry_type, ddcrc, tryct);
 
    Try_Data2 * stats_rec = &try_data[retry_type];
    bool locked_by_this_func = lock_if_unlocked();
