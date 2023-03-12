@@ -984,10 +984,10 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
 // Numeric conversion
 //
 
-/** Converts a decimal or hexadecimal string to an integer value.
+/** Converts a decimal or hexadecimal string to a long integer value.
  *
  * @param sval   string representing an integer
- * @param p_ival address at which to store integer value
+ * @param p_ival address at which to store long integer value
  * @param base   10, 16, or 0 (see below)
  * @return true if conversion succeeded, false if it failed
  *
@@ -1003,7 +1003,7 @@ bool sbuf_append(char * buf, int bufsz, char * sepstr, char * nextval)
  * @remark
  * This function wraps system function strtol(), hiding the ugly details.
  */
-bool str_to_int(const char * sval, int * p_ival, int base)
+bool str_to_long(const char * sval, long * p_ival, int base)
 {
    assert (base == 0 || base == 10 || base == 16);
    bool debug = false;
@@ -1032,13 +1032,36 @@ bool str_to_int(const char * sval, int * p_ival, int base)
 
    if (debug) {
       if (ok)
-        printf("(%s) sval=%s, Returning: %s, *ival = %d\n", __func__, sval, sbool(ok), *p_ival);
+        printf("(%s) sval=%s, Returning: %s, *ival = %ld\n", __func__, sval, sbool(ok), *p_ival);
       else
         printf("(%s) sval=%s, Returning: %s\n", __func__, sval, sbool(ok));
    }
    return ok;
 }
 
+
+/** Converts a decimal or hexadecimal string to an integer value.
+ *
+ * @param sval   string representing an integer
+ * @param p_ival address at which to store integer value
+ * @param base   10, 16, or 0 (see below)
+ * @return true if conversion succeeded, false if it failed
+ *
+ * @remark
+ * This function is implemented using #str_to_long().  See the documentation
+ * of that function for details.
+ * This function returns false if the value returned by #str_to_long() does
+ * fit in an int.
+ */
+bool str_to_int(const char * sval, int * p_ival, int base)
+{
+   long lval;
+   bool result = str_to_long(sval, &lval, base);
+   *p_ival = lval;
+   if (*p_ival!= lval)     // ensure that lval fits in an int
+      result = false;
+   return result;
+}
 
 /** Converts a string to a float value.
  *

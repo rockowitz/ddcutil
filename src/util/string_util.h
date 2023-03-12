@@ -2,11 +2,11 @@
  *  String utility functions header file
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef STRINGUTIL_H_
-#define STRINGUTIL_H_
+#ifndef STRING_UTIL_H_
+#define STRING_UTIL_H_
 
 /** \cond */
 #include <stdbool.h>
@@ -93,7 +93,8 @@ Null_Terminated_String_Array g_ptr_array_to_ntsa(GPtrArray * garray, bool duplic
 // Numeric conversion
 //
 
-bool str_to_int(const char * sval, int * p_ival, int base);
+bool str_to_long( const char * sval, long *  p_ival, int base);
+bool str_to_int(  const char * sval, int *   p_ival, int base);
 bool str_to_float(const char * sval, float * p_fval);
 
 
@@ -152,4 +153,4 @@ bool apply_filter_terms(const char * text, char ** terms, bool ignore_case);
 #endif
 
 
-#endif /* STRINGUTIL_H_ */
+#endif /* STRING_UTIL_H_ */
