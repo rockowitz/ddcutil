@@ -372,8 +372,8 @@ static bool parse_sleep_multiplier(
       if (arg_ok) {
          if (multiplier < 0.0f || multiplier >= 100.0)
             arg_ok = false;
-         if (parsed_cmd->parser_mode == MODE_DDCUTIL && multiplier == 0.0f)
-            arg_ok = false;
+         // if (parsed_cmd->parser_mode == MODE_DDCUTIL && multiplier == 0.0f)
+         //    arg_ok = false;
       }
 
       if (!arg_ok) {
@@ -381,6 +381,7 @@ static bool parse_sleep_multiplier(
       }
       else {
          parsed_cmd->sleep_multiplier = multiplier;
+         parsed_cmd->flags |= CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER;
       }
    }
    return arg_ok;
