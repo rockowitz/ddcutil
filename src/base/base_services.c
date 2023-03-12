@@ -12,6 +12,7 @@
 #include "displays.h"
 #include "dynamic_features.h"
 #include "dynamic_sleep.h"
+#include "dsa2.h"
 #include "execution_stats.h"
 #include "linux_errno.h"
 #include "per_thread_data.h"
@@ -39,6 +40,7 @@ void init_base_services() {
    init_displays();
    init_ddc_packets();
    init_dynamic_sleep();
+   init_dsa2();
    init_base_dynamic_features();
    init_thread_sleep_data();
    init_display_sleep_data();
