@@ -13,6 +13,7 @@
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/per_display_data.h"
@@ -167,7 +168,12 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
          "tsd->sleep_multiplier_factor=%2.1f, adjusted_sleep_time_millis=%d",
          tsd->sleep_multiplier_factor, adjusted_sleep_time_millis);
 
-   if (tsd->dynamic_sleep_enabled) {
+   if (dsa2_enabled) {
+      double multiplier = dsa2_get_sleep_multiplier(dh->dref->io_path);
+      adjusted_sleep_time_millis = multiplier * spec_sleep_time_millis;
+   }
+
+   else if (tsd->dynamic_sleep_enabled) {
       dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
       adjusted_sleep_time_millis =
             tsd->cur_sleep_adjustment_factor * adjusted_sleep_time_millis;
