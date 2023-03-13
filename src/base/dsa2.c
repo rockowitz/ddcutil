@@ -255,6 +255,7 @@ dbgrpt_circular_invocation_results_buffer(Circular_Invocation_Result_Buffer * ci
 
 int  steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
 int step_ct = ARRAY_SIZE(steps);   //11
+int step_max = ARRAY_SIZE(steps)-1;        // index of last entry
 
 typedef struct {
    Circular_Invocation_Result_Buffer * recent_values;
@@ -262,7 +263,7 @@ typedef struct {
    int  busno;
    int  cur_step;
    int  lookback;
-   int  interval;
+   int  remaining_interval;
    int  min_ok_step;
    bool found_failure_step;
 
@@ -280,7 +281,8 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(busno);
    ONE_INT_FIELD(cur_step);
    ONE_INT_FIELD(lookback);
-   ONE_INT_FIELD(interval);
+   ONE_INT_FIELD(remaining_interval);
+   ONE_INT_FIELD(min_ok_step);
    rpt_bool("found_failure_step", NULL, rtable->found_failure_step, d1);
    ONE_INT_FIELD(cur_retry_loop_step);
    ONE_INT_FIELD(cur_retry_loop_ct);
@@ -295,7 +297,8 @@ int Default_Look_Back = 5;
 const int Default_Initial_Step = 7;  // 1.0
 int initial_step  = Default_Initial_Step;
 int Max_Recent_Values = 20;
-int Default_Interval  = 3;
+const int Default_Interval  = 3;
+int adjustment_interval = Default_Interval;
 // assert(Default_Look_Back <= Max_Recent_Values);
 
 
@@ -342,8 +345,9 @@ Results_Table * new_results_table(int busno) {
    rtable->cur_step = initial_step;
    rtable->lookback = Default_Look_Back;
    rtable->recent_values = cirb_new(MAX_RECENT_VALUES);
-   rtable->interval = Default_Interval;
-   rtable->min_ok_step = 0;;
+   rtable->remaining_interval = Default_Interval;
+   rtable->min_ok_step = 0;
+   rtable->found_failure_step = false;
    return rtable;
 }
 
@@ -477,11 +481,24 @@ adjust_for_recent_successes(Results_Table * rtable) {
                rtable->min_ok_step);
    }
    else {
-      if (!rtable->found_failure_step && rtable->cur_step > 0) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Looking to decrement cur_step, cur_step=%d, found_failure_step=%s, min_on_step = %d",
+            rtable->cur_step, sbool(rtable->found_failure_step), rtable->min_ok_step);
+      if (rtable->cur_step > 0) {
+         if (rtable->found_failure_step) {
+            if (rtable->cur_step > rtable->min_ok_step) {
+               rtable->cur_step--;
+               DBGTRC(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
+            }
+         }
+         else {
             rtable->cur_step--;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Decremented rtable->cur_step.  Now %d",
-                  rtable->cur_step);
+            DBGTRC(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
+         }
       }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "rtable->cur_step = 0, cannot decrement");
+      }
+
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
                "max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
@@ -515,16 +532,16 @@ dsa2_record_ddcrw_status_code(DDCA_IO_Path dpath,
       Successful_Invocation si = {time(NULL), tryctr, rtable->cur_retry_loop_step};
       cirb_add(rtable->recent_values, si);
       if (rtable->cur_retry_loop_ct > 2) {
-         rtable->cur_step = rtable->cur_retry_loop_step;
-         rtable->found_failure_step = true;
+         if (rtable->cur_step < step_max) {
+            rtable->cur_step = rtable->cur_retry_loop_step+1;
+            rtable->min_ok_step = rtable->cur_step;
+            rtable->found_failure_step = true;
+         }
       }
       else if (rtable->cur_retry_loop_ct == 2) {
-         if (--rtable->interval == 0) {
-
+         if (--rtable->remaining_interval == 0) {
             adjust_for_recent_successes(rtable);
-
-
-            rtable->interval = Default_Interval;
+            rtable->remaining_interval = adjustment_interval;
          }
       }
       rtable->cur_retry_loop_ct = 0;
@@ -553,7 +570,7 @@ dsa2_record_ddcrw_status_code(DDCA_IO_Path dpath,
       int retry_ct = try_ct;
       cib_add(rtable->recent_values, retry_ct);
 
-      if (--rtable->interval == 0) {
+      if (--rtable->remaining_interval == 0) {
          int latest_values[MAX_RECENT_VALUES];
          cib_get_latest(rtable->recent_values, rtable->lookback, latest_values);
          int max_tryct = 0;
@@ -574,7 +591,7 @@ dsa2_record_ddcrw_status_code(DDCA_IO_Path dpath,
                }
             }
          }
-         rtable->interval = Default_Interval;
+         rtable->remaining_interval = Default_Interval;
       }
    }
 #endif
@@ -657,7 +674,7 @@ dsa2_save_persistent_stats() {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];
          fprintf(stats_file, "i2c-%d %d %d %d %d %d",
-                 rtable->busno, rtable->cur_step, rtable->lookback, rtable->interval,
+                 rtable->busno, rtable->cur_step, rtable->lookback, rtable->remaining_interval,
                  rtable->min_ok_step, rtable->found_failure_step);
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
@@ -841,7 +858,7 @@ dsa2_restore_persistent_stats() {
          int iwork;
          ok = ok && str_to_int(pieces[1], &rtable->cur_step, 10);
          ok = ok && str_to_int(pieces[2], &rtable->lookback, 10);
-         ok = ok && str_to_int(pieces[3], &rtable->interval, 10);
+         ok = ok && str_to_int(pieces[3], &rtable->remaining_interval, 10);
          ok = ok && str_to_int(pieces[4], &rtable->min_ok_step, 10);
          ok = ok && str_to_int(pieces[5], &iwork, 10);
          // DBGMSG("A");
