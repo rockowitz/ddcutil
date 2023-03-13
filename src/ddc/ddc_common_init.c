@@ -21,6 +21,7 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/thread_retry_data.h"
@@ -230,6 +231,15 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
          dsd_dsa_enable_globally(true);
       }
    }
+
+   if (parsed_cmd->flags & CMD_FLAG_F3) {
+      dsa2_enabled = true;
+      dsa2_restore_persistent_stats();
+      if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
+         dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
+      }
+   }
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
