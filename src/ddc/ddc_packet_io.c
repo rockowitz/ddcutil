@@ -34,6 +34,7 @@
 #include "base/ddc_errno.h"
 #include "base/displays.h"
 #include "base/dynamic_sleep.h"
+#include "base/dsa2.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"
 #include "base/rtti.h"
@@ -739,6 +740,7 @@ ddc_write_read_with_retry(
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
 
       }    // rc < 0
+      dsa2_record_ddcrw_status_code_by_dh(dh, tryctr, psc, retryable);
       // DBGMSG("Bottom of try loop. psc=%d, tryctr=%d, retryable=%s", psc, tryctr, sbool(retryable));
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
@@ -797,6 +799,7 @@ ddc_write_read_with_retry(
    }
 
    try_data_record_tries2(dh, WRITE_READ_TRIES_OP, psc, tryctr);
+
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
