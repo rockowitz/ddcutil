@@ -955,6 +955,8 @@ bye:
 
    if (dsa2_enabled)
       dsa2_save_persistent_stats();
+   else
+      dsa2_erase_persistent_stats();
 
 #ifdef ENABLE_SYSLOG
    if (trace_to_syslog) {
