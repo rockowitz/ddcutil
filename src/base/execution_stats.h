@@ -50,6 +50,7 @@ typedef enum {
    IE_OTHER                ///< other IO event
 } IO_Event_Type;
 const char * io_event_name(IO_Event_Type event_type);
+
 void log_io_call(
         const IO_Event_Type  event_type,
         const char *         location,
