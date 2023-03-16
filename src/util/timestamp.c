@@ -166,7 +166,7 @@ static uint64_t ipow(const uint64_t base, guint n)
  *  @param  precision  number of digits after the decimal point
  *  @return formatted elapsed time
  */
-char * formatted_elapsed_time(guint precision) {
+char * formatted_elapsed_time_t(guint precision) {
    static GPrivate  formatted_elapsed_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_elapsed_time_key, 40);
 
@@ -194,7 +194,7 @@ char * formatted_elapsed_time(guint precision) {
  *  @param  end     end time, in nanoseconds
  *  @return formatted time difference
  */
-char *   formatted_time(uint64_t nanos) {
+char *   formatted_time_t(uint64_t nanos) {
    static GPrivate  formatted_time_key = G_PRIVATE_INIT(g_free);
    char * elapsed_buf = get_thread_fixed_buffer(&formatted_time_key, 40);
 
@@ -203,4 +203,24 @@ char *   formatted_time(uint64_t nanos) {
    snprintf(elapsed_buf, 40, "%3"PRIu64".%03"PRIu64"", isecs, imillis - (isecs*1000) );
    return elapsed_buf;
 }
+
+
+/** Thread safe function that returns a string representation of an epoch
+ *  time value. The returned value is valid until the next call to this
+ *  function on the current thread.
+ *
+ *  \param  epoch_time
+ *  \return string representation
+ */
+char * formatted_epoch_time_t(long epoch_seconds) {
+   static GPrivate  formatted_epoch_time_key = G_PRIVATE_INIT(g_free);
+   char * buf = get_thread_fixed_buffer(&formatted_epoch_time_key, 40);
+
+   struct tm broken_down_time;
+   localtime_r(&epoch_seconds, &broken_down_time);
+   strftime(buf, 40, "%b %d %T", &broken_down_time);
+
+   return buf;
+}
+
 
