@@ -181,7 +181,7 @@ void test_display_detection_variants() {
        cur_result->elapsed_nanos = end_time-start_time;
        rpt_vstring(d, "Valid displays:           %d", valid_ct);
        cur_result->valid_display_ct = valid_ct;
-       rpt_vstring(d, "Elapsed time:           %s seconds", formatted_time(end_time - start_time));
+       rpt_vstring(d, "Elapsed time:           %s seconds", formatted_time_t(end_time - start_time));
        rpt_nl();
        // will include any USB or ADL displays, but that's ok
        ddc_report_displays(/*include_invalid_displays=*/ true, 0);
@@ -214,7 +214,7 @@ void test_display_detection_variants() {
             SBOOL(cur.write_before_read),
             read_size_name(cur.edid_read_size),
             cur_result->valid_display_ct,
-            formatted_time(cur_result->elapsed_nanos));
+            formatted_time_t(cur_result->elapsed_nanos));
    }
    rpt_nl();
 #ifdef DO_NOT_DISTRIBUTE
@@ -234,7 +234,7 @@ void test_display_detection_variants() {
             SBOOL(cur.write_before_read),
             read_size_name(cur.edid_read_size),
             cur_result->valid_display_ct,
-            formatted_time(cur_result->elapsed_nanos));
+            formatted_time_t(cur_result->elapsed_nanos));
    }
 #endif
 }
