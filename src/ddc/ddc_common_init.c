@@ -239,6 +239,9 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
       }
    }
+   else {
+      dsa2_erase_persistent_stats();
+   }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
