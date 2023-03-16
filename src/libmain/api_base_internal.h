@@ -125,7 +125,7 @@ ddca_get_precondition_failure_mode();
 #define ENSURE_LIBRARY_INITIALIZED() \
       do { \
          if (!library_initialized)  { \
-            ddca_init(DDCA_Init_Options_Disable_Config_File); \
+            ddca_init(DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
          } \
       } while (0)
 #endif
@@ -133,7 +133,7 @@ ddca_get_precondition_failure_mode();
 #define API_PROLOG(debug_flag, format, ...) \
    do { \
       if (!library_initialized)  { \
-         ddca_init(DDCA_Init_Options_Disable_Config_File); \
+         ddca_init(NULL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
       } \
       if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
          trace_api_call_depth++; \
@@ -145,7 +145,7 @@ ddca_get_precondition_failure_mode();
 #define API_PROLOGX(debug_flag, _trace_groups, format, ...) \
    do { \
       if (!library_initialized)  { \
-         ddca_init(DDCA_Init_Options_Disable_Config_File); \
+         ddca_init(DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
       } \
       trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (_trace_groups), DBGTRC_OPTIONS_NONE, \
