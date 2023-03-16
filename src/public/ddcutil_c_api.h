@@ -175,7 +175,7 @@ ddca_rc_desc(
 // Initialization
 //
 
-DDCA_Status ddca_init(DDCA_Init_Options opts);
+DDCA_Status ddca_init(char * library_options, DDCA_Init_Options opts);
 
 
 //
