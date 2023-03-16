@@ -147,7 +147,6 @@ static void emit_parser_error(GPtrArray* errmsgs, const char * func, const char 
 }
 
 
-
 static bool parse_maxtrywork(char * maxtrywork, Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
     bool debug = false;
     DBGMSF(debug, "retrywork, argument = |%s|", maxtrywork );
@@ -533,7 +532,7 @@ static void report_ddcutil_version() {
  * \param   argc         number of command line arguments
  * \param   argv         array of pointers to command line arguments
  * \param   parser_mode  indicate whether called for ddcutil or libddcutil
- * \param   errmsgs      if non-null collect error messages
+ * \param   errmsgs      if non-null collect error messages, do not write to terminal
  * \return  pointer to newly allocated Parsed_Cmd struct if parsing successful
  *          NULL if execution should be terminated
  */
@@ -646,6 +645,7 @@ parse_command(
 // char *   trace_destination = NULL;
    gint     edid_read_size_work = -1;
    char *   i1_work         = NULL;
+   char *   i2_work         = NULL;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
@@ -813,6 +813,7 @@ parse_command(
 
       // Generic options to aid development
       {"i1",      '\0', 0,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer",   "decimal or hex number" },
+      {"i2",      '\0', 0,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer",   "decimal or hex number" },
       {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
       {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
@@ -1025,11 +1026,9 @@ parse_command(
    //
    // n. at this point parsed_cmd->pdid == NULL
 
-
    parsing_ok &= parse_display_identifier(
                     parsed_cmd,
                     errmsgs,
-
                     dispwork,
                     buswork,
                     hidwork,
@@ -1049,6 +1048,12 @@ parse_command(
       bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errmsgs);
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
+      parsing_ok &= ok;
+   }
+   if (i2_work) {
+      bool ok = parse_int_work(i2_work, &parsed_cmd->i2, errmsgs);
+      if (ok)
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
       parsing_ok &= ok;
    }
 
@@ -1212,6 +1217,7 @@ parse_command(
       free_parsed_cmd(parsed_cmd);
       parsed_cmd = NULL;
    }
+
    DBGMSF(debug, "Returning: %p", parsed_cmd);
    return parsed_cmd;
 }
