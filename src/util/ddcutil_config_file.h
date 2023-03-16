@@ -10,6 +10,10 @@
 
 #include "error_info.h"
 
+int tokenize_options_line(
+      char *         string,
+      char ***       tokens_loc);
+
 int read_ddcutil_config_file(
       const char *   ddcutil_application,
       char **        config_fn_loc,

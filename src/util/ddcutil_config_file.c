@@ -21,6 +21,7 @@
 
 #include "debug_util.h"
 #include "error_info.h"
+#include "report_util.h"
 #include "simple_ini_file.h"
 #include "string_util.h"
 #include "xdg_util.h"
@@ -212,9 +213,10 @@ int merge_command_tokens(
        printf("(%s) Returning %d, *merged_argv_loc=%p\n",
               __func__, merged_argc, (void*)*merged_argv_loc);
        printf("(%s) *merged_arv_loc tokens:\n", __func__);
-       ntsa_show(*merged_argv_loc);
+       rpt_ntsa(*merged_argv_loc, 3);
    }
 
+   assert(merged_argc == ntsa_length(*merged_argv_loc));
    return merged_argc;
 }
 
@@ -304,9 +306,9 @@ int apply_config_file(
    if (debug) {
        DBGF(debug, "Done.     *new_argc_loc=%d, *new_argv_loc=%p, returning %d",
                     *new_argc_loc, *new_argv_loc, result);
-       printf("(%s) *new_argv_loc tokens:\n", __func__);
-       ntsa_show(*new_argv_loc);
-       printf("(%s) *untokenized_config_options_loc=%p->|%s|\n",
+       printf("(%s)           *new_argv_loc tokens:\n", __func__);
+       rpt_ntsa(*new_argv_loc, 3);
+       printf("(%s)           *untokenized_config_options_loc=%p->|%s|\n",
               __func__, *untokenized_config_options_loc, *untokenized_config_options_loc);
    }
 
