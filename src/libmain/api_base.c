@@ -162,115 +162,157 @@ char * get_library_filename() {
 //
 // Initialization
 //
-static
-Error_Info * get_parsed_libmain_config(Parsed_Cmd** parsed_cmd_loc) {
-   bool debug = false;
-   DBGF(debug, "Starting");
+static Error_Info *
+get_parsed_libmain_config(char *       libopts_string,
+                          bool         disable_config_file,
+                          Parsed_Cmd** parsed_cmd_loc)
+{
+   bool debug = true;
+   if (debug)
+      printf("(%s) Starting. disable_config_file = %s, libopts_string = %s\n",
+               __func__, sbool(disable_config_file), libopts_string);
 
    Error_Info * result = NULL;
-
    *parsed_cmd_loc = NULL;
 
-   // dummy initial argument list so libddcutil is not a special case
-   Null_Terminated_String_Array cmd_name_array = calloc(2, sizeof(char*));
-   cmd_name_array[0] = "libddcutil";
-   cmd_name_array[1] = NULL;
-   DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s",
-                cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
+   char ** libopts_tokens = NULL;
+   int libopts_token_ct = 0;
+   if (libopts_string) {
+      libopts_token_ct = tokenize_options_line(libopts_string, &libopts_tokens);
+      if (debug) {
+         printf("(%s) libopts_token_ct = %d, libopts_tokens:\n", __func__, libopts_token_ct);
+         rpt_ntsa(libopts_tokens, 3);
+      }
+   }
+   Null_Terminated_String_Array cmd_name_array = calloc(2 + libopts_token_ct, sizeof(char*));
+   cmd_name_array[0] = "libddcutil";   // so libddcutil not a special case for parser
+   int ndx = 0;
+   for (; ndx < libopts_token_ct; ndx++)
+      cmd_name_array[ndx+1] = libopts_tokens[ndx];
+   cmd_name_array[ndx+1] = NULL;
 
-   GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
+   if (debug)
+      printf("(%s) cmd_name_array=%p, cmd_name_array[1]=%p -> %s\n",
+                __func__, cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
+
    char ** new_argv = NULL;
    int     new_argc = 0;
    char *  untokenized_option_string = NULL;
-   char *  config_fn;
-   DBGF(debug, "Calling apply_config_file()...");
-   int apply_config_rc = apply_config_file(
-                                 "libddcutil",  // use this section of config file
-                                 1, cmd_name_array,
-                                 &new_argc,
-                                 &new_argv,
-                                 &untokenized_option_string,
-                                 &config_fn,
-                                 errmsgs);
-   assert(apply_config_rc <= 0);
-   // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-   // ntsa_free(cmd_name_array, false);
-   DBGF(debug, "apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:",
-                 apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
-   if (apply_config_rc == -EBADMSG) {
-      apply_config_rc = DDCRC_INVALID_CONFIG_FILE;
-      result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, "Error(s) processing configuration file: %s", config_fn);
-      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         errinfo_add_cause(result,  errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
-      }
-   }
-   else if (apply_config_rc == -ENOENT) {
-      result = errinfo_new(-ENOENT, __func__, "Configuration file not found");
-   }
-   else if (apply_config_rc < 0) {
-      result = errinfo_new(apply_config_rc, __func__, "Unexpected error reading configuration file: %s", psc_desc(apply_config_rc));
+   GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
+   if (disable_config_file) {
+      if (debug)
+         printf("(%s) config file disabled\n", __func__);
+      new_argv = cmd_name_array;
+      new_argc = ntsa_length(cmd_name_array);
+      untokenized_option_string = libopts_string;
    }
    else {
-      assert( new_argc == ntsa_length(new_argv) );
+      char *  config_fn = NULL;
       if (debug)
-         ntsa_show(new_argv);
+         printf("(%s) Calling apply_config_file()...\n", __func__);
+      int apply_config_rc = apply_config_file(
+                                    "libddcutil",  // use this section of config file
+                                    1, cmd_name_array,
+                                    &new_argc,
+                                    &new_argv,
+                                    &untokenized_option_string,
+                                    &config_fn,
+                                    errmsgs);
+      assert(apply_config_rc <= 0);
+      ASSERT_IFF(apply_config_rc == 0, errmsgs->len == 0);
+      // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
+      // ntsa_free(cmd_name_array, false);
+      if (debug)
+         printf("(%s) apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:\n",
+                    __func__, apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
 
-
-#ifdef OUT
-   // TODO: set msgs in Error_Info records
-   if (errmsgs->len > 0) {
-      f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
-      SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
-      for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
-         f0printf(fout(),     "   %s\n", g_ptr_array_index(errmsgs, ndx));
-         SYSLOG(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
+      if (apply_config_rc == -EBADMSG) {
+         apply_config_rc = DDCRC_INVALID_CONFIG_FILE;
+         result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, "Error(s) processing configuration file: %s", config_fn);
+         for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+            errinfo_add_cause(result,  errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
+         }
       }
-   }
-   // alt:
-   if (errinfo_accumulator->len > 0) {
-      f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
-      SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
-      for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
-         f0printf(fout(),     "   %s\n", errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
-         SYSLOG(LOG_WARNING,  "   %s",   errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
+      else if (apply_config_rc == -ENOENT) {
+         result = errinfo_new(-ENOENT, __func__, "Configuration file not found");
       }
-   }
-#endif
-   if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
-      fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
-      SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+      else if (apply_config_rc < 0) {
+         result = errinfo_new(apply_config_rc, __func__, "Unexpected error reading configuration file: %s", psc_desc(apply_config_rc));
+      }
+      else {
+         assert( new_argc == ntsa_length(new_argv) );
+         if (debug)
+            ntsa_show(new_argv);
+
+   #ifdef OUT
+      // TODO: set msgs in Error_Info records
+      if (errmsgs->len > 0) {
+         f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
+         SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
+         for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
+            f0printf(fout(),     "   %s\n", g_ptr_array_index(errmsgs, ndx));
+            SYSLOG(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
+         }
+      }
+      // alt:
+      if (errinfo_accumulator->len > 0) {
+         f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
+         SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
+         for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
+            f0printf(fout(),     "   %s\n", errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
+            SYSLOG(LOG_WARNING,  "   %s",   errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
+         }
+      }
+   #endif
+         if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
+            fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
+            SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+         }
+      }
+      free(config_fn);
    }
 
+   if (!result) {
       assert(new_argc >= 1);
-      DBGF(debug, "Calling parse_command()");
-       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
+      if (debug)
+         printf("(%s) Calling parse_command(), errmsgs=%p\n", __func__, errmsgs);
+      *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
+      if (debug)
+         printf("(%s) *parsed_cmd_loc=%p, errmsgs->len=%d\n", __func__, *parsed_cmd_loc, errmsgs->len);
+      ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
       if (!*parsed_cmd_loc) {
-         SYSLOG(LOG_ERR, "Invalid configuration file option string: %s",  untokenized_option_string);
+         SYSLOG(LOG_ERR, "Invalid option string: %s",  untokenized_option_string);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
              char * msg =  g_ptr_array_index(errmsgs,ndx);
              SYSLOG(LOG_ERR, "%s", msg);
          }
          result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
-               "Invalid configuration file option string: %s",  untokenized_option_string);
+               "Invalid option string: %s",  untokenized_option_string);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
             char * msg =  g_ptr_array_index(errmsgs, ndx);
             errinfo_add_cause(result, errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, msg));
          }
       }
-      else if (debug) {
-         dbgrpt_parsed_cmd(*parsed_cmd_loc, 1);
+      else {
+         assert(*parsed_cmd_loc);
+         if (debug)
+            dbgrpt_parsed_cmd(*parsed_cmd_loc, 1);
+         ntsa_free(new_argv, true);
       }
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-      ntsa_free(cmd_name_array, false);
-      ntsa_free(new_argv, true);
+      // ntsa_free(cmd_name_array, false);
+      // ntsa_free(new_argv, true);
       free(untokenized_option_string);
-      free(config_fn);
    }
 
-   DBGF(debug, "Done.     Returning %s", errinfo_summary(result));
+   if (debug)
+      printf("(%s) Done.     *parsed_cmd_loc=%p. Returning %s\n",
+              __func__, *parsed_cmd_loc, errinfo_summary(result));
 
+   ASSERT_IFF(*parsed_cmd_loc, !result);
    return result;
 }
+
 
 #ifdef TESTING_CLEANUP
 void done() {
@@ -427,6 +469,7 @@ set_master_errinfo_from_init_errors(
    return master_error;
 }
 
+
 DDCA_Status
 set_ddca_error_detail_from_init_errors(
       GPtrArray * errs) // array of Error_Info *
@@ -448,9 +491,10 @@ set_ddca_error_detail_from_init_errors(
    return ddcrc;
 }
 
+
 DDCA_Status
-ddca_init(DDCA_Init_Options opts) {
-   bool debug = false;
+ddca_init(char * library_options, DDCA_Init_Options opts) {
+   bool debug = true;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -460,7 +504,7 @@ ddca_init(DDCA_Init_Options opts) {
 
    enable_syslog = false;   // global in core.c
 #ifdef ENABLE_SYSLOG
-   if (!(opts & DDCA_Init_Options_Disable_Syslog)) {
+   if (!(opts & DDCA_INIT_OPTIONS_DISABLE_SYSLOG)) {
       enable_syslog = true;
       openlog("libddcutil",       // prepended to every log message
               LOG_CONS | LOG_PID, // write to system console if error sending to system logger
@@ -476,11 +520,14 @@ ddca_init(DDCA_Init_Options opts) {
    }
    else {
       Parsed_Cmd * parsed_cmd = NULL;
-      if (opts & DDCA_Init_Options_Disable_Config_File) {
+      if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !library_options) {
          parsed_cmd = new_parsed_cmd();
       }
       else {
-         master_error = get_parsed_libmain_config(&parsed_cmd);
+         master_error = get_parsed_libmain_config(
+                           library_options,
+                           opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE,
+                           &parsed_cmd);
          ASSERT_IFF(master_error, !parsed_cmd);
          if (!master_error) {
             if (parsed_cmd->trace_destination) {
