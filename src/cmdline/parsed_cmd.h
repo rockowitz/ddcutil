@@ -92,8 +92,9 @@ typedef enum {
    CMD_FLAG_I2C_IO_FILEIO  = 0x010000000000,
    CMD_FLAG_I2C_IO_IOCTL   = 0x020000000000,
    CMD_FLAG_I1_SET         = 0x040000000000,
+   CMD_FLAG_I2_SET         = 0x080000000000,
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
-                           = 0x080000000000,
+                           = 0x100000000000,
 } Parsed_Cmd_Flags;
 
 typedef
@@ -143,6 +144,7 @@ struct {
    uint64_t               flags;      // Parsed_Cmd_Flags
 
    int                    i1;         // for temporary use
+   int                    i2;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
