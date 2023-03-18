@@ -1050,6 +1050,11 @@ parse_command(
                     modelwork,
                     snwork);
 
+   if (dsa_flag && enable_dsa2_flag) {
+      emit_parser_error(errmsgs,  __func__, "Options --dsa and --dsa2 are muturally exclusive");
+      parsing_ok = false;
+   }
+
    if (maxtrywork)
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
 
