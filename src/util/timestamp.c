@@ -35,8 +35,6 @@ static int   timestamp_ct = 0;
 static uint64_t * timestamp_history = NULL;
 
 
-
-
 /** Returns the current value of the realtime clock in nanoseconds.
  *
  * @return timestamp, in nanoseconds
