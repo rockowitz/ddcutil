@@ -617,6 +617,11 @@ parse_command(
    gboolean debug_parse_flag  = false;
    gboolean parse_only_flag   = false;
    gboolean x52_no_fifo_flag  = false;
+// gboolean dsa2_enabled_flag = false;
+// gboolean dsa2_disabled_flag= false;
+   gboolean enable_dsa2_flag = DEFAULT_ENABLE_DSA2;
+   const char * enable_dsa2_expl =  (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
+   const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algoritm 2" : "Disable dynamic sleep algorithm 2 (default)";
 
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
@@ -779,6 +784,12 @@ parse_command(
 
       {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"enable-dsa2",             '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"no-dsa2",                 '\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"disable-dsa2",            '\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
       {"edid-read-size",
                       '\0', 0, G_OPTION_ARG_INT,         &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
       {NULL},
@@ -808,7 +819,7 @@ parse_command(
       {"syslog",     '\0', 0, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
 #endif
       {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
-      {"parse-only", '\0', 0,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",    NULL},
+      {"parse-only", '\0', 0,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
 
       // Generic options to aid development
@@ -992,6 +1003,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_DSA,               dsa_flag);
+   SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
    SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);

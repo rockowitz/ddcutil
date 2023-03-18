@@ -95,6 +95,7 @@ typedef enum {
    CMD_FLAG_I2_SET         = 0x080000000000,
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
                            = 0x100000000000,
+   CMD_FLAG_DSA2           = 0x200000000000,
 } Parsed_Cmd_Flags;
 
 typedef
