@@ -642,7 +642,7 @@ ddc_write_read_with_retry(
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
    bool sleep_multiplier_incremented = false;
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
-   DBGMSF(debug, "retry_null_response = %s, ddcrc_null_response_max = %d",
+   DBGMSF(debug, "          retry_null_response = %s, ddcrc_null_response_max = %d",
           sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES];
 
@@ -654,7 +654,7 @@ ddc_write_read_with_retry(
         tryctr++)
    {
       DBGMSF(debug,
-           "Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+           "          Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
            tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
@@ -742,8 +742,15 @@ ddc_write_read_with_retry(
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d, tryctr=%d, retryable=%s",
                              psc, tryctr, sbool(retryable));
-      DSA2_RECORD_DDCRW_STATUS_CODE_BY_DH(dh, tryctr, psc, retryable);
+      if (dsa2_enabled && psc != 0)
+         dsa2_note_retryable_failure(dh->dref->io_path, (max_tries-1) - tryctr);
    }
+
+   // tryctr = number of times through loop, i.e. 1..max_tries
+   assert(tryctr >= 1 && tryctr <= max_tries);
+   if (psc == 0 && dsa2_enabled)
+      dsa2_record_final(dh->dref->io_path, psc, tryctr);
+
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
          tryctr, psc, sbool(retryable), sbool(read_bytewise));
 
@@ -760,15 +767,14 @@ ddc_write_read_with_retry(
    }
 #endif
    // DBGMSG("try_errors = %p, &try_errors=%p", try_errors, &try_errors);
-   if (errct > 0) {
-         char * s0 = (psc == 0) ? "Succeeded" : "Failed";
-         char * s1 = (errct == 1) ? "" : "s";
-         char * s = errinfo_array_summary(try_errors, errct);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY, "%s,%s after %d error%s: %s",
-               dh_repr(dh), s0, errct, s1, s);
-         free(s);
 
-   }
+   char * s0 = (psc == 0) ? "Succeeded" : "Failed";
+   char * s1 = (errct == 1) ? "" : "s";
+   char * s = errinfo_array_summary(try_errors, errct);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
+                   "%s,%s after %d error%s: %s", dh_repr(dh), s0, errct, s1, s);
+   free(s);
+
    if (sleep_multiplier_incremented) {
       tsd_set_sleep_multiplier_ct(1);   // in case we changed it
       tsd_bump_sleep_multiplier_changer_ct();
@@ -778,7 +784,8 @@ ddc_write_read_with_retry(
 
    if (psc < 0) {
       // int last_try_index = tryctr-1;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                      "After try loop. tryctr=%d, retryable=%s", tryctr, sbool(retryable));
 
       if (retryable)
          psc = DDCRC_RETRIES;
@@ -802,7 +809,8 @@ ddc_write_read_with_retry(
    try_data_record_tries2(dh, WRITE_READ_TRIES_OP, psc, tryctr);
 
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s", tryctr, errinfo_summary(ddc_excp));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Total Tries (tryctr): %d. Returning: %s",
+                                   tryctr, errinfo_summary(ddc_excp));
    return ddc_excp;
 }
 
