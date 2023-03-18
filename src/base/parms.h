@@ -67,6 +67,9 @@
 // *** Miscellaneous
 //
 
+/** Maximum number of i2c buses this code supports */
+#define I2C_BUS_MAX 32
+
 /** Maximum number of values on getvcp or vcpinfo */
 #define MAX_GETVCP_VALUES    50
 
@@ -93,5 +96,6 @@
 
 #define DEFAULT_ENABLE_CACHED_CAPABILITIES true
 #define DEFAULT_ENABLE_UDF true
+#define DEFAULT_ENABLE_DSA2 true
 
 #endif /* PARMS_H_ */
