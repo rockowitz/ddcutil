@@ -569,12 +569,12 @@ parse_command(
    DBGMSF(debug, "original command: %s", original_command);
    parsed_cmd->raw_command = original_command;
 
-// gboolean stats_flag     = false;
-   gboolean ddc_flag       = false;
-   gboolean force_flag     = false;
+// gboolean stats_flag       = false;
+   gboolean ddc_flag         = false;
+   gboolean force_flag       = false;
    gboolean force_slave_flag = false;
    gboolean show_unsupported_flag = false;
-   gboolean version_flag   = false;
+   gboolean version_flag     = false;
    gboolean timestamp_trace_flag = false;
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
@@ -593,11 +593,11 @@ parse_command(
    gboolean ro_only_flag   = false;
    gboolean wo_only_flag   = false;
    gboolean enable_udf_flag = DEFAULT_ENABLE_UDF;
-   const char * enable_udf_expl = (enable_udf_flag) ? "Enable User Defined Features (default)" : "Enable User Defined Features";
+   const char * enable_udf_expl  = (enable_udf_flag) ? "Enable User Defined Features (default)" : "Enable User Defined Features";
    const char * disable_udf_expl = (enable_udf_flag) ? "Disable User Defined Features" : "Disable User Defined Features (default)";
 #ifdef USE_USB
    gboolean enable_usb_flag = DEFAULT_ENABLE_USB;
-   const char * enable_usb_expl = (enable_usb_flag) ? "Detect USB devices (default)" : "Detect USB devices";
+   const char * enable_usb_expl  = (enable_usb_flag) ? "Detect USB devices (default)" : "Detect USB devices";
    const char * disable_usb_expl = (enable_usb_flag) ? "Ignore USB devices" : "Ignore USB devices (default)";
 #endif
    gboolean timeout_i2c_io_flag = false;
@@ -605,29 +605,25 @@ parse_command(
    gboolean deferred_sleep_flag = false;
    gboolean per_thread_stats_flag = false;
    gboolean show_settings_flag = false;
-   gboolean dsa_flag       = false;
+   gboolean dsa_flag           = false;
    gboolean i2c_io_fileio_flag = false;
    gboolean i2c_io_ioctl_flag  = false;
-   gboolean f1_flag        = false;
-   gboolean f2_flag        = false;
-   gboolean f3_flag        = false;
-   gboolean f4_flag        = false;
-   gboolean f5_flag        = false;
-   gboolean f6_flag        = false;
-   gboolean debug_parse_flag  = false;
-   gboolean parse_only_flag   = false;
-   gboolean x52_no_fifo_flag  = false;
-// gboolean dsa2_enabled_flag = false;
-// gboolean dsa2_disabled_flag= false;
-   gboolean enable_dsa2_flag = DEFAULT_ENABLE_DSA2;
-   const char * enable_dsa2_expl =  (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
+   gboolean f1_flag            = false;
+   gboolean f2_flag            = false;
+   gboolean f3_flag            = false;
+   gboolean f4_flag            = false;
+   gboolean f5_flag            = false;
+   gboolean f6_flag            = false;
+   gboolean debug_parse_flag   = false;
+   gboolean parse_only_flag    = false;
+   gboolean x52_no_fifo_flag   = false;
+   gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
+   const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algoritm 2" : "Disable dynamic sleep algorithm 2 (default)";
 
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
-   // gboolean enable_cc_flag_set = false;
-   // gboolean disable_cc_flag_set = false;
 
    // gboolean ignore_cc_flag = false;
    char *   mfg_id_work     = NULL;
