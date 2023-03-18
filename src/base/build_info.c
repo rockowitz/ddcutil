@@ -66,9 +66,9 @@ void report_build_options(int depth) {
 // #define REPORT_BUILD_OPTION(_name) rpt_vstring(d1, "%-20s %s", #_name ":", ( _name ## "+0" ) ? "Set" : "Not Set" )
 
 #define IS_SET(_name) \
-      rpt_vstring(d1, "%-20s Defined", #_name ":");
+      rpt_vstring(d1, "%-24s Defined", #_name ":");
 #define NOT_SET(_name) \
-      rpt_vstring(d1, "%-20s Not defined", #_name ":");
+      rpt_vstring(d1, "%-24s Not defined", #_name ":");
 
 #ifdef BUILD_SHARED_LIB
    IS_SET(BUILD_SHARED_LIB);
@@ -118,10 +118,12 @@ void report_build_options(int depth) {
    NOT_SET(ENABLE_SYSLOG);
 #endif
 
+#ifdef UNUSED
 #ifdef ENABLE_TRACE
    IS_SET(ENABLE_TRACE);
 #else
    NOT_SET(ENABLE_TRACE);
+#endif
 #endif
 
 #ifdef WITH_ASAN
