@@ -1027,6 +1027,7 @@ bool str_to_long(const char * sval, long * p_ival, int base)
             *p_ival = result;
             ok = true;
          }
+         free(work);
       }
    }
 
@@ -1057,9 +1058,11 @@ bool str_to_int(const char * sval, int * p_ival, int base)
 {
    long lval;
    bool result = str_to_long(sval, &lval, base);
-   *p_ival = lval;
-   if (*p_ival!= lval)     // ensure that lval fits in an int
-      result = false;
+   if (result) {
+      *p_ival = lval;
+      if (*p_ival!= lval)     // ensure that lval fits in an int
+         result = false;
+   }
    return result;
 }
 
