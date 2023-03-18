@@ -582,7 +582,7 @@ static int32_t maybe_signed_data(uint32_t data, int bytect) {
    assert(bytect == 0 || bytect == 1 || bytect==2 || bytect==4);
    if (bytect > 0) {
       unsigned int sign_bitno = (bytect * 8) - 1;
-      uint32_t sign_mask = 1 << sign_bitno;
+      uint32_t sign_mask = (uint32_t) 1 << sign_bitno;  // cast to avoid clang warning
       // printf("     sign_bitno = %d, sign_mask=0x%08x\n", sign_bitno, sign_mask);
       if (data & sign_mask)
             result = -data;
