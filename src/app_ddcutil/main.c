@@ -141,14 +141,15 @@ report_performance_options(int depth)
 {
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
-      rpt_vstring(d1, "Deferred sleep enabled:                      %s", sbool( is_deferred_sleep_enabled() ) );
+      rpt_vstring(d1, "Deferred sleep enabled:                 %s", sbool( is_deferred_sleep_enabled() ) );
 #ifdef OLD   // SLEEP_SUPPRESSION
       rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
 #endif
       bool dsa_enabled =  tsd_get_dsa_enabled_default();
-      rpt_vstring(d1, "Dynamic sleep adjustment enabled:            %s", sbool(dsa_enabled) );
+      rpt_vstring(d1, "Dynamic sleep adjustment enabled:       %s", sbool(dsa_enabled) );
       if ( dsa_enabled )
-        rpt_vstring(d1, "Sleep multiplier factor:                %5.2f", tsd_get_sleep_multiplier_factor() );
+        rpt_vstring(d1, "Sleep multiplier factor:           %5.2f", tsd_get_sleep_multiplier_factor() );
+      rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_enabled));
       rpt_nl();
 }
 
@@ -176,9 +177,7 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     if (config_fn)
        rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
 
-
-    // if (parsed_cmd->output_level >= DDCA_OL_VV)
-       report_build_options(depth);
+    report_build_options(depth);
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
     report_tracing(depth);
