@@ -190,6 +190,8 @@ get_parsed_libmain_config(char *       libopts_string,
    for (; ndx < libopts_token_ct; ndx++)
       cmd_name_array[ndx+1] = libopts_tokens[ndx];
    cmd_name_array[ndx+1] = NULL;
+   if (libopts_tokens)
+      ntsa_free(libopts_tokens, false);
 
    if (debug)
       printf("(%s) cmd_name_array=%p, cmd_name_array[1]=%p -> %s\n",
@@ -221,13 +223,12 @@ get_parsed_libmain_config(char *       libopts_string,
       assert(apply_config_rc <= 0);
       ASSERT_IFF(apply_config_rc == 0, errmsgs->len == 0);
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-      // ntsa_free(cmd_name_array, false);
+      ntsa_free(cmd_name_array, false);
       if (debug)
          printf("(%s) apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:\n",
                     __func__, apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
 
       if (apply_config_rc == -EBADMSG) {
-         apply_config_rc = DDCRC_INVALID_CONFIG_FILE;
          result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, "Error(s) processing configuration file: %s", config_fn);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
             errinfo_add_cause(result,  errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
@@ -543,6 +544,7 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
 
          ddc_start_watch_displays();
       }
+      free_parsed_cmd(parsed_cmd);
    }
 
    DDCA_Status ddcrc = 0;
