@@ -147,7 +147,7 @@ bool pdd_cross_display_operation_start() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "thread_has_lock: %s, lock depth: %d",
                                          sbool(thread_has_lock), display_lock_depth);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
-   ASSERT_IFF( thread_has_lock, display_lock_depth  > 0);
+   ASSERT_IFF(thread_has_lock, display_lock_depth  > 0);
 
    if (display_lock_depth == 0) {    // (A)
    // if (!thread_has_lock) {
@@ -162,8 +162,7 @@ bool pdd_cross_display_operation_start() {
       g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(true));
 
       Thread_Output_Settings * thread_settings = get_thread_settings();
-      // intmax_t cur_display_id = get_display_id();
-      intmax_t cur_thread_id = thread_settings->tid;
+      intmax_t cur_thread_id = thread_settings->tid;  // alt: get_thread_id()
       cross_thread_operation_owner = cur_thread_id;
       DBGMSF(debug, "Locked by thread %d", cur_thread_id);
       sleep_millis(10);   // give all per-thread functions time to finish
