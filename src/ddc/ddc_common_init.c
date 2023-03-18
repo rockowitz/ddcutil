@@ -199,7 +199,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       // impedance match
       drd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
       // drd_set_initial_display_max_tries(3, parsed_cmd->max_tries[2]);
-
    }
 }
 
@@ -232,8 +231,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       }
    }
 
-   if (parsed_cmd->flags & CMD_FLAG_F3) {
-      dsa2_enabled = true;
+   dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
+   if (dsa2_enabled) {
       dsa2_restore_persistent_stats();
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
