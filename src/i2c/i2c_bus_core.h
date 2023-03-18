@@ -20,11 +20,8 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/execution_stats.h"
+#include "base/parms.h"
 #include "base/status_code_mgt.h"
-
-
-/** \def I2C_BUS_MAX maximum number of i2c buses this code supports */
-#define I2C_BUS_MAX 32
 
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
