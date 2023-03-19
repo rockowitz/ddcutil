@@ -1200,10 +1200,14 @@ void test_one_logistic(int steps) {
  */
 void
 init_dsa2() {
-   // RTTI_ADD_FUNC(dsa2_record_ddcrw_status_code);
    RTTI_ADD_FUNC(adjust_for_recent_successes);
    RTTI_ADD_FUNC(dsa2_record_final);
    RTTI_ADD_FUNC(dsa2_note_retryable_failure);
+   RTTI_ADD_FUNC(dsa2_reset_multiplier);
+   RTTI_ADD_FUNC(dsa2_get_sleep_multiplier);
+   RTTI_ADD_FUNC(dsa2_save_persistent_stats);
+   RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
+   RTTI_ADD_FUNC(dsa2_restore_persistent_stats);
 
    results_tables = calloc(I2C_BUS_MAX+1, sizeof(Results_Table*));
 
