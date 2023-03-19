@@ -1041,6 +1041,8 @@ dsa2_restore_persistent_stats() {
    bool all_ok = true;
    GPtrArray* line_array = g_ptr_array_new_with_free_func(g_free);
    int linect = file_getlines(stats_fn, line_array, debug);
+   if (linect == -ENOENT)
+      goto bye;
    if (linect < 0) {
       stats_file_error("Error  %s reading stats file %s", psc_desc(linect), stats_fn);
       all_ok = false;
