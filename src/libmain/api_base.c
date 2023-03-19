@@ -28,6 +28,7 @@
 #include "base/build_info.h"
 #include "base/core.h"
 #include "base/core_per_thread_settings.h"
+#include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/per_thread_data.h"
 #include "base/rtti.h"
@@ -167,7 +168,7 @@ get_parsed_libmain_config(char *       libopts_string,
                           bool         disable_config_file,
                           Parsed_Cmd** parsed_cmd_loc)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. disable_config_file = %s, libopts_string = %s\n",
                __func__, sbool(disable_config_file), libopts_string);
@@ -298,7 +299,7 @@ get_parsed_libmain_config(char *       libopts_string,
          assert(*parsed_cmd_loc);
          if (debug)
             dbgrpt_parsed_cmd(*parsed_cmd_loc, 1);
-         ntsa_free(new_argv, true);
+         ntsa_free(new_argv, false);
       }
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
       // ntsa_free(cmd_name_array, false);
@@ -432,6 +433,8 @@ _ddca_terminate(void) {
    if (library_initialized) {
       if (debug)
          dbgrpt_distinct_display_descriptors(2);
+      if (dsa2_enabled)
+         dsa2_save_persistent_stats();
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_thread_stats, 0);
@@ -495,7 +498,7 @@ set_ddca_error_detail_from_init_errors(
 
 DDCA_Status
 ddca_init(char * library_options, DDCA_Init_Options opts) {
-   bool debug = true;
+   bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
    if (s && strlen(s) > 0)
       debug = true;
@@ -539,12 +542,12 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
             requested_stats = parsed_cmd->stats_types;
             per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS;
             submaster_initializer(parsed_cmd);
-            free_parsed_cmd(parsed_cmd);
          }
 
          ddc_start_watch_displays();
       }
-      free_parsed_cmd(parsed_cmd);
+      if (parsed_cmd)
+         free_parsed_cmd(parsed_cmd);
    }
 
    DDCA_Status ddcrc = 0;
