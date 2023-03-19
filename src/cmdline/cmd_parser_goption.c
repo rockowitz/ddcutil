@@ -929,8 +929,10 @@ parse_command(
    bool parsing_ok = g_option_context_parse_strv(context, &temp_argv, &error);
    if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
-      if (error)
-         emit_parser_error(errmsgs,  __func__,  "%s option parsing failed: %s", mode_name, error->message);
+      if (error) {
+         // emit_parser_error(errmsgs,  __func__,  "%s option parsing failed: %s", mode_name, error->message);
+         emit_parser_error(errmsgs,  __func__, "%s", error->message);
+      }
       else
          emit_parser_error(errmsgs,  __func__,  "%s option parsing failed", mode_name);
    }
