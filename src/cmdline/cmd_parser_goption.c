@@ -603,7 +603,7 @@ parse_command(
    gboolean timeout_i2c_io_flag = false;
    gboolean reduce_sleeps_specified = false;
    gboolean deferred_sleep_flag = false;
-   gboolean per_thread_stats_flag = false;
+   gboolean per_display_stats_flag = false;
    gboolean show_settings_flag = false;
    gboolean dsa_flag           = false;
    gboolean i2c_io_fileio_flag = false;
@@ -707,8 +707,8 @@ parse_command(
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
-      {"per-thread-stats",
-                  '\0', 0, G_OPTION_ARG_NONE,     &per_thread_stats_flag, "Include per-thread statistics",   NULL},
+      {"per-display-stats",
+                  '\0', 0, G_OPTION_ARG_NONE,     &per_display_stats_flag, "Include per-display statistics",   NULL},
 
       // Behavior options
 #ifdef USE_USB
@@ -1010,7 +1010,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
-   SET_CMDFLAG(CMD_FLAG_PER_THREAD_STATS,  per_thread_stats_flag);
+   SET_CMDFLAG(CMD_FLAG_PER_DISPLAY_STATS, per_display_stats_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);

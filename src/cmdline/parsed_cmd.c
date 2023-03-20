@@ -269,7 +269,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA,              d1);
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                d1);
 
-      rpt_bool("per_thread_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS,        d1);
+      rpt_bool("per_display_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS,        d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
       rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
       for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
