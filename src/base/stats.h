@@ -10,6 +10,10 @@
 
 #include <stdint.h>
 
+//
+// Retry management
+//
+
 //! I2C retry types
 typedef enum{
    WRITE_ONLY_TRIES_OP,       /**< write-only operation tries */
@@ -20,23 +24,13 @@ typedef enum{
 #define RETRY_OP_COUNT 4
 typedef uint16_t Retry_Op_Value;
 
-//
-// Retry management
-//
-
 const char * retry_type_name(Retry_Operation stat_id);
 const char * retry_type_description(Retry_Operation retry_class);
-
-char * int_array_to_string(uint16_t * start, int ct);
-
-
 
 typedef struct {
    Retry_Operation retry_type;
    uint16_t        max_highest_maxtries;
    uint16_t        min_lowest_maxtries;
 } Global_Maxtries_Accumulator;
-
-
 
 #endif /* STATS_H_ */
