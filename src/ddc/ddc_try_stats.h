@@ -5,7 +5,7 @@
  *  These statistics are global, not broken out by thread.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef TRY_STATS_H_
@@ -15,7 +15,8 @@
 
 #include "ddcutil_types.h"
 
-#include "base/per_thread_data.h"
+#include "base/displays.h"
+#include "base/stats.h"
 
 void     try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries);
 void     try_data_init();

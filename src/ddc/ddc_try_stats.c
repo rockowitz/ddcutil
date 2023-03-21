@@ -3,7 +3,7 @@
  *  Maintains statistics on DDC retries, along with maxtries settings.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -20,12 +20,9 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
-#include "base/parms.h"
-#include "base/per_thread_data.h"    // for retry_type_name()
-#include "base/thread_retry_data.h"
-#include "base/thread_sleep_data.h"
 #include "base/display_retry_data.h"
-#include "base/display_sleep_data.h"
+#include "base/parms.h"
+#include "base/stats.h"
 
 #include "ddc/ddc_try_stats.h"
 
@@ -207,7 +204,9 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
-   trd_set_all_maxtries(retry_type, new_maxtries);
+   // trd_set_all_maxtries(retry_type, new_maxtries);
+   drd_set_all_maxtries(retry_type, new_maxtries);
+
 
    unlock_if_needed(this_function_performed_lock);
 
@@ -320,7 +319,7 @@ void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDC
    DBGMSF(debug, "retry_type = %d - %s,  ddcrc=%d, tryct=%d",
                  retry_type, retry_type_name(retry_type), ddcrc, tryct);
 
-   trd_record_cur_thread_tries(retry_type, ddcrc, tryct);
+   // trd_record_cur_thread_tries(retry_type, ddcrc, tryct);
    Per_Display_Data * pdd = dh->dref->pdd;
    drd_record_display_tries(pdd, retry_type, ddcrc, tryct);
 
@@ -390,7 +389,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
 
       // Temporary for consistency check:
       Global_Maxtries_Accumulator acc =
-             trd_get_all_threads_maxtries_range(retry_type);
+             drd_get_all_displays_maxtries_range(retry_type);
       DBGMSF(debug, "acc.max_highest_maxtries=%d, stats_rec->highest_maxtries = %d",
                     acc.max_highest_maxtries, stats_rec->highest_maxtries);
       // assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
