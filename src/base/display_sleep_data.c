@@ -27,7 +27,6 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/per_display_data.h"
-#include "base/per_thread_data.h"
 
 #include "ddc/ddc_displays.h"    // !!!
 
@@ -66,7 +65,7 @@ static       bool   default_dynamic_sleep_enabled   = false;
  *  @param  depth  logical indentation level
  */
 void report_display_sleep_data(Per_Display_Data * data, int depth) {
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
    int d1 = depth+1;
    int d2 = depth+2;
 //   rpt_vstring(depth, "Thread %d sleep data:", data->display_id);
@@ -137,25 +136,8 @@ void report_all_display_sleep_data(int depth) {
 
 
 //
-// Obtain, initialize, and reset sleep data for current display
+// Obtain, initialize, and reset sleep data for a display
 //
-
-
-Per_Display_Data * dsd_get_display_sleep_data() {
-#ifdef OLD
-   Per_Display_Data * ptd = pdd_get_per_display_data();
-   // n. init_display_sleep_data() is called from per-display data initializer
-#endif
-   Per_Thread_Data * ptd = ptd_get_per_thread_data();
-   Per_Display_Data * pdd = NULL;
-   if (ptd->cur_dh) {
-      pdd = ptd->cur_dh->dref->pdd;
-      assert(pdd->display_sleep_data_defined);
-   }
-   return pdd;
-}
-
-
 
 // initialize a single instance, called from init_per_display_data()
 void dsd_init_display_sleep_data(Per_Display_Data * data) {
@@ -166,8 +148,6 @@ void dsd_init_display_sleep_data(Per_Display_Data * data) {
    data->dynamic_sleep_enabled       = default_dynamic_sleep_enabled;
    data->sleep_multiplier_ct         = default_sleep_multiplier_count;
    data->highest_sleep_multiplier_ct = 1;
-
-
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "Setting data->sleep_multiplier_factor = default_sleep_multiplier_factor = %6.3f",
@@ -322,17 +302,16 @@ double get_global_sleep_multiplier_factor() {
 // Sleep Multiplier Count
 //
 
-/** Gets the multiplier count for the current display.
+/** Gets the multiplier count for the specified display.
  *
  *  @return multiplier count
  */
 int dsd_get_sleep_multiplier_ct(Per_Display_Data * data) {
-   // Per_Display_Data * data = dsd_get_display_sleep_data();
    return data->sleep_multiplier_ct;
 }
 
 
-/** Sets the multiplier count for the current display.
+/** Sets the multiplier count for the specified display.
  *
  *  @param multipler_ct  value to set
  */
@@ -340,21 +319,19 @@ void dsd_set_sleep_multiplier_ct(Per_Display_Data * data , int multiplier_ct) {
    bool debug = false;
    DBGMSF(debug, "Setting sleep_multiplier_ct = %d for current display", multiplier_ct);
    assert(multiplier_ct > 0 && multiplier_ct < 100);
-   // pdd_cross_display_operation_start();
-   // Per_Display_Data * data = dsd_get_display_sleep_data();
+   pdd_cross_display_operation_start(__func__);
    data->sleep_multiplier_ct = multiplier_ct;
    if (multiplier_ct > data->highest_sleep_multiplier_ct)
       data->highest_sleep_multiplier_ct = multiplier_ct;
-   pdd_cross_display_operation_end();
+   pdd_cross_display_operation_end(__func__);
 }
 
 
-/** Increment the number of function executions on this display
+/** Increment the number of function executions on a specified display
  *  that changed the sleep multiplier count.
  */
 void dsd_bump_sleep_multiplier_changer_ct(Per_Display_Data * data) {
    // pdd_cross_display_operation_block();
-   // Per_Display_Data * data = dsd_get_display_sleep_data();
    data->sleep_multipler_changer_ct++;
 }
 
@@ -403,15 +380,15 @@ void dsd_enable_dynamic_sleep(bool enabled) {
 
 
 /** Enable or disable dynamic sleep adjustment on all existing displays
+ *  and any newly detected displays
  *
  *  @param enable  true/false
  */
 void dsd_enable_dsa_all(bool enable) {
    bool debug = false;
-   DBGMSF(debug, "enable=%s", sbool(enable));
-   // needs mutex
-   pdd_cross_display_operation_start();
    DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
+   // needs mutex
+   pdd_cross_display_operation_start(__func__);
    default_dynamic_sleep_enabled = enable;  // for initializing new displays
 
    if (per_display_data_hash) {
@@ -434,8 +411,8 @@ void dsd_enable_dsa_all(bool enable) {
    }
 #endif
 
-
-   pdd_cross_display_operation_end();
+   pdd_cross_display_operation_end(__func__);
+   DBGMSF(debug, "Done");
 }
 
 
@@ -459,10 +436,10 @@ void dsd_dsa_enable(bool enabled) {
 void dsd_dsa_enable_globally(bool enabled) {
    bool debug = false;
    DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   pdd_cross_display_operation_start();
+   pdd_cross_display_operation_start(__func__);
    default_dynamic_sleep_enabled = enabled;
    dsd_enable_dsa_all(enabled) ;
-   pdd_cross_display_operation_end();
+   pdd_cross_display_operation_end(__func__);
 }
 
 
