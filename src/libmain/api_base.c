@@ -338,7 +338,7 @@ static FILE * flog = NULL;
 
 bool library_initialized = false;
 DDCA_Stats_Type requested_stats = 0;
-bool per_thread_stats = false;
+bool per_display_stats = false;
 
 
 /** Initializes the ddcutil library module.
@@ -436,7 +436,7 @@ _ddca_terminate(void) {
          dsa2_save_persistent_stats();
       ddc_discard_detected_displays();
       if (requested_stats)
-         ddc_report_stats_main(requested_stats, per_thread_stats, 0);
+         ddc_report_stats_main(requested_stats, per_display_stats, 0);
       release_base_services();
       ddc_stop_watch_displays();
       free_regex_hash_table();
@@ -539,7 +539,7 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
             }
             master_error = init_tracing(parsed_cmd);
             requested_stats = parsed_cmd->stats_types;
-            per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS;
+            per_display_stats = parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS;
             submaster_initializer(parsed_cmd);
          }
 

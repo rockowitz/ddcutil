@@ -71,11 +71,11 @@ void ddc_reset_stats_main() {
 
 /** Master function for reporting statistics.
  *
- * \param stats                  bitflags indicating which statistics to report
- * \param show_per_thread_stats  include per thread execution stats
- * \param depth logical          indentation depth
+ * \param stats                 bitflags indicating which statistics to report
+ * \param show_per_display      include per display execution stats
+ * \param depth logical         indentation depth
  */
-void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, int depth) {
+void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, int depth) {
    // DBGMSG("show_per_thread_stats: %s", sbool(show_per_thread_stats));
    // int d1 = depth+1;
    rpt_nl();
@@ -120,7 +120,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
       rpt_nl();
    }
 
-   if (show_per_thread_stats) {
+   if (show_per_display_stats) {
 #ifdef OUT
       rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
       rpt_nl();
