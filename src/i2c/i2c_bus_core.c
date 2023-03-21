@@ -195,7 +195,9 @@ int i2c_open_bus(int busno, Byte callopts) {
    }
    else {
       RECORD_IO_FINISH_NOW(fd, IE_OPEN);
+#ifdef PTD
       ptd_append_thread_description(filename);
+#endif
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
