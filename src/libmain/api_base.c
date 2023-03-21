@@ -26,14 +26,14 @@
 #include "util/xdg_util.h"
 
 #include "base/build_info.h"
-#include "base/core.h"
 #include "base/core_per_thread_settings.h"
+#include "base/core.h"
+#include "base/display_sleep_data.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
+#include "base/per_display_data.h"
 #include "base/per_thread_data.h"
 #include "base/rtti.h"
-#include "base/thread_retry_data.h"
-#include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
 
 #include "cmdline/cmd_parser.h"
@@ -133,7 +133,6 @@ ddca_built_with_usb(void) {
    return false;
 #endif
 }
-
 
 // Alternative to individual ddca_built_with...() functions.
 // conciseness vs documentatbility
@@ -540,7 +539,7 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
             }
             master_error = init_tracing(parsed_cmd);
             requested_stats = parsed_cmd->stats_types;
-            per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS;
+            per_thread_stats = parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS;
             submaster_initializer(parsed_cmd);
          }
 
@@ -820,21 +819,25 @@ ddca_max_max_tries(void) {
 }
 
 
+//  *** THIS IS FOR THE CURRENT THREAD
+//  *** replace using function specifying display
+//  *** for now, revert to old try_data_get_maxtries2()
 int
 ddca_get_max_tries(DDCA_Retry_Type retry_type) {
    // stats for multi part writes and reads are separate, but the
    // max tries for both are identical
-#ifndef NDEBUG
+// #ifndef NDEBUG
    Retry_Op_Value result3 = try_data_get_maxtries2((Retry_Operation) retry_type);
-#endif
-   // new way using retry_mgt
-   Retry_Op_Value result2 = trd_get_thread_max_tries((Retry_Operation) retry_type);
+// #endif
+   // // new way using retry_mgt
+   // Retry_Op_Value result2 = trd_get_thread_max_tries((Retry_Operation) retry_type);
    // assert(result == result2);
-   assert(result2 == result3);
-   return result2;
+   // assert(result2 == result3);
+   return result3;
 }
 
 
+// ** THIS IS FOR CURRENT THREAD - FIX
 DDCA_Status
 ddca_set_max_tries(
       DDCA_Retry_Type retry_type,
@@ -851,9 +854,11 @@ ddca_set_max_tries(
          try_data_set_maxtries2(MULTI_PART_WRITE_OP, max_tries);
 
       // new way, set in retry_mgt
+#ifdef TRD
       trd_set_thread_max_tries((Retry_Operation) retry_type, max_tries);
       if (retry_type == DDCA_MULTI_PART_TRIES)
            trd_set_thread_max_tries(MULTI_PART_WRITE_OP, max_tries);
+#endif
    }
    return rc;
 }
@@ -894,6 +899,7 @@ ddca_is_sleep_suppression_enabled() {
 }
 
 
+// *** FOR CURRENT THREAD
 double
 ddca_set_default_sleep_multiplier(double multiplier)
 {
@@ -902,8 +908,10 @@ ddca_set_default_sleep_multiplier(double multiplier)
 
    double old_value = -1.0;
    if (multiplier >= 0.0 && multiplier <= 10.0) {
-      old_value = tsd_get_default_sleep_multiplier_factor();
-      tsd_set_default_sleep_multiplier_factor(multiplier);
+// #ifdef TSD
+      old_value = dsd_get_default_sleep_multiplier_factor();
+      dsd_set_default_sleep_multiplier_factor(multiplier);
+// #endif
     }
 
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %6.3f", old_value);
@@ -916,10 +924,11 @@ ddca_get_default_sleep_multiplier()
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
-   double result = tsd_get_default_sleep_multiplier_factor();
+   double result = dsd_get_default_sleep_multiplier_factor();
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
+
 
 void
 ddca_set_global_sleep_multiplier(double multiplier)
@@ -943,8 +952,12 @@ ddca_set_sleep_multiplier(double multiplier)
 
    double old_value = -1.0;
    if (multiplier >= 0.0 && multiplier <= 10.0) {
-      old_value = tsd_get_sleep_multiplier_factor();
-      tsd_set_sleep_multiplier_factor(multiplier);
+      Per_Thread_Data * ptd = ptd_get_per_thread_data();
+      if (ptd->cur_dh) {
+         Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
+         old_value = pdd->sleep_multiplier_factor;
+         pdd->sleep_multiplier_factor = multiplier;
+      }
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %6.3f", old_value);
@@ -956,7 +969,16 @@ ddca_get_sleep_multiplier()
 {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_API, "");
+
+   Per_Thread_Data * ptd = ptd_get_per_thread_data();
+   double result =  -1.0f;
+   if (ptd->cur_dh) {
+      Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
+      result = pdd->sleep_multiplier_factor;
+   }
+#ifdef TSD
    double result = tsd_get_sleep_multiplier_factor();
+#endif
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
@@ -1099,6 +1121,7 @@ ddca_append_thread_description(
 
 const char *
 ddca_get_thread_descripton() {
+   return NULL;
    return ptd_get_thread_description_t();
 }
 
