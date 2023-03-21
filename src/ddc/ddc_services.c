@@ -15,15 +15,13 @@
 #include "util/report_util.h"
 /** \endcond */
 
+#include "base/display_retry_data.h"
+#include "base/display_sleep_data.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
-// #include "base/thread_retry_data.h"
-// #include "base/thread_sleep_data.h"
-#include "base/display_retry_data.h"
-#include "base/display_sleep_data.h"
 
 #include "vcp/parse_capabilities.h"
 #include "vcp/persistent_capabilities.h"
@@ -37,8 +35,8 @@
 #include "usb/usb_displays.h"
 
 #include "ddc/ddc_display_lock.h"
-#include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_output.h"
