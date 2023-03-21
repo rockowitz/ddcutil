@@ -23,12 +23,12 @@
 
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
+#include "util/edid.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
 #include "util/report_util.h"
-#include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -44,11 +44,11 @@
 #include "base/last_io_event.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
+#include "base/per_display_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
-#include "base/per_display_data.h"
 
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
