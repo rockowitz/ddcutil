@@ -23,5 +23,6 @@ Status_Errno dsa2_erase_persistent_stats();
 bool         dsa2_restore_persistent_stats();
 
 void         init_dsa2();
+void         terminate_dsa2();  // release all resources
 
 #endif /* DSA2_H_ */

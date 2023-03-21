@@ -1215,3 +1215,14 @@ init_dsa2() {
    // test_dsa2_next_retry_step();
    // test_float_to_step_conversion();
 }
+
+
+void terminate_dsa2() { // release all resources
+   if (results_tables) {
+      for (int ndx = 0; ndx < I2C_BUS_MAX+1; ndx++) {
+         if (results_tables[ndx])
+            free(results_tables[ndx]);
+      }
+   }
+}
+
