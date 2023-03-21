@@ -20,7 +20,8 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/rtti.h"
-#include "base/thread_sleep_data.h"
+// #include "base/thread_sleep_data.h"
+#include "base/per_display_data.h"
 
 #include "cmdline/parsed_cmd.h"
 
@@ -89,14 +90,16 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    // query_usbenv();
 #endif
    f0printf(fout(), "\nStatistics for environment exploration:\n");
-   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, 0);
    reset_stats();
 
    // PROBE command
    f0printf(fout(), "Setting output level normal. Table features will be skipped...\n");
    set_output_level(DDCA_OL_NORMAL);  // affects this thread only
 
+#ifdef TSD
    tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
+#endif
    GPtrArray * all_displays = ddc_get_all_displays();
    for (int ndx=0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
@@ -108,7 +111,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
          f0printf(fout(), "\nProbing display %d\n", dref->dispno);
          app_probe_display_by_dref(dref);
          f0printf(fout(), "\nStatistics for probe of display %d:\n", dref->dispno);
-         ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+         ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, 0);
       }
       reset_stats();
    }
