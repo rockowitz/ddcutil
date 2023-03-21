@@ -48,7 +48,7 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
-#include "base/per_thread_data.h"
+#include "base/per_display_data.h"
 
 #ifdef TARGET_BSD
 #include "bsd/i2c-dev.h"
