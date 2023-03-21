@@ -270,11 +270,16 @@ bool
 ddca_is_force_slave_address_enabled(void);
 
 
-/** Sets the sleep multiplier factor to be used for new threads.
+/** Sets the sleep multiplier factor to be used for newly detected displays.
  *
  *  @param[in]  multiplier, must be >= 0 and <= 10
  *  @return     old multiplier, -1.0f if invalid multiplier specified
  *
+ *  The semantics of this function has changed.  Prior to release 1.5,
+ *  this function set the sleep multiplier for new threads.
+ *  As of release 1.5, the sleep multiplier is maintained per
+ *  display, not per thread.  This function sets the sleep multiplier
+ *  for newly detected displays.
  *  @remark
  *  This function is intended for use only during program initialization,
  *  typically from a value passed on the command line.
@@ -283,7 +288,10 @@ ddca_is_force_slave_address_enabled(void);
 double
 ddca_set_default_sleep_multiplier(double multiplier);
 
-/** Gets the sleep multiplier factor used for new threads
+/** Gets the sleep multiplier factor used for newly detected displays.
+ *
+ *  The semantics of this function has changed.
+ *  See #ddca_set_default_sleep_multiplier().
  *
  * @return multiplier
  */
@@ -303,17 +311,25 @@ double
 ddca_get_global_sleep_multiplier();
 
 
-/** Sets the sleep multiplier factor for the current thread.
+/** Sets the sleep multiplier factor for the open display on current thread.
+ *
+ *  The semantics of this function has changed. Prior to release 1.5,
+ *  this function set the sleep multiplier for the current thread.
+ *  As of release 1.5, it sets the sleep multiplier for open display
+ *  (if any) on the current thread.
  *
  *  @param[in]  multiplier, must be >= 0 and <= 10
- *  @return     old multiplier, -1.0f if invalid multiplier specified
+ *  @return     old multiplier, -1.0f if invalid multiplier specified, or no display open
  */
 double
 ddca_set_sleep_multiplier(double multiplier);
 
-/** Gets the sleep multiplier for the current thread
+/** Gets the sleep multiplier for the open display on the current thread
  *
- *  @return[in] sleep multiplier
+ *  As of release 1.5, the semantics of this function has changed.
+ *  See #ddca_set_sleep_multiplier().
+ *
+ *  @return  sleep multiplier, -1.0f if no display open on current thread
  */
 double
 ddca_get_sleep_multiplier();
@@ -527,7 +543,7 @@ ddca_set_thread_description(const char * description);
 
 /** Appends text to the current thread description.
  *
- *  @param[in] description]
+ *  @param[in] description
  */
 void
 ddca_append_thread_description(const char * description);
