@@ -20,9 +20,6 @@
 #include "base/displays.h"
 #include "base/parms.h"
 #include "base/sleep.h"
-#include "base/stats.h"
-#include "base/thread_retry_data.h"    // temp circular
-#include "base/thread_sleep_data.h"
 
 #include "base/per_thread_data.h"
 
@@ -161,8 +158,6 @@ void release_thread_data_module() {
 //
 
 static void ptd_init(Per_Thread_Data * ptd) {
-   tsd_init_thread_sleep_data(ptd);
-   trd_init_thread_data(ptd);
 }
 
 
@@ -197,9 +192,11 @@ Per_Thread_Data * ptd_get_per_thread_data() {
       data->thread_id = cur_thread_id;
       g_private_set(&lock_depth, GINT_TO_POINTER(0));
       ptd_init(data);
+#ifdef PTD
       DBGMSF(debug, "Initialized: %s. thread_sleep_data_defined: %s. thread_retry_data_defined; %s",
            sbool(data->initialized),
            sbool( data->thread_sleep_data_defined), sbool( data->thread_retry_data_defined));
+#endif
 
       g_hash_table_insert(per_thread_data_hash,
                           GINT_TO_POINTER(cur_thread_id),
@@ -238,8 +235,6 @@ void ptd_append_thread_description(const char * addl_description) {
       ptd->description = g_strdup_printf("%s; %s", ptd->description, addl_description);
       free(s);
    }
-
-   // DBGMSG("Final ptd->description = %s", ptd->description);
 }
 
 
@@ -269,58 +264,10 @@ const char * ptd_get_thread_description_t() {
 void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    int d1 = depth+1;
    rpt_structure_loc("Per_Thread_Data", data, depth);
- //rpt_int( "sizeof(Per_Thread_Data)",  NULL, sizeof(Per_Thread_Data),   d1);
-   rpt_bool("initialized",                NULL, data->initialized,           d1);
-   rpt_int( "thread_id",                  NULL, data->thread_id,             d1);
+   rpt_vstring(d1,"initialized                %s", sbool(data->initialized));
+   rpt_vstring(d1,"thread_id                  %d", data->thread_id);
    rpt_vstring(d1,"description                %s", data->description);
-   rpt_bool("sleep data initialized" ,    NULL, data->thread_sleep_data_defined, d1);
-
-   // Sleep multiplier adjustment:
-   rpt_vstring(d1, "sleep-multiplier value:           %15.2f", data->sleep_multiplier_factor);
-   rpt_int("sleep_multiplier_ct",         NULL, data->sleep_multiplier_ct,        d1);
-   rpt_vstring(d1, "sleep_multiplier_changer_ct:      %15d",   data->sleep_multipler_changer_ct);
-   rpt_vstring(d1, "highest_sleep_multiplier_ct:      %15d",   data->highest_sleep_multiplier_ct);
-
-   rpt_vstring(d1,"cur_dh:                 %s", dh_repr(data->cur_dh) );
-
-   // Dynamic sleep adjustment:
-   rpt_bool("dynamic_sleep_enabled",      NULL, data->dynamic_sleep_enabled,     d1);
-   rpt_int("cur_ok_status_count",         NULL, data->cur_ok_status_count,       d1);
-   rpt_int("cur_error_status_count",      NULL, data->cur_error_status_count,    d1);
-   rpt_int("total_ok_status_count",       NULL, data->total_ok_status_count,     d1);
-   rpt_int("total_error",                 NULL, data->total_error_status_count,  d1);
-   rpt_int("other_status_ct",             NULL, data->total_other_status_ct,     d1);
-
-   rpt_int("calls_since_last_check",      NULL, data->calls_since_last_check,    d1);
-   rpt_int("total_adjustment_checks",     NULL, data->total_adjustment_checks,   d1);
-   rpt_int("adjustment_ct",               NULL, data->total_adjustment_ct,       d1);
-// rpt_int("max_adjustment_ct",           NULL, data->total_max_adjustment_ct,   d1);
-// rpt_int("non_adjustment_ct",           NULL, data->total_non_adjustment_ct,   d1);
-
-   rpt_vstring(d1, "cur_sleep_adjustmet_factor     %15.2f", data->cur_sleep_adjustment_factor);
-// rpt_vstring(d1, "thread_adjustment_increment        %15.2f", data->thread_adjustment_increment);
-
-   // Maxtries history
-   rpt_bool("retry data initialized"    , NULL, data->thread_retry_data_defined, d1);
-
-   rpt_vstring(d1, "Highest maxtries:                  %d,%d,%d,%d",
-                    data->highest_maxtries[0], data->highest_maxtries[1],
-                    data->highest_maxtries[2], data->highest_maxtries[3]);
-   rpt_vstring(d1, "Current maxtries:                  %d,%d,%d,%d",
-                    data->current_maxtries[0], data->current_maxtries[1],
-                    data->current_maxtries[2], data->current_maxtries[3]);
-   rpt_vstring(d1, "Lowest maxtries:                   %d,%d,%d,%d",
-                    data->lowest_maxtries[0], data->lowest_maxtries[1],
-                    data->lowest_maxtries[2], data->lowest_maxtries[3]);
-
-   for (int retry_type = 0; retry_type < 4; retry_type++) {
-      int upper_bound = data->highest_maxtries[retry_type] + 1;
-      assert(upper_bound <= MAX_MAX_TRIES + 1);
-      char * buf = int_array_to_string( data->try_stats[retry_type].counters, upper_bound);
-      rpt_vstring(d1, "try_stats[%d=%-27s].counters = %s",
-                      retry_type, retry_type_name(retry_type), buf);
-      free(buf);
-   }
+   rpt_vstring(d1,"cur_dh:                    %s", dh_repr(data->cur_dh) );
 }
 
 
@@ -447,7 +394,7 @@ void ptd_list_threads(int depth) {
    rpt_nl();
 }
 
-
+#ifdef PTD
 void report_all_thread_status_counts(int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -455,6 +402,7 @@ void report_all_thread_status_counts(int depth) {
    rpt_nl();
    DBGMSF(debug, "Done");
 }
+#endif
 
 
 /** Initialize per_thread_data.c at program startup */
