@@ -23,7 +23,7 @@
 #include "base/sleep.h"
 #include "base/display_retry_data.h"    // temp circular
 #include "base/display_sleep_data.h"
-#include "base/per_thread_data.h"
+#include "base/per_display_data.h"
 #include "base/rtti.h"
 
 #include "base/per_display_data.h"
@@ -132,22 +132,19 @@ static pid_t   cross_thread_operation_owner;
 
 /**
  */
-bool pdd_cross_display_operation_start() {
+bool pdd_cross_display_operation_start(const char * caller) {
    // Only 1 cross display action can be active at one time.
    // All per_display actions must wait
 
    bool debug = false;
    debug = debug || debug_mutex;
 
-   bool lock_performed = true;
+   bool lock_performed = false;
 
-   // which way is better?
-   bool thread_has_lock  = GPOINTER_TO_INT(g_private_get(&pdd_this_thread_has_lock));
    int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "thread_has_lock: %s, lock depth: %d",
-                                         sbool(thread_has_lock), display_lock_depth);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
-   ASSERT_IFF(thread_has_lock, display_lock_depth  > 0);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+      "Caller %s, lock depth: %d. pdd_lock_count=%d, pdd_unlock_count=%d",
+      caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
 
    if (display_lock_depth == 0) {    // (A)
    // if (!thread_has_lock) {
@@ -155,38 +152,34 @@ bool pdd_cross_display_operation_start() {
       g_mutex_lock(&cross_thread_operation_mutex);
       lock_performed = true;
       cross_thread_operation_active = true;
-
       pdd_lock_count++;
-
-      // should this be a depth counter rather than a boolean?
-      g_private_set(&pdd_this_thread_has_lock, GINT_TO_POINTER(true));
-
       Thread_Output_Settings * thread_settings = get_thread_settings();
       intmax_t cur_thread_id = thread_settings->tid;  // alt: get_thread_id()
       cross_thread_operation_owner = cur_thread_id;
-      DBGMSF(debug, "Locked by thread %d", cur_thread_id);
+      DBGMSF(debug, "          Locked performed by thread %d", cur_thread_id);
       sleep_millis(10);   // give all per-thread functions time to finish
    }
-   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth+1));
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "thread_has_lock=%s, pdd_lock_count=%d, Returning lock_performed: %s",
-         sbool(thread_has_lock), pdd_lock_count, sbool(lock_performed) );
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
+   display_lock_depth+=1;
+   g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE,
+         "Caller: %s, pdd_display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_cound=%d, Returning lock_performed: %s,",
+         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count, sbool(lock_performed));
    return lock_performed;
 }
 
 
-void pdd_cross_display_operation_end() {
+void pdd_cross_display_operation_end(const char * caller) {
    bool debug = false;
    int display_lock_depth = GPOINTER_TO_INT(g_private_get(&pdd_lock_depth));
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "display_lock_depth=%d", display_lock_depth);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "Caller: %s, display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
+         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
    assert(display_lock_depth >= 1);
    g_private_set(&pdd_lock_depth, GINT_TO_POINTER(display_lock_depth-1));
 
    if (display_lock_depth == 1) {
       cross_thread_operation_active = false;
       cross_thread_operation_owner = 0;
-      g_private_set(&pdd_this_thread_has_lock, false);
       pdd_unlock_count++;
       assert(pdd_lock_count == pdd_unlock_count);
       g_mutex_unlock(&cross_thread_operation_mutex);
@@ -194,9 +187,9 @@ void pdd_cross_display_operation_end() {
    else {
       assert( pdd_lock_count > pdd_unlock_count );
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d",
-         pdd_lock_count, pdd_unlock_count);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "pdd_lock_count=%d, pdd_unlock_count=%d", pdd_lock_count, pdd_unlock_count);
+   display_lock_depth -= 1;
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Caller: %s, display_lock_depth=%d, pdd_lock_count=%d, pdd_unlock_count=%d",
+         caller, display_lock_depth, pdd_lock_count, pdd_unlock_count);
 }
 
 
@@ -204,7 +197,7 @@ void pdd_cross_display_operation_end() {
  *  involving multiple Per_Thead_Data instances is active.
  */
 
-void pdd_cross_display_operation_block() {
+void pdd_cross_display_operation_block(const char * caller) {
    // intmax_t cur_displayid = get_display_id();
    Thread_Output_Settings * thread_settings = get_thread_settings();
    intmax_t cur_displayid = thread_settings->tid;
@@ -418,7 +411,7 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
  *  This is a multi-instance operation.
  */
 void pdd_apply_all(Dtd_Func func, void * arg) {
-   pdd_cross_display_operation_start();
+   pdd_cross_display_operation_start(__func__);
    bool debug = false;
    assert(per_display_data_hash);    // allocated by init_display_data_module()
 
@@ -431,7 +424,7 @@ void pdd_apply_all(Dtd_Func func, void * arg) {
          func(data, arg);
       }
 
-   pdd_cross_display_operation_end();
+   pdd_cross_display_operation_end(__func__);
 }
 
 
@@ -446,7 +439,7 @@ void pdd_apply_all(Dtd_Func func, void * arg) {
 void pdd_apply_all_sorted(Dtd_Func func, void * arg) {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   pdd_cross_display_operation_start();
+   pdd_cross_display_operation_start(__func__);
    assert(per_display_data_hash);
 
    DBGMSF(debug, "hash table size = %d", g_hash_table_size(per_display_data_hash));
@@ -463,7 +456,7 @@ void pdd_apply_all_sorted(Dtd_Func func, void * arg) {
    }
    g_list_free(new_head);   // would keys also work?
 
-   pdd_cross_display_operation_end();
+   pdd_cross_display_operation_end(__func__);
    DBGMSF(debug, "Done");
 }
 
@@ -482,7 +475,7 @@ void pdd_apply_all_sorted(Dtd_Func func, void * arg) {
 void pdd_display_summary(Per_Display_Data * pdd, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    int d1 = depth+1;
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
 
    // simple but ugly
    // rpt_vstring(depth, "Thread: %d. Description:%s",

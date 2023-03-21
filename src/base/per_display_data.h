@@ -19,15 +19,14 @@
 
 #include "base/parms.h"
 #include "base/stats.h"
-// #include "base/displays.h"
 
 extern GHashTable *  per_display_data_hash;
-extern GMutex        per_display_data_mutex;    // temp, replace by function calls
+// extern GMutex        per_display_data_mutex;    // temp, replace by function calls
 
+#ifdef PTD
 void pdd_init_display_data_module();     // module initialization
 void pdd_release_display_data_module();  // release all resources
-
-
+#endif
 
 extern int  pdd_lock_count;
 extern int  pdd_unlock_count;
@@ -82,15 +81,11 @@ typedef struct {
 
 void pdd_init(Per_Display_Data * pdd);
 
-bool pdd_cross_display_operation_start();
-void pdd_cross_display_operation_end();
-void pdd_cross_display_operation_block();
+bool pdd_cross_display_operation_start(const char * msg);
+void pdd_cross_display_operation_end(const char * msg);
+void pdd_cross_display_operation_block(const char * msg);
 
-Per_Display_Data * pdd_get_per_display_data();
-
-void         pdd_set_display_description(const char * description);
-void         pdd_append_display_description(const char * addl_description);
-const char * pdd_get_display_description_t();
+Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path);
 
 // Apply a function to all Display_Sleep_Data records
 typedef void (*Dtd_Func)(Per_Display_Data * data, void * arg);   // Template for function to apply
