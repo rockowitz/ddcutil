@@ -17,7 +17,7 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
-#include "base/stats.h"
+// #include "base/stats.h"
 #include "base/displays.h"
 
 #include "base/display_retry_data.h"
@@ -47,7 +47,7 @@ void drd_init_display_data(Per_Display_Data * data) {
    bool debug = false;
 
    for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
-      DBGMSF(debug, "thread_id %d, retry type: %d, setting current, lowest, highest maxtries to %d ",
+      DBGMSF(debug, "dpath =%s, retry type: %d, setting current, lowest, highest maxtries to %d ",
                     data->dpath, ndx, default_maxtries[ndx]);
 
       data->current_maxtries[ndx] = default_maxtries[ndx];
@@ -58,7 +58,6 @@ void drd_init_display_data(Per_Display_Data * data) {
       data->try_stats[1].retry_op = WRITE_READ_TRIES_OP;
       data->try_stats[2].retry_op = MULTI_PART_READ_OP;
       data->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
-
    }
 
    data->display_retry_data_defined = true;
@@ -156,7 +155,7 @@ void ddc_set_default_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
 }
 #endif
 
-
+#ifdef PTD
 /** Sets the initial maxtries value for a specified retry type and the current thread.
  *  The highest_maxtries and lowest_maxtries values are set to the same value.
  *
@@ -175,6 +174,7 @@ void drd_set_initial_display_max_tries(DDCA_IO_Path dpath, Retry_Operation retry
    data->lowest_maxtries[retry_type]  = new_maxtries;
    // pdd_unlock_if_needed(this_function_locked);
 }
+#endif
 
 
 /** Sets the maxtries value for a specified retry type and display
@@ -189,7 +189,7 @@ void drd_set_display_max_tries(
       Retry_Op_Value   new_maxtries)
 {
    bool debug = false;
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
 
    Per_Display_Data * drd = drd_get_display_retry_data(dpath);
    DBGMSF(debug, "Executing. display_id=%d, retry_class = %s, new_max_tries=%d",
@@ -238,7 +238,7 @@ void drd_set_display_all_max_tries(uint16_t new_max_tries[RETRY_TYPE_COUNT]) {
  */
 Retry_Op_Value drd_get_display_max_tries(DDCA_IO_Path dpath, Retry_Operation type_id) {
    bool debug = false;
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
    Per_Display_Data * pdd = drd_get_display_retry_data(dpath);
    Retry_Op_Value result = pdd->current_maxtries[type_id];
    DBGMSF(debug, "dpath=%s, retry type=%s, returning %d", dpath_repr_t(&dpath), retry_type_name(type_id), result);
@@ -284,7 +284,7 @@ static void drd_minmax_visitor(Per_Display_Data * data, void * accumulator) {
 // Used only as a consistency check vs ddca_try_stats
 // This is a multi-Per_Display_Data function, pdd_apply_all() performs locking
 Global_Maxtries_Accumulator
-drd_get_all_threads_maxtries_range(Retry_Operation typeid) {
+drd_get_all_displays_maxtries_range(Retry_Operation typeid) {
    Global_Maxtries_Accumulator accumulator;
    accumulator.retry_type = typeid;
    accumulator.max_highest_maxtries = 0;               // less than any valid value
@@ -303,7 +303,7 @@ drd_get_all_threads_maxtries_range(Retry_Operation typeid) {
 static void report_display_maxtries_data(Per_Display_Data * data, int depth) {
    assert(data->display_retry_data_defined);
 
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
    //bool this_function_locked = pdd_lock_if_unlocked();
 
    int d1 = depth+1;
@@ -347,7 +347,7 @@ void drd_report_all_display_maxtries_data(int depth) {
    DBGMSF(debug, "Starting");
    rpt_label(depth, "Retry data by device path:");
    assert(per_display_data_hash);
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
       // bool this_function_locked = pdd_lock_if_unlocked();
       pdd_apply_all_sorted(&wrap_report_display_maxtries_data, GINT_TO_POINTER(depth+1) );
       // pdd_unlock_if_needed(this_function_locked);
@@ -461,7 +461,7 @@ void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, i
 
 
 int get_display_total_tries_for_one_type_by_data(Retry_Operation retry_type, Per_Display_Data  * data) {
-   pdd_cross_display_operation_block();
+   pdd_cross_display_operation_block(__func__);
 
    int total_attempts = 0;
    for (int counter_ndx = 0; counter_ndx < MAX_MAX_TRIES + 2; counter_ndx++) {

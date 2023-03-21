@@ -10,15 +10,14 @@
 #define DISPLAY_RETRY_DATA_H_
 
 #include "public/ddcutil_types.h"
-#include "base/stats.h"
 
 #include "base/per_display_data.h"
+
 
 void     drd_init_display_data(Per_Display_Data * data);
 
 // Maintain max_tries data
 void     drd_set_default_max_tries(                            Retry_Operation type_id, uint16_t new_maxtries);
-void     drd_set_initial_display_max_tries(DDCA_IO_Path dpath, Retry_Operation type_id, uint16_t new_maxtries);
 void     drd_set_display_max_tries(        DDCA_IO_Path dpath, Retry_Operation type_id, uint16_t new_maxtries);
 uint16_t drd_get_display_max_tries(        DDCA_IO_Path dpath, Retry_Operation type_id);
 void     drd_set_all_maxtries(                                 Retry_Operation type_id, uint16_t maxtries);
@@ -40,11 +39,7 @@ void drd_reset_all_displays_tries();
 #endif
 
 void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, int rc, int tryct);
-#ifdef UNUSED   // replaced by drd_record_display_tries
-void drd_record_cur_display_successful_tries(Retry_Operation type_id, int tryct);
-void drd_record_cur_display_failed_max_tries(Retry_Operation type_id);
-void drd_record_cur_display_failed_fatally(Retry_Operation type_id);
-#endif
+
 
 #ifdef UNUSED
 int get_display_total_tries_for_all_types_by_data(Per_Display_Data  * data);
