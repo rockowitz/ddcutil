@@ -20,8 +20,8 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
-#include "base/thread_retry_data.h"
-#include "base/thread_sleep_data.h"
+// #include "base/thread_retry_data.h"
+// #include "base/thread_sleep_data.h"
 #include "base/display_retry_data.h"
 #include "base/display_sleep_data.h"
 
@@ -123,6 +123,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
    }
 
    if (show_per_thread_stats) {
+#ifdef OUT
       rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
       rpt_nl();
       ptd_list_threads(depth);
@@ -142,6 +143,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_thread_stats, in
           //   rpt_nl();
       }
 
+#endif
       rpt_label(depth, "PER-DISPLAY EXECUTION STATISTICS");
       rpt_nl();
       // ptd_list_threads(depth);
