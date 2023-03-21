@@ -24,10 +24,10 @@
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/rtti.h"
-#include "base/thread_retry_data.h"
-#include "base/thread_sleep_data.h"
 #include "base/display_retry_data.h"
 #include "base/display_sleep_data.h"
+#include "base/per_display_data.h"
+// #include "base/stats.h"
 #include "base/tuned_sleep.h"
 
 #include "vcp/persistent_capabilities.h"
@@ -161,9 +161,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);  // resets highest, lowest
 
       // redundant
-      trd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
-      // trd_set_initial_thread_max_tries(0, parsed_cmd->max_tries[0]);
-
       drd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
       // drd_set_initial_display_max_tries(0, parsed_cmd->max_tries[0]);
    }
@@ -172,9 +169,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       // ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
       // try_data_set_maxtries2(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
       try_data_init_retry_type(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
-
-      trd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
-      // trd_set_initial_thread_max_tries(1, parsed_cmd->max_tries[1]);
 
       drd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
       // drd_set_initial_display_max_tries(1, parsed_cmd->max_tries[1]);
@@ -188,16 +182,10 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
       try_data_init_retry_type(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
       try_data_init_retry_type(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
 
-      trd_set_default_max_tries(2, parsed_cmd->max_tries[2]);
-      trd_set_initial_thread_max_tries(2, parsed_cmd->max_tries[2]);
-      // impedance match
-      trd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
-      trd_set_initial_thread_max_tries(3, parsed_cmd->max_tries[2]);
-
-      drd_set_default_max_tries(2, parsed_cmd->max_tries[2]);
+      drd_set_default_max_tries(MULTI_PART_READ_OP, parsed_cmd->max_tries[2]);
       // drd_set_initial_display_max_tries(2, parsed_cmd->max_tries[2]);
       // impedance match
-      drd_set_default_max_tries(3, parsed_cmd->max_tries[2]);
+      drd_set_default_max_tries(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
       // drd_set_initial_display_max_tries(3, parsed_cmd->max_tries[2]);
    }
 }
@@ -218,15 +206,15 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->sleep_multiplier >= 0 && parsed_cmd->sleep_multiplier != 1) {
-      tsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
-      tsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
+      // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current displays
+      dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new displays
 
       // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
-      dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
+      // dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
       // if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
       if (parsed_cmd->flags & CMD_FLAG_DSA)
       {
-         tsd_dsa_enable_globally(true);
+         // tsd_dsa_enable_globally(true);
          dsd_dsa_enable_globally(true);
       }
    }
