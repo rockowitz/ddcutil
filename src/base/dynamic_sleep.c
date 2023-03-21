@@ -3,7 +3,7 @@
  *  Experimental dynamic sleep adjustment
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -28,7 +28,6 @@
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
-#include "base/thread_sleep_data.h"
 #include "base/per_display_data.h"
 
 #include "base/dynamic_sleep.h"
@@ -37,49 +36,16 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 
-void compare_ptd_pdd_dsa_data(const char * func, Per_Thread_Data * ptd, Per_Display_Data * pdd) {
-   /*
-       // For Dynamic Sleep Adjustment
-   bool   dynamic_sleep_enabled;
-   int    cur_ok_status_count;
-   int    cur_error_status_count;
-   int    total_ok_status_count;
-   int    total_error_status_count;
-   int    total_other_status_ct;
-   int    calls_since_last_check;
-   int    adjustment_check_interval;
-   int    total_adjustment_checks;
-    */
-
-#define COMP_DSA_VALUE(_var)  \
-   if (ptd->_var != pdd->_var) \
-      DBGMSG("%-20s: ptd->" #_var "=%d, pdd->" #_var "=%d", func, ptd->_var, pdd->_var);
-
-
-   COMP_DSA_VALUE(dynamic_sleep_enabled);
-   COMP_DSA_VALUE(    cur_ok_status_count);
-   COMP_DSA_VALUE(    cur_error_status_count);
-   COMP_DSA_VALUE(    total_ok_status_count);
-   COMP_DSA_VALUE(    total_error_status_count);
-   COMP_DSA_VALUE(    total_other_status_ct);
-   COMP_DSA_VALUE(    calls_since_last_check);
-   COMP_DSA_VALUE(    adjustment_check_interval);
-   COMP_DSA_VALUE(    total_adjustment_checks);
-
-#undef COMP_DSA_VALUE
-}
-
-
 void dsa_record_ddcrw_status_code(Display_Handle *  dh, int rc) {
    bool debug = false;
    DBGMSF(debug, "rc=%s", psc_desc(rc));
-   Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
+   // Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
    Per_Display_Data * pdd = dh->dref->pdd;
    // compare_ptd_pdd_dsa_data(__func__,ptd, pdd);
 
    if (rc == DDCRC_OK) {
-      ptd->cur_ok_status_count++;
-      ptd->total_ok_status_count++;
+      // ptd->cur_ok_status_count++;
+      // ptd->total_ok_status_count++;
 
       pdd->cur_ok_status_count++;
       pdd->total_ok_status_count++;
@@ -91,31 +57,26 @@ void dsa_record_ddcrw_status_code(Display_Handle *  dh, int rc) {
             rc == DDCRC_NULL_RESPONSE  // can be either a valid "No Value" response, or indicate a display error
            )
    {
-      ptd->cur_error_status_count++;
-      ptd->total_error_status_count++;
+     // ptd->cur_error_status_count++;
+     // ptd->total_error_status_count++;
 
       pdd->cur_error_status_count++;
       pdd->total_error_status_count++;
    }
    else {
       DBGMSF(debug, "other status code: %s", psc_desc(rc));
-      ptd->total_other_status_ct++;
+    //  ptd->total_other_status_ct++;
       pdd->total_other_status_ct++;
    }
    DBGMSF(debug, "Done. current_ok_status_count=%d, current_error_status_count=%d",
-                 ptd->cur_ok_status_count, ptd->cur_error_status_count);
+                 pdd->cur_ok_status_count, pdd->cur_error_status_count);
 }
 
 
 static void dsa_reset_cur_status_counts(Display_Handle * dh) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Executing");
-   Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
    Per_Display_Data * pdd = dh->dref->pdd;
-   // compare_ptd_pdd_dsa_data(__func__,ptd, pdd);
-
-   ptd->cur_ok_status_count = 0;
-   ptd->cur_error_status_count = 0;
 
    pdd->cur_ok_status_count = 0;
    pdd->cur_error_status_count = 0;
@@ -124,20 +85,18 @@ static void dsa_reset_cur_status_counts(Display_Handle * dh) {
 
 static int dsa_required_status_sample_size = 3;
 
-bool dsa_error_rate_is_high(Per_Thread_Data * ptd, Per_Display_Data * pdd) {
-   assert(ptd);
+bool dsa_error_rate_is_high(Per_Display_Data * pdd) {
    bool debug = false;
    bool result = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "current_ok_status_count=%d, current_error_status_count=%d",
-         ptd->cur_ok_status_count, ptd->cur_error_status_count);
+         pdd->cur_ok_status_count, pdd->cur_error_status_count);
    // compare_ptd_pdd_dsa_data(__func__,ptd,pdd);
 
    double dsa_error_rate_threshold = .1;
 
    double error_rate = 0.0;    // outside of loop for final debug message
 
-   int current_total_count = ptd->cur_ok_status_count + ptd->cur_error_status_count;
-       current_total_count = pdd->cur_ok_status_count + pdd->cur_error_status_count;
+   int current_total_count = pdd->cur_ok_status_count + pdd->cur_error_status_count;
 
    if ( (current_total_count) >= dsa_required_status_sample_size) {
       if (current_total_count <= 4) {
@@ -153,11 +112,11 @@ bool dsa_error_rate_is_high(Per_Thread_Data * ptd, Per_Display_Data * pdd) {
          // adjustment_check_interval = 5;
       }
 
-      error_rate = (1.0 * ptd->cur_error_status_count) / (current_total_count);
+      error_rate = (1.0 * pdd->cur_error_status_count) / (current_total_count);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "ok_status_count=%d, error_status_count=%d,"
                     " error_rate = %7.2f, error_rate_threshold= %7.2f",
-                    ptd->cur_ok_status_count, ptd->cur_error_status_count,
+                    pdd->cur_ok_status_count, pdd->cur_error_status_count,
                     error_rate, dsa_error_rate_threshold);
       result = (error_rate > dsa_error_rate_threshold);
    }
@@ -211,83 +170,66 @@ double dsa_calc_adjustment_factor(
 
 double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis) {
    bool debug = false;
-   Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dynamic_sleep_enabled for current thread = %s",
-                            dh_repr(dh),              sbool(ptd->dynamic_sleep_enabled));
-
+   // Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
    Per_Display_Data * pdd = dh->dref->pdd;
-   // compare_ptd_pdd_dsa_data(__func__,ptd, pdd);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dynamic_sleep_enabled for current thread = %s",
+                            dh_repr(dh),              sbool(pdd->dynamic_sleep_enabled));
 
-
-   if (!ptd->dynamic_sleep_enabled) {
-      double result = ptd->sleep_multiplier_factor;
+   if (!pdd->dynamic_sleep_enabled) {
+      double result = pdd->sleep_multiplier_factor;
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa disabled, returning %7.1f", result);
       return result;
    }
 
    // FUTURE
    if (!pdd->dynamic_sleep_enabled) {
-      double result = ptd->sleep_multiplier_factor;
+      double result = pdd->sleep_multiplier_factor;
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa disabled, returning %7.1f", result);
       return result;
    }
 
-
-   if (dh != ptd->cur_dh) {
-      ptd->cur_dh = dh;
-      dsa_reset_cur_status_counts(dh);
-      ptd->cur_sleep_adjustment_factor  = 1.0;
-      DBGTRC_DONE(debug, TRACE_GROUP, "dh changed, returning %4.2f" ,
-                                      ptd->cur_sleep_adjustment_factor);
-      return ptd->cur_sleep_adjustment_factor;
-   }
-
-
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                   "ptd calls_since_last_check = %d, adjustment_check_interval = %d",
-                   ptd->calls_since_last_check, ptd->adjustment_check_interval);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                    "pdd calls_since_last_check = %d, adjustment_check_interval = %d",
                    pdd->calls_since_last_check, pdd->adjustment_check_interval);
 
    bool sleep_adjustment_changed = false;
-   double max_factor = (spec_sleep_time_millis/ptd->sleep_multiplier_factor) * 3.0f;
-   if (ptd->calls_since_last_check > ptd->adjustment_check_interval) {
+   double max_factor = (spec_sleep_time_millis/pdd->sleep_multiplier_factor) * 3.0f;
+   if (pdd->calls_since_last_check > pdd->adjustment_check_interval) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Performing check");
-      ptd->calls_since_last_check = 0;
-      ptd->total_adjustment_checks++;
+      pdd->calls_since_last_check = 0;
+      pdd->total_adjustment_checks++;
       pdd->calls_since_last_check = 0;
       pdd->total_adjustment_checks++;
 
-      int current_total_count = ptd->cur_ok_status_count + ptd->cur_error_status_count;
+      int current_total_count = pdd->cur_ok_status_count + pdd->cur_error_status_count;
           current_total_count = pdd->cur_ok_status_count + pdd->cur_error_status_count;
 
       if (current_total_count >= dsa_required_status_sample_size) {
-         if (dsa_error_rate_is_high(ptd, dh->dref->pdd)) {
-            if (ptd->cur_sleep_adjustment_factor < max_factor) {
-               // double d = 2 * ptd->current_sleep_adjustment_factor;
+         if (dsa_error_rate_is_high(pdd)) {
+            if (pdd->cur_sleep_adjustment_factor < max_factor) {
+               // double d = 2 * pdd->current_sleep_adjustment_factor;
                double d = dsa_calc_adjustment_factor(
                      spec_sleep_time_millis,
-                     ptd->sleep_multiplier_factor,
-                     ptd->cur_sleep_adjustment_factor);
+                     pdd->sleep_multiplier_factor,
+                     pdd->cur_sleep_adjustment_factor);
                if (d <= max_factor) {
-                     ptd->cur_sleep_adjustment_factor = d;
+                     pdd->cur_sleep_adjustment_factor = d;
                      pdd->cur_sleep_adjustment_factor = d;
                }
                else {
-                  ptd->cur_sleep_adjustment_factor = max_factor;
+                  pdd->cur_sleep_adjustment_factor = max_factor;
                   pdd->cur_sleep_adjustment_factor = max_factor;
                }
                sleep_adjustment_changed = true;
-               ptd->total_adjustment_ct++;
                pdd->total_adjustment_ct++;
-               // ptd->adjustment_check_interval = 2 * ptd->adjustment_check_interval;
+               pdd->total_adjustment_ct++;
+               // pdd->adjustment_check_interval = 2 * pdd->adjustment_check_interval;
             }
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                   "sleep_adjustment_changed = %s, "
                    "New sleep_adjustment_factor %5.2f",
                    sbool(sleep_adjustment_changed),
-                   ptd->cur_sleep_adjustment_factor);
+                   pdd->cur_sleep_adjustment_factor);
          }
 
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "sleep_adjustment_changed=%s", sbool(sleep_adjustment_changed));
@@ -298,16 +240,16 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Inadequate sample size");
    }
    else {
-      ptd->calls_since_last_check++;
+      pdd->calls_since_last_check++;
       pdd->calls_since_last_check++;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP,
            "current_ok_status_count=%d, current_error_status_count=%d, returning %5.2f",
-           ptd->cur_ok_status_count,
-           ptd->cur_error_status_count,
-           ptd->cur_sleep_adjustment_factor);
-   return ptd->cur_sleep_adjustment_factor;
+           pdd->cur_ok_status_count,
+           pdd->cur_error_status_count,
+           pdd->cur_sleep_adjustment_factor);
+   return pdd->cur_sleep_adjustment_factor;
 }
 
 
