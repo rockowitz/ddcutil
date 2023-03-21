@@ -68,9 +68,9 @@ typedef struct {
    double cur_sleep_adjustment_factor;
    int    total_sleep_time_millis;
 
-// #ifdef UNUSED
    // Retry management
    bool              display_retry_data_defined;
+// #ifdef UNUSED
    Retry_Op_Value    current_maxtries[4];
    Retry_Op_Value    highest_maxtries[4];
    Retry_Op_Value    lowest_maxtries[4];

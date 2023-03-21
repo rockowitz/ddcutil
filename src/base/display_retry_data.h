@@ -29,7 +29,7 @@ void     ddc_set_display_all_max_tries( uint16_t new_max_tries[RETRY_TYPE_COUNT]
 
 Global_Maxtries_Accumulator
          drd_get_all_displays_maxtries_range(Retry_Operation typeid);
-void     drd_report_all_display_maxtries_data(int depth);
+void     drd_report_all_display_retry_data(int depth);
 
 // Try Stats
 

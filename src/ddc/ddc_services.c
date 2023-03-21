@@ -146,7 +146,7 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
       rpt_nl();
       // ptd_list_threads(depth);
        if (stats & DDCA_STATS_TRIES) {
-           drd_report_all_display_maxtries_data(depth);
+           drd_report_all_display_retry_data(depth);
       }
       if (stats & DDCA_STATS_ERRORS) {
           report_all_display_status_counts(depth);

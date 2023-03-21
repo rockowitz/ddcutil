@@ -147,6 +147,8 @@ static Try_Data2 try_data[RETRY_OP_COUNT];
  * #param  maxtries    maximum number of tries
  */
 void try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtries) {
+   bool debug = false;
+   DBGTRC(debug, DDCA_TRC_NONE, "Executing. retry_type=%s, maxtries=%d", retry_type_name(retry_type), maxtries);
    try_data[retry_type].retry_type       = retry_type;
    try_data[retry_type].maxtries         = maxtries;
    try_data[retry_type].highest_maxtries = maxtries;
@@ -189,7 +191,7 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    bool debug = false;
 
    Try_Data2 * stats_rec = &try_data[retry_type];
-   DBGMSF(debug, "Starting. stats type: %s for %s, new_maxtries: %d",
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "stats type: %s for %s, new_maxtries: %d",
                  retry_type_name(stats_rec->retry_type),
                  retry_type_description(stats_rec->retry_type),
                  new_maxtries);
@@ -204,13 +206,13 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
-   // trd_set_all_maxtries(retry_type, new_maxtries);
+#ifdef PER_DISPLAY_MAXTRIES
    drd_set_all_maxtries(retry_type, new_maxtries);
-
+#endif
 
    unlock_if_needed(this_function_performed_lock);
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE,  "");
 }
 
 
@@ -368,7 +370,7 @@ static int try_data_get_total_attempts2(Retry_Operation retry_type) {
  *
  */
 void try_data_report2(Retry_Operation retry_type, int depth) {
-   bool debug = false;
+   // bool debug = false;
    int d1 = depth+1;
    rpt_nl();
    Try_Data2 * stats_rec = &try_data[retry_type];
@@ -387,6 +389,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
       int total_successful_attempts = 0;
       int max1 = stats_rec->maxtries;
 
+#ifdef PER_DISPLAY_MAXTRIES
       // Temporary for consistency check:
       Global_Maxtries_Accumulator acc =
              drd_get_all_displays_maxtries_range(retry_type);
@@ -402,14 +405,16 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
             DBGMSG("acc.max_lowest_maxtries(%d) != stats_rec->lowest_maxtries(%d)",
                    acc.min_lowest_maxtries,stats_rec->lowest_maxtries);
       }
+#endif
 
       rpt_vstring(d1, "Max tries allowed: %d", max1);
+#ifdef PER_DISPLAY_MAXTRIES
       if (acc.min_lowest_maxtries == acc.max_highest_maxtries)
          rpt_vstring(d1, "Max tries allowed: %d", acc.min_lowest_maxtries);
 
       rpt_vstring(d1, "Max tries allowed range: %d..%d",
                       acc.min_lowest_maxtries, acc.max_highest_maxtries);
-
+#endif
       int upper_bound = MAX_MAX_TRIES+1;
       while (upper_bound > 1) {
          if (stats_rec->counters[upper_bound] != 0)
@@ -430,6 +435,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
       assert( ( (upper_bound == 1) && (total_successful_attempts == 0) ) ||
               ( (upper_bound > 1 ) && (total_successful_attempts >  0) )
             );
+
       rpt_vstring(d1, "Total successful attempts:        %3d", total_successful_attempts);
       rpt_vstring(d1, "Failed due to max tries exceeded: %3d", stats_rec->counters[1]);
       rpt_vstring(d1, "Failed due to fatal error:        %3d", stats_rec->counters[0]);
@@ -460,25 +466,31 @@ void ddc_report_multi_part_write_stats(int depth) {
 }
 #endif
 
+
+static inline void ddc_report_max_tries_for_op(Retry_Operation op, char * title, int depth) {
+   Try_Data2 td = try_data[op];
+   rpt_vstring(depth, "%-32s   %6d %8d %7d %7d",
+               title,
+               td.maxtries,
+               INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES,
+               td.lowest_maxtries,
+               td.highest_maxtries);
+}
+
+
+
 /** Reports the current maxtries settings.
  *
  *  \param depth logical indentation depth
  */
 void ddc_report_max_tries(int depth) {
-   rpt_vstring(depth, "Maximum Try Settings:");
-   rpt_vstring(depth, "Operation Type                    Current  Default");
-   rpt_vstring(depth, "Write only exchange tries:       %8d %8d",
-               try_data_get_maxtries2(WRITE_ONLY_TRIES_OP),
-               INITIAL_MAX_WRITE_ONLY_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Write read exchange tries:       %8d %8d",
-               try_data_get_maxtries2(WRITE_READ_TRIES_OP),
-               INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part read exchange tries:  %8d %8d",
-               try_data_get_maxtries2(MULTI_PART_READ_OP),
-               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
-   rpt_vstring(depth, "Multi-part write exchange tries: %8d %8d",
-               try_data_get_maxtries2(MULTI_PART_WRITE_OP),
-               INITIAL_MAX_MULTI_EXCHANGE_TRIES);
+   rpt_vstring(depth, "Maxtries Settings:");
+   rpt_vstring(depth, "Operation Type                    Current  Default     Min     Max");
+
+   ddc_report_max_tries_for_op(WRITE_ONLY_TRIES_OP,"Write only exchange tries:",       depth);
+   ddc_report_max_tries_for_op(WRITE_READ_TRIES_OP,"Write read exchange tries:",       depth);
+   ddc_report_max_tries_for_op(MULTI_PART_READ_OP, "Multi-part read exchange tries:",  depth);
+   ddc_report_max_tries_for_op(MULTI_PART_WRITE_OP,"Multi-part_write exchange tries:", depth);
    rpt_nl();
 }
 

@@ -16,6 +16,7 @@
 #include "execution_stats.h"
 #include "linux_errno.h"
 #include "per_display_data.h"
+#include "per_thread_data.h"
 #include "sleep.h"
 #include "display_sleep_data.h"
 #include "tuned_sleep.h"
@@ -38,6 +39,7 @@ void init_base_services() {
    init_execution_stats();
    // init_linux_errno();
    init_per_display_data();
+   init_per_thread_data();
    init_sleep_stats();
    init_status_code_mgt();
    init_tuned_sleep();

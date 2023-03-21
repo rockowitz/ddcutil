@@ -27,7 +27,7 @@
 #include "base/display_retry_data.h"
 #include "base/display_sleep_data.h"
 #include "base/per_display_data.h"
-// #include "base/stats.h"
+#include "base/stats.h"
 #include "base/tuned_sleep.h"
 
 #include "vcp/persistent_capabilities.h"

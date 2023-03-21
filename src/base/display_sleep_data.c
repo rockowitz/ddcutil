@@ -69,7 +69,7 @@ void report_display_sleep_data(Per_Display_Data * data, int depth) {
    int d1 = depth+1;
    int d2 = depth+2;
 //   rpt_vstring(depth, "Thread %d sleep data:", data->display_id);
-   rpt_vstring(depth, "Sleep data for display %s", dpath_repr_t(&data->dpath));
+   rpt_vstring(depth, "Sleep data for display on %s", dpath_short_name_t(&data->dpath));
    rpt_label(  d1,   "General:");
    // if (data->dref)
    //    rpt_vstring(d2,    "Display:                           %s", dref_repr_t(data->dref) );
