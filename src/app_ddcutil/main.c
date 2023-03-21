@@ -59,10 +59,7 @@
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
-#include "base/thread_retry_data.h"
-#include "base/thread_sleep_data.h"
 #include "base/tuned_sleep.h"
-
 #include "base/display_retry_data.h"
 #include "base/display_sleep_data.h"
 
@@ -145,10 +142,12 @@ report_performance_options(int depth)
 #ifdef OLD   // SLEEP_SUPPRESSION
       rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
 #endif
-      bool dsa_enabled =  tsd_get_dsa_enabled_default();
+      bool dsa_enabled =  dsd_get_dsa_enabled_default();
       rpt_vstring(d1, "Dynamic sleep adjustment enabled:       %s", sbool(dsa_enabled) );
+#ifdef TSD
       if ( dsa_enabled )
-        rpt_vstring(d1, "Sleep multiplier factor:           %5.2f", tsd_get_sleep_multiplier_factor() );
+        rpt_vstring(d1, "Sleep multiplier factor:           %5.2f", dsd_get_sleep_multiplier_factor() );
+#endif
       rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_enabled));
       rpt_nl();
 }
@@ -553,7 +552,7 @@ execute_cmd_with_optional_display_handle(
          // check_dynamic_features();
          // ensure_vcp_version_set();
 
-         tsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
+         dsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
          // loadvcp will search monitors to find the one matching the
          // identifiers in the record
          ddc_ensure_displays_detected();
@@ -803,7 +802,7 @@ main(int argc, char *argv[]) {
       callopts |= CALLOPT_FORCE;
 
    // affects all current threads and new threads
-   tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
+   // tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
    dsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
@@ -932,7 +931,7 @@ main(int argc, char *argv[]) {
 #endif
       )
    {
-      ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_THREAD_STATS, 0);
+      ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, 0);
       // report_timestamp_history();  // debugging function
    }
 
