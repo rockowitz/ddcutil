@@ -8,13 +8,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <base/dsa1.h>
 #include <sys/types.h>
 
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
 #include "base/dsa2.h"
-#include "base/dynamic_sleep.h"
 #include "base/execution_stats.h"
 #include "base/per_display_data.h"
 #include "base/rtti.h"

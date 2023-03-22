@@ -1,4 +1,5 @@
 /** @file base_services.c
+#include <base/dsa1.h>
  *  Initialize and release base services.
  */
 
@@ -11,7 +12,7 @@
 #include "ddc_packets.h"
 #include "displays.h"
 #include "dynamic_features.h"
-#include "dynamic_sleep.h"
+#include "dsa1.h"
 #include "dsa2.h"
 #include "execution_stats.h"
 #include "linux_errno.h"
@@ -33,9 +34,9 @@ void init_base_services() {
    init_base_dynamic_features();
    init_ddc_packets();
    init_display_sleep_data();
-   init_displays();
+   init_dsa1();
    init_dsa2();
-   init_dynamic_sleep();
+   init_dsa1();
    init_execution_stats();
    // init_linux_errno();
    init_per_display_data();

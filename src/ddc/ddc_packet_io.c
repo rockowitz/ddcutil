@@ -14,6 +14,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/dsa1.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -33,7 +34,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/displays.h"
-#include "base/dynamic_sleep.h"
 #include "base/dsa2.h"
 #include "base/execution_stats.h"
 #include "base/parms.h"

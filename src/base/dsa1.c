@@ -9,6 +9,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <base/dsa1.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
@@ -30,7 +31,6 @@
 #include "base/rtti.h"
 #include "base/per_display_data.h"
 
-#include "base/dynamic_sleep.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
@@ -253,7 +253,7 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
 }
 
 
-void init_dynamic_sleep() {
+void init_dsa1() {
    RTTI_ADD_FUNC(dsa_calc_adjustment_factor);
    RTTI_ADD_FUNC(dsa_calc_sleep_time);
    RTTI_ADD_FUNC(dsa_update_adjustment_factor);

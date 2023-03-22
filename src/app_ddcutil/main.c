@@ -52,7 +52,7 @@
 #include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/dsa2.h"
-#include "base/dynamic_sleep.h"
+#include <base/dsa1.h>
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"

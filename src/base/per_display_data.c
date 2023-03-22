@@ -391,7 +391,6 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    rpt_vstring(d1, "Lowest maxtries                                          : %d,%d,%d,%d",
                     data->lowest_maxtries[0], data->lowest_maxtries[1],
                     data->lowest_maxtries[2], data->lowest_maxtries[3]);
-
    for (int retry_type = 0; retry_type < 4; retry_type++) {
       int upper_bound = data->highest_maxtries[retry_type] + 1;
       assert(upper_bound <= MAX_MAX_TRIES + 1);
