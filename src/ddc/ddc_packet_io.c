@@ -570,7 +570,7 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-   dsa_record_ddcrw_status_code(dh, psc);
+   dsa1_record_ddcrw_status_code(dh, psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 

@@ -36,7 +36,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 
-void dsa_record_ddcrw_status_code(Display_Handle *  dh, int rc) {
+void dsa1_record_ddcrw_status_code(Display_Handle *  dh, int rc) {
    bool debug = false;
    DBGMSF(debug, "rc=%s", psc_desc(rc));
    // Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
@@ -168,7 +168,7 @@ double dsa_calc_adjustment_factor(
 }
 
 
-double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis) {
+double dsa1_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis) {
    bool debug = false;
    // Per_Thread_Data * ptd = tsd_get_thread_sleep_data();
    Per_Display_Data * pdd = dh->dref->pdd;
@@ -256,6 +256,6 @@ double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_mil
 void init_dsa1() {
    RTTI_ADD_FUNC(dsa_calc_adjustment_factor);
    RTTI_ADD_FUNC(dsa_calc_sleep_time);
-   RTTI_ADD_FUNC(dsa_update_adjustment_factor);
+   RTTI_ADD_FUNC(dsa1_update_adjustment_factor);
    RTTI_ADD_FUNC(dsa_error_rate_is_high);
 }

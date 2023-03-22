@@ -172,7 +172,7 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
    }
 
    else if (pdd->dynamic_sleep_enabled) {
-      dsa_update_adjustment_factor(dh, spec_sleep_time_millis);
+      dsa1_update_adjustment_factor(dh, spec_sleep_time_millis);
       adjusted_sleep_time_millis =
             pdd->cur_sleep_adjustment_factor * adjusted_sleep_time_millis;
 

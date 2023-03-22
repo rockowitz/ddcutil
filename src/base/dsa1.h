@@ -19,9 +19,9 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-void   dsa_record_ddcrw_status_code(Display_Handle * dh, int rc);
-double dsa_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis);
-int    dsa_get_sleep_time(Display_Handle * dh, int spec_sleep_time_millis);
+void   dsa1_record_ddcrw_status_code(Display_Handle * dh, int rc);
+double dsa1_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis);
+int    dsa1_get_sleep_time(Display_Handle * dh, int spec_sleep_time_millis);
 void   init_dsa1();
 
 #endif /* DSA1_H_ */
