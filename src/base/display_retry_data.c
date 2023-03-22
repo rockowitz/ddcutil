@@ -541,7 +541,7 @@ void report_display_try_typed_data_by_data(
       Per_Display_Data *  data,
       int                 depth)
 {
-   bool debug = false;
+   // bool debug = false;
    int d1 = depth+1;
    int d2 = depth+2;
    // rpt_nl();
@@ -562,6 +562,7 @@ void report_display_try_typed_data_by_data(
                retry_type_description(retry_type));
    }
 
+#ifdef OUT     // only use of highest_maxtries
    if (debug) {
       int upper_bound = data->highest_maxtries[retry_type] + 1;
       assert(upper_bound <= MAX_MAX_TRIES + 1);
@@ -570,6 +571,7 @@ void report_display_try_typed_data_by_data(
                       retry_type, retry_type_name(retry_type), buf);
       free(buf);
    }
+#endif
 
 
    if ( total_attempts_for_one_type == 0) {

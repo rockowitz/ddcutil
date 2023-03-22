@@ -70,13 +70,12 @@ typedef struct {
 
    // Retry management
    bool              display_retry_data_defined;
-// #ifdef UNUSED
+#ifdef UNUSED
    Retry_Op_Value    current_maxtries[4];
    Retry_Op_Value    highest_maxtries[4];
    Retry_Op_Value    lowest_maxtries[4];
-
+#endif
    Per_Display_Try_Stats  try_stats[4];
-// #endif
 } Per_Display_Data;
 
 void pdd_init(Per_Display_Data * pdd);

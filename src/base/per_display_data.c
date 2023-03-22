@@ -378,6 +378,7 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    rpt_vstring(d1, "cur_sleep_adjustmet_factor                               : %3.2f", data->cur_sleep_adjustment_factor);
 // rpt_vstring(d1, "display_adjustment_increment        %15.2f", data->display_adjustment_increment);
 
+#ifdef UNUSED
    // Maxtries history
    rpt_bool("display_retry_data_defined", NULL, data->display_retry_data_defined, d1);
 
@@ -399,6 +400,7 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
                       retry_type, retry_type_name(retry_type), buf);
       free(buf);
    }
+#endif
 }
 
 
