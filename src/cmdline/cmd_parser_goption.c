@@ -605,7 +605,7 @@ parse_command(
    gboolean deferred_sleep_flag = false;
    gboolean per_display_stats_flag = false;
    gboolean show_settings_flag = false;
-   gboolean dsa_flag           = false;
+   gboolean dsa1_flag          = false;
    gboolean i2c_io_fileio_flag = false;
    gboolean i2c_io_ioctl_flag  = false;
    gboolean f1_flag            = false;
@@ -617,6 +617,7 @@ parse_command(
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
+   gboolean enable_dsa0_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algoritm 2" : "Disable dynamic sleep algorithm 2 (default)";
@@ -778,8 +779,10 @@ parse_command(
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa0",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa0_flag,"Original DSA",  NULL},
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa1",                    '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"enable-dsa2",             '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"no-dsa2",                 '\0', G_OPTION_FLAG_REVERSE,
@@ -969,6 +972,8 @@ parse_command(
    } while(0)
 
    parsed_cmd->output_level     = output_level;
+   if (per_display_stats_flag && stats_work == DDCA_STATS_NONE)
+      stats_work = DDCA_STATS_ALL;
    parsed_cmd->stats_types      = stats_work;
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
@@ -1000,8 +1005,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
 #endif
-   SET_CMDFLAG(CMD_FLAG_DSA,               dsa_flag);
+   SET_CMDFLAG(CMD_FLAG_DSA1,               dsa1_flag);
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
+   SET_CMDFLAG(CMD_FLAG_DSA0,              enable_dsa0_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
    SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);
@@ -1048,8 +1054,12 @@ parse_command(
                     modelwork,
                     snwork);
 
-   if (dsa_flag && enable_dsa2_flag) {
-      emit_parser_error(errmsgs,  __func__, "Options --dsa and --dsa2 are muturally exclusive");
+   int dsa_ct = 0;
+   if (enable_dsa0_flag) dsa_ct++;
+   if (dsa1_flag)        dsa_ct++;
+   if (enable_dsa2_flag) dsa_ct++;
+   if (dsa_ct > 1) {
+      emit_parser_error(errmsgs,  __func__, "Dynamic sleep options are muturally exclusive");
       parsing_ok = false;
    }
 
