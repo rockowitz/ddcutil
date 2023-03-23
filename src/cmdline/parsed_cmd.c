@@ -266,7 +266,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("reduce sleeps:",    NULL, parsed_cmd->flags & CMD_FLAG_REDUCE_SLEEPS,           d1);
 #endif
       rpt_bool("defer sleeps",      NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
-      rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA,              d1);
+      rpt_bool("dsa0 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA0,                d1);
+      rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA1,              d1);
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                d1);
 
       rpt_bool("per_display_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS,        d1);
