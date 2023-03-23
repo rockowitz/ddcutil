@@ -96,6 +96,7 @@
 
 #define DEFAULT_ENABLE_CACHED_CAPABILITIES true
 #define DEFAULT_ENABLE_UDF true
-#define DEFAULT_ENABLE_DSA2 true
+#define DEFAULT_ENABLE_DSA1 false
+#define DEFAULT_ENABLE_DSA2 false
 
 #endif /* PARMS_H_ */
