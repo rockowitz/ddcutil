@@ -35,6 +35,7 @@ ddc_errno.c               \
 ddc_packets.c             \
 dynamic_features.c        \
 displays.c                \
+dsa0.c                    \
 dsa2.c                    \
 dsa1.c                    \
 execution_stats.c         \
@@ -52,12 +53,9 @@ stats.c                   \
 trace_control.c           \
 tuned_sleep.c             \
 status_code_mgt.c         \
-vcp_version.c
-
-libbase_la_SOURCES +=     \
+vcp_version.c             \
 per_display_data.c        \
-display_retry_data.c      \
-display_sleep_data.c      
+display_retry_data.c
 
 nodist_libbase_la_SOURCES = adl_errors.h
 
