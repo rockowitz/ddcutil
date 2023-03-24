@@ -22,7 +22,7 @@
 #include "core.h"
 #include "dynamic_features.h"
 #include "feature_set_ref.h"
-#include "per_display_data.h"
+// #include "per_display_data.h"
 #include "vcp_version.h"
 
 typedef void * Global_Display_Lock;
@@ -200,7 +200,7 @@ typedef struct _display_ref {
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
    char *                   driver_name;           //
-   Per_Display_Data *       pdd;
+   /*Per_Display_Data*/ void *       pdd;
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
@@ -252,7 +252,6 @@ int    hiddev_name_to_number(const char * hiddev_name);
 #ifdef UNUSED
 char * hiddev_number_to_name(int hiddev_number);
 #endif
-
 
 bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);
 void unlock_display_lock(Display_Async_Rec * async_rec);

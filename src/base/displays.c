@@ -27,6 +27,8 @@
 #endif
 /** \endcond */
 
+#include "base/per_display_data.h"
+
 #include "public/ddcutil_types.h"
 #include "public/ddcutil_status_codes.h"
 
@@ -100,15 +102,17 @@ int dpath_hash(DDCA_IO_Path path) {
 }
 
 
+#ifdef ASYNC_REC
 // *** Display_Async_Rec ***
 
 // At least temporarily for development, base all async operations for a display
 // on this struct.
 
 
+#ifdef UNUSED
 static GMutex displays_master_list_mutex;
+#endif
 static GPtrArray * displays_master_list = NULL;  // only handful of displays, simple data structure suffices
-
 
 void dbgrpt_displays_master_list(GPtrArray* displays_master_list, int depth) {
    int d1 = depth+1;
@@ -122,7 +126,6 @@ void dbgrpt_displays_master_list(GPtrArray* displays_master_list, int depth) {
       }
    }
 }
-
 
 Display_Async_Rec * display_async_rec_new(DDCA_IO_Path dpath) {
    Display_Async_Rec * newrec = calloc(1, sizeof(Display_Async_Rec));
@@ -144,7 +147,6 @@ Display_Async_Rec * display_async_rec_new(DDCA_IO_Path dpath) {
    return newrec;
 }
 
-
 Display_Async_Rec * find_display_async_rec(DDCA_IO_Path dpath) {
    bool debug = false;
    assert(displays_master_list);
@@ -161,7 +163,6 @@ Display_Async_Rec * find_display_async_rec(DDCA_IO_Path dpath) {
    DBGMSF(debug, "Returning %p", result);
    return result;
 }
-
 
 /** Obtains a reference to the #Display_Async_Rec for a display.
  *
@@ -194,8 +195,6 @@ Display_Async_Rec * get_display_async_rec(DDCA_IO_Path dpath) {
 // GLOCK_DEFINE_STATIC(global_locks_mutex);
 
 
-
-
 /** Acquired at display open time.
  *  Only 1 thread can open
  */
@@ -226,6 +225,7 @@ void unlock_display_lock(Display_Async_Rec * async_rec) {
       g_mutex_unlock(&async_rec->display_lock);
    }
 }
+#endif
 
 
 // *** Display_Identifier ***
@@ -414,13 +414,6 @@ void dbgrpt_display_identifier(Display_Identifier * pdid, int depth) {
    char * edidstr = hexstring(pdid->edidbytes, 128);
    rpt_str( "edid",          NULL, edidstr,             d1);
    free(edidstr);
-
-#ifdef ALTERNATIVE
-   // avoids a malloc and free, but less clear
-   char edidbuf[257];
-   char * edidstr2 = hexstring2(pdid->edidbytes, 128, NULL, true, edidbuf, 257);
-   rpt_str( "edid",          NULL, edidstr2, d1);
-#endif
 }
 
 
@@ -591,22 +584,19 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 // *** Display_Ref ***
 
 static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
-   bool debug = false;
+   // bool debug = false;
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
 
+#ifdef ASYNC_REC
    dref->async_rec  = get_display_async_rec(io_path);    // keep?
+#endif
 
-   Per_Display_Data * pdd = pdd_get_per_display_data(io_path);
+   Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    dref->pdd = pdd;
-
-   DBGMSF(debug, "Initialized: %s. display_sleep_data_defined: %s.display_retry_data_defined; %s",
-   sbool(dref->pdd->initialized),
-   sbool( dref->pdd->display_sleep_data_defined), sbool( dref->pdd->display_retry_data_defined));
-
    return dref;
 }
 
@@ -656,25 +646,6 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    if (debug) {
       DBGMSG("Done.  Constructed USB display ref:");
       dbgrpt_display_ref(dref,0);
-   }
-   return dref;
-}
-#endif
-
-
-#ifdef THANKFULLY_UNNEEDED
-// Issue: what to do with referenced data structures
-Display_Ref * clone_display_ref(Display_Ref * old) {
-   assert(old);
-   Display_Ref * dref = calloc(1, sizeof(Display_Ref));
-   // dref->ddc_io_mode = old->ddc_io_mode;
-   // dref->busno         = old->busno;
-   // dref->iAdapterIndex = old->iAdapterIndex;
-   // dref->iDisplayIndex = old->iDisplayIndex;
-   // DBGMSG("dref=%p, old=%p, len=%d  ", dref, old, (int) sizeof(BasicDisplayRef) );
-   memcpy(dref, old, sizeof(Display_Ref));
-   if (old->usb_hiddev_name) {
-      dref->usb_hiddev_name = strcpy(dref->usb_hiddev_name, old->usb_hiddev_name);
    }
    return dref;
 }
@@ -1009,6 +980,8 @@ void init_displays() {
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
 
+#ifdef ASYNC_REC
    displays_master_list = g_ptr_array_new();
+#endif
 }
 
