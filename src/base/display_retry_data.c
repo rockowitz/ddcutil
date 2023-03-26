@@ -58,16 +58,13 @@ void drd_init_display_data(Per_Display_Data * data) {
       data->try_stats[2].retry_op = MULTI_PART_READ_OP;
       data->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
    }
-
-   data->display_retry_data_defined = true;
 }
 
 
 // Just a pass through to pdd_get_display_data()
 // Vestige of having separate stuct for retry data alone
 Per_Display_Data * drd_get_display_retry_data(DDCA_IO_Path dpath) {
-   Per_Display_Data * pdd = pdd_get_per_display_data(dpath);
-   assert(pdd->display_retry_data_defined);
+   Per_Display_Data * pdd = pdd_get_per_display_data(dpath, true);
    return pdd;
 }
 

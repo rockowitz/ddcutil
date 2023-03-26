@@ -124,10 +124,10 @@ void try_data_unlock(bool release_requested) {
 typedef
 struct {
    Retry_Operation retry_type;
-   Retry_Op_Value    maxtries;
-   Retry_Op_Value    counters[MAX_MAX_TRIES+2];
-   Retry_Op_Value    highest_maxtries;
-   Retry_Op_Value    lowest_maxtries;
+   Retry_Op_Value  maxtries;
+   Retry_Op_Value  counters[MAX_MAX_TRIES+2];
+   Retry_Op_Value  highest_maxtries;
+   Retry_Op_Value  lowest_maxtries;
 } Try_Data2;
 
 

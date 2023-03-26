@@ -1,4 +1,5 @@
 /** @file ddc_services.c
+#include <base/dsa0.h>
 #include <base/base_services.h>
  *
  * ddc layer initialization and configuration, statistics management
@@ -16,7 +17,7 @@
 /** \endcond */
 
 #include "base/display_retry_data.h"
-#include "base/display_sleep_data.h"
+#include "base/dsa2.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
 #include "base/rtti.h"
@@ -121,27 +122,6 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
    }
 
    if (show_per_display_stats) {
-#ifdef OUT
-      rpt_label(depth, "PER-THREAD EXECUTION STATISTICS");
-      rpt_nl();
-      ptd_list_threads(depth);
-       if (stats & DDCA_STATS_TRIES) {
-           report_all_thread_maxtries_data(depth);
-      }
-      if (stats & DDCA_STATS_ERRORS) {
-          report_all_thread_status_counts(depth);
-          rpt_nl();
-      }
-      if (stats & DDCA_STATS_CALLS) {
-          report_all_thread_sleep_data(depth);
-      }
-      if (stats & (DDCA_STATS_ELAPSED)) {
-          // need a report_all_thread_elapsed_summary()
-          report_elapsed_summary(depth);     // temp?
-          //   rpt_nl();
-      }
-
-#endif
       rpt_label(depth, "PER-DISPLAY EXECUTION STATISTICS");
       rpt_nl();
       // ptd_list_threads(depth);
@@ -149,15 +129,17 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
            drd_report_all_display_retry_data(depth);
       }
       if (stats & DDCA_STATS_ERRORS) {
-          report_all_display_status_counts(depth);
+          pdd_report_all_display_status_counts(depth);
           rpt_nl();
       }
       if (stats & DDCA_STATS_CALLS) {
-          report_all_display_sleep_data(depth);
+          report_all_dsa0_data(depth);
       }
       if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
-          report_elapsed_summary(depth);     // temp?
+          pdd_report_all_elapsed(depth);
+          // if (dsa2_enabled)
+          //   dsa2_report_all(depth);
       }
           //   rpt_nl();
       // Reports locks held by per_thread_data() to confirm that locking has

@@ -14,6 +14,7 @@
 #include <config.h>
 
 #include <assert.h>
+#include <base/dsa0.h>
 #include <base/dsa1.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -40,7 +41,6 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
-#include "base/display_sleep_data.h"
 #include "base/per_display_data.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -570,7 +570,7 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-   dsa1_record_ddcrw_status_code(dh, psc);
+   // dsa1_record_ddcrw_status_code(dh, psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 
@@ -640,25 +640,29 @@ ddc_write_read_with_retry(
    DDCA_Status  psc;
    bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
    int  tryctr;
+
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   bool sleep_multiplier_incremented = false;
+   bool sleep_multiplier_incremented = false;   // dsa0
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGMSF(debug, "          retry_null_response = %s, ddcrc_null_response_max = %d",
           sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES];
+   for (int ndx = 0; ndx < MAX_MAX_TRIES; ndx++)
+      try_errors[ndx] = NULL;
 
    // TRACED_ASSERT(max_write_read_exchange_tries > 0);   // to avoid clang warning
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    TRACED_ASSERT(max_tries >= 0);
+   // int skipped_tries = 0;
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_tries && psc < 0 && retryable;
         tryctr++)
    {
       DBGMSF(debug,
-           "          Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+        "          Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
            tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
@@ -703,12 +707,18 @@ ddc_write_read_with_retry(
                   if (retryable) {
                      if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                         f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                     if (max_tries > 3)
+                        max_tries = 3;
+#ifdef OUT
 #ifdef TSD
                      tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct++);
 #endif
-                     dsd_set_sleep_multiplier_ct(pdd, ddcrc_null_response_ct++);
-                     sleep_multiplier_incremented = true;
-                     // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
+                     if (dsa0_enabled) {
+                        dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, ddcrc_null_response_ct++);
+                        sleep_multiplier_incremented = true;
+                        // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
+                     }
+#endif
                   }
                }
                break;
@@ -749,47 +759,50 @@ ddc_write_read_with_retry(
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d, tryctr=%d, retryable=%s",
                              psc, tryctr, sbool(retryable));
+#ifdef OLD
       if (dsa2_enabled && psc != 0)
-         dsa2_note_retryable_failure(dh->dref->io_path, (max_tries-1) - tryctr);
+         dsa2_note_retryable_failure(dh->dref->io_path,
+                                    (max_tries-1) - tryctr);  // remaining retries
+#endif
+      if (psc != 0)
+         pdd_note_retryable_failure_by_dh(dh, (max_tries-1) - tryctr);  // remaining retries
    }
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
+#ifdef OLD
    if (psc == 0 && dsa2_enabled)
       dsa2_record_final(dh->dref->io_path, psc, tryctr);
-
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d, retryable=%s, read_bytewise=%s",
-         tryctr, psc, sbool(retryable), sbool(read_bytewise));
-
-   int errct = (psc == 0) ? tryctr-1 : tryctr;
-   // DBGMSG("psc=%d, tryctr=%d, errct=%d", psc, tryctr, errct);
-
-   // read_bytewise = !read_bytewise;
-#ifdef OLD
-   if (debug) {
-      for (int ndx = 0; ndx < tryctr; ndx++) {
-         DBGMSG("try_errors[ndx] = %p", try_errors[ndx]);
-         DBGMSG("try_errors[%d] = %s", ndx, errinfo_summary(try_errors[ndx]));
-      }
-   }
+   if (psc == 0)
+      pdd_record_adjusted_successful_sleep_multiplier_bounds(pdd);
 #endif
-   // DBGMSG("try_errors = %p, &try_errors=%p", try_errors, &try_errors);
+   if (psc == 0)
+      pdd_record_final_by_dh(dh, psc, tryctr);
 
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d (%s), retryable=%s, read_bytewise=%s",
+         tryctr, psc, psc_desc(psc), sbool(retryable), sbool(read_bytewise));
+
+   // int errct = (psc == 0) ? tryctr-1 : tryctr;
+   // errct -= skipped_tries;
+
+
+   Error_Info * errors_found[MAX_MAX_TRIES];
+   int errct = 0;
+   for (int ndx = 0; ndx < MAX_MAX_TRIES; ndx++) {
+      if (try_errors[ndx])
+         errors_found[errct++] = try_errors[ndx];
+   }
    char * s0 = (psc == 0) ? "Succeeded" : "Failed";
    char * s1 = (errct == 1) ? "" : "s";
-   char * s = errinfo_array_summary(try_errors, errct);
+
+   char * s = errinfo_array_summary(errors_found, errct);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
                    "%s,%s after %d error%s: %s", dh_repr(dh), s0, errct, s1, s);
    free(s);
 
-   if (sleep_multiplier_incremented) {
-#ifdef PTD
-      tsd_set_sleep_multiplier_ct(1);   // in case we changed it
-      tsd_ump_sleep_multiplier_changer_ct();
-#else
-      dsd_set_sleep_multiplier_ct(pdd, 1);   // in case we changed it
-      dsd_bump_sleep_multiplier_changer_ct(pdd);
-#endif
+   if (dsa0_enabled && sleep_multiplier_incremented) {
+      dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, 1);   // in case we changed it
+      dsa0_bump_sleep_multiplier_changer_ct(pdd->dsa0_data);
    }
 
    Error_Info * ddc_excp = NULL;
@@ -806,7 +819,7 @@ ddc_write_read_with_retry(
       else if (ddcrc_null_response_ct > ddcrc_null_response_max)
          psc = DDCRC_ALL_RESPONSES_NULL;
 
-      ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__, NULL);
+      ddc_excp = errinfo_new_with_causes(psc, errors_found, errct, __func__, NULL);
 
       if (psc != try_errors[tryctr-1]->status_code)
          COUNT_STATUS_CODE(psc);     // new status code, count it

@@ -21,12 +21,13 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/display_retry_data.h"
+#include "base/dsa0.h"
+#include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
-#include "base/rtti.h"
-#include "base/display_retry_data.h"
-#include "base/display_sleep_data.h"
 #include "base/per_display_data.h"
+#include "base/rtti.h"
 #include "base/stats.h"
 #include "base/tuned_sleep.h"
 
@@ -207,19 +208,24 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 
    if (parsed_cmd->sleep_multiplier >= 0 && parsed_cmd->sleep_multiplier != 1) {
       // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current displays
-      dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new displays
+      pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new displays
 
+#ifdef USE_DSA1
       // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
       // dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
       // if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
-      if (parsed_cmd->flags & CMD_FLAG_DSA)
+      if (parsed_cmd->flags & CMD_FLAG_DSA1)
       {
          // tsd_dsa_enable_globally(true);
          dsd_dsa_enable_globally(true);
       }
+#endif
    }
 
+   dsa1_enabled = parsed_cmd->flags & CMD_FLAG_DSA1;
    dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
+   dsa0_enabled = parsed_cmd->flags & CMD_FLAG_DSA0;
+   assert(!(dsa1_enabled && dsa2_enabled));
    if (dsa2_enabled) {
       dsa2_restore_persistent_stats();
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {

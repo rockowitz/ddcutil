@@ -10,6 +10,7 @@
 
 #include <assert.h>
 #include <base/base_services.h>
+#include <base/dsa0.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <signal.h>
@@ -28,7 +29,6 @@
 #include "base/build_info.h"
 #include "base/core_per_thread_settings.h"
 #include "base/core.h"
-#include "base/display_sleep_data.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
@@ -909,8 +909,8 @@ ddca_set_default_sleep_multiplier(double multiplier)
    double old_value = -1.0;
    if (multiplier >= 0.0 && multiplier <= 10.0) {
 // #ifdef TSD
-      old_value = dsd_get_default_sleep_multiplier_factor();
-      dsd_set_default_sleep_multiplier_factor(multiplier);
+      old_value = pdd_get_default_sleep_multiplier_factor();
+      pdd_set_default_sleep_multiplier_factor(multiplier);
 // #endif
     }
 
@@ -924,7 +924,7 @@ ddca_get_default_sleep_multiplier()
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "");
-   double result = dsd_get_default_sleep_multiplier_factor();
+   double result = pdd_get_default_sleep_multiplier_factor();
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
@@ -943,7 +943,7 @@ ddca_get_global_sleep_multiplier()
    return ddca_get_default_sleep_multiplier();
 }
 
-// for current thread
+// for display on current thread
 double
 ddca_set_sleep_multiplier(double multiplier)
 {
@@ -955,8 +955,8 @@ ddca_set_sleep_multiplier(double multiplier)
       Per_Thread_Data * ptd = ptd_get_per_thread_data();
       if (ptd->cur_dh) {
          Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
-         old_value = pdd->sleep_multiplier_factor;
-         pdd->sleep_multiplier_factor = multiplier;
+         old_value = pdd->user_sleep_multiplier;
+         pdd_reset_multiplier(pdd, multiplier);
       }
    }
 
@@ -974,7 +974,7 @@ ddca_get_sleep_multiplier()
    double result =  -1.0f;
    if (ptd->cur_dh) {
       Per_Display_Data * pdd = ptd->cur_dh->dref->pdd;
-      result = pdd->sleep_multiplier_factor;
+      result = pdd->user_sleep_multiplier;
    }
 #ifdef TSD
    double result = tsd_get_sleep_multiplier_factor();

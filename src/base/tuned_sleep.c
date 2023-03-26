@@ -14,6 +14,7 @@
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
+#include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/execution_stats.h"
 #include "base/per_display_data.h"
@@ -143,11 +144,20 @@ static int get_sleep_time(
 }
 
 
-/** Adjusts the sleep time.
+/** Adjusts the sleep time, using the dynamic sleep adjustment protocol
+ *  set (if one is set).
  *
- *  First the sleep multiplier is applied.
+ *  First the sleep multiplier is applied.  If no dynamic sleep adjustment
+ *  is in effect, that is the value returned.
  *
- *  Then, if dynamic sleep is not enabled (the usual case) the sleep time is
+ *  If the original automatic adjustment algorithm is in effect (dsa0),
+ *  what had been the normal case, the sleep time is multiplied by the
+ *  per thread sleep multiplier count.
+ *
+ *  If the original dynamic sleep adjustment is enabled (dsa1), the
+ *  sleep time is adjusted by a per thread adjustment factor determined by
+ *  the algorithm.
+ *  Then, if no dynamic sleep adjustment is enabled (the usual case) the sleep time is
  *  multiplied by the per thread sleep multiplier count. This count is
  *  maintained by the IO retry logic.
  *
@@ -161,35 +171,77 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
                           "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
 
    Per_Display_Data * pdd = dh->dref->pdd;
+#ifdef OLD
    int adjusted_sleep_time_millis = spec_sleep_time_millis * pdd->sleep_multiplier_factor;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "pdd->sleep_multiplier_factor=%2.1f, adjusted_sleep_time_millis=%d",
          pdd->sleep_multiplier_factor, adjusted_sleep_time_millis);
+#endif
+
+   double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+   int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
+
+#ifdef OUT
+   double dsa_multiplier;
+   if (dsa2_enabled)
+      dsa_multiplier = dsa2_get_sleep_multiplier(dh->dref->io_path);
+   else if (dsa1_enabled)  {
+      dsa1_update_adjustment_factor(dh, spec_sleep_time_millis);
+      dsa_multiplier = pdd->cur_sleep_adjustment_factor * pdd->sleep_multiplier_factor;
+   }
+   else if (dsa0_enabled) {
+      DSA0_Data * dsa0_data = (DSA0_Data*) pdd->dsa0_data;
+      dsa_multiplier = dsa0_data->sleep_multiplier_ct * pdd->sleep_multiplier_factor;
+   }
+   else
+      dsa_multiplier = pdd->sleep_multiplier_factor;
+
+   pdd->most_recent_adjusted_sleep_multiplier = dsa_multiplier;
+
+   int adjusted_sleep_time_millis2 = dsa_multiplier * spec_sleep_time_millis;
+   // DBGMSG("dsa_multiplier = %7.3f, adjusted_sleep_time_millis2=%d", dsa_multiplier, adjusted_sleep_time_millis2);
+
 
    if (dsa2_enabled) {
       double multiplier = dsa2_get_sleep_multiplier(dh->dref->io_path);
       adjusted_sleep_time_millis = multiplier * spec_sleep_time_millis;
    }
 
-   else if (pdd->dynamic_sleep_enabled) {
+   else if (dsa1_enabled) {
       dsa1_update_adjustment_factor(dh, spec_sleep_time_millis);
       adjusted_sleep_time_millis =
             pdd->cur_sleep_adjustment_factor * adjusted_sleep_time_millis;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "Dynamic sleep enabled. Updated adjustment factor: %4.2f",
+                "Dynamic sleep (dsa1) enabled. Updated adjustment factor: %4.2f",
                 pdd->cur_sleep_adjustment_factor);
    }
-   else {
+   else if (dsa0_enabled) {
+      DSA0_Data * dsa0_data = (DSA0_Data*) pdd->dsa0_data;
       adjusted_sleep_time_millis =
-            pdd->sleep_multiplier_ct * adjusted_sleep_time_millis;
+            dsa0_data->sleep_multiplier_ct * adjusted_sleep_time_millis;
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "Dynamic sleep disabled. sleep_multiplier_ct = %d",
-             pdd->sleep_multiplier_ct);
+             "dsa0. sleep_multiplier_ct = %d",
+             dsa0_data->sleep_multiplier_ct);
    }
+   else {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No dynamic adjustment");
+   }
+#endif
 
+   // DBGMSG("adjusted_sleep_time_millis = %d, adjusted_sleep_time_millis2 = %d",
+   //       adjusted_sleep_time_millis, adjusted_sleep_time_millis2);
+
+    // assert(adjusted_sleep_time_millis == adjusted_sleep_time_millis2);
+
+#ifdef OLD
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d milliseconds", adjusted_sleep_time_millis);
+#endif
+
+   DBGTRC(debug, TRACE_GROUP,
+         "Executing. spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, Returning: %d",
+         spec_sleep_time_millis, dsa_multiplier, adjusted_sleep_time_millis);
    return adjusted_sleep_time_millis;
 }
 
@@ -265,7 +317,7 @@ void tuned_sleep_with_trace(
          g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
       sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
-      Per_Display_Data * pdd   = pdd_get_per_display_data(dh->dref->io_path);
+      Per_Display_Data * pdd   = pdd_get_per_display_data(dh->dref->io_path, true);
       Per_Display_Data * pdd2  = dh->dref->pdd;
       assert (pdd == pdd2);
       pdd->total_sleep_time_millis += adjusted_sleep_time_millis;

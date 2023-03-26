@@ -28,6 +28,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/parms.h"
+#include "base/per_display_data.h"
 #include "base/status_code_mgt.h"
 #include "base/rtti.h"
 
@@ -43,6 +44,7 @@ const int  Default_Interval     = 3;
 bool dsa2_enabled        = Default_DSA2_Enabled;
 int  initial_step        = Default_Initial_Step;
 int  adjustment_interval = Default_Interval;
+
 
 //
 // Utility Functions
@@ -320,6 +322,16 @@ typedef struct {
    int  min_ok_step;
    bool found_failure_step;
    int  cur_retry_loop_step;
+
+   int  initial_step;
+   int  initial_lookback;
+   int  adjustments_up;
+   int  adjustments_down;
+   int  successful_observation_ct;
+   int  reset_ct;
+   int  retryable_failure_ct;
+
+   bool found_on_current_execution;
 } Results_Table;
 
 
@@ -340,6 +352,16 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(min_ok_step);
    rpt_bool("found_failure_step", NULL, rtable->found_failure_step, d1);
    ONE_INT_FIELD(cur_retry_loop_step);
+
+   ONE_INT_FIELD(initial_step);
+   ONE_INT_FIELD(adjustments_up);
+   ONE_INT_FIELD(adjustments_down);
+   ONE_INT_FIELD(successful_observation_ct);
+   ONE_INT_FIELD(reset_ct);
+   ONE_INT_FIELD(retryable_failure_ct);
+   ONE_INT_FIELD(initial_lookback);
+   rpt_bool("found_on_current_execution", NULL, rtable->found_on_current_execution, d1);
+
 #undef ONE_INT_FIELD
    dbgrpt_circular_invocation_results_buffer(rtable->recent_values, d1);
 }
@@ -362,6 +384,9 @@ Results_Table * new_results_table(int busno) {
    rtable->remaining_interval = Default_Interval;
    rtable->min_ok_step = 0;
    rtable->found_failure_step = false;
+
+   rtable->initial_step     = rtable->cur_step;
+   rtable->initial_lookback = rtable->lookback;
    return rtable;
 }
 
@@ -386,19 +411,18 @@ free_results_table(Results_Table * rtable) {
  *  @return pointer to #Results_Table (may be newly created)
  */
 static
-Results_Table * get_results_table(int busno) {
+Results_Table * get_results_table(int busno, bool create_if_not_found) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d", busno);
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
-   if (!rtable) {
+   if (!rtable && create_if_not_found) {
       rtable = new_results_table(busno);
       results_tables[busno] = rtable;
       rtable->cur_step = initial_step;
       rtable->cur_retry_loop_step = initial_step;
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning rtable=%p, rtable->cur_step=%d, rtable->cur_retry_loop_step=%d",
-                       rtable, rtable->cur_step, rtable->cur_retry_loop_step);
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Results_Table", dbgrpt_results_table, rtable);
    return rtable;
 }
 
@@ -476,13 +500,36 @@ void dsa2_reset_multiplier(float multiplier) {
    initial_step = multiplier_to_step(multiplier);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
-         results_tables[ndx]->cur_step = initial_step;
-         results_tables[ndx]->found_failure_step = false;
-         results_tables[ndx]->min_ok_step = 0;
+         Results_Table * rtable = results_tables[ndx];
+         rtable->cur_step = initial_step;
+         rtable->found_failure_step = false;
+         rtable->min_ok_step = 0;
+
+         rtable->reset_ct++;
+         rtable->initial_step = initial_step;
+         rtable->adjustments_down = 0;
+         rtable->adjustments_up = 0;
+         rtable->successful_observation_ct = 0;
+         rtable->retryable_failure_ct = 0;
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set initial_step=%d", initial_step);
 }
+
+
+void dsa2_reset(DDCA_IO_Path dpath) {
+   assert(dpath.io_mode == DDCA_IO_I2C);
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s", dpath_repr_t(&dpath));
+
+   Results_Table * rtable = get_results_table(dpath.path.i2c_busno, false);
+   if (rtable) {
+      int busno = rtable->busno;
+      free_results_table(rtable);
+      results_tables[busno] = get_results_table(busno, true);
+   }
+}
+
 
 
 //
@@ -630,6 +677,7 @@ adjust_for_recent_successes(Results_Table * rtable) {
    if (too_many_errors(max_tryct, total_tryct, actual_lookback)) {
       if (rtable->cur_step < step_last) {
          rtable->cur_step++;
+         rtable->adjustments_up++;
       }
       rtable->found_failure_step = true;
       rtable->min_ok_step = rtable->cur_step;
@@ -644,6 +692,7 @@ adjust_for_recent_successes(Results_Table * rtable) {
       if (rtable->cur_step > 0) {
          if (total_tryct <= actual_lookback+1) {  // i.e. no more that 1 retry was required
             rtable->cur_step--;
+            rtable->adjustments_down++;
             if (rtable->cur_step > rtable->min_ok_step)
                rtable->min_ok_step = rtable->cur_step;
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unconditionally decremented cur_step.  New value: %d", rtable->cur_step);
@@ -651,6 +700,7 @@ adjust_for_recent_successes(Results_Table * rtable) {
          else if (rtable->found_failure_step) {
             if (rtable->cur_step > rtable->min_ok_step) {
                rtable->cur_step--;
+               rtable->adjustments_down++;
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
             }
          }
@@ -689,9 +739,15 @@ dsa2_note_retryable_failure(DDCA_IO_Path dpath, int remaining_tries) {
       return;
    }
 
-   Results_Table * rtable = get_results_table(dpath.path.i2c_busno);
+   Results_Table * rtable = get_results_table(dpath.path.i2c_busno, true);
+   assert(rtable);
+   rtable->found_on_current_execution = true;
    int prev_step = rtable->cur_retry_loop_step;
    rtable->cur_retry_loop_step = dsa2_next_retry_step(prev_step, remaining_tries);
+
+   Per_Display_Data * pdd = pdd_get_per_display_data(dpath,  false);
+   assert(pdd);
+   pdd->adjusted_sleep_multiplier =  steps[rtable->cur_step];
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Previous step=%d, next step = %d",
                                      prev_step, rtable->cur_retry_loop_step);
@@ -728,10 +784,15 @@ dsa2_record_final(DDCA_IO_Path dpath, DDCA_Status ddcrw, int tries) {
       DBGTRC_DONE(debug, DDCA_TRC_NONE, "dsa2 not enabled");
       return;
    }
+   Per_Display_Data * pdd = pdd_get_per_display_data(dpath,  false);
+   assert(pdd);
 
-   Results_Table * rtable = get_results_table(dpath.path.i2c_busno);
+   Results_Table * rtable = get_results_table(dpath.path.i2c_busno, true);
+   assert(rtable);
+   rtable->found_on_current_execution = true;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_retry_loop_step=%d", rtable->cur_retry_loop_step);
    if (ddcrw == 0) {
+      rtable->successful_observation_ct++;
       Successful_Invocation si = {time(NULL), tries, rtable->cur_retry_loop_step};
       cirb_add(rtable->recent_values, si);
       if (tries > 3) {
@@ -739,6 +800,7 @@ dsa2_record_final(DDCA_IO_Path dpath, DDCA_Status ddcrw, int tries) {
             rtable->cur_step = rtable->cur_retry_loop_step;
             rtable->min_ok_step = rtable->cur_step;
             rtable->found_failure_step = true;
+            rtable->adjustments_up++;
          }
       }
       else if (tries > 2) {
@@ -759,6 +821,7 @@ dsa2_record_final(DDCA_IO_Path dpath, DDCA_Status ddcrw, int tries) {
       rtable->remaining_interval = adjustment_interval;
       rtable->cur_retry_loop_step = initial_step;    // ???
    }
+   pdd->adjusted_sleep_multiplier =  steps[rtable->cur_step];
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
                "cur_step=%d, cur_retry_loop_step=%d, min_ok_step=%d, found_failure_step=%s, remaining_interval=%d",
                rtable->cur_step, rtable->cur_retry_loop_step, rtable->min_ok_step,
@@ -882,12 +945,13 @@ float dsa2_multiplier_step_to_float(int step) {
  *  @return multiplier value
  */
 float
-dsa2_get_sleep_multiplier(DDCA_IO_Path dpath) {
+dsa2_get_adjusted_sleep_multiplier(DDCA_IO_Path dpath) {
    bool debug = false;
    float result = 1.0f;
    if (dpath.io_mode == DDCA_IO_I2C) {   // in case called for usb device, or dsa2 not initialized
-      Results_Table * rtable = get_results_table(dpath_busno(dpath));
+      Results_Table * rtable = get_results_table(dpath_busno(dpath), true);
       assert(rtable);
+      rtable->found_on_current_execution = true;
       result = steps[rtable->cur_retry_loop_step]/100.0;
       DBGTRC(debug, DDCA_TRC_NONE,
                    "Executing dpath=%s, rtable->cur_retry_loop_step=%d, Returning %7.2f",
@@ -895,6 +959,33 @@ dsa2_get_sleep_multiplier(DDCA_IO_Path dpath) {
    }
    return result;
 }
+
+void dsa2_report(Results_Table * rtable, int depth) {
+   int d1 = depth+1;
+   rpt_vstring(depth, "Dynamic sleep algorithm 2 data for /dev/i2c-%d:", rtable->busno);
+   rpt_vstring(d1, "Initial Step:       %3d, %5.2f millisec", rtable->initial_step, steps[rtable->initial_step]/100.0);
+   rpt_vstring(d1, "Final Step:         %3d, %5.2f millisec", rtable->cur_step, steps[rtable->cur_step]/100.0);
+   rpt_vstring(d1, "Initial lookback ct:%3d", rtable->initial_lookback);
+   rpt_vstring(d1, "Final lookback ct:  %3d", rtable->lookback);
+   rpt_vstring(d1, "Adjustment interval:%3d", adjustment_interval);
+   rpt_vstring(d1, "Adjustments up:     %3d", rtable->adjustments_up);
+   rpt_vstring(d1, "Adjustments down:   %3d", rtable->adjustments_down);
+   rpt_vstring(d1, "All tries:          %3d", rtable->successful_observation_ct);
+   rpt_vstring(d1, "Retryable Failures: %3d", rtable->retryable_failure_ct);
+   rpt_vstring(d1, "Resets:             %3d", rtable->reset_ct);
+}
+
+
+void dsa2_report_all(int depth) {
+   int d1 = depth+1;
+   rpt_label(depth, "Dynamic Sleep Adjustment (algorithm 2)");
+   for (int busno = 0; busno <= I2C_BUS_MAX; busno++) {
+      Results_Table * rtable = get_results_table(busno, false);
+      if (rtable)
+         dsa2_report(rtable, d1);
+   }
+}
+
 
 
 //
@@ -933,7 +1024,7 @@ dsa2_save_persistent_stats() {
       goto bye;
    }
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
-      if (results_tables[ndx])
+      if (results_tables[ndx] && results_tables[ndx]->found_on_current_execution)
          results_tables_ct++;
    }
    DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
@@ -1130,13 +1221,16 @@ dsa2_restore_persistent_stats() {
          ok = ok && str_to_int(pieces[3], &rtable->remaining_interval, 10);
          ok = ok && str_to_int(pieces[4], &rtable->min_ok_step, 10);
          ok = ok && str_to_int(pieces[5], &iwork, 10);
-         if (ok)
-            rtable->found_failure_step = (iwork);
          if (ok) {
+            rtable->found_failure_step = (iwork);
             rtable->cur_retry_loop_step = rtable->cur_step;
+            rtable->initial_step = rtable->cur_step;
+            rtable->initial_lookback = rtable->lookback;
          }
-         for (int ndx = 6; ndx < piecect; ndx++) {
-            ok = ok && cirb_parse_and_add(rtable->recent_values, pieces[ndx]);
+         if (piecect >= 6) {   // handle no Successful_Invocation data
+            for (int ndx = 6; ndx < piecect; ndx++) {
+               ok = ok && cirb_parse_and_add(rtable->recent_values, pieces[ndx]);
+            }
          }
          if (!ok) {
             all_ok = false;
@@ -1204,7 +1298,7 @@ init_dsa2() {
    RTTI_ADD_FUNC(dsa2_record_final);
    RTTI_ADD_FUNC(dsa2_note_retryable_failure);
    RTTI_ADD_FUNC(dsa2_reset_multiplier);
-   RTTI_ADD_FUNC(dsa2_get_sleep_multiplier);
+   RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_multiplier);
    RTTI_ADD_FUNC(dsa2_save_persistent_stats);
    RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
    RTTI_ADD_FUNC(dsa2_restore_persistent_stats);

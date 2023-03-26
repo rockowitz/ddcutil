@@ -1,4 +1,4 @@
-/** @file display_sleep_data.h
+/** @file dsa0.h
   *
   * Maintains thread specific sleep data
   */
@@ -6,53 +6,58 @@
 // Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#ifndef DSA0_H_
+#define DSA0_H_
 
-#ifndef DISPLAY_SLEEP_DATA_H_
-#define DISPLAY_SLEEP_DATA_H_
+#include <stdbool.h>
+
+#include "public/ddcutil_types.h"
 
 
-#include "base/per_display_data.h"
+typedef  struct Per_Display_Data Per_Display_Data;
+
+extern bool dsa0_enabled;
+
+void    dsa0_enable(bool enabled);
+bool    dsa0_is_enabledt();
 
 
-void dsd_init_display_sleep_data(Per_Display_Data * data);
+typedef struct DSA0_Data {
+   int    busno;
+   int    sleep_multiplier_ct    ;         // can be changed by retry logic
+   int    highest_sleep_multiplier_ct;     // high water mark
+   int    sleep_multiplier_changer_ct;      // number of function calls that adjusted multiplier ct
+   double adjusted_sleep_multiplier;     //
+} DSA0_Data;
 
-Per_Display_Data * dsd_get_display_sleep_data();
+DSA0_Data * new_dsa0_data();
+DSA0_Data * dsa0_get_dsa0_data(int busno);
 
-// Experimental Dynamic Sleep Adjustment
-void   dsd_enable_dsa_all(bool enable);
-void   dsd_enable_dynamic_sleep(bool enabled);   // controls field display in reports
+void    dsa0_init_dsa0_data(DSA0_Data * data);
+void    dsa0_reset(DSA0_Data * data);
 
-void   dsd_dsa_enable_globally(bool enabled);
-void   dsd_dsa_enable(bool enabled);
-bool   dsd_dsa_is_enabled();
-#ifdef UNUSED
-void   dsd_set_dsa_enabled_default(bool enabled);
-#endif
-bool   dsd_get_dsa_enabled_default();
-
-//
-// Sleep time adjustments
-//
-
-// For new threads
-void   dsd_set_default_sleep_multiplier_factor(double multiplier);
-double dsd_get_default_sleep_multiplier_factor();
-
-//  Per thread sleep-multiplier
-double dsd_get_sleep_multiplier_factor(Per_Display_Data * pdd);
-void   dsd_set_sleep_multiplier_factor(Per_Display_Data * pdd, double factor);
+double  dsa0_get_adjusted_sleep_multiplier(DSA0_Data * data);
+void    dsa0_note_retryable_failure(DSA0_Data * data, int remaining_tries);
+void    dsa0_record_final_by_pdd(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries);
 
 //  sleep_multiplier_ct is set by functions performing I2C retry
 //  Per thread
-int    dsd_get_sleep_multiplier_ct(Per_Display_Data * pdd);
-void   dsd_set_sleep_multiplier_ct(Per_Display_Data * pdd, int multiplier_ct);
-void   dsd_bump_sleep_multiplier_changer_ct(Per_Display_Data * pdd);
+int    dsa0_get_sleep_multiplier_ct(DSA0_Data * dsa0);
+void   dsa0_set_sleep_multiplier_ct(DSA0_Data * dsa0, int multiplier_ct);
+void   dsa0_bump_sleep_multiplier_changer_ct(DSA0_Data * dsa0);
 
 // Reporting
-void   report_display_sleep_data(Per_Display_Data * data, int depth);
-void   report_all_display_sleep_data(int depth);
+void   report_dsa0_data(DSA0_Data * data, int depth);
+void   report_all_dsa0_data(int depth);
+
+
+// Apply a function to all DSA0_Data records
+typedef void (*Dsa0_Func)(DSA0_Data * data, void * arg);   // Template for function to apply
+void dsa0_apply_all(Dsa0_Func func, void * arg);
+void dsa0_apply_all_sorted(Dsa0_Func func, void * arg);
+
 
 // Module Initialization
-void   init_display_sleep_data();
+void   init_dsa0();
 
-#endif /* DISPLAY_SLEEP_DATA_H_ */
+#endif /* DSA0_H_ */

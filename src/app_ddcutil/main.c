@@ -50,9 +50,11 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/ddc_packets.h"
+#include "base/display_retry_data.h"
 #include "base/displays.h"
+#include "base/dsa0.h"
+#include "base/dsa1.h"
 #include "base/dsa2.h"
-#include <base/dsa1.h>
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
 #include "base/parms.h"
@@ -60,8 +62,6 @@
 #include "base/sleep.h"
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
-#include "base/display_retry_data.h"
-#include "base/display_sleep_data.h"
 
 #include "i2c/i2c_sysfs.h"
 
@@ -139,16 +139,10 @@ report_performance_options(int depth)
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                 %s", sbool( is_deferred_sleep_enabled() ) );
-#ifdef OLD   // SLEEP_SUPPRESSION
-      rpt_vstring(d1, "Sleep suppression (reduced sleeps) enabled:  %s", sbool( is_sleep_suppression_enabled() ) );
-#endif
-      bool dsa_enabled =  dsd_get_dsa_enabled_default();
-      rpt_vstring(d1, "Dynamic sleep adjustment enabled:       %s", sbool(dsa_enabled) );
-#ifdef TSD
-      if ( dsa_enabled )
-        rpt_vstring(d1, "Sleep multiplier factor:           %5.2f", dsd_get_sleep_multiplier_factor() );
-#endif
+      rpt_vstring(d1, "Dynamic sleep algorithm 0 enabled:      %s", sbool(dsa0_enabled) );
+      rpt_vstring(d1, "Dynamic sleep algorithm 1 enabled:      %s", sbool(dsa1_enabled));
       rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_enabled));
+      rpt_vstring(d1, "Default sleep multiplier factor:     %7.2f", pdd_get_default_sleep_multiplier_factor() );
       rpt_nl();
 }
 
@@ -549,10 +543,6 @@ execute_cmd_with_optional_display_handle(
 
    case CMDID_LOADVCP:
       {
-         // check_dynamic_features();
-         // ensure_vcp_version_set();
-
-         dsd_dsa_enable(parsed_cmd->flags & CMD_FLAG_DSA);
          // loadvcp will search monitors to find the one matching the
          // identifiers in the record
          ddc_ensure_displays_detected();
@@ -800,10 +790,6 @@ main(int argc, char *argv[]) {
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
    if (parsed_cmd->flags & CMD_FLAG_FORCE)
       callopts |= CALLOPT_FORCE;
-
-   // affects all current threads and new threads
-   // tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
-   dsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");

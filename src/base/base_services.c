@@ -1,5 +1,5 @@
 /** @file base_services.c
-#include <base/dsa1.h>
+ *
  *  Initialize and release base services.
  */
 
@@ -12,6 +12,7 @@
 #include "ddc_packets.h"
 #include "displays.h"
 #include "dynamic_features.h"
+#include "dsa0.h"
 #include "dsa1.h"
 #include "dsa2.h"
 #include "execution_stats.h"
@@ -19,10 +20,9 @@
 #include "per_display_data.h"
 #include "per_thread_data.h"
 #include "sleep.h"
-#include "display_sleep_data.h"
 #include "tuned_sleep.h"
 
-#include <base_services.h>
+#include "base_services.h"
 
 /** Master initialization function for files in subdirectory base
  */
@@ -33,10 +33,9 @@ void init_base_services() {
    errinfo_init(psc_name, psc_desc);
    init_base_dynamic_features();
    init_ddc_packets();
-   init_display_sleep_data();
+   init_dsa0();
    init_dsa1();
    init_dsa2();
-   init_dsa1();
    init_execution_stats();
    // init_linux_errno();
    init_per_display_data();

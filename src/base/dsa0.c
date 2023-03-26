@@ -1,4 +1,4 @@
-/** @file display_sleep_data.c
+/** @file dsa0.c
  *
  *  Struct Thread_Sleep_Data maintains all per-display sleep data.
  *
@@ -21,22 +21,35 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 
-#include "base/parms.h"
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/parms.h"
+#include "base/per_display_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
-#include "base/per_display_data.h"
 
-#include "ddc/ddc_displays.h"    // !!!
+#include "base/dsa0.h"
 
-#include "base/display_sleep_data.h"
 
-static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
+// static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;   // unused
+
+
+bool dsa0_enabled = false;
 
 //
-// Sleep time adjustment
+// Sleep time adjustment - old notes
 //
+
+
+void dsa0_enable(bool enabled) {
+   dsa0_enabled = enabled;
+}
+
+bool dsa0_is_enabledt() {
+   return dsa0_enabled;
+}
+
+
 
 /* Two multipliers are applied to the sleep time determined from the
  * IO mode and event type.
@@ -47,11 +60,66 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_BASE;
  * sleep_multiplier_ct: Per display adjustment,initiated by IO retries.
  */
 
-// Defaults for new displays.  Default sleep multiplier factor can be adjusted,
-// Default sleep multiplier count cannot.
-static       double default_sleep_multiplier_factor = 1.0; // may be changed by --sleep-multiplier option
-static const int    default_sleep_multiplier_count  = 1;
-static       bool   default_dynamic_sleep_enabled   = false;
+
+DSA0_Data ** dsa0_data_recs;
+
+
+DSA0_Data * new_dsa0_data(int busno) {
+   DSA0_Data * result = calloc(1,sizeof(DSA0_Data));
+   result->busno = busno;
+   result->sleep_multiplier_ct = 1;
+   result->highest_sleep_multiplier_ct = 1;
+   return result;
+}
+
+
+/** Returns the #Results_Table for an I2C bus number
+ *
+ *  @param  bus number
+ *  @return pointer to #Results_Table (may be newly created)
+ */
+DSA0_Data * dsa0_get_dsa0_data(int busno) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d", busno);
+   assert(busno <= I2C_BUS_MAX);
+   DSA0_Data * dsa0_data = dsa0_data_recs[busno];
+   if (!dsa0_data) {
+      dsa0_data = new_dsa0_data(busno);
+      dsa0_data_recs[busno] =   dsa0_data;
+   }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning   dsa0_data=%p", dsa0_data);
+   return dsa0_data;
+}
+
+
+
+void dsa0_reset(DSA0_Data * dsa0) {
+   dsa0->sleep_multiplier_ct = 1   ;         // can be changed by retry logic - this is a factor
+   dsa0->highest_sleep_multiplier_ct = 1;     // high water mark
+   dsa0->sleep_multiplier_changer_ct = 0;      // number of function calls that adjusted multiplier ct
+   dsa0->adjusted_sleep_multiplier = 1.0;
+}
+
+
+double  dsa0_get_adjusted_sleep_multiplier(DSA0_Data * dsa0) {
+   return dsa0->adjusted_sleep_multiplier;
+}
+
+void dsa0_note_retryable_failure(DSA0_Data* dsa0, int remaining_tries) {
+   dsa0->sleep_multiplier_ct++;
+   if (dsa0->sleep_multiplier_ct > dsa0->highest_sleep_multiplier_ct)
+      dsa0->highest_sleep_multiplier_ct = dsa0->sleep_multiplier_ct;
+   dsa0->sleep_multiplier_changer_ct++;
+   dsa0->adjusted_sleep_multiplier = dsa0->sleep_multiplier_ct;
+}
+
+void         dsa0_record_final_by_pdd(Per_Display_Data * pdd,  DDCA_Status ddcrc, int retries) {
+}
+
+
+
+
+
 
 
 //
@@ -64,40 +132,22 @@ static       bool   default_dynamic_sleep_enabled   = false;
  *  @param  data   pointer to #Per_Display_Data struct
  *  @param  depth  logical indentation level
  */
-void report_display_sleep_data(Per_Display_Data * data, int depth) {
+void report_dsa0_data(DSA0_Data * data, int depth) {
    pdd_cross_display_operation_block(__func__);
    int d1 = depth+1;
    int d2 = depth+2;
-//   rpt_vstring(depth, "Thread %d sleep data:", data->display_id);
-   rpt_vstring(depth, "Sleep data for display on %s", dpath_short_name_t(&data->dpath));
-   rpt_label(  d1,   "General:");
+   rpt_label(  d1,   "Dynamic sleep adjustment detail (algorithm 0):");
    // if (data->dref)
    //    rpt_vstring(d2,    "Display:                           %s", dref_repr_t(data->dref) );
-   rpt_vstring(d2,    "Total sleep time (millis):         %d",   data->total_sleep_time_millis);
-   rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
-   rpt_vstring(d2,    "Dynamic sleep enabled:             %s",   sbool(data->dynamic_sleep_enabled));
-
+#ifdef USE_DSA0
+   rpt_vstring(d2,    "Total sleep time (millis):         %d",   data->total_sleep_time_millis);   // not defined
+#endif
+//   rpt_vstring(d2,    "Current sleep-multiplier factor:  %5.2f", data->sleep_multiplier_factor);
    rpt_label(  d1,    "Sleep multiplier adjustment:");
    rpt_vstring(d2,    "Current adjustment:                %d",   data->sleep_multiplier_ct);
    rpt_vstring(d2,    "Highest adjustment:                %d",   data->highest_sleep_multiplier_ct);
    rpt_label(  d2,    "Number of function calls");
-   rpt_vstring(d2,    "   that performed adjustment:      %d",   data->sleep_multipler_changer_ct);
-
-   if ( data->dynamic_sleep_enabled ) {
-      rpt_label(  d1, "Dynamic Sleep Adjustment:  ");
-      rpt_vstring(d2, "Total successful reads:           %5d",   data->total_ok_status_count);
-      rpt_vstring(d2, "Total reads with DDC error:       %5d",   data->total_error_status_count);
-      rpt_vstring(d2, "Total ignored status codes:       %5d",   data->total_other_status_ct);
-      rpt_vstring(d2, "Current sleep adjustment factor:  %5.2f", data->cur_sleep_adjustment_factor);
-//    rpt_vstring(d2, "Thread adjustment increment:      %5.2f", data->display_adjustment_increment);
-      rpt_vstring(d2, "Adjustment check interval         %5d",   data->adjustment_check_interval);
-
-      rpt_vstring(d2, "Calls since last check:           %5d",   data->calls_since_last_check);
-      rpt_vstring(d2, "Total adjustment checks:          %5d",   data->total_adjustment_checks);
-      rpt_vstring(d2, "Number of adjustments:            %5d",   data->total_adjustment_ct);
-//    rpt_vstring(d2, "Number of excess adjustments:     %5d",   data->total_max_adjustment_ct);
-      rpt_vstring(d2, "Final sleep adjustment:           %5.2f", data->cur_sleep_adjustment_factor);
-   }
+   rpt_vstring(d2,    "   that performed adjustment:      %d",   data->sleep_multiplier_changer_ct);
 }
 
 
@@ -106,11 +156,28 @@ void report_display_sleep_data(Per_Display_Data * data, int depth) {
  *  @param  data pointer to #Per_Display_Data instance
  *  @param  arg  an integer holding the depth argument
  */
-void wrap_report_display_sleep_data(Per_Display_Data * data, void * arg) {
+void wrap_report_dsa0_data(DSA0_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    // rpt_vstring(depth, "Per_Display_Data:");  // needed?
-   report_display_sleep_data(data, depth);
+   report_dsa0_data(data, depth);
 }
+
+void dsa0_apply_all(Dsa0_Func func, void * arg) {
+   pdd_cross_display_operation_start(__func__);
+   // bool debug = false;
+   // assert(per_display_data_hash);    // allocated by init_display_data_module()
+
+   for (int ndx = 0; ndx <= I2C_BUS_MAX; ndx++) {
+      if (dsa0_data_recs[ndx]) {
+        DSA0_Data * data = dsa0_data_recs[ndx];
+       //  DBGMSF(debug, "Thread id: %d", data->dpath);
+         func(data, arg);
+      }
+   }
+   pdd_cross_display_operation_end(__func__);
+}
+
+
 
 
 /** Report all #Per_Display_Data structs.  Note that this report includes
@@ -118,18 +185,19 @@ void wrap_report_display_sleep_data(Per_Display_Data * data, void * arg) {
  *
  *  @param depth  logical indentation depth
  */
-void report_all_display_sleep_data(int depth) {
+void report_all_dsa0_data(int depth) {
    // int d1 = depth+1;
    bool debug = false;
    DBGMSF(debug, "Starting");
    assert(per_display_data_hash);
-   rpt_label(depth, "Per display sleep data");
+   rpt_label(depth, "(dsa0) Per display sleep data");
    // For debugging per-display locks
    // rpt_vstring(d1, "ptd lock count:                  %d", pdd_lock_count);
    // rpt_vstring(d1, "pdd_unlock_count:                %d", pdd_unlock_count);
    // rpt_vstring(d1, "cross display operations blocked: %d", cross_display_operation_blocked_count);
 
-   pdd_apply_all_sorted(&wrap_report_display_sleep_data, GINT_TO_POINTER(depth+1) );
+   dsa0_apply_all(&wrap_report_dsa0_data, GINT_TO_POINTER(depth+1));   // TEMP NOT SORTED
+   // pdd_apply_all_sorted(&wrap_report_dsa0_data, GINT_TO_POINTER(depth+1) );
    DBGMSF(debug, "Done");
    rpt_nl();
 }
@@ -140,61 +208,24 @@ void report_all_display_sleep_data(int depth) {
 //
 
 // initialize a single instance, called from init_per_display_data()
-void dsd_init_display_sleep_data(Per_Display_Data * data) {
+void dsa0_init_dsa0_data(DSA0_Data * data) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data=%p", (void*)data);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data=%p, busno=%d", (void*)data, data->busno);
 
-   data->initialized = true;
-   data->dynamic_sleep_enabled       = default_dynamic_sleep_enabled;
-   data->sleep_multiplier_ct         = default_sleep_multiplier_count;
-   data->highest_sleep_multiplier_ct = 1;
+   data->sleep_multiplier_ct          = 1;
+   data->highest_sleep_multiplier_ct  = 1;
+   data->sleep_multiplier_changer_ct  = 0;
+   data->adjusted_sleep_multiplier    = 1.0;
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "Setting data->sleep_multiplier_factor = default_sleep_multiplier_factor = %6.3f",
-         default_sleep_multiplier_factor);
-   data->sleep_multiplier_factor      = default_sleep_multiplier_factor;
-   // data->display_adjustment_increment = default_sleep_multiplier_factor;
-   data->cur_sleep_adjustment_factor  = 1.0;
-   data->adjustment_check_interval    = 2;
-   data->total_sleep_time_millis      = 0;
-   data->display_sleep_data_defined   = true;   // vs data->initialized
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "sleep_multiplier_factor = %5.2f", data->sleep_multiplier_factor);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
-
-
-#ifdef UNUSED
-void reset_display_sleep_data(Per_Display_Data * data) {
-   pdd_cross_display_operation_block();
-   data->highest_sleep_multiplier_ct = data->sleep_multiplier_ct;
-   data->sleep_multipler_changer_ct = 0;
-   data->total_ok_status_count = 0;
-   data->total_error_status_count = 0;
-   data->total_other_status_ct = 0;
-   data->total_adjustment_checks = 0;
-   data->total_adjustment_ct = 0;
-   data->total_max_adjustment_ct = 0;
-   data->total_sleep_time_millis = 0;
-}
-
-
-void wrap_reset_display_sleep_data(Per_Display_Data * data, void * arg) {
-   reset_display_sleep_data(data);
-}
-#endif
 
 
 //
 // Operations on all instances
 //
 
-#ifdef UNUSED
-void reset_all_display_sleep_data() {
-   if (per_display_data_hash) {
-      pdd_apply_all_sorted(&wrap_reset_display_sleep_data, NULL );
-   }
-}
-#endif
+
 
 
 //
@@ -213,111 +244,18 @@ void reset_all_display_sleep_data() {
  * It is normally 1.
  */
 
-//
-// Sleep Multiplier Factor
-//
-
-/** Sets the default sleep multiplier factor, used for the creation of any new displays.
- * This is a global value and is a floating point number.
- *
- *  @param multiplier
- *
- *  @remark Intended for use only during program initialization.  If used
- *          more generally, get and set of default sleep multiplier needs to
- *          be protected by a lock.
- *  @todo
- *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
- */
-void dsd_set_default_sleep_multiplier_factor(double multiplier) {
-   bool debug = false;
-   DBGTRC(debug, DDCA_TRC_NONE,
-                    "Executing. Setting default_sleep_multiplier_factor = %6.3f", multiplier);
-   assert(multiplier >= 0);
-   default_sleep_multiplier_factor = multiplier;
-}
-
-
-/** Gets the default sleep multiplier factor.
- *
- *  @return sleep multiplier factor
- */
-double dsd_get_default_sleep_multiplier_factor() {
-   bool debug = false;
-   DBGTRC(debug, DDCA_TRC_NONE,
-          "Returning default_sleep_multiplier_factor = %6.3f", default_sleep_multiplier_factor);
-   return default_sleep_multiplier_factor;
-}
-
-
-/** Gets the sleep multiplier factor for the current display.
- *
- *  @return sleep multiplier factor
- */
-double dsd_get_sleep_multiplier_factor(Per_Display_Data * data) {
-   bool debug = false;
-   // Per_Display_Data * data = dsd_get_display_sleep_data();
-   double result = data->sleep_multiplier_factor;
-   DBGTRC(debug, TRACE_GROUP, "Returning %6.3f", result );
-   return result;
-}
-
-
-/** Sets the sleep multiplier factor for the current display.
- *
- *  @param factor  sleep multiplier factor
- */
-void dsd_set_sleep_multiplier_factor(Per_Display_Data * data, double factor) {
-   bool debug = false;
-
-   // Need to guard with mutex!
-
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "factor = %6.3f", factor);
-   assert(factor >= 0);
-   // pdd_cross_display_operation_block();
-   // Per_Display_Data * data = dsd_get_display_sleep_data();
-   data->sleep_multiplier_factor = factor;
-   // data->display_adjustment_increment = factor;
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
-}
-
-
-#ifdef UNUSED
-default_dynamic_sleep_enabled
-
-void set_global_sleep_multiplier_factor(double factor) {
-   bool debug = false;
-   DBGMSF(debug, "factor = %5.2f", factor);
-   global_sleep_multiplier_factor = factor;
-   // set_sleep_multiplier_factor_all(factor);   // only applies to new displays, do not change existing displays
-}
-
-
-double get_global_sleep_multiplier_factor() {
-   return global_sleep_multiplier_factor;
-}
-#endif
-
 
 //
 // Sleep Multiplier Count
 //
 
-/** Gets the multiplier count for the specified display.
- *
- *  @return multiplier count
- */
-int dsd_get_sleep_multiplier_ct(Per_Display_Data * data) {
-   return data->sleep_multiplier_ct;
-}
-
-
 /** Sets the multiplier count for the specified display.
  *
  *  @param multipler_ct  value to set
  */
-void dsd_set_sleep_multiplier_ct(Per_Display_Data * data , int multiplier_ct) {
-   bool debug = false;
-   DBGMSF(debug, "Setting sleep_multiplier_ct = %d for current display", multiplier_ct);
+void dsa0_set_sleep_multiplier_ct(DSA0_Data * data , int multiplier_ct) {
+   bool debug = true;
+   DBGMSF(debug, "Setting sleep_multiplier_ct = %d for current display on bus %d", multiplier_ct, data->busno);
    assert(multiplier_ct > 0 && multiplier_ct < 100);
    pdd_cross_display_operation_start(__func__);
    data->sleep_multiplier_ct = multiplier_ct;
@@ -330,147 +268,30 @@ void dsd_set_sleep_multiplier_ct(Per_Display_Data * data , int multiplier_ct) {
 /** Increment the number of function executions on a specified display
  *  that changed the sleep multiplier count.
  */
-void dsd_bump_sleep_multiplier_changer_ct(Per_Display_Data * data) {
+void dsa0_bump_sleep_multiplier_changer_ct(DSA0_Data * data) {
    // pdd_cross_display_operation_block();
-   data->sleep_multipler_changer_ct++;
+   bool debug = true;
+   data->sleep_multiplier_changer_ct++;
+   DBGMSF(debug, "Executing.  New changer ct = %d", data->sleep_multiplier_changer_ct);
 }
-
-
-#ifdef UNUSED
-// apply the sleep-multiplier to any existing displays
-// it will be set for new displays from global_sleep_multiplier_factor
-void set_sleep_multiplier_factor_all(double factor) {
-   // needs mutex
-   bool debug = false;
-   DBGMSF(debug, "Starting. factor = %5.2f", factor);
-   if (display_sleep_data_hash) {
-      GHashTableIter iter;
-      gpointer key, value;
-      g_hash_table_iter_init (&iter,display_sleep_data_hash);
-      while (g_hash_table_iter_next (&iter, &key, &value)) {
-         Per_Display_Data * data = value;
-         DBGMSF(debug, "Thread id: %d", data->display_id);
-         data->sleep_multiplier_factor = factor;
-      }
-   }
-}
-#endif
 
 
 //
 // Dynamic Sleep
 //
 
-#ifdef UNUSED
-/** Enable or disable dynamic sleep adjustment on the current display
- *
- *  @param enabled   true/false i.e. enabled, disabled
- */
-void dsd_enable_dynamic_sleep(bool enabled) {
-   bool debug = false;
-   DBGMSF(debug, "enabled = %s", sbool(enabled));
-   pdd_cross_display_operation_start();
-   // bool this_function_owns_lock = pdd_lock_if_unlocked();
-   Per_Display_Data * data = dsd_get_display_sleep_data();
-   data->dynamic_sleep_enabled = enabled;
-   pdd_cross_display_operation_end();
-   // pdd_unlock_if_needed(this_function_owns_lock);
-}
-#endif
 
 
-/** Enable or disable dynamic sleep adjustment on all existing displays
- *  and any newly detected displays
- *
- *  @param enable  true/false
- */
-void dsd_enable_dsa_all(bool enable) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. enable = %s", sbool(enable) );
-   // needs mutex
-   pdd_cross_display_operation_start(__func__);
-   default_dynamic_sleep_enabled = enable;  // for initializing new displays
-
-   if (per_display_data_hash) {
-      GHashTableIter iter;
-      gpointer key, value;
-      g_hash_table_iter_init (&iter,per_display_data_hash);
-      while (g_hash_table_iter_next (&iter, &key, &value)) {
-         Per_Display_Data * data = value;
-         DBGMSF(debug, "Display: %s", dpath_repr_t(&data->dpath));
-         data->dynamic_sleep_enabled = enable;
-      }
-   }
-
-#ifdef NEW
-   GPtrArray * drefs = ddc_get_all_displays();
-   for (int ndx = 0; ndx < drefs->len; ndx++) {
-      Display_Ref * dref = g_ptr_array_index(drefs, ndx);
-      Per_Display_Data * pdd = dref->pdd;
-      pdd->dynamic_sleep_enabled = enable;
-   }
-#endif
-
-   pdd_cross_display_operation_end(__func__);
-   DBGMSF(debug, "Done");
-}
 
 
-/** Enable or disable dynamic sleep adjustment for the current display.
- *
- *  @param true/false
- */
-void dsd_dsa_enable(bool enabled) {
-#ifdef OUT
-   pdd_cross_display_operation_block();
-   Per_Display_Data * tsd = dsd_get_display_sleep_data();
-   tsd->dynamic_sleep_enabled = enabled;
-#endif
-}
 
+void init_dsa0() {
+   RTTI_ADD_FUNC(dsa0_init_dsa0_data);
+//    RTTI_ADD_FUNC(dsd_get_default_sleep_multiplier_factor);
+//    RTTI_ADD_FUNC(dsd_set_default_sleep_multiplier_factor);
+//   RTTI_ADD_FUNC(dsd_get_sleep_multiplier_factor);
+   // RTTI_ADD_FUNC(_set_sleep_multiplier_factor);
 
-/** Enable or disable dynamic sleep adjustment for all current displays and new displays
- *
- *  @param enabled  true/false
- */
-void dsd_dsa_enable_globally(bool enabled) {
-   bool debug = false;
-   DBGMSF(debug, "Executing.  enabled = %s", sbool(enabled));
-   pdd_cross_display_operation_start(__func__);
-   default_dynamic_sleep_enabled = enabled;
-   dsd_enable_dsa_all(enabled) ;
-   pdd_cross_display_operation_end(__func__);
-}
-
-
-#ifdef UNUSED
-// Is dynamic sleep enabled on the current display?
-bool dsd_dsa_is_enabled() {
-   pdd_cross_display_operation_start();     // needed
-   Per_Display_Data * tsd = dsd_get_display_sleep_data();
-   bool result = tsd->dynamic_sleep_enabled;
-   pdd_cross_display_operation_end();
-   return result;
-}
-#endif
-
-#ifdef UNUSED
-void dsd_set_dsa_enabled_default(bool enabled) {
-   default_dynamic_sleep_enabled = enabled;
-}
-#endif
-
-
-bool dsd_get_dsa_enabled_default() {
-   return default_dynamic_sleep_enabled;
-}
-
-
-void init_display_sleep_data() {
-   RTTI_ADD_FUNC(dsd_init_display_sleep_data);
-   RTTI_ADD_FUNC(dsd_get_default_sleep_multiplier_factor);
-   RTTI_ADD_FUNC(dsd_set_default_sleep_multiplier_factor);
-   RTTI_ADD_FUNC(dsd_get_sleep_multiplier_factor);
-   RTTI_ADD_FUNC(dsd_set_sleep_multiplier_factor);
+   dsa0_data_recs = calloc(I2C_BUS_MAX+1, sizeof(DSA0_Data*));
 }
 
