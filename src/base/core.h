@@ -302,6 +302,10 @@ bool dbgtrc_returning_expression(
     dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__)
 
+#define DBGTRC_EXECUTED(debug_flag, trace_group, format, ...) \
+    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "Executed  "format, ##__VA_ARGS__)
+
 #define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
     dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
