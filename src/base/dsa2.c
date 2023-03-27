@@ -359,7 +359,6 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(adjustments_up);
    ONE_INT_FIELD(adjustments_down);
    ONE_INT_FIELD(successful_observation_ct);
-   ONE_INT_FIELD(reset_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
    rpt_bool("found_on_current_execution", NULL, rtable->found_on_current_execution, d1);
@@ -380,6 +379,7 @@ static
 Results_Table * new_results_table(int busno) {
    Results_Table * rtable = calloc(1, sizeof(Results_Table));
    rtable->busno = busno;
+   rtable->initial_step = initial_step;
    rtable->cur_step = initial_step;
    rtable->lookback = Default_Look_Back;
    rtable->recent_values = cirb_new(MAX_RECENT_VALUES);
@@ -387,7 +387,6 @@ Results_Table * new_results_table(int busno) {
    rtable->min_ok_step = 0;
    rtable->found_failure_step = false;
 
-   rtable->initial_step     = rtable->cur_step;
    rtable->initial_step_from_cache = false;
    rtable->initial_lookback = rtable->lookback;
    return rtable;
@@ -415,8 +414,8 @@ free_results_table(Results_Table * rtable) {
  */
 static
 Results_Table * dsa2_get_results_table(int busno, bool create_if_not_found) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d", busno);
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
    if (!rtable && create_if_not_found) {
@@ -463,7 +462,7 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, float multiplier) {
  */
 static
 int multiplier_to_step(float multiplier) {
-   bool debug = false;
+   bool debug = true;
    int imult = multiplier * 100;
 
    int ndx = 0;
@@ -473,7 +472,7 @@ int multiplier_to_step(float multiplier) {
    }
 
    int step = (ndx == step_ct) ? step_ct-1 : ndx;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
                                          multiplier, imult, step, step, steps[step]);
    return step;
 }
@@ -498,18 +497,18 @@ void test_float_to_step_conversion() {
  *  @param multiplier sleep multiplier value
  */
 void dsa2_reset_multiplier(float multiplier) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "multiplier=%7.3f", multiplier);
    initial_step = multiplier_to_step(multiplier);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing Results_Table for /dev/i2c-%d", rtable->busno);
          rtable->cur_step = initial_step;
          rtable->found_failure_step = false;
          rtable->min_ok_step = 0;
 
-         rtable->reset_ct++;
-         rtable->initial_step = initial_step;
+         rtable->cur_retry_loop_step = initial_step;
          rtable->adjustments_down = 0;
          rtable->adjustments_up = 0;
          rtable->successful_observation_ct = 0;
@@ -566,37 +565,6 @@ too_many_errors(int max_tryct, int total_tryct, int interval) {
           max_tryct, total_tryct, interval, sbool(result));
    return result;
 }
-
-#ifdef OLD
-/**
- *  Returns the next retry loop step to use, adjusting upwards
- *  if necessary.
- *
- */
-static int
-next_retry_step(Results_Table * rtable, int tryctr) {
-   bool debug = false;
-   rtable->cur_retry_loop_ct = tryctr;
-   int maxtries = 10;     // ***TEMP***  Get this from where?
-
-   // alt rtable->cur_retry_loop_ct++;
-   int remaining_steps = step_ct - rtable->cur_retry_loop_step;
-   int remaining_tries = maxtries - tryctr;
-   int adjustment = 0;
-   if (remaining_tries < 3)
-      adjustment = remaining_tries;
-   else if (remaining_tries < 6)
-      adjustment = remaining_steps/2;
-   else
-      adjustment = remaining_steps/3;
-   int next_step = tryctr + adjustment;
-
-   rtable->cur_retry_loop_step = next_step;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "tryctr-%d, maxtries=%d, remaining_tries=%d, returning %d",
-                                tryctr, maxtries, remaining_tries, next_step);
-   return next_step;
-}
-#endif
 
 
 /** Calculates the step to be used on the next try loop iteration after
@@ -971,7 +939,6 @@ void dsa2_report(Results_Table * rtable, int depth) {
    rpt_vstring(d1, "Adjustments down:   %3d", rtable->adjustments_down);
    rpt_vstring(d1, "All tries:          %3d", rtable->successful_observation_ct);
    rpt_vstring(d1, "Retryable Failures: %3d", rtable->retryable_failure_ct);
-   rpt_vstring(d1, "Resets:             %3d", rtable->reset_ct);
 }
 
 
