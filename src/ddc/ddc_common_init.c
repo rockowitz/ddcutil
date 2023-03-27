@@ -206,20 +206,9 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       ddc_set_async_threshold(threshold);
    }
 
-   if (parsed_cmd->sleep_multiplier >= 0 && parsed_cmd->sleep_multiplier != 1) {
-      // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current displays
-      pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new displays
-
-#ifdef USE_DSA1
-      // dsd_set_sleep_multiplier_factor(parsed_cmd->sleep_multiplier);         // for current thread
-      // dsd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier); // for new threads
-      // if (parsed_cmd->sleep_multiplier > 1.0f && (parsed_cmd->flags & CMD_FLAG_DSA) )
-      if (parsed_cmd->flags & CMD_FLAG_DSA1)
-      {
-         // tsd_dsa_enable_globally(true);
-         dsd_dsa_enable_globally(true);
-      }
-#endif
+   if (parsed_cmd->sleep_multiplier >= 0) {
+      bool explicit = parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER;
+      pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, explicit);
    }
 
    dsa1_enabled = parsed_cmd->flags & CMD_FLAG_DSA1;
@@ -227,13 +216,15 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    dsa0_enabled = parsed_cmd->flags & CMD_FLAG_DSA0;
    assert(!(dsa1_enabled && dsa2_enabled));
    if (dsa2_enabled) {
-      dsa2_restore_persistent_stats();
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
+         dsa2_erase_persistent_stats();
       }
+      else
+         dsa2_restore_persistent_stats();
    }
    else {
-      dsa2_erase_persistent_stats();
+      dsa2_erase_persistent_stats();   // do i want to do this ?
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
