@@ -910,7 +910,7 @@ ddca_set_default_sleep_multiplier(double multiplier)
    if (multiplier >= 0.0 && multiplier <= 10.0) {
 // #ifdef TSD
       old_value = pdd_get_default_sleep_multiplier_factor();
-      pdd_set_default_sleep_multiplier_factor(multiplier);
+      pdd_set_default_sleep_multiplier_factor(multiplier, true);
 // #endif
     }
 
