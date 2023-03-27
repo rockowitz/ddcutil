@@ -16,6 +16,7 @@
 extern const bool DSA2_Enabled_Default;
 extern bool       dsa2_enabled;
 
+bool         dsa2_is_from_cache(DDCA_IO_Path dpath);
 void         dsa2_reset_multiplier(float multiplier);
 float        dsa2_get_adjusted_sleep_multiplier(DDCA_IO_Path dpath);
 void         dsa2_note_retryable_failure(DDCA_IO_Path dpath, int remaining_tries);
