@@ -46,7 +46,8 @@ static bool     debug_mutex = false;
        int      pdd_unlock_count = 0;
        int      pdd_cross_thread_operation_blocked_count = 0;
 
-double default_sleep_multiplier_factor = 1.0; // may be changed by --sleep-multiplier option
+double user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
+bool   explicit_user_sleep_multiplier = false;
 
 void dbgrpt_per_display_data_locks(int depth) {
    rpt_vstring(depth, "pdd_lock_count:                            %-4d", pdd_lock_count);
@@ -239,14 +240,16 @@ void per_display_data_destroy(void * data) {
  *  @todo
  *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
  */
-void pdd_set_default_sleep_multiplier_factor(double multiplier) {
+void pdd_set_default_sleep_multiplier_factor(double multiplier, bool explicit) {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_NONE,
-                    "Executing. Setting default_sleep_multiplier_factor = %6.3f", multiplier);
+                    "Executing. Setting default_sleep_multiplier_factor = %6.3f, explicit = %s",
+                    multiplier, sbool(explicit));
    assert(multiplier >= 0);
    if (multiplier == 0.0f)
       multiplier = .01;
-   default_sleep_multiplier_factor = multiplier;
+   user_sleep_multiplier = multiplier;
+   explicit_user_sleep_multiplier = explicit;
 }
 
 
@@ -257,8 +260,8 @@ void pdd_set_default_sleep_multiplier_factor(double multiplier) {
 double pdd_get_default_sleep_multiplier_factor() {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_NONE,
-          "Returning default_sleep_multiplier_factor = %6.3f", default_sleep_multiplier_factor);
-   return default_sleep_multiplier_factor;
+          "Returning default_sleep_multiplier_factor = %6.3f", user_sleep_multiplier);
+   return user_sleep_multiplier;
 }
 
 
@@ -306,9 +309,7 @@ void set_sleep_multiplier_factor_all(double factor) {
       }
    }
 }
-#endif
 
-#ifdef UNUSED
 default_dynamic_sleep_enabled
 
 void set_global_sleep_multiplier_factor(double factor) {
@@ -325,27 +326,26 @@ double get_global_sleep_multiplier_factor() {
 #endif
 
 
-
-
-
-
-
 //
 // Locking
 //
 
 void pdd_init_pdd(Per_Display_Data * pdd) {
    bool debug = false;
-   DBGMSF(debug, "Initializing Per_Display_Data for %s", dpath_repr_t(&pdd->dpath));
-   pdd->user_sleep_multiplier              = default_sleep_multiplier_factor;
-   pdd->initial_adjusted_sleep_multiplier  = default_sleep_multiplier_factor;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "Initializing Per_Display_Data for %s", dpath_repr_t(&pdd->dpath));
+   pdd->user_sleep_multiplier                      = user_sleep_multiplier;
+   pdd->initial_adjusted_sleep_multiplier          = -1.0f;
    pdd->final_successful_adjusted_sleep_multiplier = -1.0f;
-   pdd->most_recent_adjusted_sleep_multiplier      = -1.0f;
    pdd->total_sleep_time_millis = 0;
    if (dsa0_enabled)
       pdd->dsa0_data = dsa0_get_dsa0_data(pdd->dpath.path.i2c_busno);
+   if (dsa1_enabled)
+      pdd->dsa1_data = new_dsa1_data(pdd);
    drd_init_display_data(pdd);   // initialize the retry data section of Per_Display_Data
-   DBGMSF(debug, "Done.  Device = %s", dpath_repr_t(&pdd->dpath));
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Device = %s, user_sleep_multiplier=%4.2f", dpath_repr_t(&pdd->dpath), pdd->user_sleep_multiplier);
+   if (debug)
+      dbgrpt_per_display_data(pdd, 1);
 }
 
 
@@ -371,36 +371,43 @@ Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath, bool create_if_n
    bool this_function_owns_lock = pdd_lock_if_unlocked();
    assert(per_display_data_hash);    // allocated by init_display_data_module()
    int hval = dpath_hash(dpath);
-   Per_Display_Data * data = g_hash_table_lookup(per_display_data_hash, GINT_TO_POINTER(hval));
-   if (!data && create_if_not_found) {
+   Per_Display_Data * pdd = g_hash_table_lookup(per_display_data_hash, GINT_TO_POINTER(hval));
+   if (!pdd && create_if_not_found) {
       DBGTRC(debug, TRACE_GROUP, "Per_Display_Data not found for %s", dpath_repr_t(&dpath));
-      data = g_new0(Per_Display_Data, 1);
-      data->dpath = dpath;
-      if (dsa0_enabled)
-      data->dsa0_data = dsa0_get_dsa0_data(dpath.path.i2c_busno);
-      data->dsa1_data = new_dsa1_data(dpath.path.i2c_busno);
+      pdd = g_new0(Per_Display_Data, 1);
+      pdd->dpath = dpath;
       g_private_set(&pdd_lock_depth, GINT_TO_POINTER(0));
-      pdd_init_pdd(data);
+      pdd_init_pdd(pdd);
 
-      g_hash_table_insert(per_display_data_hash, GINT_TO_POINTER(hval), data);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Created Per_Display_Data struct for %s", dpath_repr_t(&data->dpath));
+      g_hash_table_insert(per_display_data_hash, GINT_TO_POINTER(hval), pdd);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Created Per_Display_Data struct for %s", dpath_repr_t(&pdd->dpath));
       DBGMSF(debug, "per_display_data_hash size=%d", g_hash_table_size(per_display_data_hash));
-      // if (debug)
-      //    dbgrpt_per_display_data(data, 1);
+      if (debug)
+         dbgrpt_per_display_data(pdd, 1);
    }
    pdd_unlock_if_needed(this_function_owns_lock);
    DBGTRC_NOPREFIX(  debug, TRACE_GROUP, "Device dpath:%s", dpath_repr_t(&dpath) );
-   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Per_Display_Data, dbgrpt_per_display_data, data);
-   return data;
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, Per_Display_Data, dbgrpt_per_display_data, pdd);
+   return pdd;
 }
 
-void pdd_record_adjusted_successful_sleep_multiplier_bounds(Per_Display_Data * pdd) {
+
+void pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool successful) {
    assert(pdd);
-   if (pdd->most_recent_adjusted_sleep_multiplier >= 0) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bus=%d, initial_adjusted_sleep_multiplier = %4.2f",
+         pdd->dpath.path.i2c_busno, pdd->initial_adjusted_sleep_multiplier);
+
+   double cur_sleep_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+   if (cur_sleep_multiplier >= 0) {
       if (pdd->initial_adjusted_sleep_multiplier < 0.0f)
-         pdd->initial_adjusted_sleep_multiplier = pdd->most_recent_adjusted_sleep_multiplier;
-      pdd->final_successful_adjusted_sleep_multiplier = pdd->most_recent_adjusted_sleep_multiplier;
+         pdd->initial_adjusted_sleep_multiplier = cur_sleep_multiplier;
+      if (successful)
+         pdd->final_successful_adjusted_sleep_multiplier = cur_sleep_multiplier;
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "cur_sleep_multiplier=%4.2f, initial_adjusted_sleep_multiplier = %4.2f, final_successful_adjusted_sleep_multiplier=%4.2f",
+         cur_sleep_multiplier, pdd->initial_adjusted_sleep_multiplier, pdd->final_successful_adjusted_sleep_multiplier);
 }
 
 
@@ -463,13 +470,9 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    rpt_structure_loc("Per_Display_Data",  data, depth);
  //rpt_int( "sizeof(Per_Display_Data)",   NULL, sizeof(Per_Display_Data),          d1);
    rpt_vstring(d1, "dpath                                                    : %s", dpath_repr_t(&data->dpath) );
-
    // Sleep multiplier adjustment:
-   rpt_vstring(d1, "adjusted_sleep_multiplier                                : %3.2f", data->adjusted_sleep_multiplier);
-
    rpt_vstring(d1, "initial_sleep_multiplier                                 : %3.2f", data->initial_adjusted_sleep_multiplier);
    rpt_vstring(d1, "final_sleep_multiplier                                   : %3.2f", data->final_successful_adjusted_sleep_multiplier);
-   rpt_vstring(d1, "most_recent_adjusted_sleep_multiplier                    : %3.2f", data->most_recent_adjusted_sleep_multiplier);
 
 
    // Maxtries history
@@ -542,6 +545,8 @@ void pdd_apply_all_sorted(Pdd_Func func, void * arg) {
 
 
 void pdd_reset_per_display_data(Per_Display_Data * data, void* arg ) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data = %p, dpath=%s", data, dpath_repr_t(&data->dpath));
 
    Per_Display_Data * pdd = data;
    pdd->total_sleep_time_millis = 0.0;
@@ -558,6 +563,7 @@ void pdd_reset_per_display_data(Per_Display_Data * data, void* arg ) {
          pdd->try_stats[retry_type].counters[ndx] = 0;
       }
    }
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -629,22 +635,24 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    rpt_vstring(depth, "Elapsed time report for display %s (pdd)", dpath_short_name_t(&pdd->dpath));
    int d1 = depth+1;
 
-   rpt_vstring(d1, "Initial sleep multiplier factor:%7.2f",  pdd->user_sleep_multiplier);
-   rpt_vstring(d1, "Initial adjusted multiplier:    %7.2f",  pdd->initial_adjusted_sleep_multiplier);
-   rpt_vstring(d1, "Final adjusted multiplier:      %7.2f",  pdd->final_successful_adjusted_sleep_multiplier);
-   rpt_vstring(d1, "Total sleep time (milliseconds):    %3d", pdd->total_sleep_time_millis);
+   char * s = (dsa2_enabled && dsa2_is_from_cache(pdd->dpath) ?   "  (from cache)" : "" );
+
+   rpt_vstring(d1, "User sleep multiplier factor:   %7.2f",   pdd->user_sleep_multiplier);
+   rpt_vstring(d1, "Initial adjusted multiplier:    %7.2f%s", pdd->initial_adjusted_sleep_multiplier, s);
+   rpt_vstring(d1, "Final adjusted multiplier:      %7.2f",   pdd->final_successful_adjusted_sleep_multiplier);
+   rpt_vstring(d1, "Total sleep time (milliseconds):  %5d",   pdd->total_sleep_time_millis);
    // if (debug || get_output_level() >= DDCA_OL_VV) {
    //    rpt_vstring(d1, "Internal data: (A)");
    // }
    rpt_nl();
 
-   report_display_all_types_data_by_data(false, pdd, depth);
+   // report_display_all_types_data_by_data(false, pdd, depth);
 
    if (dsa0_enabled) {
       assert(pdd->dsa0_data);
       report_dsa0_data(pdd->dsa0_data, d1);
    }
-   if (dsa1_enabled && pdd->dsa1_data) {
+   if (dsa1_enabled && pdd->dsa1_data && get_output_level() >= DDCA_OL_VERBOSE) {
       dsa1_report(pdd->dsa1_data, d1);
    }
    if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
@@ -655,7 +663,7 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
 
 
 void pdd_report_all_elapsed(int depth) {
-   rpt_label(depth, "PER DISPLAY ELAPSED DETAIL");
+   // rpt_label(depth, "PER DISPLAY ELAPSED DETAIL");
    for (int ndx = 0; ndx <= I2C_BUS_MAX; ndx++) {
       DDCA_IO_Path dpath;
       dpath.io_mode = DDCA_IO_I2C;
@@ -685,22 +693,18 @@ double pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    float result = 1.0f;
 
    if (dsa0_enabled) {
-      pdd->adjusted_sleep_multiplier = dsa0_get_adjusted_sleep_multiplier(pdd->dsa0_data);
-      result = pdd->adjusted_sleep_multiplier;
+      result = dsa0_get_adjusted_sleep_multiplier(pdd->dsa0_data);
    }
    else if (dsa1_enabled) {
-      pdd->adjusted_sleep_multiplier = dsa1_get_adjusted_sleep_multiplier(pdd->dsa1_data);
-      result = pdd->adjusted_sleep_multiplier;
+      result = dsa1_get_adjusted_sleep_multiplier(pdd->dsa1_data);
    }
    else if (dsa2_enabled) {
-      pdd->adjusted_sleep_multiplier = dsa2_get_adjusted_sleep_multiplier(pdd->dpath);
-      result = pdd->adjusted_sleep_multiplier;
+      result = dsa2_get_adjusted_sleep_multiplier(pdd->dpath);
    }
    else {
       result = pdd->user_sleep_multiplier;
    }
 
-   pdd->most_recent_adjusted_sleep_multiplier = result;
    return result;
 }
 
@@ -715,6 +719,7 @@ void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
    else if (dsa2_enabled) {
       dsa2_note_retryable_failure(pdd->dpath, remaining_tries);
    }
+   pdd_record_adjusted_sleep_multiplier_bounds(pdd, false);
 }
 
 
@@ -729,7 +734,7 @@ void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
       dsa2_record_final(pdd->dpath, ddcrc, retries);
    }
    if (ddcrc == 0)
-      pdd_record_adjusted_successful_sleep_multiplier_bounds(pdd);
+      pdd_record_adjusted_sleep_multiplier_bounds(pdd, true);
 }
 
 

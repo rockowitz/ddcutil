@@ -29,7 +29,7 @@ struct DSA0_Data;
 extern GHashTable *  per_display_data_hash;
 // extern GMutex        per_display_data_mutex;    // temp, replace by function calls
 
-extern double default_sleep_multiplier_factor;
+extern double user_sleep_multiplier;
 extern int    pdd_lock_count;
 extern int    pdd_unlock_count;
 extern int    pdd_cross_thread_operation_blocked_count;
@@ -40,10 +40,21 @@ struct {
     uint16_t         counters[MAX_MAX_TRIES+2];
 } Per_Display_Try_Stats;
 
+#ifdef UNUSED
+typedef enum {
+   Default_Initial_Multiplier,
+   Explicit_Initial_User_Multiplier,
+   Cached_Initial_Multiplier
+} Initial_Multiplier_Type;
+#endif
+
+
 typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
    double                 user_sleep_multiplier;           // set by user
-   double                 adjusted_sleep_multiplier;     //
+#ifdef UNUSED
+   Initial_Multiplier_Type initial_multiplier_type;
+#endif
    struct DSA0_Data *     dsa0_data;
    struct DSA1_Data *     dsa1_data;
    int                    total_sleep_time_millis;
@@ -54,7 +65,7 @@ typedef struct Per_Display_Data {
 } Per_Display_Data;
 
 // For new displays
-void   pdd_set_default_sleep_multiplier_factor(double multiplier);
+void   pdd_set_default_sleep_multiplier_factor(double multiplier, bool explicit);
 double pdd_get_default_sleep_multiplier_factor();
 
 //  Per display sleep-multiplier
@@ -83,7 +94,7 @@ void   pdd_report_all_display_status_counts(int depth);
 void   pdd_report_elapsed(Per_Display_Data * pdd, int depth);
 void   pdd_report_all_elapsed(int depth);
 
-void   pdd_record_adjusted_successful_sleep_multiplier_bounds(Per_Display_Data * pdd);
+void   pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool successful);
 
 void   pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier);
 double pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
@@ -95,7 +106,7 @@ float  pdd_get_sleep_multiplier_by_dh(Display_Handle * dh);
 void   pdd_note_retryable_failure_by_dh(Display_Handle * dh, int remaining_tries);
 void   pdd_record_final_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int retries);
 
-void init_per_display_data();
-void terminate_per_display_data();
+void   init_per_display_data();
+void   terminate_per_display_data();
 
 #endif /* PER_DISPLAY_DATA_H_ */
