@@ -24,8 +24,7 @@ extern bool       dsa1_enabled;
 
 typedef struct DSA1_Data {
    int    busno;
-   double                 adjusted_sleep_multiplier;     //
-   double cur_sleep_adjustment_factor;     //
+   double adjusted_sleep_multiplier;     //
    int    cur_ok_status_count;
    int    cur_error_status_count;
    int    total_ok_status_count;
@@ -40,17 +39,17 @@ typedef struct DSA1_Data {
 // int    spec_sleep_time_millis;
 } DSA1_Data;
 
-DSA1_Data * new_dsa1_data(int busno);
+DSA1_Data * new_dsa1_data(Per_Display_Data * pdd);
 void   dsa1_reset_data(DSA1_Data * data);
 void   dsa1_record_ddcrw_status_code(Display_Handle * dh, int rc);
 
-void         dsa1_reset(DSA1_Data * data);
-double       dsa1_get_adjusted_sleep_multiplier(DSA1_Data * data);
-void         dsa1_note_retryable_failure_by_pdd(Per_Display_Data * data, int remaining_tries);
-void         dsa1_record_final_by_pdd(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries);
+void   dsa1_reset(DSA1_Data * data);
+double dsa1_get_adjusted_sleep_multiplier(DSA1_Data * data);
+void   dsa1_note_retryable_failure_by_pdd(Per_Display_Data * data, int remaining_tries);
+void   dsa1_record_final_by_pdd(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries);
 
 
-void dsa1_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis);
+void   dsa1_update_adjustment_factor(Display_Handle * dh, int spec_sleep_time_millis);
 int    dsa1_get_sleep_time(Display_Handle * dh, int spec_sleep_time_millis);
 double dsa1_get_sleep_multiplier(DDCA_IO_Path dpath);
 void   dsa1_report(DSA1_Data * data, int depth);

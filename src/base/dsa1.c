@@ -42,9 +42,28 @@ const bool Default_DSA1_Enabled = DEFAULT_ENABLE_DSA1;
 bool  dsa1_enabled        = Default_DSA1_Enabled;
 
 
-DSA1_Data * new_dsa1_data(int busno) {
+// *** TO REVIEW: ***
+void dsa1_reset_data(DSA1_Data * data) {
+   pdd_cross_display_operation_block(__func__);
+   data->adjusted_sleep_multiplier = 1.0;
+   data->total_ok_status_count = 0;
+   data->total_error_status_count = 0;
+   data->total_other_status_ct = 0;
+   data->total_adjustment_checks = 0;
+   data->total_adjustment_ct = 0;
+}
+
+
+DSA1_Data * new_dsa1_data(Per_Display_Data * pdd) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "pdd=%p, dpath=%s, pdd->user_sleep_multiplier = %5.3f",
+         pdd, dpath_repr_t(&pdd->dpath), pdd->user_sleep_multiplier);
+   int busno = pdd->dpath.path.i2c_busno;
    DSA1_Data * dsa1 = calloc(1,sizeof(DSA1_Data));
    dsa1->busno = busno;
+   dsa1->adjusted_sleep_multiplier = pdd->user_sleep_multiplier;
+   DBGTRC(debug, DDCA_TRC_NONE, "Executed. dsa1->adjusted_sleep_multiplier = %5.3f, returning %p",
+         dsa1->adjusted_sleep_multiplier);
    return dsa1;
 }
 
@@ -56,17 +75,7 @@ DSA1_Data * dsa1_data_from_dh(Display_Handle * dh) {
 }
 
 
-// *** TO REVIEW: ***
-void dsa1_reset_data(DSA1_Data * data) {
-   pdd_cross_display_operation_block(__func__);
-   data->cur_sleep_adjustment_factor = 1.0;
-   data->adjusted_sleep_multiplier = 1.0;
-   data->total_ok_status_count = 0;
-   data->total_error_status_count = 0;
-   data->total_other_status_ct = 0;
-   data->total_adjustment_checks = 0;
-   data->total_adjustment_ct = 0;
-}
+
 
 double
 dsa1_get_adjusted_sleep_multiplier(DSA1_Data * data) {
@@ -132,29 +141,31 @@ double dsa1_calc_readjustment_factor( double current_multiplier) {
    if (current_multiplier == 0.0f)
       current_multiplier = .01;
 
-   double result = 1.0;
+   double factor = 1.0;
    if (current_multiplier <= .2)
-      result = 4.0;
+      factor = 4.0;
    else if (current_multiplier <= .6 )
-      result = 3.0;
+      factor = 3.0;
    else if (current_multiplier <= 1.0)
-      result = 2.0;
+      factor = 2.0;
    else if (current_multiplier <= 3.0)
-      result = 1.5;
+      factor = 1.5;
    else
-      result = 1.2;
+      factor = 1.2;
 
-   DBGMSF(debug, "current_multiplier = %3.2f, returning %3.2f",
-                 current_multiplier, result);
+   double result = factor * current_multiplier;
+   DBGMSF(debug, "current_multiplier = %3.2f, factor=%3.2f, returning %3.2f",
+                 current_multiplier, factor, result);
    return result;
 }
 
 
-void dsa1_update_adjustment_factor_by_pdd(Per_Display_Data * pdd) {
+void dsa1_update_sleep_multiplier_by_pdd(Per_Display_Data * pdd) {
    DSA1_Data * dsa1 = (DSA1_Data*) pdd->dsa1_data;
 
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p", pdd);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p, dpath=%s, dsa1->adjusted_sleep_multiplier=%4.2f",
+         pdd, dpath_repr_t(&pdd->dpath), dsa1->adjusted_sleep_multiplier);
 
 #ifdef RETAINED_FOR_REFERENCE
    if (!dsa1) {
@@ -174,7 +185,7 @@ void dsa1_update_adjustment_factor_by_pdd(Per_Display_Data * pdd) {
       DBGMSG("denominator == 0");
       denominator = .01;
    }
-   double max_adjustment_factor = 4.0f;
+   double max_multiplier = 4.0f;
    if (dsa1->calls_since_last_check > dsa1->adjustment_check_interval) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Performing check");
       dsa1->calls_since_last_check = 0;
@@ -185,26 +196,25 @@ void dsa1_update_adjustment_factor_by_pdd(Per_Display_Data * pdd) {
       int current_total_count = dsa1->cur_ok_status_count + dsa1->cur_error_status_count;
       if (current_total_count >= dsa_required_status_sample_size) {
          if (dsa1_error_rate_is_high(dsa1)) {
-            if (dsa1->cur_sleep_adjustment_factor <= max_adjustment_factor) {
+            if (dsa1->adjusted_sleep_multiplier <= max_multiplier) {
                // double d = 2 * dsa1->current_sleep_adjustment_factor;
-               double d = dsa1_calc_readjustment_factor(pdd->adjusted_sleep_multiplier);
-               if (d <= max_adjustment_factor) {
-                     pdd->adjusted_sleep_multiplier = d;
+               double d = dsa1_calc_readjustment_factor(dsa1->adjusted_sleep_multiplier);
+               if (d <= max_multiplier) {
+                     dsa1->adjusted_sleep_multiplier = d;
                }
                else {
-                  pdd->adjusted_sleep_multiplier = max_adjustment_factor;
+                  dsa1->adjusted_sleep_multiplier = max_multiplier;
                }
                sleep_adjustment_changed = true;
-               pdd->most_recent_adjusted_sleep_multiplier = pdd->adjusted_sleep_multiplier;
                dsa1->total_adjustment_ct++;
                dsa1->total_adjustment_ct++;
                // dsa1->adjustment_check_interval = 2 * dsa1->adjustment_check_interval;
             }
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                   "sleep_adjustment_changed = %s, "
-                   "New sleep_adjustment_factor %5.2f",
+                   "New adjusted_sleep_multiplier %5.2f",
                    sbool(sleep_adjustment_changed),
-                   pdd->adjusted_sleep_multiplier);
+                   dsa1->adjusted_sleep_multiplier);
          }
 
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "sleep_adjustment_changed=%s", sbool(sleep_adjustment_changed));
@@ -219,16 +229,13 @@ void dsa1_update_adjustment_factor_by_pdd(Per_Display_Data * pdd) {
    }
    else {
       dsa1->calls_since_last_check++;
-      dsa1->calls_since_last_check++;
    }
-
-
 
    DBGTRC_DONE(debug, TRACE_GROUP,
            "current_ok_status_count=%d, current_error_status_count=%d, returning %5.2f",
            dsa1->cur_ok_status_count,
            dsa1->cur_error_status_count,
-           dsa1->cur_sleep_adjustment_factor);
+           dsa1->adjusted_sleep_multiplier);
 }
 
 
@@ -242,7 +249,7 @@ dsa1_note_retryable_failure_by_pdd(Per_Display_Data * pdd, int remaining_tries) 
 
    dsa1->cur_error_status_count++;
    dsa1->total_error_status_count++;
-   dsa1_update_adjustment_factor_by_pdd(pdd);
+   dsa1_update_sleep_multiplier_by_pdd(pdd);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
@@ -258,6 +265,7 @@ void dsa1_record_final_by_pdd(Per_Display_Data * pdd, DDCA_Status ddcrc, int ret
    if (ddcrc == DDCRC_OK) {
       dsa1->cur_ok_status_count++;
       dsa1->total_ok_status_count++;
+
    }
    else if (ddcrc == DDCRC_DDC_DATA ||
             ddcrc == DDCRC_READ_ALL_ZERO ||
@@ -268,7 +276,7 @@ void dsa1_record_final_by_pdd(Per_Display_Data * pdd, DDCA_Status ddcrc, int ret
    {
       dsa1->cur_error_status_count++;
       dsa1->total_error_status_count++;
-      dsa1_update_adjustment_factor_by_pdd(pdd);
+      dsa1_update_sleep_multiplier_by_pdd(pdd);
    }
    else {
       DBGMSF(debug, "other status code: %s", psc_desc(ddcrc));
@@ -290,7 +298,7 @@ void   dsa1_report(DSA1_Data * data, int depth) {
 
       rpt_vstring(d1, "Total adjustment checks:          %5d",   data->total_adjustment_checks);
       rpt_vstring(d1, "Number of adjustments:            %5d",   data->total_adjustment_ct);
-      rpt_vstring(d1, "cur_sleep_adjustmet_factor    : %3.2f",   data->cur_sleep_adjustment_factor);
+      rpt_vstring(d1, "Adjusted sleep multiplier:      %3.2f",   data->adjusted_sleep_multiplier);
    }
    else
       rpt_label(depth, "Dynamic sleep_adjustment algorithm 1: disabled");
