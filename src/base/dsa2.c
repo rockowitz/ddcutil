@@ -32,6 +32,8 @@
 #include "base/status_code_mgt.h"
 #include "base/rtti.h"
 
+#include "i2c/i2c_bus_core.h"     // UGH
+
 #include "dsa2.h"
 
 
@@ -331,6 +333,7 @@ typedef struct Results_Table {
    int  successful_observation_ct;
    int  reset_ct;
    int  retryable_failure_ct;
+   Byte edid_checksum_byte;
 
    bool device_found_on_current_execution;
 } Results_Table;
@@ -362,6 +365,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
    rpt_bool("found_on_current_execution", NULL, rtable->device_found_on_current_execution, d1);
+   rpt_vstring(d1, "edid_checksum_byte    0x%02x", rtable->edid_checksum_byte);
 
 #undef ONE_INT_FIELD
    dbgrpt_circular_invocation_results_buffer(rtable->recent_values, d1);
@@ -1097,13 +1101,27 @@ dsa2_save_persistent_stats() {
    }
    DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
    fprintf(stats_file, "FORMAT 1\n");
-   fprintf(stats_file, "* bus cur_step lookback interval min_ok_step"
-                       " found_failure_step {epoch_seconds, try_ct, required_step} ... \n");
+   fprintf(stats_file, "* DEV  /dev/i2c device\n");
+   fprintf(stats_file, "* EC   EDID check sum byte\n");
+   fprintf(stats_file, "* C    cur step\n");
+   fprintf(stats_file, "* L    lookback\n");
+   fprintf(stats_file, "* I    interval\n");
+   fprintf(stats_file, "* M    minimum ok step\n");
+   fprintf(stats_file, "* F    found failure step\n");
+   fprintf(stats_file, "* Values {epoch_seconds, try_ct, required_step\n");
+   // fprintf(stats_file, "* bus cur_step lookback interval min_ok_step"
+   //                     " found_failure_step {epoch_seconds, try_ct, required_step} ... \n");
+   fprintf(stats_file, "* DEV EC C L I M F Values\n");
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];
-         fprintf(stats_file, "i2c-%d %d %d %d %d %d",
-                 rtable->busno, rtable->cur_step, rtable->lookback, rtable->remaining_interval,
+
+         I2C_Bus_Info * bus_info = i2c_find_bus_info_by_busno(rtable->busno);
+         Byte * raw_edid = bus_info->edid->bytes;
+         Byte edid_ck_digit = raw_edid[127];
+
+         fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
+                 rtable->busno, edid_ck_digit, rtable->cur_step, rtable->lookback, rtable->remaining_interval,
                  rtable->min_ok_step, rtable->found_failure_step);
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
@@ -1285,18 +1303,20 @@ dsa2_restore_persistent_stats() {
             ok = (busno >= 0);
          }
          int iwork;
-         ok = ok && str_to_int(pieces[1], &rtable->cur_step, 10);
-         ok = ok && str_to_int(pieces[2], &rtable->lookback, 10);
-         ok = ok && str_to_int(pieces[3], &rtable->remaining_interval, 10);
-         ok = ok && str_to_int(pieces[4], &rtable->min_ok_step, 10);
-         ok = ok && str_to_int(pieces[5], &iwork, 10);
+
+         ok = ok && any_one_byte_hex_string_to_byte_in_buf(pieces[1], &rtable->edid_checksum_byte);
+         ok = ok && str_to_int(pieces[2], &rtable->cur_step, 10);
+         ok = ok && str_to_int(pieces[3], &rtable->lookback, 10);
+         ok = ok && str_to_int(pieces[4], &rtable->remaining_interval, 10);
+         ok = ok && str_to_int(pieces[5], &rtable->min_ok_step, 10);
+         ok = ok && str_to_int(pieces[6], &iwork, 10);
          if (ok) {
             rtable->found_failure_step = (iwork);
             rtable->cur_retry_loop_step = rtable->cur_step;
             rtable->initial_step = rtable->cur_step;
             rtable->initial_lookback = rtable->lookback;
          }
-         if (piecect >= 6) {   // handle no Successful_Invocation data
+         if (piecect >= 7) {   // handle no Successful_Invocation data
             for (int ndx = 6; ndx < piecect; ndx++) {
                ok = ok && cirb_parse_and_add(rtable->recent_values, pieces[ndx]);
             }
