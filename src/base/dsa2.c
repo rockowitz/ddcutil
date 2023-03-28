@@ -312,7 +312,7 @@ int steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
 int step_ct = ARRAY_SIZE(steps);   //11
 int step_last = ARRAY_SIZE(steps)-1;        // index of last entry
 
-typedef struct {
+typedef struct Results_Table {
    Circular_Invocation_Result_Buffer * recent_values;
    // use int rather than a smaller type to simplify use of str_to_int()
    int  busno;
@@ -412,7 +412,6 @@ free_results_table(Results_Table * rtable) {
  *  @param  bus number
  *  @return pointer to #Results_Table (may be newly created)
  */
-static
 Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));

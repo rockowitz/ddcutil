@@ -25,6 +25,7 @@
 
 struct DSA1_Data;
 struct DSA0_Data;
+struct Results_Table;
 
 extern GHashTable *  per_display_data_hash;
 // extern GMutex        per_display_data_mutex;    // temp, replace by function calls
@@ -57,6 +58,7 @@ typedef struct Per_Display_Data {
 #endif
    struct DSA0_Data *     dsa0_data;
    struct DSA1_Data *     dsa1_data;
+   struct Results_Table * dsa2_data;
    int                    total_sleep_time_millis;
    Per_Display_Try_Stats  try_stats[4];
    double                 initial_adjusted_sleep_multiplier;
