@@ -332,7 +332,7 @@ typedef struct {
    int  reset_ct;
    int  retryable_failure_ct;
 
-   bool found_on_current_execution;
+   bool device_found_on_current_execution;
 } Results_Table;
 
 
@@ -361,7 +361,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(successful_observation_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
-   rpt_bool("found_on_current_execution", NULL, rtable->found_on_current_execution, d1);
+   rpt_bool("found_on_current_execution", NULL, rtable->device_found_on_current_execution, d1);
 
 #undef ONE_INT_FIELD
    dbgrpt_circular_invocation_results_buffer(rtable->recent_values, d1);
@@ -571,27 +571,36 @@ too_many_errors(int max_tryct, int total_tryct, int interval) {
  *  retryable loop failure.  The step number may be incremented some
  *  amount based on the number of tries remaining.
  *
+ *  If remaining_tries == 0, there's no next_step that's needed.
+ *  Return prev_step in this degenerate case.
+ *
  *  @param  prev_step  number of step that failed
  *  @param  remaining_tries number of tries remaining
  *  @return step number to be used for next try loop iteration
  */
 int
 dsa2_next_retry_step(int prev_step, int remaining_tries)  {
-   bool debug = false;
+   bool debug = true;
+   int next_step = prev_step;
+   if (remaining_tries > 0) {   // handle maxtries failure
+      int remaining_steps = step_ct - prev_step;
+      float fadj = (1.0*remaining_steps)/remaining_tries;
+      float fadj2 = fadj;
+      if (fadj > .75 && fadj < 1.0)
+         fadj2 = 1.0;
+      int adjustment = fadj2;
+      int next_step = prev_step + adjustment;
+      if (next_step > step_last)
+         next_step = step_last;
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+            "Executing prev_step=%d, remaining_tries=%d, fadj=%2.3f, fadj2=%2.3f, adjustment=%d, returning %d",
+            prev_step, remaining_tries, fadj, fadj2, adjustment, next_step);
+   }
+   else {
+      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+            "remaining_tries == 0, returning next_step = prev_step = %d", next_step);
+   }
 
-   int remaining_steps = step_ct - prev_step;
-   float fadj = (1.0*remaining_steps)/remaining_tries;
-   float fadj2 = fadj;
-   if (fadj > .75 && fadj < 1.0)
-      fadj2 = 1.0;
-   int adjustment = fadj2;
-   int next_step = prev_step + adjustment;
-   if (next_step > step_last)
-      next_step = step_last;
-
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "Executing prev_step=%d, remaining_tries=%d, fadj=%2.3f, fadj2=%2.3f, adjustment=%d, returning %d",
-         prev_step, remaining_tries, fadj, fadj2, adjustment, next_step);
    return next_step;
 }
 
@@ -712,8 +721,9 @@ dsa2_note_retryable_failure(DDCA_IO_Path dpath, int remaining_tries) {
 
    Results_Table * rtable = dsa2_get_results_table(dpath.path.i2c_busno, true);
    assert(rtable);
-   rtable->found_on_current_execution = true;
+   rtable->device_found_on_current_execution = true;
    int prev_step = rtable->cur_retry_loop_step;
+   // has special handling for case of remaining_tries = 0;
    rtable->cur_retry_loop_step = dsa2_next_retry_step(prev_step, remaining_tries);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Previous step=%d, next step = %d",
@@ -756,7 +766,7 @@ dsa2_record_final(DDCA_IO_Path dpath, DDCA_Status ddcrw, int tries) {
 
    Results_Table * rtable = dsa2_get_results_table(dpath.path.i2c_busno, true);
    assert(rtable);
-   rtable->found_on_current_execution = true;
+   rtable->device_found_on_current_execution = true;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_retry_loop_step=%d", rtable->cur_retry_loop_step);
    if (ddcrw == 0) {
       rtable->successful_observation_ct++;
@@ -917,7 +927,7 @@ dsa2_get_adjusted_sleep_multiplier(DDCA_IO_Path dpath) {
    if (dpath.io_mode == DDCA_IO_I2C) {   // in case called for usb device, or dsa2 not initialized
       Results_Table * rtable = dsa2_get_results_table(dpath_busno(dpath), true);
       assert(rtable);
-      rtable->found_on_current_execution = true;
+      rtable->device_found_on_current_execution = true;
       result = steps[rtable->cur_retry_loop_step]/100.0;
       DBGTRC(debug, DDCA_TRC_NONE,
                    "Executing dpath=%s, rtable->cur_retry_loop_step=%d, Returning %7.2f",
@@ -994,7 +1004,7 @@ dsa2_save_persistent_stats() {
       goto bye;
    }
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
-      if (results_tables[ndx] && results_tables[ndx]->found_on_current_execution)
+      if (results_tables[ndx] && results_tables[ndx]->device_found_on_current_execution)
          results_tables_ct++;
    }
    DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
