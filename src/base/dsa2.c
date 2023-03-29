@@ -1050,47 +1050,6 @@ dsa2_restore_persistent_stats() {
       goto bye;
    }
 
-#ifdef REGEX
-   const char * dev_stats_pattern = "^i2c-([0-9]+)\\s+"
-         "([0-9]+)\\s+([0-9]+)\\s+([0-9])+\\s+([0-9]+)\\s+([0-9]+)\\s+(-?[0-9]+\\s+"
-         "(?:[{][0-9]+,[0-9]+[}])$";
-   regex_t * re = calloc(1, sizeof(regex_t));
-   if (debug)
-      printf("(%s) Allocated regex %p, compiling...\n", __func__, (void*)re);
-   int rc = regcomp(re, dev_stats_pattern, REG_EXTENDED);
-   if (rc != 0) {
-      printf("(%s) regcomp() returned %d\n", __func__, rc);
-      char buffer[100];
-      regerror(rc, re, buffer, 100);
-      printf("regcomp() failed with '%s'\n", buffer);
-
-
-      assert(rc == 0);
-   }
-   regmatch_t matches[100];
-   for (int linendx; linendx < line_array->len; linendx++) {
-      char * cur_line = g_ptr_array_index(line_array, linendx);
-      regmatch_t matches[100];
-      int rc = regexec(
-             re,                  /* the compiled pattern */
-             cur_line,                /* the subject string */
-             100,     // absurdly large number of matches
-             matches,
-             0
-          );
-      if (rc != 0) {
-         stats_file_error("Invalid stats file line: %s", cur_line);
-      }
-      else {
-         int matchndx = 0;
-         while (matches[matchndx].rm_so != -1) {
-            regmatch_t cur_match = matches[matchndx];
-            printf("%*s\n", cur_match.rm_eo-cur_match.rm_so, cur_line + cur_match.rm_so);
-         }
-      }
-   }
-#endif
-
    for (int linendx = 1; linendx < line_array->len; linendx++) {
       char * cur_line = g_ptr_array_index(line_array, linendx);
       // DBGMSG("cur_line = |%s|", cur_line);
