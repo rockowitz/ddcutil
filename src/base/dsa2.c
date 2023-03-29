@@ -60,7 +60,6 @@ int dpath_busno(DDCA_IO_Path dpath) {
 }
 
 
-
 //
 // Successful Invocation Struct
 //
@@ -715,6 +714,14 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
 }
 
 
+/** Called at the bottom of each try loop that fails in #ddc_read_write_with_retry().
+ *
+ *  Based on the number of tries remaining, may increment the retry_loop_step
+ *  for the next step execution in the current loop.
+ *
+ *  @param rtable            Results_Table for device
+ *  @param remaining_tries   number of tries remaining
+ */
 void
 dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    bool debug = false;
@@ -730,39 +737,9 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
 }
 
 
-
-#ifdef UNUSED
-/** Called at the bottom of each try loop that fails in #ddc_read_write_with_retry().
- *
- *  Based on the number of tries remaining, may increment the retry_loop_step
- *  for the next step execution in the current loop.
- *
- *  @param dpath             device path
- *  @param remaining_tries   number of tries remaining
- */
-void
-dsa2_note_retryable_failure_by_dpath(DDCA_IO_Path dpath, int remaining_tries) {
-   assert(dpath.io_mode == DDCA_IO_I2C);
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s, remaining_tries=%d, dsa2_enabled=%s",
-         dpath_repr_t(&dpath), remaining_tries, sbool(dsa2_enabled));
-   if (!dsa2_enabled) {
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "dsa2 not enabled");
-      return;
-   }
-
-   Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, true);
-   assert(rtable);
-   dsa2_note_retryable_failure(rtable, remaining_tries);
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "next step = %d", rtable->cur_retry_loop_step);
-}
-#endif
-
-
 /** Called after all (possible) retries in #ddc_write_read_with_retry()
  *
- *  If ddcrw = 0 (i.e. the operation succeeded, which is the normal case)
+ *  If ddcrc = 0 (i.e. the operation succeeded, which is the normal case)
  *  a #Successful_Invocation record is added to the Circular Invocation
  *  Response buffer. The results table for the bus is updated.
  *  Depending on how many tries were required, the current step
@@ -770,11 +747,11 @@ dsa2_note_retryable_failure_by_dpath(DDCA_IO_Path dpath, int remaining_tries) {
  *  (possibly update) cur_loop_step, ready to be used on the next
  *  #ddc_write_read_with_retry() operation.
  *
- *  If ddcrw != 0 (the operation failed, either because of a fatal error
+ *  If ddcrc != 0 (the operation failed, either because of a fatal error
  *  or retries exhausted) it's not clear what to do.  Currently just
  *  cur_retry_loop_step is set to the global initial_step.
  *
- *  @param  dpath   device path
+ *  @param  rtable  #Results_Table for device
  *  @param  ddcrc   #ddc_write_read_with_retry() return code
  *  @param  tries   number of tries used, always < max tries for success,
  *                  always max tries for retries exhausted, and either
@@ -830,52 +807,6 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
                sbool(rtable->found_failure_step), rtable->remaining_interval);
 }
 
-
-
-#ifdef UNUSED
-/** Called after all (possible) retries in #ddc_write_read_with_retry()
- *
- *  If ddcrw = 0 (i.e. the operation succeeded, which is the normal case)
- *  a #Successful_Invocation record is added to the Circular Invocation
- *  Response buffer. The results table for the bus is updated.
- *  Depending on how many tries were required, the current step
- *  may be adjusted up or down. The cur_retry_loop_step is reset to the
- *  (possibly update) cur_loop_step, ready to be used on the next
- *  #ddc_write_read_with_retry() operation.
- *
- *  If ddcrw != 0 (the operation failed, either because of a fatal error
- *  or retries exhausted) it's not clear what to do.  Currently just
- *  cur_retry_loop_step is set to the global initial_step.
- *
- *  @param  dpath   device path
- *  @param  ddcrw   #ddc_write_read_with_retry() return code
- *  @param  tries   number of tries used, always < max tries for success,
- *                  always max tries for retries exhausted, and either
- *                  in case of a fatal error of some sort
- */
-void
-dsa2_record_final_by_dpath(DDCA_IO_Path dpath, DDCA_Status ddcrc, int tries) {
-   assert(dpath.io_mode == DDCA_IO_I2C);
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s, ddcrc=%s, tries=%d dsa2_enabled=%s",
-                   dpath_repr_t(&dpath), psc_desc(ddcrc), tries, sbool(dsa2_enabled));
-   if (!dsa2_enabled) {
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "dsa2 not enabled");
-      return;
-   }
-   Per_Display_Data * pdd = pdd_get_per_display_data(dpath,  false);
-   assert(pdd);
-
-   Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, true);
-   assert(rtable);
-   dsa2_record_final(rtable, ddcrc, tries);
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE,
-               "cur_step=%d, cur_retry_loop_step=%d, min_ok_step=%d, found_failure_step=%s, remaining_interval=%d",
-               rtable->cur_step, rtable->cur_retry_loop_step, rtable->min_ok_step,
-               sbool(rtable->found_failure_step), rtable->remaining_interval);
-}
-#endif
 
 
 #ifdef OLD
@@ -990,7 +921,7 @@ float dsa2_multiplier_step_to_float(int step) {
  *  Converts the internal step number for the current retry loop
  *  to a floating point value.
  *
- *  @param  dpath  io path
+ *  @param  rtable #Results_Table for device
  *  @return multiplier value
  */
 float
@@ -1004,31 +935,6 @@ dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
                   rtable,  rtable->cur_retry_loop_step, result);
    return result;
 }
-
-
-#ifdef UNUSED
-/** Gets the current sleep multiplier value for a device
- *
- *  Converts the internal step number for the current retry loop
- *  to a floating point value.
- *
- *  @param  dpath  io path
- *  @return multiplier value
- */
-float
-dsa2_get_adjusted_sleep_multiplier_by_dpath(DDCA_IO_Path dpath) {
-   bool debug = false;
-   float result = 1.0f;
-   if (dpath.io_mode == DDCA_IO_I2C) {   // in case called for usb device, or dsa2 not initialized
-      Results_Table * rtable = dsa2_get_results_table_by_busno(dpath_busno(dpath), true);
-      result = dsa2_get_adjusted_sleep_multiplier(rtable);
-      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
-                   "dpath=%s, rtable->cur_retry_loop_step=%d, Returning %7.2f",
-                   dpath_repr_t(&dpath),  rtable->cur_retry_loop_step, result);
-   }
-   return result;
-}
-#endif
 
 
 void dsa2_report(Results_Table * rtable, int depth) {
@@ -1079,13 +985,6 @@ bool dsa2_is_from_cache(Results_Table * rtable) {
    return (rtable && (rtable->state & RTABLE_FROM_CACHE));
 }
 
-
-#ifdef UNUSED
-bool dsa2_is_from_cache_by_dpath(DDCA_IO_Path dpath) {
-   Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, false);
-   return dsa2_is_from_cache(rtable);
-}
-#endif
 
 /** Saves the current performance statistics in file ddcutil/stats
  *  within the user's XDG cache directory, typically $HOME/.cache.
