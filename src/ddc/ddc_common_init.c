@@ -47,7 +47,14 @@
 
 #include "ddc_common_init.h"
 
-
+/** Assembles a #Error_Info struct and appends it to an array.
+ *
+ *  @param errinfo_accumulator  array of #Error_Info
+ *  @param func                 function generating the error
+ *  @param errcode              status code
+ *  @param format               msg template
+ *  @param ...                  substitution arguments
+ */
 void emit_init_tracing_error(
       GPtrArray*   errinfo_accumulator,
       const char * func,
@@ -220,8 +227,17 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);
          dsa2_erase_persistent_stats();
       }
-      else
-         dsa2_restore_persistent_stats();
+      else {
+         Error_Info * stats_errs = dsa2_restore_persistent_stats();
+         if (stats_errs) {
+            // for now, just dump to terminal
+            rpt_vstring(0, stats_errs->detail);
+            for (int ndx = 0; ndx < stats_errs->cause_ct; ndx++) {
+               rpt_vstring(1, stats_errs->causes[ndx]->detail);
+            }
+            errinfo_free(stats_errs);
+         }
+      }
    }
    else {
       dsa2_erase_persistent_stats();   // do i want to do this ?
