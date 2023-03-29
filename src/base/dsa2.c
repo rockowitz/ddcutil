@@ -15,6 +15,8 @@
 #include <time.h>
  
 #include "util/coredefs.h"
+#include "util/data_structures.h"
+#include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/i2c_util.h"
@@ -314,6 +316,10 @@ int steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
 int step_ct = ARRAY_SIZE(steps);   //11
 int step_last = ARRAY_SIZE(steps)-1;        // index of last entry
 
+#define RTABLE_FROM_CACHE    0x01
+#define RTABLE_BUS_DETECTED  0x02
+#define RTABLE_EDID_VERIFIED 0x04
+
 typedef struct Results_Table {
    Circular_Invocation_Result_Buffer * recent_values;
    // use int rather than a smaller type to simplify use of str_to_int()
@@ -325,7 +331,7 @@ typedef struct Results_Table {
    bool found_failure_step;
    int  cur_retry_loop_step;
 
-   bool initial_step_from_cache;
+// bool initial_step_from_cache;   // ELIMINATE, USE RESULTS_TABLE_FROM_CACHE flag
    int  initial_step;
    int  initial_lookback;
    int  adjustments_up;
@@ -334,8 +340,7 @@ typedef struct Results_Table {
    int  reset_ct;
    int  retryable_failure_ct;
    Byte edid_checksum_byte;
-
-   bool device_found_on_current_execution;
+   Byte state;
 } Results_Table;
 
 
@@ -358,15 +363,28 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(cur_retry_loop_step);
 
    ONE_INT_FIELD(initial_step);
-   rpt_bool("initial_step_from_cache", NULL, rtable->initial_step_from_cache, d1);
+// rpt_bool("initial_step_from_cache", NULL, rtable->initial_step_from_cache, d1);
    ONE_INT_FIELD(adjustments_up);
    ONE_INT_FIELD(adjustments_down);
    ONE_INT_FIELD(successful_observation_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
-   rpt_bool("found_on_current_execution", NULL, rtable->device_found_on_current_execution, d1);
-   rpt_vstring(d1, "edid_checksum_byte    0x%02x", rtable->edid_checksum_byte);
-
+   rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
+   char statebuf[100];
+   statebuf[0] = '\0';
+   if (rtable->state & RTABLE_BUS_DETECTED)
+      strcpy(statebuf, "RTABLE_BUS_DETECTED");
+   if (rtable->state & RTABLE_FROM_CACHE) {
+      if (strlen(statebuf) > 0)
+         strcat(statebuf, "|");
+      strcat(statebuf, "RTABLE_FROM_CACHE");
+   }
+   if (rtable->state & RTABLE_EDID_VERIFIED) {
+      if (strlen(statebuf) > 0)
+         strcat(statebuf, "|");
+      strcat(statebuf, "RTABLE_EDID_VERIFIED");
+   }
+   rpt_vstring(d1, "state                          %s", statebuf);
 #undef ONE_INT_FIELD
    dbgrpt_circular_invocation_results_buffer(rtable->recent_values, d1);
 }
@@ -390,11 +408,23 @@ Results_Table * new_results_table(int busno) {
    rtable->remaining_interval = Default_Interval;
    rtable->min_ok_step = 0;
    rtable->found_failure_step = false;
+   rtable->state = 0x00;
 
-   rtable->initial_step_from_cache = false;
+// rtable->initial_step_from_cache = false;
    rtable->initial_lookback = rtable->lookback;
    return rtable;
 }
+
+
+Byte get_edid_checkbyte(int busno) {
+   bool debug = false;
+   I2C_Bus_Info * bus_info = i2c_find_bus_info_by_busno(busno);
+   assert(bus_info);
+   Byte checkbyte = bus_info->edid->bytes[127];
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "busno=%d, returning 0x%02x", busno, checkbyte);
+   return checkbyte;
+}
+
 
 
 /** Frees a #Results_Table
@@ -421,6 +451,41 @@ Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_fo
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
+   if (rtable) {
+      rtable->state |= RTABLE_BUS_DETECTED;
+      if ( (rtable->state & RTABLE_FROM_CACHE) && !(rtable->state & RTABLE_EDID_VERIFIED)) {
+         if (get_edid_checkbyte(busno) != rtable->edid_checksum_byte) {
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "EDID verification failed");
+            free_results_table(rtable);
+            results_tables[busno] = NULL;
+            rtable = NULL;
+         }
+         else {
+            rtable->state |= RTABLE_EDID_VERIFIED;
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "EDID verification succeeded");
+         }
+      }
+   }
+   if (!rtable && create_if_not_found) {
+      rtable = new_results_table(busno);
+      results_tables[busno] = rtable;
+      rtable->cur_step = initial_step;
+      rtable->cur_retry_loop_step = initial_step;
+      rtable->state = RTABLE_BUS_DETECTED;
+      rtable->edid_checksum_byte = get_edid_checkbyte(busno);
+   }
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Results_Table", dbgrpt_results_table, rtable);
+   return rtable;
+}
+
+
+Results_Table * dsa2_find_results_table_by_busno(int busno, bool create_if_not_found) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));
+   assert(busno <= I2C_BUS_MAX);
+   Results_Table * rtable = results_tables[busno];
+   // rtable->state |= RESULTS_TABLE_FROM_DETECTED;
+
    if (!rtable && create_if_not_found) {
       rtable = new_results_table(busno);
       results_tables[busno] = rtable;
@@ -430,6 +495,7 @@ Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_fo
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Results_Table", dbgrpt_results_table, rtable);
    return rtable;
 }
+
 
 
 #ifdef UNUSED
@@ -521,7 +587,7 @@ void dsa2_reset_multiplier(float multiplier) {
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set initial_step=%d", initial_step);
 }
 
-
+#ifdef UNUSED
 void dsa2_reset(Results_Table * rtable) {
    if (rtable) {
       int busno = rtable->busno;
@@ -539,6 +605,7 @@ void dsa2_reset_by_dpath(DDCA_IO_Path dpath) {
    Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, false);
    dsa2_reset(rtable);
 }
+#endif
 
 
 //
@@ -713,7 +780,6 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
          rtable, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
-   rtable->device_found_on_current_execution = true;
    int prev_step = rtable->cur_retry_loop_step;
    // has special handling for case of remaining_tries = 0;
    rtable->cur_retry_loop_step = dsa2_next_retry_step(prev_step, remaining_tries);
@@ -786,7 +852,6 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
    // assert(pdd);
 
    assert(rtable);
-   rtable->device_found_on_current_execution = true;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_retry_loop_step=%d", rtable->cur_retry_loop_step);
    if (ddcrc == 0) {
       rtable->successful_observation_ct++;
@@ -992,7 +1057,6 @@ dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
    bool debug = false;
    float result = 1.0f;
    assert(rtable);
-   rtable->device_found_on_current_execution = true;
    result = steps[rtable->cur_retry_loop_step]/100.0;
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
                   "rtable=%p, rtable->cur_retry_loop_step=%d, Returning %7.2f",
@@ -1030,7 +1094,7 @@ void dsa2_report(Results_Table * rtable, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Dynamic sleep algorithm 2 data for /dev/i2c-%d:", rtable->busno);
    rpt_vstring(d1, "Initial Step:       %3d, %5.2f millisec", rtable->initial_step, steps[rtable->initial_step]/100.0);
-   rpt_vstring(d1, "Initial step from cache: %s", sbool(rtable->initial_step_from_cache));
+// rpt_vstring(d1, "Initial step from cache: %s", sbool(rtable->initial_step_from_cache));
    rpt_vstring(d1, "Final Step:         %3d, %5.2f millisec", rtable->cur_step, steps[rtable->cur_step]/100.0);
    rpt_vstring(d1, "Initial lookback ct:%3d", rtable->initial_lookback);
    rpt_vstring(d1, "Final lookback ct:  %3d", rtable->lookback);
@@ -1070,15 +1134,17 @@ stats_cache_file_name() {
 
 bool dsa2_is_from_cache(Results_Table * rtable) {
    assert(rtable);
-   return (rtable && rtable->initial_step_from_cache);
+   // return (rtable && rtable->initial_step_from_cache);
+   return (rtable && (rtable->state & RTABLE_FROM_CACHE));
 }
 
 
+#ifdef UNUSED
 bool dsa2_is_from_cache_by_dpath(DDCA_IO_Path dpath) {
    Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, false);
    return dsa2_is_from_cache(rtable);
 }
-
+#endif
 
 /** Saves the current performance statistics in file ddcutil/stats
  *  within the user's XDG cache directory, typically $HOME/.cache.
@@ -1090,17 +1156,17 @@ Status_Errno
 dsa2_save_persistent_stats() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   int result = 0;
    char * stats_fn = stats_cache_file_name();
    FILE * stats_file = fopen(stats_fn, "w");
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened %s", stats_fn);
-   int result = 0;
-   int results_tables_ct = 0;
    if (!stats_file) {
       result = -errno;
       goto bye;
    }
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened %s", stats_fn);
+   int results_tables_ct = 0;
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
-      if (results_tables[ndx] && results_tables[ndx]->device_found_on_current_execution)
+      if (results_tables[ndx] && (results_tables[ndx]->state & RTABLE_BUS_DETECTED))
          results_tables_ct++;
    }
    DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
@@ -1112,18 +1178,14 @@ dsa2_save_persistent_stats() {
    fprintf(stats_file, "* I    interval\n");
    fprintf(stats_file, "* M    minimum ok step\n");
    fprintf(stats_file, "* F    found failure step\n");
-   fprintf(stats_file, "* Values {epoch_seconds, try_ct, required_step\n");
-   // fprintf(stats_file, "* bus cur_step lookback interval min_ok_step"
-   //                     " found_failure_step {epoch_seconds, try_ct, required_step} ... \n");
+   fprintf(stats_file, "* Values {epoch_seconds, try_ct, required_step}\n");
    fprintf(stats_file, "* DEV EC C L I M F Values\n");
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];
-
-         I2C_Bus_Info * bus_info = i2c_find_bus_info_by_busno(rtable->busno);
-         Byte * raw_edid = bus_info->edid->bytes;
-         Byte edid_ck_digit = raw_edid[127];
-
+         if (debug)
+            dbgrpt_results_table(rtable, 2);
+         Byte edid_ck_digit = get_edid_checkbyte(rtable->busno);
          fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
                  rtable->busno, edid_ck_digit, rtable->cur_step, rtable->lookback, rtable->remaining_interval,
                  rtable->min_ok_step, rtable->found_failure_step);
@@ -1164,12 +1226,14 @@ dsa2_erase_persistent_stats() {
 
 
 static void
-stats_file_error(char * format, ...) {
+stats_file_error(GPtrArray* errmsgs, char * format, ...) {
    va_list(args);
    va_start(args, format);
    char buffer[200];
    vsnprintf(buffer, sizeof(buffer), format, args);
-   DBGMSG(buffer);
+   if (errmsgs)
+      g_ptr_array_add(errmsgs, strdup(buffer));
+   // DBGMSG(buffer);
    va_end(args);
 }
 
@@ -1213,31 +1277,35 @@ cirb_parse_and_add(Circular_Invocation_Result_Buffer * cirb, char * segment) {
  *  @retval  false a file was found but parsing failed
  *  @retval  true  loading succeeded or no file found
  */
-bool
+Error_Info *
 dsa2_restore_persistent_stats() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    char * stats_fn = stats_cache_file_name();
+   Error_Info * result = NULL;
+
    // DBGMSG("stats_fn=%s", stats_fn);
    bool all_ok = true;
    GPtrArray* line_array = g_ptr_array_new_with_free_func(g_free);
    int linect = file_getlines(stats_fn, line_array, debug);
    if (linect == -ENOENT)
-      goto bye;
+      goto bye0;
+
+   GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
    if (linect < 0) {
-      stats_file_error("Error  %s reading stats file %s", psc_desc(linect), stats_fn);
+      stats_file_error(errmsgs, "Error  %s reading stats file %s", psc_desc(linect), stats_fn);
       all_ok = false;
       goto bye;
    }
    if (linect == 0)  { // empty file
-      stats_file_error("Empty stats file");
+      stats_file_error(errmsgs, "Empty stats file");
       goto bye;
    }
    char * format_line = g_ptr_array_index(line_array, 0);
    // DBGMSG("format_line %p |%s|", format_line, format_line);
    if (!str_starts_with(format_line, "FORMAT ")) {
-      stats_file_error("Invalid format line: %s", format_line);
-      all_ok = -1;
+      stats_file_error(errmsgs, "Invalid format line: %s", format_line);
+      all_ok = false;
       goto bye;
    }
    int format_id;
@@ -1245,8 +1313,8 @@ dsa2_restore_persistent_stats() {
    // DBGMSG("sformat %d %p |%s|", strlen("FORMAT "), sformat, sformat);
    bool ok = str_to_int( sformat, &format_id, 10);
    if (!ok || format_id != 1) {
-      stats_file_error("Invalid format: %s", sformat);
-      all_ok = -1;
+      stats_file_error(errmsgs, "Invalid format: %s", sformat);
+      all_ok = false;
       goto bye;
    }
 
@@ -1303,7 +1371,7 @@ dsa2_restore_persistent_stats() {
          if (ok) {
             busno = i2c_name_to_busno(pieces[0]);
             rtable = new_results_table(busno);
-            rtable->initial_step_from_cache = true;
+            // rtable->initial_step_from_cache = true;
             ok = (busno >= 0);
          }
          int iwork;
@@ -1321,16 +1389,17 @@ dsa2_restore_persistent_stats() {
             rtable->initial_lookback = rtable->lookback;
          }
          if (piecect >= 7) {   // handle no Successful_Invocation data
-            for (int ndx = 6; ndx < piecect; ndx++) {
+            for (int ndx = 7; ndx < piecect; ndx++) {
                ok = ok && cirb_parse_and_add(rtable->recent_values, pieces[ndx]);
             }
          }
          if (!ok) {
             all_ok = false;
-            stats_file_error("Invalid: %s", cur_line);
+            stats_file_error(errmsgs, "Invalid: %s", cur_line);
             free_results_table(rtable);
          }
          else {
+            rtable->state = RTABLE_FROM_CACHE;
             results_tables[busno] = rtable;
             if (debug)
                dbgrpt_results_table(rtable, 1);
@@ -1349,10 +1418,20 @@ dsa2_restore_persistent_stats() {
    }
 
 bye:
+   if (!all_ok) {
+      result = errinfo_new(DDCRC_BAD_DATA, __func__, "Error(s) reading cached performance stats file %s", stats_fn);
+      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+         Error_Info * err = errinfo_new(DDCRC_BAD_DATA, __func__, g_ptr_array_index(errmsgs, ndx));
+         errinfo_add_cause(result, err);
+      }
+   }
+   g_ptr_array_free(errmsgs, true);
+
+bye0:
   free(stats_fn);
   g_ptr_array_free(line_array, true);
-  DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, all_ok, "");
-  return all_ok;
+  DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Error_Info", errinfo_report, result);
+  return result;
 }
 
 
@@ -1416,7 +1495,7 @@ void terminate_dsa2() { // release all resources
    if (results_tables) {
       for (int ndx = 0; ndx < I2C_BUS_MAX+1; ndx++) {
          if (results_tables[ndx])
-            free(results_tables[ndx]);
+            free_results_table(results_tables[ndx]);
       }
    }
 }
