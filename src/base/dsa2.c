@@ -60,65 +60,6 @@ int dpath_busno(DDCA_IO_Path dpath) {
 }
 
 
-#ifdef OLD
-//
-// Circular Integer Buffer
-//
-
-typedef struct {
-   int *    values;
-   int      size;
-   int      ct;
-} Circular_Integer_Buffer;
-
-
-/** Allocates a new #Circular_Integer_Buffer
- *
- *  @param  size  buffer size (number of entries)
- *  @return newly allocated #Circular_Integer_Buffer
- */
-Circular_Integer_Buffer *
-cib_new(int size) {
-   Circular_Integer_Buffer * cib = calloc(1, sizeof(Circular_Integer_Buffer));
-   cib->values = calloc(size, sizeof(int));
-   cib->size = size;
-   cib->ct = 0;
-   return cib;
-}
-
-
-void cib_free(Circular_Integer_Buffer * cib) {
-   free(cib->values);
-   free(cib);
-}
-
-
-/** Appends an integer to a #Circular_Integer_Buffer.
- *
- *  @param   cib   #Circular_Integer_Buffer
- *  @param   value value to append
- */
-void
-cib_add(Circular_Integer_Buffer * cib, int value) {
-    int nextpos = cib->ct % cib->size;
-    // printf("(%s) Adding at ct %d, pos %d, value %d\n", __func__, cib->ct, nextpos, value);
-       cib->values[nextpos] = value;
-    cib->ct++;
-}
-
-
-void cib_get_latest(Circular_Integer_Buffer * cib, int ct, int latest_values[]) {
-   assert(ct <= cib->ct);
-   int ctr = 0;
-
-   while(ctr < ct) {int_min
-      int ndx = (ctr > 0) ? (ctr-1) % cib->size : cib->size - 1;
-      latest_values[ctr] = cib->values[ ndx ];
-   }
-}
-
-#endif
-
 
 //
 // Successful Invocation Struct
