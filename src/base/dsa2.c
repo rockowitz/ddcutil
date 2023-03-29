@@ -1157,6 +1157,7 @@ dsa2_save_persistent_stats() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    int result = 0;
+   int results_tables_ct = 0;
    char * stats_fn = stats_cache_file_name();
    FILE * stats_file = fopen(stats_fn, "w");
    if (!stats_file) {
@@ -1164,7 +1165,6 @@ dsa2_save_persistent_stats() {
       goto bye;
    }
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened %s", stats_fn);
-   int results_tables_ct = 0;
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx] && (results_tables[ndx]->state & RTABLE_BUS_DETECTED))
          results_tables_ct++;
