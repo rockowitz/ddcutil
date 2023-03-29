@@ -342,8 +342,10 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
       pdd->dsa0_data = dsa0_get_dsa0_data(pdd->dpath.path.i2c_busno);
    if (dsa1_enabled)
       pdd->dsa1_data = new_dsa1_data(pdd);
-   if (dsa2_enabled)
+   if (dsa2_enabled) {
       pdd->dsa2_data = dsa2_get_results_table_by_busno(pdd->dpath.path.i2c_busno, true);
+
+   }
    drd_init_display_data(pdd);   // initialize the retry data section of Per_Display_Data
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Device = %s, user_sleep_multiplier=%4.2f",
                       dpath_repr_t(&pdd->dpath), pdd->user_sleep_multiplier);
@@ -553,19 +555,22 @@ void pdd_reset_per_display_data(Per_Display_Data * data, void* arg ) {
 
    Per_Display_Data * pdd = data;
    pdd->total_sleep_time_millis = 0.0;
-   // what other fields to reset?
 
+#ifdef NO   // does not apply
    if (pdd->dsa0_data)
       dsa0_reset(pdd->dsa0_data);
    if (pdd->dsa1_data)
       dsa1_reset_data(pdd->dsa1_data);
    if (dsa2_enabled)
       dsa2_reset(pdd->dsa2_data);
+#endif
+
    for (int retry_type = 0; retry_type < 4; retry_type++) {
       for (int ndx = 0; ndx < MAX_MAX_TRIES+2; ndx++) {
          pdd->try_stats[retry_type].counters[ndx] = 0;
       }
    }
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
@@ -642,7 +647,10 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
 
    rpt_vstring(d1, "User sleep multiplier factor:   %7.2f",   pdd->user_sleep_multiplier);
    rpt_vstring(d1, "Initial adjusted multiplier:    %7.2f%s", pdd->initial_adjusted_sleep_multiplier, s);
-   rpt_vstring(d1, "Final adjusted multiplier:      %7.2f",   pdd->final_successful_adjusted_sleep_multiplier);
+   if (pdd->final_successful_adjusted_sleep_multiplier < 0.0)
+      rpt_vstring(d1, "Final adjusted multiplier:      Not set");
+   else
+      rpt_vstring(d1, "Final adjusted multiplier:      %7.2f",   pdd->final_successful_adjusted_sleep_multiplier);
    rpt_vstring(d1, "Total sleep time (milliseconds):  %5d",   pdd->total_sleep_time_millis);
    // if (debug || get_output_level() >= DDCA_OL_VV) {
    //    rpt_vstring(d1, "Internal data: (A)");
