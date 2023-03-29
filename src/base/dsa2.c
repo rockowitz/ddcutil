@@ -527,31 +527,10 @@ void dsa2_reset_multiplier(float multiplier) {
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set initial_step=%d", initial_step);
 }
 
-#ifdef UNUSED
-void dsa2_reset(Results_Table * rtable) {
-   if (rtable) {
-      int busno = rtable->busno;
-      free_results_table(rtable);
-      results_tables[busno] = dsa2_get_results_table_by_busno(busno, true);
-   }
-}
-
-
-void dsa2_reset_by_dpath(DDCA_IO_Path dpath) {
-   assert(dpath.io_mode == DDCA_IO_I2C);
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s", dpath_repr_t(&dpath));
-
-   Results_Table * rtable = dsa2_get_results_table_by_busno(dpath.path.i2c_busno, false);
-   dsa2_reset(rtable);
-}
-#endif
-
 
 //
 // The Algorithm
 //
-
 
 /** Encapsulates the algorithm used by #adjust_for_recent_successes()
  *  to determine if recent Successful_Invocation buffer stats
