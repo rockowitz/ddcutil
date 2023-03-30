@@ -212,20 +212,7 @@ bool report_freed_exceptions = false;
 // Report DDC data errors
 //
 
-#ifdef PER_THREAD
-bool enable_report_ddc_errors(bool onoff) {
-   Thread_Output_Settings * dests = get_thread_settings();
-   bool old_val = dests->report_ddc_errors;
-   dests->report_ddc_errors = onoff;
-   return old_val;
-}
 
-bool is_report_ddc_errors_enabled() {
-   Thread_Output_Settings * dests = get_thread_settings();
-   bool old_val = dests->report_ddc_errors;
-   return old_val;
-}
-#else
 static bool report_ddc_errors = false;
 static GMutex report_ddc_errors_mutex;
 
@@ -241,7 +228,6 @@ bool is_report_ddc_errors_enabled() {
    bool old_val = report_ddc_errors;
    return old_val;
 }
-#endif
 
 
 /** Checks if DDC data errors are to be reported.  This is the case if any of the
@@ -262,12 +248,7 @@ bool is_report_ddc_errors_enabled() {
  */
 bool is_reporting_ddc(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
   bool result = (is_tracing(trace_group,filename, funcname) ||
-#ifdef PER_THREAD
-        is_report_ddc_errors_enabled()
-#else
-        report_ddc_errors
-#endif
-        );
+        report_ddc_errors);
   return result;
 }
 
