@@ -12,13 +12,14 @@ rulesfiles = \
 	usr/lib/udev/rules.d/60-ddcutil.rules
 
 distributed_modulesfiles = \
-    usr/lib/modules-load.d/ddcutil.conf \
-    usr/lib/modules-load.d/libddcutil.conf
+    usr/lib/modules-load.d/ddcutil.conf
+
+#   usr/lib/modules-load.d/libddcutil.conf
 
 installed_modulesfiles  =  usr/lib/modules-load.d/ddcutil.conf 
-if ENABLE_SHARED_LIB_COND
- installed_modulesfiles += usr/lib/modules-load.d/libddcutil.conf
-endif
+# if ENABLE_SHARED_LIB_COND
+#  installed_modulesfiles += usr/lib/modules-load.d/libddcutil.conf
+# endif
 
 # Causes files (with directory structure) to be included in tarball:
 EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles)
