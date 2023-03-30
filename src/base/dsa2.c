@@ -560,15 +560,15 @@ too_many_errors(int max_tryct, int total_tryct, int interval) {
 }
 
 
-/** Calculates the step to be used on the next try loop iteration after
- *  retryable loop failure.  The step number may be incremented some
- *  amount based on the number of tries remaining.
+/** Calculates the step to be used on the next try loop iteration after a
+ *  retryable loop failure.  The step number may be incremented some amount
+ *   based on the number of tries remaining.
  *
  *  If remaining_tries == 0, there's no next_step that's needed.
  *  Return prev_step in this degenerate case.
  *
- *  @param  prev_step  number of step that failed
- *  @param  remaining_tries number of tries remaining
+ *  @param  prev_step        number of the step that failed
+ *  @param  remaining_tries  number of tries remaining
  *  @return step number to be used for next try loop iteration
  */
 int
