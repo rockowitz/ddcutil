@@ -190,8 +190,8 @@ get_parsed_libmain_config(char *       libopts_string,
    for (; ndx < libopts_token_ct; ndx++)
       cmd_name_array[ndx+1] = libopts_tokens[ndx];
    cmd_name_array[ndx+1] = NULL;
-   if (libopts_tokens)
-      ntsa_free(libopts_tokens, false);
+   // if (libopts_tokens)
+   //   ntsa_free(libopts_tokens, false);
 
    if (debug)
       printf("(%s) cmd_name_array=%p, cmd_name_array[1]=%p -> %s\n",
@@ -275,6 +275,21 @@ get_parsed_libmain_config(char *       libopts_string,
 
    if (!result) {
       assert(new_argc >= 1);
+      if (libopts_token_ct > 0) {
+        int newest_argc = new_argc + libopts_token_ct;
+        Null_Terminated_String_Array newest_argv = reallocarray(new_argv, newest_argc+1, sizeof(char*));
+        for (int ndx = 0; ndx < libopts_token_ct; ndx++) {
+           newest_argv[new_argc+ndx] = libopts_tokens[ndx];   // strdup?
+           newest_argv[new_argc+libopts_token_ct] = NULL;
+        }
+        new_argv = newest_argv;
+        new_argc = new_argc + libopts_token_ct;
+        if (debug) {
+           DBGF(true, "After libopts tokens applied:");
+           ntsa_show(new_argv);
+        }
+
+      }
       if (debug)
          printf("(%s) Calling parse_command(), errmsgs=%p\n", __func__, errmsgs);
       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
