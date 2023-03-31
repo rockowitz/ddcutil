@@ -32,7 +32,7 @@
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
-#include "base/per_thread_data.h"
+#include "base/per_thread_data.h"pdd_report_elapsed
 #include "base/rtti.h"
 #include "base/tuned_sleep.h"
 
@@ -229,16 +229,19 @@ get_parsed_libmain_config(char *       libopts_string,
                     __func__, apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
 
       if (apply_config_rc == -EBADMSG) {
-         result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, "Error(s) processing configuration file: %s", config_fn);
+         result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
+                              "Error(s) processing configuration file: %s", config_fn);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-            errinfo_add_cause(result,  errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
+            errinfo_add_cause(result,
+                  errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
          }
       }
       else if (apply_config_rc == -ENOENT) {
          result = errinfo_new(-ENOENT, __func__, "Configuration file not found");
       }
       else if (apply_config_rc < 0) {
-         result = errinfo_new(apply_config_rc, __func__, "Unexpected error reading configuration file: %s", psc_desc(apply_config_rc));
+         result = errinfo_new(apply_config_rc, __func__,
+                     "Unexpected error reading configuration file: %s", psc_desc(apply_config_rc));
       }
       else {
          assert( new_argc == ntsa_length(new_argv) );
