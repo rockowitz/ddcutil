@@ -130,18 +130,18 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
       }
       if (stats & DDCA_STATS_ERRORS) {
           pdd_report_all_display_status_counts(depth);
-          rpt_nl();
+          // rpt_nl();
       }
       if (stats & DDCA_STATS_CALLS) {
-          report_all_dsa0_data(depth);
+         pdd_report_all_display_call_stats(depth);
+         // rpt_nl();
       }
       if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
           pdd_report_all_elapsed(depth);
-          // if (dsa2_enabled)
-          //   dsa2_report_all(depth);
+          // rpt_nl();
       }
-          //   rpt_nl();
+
       // Reports locks held by per_thread_data() to confirm that locking has
       // trivial affect on performance.
       //dbgrpt_per_thread_data_locks(depth+1);
