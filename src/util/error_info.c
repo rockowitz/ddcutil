@@ -412,6 +412,21 @@ errinfo_new_with_causes(
 }
 
 
+/** Creates a new #Error_Info instance with a collection of
+ *  instances specified as the causes. The collection is
+ *  passed as a GPtrArray.
+ *
+ *  Note that the pointers in the **causes** array are copied to the new
+ *  #Error_Info instance. The pointers should not be freed when destroying
+ *  the original array of causes.
+ *
+ *  \param  code            status code of the new instance
+ *  \param  causes          GPtrArray of #Error_Info instances
+ *  \param  func            name of function creating the new #Error_Info
+ *  \param  detail          detail format string
+ *  \param  ...             optional arguments for detail format string
+ *  \return pointer to new instance
+ */
 Error_Info * errinfo_new_with_causes_gptr(
       int            status_code,
       GPtrArray*     causes,
@@ -428,9 +443,6 @@ Error_Info * errinfo_new_with_causes_gptr(
    }
    return result;
 }
-
-
-
 
 
 #ifdef UNUSED
