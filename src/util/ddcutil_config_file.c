@@ -254,6 +254,11 @@ int apply_config_file(
 {
    bool debug = false;
    DBGF(debug, "Starting. application_name=%s, errmsgs=%p", application_name, (void*)errmsgs);
+   if (debug) {
+      for (int ndx = 0; ndx < old_argc; ndx++) {
+         DBGF(true, "old_argv[%d] = |%s|", ndx, old_argv[ndx]);
+      }
+   }
 
    *untokenized_config_options_loc = NULL;
    *configure_fn_loc = NULL;
