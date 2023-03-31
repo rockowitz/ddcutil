@@ -1,9 +1,13 @@
 /** @file ddcutil_c_api.h
  *
- *  Public C API for ddcutil
+ *  @brief Public C API for ddcutil
+ *
+ *  Function names in the public C API begin with "ddca_"\n
+ *  Status codes begin with "DDCRC_".\n
+ *  Typedefs, other constants, etc. begin with "DDCA_".
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_C_API_H_
@@ -19,15 +23,6 @@ extern "C" {
 #endif
 
 #include "ddcutil_types.h"
-
-
-/** @file ddcutil_c_api.h
- *  @brief ddcutil public C API
- *
- *  Function names in the public C API begin with "ddca_"\n
- *  Status codes begin with "DDCRC_".\n
- *  Typedefs, other constants, etc. begin with "DDCA_".
- */
 
 
 /* Note on "report" functions.
