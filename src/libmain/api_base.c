@@ -9,8 +9,6 @@
 #include "config.h"
 
 #include <assert.h>
-#include <base/base_services.h>
-#include <base/dsa0.h>
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <signal.h>
@@ -26,9 +24,11 @@
 #include "util/sysfs_filter_functions.h"
 #include "util/xdg_util.h"
 
+#include "base/base_services.h"
 #include "base/build_info.h"
 #include "base/core_per_thread_settings.h"
 #include "base/core.h"
+#include "base/dsa0.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
