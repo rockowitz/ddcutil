@@ -92,6 +92,7 @@ void   dbgrpt_per_display_data(Per_Display_Data * data, int depth);
 void   dbgrpt_per_display_data_locks(int depth);
 
 void   pdd_report_all_display_status_counts(int depth);
+void   pdd_report_all_display_call_stats(int depth);
 
 void   pdd_report_elapsed(Per_Display_Data * pdd, int depth);
 void   pdd_report_all_elapsed(int depth);

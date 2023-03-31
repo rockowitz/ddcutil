@@ -638,6 +638,16 @@ void pdd_report_all_display_status_counts(int depth) {
 }
 
 
+void pdd_report_all_display_call_stats(int depth) {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   rpt_label(depth, "No per-display call statistics are collected");
+   rpt_nl();
+   DBGMSF(debug, "Done");
+}
+
+
+
 void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    // bool debug = false;
    rpt_vstring(depth, "Elapsed time report for display %s (pdd)", dpath_short_name_t(&pdd->dpath));
@@ -667,7 +677,7 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
       dsa1_report(pdd->dsa1_data, d1);
    }
    if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
-         dsa2_report_all(d1);  // detailed internal info
+         dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
    }
    rpt_nl();
 }
