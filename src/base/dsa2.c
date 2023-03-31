@@ -388,7 +388,8 @@ free_results_table(Results_Table * rtable) {
  */
 Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s",
+                                         busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
    if (rtable) {
@@ -402,7 +403,7 @@ Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_fo
          }
          else {
             rtable->state |= RTABLE_EDID_VERIFIED;
-            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "EDID verification succeeded");
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID verification succeeded");
          }
       }
    }
@@ -421,7 +422,8 @@ Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_fo
 
 Results_Table * dsa2_find_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s", busno, sbool(create_if_not_found));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s",
+                                         busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
    // rtable->state |= RESULTS_TABLE_FROM_DETECTED;
@@ -582,7 +584,7 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
       if (fadj > .75 && fadj < 1.0)
          fadj2 = 1.0;
       int adjustment = fadj2;
-      int next_step = prev_step + adjustment;
+      next_step = prev_step + adjustment;
       if (next_step > step_last)
          next_step = step_last;
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
@@ -623,14 +625,16 @@ void test_dsa2_next_retry_step() {
  *
  *  @param rtable pointer to #Results_Table to examine
  */
-
 static void
 dsa2_adjust_for_recent_successes(Results_Table * rtable) {
-   bool debug = false;
+   bool debug = true;
 
+   // n. called only if most recent try was a success
    Successful_Invocation latest_values[MAX_RECENT_VALUES];
    int actual_lookback = cirb_get_latest(rtable->recent_values, rtable->lookback, latest_values);
+   assert(actual_lookback > 0);
    int max_tryct = 0;
+   int min_tryct = 99;
    int total_tryct = 0;
    char  b[300];
    b[0] = '\0';
@@ -642,12 +646,19 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       total_tryct += latest_values[ndx].tryct;
       if (latest_values[ndx].tryct > max_tryct)
             max_tryct = latest_values[ndx].tryct;
+      if (latest_values[ndx].tryct < min_tryct)
+            min_tryct = latest_values[ndx].tryct;
    }
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, actual_lookback = %d, latest_values:%s",
          rtable->busno, actual_lookback, b);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, total_tryct = %d", max_tryct, total_tryct);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, min_tr yct = %d, total_tryct = %d",
+                                         max_tryct, min_tryct, total_tryct);
+   int last_value_pos = actual_lookback - 1;
+   int most_recent_step = latest_values[last_value_pos].required_step;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "actual_lookback=%d,  most_recent_step=%d",
+                                         actual_lookback, most_recent_step);
 
-   if (too_many_errors(max_tryct, total_tryct, actual_lookback)) {
+   if (too_many_errors(max_tryct, total_tryct, actual_lookback) && rtable->cur_step < most_recent_step) {
       if (rtable->cur_step < step_last) {
          rtable->cur_step++;
          rtable->adjustments_up++;
@@ -662,13 +673,15 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Looking to decrement cur_step, cur_step=%d, found_failure_step=%s, min_ok_step = %d",
              rtable->cur_step, sbool(rtable->found_failure_step), rtable->min_ok_step);
+
       if (rtable->cur_step > 0) {
-         if (total_tryct <= actual_lookback+1) {  // i.e. no more that 1 retry was required
+         if (total_tryct <= actual_lookback+1) {  // i.e. no more than 1 retry was required
             rtable->cur_step--;
             rtable->adjustments_down++;
             if (rtable->cur_step > rtable->min_ok_step)
                rtable->min_ok_step = rtable->cur_step;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Unconditionally decremented cur_step.  New value: %d", rtable->cur_step);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Unconditionally decremented cur_step.  New value: %d", rtable->cur_step);
          }
          else if (rtable->found_failure_step) {
             if (rtable->cur_step > rtable->min_ok_step) {
@@ -679,6 +692,7 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
          }
          else {
             rtable->cur_step--;
+            rtable->adjustments_down++;
             DBGTRC(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
          }
       }
@@ -688,7 +702,7 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
 
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
-               "max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
+          "max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
           max_tryct, total_tryct, rtable->cur_step, rtable->min_ok_step, sbool(rtable->found_failure_step) );
 }
 
@@ -703,13 +717,17 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
  */
 void
 dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
-         rtable, remaining_tries, sbool(dsa2_enabled));
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, remaining_tries=%d, dsa2_enabled=%s",
+         rtable, rtable->busno, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
    int prev_step = rtable->cur_retry_loop_step;
    // has special handling for case of remaining_tries = 0;
-   rtable->cur_retry_loop_step = dsa2_next_retry_step(prev_step, remaining_tries);
+
+   int next_step =  dsa2_next_retry_step(prev_step, remaining_tries);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dsa2_next_retry_step(%d,%d) returned %d",
+                                         prev_step, remaining_tries, next_step);
+   rtable->cur_retry_loop_step = next_step;
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Previous step=%d, next step = %d",
                                      prev_step, rtable->cur_retry_loop_step);
@@ -738,9 +756,9 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
  */
 void
 dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s",
-                   rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled));
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, ddcrc=%s, tries=%d dsa2_enabled=%s",
+                   rtable, rtable->busno, psc_desc(ddcrc), tries, sbool(dsa2_enabled));
    if (!dsa2_enabled) {
       DBGTRC_DONE(debug, DDCA_TRC_NONE, "dsa2 not enabled");
       return;
@@ -808,7 +826,12 @@ dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
 }
 
 
-void dsa2_report(Results_Table * rtable, int depth) {
+/** Reports internal statistics on the dsa2 algorithm.
+ *
+ *  @param rtable pointer to #Results_Table
+ *  @param depth  logical indentation
+ */
+void dsa2_report_internal(Results_Table * rtable, int depth) {
    int d1 = depth+1;
    rpt_vstring(depth, "Dynamic sleep algorithm 2 data for /dev/i2c-%d:", rtable->busno);
    rpt_vstring(d1, "Initial Step:       %3d, %5.2f millisec", rtable->initial_step, steps[rtable->initial_step]/100.0);
@@ -824,13 +847,13 @@ void dsa2_report(Results_Table * rtable, int depth) {
 }
 
 
-void dsa2_report_all(int depth) {
+void dsa2_report_internal_all(int depth) {
    int d1 = depth+1;
    rpt_label(depth, "Dynamic Sleep Adjustment (algorithm 2)");
    for (int busno = 0; busno <= I2C_BUS_MAX; busno++) {
       Results_Table * rtable = dsa2_get_results_table_by_busno(busno, false);
       if (rtable)
-         dsa2_report(rtable, d1);
+         dsa2_report_internal(rtable, d1);
    }
 }
 
@@ -1075,6 +1098,7 @@ dsa2_restore_persistent_stats() {
                dbgrpt_results_table(rtable, 1);
          }
          ntsa_free(pieces, true);
+         DBGTRC(debug, DDCA_TRC_NONE, "Restored stats for /dev/i2c-%d", busno);
       }
    }
 

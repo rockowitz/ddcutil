@@ -27,7 +27,8 @@ void         dsa2_record_final(struct Results_Table * rtable, DDCA_Status ddcrc,
 Status_Errno dsa2_save_persistent_stats();
 Status_Errno dsa2_erase_persistent_stats();
 Error_Info * dsa2_restore_persistent_stats();
-void         dsa2_report_all(int depth);
+void         dsa2_report_internal(struct Results_Table * rtable, int depth);
+void         dsa2_report_internal_all(int depth);
 
 void         init_dsa2();
 void         terminate_dsa2();  // release all resources
