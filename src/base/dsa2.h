@@ -1,4 +1,4 @@
-/** @file dsa2.h
+/** @file dsa2.h Dynamic sleep algorithm 2
  */
 
 // Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -12,7 +12,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/error_info.h"
-#include "base/displays.h"
+#include "base/status_code_mgt.h"
 
 extern const bool DSA2_Enabled_Default;
 extern bool       dsa2_enabled;
@@ -32,4 +32,5 @@ void         dsa2_report_internal_all(int depth);
 
 void         init_dsa2();
 void         terminate_dsa2();  // release all resources
+
 #endif /* DSA2_H_ */
