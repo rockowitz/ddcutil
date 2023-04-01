@@ -42,6 +42,7 @@ execution_stats.c         \
 feature_lists.c           \
 feature_metadata.c        \
 feature_set_ref.c         \
+i2c_bus_base.c            \
 last_io_event.c           \
 linux_errno.c             \
 monitor_model_key.c       \
