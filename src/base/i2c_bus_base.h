@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
+#include "util/edid.h"
+
 // shared with i2c_bus_selector.c
 extern GPtrArray * i2c_buses;
 
