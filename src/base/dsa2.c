@@ -1,4 +1,5 @@
-// dsa2.c
+/** @file dsa2.c Dynamic sleep algorithm 2
+ */
 
 // Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
@@ -29,12 +30,11 @@
 
 #include "base/core.h"
 #include "base/displays.h"
+#include "base/i2c_bus_base.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
 #include "base/status_code_mgt.h"
 #include "base/rtti.h"
-
-#include "i2c/i2c_bus_core.h"     // UGH
 
 #include "dsa2.h"
 
