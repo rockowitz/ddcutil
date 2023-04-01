@@ -10,6 +10,10 @@
 #define I2C_SYSFS_H_
 
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
+
+#include "util/coredefs_base.h"
+#include "util/data_structures.h"
 
 char * find_adapter(char * path, int depth);
 char * get_driver_for_adapter(char * adapter_path, int depth);
