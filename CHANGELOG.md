@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.5.0] 2023-nn-nn
+
+### Changed 
+
+- dynamic sleep algorithm
+  - $USER/.cache/ddcutil/stats
+  - ignored if either explicit sleep multiplier or not --dsa2
+
+-  -- sleep-multiplier = 0 allowed
+
+- many displays can function with very low --sleep-multiplier values 
+  some with 0 for DP
+
+- --dsa2 --no-dsa2 --enable-dsa2 --disable-dsa2
+
+
+- libddcutil initialization 
+  function ddca_init() 
+  - arguments: library_options
+               DDCA_Init_Options
+  - sets errors for ddca_get_error_detail()
+
+- per-thread actions/options/statitics generally replaced by per-display
+- detailed statistics are now per-display
+
+    The API is unchanged
+    
+    ddca_set_default_sleep_multiplier(), ddca_get_default_sleep_multiplier()
+    operates on newly detected displays, not new threads
+    
+    ddca_set_sleep_multiplier(), ddca_get_sleep_multiplier()
+    
+    intead of operating on the current thread, operate on the display,
+    if any, open in the current thread
+
+    functions with changed semantics(): 
+
+    ddca_report_display_info() returns DDCA_Status instead of void
+
+ - utility option --i1 overrids x51 as packet source address
+ 
+
+
+
+
+
 ## [1.4.2] 2023-02-17
 
 ### Added 
