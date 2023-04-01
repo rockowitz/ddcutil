@@ -3,7 +3,7 @@
  *  Access displays, whether DDC or USB
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAYS_H_
@@ -21,27 +21,26 @@
 #endif
 
 // Initial Checks
-void ddc_set_async_threshold(int threshold);
-bool ddc_initial_checks_by_dref(Display_Ref * dref);
+void        ddc_set_async_threshold(int threshold);
+bool        ddc_initial_checks_by_dref(Display_Ref * dref);
 
 // Get Display Information
 GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
 GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays);
 GPtrArray * ddc_get_bus_open_errors();
-int ddc_get_display_count(bool include_invalid_displays);
-
+int         ddc_get_display_count(bool include_invalid_displays);
 
 // Display Detection
-void ddc_ensure_displays_detected();
-void ddc_discard_detected_displays();
-void ddc_redetect_displays();
-bool ddc_displays_already_detected();
+void        ddc_ensure_displays_detected();
+void        ddc_discard_detected_displays();
+void        ddc_redetect_displays();
+bool        ddc_displays_already_detected();
 DDCA_Status ddc_enable_usb_display_detection(bool onoff);
-bool ddc_is_usb_display_detection_enabled();
-void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
-bool ddc_is_valid_display_ref(Display_Ref * dref);
+bool        ddc_is_usb_display_detection_enabled();
+void        dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
+bool        ddc_is_valid_display_ref(Display_Ref * dref);
 
 // Initialization
-void init_ddc_displays();
+void        init_ddc_displays();
 
 #endif /* DDC_DISPLAYS_H_ */
