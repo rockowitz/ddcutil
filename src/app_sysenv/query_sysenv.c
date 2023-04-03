@@ -15,7 +15,6 @@
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
-#include <glib-2.0/glib.h>
 #include <string.h>
 #include <sys/utsname.h>
 
@@ -346,7 +345,7 @@ void query_x11() {
       // Device_Id_Xref * xref = device_xref_get(prec->edidbytes);
       Device_Id_Xref * xref = device_xref_find_by_edid(edidbytes);
       if (xref) {
-         xref->xrandr_name = g_strdup(prec->output_name);
+         xref->xrandr_name = strdup(prec->output_name);
          if (xref->ambiguous_edid) {
             rpt_vstring(2, "Multiple displays have same EDID ...%s", xref->edid_tag);
             rpt_vstring(2, "xrandr name in device cross reference table may be incorrect.");
@@ -366,23 +365,10 @@ void query_x11() {
 #endif
 
 
-<<<<<<< Updated upstream
 static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
                 const char * pattern,
                 const char * command_name)
 {
-=======
-//
-// i2cdetect
-//
-
-/** Examines /dev/i2c devices using command i2cdetect, if it exists.
- *
- *  \param  i2c_device_numbers  I2C bus numbers to checkFgetenf
- *
- */
-static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
->>>>>>> Stashed changes
    assert(i2c_device_numbers);
 
    int d0 = 0;
@@ -444,8 +430,8 @@ static void probe_i2c_devices_using_udev() {
       int busno = udev_i2c_device_summary_busno(summary);
       Device_Id_Xref * xref = device_xref_find_by_busno(busno);
       if (xref) {
-         xref->udev_name = g_strdup(summary->sysattr_name);
-         xref->udev_syspath = g_strdup(summary->devpath);
+         xref->udev_name = strdup(summary->sysattr_name);
+         xref->udev_syspath = strdup(summary->devpath);
          xref->udev_busno = busno;
       }
       else {
@@ -947,12 +933,7 @@ void query_sysenv() {
 
       probe_modules_d(0);
 
-<<<<<<< Updated upstream
-      dump_sysfs_i2c();
-=======
       dump_sysfs_i2c(accumulator);
-
->>>>>>> Stashed changes
       rpt_nl();
 
 #ifdef OLD
@@ -988,10 +969,11 @@ void query_sysenv() {
 }
 
 
-void init_query_sysenv() {
+void init_sysenv() {
    RTTI_ADD_FUNC(query_sysenv);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(probe_i2c_devices_using_udev);
 #endif
+   init_query_sysenv_sysfs();
 }
 
