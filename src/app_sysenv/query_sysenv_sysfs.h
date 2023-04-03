@@ -3,7 +3,7 @@
  *  Query environment using /sys file system
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef QUERY_SYSENV_SYSFS_H_
@@ -25,9 +25,8 @@ void query_loaded_modules_using_sysfs();
 void query_sys_bus_i2c(Env_Accumulator * accum);
 void query_sys_amdgpu_parameters(int depth);
 void query_drm_using_sysfs();
-void dump_sysfs_i2c();
 void show_relevant_char_major_numbers();
-
+void dump_sysfs_i2c(Env_Accumulator * accum);
 void init_query_sysenv_sysfs();
 
 #endif /* QUERY_SYSENV_SYSFS_H_ */

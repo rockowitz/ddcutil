@@ -366,10 +366,23 @@ void query_x11() {
 #endif
 
 
+<<<<<<< Updated upstream
 static void query_using_shell_command(Byte_Value_Array i2c_device_numbers,
                 const char * pattern,
                 const char * command_name)
 {
+=======
+//
+// i2cdetect
+//
+
+/** Examines /dev/i2c devices using command i2cdetect, if it exists.
+ *
+ *  \param  i2c_device_numbers  I2C bus numbers to checkFgetenf
+ *
+ */
+static void query_using_i2cdetect(Byte_Value_Array i2c_device_numbers) {
+>>>>>>> Stashed changes
    assert(i2c_device_numbers);
 
    int d0 = 0;
@@ -934,7 +947,12 @@ void query_sysenv() {
 
       probe_modules_d(0);
 
+<<<<<<< Updated upstream
       dump_sysfs_i2c();
+=======
+      dump_sysfs_i2c(accumulator);
+
+>>>>>>> Stashed changes
       rpt_nl();
 
 #ifdef OLD
