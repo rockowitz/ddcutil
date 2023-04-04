@@ -95,6 +95,8 @@ typedef enum {
    CMD_FLAG_DSA2             = 0x200000000000,
    CMD_FLAG_DSA0             = 0x400000000000,
    CMD_FLAG_QUICK            = 0x800000000000,
+   CMD_FLAG_F7             = 0x01000000000000,
+   CMD_FLAG_F8             = 0x02000000000000,
 } Parsed_Cmd_Flags;
 
 typedef

@@ -309,6 +309,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("f4",                NULL, parsed_cmd->flags & CMD_FLAG_F4,           d1);
       rpt_bool("f5",                NULL, parsed_cmd->flags & CMD_FLAG_F5,           d1);
       rpt_bool("f6",                NULL, parsed_cmd->flags & CMD_FLAG_F6,           d1);
+      rpt_bool("f7",                NULL, parsed_cmd->flags & CMD_FLAG_F7,           d1);
+      rpt_bool("f8",                NULL, parsed_cmd->flags & CMD_FLAG_F8,           d1);
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
       rpt_str( "s3",                NULL, parsed_cmd->s3,                            d1);

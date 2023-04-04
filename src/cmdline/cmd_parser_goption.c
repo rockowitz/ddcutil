@@ -614,6 +614,8 @@ parse_command(
    gboolean f4_flag            = false;
    gboolean f5_flag            = false;
    gboolean f6_flag            = false;
+   gboolean f7_flag            = false;
+   gboolean f8_flag            = false;
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
@@ -832,6 +834,8 @@ parse_command(
       {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
       {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
+      {"f7",      '\0', 0,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 6",    NULL},
+      {"f8",      '\0', 0,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 6",    NULL},
       {"s1",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1017,6 +1021,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F4,                f4_flag);
    SET_CMDFLAG(CMD_FLAG_F5,                f5_flag);
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
+   SET_CMDFLAG(CMD_FLAG_F7,                f7_flag);
+   SET_CMDFLAG(CMD_FLAG_F8,                f8_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
    SET_CMDFLAG(CMD_FLAG_PER_DISPLAY_STATS, per_display_stats_flag);
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
