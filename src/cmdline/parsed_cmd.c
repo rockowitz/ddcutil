@@ -269,6 +269,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("dsa0 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA0,                d1);
       rpt_bool("dynamic_sleep_adjustment", NULL, parsed_cmd->flags & CMD_FLAG_DSA1,              d1);
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                d1);
+      rpt_bool("quick",             NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                d1);
+
 
       rpt_bool("per_display_stats:", NULL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS,        d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
