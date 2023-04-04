@@ -734,19 +734,19 @@ void final_analysis(Env_Accumulator * accum, int depth) {
  *
  * Returns:      nothing
  */
-void query_sysenv() {
+void query_sysenv(bool quick_env) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    rpt_label(0,
        "The following tests probe the runtime environment using multiple overlapping methods.");
 
    char * s = getenv("SYSENV_QUICK_TEST");
-   if (s && strlen(s) > 0) {
+   if ((s && strlen(s) > 0) || quick_env) {
       sysfs_quick_test = true;
-      rpt_label(0, "Environment variable SYSENV_QUICK_TEST is set.  Skipping some tests.");
+      rpt_label(0, "Environment variable SYSENV_QUICK_TEST or option --quickenv is set.  Skipping some tests.");
    }
    else if (get_output_level() >= DDCA_OL_VERBOSE) {
-      rpt_label(0, "Set environment variable SYSENV_QUICK_TEST to skip some long-running tests.");
+      rpt_label(0, "Set environment variable SYSENV_QUICK_TEST or option --quickenv to skip some long-running tests.");
    }
 
    i2c_forceable_slave_addr_flag = true;    // be a bully

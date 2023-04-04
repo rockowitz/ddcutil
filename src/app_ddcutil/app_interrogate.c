@@ -81,7 +81,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
 
    // ENVIRONMENT command
-   query_sysenv();
+   query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
 #ifdef USE_USB
    // 7/2017: disable, USB attached monitors are rare, and this just
    // clutters the output

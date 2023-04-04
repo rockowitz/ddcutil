@@ -9,7 +9,9 @@
 #ifndef QUERY_SYSENV_H_
 #define QUERY_SYSENV_H_
 
+#include <stdbool.h>
+
 void init_query_sysenv();
-void query_sysenv();
+void query_sysenv(bool quickenv);
 
 #endif /* QUERY_SYSENV_H_ */

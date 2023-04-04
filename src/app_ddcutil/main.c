@@ -840,7 +840,7 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_ENVIRONMENT) {
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command ENVIRONMENT...");
       dup2(1,2);   // redirect stderr to stdout
-      query_sysenv();
+      query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
       main_rc = EXIT_SUCCESS;
    }
 
