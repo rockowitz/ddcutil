@@ -861,6 +861,20 @@ void dump_sysfs_i2c(Env_Accumulator * accum) {
 
    consolidated_i2c_sysfs_report(0);
 
+   if (accum->is_arm) {
+      rpt_label(0,"*** Extended dump of sysfs video devices for ARM architecture ***");
+      rpt_nl();
+      GPtrArray *  video_devices =   execute_shell_cmd_collect(
+            "find /sys/devices -name class | xargs grep -il 0x03 | xargs dirname | xargs ls -lR");
+      rpt_nl();
+
+      rpt_vstring(0, "Display devices: (class 0x03nnnn)");
+      for (int ndx = 0; ndx < video_devices->len; ndx++) {
+         char * dirname = g_ptr_array_index(video_devices, ndx);
+         rpt_vstring(2, "%s", dirname);
+      }
+   }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
