@@ -628,42 +628,33 @@ ddc_write_read_with_retry(
           dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
-
    // if (debug)
    //     dbgrpt_display_ref(dh->dref, 1);
 
    Per_Display_Data * pdd = dh->dref->pdd;
-
-
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
+   bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
 
    DDCA_Status  psc;
-   bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
    int  tryctr;
-
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
    bool sleep_multiplier_incremented = false;   // dsa0
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
-   DBGMSF(debug, "          retry_null_response = %s, ddcrc_null_response_max = %d",
-          sbool(retry_null_response), ddcrc_null_response_max);
-   Error_Info * try_errors[MAX_MAX_TRIES];
-   for (int ndx = 0; ndx < MAX_MAX_TRIES; ndx++)
-      try_errors[ndx] = NULL;
-
-   // TRACED_ASSERT(max_write_read_exchange_tries > 0);   // to avoid clang warning
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "retry_null_response = %s, ddcrc_null_response_max = %d",
+                                         sbool(retry_null_response), ddcrc_null_response_max);
+   Error_Info * try_errors[MAX_MAX_TRIES] = {NULL};
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    TRACED_ASSERT(max_tries >= 0);
-   // int skipped_tries = 0;
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_tries && psc < 0 && retryable;
         tryctr++)
    {
-      DBGMSF(debug,
-        "          Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
-           tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
+         tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
@@ -710,9 +701,6 @@ ddc_write_read_with_retry(
                      if (max_tries > 3)
                         max_tries = 3;
 #ifdef OUT
-#ifdef TSD
-                     tsd_set_sleep_multiplier_ct(ddcrc_null_response_ct++);
-#endif
                      if (dsa0_enabled) {
                         dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, ddcrc_null_response_ct++);
                         sleep_multiplier_incremented = true;
@@ -783,7 +771,6 @@ ddc_write_read_with_retry(
          tryctr, psc, psc_desc(psc), sbool(retryable), sbool(read_bytewise));
 
    // int errct = (psc == 0) ? tryctr-1 : tryctr;
-   // errct -= skipped_tries;
 
 
    Error_Info * errors_found[MAX_MAX_TRIES];
