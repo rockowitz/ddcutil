@@ -178,7 +178,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             if (psc == DDCRC_REPORTED_UNSUPPORTED)
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
 
-            else if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL)
+            else if ( (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL) &&
+                      !ddc_never_uses_null_response_for_unsupported)
                dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
 
             else {
