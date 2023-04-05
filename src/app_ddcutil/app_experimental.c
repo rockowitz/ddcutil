@@ -32,12 +32,21 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1, "Suppress SE_POST_READ");
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
-   REPORT_FLAG_OPTION(3, "Unused");
+   REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
    REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
    REPORT_FLAG_OPTION(6, "Force I2C bus");
+   REPORT_FLAG_OPTION(7, "Unused");
+   REPORT_FLAG_OPTION(8, "Unused");
 
    rpt_vstring(depth+1, "Utility option --i1 = %d:     Set source address byte in feature set packet", parsed_cmd->i1);
+   rpt_vstring(depth+1, "Utility option --i2:          Unused");
+
+   rpt_vstring(depth+1, "Utility option --s1:          Unused");
+   rpt_vstring(depth+1, "Utility option --s2:          Unused");
+   rpt_vstring(depth+1, "Utility option --s3:          Unused");
+   rpt_vstring(depth+1, "Utility option --s4:          Unused");
+
    rpt_nl();
 }
 
@@ -46,16 +55,6 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 
 bool init_experimental_options(Parsed_Cmd* parsed_cmd)
 {
-#ifdef NOT_NEEDED
-   if (parsed_cmd->flags & CMD_FLAG_F2) {
-      fprintf(stdout, "Experimental /sys analysis\n");
-   }
-
-   if (parsed_cmd->flags & CMD_FLAG_F4) {
-      fprintf(stdout, "Read strategy tests\n");
-   }
-#endif
-
    // HACK FOR TESTING
    if (parsed_cmd->flags & CMD_FLAG_F6) {
       fprintf(stdout, "Setting i2c_force_bus\n");

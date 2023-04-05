@@ -154,6 +154,9 @@ bool               dsel_validate(          Display_Selector * dsel);
 
 // *** Display_Ref ***
 
+extern bool ddc_never_uses_null_response_for_unsupported;
+// extern bool ddc_always_uses_null_response_for_unsupported;
+
 typedef uint16_t Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED                 0x0080
 #define DREF_DDC_COMMUNICATION_WORKING                 0x0040

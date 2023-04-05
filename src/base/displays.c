@@ -938,6 +938,12 @@ char * hiddev_number_to_name(int hiddev_number) {
 #endif
 
 
+// globals
+bool ddc_never_uses_null_response_for_unsupported = false;
+// bool ddc_always_uses_null_response_for_unsupported = false;
+
+
+
 Value_Name_Table dref_flags_table = {
       VN(DREF_DDC_COMMUNICATION_CHECKED),
  //   VN(DREF_DDC_COMMUNICATION_WORKING),
