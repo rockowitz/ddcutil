@@ -152,7 +152,7 @@ int module_status_using_libkmod(const char * module_alias)
    int result = 0;
    struct kmod_ctx * ctx = NULL;
    struct kmod_module *  mod;
-   const char * filename;
+   const char * filename = NULL;
    int rc = 0;
 
    ctx = kmod_new(
