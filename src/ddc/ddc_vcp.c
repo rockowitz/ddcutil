@@ -3,7 +3,7 @@
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -48,6 +48,8 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+
+bool enable_mock_data = false;
 
 typedef struct {
    bool   verify_setvcp;
@@ -437,6 +439,21 @@ ddc_set_vcp_value(
 }
 
 
+static Parsed_Nontable_Vcp_Response * create_all_zero_response(Byte feature_code) {
+   Parsed_Nontable_Vcp_Response * resp = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+   resp->vcp_code = feature_code;
+   resp->valid_response = true;
+   resp->supported_opcode = true;
+   resp->mh = 0;
+   resp->ml = 0;
+   resp->sh = 0;
+   resp->sl = 0;
+
+   return resp;
+}
+
+
+
 /** Possibly returns a mock value for a non-table feature
  *
  *  @param  feature_code  VCP Feature Code
@@ -449,10 +466,10 @@ ddc_set_vcp_value(
  */
 Error_Info *
 mock_get_nontable_vcp_value(
-      DDCA_Vcp_Feature_Code   feature_code,
+      DDCA_Vcp_Feature_Code          feature_code,
       Parsed_Nontable_Vcp_Response** resp_loc)
 {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. feature_code = 0x%02x, resp_loc = %p",
                  feature_code, resp_loc);
    Error_Info * pseudo_errinfo = NULL;
@@ -480,6 +497,21 @@ mock_get_nontable_vcp_value(
       pseudo_errinfo = errinfo_new(-EIO, __func__, "Pseudo EIO error");
    }
 #endif
+
+   if (feature_code == 0x00) {
+      // pseudo_errinfo = errinfo_new(DDCRC_NULL_RESPONSE, __func__, "Pseudo Null Response for feature 0x00");
+      Parsed_Nontable_Vcp_Response * resp = create_all_zero_response(feature_code);
+      *resp_loc = resp;
+   }
+
+   if (feature_code == 0x10) {
+      pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x10");
+   }
+
+   if (feature_code == 0x41) {
+      // *resp_loc = create_all_zero_response(feature_code);
+      pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x41");
+   }
 
    if (debug) {
       DBGMSG("Feature 0x%02x, *resp_loc = %p, returning: %s",
@@ -514,17 +546,20 @@ ddc_get_nontable_vcp_value(
        DDCA_Vcp_Feature_Code          feature_code,
        Parsed_Nontable_Vcp_Response** parsed_response_loc)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
    *parsed_response_loc = NULL;
 
-   Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, parsed_response_loc);
-   if (mock_errinfo || *parsed_response_loc) {
-      DBGMSF(debug, "Returning mock response for feature 0x%02x", feature_code);
-      return mock_errinfo;
+   if (enable_mock_data) {
+      Error_Info * mock_errinfo = mock_get_nontable_vcp_value(feature_code, parsed_response_loc);
+      if (mock_errinfo || *parsed_response_loc) {
+         DBGMSF(debug, "Returning mock response for feature 0x%02x", feature_code);
+         return mock_errinfo;
+      }
    }
 
    DDC_Packet * request_packet_ptr  = NULL;
@@ -543,6 +578,7 @@ ddc_get_nontable_vcp_value(
    //  N. response does not include initial destination address byte of DDC/CI spec
    int max_read_bytes = 11;
 
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "before ddc_write_read_with_retry(): communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
    excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -703,6 +739,7 @@ ddc_get_vcp_value(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Reading feature 0x%02x, dh=%s, dh->fd=%d",
             feature_code, dh_repr(dh), dh->fd);
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    Error_Info * ddc_excp = NULL;
    Buffer * buffer = NULL;
@@ -786,12 +823,12 @@ ddc_get_vcp_value(
 
 
 void init_ddc_vcp() {
-   RTTI_ADD_FUNC(ddc_save_current_settings);
-   RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
-   RTTI_ADD_FUNC(set_table_vcp_value);
-   RTTI_ADD_FUNC(ddc_set_vcp_value);
    RTTI_ADD_FUNC(ddc_get_nontable_vcp_value);
    RTTI_ADD_FUNC(ddc_get_table_vcp_value);
    RTTI_ADD_FUNC(ddc_get_vcp_value);
+   RTTI_ADD_FUNC(ddc_save_current_settings);
+   RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
+   RTTI_ADD_FUNC(ddc_set_vcp_value);
+   RTTI_ADD_FUNC(set_table_vcp_value);
 }
 

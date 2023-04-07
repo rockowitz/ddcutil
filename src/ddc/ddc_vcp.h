@@ -3,13 +3,14 @@
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_VCP_H_
 #define DDC_VCP_H_
 
 /** \cond */
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "util/error_info.h"
@@ -22,6 +23,7 @@
 #include "vcp/vcp_feature_codes.h"
 #include "vcp/vcp_feature_values.h"
 
+extern bool enable_mock_data;
 
 bool
 ddc_set_verify_setvcp(
