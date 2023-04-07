@@ -84,6 +84,7 @@ errinfo_free(Error_Info * erec){
    if (debug) {
       printf("(%s) Starting. erec=%p\n", __func__, (void*)erec);
       show_backtrace(2);
+      errinfo_report(erec, 2);
    }
    if (erec) {
       VALID_ERROR_INFO_PTR(erec);
@@ -114,6 +115,7 @@ errinfo_free(Error_Info * erec){
       erec->marker[3] = 'x';
       free(erec);
    }
+   printf("(%s) Done.\n", __func__);
 }
 
 
