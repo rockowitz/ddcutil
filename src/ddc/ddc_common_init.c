@@ -282,6 +282,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
    init_max_tries(parsed_cmd);
+   enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
 
 #ifdef USE_USB
 #ifndef NDEBUG
