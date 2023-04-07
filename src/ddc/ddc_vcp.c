@@ -469,57 +469,60 @@ mock_get_nontable_vcp_value(
       DDCA_Vcp_Feature_Code          feature_code,
       Parsed_Nontable_Vcp_Response** resp_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. feature_code = 0x%02x, resp_loc = %p",
                  feature_code, resp_loc);
    Error_Info * pseudo_errinfo = NULL;
    *resp_loc = NULL;
 
-#ifdef TEST_X72
-   if (feature_code == 0x72) {
-      Parsed_Nontable_Vcp_Response * resp = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
-      resp->vcp_code = feature_code;
-      resp->valid_response = true;
-      resp->supported_opcode = true;
-      resp->mh = 0;
-      resp->ml = 0;
-      resp->sh = 0x78;
-      resp->sl = 0x00;
-      resp->max_value = resp->mh << 8 | resp->ml;
-      resp->cur_value = resp->sh << 8 | resp->sl;
+   if (enable_mock_data) {
 
-      *resp_loc = resp;
-   }
-#endif
+   #ifdef TEST_X72
+      if (feature_code == 0x72) {
+         Parsed_Nontable_Vcp_Response * resp = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+         resp->vcp_code = feature_code;
+         resp->valid_response = true;
+         resp->supported_opcode = true;
+         resp->mh = 0;
+         resp->ml = 0;
+         resp->sh = 0x78;
+         resp->sl = 0x00;
+         resp->max_value = resp->mh << 8 | resp->ml;
+         resp->cur_value = resp->sh << 8 | resp->sl;
 
-#ifdef TEST_EIO
-   if (feature_code == 0x45) {
-      pseudo_errinfo = errinfo_new(-EIO, __func__, "Pseudo EIO error");
-   }
-#endif
+         *resp_loc = resp;
+      }
+   #endif
 
-   if (feature_code == 0x00) {
-      // pseudo_errinfo = errinfo_new(DDCRC_NULL_RESPONSE, __func__, "Pseudo Null Response for feature 0x00");
-      Parsed_Nontable_Vcp_Response * resp = create_all_zero_response(feature_code);
-      *resp_loc = resp;
-   }
+   #ifdef TEST_EIO
+      if (feature_code == 0x45) {
+         pseudo_errinfo = errinfo_new(-EIO, __func__, "Pseudo EIO error");
+      }
+   #endif
 
-   if (feature_code == 0x10) {
-      pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x10");
-   }
+      if (feature_code == 0x00) {
+         // pseudo_errinfo = errinfo_new(DDCRC_NULL_RESPONSE, __func__, "Pseudo Null Response for feature 0x00");
+         Parsed_Nontable_Vcp_Response * resp = create_all_zero_response(feature_code);
+         *resp_loc = resp;
+      }
 
-   if (feature_code == 0x41) {
-      // *resp_loc = create_all_zero_response(feature_code);
-      pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x41");
-   }
+      if (feature_code == 0x10) {
+         pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x10");
+      }
 
-   if (debug) {
-      DBGMSG("Feature 0x%02x, *resp_loc = %p, returning: %s",
-          feature_code,
-          *resp_loc,
-          errinfo_summary(pseudo_errinfo) );
-      if (*resp_loc)
-         dbgrpt_interpreted_nontable_vcp_response(*resp_loc, 2);
+      if (feature_code == 0x41) {
+         // *resp_loc = create_all_zero_response(feature_code);
+         pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x41");
+      }
+
+      if (debug) {
+         DBGMSG("Feature 0x%02x, *resp_loc = %p, returning: %s",
+             feature_code,
+             *resp_loc,
+             errinfo_summary(pseudo_errinfo) );
+         if (*resp_loc)
+            dbgrpt_interpreted_nontable_vcp_response(*resp_loc, 2);
+      }
    }
    return pseudo_errinfo;
 }
