@@ -94,6 +94,7 @@ ddc_set_async_threshold(int threshold) {
 
 static inline bool
 value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
+   assert(pvalrec);
    bool result = pvalrec && pvalrec->value_type ==  DDCA_NON_TABLE_VCP_VALUE &&
                  pvalrec->val.c_nc.mh == 0 &&
                  pvalrec->val.c_nc.ml == 0 &&
@@ -101,6 +102,28 @@ value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
                  pvalrec->val.c_nc.sl == 0;
    return result;
 }
+
+
+static inline bool
+value_bytes_zero_for_nontable_value(Parsed_Nontable_Vcp_Response* valrec) {
+   assert(valrec);
+   bool result =  valrec->mh == 0 && valrec->ml == 0 && valrec->sh == 0 && valrec->sl == 0;
+   return result;
+}
+
+
+static inline bool
+all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
+   bool all_same = true;
+   for (int ndx = 0; ndx < ddc_excp->cause_ct; ndx++) {
+      if (ddc_excp->causes[ndx]->status_code != psc) {
+         all_same = false;
+         break;
+      }
+   }
+   return all_same;
+}
+
 
 
 /** Collects initial monitor checks to perform them on a single open of the
@@ -151,10 +174,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                              errinfo_summary(ddc_excp), pvalrec);
       TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
 
-      if (psc == DDCRC_RETRIES && debug)
-         DBGMSG("    Try errors: %s", errinfo_causes_string(ddc_excp));
-      if (ddc_excp)
-         errinfo_free(ddc_excp);
+
 
       DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
       if (io_mode == DDCA_IO_USB) {
@@ -164,6 +184,12 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       }
       else {
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
+
+         if (psc == DDCRC_RETRIES) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Try errors: %s", errinfo_causes_string(ddc_excp));
+            if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE))
+               psc = DDCRC_ALL_RESPONSES_NULL;
+         }
 
          // What if returns -EIO?  Dell AW3418D returns -EIO for unsupported features
          // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
@@ -180,8 +206,32 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
             else if ( (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL) &&
                       !ddc_never_uses_null_response_for_unsupported)
-               dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
-
+            {
+               // get a feature that always exists
+               Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+               Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+               Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                     "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s",
+                     errinfo_summary(ddc_excp) );
+               free(parsed_response_loc);
+               if (psc == DDCRC_RETRIES) {
+                  DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Try errors: %s", errinfo_causes_string(ddc_excp));
+                  if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE))
+                     psc = DDCRC_ALL_RESPONSES_NULL;
+               }
+               if (psc == 0) {
+                  // feature x10 succeeded, so Null Msg for feature x00 really means unsupported
+                  dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+               }
+               else if (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL) {
+                  dh->dref->flags &= ~DREF_DDC_COMMUNICATION_WORKING;
+               }
+               else {
+                  dh->dref->flags &= ~DREF_DDC_COMMUNICATION_WORKING;
+               }
+               errinfo_free(ddc_excp);
+            }
             else {
                TRACED_ASSERT( psc == 0);
                TRACED_ASSERT(pvalrec && pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
@@ -191,8 +241,40 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
                if (value_bytes_zero_for_any_value(pvalrec))
                {
-                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
-                  dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+                  // try another feature that should never exist
+                  // ignoring the vanishingly small possibility that this actually is a CRT
+                  Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+                  Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x41, &parsed_response_loc);
+                  Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                        "ddc_get_nontable_vcp_value() for feature 0x41 returned: %s",
+                        errinfo_summary(ddc_excp) );
+                  if (psc == 0) {
+                     if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
+                        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
+                        dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+                     }
+                     else {
+                        // Time to stop chasing cases with vanishingly small probabilities
+                        DBGMSG("Feature x41 should not exist but returns non-zero value");
+                        // just use the normal case
+                        dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+                     }
+                  }
+                  else if (psc == DDCRC_REPORTED_UNSUPPORTED) {
+                     // feature x00 really was a supported feature
+                     dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+                  }
+                  else if (psc == DDCRC_ALL_RESPONSES_NULL || psc == DDCRC_NULL_RESPONSE) {
+                     // is it an error or indication of unsupported feature?
+                     dh->dref->flags &= ~DREF_DDC_COMMUNICATION_WORKING;
+                  }
+
+                  else {
+                     dh->dref->flags &= ~DREF_DDC_COMMUNICATION_WORKING;
+
+                  }
+                  free(parsed_response_loc);
                }
                else {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
@@ -217,15 +299,17 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          }
       }    // end, io_mode == DDC_IO_I2C
       dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+      if (ddc_excp)
+         errinfo_free(ddc_excp);
 
-     if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
-        // Would prefer to defer checking version until actually needed to avoid additional DDC io
-        // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
-        // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
-        if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
-           set_vcp_version_xdf_by_dh(dh);
-        }
-     }
+      if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+         // Would prefer to defer checking version until actually needed to avoid additional DDC io
+         // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
+         // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
+         if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
+            set_vcp_version_xdf_by_dh(dh);
+         }
+      }
 
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
