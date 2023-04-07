@@ -626,6 +626,11 @@ ddc_write_read_with_retry(
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
                                        "expected_subtype=0x%02x, all_zero_response_ok=%s",
           dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED: %s",
+         sbool(dh->dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED: %s",
+         sbool(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
    // if (debug)
@@ -634,19 +639,23 @@ ddc_write_read_with_retry(
    Per_Display_Data * pdd = dh->dref->pdd;
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
    bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "retry_null_rsponse=%s", sbool(retry_null_response));
 
    DDCA_Status  psc;
    int  tryctr;
    bool retryable;
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
-   int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
+   // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
+
    bool sleep_multiplier_incremented = false;   // dsa0
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "retry_null_response = %s, ddcrc_null_response_max = %d",
                                          sbool(retry_null_response), ddcrc_null_response_max);
    Error_Info * try_errors[MAX_MAX_TRIES] = {NULL};
-   int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
+
    TRACED_ASSERT(max_tries >= 0);
    for (tryctr=0, psc=-999, retryable=true;
         tryctr < max_tries && psc < 0 && retryable;
@@ -693,13 +702,11 @@ ddc_write_read_with_retry(
          switch (psc) {
          case DDCRC_NULL_RESPONSE:
                {
-                  retryable = (++ddcrc_null_response_ct < ddcrc_null_response_max);
+                  retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
                   DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                   if (retryable) {
                      if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                         f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-                     if (max_tries > 3)
-                        max_tries = 3;
 #ifdef OUT
                      if (dsa0_enabled) {
                         dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, ddcrc_null_response_ct++);
@@ -707,6 +714,8 @@ ddc_write_read_with_retry(
                         // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
                      }
 #endif
+                     // if (max_tries > 3)
+                     //    max_tries = 3;
                   }
                }
                break;
