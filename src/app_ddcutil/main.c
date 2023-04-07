@@ -154,6 +154,8 @@ report_optional_features(Parsed_Cmd * parsed_cmd, int depth) {
    rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "User defined features:",
                        (enable_dynamic_features) ? "enabled" : "disabled" );
                        // "Enable user defined features" is too long a title
+   rpt_vstring( depth, "%.*s%-*s%s", 0, "", 28, "Mock feature values:",
+                       (enable_mock_data) ? "enabled" : "disabled" );
    rpt_nl();
 }
 
