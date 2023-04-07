@@ -628,6 +628,7 @@ parse_command(
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
    gboolean quick_flag         = false;
+   gboolean mock_data_flag     = false;
 
    // gboolean ignore_cc_flag = false;
    char *   mfg_id_work     = NULL;
@@ -824,6 +825,8 @@ parse_command(
       {"parse-only", '\0', 0,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
       {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
       {"quickenv",   '\0', 0,  G_OPTION_ARG_NONE,        &quick_flag,           "Skip long running tests", NULL},
+      {"enable-mock-data",
+                     '\0', 0,  G_OPTION_ARG_NONE,        &mock_data_flag,       "Enable mock feature values", NULL},
 
       // Generic options to aid development
       {"i1",      '\0', 0,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer",   "decimal or hex number" },
@@ -1029,6 +1032,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);
    SET_CMDFLAG(CMD_FLAG_QUICK,             quick_flag);
+   SET_CMDFLAG(CMD_FLAG_MOCK,              mock_data_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 
