@@ -174,8 +174,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                              errinfo_summary(ddc_excp), pvalrec);
       TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
 
-
-
       DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
       if (io_mode == DDCA_IO_USB) {
          if (psc == 0 || psc == DDCRC_DETERMINED_UNSUPPORTED) {
