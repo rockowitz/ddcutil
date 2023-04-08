@@ -407,7 +407,7 @@ static bool vdbgtrc(
 
    bool msg_emitted = false;
 
-   if (trace_api_call_depth > 0)
+   if (trace_api_call_depth > 0 || trace_callstack_call_depth > 0)
       trace_group = DDCA_TRC_ALL;
    if (debug)
       printf("(%s) Adjusted trace_group == 0x%02x\n", __func__, trace_group);
@@ -547,7 +547,24 @@ bool dbgtrc(
                        (fout() == stdout) ? "==" : "!=");
 
    bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
+   bool in_callstack = (trace_callstack_call_depth > 0);
+   if (options & DBGTRC_OPTIONS_STARTING) {
+      if (!in_callstack) {
+         if (is_traced_callstack_call(funcname)) {
+            trace_callstack_call_depth++;
+            in_callstack = true;
+         }
+      }
+      else {
+         trace_callstack_call_depth++;
+         in_callstack = true;
+      }
+   }
+   if (options & DBGTRC_OPTIONS_DONE) {
+      trace_callstack_call_depth--;
+   }
+
+   if ( in_callstack || is_tracing(trace_group, filename, funcname) ) {
       va_list(args);
       va_start(args, format);
       // if (debug)
@@ -585,7 +602,7 @@ bool dbgtrc_ret_ddcrc(
                        rc, format);
 
    bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) || trace_callstack_call_depth > 0 ) {
       char pre_prefix[60];
       g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", psc_name_code(rc));
       if (debug)
@@ -628,7 +645,7 @@ bool dbgtrc_returning_errinfo(
                        (void*)errs, format);
 
    bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) || trace_callstack_call_depth > 0 ) {
       char * pre_prefix = g_strdup_printf("Done      Returning: %s. ", errinfo_summary(errs));
       if (debug)
          printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
@@ -671,7 +688,7 @@ bool dbgtrc_returning_expression(
                        retval, format);
 
    bool msg_emitted = false;
-   if ( is_tracing(trace_group, filename, funcname) ) {
+   if ( is_tracing(trace_group, filename, funcname) || trace_callstack_call_depth > 0 ) {
       char pre_prefix[60];
       g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", retval);
       if (debug)
