@@ -115,7 +115,8 @@ errinfo_free(Error_Info * erec){
       erec->marker[3] = 'x';
       free(erec);
    }
-   printf("(%s) Done.\n", __func__);
+   if (debug)
+      printf("(%s) Done.\n", __func__);
 }
 
 
