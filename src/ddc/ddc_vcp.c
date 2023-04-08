@@ -549,7 +549,7 @@ ddc_get_nontable_vcp_value(
        DDCA_Vcp_Feature_Code          feature_code,
        Parsed_Nontable_Vcp_Response** parsed_response_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
