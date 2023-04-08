@@ -31,6 +31,7 @@ void init_base_services() {
    if (debug)
       printf("(%s) Starting.\n", __func__);
    errinfo_init(psc_name, psc_desc);
+   init_core();
    init_base_dynamic_features();
    init_ddc_packets();
    init_dsa0();
