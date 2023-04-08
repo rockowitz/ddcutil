@@ -640,6 +640,7 @@ parse_command(
    char**   cmd_and_args    = NULL;
    gchar**  trace_classes   = NULL;
    gchar**  trace_functions = NULL;
+   gchar**  trace_calls     = NULL;
    gchar**  trace_api_calls = NULL;
    gchar**  trace_filenames = NULL;
 // gboolean enable_syslog_flag  = false;
@@ -804,6 +805,7 @@ parse_command(
       {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_functions,      "Trace functions","function name" },
+      {"trccall",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_calls,          "Trace calls stack from function","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_filenames,      "Trace files",    "file name" },
 
 
@@ -1115,6 +1117,9 @@ parse_command(
 
    if (trace_functions) {
       parsed_cmd->traced_functions = trace_functions;
+   }
+   if (trace_calls) {
+      parsed_cmd->traced_calls = trace_calls;
    }
    if (trace_filenames) {
       parsed_cmd->traced_files = trace_filenames;

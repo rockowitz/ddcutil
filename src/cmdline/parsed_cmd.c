@@ -150,6 +150,7 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    free(parsed_cmd->fref);
    ntsa_free(parsed_cmd->traced_files, true);
    ntsa_free(parsed_cmd->traced_functions, true);
+   ntsa_free(parsed_cmd->traced_calls, true);
    ntsa_free(parsed_cmd->traced_api_calls, true);
    g_array_free(parsed_cmd->setvcp_values, true);
    free(parsed_cmd->s1);
@@ -160,6 +161,17 @@ void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    parsed_cmd->marker[3] = 'x';
    free(parsed_cmd);
    DBGMSF(debug, "Done");
+}
+
+static void
+dbgrpt_ntsa(int depth, char * title, gchar** values) {
+   if (values) {
+      char * joined = g_strjoinv(", ", values);
+      rpt_str(title, NULL, joined, depth);
+      free(joined);
+   }
+   else
+      rpt_str(title, NULL, "none", depth);
 }
 
 
@@ -193,28 +205,10 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("timestamp_trace",  NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,  d1);
       rpt_int_as_hex(
                "traced_groups",    NULL,  parsed_cmd->traced_groups,                    d1);
-      if (parsed_cmd->traced_functions) {
-         char * joined = g_strjoinv(", ", parsed_cmd->traced_functions);
-         rpt_str("traced_functions", NULL, joined, d1);
-         free(joined);
-      }
-      else
-         rpt_str("traced_functions", NULL, "none", d1);
-      if (parsed_cmd->traced_files) {
-         char * joined = g_strjoinv(", ", parsed_cmd->traced_files);
-         rpt_str("traced_files", NULL, joined, d1);
-         free(joined);
-      }
-      else
-         rpt_str("traced_files", NULL, "none", d1);
-
-      if (parsed_cmd->traced_api_calls) {
-         char * joined = g_strjoinv(", ", parsed_cmd->traced_api_calls);
-         rpt_str("traced_api_calls", NULL, joined, d1);
-         free(joined);
-      }
-      else
-         rpt_str("traced_files", NULL, "none", d1);
+      dbgrpt_ntsa(d1, "traced_functions", parsed_cmd->traced_functions);
+      dbgrpt_ntsa(d1, "traced_files", parsed_cmd->traced_files);
+      dbgrpt_ntsa(d1, "traced_api_calls", parsed_cmd->traced_api_calls);
+      dbgrpt_ntsa(d1, "traced_calls", parsed_cmd->traced_calls);
 
       rpt_int( "argct",       NULL,  parsed_cmd->argct, d1);
       int ndx = 0;
