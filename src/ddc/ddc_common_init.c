@@ -108,6 +108,7 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
           }
        }
     }
+
     if (parsed_cmd->traced_api_calls) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_api_calls); ndx++) {
           char * curfunc = parsed_cmd->traced_api_calls[ndx];
@@ -121,6 +122,21 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
           }
        }
    }
+
+   if (parsed_cmd->traced_calls) {
+      for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_calls); ndx++) {
+         char * curfunc = parsed_cmd->traced_calls[ndx];
+         if (debug)
+               printf("(%s) Adding traced call stack function: %s\n", __func__, curfunc);
+
+         bool found = add_traced_callstack_call(curfunc);
+         if (!found) {
+            emit_init_tracing_error(errinfo_accumulator, __func__, -EINVAL,
+                                     "Traced call stack function not found: %s", curfunc);
+         }
+      }
+   }
+
    if (parsed_cmd->traced_files) {
        for (int ndx = 0; ndx < ntsa_length(parsed_cmd->traced_files); ndx++) {
           if (debug)
