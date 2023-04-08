@@ -297,40 +297,40 @@ bool dbgtrc_returning_expression(
 #endif
 
 #define DBGTRC_STARTING(debug_flag, trace_group, format, ...) \
-    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING, \
+    dbgtrc( (debug_flag || trace_callstack_call_depth > 0 || is_traced_callstack_call(__func__) ) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__)
 
-#define DBGTRC_DONE(debug_flag, trace_group, format, ...) \
-    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+#define DBGTRC_DONE(debug_flag , trace_group, format, ...) \
+    dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
             __func__, __LINE__, __FILE__, "Done      "format, ##__VA_ARGS__)
 
 #define DBGTRC_EXECUTED(debug_flag, trace_group, format, ...) \
-    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
+    dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING | DBGTRC_OPTIONS_DONE, \
             __func__, __LINE__, __FILE__, "Executed  "format, ##__VA_ARGS__)
 
 #define DBGTRC_NOPREFIX(debug_flag, trace_group, format, ...) \
-    dbgtrc( (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_STARTING | DBGTRC_OPTIONS_DONE, \
+    dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
     dbgtrc_ret_ddcrc( \
-          (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
     dbgtrc_returning_expression( \
-          (debug_flag) ? DDCA_TRC_ALL : (trace_group), \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
     dbgtrc_returning_errinfo( \
-          (debug_flag) ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBGMSF_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
-if (_flag) { \
+if ((_flag) || trace_callstack_call_depth > 0)  { \
    dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
    if (_structptr) { \
@@ -339,7 +339,7 @@ if (_flag) { \
 }
 
 #define DBGTRC_RET_STRUCT(_flag, _trace_group, _structname, _dbgfunc, _structptr) \
-if ( (_flag) || is_tracing(_trace_group, __FILE__, __func__) )  { \
+if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FILE__, __func__) )  { \
    dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, \
           "Returning %s at %p", #_structname, _structptr); \
@@ -350,7 +350,7 @@ if ( (_flag) || is_tracing(_trace_group, __FILE__, __func__) )  { \
 
 #define DBGTRC_RET_ERRINFO_STRUCT(_debug_flag, _trace_group, _errinfo_result, \
                                   _structptr_loc, _dbgfunc)                   \
-   if ( (_debug_flag) || is_tracing(_trace_group, __FILE__, __func__) )  {    \
+   if ( (_debug_flag || trace_callstack_call_depth > 0 ) || is_tracing(_trace_group, __FILE__, __func__) )  {    \
       dbgtrc_returning_errinfo(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE,             \
               __func__, __LINE__, __FILE__,                                   \
               _errinfo_result, "*%s = %p", #_structptr_loc, *_structptr_loc); \
