@@ -318,14 +318,34 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                    bus_info->flags |= I2C_BUS_BUSY;
              }
           }
-          else if (ddcrc == -EBUSY)
+          else if (ddcrc == -EBUSY) {
              bus_info->flags |= I2C_BUS_BUSY;
+          }
 
           DBGMSF(debug, "Closing bus...");
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
       else {
          bus_info->open_errno = -errno;
+      }
+
+      if (bus_info->flags & I2C_BUS_BUSY) {
+         DBGMSF(debug, "Getting EDID from sysfs");
+         Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_busno(bus_info->busno);
+         if (connector_rec && connector_rec->edid_bytes) {
+            bus_info->edid = create_parsed_edid2(connector_rec->edid_bytes, "SYSFS");
+            if (debug) {
+               if (bus_info->edid)
+                  report_parsed_edid(bus_info->edid, false /* verbose */, 0);
+               else
+                  DBGMSG("create_parsed_edid() returned NULL");
+            }
+            if (bus_info->edid) {
+               bus_info->flags |= I2C_BUS_ADDR_0X50;  // ???
+               bus_info->flags |= I2C_BUS_SYSFS_EDID;
+               memcpy(bus_info->edid->edid_source, "SYSFS", 6);
+            }
+         }
       }
    }   // probing complete
 
@@ -341,13 +361,10 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
 }
 
 
-
-
 // satisfies GDestroyNotify()
 void i2c_gdestroy_bus_info(gpointer data) {
    i2c_free_bus_info((I2C_Bus_Info*) data);
 }
-
 
 
 /** Reports a single active display.
@@ -557,30 +574,11 @@ int i2c_detect_buses() {
          i2c_check_bus(businfo);
          if (debug || IS_TRACING() )
             i2c_dbgrpt_bus_info(businfo, 0);
-         if (businfo->flags & I2C_BUS_BUSY) {
-            DBGMSF(debug, "Getting EDID from sysfs");
-            Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_busno(busno);
-            if (connector_rec && connector_rec->edid_bytes) {
-               businfo->edid = create_parsed_edid2(connector_rec->edid_bytes, "SYSFS");
-               if (debug) {
-                  if (businfo->edid)
-                     report_parsed_edid(businfo->edid, false /* verbose */, 0);
-                  else
-                     DBGMSG("create_parsed_edid() returned NULL");
-               }
-               if (businfo->edid) {
-                  businfo->flags |= I2C_BUS_ADDR_0X50;  // ???
-                  businfo->flags |= I2C_BUS_SYSFS_EDID;
-                  memcpy(businfo->edid->edid_source, "SYSFS", 6);
-               }
-            }
-
-            if (debug) {
-               GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
-               // report_conflicting_drivers(conflicts);
-               DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
-               free_conflicting_drivers(conflicts);
-            }
+         if (debug) {
+            GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
+            // report_conflicting_drivers(conflicts);
+            DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
+            free_conflicting_drivers(conflicts);
          }
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);
@@ -610,11 +608,16 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    I2C_Bus_Info * businfo = NULL;
 
    if (i2c_device_exists(busno) ) {
+      if (!i2c_buses) {
+         i2c_buses = g_ptr_array_sized_new(1);
+         g_ptr_array_set_free_func(i2c_buses, i2c_gdestroy_bus_info);
+      }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
       i2c_check_bus(businfo);
       if (debug)
          i2c_dbgrpt_bus_info(businfo, 0);
+      g_ptr_array_add(i2c_buses, businfo);
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "busno=%d, returning: %p", busno, businfo);
@@ -683,12 +686,13 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-   RTTI_ADD_FUNC(i2c_open_bus);
+   RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
-   RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
+   RTTI_ADD_FUNC(i2c_discard_buses);
+   RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_display);
 }
 
