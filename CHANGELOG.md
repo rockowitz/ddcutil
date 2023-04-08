@@ -4,6 +4,19 @@
 
 ### Changed 
 
+DDC communication tests during display detection
+- more robust checks for misuse of DDC Null Message and all zero getvcp response to indicate unsupported feature
+
+--enable-mock-data
+- additional utility options --f7, --f8, --i2, --s1, --s2 
+
+option --quickenv
+
+environment --verbose: 
+additional dump for ARM
+
+option 
+
 - dynamic sleep algorithm
   - $USER/.cache/ddcutil/stats
   - ignored if either explicit sleep multiplier or not --dsa2
