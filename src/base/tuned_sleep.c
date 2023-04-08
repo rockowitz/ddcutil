@@ -239,8 +239,8 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d milliseconds", adjusted_sleep_time_millis);
 #endif
 
-   DBGTRC(debug, TRACE_GROUP,
-         "Executing. spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, Returning: %d",
+   DBGTRC_DONE(debug, TRACE_GROUP,
+         "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, Returning: %d",
          spec_sleep_time_millis, dsa_multiplier, adjusted_sleep_time_millis);
    return adjusted_sleep_time_millis;
 }
