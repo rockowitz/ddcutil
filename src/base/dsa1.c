@@ -180,11 +180,11 @@ void dsa1_update_sleep_multiplier_by_pdd(Per_Display_Data * pdd) {
                    dsa1->calls_since_last_check, dsa1->adjustment_check_interval);
 
    bool sleep_adjustment_changed = false;
-   double denominator = pdd->user_sleep_multiplier;  // --sleep-multiplier set by user
-   if (denominator == 0) {
-      DBGMSG("denominator == 0");
-      denominator = .01;
-   }
+   // double denominator = pdd->user_sleep_multiplier;  // --sleep-multiplier set by user
+   // if (denominator == 0) {
+   //    DBGMSG("denominator == 0");
+   //    denominator = .01;
+   // }
    double max_multiplier = 4.0f;
    if (dsa1->calls_since_last_check > dsa1->adjustment_check_interval) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Performing check");
