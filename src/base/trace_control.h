@@ -16,6 +16,7 @@
 #include "public/ddcutil_types.h"
 
 extern __thread  int  trace_api_call_depth;
+extern __thread  int  trace_callstack_call_depth;
 
 
 bool add_traced_function(const char * funcname);

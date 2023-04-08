@@ -25,6 +25,7 @@
 #include "trace_control.h"
 
 _Thread_local  int  trace_api_call_depth = 0;
+_Thread_local  int  trace_callstack_call_depth = 0;
 
 #ifdef ENABLE_SYSLOG
 bool enable_syslog = true;
