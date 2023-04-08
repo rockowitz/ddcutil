@@ -25,6 +25,9 @@ void dbgrpt_traced_function_table(int depth);
 bool add_traced_api_call(const char * funcname);
 bool is_traced_api_call( const char * funcname);
 
+bool add_traced_callstack_call(const char * funcname);
+bool is_traced_callstack_call( const char * funcname);
+
 void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
 

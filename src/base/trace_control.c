@@ -110,8 +110,9 @@ void add_trace_groups(DDCA_Trace_Group trace_flags) {
 static GPtrArray  * traced_function_table = NULL;
 static GPtrArray  * traced_file_table     = NULL;
 static GPtrArray  * traced_api_call_table = NULL;
+static GPtrArray  * traced_callstack_call_table = NULL;
 
-
+#ifdef UNUSED
 void dbgrpt_traced_function_table(int depth) {
    if (traced_function_table) {
       rpt_vstring(depth, "traced_function_table:");
@@ -124,6 +125,7 @@ void dbgrpt_traced_function_table(int depth) {
    else
       rpt_vstring(depth, "traced_function_table: NULL");
 }
+#endif
 
 
 /** Adds a function to the list of functions to be traced.
@@ -173,6 +175,29 @@ bool add_traced_api_call(const char * funcname) {
 }
 
 
+bool add_traced_callstack_call(const char * funcname) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
+
+   if (!rtti_get_func_addr_by_name(funcname))
+      return false;
+
+   if (!traced_callstack_call_table)
+      traced_callstack_call_table = g_ptr_array_new();
+   // n. g_ptr_array_find_with_equal_func() requires glib 2.54
+   bool missing = (gaux_string_ptr_array_find(traced_callstack_call_table, funcname) < 0);
+   if (missing)
+      g_ptr_array_add(traced_callstack_call_table, g_strdup(funcname));
+
+   if (debug)
+      printf("(%s) Done. funcname=|%s|, missing=%s\n",
+             __func__, funcname, SBOOL(missing));
+   return true;
+}
+
+
+
 /** Adds a file to the list of files to be traced.
  *
  *  @param filename file name
@@ -212,6 +237,18 @@ void add_traced_file(const char * filename) {
 }
 
 
+static char * get_gptrarray_as_joined_string(GPtrArray * arry, bool sort) {
+   char * result = NULL;
+   if (arry) {
+      if (sort)
+         g_ptr_array_sort(arry, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(arry, ", ");
+   }
+   return result;
+}
+
+
+#ifdef OLD
 static char * get_traced_functions_as_joined_string() {
    char * result = NULL;
    if (traced_function_table) {
@@ -232,6 +269,17 @@ static char * get_traced_api_calls_as_joined_string() {
 }
 
 
+static char * get_traced_callstack_calls_as_joined_string() {
+   char * result = NULL;
+   if (traced_callstack_call_table) {
+      g_ptr_array_sort(traced_callstack_call_table, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(traced_callstack_call_table, ", ");
+   }
+   return result;
+}
+
+
+
 static char * get_traced_files_as_joined_string() {
    char * result = NULL;
    if (traced_file_table) {
@@ -240,6 +288,7 @@ static char * get_traced_files_as_joined_string() {
    }
    return result;
 }
+#endif
 
 
 /** Checks if a function is being traced.
@@ -258,10 +307,25 @@ bool is_traced_api_call(const char * funcname) {
    bool debug = false;
    if (debug) {
       printf("(%s) Starting. funcname = %s\n", __func__, funcname);
-      printf("(%s) traced_api_calls: %s\n", __func__, get_traced_api_calls_as_joined_string() );
+      printf("(%s) traced_api_calls: %s\n", __func__, get_gptrarray_as_joined_string(traced_api_call_table, true) );
    }
 
    bool result = (traced_api_call_table && gaux_string_ptr_array_find(traced_api_call_table, funcname) >= 0);
+
+   if (debug)
+      printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, SBOOL(result));
+   return result;
+}
+
+
+bool is_traced_callstack_call(const char * funcname) {
+   bool debug = false;
+   if (debug) {
+      printf("(%s) Starting. funcname = %s\n", __func__, funcname);
+      printf("(%s) traced_callstack_calls: %s\n", __func__, get_gptrarray_as_joined_string(traced_callstack_call_table, true) );
+   }
+
+   bool result = (traced_callstack_call_table && gaux_string_ptr_array_find(traced_callstack_call_table, funcname) >= 0);
 
    if (debug)
       printf("(%s) funcname=|%s|, returning: %s\n", __func__, funcname, SBOOL(result));
@@ -344,15 +408,19 @@ void report_tracing(int depth) {
    rpt_vstring(d1, "Trace groups active:     %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
-   buf = get_traced_functions_as_joined_string();
+   buf = get_gptrarray_as_joined_string(traced_function_table, true);
    rpt_vstring(d1, "Traced functions:        %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
-   buf = get_traced_api_calls_as_joined_string();
+   buf = get_gptrarray_as_joined_string(traced_api_call_table, true);
    rpt_vstring(d1, "Traced API calls:        %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
-   buf = get_traced_files_as_joined_string();
+   buf = get_gptrarray_as_joined_string(traced_callstack_call_table, true);
+   rpt_vstring(d1, "Traced call stack calls: %s", (buf && strlen(buf)>0) ? buf : "none");
+   free(buf);
+
+   buf = get_gptrarray_as_joined_string(traced_file_table, true);
    rpt_vstring(d1, "Traced files:            %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
