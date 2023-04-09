@@ -984,17 +984,19 @@ cirb_parse_and_add(Circular_Invocation_Result_Buffer * cirb, char * segment) {
       char * s = g_strdup(segment);
       char * comma_pos = strchr(s, ',');
       char * comma_pos2 = (comma_pos) ? strchr(comma_pos+1, ',') : NULL;
-      char * lastpos = s + strlen(s) - 1;
-      if (comma_pos && comma_pos < lastpos && comma_pos2 < lastpos) {
+      char * lastpos = s + strlen(s) - 1;  // subtract for final '}'
+      if (comma_pos && comma_pos2) {
          *comma_pos  = '\0';
          *comma_pos2 = '\0';
          *lastpos    = '\0';
-         Successful_Invocation si;
-         result  = str_to_long(s+1,           &si.epoch_seconds, 10);
-         result &= str_to_int(comma_pos  + 1, &si.tryct,         10);
-         result &= str_to_int(comma_pos2 + 1, &si.required_step, 10);
-         if (result) {
-            cirb_add(cirb, si);
+         if (strlen(s+1) > 0 && strlen(comma_pos+1) > 0 && strlen(comma_pos2 + 1) > 0 ) {
+            Successful_Invocation si;
+            result  = str_to_long(s+1,           &si.epoch_seconds, 10);
+            result &= str_to_int(comma_pos  + 1, &si.tryct,         10);
+            result &= str_to_int(comma_pos2 + 1, &si.required_step, 10);
+            if (result) {
+               cirb_add(cirb, si);
+            }
          }
       }
       g_free(s);
