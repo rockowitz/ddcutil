@@ -1139,7 +1139,6 @@ ddca_append_thread_description(
 
 const char *
 ddca_get_thread_descripton() {
-   return NULL;
    return ptd_get_thread_description_t();
 }
 
