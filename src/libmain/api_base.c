@@ -190,8 +190,6 @@ get_parsed_libmain_config(char *       libopts_string,
    for (; ndx < libopts_token_ct; ndx++)
       cmd_name_array[ndx+1] = libopts_tokens[ndx];
    cmd_name_array[ndx+1] = NULL;
-   // if (libopts_tokens)
-   //   ntsa_free(libopts_tokens, false);
 
    if (debug)
       printf("(%s) cmd_name_array=%p, cmd_name_array[1]=%p -> %s\n",
@@ -291,7 +289,6 @@ get_parsed_libmain_config(char *       libopts_string,
            DBGF(true, "After libopts tokens applied:");
            ntsa_show(new_argv);
         }
-
       }
       if (debug)
          printf("(%s) Calling parse_command(), errmsgs=%p\n", __func__, errmsgs);
@@ -323,6 +320,8 @@ get_parsed_libmain_config(char *       libopts_string,
       // ntsa_free(new_argv, true);
       free(untokenized_option_string);
    }
+   if (libopts_tokens)
+      ntsa_free(libopts_tokens, false);
 
    if (debug)
       printf("(%s) Done.     *parsed_cmd_loc=%p. Returning %s\n",
