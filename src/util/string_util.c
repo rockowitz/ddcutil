@@ -1014,18 +1014,28 @@ bool str_to_long(const char * sval, long * p_ival, int base)
    bool ok = false;
    if (sval) {
       if ( *sval != '\0') {
-         char * work = (sval[0] == 'x' || sval[0] == 'X')
-                          ? g_strdup_printf("0%s", sval)
-                          : strdup(sval);
+         char * work = NULL;
+         bool has_digits = false;
+         if (sval[0] == 'x' || sval[0] == 'X') {
+            work = g_strdup_printf("0%s", sval);
+            has_digits = strlen(work) > 2;
+         }
+         else {
+            work = strdup(sval);
+            has_digits = strlen(work) > 0;
+         }
+
          if (debug)
             printf("(%s) work = %s\n", __func__, work);
 
-         long result = strtol(work, &endptr, base); // allow hex
-         // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
-         //        __func__, sval, endptr, *endptr, *endptr, result);
-         if (*endptr == '\0') {
-            *p_ival = result;
-            ok = true;
+         if (has_digits) {
+            long result = strtol(work, &endptr, base); // allow hex
+            // printf("(%s) sval=%p, endptr=%p, *endptr=|%c| (0x%02x), result=%ld\n",
+            //        __func__, sval, endptr, *endptr, *endptr, result);
+            if (*endptr == '\0') {
+               *p_ival = result;
+               ok = true;
+            }
          }
          free(work);
       }
