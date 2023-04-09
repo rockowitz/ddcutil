@@ -627,7 +627,7 @@ void test_dsa2_next_retry_step() {
  */
 static void
 dsa2_adjust_for_recent_successes(Results_Table * rtable) {
-   bool debug = true;
+   bool debug = false;
 
    // n. called only if most recent try was a success
    Successful_Invocation latest_values[MAX_RECENT_VALUES];
@@ -717,7 +717,7 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
  */
 void
 dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, remaining_tries=%d, dsa2_enabled=%s",
          rtable, rtable->busno, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
@@ -756,7 +756,7 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
  */
 void
 dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, ddcrc=%s, tries=%d dsa2_enabled=%s",
                    rtable, rtable->busno, psc_desc(ddcrc), tries, sbool(dsa2_enabled));
    if (!dsa2_enabled) {
