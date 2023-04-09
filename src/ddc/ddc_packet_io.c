@@ -636,7 +636,9 @@ ddc_write_read_with_retry(
    // if (debug)
    //     dbgrpt_display_ref(dh->dref, 1);
 
+#ifdef DSA0
    Per_Display_Data * pdd = dh->dref->pdd;
+#endif
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
    bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "retry_null_rsponse=%s", sbool(retry_null_response));
@@ -650,7 +652,9 @@ ddc_write_read_with_retry(
    // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
    int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
 
+#ifdef DSA0
    bool sleep_multiplier_incremented = false;   // dsa0
+#endif
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "retry_null_response = %s, ddcrc_null_response_max = %d",
                                          sbool(retry_null_response), ddcrc_null_response_max);
@@ -796,10 +800,12 @@ ddc_write_read_with_retry(
                    "%s,%s after %d error%s: %s", dh_repr(dh), s0, errct, s1, s);
    free(s);
 
+#ifdef DSA0
    if (dsa0_enabled && sleep_multiplier_incremented) {
       dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, 1);   // in case we changed it
       dsa0_bump_sleep_multiplier_changer_ct(pdd->dsa0_data);
    }
+#endif
 
    Error_Info * ddc_excp = NULL;
 
