@@ -2,61 +2,94 @@
 
 ## [1.5.0] 2023-nn-nn
 
+### Added
+
+install /usr/lib/modules-load.d/ddcutil.conf
+
+
 ### Changed 
 
-DDC communication tests during display detection
-- more robust checks for misuse of DDC Null Message and all zero getvcp response to indicate unsupported feature
+The dynamic sleep algorithm has been completely rewritten to both dynamically increase
+the sleep-multiplier factor (as needed) and decrease the sleep multiplier factor 
+(insofar as possible).  Data is maintained across program executions in file 
+$HOME/.cache/ddcutil/stats. Use this algorithm is currently off by default.  It is
+enabled by option ***--dsa2***. If both ***--sleep-multiplier*** and ***--dsa2***
+are specified, existing statistics are discarded and the sleep algorithm starts 
+with the specified sleep-multiplier value.
 
---enable-mock-data
-- additional utility options --f7, --f8, --i2, --s1, --s2 
+- Option ***--sleep-multiplier***:  0 is now allowed as an argument. Some DisplayPort monitors
+have been observed to work with this value.  (For implementation of the dynamic
+sleep algorithm, 0 is replaced internally by .01.)
 
-option --quickenv
+More robust checks durning display detection to check for misuse of the DDC Null Message
+and all zero getvcp response to indicate unsupported features.
 
-environment --verbose: 
-additional dump for ARM
+Detailed statistics are now maintained on a per-display instead of per-thread basis.
 
-option 
+- Option ***--per-display-stats*** 
 
-- dynamic sleep algorithm
-  - $USER/.cache/ddcutil/stats
-  - ignored if either explicit sleep multiplier or not --dsa2
+Miscellaneous options changes:
 
--  -- sleep-multiplier = 0 allowed
+- **environment --verbose**: Option ***--quickenv*** skips some slow tests such as 
+  use of program i2cdetect.
 
-- many displays can function with very low --sleep-multiplier values 
-  some with 0 for DP
+- **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
+   those devices use /sys
 
 - --dsa2 --no-dsa2 --enable-dsa2 --disable-dsa2
 
 
-- libddcutil initialization 
-  function ddca_init() 
-  - arguments: library_options
-               DDCA_Init_Options
-  - sets errors for ddca_get_error_detail()
+**libddcutil** changes
 
-- per-thread actions/options/statitics generally replaced by per-display
-- detailed statistics are now per-display
+The API is compatible with prior releaes.
 
-    The API is unchanged
+Library initialization has been reworked extensively to move operations 
+that can fail and other aspects that should be under control of the library user
+into a new function **ddca_init()**.
+
+This function: 
+- controls whether messages are written to the system log
+- optionally processes options obtained from the **ddcutil** configuration file
+- processes additional options passed as a string
+- sets error information for ddca_get_error_detail()
+
+If this function is not called by the user program, any API function that relies on its 
+processing invokes **ddca_init()** using arguments such that it never fails, e.g. 
+the configuration file is not processed.
+
+The semantics of some functions have changed, reflecting
+the fact that some information is maintained on a per-display
+rather than per-thread basis.
+
+- ddca_set_sleep_multiplier(), ddca_get_sleep_multiplier(). 
+  Instead of operating on the current thread, these functions operate on the
+  display, if any, open in the current thread.
+
+- ddca_set_default_sleep_multiplier(), ddca_get_default_sleep_multiplier()
+  Operate on newly detected displays, not new threads.
     
-    ddca_set_default_sleep_multiplier(), ddca_get_default_sleep_multiplier()
-    operates on newly detected displays, not new threads
-    
-    ddca_set_sleep_multiplier(), ddca_get_sleep_multiplier()
-    
-    intead of operating on the current thread, operate on the display,
-    if any, open in the current thread
 
-    functions with changed semantics(): 
+Miscellaneous:
 
-    ddca_report_display_info() returns DDCA_Status instead of void
-
- - utility option --i1 overrids x51 as packet source address
- 
+- ddca_report_display_info() returns DDCA_Status instead of void
 
 
+### Fixed
 
+
+### Development Facilities
+
+- Added utility options --f7, --f8, --i2, --s1, --s2, --s3, --s4
+  These options are used temporarily during development to avoid having to
+  create new options for test purposes.  The current use of the utility 
+  options is reported by option ***--settings***.
+
+- Option ***--enable-mock-data***
+
+- Option ***--trccall*** indicates that trace is enabled no only for the function,
+  but also the functions that it calls. 
+
+- Utility option ***--i1*** currently overrides x51 as packet source address
 
 
 ## [1.4.2] 2023-02-17
