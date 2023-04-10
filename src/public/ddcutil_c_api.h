@@ -170,6 +170,22 @@ ddca_rc_desc(
 // Initialization
 //
 
+/** Performs library initialization.
+ *
+ *  @param  library_options  string of **libddcutil** options
+ *  @param  opts             option flags
+ *  @return status code
+ *
+ * Unless flag DDC_INIT_OPTIONS_CONFIG_FILE is set in **opts**,
+ * libddcutil options are read from the ddcutil configuration file.
+ * These are combined with any options passed in string **library_options**
+ * and then processed.
+ *
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail().
+ *
+ * @since 1.5.0
+ */
 DDCA_Status ddca_init(char * library_options, DDCA_Init_Options opts);
 
 
