@@ -98,8 +98,7 @@ typedef struct ddca_error_detail {
 typedef enum {
    DDCA_INIT_OPTIONS_NONE                = 0,
    DDCA_INIT_OPTIONS_DISABLE_SYSLOG      = 1,
-   DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE = 2,
-   DDCA_INIT_OPTIONS_ALL                 = 255
+   DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE = 2
 } DDCA_Init_Options;
 
 
