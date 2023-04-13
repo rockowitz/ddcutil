@@ -106,12 +106,6 @@ typedef enum {
 // I2C Protocol Control
 //
 
-//! I2C timeout types
-typedef enum{
-   DDCA_TIMEOUT_STANDARD,      /**< Normal retry interval */
-   DDCA_TIMEOUT_TABLE_RETRY    /**< Special timeout for Table reads and writes */
-} DDCA_Timeout_Type;
-
 //! I2C retry limit types
 typedef enum{
    DDCA_WRITE_ONLY_TRIES,     /**< Maximum write-only operation tries */
