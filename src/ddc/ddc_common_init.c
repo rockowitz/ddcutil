@@ -9,6 +9,7 @@
 // be shared with libmain/api.base.c
 
 #include <assert.h>
+#include <errno.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
