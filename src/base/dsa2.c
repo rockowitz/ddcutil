@@ -8,9 +8,11 @@
 #define __ISOC99_SOURCE
 
 #include <assert.h>
+#include <errno.h>
 #include <math.h>
 #include <regex.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
 #include <time.h>
@@ -950,7 +952,7 @@ dsa2_erase_persistent_stats() {
    Status_Errno result = 0;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    char * stats_fn = stats_cache_file_name();
-   int rc = unlink(stats_fn);
+   int rc = remove(stats_fn);
    if (rc < 0 && errno != ENOENT)
       result = -errno;
    free(stats_fn);
