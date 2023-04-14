@@ -132,7 +132,7 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
    GPtrArray * result = g_ptr_array_new();
    g_ptr_array_set_free_func(result, g_free);
    if (debug)
-      printf("(%s) Starting. shell_cmd = |%s|", __func__, shell_cmd);
+      printf("(%s) Starting. shell_cmd = |%s|\n", __func__, shell_cmd);
    bool ok = true;
    FILE * fp;
    int bufsz = strlen(shell_cmd) + 50;
@@ -151,8 +151,11 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
        size_t len = 0;
        bool first_line = true;
        while ( getline(&a_line, &len, fp) >= 0) {
+
           if (strlen(a_line) > 0)
              a_line[strlen(a_line)-1] = '\0';
+          if (debug)
+             printf("(%s) a_line = |%s|\n", __func__, a_line);
           if (first_line) {
              if (str_ends_with(a_line, "not found")) {
                 // printf("(%s) found \"not found\"\n", __func__);
