@@ -538,15 +538,6 @@ dnl                     AC_MSG_NOTICE( [header file i2c/smbus.h found.] ),
 dnl                     AC_MSG_ERROR( [libi2c development package (e.g. libi2c-dev, name varies by distribution) >= 4.0 required.] )
 dnl 					)
 
-dnl on openSUSE, libkmod.h is found in a subdirectory
-AC_CHECK_HEADER( [kmod/libkmod.h],
-                    AC_DEFINE([LIBKMOD_H_SUBDIR_KMOD], [1], [libkmod.h location is include/kmod])
-                    AC_MSG_NOTICE( [header file libkmod.h found in subdirectory include/kmod]  )
-               ,
-	            AC_MSG_NOTICE( [header file libkmod.h not in subdirectory include/kmod]    )
-
-               )
-
 
 ###
 ### Required library tests
@@ -560,9 +551,6 @@ dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
 dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40) 
 required_packages="$required_packages glib-2.0 >= 2.40"
-
-PKG_CHECK_MODULES(KMOD, libkmod)
-required_packages="$required_packages kmod"
 
 AS_IF( [test "x$enable_udev" = "xyes"],
   [   PKG_CHECK_MODULES(UDEV,   libudev, 

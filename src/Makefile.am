@@ -217,8 +217,7 @@ endif
 libcommon_la_LIBADD += \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
-  $(LIBUSB_LIBS) \
-  $(KMOD_LIBS)
+  $(LIBUSB_LIBS) 
 
 # for smbus functions:
 # libcommon_la_LIBADD += -li2c

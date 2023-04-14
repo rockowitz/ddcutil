@@ -20,7 +20,6 @@
 
 #include "util/data_structures.h"
 #include "util/edid.h"
-#include "util/libkmod_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -455,10 +454,7 @@ static void probe_i2c_devices_using_udev() {
 
 
 void rpt_module_status(int depth, const char * module_name) {
-   int module_status =  module_status_using_libkmod(module_name);
-   int module_status2 = module_status_by_modules_builtin_or_existence(module_name);
-   // DBGMSG("module_status=%d, module_status2=%d", module_status, module_status2);
-   assert(module_status == module_status2);
+   int module_status = module_status_by_modules_builtin_or_existence(module_name);
    switch( module_status) {
    case KERNEL_MODULE_NOT_FOUND:    // 0
       rpt_vstring(depth,"Kernel module %-16s not found", module_name);
@@ -467,7 +463,7 @@ void rpt_module_status(int depth, const char * module_name) {
       rpt_vstring(depth,"Kernel module %-16s is builtin", module_name);
       break;
    case KERNEL_MODULE_LOADABLE_FILE: // 2
-      if (is_module_loaded_using_libkmod(module_name))
+      if (is_module_loaded_using_sysfs(module_name))
          rpt_vstring(depth, "Kernel module %-16s is loaded", module_name);
       else
          rpt_vstring(depth, "Kernel module %-16s found but not loaded", module_name);
@@ -480,7 +476,7 @@ void rpt_module_status(int depth, const char * module_name) {
 }
 
 
-void query_loaded_modules_using_libkmod() {
+void query_loaded_modules() {
    rpt_vstring(0,"*** Checking if modules are loaded or builtin... ***");
 
    char ** pmodule_names = get_known_video_driver_module_names();
@@ -838,7 +834,7 @@ void query_sysenv(bool quick_env) {
                                  1);     // logical depth
       // printf("Detected: %d displays\n", display_ct);   // not needed
 
-      query_loaded_modules_using_libkmod();
+      query_loaded_modules();
       rpt_nl();
 
       // printf("Gathering card and driver information...\n");
