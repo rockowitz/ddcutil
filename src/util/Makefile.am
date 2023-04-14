@@ -31,6 +31,7 @@ file_util_base.c           \
 glib_util.c                \
 glib_string_util.c         \
 i2c_util.c                 \
+libkmod_util.c             \
 linux_util.c               \
 multi_level_map.c          \
 pnp_ids.c                  \

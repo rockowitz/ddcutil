@@ -20,6 +20,7 @@
 
 #include "util/data_structures.h"
 #include "util/edid.h"
+#include "util/libkmod_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -455,6 +456,9 @@ static void probe_i2c_devices_using_udev() {
 
 void rpt_module_status(int depth, const char * module_name) {
    int module_status =  module_status_using_libkmod(module_name);
+   int module_status2 = module_status_by_modules_builtin_or_existence(module_name);
+   // DBGMSG("module_status=%d, module_status2=%d", module_status, module_status2);
+   assert(module_status == module_status2);
    switch( module_status) {
    case KERNEL_MODULE_NOT_FOUND:    // 0
       rpt_vstring(depth,"Kernel module %-16s not found", module_name);

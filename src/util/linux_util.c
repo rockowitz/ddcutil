@@ -17,13 +17,9 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include <sys/utsname.h>
 #include <unistd.h>
-#ifdef LIBKMOD_H_SUBDIR_KMOD
-#include <kmod/libkmod.h>
-#else
-#include <libkmod.h>
-#endif
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
@@ -36,6 +32,7 @@
 
 #include "file_util.h"
 #include "string_util.h"
+#include "subprocess_util.h"
 
 #include "linux_util.h"
 
@@ -132,165 +129,228 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
 }
 
 
-/** Uses libkmod to determine if a kernel module exists and
-  * if so whether it is built into the kernel or a loadable file.
-  *
-  * \param   module_alias
-  * \retval  0=KERNEL_MODULE_NOT_FOUND      not found  (or use -ENOENT?)
-  * \retval  1=KERNEL_MODULE_BUILTIN        module is built into kernel
-  * \retval  2=KERNEL_MODULE_LOADABLE_FILE  module is is loadable file
-  * \retval  < 0                            -errno
-  *
-  * \remark Adapted from kmod file tools/modinfo.c
-  */
-int module_status_using_libkmod(const char * module_alias)
-{
+/** Checks whether a module file exists for the current kernel.
+ *
+ *  Name variants using underscores (_) and hyphens (-) are both checked.
+ *
+ *  Allows for extension .ko.xz etc. as well as .ko.
+ *
+ *  @param  module_name  name of module
+ *  @retval true  file exists
+ *  @retval false file does not exist
+ */
+bool find_module_ko(const char * module_name) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. module_alias=%s\n", __func__, module_alias);
+      printf("(%s) Starting. module_name: %s\n", __func__, module_name);
 
-   int result = 0;
-   struct kmod_ctx * ctx = NULL;
-   struct kmod_module *  mod;
-   const char * filename = NULL;
-   int rc = 0;
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
 
-   ctx = kmod_new(
-            NULL ,     // use default modules directory, /lib/modules/`uname -r`
-            NULL);     // use default config file path: /etc/modprobe.d, /run/modprobe.d,
-                       // /usr/local/lib/modprobe.d and /lib/modprobe.d.
-   if (!ctx) {
-      result = -errno;
-      if (result == 0)     // review of kmond_new() code indicates should be impossible
-         result = -999;    // .. but kmod_new() documentation does not guarantee
-      goto bye;
-   }
+   char * module_name1 = strdup(module_name);
+   char * module_name2 = strdup(module_name);
+   str_replace_char(module_name1, '-','_');
+   str_replace_char(module_name2, '_','-');
 
-   if (debug) {
-      const char *  s1 = kmod_get_dirname(ctx);
-      printf("(%s) ctx->dirname = |%s|\n", __func__, s1);
-   }
-
-   // According to inline kmod doc, this is only a performance enhancer, but
-   // without it valgrind reports a branch is taken based on an uninitialized
-   // variable in kmod_module_new_from_lookup().  Execution does, however,
-   // proceed. "valgrind modinfo" shows the same behavior.
-   // If kmod_load_resources() is called, this bogus error message does
-   // not occur.
-   rc = kmod_load_resources(ctx);
-   if (rc < 0) {
+   bool result = false;
+   char cmd[200];
+   g_snprintf(cmd, 200, "find /lib/modules/%s -name \"%s.ko*\" -o -name \"%s.ko*\"",
+         utsbuf.release, module_name1, module_name2);
+   if (debug)
+      printf("(%s) cmd |%s|\n", __func__, cmd);
+   GPtrArray * cmd_result = execute_shell_cmd_collect(cmd);
+   if (cmd_result) {
       if (debug)
-         printf("(__func__) kmod_load_resources() returned %d\n", rc);
-      result = rc;
-      goto bye;
-   }
-
-   struct kmod_list* list = NULL;
-   rc = kmod_module_new_from_lookup(ctx, module_alias, &list);
-   if (rc < 0) {
-      result = rc;
-      goto bye;
-   }
-
-   if (list == NULL) {
-      if (debug)
-         printf("(%s) Module %s not found.\n", __func__, module_alias);
-      result = KERNEL_MODULE_NOT_FOUND;   // or use result = -ENOENT ?
-      goto bye;
-   }
-
-   struct kmod_list* itr;
-   kmod_list_foreach(itr, list) {
-      mod = kmod_module_get_module(itr);
-      // would fail if 2 entries in list since filename is const
-      // but this is how tools/modinfo.c does it, assumes only 1 entry
-      filename = kmod_module_get_path(mod);
-      const char *name = kmod_module_get_name(mod);
-      if (debug) {
-         printf("(%s) name = |%s|, path = |%s|\n", __func__, name, filename);
+         printf("(%s) len=%d\n", __func__, cmd_result->len);
+      if (cmd_result->len > 0) {
+         if (debug)
+             printf("(%s) Found: %s\n", __func__, (char*) g_ptr_array_index(cmd_result,0));
+         result = true;
       }
-      kmod_module_unref(mod);
+      g_ptr_array_free(cmd_result,true);
    }
-   kmod_module_unref_list(list);
-
-   result = (filename) ? KERNEL_MODULE_LOADABLE_FILE : KERNEL_MODULE_BUILTIN;
-
-bye:
-   if (ctx)
-      kmod_unref(ctx);
+   free(module_name1);
+   free(module_name2);
 
    if (debug)
-      printf("(%s) Done.     module_alias=%s, returning %d\n",__func__,  module_alias, result);
+      printf("(%s) Done.  Returning %s\n", __func__, sbool(result));
    return result;
 }
 
 
-/** Uses libkmod to check if a kernel module is loaded.
+/** Examines file /lib/modules/<kernel release>/modules/builtin to determine
+ *  whether a module is built into the kernel.
  *
- *  \param  module name
- *  \retval 0  not loaded
- *  \retval 1  is loaded
- *  \retval <0 -errno
+ *  Name variants using underscores (_) and hyphens (-) are both checked.
  *
- *  \remark Adapted from kmod file tools/lsmod.c
+ *  Allows for extension .ko.xz etc. as well as .ko.
  *
- *  \remark
- *  Similar to module_status_using_libkmod(), but calls
- *  kmod_module_new_from_loaded() instead of kmod_module_new_from_lookup().
+ *  @param  module_name  name of module
+ *  @retval true  module is built in
+ *  @retval false module is not built in, or modules/builtin file not found
+ *
+ *  @remark
+ *  It is possible that modules/builtin does not exist for some incorrectly
+ *  built kernel.
  */
-int is_module_loaded_using_libkmod(const char * module_name) {
+bool is_module_built_in_by_modules_builtin(const char * module_name) {
    bool debug = false;
    if (debug)
-      printf("(%s) Starting. module_name=%s\n", __func__, module_name);
+      printf("(%s) Starting. module_name = |%s|\n", __func__, module_name);
 
-   int result = 0;
-   int err = 0;
-
-   struct kmod_ctx * ctx = kmod_new(NULL, NULL);
-   if (!ctx) {
-      result = -errno;
-      if (result == 0)  // kmond_new() doc does not guarantee that errno set
-         result = -999;
-      goto bye;
-   }
-
-   struct kmod_list *list = NULL;
-   err = kmod_module_new_from_loaded(ctx, &list);
-   if (err < 0) {
-       fprintf(stderr, "Error: could not get list of loaded modules: %s\n", strerror(-err));
-       result = err;
-       goto bye;
-   }
-
-   char * module_name1 = g_strdup(module_name);
-   char * module_name2 = g_strdup(module_name);
+   // Look for name variants with either "-" or "_"
+   char * module_name1 = strdup(module_name);
+   char * module_name2 = strdup(module_name);
    str_replace_char(module_name1, '-','_');
-   str_replace_char(module_name2, '_', '-');
-   struct kmod_list *itr;
+   str_replace_char(module_name2, '_','-');
+
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
+
+   char builtin_fn[PATH_MAX];
+   g_snprintf(builtin_fn, PATH_MAX, "/lib/modules/%s/modules.builtin", utsbuf.release);
+
    bool found = false;
-   kmod_list_foreach(itr, list) {
-       struct kmod_module *mod = kmod_module_get_module(itr);
-       const char *name = kmod_module_get_name(mod);
-       kmod_module_unref(mod);
-       if (streq(name, module_name1) || streq(name, module_name2)) {
-          found = true;
-          break;
-       }
+   if ( !regular_file_exists(builtin_fn) ) {
+      fprintf(stderr, "File not found: %s\n", builtin_fn);
+   }
+   else {
+      char cmd[200];
+      // fbdev.ko is under kernel/arch/x86/video
+      g_snprintf(cmd, 200, "grep  -e \"^kernel/.*/%s.ko\" -e \"^kernel/.*/%s.ko\"  %s ",
+                 module_name1, module_name2, builtin_fn);  // allow for .ko.xz etc.
+      if (debug)
+         printf("(%s) cmd |%s|\n", __func__, cmd);
+      GPtrArray * cmd_result = execute_shell_cmd_collect(cmd);
+      if (cmd_result) {
+         if (debug)
+            printf("(%s) len=%d\n", __func__, cmd_result->len);
+         if (cmd_result->len > 0) {
+            found = true;
+         }
+         g_ptr_array_free(cmd_result,true);
+      }
    }
    free(module_name1);
    free(module_name2);
-   kmod_module_unref_list(list);
-
-   result = (found) ? 1 : 0;
-
-bye:
-   if (ctx) {
-      kmod_unref(ctx);
-   }
 
    if (debug)
-      printf("(%s) Done.     Returning: %d\n", __func__, result);
+      printf("(%s) Done.    module_name=%s, Returning %s\n", __func__, module_name, sbool(found));
+   return found;
+}
+
+
+#ifdef OLD_WAY
+/** Checks if a module is built into the kernel.
+  *
+  * \param  module_name  simple module name, as it appears in the file system, e.g. i2c-dev
+  * \return true/false
+  */
+bool is_module_builtin(char * module_name)
+{
+   bool debug = false;
+   bool result = false;
+
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
+
+   char modules_builtin_fn[100];
+   snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
+
+   char ko_name[40];
+   snprintf(ko_name, 40, "%s.ko", module_name);
+
+   result = false;
+   GPtrArray * lines = g_ptr_array_new_full(400, g_free);
+   char * terms[2];
+   terms[0] = ko_name;
+   terms[1] = NULL;
+   int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, terms, false, 0);
+   if (unfiltered_ct < 0) {
+      char buf[100];
+      strerror_r(errno, buf, 100);
+      fprintf(stderr, "Error reading file %s: %s\n", modules_builtin_fn, buf);
+      fprintf(stderr, "Assuming module %s is not built in to kernel\n", module_name);
+   }
+   else {
+      result = (lines->len == 1);
+   }
+   g_ptr_array_free(lines, true);
+   if (debug)
+      printf("(%s) module_name=%s, returning %s\n",__func__,  module_name, sbool(result));
    return result;
+}
+#endif
+
+
+
+#ifdef REF
+#define KERNEL_MODULE_NOT_FOUND     0     // not found
+#define KERNEL_MODULE_BUILTIN       1     // module is built into kernel
+#define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
+#endif
+
+char * kernel_module_types[] = {
+      "KERNEL_MODULE_NOT_FOUND",
+      "KERNEL_MODULE_BUILTIN",
+      "KERNEL_MODULE_LOADABLE_FILE"};
+
+int module_status_by_modules_builtin_or_existence(const char * module_name) {
+   bool debug = false;
+   int result = KERNEL_MODULE_NOT_FOUND;
+   if ( is_module_built_in_by_modules_builtin(module_name) )
+      result = KERNEL_MODULE_BUILTIN;
+   else {
+      bool found = find_module_ko(module_name);
+      if (found) {
+         result = KERNEL_MODULE_LOADABLE_FILE;
+      }
+   }
+   if (debug)
+      printf("(%s) Executed. module_name=%s, returning %d = %s\n", __func__, module_name, result, kernel_module_types[result]);
+   return result;
+}
+
+
+/** Examines file /boot/config-<kernel version> to determine whether module
+ *  i2c-dev exists and if so whether it is built into the kernel or is a
+ *  loadable module.
+ *
+ *  @retval y   built into kernel
+ *  @retval m   built as loadable module
+ *  @retval n   not built
+ *  @retval X   /boot/config file not found, or CONFIG_I2C_CHARDEV line not found
+ */
+char i2c_dev_status_by_boot_config_file() {
+   struct utsname utsbuf;
+   int rc = uname(&utsbuf);
+   assert(rc == 0);
+
+   char config_fn[PATH_MAX];
+   g_snprintf(config_fn, PATH_MAX, "/boot/config-%s", utsbuf.release);
+
+   char status = 'X';
+   if ( !regular_file_exists(config_fn) ) {
+      fprintf(stderr, "Kernel configuration file not found: %s\n", config_fn);
+   }
+   else {
+      char cmd[100];
+      g_snprintf(cmd, 100, "grep CONFIG_I2C_CHARDEV= /boot/config-%s", utsbuf.release);
+      int pos = strlen("CONFIG_I2C_CHARDEV=");
+
+      char * cmd_result = execute_shell_cmd_one_line_result(cmd);
+      if (!cmd_result) {
+         fprintf(stderr, "CONFIG_I2C_CHARDEV not found in %s\n", config_fn);
+      }
+      else {
+         status = cmd_result[pos];
+         free(cmd_result);
+      }
+   }
+   return status;
 }
 
 

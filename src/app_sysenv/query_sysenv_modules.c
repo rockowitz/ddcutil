@@ -3,7 +3,7 @@
  *  Module checks
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -14,6 +14,7 @@
 #include <string.h>
 #include <sys/utsname.h>
 
+#include "util/libkmod_util.h"
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -59,7 +60,9 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
 
    bool is_builtin = false;
    bool loadable = false;
+   int module_status2 = module_status_by_modules_builtin_or_existence("i2c-dev");
    int module_status = module_status_using_libkmod("i2c-dev");
+   assert(module_status == module_status2);
    if (module_status < 0) {
       rpt_vstring(d1, "Unable to determine i2c-dev status.");
       rpt_vstring(d1, "module_status_using_libkmod() returned %s", psc_desc(module_status));
