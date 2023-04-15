@@ -200,8 +200,8 @@ bool is_module_built_in_by_modules_builtin(const char * module_name) {
       printf("(%s) Starting. module_name = |%s|\n", __func__, module_name);
 
    // Look for name variants with either "-" or "_"
-   char * module_name1 = strdup(module_name);
-   char * module_name2 = strdup(module_name);
+   char * module_name1 = g_strdup_printf("%s.ko", module_name);
+   char * module_name2 = g_strdup_printf("%s.ko", module_name);
    str_replace_char(module_name1, '-','_');
    str_replace_char(module_name2, '_','-');
 
@@ -211,15 +211,15 @@ bool is_module_built_in_by_modules_builtin(const char * module_name) {
 
    char builtin_fn[PATH_MAX];
    g_snprintf(builtin_fn, PATH_MAX, "/lib/modules/%s/modules.builtin", utsbuf.release);
-
    bool found = false;
+#ifdef ALT
    if ( !regular_file_exists(builtin_fn) ) {
       fprintf(stderr, "File not found: %s\n", builtin_fn);
    }
    else {
       char cmd[200];
-      // fbdev.ko is under kernel/arch/x86/video
-      g_snprintf(cmd, 200, "grep  -e \"^kernel/.*/%s.ko\" -e \"^kernel/.*/%s.ko\"  %s ",
+      // not everything is under kernel/drivers e.g. fbdev.ko is under kernel/arch/x86/video
+      g_snprintf(cmd, 200, "grep  -e \"^kernel/.*/%s\" -e \"^kernel/.*/%s\"  %s ",
                  module_name1, module_name2, builtin_fn);  // allow for .ko.xz etc.
       if (debug)
          printf("(%s) cmd |%s|\n", __func__, cmd);
@@ -233,6 +233,23 @@ bool is_module_built_in_by_modules_builtin(const char * module_name) {
          g_ptr_array_free(cmd_result,true);
       }
    }
+#else
+    GPtrArray * lines = g_ptr_array_new_full(400, g_free);
+    char * terms[3];
+    terms[0] = module_name1;
+    terms[1] = module_name2;  // probably same as module_name1, but not worth optimizing
+    terms[2] = NULL;
+    int unfiltered_ct = read_file_with_filter(lines, builtin_fn, terms, false, 0);
+    if (unfiltered_ct < 0) {   //  = -errno
+       fprintf(stderr, "Error reading file %s: %s\n", builtin_fn, strerror(errno));
+       fprintf(stderr, "Assuming module %s is not built in to kernel\n", module_name);
+    }
+    else {
+       found = (lines->len == 1);
+    }
+    g_ptr_array_free(lines, true);
+#endif
+
    free(module_name1);
    free(module_name2);
 
@@ -242,61 +259,10 @@ bool is_module_built_in_by_modules_builtin(const char * module_name) {
 }
 
 
-#ifdef OLD_WAY
-/** Checks if a module is built into the kernel.
-  *
-  * \param  module_name  simple module name, as it appears in the file system, e.g. i2c-dev
-  * \return true/false
-  */
-bool is_module_builtin(char * module_name)
-{
-   bool debug = false;
-   bool result = false;
-
-   struct utsname utsbuf;
-   int rc = uname(&utsbuf);
-   assert(rc == 0);
-
-   char modules_builtin_fn[100];
-   snprintf(modules_builtin_fn, 100, "/lib/modules/%s/modules.builtin", utsbuf.release);
-
-   char ko_name[40];
-   snprintf(ko_name, 40, "%s.ko", module_name);
-
-   result = false;
-   GPtrArray * lines = g_ptr_array_new_full(400, g_free);
-   char * terms[2];
-   terms[0] = ko_name;
-   terms[1] = NULL;
-   int unfiltered_ct = read_file_with_filter(lines, modules_builtin_fn, terms, false, 0);
-   if (unfiltered_ct < 0) {
-      char buf[100];
-      strerror_r(errno, buf, 100);
-      fprintf(stderr, "Error reading file %s: %s\n", modules_builtin_fn, buf);
-      fprintf(stderr, "Assuming module %s is not built in to kernel\n", module_name);
-   }
-   else {
-      result = (lines->len == 1);
-   }
-   g_ptr_array_free(lines, true);
-   if (debug)
-      printf("(%s) module_name=%s, returning %s\n",__func__,  module_name, sbool(result));
-   return result;
-}
-#endif
-
-
-
-#ifdef REF
-#define KERNEL_MODULE_NOT_FOUND     0     // not found
-#define KERNEL_MODULE_BUILTIN       1     // module is built into kernel
-#define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
-#endif
-
 char * kernel_module_types[] = {
-      "KERNEL_MODULE_NOT_FOUND",
-      "KERNEL_MODULE_BUILTIN",
-      "KERNEL_MODULE_LOADABLE_FILE"};
+      "KERNEL_MODULE_NOT_FOUND",          // 0
+      "KERNEL_MODULE_BUILTIN",            // 1
+      "KERNEL_MODULE_LOADABLE_FILE"};     // 2
 
 int module_status_by_modules_builtin_or_existence(const char * module_name) {
    bool debug = false;
@@ -310,7 +276,8 @@ int module_status_by_modules_builtin_or_existence(const char * module_name) {
       }
    }
    if (debug)
-      printf("(%s) Executed. module_name=%s, returning %d = %s\n", __func__, module_name, result, kernel_module_types[result]);
+      printf("(%s) Executed. module_name=%s, returning %d = %s\n",
+             __func__, module_name, result, kernel_module_types[result]);
    return result;
 }
 

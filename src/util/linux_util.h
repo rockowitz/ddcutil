@@ -2,7 +2,7 @@
  *  Miscellaneous Linux utilities
  */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef LINUX_UTIL_H_
@@ -18,7 +18,6 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
 #define KERNEL_MODULE_LOADABLE_FILE 2     // module is a loadable file
 
 int  module_status_by_modules_builtin_or_existence(const char * module_name);
-int  is_module_builtin(const char * module_name);
 bool is_module_loadable(const char * module_name);
 
 intmax_t get_thread_id();
