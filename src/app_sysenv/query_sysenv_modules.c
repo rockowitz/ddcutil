@@ -54,7 +54,8 @@ void check_i2c_dev_module(Env_Accumulator * accum, int depth) {
    int module_status = module_status_by_modules_builtin_or_existence("i2c-dev");
    if (module_status < 0) {
       rpt_vstring(d1, "Unable to determine i2c-dev status.");
-      rpt_vstring(d1, "module_status_using_libkmod() returned %s", psc_desc(module_status));
+      rpt_vstring(d1, "module_status_by_modules_builtin_or_existence() returned %s",
+                      psc_desc(module_status));
       rpt_vstring(d1, "Treating i2c-dev as not builtin and not loadable!!!");
    }
    else if (module_status == 0) {

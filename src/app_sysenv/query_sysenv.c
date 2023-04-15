@@ -469,7 +469,7 @@ void rpt_module_status(int depth, const char * module_name) {
          rpt_vstring(depth, "Kernel module %-16s found but not loaded", module_name);
       break;
    default:
-      rpt_vstring(depth, "Error %s from module_status_using_libkmod() for %s",
+      rpt_vstring(depth, "Error %s from module_status_by_modules_builtin_or_existence() for %s",
                   psc_desc(module_status), module_name);
       break;
    }
