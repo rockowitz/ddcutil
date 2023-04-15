@@ -194,7 +194,7 @@ bool find_module_ko(const char * module_name) {
  *  It is possible that modules/builtin does not exist for some incorrectly
  *  built kernel.
  */
-bool is_module_built_in_by_modules_builtin(const char * module_name) {
+bool is_module_built_in(const char * module_name) {
    bool debug = false;
    if (debug)
       printf("(%s) Starting. module_name = |%s|\n", __func__, module_name);
@@ -267,7 +267,7 @@ char * kernel_module_types[] = {
 int module_status_by_modules_builtin_or_existence(const char * module_name) {
    bool debug = false;
    int result = KERNEL_MODULE_NOT_FOUND;
-   if ( is_module_built_in_by_modules_builtin(module_name) )
+   if ( is_module_built_in(module_name) )
       result = KERNEL_MODULE_BUILTIN;
    else {
       bool found = find_module_ko(module_name);

@@ -11,7 +11,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
+int  get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz);
+bool is_module_built_in(const char * module_name);
 
 #define KERNEL_MODULE_NOT_FOUND     0     // not found
 #define KERNEL_MODULE_BUILTIN       1     // module is built into kernel
