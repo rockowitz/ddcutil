@@ -257,7 +257,7 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       }
    }
    else {
-      dsa2_erase_persistent_stats();   // do i want to do this ?
+      // dsa2_erase_persistent_stats();   // do i want to do this ?
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
