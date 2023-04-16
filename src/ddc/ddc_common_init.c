@@ -231,8 +231,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->sleep_multiplier >= 0) {
-      bool explicit = parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER;
-      pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, explicit);
+      User_Multiplier_Source  source = (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) ? Explicit : Default;
+      pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, source);
    }
 
    dsa1_enabled = parsed_cmd->flags & CMD_FLAG_DSA1;

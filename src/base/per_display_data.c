@@ -46,8 +46,9 @@ static bool     debug_mutex = false;
        int      pdd_unlock_count = 0;
        int      pdd_cross_thread_operation_blocked_count = 0;
 
-double user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
+double default_user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
 bool   explicit_user_sleep_multiplier = false;
+User_Multiplier_Source default_user_multiplier_source = Default;
 
 void dbgrpt_per_display_data_locks(int depth) {
    rpt_vstring(depth, "pdd_lock_count:                            %-4d", pdd_lock_count);
@@ -115,7 +116,6 @@ void pdd_unlock_if_needed(bool unlock_requested) {
 
    DBGMSF(debug, "Done");
 }
-
 
 
 static bool    cross_thread_operation_active = false;
@@ -229,6 +229,17 @@ void per_display_data_destroy(void * data) {
 // Sleep Multiplier Factor
 //
 
+const char * user_multiplier_source_name(User_Multiplier_Source source) {
+   char * s = NULL;
+   switch(source) {
+   case Default:     s = "Implicit";  break;
+   case Explicit:    s = "Explicit";  break;
+   case Reset:       s = "Reset";     break;
+   }
+   return s;
+}
+
+
 /** Sets the default sleep multiplier factor, used for the creation of any new displays.
  * This is a global value and is a floating point number.
  *
@@ -240,16 +251,17 @@ void per_display_data_destroy(void * data) {
  *  @todo
  *  Add Sleep_Event_Type bitfield to make sleep factor dependent on event type?
  */
-void pdd_set_default_sleep_multiplier_factor(double multiplier, bool explicit) {
+void pdd_set_default_sleep_multiplier_factor(double multiplier, User_Multiplier_Source source) {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_NONE,
                     "Executing. Setting default_sleep_multiplier_factor = %6.3f, explicit = %s",
-                    multiplier, sbool(explicit));
+                    multiplier, user_multiplier_source_name(source));
    assert(multiplier >= 0);
-   if (multiplier == 0.0f)
-      multiplier = .01;
-   user_sleep_multiplier = multiplier;
-   explicit_user_sleep_multiplier = explicit;
+   // still needed?
+   // if (multiplier == 0.0f)
+   //    multiplier = .01;
+   default_user_sleep_multiplier = multiplier;
+   default_user_multiplier_source = source;
 }
 
 
@@ -260,11 +272,12 @@ void pdd_set_default_sleep_multiplier_factor(double multiplier, bool explicit) {
 double pdd_get_default_sleep_multiplier_factor() {
    bool debug = false;
    DBGTRC(debug, DDCA_TRC_NONE,
-          "Returning default_sleep_multiplier_factor = %6.3f", user_sleep_multiplier);
-   return user_sleep_multiplier;
+          "Returning default_sleep_multiplier_factor = %6.3f", default_user_sleep_multiplier);
+   return default_user_sleep_multiplier;
 }
 
 
+#ifdef UNUSED
 /** Sets the sleep multiplier factor for the current display.
  *
  *  @param factor  sleep multiplier factor
@@ -273,7 +286,7 @@ void pdd_set_sleep_multiplier_factor(Per_Display_Data * data, double factor) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "factor = %6.3f", factor);
    assert(factor >= 0);
-   data->user_sleep_multiplier = factor;
+   data->default_user_sleep_multiplier = factor;
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
@@ -284,10 +297,11 @@ void pdd_set_sleep_multiplier_factor(Per_Display_Data * data, double factor) {
  */
 double pdd_get_sleep_multiplier_factor(Per_Display_Data * data) {
    bool debug = false;
-   double result = data->user_sleep_multiplier;
+   double result = data->default_user_sleep_multiplier;
    DBGTRC(debug, DDCA_TRC_NONE, "Returning %6.3f", result );
    return result;
 }
+#endif
 
 
 
@@ -305,7 +319,7 @@ void set_sleep_multiplier_factor_all(double factor) {
       while (g_hash_table_iter_next (&iter, &key, &value)) {
          Per_Display_Data * data = value;
          DBGMSF(debug, "Thread id: %d", data->display_id);
-         data->user_sleep_multiplier = factor;
+         data->default_user_sleep_multiplier = factor;
       }
    }
 }
@@ -334,7 +348,8 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "Initializing Per_Display_Data for %s", dpath_repr_t(&pdd->dpath));
-   pdd->user_sleep_multiplier                      = user_sleep_multiplier;
+   pdd->user_sleep_multiplier                      = default_user_sleep_multiplier;
+   pdd->user_multiplier_source                     = default_user_multiplier_source;
    pdd->initial_adjusted_sleep_multiplier          = -1.0f;
    pdd->final_successful_adjusted_sleep_multiplier = -1.0f;
    pdd->total_sleep_time_millis = 0;
@@ -549,6 +564,7 @@ void pdd_apply_all_sorted(Pdd_Func func, void * arg) {
 }
 
 
+#ifdef UNUSED
 void pdd_reset_per_display_data(Per_Display_Data * data, void* arg ) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "data = %p, dpath=%s", data, dpath_repr_t(&data->dpath));
@@ -580,6 +596,7 @@ void pdd_reset_all() {
    pdd_apply_all(pdd_reset_per_display_data, NULL);
    pdd_cross_display_operation_end(__func__);
 }
+#endif
 
 
 #ifdef UNUSED
@@ -647,16 +664,16 @@ void pdd_report_all_display_call_stats(int depth) {
 }
 
 
-
 void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    // bool debug = false;
    rpt_vstring(depth, "Elapsed time report for display %s (pdd)", dpath_short_name_t(&pdd->dpath));
    int d1 = depth+1;
 
-   char * s = (dsa2_enabled && dsa2_is_from_cache(pdd->dsa2_data) ?   "  (from cache)" : "" );
+   const char * s0 = user_multiplier_source_name(pdd->user_multiplier_source);
+   char * s1 = (dsa2_enabled && dsa2_is_from_cache(pdd->dsa2_data) ?   "  from cache" : "" );
 
-   rpt_vstring(d1, "User sleep multiplier factor:   %7.2f",   pdd->user_sleep_multiplier);
-   rpt_vstring(d1, "Initial adjusted multiplier:    %7.2f%s", pdd->initial_adjusted_sleep_multiplier, s);
+   rpt_vstring(d1, "User sleep multiplier factor:   %7.2f  %s",   pdd->user_sleep_multiplier, s0);
+   rpt_vstring(d1, "Initial adjusted multiplier:    %7.2f%s", pdd->initial_adjusted_sleep_multiplier, s1);
    if (pdd->final_successful_adjusted_sleep_multiplier < 0.0)
       rpt_vstring(d1, "Final adjusted multiplier:      Not set");
    else
@@ -672,14 +689,16 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    if (dsa0_enabled) {
       assert(pdd->dsa0_data);
       report_dsa0_data(pdd->dsa0_data, d1);
+      rpt_nl();
    }
    if (dsa1_enabled && pdd->dsa1_data && get_output_level() >= DDCA_OL_VERBOSE) {
       dsa1_report(pdd->dsa1_data, d1);
+      rpt_nl();
    }
    if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
-         dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
+      dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
+      rpt_nl();
    }
-   rpt_nl();
 }
 
 
@@ -698,6 +717,7 @@ void pdd_report_all_elapsed(int depth) {
 
 void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
    pdd->user_sleep_multiplier = multiplier;
+   pdd->user_multiplier_source = Reset;
    if (dsa0_enabled) {
       dsa0_reset(pdd->dsa0_data);
    }
@@ -764,17 +784,21 @@ void pdd_reset_multiplier_by_dh(Display_Handle * dh, float multiplier) {
    pdd_reset_multiplier(pdd, multiplier);
 }
 
+
 float pdd_get_sleep_multiplier_by_dh(Display_Handle * dh)
 {
    Per_Display_Data * pdd = dh->dref->pdd;
    return pdd_get_adjusted_sleep_multiplier(pdd);
 }
 
+
 void pdd_note_retryable_failure_by_dh(Display_Handle * dh, int remaining_tries)
 {
    Per_Display_Data * pdd = dh->dref->pdd;
    pdd_note_retryable_failure(pdd, remaining_tries);
 }
+
+
 void pdd_record_final_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int retries) {
    Per_Display_Data * pdd = dh->dref->pdd;
    pdd_record_final(pdd, ddcrc, retries);

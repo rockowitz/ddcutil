@@ -358,7 +358,8 @@ Results_Table * new_results_table(int busno) {
 }
 
 
-Byte get_edid_checkbyte(int busno) {
+static Byte
+get_edid_checkbyte(int busno) {
    bool debug = false;
    I2C_Bus_Info * bus_info = i2c_find_bus_info_by_busno(busno);
    assert(bus_info);
@@ -388,7 +389,8 @@ free_results_table(Results_Table * rtable) {
  *  @param  bus number
  *  @return pointer to #Results_Table (may be newly created)
  */
-Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
+Results_Table *
+dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s",
                                          busno, sbool(create_if_not_found));
@@ -422,6 +424,7 @@ Results_Table * dsa2_get_results_table_by_busno(int busno, bool create_if_not_fo
 }
 
 
+#ifdef UNUSED
 Results_Table * dsa2_find_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s",
@@ -439,7 +442,7 @@ Results_Table * dsa2_find_results_table_by_busno(int busno, bool create_if_not_f
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Results_Table", dbgrpt_results_table, rtable);
    return rtable;
 }
-
+#endif
 
 
 #ifdef UNUSED
@@ -473,8 +476,8 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, float multiplier) {
  *  Relies on fact that IEEE floating point variables with whole integer values
  *  convert to correct integer variables.
  */
-static
-int multiplier_to_step(float multiplier) {
+static int
+multiplier_to_step(float multiplier) {
    bool debug = false;
    int imult = multiplier * 100;
 
@@ -489,6 +492,7 @@ int multiplier_to_step(float multiplier) {
                                          multiplier, imult, step, step, steps[step]);
    return step;
 }
+
 
 #ifdef TEST
 void test_float_to_step_conversion() {
@@ -822,7 +826,7 @@ dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
    assert(rtable);
    result = steps[rtable->cur_retry_loop_step]/100.0;
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
-                  "rtable=%p, rtable->cur_retry_loop_step=%d, Returning %7.2f",
+                  "rtable=%p, rtable->cur_retry_loop_step=%d, Returning: %.2f",
                   rtable,  rtable->cur_retry_loop_step, result);
    return result;
 }

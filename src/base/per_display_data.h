@@ -30,7 +30,15 @@ struct Results_Table;
 extern GHashTable *  per_display_data_hash;
 // extern GMutex        per_display_data_mutex;    // temp, replace by function calls
 
-extern double user_sleep_multiplier;
+typedef enum {
+   Default,
+   Explicit,
+   Reset
+} User_Multiplier_Source;
+
+const char * user_multiplier_source_name(User_Multiplier_Source source);
+
+extern double default_user_sleep_multiplier;
 extern int    pdd_lock_count;
 extern int    pdd_unlock_count;
 extern int    pdd_cross_thread_operation_blocked_count;
@@ -53,6 +61,7 @@ typedef enum {
 typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
    double                 user_sleep_multiplier;           // set by user
+   User_Multiplier_Source user_multiplier_source;
 #ifdef UNUSED
    Initial_Multiplier_Type initial_multiplier_type;
 #endif
@@ -67,7 +76,7 @@ typedef struct Per_Display_Data {
 } Per_Display_Data;
 
 // For new displays
-void   pdd_set_default_sleep_multiplier_factor(double multiplier, bool explicit);
+void   pdd_set_default_sleep_multiplier_factor(double multiplier, User_Multiplier_Source source);
 double pdd_get_default_sleep_multiplier_factor();
 
 //  Per display sleep-multiplier
