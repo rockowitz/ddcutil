@@ -17,18 +17,18 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
+#include "base/core.h"
 #include "base/parms.h"
 #include "base/displays.h"
-//#include "base/dsa0.h"
-// #include "base/dsa1.h"
 #include "base/stats.h"
 
+// use struct instead of #include "dsa2.h", etc. to avoid circular includes
 struct DSA1_Data;
 struct DSA0_Data;
 struct Results_Table;
 
 extern GHashTable *  per_display_data_hash;
-// extern GMutex        per_display_data_mutex;    // temp, replace by function calls
+// extern GMutex     per_display_data_mutex;    // temp, replace by function calls
 
 typedef enum {
    Default,
@@ -38,10 +38,7 @@ typedef enum {
 
 const char * user_multiplier_source_name(User_Multiplier_Source source);
 
-extern double default_user_sleep_multiplier;
-extern int    pdd_lock_count;
-extern int    pdd_unlock_count;
-extern int    pdd_cross_thread_operation_blocked_count;
+extern Sleep_Multiplier default_user_sleep_multiplier;
 
 typedef
 struct {
@@ -51,28 +48,31 @@ struct {
 
 typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
-   double                 user_sleep_multiplier;           // set by user
+   Sleep_Multiplier       user_sleep_multiplier;           // set by user
    User_Multiplier_Source user_multiplier_source;
    struct DSA0_Data *     dsa0_data;
    struct DSA1_Data *     dsa1_data;
    struct Results_Table * dsa2_data;
    int                    total_sleep_time_millis;
    Per_Display_Try_Stats  try_stats[4];
-   double                 initial_adjusted_sleep_multiplier;
-   double                 final_successful_adjusted_sleep_multiplier;
-   double                 most_recent_adjusted_sleep_multiplier;   // may have failed
+   Sleep_Multiplier       initial_adjusted_sleep_multiplier;
+   Sleep_Multiplier       final_successful_adjusted_sleep_multiplier;
+   Sleep_Multiplier       most_recent_adjusted_sleep_multiplier;   // may have failed
 } Per_Display_Data;
 
 // For new displays
-void   pdd_set_default_sleep_multiplier_factor(double multiplier, User_Multiplier_Source source);
-double pdd_get_default_sleep_multiplier_factor();
+void   pdd_set_default_sleep_multiplier_factor(
+          Sleep_Multiplier multiplier, User_Multiplier_Source source);
+Sleep_Multiplier
+       pdd_get_default_sleep_multiplier_factor();
 
 bool   pdd_cross_display_operation_start(const char * msg);
 void   pdd_cross_display_operation_end(const char * msg);
 void   pdd_cross_display_operation_block(const char * msg);
 
 void   pdd_init_pdd(Per_Display_Data * pdd);
-Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path, bool create_if_not_found);
+Per_Display_Data *
+       pdd_get_per_display_data(DDCA_IO_Path, bool create_if_not_found);
 
 // Apply a function to all Per_Display_Data records
 typedef void (*Pdd_Func)(Per_Display_Data * data, void * arg);   // Template for function to apply
@@ -92,13 +92,15 @@ void   pdd_report_all_elapsed(int depth);
 
 void   pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool successful);
 
-void   pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier);
-double pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
+void   pdd_reset_multiplier(Per_Display_Data * pdd, Sleep_Multiplier multiplier);
+Sleep_Multiplier
+       pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
 void   pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries);
 void   pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries);
 
-void   pdd_reset_multiplier_by_dh(Display_Handle * dh, float multiplier);
-float  pdd_get_sleep_multiplier_by_dh(Display_Handle * dh);
+void   pdd_reset_multiplier_by_dh(Display_Handle * dh, Sleep_Multiplier multiplier);
+Sleep_Multiplier
+       pdd_get_sleep_multiplier_by_dh(Display_Handle * dh);
 void   pdd_note_retryable_failure_by_dh(Display_Handle * dh, int remaining_tries);
 void   pdd_record_final_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int retries);
 
