@@ -431,53 +431,6 @@ void pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool su
 }
 
 
-
-// Thread description operations always operate on the Per_Display_Data
-// instance for the currently executing thread.
-
-#ifdef OUT
-void pdd_set_display_description(const char * description) {
-   pdd_cross_display_operation_block();
-   Per_Display_Data *  pdd = pdd_get_per_display_data();
-   // DBGMSG("thread: %d, description: %s", pdd->display_id, description);
-   if (pdd->description)
-      free(pdd->description);
-   pdd->description = g_strdup(description);
-}
-
-
-void pdd_append_display_description(const char * addl_description) {
-   pdd_cross_display_operation_block();
-   Per_Display_Data *  pdd = pdd_get_per_display_data();
-   // DBGMSG("pdd->description = %s, addl_descripton = %s", pdd->description, addl_description);
-   if (!pdd->description)
-      pdd->description = g_strdup(addl_description);
-   else if (str_contains(pdd->description, addl_description) < 0) {
-      char * s = pdd->description;
-      pdd->description = g_strdup_printf("%s; %s", pdd->description, addl_description);
-      free(s);
-   }
-
-   // DBGMSG("Final pdd->description = %s", pdd->description);
-}
-
-
-const char * pdd_get_display_description_t() {
-   static GPrivate  x_key = G_PRIVATE_INIT(g_free);
-   static GPrivate  x_len_key = G_PRIVATE_INIT(g_free);
-
-   pdd_cross_display_operation_block();
-   Per_Display_Data *  pdd = pdd_get_per_display_data();
-   char * buf = NULL;
-   if (pdd->description) {
-      char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(pdd->description)+1);
-      strcpy(buf,pdd->description);
-   }
-   return buf;
-}
-#endif
-
-
 /** Output a debug report of a #Per_Display_Data struct.
  *
  *  @param  data   pointer to #Per_Display_Data struct
@@ -493,7 +446,6 @@ void dbgrpt_per_display_data(Per_Display_Data * data, int depth) {
    // Sleep multiplier adjustment:
    rpt_vstring(d1, "initial_sleep_multiplier                                 : %3.2f", data->initial_adjusted_sleep_multiplier);
    rpt_vstring(d1, "final_sleep_multiplier                                   : %3.2f", data->final_successful_adjusted_sleep_multiplier);
-
 
    // Maxtries history
    for (int retry_type = 0; retry_type < 4; retry_type++) {
