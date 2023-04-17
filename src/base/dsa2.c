@@ -447,7 +447,7 @@ Results_Table * dsa2_find_results_table_by_busno(int busno, bool create_if_not_f
 
 #ifdef UNUSED
 // static
-void set_multiplier(Results_Table * rtable, float multiplier) {
+void set_multiplier(Results_Table * rtable, Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "multiplier=%7.3f", multiplier);
    rtable->cur_step = multiplier_to_step(multiplier);
@@ -456,7 +456,7 @@ void set_multiplier(Results_Table * rtable, float multiplier) {
 
 
 void
-dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, float multiplier) {
+dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s, multiplier=%7.3f", dpath_repr_t(&dpath), multiplier);
    Results_Table * rtable = dsa2_get_results_table_by_busno(dpath_busno(dpath));
@@ -477,7 +477,7 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, float multiplier) {
  *  convert to correct integer variables.
  */
 static int
-multiplier_to_step(float multiplier) {
+multiplier_to_step(Sleep_Multiplier multiplier) {
    bool debug = false;
    int imult = multiplier * 100;
 
@@ -497,7 +497,7 @@ multiplier_to_step(float multiplier) {
 #ifdef TEST
 void test_float_to_step_conversion() {
    for (int ndx = 0; ndx < step_ct; ndx++) {
-      float f = steps[ndx] / 100.0;
+      Sleep_Multiplier f = steps[ndx] / 100.0;
       int found_ndx = multiplier_to_step(f);
       printf("ndx=%2d, steps[ndx]=%d, f=%2.5f, found_ndx=%d\n",
              ndx, steps[ndx], f, found_ndx);
@@ -513,7 +513,7 @@ void test_float_to_step_conversion() {
  *
  *  @param multiplier sleep multiplier value
  */
-void dsa2_reset_multiplier(float multiplier) {
+void dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "multiplier=%7.3f", multiplier);
    initial_step = multiplier_to_step(multiplier);
@@ -585,8 +585,8 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
    int next_step = prev_step;
    if (remaining_tries > 0) {   // handle maxtries failure
       int remaining_steps = step_ct - prev_step;
-      float fadj = (1.0*remaining_steps)/remaining_tries;
-      float fadj2 = fadj;
+      Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
+      Sleep_Multiplier fadj2 = fadj;
       if (fadj > .75 && fadj < 1.0)
          fadj2 = 1.0;
       int adjustment = fadj2;
@@ -819,10 +819,10 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
  *  @param  rtable #Results_Table for device
  *  @return multiplier value
  */
-float
+Sleep_Multiplier
 dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
    bool debug = false;
-   float result = 1.0f;
+   Sleep_Multiplier result = 1.0f;
    assert(rtable);
    result = steps[rtable->cur_retry_loop_step]/100.0;
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
@@ -1138,7 +1138,7 @@ bye0:
 
 
 #ifdef DIDNT_WORK
-double logistic(double x) {
+Sleep_Multiplier logistic(double x) {
   // const double M_E =   2.7182818284590452354;
    double k = .5;
   double result =  exp(k*x)/(1+exp(k*x));
