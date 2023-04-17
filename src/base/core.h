@@ -51,6 +51,13 @@
 
 
 //
+// Miscellaneous types
+//
+
+typedef float Sleep_Multiplier;
+
+
+//
 // Standard function call arguments and return values
 //
 
