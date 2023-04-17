@@ -80,8 +80,6 @@ typedef struct {
 #endif
 
 
-
-
 //
 // Trace message control
 //
@@ -89,7 +87,6 @@ typedef struct {
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
-
 
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 
@@ -145,7 +142,6 @@ bool ddcmsg(
    ddcmsg(( (debug_flag) ) ? 0xff : (trace_group), \
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
-
 /** Macro that wrappers function ddcmsg(), passing the current TRACE_GROUP,
  *  file name, line number, and function name as arguments.
  *
@@ -156,7 +152,6 @@ bool ddcmsg(
 #define DDCMSG(debug_flag, format, ...) \
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), \
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
-
 
 // Show report levels for all types
 void show_reporting();
@@ -217,7 +212,6 @@ bool dbgtrc_returning_expression(
         char *           format,
         ...);
 
-
 /* __assert_fail() is not part of the C spec, it is part of the Linux
  * implementation of assert(), etc., which are macros.
  * It is reported to not exist on Termux.
@@ -250,7 +244,6 @@ bool dbgtrc_returning_expression(
    } while (0)
 #endif
 
-
 #ifndef TRACED_ASSERT_IFF
 #define TRACED_ASSERT_IFF(_cond1, _cond2) \
    TRACED_ASSERT( ( (_cond1) && (_cond2) ) || ( !(_cond1) && !(_cond2) ) )
@@ -268,9 +261,6 @@ bool dbgtrc_returning_expression(
       __assert_fail(#_assertion, __FILE__, line, __func__); \
    } while (0)
 #endif
-
-
-
 
 #define SEVEREMSG(format, ...) \
    dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_SEVERE, \
@@ -359,6 +349,7 @@ if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FI
       }                                                                       \
    }
 
+
 //
 // Error handling
 //
@@ -396,6 +387,10 @@ void core_errmsg_emitter(
       const char * msg, ...);
 #endif
 
+
+//
+// Initialization
+//
 
 void init_core();
 
