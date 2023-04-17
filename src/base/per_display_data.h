@@ -49,22 +49,10 @@ struct {
     uint16_t         counters[MAX_MAX_TRIES+2];
 } Per_Display_Try_Stats;
 
-#ifdef UNUSED
-typedef enum {
-   Default_Initial_Multiplier,
-   Explicit_Initial_User_Multiplier,
-   Cached_Initial_Multiplier
-} Initial_Multiplier_Type;
-#endif
-
-
 typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
    double                 user_sleep_multiplier;           // set by user
    User_Multiplier_Source user_multiplier_source;
-#ifdef UNUSED
-   Initial_Multiplier_Type initial_multiplier_type;
-#endif
    struct DSA0_Data *     dsa0_data;
    struct DSA1_Data *     dsa1_data;
    struct Results_Table * dsa2_data;
