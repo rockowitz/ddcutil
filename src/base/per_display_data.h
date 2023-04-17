@@ -79,10 +79,6 @@ typedef struct Per_Display_Data {
 void   pdd_set_default_sleep_multiplier_factor(double multiplier, User_Multiplier_Source source);
 double pdd_get_default_sleep_multiplier_factor();
 
-//  Per display sleep-multiplier
-double pdd_get_sleep_multiplier_factor(Per_Display_Data * pdd);
-void   pdd_set_sleep_multiplier_factor(Per_Display_Data * pdd, double factor);
-
 bool   pdd_cross_display_operation_start(const char * msg);
 void   pdd_cross_display_operation_end(const char * msg);
 void   pdd_cross_display_operation_block(const char * msg);
