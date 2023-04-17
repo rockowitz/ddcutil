@@ -351,8 +351,6 @@ Results_Table * new_results_table(int busno) {
    rtable->min_ok_step = 0;
    rtable->found_failure_step = false;
    rtable->state = 0x00;
-
-// rtable->initial_step_from_cache = false;
    rtable->initial_lookback = rtable->lookback;
    return rtable;
 }
@@ -524,7 +522,6 @@ void dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
          rtable->cur_step = initial_step;
          rtable->found_failure_step = false;
          rtable->min_ok_step = 0;
-
          rtable->cur_retry_loop_step = initial_step;
          rtable->adjustments_down = 0;
          rtable->adjustments_up = 0;
@@ -601,7 +598,6 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
             "remaining_tries == 0, returning next_step = prev_step = %d", next_step);
    }
-
    return next_step;
 }
 
