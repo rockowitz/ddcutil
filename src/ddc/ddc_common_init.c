@@ -28,6 +28,7 @@
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/per_display_data.h"
+#include "base/per_thread_data.h"
 #include "base/rtti.h"
 #include "base/stats.h"
 #include "base/tuned_sleep.h"
@@ -146,6 +147,8 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
           add_traced_file(parsed_cmd->traced_files[ndx]);
        }
    }
+
+   ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
 
    // if (debug)
    //    printf("(%s) Done. Returning: %s\n", __func__, sbool(ok));
