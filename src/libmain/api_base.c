@@ -391,6 +391,41 @@ _ddca_new_init(void) {
 
 
 //
+// Profiling
+//
+
+void profiling_enable(bool enabled) {
+   ptd_api_profiling_enabled = enabled;
+}
+
+void profiling_reset() {
+   ptd_profile_reset_all_stats();
+}
+
+void profile_start_call(void * func) {
+   ptd_profile_function_start(func);
+}
+
+void profile_end_call(void * func) {
+   ptd_profile_function_end(func);
+}
+
+void profile_report(FILE * dest, bool by_thread) {
+   if (dest) {
+      rpt_push_output_dest(dest);
+   }
+   ptd_profile_report_all_threads(0);
+   ptd_profile_report_stats_summary(0);
+   if (dest) {
+      rpt_pop_output_dest();
+   }
+}
+
+
+
+
+
+//
 // Tracing
 //
 
@@ -556,6 +591,7 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
             }
             master_error = init_tracing(parsed_cmd);
             requested_stats = parsed_cmd->stats_types;
+            ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
             per_display_stats = parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS;
             submaster_initializer(parsed_cmd);
          }
