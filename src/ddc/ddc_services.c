@@ -20,6 +20,7 @@
 #include "base/dsa2.h"
 #include "base/feature_metadata.h"
 #include "base/parms.h"
+#include "base/per_thread_data.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
 #include "base/tuned_sleep.h"
@@ -67,6 +68,7 @@ void ddc_reset_stats_main() {
    // ddc_reset_ddc_stats();
    try_data_reset2_all();
    reset_execution_stats();
+   ptd_profile_reset_all_stats();
 }
 
 
@@ -77,7 +79,7 @@ void ddc_reset_stats_main() {
  * \param depth logical         indentation depth
  */
 void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, int depth) {
-   // DBGMSG("show_per_thread_stats: %s", sbool(show_per_thread_stats));
+   // DBGMSG("show_per_thread_stats: %s", sbool(show_per_display_stats));
    // int d1 = depth+1;
    rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
@@ -145,6 +147,11 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
       // Reports locks held by per_thread_data() to confirm that locking has
       // trivial affect on performance.
       //dbgrpt_per_thread_data_locks(depth+1);
+   }
+
+   if (ptd_api_profiling_enabled) {
+      ptd_profile_report_all_threads(0);
+      ptd_profile_report_stats_summary(0);
    }
 }
 
