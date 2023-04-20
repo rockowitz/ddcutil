@@ -98,6 +98,7 @@ typedef enum {
    CMD_FLAG_F7             = 0x01000000000000,
    CMD_FLAG_F8             = 0x02000000000000,
    CMD_FLAG_MOCK           = 0x04000000000000,
+   CMD_FLAG_PROFILE_API    = 0x08000000000000,
 } Parsed_Cmd_Flags;
 
 typedef

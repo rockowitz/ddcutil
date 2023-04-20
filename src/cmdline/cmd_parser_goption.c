@@ -629,6 +629,7 @@ parse_command(
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
+   gboolean profile_api_flag   = false;
 
    // gboolean ignore_cc_flag = false;
    char *   mfg_id_work     = NULL;
@@ -659,6 +660,7 @@ parse_command(
 
    GOptionEntry libddcutil_only_options[] = {
          {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_api_calls,      "Trace API call", "function name"},
+         {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
          {"libddcutil-trace-file",
                      '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
          {NULL},
@@ -1016,7 +1018,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
 #endif
-   SET_CMDFLAG(CMD_FLAG_DSA1,               dsa1_flag);
+   SET_CMDFLAG(CMD_FLAG_DSA1,              dsa1_flag);
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
    SET_CMDFLAG(CMD_FLAG_DSA0,              enable_dsa0_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
@@ -1035,6 +1037,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);
    SET_CMDFLAG(CMD_FLAG_QUICK,             quick_flag);
    SET_CMDFLAG(CMD_FLAG_MOCK,              mock_data_flag);
+   SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 
