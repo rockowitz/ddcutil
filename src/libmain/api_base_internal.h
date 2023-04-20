@@ -21,6 +21,8 @@
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"
 
+#include "base/per_thread_data.h"
+
 #define DDCA_PRECOND_STDERR 0x01
 #define DDCA_PRECOND_RETURN 0x02
 
@@ -139,6 +141,7 @@ ddca_get_precondition_failure_mode();
          trace_api_call_depth++; \
       dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
+      if (ptd_api_profiling_enabled) ptd_profile_function_start(__func__); \
   } while(0)
 
 #ifdef UNUSED
@@ -161,6 +164,7 @@ ddca_get_precondition_failure_mode();
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
+        if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
         return _rc; \
    } while(0)
 
@@ -172,6 +176,7 @@ ddca_get_precondition_failure_mode();
           __func__, __LINE__, __FILE__, _rc, _format, ##__VA_ARGS__); \
         if (trace_api_call_depth > 0) \
            trace_api_call_depth--; \
+        if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
    } while(0)
 
 #ifdef UNUSED
