@@ -41,16 +41,38 @@
 #include "dsa2.h"
 
 
-const bool Default_DSA2_Enabled = DEFAULT_ENABLE_DSA2;
-const int  Default_Look_Back    = 5;
-const int  Default_Initial_Step = 7;  // 1.0
-const int  Max_Recent_Values    = 20;
-const int  Default_Interval     = 3;
+const bool  Default_DSA2_Enabled = DEFAULT_ENABLE_DSA2;
+const int   Default_Look_Back    = 5;
+const int   Default_Initial_Step = 7;  // 1.0
+const int   Max_Recent_Values    = 20;
+const int   Default_Interval     = 3;
+const int   Default_Greatest_Tries_Bound = 3;
+const Sleep_Multiplier
+            Default_Average_Tries_Bound = 1.4;
 
-bool dsa2_enabled        = Default_DSA2_Enabled;
-int  initial_step        = Default_Initial_Step;
-int  adjustment_interval = Default_Interval;
+bool  dsa2_enabled           = Default_DSA2_Enabled;
+int   initial_step           = Default_Initial_Step;
+int   adjustment_interval    = Default_Interval;
+int   greatest_tries_bound   = Default_Greatest_Tries_Bound;
+int   avg_tries_bound_10     = Default_Average_Tries_Bound * 10; // multiply by 10 for integer arithmetic
 
+bool  dsa2_set_greatest_tries_bound(int tries) {
+   bool result = false;
+   if ( 1 <= tries && tries <= MAX_MAX_TRIES) {    // should get actual write/read maxtries
+      greatest_tries_bound = tries;
+      result = true;
+   }
+   return result;
+}
+
+bool  dsa2_set_average_tries_bound(Sleep_Multiplier avg_tries) {
+   bool result = false;
+   if (1.0 <= avg_tries && avg_tries <= MAX_MAX_TRIES) {
+      avg_tries_bound_10 = avg_tries * 10;
+      result = true;
+   }
+   return result;
+}
 
 //
 // Utility Functions
@@ -537,30 +559,35 @@ void dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
 // The Algorithm
 //
 
-/** Encapsulates the algorithm used by #adjust_for_recent_successes()
- *  to determine if recent Successful_Invocation buffer stats
- *  indicate that the multiplier supplied by the dsa2 subsystem
- *  should be increased.
+/** Encapsulates the algorithm used by #adjust_for_recent_successes() to
+ *  determine if recent Successful_Invocation buffer statistics indicate
+ *  that the multiplier currently supplied by the dsa2 subsystem should
+ *  be increased.
  *
- *  @param max_tryct   highest try count for any Successful_Invocation record
- *  @param total_tryct total number of tries reported
- *  @param interval    number of Successful_Invocation records examined
- *  @param true if cur_step for the needs to be increased, false if not
+ *  @param highest_tryct  highest try count for any Successful_Invocation record
+ *  @param total_tryct    total number of tries reported
+ *  @param interval       number of Successful_Invocation records examined
+ *  @param true if cur_step needs to be increased, false if not
  */
 static bool
-too_many_errors(int max_tryct, int total_tryct, int interval) {
+too_many_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "greatest_tries_bound=%d, avg_tries_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
+          greatest_tries_bound,    avg_tries_bound_10,    highest_tryct,    total_tryct,    interval);
+   int computed_avg_10 = (total_tryct * 10)/interval;
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "computed_avg_10=%d", computed_avg_10);
+
    bool result = false;
-   if (max_tryct > 3)
+   if (highest_tryct > greatest_tries_bound)
       result = true;
    else {
-      if (total_tryct * 10 / interval > 14) {   // i.e. total_tryct/interval > 1.4)
+      if (computed_avg_10 > avg_tries_bound_10) {   // i.e. total_tryct/interval > 1.4)
          result = true;
       }
    }
-   DBGTRC(debug, DDCA_TRC_NONE,
-          "Executing max_tryct=%d, total_tryct=%d, interval=%d, Returning: %s",
-          max_tryct, total_tryct, interval, sbool(result));
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
 
@@ -1164,6 +1191,7 @@ void test_one_logistic(int steps) {
  */
 void
 init_dsa2() {
+   RTTI_ADD_FUNC(too_many_errors);
    RTTI_ADD_FUNC(dsa2_adjust_for_recent_successes);
    RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
    RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_multiplier);
