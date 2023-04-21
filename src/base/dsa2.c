@@ -49,12 +49,17 @@ const int   Default_Interval     = 3;
 const int   Default_Greatest_Tries_Bound = 3;
 const Sleep_Multiplier
             Default_Average_Tries_Bound = 1.4;
+const int   Default_Greatest_Tries_Lower_Bound = 1;
+const Sleep_Multiplier
+            Default_Average_Tries_Lower_Bound = 1.1;
 
 bool  dsa2_enabled           = Default_DSA2_Enabled;
 int   initial_step           = Default_Initial_Step;
 int   adjustment_interval    = Default_Interval;
 int   greatest_tries_bound   = Default_Greatest_Tries_Bound;
 int   avg_tries_bound_10     = Default_Average_Tries_Bound * 10; // multiply by 10 for integer arithmetic
+int   greatest_tries_lower_bound = Default_Greatest_Tries_Lower_Bound;
+int   avg_tries_lower_bound_10 = Default_Average_Tries_Lower_Bound * 10;
 
 bool  dsa2_set_greatest_tries_bound(int tries) {
    bool result = false;
@@ -578,18 +583,30 @@ too_many_errors(int highest_tryct, int total_tryct, int interval) {
    int computed_avg_10 = (total_tryct * 10)/interval;
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "computed_avg_10=%d", computed_avg_10);
 
-   bool result = false;
-   if (highest_tryct > greatest_tries_bound)
-      result = true;
-   else {
-      if (computed_avg_10 > avg_tries_bound_10) {   // i.e. total_tryct/interval > 1.4)
-         result = true;
-      }
-   }
+   bool result = ( highest_tryct > greatest_tries_bound ||
+                   computed_avg_10 > avg_tries_bound_10);     // i.e. total_tryct/interval > 1.4)
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
+
+#ifdef PERHAPS_FUTURE
+static bool
+too_few_errors(int highest_tryct, int total_tryct, int interval) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+         "greatest_tries_lower_bound=%d, avg_tries_lower_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
+          greatest_tries_lower_bound,    avg_tries_lower_bound_10,    highest_tryct,    total_tryct,    interval);
+   int computed_avg_10 = (total_tryct * 10)/interval;
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "computed_avg_10=%d", computed_avg_10);
+
+   bool result = (highest_tryct   <= greatest_tries_lower_bound &&
+                  computed_avg_10 <= avg_tries_lower_bound_10);
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
+   return result;
+}
+#endif
 
 
 /** Calculates the step to be used on the next try loop iteration after a
@@ -1192,6 +1209,7 @@ void test_one_logistic(int steps) {
 void
 init_dsa2() {
    RTTI_ADD_FUNC(too_many_errors);
+// RTTI_ADD_FUNC(too_few_errors);
    RTTI_ADD_FUNC(dsa2_adjust_for_recent_successes);
    RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
    RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_multiplier);
