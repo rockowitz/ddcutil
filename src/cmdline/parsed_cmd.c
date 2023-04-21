@@ -299,6 +299,12 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                   "i2 as hex",      NULL, parsed_cmd->i2,                            d1);
       }
 
+      rpt_bool("fl1 set:",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
+      if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
+         rpt_vstring(d1, "fl1                                                      : %.2f", parsed_cmd->fl1);
+      rpt_bool("fl2 set:",           NULL, parsed_cmd->flags & CMD_FLAG_FL2_SET,     d1);
+      if (parsed_cmd->flags & CMD_FLAG_FL2_SET)
+         rpt_vstring(d1, "fl2                                                      : %.2f", parsed_cmd->fl2);
       rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
       rpt_bool("f2",                NULL, parsed_cmd->flags & CMD_FLAG_F2,           d1);
       rpt_bool("f3",                NULL, parsed_cmd->flags & CMD_FLAG_F3,           d1);

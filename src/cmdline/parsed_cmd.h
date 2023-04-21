@@ -99,6 +99,8 @@ typedef enum {
    CMD_FLAG_F8             = 0x02000000000000,
    CMD_FLAG_MOCK           = 0x04000000000000,
    CMD_FLAG_PROFILE_API    = 0x08000000000000,
+   CMD_FLAG_FL1_SET        = 0x10000000000000,
+   CMD_FLAG_FL2_SET        = 0x20000000000000,
 } Parsed_Cmd_Flags;
 
 typedef
@@ -154,6 +156,8 @@ struct {
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
    char *                 s4;         // for temporary use
+   float                  fl1;        // for temporary use
+   float                  fl2;        // for temporary use
 } Parsed_Cmd;
 
 const char *  parser_mode_name(Parser_Mode mode);

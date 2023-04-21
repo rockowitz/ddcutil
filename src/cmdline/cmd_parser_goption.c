@@ -663,6 +663,8 @@ parse_command(
    gint     edid_read_size_work = -1;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
+   char *   fl1_work        = NULL;
+   char *   fl2_work        = NULL;
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
@@ -854,6 +856,8 @@ parse_command(
       // Generic options to aid development
       {"i1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer 1", "decimal or hex number" },
       {"i2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer 2", "decimal or hex number" },
+      {"fl1",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl1_work,        "Special floating point number 1", "floating point number" },
+      {"fl2",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl2_work,        "Special floating point number 2", "floating point number" },
       {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
       {"f2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
       {"f3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
@@ -1163,6 +1167,26 @@ parse_command(
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
       parsing_ok &= ok;
    }
+
+   if (fl1_work) {
+     bool ok = str_to_float(fl1_work, &parsed_cmd->fl1);
+     if (!ok)
+        emit_parser_error(errmsgs,  __func__, "Invalid floating point number: %s", fl1_work);
+     else
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL1_SET;
+      parsing_ok &= ok;
+   }
+
+
+   if (fl2_work) {
+     bool ok = str_to_float(fl2_work, &parsed_cmd->fl2);
+     if (!ok)
+        emit_parser_error(errmsgs,  __func__, "Invalid floating point number: %s", fl2_work);
+     else
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL2_SET;
+      parsing_ok &= ok;
+   }
+
 
    if (sleep_multiplier_work)
       parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errmsgs);
