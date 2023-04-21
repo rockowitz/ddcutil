@@ -387,6 +387,15 @@ static bool parse_sleep_multiplier(
 }
 
 
+static void unhide_options(GOptionEntry * options) {
+   GOptionEntry * cur = options;
+   for (;cur->long_name;  cur++) {
+      // DBGMSG("cur=%p, cur->long_name=%p - %s", cur, cur->long_name, cur->long_name);
+      cur->flags = cur->flags & ~G_OPTION_FLAG_HIDDEN;
+   }
+}
+
+
 static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, GPtrArray* errmsgs)
 {
 #ifdef COMMA_DELIMITED_TRACE
@@ -658,6 +667,13 @@ parse_command(
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
 
+   gboolean hidden_help_flag = false;
+
+   GOptionEntry preparser_options[] = {
+         {"hh",         '\0', 0, G_OPTION_ARG_NONE, &hidden_help_flag, "Show hidden options", NULL},
+         {NULL},
+   };
+
    GOptionEntry libddcutil_only_options[] = {
          {"trcapi",     '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_api_calls,      "Trace API call", "function name"},
          {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
@@ -729,7 +745,9 @@ parse_command(
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
 #endif
       {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
-      {"timeout-i2c-io",'\0', 0, G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
+
+      {"timeout-i2c-io",'\0', G_OPTION_FLAG_HIDDEN,
+                               G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
 //                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
 
@@ -781,7 +799,8 @@ parse_command(
       {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
       {"sleep-less" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
       {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-      {"disable-sleep-less",'\0', G_OPTION_FLAG_REVERSE,G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_REVERSE,
+                                                        G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
 
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
@@ -823,30 +842,30 @@ parse_command(
       {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,         &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
       {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,        &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
 
-      {"syslog",     '\0', 0, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
+      {"syslog",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
 #endif
-      {"debug-parse",'\0', 0,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
-      {"parse-only", '\0', 0,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
-      {"failsim",    '\0', 0,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
-      {"quickenv",   '\0', 0,  G_OPTION_ARG_NONE,        &quick_flag,           "Skip long running tests", NULL},
+      {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
+      {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
+      {"failsim",    '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
+      {"quickenv",   '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &quick_flag,           "Skip long running tests", NULL},
       {"enable-mock-data",
-                     '\0', 0,  G_OPTION_ARG_NONE,        &mock_data_flag,       "Enable mock feature values", NULL},
+                     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &mock_data_flag,       "Enable mock feature values", NULL},
 
       // Generic options to aid development
-      {"i1",      '\0', 0,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer",   "decimal or hex number" },
-      {"i2",      '\0', 0,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer",   "decimal or hex number" },
-      {"f1",      '\0', 0,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
-      {"f2",      '\0', 0,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
-      {"f3",      '\0', 0,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
-      {"f4",      '\0', 0,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
-      {"f5",      '\0', 0,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
-      {"f6",      '\0', 0,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
-      {"f7",      '\0', 0,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 6",    NULL},
-      {"f8",      '\0', 0,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 6",    NULL},
-      {"s1",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
-      {"s2",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
-      {"s3",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
-      {"s4",      '\0', 0,  G_OPTION_ARG_STRING,   &parsed_cmd->s4,  "Special string 4",  "string"},
+      {"i1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer 1", "decimal or hex number" },
+      {"i2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer 2", "decimal or hex number" },
+      {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
+      {"f2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f2_flag,         "Special flag 2",    NULL},
+      {"f3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f3_flag,         "Special flag 3",    NULL},
+      {"f4",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
+      {"f5",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
+      {"f6",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
+      {"f7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 6",    NULL},
+      {"f8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 6",    NULL},
+      {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
+      {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
+      {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
+      {"s4",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s4,  "Special string 4",  "string"},
       {NULL},
    };
 
@@ -856,12 +875,28 @@ parse_command(
       { NULL }
    };
 
+   Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   int hh_ndx = ntsa_find(temp_argv, "--hh");
+   if (hh_ndx >= 0) {
+      DBGMSG("--hh found");
+      hidden_help_flag = true;
+      free(temp_argv[hh_ndx]);
+      temp_argv[hh_ndx] = g_strdup("-h");
+   }
+
+   if (hidden_help_flag) {
+      unhide_options(ddcutil_only_options);
+      unhide_options(common_options);
+      unhide_options(debug_options);
+   }
+
    GOptionGroup * all_options = g_option_group_new(
          "group name", "group description", "help description", NULL, NULL);
    if (parser_mode == MODE_DDCUTIL) {
       g_option_group_add_entries(all_options, ddcutil_only_options);
    }
    g_option_group_add_entries(all_options, common_options);
+   g_option_group_add_entries(all_options, preparser_options);
    if (parser_mode == MODE_LIBDDCUTIL) {
       g_option_group_add_entries(all_options, libddcutil_only_options);
    }
@@ -880,8 +915,37 @@ parse_command(
 #endif
 
 
+#ifdef WORKS
+   // Preparser
+   GError* preparser_error = NULL;
+   GOptionContext* preparser_context = g_option_context_new("- Preparser");
+   g_option_context_add_main_entries(preparser_context, preparser_options, NULL);
+   // on --help, comes after usage line, before option detail
+    g_option_context_set_summary(preparser_context, "Preparser help_summary");
+    // on --help, comes at end after option detail
+    g_option_context_set_description(preparser_context, "Preparser help description");
+   g_option_context_set_help_enabled(preparser_context, false);
+   Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   bool preparser_parsing_ok = g_option_context_parse_strv(preparser_context, &temp_argv, &preparser_error);
+   if (!preparser_parsing_ok) {
+      if (preparser_error)
+         printf("%s\n" , preparser_error->message);
+      else
+         printf("Preparser option parsing failed");
+   }
+   ntsa_free(temp_argv, true);
+   printf("(%s) hidden_help_flag: %s\n", __func__, sbool(hidden_help_flag));
+
+   if (hidden_help_flag) {
+
+   }
+#endif
+
+
+   // Main Parser
+
    GError* error = NULL;
-   GOptionContext* context = g_option_context_new("- DDC query and manipulation");
+   GOptionContext* context  = g_option_context_new("- DDC query and manipulation");
    // g_option_context_add_main_entries(context, option_entries, NULL);
    g_option_context_set_main_group(context, all_options);
 #ifdef FUTURE
@@ -941,7 +1005,7 @@ parse_command(
 
       Pass a mangleable copy of argv to g_option_context_parse_strv().
    */
-   Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   // Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
    bool parsing_ok = g_option_context_parse_strv(context, &temp_argv, &error);
    if (!parsing_ok) {
       char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
