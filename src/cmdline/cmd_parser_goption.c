@@ -670,6 +670,7 @@ parse_command(
    char *   sleep_multiplier_work = NULL;
 
    gboolean hidden_help_flag = false;
+   gboolean disable_config_flag = false;
 
    GOptionEntry preparser_options[] = {
          {"hh",         '\0', 0, G_OPTION_ARG_NONE, &hidden_help_flag, "Show hidden options", NULL},
@@ -719,9 +720,13 @@ parse_command(
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
          {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
-  // Program information
+         // Program information
          {"settings",'\0', 0, G_OPTION_ARG_NONE,     &show_settings_flag,"Show current settings",           NULL},
          {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version",             NULL},
+
+         // Miscellaneous
+         // move to preparser_options if also implemented for libddcutil
+         {"noconfig",'\0', 0, G_OPTION_ARG_NONE,     &disable_config_flag, "Do not process configuration file", NULL},
       {NULL},
    };
 

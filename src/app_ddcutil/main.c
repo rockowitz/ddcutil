@@ -700,34 +700,42 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(g_free);
-   int apply_config_rc = apply_config_file(
-                    "ddcutil",     // use this section of config file
-                    argc,
-                    argv,
-                    &new_argc,
-                    &new_argv,
-                    &untokenized_cmd_prefix,
-                    &configure_fn,
-                    config_file_errs);
-#ifdef LATER
-   if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
-      fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
-            untokenized_cmd_prefix);
-#endif
-   DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
-   if (config_file_errs->len > 0) {
-      f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
-      for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
-         char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
-         f0printf(ferr(), s);
-         free(s);
-      }
+   bool skip_config = (ntsa_find(argv, "--noconfig") >= 0);
+   if (skip_config) {
+      // DBGMSG("Skipping config file");
+      new_argv = ntsa_copy(argv, true);
+      new_argc = argc;
    }
-   g_ptr_array_free(config_file_errs, true);
+   else {
+      GPtrArray * config_file_errs = g_ptr_array_new_with_free_func(g_free);
+      int apply_config_rc = apply_config_file(
+                       "ddcutil",     // use this section of config file
+                       argc,
+                       argv,
+                       &new_argc,
+                       &new_argv,
+                       &untokenized_cmd_prefix,
+                       &configure_fn,
+                       config_file_errs);
+#ifdef LATER
+      if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0)
+         fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn,
+               untokenized_cmd_prefix);
+#endif
+      DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
+      if (config_file_errs->len > 0) {
+         f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
+         for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
+            char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
+            f0printf(ferr(), s);
+            free(s);
+         }
+      }
+      g_ptr_array_free(config_file_errs, true);
 
-   if (apply_config_rc < 0)
-      goto bye;
+      if (apply_config_rc < 0)
+         goto bye;
+   }
 
    assert(new_argc == ntsa_length(new_argv));
 
