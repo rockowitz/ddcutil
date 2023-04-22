@@ -12,6 +12,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/error_info.h"
+#include "base/core.h"
 #include "base/status_code_mgt.h"
 
 extern const bool DSA2_Enabled_Default;
