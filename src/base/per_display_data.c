@@ -345,20 +345,6 @@ Sleep_Multiplier get_global_sleep_multiplier_factor() {
 //
 
 
-/** Initializes the retry data section of struct #Per_Display_Data
- *
- *  \param  data
- */
-void drd_init_display_data(Per_Display_Data * data) {
-   for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
-      data->try_stats[0].retry_op = WRITE_ONLY_TRIES_OP;
-      data->try_stats[1].retry_op = WRITE_READ_TRIES_OP;
-      data->try_stats[2].retry_op = MULTI_PART_READ_OP;
-      data->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
-   }
-}
-
-
 void pdd_init_pdd(Per_Display_Data * pdd) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -374,9 +360,15 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
       pdd->dsa1_data = new_dsa1_data(pdd);
    if (dsa2_enabled) {
       pdd->dsa2_data = dsa2_get_results_table_by_busno(pdd->dpath.path.i2c_busno, true);
-
    }
-   drd_init_display_data(pdd);   // initialize the retry data section of Per_Display_Data
+
+   for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
+      pdd->try_stats[0].retry_op = WRITE_ONLY_TRIES_OP;
+      pdd->try_stats[1].retry_op = WRITE_READ_TRIES_OP;
+      pdd->try_stats[2].retry_op = MULTI_PART_READ_OP;
+      pdd->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
+   }
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "Device = %s, user_sleep_multiplier=%4.2f",
                       dpath_repr_t(&pdd->dpath), pdd->user_sleep_multiplier);
    if (debug)
