@@ -829,7 +829,8 @@ parse_command(
 
    GOptionEntry debug_options[] = {
       // Debugging
-      {"excp",       '\0', 0, G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
+      {"excp",       '\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
       {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
       {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_functions,      "Trace functions","function name" },
