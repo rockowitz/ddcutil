@@ -46,9 +46,9 @@ const int   Default_Look_Back    = 5;
 const int   Default_Initial_Step = 7;  // 1.0
 const int   Max_Recent_Values    = 20;
 const int   Default_Interval     = 3;
-const int   Default_Greatest_Tries_Bound = 3;
+const int   Default_Greatest_Tries_Upper_Bound = 3;
 const Sleep_Multiplier
-            Default_Average_Tries_Bound = 1.4;
+            Default_Average_Tries_Upper_Bound = 1.4;
 const int   Default_Greatest_Tries_Lower_Bound = 1;
 const Sleep_Multiplier
             Default_Average_Tries_Lower_Bound = 1.1;
@@ -56,15 +56,15 @@ const Sleep_Multiplier
 bool  dsa2_enabled           = Default_DSA2_Enabled;
 int   initial_step           = Default_Initial_Step;
 int   adjustment_interval    = Default_Interval;
-int   greatest_tries_bound   = Default_Greatest_Tries_Bound;
-int   avg_tries_bound_10     = Default_Average_Tries_Bound * 10; // multiply by 10 for integer arithmetic
-int   greatest_tries_lower_bound = Default_Greatest_Tries_Lower_Bound;
-int   avg_tries_lower_bound_10 = Default_Average_Tries_Lower_Bound * 10;
+int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
+int   target_avg_tries_upper_bound_10    = Default_Average_Tries_Upper_Bound * 10; // multiply by 10 for integer arithmetic
+int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
+int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
 
 bool  dsa2_set_greatest_tries_bound(int tries) {
    bool result = false;
    if ( 1 <= tries && tries <= MAX_MAX_TRIES) {    // should get actual write/read maxtries
-      greatest_tries_bound = tries;
+      target_greatest_tries_upper_bound = tries;
       result = true;
    }
    return result;
@@ -73,7 +73,7 @@ bool  dsa2_set_greatest_tries_bound(int tries) {
 bool  dsa2_set_average_tries_bound(Sleep_Multiplier avg_tries) {
    bool result = false;
    if (1.0 <= avg_tries && avg_tries <= MAX_MAX_TRIES) {
-      avg_tries_bound_10 = avg_tries * 10;
+      target_avg_tries_upper_bound_10 = avg_tries * 10;
       result = true;
    }
    return result;
@@ -579,12 +579,12 @@ too_many_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "greatest_tries_bound=%d, avg_tries_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
-          greatest_tries_bound,    avg_tries_bound_10,    highest_tryct,    total_tryct,    interval);
+          target_greatest_tries_upper_bound,    target_avg_tries_upper_bound_10,    highest_tryct,    total_tryct,    interval);
    int computed_avg_10 = (total_tryct * 10)/interval;
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "computed_avg_10=%d", computed_avg_10);
 
-   bool result = ( highest_tryct > greatest_tries_bound ||
-                   computed_avg_10 > avg_tries_bound_10);     // i.e. total_tryct/interval > 1.4)
+   bool result = ( highest_tryct > target_greatest_tries_upper_bound ||
+                   computed_avg_10 > target_avg_tries_upper_bound_10);     // i.e. total_tryct/interval > 1.4)
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
    return result;
@@ -596,12 +596,12 @@ too_few_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
          "greatest_tries_lower_bound=%d, avg_tries_lower_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
-          greatest_tries_lower_bound,    avg_tries_lower_bound_10,    highest_tryct,    total_tryct,    interval);
+          target_greatest_tries_lower_bound,    target_avg_tries_lower_bound_10,    highest_tryct,    total_tryct,    interval);
    int computed_avg_10 = (total_tryct * 10)/interval;
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "computed_avg_10=%d", computed_avg_10);
 
-   bool result = (highest_tryct   <= greatest_tries_lower_bound &&
-                  computed_avg_10 <= avg_tries_lower_bound_10);
+   bool result = (highest_tryct   <= target_greatest_tries_lower_bound &&
+                  computed_avg_10 <= target_avg_tries_lower_bound_10);
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
    return result;
