@@ -166,6 +166,7 @@ void drd_reset_all_displays_tries() {
 }
 #endif
 
+
 // static
 void drd_record_display_successful_tries(Per_Display_Data * data, Retry_Operation type_id, int tryct) {
    bool debug = false;
@@ -182,17 +183,20 @@ void drd_record_display_successful_tries(Per_Display_Data * data, Retry_Operatio
    DBGMSF(debug, "new counters value: %d", data->try_stats[type_id].counters[tryct+1]);
 }
 
+
 // static
 void drd_record_display_failed_max_tries(Per_Display_Data * data, Retry_Operation type_id) {
    // Per_Display_Data * data = drd_get_display_retry_data();
    data->try_stats[type_id].counters[1]++;
 }
 
+
 // static
 void drd_record_display_failed_fatally(Per_Display_Data * data, Retry_Operation type_id) {
    // Per_Display_Data * data = drd_get_display_retry_data();
    data->try_stats[type_id].counters[0]++;
 }
+
 
 void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, int rc, int tryct) {
    bool debug = false;
