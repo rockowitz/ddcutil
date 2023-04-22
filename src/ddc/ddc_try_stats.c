@@ -206,10 +206,6 @@ void try_data_set_maxtries2(Retry_Operation retry_type, Retry_Op_Value new_maxtr
    if (new_maxtries > stats_rec->highest_maxtries)
       stats_rec->highest_maxtries = new_maxtries;
 
-#ifdef PER_DISPLAY_MAXTRIES
-   drd_set_all_maxtries(retry_type, new_maxtries);
-#endif
-
    unlock_if_needed(this_function_performed_lock);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE,  "");
@@ -344,33 +340,7 @@ void try_data_report2(Retry_Operation retry_type, int depth) {
    else {
       int total_successful_attempts = 0;
       int max1 = stats_rec->maxtries;
-
-#ifdef PER_DISPLAY_MAXTRIES
-      // Temporary for consistency check:
-      Global_Maxtries_Accumulator acc =
-             drd_get_all_displays_maxtries_range(retry_type);
-      DBGMSF(debug, "acc.max_highest_maxtries=%d, stats_rec->highest_maxtries = %d",
-                    acc.max_highest_maxtries, stats_rec->highest_maxtries);
-      // assert (acc.max_highest_maxtries == stats_rec->highest_maxtries);
-      // assert (acc.min_lowest_maxtries  == stats_rec->lowest_maxtries);
-      if (acc.max_highest_maxtries != stats_rec->highest_maxtries) {
-         DBGMSG("acc.max_highest_maxtries(%d) != stats_rec->highest_retries(%d)",
-                acc.max_highest_maxtries,stats_rec->highest_maxtries);
-      }
-      if (acc.min_lowest_maxtries != stats_rec->lowest_maxtries) {
-            DBGMSG("acc.max_lowest_maxtries(%d) != stats_rec->lowest_maxtries(%d)",
-                   acc.min_lowest_maxtries,stats_rec->lowest_maxtries);
-      }
-#endif
-
       rpt_vstring(d1, "Max tries allowed: %d", max1);
-#ifdef PER_DISPLAY_MAXTRIES
-      if (acc.min_lowest_maxtries == acc.max_highest_maxtries)
-         rpt_vstring(d1, "Max tries allowed: %d", acc.min_lowest_maxtries);
-
-      rpt_vstring(d1, "Max tries allowed range: %d..%d",
-                      acc.min_lowest_maxtries, acc.max_highest_maxtries);
-#endif
       int upper_bound = MAX_MAX_TRIES+1;
       while (upper_bound > 1) {
          if (stats_rec->counters[upper_bound] != 0)
