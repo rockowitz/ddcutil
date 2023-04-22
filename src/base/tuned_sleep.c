@@ -171,73 +171,8 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
                           "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
 
    Per_Display_Data * pdd = dh->dref->pdd;
-#ifdef OLD
-   int adjusted_sleep_time_millis = spec_sleep_time_millis * pdd->sleep_multiplier_factor;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "pdd->sleep_multiplier_factor=%2.1f, adjusted_sleep_time_millis=%d",
-         pdd->sleep_multiplier_factor, adjusted_sleep_time_millis);
-#endif
-
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
-
-#ifdef OUT
-   double dsa_multiplier;
-   if (dsa2_enabled)
-      dsa_multiplier = dsa2_get_sleep_multiplier(dh->dref->io_path);
-   else if (dsa1_enabled)  {
-      dsa1_update_adjustment_factor(dh, spec_sleep_time_millis);
-      dsa_multiplier = pdd->cur_sleep_adjustment_factor * pdd->sleep_multiplier_factor;
-   }
-   else if (dsa0_enabled) {
-      DSA0_Data * dsa0_data = (DSA0_Data*) pdd->dsa0_data;
-      dsa_multiplier = dsa0_data->sleep_multiplier_ct * pdd->sleep_multiplier_factor;
-   }
-   else
-      dsa_multiplier = pdd->sleep_multiplier_factor;
-
-   pdd->most_recent_adjusted_sleep_multiplier = dsa_multiplier;
-
-   int adjusted_sleep_time_millis2 = dsa_multiplier * spec_sleep_time_millis;
-   // DBGMSG("dsa_multiplier = %7.3f, adjusted_sleep_time_millis2=%d", dsa_multiplier, adjusted_sleep_time_millis2);
-
-
-   if (dsa2_enabled) {
-      double multiplier = dsa2_get_sleep_multiplier(dh->dref->io_path);
-      adjusted_sleep_time_millis = multiplier * spec_sleep_time_millis;
-   }
-
-   else if (dsa1_enabled) {
-      dsa1_update_adjustment_factor(dh, spec_sleep_time_millis);
-      adjusted_sleep_time_millis =
-            pdd->cur_sleep_adjustment_factor * adjusted_sleep_time_millis;
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                "Dynamic sleep (dsa1) enabled. Updated adjustment factor: %4.2f",
-                pdd->cur_sleep_adjustment_factor);
-   }
-   else if (dsa0_enabled) {
-      DSA0_Data * dsa0_data = (DSA0_Data*) pdd->dsa0_data;
-      adjusted_sleep_time_millis =
-            dsa0_data->sleep_multiplier_ct * adjusted_sleep_time_millis;
-
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "dsa0. sleep_multiplier_ct = %d",
-             dsa0_data->sleep_multiplier_ct);
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No dynamic adjustment");
-   }
-#endif
-
-   // DBGMSG("adjusted_sleep_time_millis = %d, adjusted_sleep_time_millis2 = %d",
-   //       adjusted_sleep_time_millis, adjusted_sleep_time_millis2);
-
-    // assert(adjusted_sleep_time_millis == adjusted_sleep_time_millis2);
-
-#ifdef OLD
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d milliseconds", adjusted_sleep_time_millis);
-#endif
 
    DBGTRC_DONE(debug, TRACE_GROUP,
          "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, Returning: %d",
