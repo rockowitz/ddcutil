@@ -184,8 +184,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
 {
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
-      // ddc_set_max_write_only_exchange_tries(parsed_cmd->max_tries[0]);  // sets in Try_Data
-      // try_data_set_maxtries2(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);
       try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);  // resets highest, lowest
 
       // redundant
@@ -194,8 +192,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->max_tries[1] > 0) {
-      // ddc_set_max_write_read_exchange_tries(parsed_cmd->max_tries[1]);   // sets in Try_Data
-      // try_data_set_maxtries2(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
       try_data_init_retry_type(WRITE_READ_TRIES_OP, parsed_cmd->max_tries[1]);
 
       drd_set_default_max_tries(1, parsed_cmd->max_tries[1]);
@@ -203,10 +199,6 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->max_tries[2] > 0) {
-      // ddc_set_max_multi_part_read_tries(parsed_cmd->max_tries[2]);       // sets in Try_Data
-      // ddc_set_max_multi_part_write_tries(parsed_cmd->max_tries[2]);
-      // try_data_set_maxtries2(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
-      // try_data_set_maxtries2(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
       try_data_init_retry_type(MULTI_PART_READ_OP,  parsed_cmd->max_tries[2]);
       try_data_init_retry_type(MULTI_PART_WRITE_OP, parsed_cmd->max_tries[2]);
 
