@@ -4,8 +4,17 @@
 
 ### Added
 
-install /usr/lib/modules-load.d/ddcutil.conf
+- Install /usr/lib/modules-load.d/ddcutil.conf. Ensures that driver i2c-dev
+  is loaded.
 
+- Option ***--hh***. The number of command line options has become huge. Many 
+  are development related.  Options not of interest to general users are now
+  hidden.  Option ***--hh*** exposes them, and implies option ***--help***.
+
+- Option ***--noconfig***. Do not process the configuration file.
+
+- Option ***--trccall***. Traces the call stack starting with the specified 
+  function.  
 
 ### Changed 
 
@@ -38,6 +47,7 @@ Miscellaneous options changes:
 
 - --dsa2 --no-dsa2 --enable-dsa2 --disable-dsa2
 
+Use of shared library libkmod eliminated.
 
 **libddcutil** changes
 
@@ -67,11 +77,14 @@ rather than per-thread basis.
 
 - ddca_set_default_sleep_multiplier(), ddca_get_default_sleep_multiplier()
   Operate on newly detected displays, not new threads.
-    
-
-Miscellaneous:
 
 - ddca_report_display_info() returns DDCA_Status instead of void
+
+- Option ***--profile-api***. Applies only to **libddcutil**.  Performance
+  statistics for API functions that perform display IO are collected
+  are reported when the library is terminated.  
+
+- Option ***--trcapi***. Trace the call stack for a specified API function.
 
 
 ### Fixed
@@ -79,15 +92,12 @@ Miscellaneous:
 
 ### Development Facilities
 
-- Added utility options --f7, --f8, --i2, --s1, --s2, --s3, --s4
+- Added utility options --f7, --f8, --i2, --s1, --s2, --s3, --s4, --fl1, --fl2
   These options are used temporarily during development to avoid having to
   create new options for test purposes.  The current use of the utility 
   options is reported by option ***--settings***.
 
 - Option ***--enable-mock-data***
-
-- Option ***--trccall*** indicates that trace is enabled no only for the function,
-  but also the functions that it calls. 
 
 - Utility option ***--i1*** currently overrides x51 as packet source address
 
