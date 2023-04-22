@@ -304,7 +304,6 @@ Sleep_Multiplier pdd_get_sleep_multiplier_factor(Per_Display_Data * data) {
 #endif
 
 
-
 #ifdef UNUSED
 // apply the sleep-multiplier to any existing displays
 // it will be set for new displays from global_sleep_multiplier_factor
@@ -338,11 +337,6 @@ Sleep_Multiplier get_global_sleep_multiplier_factor() {
    return global_sleep_multiplier_factor;
 }
 #endif
-
-
-//
-// Locking
-//
 
 
 void pdd_init_pdd(Per_Display_Data * pdd) {
