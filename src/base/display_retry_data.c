@@ -55,16 +55,6 @@ void drd_init_display_data(Per_Display_Data * data) {
 }
 
 
-#ifdef UNUSED
-// Just a pass through to pdd_get_display_data()
-// Vestige of having separate struct for retry data alone
-Per_Display_Data * drd_get_display_retry_data(DDCA_IO_Path dpath) {
-   Per_Display_Data * pdd = pdd_get_per_display_data(dpath, true);
-   return pdd;
-}
-#endif
-
-
 /** Sets the maxtries value to be used for a given retry type when creating
  * new #Per_Display_Data instances.
  *
