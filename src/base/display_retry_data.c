@@ -37,24 +37,6 @@ static int default_maxtries[] = {
       INITIAL_MAX_MULTI_EXCHANGE_TRIES };
 
 
-/** Initializes the retry data section of struct #Per_Display_Data
- *
- *  \param  data
- */
-void drd_init_display_data(Per_Display_Data * data) {
-   bool debug = false;
-
-   for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
-      DBGMSF(debug, "dpath =%s, retry type: %d, setting current, lowest, highest maxtries to %d ",
-                    data->dpath, ndx, default_maxtries[ndx]);
-      data->try_stats[0].retry_op = WRITE_ONLY_TRIES_OP;
-      data->try_stats[1].retry_op = WRITE_READ_TRIES_OP;
-      data->try_stats[2].retry_op = MULTI_PART_READ_OP;
-      data->try_stats[3].retry_op = MULTI_PART_WRITE_OP;
-   }
-}
-
-
 /** Sets the maxtries value to be used for a given retry type when creating
  * new #Per_Display_Data instances.
  *

@@ -14,9 +14,7 @@
 #include "base/per_display_data.h"
 
 
-void drd_init_display_data(Per_Display_Data * data);
-
-// Maintain max_tries data
+// Maintain max_tries
 void drd_set_default_max_tries(
       Retry_Operation     type_id,
       uint16_t            new_maxtries);
