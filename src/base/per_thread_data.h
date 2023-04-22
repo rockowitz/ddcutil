@@ -21,7 +21,6 @@
 #include "base/displays.h"
 
 extern GHashTable *  per_thread_data_hash;   // key is thread id, value is Per_Thread_Data*
-// extern GMutex        per_thread_data_mutex;    // temp, replace by function calls
 
 void init_per_thread_data();     // module initialization
 void release_thread_data_module();  // release all resources
@@ -39,7 +38,6 @@ typedef struct {
 // key is function name, value is Per_Thread_Fuction_Stats *
 typedef GHashTable Function_Stats_Hash;
 
-
 typedef struct {
    bool                  initialized;
    pid_t                 thread_id;
@@ -47,12 +45,13 @@ typedef struct {
    Display_Handle *      cur_dh;
    char *                cur_func;
    uint64_t              cur_start;
-   Function_Stats_Hash * function_stats;  // key is function name, value is Per_Thread_Function_Stats*
+   Function_Stats_Hash * function_stats;
 } Per_Thread_Data;
 
 bool ptd_cross_thread_operation_start();
 void ptd_cross_thread_operation_end();
 void ptd_cross_thread_operation_block();
+void dbgrpt_per_thread_data_locks(int depth);
 
 Per_Thread_Data * ptd_get_per_thread_data();
 
@@ -61,18 +60,12 @@ void         ptd_append_thread_description(const char * addl_description);
 const char * ptd_get_thread_description_t();
 
 // Apply a function to all Per_Thread_Data records
-typedef void (*Ptd_Func)(Per_Thread_Data * data, void * arg);   // Template for function to apply
+typedef void (*Ptd_Func)(Per_Thread_Data * data, void * arg);
 void ptd_apply_all(Ptd_Func func, void * arg);
 void ptd_apply_all_sorted(Ptd_Func func, void * arg);
 
 void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth);
 void ptd_list_threads(int depth);
-
-void dbgrpt_per_thread_data_locks(int depth);
-
-#ifdef PTD
-void report_all_thread_status_counts(int depth);
-#endif
 
 // API function performance profiling
 extern bool ptd_api_profiling_enabled;
