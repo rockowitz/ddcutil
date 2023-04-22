@@ -261,51 +261,6 @@ void try_data_reset2_all() {
 }
 
 
-#ifdef OLD
-static void record_successful_tries2(Retry_Operation retry_type, int tryct){
-   bool debug = false || debug_mutex;
-   // DBGMSG("=============================================");
-   DBGMSF(debug, "Starting. retry_type=%d - %s, tryct=%d",
-                 retry_type, retry_type_name(retry_type), tryct);
-   Try_Data2 * stats_rec = try_data[retry_type];
-   DBGMSF(debug, "Current stats_rec->maxtries=%d", stats_rec->maxtries);
-   assert(0 < tryct && tryct <= stats_rec->maxtries);
-
-   //g_mutex_lock(&try_data_mutex);
-   stats_rec->counters[tryct+1] += 1;
-   // g_mutex_unlock(&try_data_mutex);
-
-   DBGMSF(debug, "Done");
-}
-
-
-static void record_failed_max_tries2(Retry_Operation retry_type) {
-   bool debug = false || debug_mutex;
-   DBGMSF(debug, "Starting");
-
-   Try_Data2 * stats_rec = try_data[retry_type];
-   // g_mutex_lock(&try_data_mutex);
-   stats_rec->counters[1] += 1;
-   // g_mutex_unlock(&try_data_mutex);
-
-   DBGMSF(debug, "Done");
-}
-
-
-static void record_failed_fatally2(Retry_Operation retry_type) {
-   bool debug = false || debug_mutex;
-    DBGMSF(debug, "Starting");
-
-   Try_Data2 * stats_rec = try_data[retry_type];
-   // g_mutex_lock(&try_data_mutex);
-   stats_rec->counters[0] += 1;
-   // g_mutex_unlock(&try_data_mutex);
-
-   DBGMSF(debug, "Done");
-}
-#endif
-
-
 /** Records the status and retry count for a retryable transaction
  *
  *  @param  retry_type
@@ -345,6 +300,7 @@ void try_data_record_tries2(Display_Handle * dh, Retry_Operation retry_type, DDC
 
    unlock_if_needed(locked_by_this_func);
 }
+
 
 //
 // Reporting
