@@ -619,7 +619,7 @@ void pdd_report_all_display_call_stats(int depth) {
 
 void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    // bool debug = false;
-   rpt_vstring(depth, "Elapsed time report for display %s (pdd)", dpath_short_name_t(&pdd->dpath));
+   rpt_vstring(depth, "Elapsed time report for display %s", dpath_short_name_t(&pdd->dpath));
    int d1 = depth+1;
 
    const char * s0 = user_multiplier_source_name(pdd->user_multiplier_source);
