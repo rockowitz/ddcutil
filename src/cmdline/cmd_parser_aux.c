@@ -547,7 +547,7 @@ char * stats_multiple_call_option_help =
        "Stats:\n"
        "  The argument to --stats is a statistics class.  Specify the --stats option multiple\n"
        "  times to activate multiple statistics classes, e.g. \"--stats calls --stats errors\"\n"
-       "  Valid statistics classes are:  TRY, TRIES, ERRS, ERRORS, CALLS, ALL.\n"
+       "  Valid statistics classes are:  TRY, TRIES, ERRS, ERRORS, CALLS, ELAPSED, ALL.\n"
        "  Statistics class names are not case sensitive and can abbreviated to 3 characters.\n"
        "  If no argument is specified, or ALL is specified, then all statistics classes are\n"
        "  output.\n"
