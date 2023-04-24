@@ -35,7 +35,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
    REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
-   REPORT_FLAG_OPTION(6, "Force I2C bus");
+   REPORT_FLAG_OPTION(6, "Report internal DSA stats");
    REPORT_FLAG_OPTION(7, "Unused");
    REPORT_FLAG_OPTION(8, "Unused");
 
@@ -46,6 +46,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --s2:          Unused");
    rpt_vstring(depth+1, "Utility option --s3:          Unused");
    rpt_vstring(depth+1, "Utility option --s4:          Unused");
+
+   rpt_vstring(depth+1, "Utility option --fl1:         Unused");
+   rpt_vstring(depth+1, "Utility option --fl2:         Unused");
 
    rpt_nl();
 }
