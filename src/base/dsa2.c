@@ -716,7 +716,7 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       }
       rtable->found_failure_step = true;
       rtable->min_ok_step = rtable->cur_step;
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "busno=%d, Incremented cur_step. Set found_failure_step=true, min_ok_step=%d, cur_step=%2d",
             rtable->busno, rtable->min_ok_step, rtable->cur_step);
    }
@@ -754,7 +754,7 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       if (actual_lookback >= min_decrement_lookback && rtable->cur_step > 0 && too_few_errors(max_tryct, total_tryct, actual_lookback)) {
          rtable->cur_step--;
          rtable->adjustments_down++;
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
