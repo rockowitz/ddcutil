@@ -60,6 +60,7 @@ int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
 int   target_avg_tries_upper_bound_10    = Default_Average_Tries_Upper_Bound * 10; // multiply by 10 for integer arithmetic
 int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
+int   min_decrement_lookback = 5;
 
 bool  dsa2_set_greatest_tries_bound(int tries) {
    bool result = false;
@@ -387,6 +388,8 @@ static Byte
 get_edid_checkbyte(int busno) {
    bool debug = false;
    I2C_Bus_Info * bus_info = i2c_find_bus_info_by_busno(busno);
+   if (!bus_info)
+      SEVEREMSG("i2c_find_bus_info_by_busno(%d) failed!", busno);
    assert(bus_info);
    Byte checkbyte = bus_info->edid->bytes[127];
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "busno=%d, returning 0x%02x", busno, checkbyte);
@@ -590,7 +593,7 @@ too_many_errors(int highest_tryct, int total_tryct, int interval) {
    return result;
 }
 
-#ifdef PERHAPS_FUTURE
+// #ifdef PERHAPS_FUTURE
 static bool
 too_few_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
@@ -606,7 +609,7 @@ too_few_errors(int highest_tryct, int total_tryct, int interval) {
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
-#endif
+// #endif
 
 
 /** Calculates the step to be used on the next try loop iteration after a
@@ -685,9 +688,11 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
    char  b[300];
    b[0] = '\0';
    for (int ndx = 0; ndx < actual_lookback; ndx++) {
-      sprintf(b + strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
-            (ndx > 0) ? ", " : "",
-            latest_values[ndx].tryct, latest_values[ndx].required_step, latest_values[ndx].epoch_seconds);
+      if (debug)
+         sprintf(b + strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
+             (ndx > 0) ? ", " : "",
+             latest_values[ndx].tryct, latest_values[ndx].required_step,
+             latest_values[ndx].epoch_seconds);
 
       total_tryct += latest_values[ndx].tryct;
       if (latest_values[ndx].tryct > max_tryct)
@@ -711,15 +716,15 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       }
       rtable->found_failure_step = true;
       rtable->min_ok_step = rtable->cur_step;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            "Set found_failure_step=true, min_ok_step=%d, cur_step=%2d",
-            rtable->min_ok_step, rtable->cur_step);
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,
+            "busno=%d, Incremented cur_step. Set found_failure_step=true, min_ok_step=%d, cur_step=%2d",
+            rtable->busno, rtable->min_ok_step, rtable->cur_step);
    }
    else {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-             "Looking to decrement cur_step, cur_step=%d, found_failure_step=%s, min_ok_step = %d",
-             rtable->cur_step, sbool(rtable->found_failure_step), rtable->min_ok_step);
-
+             "busno=%d, Looking to decrement cur_step, cur_step=%d, found_failure_step=%s, min_ok_step = %d",
+             rtable->busno, rtable->cur_step, sbool(rtable->found_failure_step), rtable->min_ok_step);
+#ifdef OLD
       if (rtable->cur_step > 0) {
          if (total_tryct <= actual_lookback+1) {  // i.e. no more than 1 retry was required
             rtable->cur_step--;
@@ -745,11 +750,16 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "rtable->cur_step = 0, cannot decrement");
       }
-
+#endif
+      if (actual_lookback >= min_decrement_lookback && rtable->cur_step > 0 && too_few_errors(max_tryct, total_tryct, actual_lookback)) {
+         rtable->cur_step--;
+         rtable->adjustments_down++;
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+      }
    }
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
-          "max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
-          max_tryct, total_tryct, rtable->cur_step, rtable->min_ok_step, sbool(rtable->found_failure_step) );
+          "busno=%d, max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
+           rtable->busno, max_tryct, total_tryct, rtable->cur_step, rtable->min_ok_step, sbool(rtable->found_failure_step) );
 }
 
 
@@ -767,6 +777,7 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, remaining_tries=%d, dsa2_enabled=%s",
          rtable, rtable->busno, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
+   rtable->retryable_failure_ct++;
    int prev_step = rtable->cur_retry_loop_step;
    // has special handling for case of remaining_tries = 0;
 
@@ -965,10 +976,9 @@ dsa2_save_persistent_stats() {
          Results_Table * rtable = results_tables[ndx];
          if (debug)
             dbgrpt_results_table(rtable, 2);
-         Byte edid_ck_digit = get_edid_checkbyte(rtable->busno);
          fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
-                 rtable->busno, edid_ck_digit, rtable->cur_step, rtable->lookback, rtable->remaining_interval,
-                 rtable->min_ok_step, rtable->found_failure_step);
+                 rtable->busno, rtable->edid_checksum_byte, rtable->cur_step, rtable->lookback,
+                 rtable->remaining_interval, rtable->min_ok_step, rtable->found_failure_step);
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
             fprintf(stats_file, " {%ld,%d,%d}", si.epoch_seconds, si.tryct, si.required_step);
@@ -1209,7 +1219,7 @@ void test_one_logistic(int steps) {
 void
 init_dsa2() {
    RTTI_ADD_FUNC(too_many_errors);
-// RTTI_ADD_FUNC(too_few_errors);
+   RTTI_ADD_FUNC(too_few_errors);
    RTTI_ADD_FUNC(dsa2_adjust_for_recent_successes);
    RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
    RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_multiplier);
