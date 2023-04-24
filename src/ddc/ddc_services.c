@@ -84,8 +84,7 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
                            bool             include_dsa_internal,
                            int depth)
 {
-   // DBGMSG("show_per_thread_stats: %s", sbool(show_per_display_stats));
-   // int d1 = depth+1;
+   DBGMSG("show_per_thread_stats: %s, include_dsa_internal: %s", sbool(show_per_display_stats), sbool(include_dsa_internal));
    rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
