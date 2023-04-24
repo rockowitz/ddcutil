@@ -618,6 +618,7 @@ void pdd_report_all_display_call_stats(int depth) {
 
 
 void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int depth) {
+   // DBGMSG("include_dsa_internal=%s", sbool(include_dsa_internal));
    // bool debug = false;
    rpt_vstring(depth, "Elapsed time report for display %s", dpath_short_name_t(&pdd->dpath));
    int d1 = depth+1;
@@ -647,7 +648,7 @@ void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int d
          dsa1_report(pdd->dsa1_data, d1);
          rpt_nl();
       }
-      if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
+      if (dsa2_enabled) {
          dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
          rpt_nl();
       }
