@@ -563,13 +563,18 @@ const char * ddca_get_thread_descripton();
 /** Show execution statistics.
  *
  *  @param[in] stats  bitflags of statistics types to show
- *  @param[in] include_per_thread_data include per thread detail
+ *  @param[in] include_per_display_data include per display detail
  *  @param[in] depth  logical indentation depth
+ *
+ *  @remark
+ *  Prior to version 1.5.0, the second parm was named **include_per_thread_data**
+ *  and caused per-thread data to be reported.  Most of this data is now
+ *  maintained on a per-display basis
  */
 void
 ddca_show_stats(
       DDCA_Stats_Type stats,
-      bool            include_per_thread_data,
+      bool            include_per_display_data,
       int             depth);
 
 // TODO: Add functions to get stats

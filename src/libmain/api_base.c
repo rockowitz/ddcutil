@@ -1187,11 +1187,11 @@ ddca_reset_stats(void) {
 void
 ddca_show_stats(
       DDCA_Stats_Type stats_types,
-      bool            by_thread,
+      bool            per_display_stats,
       int             depth)
 {
    if (stats_types)
-      ddc_report_stats_main( stats_types, by_thread, depth);
+      ddc_report_stats_main( stats_types, per_display_stats, depth);
 }
 
 
