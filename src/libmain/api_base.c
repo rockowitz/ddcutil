@@ -124,7 +124,7 @@ ddca_ddcutil_extended_version_string(void) {
 }
 
 
-// Indicates whether the ddcutil library was built with support for USB connected monitors. .
+// Indicates whether the ddcutil library was built with support for USB connected monitors.
 bool
 ddca_built_with_usb(void) {
 #ifdef USE_USB
@@ -135,7 +135,7 @@ ddca_built_with_usb(void) {
 }
 
 // Alternative to individual ddca_built_with...() functions.
-// conciseness vs documentatbility
+// conciseness vs documentability
 // how to document bits?   should doxygen doc be in header instead?
 
 DDCA_Build_Option_Flags
@@ -356,6 +356,7 @@ static FILE * flog = NULL;
 bool library_initialized = false;
 DDCA_Stats_Type requested_stats = 0;
 bool per_display_stats = false;
+bool dsa_detail_stats;
 
 
 /** Initializes the ddcutil library module.
@@ -488,7 +489,7 @@ _ddca_terminate(void) {
          dsa2_save_persistent_stats();
       ddc_discard_detected_displays();
       if (requested_stats)
-         ddc_report_stats_main(requested_stats, per_display_stats, 0);
+         ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, 0);
       release_base_services();
       ddc_stop_watch_displays();
       free_regex_hash_table();
@@ -593,6 +594,7 @@ ddca_init(char * library_options, DDCA_Init_Options opts) {
             requested_stats = parsed_cmd->stats_types;
             ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
             per_display_stats = parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS;
+            dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_F6;
             submaster_initializer(parsed_cmd);
          }
 
@@ -1191,7 +1193,7 @@ ddca_show_stats(
       int             depth)
 {
    if (stats_types)
-      ddc_report_stats_main( stats_types, per_display_stats, depth);
+      ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, depth);
 }
 
 

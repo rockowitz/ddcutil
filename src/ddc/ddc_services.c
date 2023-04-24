@@ -76,9 +76,14 @@ void ddc_reset_stats_main() {
  *
  * \param stats                 bitflags indicating which statistics to report
  * \param show_per_display      include per display execution stats
+ * \param include_dsa_internal  include internal dsa info in per display elapsed stats
  * \param depth logical         indentation depth
  */
-void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, int depth) {
+void ddc_report_stats_main(DDCA_Stats_Type  stats,
+                           bool             show_per_display_stats,
+                           bool             include_dsa_internal,
+                           int depth)
+{
    // DBGMSG("show_per_thread_stats: %s", sbool(show_per_display_stats));
    // int d1 = depth+1;
    rpt_nl();
@@ -88,9 +93,6 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
    if (stats & DDCA_STATS_TRIES) {
       ddc_report_ddc_stats(depth);
       rpt_nl();
-
-      // Consistency check:
-      // report_all_thread_retry_data(depth);
    }
 
    if (stats & DDCA_STATS_ERRORS) {
@@ -126,22 +128,18 @@ void ddc_report_stats_main(DDCA_Stats_Type stats, bool show_per_display_stats, i
    if (show_per_display_stats) {
       rpt_label(depth, "PER-DISPLAY EXECUTION STATISTICS");
       rpt_nl();
-      // ptd_list_threads(depth);
        if (stats & DDCA_STATS_TRIES) {
            drd_report_all_display_retry_data(depth);
       }
       if (stats & DDCA_STATS_ERRORS) {
           pdd_report_all_display_status_counts(depth);
-          // rpt_nl();
       }
       if (stats & DDCA_STATS_CALLS) {
          pdd_report_all_display_call_stats(depth);
-         // rpt_nl();
       }
       if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
-          pdd_report_all_elapsed(depth);
-          // rpt_nl();
+          pdd_report_all_elapsed(include_dsa_internal, depth);
       }
 
       // Reports locks held by per_thread_data() to confirm that locking has

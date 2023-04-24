@@ -927,7 +927,9 @@ main(int argc, char *argv[]) {
 #endif
       )
    {
-      ddc_report_stats_main(parsed_cmd->stats_types, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, 0);
+      ddc_report_stats_main(parsed_cmd->stats_types,
+            parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS,
+            parsed_cmd->flags & CMD_FLAG_F6, 0);
       // report_timestamp_history();  // debugging function
    }
 

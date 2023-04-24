@@ -617,7 +617,7 @@ void pdd_report_all_display_call_stats(int depth) {
 }
 
 
-void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
+void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int depth) {
    // bool debug = false;
    rpt_vstring(depth, "Elapsed time report for display %s", dpath_short_name_t(&pdd->dpath));
    int d1 = depth+1;
@@ -637,33 +637,33 @@ void pdd_report_elapsed(Per_Display_Data * pdd, int depth) {
    // }
    rpt_nl();
 
-   // report_display_all_types_data_by_data(false, pdd, depth);
-
-   if (dsa0_enabled) {
-      assert(pdd->dsa0_data);
-      report_dsa0_data(pdd->dsa0_data, d1);
-      rpt_nl();
-   }
-   if (dsa1_enabled && pdd->dsa1_data && get_output_level() >= DDCA_OL_VERBOSE) {
-      dsa1_report(pdd->dsa1_data, d1);
-      rpt_nl();
-   }
-   if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
-      dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
-      rpt_nl();
+   if (include_dsa_internal) {
+      if (dsa0_enabled) {
+         assert(pdd->dsa0_data);
+         report_dsa0_data(pdd->dsa0_data, d1);
+         rpt_nl();
+      }
+      if (dsa1_enabled && pdd->dsa1_data) {
+         dsa1_report(pdd->dsa1_data, d1);
+         rpt_nl();
+      }
+      if (dsa2_enabled && get_output_level() >= DDCA_OL_VV) {
+         dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
+         rpt_nl();
+      }
    }
 }
 
 
-void pdd_report_all_elapsed(int depth) {
-   // rpt_label(depth, "PER DISPLAY ELAPSED DETAIL");
+void pdd_report_all_elapsed(bool include_dsa_internal, int depth) {
+   rpt_label(depth, "Per display elapsed time");
    for (int ndx = 0; ndx <= I2C_BUS_MAX; ndx++) {
       DDCA_IO_Path dpath;
       dpath.io_mode = DDCA_IO_I2C;
       dpath.path.i2c_busno = ndx;
       Per_Display_Data * pdd = pdd_get_per_display_data(dpath, false);
       if (pdd)
-         pdd_report_elapsed(pdd, depth);
+         pdd_report_elapsed(pdd, include_dsa_internal, depth+1);
    }
 }
 
