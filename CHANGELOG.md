@@ -67,6 +67,11 @@ If this function is not called by the user program, any API function that relies
 processing invokes **ddca_init()** using arguments such that it never fails, e.g. 
 the configuration file is not processed.
 
+Added functions: 
+
+- **ddca_library_filename()**:  Returns the fully qualified name of the 
+  chared library.
+  
 The semantics of some functions have changed, reflecting
 the fact that some information is maintained on a per-display
 rather than per-thread basis.
@@ -88,6 +93,9 @@ rather than per-thread basis.
 
 
 ### Fixed
+
+- Option ***--help***. Document **ELAPSED** as a recognized statistics class
+
 
 
 ### Development Facilities
