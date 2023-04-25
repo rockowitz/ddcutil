@@ -8,7 +8,9 @@
 
 #include "config.h"
 
+#define _GNU_SOURCE 1
 #include <assert.h>
+#include <dlfcn.h>     // _GNU_SOURCE for dladdr()
 #include <errno.h>
 #include <glib-2.0/glib.h>
 #include <signal.h>
@@ -151,12 +153,16 @@ ddca_build_options(void) {
    return result;
 }
 
-#ifdef FUTURE
-char * get_library_filename() {
-   intmax_t pid = get_process_id();
-   return NULL;
+
+const char * ddca_libddcutil_filename(void) {
+   static Dl_info info = {NULL,NULL,NULL,NULL};
+   static char fullname[PATH_MAX];
+   if (!info.dli_fname) {
+      dladdr(ddca_build_options, &info);
+      realpath(info.dli_fname, fullname);
+   }
+   return fullname;
 }
-#endif
 
 
 //

@@ -87,15 +87,22 @@ ddca_ddcutil_extended_version_string(void);
  *
  * @return  flags byte
  *
- * | Defined Bits: | |
- * |:-------| :--------------
- * |#DDCA_BUILT_WITH_USB  | built with USB support
+ * | Defined Bits:           | |
+ * |:------------------------| :--------------
+ * |#DDCA_BUILT_WITH_USB     | built with USB support
  * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
  *
  */
 DDCA_Build_Option_Flags
 ddca_build_options(void);
 
+
+ /** Reports the fully qualified name of the shared library file
+  *
+  *  @return file name
+  */
+ const char *
+ ddca_libddcutil_filename(void);
 
  //
  // Error Detail
