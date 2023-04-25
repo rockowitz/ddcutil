@@ -1108,10 +1108,12 @@ ddca_add_traced_function(const char * funcname) {
    return add_traced_function(funcname);
 }
 
+#ifdef UNNEEDED
 bool
 ddca_add_traced_api_call(const char * funcname) {
    return add_traced_api_call(funcname);
 }
+#endif
 
 
 void

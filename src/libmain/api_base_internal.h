@@ -224,5 +224,20 @@ ddca_get_precondition_failure_mode();
 // Unpublished
 //
 
+#ifdef UNNEEDED
+/** Turn on call stack tracing for a specific API function.
+ *
+ *  @param[in]  funcname   function name
+ *  @return true if function is traceable, false if not
+ *
+ *  @remark
+ *  The function must include trace calls.
+ */
+bool
+ddca_add_traced_api_call(
+      const char * funcname);
+#endif
+
+
 
 #endif /* API_BASE_INTERNAL_H_ */
