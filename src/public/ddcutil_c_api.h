@@ -100,6 +100,8 @@ ddca_build_options(void);
  /** Reports the fully qualified name of the shared library file
   *
   *  @return file name
+  *
+  *  @since 1.5.0
   */
  const char *
  ddca_libddcutil_filename(void);
@@ -465,6 +467,7 @@ ddca_is_report_ddc_errors_enabled(void);
  *  @return true if function is traceable, false if not
  *
  *  @remark
+ *
  *  The function must include trace calls.
  */
 bool
