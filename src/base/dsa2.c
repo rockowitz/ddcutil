@@ -304,7 +304,6 @@ typedef struct Results_Table {
    int  min_ok_step;
    int  cur_retry_loop_step;
 
-// bool initial_step_from_cache;   // ELIMINATE, USE RESULTS_TABLE_FROM_CACHE flag
    int  initial_step;
    int  initial_lookback;
    int  cur_lookback;
@@ -312,20 +311,20 @@ typedef struct Results_Table {
    int  total_steps_up;
    int  adjustments_down;
    int  total_steps_down;
-   int  successful_observation_ct;
-   int  reset_ct;
+   int  successful_try_ct;
    int  retryable_failure_ct;
+   int  reset_ct;
    Byte edid_checksum_byte;
    Byte state;
 
    // format 1
-   bool found_failure_step;
-   int  lookback;
+   // bool found_failure_step;
+   // int  lookback;
 
 } Results_Table;
 
 
-/** Output a debugging report a #Results_Table
+/** Output a debugging report for a #Results_Table
  *
  *  @param rtable  point to table instance
  *  @param depth   logical indentation depth
@@ -339,8 +338,8 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(cur_step);
    ONE_INT_FIELD(cur_lookback);
    ONE_INT_FIELD(remaining_interval);
-   ONE_INT_FIELD(min_ok_step);
-   rpt_bool("found_failure_step", NULL, rtable->found_failure_step, d1);
+   // ONE_INT_FIELD(min_ok_step);
+   // rpt_bool("found_failure_step", NULL, rtable->found_failure_step, d1);
    ONE_INT_FIELD(cur_retry_loop_step);
 
    ONE_INT_FIELD(initial_step);
@@ -349,7 +348,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(total_steps_up);
    ONE_INT_FIELD(adjustments_down);
    ONE_INT_FIELD(total_steps_down);
-   ONE_INT_FIELD(successful_observation_ct);
+   ONE_INT_FIELD(successful_try_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
@@ -389,7 +388,7 @@ Results_Table * new_results_table(int busno) {
    rtable->cur_lookback = global_lookback;
    rtable->recent_values = cirb_new(MAX_RECENT_VALUES);
    rtable->remaining_interval = Default_Interval;
-   rtable->min_ok_step = 0;
+   // rtable->min_ok_step = 0;
    // rtable->found_failure_step = false;
    rtable->state = 0x00;
    rtable->initial_lookback = rtable->cur_lookback;
@@ -563,14 +562,14 @@ void dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
          Results_Table * rtable = results_tables[ndx];
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing Results_Table for /dev/i2c-%d", rtable->busno);
          rtable->cur_step = initial_step;
-         rtable->found_failure_step = false;
-         rtable->min_ok_step = 0;
+         // rtable->found_failure_step = false;
+         // rtable->min_ok_step = 0;
          rtable->cur_retry_loop_step = initial_step;
          rtable->adjustments_down = 0;
          rtable->adjustments_up = 0;
          rtable->total_steps_up = 0;
          rtable->total_steps_down = 0;
-         rtable->successful_observation_ct = 0;
+         rtable->successful_try_ct = 0;
          rtable->retryable_failure_ct = 0;
       }
    }
@@ -850,7 +849,7 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
    assert(rtable);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_retry_loop_step=%d", rtable->cur_retry_loop_step);
    if (ddcrc == 0) {
-      rtable->successful_observation_ct++;
+      rtable->successful_try_ct++;
       Successful_Invocation si = {time(NULL), tries, rtable->cur_retry_loop_step};
       cirb_add(rtable->recent_values, si);
       if (tries > 3) {
@@ -858,8 +857,8 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
             rtable->total_steps_up += rtable->cur_retry_loop_step - rtable->cur_step;
             rtable->cur_step = rtable->cur_retry_loop_step;
             rtable->adjustments_up++;
-            rtable->min_ok_step = rtable->cur_step;
-            rtable->found_failure_step = true;
+            // rtable->min_ok_step = rtable->cur_step;
+            // rtable->found_failure_step = true;
          }
       }
       else if (tries > 2) {
@@ -882,10 +881,15 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
       rtable->cur_retry_loop_step = initial_step;    // ???
    }
 
+#ifdef OLD
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
                "cur_step=%d, cur_retry_loop_step=%d, min_ok_step=%d, found_failure_step=%s, remaining_interval=%d",
                rtable->cur_step, rtable->cur_retry_loop_step, rtable->min_ok_step,
                sbool(rtable->found_failure_step), rtable->remaining_interval);
+#endif
+   DBGTRC_DONE(debug, DDCA_TRC_NONE,
+               "cur_step=%d, cur_retry_loop_step=%d, remaining_interval=%d",
+               rtable->cur_step, rtable->cur_retry_loop_step, rtable->remaining_interval);
 }
 
 
@@ -928,7 +932,7 @@ void dsa2_report_internal(Results_Table * rtable, int depth) {
    rpt_vstring(d1, "Total steps up:     %3d", rtable->total_steps_up);
    rpt_vstring(d1, "Adjustments down:   %3d", rtable->adjustments_down);
    rpt_vstring(d1, "Total steps down:   %3d", rtable->total_steps_down);
-   rpt_vstring(d1, "All tries:          %3d", rtable->successful_observation_ct);
+   rpt_vstring(d1, "Successes:          %3d", rtable->successful_try_ct);
    rpt_vstring(d1, "Retryable Failures: %3d", rtable->retryable_failure_ct);
 }
 
@@ -1019,7 +1023,7 @@ dsa2_save_persistent_stats() {
          if (format_id == 1) {
             fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
                  rtable->busno, rtable->edid_checksum_byte, rtable->cur_step, rtable->cur_lookback,
-                 rtable->remaining_interval, rtable->min_ok_step, rtable->found_failure_step);
+                 rtable->remaining_interval, 0, 0);
          }
          else {
             fprintf(stats_file, "i2c-%d %02x %d %d %d",
@@ -1140,15 +1144,15 @@ dsa2_restore_persistent_stats() {
       stats_file_error(errmsgs, "Empty stats file");
       goto bye;
    }
-   char * format_line = g_ptr_array_index(line_array, 0);
-   // DBGMSG("format_line %p |%s|", format_line, format_line);
-   if (!str_starts_with(format_line, "FORMAT ")) {
-      stats_file_error(errmsgs, "Invalid format line: %s", format_line);
+   char * format_id_line = g_ptr_array_index(line_array, 0);
+   // DBGMSG("format_id_line %p |%s|", format_line, format_line);
+   if (!str_starts_with(format_id_line, "FORMAT ")) {
+      stats_file_error(errmsgs, "Invalid format line: %s", format_id_line);
       all_ok = false;
       goto bye;
    }
    int format_id;
-   char * sformat = format_line + strlen("FORMAT ");
+   char * sformat = format_id_line + strlen("FORMAT ");
    // DBGMSG("sformat %d %p |%s|", strlen("FORMAT "), sformat, sformat);
    bool ok = str_to_int( sformat, &format_id, 10);
    if (!ok || (format_id != 1 && format_id != 2)) {
@@ -1181,19 +1185,20 @@ dsa2_restore_persistent_stats() {
          ok = ok && any_one_byte_hex_string_to_byte_in_buf(pieces[fieldndx++], &rtable->edid_checksum_byte);
          ok = ok && str_to_int(pieces[fieldndx++], &rtable->cur_step, 10);
          if (format_id == 1) {
-            ok = ok && str_to_int(pieces[fieldndx++], &rtable->lookback, 10);
+            int isink;
+            ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
          }
-            ok = ok && str_to_int(pieces[fieldndx++], &rtable->remaining_interval, 10);
-            if (format_id == 1) {
-            ok = ok && str_to_int(pieces[fieldndx++], &rtable->min_ok_step, 10);
-            int iwork;
-            ok = ok && str_to_int(pieces[fieldndx++], &iwork, 10);
-            if (ok) {
-               rtable->found_failure_step = (iwork);
-               rtable->cur_retry_loop_step = rtable->cur_step;
-               rtable->initial_step = rtable->cur_step;
-               rtable->initial_lookback = rtable->lookback;
-            }
+         ok = ok && str_to_int(pieces[fieldndx++], &rtable->remaining_interval, 10);
+         if (format_id == 1) {
+               int isink;
+               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
+               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
+         }
+         if (ok) {
+            // rtable->found_failure_step = (iwork);
+            rtable->cur_retry_loop_step = rtable->cur_step;
+            rtable->initial_step = rtable->cur_step;
+            rtable->initial_lookback = global_lookback;
          }
          else {
             if (ok) {
@@ -1201,7 +1206,7 @@ dsa2_restore_persistent_stats() {
                rtable->initial_step = rtable->cur_step;
 
                // temp: dummy values
-               rtable->found_failure_step = false;
+               // rtable->found_failure_step = false;
                rtable->initial_lookback = Default_Look_Back;
             }
          }
