@@ -572,11 +572,11 @@ uint32_t vnt_find_id(
 
 /** Interprets an integer whose bits represent named flags.
  *
- * @param flags_val      value to interpret
- * @param bitname_table  pointer to Value_Name table
- * @param use_title      if **true**, use the **title** field of the table,\n
- *                       if **false**, use the **name** field of the table
- * @param sepstr         if non-NULL, separator string to insert between values
+ * @param  flags_val      value to interpret
+ * @param  bitname_table  pointer to Value_Name table
+ * @param  use_title      if **true**, use the **title** field of the table,\n
+ *                        if **false**, use the **name** field of the table
+ * @param  sepstr         if non-NULL, separator string to insert between values
  *
  * @return newly allocated character string
  *
@@ -632,7 +632,34 @@ char * vnt_interpret_flags(
      if (debug)
         printf("(%s) Done. Returning: |%s|\n", __func__, result);
      return result;
+}
 
+
+/** Interprets a flags value as a printable string. The returned string is
+ *  valid until the next call of this function in the current thread.
+ *
+ *  @param flags_val      value to interpret
+ *  @param bitname_table  pointer to Value_Name_Title table
+ *  @param use_title      if **true**, use the **title** field of the table,\n
+ *                        if **false**, use the **name** field of the table
+ *  @param sepstr         if non-NULL, separator string to insert between values
+ *
+ *  @return interpreted value
+ */
+char * vnt_interpret_flags_t(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr)
+{
+   static GPrivate  x_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  x_len_key = G_PRIVATE_INIT(g_free);
+
+   char * buftemp = vnt_interpret_flags(flags_val, bitname_table, use_title, sepstr);
+   char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(buftemp)+1);
+   strcpy(buf, buftemp);
+   free(buftemp);
+   return buf;
 }
 
 
