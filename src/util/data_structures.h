@@ -137,6 +137,18 @@ char * vnt_interpret_flags(
       bool                    use_title,
       char *                  sepstr);
 
+char * vnt_interpret_flags_t(
+      uint32_t                flags_val,
+      Value_Name_Title_Table  bitname_table,
+      bool                    use_title,
+      char *                  sepstr);
+
+#define VN_INTERPRET_FLAGS(_flags_val, _bitname_table, _sepstr) \
+   vnt_interpret_flags(_flags_val, _bitname_table, false, _sepstr)
+
+#define VN_INTERPRET_FLAGS_T(_flags_val, _bitname_table, _sepstr) \
+   vnt_interpret_flags_t(_flags_val, _bitname_table, false, _sepstr)
+
 
 //
 // Byte Value Array
