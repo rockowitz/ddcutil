@@ -63,7 +63,6 @@ ddca_ddcutil_version(void);
 const char *
 ddca_ddcutil_version_string(void);
 
-
 /** Returns the full ddcutil version as a string, possibly with a suffix,
  *
  * @return string in form "1.3.0" or "1.3.0-dev" (caller must not free)
@@ -73,31 +72,14 @@ ddca_ddcutil_version_string(void);
 const char *
 ddca_ddcutil_extended_version_string(void);
 
-
-// Bit ids for ddca_get_build_options() - how to make connection in doxygen?
-#ifdef ALT
- * Defined Bits
- * <table>
- * <tr><td>#DDCA_BUILT_WITH_USB</td><td>built with USB support
- * <tr><td>#DDCA_BUILT_WITH_FAILSIM</td><td> built with failure simulation
- * </table>
-#endif
-
 /** Queries the options with which the **ddcutil** library was built.
  *
  * @return  flags byte
- *
- * | Defined Bits:           | |
- * |:------------------------| :--------------
- * |#DDCA_BUILT_WITH_USB     | built with USB support
- * |#DDCA_BUILT_WITH_FAILSIM | built with failure simulation
- *
  */
 DDCA_Build_Option_Flags
 ddca_build_options(void);
 
-
- /** Reports the fully qualified name of the shared library file
+ /** Returns the fully qualified name of the shared library file
   *
   *  @return file name
   *
@@ -105,6 +87,7 @@ ddca_build_options(void);
   */
  const char *
  ddca_libddcutil_filename(void);
+
 
  //
  // Error Detail
