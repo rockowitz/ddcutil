@@ -1838,10 +1838,6 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
 
-
-void init_api_metadata();
-
-
 #ifdef __cplusplus
 }
 #endif
