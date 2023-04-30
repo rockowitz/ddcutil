@@ -18,8 +18,8 @@
 extern const bool DSA2_Enabled_Default;
 extern bool       dsa2_enabled;
 
-bool         dsa2_set_greatest_tries_bound(int tries);
-bool         dsa2_set_average_tries_bound(Sleep_Multiplier avg_tries);
+bool         dsa2_set_greatest_tries_upper_bound(int tries);
+bool         dsa2_set_average_tries_upper_bound(Sleep_Multiplier avg_tries);
 
 struct Results_Table *
              dsa2_get_results_table_by_busno(int busno, bool create_if_not_found);
