@@ -154,14 +154,17 @@ ddca_build_options(void) {
 }
 
 
-const char * ddca_libddcutil_filename(void) {
-   static Dl_info info = {NULL,NULL,NULL,NULL};
+const char *
+ddca_libddcutil_filename(void) {
+   Dl_info info = {NULL,NULL,NULL,NULL};
    static char fullname[PATH_MAX];
-   if (!info.dli_fname) {
+   static char * p = NULL;
+   if (!p) {
       dladdr(ddca_build_options, &info);
-      realpath(info.dli_fname, fullname);
+      p = realpath(info.dli_fname, fullname);
+      assert(p == fullname);
    }
-   return fullname;
+   return p;
 }
 
 
