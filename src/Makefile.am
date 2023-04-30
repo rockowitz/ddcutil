@@ -126,7 +126,8 @@ $(LIBUSB_CFLAGS) \
 # Compiler flags
 #
 
-AM_CFLAGS = -Wall -std=c11
+# unused-result defined since at least gcc 5
+AM_CFLAGS = -Wall -std=c11 -Werror=unused-result
 
 # Distributing -Werror is bad programming practice.  It can result in build failure
 # on an external site having a different compiler, compiler version, or configuration. 
