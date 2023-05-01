@@ -126,6 +126,7 @@ ddca_ddcutil_extended_version_string(void) {
 }
 
 
+#ifdef UNUSED
 // Indicates whether the ddcutil library was built with support for USB connected monitors.
 bool
 ddca_built_with_usb(void) {
@@ -135,6 +136,7 @@ ddca_built_with_usb(void) {
    return false;
 #endif
 }
+#endif
 
 // Alternative to individual ddca_built_with...() functions.
 // conciseness vs documentability
