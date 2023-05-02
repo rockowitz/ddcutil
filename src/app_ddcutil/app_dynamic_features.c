@@ -1,6 +1,6 @@
 /** @file app_dynamic_features.c */
 
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -68,49 +68,6 @@ bye:
 }
 
 
-#ifdef OLD
-void check_dynamic_features_old(Display_Ref * dref) {
-   if (!enable_dynamic_features)    // global variable
-      return;
-
-   bool debug = false;
-   DBGMSF(debug, "Starting. ");
-   if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
-      // DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
-      dref->dfr = NULL;
-      DDCA_Output_Level ol = get_output_level();
-
-      Dynamic_Features_Rec * dfr = NULL;
-      Error_Info * errs = dfr_load_by_edid(dref->pedid, &dfr);
-      if (errs) {
-         if (errs->status_code == DDCRC_NOT_FOUND) {
-            if (ol >= DDCA_OL_VERBOSE)
-               f0printf(fout(), "%s\n", errs->detail);
-         }
-         else {
-            // errinfo_report(errs, 1);
-            f0printf(fout(), "%s\n", errs->detail);
-            for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
-               f0printf(fout(), "   %s\n", errs->causes[ndx]->detail);
-            }
-         }
-         errinfo_free(errs);
-      }
-      else {
-         // dbgrpt_dynamic_features_rec(dfr, 1);
-         if (ol >= DDCA_OL_VERBOSE)
-            f0printf(fout(), "Processed feature definition file: %s\n", dfr->filename);
-         dref->dfr = dfr;
-      }
-
-      dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
-   }
-   DBGMSF(debug, "Done.");
-}
-#endif
-
 void init_app_dynamic_features() {
    RTTI_ADD_FUNC(app_check_dynamic_features);
 }
-
-
