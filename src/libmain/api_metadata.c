@@ -953,10 +953,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
    WITH_VALIDATED_DH3(ddca_dh, psc,
       {
             DBGMSF(debug, "dref=%s", dh_repr(dh));
-
             psc = ddca_dfr_check_by_dref(dh->dref);
-
-
       }
    );
    API_EPILOG(debug, psc, "ddca_dh=%p->%s.",
