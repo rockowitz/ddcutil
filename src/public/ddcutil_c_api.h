@@ -1140,8 +1140,7 @@ ddca_is_udf_enabled(void);
  *
  * @param[in] ddca_dref display reference
  *
- * @remark
- * User supplied feature definition files are not yet publicly supported.
+ * Feature definition file errors can be retrieved using #ddca_get_error_detail().
  *
  * @since 0.9.3
  */
@@ -1154,8 +1153,8 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref);
  *
  * @param[in] ddca_dh display handle
  *
- * @remark
- * User supplied feature definition files are not yet publicly supported.
+ * Feature definition file errors can be retrieved using #ddca_get_error_detail().
+ *
  * @since 0.9.3
  */
 DDCA_Status
