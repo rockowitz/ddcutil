@@ -3,7 +3,7 @@
  *  Maintain user-defined (aka dynamic) feature definitions
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -316,15 +316,11 @@ dfr_check_by_dref(
    if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
       DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
       dref->dfr = NULL;
-
       Dynamic_Features_Rec * dfr = NULL;
       DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
             dref->pedid->mfg_id, dref->pedid->model_name, dref->pedid->product_code);
       errs = dfr_load_by_mmk(mmk, &dfr);
- //     if (!errs) {
-         dref->dfr = dfr;   // will be a dummy record if errors
- //     }
-
+      dref->dfr = dfr;   // will be a dummy record if errors
       dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
    }
 
