@@ -203,7 +203,7 @@ typedef struct _display_ref {
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
    char *                   driver_name;           //
-   /*Per_Display_Data*/ void *       pdd;
+   struct Per_Display_Data* pdd;
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \
