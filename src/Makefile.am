@@ -216,6 +216,7 @@ endif
 # endif 
 
 libcommon_la_LIBADD += \
+  $(JSON_GLIB_LIBS) \
   $(GLIB_LIBS)   \
   $(UDEV_LIBS)   \
   $(LIBUSB_LIBS) 
