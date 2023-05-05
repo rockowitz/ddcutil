@@ -188,20 +188,23 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
  *          NULL if invalid index
  */
 I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
-   assert(i2c_buses);
-   assert(busndx < i2c_buses->len);
-
    bool debug = false;
    DBGMSF(debug, "Starting.  busndx=%d", busndx );
-   I2C_Bus_Info * bus_info = g_ptr_array_index(i2c_buses, busndx);
-   // report_businfo(busInfo);
-   if (debug) {
-      char * s = interpret_i2c_bus_flags(bus_info->flags);
-      DBGMSG("busno=%d, flags = 0x%04x = %s", bus_info->busno, bus_info->flags, s);
-      free(s);
+   assert(i2c_buses);
+   I2C_Bus_Info * bus_info = NULL;
+   if (busndx < i2c_buses->len) {
+      bus_info = g_ptr_array_index(i2c_buses, busndx);
+      // report_businfo(busInfo);
+      if (debug) {
+         char * s = interpret_i2c_bus_flags(bus_info->flags);
+         DBGMSG("busno=%d, flags = 0x%04x = %s", bus_info->busno, bus_info->flags, s);
+         free(s);
+      }
+      assert( bus_info->flags & I2C_BUS_PROBED );
    }
-   assert( bus_info->flags & I2C_BUS_PROBED );
-   DBGMSF(debug, "busndx=%d, busno=%d, returning %p", busndx, bus_info->busno, bus_info );
+
+   DBGMSF(debug, "Done.  busndx=%d, Returning %p, busno=%d",
+                         busndx, bus_info,  (bus_info) ? bus_info->busno : -1) ;
    return bus_info;
 }
 
@@ -220,7 +223,6 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
-   assert(i2c_buses);   // fails if using temporary dref
    I2C_Bus_Info * result = NULL;
    for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
       I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
