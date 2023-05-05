@@ -551,6 +551,8 @@ dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
 dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40) 
 required_packages="$required_packages glib-2.0 >= 2.40"
+PKG_CHECK_MODULES(JSON_GLIB, json-glib-1.0)
+required_packages="$required_packages json-glib-1.0"
 
 AS_IF( [test "x$enable_udev" = "xyes"],
   [   PKG_CHECK_MODULES(UDEV,   libudev, 
