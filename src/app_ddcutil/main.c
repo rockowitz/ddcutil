@@ -88,6 +88,9 @@
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
+#ifdef WORK_IN_PROGRESS
+#include "ddc/ddc_serialize.h"
+#endif
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
@@ -951,6 +954,13 @@ bye:
 
    if (dsa2_enabled)
       dsa2_save_persistent_stats();
+
+#ifdef WORK_IN_PROGRESS
+   s = ddc_serialize_displays();
+   printf("%s\n", s);
+   ddc_deserialize_displays(s);
+   free(s);
+#endif
 
 #ifdef ENABLE_SYSLOG
    if (trace_to_syslog) {
