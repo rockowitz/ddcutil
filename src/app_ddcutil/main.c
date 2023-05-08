@@ -434,8 +434,6 @@ find_dref(
    Status_Errno_DDC final_result = DDCRC_OK;
    Display_Ref * dref = NULL;
    Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
-   if (parsed_cmd->flags & CMD_FLAG_FORCE)
-      callopts |= CALLOPT_FORCE;
 
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
@@ -801,8 +799,6 @@ main(int argc, char *argv[]) {
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
-   if (parsed_cmd->flags & CMD_FLAG_FORCE)
-      callopts |= CALLOPT_FORCE;
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
