@@ -211,6 +211,7 @@ typedef struct _display_ref {
           memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0) && \
           _dref->io_path.io_mode == _mode)
 
+Display_Ref * create_base_display_ref(DDCA_IO_Path io_path);
 Display_Ref * create_bus_display_ref(int busno);
 Display_Ref * create_usb_display_ref(int bus, int device, char * hiddev_devname);
 void          dbgrpt_display_ref(Display_Ref * dref, int depth);

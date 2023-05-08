@@ -583,7 +583,7 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 
 // *** Display_Ref ***
 
-static Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
+Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    // bool debug = false;
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
