@@ -106,7 +106,7 @@ char * canonicalize_possible_hex_value(char * string_value);
 bool hhs_to_byte_in_buf(const char * s,  Byte * result);    // converts null terminated string into buffer
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result);
 bool hhc_to_byte_in_buf(const char * hh, Byte * result);    // converts 2 characters at hh into buffer
-int  hhs_to_byte_array(const char * hhs, Byte** pBa);
+int  hhs_to_byte_array(const char * hhs, Byte** ba_loc);
 
 char * hexstring(const Byte * bytes, int size);  // buffer returned must be freed
 char * hexstring_t(
