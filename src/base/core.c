@@ -71,7 +71,6 @@ Value_Name_Table callopt_bitname_table2 = {
  //   VN(CALLOPT_ERR_ABORT),
       VN(CALLOPT_RDONLY),
       VN(CALLOPT_WARN_FINDEX),
-      VN(CALLOPT_FORCE),
       VN(CALLOPT_WAIT),
       VN(CALLOPT_FORCE_SLAVE_ADDR),
       VN(CALLOPT_NONE),                // special entry
