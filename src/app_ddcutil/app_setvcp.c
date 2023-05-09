@@ -192,7 +192,7 @@ app_set_vcp_value(
                        "Verification failed for feature %02x", feature_code);
       else
          ddc_excp = errinfo_new_with_cause(ddcrc, ddc_excp, __func__,
-                       "Setting value failed for feature %02x, rc=%s",
+                       "Setting value failed for feature x%02X, rc=%s",
                        feature_code, psc_desc(ddcrc));
    }
 
