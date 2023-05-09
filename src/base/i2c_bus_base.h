@@ -58,11 +58,13 @@ struct {
 char *           interpret_i2c_bus_flags(uint16_t flags);
 I2C_Bus_Info *   i2c_new_bus_info(int busno);
 void             i2c_free_bus_info(I2C_Bus_Info * bus_info);
+GPtrArray *      i2c_get_all_buses();
 
 // Simple Bus_Info retrieval
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
+void             i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
 // Reports all detected i2c buses:
 int              i2c_dbgrpt_buses(bool report_all, int depth);
 

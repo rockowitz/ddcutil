@@ -34,7 +34,6 @@ extern bool i2c_force_bus;
 int              i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno     i2c_close_bus(int fd, Call_Options callopts);
 
-void             i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
 void             i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
 
 bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
