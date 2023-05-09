@@ -60,7 +60,6 @@ char *  dpath_short_name_t(DDCA_IO_Path * dpath);
 char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
 int     dpath_hash(DDCA_IO_Path path);
 
-
 // *** Display_Async ***
 
 #define DISPLAY_ASYNC_REC_MARKER "DSNC"
