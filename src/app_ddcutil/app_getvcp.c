@@ -118,7 +118,7 @@ app_show_single_vcp_value_by_feature_id(
       DDCA_Vcp_Feature_Code feature_id,
       bool                  force)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Getting feature 0x%02x for %s, force=%s",
                               feature_id, dh_repr(dh), sbool(force) );
 
