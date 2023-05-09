@@ -370,7 +370,6 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
 }
 
 
-
 /** Gets the #Per_Display_Data struct for a specified display.
  *  If the struct does not already exist, it is allocated and initialized.
  *
@@ -394,7 +393,7 @@ Per_Display_Data * pdd_get_per_display_data(DDCA_IO_Path dpath, bool create_if_n
    int hval = dpath_hash(dpath);
    Per_Display_Data * pdd = g_hash_table_lookup(per_display_data_hash, GINT_TO_POINTER(hval));
    if (!pdd && create_if_not_found) {
-      DBGTRC(debug, TRACE_GROUP, "Per_Display_Data not found for %s", dpath_repr_t(&dpath));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Per_Display_Data not found for %s", dpath_repr_t(&dpath));
       pdd = g_new0(Per_Display_Data, 1);
       pdd->dpath = dpath;
       g_private_set(&pdd_lock_depth, GINT_TO_POINTER(0));
