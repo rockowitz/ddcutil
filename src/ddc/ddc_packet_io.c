@@ -195,9 +195,7 @@ ddc_open_display(
                // 10/24/15, try disabling:
                // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
                dh = create_base_display_handle(fd, dref);    // n. sets dh->dref = dref
-
-               dref->pedid = bus_info->edid;
-               if (!dref->pedid) {
+               if (!bus_info->edid) {
                   // How is this even possible?
                   // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
                   //          close(fd) fails
@@ -207,6 +205,10 @@ ddc_open_display(
                   free_display_handle(dh);
                   dh = NULL;
                }
+               if (!dref->pedid)
+                  dref->pedid = bus_info->edid;
+               if (!dref->pdd)
+                  dref->pdd = pdd_get_per_display_data(dref->io_path, true);
             }
          }
       }
@@ -231,7 +233,10 @@ ddc_open_display(
          }
          else {
             dh = create_base_display_handle(fd, dref);
-            dref->pedid = usb_get_parsed_edid_by_dh(dh);
+            if (!dref->pedid)
+               dref->pedid = usb_get_parsed_edid_by_dh(dh);
+            if (!dref->pdd)
+               dref->pdd = pdd_get_per_display_data(dref->io_path, true);
          }
       }
 #else
