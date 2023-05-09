@@ -1221,7 +1221,7 @@ bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted)
  */
 int hhs_to_byte_array(const char * hhs, Byte** ba_loc)
 {
-   printf("strlen(hhs) = %ld, ba_loc=%p", strlen(hhs), ba_loc);
+   // printf("strlen(hhs) = %ld, ba_loc=%p\n", strlen(hhs), ba_loc);
    if ( strlen(hhs) % 2)     // if odd number of characters
       return -1;
    char xlate[] = "0123456789ABCDEF";
