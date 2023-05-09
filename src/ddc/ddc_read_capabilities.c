@@ -22,6 +22,7 @@
 #include "base/ddc_errno.h"
 #include "base/rtti.h"
 #include "base/sleep.h"
+#include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 
 #ifdef USE_USB
