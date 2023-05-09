@@ -49,6 +49,7 @@
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_serialize.h"
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp.h"
@@ -498,6 +499,8 @@ _ddca_terminate(void) {
          dbgrpt_distinct_display_descriptors(2);
       if (dsa2_enabled)
          dsa2_save_persistent_stats();
+      if (display_caching_enabled)
+         ddc_store_displays_cache();
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, 0);
