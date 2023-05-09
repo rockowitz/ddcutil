@@ -464,7 +464,6 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
 }
 
 
-
 #ifdef UNUSED
 // static
 void set_multiplier(Results_Table * rtable, Sleep_Multiplier multiplier) {
