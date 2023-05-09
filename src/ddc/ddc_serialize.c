@@ -1,24 +1,68 @@
-// ddc_serialize.c
+/** @file ddc_serialize.c */
 
 // Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <glib-2.0/glib.h>
 #include <jansson.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "public/ddcutil_types.h"
+
+#include "util/file_util.h"
 #include "util/string_util.h"
+#include "util/xdg_util.h"
+
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 #include "base/monitor_model_key.h"
+#include "base/rtti.h"
+
 #include "ddc/ddc_displays.h"
 
 #include "ddc_serialize.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+
+bool display_caching_enabled = false;
+
+GPtrArray* deserialized_displays = NULL;
+GPtrArray* deserialized_buses    = NULL;
+
+
+Display_Ref * ddc_find_deserialized_display(int busno, Byte* edidbytes) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "busno = %d", busno);
+   Display_Ref * result = NULL;
+   if (deserialized_displays) {
+      for (int ndx = 0; ndx < deserialized_displays->len; ndx++) {
+         Display_Ref * cur = g_ptr_array_index(deserialized_displays, ndx);
+         if (cur->io_path.io_mode == DDCA_IO_I2C    &&
+             cur->io_path.path.i2c_busno == busno   &&
+             cur->pedid                             &&
+             memcmp(cur->pedid->bytes, edidbytes, 128) == 0 )
+         {
+            result = cur;
+            break;
+         }
+      }
+   }
+   if (result)
+      DBGTRC_RET_STRUCT(debug, DDCA_TRC_DDCIO, Display_Ref, dbgrpt_display_ref, result);
+   else
+      DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Not found. Returning NULL");
+   return result;
+}
+
+void ddc_enable_displays_cache(bool onoff) {
+   bool debug = false;
+   display_caching_enabled = onoff;
+   DBGMSF(debug, "Executed. onoff=%s", sbool(onoff));
+}
 
 json_t* serialize_dpath(DDCA_IO_Path iopath) {
    json_t* jpath = json_object();
@@ -41,6 +85,8 @@ json_t * serialize_vspec(DDCA_MCCS_Version_Spec vspec) {
 
 
 json_t * serialize_parsed_edid(Parsed_Edid * pedid) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "pedid=%p", pedid);
    json_t* jpath = json_object();
 
    char edid_bytes[257];
@@ -51,7 +97,7 @@ json_t * serialize_parsed_edid(Parsed_Edid * pedid) {
                    true,            // use upper case hex characters
                    edid_bytes,      // buffer in which to return hex string
                    257) ;           // buffer size
-   DBGMSG("edid_bytes=%s", edid_bytes);
+   DBGMSF(debug, "edid_bytes=%s", edid_bytes);
 
    json_t* jpath_raw = json_string(edid_bytes);
    json_object_set_new(jpath, "bytes", jpath_raw);
@@ -59,6 +105,7 @@ json_t * serialize_parsed_edid(Parsed_Edid * pedid) {
    json_t* jnode = json_string(pedid->edid_source);
    json_object_set_new(jpath, "edid_source", jnode);
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", jpath);
    return jpath;
 }
 
@@ -80,8 +127,10 @@ json_t * serialize_mmk(DDCA_Monitor_Model_Key * mmk) {
 
 
 json_t* serialize_one_display(Display_Ref * dref) {
-   DBGMSG("Before serialization:");
-   dbgrpt_display_ref(dref, 2);
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "dref=%s", dref_repr_t(dref));
+   if (debug)
+      dbgrpt_display_ref(dref, 2);
 
    json_t * jtmp = NULL;
    json_t * jdisp = json_object();
@@ -100,7 +149,7 @@ json_t* serialize_one_display(Display_Ref * dref) {
    json_object_set_new(jdisp, "vcp_version_cmdline", serialize_vspec(dref->vcp_version_cmdline));
    json_object_set_new(jdisp, "flags", json_integer(dref->flags));
 
-   DBGMSG("capabilities_string: %s", dref->capabilities_string);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "capabilities_string: %s", dref->capabilities_string);
    if (dref->capabilities_string) {
       jnode = json_string(dref->capabilities_string);
       json_object_set_new(jdisp, "capabilities_string", jnode);
@@ -122,6 +171,7 @@ json_t* serialize_one_display(Display_Ref * dref) {
       json_object_set_new(jdisp, "driver_name", json_string(dref->driver_name));
    }
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", jdisp);
    return jdisp;
 }
 
@@ -258,27 +308,10 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
    return dref;
 }
 
-#ifdef REF
-#define I2C_BUS_INFO_MARKER "BINF"
-/** Information about one I2C bus */
-typedef
-struct {
-   char             marker[4];          ///< always "BINF"
-   int              busno;              ///< I2C device number, i.e. N for /dev/i2c-N
-   unsigned long    functionality;      ///< i2c bus functionality flags
-   Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
-   uint16_t         flags;              ///< I2C_BUS_* flags
-   char *           driver;             ///< driver name
-   int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
-   char *           drm_connector_name; ///< from /sys
-   Drm_Connector_Found_By
-                    drm_connector_found_by;
-} I2C_Bus_Info;
-#endif
 
 json_t* serialize_one_i2c_bus(I2C_Bus_Info * businfo) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Before serialization:");
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, Before serialization:", businfo->busno);
    if (IS_TRACING() || debug)
       i2c_dbgrpt_bus_info(businfo, 2);
 
@@ -298,12 +331,14 @@ json_t* serialize_one_i2c_bus(I2C_Bus_Info * businfo) {
       json_object_set_new(jbus, "drm_connector_name", json_string(businfo->drm_connector_name));
    json_object_set_new(jbus, "drm_connector_found_by", json_integer(businfo->drm_connector_found_by));
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Returning %p", jbus);
    return jbus;
 }
 
+
 I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "jbus=%p", jbus);
    json_t* jtmp = NULL;
    json_t* busno_node = json_object_get(jbus, "busno");
    if (!(busno_node && json_is_integer(busno_node))) {
@@ -315,6 +350,7 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
       return NULL;
    }
    int busno = json_integer_value(busno_node);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d", busno);
 
    I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
 
@@ -340,14 +376,22 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
    return businfo;
 }
 
+
 typedef enum {
    serialize_mode_display,
    serialize_mode_bus
 } Serialize_Mode;
 
 
+const char * serialize_mode_name(Serialize_Mode mode) {
+   char * result = (mode == serialize_mode_display) ? "serialize_mode_display"
+                                                    : "serialize_mode_bus";
+   return result;
+}
+
+
 char * ddc_serialize_displays_and_buses() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
 
    json_t* root = json_object();
@@ -381,10 +425,10 @@ char * ddc_serialize_displays_and_buses() {
 }
 
 
-
-
 GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mode mode) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "mode=%s, jstring:", serialize_mode_name(mode));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_DDCIO, "%s", jstring);
    GPtrArray * restored = g_ptr_array_new();
 
    json_error_t error;
@@ -448,17 +492,88 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
       }
    }
 
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d records.", restored->len);
    return restored;
 }
 
-
+#ifdef OUT
 GPtrArray * ddc_deserialize_displays(const char * jstring) {
+   DBGMSG("jstring: |%s|", jstring);
    return ddc_deserialize_displays_or_buses(jstring, serialize_mode_display);
 }
 
 
 GPtrArray * ddc_deserialize_buses(const char * jstring) {
+   DBGMSG("jstring: |%s|", jstring);
    return ddc_deserialize_displays_or_buses(jstring, serialize_mode_bus);
+}
+#endif
+
+/** Returns the name of the file that stores persistent display information
+ *
+ *  \return name of file, normally $HOME/.cache/ddcutil/displays
+ */
+/* caller is responsible for freeing returned value */
+char * get_displays_cache_file_name() {
+   return xdg_cache_home_file("ddcutil", "displays");
 }
 
 
+bool ddc_store_displays_cache() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "Starting");
+   bool ok = true;
+   char * json_text = ddc_serialize_displays_and_buses();
+   char * fn = get_displays_cache_file_name();
+   FILE * fp = fopen(fn, "w");
+   size_t bytes_written = fwrite(json_text, strlen(json_text), 1, fp);
+   if (bytes_written < 0) {
+      DBGMSG("Error writing file %s:%s", fn, strerror(errno));
+      ok = false;
+   }
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_DDCIO, ok, "");
+   return ok;
+}
+
+
+void ddc_restore_displays_cache() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
+   char * fn = get_displays_cache_file_name();
+   if (regular_file_exists(fn)) {
+      DBGMSF(debug, "Found file: %s", fn);
+      char * buf = read_file_single_string(fn, debug);
+      // DBGMSF(debug, "buf: |%s|", buf);
+      deserialized_displays = ddc_deserialize_displays_or_buses(buf, serialize_mode_display);
+      deserialized_buses    = ddc_deserialize_displays_or_buses(buf, serialize_mode_bus);
+   }
+   else {
+      DBGMSF(debug, "File not found: %s", fn);
+      deserialized_buses = g_ptr_array_new();
+      deserialized_displays = g_ptr_array_new();
+   }
+   // DBGMSF(debug, "Restored %d Display_Refs", deserialized_displays->len);
+   // DBGMSF(debug, "Restored %d I2C_Bus_Info records", deserialized_buses->len);
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d Display_Ref records, %d I2C_Bus_Info records",
+         deserialized_displays->len, deserialized_buses->len);
+}
+
+
+void ddc_erase_displays_cache() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
+   char * fn = get_displays_cache_file_name();
+   bool found = regular_file_exists(fn);
+   if (found)
+      remove(fn);
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "%s: %s", (found) ? "Removed file" : "File not found", fn);
+}
+
+
+void init_ddc_serialize() {
+   RTTI_ADD_FUNC(ddc_store_displays_cache);
+   RTTI_ADD_FUNC(ddc_restore_displays_cache);
+   RTTI_ADD_FUNC(ddc_erase_displays_cache);
+   RTTI_ADD_FUNC(serialize_one_display);
+   RTTI_ADD_FUNC(deserialize_one_display);
+}
