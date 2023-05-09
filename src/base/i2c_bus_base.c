@@ -178,6 +178,11 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
 // Bus_Info retrieval
 //
 
+
+GPtrArray * i2c_get_all_buses() {
+   return i2c_buses;
+}
+
 // Simple Bus_Info retrieval
 
 /** Retrieves bus information by its index in the i2c_buses array
