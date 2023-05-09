@@ -43,6 +43,7 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc_displays.h"
+#include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc_try_stats.h"
 #include "ddc_vcp.h"
@@ -255,6 +256,11 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       // dsa2_erase_persistent_stats();   // do i want to do this ?
    }
 
+   if (display_caching_enabled)
+      ddc_restore_displays_cache();
+   else
+      ddc_erase_displays_cache();
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
@@ -304,8 +310,10 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    assert (rc == DDCRC_OK);
  #endif
 
+   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_DISPLAYS);
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
+
 
    // for testing
    ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
