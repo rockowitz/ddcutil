@@ -1,6 +1,6 @@
 AM_CPPFLAGS =         \
   $(GLIB_CFLAGS)      \
-  $(JSON_GLIB_CFLAGS) \
+  $(JSON_CFLAGS)      \
   -I$(top_srcdir)/src \
   -I$(top_srcdir)/src/public
 
