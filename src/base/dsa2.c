@@ -366,30 +366,8 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
-#ifdef OLD
-   char statebuf[100];
-   statebuf[0] = '\0';
-   if (rtable->state & RTABLE_BUS_DETECTED)
-      strcpy(statebuf, "RTABLE_BUS_DETECTED");
-   if (rtable->state & RTABLE_FROM_CACHE) {
-      if (strlen(statebuf) > 0)
-         strcat(statebuf, "|");
-      strcat(statebuf, "RTABLE_FROM_CACHE");
-   }
-   if (rtable->state & RTABLE_EDID_VERIFIED) {
-      if (strlen(statebuf) > 0)
-         strcat(statebuf, "|");
-      strcat(statebuf, "RTABLE_EDID_VERIFIED");
-   }
-   rpt_vstring(d1, "state                          %s", statebuf);
-#endif
-#ifdef OLD
-   char * statebuf2 = VN_INTERPRET_FLAGS(rtable->state, rtable_status_flags_table, "|");
-   rpt_vstring(d1, "state                          %s", statebuf2);
-   free(statebuf2);
-#endif
-   rpt_vstring(d1, "state                          %s", VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
-
+   rpt_vstring(d1, "state                          %s",
+                   VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
 #undef ONE_INT_FIELD
    dbgrpt_circular_invocation_results_buffer(rtable->recent_values, d1);
 }
