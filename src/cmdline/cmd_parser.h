@@ -14,7 +14,6 @@
 
 #include <glib-2.0/glib.h>
 
-#include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
 
 Parsed_Cmd * parse_command(
