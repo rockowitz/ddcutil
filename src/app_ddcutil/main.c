@@ -88,9 +88,7 @@
 #include "ddc/ddc_output.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
-#ifdef WORK_IN_PROGRESS
 #include "ddc/ddc_serialize.h"
-#endif
 #include "ddc/ddc_services.h"
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
@@ -951,10 +949,14 @@ bye:
    if (dsa2_enabled)
       dsa2_save_persistent_stats();
 
+   if (display_caching_enabled)
+      ddc_store_displays_cache();
+
 #ifdef WORK_IN_PROGRESS
-   s = ddc_serialize_displays();
+   s = ddc_serialize_displays_and_buses();
    printf("%s\n", s);
    ddc_deserialize_displays(s);
+   ddc_deserialize_buses(s);
    free(s);
 #endif
 
