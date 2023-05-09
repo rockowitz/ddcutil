@@ -327,26 +327,31 @@ bool dbgtrc_returning_expression(
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBGMSF_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
-if ((_flag) || trace_callstack_call_depth > 0)  { \
-   dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
-         __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
-   if (_structptr) { \
-      _dbgfunc(_structptr, 1); \
+do { \
+   if ((_flag) || trace_callstack_call_depth > 0)  { \
+      dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
+            __func__, __LINE__, __FILE__, "Returning %s at %p", #_structname, _structptr); \
+      if (_structptr) { \
+         _dbgfunc(_structptr, 1); \
+      } \
    } \
-}
+} while (0)
 
 #define DBGTRC_RET_STRUCT(_flag, _trace_group, _structname, _dbgfunc, _structptr) \
-if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FILE__, __func__) )  { \
-   dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, \
-          "Returning %s at %p", #_structname, _structptr); \
-   if (_structptr) { \
-      _dbgfunc(_structptr, 1); \
+do { \
+   if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FILE__, __func__) )  { \
+      dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
+             __func__, __LINE__, __FILE__, \
+             "Returning %s at %p", #_structname, _structptr); \
+      if (_structptr) { \
+         _dbgfunc(_structptr, 1); \
+      } \
    } \
-}
+} while(0)
 
 #define DBGTRC_RET_ERRINFO_STRUCT(_debug_flag, _trace_group, _errinfo_result, \
                                   _structptr_loc, _dbgfunc)                   \
+do { \
    if ( (_debug_flag || trace_callstack_call_depth > 0 ) || is_tracing(_trace_group, __FILE__, __func__) )  {    \
       dbgtrc_returning_errinfo(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE,             \
               __func__, __LINE__, __FILE__,                                   \
@@ -354,7 +359,8 @@ if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FI
       if (*_structptr_loc) {                                                  \
          _dbgfunc(*_structptr_loc, 1);                                        \
       }                                                                       \
-   }
+   } \
+} while(0)
 
 
 //
