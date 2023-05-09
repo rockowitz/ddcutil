@@ -595,8 +595,8 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->async_rec  = get_display_async_rec(io_path);    // keep?
 #endif
 
-   Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
-   dref->pdd = pdd;
+   // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
+   // dref->pdd = pdd;
    return dref;
 }
 
