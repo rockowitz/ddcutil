@@ -55,6 +55,7 @@
 #include "dynvcp/dyn_feature_files.h"
 
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_serialize.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
 
@@ -675,18 +676,40 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (busndx=0; busndx < busct; busndx++) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
-         Display_Ref * dref = create_bus_display_ref(businfo->busno);
-         dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-         dref->pedid = businfo->edid;    // needed?
-         dref->mmid  = monitor_model_key_new(
-                          dref->pedid->mfg_id,
-                          dref->pedid->model_name,
-                          dref->pedid->product_code);
+         Display_Ref * dref2 = NULL;
+         if (display_caching_enabled) {
+            dref2 = ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes);
+            if (dref2)
+               dref2->detail = businfo;
+         }
+         bool testing = false;
+         Display_Ref * dref = NULL;
+         if (!dref2 || testing) {
+            dref = create_bus_display_ref(businfo->busno);
+            dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+            dref->pedid = businfo->edid;    // needed?
+            dref->mmid  = monitor_model_key_new(
+                             dref->pedid->mfg_id,
+                             dref->pedid->model_name,
+                             dref->pedid->product_code);
 
-         // drec->detail.bus_detail = businfo;
-         dref->detail = businfo;
-         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-         dref->flags |= DREF_DDC_IS_MONITOR;
+            // drec->detail.bus_detail = businfo;
+            dref->detail = businfo;
+            dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+            dref->flags |= DREF_DDC_IS_MONITOR;
+         }
+
+         if (dref2) {
+            if (testing) {
+               DBGMSG("dref:");
+               dbgrpt_display_ref(dref, 3);
+               DBGMSG("dref2:");
+               dbgrpt_display_ref(dref2, 3);
+            }
+            dref = dref2;
+         }
+
+
          g_ptr_array_add(display_list, dref);
          // dbgrpt_display_ref(dref,5);
       }
