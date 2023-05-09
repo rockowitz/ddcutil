@@ -246,6 +246,42 @@ bye:
 }
 
 
+/** Reads an entire file as a single string.
+ *  As a precaution, a trailing \0 is appended to the returned value.
+ *
+ *  The caller is responsible for freeing the returned buffer.
+ *
+ *  @param  filename   file name
+ *  @param  verbose    white error message to stderr if unable to read
+ *  @return pointer to newly allocated buffer, NULL if file not read
+ */
+char * read_file_single_string(const char * filename, bool verbose) {
+   char * buffer = NULL;
+   long length;
+   FILE * fp = fopen (filename, "rb");
+   if (!fp) {
+      if (verbose)
+         fprintf(stderr, "Error opening \"%s\", %s\n", filename, strerror(errno));
+      goto bye;
+   }
+
+   if (fp) {
+     fseek (fp, 0, SEEK_END);
+     length = ftell (fp);
+     fseek (fp, 0, SEEK_SET);
+     buffer = malloc (length+1);
+     assert(buffer);
+     size_t len1 = fread (buffer, 1, length, fp);   // len1 assignment to avoid unused result error
+     assert(len1 == length);
+     fclose (fp);
+     buffer[len1] = '\0';    // ensure there's a trailing null
+   }
+
+bye:
+   return buffer;
+}
+
+
 /** Checks if a regular file exists.
  *
  * @param fqfn fully qualified file name

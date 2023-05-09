@@ -2,7 +2,7 @@
  *  File utility functions
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FILE_UTIL_H_
@@ -36,6 +36,10 @@ GByteArray * read_binary_file(
       const char *  fn,
       int           est_size,
       bool          verbose);
+
+char * read_file_single_string(
+      const char * filename,
+      bool         verbose);
 
 bool regular_file_exists(
       const char *  fqfn);
