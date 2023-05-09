@@ -101,6 +101,8 @@ typedef enum {
    CMD_FLAG_PROFILE_API    = 0x08000000000000,
    CMD_FLAG_FL1_SET        = 0x10000000000000,
    CMD_FLAG_FL2_SET        = 0x20000000000000,
+   CMD_FLAG_ENABLE_CACHED_DISPLAYS
+                           = 0x40000000000000,
 } Parsed_Cmd_Flags;
 
 typedef

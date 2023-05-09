@@ -636,6 +636,11 @@ parse_command(
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
+
+   gboolean enable_cd_flag = DEFAULT_ENABLE_CACHED_DISPLAYS;
+   const char * enable_cd_expl =  (enable_cd_flag) ? "Enable cached displays (default)" : "Enable cached displays";
+   const char * disable_cd_expl = (enable_cd_flag) ? "Disable cached displays" : "Disable cached displays (default)";
+
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
    gboolean profile_api_flag   = false;
@@ -774,6 +779,10 @@ parse_command(
                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
+      {"enable-displays-cache",
+                                       '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
+      {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
+                                                G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
       {"use-file-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
       {"use-ioctl-io",
@@ -1114,6 +1123,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
+   SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
