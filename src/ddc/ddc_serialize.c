@@ -17,6 +17,9 @@
 
 #include "ddc_serialize.h"
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
+
 json_t* serialize_dpath(DDCA_IO_Path iopath) {
    json_t* jpath = json_object();
    json_t* jpath_mode = json_integer(iopath.io_mode);
@@ -123,25 +126,6 @@ json_t* serialize_one_display(Display_Ref * dref) {
 }
 
 
-char * ddc_serialize_displays() {
-   bool debug = true;
-   GPtrArray* all_displays = ddc_get_all_displays();
-   json_t* jdisplays = json_array();
-   json_t* root = json_object();
-   json_object_set_new(root, "version", json_integer(1));
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      json_t* node = serialize_one_display(g_ptr_array_index(all_displays, ndx));
-      json_array_append(jdisplays, node);
-   }
-   json_object_set_new(root, "all_displays", jdisplays);
-   char * result = json_dumps(root, JSON_INDENT(3));
-
-   if (debug) {
-      DBGMSG("Returning:");
-      DBGMSG(result);
-   }
-   return result;
-}
 
 
 DDCA_IO_Path deserialize_dpath(json_t* jpath) {
@@ -220,7 +204,7 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
    jtmp = json_object_get(disp_node, "io_path");
    DDCA_IO_Path io_path = deserialize_dpath(jtmp);
 
-   Display_Ref * dref =    create_base_display_ref(io_path);
+   Display_Ref * dref = create_base_display_ref(io_path);
 
    jtmp = json_object_get(disp_node, "usb_bus");
    dref->usb_bus = json_integer_value(jtmp);
@@ -274,10 +258,134 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
    return dref;
 }
 
+#ifdef REF
+#define I2C_BUS_INFO_MARKER "BINF"
+/** Information about one I2C bus */
+typedef
+struct {
+   char             marker[4];          ///< always "BINF"
+   int              busno;              ///< I2C device number, i.e. N for /dev/i2c-N
+   unsigned long    functionality;      ///< i2c bus functionality flags
+   Parsed_Edid *    edid;               ///< parsed EDID, if slave address x50 active
+   uint16_t         flags;              ///< I2C_BUS_* flags
+   char *           driver;             ///< driver name
+   int              open_errno;         ///< errno if open fails (!I2C_BUS_ACCESSIBLE)
+   char *           drm_connector_name; ///< from /sys
+   Drm_Connector_Found_By
+                    drm_connector_found_by;
+} I2C_Bus_Info;
+#endif
 
-GPtrArray * ddc_deserialize_displays(const char * jstring) {
+json_t* serialize_one_i2c_bus(I2C_Bus_Info * businfo) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Before serialization:");
+   if (IS_TRACING() || debug)
+      i2c_dbgrpt_bus_info(businfo, 2);
+
+   json_t * jtmp = NULL;
+   json_t * jbus = json_object();
+
+   json_object_set_new(jbus, "busno", json_integer(businfo->busno));
+   json_object_set_new(jbus, "functionality", json_integer(businfo->busno));
+   if (businfo->edid) {
+      jtmp = serialize_parsed_edid(businfo->edid);
+      json_object_set_new(jbus, "edid", jtmp);
+   }
+   json_object_set_new(jbus, "flags", json_integer(businfo->flags));
+   if (businfo->driver)
+      json_object_set_new(jbus, "driver", json_string(businfo->driver));
+   if (businfo->drm_connector_name)
+      json_object_set_new(jbus, "drm_connector_name", json_string(businfo->drm_connector_name));
+   json_object_set_new(jbus, "drm_connector_found_by", json_integer(businfo->drm_connector_found_by));
+
+   return jbus;
+}
+
+I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   json_t* jtmp = NULL;
+   json_t* busno_node = json_object_get(jbus, "busno");
+   if (!(busno_node && json_is_integer(busno_node))) {
+      if (busno_node)
+         fprintf(stderr, "error: busno is not an integer\n");
+      else
+         fprintf(stderr, "member busno not found");
+      json_decref(jbus);
+      return NULL;
+   }
+   int busno = json_integer_value(busno_node);
+
+   I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
+
+   businfo->functionality = json_integer_value(json_object_get(jbus, "functionality"));
+
+   jtmp = json_object_get(jbus, "edid");
+   if (jtmp)
+      businfo->edid = deserialize_parsed_edid(jtmp);
+
+   businfo->flags = json_integer_value(json_object_get(jbus, "flags"));
+
+   jtmp = json_object_get(jbus, "driver");
+   if (jtmp)
+      businfo->driver = g_strdup(json_string_value(jtmp));
+
+   jtmp = json_object_get(jbus, "drm_connector_name");
+    if (jtmp)
+       businfo->drm_connector_name = g_strdup(json_string_value(jtmp));
+
+   businfo->drm_connector_found_by = json_integer_value(json_object_get(jbus, "drm_connector_found_by"));
+
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, I2C_Bus_Info, i2c_dbgrpt_bus_info, businfo);
+   return businfo;
+}
+
+typedef enum {
+   serialize_mode_display,
+   serialize_mode_bus
+} Serialize_Mode;
+
+
+char * ddc_serialize_displays_and_buses() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+
+   json_t* root = json_object();
+   json_object_set_new(root, "version", json_integer(1));
+
+   GPtrArray* all_displays = ddc_get_all_displays();
+   json_t* jdisplays = json_array();
+
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      json_t* node = serialize_one_display(g_ptr_array_index(all_displays, ndx));
+      json_array_append(jdisplays, node);
+   }
+   json_object_set_new(root, "all_displays", jdisplays);
+
+   GPtrArray* all_buses = i2c_get_all_buses();
+   json_t* jbuses = json_array();
+
+   for (int ndx = 0; ndx < all_buses->len; ndx++) {
+      json_t* node = serialize_one_i2c_bus(g_ptr_array_index(all_buses, ndx));
+      json_array_append(jbuses, node);
+   }
+   json_object_set_new(root, "all_buses", jbuses);
+
+   char * result = json_dumps(root, JSON_INDENT(3));
+
+   if (debug || IS_TRACING() ) {
+      DBGMSG("Returning:");
+      DBGMSG(result);
+   }
+   return result;
+}
+
+
+
+
+GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mode mode) {
    bool debug = false;
-   GPtrArray * restored_displays = g_ptr_array_new();
+   GPtrArray * restored = g_ptr_array_new();
 
    json_error_t error;
 
@@ -305,31 +413,52 @@ GPtrArray * ddc_deserialize_displays(const char * jstring) {
    DBGMSF(debug, "version = %d", version);
    assert(version == 1);
 
-   json_t* disp_nodes = json_object_get(root, "all_displays");
+   char * all = "all_displays";
+   if (mode == serialize_mode_bus)
+      all = "all_buses";
+
+   json_t* disp_nodes = json_object_get(root, all);
    if (!(disp_nodes && json_is_array(disp_nodes))) {
       if (disp_nodes)
-         DBGMSG("error: all_displays is not an array");
+         DBGMSG("error: %s is not an array", all);
       else
-         DBGMSG("member all_displays not found");
+         DBGMSG("member %s not found", all);
       json_decref(root);
       return NULL;
    }
 
    for (int dispctr = 0; dispctr < json_array_size(disp_nodes); dispctr++) {
-      json_t* one_display = json_array_get(disp_nodes, dispctr);
-      if (! (one_display && json_is_object(one_display))) {
-         if (one_display)
-            DBGMSG("all_displays[%d] not found", dispctr);
+      json_t* one_display_or_bus = json_array_get(disp_nodes, dispctr);
+      if (! (one_display_or_bus && json_is_object(one_display_or_bus))) {
+         if (one_display_or_bus)
+            DBGMSG("%s[%d] not found", all, dispctr);
          else
-            DBGMSG("all_displays[%d] is not an object", dispctr);
+            DBGMSG("%s[%d] is not an object", all, dispctr);
          json_decref(root);
          return NULL;
       }
 
-      Display_Ref * dref = deserialize_one_display(one_display);
-      g_ptr_array_add(restored_displays, dref);
+      if (mode == serialize_mode_display) {
+         Display_Ref * dref = deserialize_one_display(one_display_or_bus);
+         g_ptr_array_add(restored, dref);
+      }
+      else {
+         I2C_Bus_Info * businfo = deserialize_one_i2c_bus(one_display_or_bus);
+         g_ptr_array_add(restored, businfo);
+      }
+   }
+
+   return restored;
 }
 
-   return restored_displays;
+
+GPtrArray * ddc_deserialize_displays(const char * jstring) {
+   return ddc_deserialize_displays_or_buses(jstring, serialize_mode_display);
 }
+
+
+GPtrArray * ddc_deserialize_buses(const char * jstring) {
+   return ddc_deserialize_displays_or_buses(jstring, serialize_mode_bus);
+}
+
 

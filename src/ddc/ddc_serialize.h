@@ -10,9 +10,8 @@
 
 #include "base/i2c_bus_base.h"
 
-char * serialize_bus_info(I2C_Bus_Info * info);
-
-char * ddc_serialize_displays();
+char * ddc_serialize_displays_and_buses();
 GPtrArray * ddc_deserialize_displays(const char * jstring);
+GPtrArray * ddc_deserialize_buses(const char * jstring);
 
 #endif /* DDC_SERIALIZE_H_ */
