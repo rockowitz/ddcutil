@@ -732,11 +732,18 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
       rpt_str("usb_hiddev_name", NULL, dref->usb_hiddev_name, d1);
    }
 
-   rpt_vstring(d1, "vcp_version_xdf:  %s", format_vspec(dref->vcp_version_xdf) );
-   rpt_vstring(d1, "flags:            %s", interpret_dref_flags_t(dref->flags) );
-   rpt_vstring(d1, "mmid:             %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+   rpt_vstring(d1, "vcp_version_xdf:     %s", format_vspec(dref->vcp_version_xdf) );
+   rpt_vstring(d1, "vcp_version_cmdline: %s", format_vspec(dref->vcp_version_cmdline) );
+   rpt_vstring(d1, "flags:               %s", interpret_dref_flags_t(dref->flags) );
+   rpt_vstring(d1, "capabilities_string: %s", dref->capabilities_string);
+   rpt_vstring(d1, "mmid:                %s", (dref->mmid) ? mmk_repr(*dref->mmid) : "NULL");
+   rpt_vstring(d1, "dispno:              %d", dref->dispno);
+   rpt_vstring(d1, "pedid:               %p", dref->pedid);
+   report_parsed_edid(dref->pedid, /*verbose*/ false, depth+1);
 
    rpt_vstring(d1, "driver:           %s", dref->driver_name);
+   rpt_vstring(d1, "actual_display:   %p", dref->actual_display);
+   rpt_vstring(d1, "actual_display_path: %s", (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
 
    DBGMSF(debug, "Done");
 }

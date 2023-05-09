@@ -202,6 +202,7 @@ typedef struct _display_ref {
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
+   DDCA_IO_Path *           actual_display_path;   // alt to actual_display
    char *                   driver_name;           //
    struct Per_Display_Data* pdd;
 } Display_Ref;
