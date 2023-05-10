@@ -550,7 +550,7 @@ dnl 2) if no action-if-false branch defined, pkg_check_modules terminates execut
 dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40) 
 required_packages="$required_packages glib-2.0 >= 2.40"
-PKG_CHECK_MODULES(JSON, jansson >= 2.0)
+PKG_CHECK_MODULES(JANSSON, jansson >= 2.0)
 required_packages="$required_packages jansson >= 2.0"
 
 AS_IF( [test "x$enable_udev" = "xyes"],

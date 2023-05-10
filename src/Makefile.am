@@ -216,9 +216,9 @@ endif
 # endif 
 
 libcommon_la_LIBADD += \
-  $(JSON_LIBS) \
-  $(GLIB_LIBS)   \
-  $(UDEV_LIBS)   \
+  $(JANSSON_LIBS) \
+  $(GLIB_LIBS)    \
+  $(UDEV_LIBS)    \
   $(LIBUSB_LIBS) 
 
 # for smbus functions:

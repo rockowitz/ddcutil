@@ -142,8 +142,8 @@ show:
 	@echo "Set by PKG_CHECK_MODULES:"
 	@echo "  GLIB_CFLAGS             = $(GLIB_CFLAGS) "
 	@echo "  GLIB_LIBS               = $(GLIB_LIBS)"
-	@echo "  JSON_LIBS               = $(JSON_LIBS)"
-	@echo "  JSON_CFLAGS             = $(JSON_CFLAGS)"
+	@echo "  JANSSON_LIBS            = $(JANSSON_LIBS)"
+	@echo "  JANSSON_CFLAGS          = $(JANSSON_CFLAGS)"
 
 	@echo "  UDEV_CFLAGS             = $(UDEV_CFLAGS)"
 	@echo "  UDEV_LIBS               = $(UDEV_LIBS)"
