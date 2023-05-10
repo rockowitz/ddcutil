@@ -349,9 +349,9 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
    json_t* busno_node = json_object_get(jbus, "busno");
    if (!(busno_node && json_is_integer(busno_node))) {
       if (busno_node)
-         fprintf(stderr, "error: busno is not an integer\n");
+         SEVEREMSG("error: busno is not an integer\n");
       else
-         fprintf(stderr, "member busno not found");
+         SEVEREMSG("member busno not found");
       // json_decref(jbus);
       return NULL;
    }
@@ -444,21 +444,21 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
 
    json_t* root = json_loads(jstring, 0, &error);
    if (!root) {
-          fprintf(stderr, "error: on line %d: %s\n", error.line, error.text);
+          SEVEREMSG( "error: on line %d: %s\n", error.line, error.text);
           return NULL;
       }
    if(!json_is_object(root))
    {
-       fprintf(stderr, "error: root is not an object\n");
+       SEVEREMSG( "error: root is not an object\n");
        // json_decref(root);
        return NULL;
    }
    json_t* version_node = json_object_get(root, "version");
    if (!(version_node && json_is_integer(version_node))) {
       if (version_node)
-         fprintf(stderr, "error: version is not an integer\n");
+         SEVEREMSG("error: version is not an integer\n");
       else
-         fprintf(stderr, "member version not found");
+         SEVEREMSG("member version not found");
       // json_decref(root);
       return NULL;
    }
@@ -473,9 +473,9 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    json_t* disp_nodes = json_object_get(root, all);
    if (!(disp_nodes && json_is_array(disp_nodes))) {
       if (disp_nodes)
-         DBGMSG("error: %s is not an array", all);
+         SEVEREMSG("error: %s is not an array", all);
       else
-         DBGMSG("member %s not found", all);
+         SEVEREMSG("member %s not found", all);
       // json_decref(root);
       return NULL;
    }
@@ -484,9 +484,9 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
       json_t* one_display_or_bus = json_array_get(disp_nodes, dispctr);
       if (! (one_display_or_bus && json_is_object(one_display_or_bus))) {
          if (one_display_or_bus)
-            DBGMSG("%s[%d] not found", all, dispctr);
+            SEVEREMSG("%s[%d] not found", all, dispctr);
          else
-            DBGMSG("%s[%d] is not an object", all, dispctr);
+            SEVEREMSG("%s[%d] is not an object", all, dispctr);
          // json_decref(root);
          return NULL;
       }
