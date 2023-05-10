@@ -59,11 +59,13 @@ Display_Ref * ddc_find_deserialized_display(int busno, Byte* edidbytes) {
    return result;
 }
 
+
 void ddc_enable_displays_cache(bool onoff) {
    bool debug = false;
    display_caching_enabled = onoff;
    DBGMSF(debug, "Executed. onoff=%s", sbool(onoff));
 }
+
 
 json_t* serialize_dpath(DDCA_IO_Path iopath) {
    json_t* jpath = json_object();
@@ -519,6 +521,7 @@ GPtrArray * ddc_deserialize_buses(const char * jstring) {
    return ddc_deserialize_displays_or_buses(jstring, serialize_mode_bus);
 }
 #endif
+
 
 /** Returns the name of the file that stores persistent display information
  *
