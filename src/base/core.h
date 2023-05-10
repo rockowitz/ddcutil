@@ -171,15 +171,6 @@ void show_ddcutil_version();
 // Issue messages of various types
 //
 
-#ifdef OLD
-void severemsg(
-        const char * funcname,
-        const int    lineno,
-        const char * fn,
-        char *       format,
-        ...);
-#endif
-
 bool dbgtrc(
         DDCA_Trace_Group trace_group,
         Dbgtrc_Options   options,
