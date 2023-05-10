@@ -849,7 +849,7 @@ AC_MSG_RESULT([
 	datadir:                ${datadir}
 	docdir:                 ${docdir}
 	mandir:               	${mandir}
-	includedir:	            ${includedir}
+	includedir:             ${includedir}
 	pkgconfigdir:           ${pkgconfigdir}
 	required_packages:      ${required_packages}
 
