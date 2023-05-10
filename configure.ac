@@ -544,15 +544,14 @@ dnl 					)
 ###
 
 dnl Notes on pkg_check_modules:
-dnl 1) appends to xxx_CFLAGS and xxx_LIBS the output of pkg-config --cflags|--lib 
+dnl 1) appends to xxx_CFLAGS and xxx_LIBS the output of pkg-config --cflags|--libs 
 dnl 2) if no action-if-false branch defined, pkg_check_modules terminates execution if not found
 
-dnl was 2.36, can we drop this to 2.14 to allow for Debian 7.0
 dnl 9/2017: need >= 2.32 for g_thread_...() functions
 PKG_CHECK_MODULES(GLIB,  glib-2.0 >= 2.40) 
 required_packages="$required_packages glib-2.0 >= 2.40"
-PKG_CHECK_MODULES(JSON, jansson)
-required_packages="$required_packages jansson"
+PKG_CHECK_MODULES(JSON, jansson >= 2.0)
+required_packages="$required_packages jansson >= 2.0"
 
 AS_IF( [test "x$enable_udev" = "xyes"],
   [   PKG_CHECK_MODULES(UDEV,   libudev, 
