@@ -1012,6 +1012,7 @@ ddca_get_global_sleep_multiplier()
 {
    return ddca_get_default_sleep_multiplier();
 }
+#endif
 
 // for display on current thread
 double
@@ -1052,7 +1053,6 @@ ddca_get_sleep_multiplier()
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
-#endif
 
 
 #ifdef FUTURE

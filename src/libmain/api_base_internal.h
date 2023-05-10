@@ -335,28 +335,6 @@ ddca_add_traced_api_call(
    ddca_get_global_sleep_multiplier();
 
 
-   /** Sets the sleep multiplier factor for the open display on current thread.
-    *
-    *  The semantics of this function has changed. Prior to release 1.5,
-    *  this function set the sleep multiplier for the current thread.
-    *  As of release 1.5, it sets the sleep multiplier for open display
-    *  (if any) on the current thread.
-    *
-    *  @param[in]  multiplier, must be >= 0 and <= 10
-    *  @return     old multiplier, -1.0f if invalid multiplier specified, or no display open
-    */
-   double
-   ddca_set_sleep_multiplier(double multiplier);
-
-   /** Gets the sleep multiplier for the open display on the current thread
-    *
-    *  As of release 1.5, the semantics of this function has changed.
-    *  See #ddca_set_sleep_multiplier().
-    *
-    *  @return  sleep multiplier, -1.0f if no display open on current thread
-    */
-   double
-   ddca_get_sleep_multiplier();
 #endif
 
 
