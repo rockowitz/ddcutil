@@ -50,7 +50,6 @@
  *  \TODO
  *  Extract busno from fq_i2c_dir_name
  */
-
 void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "fqfn=%s, busno=%d", fq_i2c_dir_name, busno);
@@ -72,13 +71,11 @@ void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
          RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "dev");
          // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idModel");
 #ifdef HUH
-
          GByteArray * idModel = NULL;
-
          rpt_attr_binary(d0, &idModel, fq_i2c_dir_name, fn_0037, ddcciN, "idModel");
          if (idModel) {
-         char * node = "Fully qualified node name";
-         rpt_attr_output(d0, node, "=", hexstring_t(idModel->data, idModel->len));
+            char * node = "Fully qualified node name";
+            rpt_attr_output(d0, node, "=", hexstring_t(idModel->data, idModel->len));
          }
 #endif
          // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idModule");
@@ -200,9 +197,6 @@ void sysfs_dir_cardN(
          accumulator,
          depth);
 }
-
-
-
 
 
 /**  Process /sys/bus/pci/devices/<pci-device>/i2c-N directory
@@ -367,4 +361,3 @@ void init_query_detailed_bus_pci_devices() {
    RTTI_ADD_FUNC(rpt_0037_subdir);
    RTTI_ADD_FUNC(one_pci_device);
 }
-
