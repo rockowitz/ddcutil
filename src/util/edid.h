@@ -32,18 +32,18 @@
 #define EDID_SOURCE_FIELD_SIZE        6
 
 //Calculates checksum for a 128 byte EDID
-Byte edid_checksum(Byte * edid);
+Byte edid_checksum(const Byte * edid);
 
-bool is_valid_edid_checksum(Byte * edidbytes);
-bool is_valid_edid_header(Byte * edidbytes);
-bool is_valid_raw_edid(Byte * edidbytes, int len);
-bool is_valid_raw_cea861_extension_block(Byte * edid, int len);
+bool is_valid_edid_checksum(const Byte * edidbytes);
+bool is_valid_edid_header(const Byte * edidbytes);
+bool is_valid_raw_edid(const Byte * edidbytes, int len);
+bool is_valid_raw_cea861_extension_block(const Byte * edid, int len);
 
-void parse_mfg_id_in_buffer(Byte * mfgIdBytes, char * buffer, int bufsize);
+void parse_mfg_id_in_buffer(const Byte * mfgIdBytes, char * buffer, int bufsize);
 
 // Extracts the 3 character manufacturer id from an EDID byte array.
 // The id is returned, with a trailing null character, in a buffer provided by the caller.
-void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize);
+void get_edid_mfg_id_in_buffer(const Byte* edidbytes, char * result, int bufsize);
 
 
 #define EDID_MARKER_NAME "EDID"
@@ -79,8 +79,8 @@ struct {
 } Parsed_Edid;
 
 
-Parsed_Edid * create_parsed_edid(Byte* edidbytes);
-Parsed_Edid * create_parsed_edid2(Byte* edidbytes, char * source);
+Parsed_Edid * create_parsed_edid(const Byte* edidbytes);
+Parsed_Edid * create_parsed_edid2(const Byte* edidbytes, const char * source);
 void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose_synopsis, bool show_raw, int depth);
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);

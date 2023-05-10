@@ -38,7 +38,7 @@
  * Note that the checksum byte (offset 127) is itself
  * included in the checksum calculation.
  */
-Byte edid_checksum(Byte * edid) {
+Byte edid_checksum(const Byte * edid) {
    Byte checksum = 0;
    for (int ndx = 0; ndx < 128; ndx++) {
       checksum += edid[ndx];
@@ -47,12 +47,12 @@ Byte edid_checksum(Byte * edid) {
 }
 
 
-bool is_valid_edid_checksum(Byte * edidbytes) {
+bool is_valid_edid_checksum(const Byte * edidbytes) {
    return (edid_checksum(edidbytes) == 0);
 }
 
 
-bool is_valid_edid_header(Byte * edidbytes) {
+bool is_valid_edid_header(const Byte * edidbytes) {
    bool debug = false;
    bool result = true;
 
@@ -69,12 +69,12 @@ bool is_valid_edid_header(Byte * edidbytes) {
 }
 
 
-bool is_valid_raw_edid(Byte * edid, int len) {
+bool is_valid_raw_edid(const Byte * edid, int len) {
    return (len >= 128) && is_valid_edid_header(edid) && is_valid_edid_checksum(edid);
 }
 
 
-bool is_valid_raw_cea861_extension_block(Byte * edid, int len) {
+bool is_valid_raw_cea861_extension_block(const Byte * edid, int len) {
    return (len >= 128) && edid[0] == 0x02 && is_valid_edid_checksum(edid);
 }
 
@@ -90,7 +90,7 @@ bool is_valid_raw_cea861_extension_block(Byte * edid, int len) {
  * Since the unpacked value is 4 bytes in length (3 characters plus a trailing '\0')
  * it could easily be returned on the stack.  Consider.
  */
-void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
+void parse_mfg_id_in_buffer(const Byte * mfg_id_bytes, char * result, int bufsize) {
       assert(bufsize >= 4);
       result[0] = (mfg_id_bytes[0] >> 2) & 0x1f;
       result[1] = ((mfg_id_bytes[0] & 0x03) << 3) | ((mfg_id_bytes[1] >> 5) & 0x07);
@@ -112,7 +112,7 @@ void parse_mfg_id_in_buffer(Byte * mfg_id_bytes, char * result, int bufsize) {
  *  @param  result       buffer  in which to return manufacturer ID
  *  @param  bufsize      buffer size (must be >= 4)
  */
-void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
+void get_edid_mfg_id_in_buffer(const Byte* edidbytes, char * result, int bufsize) {
    parse_mfg_id_in_buffer(edidbytes+8, result, bufsize);
 }
 
@@ -144,7 +144,7 @@ void get_edid_mfg_id_in_buffer(Byte* edidbytes, char * result, int bufsize) {
  * - Buffer for edidbytes, and just return pointers to newly allocated memory for found strings
  */
 static void get_edid_descriptor_strings(
-        Byte* edidbytes,
+        const Byte* edidbytes,
         char* namebuf,
         int   namebuf_len,
         char* snbuf,
@@ -164,7 +164,7 @@ static void get_edid_descriptor_strings(
    // In each block, bytes 0-3 indicates the contents.
    int descriptor_ndx = 0;
    for (descriptor_ndx = 0; descriptor_ndx < EDID_DESCRIPTOR_BLOCK_CT; descriptor_ndx++) {
-      Byte * descriptor = edidbytes +
+      const Byte * descriptor = edidbytes +
                           EDID_DESCRIPTORS_BLOCKS_START +
                           descriptor_ndx * EDID_DESCRIPTOR_BLOCK_SIZE;
       if (debug)
@@ -186,7 +186,7 @@ static void get_edid_descriptor_strings(
          }
 
          if (nameslot) {
-            Byte * textstart = descriptor+5;
+            const Byte * textstart = descriptor+5;
             // DBGMSF(debug, "String in descriptor: %s", hexstring(textstart, 14));
             int    offset = 0;
             while (textstart[offset] != 0x0a && offset < 13) {
@@ -212,8 +212,13 @@ static void get_edid_descriptor_strings(
  * @return pointer to newly allocated Parsed_Edid struct,
  *         or NULL if the bytes could not be parsed.
  *         It is the responsibility of the caller to free this memory.
+ *
+ * @remark
+ * The bytes pointed to by **edidbytes** are copied into the newly
+ * allocated Parsed_Edid.  If they were previously malloc'd they
+ * need to free'd.
  */
-Parsed_Edid * create_parsed_edid(Byte* edidbytes) {
+Parsed_Edid * create_parsed_edid(const Byte* edidbytes) {
    assert(edidbytes);
    // bool debug = false;
    Parsed_Edid* parsed_edid = NULL;
@@ -283,8 +288,11 @@ bye:
  * @return pointer to newly allocated Parsed_Edid struct,
  *         or NULL if the bytes could not be parsed.
  *         It is the responsibility of the caller to free this memory.
+ *
+ * **source** is copied to the Parsed_Edid and should be freed is it
+ * was allocated.
  */
-Parsed_Edid * create_parsed_edid2(Byte* edidbytes, char * source) {
+Parsed_Edid * create_parsed_edid2(const Byte* edidbytes, const char * source) {
    Parsed_Edid * edid = create_parsed_edid(edidbytes);
    if (edid) {
       assert(source && strlen(source) < EDID_SOURCE_FIELD_SIZE);
