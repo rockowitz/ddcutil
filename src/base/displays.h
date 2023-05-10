@@ -170,7 +170,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
 #define DREF_DDC_BUSY                                  0x8000
 
-char * interpret_dref_flags_t(Dref_Flags flags);    // replaces dref_basic_flags()?
+char * interpret_dref_flags_t(Dref_Flags flags);
 
 // define in ddcutil_types.h?, or perhaps use -1 for generic invalid, put type of invalid in Dref_Flags?
 #define DISPNO_NOT_SET  0
