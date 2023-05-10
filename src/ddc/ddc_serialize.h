@@ -9,6 +9,7 @@
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
+#include "base/core.h"
 #include "base/displays.h"
 #include "base/i2c_bus_base.h"
 
