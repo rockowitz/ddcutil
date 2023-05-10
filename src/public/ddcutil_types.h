@@ -158,11 +158,6 @@ typedef enum {
 } DDCA_Trace_Group;
 
 
-typedef enum {
-   DDCA_TRCOPT_TIMESTAMP = 0x01,
-   DDCA_TRCOPT_THREAD_ID = 0x02,
-   DDCA_TRCOPT_WALLTIME  = 0x04
-} DDCA_Trace_Options;
 
 
 //
