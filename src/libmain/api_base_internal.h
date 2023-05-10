@@ -239,5 +239,136 @@ ddca_add_traced_api_call(
 #endif
 
 
+#ifdef REMOVED
+   /***
+   I2C is an inherently unreliable protocol.  The application is responsible for
+   retry management.
+   The maximum number of retries can be tuned.
+   There are 3 retry contexts:
+   - An I2C write followed by a read.  Most DDC operations are of this form.
+   - An I2C write without a subsequent read.  DDC operations to set a VCP feature
+     value are in this category.
+   - Some DDC operations, such as reading the capabilities string, reading table
+     feature and writing table features require multiple write/read exchanges.
+     These multi-part exchanges have a separate retry count for the entire operation.
+   */
+   ///@{
+   /** Gets the upper limit on a max tries value that can be set.
+    *
+    * @return maximum max tries value allowed on set_max_tries()
+    */
+   int
+   ddca_max_max_tries(void);
+
+   /** Gets the maximum number of I2C tries for the specified operation type.
+    * @param[in]  retry_type   I2C operation type
+    * @return maximum number of tries
+    *
+    * @remark
+    * This setting is global, not thread-specific.
+    */
+   int
+   ddca_get_max_tries(
+       DDCA_Retry_Type retry_type);
+
+   /** Sets the maximum number of I2C retries for the specified operation type
+    * @param[in] retry_type    I2C operation type
+    * @param[in] max_tries     maximum count to set
+    * @retval    DDCRC_ARG     max_tries < 1 or > #ddca_get_max_tries()
+    *
+    * @remark
+    * This setting is global, not thread-specific.
+    */
+   DDCA_Status
+   ddca_set_max_tries(
+       DDCA_Retry_Type retry_type,
+       int             max_tries);
+   ///@}
+#endif
+
+
+#ifdef REMOVED
+
+   //
+   // Performance Options
+   //
+
+
+   /** Sets the sleep multiplier factor to be used for newly detected displays.
+    *
+    *  @param[in]  multiplier, must be >= 0 and <= 10
+    *  @return     old multiplier, -1.0f if invalid multiplier specified
+    *
+    *  The semantics of this function has changed.  Prior to release 1.5,
+    *  this function set the sleep multiplier for new threads.
+    *  As of release 1.5, the sleep multiplier is maintained per
+    *  display, not per thread.  This function sets the sleep multiplier
+    *  for newly detected displays.
+    *  @remark
+    *  This function is intended for use only during program initialization,
+    *  typically from a value passed on the command line.
+    *  Consequently there are no associated lock/unlock functions for the value.
+    */
+   double
+   ddca_set_default_sleep_multiplier(double multiplier);
+
+   /** Gets the sleep multiplier factor used for newly detected displays.
+    *
+    *  The semantics of this function has changed.
+    *  See #ddca_set_default_sleep_multiplier().
+    *
+    * @return multiplier
+    */
+   double
+   ddca_get_default_sleep_multiplier();
+
+   /** @deprecated use #ddca_set_default_sleep_multiplier()
+    */
+   __attribute__ ((deprecated ("use ddca_set_default_sleep_multiplier")))
+   void
+   ddca_set_global_sleep_multiplier(double multiplier);
+
+   /** @deprecated use #ddca_get_default_sleep_multiplier()
+    */
+   __attribute__ ((deprecated ("use ddca_get_default_sleep_multiplier")))
+   double
+   ddca_get_global_sleep_multiplier();
+
+
+   /** Sets the sleep multiplier factor for the open display on current thread.
+    *
+    *  The semantics of this function has changed. Prior to release 1.5,
+    *  this function set the sleep multiplier for the current thread.
+    *  As of release 1.5, it sets the sleep multiplier for open display
+    *  (if any) on the current thread.
+    *
+    *  @param[in]  multiplier, must be >= 0 and <= 10
+    *  @return     old multiplier, -1.0f if invalid multiplier specified, or no display open
+    */
+   double
+   ddca_set_sleep_multiplier(double multiplier);
+
+   /** Gets the sleep multiplier for the open display on the current thread
+    *
+    *  As of release 1.5, the semantics of this function has changed.
+    *  See #ddca_set_sleep_multiplier().
+    *
+    *  @return  sleep multiplier, -1.0f if no display open on current thread
+    */
+   double
+   ddca_get_sleep_multiplier();
+#endif
+
+
+   // Deprecated, has no effect
+   __attribute__ ((deprecated ("has no effect")))
+   bool
+   ddca_enable_sleep_suppression(bool newval); ;
+
+   __attribute__ ((deprecated ("always returns false")))
+   bool
+   ddca_is_sleep_suppression_enabled();
+
+
 
 #endif /* API_BASE_INTERNAL_H_ */

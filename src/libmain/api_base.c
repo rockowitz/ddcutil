@@ -882,6 +882,7 @@ ddca_is_report_ddc_errors_enabled(void) {
 // Global Settings
 //
 
+#ifdef REMOVED
 int
 ddca_max_max_tries(void) {
    return MAX_MAX_TRIES;
@@ -931,7 +932,7 @@ ddca_set_max_tries(
    }
    return rc;
 }
-
+#endif
 
 bool
 ddca_enable_verify(bool onoff) {
@@ -954,7 +955,7 @@ void ddca_unlock_sleep_multiplier() {
 }
 #endif
 
-
+#ifdef REMOVED
 // deprecated, now a NOOP
 bool
 ddca_enable_sleep_suppression(bool newval) {
@@ -1051,6 +1052,7 @@ ddca_get_sleep_multiplier()
    DBGTRC(debug, DDCA_TRC_API, "Returning %6.3f", result);
    return result;
 }
+#endif
 
 
 #ifdef FUTURE
@@ -1215,8 +1217,9 @@ ddca_show_stats(
 
 void init_api_base() {
    // DBGMSG("Executing");
+#ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
-
+#endif
 }
 
