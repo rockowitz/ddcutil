@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <errno.h>
 #include <glib-2.0/glib.h>
 #include <jansson.h>
 #include <stdbool.h>
