@@ -6,14 +6,14 @@
 // Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <stdbool.h>
 #include <glib-2.0/glib.h>
+#include <stdbool.h>
 #include <string.h>
  
+#include "base/rtti.h"
 #include "util/glib_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
-#include "base/rtti.h"
 
 
 static GHashTable * func_name_table = NULL;
@@ -75,7 +75,6 @@ void dbgrpt_rtti_func_name_table(int depth) {
       for (int ndx = 0; ndx < values->len; ndx++) {
          rpt_vstring(d1, "   %s", (char *) g_ptr_array_index(values, ndx));
       }
-
    }
 }
 
