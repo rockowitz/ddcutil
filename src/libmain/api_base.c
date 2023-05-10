@@ -1108,7 +1108,7 @@ ddca_is_force_slave_address_enabled(void) {
 }
 
 
-
+#ifdef REMOVED
 //
 // Tracing
 //
@@ -1162,7 +1162,7 @@ ddca_set_trace_options(DDCA_Trace_Options  options) {
    if (options & DDCA_TRCOPT_THREAD_ID)
       dbgtrc_show_thread_id = true;
 }
-
+#endif
 
 //
 // Statistics

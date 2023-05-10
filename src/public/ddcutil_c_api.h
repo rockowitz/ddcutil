@@ -359,69 +359,6 @@ ddca_is_report_ddc_errors_enabled(void);
 
 
 //
-// Tracing
-//
-
-/** Turn on tracing for a specific function.
- *
- *  @param[in]  funcname   function name
- *  @return true if function is traceable, false if not
- *
- *  @remark
- *
- *  The function must include trace calls.
- */
-bool
-ddca_add_traced_function(
-      const char * funcname);
-
-/** Turn on all tracing in a specific source file.
- *
- *  @param[in] filename  simple file name, with or without the ".c" extension,
- *                        e.g. vcp_feature_set.c, vcp_feature_set
- */
-void
-ddca_add_traced_file(
-      const char * filename);
-
-/** Replaces the groups being traced
- *
- *  @param[in] trace_flags  bitfield indicating groups to trace
- */
-void
-ddca_set_trace_groups(
-      DDCA_Trace_Group trace_flags);
-
-/** Adds to the groups being traced
- *
- *  @param[in] trace_flags  bitfield indicating groups to trace
- *
- *  @since 1.2.0
- */
-void
-ddca_add_trace_groups(
-      DDCA_Trace_Group trace_flags);
-
-
-/** Given a trace group name, returns its identifier.
- *  Case is ignored.
- *
- *  @param[in] name trace group name
- *  @return    trace group identifier
- *  @retval    TRC_NEVER unrecognized name
- */
-DDCA_Trace_Group
-ddca_trace_group_name_to_value(char * name);
-
-/** Sets tracing options
- *
- *  @param[in] options  enum that can be used as bit flags
- */
-void
-ddca_set_trace_options(DDCA_Trace_Options  options);
-
-
-//
 // Statistics and Diagnostics
 //
 
