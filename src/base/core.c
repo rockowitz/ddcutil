@@ -301,7 +301,7 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
 /** Tells whether DDC data errors are reported.
  *  Output is written to the current **FOUT** device.
  */
-void show_ddcmsg() {
+static void show_ddcmsg() {
    print_simple_title_value(SHOW_REPORTING_TITLE_START,
                               "Reporting DDC data errors: ",
                               SHOW_REPORTING_MIN_TITLE_SIZE,
@@ -337,7 +337,7 @@ void show_reporting() {
  *
  *  @return formatted wall time
  */
-char * formatted_wall_time() {
+static char * formatted_wall_time() {
    static GPrivate  formatted_wall_time_key = G_PRIVATE_INIT(g_free);
    char * time_buf = get_thread_fixed_buffer(&formatted_wall_time_key, 40);
 
@@ -366,7 +366,7 @@ if (!trace_callstack) { \
 }
 
 
-void report_callstack() {
+static void report_callstack() {
    INIT_CALLSTACK();
    printf("Current callstack, callstack->len=%d, trace_callstack_call_depth=%d\n",
           trace_callstack->len, trace_callstack_call_depth);
@@ -376,7 +376,8 @@ void report_callstack() {
    }
 }
 
-void push_callstack(const char * funcname) {
+
+static void push_callstack(const char * funcname) {
    INIT_CALLSTACK();
    bool debug = false;
    if (debug)
@@ -394,8 +395,7 @@ void push_callstack(const char * funcname) {
 }
 
 
-
-void pop_callstack(const char * funcname) {
+static void pop_callstack(const char * funcname) {
    INIT_CALLSTACK();
    bool debug = false;
    if (debug)
