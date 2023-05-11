@@ -1178,6 +1178,7 @@ ddca_register_thread_dref(DDCA_Display_Ref dref) {
 }
 #endif
 
+#ifdef REMOVED
 void
 ddca_set_thread_description(
       const char * description)
@@ -1196,6 +1197,7 @@ const char *
 ddca_get_thread_descripton() {
    return ptd_get_thread_description_t();
 }
+#endif
 
 void
 ddca_reset_stats(void) {

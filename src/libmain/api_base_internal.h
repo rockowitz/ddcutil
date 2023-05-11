@@ -422,5 +422,25 @@ typedef enum {
 #endif
 
 
+#ifdef REMOVED
+/** Assigns a description to the the current thread.
+ *
+ *  @param[in] description
+ */
+void
+ddca_set_thread_description(const char * description);
+
+/** Appends text to the current thread description.
+ *
+ *  @param[in] description
+ */
+void
+ddca_append_thread_description(const char * description);
+
+const char * ddca_get_thread_descripton();
+#endif
+
+
+
 
 #endif /* API_BASE_INTERNAL_H_ */

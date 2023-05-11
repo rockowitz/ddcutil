@@ -41,7 +41,9 @@ typedef GHashTable Function_Stats_Hash;
 typedef struct {
    bool                  initialized;
    pid_t                 thread_id;
+#ifdef REMOVED
    char *                description;
+#endif
    Display_Handle *      cur_dh;
    char *                cur_func;
    uint64_t              cur_start;
@@ -55,9 +57,11 @@ void dbgrpt_per_thread_data_locks(int depth);
 
 Per_Thread_Data * ptd_get_per_thread_data();
 
+#ifdef REMOVED
 void         ptd_set_thread_description(const char * description);
 void         ptd_append_thread_description(const char * addl_description);
 const char * ptd_get_thread_description_t();
+#endif
 
 // Apply a function to all Per_Thread_Data records
 typedef void (*Ptd_Func)(Per_Thread_Data * data, void * arg);

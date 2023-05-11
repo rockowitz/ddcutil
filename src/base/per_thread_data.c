@@ -148,7 +148,9 @@ void ptd_cross_thread_operation_block() {
 void per_thread_data_destroy(void * data) {
    if (data) {
       Per_Thread_Data * ptd = data;
+#ifdef REMOVED_20
       free(ptd->description);
+#endif
       free(ptd->cur_func);
       if (ptd->function_stats)
          g_hash_table_destroy(ptd->function_stats);
@@ -221,6 +223,7 @@ Per_Thread_Data * ptd_get_per_thread_data() {
 }
 
 
+#ifdef REMOVED_20
 // Thread description operations always operate on the Per_Thread_Data
 // instance for the currently executing thread.
 
@@ -261,6 +264,7 @@ const char * ptd_get_thread_description_t() {
    }
    return buf;
 }
+#endif
 
 
 /** Output a debug report of a #Per_Thread_Data struct.
@@ -275,7 +279,9 @@ void dbgrpt_per_thread_data(Per_Thread_Data * data, int depth) {
    rpt_structure_loc("Per_Thread_Data", data, depth);
    rpt_vstring(d1,"initialized                %s", sbool(data->initialized));
    rpt_vstring(d1,"thread_id                  %d", data->thread_id);
+#ifdef REMOVED_20
    rpt_vstring(d1,"description                %s", data->description);
+#endif
    rpt_vstring(d1,"cur_dh:                    %s", dh_repr(data->cur_dh) );
    rpt_vstring(d1,"cur_func                   %s", data->cur_func);
    rpt_vstring(d1,"cur_start                  %"PRIu64, data->cur_start);
@@ -369,6 +375,8 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
    char header[100];
    g_snprintf(header, 100, "Thread %d: ", ptd->thread_id);
 
+   rpt_vstring(d1, "%s", header);
+#ifdef REMOVED_20
    int hdrlen = strlen(header);
    if (!ptd->description)
       rpt_vstring(d1, "%s", header);
@@ -389,8 +397,8 @@ void ptd_thread_summary(Per_Thread_Data * ptd, void * arg) {
       }
       ntsa_free(pieces, true);
    }
+#endif
 }
-
 
 /** Emits a brief summary (thread id and description) for each
  * #Per_Thread_Data instance.

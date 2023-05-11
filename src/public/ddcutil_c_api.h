@@ -83,7 +83,7 @@ ddca_build_options(void);
   *
   *  @return file name
   *
-  *  @since 1.5.0
+  *  @since 2.0.0
   */
  const char *
  ddca_libddcutil_filename(void);
@@ -138,7 +138,7 @@ ddca_build_options(void);
  * @remark
  * The returned value is a pointer into internal persistent
  * data structures and should not be freed by the caller.
- *  */
+ */
 const char *
 ddca_rc_name(
       DDCA_Status status_code);
@@ -176,9 +176,10 @@ ddca_rc_desc(
  * If the returned status code is other than **DDCRC_OK**, a detailed
  * error report can be obtained using #ddca_get_error_detail().
  *
- * @since 1.5.0
+ * @since 2.0.0
  */
-DDCA_Status ddca_init(char * library_options, DDCA_Init_Options opts);
+DDCA_Status
+ddca_init(char * library_options, DDCA_Init_Options opts);
 
 
 //
@@ -365,21 +366,6 @@ ddca_is_report_ddc_errors_enabled(void);
 /** Resets all **ddcutil** statistics */
 void
 ddca_reset_stats(void);
-
-/** Assigns a description to the the current thread.
- *
- *  @param[in] description
- */
-void
-ddca_set_thread_description(const char * description);
-
-/** Appends text to the current thread description.
- *
- *  @param[in] description
- */
-void
-ddca_append_thread_description(const char * description);
-const char * ddca_get_thread_descripton();
 
 /** Show execution statistics.
  *
