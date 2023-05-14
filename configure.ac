@@ -281,18 +281,6 @@ AS_IF( [test "x$enable_asan" = "xyes"],
          AC_MSG_NOTICE( [asan..........disabled] )
      )
 
-dnl *** configure option: --enable-syslog
-AC_ARG_ENABLE([syslog],
-              [ AS_HELP_STRING( [--enable-syslog=@<:@yes/no@:>@], [Write to system log@<:@default=yes@:>@] )],
-              [enable_syslog=${enableval}],
-              [enable_syslog=yes] )
-AS_IF([test "x$enable_syslog" = "xyes"],
-        AC_MSG_NOTICE( [syslog...     enabled]  )
-        AC_DEFINE([ENABLE_SYSLOG], [1], [If defined, write to system log.])
-      ,
-        AC_MSG_NOTICE( [syslog...     disabled] )
-     )
-          
 dnl dnl *** configure option: --enable-trace
 dnl AC_ARG_ENABLE([trace],
 dnl               [ AS_HELP_STRING( [--enable-trace=@<:@yes/no@:>@], [Output trace messages@<:@default=yes@:>@] )],
@@ -860,7 +848,6 @@ AC_MSG_RESULT([
 	enable_drm:             ${enable_drm}   
 	enable_x11:             ${enable_x11}   
 dnl	enable_trace:           ${enable_trace}  
-	enable_syslog:          ${enable_syslog}  
 	enable_asan:            ${enable_asan}
 
 	Developer-only options:
