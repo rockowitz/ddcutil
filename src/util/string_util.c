@@ -727,7 +727,7 @@ Null_Terminated_String_Array ntsa_create_empty_array() {
  */
 int ntsa_findx(
       Null_Terminated_String_Array string_array,
-      char *                       value,
+      const char *                 value,
       String_Comp_Func             func)
 {
    assert(string_array);
@@ -754,7 +754,7 @@ int ntsa_findx(
  *  @param  value         value to look for
  *  @return index of first matching entry, -1 if not found
  */
-int  ntsa_find(  Null_Terminated_String_Array string_array, char * value) {
+int  ntsa_find(  Null_Terminated_String_Array string_array, const char * value) {
    return ntsa_findx(string_array, value, streq);
 }
 
