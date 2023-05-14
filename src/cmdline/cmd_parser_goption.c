@@ -876,8 +876,6 @@ parse_command(
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
-      {"trace-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
-                              G_OPTION_ARG_NONE,         &trace_to_syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
      {"syslog",      '\0', 0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", "NONE, ERROR, WARN, INFO, NEVER"},
       {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
