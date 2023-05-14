@@ -14,7 +14,14 @@
 
 #include <glib-2.0/glib.h>
 
+#include "public/ddcutil_types.h"
+
 #include "cmdline/parsed_cmd.h"
+
+bool parse_syslog_level(
+      const char *        sval,
+      DDCA_Syslog_Level * result_loc,
+      GPtrArray *         errmsgs);
 
 Parsed_Cmd * parse_command(
       int         argc,
