@@ -964,6 +964,7 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED),
       VN(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED),
       VN(DREF_DDC_BUSY),
+      VN(DREF_REMOVED),
       VN(CALLOPT_NONE),                // special entry
       VN_END
 };

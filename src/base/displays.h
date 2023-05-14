@@ -169,6 +169,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
 #define DREF_DDC_BUSY                                  0x8000
+#define DREF_REMOVED                                   0x4000
 
 char * interpret_dref_flags_t(Dref_Flags flags);
 
