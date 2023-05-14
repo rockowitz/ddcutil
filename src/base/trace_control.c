@@ -38,7 +38,7 @@ Value_Name_Title_Table syslog_level_table = {
       VNT(DDCA_SYSLOG_INFO,    "INFO"),
       VNT(DDCA_SYSLOG_WARNING, "WARN"),
       VNT(DDCA_SYSLOG_ERROR,   "ERROR"),
-      VNT(DDCA_SYSLOG_NONE,    "NEVER"),
+      VNT(DDCA_SYSLOG_NEVER,   "NEVER"),
       VNT_END
 };
 const int syslog_level_ct = (ARRAY_SIZE(syslog_level_table)-1);
