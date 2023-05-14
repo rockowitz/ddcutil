@@ -158,6 +158,15 @@ typedef enum {
 } DDCA_Trace_Group;
 
 
+// gaps in value to allow for further refinement
+typedef enum {
+   DDCA_SYSLOG_DEBUG    =   0,
+   DDCA_SYSLOG_INFO     =   3,
+   DDCA_SYSLOG_WARNING  =   5,
+   DDCA_SYSLOG_ERROR    =   7,
+   DDCA_SYSLOG_NEVER    =   9,
+   DDCA_SYSLOG_NOT_SET  = 255,
+} DDCA_Syslog_Level;
 
 
 //
