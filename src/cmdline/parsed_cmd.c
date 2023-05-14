@@ -285,6 +285,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #ifdef ENABLE_SYSLOG
       rpt_bool("write to syslog:",  NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG,       d1);
 #endif
+      rpt_str("syslog_level:",      NULL, syslog_level_id_name(parsed_cmd->syslog_level), d1);
       rpt_bool("i2c_io_fileio:",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
       rpt_bool("i2c_io_ioctl:",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
 

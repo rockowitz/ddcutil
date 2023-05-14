@@ -140,8 +140,7 @@ struct {
    gchar **               traced_functions;
    gchar **               traced_calls;
    gchar **               traced_api_calls;
-   bool                   enable_syslog_specified;
-   bool                   disable_syslog_specified;
+   DDCA_Syslog_Level      syslog_level;
    char *                 trace_destination;
 
    DDCA_Output_Level      output_level;
