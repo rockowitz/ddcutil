@@ -786,7 +786,7 @@ main(int argc, char *argv[]) {
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
    DBGMSF(main_debug, "syslog_level = %s", syslog_level_id_name(syslog_level));
-   if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER ) {   // global
+   if (syslog_level < DDCA_SYSLOG_NEVER ) {   // global
       openlog("ddcutil",          // prepended to every log message
               LOG_CONS |          // write to system console if error sending to system logger
               LOG_PID,            // include caller's process id
@@ -972,7 +972,7 @@ bye:
    free(s);
 #endif
 
-   if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER) {
+   if (test_emit_syslog(DDCA_SYSLOG_INFO)) {
       syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
       closelog();
    }
