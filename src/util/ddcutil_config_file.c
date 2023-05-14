@@ -38,7 +38,7 @@
  *  @remark
  *  The caller is responsible for freeing the list of tokens
  */
-int tokenize_options_line(char * string, char ***tokens_loc) {
+int tokenize_options_line(const char * string, char ***tokens_loc) {
    bool debug = false;
    if (debug)
       printf("(%s) string -> |%s|\n", __func__, string);

@@ -6,12 +6,16 @@
 #ifndef DDCUTIL_CONFIG_FILE_H_
 #define DDCUTIL_CONFIG_FILE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <glib-2.0/glib.h>
 
 #include "error_info.h"
 
 int tokenize_options_line(
-      char *         string,
+      const char *   string,
       char ***       tokens_loc);
 
 int read_ddcutil_config_file(
@@ -30,5 +34,9 @@ int apply_config_file(
       char **      untokenized_option_string_loc,
       char **      configure_fn_loc,
       GPtrArray *  errmsgs);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif /* DDCUTIL_CONFIG_FILE_H_ */
