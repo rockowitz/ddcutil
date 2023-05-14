@@ -139,6 +139,7 @@ static void emit_parser_error(GPtrArray* errmsgs, const char * func, const char 
    va_end(args);
 
    if (errmsgs) {
+      // printf("(%s) Adding: %s\n", __func__, buffer);
       g_ptr_array_add(errmsgs, g_strdup(buffer));
    }
    else{
@@ -470,6 +471,29 @@ static bool parse_trace_classes(gchar** trace_classes, Parsed_Cmd* parsed_cmd, G
 }
 
 
+bool parse_syslog_level(
+      const char *        sval,
+      DDCA_Syslog_Level * result_loc,
+      GPtrArray *         errmsgs)
+{
+   bool debug = false;
+   bool parsing_ok = true;
+   if (debug)
+      printf("(%s) sval=|%s|\n", __func__, sval);
+
+   *result_loc = syslog_level_name_to_value(sval);
+   if (*result_loc == DDCA_SYSLOG_NOT_SET) {
+      parsing_ok = false;
+      emit_parser_error(errmsgs, __func__, "Invalid syslog level: %s", sval );
+      emit_parser_error(errmsgs, __func__, "Valid values are NEVER, ERROR, WARN, INFO, DEBUG");
+   }
+   if (debug)
+      printf("(%s) Returning %s, *result_loc = %d\n",
+            __func__, sbool(parsing_ok), *result_loc);
+   return parsing_ok;
+}
+
+
 static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
    bool parsing_ok = true;
    // for (int argpos = 0; argpos < parsed_cmd->argct; argpos+=2) {
@@ -588,7 +612,7 @@ parse_command(
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
 #ifdef ENABLE_SYSLOG
-   gboolean syslog_flag    = false;
+   gboolean trace_to_syslog_flag    = false;
 #endif
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
@@ -658,8 +682,8 @@ parse_command(
    gchar**  trace_calls     = NULL;
    gchar**  trace_api_calls = NULL;
    gchar**  trace_filenames = NULL;
-// gboolean enable_syslog_flag  = false;
-// gboolean disable_syslog_flag = false;
+   DDCA_Syslog_Level syslog_level = (parser_mode == MODE_DDCUTIL) ? DDCA_SYSLOG_NEVER : DDCA_SYSLOG_INFO;
+   char *   syslog_work     = NULL;
    gint     buswork         = -1;
    gint     hidwork         = -1;
    gint     dispwork        = -1;
@@ -856,10 +880,9 @@ parse_command(
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
 #ifdef ENABLE_SYSLOG
-      {"enable-syslog",'\0',0,G_OPTION_ARG_NONE,         &parsed_cmd->enable_syslog_specified,  "Write msgs to system log",    NULL},
-      {"disable-syslog",'\0',0,G_OPTION_ARG_NONE,        &parsed_cmd->disable_syslog_specified, "Do not write msgs to system log",  NULL},
-
-      {"syslog",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
+      {"trace-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,         &trace_to_syslog_flag,           "Write trace messages to system log (deprecated)",  NULL},
+     {"syslog",      '\0', 0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", "NONE, ERROR, WARN, INFO, NEVER"},
 #endif
       {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
@@ -1077,7 +1100,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
 #ifdef ENABLE_SYSLOG
-   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   syslog_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   trace_to_syslog_flag);
 #endif
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
@@ -1171,12 +1194,24 @@ parse_command(
    if (mccswork)
       parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errmsgs);
 
+   if (syslog_work) {
+      DDCA_Syslog_Level level;
+      bool this_ok = parse_syslog_level(syslog_work, &level, errmsgs);
+      // printf("(%s) this_ok = %s\n", __func__, sbool(this_ok));
+      if (this_ok)
+         syslog_level = level;
+      else
+         parsing_ok = false;
+   }
+   parsed_cmd->syslog_level = syslog_level;
+
    if (i1_work) {
       bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errmsgs);
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
       parsing_ok &= ok;
    }
+
    if (i2_work) {
       bool ok = parse_int_work(i2_work, &parsed_cmd->i2, errmsgs);
       if (ok)
@@ -1367,7 +1402,6 @@ parse_command(
       free_parsed_cmd(parsed_cmd);
       parsed_cmd = NULL;
    }
-
    DBGMSF(debug, "Returning: %p", parsed_cmd);
    return parsed_cmd;
 }
