@@ -27,9 +27,54 @@
 _Thread_local  int  trace_api_call_depth = 0;
 _Thread_local  int  trace_callstack_call_depth = 0;
 
+DDCA_Syslog_Level syslog_level = DDCA_SYSLOG_NOT_SET;
+
 #ifdef ENABLE_SYSLOG
 bool enable_syslog = true;
 bool trace_to_syslog = false;  // write trace output to the system log as well as terminal
+
+Value_Name_Title_Table syslog_level_table = {
+      VNT(DDCA_SYSLOG_DEBUG,   "DEBUG"),
+      VNT(DDCA_SYSLOG_INFO,    "INFO"),
+      VNT(DDCA_SYSLOG_WARNING, "WARN"),
+      VNT(DDCA_SYSLOG_ERROR,   "ERROR"),
+      VNT(DDCA_SYSLOG_NONE,    "NEVER"),
+      VNT_END
+};
+const int syslog_level_ct = (ARRAY_SIZE(syslog_level_table)-1);
+
+
+const char * syslog_level_id_name(DDCA_Syslog_Level level) {
+   char * result = "DDCA_SYSLOG_NOT_SET";
+   if (level != DDCA_SYSLOG_NOT_SET)
+      result = vnt_name(syslog_level_table, level);
+   return result;
+}
+
+
+DDCA_Syslog_Level
+syslog_level_name_to_value(const char * name) {
+   return (DDCA_Syslog_Level) vnt_find_id(syslog_level_table,
+                                          name,
+                                          true,      // search title field
+                                          true,      // ignore-case
+                                          DDCA_SYSLOG_NOT_SET);
+}
+
+
+/** Given a message severity level, test whether it should be
+ *  written to the system log.
+ *
+ *  @param  msg_level  severity of message
+ *  @return true if msg should be written to system log, false if not
+ */
+bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
+   bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET &&
+         msg_level >= syslog_level);
+   return result;
+}
+
+
 #endif
 
 
@@ -49,8 +94,7 @@ Value_Name_Title_Table trace_group_table = {
       VNT(DDCA_TRC_RETRY, "RETRY"),
       VNT_END
 };
-const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
-
+const int trace_group_ct = (ARRAY_SIZE(trace_group_table)-1);
 
 
 /** Given a trace group name, returns its identifier.
@@ -62,7 +106,7 @@ const int trace_group_ct = ARRAY_SIZE(trace_group_table)-1;
  *
  *  /ingroup dbgtrace
  */
-DDCA_Trace_Group trace_class_name_to_value(char * name) {
+DDCA_Trace_Group trace_class_name_to_value(const char * name) {
    return (DDCA_Trace_Group) vnt_find_id(
                            trace_group_table,
                            name,

@@ -18,6 +18,11 @@
 extern __thread  int  trace_api_call_depth;
 extern __thread  int  trace_callstack_call_depth;
 
+extern DDCA_Syslog_Level syslog_level;
+
+DDCA_Syslog_Level syslog_level_name_to_value(const char * name);
+const char * syslog_level_id_name(DDCA_Syslog_Level level);
+bool test_emit_syslog(DDCA_Syslog_Level msg_level);
 
 bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
@@ -32,7 +37,7 @@ bool is_traced_callstack_call( const char * funcname);
 void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);
 
-DDCA_Trace_Group trace_class_name_to_value(char * name);
+DDCA_Trace_Group trace_class_name_to_value(const char * name);
 void set_trace_groups(DDCA_Trace_Group trace_flags);
 void add_trace_groups(DDCA_Trace_Group trace_flags);
 // char * get_active_trace_group_names();  // unimplemented
