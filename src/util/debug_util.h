@@ -9,6 +9,10 @@
 #ifndef DEBUG_UTIL_H_
 #define DEBUG_UTIL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <assert.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -34,5 +38,9 @@ bool simple_dbgmsg(
 
 #define DBGF(debug_flag, format, ...) \
    do { if (debug_flag) simple_dbgmsg(debug_flag, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__); }  while(0)
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif /* DEBUG_UTIL_H_ */

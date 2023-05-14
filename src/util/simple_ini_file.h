@@ -9,6 +9,10 @@
 #ifndef SIMPLE_INI_FILE_H_
 #define SIMPLE_INI_FILE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
@@ -36,4 +40,9 @@ void   ini_file_dump(
 
 void   ini_file_free(
            Parsed_Ini_File * parsed_ini_file);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
+
 #endif /* SIMPLE_INI_FILE_H_ */

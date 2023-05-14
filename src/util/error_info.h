@@ -16,6 +16,10 @@
 #ifndef ERROR_INFO_H_
 #define ERROR_INFO_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
@@ -128,5 +132,9 @@ void errinfo_report_details(Error_Info * erec, int depth);
 
 char * errinfo_summary(
       Error_Info *   erec);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif /* ERROR_INFO_H_ */

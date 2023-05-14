@@ -9,6 +9,10 @@
 #ifndef REPORT_UTIL_H_
 #define REPORT_UTIL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** \cond */
 #include <glib-2.0/glib.h>
 #include <stdio.h>
@@ -82,5 +86,9 @@ void rpt_ifval2(char * name,
                 Flag_Name_Set *   pflagNameSet,
                 Flag_Dictionary * pDict,
                 int    depth);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif /* REPORT_UTIL_H_ */
