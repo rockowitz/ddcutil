@@ -15,6 +15,7 @@
 
 /** @cond */
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 /** @endcond */
 
@@ -162,13 +163,25 @@ ddca_rc_desc(
 // Initialization
 //
 
+/** Given an external syslog level name returns  the syslog level id.
+ *
+ *  @param  name    e.g. ERROR
+ *  @return syslog level id
+ *  @retval DDCA_SYSLOG_NOT FOUND if invalid name
+ *
+ * @since 2.0.0
+ */
+DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name);
+
+
 /** Performs library initialization.
  *
  *  @param  library_options  string of **libddcutil** options
+ *  @param  syslog_level     severity cutoff for system log
  *  @param  opts             option flags
  *  @return status code
  *
- * Unless flag DDC_INIT_OPTIONS_CONFIG_FILE is set in **opts**,
+ * Unless flag DDC_INIT_OPTIONS_DISABLE_CONFIG_FILE is set in **opts**,
  * libddcutil options are read from the ddcutil configuration file.
  * These are combined with any options passed in string **library_options**
  * and then processed.
@@ -179,7 +192,9 @@ ddca_rc_desc(
  * @since 2.0.0
  */
 DDCA_Status
-ddca_init(char * library_options, DDCA_Init_Options opts);
+ddca_init(const char *      library_options,
+          DDCA_Syslog_Level syslog_level,
+          DDCA_Init_Options opts);
 
 
 //
