@@ -611,7 +611,6 @@ parse_command(
    gboolean timestamp_trace_flag = false;
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
-   gboolean trace_to_syslog_flag    = false;
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
 #ifdef OLD
@@ -1095,7 +1094,6 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
-   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG,   trace_to_syslog_flag);
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
    //    parsed_cmd->flags |= CMD_FLAG_VERIFY;
