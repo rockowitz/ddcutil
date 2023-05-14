@@ -699,6 +699,21 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
+   syslog_level = DDCA_SYSLOG_NEVER;  // ddcutil default
+   int syslog_pos = ntsa_find(argv, "--syslog");
+   if (syslog_pos >= 0 && syslog_pos < (argc-1)) {
+      // printf("(%s) Parsing initial log level\n", __func__);
+      GPtrArray *sink = g_ptr_array_new();
+      g_ptr_array_set_free_func(sink, g_free);
+      DDCA_Syslog_Level parsed_level;
+      bool ok_level = parse_syslog_level(argv[syslog_pos+1], &parsed_level, sink);
+      g_ptr_array_free(sink, true);
+      if (ok_level)
+         syslog_level = parsed_level;
+   }
+
+   // enable_syslog = (initial_syslog_level < DDCA_SYSLOG_NEVER);    // TO REFACTOR
+
    bool skip_config = (ntsa_find(argv, "--noconfig") >= 0);
    if (skip_config) {
       // DBGMSG("Skipping config file");
@@ -773,7 +788,8 @@ main(int argc, char *argv[]) {
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 #ifdef ENABLE_SYSLOG
-   if (trace_to_syslog) {   // global
+   DBGMSF(main_debug, "syslog_level = %s", syslog_level_id_name(syslog_level));
+   if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER ) {   // global
       openlog("ddcutil",          // prepended to every log message
               LOG_CONS |          // write to system console if error sending to system logger
               LOG_PID,            // include caller's process id
@@ -961,7 +977,7 @@ bye:
 #endif
 
 #ifdef ENABLE_SYSLOG
-   if (trace_to_syslog) {
+   if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER) {
       syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
       closelog();
    }
