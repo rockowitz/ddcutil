@@ -29,7 +29,6 @@ _Thread_local  int  trace_callstack_call_depth = 0;
 
 DDCA_Syslog_Level syslog_level = DDCA_SYSLOG_NOT_SET;
 
-#ifdef ENABLE_SYSLOG
 bool enable_syslog = true;
 bool trace_to_syslog = false;  // write trace output to the system log as well as terminal
 
@@ -73,9 +72,6 @@ bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
          msg_level >= syslog_level);
    return result;
 }
-
-
-#endif
 
 
 static
@@ -469,9 +465,5 @@ void report_tracing(int depth) {
    rpt_vstring(d1, "Traced files:            %s", (buf && strlen(buf)>0) ? buf : "none");
    free(buf);
 
-#ifdef ENABLE_SYSLOG
-   rpt_vstring(d1, "Trace to syslog:         %s", SBOOL(trace_to_syslog));
-   rpt_nl();
-#endif
 }
 

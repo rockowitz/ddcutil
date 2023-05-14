@@ -27,9 +27,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef ENABLE_SYSLOG
 #include <syslog.h>
-#endif
 /** \endcond */
 
 #include "public/ddcutil_types.h"

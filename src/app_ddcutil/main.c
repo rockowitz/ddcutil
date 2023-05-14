@@ -21,9 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef ENABLE_SYSLOG
 #include <syslog.h>
-#endif
 #include <unistd.h>
 
 #include "util/data_structures.h"
@@ -787,7 +785,6 @@ main(int argc, char *argv[]) {
    DBGMSF(start_time_reported, "Starting %s execution, %s",
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
-#ifdef ENABLE_SYSLOG
    DBGMSF(main_debug, "syslog_level = %s", syslog_level_id_name(syslog_level));
    if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER ) {   // global
       openlog("ddcutil",          // prepended to every log message
@@ -796,7 +793,6 @@ main(int argc, char *argv[]) {
               LOG_USER);          // generic user program, syslogger can use to determine how to handle
       syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
    }
-#endif
 
    if (!master_initializer(parsed_cmd))
       goto bye;
@@ -976,12 +972,10 @@ bye:
    free(s);
 #endif
 
-#ifdef ENABLE_SYSLOG
    if (trace_to_syslog || syslog_level < DDCA_SYSLOG_NEVER) {
       syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
       closelog();
    }
-#endif
    return main_rc;
 }
 

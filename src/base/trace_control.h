@@ -65,12 +65,9 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 // Use of system log
 //
 
-#ifdef ENABLE_SYSLOG
 extern bool trace_to_syslog;
 extern bool enable_syslog;
 #define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
-#else
-#define SYSLOG(priority, format, ...) do {} while (0)
-#endif
+// #define SYSLOG(priority, format, ...) do {} while (0)
 
 #endif /* TRACE_CONTROL_H_ */

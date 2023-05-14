@@ -34,9 +34,7 @@
 #else
 #include <sys/types.h>
 #include <sys/syscall.h>
-#ifdef ENABLE_SYSLOG
 #include <syslog.h>
-#endif
 #endif
 
 #include <unistd.h>
@@ -284,12 +282,10 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
       else {
          f0printf(fout(), "DDC: %s\n", buffer);
 
-#ifdef ENABLE_SYSLOG
          // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
-         if (trace_to_syslog) {    // HACK
-            syslog(LOG_INFO, "%s", buffer);
+         if (test_emit_syslog(DDCA_SYSLOG_WARNING)) {
+            syslog(LOG_NOTICE, "%s", buffer);
          }
-#endif
       }
       fflush(fout());
       va_end(args);
@@ -548,14 +544,20 @@ static bool vdbgtrc(
          msg_emitted = true;
 #endif
 
-#ifdef ENABLE_SYSLOG
-         if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
+         // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
                                      elapsed_prefix, funcname, retval_info, base_msg);
-            syslog(LOG_INFO, "%s", syslog_msg);
+            syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
          }
-#endif
+         else if (options & DBGTRC_OPTIONS_SEVERE && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
+            char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
+                                     elapsed_prefix, funcname, retval_info, base_msg);
+            syslog(LOG_ERR, "%s", syslog_msg);
+            free(syslog_msg);
+         }
+
          FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                            ? thread_settings->ferr
                            : thread_settings->fout;
@@ -844,8 +846,10 @@ void program_logic_error(
    f0printf(f, "%s\n", buffer);
    fflush(f);
 
-   SYSLOG(LOG_ERR, "%s", buf2);
-   SYSLOG(LOG_ERR, "%s", buffer);
+   if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
+      SYSLOG(LOG_ERR, "%s", buf2);
+      SYSLOG(LOG_ERR, "%s", buffer);
+   }
 }
 
 

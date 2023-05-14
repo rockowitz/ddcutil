@@ -83,10 +83,8 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func(g_free);
    if (debug)
       printf("(%s) Starting.\n",__func__);
-#ifdef ENABLE_SYSLOG
    if (parsed_cmd->flags & (CMD_FLAG_TRACE_TO_SYSLOG))
       trace_to_syslog = true;
-#endif
    if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)      // timestamps on debug and trace messages?
        dbgtrc_show_time = true;                           // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)       // wall timestamps on debug and trace messages?

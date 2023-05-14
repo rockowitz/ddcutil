@@ -13,9 +13,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#ifdef ENABLE_SYSLOG
 #include <syslog.h>
-#endif
 #include <threads.h>
 
 #include "public/ddcutil_status_codes.h"

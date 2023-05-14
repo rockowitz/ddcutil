@@ -112,12 +112,6 @@ void report_build_options(int depth) {
    NOT_SET(USE_USB);
 #endif
 
-#ifdef ENABLE_SYSLOG
-   IS_SET(ENABLE_SYSLOG);
-#else
-   NOT_SET(ENABLE_SYSLOG);
-#endif
-
 #ifdef UNUSED
 #ifdef ENABLE_TRACE
    IS_SET(ENABLE_TRACE);

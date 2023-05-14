@@ -587,7 +587,6 @@ ddca_init(const char *      library_options,
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DDCA_SYSLOG_INFO;              // libddcutil default
 
-#ifdef ENABLE_SYSLOG
    if (syslog_level_arg < DDCA_SYSLOG_NEVER) {
       enable_syslog = true;
       openlog("libddcutil",       // prepended to every log message
@@ -599,7 +598,6 @@ ddca_init(const char *      library_options,
                 get_full_ddcutil_version(), ddca_libddcutil_filename());
       }
    }
-#endif
    syslog_level = syslog_level_arg;  // global in trace_control.h
 
    Error_Info * master_error = NULL;
