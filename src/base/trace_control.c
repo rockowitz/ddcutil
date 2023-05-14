@@ -30,7 +30,6 @@ _Thread_local  int  trace_callstack_call_depth = 0;
 DDCA_Syslog_Level syslog_level = DDCA_SYSLOG_NOT_SET;
 
 bool enable_syslog = true;
-bool trace_to_syslog = false;  // write trace output to the system log as well as terminal
 
 Value_Name_Title_Table syslog_level_table = {
       VNT(DDCA_SYSLOG_DEBUG,   "DEBUG"),

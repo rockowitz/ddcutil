@@ -587,7 +587,7 @@ ddca_init(const char *      library_options,
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DDCA_SYSLOG_INFO;              // libddcutil default
 
-   if (syslog_level_arg < DDCA_SYSLOG_NEVER) {
+   if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
       enable_syslog = true;
       openlog("libddcutil",       // prepended to every log message
               LOG_CONS | LOG_PID, // write to system console if error sending to system logger
