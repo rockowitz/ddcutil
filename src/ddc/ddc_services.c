@@ -185,9 +185,9 @@ void init_ddc_services() {
    init_ddc_serialize();
    init_ddc_multi_part_io();
    init_ddc_vcp();
-#ifdef BUILD_SHARED_LIB
+// #ifdef BUILD_SHARED_LIB
    init_ddc_watch_displays();
-#endif
+// #endif
 
    if (debug)
       dbgrpt_rtti_func_name_table(1);

@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -91,6 +92,7 @@
 #include "ddc/ddc_try_stats.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
+#include "ddc/ddc_watch_displays.h"
 
 #include "cmdline/cmd_parser_aux.h"    // for parse_feature_id_or_subset(), should it be elsewhere?
 #include "cmdline/cmd_parser.h"
@@ -825,6 +827,9 @@ main(int argc, char *argv[]) {
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
+      ddc_start_watch_displays(parsed_cmd->flags & CMD_FLAG_F8);
+      DBGMSG("Sleeping for 60 minutes");
+      sleep(60*60);
       main_rc = EXIT_SUCCESS;
    }
 

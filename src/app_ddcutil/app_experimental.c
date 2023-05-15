@@ -37,7 +37,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
    REPORT_FLAG_OPTION(6, "Report internal DSA stats");
    REPORT_FLAG_OPTION(7, "Unused");
-   REPORT_FLAG_OPTION(8, "Unused");
+   REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
 
    rpt_vstring(depth+1, "Utility option --i1 = %d:     Set source address byte in feature set packet", parsed_cmd->i1);
    rpt_vstring(depth+1, "Utility option --i2:          Unused");
