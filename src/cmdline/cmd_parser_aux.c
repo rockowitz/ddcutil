@@ -45,14 +45,15 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_USBENV,       "usbenvironment", 6,  0,       0,                  Option_None},
 #endif
    {CMDID_VCPINFO,      "vcpinfo",        5,  0,       MAX_GETVCP_VALUES,  Option_None},
-#ifdef WATCH_COMMAND
+// #ifdef WATCH_COMMAND
    {CMDID_READCHANGES,  "watch",          3,  0,       0,                  Option_Explicit_Display},
-#endif
+//#endif
 #ifdef USE_USB
    {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1,                  Option_None},
 #endif
    {CMDID_PROBE,        "probe",          5,  0,       0,                  Option_Explicit_Display},
    {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0,                  Option_Explicit_Display},
+   {CMDID_C1,           "c1",             2,  0,       0,                  Option_None},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 

@@ -823,6 +823,11 @@ main(int argc, char *argv[]) {
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_C1) {
+      DBGMSG("Executing temporarily defined command C1");
+      main_rc = EXIT_SUCCESS;
+   }
+
 #ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
       show_test_cases();

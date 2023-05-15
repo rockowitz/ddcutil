@@ -58,6 +58,7 @@ Value_Name_Table cmd_id_table = {
       VNT(CMDID_CHKUSBMON     ,  "chkusbmon"),
       VNT(CMDID_PROBE         ,  "probe"),
       VNT(CMDID_SAVE_SETTINGS ,  "save settings"),
+      VNT(CMDID_C1            ,  "c1"),
       VNT_END
 };
 
