@@ -191,14 +191,24 @@ GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verb
 #endif
 
 
-// Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
-// to sysfs_i2c_util.c?
-
+/** Examines a single connector, e.g. card0-HDMI-1, in a directory /sys/class/drm/cardN
+ *  to determine if it is has a monitor connected.  If so, appends the simple
+ *  connector name to the list of active connectors
+ *
+ *  @param  dirname    directory to examine, <device>/drm/cardN
+ *  @param  simple_fn  filename to examine
+ *  @param  data       GPtrArray of connected monitors
+ *  @param  depth      if >= 0, emits a report with this logical indentation depth
+ *
+ *  @remark
+ *  Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
+ * to sysfs_i2c_util.c?
+ */
 static
 void get_sysfs_drm_examine_one_connector(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
-      void *       data,
+      void *       data,        // GPtrArray collecting conn
       int          depth)
 {
    bool debug = false;
@@ -217,7 +227,10 @@ void get_sysfs_drm_examine_one_connector(
 
 
 
-
+/**Checks /sys/class/drm for connectors with active displays.
+ *
+ * @return newly allocated GPtrArray of DRM connector names, sorted
+ */
 static
 GPtrArray * get_sysfs_drm_displays() {
    bool debug = false;
@@ -243,6 +256,15 @@ GPtrArray * get_sysfs_drm_displays() {
  }
 
 
+/** Obtains a list of currently connected displays and compares it to the
+ *  previously detected list
+ *
+ *  Reports each change to the display_change_handler() in the Watch_Displays_Data struct
+ *
+ *  @param prev_displays   GPtrArray of previously detected displays
+ *  @param data  pointer to a Watch_Displays_Data struct
+ *  @return GPtrArray of currently detected monitors
+ */
 static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays=%s",
@@ -305,7 +327,7 @@ gpointer watch_displays_using_poll(gpointer data) {
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays();
+   GPtrArray * prev_displays = get_sysfs_drm_displays();  // GPtrArray of DRM connector names
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
           "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
@@ -517,7 +539,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added)
 {
-   bool debug = false;
+   bool debug = true;
    // DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
    if (removed && removed->len > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
@@ -529,6 +551,9 @@ void dummy_display_change_handler(
 }
 
 
+
+
+
 /** Starts thread that watches for addition or removal of displays
  *
  *  \retval  DDCRC_OK
@@ -537,7 +562,7 @@ void dummy_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays()
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
