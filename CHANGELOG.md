@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.5.0] 2023-nn-nn
+## [2.0.0] 2023-nn-nn
 
 ### Added
 
@@ -15,6 +15,15 @@
 
 - Option ***--trccall***. Traces the call stack starting with the specified 
   function.  
+
+- Utility optons --fl1 --fl2
+
+Displays cache 
+
+--enable-displays-cache
+
+Dynamic sleep
+
 
 ### Changed 
 
@@ -39,6 +48,8 @@ Detailed statistics are now maintained on a per-display instead of per-thread ba
 
 Miscellaneous options changes:
 
+Options not for general use, generaly a 
+
 - **environment --verbose**: Option ***--quickenv*** skips some slow tests such as 
   use of program i2cdetect.
 
@@ -51,7 +62,10 @@ Use of shared library libkmod eliminated.
 
 **libddcutil** changes
 
-The API is compatible with prior releaes.
+SONAME now libddcutil.so.5
+libddcutil.so.5.0.0
+
+NO this API is compatible with prior releaes.
 
 Library initialization has been reworked extensively to move operations 
 that can fail and other aspects that should be under control of the library user
@@ -67,10 +81,26 @@ If this function is not called by the user program, any API function that relies
 processing invokes **ddca_init()** using arguments such that it never fails, e.g. 
 the configuration file is not processed.
 
+ddca_register_display_detection_callback() 
+
+tyedef struct DDCA_Display_Detection_Report
+
+syslog handling has been generalized and in the process simplified
+
+--syslog <level>
+
+replaces 
+--enable-syslog, --disable-syslog, --trace-to-syslog
+
+eliminate .configure options --denable-syslog, --disable-syslog ; no longer necessary
+
+
+
+
 Added functions: 
 
 - **ddca_library_filename()**:  Returns the fully qualified name of the 
-  chared library.
+  shared library.
   
 The semantics of some functions have changed, reflecting
 the fact that some information is maintained on a per-display
@@ -91,6 +121,35 @@ rather than per-thread basis.
 
 - Option ***--trcapi***. Trace the call stack for a specified API function.
 
+Removed functions: 
+
+With the ability to configure libddcutil operation both by the ddcutil 
+configuration file and by passing an option string in the ddca_init() parm libopts, 
+several API functions are no longer needed and have been removed: 
+
+Max-tries options:
+  - ddca_max_max_tries()
+  - ddca_get_max_tries()
+  - ddca_set_max_tries()
+  - ddca_set_default_sleep_multiplier(), ddca_set_global_sleep_multiplier()
+  - ddca_get_default_sleep_multiplier(), ddca_set_global_sleep_multiplier()
+
+Trace options: 
+  - ddca_add_traced_function()
+  - ddca_add_traced_file()
+  - ddca_set_trace_groups()
+  - ddca_add_trace_groups()
+  - ddca_trace_group_name_to_value()
+  - ddca_set_trace_options()
+
+Most per-thread statistics are now maintained on a per-display basis.
+The following functions are no longer useful: 
+- ddca_set_thread_description()
+- ddca_append_thread_description()
+- ddca_get_thread_desription() 
+
+Remove previously deprecated functions that were replaced by more useful versions.
+
 
 ### Fixed
 
@@ -108,6 +167,12 @@ rather than per-thread basis.
 - Option ***--enable-mock-data***
 
 - Utility option ***--i1*** currently overrides x51 as packet source address
+
+API performance profiling
+
+
+Requires  libjansson
+ 
 
 
 ## [1.4.2] 2023-02-17
