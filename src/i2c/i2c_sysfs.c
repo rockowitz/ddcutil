@@ -876,9 +876,10 @@ void report_sys_drm_connectors(int depth) {
 
 
 Sys_Drm_Connector *
-find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid) {
+find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d, edid=%p", busno, (void*)edid);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d, edid=%p, connector_name=%s",
+                                        busno, (void*)edid, connector_name);
    if (!sys_drm_connectors)
      sys_drm_connectors = scan_sys_drm_connectors(-1);
    Sys_Drm_Connector * result = NULL;
@@ -898,6 +899,11 @@ find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid) {
             result = cur;
             break;
          }
+         if (connector_name && streq(connector_name, cur->connector_name)) {
+            DBGMSF(debug, "Matched by connector_name");
+            result = cur;
+            break;
+         }
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
@@ -908,7 +914,7 @@ find_sys_drm_connector_by_busno_or_edid(int busno, Byte * edid) {
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
-   Sys_Drm_Connector * result = find_sys_drm_connector_by_busno_or_edid(busno, NULL);
+   Sys_Drm_Connector * result = find_sys_drm_connector(busno, NULL, NULL);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
@@ -917,7 +923,7 @@ Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", (void*) raw_edid);
-   Sys_Drm_Connector * result = find_sys_drm_connector_by_busno_or_edid(-1, raw_edid);
+   Sys_Drm_Connector * result = find_sys_drm_connector(-1, raw_edid, NULL);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
@@ -1412,7 +1418,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(one_drm_connector);
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
-   RTTI_ADD_FUNC(find_sys_drm_connector_by_busno_or_edid);
+   RTTI_ADD_FUNC(find_sys_drm_connector);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
 
