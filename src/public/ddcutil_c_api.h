@@ -1679,6 +1679,14 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
 
+
+typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Report);
+
+DDCA_Status
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+
+
+
 #ifdef __cplusplus
 }
 #endif
