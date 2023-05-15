@@ -1134,6 +1134,18 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
 }
 
 
+DDCA_Status
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   // to implement
+   return DDCRC_OK;
+}
+
+void signal_display_detection_event(DDCA_Display_Detection_Report) {
+   // invoke callbacks
+}
+
+
+
 void init_api_displays() {
       // DBGMSG("Executing");
       RTTI_ADD_FUNC(ddca_close_display);
