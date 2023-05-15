@@ -30,7 +30,7 @@ void dummy_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added);
 
-DDCA_Status ddc_start_watch_displays();
+DDCA_Status ddc_start_watch_displays(bool use_udev_if_possible);
 DDCA_Status ddc_stop_watch_displays();
 void init_ddc_watch_displays();
 
