@@ -241,7 +241,7 @@ ddca_open_display(
 
 
 void
-signal_display_detection_event(
+api_displays_process_display_detection_event(
       DDCA_Display_Detection_Report);
 
 
