@@ -967,6 +967,11 @@ ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
 
+void
+ddc_signal_display_detection_event(DDCA_Display_Detection_Report) {
+}
+
+
 
 void
 init_ddc_displays() {

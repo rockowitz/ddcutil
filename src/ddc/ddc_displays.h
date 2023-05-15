@@ -10,6 +10,7 @@
 #define DDC_DISPLAYS_H_
 
 #include "public/ddcutil_types.h"
+#include "public/ddcutil_c_api.h"
 
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
@@ -39,6 +40,8 @@ DDCA_Status ddc_enable_usb_display_detection(bool onoff);
 bool        ddc_is_usb_display_detection_enabled();
 void        dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
 bool        ddc_is_valid_display_ref(Display_Ref * dref);
+
+void        ddc_signal_display_detection_event(DDCA_Display_Detection_Report);
 
 // Initialization
 void        init_ddc_displays();
