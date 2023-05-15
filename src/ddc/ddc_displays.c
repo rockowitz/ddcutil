@@ -65,7 +65,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-static GPtrArray * all_displays = NULL;         // all detected displays
+static GPtrArray * all_displays = NULL;         // all detected displays, array of Display_Ref *
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
 static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
@@ -967,14 +967,139 @@ ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
 
+
+GPtrArray* display_detection_callbacks = NULL;
+
 void
-ddc_signal_display_detection_event(DDCA_Display_Detection_Report) {
+ddc_emit_display_detection_event(DDCA_Display_Detection_Report report) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, operation=%d", dref_repr_t(report.dref), report.operation);
+   if (display_detection_callbacks) {
+      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
+         DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
+         func(report);
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
+         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 }
 
 
 
+bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
+
+   bool found = false;
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert(dref);
+      if (dref->io_path.io_mode == DDCA_IO_I2C) {
+         I2C_Bus_Info * businfo = dref->detail;
+         if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
+            if (streq(businfo->drm_connector_name, drm_connector)) {
+               DBGMSG("Found drm_connector %s", drm_connector);
+               dref->flags |= DREF_REMOVED;
+               i2c_free_bus_info(businfo);
+               DDCA_Display_Detection_Report report;
+               report.operation = DDCA_DISPLAY_REMOVED;
+               report.dref = dref;
+               ddc_emit_display_detection_event(report);
+               found = true;
+               break;
+            }
+         }
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
+   return found;
+}
+
+
+bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name = %s", drm_connector_name);
+
+   bool ok = false;
+   Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);
+   if (conrec) {
+      int busno = conrec->i2c_busno;
+      // TODO: ensure that there's no I2c_Bus_Info record for the bus
+
+      I2C_Bus_Info * new_businfo = i2c_new_bus_info(busno);
+      i2c_check_bus(new_businfo);
+      if (new_businfo->flags & I2C_BUS_ADDR_0X50) {
+         Display_Ref * dref = create_bus_display_ref(busno);
+         dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+         dref->pedid = new_businfo->edid;    // needed?
+         dref->mmid  = monitor_model_key_new(
+                          dref->pedid->mfg_id,
+                          dref->pedid->model_name,
+                          dref->pedid->product_code);
+
+         // drec->detail.bus_detail = businfo;
+         dref->detail = new_businfo;
+         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+         dref->flags |= DREF_DDC_IS_MONITOR;
+
+         g_ptr_array_add(all_displays, dref);
+
+         DDCA_Display_Detection_Report report = {dref, DDCA_DISPLAY_ADDED};
+         ddc_emit_display_detection_event(report);
+
+         ok = true;
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
+   return ok;
+}
+
+
+bool ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+
+   bool new_registration = true;
+   if (!display_detection_callbacks) {
+      display_detection_callbacks = g_ptr_array_new();
+   }
+   for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++) {
+      if (func == g_ptr_array_index(display_detection_callbacks, ndx)) {
+         new_registration = false;
+      }
+   }
+   if (new_registration) {
+      g_ptr_array_add(display_detection_callbacks, func);
+   }
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, new_registration, "");
+   return new_registration;
+}
+
+
+DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool found = false;
+   if (display_detection_callbacks) {
+      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++) {
+         if ( func == g_ptr_array_index(display_detection_callbacks, ndx)) {
+            g_ptr_array_remove_index(display_detection_callbacks,ndx);
+            found = true;
+         }
+      }
+   }
+   DDCA_Status ddcrc = (found) ? DDCRC_OK : DDCRC_NOT_FOUND;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
 void
 init_ddc_displays() {
+   RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
+   RTTI_ADD_FUNC(ddc_remove_display_by_drm_connector);
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_get_all_displays);
@@ -983,8 +1108,10 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
+   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
+   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
 }
 
