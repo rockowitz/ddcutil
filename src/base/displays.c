@@ -720,8 +720,8 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
  *  \param  depth logical indentation depth
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. dref=%s", dref_repr_t(dref));
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
 
    rpt_structure_loc("Display_Ref", dref, depth);
@@ -743,9 +743,10 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
 
    rpt_vstring(d1, "driver:           %s", dref->driver_name);
    rpt_vstring(d1, "actual_display:   %p", dref->actual_display);
-   rpt_vstring(d1, "actual_display_path: %s", (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
+   rpt_vstring(d1, "actual_display_path: %s",
+         (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
 
-   DBGMSF(debug, "Done");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
