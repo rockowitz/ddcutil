@@ -360,6 +360,22 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
    }
 }
 
+// called if display removed
+void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
+   bool debug = true;
+   assert(bus_info);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", bus_info->busno);
+   bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
+   if (bus_info->edid) {
+      free_parsed_edid(bus_info->edid);
+      bus_info->edid = NULL;
+   }
+   if (debug || IS_TRACING()) {
+      DBGTRC_DONE(true, TRACE_GROUP, "Final bus_info:");
+      i2c_dbgrpt_bus_info(bus_info, 2);
+   }
+}
+
 
 // satisfies GDestroyNotify()
 void i2c_gdestroy_bus_info(gpointer data) {
@@ -556,11 +572,12 @@ int i2c_detect_buses() {
    // GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
    // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
-
    if (!i2c_buses) {
-      // only returns buses with valid name (arg=false)
+
 #ifdef ENABLE_UDEV
-      Byte_Value_Array i2c_bus_bva = get_i2c_device_numbers_using_udev(false);
+      // do not include devices with ignorable name, etc.:
+      Byte_Value_Array i2c_bus_bva =
+            get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
       Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
 #endif
