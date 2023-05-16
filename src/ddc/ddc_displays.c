@@ -991,6 +991,7 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
 
    bool found = false;
+   assert(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert(dref);
