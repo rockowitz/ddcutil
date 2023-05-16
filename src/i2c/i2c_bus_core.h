@@ -31,6 +31,7 @@ extern bool i2c_force_bus;
 
 
 // Basic I2C bus operations
+void             i2c_check_bus(I2C_Bus_Info * bus_info);
 int              i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno     i2c_close_bus(int fd, Call_Options callopts);
 
