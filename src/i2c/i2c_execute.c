@@ -516,7 +516,7 @@ i2c_ioctl_reader1(
       Byte   slave_addr,
       int    bytect,
       Byte * readbuf) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 

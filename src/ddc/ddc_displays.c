@@ -994,11 +994,16 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    assert(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      DBGMSG("Checking dref %s", dref_repr_t(dref));
       assert(dref);
       if (dref->io_path.io_mode == DDCA_IO_I2C) {
          I2C_Bus_Info * businfo = dref->detail;
+         DBGMSG("Checking I2C_Bus_Info for %s", businfo->busno);
+         DBGMSG("drm_connector_found_by = %d", businfo->drm_connector_found_by);
          if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
+            DBGMSG("comparing %s", businfo->drm_connector_name);
             if (streq(businfo->drm_connector_name, drm_connector)) {
+
                DBGMSG("Found drm_connector %s", drm_connector);
                dref->flags |= DREF_REMOVED;
                i2c_free_bus_info(businfo);

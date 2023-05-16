@@ -1377,7 +1377,7 @@ char * hexstring3_t(
           uint8_t               hunk_size,  // separator string frequency
           bool                  uppercase)  // use upper case hex characters
 {
-   bool debug = true;
+   bool debug = false;
    static GPrivate  hexstring3_key = G_PRIVATE_INIT(g_free);
    static GPrivate  hexstring3_len_key = G_PRIVATE_INIT(g_free);
 
