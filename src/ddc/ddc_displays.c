@@ -999,6 +999,9 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
 
+   DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
+   i2c_dbgrpt_buses(/* report_all */ true, 2);
+
    bool found = false;
    assert(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
