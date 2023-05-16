@@ -78,6 +78,24 @@ ddca_format_any_vcp_value(
       char **                 formatted_value_loc);
 
 
+/** Returns a string containing a formatted representation of the VCP value
+ *  of a feature.  It is the responsibility of the caller to free this value.
+ *
+ *  @param[in]  ddca_dh             Display handle
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[out] formatted_value_loc Address at which to return the formatted value
+ *  @return     status code, 0 if success
+ *  @since 0.9.0
+ *  @deprecated Does not support user-supplied feature definitions
+ */
+__attribute__ ((deprecated ("Does not support user-supplied feature definitions")))
+DDCA_Status
+ddca_get_formatted_vcp_value(
+       DDCA_Display_Handle     ddca_dh,
+       DDCA_Vcp_Feature_Code   feature_code,
+       char**                  formatted_value_loc);
+
+
 void init_api_feature_access();
 
 #endif /* API_FEATURE_ACCESS_INTERNAL_H_ */

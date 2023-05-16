@@ -240,6 +240,23 @@ ddca_open_display(
       DDCA_Display_Handle * ddca_dh_loc);
 
 
+/** Gets the VCP feature name, which may vary by MCCS version and monitor model.
+ *
+ * @param[in]  feature_code  feature code
+ * @param[in]  dref          display reference
+ * @param[out] name_loc      where to return pointer to feature name (do not free)
+ * @return     status code
+ *
+ * @since 0.9.2
+ */
+__attribute__ ((deprecated ("use ddca_get_feature_metadata_by_dref()")))
+DDCA_Status
+ddca_get_feature_name_by_dref(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_Display_Ref       dref,
+      char **                name_loc);
+
+
 void init_api_displays();
 
 #endif /* API_DISPLAYS_INTERNAL_H_ */

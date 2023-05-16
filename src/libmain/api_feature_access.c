@@ -369,6 +369,7 @@ dbgrpt_any_vcp_value(
    }
 }
 
+#ifdef DEPRECATED
 // deprecated, does not support user defined features
 DDCA_Status
 ddca_get_formatted_vcp_value(
@@ -446,6 +447,7 @@ bye:
    API_EPILOG_WO_RETURN(debug, psc, "");
    return psc;
 }
+#endif
 
 
 DDCA_Status

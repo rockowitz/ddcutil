@@ -1119,21 +1119,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
 const char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
-/** Gets the VCP feature name, which may vary by MCCS version and monitor model.
- *
- * @param[in]  feature_code  feature code
- * @param[in]  dref          display reference
- * @param[out] name_loc      where to return pointer to feature name (do not free)
- * @return     status code
- *
- * @since 0.9.2
- */
-__attribute__ ((deprecated ("use ddca_get_feature_metadata_by_dref()")))
-DDCA_Status
-ddca_get_feature_name_by_dref(
-      DDCA_Vcp_Feature_Code  feature_code,
-      DDCA_Display_Ref       dref,
-      char **                name_loc);
+
 
 /** Convenience function that searches a Feature Value Table for a
  *  value and returns the corresponding name.
@@ -1515,22 +1501,6 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Vcp_Feature_Code       feature_code,
        DDCA_Any_Vcp_Value **       valrec_loc);
 
-/** Returns a string containing a formatted representation of the VCP value
- *  of a feature.  It is the responsibility of the caller to free this value.
- *
- *  @param[in]  ddca_dh             Display handle
- *  @param[in]  feature_code        VCP feature code
- *  @param[out] formatted_value_loc Address at which to return the formatted value
- *  @return     status code, 0 if success
- *  @since 0.9.0
- *  @deprecated Does not support user-supplied feature definitions
- */
-__attribute__ ((deprecated ("Does not support user-supplied feature definitions")))
-DDCA_Status
-ddca_get_formatted_vcp_value(
-       DDCA_Display_Handle     ddca_dh,
-       DDCA_Vcp_Feature_Code   feature_code,
-       char**                  formatted_value_loc);
 
 /** Returns a formatted representation of a table VCP value.
  *  It is the responsibility of the caller to free the returned string.
