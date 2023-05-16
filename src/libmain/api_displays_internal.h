@@ -240,14 +240,6 @@ ddca_open_display(
       DDCA_Display_Handle * ddca_dh_loc);
 
 
-void
-api_displays_process_display_detection_event(
-      DDCA_Display_Detection_Report);
-
-
-
 void init_api_displays();
-
-
 
 #endif /* API_DISPLAYS_INTERNAL_H_ */
