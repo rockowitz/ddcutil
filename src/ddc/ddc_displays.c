@@ -985,7 +985,16 @@ ddc_emit_display_detection_event(DDCA_Display_Detection_Report report) {
 }
 
 
-
+/** Process a display removal event.
+ *
+ *  The currently active Display_Ref for the specified DRM connector
+ *  name is located.  It is marked removed, and the associated
+ *  I2C_Bus_Info struct is reset.
+ *
+ *  @param drm_connector    connector name, e.g. card0-DP-1
+ *  @remark
+ *  Does not handle displays using USB for communication
+ */
 bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
@@ -1013,10 +1022,9 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
          if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
             DBGMSG("comparing %s", businfo->drm_connector_name);
             if (streq(businfo->drm_connector_name, drm_connector)) {
-
                DBGMSG("Found drm_connector %s", drm_connector);
                dref->flags |= DREF_REMOVED;
-               i2c_free_bus_info(businfo);
+               i2c_reset_bus_info(businfo);
                DDCA_Display_Detection_Report report;
                report.operation = DDCA_DISPLAY_REMOVED;
                report.dref = dref;
