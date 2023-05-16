@@ -43,6 +43,10 @@
 #include "base/rtti.h"
 /** \endcond */
 
+#include "src/ddc/ddc_displays.h"
+
+#include "src/ddc/ddc_watch_displays.h"
+
 
 // Experimental code
 static bool watch_displays_enabled = true;
@@ -551,7 +555,35 @@ void dummy_display_change_handler(
 }
 
 
-
+void api_display_change_handler(
+        Displays_Change_Type changes,
+        GPtrArray *          removed,
+        GPtrArray *          added)
+{
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
+   if (removed && removed->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+      if (removed) {
+         for (int ndx = 0; ndx < removed->len; ndx++) {
+             bool ok = ddc_remove_display_by_drm_connector(g_ptr_array_index(removed, ndx));
+             if (!ok)
+                DBGMSG("Display with drm connector %s not found", g_ptr_array_index(removed,ndx));
+         }
+      }
+   }
+   if (added && added->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
+      if (added) {
+         for (int ndx = 0; ndx < removed->len; ndx++) {
+             bool ok = ddc_add_display_by_drm_connector(g_ptr_array_index(added, ndx));
+             if (!ok)
+                DBGMSG("Display with drm connector %s already exists", g_ptr_array_index(added,ndx));
+         }
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
 
 
 /** Starts thread that watches for addition or removal of displays
@@ -587,7 +619,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
             terminate_watch_thread = false;
             Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
             memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-            data->display_change_handler = dummy_display_change_handler;
+            data->display_change_handler = api_display_change_handler;
             data->main_process_id = getpid();
             // data->main_thread_id = syscall(SYS_gettid);
             data->main_thread_id = get_thread_id();
@@ -659,6 +691,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(dummy_display_change_handler);
+   RTTI_ADD_FUNC(api_display_change_handler);
    RTTI_ADD_FUNC(watch_displays_using_poll);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(watch_displays_using_udev);
