@@ -539,10 +539,10 @@ bool ddc_store_displays_cache() {
    bool ok = true;
    char * json_text = ddc_serialize_displays_and_buses();
    char * fn = get_displays_cache_file_name();
-   FILE * fp = fopen(fn, "w");
+   FILE * fp = fopen_mkdir(fn, "w");
    if (!fp) {
       // TODO: properly emit error message
-      DBGMSG("Error opening file %s:%s", fn, strerror(errno));
+      SEVEREMSG("Error opening file %s:%s", fn, strerror(errno));
    }
    else {
       size_t bytes_written = fwrite(json_text, strlen(json_text), 1, fp);
