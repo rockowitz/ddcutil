@@ -993,11 +993,21 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    bool found = false;
    assert(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      // If a display is repeatedly removed and added on a particular connector,
+      // there will be multiple Display_Ref records.  All but one should already
+      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
+      // an I2C_Bus_Info struct.
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      DBGMSG("Checking dref %s", dref_repr_t(dref));
       assert(dref);
+      DBGMSG("Checking dref %s", dref_repr_t(dref));
+      dbgrpt_display_ref(dref, 2);
       if (dref->io_path.io_mode == DDCA_IO_I2C) {
+         if (dref->flags & DDCA_DISPLAY_REMOVED)  {
+            DBGMSG("DDCA_DISPLAY_REMOVED set");
+            continue;
+         }
          I2C_Bus_Info * businfo = dref->detail;
+         assert(businfo);
          DBGMSG("Checking I2C_Bus_Info for %s", businfo->busno);
          DBGMSG("drm_connector_found_by = %d", businfo->drm_connector_found_by);
          if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
