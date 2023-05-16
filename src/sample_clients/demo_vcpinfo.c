@@ -55,9 +55,9 @@ DDCA_Display_Handle * open_first_display_by_dlist() {
       printf("Opening display %s\n", dinf->model_name);
       printf("Model: %s\n", dinf->model_name);
       printf("Model: %s\n", dinf->mmid.model_name);
-      DDCA_Status rc = ddca_open_display(dref, &dh);
+      DDCA_Status rc = ddca_open_display2(dref, false, &dh);
       if (rc != 0) {
-          DDC_ERRMSG("ddca_open_display", rc);
+          DDC_ERRMSG("ddca_open_display2", rc);
       }
    }
    ddca_free_display_info_list(dlist);
