@@ -1158,7 +1158,9 @@ void init_api_displays() {
       RTTI_ADD_FUNC(ddca_get_display_info);
       RTTI_ADD_FUNC(ddca_get_display_ref);
       RTTI_ADD_FUNC(ddca_get_display_refs);
+#ifdef DEPRECATED
       RTTI_ADD_FUNC(ddca_open_display);
+#endif
       RTTI_ADD_FUNC(ddca_open_display2);
       RTTI_ADD_FUNC(ddca_open_display3);
       RTTI_ADD_FUNC(ddca_redetect_displays);
