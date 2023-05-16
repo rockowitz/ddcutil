@@ -386,6 +386,7 @@ ddca_report_display_by_dref(
 // Open and close display
 //
 
+#ifdef DEPRECATED
 DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
@@ -393,6 +394,7 @@ ddca_open_display(
 {
    return ddca_open_display2(ddca_dref, false, dh_loc);
 }
+#endif
 
 
 // unpublished extension
@@ -672,6 +674,7 @@ ddca_mmk_from_dh(
 // Display Info
 //
 
+#ifdef DEPRECATED
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
@@ -679,6 +682,7 @@ ddca_get_display_info_list(void)
    ddca_get_display_info_list2(false, &result);
    return result;
 }
+#endif
 
 
 static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
@@ -1070,6 +1074,7 @@ dbgrpt_display_info_list(
 // Miscellaneous
 //
 
+#ifdef DEPRECATED
 // deprecated
 DDCA_Status
 ddca_get_edid_by_dref(
@@ -1097,6 +1102,7 @@ ddca_get_edid_by_dref(
 bye:
    return rc;
 }
+#endif
 
 
 #ifdef UNIMPLEMENTED
@@ -1112,6 +1118,7 @@ ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
 // Reports
 //
 
+#ifdef DEPRECATED
 // deprecated, use ddca_report_displays()
 int
 ddca_report_active_displays(int depth) {
@@ -1122,6 +1129,8 @@ ddca_report_active_displays(int depth) {
    DISABLE_API_CALL_TRACING();
    return display_ct;
 }
+#endif
+
 
 int
 ddca_report_displays(bool include_invalid_displays, int depth) {
