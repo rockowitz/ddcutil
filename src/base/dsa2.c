@@ -955,9 +955,10 @@ dsa2_save_persistent_stats() {
    int result = 0;
    int results_tables_ct = 0;
    char * stats_fn = stats_cache_file_name();
-   FILE * stats_file = fopen(stats_fn, "w");
+   FILE * stats_file = fopen_mkdir(stats_fn, "w");
    if (!stats_file) {
       result = -errno;
+      SEVEREMSG("Error opening %s: %s", strerror(errno));
       goto bye;
    }
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened %s", stats_fn);
