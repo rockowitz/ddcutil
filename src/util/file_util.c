@@ -796,7 +796,8 @@ int rek_mkdir(
             printf("(%s) Creating path %s\n", __func__, path);
          if ( mkdir(path, 0777) < 0) {
             result = -errno;
-            f0printf(ferr, "Unable to create '%s', %s\n", path, strerror(errno));
+            if (ferr)
+               f0printf(ferr, "Unable to create '%s', %s\n", path, strerror(errno));
          }
       }
    }
@@ -838,7 +839,8 @@ int fopen_mkdir(
       *fp_loc = fopen(path,mode);
       if (!*fp_loc) {
          rc = -errno;
-         f0printf(ferr, "Unable to open %s with mode %s: %s\n", path, mode, strerror(errno));
+         if (ferr)
+            f0printf(ferr, "Unable to open %s with mode %s: %s\n", path, mode, strerror(errno));
       }
    }
    assert( (rc == 0 && *fp_loc) || (rc != 0 && !*fp_loc ) );
