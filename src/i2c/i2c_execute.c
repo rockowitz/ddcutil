@@ -516,7 +516,7 @@ i2c_ioctl_reader1(
       Byte   slave_addr,
       int    bytect,
       Byte * readbuf) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
@@ -585,8 +585,9 @@ i2c_ioctl_reader(
       Byte * readbuf)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
-                 fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "fd=%d, fn=%s, slave_addr=0x%02x, read_bytewise=%s, bytect=%d, readbuf=%p",
+         fd, filename_for_fd_t(fd), slave_addr, SBOOL(read_bytewise), bytect, readbuf);
    int rc = 0;
 
    if (read_bytewise) {
