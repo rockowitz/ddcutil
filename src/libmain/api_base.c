@@ -628,7 +628,7 @@ ddca_init(const char *      library_options,
             submaster_initializer(parsed_cmd);
          }
 
-         ddc_start_watch_displays(true);
+         ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
       }
       if (parsed_cmd)
          free_parsed_cmd(parsed_cmd);
