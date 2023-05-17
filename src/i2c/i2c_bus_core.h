@@ -24,6 +24,8 @@
 #include "base/parms.h"
 #include "base/status_code_mgt.h"
 
+#include "i2c/i2c_sysfs.h"
+
 /** \def I2C_SLAVE_ADDR_MAX Addresses on an I2C bus are 7 bits in size */
 #define I2C_SLAVE_ADDR_MAX 128
 
@@ -31,7 +33,8 @@ extern bool i2c_force_bus;
 
 
 // Basic I2C bus operations
-void             i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
+Sys_Drm_Connector *
+                 i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 void             i2c_check_bus(I2C_Bus_Info * bus_info);
 void             i2c_reset_bus_info(I2C_Bus_Info * bus_info);
 int              i2c_open_bus(int busno, Call_Options callopts);

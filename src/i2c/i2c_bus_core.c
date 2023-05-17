@@ -383,7 +383,7 @@ void i2c_gdestroy_bus_info(gpointer data) {
 }
 
 
-void i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
+Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
    if (drm_connector) {
@@ -398,6 +398,7 @@ void i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
      }
    }
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+   return drm_connector;
 }
 
 
@@ -479,8 +480,8 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    if (businfo->edid) {
       if (output_level == DDCA_OL_TERSE) {
          rpt_vstring(depth, "I2C bus:          /dev/"I2C"-%d", businfo->busno);
-         if (drm_connector)
-            rpt_vstring(depth, "DRM connector:    %s", drm_connector->connector_name);
+         if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND)
+            rpt_vstring(depth, "DRM connector:    %s", businfo->drm_connector_name);
          rpt_vstring(depth, "Monitor:          %s:%s:%s",
                             businfo->edid->mfg_id,
                             businfo->edid->model_name,
