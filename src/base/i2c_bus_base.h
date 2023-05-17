@@ -33,6 +33,26 @@ extern GPtrArray * i2c_buses;
 #define I2C_BUS_SYSFS_EDID         0x0100
 #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
 
+#ifdef FOR_FUTURE_SIMPLIFICATION
+Value_Name_Table i2c_bus_flags_table = {
+      VN(I2C_BUS_EXISTS),
+      VN(I2C_BUS_ACCESSIBLE),
+      VN(I2C_BUS_ADDR_0X50),
+      VN(I2C_BUS_ADDR_0X37),
+      VN(I2C_BUS_ADDR_0X30),
+      VN(I2C_BUS_EDP),
+      VN(I2C_BUS_LVDS),
+      VN(I2C_BUS_PROBED),
+      VN(I2C_BUS_VALID_NAME_CHECKED),
+      VN(I2C_BUS_HAS_VALID_NAME),
+      VN(I2C_BUS_BUSY),
+      VN(I2C_BUS_SYSFS_EDID),
+      VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
+      VN_END
+};
+#endif
+
+
 typedef enum {
    DRM_CONNECTOR_NOT_FOUND      = 0,
    DRM_CONNECTOR_FOUND_BY_BUSNO = 1,
