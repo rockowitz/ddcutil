@@ -1021,7 +1021,11 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
          I2C_Bus_Info * businfo = dref->detail;
          assert(businfo);
          DBGMSG("Checking I2C_Bus_Info for %s", businfo->busno);
-         DBGMSG("drm_connector_found_by = %d", businfo->drm_connector_found_by);
+         if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED))
+            i2c_check_businfo_connector(businfo);
+         DBGMSG("drm_connector_found_by = %s (%d)",
+               drm_connector_found_by_name(businfo->drm_connector_found_by),
+               businfo->drm_connector_found_by);
          if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
             DBGMSG("comparing %s", businfo->drm_connector_name);
             if (streq(businfo->drm_connector_name, drm_connector)) {
