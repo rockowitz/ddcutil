@@ -364,7 +364,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
 void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = true;
    assert(bus_info);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", bus_info->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
    bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
    if (bus_info->edid) {
       free_parsed_edid(bus_info->edid);
