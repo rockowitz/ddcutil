@@ -383,6 +383,24 @@ void i2c_gdestroy_bus_info(gpointer data) {
 }
 
 
+void i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
+   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
+   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
+   if (drm_connector) {
+     businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+     businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
+   }
+   else if (businfo->edid) {
+     drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
+     if (drm_connector) {
+        businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
+        businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+     }
+   }
+   businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+}
+
+
 /** Reports a single active display.
  *
  * Output is written to the current report destination.
@@ -404,23 +422,11 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth, "I2C bus:  /dev/"I2C"-%d", businfo->busno);
    // will work for amdgpu, maybe others
 
-   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
-   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
-   if (drm_connector) {
-      businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-      businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
-   }
-   else if (businfo->edid) {
-      drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
-      if (drm_connector) {
-         businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
-         businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
-      }
-   }
-   businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+   if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED))
+      i2c_check_businfo_connector(businfo);
 
    int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
-   if (drm_connector && output_level >= DDCA_OL_NORMAL)
+   if (businfo->drm_connector_name && output_level >= DDCA_OL_NORMAL)
       rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth,
                           "%-*s%s", title_width, "DRM connector:",
                           (businfo->drm_connector_name)
