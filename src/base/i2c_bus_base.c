@@ -91,16 +91,19 @@ char * interpret_i2c_bus_flags_t(uint16_t flags) {
  * @return newly allocated #I2C_Bus_Info
  */
 I2C_Bus_Info * i2c_new_bus_info(int busno) {
+   bool debug = true;
+   DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
    businfo->busno = busno;
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", businfo);
    return businfo;
 }
 
 
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
-   DBGMSF(debug, "bus_info = %p", bus_info);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p", bus_info);
    if (bus_info) {
       if (memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
          assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
@@ -114,6 +117,7 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
          free(bus_info);
       }
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -143,8 +147,11 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
  */
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    bool debug = false;
+   DBGMSF(debug, "Starting");
    assert(bus_info);
    rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
+   char * s = interpret_i2c_bus_flags(bus_info->flags);
+   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags(bus_info->flags));
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
@@ -185,7 +192,6 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
 
    DBGMSF(debug, "Done");
 }
-
 
 
 //
@@ -299,6 +305,9 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
 
 
 static void init_i2c_bus_base_func_name_table() {
+   RTTI_ADD_FUNC(i2c_dbgrpt_buses);
+   RTTI_ADD_FUNC(i2c_new_bus_info);
+   RTTI_ADD_FUNC(i2c_free_bus_info);
 }
 
 
