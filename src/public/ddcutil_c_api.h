@@ -1650,10 +1650,12 @@ ddca_set_profile_related_values(
       char *               profile_values_string);
 
 
-typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Report);
+
+
+typedef void (*DDCA_Display_Hotplug_Callback_Func)();
 
 DDCA_Status
-ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 
 
 

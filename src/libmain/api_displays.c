@@ -1142,12 +1142,26 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
    return display_ct;
 }
 
+#ifdef FUTURE
+typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Report);
+
+DDCA_Status
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    ddc_register_display_detection_callback(func);
    return DDCRC_OK;
 }
+#endif
+
+DDCA_Status
+ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   ddc_register_display_hotplug_callback(func);
+   return DDCRC_OK;
+}
+
+
 
 
 void init_api_displays() {
