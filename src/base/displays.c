@@ -27,6 +27,7 @@
 #endif
 /** \endcond */
 
+#include "base/i2c_bus_base.h"
 #include "base/per_display_data.h"
 
 #include "public/ddcutil_types.h"
@@ -723,6 +724,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
+   int d2 = depth+2;
 
    rpt_structure_loc("Display_Ref", dref, depth);
    rpt_vstring(d1, "io_path:          %s", dpath_repr_t(&(dref->io_path)));
@@ -745,6 +747,13 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
    rpt_vstring(d1, "actual_display:   %p", dref->actual_display);
    rpt_vstring(d1, "actual_display_path: %s",
          (dref->actual_display_path) ? dpath_repr_t(dref->actual_display_path) : "NULL");
+   rpt_vstring(d1, "detail:         %p", dref->detail);
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {
+      I2C_Bus_Info * businfo = dref->detail;
+      if (businfo) {
+         i2c_dbgrpt_bus_info(businfo, d2);
+      }
+   }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
