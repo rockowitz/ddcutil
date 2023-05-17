@@ -98,8 +98,6 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 }
 
 
-
-
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
    DBGMSF(debug, "bus_info = %p", bus_info);
@@ -119,6 +117,17 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
 }
 
 
+const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
+   char * result = NULL;
+   switch(found_by) {
+   case DRM_CONNECTOR_NOT_FOUND:      result = "DRM_CONNECTOR_NOT_FOUND";     break;
+   case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "DRM_CONNECTOR_FOUND_BY_BUSNO"; break;
+   case DRM_CONNECTOR_FOUND_BY_EDID:  result = "DRM_CONNECTOR_FOUND_BY_EDID";  break;
+   }
+   return result;
+}
+
+
 //
 // Bus Reports
 //
@@ -134,9 +143,8 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
  */
 void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    bool debug = false;
-   DBGMSF(debug, "bus_info=%p", bus_info);
    assert(bus_info);
-
+   rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
@@ -153,7 +161,13 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
       rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
-      rpt_vstring(depth, "drm_connector_name:      %s", bus_info->drm_connector_name);
+      rpt_vstring(depth, "Connector name checked:  %s", sbool(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
+
+      if (bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
+         rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
+            drm_connector_found_by_name(bus_info->drm_connector_found_by), bus_info->drm_connector_found_by);
+         rpt_vstring(depth, "drm_connector_name:      %s", bus_info->drm_connector_name);
+      }
       // not useful and clutters the output
       // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
       if ( bus_info->flags & I2C_BUS_ADDR_0X50) {

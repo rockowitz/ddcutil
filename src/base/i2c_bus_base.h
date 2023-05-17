@@ -39,6 +39,8 @@ typedef enum {
    DRM_CONNECTOR_FOUND_BY_EDID  = 2
 } Drm_Connector_Found_By;
 
+const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by);
+
 #define I2C_BUS_INFO_MARKER "BINF"
 /** Information about one I2C bus */
 typedef
