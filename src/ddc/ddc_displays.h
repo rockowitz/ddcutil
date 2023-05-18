@@ -30,6 +30,7 @@ GPtrArray * ddc_get_all_displays();  // returns GPtrArray of Display_Ref instanc
 GPtrArray * ddc_get_filtered_displays(bool include_invalid_displays);
 GPtrArray * ddc_get_bus_open_errors();
 int         ddc_get_display_count(bool include_invalid_displays);
+Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, bool include_invalid);
 
 // Display Detection
 void        ddc_ensure_displays_detected();
@@ -44,8 +45,13 @@ bool        ddc_is_valid_display_ref(Display_Ref * dref);
 bool        ddc_add_display_by_drm_connector(const char * drm_connector);
 bool        ddc_remove_display_by_drm_connector(const char * drm_connector);
 
+#ifdef FUTURE
 bool        ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+#endif
+bool        ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+void        ddc_emit_display_hotplug_event();
 
 // Initialization
 void        init_ddc_displays();
