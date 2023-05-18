@@ -268,4 +268,24 @@ typedef struct {
    int error;
 } Bus_Open_Error;
 
+
+// FUTURE
+typedef struct {
+   char * connector;
+   int    busno;
+   Display_Ref * dref;    // currently
+}   Connector_Busno_Dref;
+extern GPtrArray * cbd_table;
+typedef GPtrArray Connector_Busno_Dref_Table;
+
+Connector_Busno_Dref_Table * create_connector_busnfo_dref_table();
+Connector_Busno_Dref * new_cbd0(int busno);
+Connector_Busno_Dref * new_cbd(const char * connector, int busno);
+Connector_Busno_Dref * get_cbd_by_connector(const char * connector);
+Connector_Busno_Dref * get_cbd_by_busno(int busno);
+// if dref != NULL, replaces, if NULL, just erases
+void                   set_cbd_connector(Connector_Busno_Dref * cbd, Display_Ref * dref);
+void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
+
+
 #endif /* DISPLAYS_H_ */
