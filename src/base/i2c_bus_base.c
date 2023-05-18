@@ -91,7 +91,7 @@ char * interpret_i2c_bus_flags_t(uint16_t flags) {
  * @return newly allocated #I2C_Bus_Info
  */
 I2C_Bus_Info * i2c_new_bus_info(int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
    I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
    memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
