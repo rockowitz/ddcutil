@@ -283,22 +283,22 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    GPtrArray * cur_displays = get_sysfs_drm_displays();
    if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
       if ( debug || IS_TRACING() ) {
-         DBGMSG("Displays changed!");
-         DBGMSG("Previous connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", "));
-         DBGMSG("Current  connected displays: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
+         DBGMSG("Active DRM connectors changed!");
+         DBGMSG("Previous active connectors: %s", join_string_g_ptr_array_t(prev_displays, ", "));
+         DBGMSG("Current  active connectors: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
       }
 
       GPtrArray * removed = gaux_unique_string_ptr_arrays_minus(prev_displays, cur_displays);
       if (removed->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
+                "Removed DRM connectors: %s", join_string_g_ptr_array_t(removed, ", ") );
          change_type = Changed_Removed;
       }
 
       GPtrArray * added = gaux_unique_string_ptr_arrays_minus(cur_displays, prev_displays);
       if (added->len > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Added displays: %s", join_string_g_ptr_array_t(added, ", ") );
+                "Added DRM connectors: %s", join_string_g_ptr_array_t(added, ", ") );
          change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
       }
 
@@ -333,7 +333,7 @@ gpointer watch_displays_using_poll(gpointer data) {
 
    GPtrArray * prev_displays = get_sysfs_drm_displays();  // GPtrArray of DRM connector names
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-          "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
+          "Initial active DRM connectors: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (!terminate_watch_thread) {
      // else    // logically meaningless, since if() case exits, but avoids clang use after free warning
@@ -562,6 +562,7 @@ void api_display_change_handler(
 {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
+// #ifdef FUTURE
    if (removed && removed->len > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
       if (removed) {
@@ -575,13 +576,19 @@ void api_display_change_handler(
    if (added && added->len > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
       if (added) {
-         for (int ndx = 0; ndx < removed->len; ndx++) {
+         for (int ndx = 0; ndx < added->len; ndx++) {
              bool ok = ddc_add_display_by_drm_connector(g_ptr_array_index(added, ndx));
              if (!ok)
                 DBGMSG("Display with drm connector %s already exists", g_ptr_array_index(added,ndx));
          }
       }
    }
+// #endif
+
+   // simpler
+   ddc_emit_display_hotplug_event();
+
+
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
