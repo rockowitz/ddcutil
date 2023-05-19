@@ -25,13 +25,9 @@ typedef void (*Display_Change_Handler)(
                  GPtrArray *          removed,
                  GPtrArray *          added);
 
-void dummy_display_change_handler(
-        Displays_Change_Type change_type,
-        GPtrArray *          removed,
-        GPtrArray *          added);
-
 DDCA_Status ddc_start_watch_displays(bool use_udev_if_possible);
 DDCA_Status ddc_stop_watch_displays();
+
 void init_ddc_watch_displays();
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */
