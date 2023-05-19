@@ -786,7 +786,7 @@ ddca_set_continuous_vcp_value(
       DDCA_Vcp_Feature_Code feature_code,
       uint16_t              new_value)
 {
-   bool debug = true;
+   bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
@@ -911,7 +911,7 @@ ddca_set_table_vcp_value_verify(
       DDCA_Table_Vcp_Value *      table_value,
       DDCA_Table_Vcp_Value **     verified_value_loc)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "feature_code=0x%02x", feature_code);
     free_thread_error_detail();
     DDCA_Status rc = 0;
@@ -947,7 +947,7 @@ ddca_set_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Table_Vcp_Value *      table_value)
 {
-   bool debug = true;
+   bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddca_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
