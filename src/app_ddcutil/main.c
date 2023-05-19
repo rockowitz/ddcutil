@@ -714,6 +714,11 @@ main(int argc, char *argv[]) {
 
    // enable_syslog = (initial_syslog_level < DDCA_SYSLOG_NEVER);    // TO REFACTOR
 
+   bool preparse_verbose = false;
+   if (ntsa_find(argv, "--verbose") >= 0 || ntsa_find(argv, "-v") >= 0)
+      preparse_verbose = true;
+
+
    bool skip_config = (ntsa_find(argv, "--noconfig") >= 0);
    if (skip_config) {
       // DBGMSG("Skipping config file");
@@ -749,6 +754,12 @@ main(int argc, char *argv[]) {
 
       if (apply_config_rc < 0)
          goto bye;
+
+      if (preparse_verbose) {
+         if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
+            fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn, untokenized_cmd_prefix);
+         }
+      }
    }
 
    assert(new_argc == ntsa_length(new_argv));
@@ -796,10 +807,27 @@ main(int argc, char *argv[]) {
       syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
    }
 
+   if (preparse_verbose) {
+      if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
+         if (test_emit_syslog(DDCA_SYSLOG_INFO) )
+            SYSLOG(LOG_INFO,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
+      }
+   }
+
    if (!master_initializer(parsed_cmd))
       goto bye;
    if (parsed_cmd->flags&CMD_FLAG_SHOW_SETTINGS)
       report_all_options(parsed_cmd, configure_fn, untokenized_cmd_prefix, 0);
+
+#ifdef DUPLICATE
+   if (preparse_verbose) {
+      if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
+         fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn, untokenized_cmd_prefix);
+         if (test_emit_syslog(DDCA_SYSLOG_INFO) )
+            SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
+      }
+   }
+#endif
 
    // xdg_tests(); // for development
 
