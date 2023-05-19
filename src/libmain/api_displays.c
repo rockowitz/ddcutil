@@ -1142,7 +1142,7 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
    return display_ct;
 }
 
-#ifdef FUTURE
+#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
 typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Report);
 
 DDCA_Status
@@ -1157,11 +1157,13 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 
 DDCA_Status
 ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   ddc_register_display_hotplug_callback(func);
-   return DDCRC_OK;
+   return ddc_register_display_hotplug_callback(func);
 }
 
-
+DDCA_Status
+ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   return ddc_unregister_display_hotplug_callback(func);
+}
 
 
 void init_api_displays() {
