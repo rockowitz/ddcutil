@@ -1000,42 +1000,157 @@ ddc_is_usb_display_detection_enabled() {
 }
 
 
-GPtrArray* display_detection_callbacks = NULL;
+
+//
+// Generic code to register and deregister callback functions.
+// Move to data_structures.c?
+//
+
+/** Adds function to a set of registered callbacks
+ *
+ * @param  array of registered callbacks
+ * @param  function to add
+ * @retval true  success
+ * @retval false function already registered
+ */
+bool generic_register_callback(GPtrArray* registered_callbacks, void * func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+
+   if (!registered_callbacks) {
+      registered_callbacks = g_ptr_array_new();
+   }
+
+   bool new_registration = true;
+   for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
+      if (func == g_ptr_array_index(registered_callbacks, ndx)) {
+         new_registration = false;
+         break;
+      }
+   }
+   if (new_registration) {
+      g_ptr_array_add(registered_callbacks, func);
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, new_registration, "");
+   return new_registration;
+}
+
+
+/** Unregisters a callback function
+ *
+ *  @param func function to remove
+ *  @retval true  function deregistered
+ *  @retval false function not found
+ *   */
+bool generic_unregister_callback(GPtrArray* callbacks, void *func) {
+     bool debug = true;
+     DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+     bool found = false;
+     if (callbacks) {
+        for (int ndx = 0; ndx < callbacks->len; ndx++) {
+           if ( func == g_ptr_array_index(callbacks, ndx)) {
+              g_ptr_array_remove_index(callbacks,ndx);
+              found = true;
+           }
+        }
+     }
+     DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
+     return found;
+}
+
+
+//
+// Simple handling of display hotplug events
+//
+
 GPtrArray* display_hotplug_callbacks = NULL;
+
+/** Registers a display hotplug event callback
+ *
+ * The function must be of type DDCA_Display_Hotplub_Callback_Func
+ *
+ *  @param func function to register
+ *
+ *  The function must be of type DDDCA_Display_Hotplug_Callback_Func.
+ *  It is not an error if the function is already registered.
+ */
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool ok = generic_register_callback(display_hotplug_callbacks, func);
+   return (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
+}
+
+
+/** Deregisters a hotplug event callback function
+ *
+ *  @@aram function of type DDCA_Display_Hotplug_Callback_func
+ */
+/** Deregisters a hotplug event callback function
+ *
+ *  @param  function to dregister
+ *  @retval DDCRC_OK normal return
+ *  #reeval DDCRC_NOT_FOUND function not in list of registered functions
+ */
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
+   return (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
+}
+
+
+/** Invokes the registered callbacks for a display hotplug event.
+ */
+void ddc_emit_display_hotplug_event() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   if (display_hotplug_callbacks) {
+      for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
+         DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
+         func();
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
+         (display_hotplug_callbacks) ? display_hotplug_callbacks->len : 0);
+}
+
+
+#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
+
+//
+// Modify local data structures before invoking client callback functions.
+// Too many edge cases
+//
+
+
+GPtrArray* display_detection_callbacks = NULL;
+
+bool ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool result = generic_register_callback(display_detection_callbacks, func);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+bool ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func fund) {
+   // TO DO
+   return true;
+}
+
+
 
 void
 ddc_emit_display_detection_event(DDCA_Display_Detection_Report report) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, operation=%d", dref_repr_t(report.dref), report.operation);
-#ifdef FUTURE
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
          DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
          func(report);
       }
    }
-#endif
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 }
-
-void
-ddc_emit_display_hotplug_event() {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-#ifdef FUTURE
-   if (display_hotplug_callbacks) {
-      for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
-         DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func();
-      }
-   }
-#endif
-   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
-         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
-}
-
-
 
 
 /** Process a display removal event.
@@ -1154,75 +1269,16 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
 }
 
 
-bool ddc_register_callback(GPtrArray* registered_callbacks, void * func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-
-   bool new_registration = true;
-   if (!registered_callbacks) {
-      registered_callbacks = g_ptr_array_new();
-   }
-   for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
-      if (func == g_ptr_array_index(registered_callbacks, ndx)) {
-         new_registration = false;
-      }
-   }
-   if (new_registration) {
-      g_ptr_array_add(registered_callbacks, func);
-   }
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, new_registration, "");
-  return new_registration;
-}
 
 
-#ifdef FUTURE
-bool ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool result = ddc_register_callback(display_detection_callbacks, func);
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
+
 #endif
 
-bool ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool result = ddc_register_callback(display_hotplug_callbacks, func);
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-
-
-
-DDCA_Status ddc_unregister_callback(GPtrArray* callbacks, void *func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool found = false;
-   if (callbacks) {
-      for (int ndx = 0; ndx < callbacks->len; ndx++) {
-         if ( func == g_ptr_array_index(callbacks, ndx)) {
-            g_ptr_array_remove_index(callbacks,ndx);
-            found = true;
-         }
-      }
-   }
-   DDCA_Status ddcrc = (found) ? DDCRC_OK : DDCRC_NOT_FOUND;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   return ddc_unregister_callback(display_hotplug_callbacks, func);
-}
 
 
 void
 init_ddc_displays() {
-   RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
-   RTTI_ADD_FUNC(ddc_remove_display_by_drm_connector);
+
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_get_all_displays);
@@ -1231,15 +1287,19 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_is_valid_display_ref);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
-#ifdef FUTURE
-   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
-#endif
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
-
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
+
+
+#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
+   RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
+   RTTI_ADD_FUNC(ddc_remove_display_by_drm_connector);
+   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
+   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
+#endif
+
 }
 

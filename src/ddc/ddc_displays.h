@@ -42,14 +42,15 @@ bool        ddc_is_usb_display_detection_enabled();
 void        dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth);
 bool        ddc_is_valid_display_ref(Display_Ref * dref);
 
+#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
 bool        ddc_add_display_by_drm_connector(const char * drm_connector);
 bool        ddc_remove_display_by_drm_connector(const char * drm_connector);
 
-#ifdef FUTURE
 bool        ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 #endif
-bool        ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 void        ddc_emit_display_hotplug_event();
 
