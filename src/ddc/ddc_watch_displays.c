@@ -326,7 +326,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 // How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
@@ -421,7 +421,7 @@ void set_fd_blocking(int fd) {
 
 #ifdef ENABLE_UDEV
 gpointer watch_displays_using_udev(gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Watch_Displays_Data * wdd = data;
@@ -560,9 +560,10 @@ void api_display_change_handler(
         GPtrArray *          removed,
         GPtrArray *          added)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
-// #ifdef FUTURE
+
+#ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
    if (removed && removed->len > 0) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
       if (removed) {
@@ -583,7 +584,7 @@ void api_display_change_handler(
          }
       }
    }
-// #endif
+#endif
 
    // simpler
    ddc_emit_display_hotplug_event();
@@ -601,7 +602,7 @@ void api_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
