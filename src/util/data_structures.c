@@ -1428,7 +1428,7 @@ Bit_Set_256 bs256_from_string(
 {
     assert(unparsed_string);
     assert(error_msgs_loc);
-    bool debug = true;
+    bool debug = false;
     if (debug)
        printf("(bs256_from_string) unparsed_string = |%s|\n", unparsed_string );
 
