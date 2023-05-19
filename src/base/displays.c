@@ -721,7 +721,7 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
  *  \param  depth logical indentation depth
  */
 void dbgrpt_display_ref(Display_Ref * dref, int depth) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dref=%s", dref_repr_t(dref));
    int d1 = depth+1;
    int d2 = depth+2;
