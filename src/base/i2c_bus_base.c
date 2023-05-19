@@ -151,7 +151,8 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    assert(bus_info);
    rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
    char * s = interpret_i2c_bus_flags(bus_info->flags);
-   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags(bus_info->flags));
+   rpt_vstring(depth, "Flags:                   %s", s);
+   free(s);
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
