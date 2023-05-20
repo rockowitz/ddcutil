@@ -635,7 +635,6 @@ parse_command(
    gboolean deferred_sleep_flag = false;
    gboolean per_display_stats_flag = false;
    gboolean show_settings_flag = false;
-   gboolean dsa1_flag          = false;
    gboolean i2c_io_fileio_flag = false;
    gboolean i2c_io_ioctl_flag  = false;
    gboolean f1_flag            = false;
@@ -841,9 +840,8 @@ parse_command(
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa1",                    '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep algorithm 1",  NULL},
       {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"enable-dsa2",             '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"no-dsa2",                 '\0', G_OPTION_FLAG_REVERSE,
@@ -1112,7 +1110,6 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TIMEOUT_I2C_IO,    timeout_i2c_io_flag);
    SET_CMDFLAG(CMD_FLAG_REDUCE_SLEEPS,     reduce_sleeps_flag);
 #endif
-   SET_CMDFLAG(CMD_FLAG_DSA1,              dsa1_flag);
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
@@ -1165,14 +1162,6 @@ parse_command(
                     mfg_id_work,
                     modelwork,
                     snwork);
-
-   int dsa_ct = 0;
-   if (dsa1_flag)        dsa_ct++;
-   if (enable_dsa2_flag) dsa_ct++;
-   if (dsa_ct > 1) {
-      emit_parser_error(errmsgs,  __func__, "Dynamic sleep options are muturally exclusive");
-      parsing_ok = false;
-   }
 
    if (maxtrywork)
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);

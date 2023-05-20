@@ -20,7 +20,6 @@
 #include "base/core.h"
 #include "base/display_retry_data.h"    // temp circular
 #include "base/displays.h"
-#include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
 #include "base/rtti.h"
@@ -346,8 +345,6 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
    pdd->initial_adjusted_sleep_multiplier          = -1.0f;
    pdd->final_successful_adjusted_sleep_multiplier = -1.0f;
    pdd->total_sleep_time_millis = 0;
-   if (dsa1_enabled)
-      pdd->dsa1_data = new_dsa1_data(pdd);
    if (dsa2_enabled) {
       pdd->dsa2_data = dsa2_get_results_table_by_busno(pdd->dpath.path.i2c_busno, true);
    }
@@ -634,10 +631,6 @@ void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int d
    rpt_nl();
 
    if (include_dsa_internal) {
-      if (dsa1_enabled && pdd->dsa1_data) {
-         dsa1_report(pdd->dsa1_data, d1);
-         rpt_nl();
-      }
       if (dsa2_enabled) {
          dsa2_report_internal(pdd->dsa2_data, d1);  // detailed internal info
          rpt_nl();
@@ -662,10 +655,7 @@ void pdd_report_all_elapsed(bool include_dsa_internal, int depth) {
 void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
    pdd->user_sleep_multiplier = multiplier;
    pdd->user_multiplier_source = Reset;
-   if (dsa1_enabled) {
-      dsa1_reset_data(pdd->dsa1_data);
-   }
-   else if (dsa2_enabled) {
+   if (dsa2_enabled) {
      // dsa2_reset(pdd->dpath);     // TO DO
    }
 }
@@ -674,10 +664,7 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
 Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    float result = 1.0f;
 
-   if (dsa1_enabled) {
-      result = dsa1_get_adjusted_sleep_multiplier(pdd->dsa1_data);
-   }
-   else if (dsa2_enabled) {
+   if (dsa2_enabled) {
       result = dsa2_get_adjusted_sleep_multiplier(pdd->dsa2_data);
    }
    else {
@@ -689,10 +676,7 @@ Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
 
 
 void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
-   if (dsa1_enabled) {
-      dsa1_note_retryable_failure_by_pdd(pdd, remaining_tries);
-   }
-   else if (dsa2_enabled) {
+   if (dsa2_enabled) {
       dsa2_note_retryable_failure(pdd->dsa2_data, remaining_tries);
    }
    pdd_record_adjusted_sleep_multiplier_bounds(pdd, false);
@@ -700,10 +684,7 @@ void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
 
 
 void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
-   if (dsa1_enabled) {
-      dsa1_record_final_by_pdd(pdd, ddcrc, retries);
-   }
-   else if (dsa2_enabled) {
+   if (dsa2_enabled) {
       dsa2_record_final(pdd->dsa2_data, ddcrc, retries);
    }
    if (ddcrc == 0)

@@ -36,7 +36,6 @@ ddc_packets.c             \
 dynamic_features.c        \
 displays.c                \
 dsa2.c                    \
-dsa1.c                    \
 execution_stats.c         \
 feature_lists.c           \
 feature_metadata.c        \

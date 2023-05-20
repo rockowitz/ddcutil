@@ -14,7 +14,6 @@
 #include <config.h>
 
 #include <assert.h>
-#include <base/dsa1.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -574,7 +573,6 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-   // dsa1_record_ddcrw_status_code(dh, psc);
 
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 

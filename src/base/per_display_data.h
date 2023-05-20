@@ -23,7 +23,6 @@
 #include "base/stats.h"
 
 // use struct instead of #include "dsa2.h", etc. to avoid circular includes
-struct DSA1_Data;
 struct DSA0_Data;
 struct Results_Table;
 
@@ -50,7 +49,6 @@ typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
    Sleep_Multiplier       user_sleep_multiplier;           // set by user
    User_Multiplier_Source user_multiplier_source;
-   struct DSA1_Data *     dsa1_data;
    struct Results_Table * dsa2_data;
    int                    total_sleep_time_millis;
    Per_Display_Try_Stats  try_stats[4];
