@@ -649,8 +649,8 @@ parse_command(
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
-   const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
-   const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algoritm 2" : "Disable dynamic sleep algorithm 2 (default)";
+   const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm (default)" : "Enable dynamic sleep algorithm";
+   const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algorithm" : "Disable dynamic sleep algorithm (default)";
 
    gboolean enable_cc_flag = DEFAULT_ENABLE_CACHED_CAPABILITIES;
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
@@ -840,13 +840,15 @@ parse_command(
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"enable-dsa2",             '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"no-dsa2",                 '\0', G_OPTION_FLAG_REVERSE,
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"enable-dsa",              '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"no-dsa",                  '\0', G_OPTION_FLAG_REVERSE,
                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
-      {"disable-dsa2",            '\0', G_OPTION_FLAG_REVERSE,
+      {"disable-dsa",             '\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"disable-dsa2",            '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
       {"edid-read-size",
                       '\0', 0, G_OPTION_ARG_INT,         &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
