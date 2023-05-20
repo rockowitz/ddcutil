@@ -843,9 +843,9 @@ parse_command(
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
       {"dsa0",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa0_flag,"Original DSA",  NULL},
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
-      {"dsa1",                    '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dsa1",                    '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep algorithm 1",  NULL},
       {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"enable-dsa2",             '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"no-dsa2",                 '\0', G_OPTION_FLAG_REVERSE,
