@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // N. ddc_open_display() and ddc_close_display() handle case USB, but the
@@ -14,7 +14,6 @@
 #include <config.h>
 
 #include <assert.h>
-#include <base/dsa0.h>
 #include <base/dsa1.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -641,9 +640,6 @@ ddc_write_read_with_retry(
    // if (debug)
    //     dbgrpt_display_ref(dh->dref, 1);
 
-#ifdef DSA0
-   Per_Display_Data * pdd = dh->dref->pdd;
-#endif
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
    bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "retry_null_rsponse=%s", sbool(retry_null_response));
@@ -657,9 +653,6 @@ ddc_write_read_with_retry(
    // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
    int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
 
-#ifdef DSA0
-   bool sleep_multiplier_incremented = false;   // dsa0
-#endif
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "retry_null_response = %s, ddcrc_null_response_max = %d",
                                          sbool(retry_null_response), ddcrc_null_response_max);
@@ -716,13 +709,6 @@ ddc_write_read_with_retry(
                   if (retryable) {
                      if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
                         f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-#ifdef OUT
-                     if (dsa0_enabled) {
-                        dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, ddcrc_null_response_ct++);
-                        sleep_multiplier_incremented = true;
-                        // replaces: call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, ddcrc_null_response_ct);
-                     }
-#endif
                      // if (max_tries > 3)
                      //    max_tries = 3;
                   }
@@ -804,13 +790,6 @@ ddc_write_read_with_retry(
    DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
                    "%s,%s after %d error%s: %s", dh_repr(dh), s0, errct, s1, s);
    free(s);
-
-#ifdef DSA0
-   if (dsa0_enabled && sleep_multiplier_incremented) {
-      dsa0_set_sleep_multiplier_ct(pdd->dsa0_data, 1);   // in case we changed it
-      dsa0_bump_sleep_multiplier_changer_ct(pdd->dsa0_data);
-   }
-#endif
 
    Error_Info * ddc_excp = NULL;
 

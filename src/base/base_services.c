@@ -12,7 +12,6 @@
 #include "ddc_packets.h"
 #include "displays.h"
 #include "dynamic_features.h"
-#include "dsa0.h"
 #include "dsa1.h"
 #include "dsa2.h"
 #include "execution_stats.h"
@@ -34,7 +33,6 @@ void init_base_services() {
    init_core();
    init_base_dynamic_features();
    init_ddc_packets();
-   init_dsa0();
    init_dsa1();
    init_dsa2();
    init_execution_stats();

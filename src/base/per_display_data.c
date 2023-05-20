@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <assert.h>
-#include <base/dsa0.h>
 #include <glib-2.0/glib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -21,7 +20,6 @@
 #include "base/core.h"
 #include "base/display_retry_data.h"    // temp circular
 #include "base/displays.h"
-#include "base/dsa0.h"
 #include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
@@ -348,8 +346,6 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
    pdd->initial_adjusted_sleep_multiplier          = -1.0f;
    pdd->final_successful_adjusted_sleep_multiplier = -1.0f;
    pdd->total_sleep_time_millis = 0;
-   if (dsa0_enabled)
-      pdd->dsa0_data = dsa0_get_dsa0_data(pdd->dpath.path.i2c_busno);
    if (dsa1_enabled)
       pdd->dsa1_data = new_dsa1_data(pdd);
    if (dsa2_enabled) {
@@ -638,11 +634,6 @@ void pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int d
    rpt_nl();
 
    if (include_dsa_internal) {
-      if (dsa0_enabled) {
-         assert(pdd->dsa0_data);
-         report_dsa0_data(pdd->dsa0_data, d1);
-         rpt_nl();
-      }
       if (dsa1_enabled && pdd->dsa1_data) {
          dsa1_report(pdd->dsa1_data, d1);
          rpt_nl();
@@ -671,10 +662,7 @@ void pdd_report_all_elapsed(bool include_dsa_internal, int depth) {
 void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
    pdd->user_sleep_multiplier = multiplier;
    pdd->user_multiplier_source = Reset;
-   if (dsa0_enabled) {
-      dsa0_reset(pdd->dsa0_data);
-   }
-   else if (dsa1_enabled) {
+   if (dsa1_enabled) {
       dsa1_reset_data(pdd->dsa1_data);
    }
    else if (dsa2_enabled) {
@@ -686,10 +674,7 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
 Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    float result = 1.0f;
 
-   if (dsa0_enabled) {
-      result = dsa0_get_adjusted_sleep_multiplier(pdd->dsa0_data);
-   }
-   else if (dsa1_enabled) {
+   if (dsa1_enabled) {
       result = dsa1_get_adjusted_sleep_multiplier(pdd->dsa1_data);
    }
    else if (dsa2_enabled) {
@@ -704,10 +689,7 @@ Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
 
 
 void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
-   if (dsa0_enabled) {
-      dsa0_note_retryable_failure(pdd->dsa0_data, remaining_tries);
-   }
-   else if (dsa1_enabled) {
+   if (dsa1_enabled) {
       dsa1_note_retryable_failure_by_pdd(pdd, remaining_tries);
    }
    else if (dsa2_enabled) {
@@ -718,10 +700,7 @@ void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
 
 
 void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
-   if (dsa0_enabled) {
-      dsa0_record_final_by_pdd(pdd, ddcrc, retries);
-   }
-   else if (dsa1_enabled) {
+   if (dsa1_enabled) {
       dsa1_record_final_by_pdd(pdd, ddcrc, retries);
    }
    else if (dsa2_enabled) {

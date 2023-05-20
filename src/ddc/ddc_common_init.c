@@ -23,7 +23,6 @@
 
 #include "base/core.h"
 #include "base/display_retry_data.h"
-#include "base/dsa0.h"
 #include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/parms.h"
@@ -230,7 +229,6 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 
    dsa1_enabled = parsed_cmd->flags & CMD_FLAG_DSA1;
    dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
-   dsa0_enabled = parsed_cmd->flags & CMD_FLAG_DSA0;
    assert(!(dsa1_enabled && dsa2_enabled));
    if (dsa2_enabled) {
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {

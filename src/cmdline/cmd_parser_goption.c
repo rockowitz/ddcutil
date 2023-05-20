@@ -649,7 +649,6 @@ parse_command(
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
-   gboolean enable_dsa0_flag   = false;
    gboolean enable_dsa2_flag   = DEFAULT_ENABLE_DSA2;
    const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm 2 (default)" : "Enable dynamic sleep algorithm 2";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algoritm 2" : "Disable dynamic sleep algorithm 2 (default)";
@@ -842,8 +841,7 @@ parse_command(
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 //    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
 
-      {"dsa0",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa0_flag,"Original DSA",  NULL},
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
+      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, "Enable dynamic sleep adjustment",  NULL},
       {"dsa1",                    '\0', 0, G_OPTION_ARG_NONE, &dsa1_flag, "Enable dynamic sleep algorithm 1",  NULL},
       {"dsa2",                    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
@@ -1116,7 +1114,6 @@ parse_command(
 #endif
    SET_CMDFLAG(CMD_FLAG_DSA1,              dsa1_flag);
    SET_CMDFLAG(CMD_FLAG_DSA2,              enable_dsa2_flag);
-   SET_CMDFLAG(CMD_FLAG_DSA0,              enable_dsa0_flag);
    SET_CMDFLAG(CMD_FLAG_DEFER_SLEEPS,      deferred_sleep_flag);
    SET_CMDFLAG(CMD_FLAG_F1,                f1_flag);
    SET_CMDFLAG(CMD_FLAG_F2,                f2_flag);
@@ -1170,7 +1167,6 @@ parse_command(
                     snwork);
 
    int dsa_ct = 0;
-   if (enable_dsa0_flag) dsa_ct++;
    if (dsa1_flag)        dsa_ct++;
    if (enable_dsa2_flag) dsa_ct++;
    if (dsa_ct > 1) {

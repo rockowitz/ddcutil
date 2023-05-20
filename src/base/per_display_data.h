@@ -50,7 +50,6 @@ typedef struct Per_Display_Data {
    DDCA_IO_Path           dpath;
    Sleep_Multiplier       user_sleep_multiplier;           // set by user
    User_Multiplier_Source user_multiplier_source;
-   struct DSA0_Data *     dsa0_data;
    struct DSA1_Data *     dsa1_data;
    struct Results_Table * dsa2_data;
    int                    total_sleep_time_millis;

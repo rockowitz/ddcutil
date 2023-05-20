@@ -51,7 +51,6 @@
 #include "base/ddc_packets.h"
 #include "base/display_retry_data.h"
 #include "base/displays.h"
-#include "base/dsa0.h"
 #include "base/dsa1.h"
 #include "base/dsa2.h"
 #include "base/linux_errno.h"
@@ -140,7 +139,6 @@ report_performance_options(int depth)
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                 %s", sbool( is_deferred_sleep_enabled() ) );
-      rpt_vstring(d1, "Dynamic sleep algorithm 0 enabled:      %s", sbool(dsa0_enabled) );
       rpt_vstring(d1, "Dynamic sleep algorithm 1 enabled:      %s", sbool(dsa1_enabled));
       rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_enabled));
       rpt_vstring(d1, "Default sleep multiplier factor:     %7.2f", pdd_get_default_sleep_multiplier_factor() );
