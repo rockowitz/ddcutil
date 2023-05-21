@@ -294,6 +294,34 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
 }
 
 
+bool logable_msg(DDCA_Syslog_Level log_level,
+            const char * funcname,
+            const int    lineno,
+            const char * filename,
+            char *       format,
+            ...)
+{
+   bool result = true;
+   // char buffer[500];
+   va_list(args);
+   va_start(args, format);
+   char * buffer = g_strdup_printf(format, args);
+   // vsnprintf(buffer, 500, format, args);
+   f0printf(fout(), "%s\n", buffer);
+   if (test_emit_syslog(log_level)) {
+      int importance = syslog_level_to_importance(log_level);
+      syslog(importance, "%s", buffer);
+   }
+   fflush(fout());
+   va_end(args);
+   free(buffer);
+   return result;
+}
+
+
+
+
+
 /** Tells whether DDC data errors are reported.
  *  Output is written to the current **FOUT** device.
  */

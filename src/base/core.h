@@ -158,6 +158,17 @@ bool ddcmsg(
    ddcmsg(( (debug_flag) ) ? 0xff : (TRACE_GROUP), \
             __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
 
+bool logable_msg(DDCA_Syslog_Level log_level,
+            const char * funcname,
+            const int    lineno,
+            const char * filename,
+            char *       format,
+            ...);
+
+#define LOGABLE_MSG(importance, format, ...) \
+   logable_msg(importance, __func__, __LINE__, __FILE__, format, ##__VA_ARGS__)
+
+
 // Show report levels for all types
 void show_reporting();
 
