@@ -440,6 +440,8 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
       rtable->state |= RTABLE_BUS_DETECTED;
       if ( (rtable->state & RTABLE_FROM_CACHE) && !(rtable->state & RTABLE_EDID_VERIFIED)) {
          if (get_edid_checkbyte(busno) != rtable->edid_checksum_byte) {
+            LOGABLE_MSG(DDCA_SYSLOG_NOTICE,
+               "Discarding cached display information for bus /dev/i2c-%d. EDID has changed.", busno);
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "EDID verification failed");
             free_results_table(rtable);
             results_tables[busno] = NULL;
