@@ -485,7 +485,7 @@ bool parse_syslog_level(
    if (*result_loc == DDCA_SYSLOG_NOT_SET) {
       parsing_ok = false;
       emit_parser_error(errmsgs, __func__, "Invalid syslog level: %s", sval );
-      emit_parser_error(errmsgs, __func__, "Valid values are NEVER, ERROR, WARN, INFO, DEBUG");
+      emit_parser_error(errmsgs, __func__, "Valid values are NEVER, ERROR, WARN, NOTICE, INFO, VERBOSE, DEBUG");
    }
    if (debug)
       printf("(%s) Returning %s, *result_loc = %d\n",
