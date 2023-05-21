@@ -9,6 +9,7 @@
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "config.h"
 
@@ -33,7 +34,9 @@ bool enable_syslog = true;
 
 Value_Name_Title_Table syslog_level_table = {
       VNT(DDCA_SYSLOG_DEBUG,   "DEBUG"),
+      VNT(DDCA_SYSLOG_VERBOSE, "VERBOSE"),
       VNT(DDCA_SYSLOG_INFO,    "INFO"),
+      VNT(DDCA_SYSLOG_NOTICE,  "NOTICE"),
       VNT(DDCA_SYSLOG_WARNING, "WARN"),
       VNT(DDCA_SYSLOG_ERROR,   "ERROR"),
       VNT(DDCA_SYSLOG_NEVER,   "NEVER"),
@@ -70,6 +73,22 @@ bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
    bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET &&
          msg_level >= syslog_level);
    return result;
+}
+
+
+int syslog_level_to_importance(DDCA_Syslog_Level level) {
+   int importance = -1;
+   switch(level) {
+   case DDCA_SYSLOG_NEVER:   importance = -1;           break;
+   case DDCA_SYSLOG_ERROR:   importance = LOG_ERR;      break;
+   case DDCA_SYSLOG_WARNING: importance = LOG_WARNING;  break;
+   case DDCA_SYSLOG_NOTICE:  importance = LOG_NOTICE;   break;
+   case DDCA_SYSLOG_INFO:    importance = LOG_INFO;     break;
+   case DDCA_SYSLOG_VERBOSE: importance = LOG_INFO;     break;
+   case DDCA_SYSLOG_DEBUG:   importance = LOG_DEBUG;    break;
+   case DDCA_SYSLOG_NOT_SET: importance = -1;           break;
+   }
+   return importance;
 }
 
 

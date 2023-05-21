@@ -23,6 +23,7 @@ extern DDCA_Syslog_Level syslog_level;
 DDCA_Syslog_Level syslog_level_name_to_value(const char * name);
 const char * syslog_level_id_name(DDCA_Syslog_Level level);
 bool test_emit_syslog(DDCA_Syslog_Level msg_level);
+int syslog_level_to_importance(DDCA_Syslog_Level level);
 
 bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
