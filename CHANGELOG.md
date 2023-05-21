@@ -2,95 +2,55 @@
 
 ## [2.0.0] 2023-nn-nn
 
-Release 2.0.0 contains extensive changes.  Shared library ddcutil is not backwards
-compatible.  Because of the extensive changes, new facilities are first outlined.
+Release 2.0.0 contains extensive changes.  Shared library libddcutil is not backwards
+compatible.  
 
-#### Dynamic Sleep Algorithm
-
-The dynamic sleep algorithm has been completely rewritten to both dynamically increase
-the sleep-multiplier factor (as needed) and decrease the sleep multiplier factor 
-(insofar as possible).  Data is maintained across program executions in file 
-$HOME/.cache/ddcutil/stats. Use of this algorithm is currently off by default.  Option
-***-dsa***, or one of its variants such as ***--enable-dsa*** turn it on.
-If both ***--sleep-multiplier*** and ***--dsa*** are specified, existing statistics are
-discarded and the sleep algorithm restarts calculation with the specified sleep-multiplier value.
-
-- Option ***--sleep-multiplier***:  0 is now allowed as an argument. Some DisplayPort monitors
-have been observed to work with this value.  (For implementation of the dynamic
-sleep algorithm, 0 is replaced internally by .01.)
-
-#### Display Detection Caching
-
-Program startup can be slow because of the display detection process.  This information
-rarely changes.  Information about the detected system configuration is optionally 
-saved in file $HOME/.cache/ddcutil/displays.
-
-Options ***--enable-displays-cache*** and ***--disable-displays-cache*** control whether
-this feature is enabled.  The default is currently ***--disable-displays-cache***.
-
-#### System Logs
-
-Writing to the system log has been generalized and in the process simplified
-
-Option ***--syslog <level>*** controls what is written to the system log.
-Recognized levels are NEVER, ERROR, WARN, INFO, and DEBUG.  This option replaces
-***--enable-syslog***, ***--disable-syslog***, and ***--trace-to-syslog***. 
-
-
-#### Installation
-
+#### Added
+- Information about the detected system configuration is optionally saved in 
+  file $HOME/.cache/ddcutil/displays, shortening startup time. Options 
+  ***--enable-displays-cache*** and ***--disable-displays-cache*** control whether
+  this feature is enabled. 
 - Install /usr/lib/modules-load.d/ddcutil.conf. Ensures that driver i2c-dev
   is loaded.
-
-
-#### Miscellaneous Changes
-
-- Option ***--hh***. The number of command line options has become huge. Many 
-  are development related.  Options not of interest to general users are now
-  hidden.  Option ***--hh*** exposes them, and implies option ***--help***.
-
+- Options not of interest to general users are now hidden.  Option ***--hh*** 
+  exposes them, and implies option ***--help***.
 - Option ***--noconfig***. Do not process the configuration file.
-
-- **environment --verbose**: Option ***--quickenv*** skips some slow tests such as 
-  use of program i2cdetect.
-
-- **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
-   those devices use /sys
-
 - Option ***--verbose***.  If specified on the command line, the options obtained
   from the configuration file are reported.
+- Added utility options --f7, --f8, --i2, --s1, --s2, --s3, --s4, --fl1, --fl2
+  These options are for temporary use during development. The current use of 
+  the utility options is reported by option ***--settings***. 
+- Added utility command C1 for temporary use during development.
+- Added option ***--enable-mock-data*** for testing
+- Option ***--trccall***. Traces the call stack starting with the specified 
+  function.  This option applies only to functions for which tracing has been enabled.
+- API performance profiling
 
-- More robust checks during display detection to check for misuse of the DDC Null Message
-and all zero getvcp response to indicate unsupported features.
 
+#### Changed
+- The dynamic sleep algorithm has been completely rewritten to both dynamically
+  increase the sleep-multiplier factor (as needed) and decrease the sleep 
+  multiplier factor (insofar as possible).  Data is maintained across program 
+  executions in file $HOME/.cache/ddcutil/stats. Option ***-dsa***, or one of 
+  its variants such as ***--enable-dsa*** turn it on.
+- Option ***--sleep-multiplier***:  0 is now allowed as an argument. Some 
+  DisplayPort monitors have been observed to work with this value. 
+- Writing to the system log has been generalized. 
+  Option ***--syslog <level>*** controls what is written to the system log.
+  Recognized levels are NEVER, ERROR, WARN, INFO, and DEBUG.  This option 
+  replaces ***--enable-syslog***, ***--disable-syslog***, and ***--trace-to-syslog***. 
+- **environment --verbose**: Option ***--quickenv*** skips some slow tests such as 
+  use of program i2cdetect.
+- **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
+   those devices use /sys
 - Detailed statistics are now maintained on a per-display instead of per-thread basis.
   Option ***--per-display-stats*** causes the statistics reported by option ***--stats***
   to include per-display stats.
 
-
-### Development Facilities
-
-- Added utility options --f7, --f8, --i2, --s1, --s2, --s3, --s4, --fl1, --fl2
-  These options are intended to be used temporarily during development so as to not 
-  create new options for test purposes.  The current use of the utility 
-  options is reported by option ***--settings***. 
-
-- Added utility command C1 for temporary use during development.
-
-- Option ***--enable-mock-data***
-
-- Utility option ***--i1*** currently overrides x51 as packet source address
-
-- Option ***--trccall***. Traces the call stack starting with the specified 
-  function.  This option applies only to functions for which tracing has been enabled.
-
-API performance profiling
-
-
-### Fixed
-
+#### Fixed
+- More robust checks during display detection to check for misuse of the DDC Null Message
+and all zero getvcp response to indicate unsupported features.
 - Option ***--help***. Document **ELAPSED** as a recognized statistics class
-
 
 ### Shared library changes
 
@@ -180,13 +140,12 @@ Options that apply only to libddcutil (Specified in the ddcutil configuration fi
 
 - Option ***--trcapi***. Trace the call stack for a specified API function.
 
-
 #### Building ddcutil
 
-- configure option --enable-syslog/--disable-syslog have been eliminated.   Use runtime option ***-syslog NEVER***
-  to disable all writes to the system log.
-- Use of shared library libkmod eliminated.
-- Shared library libjansson is now required
+- configure options --enable-syslog/--disable-syslog have been eliminated.   
+  Use runtime option ***-syslog NEVER*** to disable all writes to the system log.
+- Use of shared library **libkmod** eliminated.
+- Shared library **libjansson** is now required
 
 
 ## [1.4.2] 2023-02-17
