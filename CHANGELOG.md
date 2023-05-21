@@ -5,17 +5,15 @@
 Release 2.0.0 contains extensive changes.  Shared library ddcutil is not backwards
 compatible.  Because of the extensive changes, new facilities are first outlined.
 
-### New Features
-
 #### Dynamic Sleep Algorithm
 
 The dynamic sleep algorithm has been completely rewritten to both dynamically increase
 the sleep-multiplier factor (as needed) and decrease the sleep multiplier factor 
 (insofar as possible).  Data is maintained across program executions in file 
-$HOME/.cache/ddcutil/stats. Use of this algorithm is currently off by default.  It is
-enabled by option ***--dsa2***. If both ***--sleep-multiplier*** and ***--dsa2***
-are specified, existing statistics are discarded and the sleep algorithm starts 
-with the specified sleep-multiplier value.
+$HOME/.cache/ddcutil/stats. Use of this algorithm is currently off by default.  Option
+***-dsa***, or one of its variants such as ***--enable-dsa*** turn it on.
+If both ***--sleep-multiplier*** and ***--dsa*** are specified, existing statistics are
+discarded and the sleep algorithm restarts calculation with the specified sleep-multiplier value.
 
 - Option ***--sleep-multiplier***:  0 is now allowed as an argument. Some DisplayPort monitors
 have been observed to work with this value.  (For implementation of the dynamic
@@ -23,19 +21,20 @@ sleep algorithm, 0 is replaced internally by .01.)
 
 #### Display Detection Caching
 
-Displays cache 
+Program startup can be slow because of the display detection process.  This information
+rarely changes.  Information about the detected system configuration is optionally 
+saved in file $HOME/.cache/ddcutil/displays.
 
---enable-displays-cache
+Options ***--enable-displays-cache*** and ***--disable-displays-cache*** control whether
+this feature is enabled.  The default is currently ***--disable-displays-cache***.
 
 #### System Logs
 
-yslog handling has been generalized and in the process simplified
+Writing to the system log has been generalized and in the process simplified
 
---syslog <level>
-
-replaces 
---enable-syslog, --disable-syslog, --trace-to-syslog
-
+Option ***--syslog <level>*** controls what is written to the system log.
+Recognized levels are NEVER, ERROR, WARN, INFO, and DEBUG.  This option replaces
+***--enable-syslog***, ***--disable-syslog***, and ***--trace-to-syslog***. 
 
 
 #### Installation
@@ -44,7 +43,7 @@ replaces
   is loaded.
 
 
-#### Miscellaneous 
+#### Miscellaneous Changes
 
 - Option ***--hh***. The number of command line options has become huge. Many 
   are development related.  Options not of interest to general users are now
@@ -58,21 +57,15 @@ replaces
 - **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
    those devices use /sys
 
--- Option ***--verbose***.  If specified on the command line, the options obtained
-   from the configuration file are reported.
+- Option ***--verbose***.  If specified on the command line, the options obtained
+  from the configuration file are reported.
 
+- More robust checks during display detection to check for misuse of the DDC Null Message
+and all zero getvcp response to indicate unsupported features.
 
-#### Development
-
-
-### Added
-
-- Option ***--trccall***. Traces the call stack starting with the specified 
-  function.  
-
-- Added utility optons --fl1 --fl2
-
-- Added utility command C1
+- Detailed statistics are now maintained on a per-display instead of per-thread basis.
+  Option ***--per-display-stats*** causes the statistics reported by option ***--stats***
+  to include per-display stats.
 
 
 ### Development Facilities
@@ -88,31 +81,10 @@ replaces
 
 - Utility option ***--i1*** currently overrides x51 as packet source address
 
+- Option ***--trccall***. Traces the call stack starting with the specified 
+  function.  This option applies only to functions for which tracing has been enabled.
+
 API performance profiling
-
-
-
-
-### Changed 
-
-
-More robust checks durning display detection to check for misuse of the DDC Null Message
-and all zero getvcp response to indicate unsupported features.
-
-Detailed statistics are now maintained on a per-display instead of per-thread basis.
-
-- Option ***--per-display-stats*** 
-
-Miscellaneous options changes:
-
-Options not for general use, generaly a 
-
-
-- --dsa2 --no-dsa2 --enable-dsa2 --disable-dsa2
-
-
-
-
 
 
 ### Fixed
@@ -123,7 +95,7 @@ Options not for general use, generaly a
 ### Shared library changes
 
 The shared library **libddcutil** is not backwardly compatible.  
-The SONAME is now libddcutil.so.5. The Released library file is libddcutil.so.5.0.0.
+The SONAME is now libddcutil.so.5. The released library file is libddcutil.so.5.0.0.
 
 Library initialization has been reworked extensively to move operations 
 that can fail and other aspects that should be under control of the library user
@@ -139,13 +111,14 @@ If this function is not called by the user program, any API function that relies
 processing invokes **ddca_init()** using arguments such that it never fails, e.g. 
 the configuration file is not processed.
 
-Added structs: 
+Added typedef 
 - struct DDCA_Display_Detection_Report
 
 Added functions: 
 - ddca_init() See above.
 - ddca_register_display_detection_callback(): Registers a function 
-  of type ... providing notification for display hotplug events.
+  of type DDCA_Display_Hotplug_Func which will be called to inform the client
+  of display hotplug events.
 - ddca_library_filename():  Returns the fully qualified name of the 
   shared library.
 
@@ -210,13 +183,10 @@ Options that apply only to libddcutil (Specified in the ddcutil configuration fi
 
 #### Building ddcutil
 
-- configure option --enable-syslog/--disable-syslog eliminated.   Use runtime option --syslog 0 
+- configure option --enable-syslog/--disable-syslog have been eliminated.   Use runtime option ***-syslog NEVER***
   to disable all writes to the system log.
-- .configure options --enable-syslog/--disable-syslog are removed
-  Writing to the system log is completely disable is if syslog level is 
-  set to NEVER.
 - Use of shared library libkmod eliminated.
-- Shared library libjansson is required
+- Shared library libjansson is now required
 
 
 ## [1.4.2] 2023-02-17
