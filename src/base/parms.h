@@ -68,7 +68,7 @@
 //
 
 /** Maximum number of i2c buses this code supports */
-#define I2C_BUS_MAX 32
+#define I2C_BUS_MAX 64
 
 /** Maximum number of values on getvcp or vcpinfo */
 #define MAX_GETVCP_VALUES    50
