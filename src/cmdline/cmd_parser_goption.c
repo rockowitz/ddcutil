@@ -637,14 +637,6 @@ parse_command(
    gboolean show_settings_flag = false;
    gboolean i2c_io_fileio_flag = false;
    gboolean i2c_io_ioctl_flag  = false;
-   gboolean f1_flag            = false;
-   gboolean f2_flag            = false;
-   gboolean f3_flag            = false;
-   gboolean f4_flag            = false;
-   gboolean f5_flag            = false;
-   gboolean f6_flag            = false;
-   gboolean f7_flag            = false;
-   gboolean f8_flag            = false;
    gboolean debug_parse_flag   = false;
    gboolean parse_only_flag    = false;
    gboolean x52_no_fifo_flag   = false;
@@ -664,7 +656,6 @@ parse_command(
    gboolean mock_data_flag     = false;
    gboolean profile_api_flag   = false;
 
-   // gboolean ignore_cc_flag = false;
    char *   mfg_id_work     = NULL;
    char *   modelwork       = NULL;
    char *   snwork          = NULL;
@@ -685,6 +676,14 @@ parse_command(
    char *   maxtrywork      = NULL;
 // char *   trace_destination = NULL;
    gint     edid_read_size_work = -1;
+   gboolean f1_flag         = false;
+   gboolean f2_flag         = false;
+   gboolean f3_flag         = false;
+   gboolean f4_flag         = false;
+   gboolean f5_flag         = false;
+   gboolean f6_flag         = false;
+   gboolean f7_flag         = false;
+   gboolean f8_flag         = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   fl1_work        = NULL;
@@ -754,7 +753,6 @@ parse_command(
       {NULL},
    };
 
-
    GOptionEntry common_options[] = {
    //  long_name short flags option-type          gpointer           description                    arg description
 
@@ -799,14 +797,13 @@ parse_command(
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
       {"enable-displays-cache",
-                                       '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
+                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
       {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
-                                                G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
+                           G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
       {"use-file-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
       {"use-ioctl-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
-
 
       {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
       {"enable-udf",'\0',0,G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
@@ -835,6 +832,9 @@ parse_command(
       {"enable-dsa",              '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"no-dsa",                  '\0', G_OPTION_FLAG_REVERSE,
                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"nodsa",                   '\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+
       {"disable-dsa",             '\0', G_OPTION_FLAG_REVERSE,
                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
       {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
