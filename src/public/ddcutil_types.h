@@ -561,16 +561,6 @@ typedef struct {
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
 
 
-typedef enum {
-   DDCA_DISPLAY_ADDED   = 0,
-   DDCA_DISPLAY_REMOVED = 1,
-} DDCA_Display_Detection_Op;
-
-typedef struct {
-   DDCA_Display_Ref dref;
-   DDCA_Display_Detection_Op operation;
-} DDCA_Display_Detection_Report;
-
 #ifdef __cplusplus
 }
 #endif
