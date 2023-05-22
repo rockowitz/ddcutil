@@ -389,7 +389,7 @@ ddca_reset_stats(void);
  *  @param[in] depth  logical indentation depth
  *
  *  @remark
- *  Prior to version 1.5.0, the second parm was named **include_per_thread_data**
+ *  Prior to version 2.0.0, the second parm was named **include_per_thread_data**
  *  and caused per-thread data to be reported.  Most of this data is now
  *  maintained on a per-display basis
  */
