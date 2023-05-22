@@ -1143,6 +1143,18 @@ ddca_report_displays(bool include_invalid_displays, int depth) {
 }
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
+
+typedef enum {
+   DDCA_DISPLAY_ADDED   = 0,
+   DDCA_DISPLAY_REMOVED = 1,
+} DDCA_Display_Detection_Op;
+
+typedef struct {
+   DDCA_Display_Ref dref;
+   DDCA_Display_Detection_Op operation;
+} DDCA_Display_Detection_Report;
+
+
 typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Report);
 
 DDCA_Status
