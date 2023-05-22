@@ -71,7 +71,7 @@ syslog_level_name_to_value(const char * name) {
  */
 bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
    bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET &&
-         msg_level >= syslog_level);
+         msg_level <= syslog_level);
    return result;
 }
 
