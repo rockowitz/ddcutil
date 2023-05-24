@@ -147,7 +147,7 @@ i2c_set_addr(int fd, int addr) {
                              (op == I2C_SLAVE) ? "I2C_SLAVE" : "I2C_SLAVE_FORCE",
                              addr);
       DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      SYSLOG(LOG_ERR, "%s", msgbuf);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msgbuf);
 
    }
    else if (result == 0 && op == I2C_SLAVE_FORCE) {
@@ -156,7 +156,7 @@ i2c_set_addr(int fd, int addr) {
             filename_for_fd_t(fd),
             addr);
       DBGTRC_NOPREFIX(debug || get_output_level() >= DDCA_OL_VERBOSE, TRACE_GROUP, "%s", msgbuf);
-      SYSLOG(LOG_INFO, "%s", msgbuf);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msgbuf);
    }
 
    assert(result <= 0);
