@@ -241,7 +241,7 @@ bool dbgtrc_returning_expression(
          dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_NONE, __func__, __LINE__, __FILE__,   \
                       "Assertion failed: \"%s\" in file %s at line %d",  \
                       #_assertion, __FILE__,  __LINE__);   \
-         SYSLOG(LOG_ERR, "Assertion failed: \"%s\" in file %s at line %d",  \
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Assertion failed: \"%s\" in file %s at line %d",  \
                          #_assertion, __FILE__,  __LINE__);   \
          /* assert(#_assertion); */ \
          /*  __assert_fail(#_assertion, __FILE__, line, __func__); */  \
