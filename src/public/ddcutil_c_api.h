@@ -163,7 +163,7 @@ ddca_rc_desc(
 // Initialization
 //
 
-/** Given an external syslog level name returns  the syslog level id.
+/** Given an external syslog level name returns the syslog level id.
  *
  *  @param  name    e.g. ERROR
  *  @return syslog level id
