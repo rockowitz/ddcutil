@@ -279,29 +279,29 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                          setvcp_value_type_name(elem->feature_value_type),
                          elem->feature_value);
       }
-      rpt_int( "edid_read_size:",   NULL, parsed_cmd->edid_read_size,                d1);
-      rpt_str ("library trace file:", NULL, parsed_cmd->trace_destination,           d1);
-      rpt_str("syslog_level:",      NULL, syslog_level_id_name(parsed_cmd->syslog_level), d1);
-      rpt_bool("i2c_io_fileio:",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
-      rpt_bool("i2c_io_ioctl:",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
+      rpt_int( "edid_read_size",   NULL, parsed_cmd->edid_read_size,                d1);
+      rpt_str ("library trace file", NULL, parsed_cmd->trace_destination,           d1);
+      rpt_str("syslog_level",      NULL, syslog_level_name(parsed_cmd->syslog_level), d1);
+      rpt_bool("i2c_io_fileio",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
+      rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
 
-      rpt_bool("i1 set:",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
+      rpt_bool("i1 set",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
       if (parsed_cmd->flags & CMD_FLAG_I1_SET) {
          rpt_int( "i1",             NULL, parsed_cmd->i1,                            d1);
          rpt_int_as_hex(
                   "i1 as hex",      NULL, parsed_cmd->i1,                            d1);
       }
-      rpt_bool("i2 set:",           NULL, parsed_cmd->flags & CMD_FLAG_I2_SET,       d1);
+      rpt_bool("i2 set",           NULL, parsed_cmd->flags & CMD_FLAG_I2_SET,       d1);
       if (parsed_cmd->flags & CMD_FLAG_I2_SET) {
          rpt_int( "i2",             NULL, parsed_cmd->i2,                            d1);
          rpt_int_as_hex(
                   "i2 as hex",      NULL, parsed_cmd->i2,                            d1);
       }
 
-      rpt_bool("fl1 set:",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
+      rpt_bool("fl1 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
       if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
          rpt_vstring(d1, "fl1                                                      : %.2f", parsed_cmd->fl1);
-      rpt_bool("fl2 set:",           NULL, parsed_cmd->flags & CMD_FLAG_FL2_SET,     d1);
+      rpt_bool("fl2 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL2_SET,     d1);
       if (parsed_cmd->flags & CMD_FLAG_FL2_SET)
          rpt_vstring(d1, "fl2                                                      : %.2f", parsed_cmd->fl2);
       rpt_bool("f1",                NULL, parsed_cmd->flags & CMD_FLAG_F1,           d1);
@@ -318,3 +318,16 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_str( "s4",                NULL, parsed_cmd->s4,                            d1);
    }
 }
+
+
+#ifdef UNUSED
+void dbgrpt_preparsed_cmd(Preparsed_Cmd * ppc, int depth) {
+   int d1 = depth+1;
+   rpt_structure_loc("Preparsed_Cmd", ppc, depth);
+   if (ppc) {
+      rpt_bool("verbose",         NULL, ppc->verbose,                        d1);
+      rpt_bool("noconfig",        NULL, ppc->noconfig,                       d1);
+      rpt_str("syslog severity",  NULL, syslog_level_name(ppc->severity), d1);
+   }
+}
+#endif
