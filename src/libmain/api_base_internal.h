@@ -38,7 +38,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 #define API_PRECOND(expr) \
    do { \
       if (!(expr)) { \
-         SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
@@ -56,7 +56,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 #define API_PRECOND_W_EPILOG(expr) \
    do { \
       if (!(expr)) { \
-         SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
                          #expr, __FILE__,  __LINE__);   \
          if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
             DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
@@ -76,7 +76,7 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 #define API_PRECOND_RVALUE(expr) \
    ( { DDCA_Status ddcrc = 0; \
        if (!(expr)) { \
-          SYSLOG(LOG_ERR, "Precondition failed: \"%s\" in file %s at line %d",  \
+          SYSLOG2(DDCA_SYSLOG_ERROR, "Precondition failed: \"%s\" in file %s at line %d",  \
                           #expr, __FILE__,  __LINE__);   \
           if (api_failure_mode & DDCA_PRECOND_STDERR) {  \
              DBGTRC_NOPREFIX(true, DDCA_TRC_ALL, "Precondition failure (%s) in function %s at line %d of file %s", \
