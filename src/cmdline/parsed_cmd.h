@@ -157,6 +157,15 @@ struct {
    float                  fl2;        // for temporary use
 } Parsed_Cmd;
 
+#ifdef UNUSED
+/** Preparsed arguments to **ddcutil** command */
+typedef struct {
+   DDCA_Syslog_Level severity;
+   bool                 verbose;
+   bool                 noconfig;
+} Preparsed_Cmd;
+#endif
+
 const char *  parser_mode_name(Parser_Mode mode);
 const char *  cmdid_name(Cmd_Id_Type id);
 const char *  setvcp_value_type_name(Setvcp_Value_Type value_type);
