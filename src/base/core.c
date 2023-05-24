@@ -309,7 +309,7 @@ bool logable_msg(DDCA_Syslog_Level log_level,
    // vsnprintf(buffer, 500, format, args);
    f0printf(fout(), "%s\n", buffer);
    if (test_emit_syslog(log_level)) {
-      int importance = syslog_level_to_importance(log_level);
+      int importance = syslog_importance_from_ddcutil_syslog_level(log_level);
       syslog(importance, "%s", buffer);
    }
    fflush(fout());
@@ -874,10 +874,8 @@ void program_logic_error(
    f0printf(f, "%s\n", buffer);
    fflush(f);
 
-   if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-      SYSLOG(LOG_ERR, "%s", buf2);
-      SYSLOG(LOG_ERR, "%s", buffer);
-   }
+   SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buf2);
+   SYSLOG2(DDCA_SYSLOG_ERROR, "%s", buffer);
 }
 
 
