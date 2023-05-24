@@ -280,8 +280,7 @@ get_parsed_libmain_config(const char * libopts_string,
    #endif
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
             fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
-            if (test_emit_syslog(DDCA_SYSLOG_INFO) )
-               SYSLOG(LOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+            SYSLOG2(DDCA_SYSLOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
       free(config_fn);
@@ -311,10 +310,10 @@ get_parsed_libmain_config(const char * libopts_string,
       ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
       if (!*parsed_cmd_loc) {
          if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-         SYSLOG(LOG_ERR, "Invalid option string: %s",  untokenized_option_string);
+            syslog(LOG_ERR, "Invalid option string: %s",  untokenized_option_string);
             for (int ndx = 0; ndx < errmsgs->len; ndx++) {
                 char * msg =  g_ptr_array_index(errmsgs,ndx);
-                SYSLOG(LOG_ERR, "%s", msg);
+                syslog(LOG_ERR, "%s", msg);
             }
          }
          result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
@@ -450,10 +449,10 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
    char * trace_file = (library_trace_file[0] != '/')
           ? xdg_state_home_file("ddcutil", library_trace_file)
           : g_strdup(library_trace_file);
-   if (debug)
+   if (debug) {
       printf("(%s) Setting trace destination %s\n", __func__, trace_file);
-   if (enable_syslog)
-      SYSLOG(LOG_INFO, "Trace destination: %s", trace_file);
+      SYSLOG2(DDCA_SYSLOG_INFO, "Trace destination: %s", trace_file);
+   }
 
    fopen_mkdir(trace_file, "a", stderr, &flog);
    if (flog) {
@@ -475,9 +474,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
    else {
       fprintf(stderr, "Error opening libddcutil trace file %s: %s\n",
                       trace_file, strerror(errno));
-      // if (enable_syslog)
-      if (test_emit_syslog(DDCA_SYSLOG_WARNING))
-         SYSLOG(LOG_WARNING, "Error opening libddcutil trace file %s: %s",
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening libddcutil trace file %s: %s",
                              trace_file, strerror(errno));
    }
    free(trace_file);
@@ -516,9 +513,10 @@ _ddca_terminate(void) {
    else {
       DBGTRC_DONE(debug, DDCA_TRC_API, "library was already terminated");   // should be impossible
    }
-   if (test_emit_syslog(DDCA_SYSLOG_INFO))
-      SYSLOG(LOG_INFO, "Terminating.");
-   if (test_emit_syslog(DDCA_SYSLOG_ERROR))
+   // special handling for termination msg
+   if (syslog_level > DDCA_SYSLOG_NEVER)
+      syslog(LOG_INFO, "Terminating.");
+   if (syslog_level > DDCA_SYSLOG_NEVER)
       closelog();
 }
 
@@ -566,14 +564,14 @@ set_ddca_error_detail_from_init_errors(
 
 
 DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name) {
-   return syslog_level_name_to_value(name);
+   return syslog_level_value(name);
 }
 
 
 DDCA_Status
-ddca_init(const char *      library_options,
+ddca_init(const char *         library_options,
           DDCA_Syslog_Level syslog_level_arg,
-          DDCA_Init_Options opts)
+          DDCA_Init_Options    opts)
 {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
@@ -592,10 +590,10 @@ ddca_init(const char *      library_options,
               LOG_CONS | LOG_PID, // write to system console if error sending to system logger
                                   // include caller's process id
               LOG_USER);          // generic user program, syslogger can use to determine how to handle
-      if (test_emit_syslog(DDCA_SYSLOG_INFO)) {
-         syslog(LOG_INFO, "Initializing.  ddcutil version: %s, shared library: %s",
+      // special handling for start and termination msgs
+      // always output if syslog is opened
+      syslog(LOG_INFO, "Initializing.  ddcutil version: %s, shared library: %s",
                 get_full_ddcutil_version(), ddca_libddcutil_filename());
-      }
    }
    syslog_level = syslog_level_arg;  // global in trace_control.h
 
@@ -639,17 +637,16 @@ ddca_init(const char *      library_options,
       DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(master_error);
       save_thread_error_detail(public_error_detail);
       if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-         SYSLOG(LOG_ERR, "Library initialization failed: %s", psc_desc(master_error->status_code));
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Library initialization failed: %s", psc_desc(master_error->status_code));
          for (int ndx = 0; ndx < master_error->cause_ct; ndx++) {
-            SYSLOG(LOG_ERR, "%s", master_error->causes[ndx]->detail);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", master_error->causes[ndx]->detail);
          }
       }
       errinfo_free(master_error);
    }
    else {
       library_initialized = true;
-      if (test_emit_syslog(DDCA_SYSLOG_INFO))
-         SYSLOG(LOG_INFO, "Library initialization complete.");
+      SYSLOG2(DDCA_SYSLOG_INFO, "Library initialization complete.");
    }
 
    if (debug)
