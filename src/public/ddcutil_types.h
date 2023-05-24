@@ -157,8 +157,12 @@ typedef enum {
 } DDCA_Trace_Group;
 
 
-// gaps in value to allow for further refinement
+//! ddcutil message severity
+//!
+//! will be mapped to syslog() severity
+//! gaps in value allow for further refinement
 typedef enum {
+   DDCA_SYSLOG_NOT_SET  =  -1,
    DDCA_SYSLOG_NEVER    =   0,
    DDCA_SYSLOG_ERROR    =   3,
    DDCA_SYSLOG_WARNING  =   6,
@@ -166,7 +170,6 @@ typedef enum {
    DDCA_SYSLOG_INFO     =  12,
    DDCA_SYSLOG_VERBOSE  =  15,
    DDCA_SYSLOG_DEBUG    =  18,
-   DDCA_SYSLOG_NOT_SET  = 255,
 } DDCA_Syslog_Level;
 
 
