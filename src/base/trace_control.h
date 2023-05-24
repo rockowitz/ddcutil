@@ -20,10 +20,10 @@ extern __thread  int  trace_callstack_call_depth;
 
 extern DDCA_Syslog_Level syslog_level;
 
-DDCA_Syslog_Level syslog_level_name_to_value(const char * name);
-const char * syslog_level_id_name(DDCA_Syslog_Level level);
+DDCA_Syslog_Level syslog_level_value(const char * name);
+const char * syslog_level_name(DDCA_Syslog_Level level);
 bool test_emit_syslog(DDCA_Syslog_Level msg_level);
-int syslog_level_to_importance(DDCA_Syslog_Level level);
+int  syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level);
 
 bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
@@ -68,7 +68,17 @@ bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char 
 
 extern bool trace_to_syslog;
 extern bool enable_syslog;
-#define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
+// #define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
 // #define SYSLOG(priority, format, ...) do {} while (0)
+#define SYSLOG2(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         syslog(syslog_priority, format, ##__VA_ARGS__); \
+      } \
+   } \
+} while(0)
+
 
 #endif /* TRACE_CONTROL_H_ */
