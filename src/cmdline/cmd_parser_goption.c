@@ -481,7 +481,7 @@ bool parse_syslog_level(
    if (debug)
       printf("(%s) sval=|%s|\n", __func__, sval);
 
-   *result_loc = syslog_level_name_to_value(sval);
+   *result_loc = syslog_level_value(sval);
    if (*result_loc == DDCA_SYSLOG_NOT_SET) {
       parsing_ok = false;
       emit_parser_error(errmsgs, __func__, "Invalid syslog level: %s", sval );
@@ -559,6 +559,91 @@ static void report_ddcutil_version() {
 }
 
 
+#ifdef UNUSED
+Preparsed_Cmd * preparse_command(
+      int         argc,
+      char *      argv[],
+      Parser_Mode parser_mode,
+      GPtrArray * errmsgs)
+{
+   bool debug = true;
+   char * s = getenv("DDCUTIL_DEBUG_PARSE");
+   if (s && strlen(s) > 0)
+      debug = true;
+   DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
+   assert(parser_mode == MODE_DDCUTIL);
+   if (debug) {
+      DBGMSG("argc=%d", argc);
+      int ndx = 0;
+      for (; ndx < argc; ndx++) {
+         DBGMSG("argv[%d] = |%s|", ndx, argv[ndx]);
+      }
+   }
+
+   Preparsed_Cmd * ppc = calloc(1, sizeof(Preparsed_Cmd));
+   ppc->severity = DDCA_SYSLOG_NOT_SET;
+   ppc->verbose = false;
+   ppc->noconfig = false;
+
+   char * syslog_work = NULL;
+   char ** ignored = NULL;
+
+   GOptionEntry preparser_options[] = {
+         {"verbose",   'v', 0, G_OPTION_ARG_NONE,         &ppc->verbose,  NULL, NULL},
+         {"noconfig", '\0', 0, G_OPTION_ARG_NONE,         &ppc->noconfig, NULL, NULL},
+
+         {"syslog",   '\0', 0, G_OPTION_ARG_STRING,       &syslog_work,   NULL, NULL},
+         {G_OPTION_REMAINING,
+                      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored,       NULL, NULL},
+         {NULL},
+   };
+
+   GOptionGroup * all_options = g_option_group_new(
+         "group name", "group description", "help description", NULL, NULL);
+   g_option_group_add_entries(all_options, preparser_options);
+
+
+   GError* error = NULL;
+   GOptionContext* context  = g_option_context_new("- Preparser");
+   g_option_context_set_main_group(context, all_options);
+   g_option_context_set_help_enabled(context, false);
+   // Pass a mangleable copy of argv to g_option_context_parse_strv().
+   Null_Terminated_String_Array temp_argv = ntsa_copy(argv, true);
+   bool parsing_ok = g_option_context_parse_strv(context, &temp_argv, &error);
+   if (ignored) {
+      ntsa_show(ignored);
+      ntsa_free(ignored, true);
+   }
+   if (!parsing_ok) {
+      char * mode_name = (parser_mode == MODE_DDCUTIL) ? "ddcutil" : "libddcutil";
+      if (error) {
+         // emit_parser_error(errmsgs,  __func__,  "%s option parsing failed: %s", mode_name, error->message);
+         emit_parser_error(errmsgs,  __func__, "%s", error->message);
+      }
+      else
+         emit_parser_error(errmsgs,  __func__,  "%s option parsing failed", mode_name);
+   }
+   ntsa_free(temp_argv, true);
+
+   if (syslog_work) {
+      DDCA_Syslog_Level level;
+      bool this_ok = parse_syslog_level(syslog_work, &level, errmsgs);
+      // printf("(%s) this_ok = %s\n", __func__, sbool(this_ok));
+      if (this_ok)
+         ppc->severity = level;
+      else
+         parsing_ok = false;
+   }
+   if (!parsing_ok) {
+      free(ppc);
+      ppc = NULL;
+   }
+
+
+   return ppc;
+}
+#endif
+
 
 /* Primary parsing function
  *
@@ -579,7 +664,7 @@ parse_command(
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_PARSE");
    if (s && strlen(s) > 0)
-      debug = false;
+      debug = true;
    DBGMSF(debug, "Starting. parser_mode = %d", parser_mode );
 #ifndef NDEBUG
    init_cmd_parser_base();   // assertions
