@@ -45,7 +45,7 @@ Value_Name_Title_Table syslog_level_table = {
 const int syslog_level_ct = (ARRAY_SIZE(syslog_level_table)-1);
 
 
-const char * syslog_level_id_name(DDCA_Syslog_Level level) {
+const char * syslog_level_name(DDCA_Syslog_Level level) {
    char * result = "DDCA_SYSLOG_NOT_SET";
    if (level != DDCA_SYSLOG_NOT_SET)
       result = vnt_name(syslog_level_table, level);
@@ -54,7 +54,7 @@ const char * syslog_level_id_name(DDCA_Syslog_Level level) {
 
 
 DDCA_Syslog_Level
-syslog_level_name_to_value(const char * name) {
+syslog_level_value(const char * name) {
    return (DDCA_Syslog_Level) vnt_find_id(syslog_level_table,
                                           name,
                                           true,      // search title field
@@ -76,19 +76,26 @@ bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
 }
 
 
-int syslog_level_to_importance(DDCA_Syslog_Level level) {
-   int importance = -1;
+/** Given a ddcutil severity level for messages written to the system log,
+ *  returns the syslog priority level to be used in a syslog() call.
+ *
+ *  @param  level ddcutil severity level
+ *  @return priority for syslog() call,
+ *          -1 for msg that should never be output
+ */
+int syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level) {
+   int priority = -1;
    switch(level) {
-   case DDCA_SYSLOG_NEVER:   importance = -1;           break;
-   case DDCA_SYSLOG_ERROR:   importance = LOG_ERR;      break;
-   case DDCA_SYSLOG_WARNING: importance = LOG_WARNING;  break;
-   case DDCA_SYSLOG_NOTICE:  importance = LOG_NOTICE;   break;
-   case DDCA_SYSLOG_INFO:    importance = LOG_INFO;     break;
-   case DDCA_SYSLOG_VERBOSE: importance = LOG_INFO;     break;
-   case DDCA_SYSLOG_DEBUG:   importance = LOG_DEBUG;    break;
-   case DDCA_SYSLOG_NOT_SET: importance = -1;           break;
+   case DDCA_SYSLOG_NOT_SET: priority = -1;           break;
+   case DDCA_SYSLOG_NEVER:   priority = -1;           break;
+   case DDCA_SYSLOG_ERROR:   priority = LOG_ERR;      break;  // 3
+   case DDCA_SYSLOG_WARNING: priority = LOG_WARNING;  break;  // 4
+   case DDCA_SYSLOG_NOTICE:  priority = LOG_NOTICE;   break;  // 5
+   case DDCA_SYSLOG_INFO:    priority = LOG_INFO;     break;  // 6
+   case DDCA_SYSLOG_VERBOSE: priority = LOG_INFO;     break;  // 6
+   case DDCA_SYSLOG_DEBUG:   priority = LOG_DEBUG;    break;  // 7
    }
-   return importance;
+   return priority;
 }
 
 
