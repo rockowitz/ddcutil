@@ -180,9 +180,8 @@ get_parsed_libmain_config(const char * libopts_string,
                           Parsed_Cmd** parsed_cmd_loc)
 {
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting. disable_config_file = %s, libopts_string = %s\n",
-               __func__, sbool(disable_config_file), libopts_string);
+   DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %sn",
+               sbool(disable_config_file), libopts_string);
 
    Error_Info * result = NULL;
    *parsed_cmd_loc = NULL;
@@ -191,10 +190,9 @@ get_parsed_libmain_config(const char * libopts_string,
    int libopts_token_ct = 0;
    if (libopts_string) {
       libopts_token_ct = tokenize_options_line(libopts_string, &libopts_tokens);
-      if (debug) {
-         printf("(%s) libopts_token_ct = %d, libopts_tokens:\n", __func__, libopts_token_ct);
+      DBGF(debug, "libopts_token_ct = %d, libopts_tokens:", libopts_token_ct);
+      if (debug)
          rpt_ntsa(libopts_tokens, 3);
-      }
    }
    Null_Terminated_String_Array cmd_name_array = calloc(2 + libopts_token_ct, sizeof(char*));
    cmd_name_array[0] = "libddcutil";   // so libddcutil not a special case for parser
@@ -203,25 +201,22 @@ get_parsed_libmain_config(const char * libopts_string,
       cmd_name_array[ndx+1] = libopts_tokens[ndx];
    cmd_name_array[ndx+1] = NULL;
 
-   if (debug)
-      printf("(%s) cmd_name_array=%p, cmd_name_array[1]=%p -> %s\n",
-                __func__, cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
+   DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s",
+                cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
 
    char ** new_argv = NULL;
    int     new_argc = 0;
    char *  untokenized_option_string = NULL;
    GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
    if (disable_config_file) {
-      if (debug)
-         printf("(%s) config file disabled\n", __func__);
+      DBGF(debug, "config file disabled");
       new_argv = cmd_name_array;
       new_argc = ntsa_length(cmd_name_array);
       untokenized_option_string = strdup(libopts_string);
    }
    else {
       char *  config_fn = NULL;
-      if (debug)
-         printf("(%s) Calling apply_config_file()...\n", __func__);
+      DBGF(debug, "Calling apply_config_file()...");
       int apply_config_rc = apply_config_file(
                                     "libddcutil",  // use this section of config file
                                     1, cmd_name_array,
@@ -234,9 +229,8 @@ get_parsed_libmain_config(const char * libopts_string,
       ASSERT_IFF(apply_config_rc == 0, errmsgs->len == 0);
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
       ntsa_free(cmd_name_array, false);
-      if (debug)
-         printf("(%s) apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:\n",
-                    __func__, apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
+      DBGF(debug, "apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:",
+                  apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
 
       if (apply_config_rc == -EBADMSG) {
          result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
@@ -302,11 +296,10 @@ get_parsed_libmain_config(const char * libopts_string,
            ntsa_show(new_argv);
         }
       }
-      if (debug)
-         printf("(%s) Calling parse_command(), errmsgs=%p\n", __func__, errmsgs);
+      DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
       if (debug)
-         printf("(%s) *parsed_cmd_loc=%p, errmsgs->len=%d\n", __func__, *parsed_cmd_loc, errmsgs->len);
+      DBGF(debug, "*parsed_cmd_loc=%p, errmsgs->len=%d", *parsed_cmd_loc, errmsgs->len);
       ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
       if (!*parsed_cmd_loc) {
          if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
@@ -337,9 +330,8 @@ get_parsed_libmain_config(const char * libopts_string,
    if (libopts_tokens)
       ntsa_free(libopts_tokens, false);
 
-   if (debug)
-      printf("(%s) Done.     *parsed_cmd_loc=%p. Returning %s\n",
-              __func__, *parsed_cmd_loc, errinfo_summary(result));
+   DBGF(debug, "Done.     *parsed_cmd_loc=%p. Returning %s",
+              *parsed_cmd_loc, errinfo_summary(result));
 
    ASSERT_IFF(*parsed_cmd_loc, !result);
    return result;
@@ -387,8 +379,7 @@ _ddca_new_init(void) {
    if (s && strlen(s) > 0)
       debug = true;
 
-   if (debug)
-      printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
+   DBGF(debug, "Starting. library_initialized=%s\n", sbool(library_initialized));
 
    init_api_base();
    init_base_services();    // initializes tracing related modules
@@ -400,8 +391,7 @@ _ddca_new_init(void) {
    // printf("(%s) atexit() returned %d\n", __func__, atexit_rc);
 #endif
 
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+   DBGF(debug, "Done.");
 }
 
 
@@ -443,16 +433,12 @@ void profile_report(FILE * dest, bool by_thread) {
 
 void
 init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debug) {
-   if (debug)
-      printf("(%s) library_trace_file = \"%s\", enable_syslog = %s\n", __func__, library_trace_file, sbool(enable_syslog));
-
+   DBGF(debug, "library_trace_file = \"%s\", enable_syslog = %s", library_trace_file, sbool(enable_syslog));
    char * trace_file = (library_trace_file[0] != '/')
           ? xdg_state_home_file("ddcutil", library_trace_file)
           : g_strdup(library_trace_file);
-   if (debug) {
-      printf("(%s) Setting trace destination %s\n", __func__, trace_file);
-      SYSLOG2(DDCA_SYSLOG_INFO, "Trace destination: %s", trace_file);
-   }
+   DBGF(debug, "Setting trace destination %s", trace_file);
+   SYSLOG2(DDCA_SYSLOG_INFO, "Trace destination: %s", trace_file);
 
    fopen_mkdir(trace_file, "a", stderr, &flog);
    if (flog) {
@@ -461,9 +447,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
       if (trace_start_time_s[strlen(trace_start_time_s)-1] == 0x0a)
            trace_start_time_s[strlen(trace_start_time_s)-1] = 0;
       fprintf(flog, "%s tracing started %s\n", "libddcutil", trace_start_time_s);
-      if (debug) {
-         fprintf(stdout, "Writing %s trace output to %s\n", "libddcutil",trace_file);
-      }
+      DBGF(debug, "Writing %s trace output to %s", "libddcutil",trace_file);
       set_default_thread_output_settings(flog, flog);
       set_fout(flog);
       set_ferr(flog);
@@ -478,8 +462,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
                              trace_file, strerror(errno));
    }
    free(trace_file);
-   if (debug)
-      printf("(%s) Done.\n", __func__);
+   DBGF(debug, "Done.");
 }
 
 
@@ -578,8 +561,7 @@ ddca_init(const char *         library_options,
    if (s && strlen(s) > 0)
       debug = true;
 
-   if (debug)
-      printf("(%s) Starting. library_initialized=%s\n", __func__, sbool(library_initialized));
+   DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DDCA_SYSLOG_INFO;              // libddcutil default
@@ -649,8 +631,7 @@ ddca_init(const char *         library_options,
       SYSLOG2(DDCA_SYSLOG_INFO, "Library initialization complete.");
    }
 
-   if (debug)
-      printf("(%s) Done.    Returning: %s\n", __func__, psc_desc(ddcrc));
+   DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
 
    return ddcrc;
 }
