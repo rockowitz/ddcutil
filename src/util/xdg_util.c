@@ -494,7 +494,6 @@ void xdg_tests() {
 
    printf( "xdg_data_path():       %s\n", xdg_data_path() );
    printf( "xdg_config_path():     %s\n", xdg_config_path() );
-   printf( "xdg_cache_path():      %s\n", xdg_cache_path() );
 
    printf( "xdg_data_home_file(\"ddcutil\", \"something.mccs\"): %s",
          xdg_data_home_file("ddcutil", "something.mccs"));
