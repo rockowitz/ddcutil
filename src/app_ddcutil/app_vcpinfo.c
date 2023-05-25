@@ -17,6 +17,7 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
+#include "base/rtti.h"
 #include "base/vcp_version.h"
 
 #include "vcp/vcp_feature_set.h"
@@ -399,4 +400,8 @@ app_vcpinfo(Parsed_Cmd * parsed_cmd)
 
    DBGTRC_RET_BOOL(debug, DDCA_TRC_VCP|DDCA_TRC_TOP, vcpinfo_ok, "");
    return vcpinfo_ok;
+}
+
+void init_app_vcpinfo() {
+   RTTI_ADD_FUNC(app_vcpinfo);
 }
