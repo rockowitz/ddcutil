@@ -954,6 +954,8 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
 bool
 ddc_displays_already_detected()
 {
+   bool debug = false;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "Returning %s", SBOOL(all_displays));
    return all_displays;
 }
 
@@ -998,7 +1000,6 @@ bool
 ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
-
 
 
 //
@@ -1275,12 +1276,11 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
 #endif
 
 
-
 void
 init_ddc_displays() {
-
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
+   RTTI_ADD_FUNC(ddc_displays_already_detected);
    RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
@@ -1293,13 +1293,11 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
 
-
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
    RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
    RTTI_ADD_FUNC(ddc_remove_display_by_drm_connector);
    RTTI_ADD_FUNC(ddc_register_display_detection_callback);
    RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
 #endif
-
 }
 
