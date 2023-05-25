@@ -31,8 +31,7 @@
  *  @param  flags   version specific feature flags
  *  @param  buf     pointer to buffer
  *  @param  buflen  buffer size
- *
- * Returns:   buf
+ *  @return buf
  */
 static char *
 vcp_interpret_version_feature_flags(
@@ -153,17 +152,15 @@ valid_versions(
 }
 
 
-/* Given a byte of flags indicating MCCS versions, return a string containing a
- * comma delimited list of MCCS version names.
+/** Given a byte of flags indicating MCCS versions, return a string containing a
+ *  comma delimited list of MCCS version names.
  *
- * Arguments:
- *   valid_version_flags
- *   version_name_buf      buffer in which to return string
- *   bufsz                 buffer size
+ *  @param  valid_version_flags
+ *  @param  version_name_buf      buffer in which to return string
+ *  @param  bufsz                 buffer size
+ *  @return version_name_buf
  *
- * Returns:                version_name_buf
- *
- * Note: MCCS 1.0 is not reported
+ *  Note: MCCS 1.0 is not reported
  */
 static char *
 valid_version_names_r(
