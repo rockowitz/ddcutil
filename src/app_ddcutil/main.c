@@ -651,6 +651,32 @@ execute_cmd_with_optional_display_handle(
 }
 
 
+DDCA_Syslog_Level preparse_syslog_level(int argc, char** argv) {
+   bool debug = false;
+   DDCA_Syslog_Level result = DDCA_SYSLOG_NOT_SET;
+   char * syslog_arg = NULL;
+   int syslog_pos = ntsa_find(argv, "--syslog");
+   if (syslog_pos >= 0 && syslog_pos < (argc-1))
+      syslog_arg = argv[syslog_pos+1];
+   else {
+      syslog_pos = ntsa_findx(argv, "--syslog=", str_starts_with);
+      syslog_arg = argv[syslog_pos] + strlen("--syslog");
+   }
+   if (syslog_arg) {
+      DBGMSF(debug, "Parsing initial log level: |%s|", syslog_arg);
+      GPtrArray *sink = g_ptr_array_new();
+      g_ptr_array_set_free_func(sink, g_free);
+      DDCA_Syslog_Level parsed_level;
+      bool ok_level = parse_syslog_level(syslog_arg, &parsed_level, sink);
+      g_ptr_array_free(sink, true);
+      if (ok_level)
+         result = parsed_level;
+   }
+   DBGMSF(debug, "Returning: %s", syslog_level_name(result));
+   return result;
+}
+
+
 //
 // Mainline
 //
@@ -673,12 +699,18 @@ main(int argc, char *argv[]) {
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
 
+   bool explicit_syslog_level = false;
+   syslog_level = DDCA_SYSLOG_INFO;  // ddcutil default
+   bool syslog_opened = false;
+   bool preparse_verbose = false;
+   bool skip_config = false;
+   Parsed_Cmd * parsed_cmd = NULL;
+
    time_t program_start_time = time(NULL);
    char * program_start_time_s = asctime(localtime(&program_start_time));
    if (program_start_time_s[strlen(program_start_time_s)-1] == 0x0a)
         program_start_time_s[strlen(program_start_time_s)-1] = 0;
 
-   Parsed_Cmd * parsed_cmd = NULL;
    add_local_rtti_functions();      // add entries for this file
    init_base_services();            // so tracing related modules are initialized
    init_ddc_services();             // initializes i2c, usb, ddc, vcp, dynvcp
@@ -695,27 +727,18 @@ main(int argc, char *argv[]) {
    char *  untokenized_cmd_prefix = NULL;
    char *  configure_fn = NULL;
 
-   syslog_level = DDCA_SYSLOG_NEVER;  // ddcutil default
-   int syslog_pos = ntsa_find(argv, "--syslog");
-   if (syslog_pos >= 0 && syslog_pos < (argc-1)) {
-      // printf("(%s) Parsing initial log level\n", __func__);
-      GPtrArray *sink = g_ptr_array_new();
-      g_ptr_array_set_free_func(sink, g_free);
-      DDCA_Syslog_Level parsed_level;
-      bool ok_level = parse_syslog_level(argv[syslog_pos+1], &parsed_level, sink);
-      g_ptr_array_free(sink, true);
-      if (ok_level)
-         syslog_level = parsed_level;
+   DDCA_Syslog_Level preparsed_level = preparse_syslog_level(argc, argv);
+   if (preparsed_level != DDCA_SYSLOG_NOT_SET) {
+      DBGMSF(main_debug, "Setting syslog_level = %s", syslog_level_name(preparsed_level));
+      syslog_level = preparsed_level;
+      explicit_syslog_level = true;
    }
+   DBGMSF(main_debug, "syslog_level=%s, explicit_syslog_level=%s", syslog_level_name(syslog_level),  sbool(explicit_syslog_level));
 
-   // enable_syslog = (initial_syslog_level < DDCA_SYSLOG_NEVER);    // TO REFACTOR
-
-   bool preparse_verbose = false;
    if (ntsa_find(argv, "--verbose") >= 0 || ntsa_find(argv, "-v") >= 0)
       preparse_verbose = true;
 
-
-   bool skip_config = (ntsa_find(argv, "--noconfig") >= 0);
+   skip_config = (ntsa_find(argv, "--noconfig") >= 0);
    if (skip_config) {
       // DBGMSG("Skipping config file");
       new_argv = ntsa_copy(argv, true);
@@ -738,14 +761,28 @@ main(int argc, char *argv[]) {
                untokenized_cmd_prefix);
 #endif
       DBGMSF(main_debug, "apply_config_file() returned %s", psc_desc(apply_config_rc));
+      DBGMSF(main_debug, "syslog_level=%d, explicit_syslog_level=%d", syslog_level, explicit_syslog_level);
       if (config_file_errs->len > 0) {
+         if (syslog_level > DDCA_SYSLOG_NEVER) {
+            openlog("ddcutil",          // prepended to every log message
+                     LOG_CONS |          // write to system console if error sending to system logger
+                     LOG_PID,            // include caller's process id
+                     LOG_USER);          // generic user program, syslogger can use to determine how to handle
+            syslog_opened = true;
+            DBGMSF(main_debug, "openlog() executed");
+         }
          f0printf(ferr(), "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
+         if (syslog_opened)
+            syslog(LOG_ERR, "Error(s) reading ddcutil configuration from file %s:\n", configure_fn);
          for (int ndx = 0; ndx < config_file_errs->len; ndx++) {
             char * s = g_strdup_printf("   %s\n", (char *) g_ptr_array_index(config_file_errs, ndx));
             f0printf(ferr(), s);
+            if (syslog_opened)
+               syslog(LOG_ERR, "%s", s);
             free(s);
          }
       }
+
       g_ptr_array_free(config_file_errs, true);
 
       if (apply_config_rc < 0)
@@ -754,6 +791,8 @@ main(int argc, char *argv[]) {
       if (preparse_verbose) {
          if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
             fprintf(fout(), "Applying ddcutil options from %s: %s\n", configure_fn, untokenized_cmd_prefix);
+            if (syslog_opened)
+               syslog(LOG_INFO, "Applying ddcutil options from %s: %s\n", configure_fn, untokenized_cmd_prefix);
          }
       }
    }
@@ -772,41 +811,55 @@ main(int argc, char *argv[]) {
    if (!parsed_cmd)
       goto bye;      // main_rc == EXIT_FAILURE
 
+   assert(parsed_cmd);
+
    Error_Info * errs = init_tracing(parsed_cmd);
    if (errs) {
       for (int ndx = 0; ndx < errs->cause_ct; ndx++) {
          Error_Info * cur = errs->causes[ndx];
          fprintf(stderr, "%s\n", cur->detail);
+         if (syslog_opened)
+            syslog(LOG_ERR, "%s\n", cur->detail);
       }
       goto bye;
+   }
+   if (preparse_verbose)
+      parsed_cmd->output_level = DDCA_OL_VERBOSE;
+
+   if (explicit_syslog_level)
+      parsed_cmd->syslog_level = explicit_syslog_level;
+
+   if (parsed_cmd->syslog_level > DDCA_SYSLOG_NEVER && !syslog_opened) {
+      if (parsed_cmd->syslog_level > DDCA_SYSLOG_NEVER ) {   // global
+         openlog("ddcutil",          // prepended to every log message
+                 LOG_CONS |          // write to system console if error sending to system logger
+                 LOG_PID,            // include caller's process id
+                 LOG_USER);          // generic user program, syslogger can use to determine how to handle
+         syslog_opened = true;
+         DBGMSF(main_debug, "openlog() executed");
+      }
+   }
+   else if (parsed_cmd->syslog_level == DDCA_SYSLOG_NEVER && syslog_opened) {
+      // oops
+      closelog();
+      syslog_opened = false;
    }
 
    // tracing is sufficiently initialized, can report start time
    start_time_reported = parsed_cmd->traced_groups    ||
-#ifdef MEANINGLESS_FOR_CMDLINE_PROGRAM
-                         parsed_cmd->traced_api_calls ||
-#endif
                          parsed_cmd->traced_files     ||
                          IS_TRACING()                 ||
                          main_debug;
-   if (main_debug)
-      printf("(%s) start_time_reported = %s\n", __func__, SBOOL(start_time_reported));
+   DBGMSF(main_debug, "start_time_reported = %s", SBOOL(start_time_reported));
    DBGMSF(start_time_reported, "Starting %s execution, %s",
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
-   DBGMSF(main_debug, "syslog_level = %s", syslog_level_id_name(syslog_level));
-   if (syslog_level < DDCA_SYSLOG_NEVER ) {   // global
-      openlog("ddcutil",          // prepended to every log message
-              LOG_CONS |          // write to system console if error sending to system logger
-              LOG_PID,            // include caller's process id
-              LOG_USER);          // generic user program, syslogger can use to determine how to handle
-      syslog(LOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
-   }
+
+   SYSLOG2(DDCA_SYSLOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
 
    if (preparse_verbose) {
       if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
-         if (test_emit_syslog(DDCA_SYSLOG_INFO) )
-            SYSLOG(LOG_INFO,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
+         SYSLOG2(DDCA_SYSLOG_INFO,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
 
@@ -1007,8 +1060,9 @@ bye:
    free(s);
 #endif
 
-   if (test_emit_syslog(DDCA_SYSLOG_INFO)) {
-      syslog(LOG_INFO, "Terminating. Returning %d", main_rc);
+   // if (test_emit_syslog(DDCA_SYSLOG_INFO)) {
+   if (syslog_opened) {
+      SYSLOG2(DDCA_SYSLOG_INFO, "Terminating. Returning %d", main_rc);
       closelog();
    }
    return main_rc;
