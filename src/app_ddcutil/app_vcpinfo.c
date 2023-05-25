@@ -3,7 +3,7 @@
  *  Implement VCPINFO and (deprecated) LISTVCP commands
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -17,6 +17,7 @@
 #include "util/report_util.h"
 
 #include "base/core.h"
+#include "base/vcp_version.h"
 
 #include "vcp/vcp_feature_set.h"
 #include "vcp/vcp_feature_codes.h"
@@ -123,30 +124,30 @@ valid_versions(
    Byte result = 0x00;
 
    if (pentry->v20_flags)
-      result |= DDCA_MCCS_V20;
+      result |= MCCS_SPEC_V20;
    if (pentry->v21_flags) {
       if ( !(pentry->v21_flags & DDCA_DEPRECATED) )
-         result |= DDCA_MCCS_V21;
+         result |= MCCS_SPEC_V21;
    }
    else {
-      if (result & DDCA_MCCS_V20)
-         result |= DDCA_MCCS_V21;
+      if (result & MCCS_SPEC_V20)
+         result |= MCCS_SPEC_V21;
    }
    if (pentry->v30_flags) {
       if ( !(pentry->v30_flags & DDCA_DEPRECATED) )
-         result |= DDCA_MCCS_V30;
+         result |= MCCS_SPEC_V30;
    }
    else {
-      if (result & DDCA_MCCS_V21)
-         result |= DDCA_MCCS_V30;
+      if (result & MCCS_SPEC_V21)
+         result |= MCCS_SPEC_V30;
    }
    if (pentry->v22_flags) {
       if ( !(pentry->v22_flags & DDCA_DEPRECATED) )
-         result |= DDCA_MCCS_V22;
+         result |= MCCS_SPEC_V22;
    }
    else {
-      if (result & DDCA_MCCS_V21)
-         result |= DDCA_MCCS_V22;
+      if (result & MCCS_SPEC_V21)
+         result |= MCCS_SPEC_V22;
    }
    return result;
 }
@@ -173,19 +174,19 @@ valid_version_names_r(
    assert(bufsz >= (4*5));        // max 4 version names, 5 chars/name
    *version_name_buf = '\0';
 
-   if (valid_version_flags & DDCA_MCCS_V20)
+   if (valid_version_flags & MCCS_SPEC_V20)
       strcpy(version_name_buf, "2.0");
-   if (valid_version_flags & DDCA_MCCS_V21) {
+   if (valid_version_flags & MCCS_SPEC_V21) {
       if (strlen(version_name_buf) > 0)
          strcat(version_name_buf, ", ");
       strcat(version_name_buf, "2.1");
    }
-   if (valid_version_flags & DDCA_MCCS_V30) {
+   if (valid_version_flags & MCCS_SPEC_V30) {
       if (strlen(version_name_buf) > 0)
          strcat(version_name_buf, ", ");
       strcat(version_name_buf, "3.0");
    }
-   if (valid_version_flags & DDCA_MCCS_V22) {
+   if (valid_version_flags & MCCS_SPEC_V22) {
       if (strlen(version_name_buf) > 0)
          strcat(version_name_buf, ", ");
       strcat(version_name_buf, "2.2");

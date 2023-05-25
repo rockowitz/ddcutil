@@ -33,16 +33,16 @@
 
 /** MCCS (VCP) Feature Version IDs */
 typedef enum {
-   DDCA_MCCS_VNONE =   0,     /**< As response, version unknown */
-   DDCA_MCCS_V10   =   1,     /**< MCCS v1.0 */
-   DDCA_MCCS_V20   =   2,     /**< MCCS v2.0 */
-   DDCA_MCCS_V21   =   4,     /**< MCCS v2.1 */
-   DDCA_MCCS_V30   =   8,     /**< MCCS v3.0 */
-   DDCA_MCCS_V22   =  16,     /**< MCCS v2.2 */
-   DDCA_MCCS_VANY  = 255      /**< On queries, match any VCP version */
-} DDCA_MCCS_Version_Id;
+   MCCS_SPEC_VNONE =   0,     /**< As response, version unknown */
+   MCCS_SPEC_V10   =   1,     /**< MCCS v1.0 */
+   MCCS_SPEC_V20   =   2,     /**< MCCS v2.0 */
+   MCCS_SPEC_V21   =   4,     /**< MCCS v2.1 */
+   MCCS_SPEC_V30   =   8,     /**< MCCS v3.0 */
+   MCCS_SPEC_V22   =  16,     /**< MCCS v2.2 */
+   MCCS_SPEC_VANY  = 255      /**< On queries, match any VCP version */
+} MCCS_SPEC_Version_Id;
 
-#define DDCA_MCCS_VUNK  DDCA_MCCS_VNONE    /**< For use on responses, indicates version unknown   */
+#define MCCS_SPEC_VUNK MCCS_SPEC_VNONE    /**< For use on responses, indicates version unknown   */
 ///@}
 
 bool vcp_version_le(DDCA_MCCS_Version_Spec val, DDCA_MCCS_Version_Spec max);
@@ -57,11 +57,11 @@ char * format_vspec_verbose(DDCA_MCCS_Version_Spec vspec);
 DDCA_MCCS_Version_Spec parse_vspec(char * s);
 
 #ifdef MCCS_VERSION_ID
-char * format_vcp_version_id(DDCA_MCCS_Version_Id version_id);
-char * vcp_version_id_name(DDCA_MCCS_Version_Id version_id);
+char * format_vcp_version_id(MCCS_SPEC_Version_Id version_id);
+char * vcp_version_id_name(MCCS_SPEC_Version_Id version_id);
 
-DDCA_MCCS_Version_Spec mccs_version_id_to_spec(DDCA_MCCS_Version_Id id);
-DDCA_MCCS_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec);
+DDCA_MCCS_Version_Spec mccs_version_id_to_spec(MCCS_SPEC_Version_Id id);
+MCCS_SPEC_Version_Id mccs_version_spec_to_id(DDCA_MCCS_Version_Spec vspec);
 #endif
 
 #endif /* VCP_VERSION_H_ */
