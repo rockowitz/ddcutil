@@ -84,7 +84,9 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
                            bool             include_dsa_internal,
                            int depth)
 {
-   // DBGMSG("show_per_thread_stats: %s, include_dsa_internal: %s", sbool(show_per_display_stats), sbool(include_dsa_internal));
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDC, "stats: 0x%02x, show_per_thread_stats: %s, include_dsa_internal: %s",
+         stats, sbool(show_per_display_stats), sbool(include_dsa_internal));
    rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
@@ -150,6 +152,8 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
       ptd_profile_report_all_threads(0);
       ptd_profile_report_stats_summary(0);
    }
+
+   DBGTRC_DONE(debug, DDCA_TRC_DDC, "");
 }
 
 
@@ -187,6 +191,8 @@ void init_ddc_services() {
 // #ifdef BUILD_SHARED_LIB
    init_ddc_watch_displays();
 // #endif
+
+   RTTI_ADD_FUNC(ddc_report_stats_main);
 
    if (debug)
       dbgrpt_rtti_func_name_table(1);
