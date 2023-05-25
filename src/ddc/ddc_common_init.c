@@ -151,7 +151,7 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
    // dbgrpt_traced_function_table(2);
    if (errinfo_accumulator->len > 0)
       result = errinfo_new_with_causes_gptr(-EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
-   g_ptr_array_free(errinfo_accumulator, true);
+   g_ptr_array_free(errinfo_accumulator, false);
    return result;
 }
 
