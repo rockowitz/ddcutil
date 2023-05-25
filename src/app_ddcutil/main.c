@@ -1005,8 +1005,10 @@ main(int argc, char *argv[]) {
             free_display_ref(dref);
       }
    }
+   DBGTRC(main_debug, DDCA_TRC_TOP, "After command processing");
 
    if (parsed_cmd->stats_types != DDCA_STATS_NONE
+         && ddc_displays_already_detected()
 #ifdef ENABLE_ENVCMDS
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
@@ -1019,6 +1021,7 @@ main(int argc, char *argv[]) {
    }
 
 bye:
+   DBGTRC(main_debug, DDCA_TRC_TOP, "at label bye");
    free(untokenized_cmd_prefix);
    if (parsed_cmd)
       free_parsed_cmd(parsed_cmd);
