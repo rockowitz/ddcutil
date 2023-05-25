@@ -17,6 +17,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/string_util.h"
 #include "util/report_util.h"
@@ -476,10 +477,11 @@ bool parse_syslog_level(
       DDCA_Syslog_Level * result_loc,
       GPtrArray *         errmsgs)
 {
+   assert(sval);
+   assert(result_loc);
    bool debug = false;
    bool parsing_ok = true;
-   if (debug)
-      printf("(%s) sval=|%s|\n", __func__, sval);
+   DBGF(debug, "sval=|%s|", sval);
 
    *result_loc = syslog_level_value(sval);
    if (*result_loc == DDCA_SYSLOG_NOT_SET) {
@@ -753,7 +755,8 @@ parse_command(
    gchar**  trace_calls     = NULL;
    gchar**  trace_api_calls = NULL;
    gchar**  trace_filenames = NULL;
-   DDCA_Syslog_Level syslog_level = (parser_mode == MODE_DDCUTIL) ? DDCA_SYSLOG_NEVER : DDCA_SYSLOG_INFO;
+   DDCA_Syslog_Level syslog_level = (parser_mode == MODE_DDCUTIL) ? DEFAULT_DDCUTIL_SYSLOG_LEVEL
+                                                                  : DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;
    char *   syslog_work     = NULL;
    gint     buswork         = -1;
    gint     hidwork         = -1;
