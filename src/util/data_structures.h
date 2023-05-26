@@ -232,6 +232,14 @@ void bs256_appender(void * data_struct, Byte val);
 // Store a value in either a Byte_Value_Array or a Byte_Bit_Flag
 bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender appender);
 
+//
+// Callback registration
+//
+
+bool generic_register_callback(GPtrArray* registered_callbacks, void * func);
+bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func);
+
+
 
 #ifdef __cplusplus
 }    // extern "C"

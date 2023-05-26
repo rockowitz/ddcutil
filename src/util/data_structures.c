@@ -14,6 +14,7 @@
 #include <sys/param.h>     // for MIN, MAX
 /** \endcond */
 
+#include "debug_util.h"
 #include "report_util.h"
 #include "string_util.h"
 
@@ -1647,4 +1648,61 @@ bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
    return store_bytehex_list(start, len, pbitset, bs256_appender);
 }
 
+
+//
+// Generic code to register and deregister callback functions.
+//
+
+/** Adds function to a set of registered callbacks
+ *
+ * @param  array of registered callbacks
+ * @param  function to add
+ * @retval true  success
+ * @retval false function already registered
+ */
+bool generic_register_callback(GPtrArray* registered_callbacks, void * func) {
+   bool debug = false;
+   DBGF(debug, "Starting. registered_callbacks=%p, func=%p", registered_callbacks, func);
+
+   if (!registered_callbacks) {
+      registered_callbacks = g_ptr_array_new();
+   }
+
+   bool new_registration = true;
+   for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
+      if (func == g_ptr_array_index(registered_callbacks, ndx)) {
+         new_registration = false;
+         break;
+      }
+   }
+   if (new_registration) {
+      g_ptr_array_add(registered_callbacks, func);
+   }
+
+   DBGF(debug, "Done.     Returning %s", SBOOL(new_registration));
+   return new_registration;
+}
+
+
+/** Unregisters a callback function
+ *
+ *  @param func function to remove
+ *  @retval true  function deregistered
+ *  @retval false function not found
+ *   */
+bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func) {
+     bool debug = false;
+     DBGF(debug, "Starting. registered_callbacks=%p, func=%p", registered_callbacks, func);
+     bool found = false;
+     if (registered_callbacks) {
+        for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
+           if ( func == g_ptr_array_index(registered_callbacks, ndx)) {
+              g_ptr_array_remove_index(registered_callbacks,ndx);
+              found = true;
+           }
+        }
+     }
+     DBGF(debug, "Done.     Returning: %s", SBOOL(found));
+     return found;
+}
 

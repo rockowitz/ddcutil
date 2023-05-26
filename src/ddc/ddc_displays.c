@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include "util/data_structures.h"
 #include "util/debug_util.h"
 #include "util/edid.h"
 #include "util/error_info.h"
@@ -999,65 +1000,6 @@ ddc_enable_usb_display_detection(bool onoff) {
 bool
 ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
-}
-
-
-//
-// Generic code to register and deregister callback functions.
-// Move to data_structures.c?
-//
-
-/** Adds function to a set of registered callbacks
- *
- * @param  array of registered callbacks
- * @param  function to add
- * @retval true  success
- * @retval false function already registered
- */
-bool generic_register_callback(GPtrArray* registered_callbacks, void * func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-
-   if (!registered_callbacks) {
-      registered_callbacks = g_ptr_array_new();
-   }
-
-   bool new_registration = true;
-   for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
-      if (func == g_ptr_array_index(registered_callbacks, ndx)) {
-         new_registration = false;
-         break;
-      }
-   }
-   if (new_registration) {
-      g_ptr_array_add(registered_callbacks, func);
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, new_registration, "");
-   return new_registration;
-}
-
-
-/** Unregisters a callback function
- *
- *  @param func function to remove
- *  @retval true  function deregistered
- *  @retval false function not found
- *   */
-bool generic_unregister_callback(GPtrArray* callbacks, void *func) {
-     bool debug = true;
-     DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-     bool found = false;
-     if (callbacks) {
-        for (int ndx = 0; ndx < callbacks->len; ndx++) {
-           if ( func == g_ptr_array_index(callbacks, ndx)) {
-              g_ptr_array_remove_index(callbacks,ndx);
-              found = true;
-           }
-        }
-     }
-     DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
-     return found;
 }
 
 
