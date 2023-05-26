@@ -3,7 +3,7 @@
  *  Functions to get EDID for USB connected monitors
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -29,6 +29,8 @@
 #include "util/x11_util.h"         // for EDID fallback
 #endif
 
+#include "public/ddcutil_types.h"
+
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 
@@ -36,6 +38,7 @@
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 
 #include "i2c/i2c_bus_core.h"     // for EDID fallback
 #include "i2c/i2c_bus_selector.h" // for EDID fallback
@@ -46,19 +49,11 @@
 
 
 // Trace class for this file
-
-// Doesn't work
-// Avoid unused variable warning if all debug code turned off
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wunused-variable"
-// static Trace_Group TRACE_GROUP = TRC_USB;
-// #pragma GCC diagnostic pop
-
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 
-void usb_edid_unused_function_to_avoid_unused_variable_warning() {
-   printf("0x%02x\n",TRACE_GROUP);
-}
+// void usb_edid_unused_function_to_avoid_unused_variable_warning() {
+//    printf("0x%02x\n",TRACE_GROUP);
+// }
 
 // struct model_sn_pair
 
@@ -95,8 +90,10 @@ void report_model_sn_pair(struct model_sn_pair * p, int depth) {
  * Returns:    pointer to a newly allocated struct hid_field_locator
  */
 
-struct hid_field_locator * find_eizo_model_sn_report(int fd) {
+struct hid_field_locator *
+find_eizo_model_sn_report(int fd) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    struct hid_field_locator * loc = NULL;
    struct hiddev_devinfo dev_info;
 
@@ -109,11 +106,10 @@ struct hid_field_locator * find_eizo_model_sn_report(int fd) {
    }
 
 bye:
-   if (debug) {
-      DBGMSG("Returning: %p", (void*)loc);
-      // if (loc)
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", (void*)loc);
+      // if (loc ) {
       //    report_hid_field_locator(loc,2);
-   }
+      // }
    return loc;
 }
 
@@ -151,9 +147,10 @@ bye:
  *
  * Returns:  model and serial number strings
  */
-struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
+struct model_sn_pair *
+get_eizo_model_sn_by_report(int fd) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    struct model_sn_pair* result = NULL;
    Buffer * modelsn  = NULL;
    Buffer * modelsn2 = NULL;
@@ -193,14 +190,14 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
    if (loc)
       free_hid_field_locator(loc);
 
-   if (debug) {
-      if (result) {
-         DBGMSG("Returning: %p -> mode=|%s|, sn=|%s|",
-                (void*) result, result->model, result->sn);
-         // report_model_sn_pair(result, 1);
-      }
-      else
-         DBGMSG("Returning: %p", (void*) result);
+    if (result) {
+       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> mode=|%s|, sn=|%s|",
+                  (void*) result, result->model, result->sn);
+       // if (debug || IS_TRACING())
+       //    report_model_sn_pair(result, 1);
+    }
+      else {
+         DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", (void*) result);
    }
    return result;
 }
@@ -219,9 +216,10 @@ struct model_sn_pair *  get_eizo_model_sn_by_report(int fd) {
  *
  * Returns:   parsed EDID if found
  */
-Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
+Parsed_Edid *
+get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  model_name=|%s|, sn_ascii=|%s|", model_name, sn_ascii);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "model_name=|%s|, sn_ascii=|%s|", model_name, sn_ascii);
    Parsed_Edid * parsed_edid = NULL;
 
    GPtrArray* edid_recs = get_x11_edids();
@@ -233,7 +231,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
       X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
       // printf(" Output name: %s -> %p\n", prec->output_name, prec->edid);
       // hex_dump(prec->edid, 128);
-      DBGMSF(debug, "Comparing EDID for xrandr output: %s", prec->output_name);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Comparing EDID for xrandr output: %s", prec->output_name);
       parsed_edid = create_parsed_edid2(prec->edidbytes, "X11");
       if (parsed_edid) {
          if (debug) {
@@ -243,7 +241,7 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          if (streq(parsed_edid->model_name, model_name) &&
                streq(parsed_edid->serial_ascii, sn_ascii) )
          {
-            DBGMSF(debug, "Found matching EDID from X11");
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Found matching EDID from X11");
             break;
          }
          free_parsed_edid(parsed_edid);
@@ -257,7 +255,6 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
       }
    }
 
-
 #ifdef MOCK_DATA_FOR_DEVELOPMENT
    if (!parsed_edid && edid_recs->len > 0) {
       printf("(%s) HACK FOR TESTING: Using last X11 EDID\n", __func__);
@@ -267,15 +264,16 @@ Parsed_Edid * get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 #endif
 
    g_ptr_array_free(edid_recs, true);
-   DBGMSF(debug, "returning %p", parsed_edid);
+   DBGTRC_DONE(debug, TRACE_GROUP, "returning %p", parsed_edid);
    return parsed_edid;
 }
 #endif
 
 
-Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
+Parsed_Edid *
+get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
    bool debug = false;
-   DBGMSF(debug, "Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Parsed_Edid * parsed_edid = NULL;
    char * edid_source;
@@ -337,7 +335,7 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
       free_model_sn_pair(model_sn);
    if (parsed_edid)
       STRLCPY(parsed_edid->edid_source, edid_source, EDID_SOURCE_FIELD_SIZE);
-   DBGMSF(debug, "Returning: %p", parsed_edid);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", parsed_edid);
    return parsed_edid;
 }
 
@@ -353,12 +351,12 @@ Parsed_Edid * get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info)
  *
  * It is the responsibility of the caller to free the returned buffer.
  */
-Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
+Parsed_Edid *
+get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = false;
-   if (debug) {
-      DBGMSG("Starting");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   if (debug || IS_TRACING())
       dbgrpt_hiddev_devinfo(dev_info, true, 1);
-   }
 
    Parsed_Edid * parsed_edid = NULL;
 
@@ -378,7 +376,7 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    if (edid_buffer) {
        parsed_edid = create_parsed_edid2(edid_buffer->bytes, "USB");  // copies bytes
        if (!parsed_edid) {
-          DBGMSF(debug, "get_hiddev_edid() returned invalid EDID");
+          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
        }
        buffer_free(edid_buffer, __func__);
@@ -388,7 +386,21 @@ Parsed_Edid * get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_
    if (!parsed_edid)
       parsed_edid = get_fallback_hiddev_edid(fd, dev_info);
 
-   DBGMSF(debug, "Returning: %p", parsed_edid);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", parsed_edid);
    return parsed_edid;
 }
+
+
+void init_usb_edid() {
+   RTTI_ADD_FUNC(find_eizo_model_sn_report);
+   RTTI_ADD_FUNC(get_eizo_model_sn_by_report);
+#ifdef USE_X11
+   RTTI_ADD_FUNC(get_x11_edid_by_model_sn);
+#endif
+   RTTI_ADD_FUNC(get_fallback_hiddev_edid);
+   RTTI_ADD_FUNC(get_hiddev_edid_with_fallback);
+}
+
+
+
 
