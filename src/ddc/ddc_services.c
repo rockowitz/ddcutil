@@ -33,7 +33,10 @@
 
 #include "i2c/i2c_services.h"
 
+#ifdef USE_USB
 #include "usb/usb_displays.h"
+#include "usb/usb_edid.h"
+#endif
 
 #include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_display_ref_reports.h"
@@ -169,6 +172,7 @@ void init_ddc_services() {
    // usb
 #ifdef USE_USB
    init_usb_displays();
+   init_usb_edid();
 #endif
 
    // ddc:
