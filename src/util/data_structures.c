@@ -1554,14 +1554,21 @@ Bit_Set_256 bva_to_bs256(Byte_Value_Array bva) {
 /** Function matching signature #Byte_Appender that adds a byte
  * to a #Byte_Value_Array.
  *
- * @param data_struct pointer to #Byte_Value_Array
- * @param val  byte to append
+ * @param data_struct  pointer to #Byte_Value_Array to modify
+ * @param val          byte to append
  */
 void bva_appender(void * data_struct, Byte val) {
    Byte_Value_Array bva = (Byte_Value_Array) data_struct;
    bva_append(bva, val);
 }
 
+
+/** Function matching signature #Byte_Appender that sets a bit
+ *  in a #Bit_Set_256.
+ *
+ * @param data_struct  pointer to #Bit_Set_256 to modify
+ * @param val          number of bit to set
+ */
 void bs256_appender(void * data_struct, Byte val) {
    assert(data_struct);
    Bit_Set_256 * bitset = (Bit_Set_256*) data_struct;
