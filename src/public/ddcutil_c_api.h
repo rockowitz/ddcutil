@@ -1120,7 +1120,6 @@ const char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
 
 
-
 /** Convenience function that searches a Feature Value Table for a
  *  value and returns the corresponding name.
  *  @param[in]   feature_value_table  pointer to first entry of table
