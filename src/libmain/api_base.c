@@ -551,9 +551,9 @@ DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name) {
 
 
 DDCA_Status
-ddca_init(const char *         library_options,
+ddca_init(const char *      library_options,
           DDCA_Syslog_Level syslog_level_arg,
-          DDCA_Init_Options    opts)
+          DDCA_Init_Options opts)
 {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
@@ -627,7 +627,7 @@ ddca_init(const char *         library_options,
    }
    else {
       library_initialized = true;
-      SYSLOG2(DDCA_SYSLOG_INFO, "Library initialization complete.");
+      // SYSLOG2(DDCA_SYSLOG_INFO, "Library initialization complete.");
    }
 
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
