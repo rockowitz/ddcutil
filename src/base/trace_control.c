@@ -54,7 +54,7 @@ const char * syslog_level_name(DDCA_Syslog_Level level) {
 
 
 DDCA_Syslog_Level
-syslog_level_value(const char * name) {
+syslog_level_name_to_value(const char * name) {
    return (DDCA_Syslog_Level) vnt_find_id(syslog_level_table,
                                           name,
                                           true,      // search title field
