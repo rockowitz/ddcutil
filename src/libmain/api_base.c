@@ -212,7 +212,6 @@ get_parsed_libmain_config(const char * libopts_string,
       DBGF(debug, "config file disabled");
       new_argv = cmd_name_array;
       new_argc = ntsa_length(cmd_name_array);
-      untokenized_option_string = strdup(libopts_string);
    }
    else {
       char *  config_fn = NULL;
@@ -547,7 +546,7 @@ set_ddca_error_detail_from_init_errors(
 
 
 DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name) {
-   return syslog_level_value(name);
+   return syslog_level_name_to_value(name);
 }
 
 
