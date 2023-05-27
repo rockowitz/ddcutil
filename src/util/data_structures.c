@@ -545,15 +545,15 @@ char * vnt_title(Value_Name_Title* table, uint32_t val) {
  *
  *  @result value id
  */
-uint32_t vnt_find_id(
+int32_t vnt_find_id(
            Value_Name_Title_Table table,
            const char * s,
            bool use_title,       // if false, search by symbolic name, if true, search by title
            bool ignore_case,
-           uint32_t default_id)
+           int32_t default_id)
 {
    assert(s);
-   uint32_t result = default_id;
+   int32_t result = default_id;
    Value_Name_Title * cur = table;
    for (; cur->name; cur++) {
       char * comparand = (use_title) ? cur->title : cur->name;

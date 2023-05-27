@@ -122,12 +122,12 @@ typedef Value_Name_Title_Table Value_Name_Table;
 char * vnt_name( Value_Name_Title* table, uint32_t val);
 char * vnt_title(Value_Name_Title* table, uint32_t val);
 
-uint32_t vnt_find_id(
+int32_t vnt_find_id(
            Value_Name_Title_Table table,
            const char * s,
            bool use_title,       // if false, search by symbolic name, if true, search by title
            bool ignore_case,
-           uint32_t default_id);
+           int32_t default_id);
 
 #define INTERPRET_VNT_FLAGS_BY_NAME false
 #define INTERPRET VNT_FLAGS_BY_TITLE true
