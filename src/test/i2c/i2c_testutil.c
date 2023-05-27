@@ -53,7 +53,7 @@ static bool is_function_supported(int busno, char * funcname) {
 
    bool result = true;
    if ( !streq(funcname, "read") &&  !streq(funcname, "write") ) {
-      uint32_t func_bit = vnt_find_id(
+      int32_t func_bit = vnt_find_id(
                                functionality_table2,
                                funcname,
                                true,      //  search title field
