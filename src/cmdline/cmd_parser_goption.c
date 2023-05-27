@@ -483,7 +483,7 @@ bool parse_syslog_level(
    bool parsing_ok = true;
    DBGF(debug, "sval=|%s|", sval);
 
-   *result_loc = syslog_level_value(sval);
+   *result_loc = syslog_level_name_to_value(sval);
    if (*result_loc == DDCA_SYSLOG_NOT_SET) {
       parsing_ok = false;
       emit_parser_error(errmsgs, __func__, "Invalid syslog level: %s", sval );
