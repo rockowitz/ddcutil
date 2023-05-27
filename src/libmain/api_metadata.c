@@ -656,7 +656,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
    }
 }
 
-#ifdef DEPRECATED
+
 // returns pointer into permanent internal data structure, caller should not free
 const char *
 ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
@@ -664,7 +664,7 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code) {
    char * result = get_feature_name_by_id_only(feature_code);
    return result;
 }
-#endif
+
 
 #ifdef DEPRECATED
 // deprecated
