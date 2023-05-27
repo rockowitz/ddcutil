@@ -134,7 +134,7 @@ bye:
 #endif
 
 
-/* Gets the module and serial number of an Eizo monitor using an Eizo specific report.
+/* Gets the model and serial number of an Eizo monitor using an Eizo specific report.
  *
  * Finds the specific report, then reads it.
  *
@@ -191,7 +191,7 @@ get_eizo_model_sn_by_report(int fd) {
       free_hid_field_locator(loc);
 
     if (result) {
-       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> mode=|%s|, sn=|%s|",
+       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> model=|%s|, sn=|%s|",
                   (void*) result, result->model, result->sn);
        // if (debug || IS_TRACING())
        //    report_model_sn_pair(result, 1);
@@ -225,7 +225,7 @@ get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
    GPtrArray* edid_recs = get_x11_edids();
    // puts("");
    // printf("EDIDs reported by X11 for connected xrandr outputs:\n");
-   // DBGMSG("Got %d X11_Edid_Recs\n", edid_recs->len);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Got %d X11_Edid_Recs", edid_recs->len);
 
    for (int ndx=0; ndx < edid_recs->len; ndx++) {
       X11_Edid_Rec * prec = g_ptr_array_index(edid_recs, ndx);
@@ -247,7 +247,7 @@ get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
          free_parsed_edid(parsed_edid);
       }
       else {
-         if (debug || get_output_level() >= DDCA_OL_VERBOSE) {
+         if (debug || IS_TRACING() || get_output_level() >= DDCA_OL_VERBOSE) {
             DBGMSG("Unparsable EDID for output name: %s -> %p",
                    prec->output_name, prec->edidbytes);
             rpt_hex_dump(prec->edidbytes, 128, /*depth=*/ 1);
@@ -273,15 +273,16 @@ get_x11_edid_by_model_sn(char * model_name, char * sn_ascii) {
 Parsed_Edid *
 get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=-x%08x, product=0x%08x",
+                          dev_info->busnum, dev_info->devnum, dev_info->vendor, dev_info->product);
 
    Parsed_Edid * parsed_edid = NULL;
    char * edid_source;
-
    struct model_sn_pair * model_sn = NULL;
 
    // Special handling for Eizo monitors
-   if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
+   // if (dev_info->vendor == 0x056d && dev_info->product == 0x0002) {   // if is EIZO monitor?
+   if (dev_info->vendor == 0x056d) {   // if is EIZO monitor?
       DBGMSG("*** Special fixup for Eizo monitor ***");
 
       model_sn  = get_eizo_model_sn_by_report(fd);
@@ -354,15 +355,18 @@ get_fallback_hiddev_edid(int fd, struct hiddev_devinfo * dev_info) {
 Parsed_Edid *
 get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busnum=%d, devnum=%d, vendor=-x%08x, product=0x%08x",
+                           dev_info->busnum, dev_info->devnum, dev_info->vendor, dev_info->product);
    if (debug || IS_TRACING())
       dbgrpt_hiddev_devinfo(dev_info, true, 1);
 
    Parsed_Edid * parsed_edid = NULL;
 
    Buffer * edid_buffer = hiddev_get_edid(fd);    // in hiddev_util.c
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "hiddev_get_edid() returned %p", edid_buffer);
    // try alternative - both work, pick one
    Buffer * edid_buf2   = hiddev_get_multibyte_value_by_ucode(fd, 0x00800002, 128);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "hiddev_get_multibyte_value_by_ucode() returned %p", edid_buf2);
    if (edid_buffer && edid_buffer->len > 128)
       buffer_set_length(edid_buffer,128);
    // printf("edid_buffer:\n");
@@ -372,12 +376,17 @@ get_hiddev_edid_with_fallback(int fd, struct hiddev_devinfo * dev_info)  {
    assert(buffer_eq(edid_buffer, edid_buf2));
    if (edid_buf2)
       buffer_free(edid_buf2, __func__);
+   if (edid_buffer) {
+      if (debug || IS_TRACING())
+         rpt_hex_dump(edid_buffer->bytes, edid_buffer->len, 2);
+   }
 
    if (edid_buffer) {
        parsed_edid = create_parsed_edid2(edid_buffer->bytes, "USB");  // copies bytes
        if (!parsed_edid) {
           DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_hiddev_edid() returned invalid EDID");
           // if debug or verbose, dump the bad edid  ??
+          // rpt_hex_dump(edid_buffer->bytes, edid_buffer->len, 2);
        }
        buffer_free(edid_buffer, __func__);
        edid_buffer = NULL;
