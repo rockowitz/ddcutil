@@ -66,6 +66,8 @@
 void init_api_base();
 
 
+static bool client_opened_syslog;
+
 //
 // Precondition Failure
 //
@@ -497,8 +499,8 @@ _ddca_terminate(void) {
    }
    // special handling for termination msg
    if (syslog_level > DDCA_SYSLOG_NEVER)
-      syslog(LOG_INFO, "Terminating.");
-   if (syslog_level > DDCA_SYSLOG_NEVER)
+      syslog(LOG_INFO, "libddcutil terminating.");
+   if (syslog_level > DDCA_SYSLOG_NEVER && !client_opened_syslog)
       closelog();
 }
 
@@ -562,25 +564,28 @@ ddca_init(const char *      library_options,
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
+   client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DDCA_SYSLOG_INFO;              // libddcutil default
 
    if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
       enable_syslog = true;
+      if (!client_opened_syslog) {
       openlog("libddcutil",       // prepended to every log message
               LOG_CONS | LOG_PID, // write to system console if error sending to system logger
                                   // include caller's process id
               LOG_USER);          // generic user program, syslogger can use to determine how to handle
+      }
       // special handling for start and termination msgs
       // always output if syslog is opened
-      syslog(LOG_INFO, "Initializing.  ddcutil version: %s, shared library: %s",
+      syslog(LOG_INFO, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
                 get_full_ddcutil_version(), ddca_libddcutil_filename());
    }
    syslog_level = syslog_level_arg;  // global in trace_control.h
 
    Error_Info * master_error = NULL;
    if (library_initialized) {
-      master_error = errinfo_new(DDCRC_INVALID_OPERATION, __func__, "Library already initialized");
+      master_error = errinfo_new(DDCRC_INVALID_OPERATION, __func__, "libddcutil already initialized");
    }
    else {
       Parsed_Cmd * parsed_cmd = NULL;
