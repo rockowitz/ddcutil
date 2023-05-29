@@ -263,7 +263,6 @@ bool add_traced_callstack_call(const char * funcname) {
 }
 
 
-
 /** Adds a file to the list of files to be traced.
  *
  *  @param filename file name
