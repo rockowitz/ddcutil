@@ -15,7 +15,7 @@
 
 // n. the DDC spec lists timeout values in milliseconds
 
-#define DDC_TIMEOUT_MILLIS_DEFAULT                      50  ///< Normal timeout in DDC spec
+#define DDC_TIMEOUT_MILLIS_DEFAULT                      50   ///< Normal timeout in DDC spec
 #define DDC_TIMEOUT_MILLIS_BETWEEN_GETVCP_WRITE_READ    40   ///< Between DDC Get Feature Request and Get Feature Reply
 #define DDC_TIMEOUT_MILLIS_POST_SETVCP_WRITE            50   ///< Following DDC Set VCP Feature command
 #define DDC_TIMEOUT_MILLIS_POST_SAVE_SETTINGS          200   ///< Following DDC Save Settings
@@ -86,8 +86,6 @@
 #define DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD  3
 #define DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT   DISPLAY_CHECK_ASYNC_NEVER
 
-#define DEFAULT_SLEEP_LESS true
-
 #ifdef USE_USB
 #define DEFAULT_ENABLE_USB false
 #else
@@ -95,11 +93,10 @@
 #endif
 
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
-#define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_INFO
+#define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
 #define DEFAULT_ENABLE_CACHED_CAPABILITIES true
 #define DEFAULT_ENABLE_CACHED_DISPLAYS false
 #define DEFAULT_ENABLE_UDF true
-#define DEFAULT_ENABLE_DSA1 false
 #define DEFAULT_ENABLE_DSA2 false
 
 #endif /* PARMS_H_ */
