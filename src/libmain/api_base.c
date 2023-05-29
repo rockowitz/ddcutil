@@ -275,7 +275,7 @@ get_parsed_libmain_config(const char * libopts_string,
    #endif
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
             fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
-            SYSLOG2(DDCA_SYSLOG_INFO,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+            SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
       free(config_fn);
@@ -439,7 +439,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
           ? xdg_state_home_file("ddcutil", library_trace_file)
           : g_strdup(library_trace_file);
    DBGF(debug, "Setting trace destination %s", trace_file);
-   SYSLOG2(DDCA_SYSLOG_INFO, "Trace destination: %s", trace_file);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Trace destination: %s", trace_file);
 
    fopen_mkdir(trace_file, "a", stderr, &flog);
    if (flog) {
@@ -499,7 +499,7 @@ _ddca_terminate(void) {
    }
    // special handling for termination msg
    if (syslog_level > DDCA_SYSLOG_NEVER)
-      syslog(LOG_INFO, "libddcutil terminating.");
+      syslog(LOG_NOTICE, "libddcutil terminating.");
    if (syslog_level > DDCA_SYSLOG_NEVER && !client_opened_syslog)
       closelog();
 }
@@ -566,7 +566,7 @@ ddca_init(const char *      library_options,
 
    client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
-      syslog_level_arg = DDCA_SYSLOG_INFO;              // libddcutil default
+      syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
 
    if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
       enable_syslog = true;
@@ -578,7 +578,7 @@ ddca_init(const char *      library_options,
       }
       // special handling for start and termination msgs
       // always output if syslog is opened
-      syslog(LOG_INFO, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
+      syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
                 get_full_ddcutil_version(), ddca_libddcutil_filename());
    }
    syslog_level = syslog_level_arg;  // global in trace_control.h
@@ -632,7 +632,7 @@ ddca_init(const char *      library_options,
    }
    else {
       library_initialized = true;
-      // SYSLOG2(DDCA_SYSLOG_INFO, "Library initialization complete.");
+      // SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
 
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
