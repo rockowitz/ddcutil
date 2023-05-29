@@ -853,11 +853,11 @@ main(int argc, char *argv[]) {
                parser_mode_name(parsed_cmd->parser_mode),
                program_start_time_s);
 
-   SYSLOG2(DDCA_SYSLOG_INFO, "Starting.  ddcutil version %s", get_full_ddcutil_version());
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "Starting.  ddcutil version %s", get_full_ddcutil_version());
 
    if (preparse_verbose) {
       if (untokenized_cmd_prefix && strlen(untokenized_cmd_prefix) > 0) {
-         SYSLOG2(DDCA_SYSLOG_INFO,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
+         SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
 
@@ -1044,7 +1044,7 @@ bye:
 
    DBGMSF(main_debug, "syslog_opened=%s", sbool(syslog_opened));
    if (syslog_opened) {
-      SYSLOG2(DDCA_SYSLOG_INFO, "Terminating. Returning %d", main_rc);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Terminating. Returning %d", main_rc);
       closelog();
    }
 
