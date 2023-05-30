@@ -111,9 +111,9 @@ ddc_get_capabilities_string(
    bool debug = false;
    assert(dh);
    assert(dh->dref);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dh->dref->capabilities_string=|%s|",
+         dh_repr(dh), dh->dref->capabilities_string);
 
-   // Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
@@ -132,6 +132,7 @@ ddc_get_capabilities_string(
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
             char * s = get_capabilities_cache_file_name();
             rpt_vstring(0, "Read cached capabilities string from %s", s);
+            SYSLOG2(DDCA_SYSLOG_INFO, "Read cached capabilities string from %s", s);
             free(s);
          }
 
