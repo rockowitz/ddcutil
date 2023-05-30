@@ -3,7 +3,7 @@
  *  Query configuration files, logs, and output of logging commands.
  */
 
-// Copyright (C) 2017-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2017-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -27,8 +27,12 @@
 #include "util/subprocess_util.h"
 
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/status_code_mgt.h"
 /** endcond */
+
+#include "ddc/ddc_serialize.h"
+#include "vcp/persistent_capabilities.h"
 
 #include "query_sysenv_base.h"
 
@@ -434,5 +438,28 @@ void probe_config_files(Env_Accumulator * accum) {
       // execute_shell_cmd_rpt("xrandr --props", 1 /* depth */);
       // rpt_nl();
    }
+}
+
+void probe_cache_files(int depth) {
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_nl();
+   rpt_label(d0, "Examining cache files...");
+   rpt_nl();
+   char * fn = NULL;
+   fn = get_capabilities_cache_file_name();
+   rpt_vstring(d0, "Reading %s:", fn);
+   rpt_file_contents(fn, true, d1);
+   rpt_nl();
+   fn = dsa2_stats_cache_file_name();
+   rpt_vstring(d0, "Reading %s:", fn);
+   rpt_file_contents(fn, true, d1);
+   free(fn);
+   rpt_nl();
+   fn = ddc_displays_cache_file_name();
+   rpt_vstring(d0, "Reading %s:", fn);
+   rpt_file_contents(fn, true, d1);
+   free(fn);
+   rpt_nl();
 }
 

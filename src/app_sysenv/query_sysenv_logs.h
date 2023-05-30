@@ -13,5 +13,6 @@
 
 void probe_logs(Env_Accumulator * accum);
 void probe_config_files(Env_Accumulator * accum);
+void probe_cache_files(int depth);
 
 #endif /* QUERY_SYSENV_LOGS_H_ */
