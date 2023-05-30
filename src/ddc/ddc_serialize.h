@@ -25,6 +25,7 @@ char *        ddc_serialize_displays_and_buses();
 GPtrArray *   ddc_deserialize_displays(const char * jstring);
 GPtrArray *   ddc_deserialize_buses(const char * jstring);
 
+char *        ddc_displays_cache_file_name();
 bool          ddc_store_displays_cache();
 void          ddc_restore_displays_cache();
 void          ddc_erase_displays_cache();
