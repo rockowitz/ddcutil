@@ -452,7 +452,7 @@ void probe_cache_files(int depth) {
    rpt_label(d0, "Examining cache files...");
    rpt_nl();
    char * fn = NULL;
-   fn = get_capabilities_cache_file_name();
+   fn = capabilities_cache_file_name();
    rpt_vstring(d0, "Reading %s:", fn);
    rpt_file_contents(fn, true, d1);
    rpt_nl();
