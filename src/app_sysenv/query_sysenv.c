@@ -43,6 +43,7 @@
 
 #include "base/build_info.h"
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"
@@ -52,7 +53,10 @@
 
 #include "ddc/ddc_displays.h"     // for ddc_ensure_displays_detected()
 #include "ddc/ddc_display_ref_reports.h"
+#include "ddc/ddc_serialize.h"
 #include "ddc/ddc_watch_displays.h"
+
+#include "vcp/persistent_capabilities.h"
 
 #include "query_sysenv_access.h"
 #include "query_sysenv_base.h"
@@ -546,6 +550,7 @@ static void query_xdg_files(int depth) {
    rpt_nl();
 
    rpt_label(depth, "*** ddcutil Configuration, Cache, and Data files ***");
+
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
    rpt_nl();
    if (config_fn) {
@@ -557,6 +562,9 @@ static void query_xdg_files(int depth) {
       rpt_label(d1, "Configuration file ddcutilrc not found");
    rpt_nl();
 
+
+   probe_cache_files(depth);
+#ifdef OLD
    char * cache_fn = find_xdg_cache_file("ddcutil", "capabilities");
    if (cache_fn) {
       rpt_vstring(d1, "Found capabilities cache file: %s", cache_fn);
@@ -566,6 +574,7 @@ static void query_xdg_files(int depth) {
    else
       rpt_label(d1, "Capabilities cache file not found");
    rpt_nl();
+#endif
 
    rpt_label(d1, "Files on data path:");
    char * data_path = xdg_data_path();
@@ -827,6 +836,13 @@ void query_sysenv(bool quick_env) {
       rpt_nl();
       rpt_label(0, "*** Additional checks for remote diagnosis ***");
       rpt_nl();
+      rpt_label(0, "Disabling capabilities cache ...");
+      enable_capabilities_cache(false);
+      rpt_label(0, "Disabling displays cache ...");
+      ddc_enable_displays_cache(false);
+      rpt_label(0, "Disabling dsa stats ...");
+      dsa2_enabled = false;
+      rpt_nl();
 
       rpt_vstring(0, "*** Displays as reported by DETECT Command ***");
       /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
@@ -908,10 +924,10 @@ void query_sysenv(bool quick_env) {
       // temp
       // get_i2c_smbus_devices_using_udev();
 
+      probe_config_files(accumulator);
       if (sysfs_quick_test)
-         DBGMSG("!!! Skipping config file and log checking to speed up testing !!!");
+         DBGMSG("!!! Skipping log checking to speed up testing !!!");
       else {
-         probe_config_files(accumulator);
          probe_logs(accumulator);
       }
 
