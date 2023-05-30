@@ -250,8 +250,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 
    if (display_caching_enabled)
       ddc_restore_displays_cache();
-   else
-      ddc_erase_displays_cache();
+   // else
+   //    ddc_erase_displays_cache();
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
