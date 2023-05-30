@@ -96,12 +96,12 @@ extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread i
 void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 
 typedef uint16_t Dbgtrc_Options;
-#define DBGTRC_OPTIONS_NONE      0
-#define DBGTRC_OPTIONS_SYSLOG    1
-#define DBGTRC_OPTIONS_SEVERE    2
-#define DBGTRC_OPTIONS_API_CALL  4       // used for tracing API
-#define DBGTRC_OPTIONS_STARTING  8
-#define DBGTRC_OPTIONS_DONE     16
+#define DBGTRC_OPTIONS_NONE      0x00
+#define DBGTRC_OPTIONS_SYSLOG    0x01
+#define DBGTRC_OPTIONS_SEVERE    0x02
+#define DBGTRC_OPTIONS_API_CALL  0x04   // used for tracing API
+#define DBGTRC_OPTIONS_STARTING  0x08
+#define DBGTRC_OPTIONS_DONE      0x10
 
 
 //
