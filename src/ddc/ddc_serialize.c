@@ -542,7 +542,7 @@ GPtrArray * ddc_deserialize_buses(const char * jstring) {
  */
 /* caller is responsible for freeing returned value */
 char * ddc_displays_cache_file_name() {
-   return xdg_cache_home_file("ddcutil", "displays");
+   return xdg_cache_home_file("ddcutil", DISPLAYS_CACHE_FILENAME);
 }
 
 
