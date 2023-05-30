@@ -59,3 +59,6 @@ src/public/ddcutil_macros.h
 doxydoc/html
 doxydoc/latex
 doxydoc/apidoc
+
+# Miscellaneous tools
+/heaptrack*
