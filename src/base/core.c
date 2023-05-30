@@ -489,7 +489,7 @@ static bool vdbgtrc(
 {
    bool debug = false;
    if (debug) {
-      printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%o2x, funcname=%s"
+      printf("(vdbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, fout() %s sysout, pre_prefix=|%s|, format=|%s|\n",
                        trace_group, options, funcname, filename, lineno, get_thread_id(),
                        (fout() == stdout) ? "==" : "!=",
@@ -673,8 +673,6 @@ bool dbgtrc(
         ...)
 {
    bool debug = false;
-   if (streq(funcname, "ddc_write_read_with_retry") || streq(funcname, "ddc_write_read"))
-      debug = false;
    if (debug)
       printf("(dbgtrc) Starting. trace_group=0x%04x, options=0x%02x, funcname=%s"
              " filename=%s, lineno=%d, thread=%ld, trace_callstack_call_depth=%d, fout() %s sysout\n",
