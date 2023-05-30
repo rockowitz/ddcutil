@@ -29,6 +29,7 @@ Sleep_Multiplier
              dsa2_get_adjusted_sleep_multiplier(struct Results_Table * rtable);
 void         dsa2_note_retryable_failure(struct Results_Table * rtable, int remaining_tries);
 void         dsa2_record_final(struct Results_Table * rtable, DDCA_Status ddcrc, int retries);
+char *       dsa2_stats_cache_file_name();
 Status_Errno dsa2_save_persistent_stats();
 Status_Errno dsa2_erase_persistent_stats();
 Error_Info * dsa2_restore_persistent_stats();

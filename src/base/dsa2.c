@@ -932,8 +932,8 @@ void dsa2_report_internal_all(int depth) {
  *
  *  Caller is responsible for freeing returned value
  */
-static char *
-stats_cache_file_name() {
+char *
+dsa2_stats_cache_file_name() {
    return xdg_cache_home_file("ddcutil", "stats");
 }
 
@@ -956,7 +956,7 @@ dsa2_save_persistent_stats() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    int result = 0;
    int results_tables_ct = 0;
-   char * stats_fn = stats_cache_file_name();
+   char * stats_fn = dsa2_stats_cache_file_name();
    FILE * stats_file = NULL;
    result = fopen_mkdir(stats_fn, "w", ferr(), &stats_file);
    if (!stats_file) {
@@ -1032,7 +1032,7 @@ dsa2_erase_persistent_stats() {
    bool debug = false;
    Status_Errno result = 0;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-   char * stats_fn = stats_cache_file_name();
+   char * stats_fn = dsa2_stats_cache_file_name();
    int rc = remove(stats_fn);
    if (rc < 0 && errno != ENOENT)
       result = -errno;
@@ -1100,7 +1100,7 @@ Error_Info *
 dsa2_restore_persistent_stats() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
-   char * stats_fn = stats_cache_file_name();
+   char * stats_fn = dsa2_stats_cache_file_name();
    Error_Info * result = NULL;
 
    // DBGMSG("stats_fn=%s", stats_fn);
