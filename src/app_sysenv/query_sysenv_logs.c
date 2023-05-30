@@ -440,6 +440,11 @@ void probe_config_files(Env_Accumulator * accum) {
    }
 }
 
+
+/** Reports cache files
+ *
+ *  @oaram depth logical indentation depth
+ */
 void probe_cache_files(int depth) {
    int d0 = depth;
    int d1 = depth+1;
