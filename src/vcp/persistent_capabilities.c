@@ -116,6 +116,9 @@ static Error_Info * load_persistent_capabilities_file() {
             }
             free(aline);
          }
+         if (errs) {
+            delete_capabilities_file();
+         }
          g_ptr_array_free(linearray, true);
       }
    }
@@ -127,6 +130,7 @@ static Error_Info * load_persistent_capabilities_file() {
 
       delete_capabilities_file();
    }
+   ASSERT_IFF(capabilities_cache_enabled, capabilities_hash);
 
    if (debug || IS_TRACING()) {
       DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
@@ -241,11 +245,11 @@ bool enable_capabilities_cache(bool newval) {
    }
    else {
       capabilities_cache_enabled = false;
-      if (capabilities_hash) {
-         g_hash_table_destroy(capabilities_hash);
-         capabilities_hash = NULL;
-      }
-      delete_capabilities_file();
+      // if (capabilities_hash) {
+      //    g_hash_table_destroy(capabilities_hash);
+      //    capabilities_hash = NULL;
+      // }
+      // delete_capabilities_file();
    }
    g_mutex_unlock(&persistent_capabilities_mutex);
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, old, "capabilities_cache_enabled has been set = %s",
@@ -267,41 +271,47 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
    assert(mmk);
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "mmk -> %s", mmk_repr(*mmk));
-   g_mutex_lock(&persistent_capabilities_mutex);
 
    char * result = NULL;
-   if (non_unique_model_id(mmk)) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
-      goto bye;
-   }
-
    if (capabilities_cache_enabled) {
-      if (!capabilities_hash) {  // if not yet loaded
-         Error_Info * errs = load_persistent_capabilities_file();
-         if (errs) {
-            if (ERRINFO_STATUS(errs) == -ENOENT)
-               errinfo_free(errs);
-            else
-               ERRINFO_FREE_WITH_REPORT(errs,true);
-         }
+      if (non_unique_model_id(mmk)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
       }
-
-      if (mmk) {
-         char * mms = g_strdup(monitor_model_string(mmk));
-
-         if (debug) {
-            DBGMSG("Hash table before lookup:");
-            dbgrpt_capabilities_hash0(2, NULL);
-            DBGMSG("Looking for key: mms -> |%s|", mms);
+      else {
+         g_mutex_lock(&persistent_capabilities_mutex);
+         Error_Info * load_errs = NULL;
+         DBGMSF(debug, "capabilities_hash = %p", capabilities_hash);
+         if (!capabilities_hash) {  // if not yet loaded
+            load_errs = load_persistent_capabilities_file();
+            if (load_errs) {
+               if (ERRINFO_STATUS(load_errs) == -ENOENT)
+                  errinfo_free(load_errs);
+               else {
+                  char * data_file_name = get_capabilities_cache_file_name();
+                  SEVEREMSG("Error(s) loading persistent capabilities file %s", data_file_name);
+                  free(data_file_name);
+                  for (int ndx =0; ndx < load_errs->cause_ct; ndx++) {
+                     Error_Info * cur = load_errs->causes[ndx];
+                     SEVEREMSG("  %s", cur->detail);
+                  }
+                  ERRINFO_FREE_WITH_REPORT(load_errs,false);
+               }
+            }
          }
-
-         result = g_hash_table_lookup (capabilities_hash, mms);
-         free(mms);
-     }
+         if (!load_errs) {
+            char * mms = g_strdup(monitor_model_string(mmk));
+            if (debug) {
+               DBGMSG("Hash table before lookup:");
+               dbgrpt_capabilities_hash0(2, NULL);
+               DBGMSG("Looking for key: mms -> |%s|", mms);
+            }
+            result = g_hash_table_lookup (capabilities_hash, mms);
+            free(mms);
+         }  // load persistent stats successful
+      }
+      g_mutex_unlock(&persistent_capabilities_mutex);
    }
 
-bye:
-   g_mutex_unlock(&persistent_capabilities_mutex);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", result);
    return result;
 }
