@@ -1167,7 +1167,7 @@ parse_command(
 
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
-   SET_CMDFLAG(CMD_FLAG_PER_DISPLAY_STATS, verbose_stats);
+   SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS, verbose_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);

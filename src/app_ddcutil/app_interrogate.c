@@ -90,7 +90,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
    // query_usbenv();
 #endif
    f0printf(fout(), "\nStatistics for environment exploration:\n");
-   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, false, 0);
+   ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS, false, 0);
    reset_stats();
 
    // PROBE command
@@ -111,7 +111,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
          f0printf(fout(), "\nProbing display %d\n", dref->dispno);
          app_probe_display_by_dref(dref);
          f0printf(fout(), "\nStatistics for probe of display %d:\n", dref->dispno);
-         ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_PER_DISPLAY_STATS, false, 0);
+         ddc_report_stats_main(DDCA_STATS_ALL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS, false, 0);
       }
       reset_stats();
    }
