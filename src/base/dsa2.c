@@ -926,18 +926,21 @@ void dsa2_report_internal_all(int depth) {
 // Persistent Statistics
 //
 
-/** Returns the name of the file that stores persistent stats
+/** Returns the name of the file in directory $HOME/.cache/ddcutil that stores
+ *  dynamic sleep stats
  *
- *  @return name of file, normally $HOME/.cache/ddcutil/stats
+ *  @return fully qualified name of file
  *
  *  Caller is responsible for freeing returned value
  */
 char *
 dsa2_stats_cache_file_name() {
-   return xdg_cache_home_file("ddcutil", "stats");
+   return xdg_cache_home_file("ddcutil", DSA_CACHE_FILENAME);
 }
 
-bool dsa2_is_from_cache(Results_Table * rtable) {
+
+bool
+dsa2_is_from_cache(Results_Table * rtable) {
    assert(rtable);
    // return (rtable && rtable->initial_step_from_cache);
    return (rtable && (rtable->state & RTABLE_FROM_CACHE));
