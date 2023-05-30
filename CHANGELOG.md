@@ -44,11 +44,17 @@ compatible.
 - **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
    those devices use /sys
 - Detailed statistics are now maintained on a per-display instead of per-thread basis.
-  Option ***--per-display-stats*** causes the statistics reported by option ***--stats***
-  to include per-display stats.
+- Option ***--vstats*** includes per-display stas in its reports.  It takes the same
+  arguments as ***--stats***. 
+- Cached capabilities are not erased by ddcutil calls that are not executed with 
+  ***--enable-displays-cache***.  This makes the behavior the same as cached 
+  displays and cached performance statistics.
+- **environment --verbose** disables caching, reports contents of cached files.
+- loosen criteria for when to try fallback methods to read EDID when using USB 
+  to communicate with Eizo monitors
 
 #### Fixed
-- More robust checks during display detection to check for misuse of the DDC Null Message
+- More robust checks during display detection to test for misuse of the DDC Null Message
 and all zero getvcp response to indicate unsupported features.
 - Option ***--help***. Document **ELAPSED** as a recognized statistics class
 
@@ -85,6 +91,7 @@ Added functions:
 Changed functions:
 
 - ddca_report_display_info() returns DDCA_Status instead of void
+- ddca_get_feature_name() implementation restored
 
 Changed semantics:
 
@@ -130,7 +137,8 @@ Remove previously deprecated functions that had been replaced by more useful ver
 - ddca_open_display(). Use ddca_open_display2().
 ...
 
-Symbols for functions that had previously been removed from ddcutil_c_api.h are no longer exported.
+Symbols for functions and enums that had previously been removed from ddcutil_c_api.h are no longer exported.
+
 
 Options that apply only to libddcutil (Specified in the ddcutil configuration file or passed to ddcs_init())
 
