@@ -36,6 +36,7 @@
 static char *            usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
+static bool              verbose_stats = false;
 
 
 // Callback function for processing --terse, --verbose and synonyms
@@ -75,6 +76,9 @@ stats_arg_func(const    gchar* option_name,
 {
    bool debug = false;
    DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+
+   if (streq(option_name, "--vstats"))
+      verbose_stats = true;
 
    bool ok = true;
    if (value) {
@@ -720,7 +724,7 @@ parse_command(
    gboolean timeout_i2c_io_flag = false;
    gboolean reduce_sleeps_specified = false;
    gboolean deferred_sleep_flag = false;
-   gboolean per_display_stats_flag = false;
+//   gboolean per_display_stats_flag = false;
    gboolean show_settings_flag = false;
    gboolean i2c_io_fileio_flag = false;
    gboolean i2c_io_ioctl_flag  = false;
@@ -848,8 +852,10 @@ parse_command(
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
-      {"per-display-stats",
-                  '\0', 0, G_OPTION_ARG_NONE,     &per_display_stats_flag, "Include per-display statistics",   NULL},
+      {"vstats",  '\0',  G_OPTION_FLAG_OPTIONAL_ARG,
+                                                G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
+      // {"per-display-stats",
+      //             '\0', 0, G_OPTION_ARG_NONE,     &per_display_stats_flag, "Include per-display statistics",   NULL},
 
       // Behavior options
 #ifdef USE_USB
@@ -1160,9 +1166,8 @@ parse_command(
    } while(0)
 
    parsed_cmd->output_level     = output_level;
-   if (per_display_stats_flag && stats_work == DDCA_STATS_NONE)
-      stats_work = DDCA_STATS_ALL;
    parsed_cmd->stats_types      = stats_work;
+   SET_CMDFLAG(CMD_FLAG_PER_DISPLAY_STATS, verbose_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
@@ -1201,7 +1206,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F7,                f7_flag);
    SET_CMDFLAG(CMD_FLAG_F8,                f8_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
-   SET_CMDFLAG(CMD_FLAG_PER_DISPLAY_STATS, per_display_stats_flag);
+
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);
