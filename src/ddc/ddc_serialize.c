@@ -441,20 +441,23 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "mode=%s, jstring:", serialize_mode_name(mode));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_DDCIO, "%s", jstring);
-   GPtrArray * restored = g_ptr_array_new();
+   GPtrArray * restored = g_ptr_array_new_with_free_func(destroy_display_ref);   // Display_Ref *
 
    json_error_t error;
 
+   bool ok = true;
    json_t* root = json_loads(jstring, 0, &error);
    if (!root) {
           SEVEREMSG( "error: on line %d: %s\n", error.line, error.text);
-          return NULL;
+          ok = false;
+          goto bye;
       }
    if(!json_is_object(root))
    {
        SEVEREMSG( "error: root is not an object\n");
        // json_decref(root);
-       return NULL;
+       ok = false;
+       goto bye;
    }
    json_t* version_node = json_object_get(root, "version");
    if (!(version_node && json_is_integer(version_node))) {
@@ -463,7 +466,8 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
       else
          SEVEREMSG("member version not found");
       // json_decref(root);
-      return NULL;
+      ok = false;
+      goto bye;
    }
    int version = json_integer_value(version_node);
    DBGMSF(debug, "version = %d", version);
@@ -480,7 +484,8 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
       else
          SEVEREMSG("member %s not found", all);
       // json_decref(root);
-      return NULL;
+      ok = false;
+      goto bye;
    }
 
    for (int dispctr = 0; dispctr < json_array_size(disp_nodes); dispctr++) {
@@ -491,7 +496,8 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
          else
             SEVEREMSG("%s[%d] is not an object", all, dispctr);
          // json_decref(root);
-         return NULL;
+         ok = false;
+         goto bye;
       }
 
       if (mode == serialize_mode_display) {
@@ -503,7 +509,14 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
          g_ptr_array_add(restored, businfo);
       }
    }
-   json_decref(root);
+
+bye:
+   if (root)
+      json_decref(root);
+
+   if (!ok) {
+      g_ptr_array_remove_range (restored, 0, restored->len);
+   }
 
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d records.", restored->len);
    return restored;
@@ -528,7 +541,7 @@ GPtrArray * ddc_deserialize_buses(const char * jstring) {
  *  \return name of file, normally $HOME/.cache/ddcutil/displays
  */
 /* caller is responsible for freeing returned value */
-char * get_displays_cache_file_name() {
+char * ddc_displays_cache_file_name() {
    return xdg_cache_home_file("ddcutil", "displays");
 }
 
@@ -539,7 +552,7 @@ bool ddc_store_displays_cache() {
    bool ok = true;
    if (ddc_displays_already_detected()) {
       char * json_text = ddc_serialize_displays_and_buses();
-      char * fn = get_displays_cache_file_name();
+      char * fn = ddc_displays_cache_file_name();
       FILE * fp = NULL;
       fopen_mkdir(fn, "w", ferr(), &fp );
       if (!fp) {
@@ -565,7 +578,7 @@ bool ddc_store_displays_cache() {
 void ddc_restore_displays_cache() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
-   char * fn = get_displays_cache_file_name();
+   char * fn = ddc_displays_cache_file_name();
    if (regular_file_exists(fn)) {
       DBGMSF(debug, "Found file: %s", fn);
       char * buf = read_file_single_string(fn, debug);
@@ -588,7 +601,7 @@ void ddc_restore_displays_cache() {
 void ddc_erase_displays_cache() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
-   char * fn = get_displays_cache_file_name();
+   char * fn = ddc_displays_cache_file_name();
    bool found = regular_file_exists(fn);
    if (found)
       remove(fn);
