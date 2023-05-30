@@ -62,6 +62,16 @@
 #define INITIAL_MAX_WRITE_READ_EXCHANGE_TRIES    10
 #define INITIAL_MAX_MULTI_EXCHANGE_TRIES          8
 
+
+//
+// *** Cache file names
+//
+
+#define DSA_CACHE_FILENAME "dsa"
+#define CAPABILITIES_CACHE_FILENAME "capabilities"
+#define DISPLAYS_CACHE_FILENAME "displays"
+
+
 //
 // *** Option Defaults
 //
