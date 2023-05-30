@@ -699,6 +699,12 @@ bye:
 }
 
 
+// wraps free_display_ref() as GDestroyNotify()
+void destroy_display_ref(void * data) {
+   free_display_ref((Display_Ref*) data);
+}
+
+
 /** Tests if 2 #Display_Ref instances specify the same path to the
  *  display.
  *
