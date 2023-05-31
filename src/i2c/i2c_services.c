@@ -18,3 +18,5 @@ void init_i2c_services() {
    init_i2c_strategy_dispatcher();
    init_i2c_sysfs();
 }
+
+// terminate_i2c_services() unnecessary, there's nothing to do
