@@ -1210,10 +1210,6 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
    return ok;
 }
 
-
-
-
-
 #endif
 
 
