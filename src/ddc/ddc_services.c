@@ -206,8 +206,8 @@ void init_ddc_services() {
 
 void release_ddc_services() {
    // also handles VCP
+   terminate_ddc_displays();
    release_persistent_capabilities();
-
    // to do: ...
 }
 
