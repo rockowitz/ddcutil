@@ -487,7 +487,7 @@ _ddca_terminate(void) {
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, 0);
       release_ddc_services();
-      release_base_services();
+      terminate_base_services();
       ddc_stop_watch_displays();
       free_regex_hash_table();
       library_initialized = false;

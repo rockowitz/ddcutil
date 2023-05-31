@@ -23,7 +23,7 @@
 extern GHashTable *  per_thread_data_hash;   // key is thread id, value is Per_Thread_Data*
 
 void init_per_thread_data();     // module initialization
-void release_thread_data_module();  // release all resources
+void terminate_per_thread_data();  // release all resources
 
 extern int  ptd_lock_count;
 extern int  ptd_unlock_count;

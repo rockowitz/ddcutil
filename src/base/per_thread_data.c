@@ -159,7 +159,7 @@ void per_thread_data_destroy(void * data) {
 }
 
 
-void release_thread_data_module() {
+void terminate_per_thread_data() {
    if (per_thread_data_hash) {
       g_hash_table_destroy(per_thread_data_hash);
    }

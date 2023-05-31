@@ -46,8 +46,8 @@ void init_base_services() {
 
 
 /** Cleanup at termination helps to reveal where the real leaks are */
-void release_base_services() {
-   release_thread_data_module();
+void terminate_base_services() {
+   terminate_per_thread_data();
    terminate_per_display_data();
    terminate_execution_stats();
    terminate_dsa2();

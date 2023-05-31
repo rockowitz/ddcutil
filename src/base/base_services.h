@@ -9,6 +9,6 @@
 #define BASE_SERVICES_H_
 
 void init_base_services();
-void release_base_services();
+void terminate_base_services();
 
 #endif /* BASE_SERVICES_H_ */
