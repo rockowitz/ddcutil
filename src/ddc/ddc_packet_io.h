@@ -66,5 +66,7 @@ Error_Info * ddc_write_read_with_retry(
 
 void init_ddc_packet_io();
 
+void terminate_ddc_packet_io();
+
 #endif /* DDC_PACKET_IO_H_ */
 

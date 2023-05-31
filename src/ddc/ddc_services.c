@@ -208,6 +208,6 @@ void release_ddc_services() {
    // also handles VCP
    terminate_ddc_displays();
    release_persistent_capabilities();
-   // to do: ...
+   terminate_ddc_packet_io();
 }
 

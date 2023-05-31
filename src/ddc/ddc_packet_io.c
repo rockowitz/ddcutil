@@ -1008,3 +1008,10 @@ init_ddc_packet_io() {
 
    open_displays = g_hash_table_new(g_direct_hash, NULL);
 }
+
+void
+terminate_ddc_packet_io() {
+   ddc_close_all_displays();
+   g_hash_table_destroy(open_displays);
+}
+
