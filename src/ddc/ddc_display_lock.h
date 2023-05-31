@@ -21,14 +21,11 @@ typedef enum {
 
 typedef void * Distinct_Display_Ref;
 
-void init_ddc_display_lock(void);
-
+void                 init_ddc_display_lock(void);
+void                 terminate_ddc_display_lock();
 Distinct_Display_Ref get_distinct_display_ref(Display_Ref * dref);
-
-DDCA_Status lock_distinct_display(Distinct_Display_Ref id, Distinct_Display_Flags flags);
-
-DDCA_Status unlock_distinct_display(Distinct_Display_Ref id);
-
-void dbgrpt_distinct_display_descriptors(int depth);
+DDCA_Status          lock_distinct_display(Distinct_Display_Ref id, Distinct_Display_Flags flags);
+DDCA_Status          unlock_distinct_display(Distinct_Display_Ref id);
+void                 dbgrpt_distinct_display_descriptors(int depth);
 
 #endif /* DDC_DISPLAY_LOCK_H_ */
