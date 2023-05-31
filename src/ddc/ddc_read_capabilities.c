@@ -36,8 +36,6 @@
 
 #include "ddc/ddc_read_capabilities.h"
 
-// Direct writes to stdout/stderr: none
-
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
@@ -94,7 +92,14 @@ get_capabilities_into_buffer(
 
 /** Gets the capabilities string for a display.
  *
- *  The value is cached as this is an expensive operation.
+ * For a display with an I2C device path:
+ *  - First, checks to see if it is already in the Display_Ref.
+ *  - If not, checks if the string is available in the capabilities cache.
+ *  - Finally, executes the VCP Get Capabilities command to obtain the
+ *    capabilities string.
+ *
+ *  For display with a USB device path
+ *  - Returns a synthesized capabilities string.
  *
  *  @param  dh       display handle
  *  @param  caps_loc location where to return pointer to capabilities string.
