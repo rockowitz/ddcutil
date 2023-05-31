@@ -20,6 +20,18 @@
  *  Only the io path to the display is checked.
  */
 
+/* 5/2023:
+ *
+ * This method of locking is vestigial from the time that there could be more
+ * than one Display_Ref for a display, which could be held in different threads.
+ *
+ * The code could be simplified, or eliminated almost entirely,  e.g. by recording
+ * in the Display_Ref which thread has  opened the display.
+ *
+ * Given the imminent release of 2.0.0-rc1, such changes are left to a future release.
+ */
+
+
 #include <assert.h>
 
 #include <glib-2.0/glib.h>
