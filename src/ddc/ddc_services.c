@@ -202,3 +202,12 @@ void init_ddc_services() {
       dbgrpt_rtti_func_name_table(1);
    DBGMSF(debug, "Done");
 }
+
+
+void release_ddc_services() {
+   // also handles VCP
+   release_persistent_capabilities();
+
+   // to do: ...
+}
+
