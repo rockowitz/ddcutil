@@ -1048,6 +1048,7 @@ bye:
       closelog();
    }
 
+   release_ddc_services();
    release_base_services();
 
    return main_rc;
