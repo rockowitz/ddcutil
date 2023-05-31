@@ -1242,3 +1242,8 @@ init_ddc_displays() {
 #endif
 }
 
+
+void terminate_ddc_displays() {
+   ddc_discard_detected_displays();
+}
+

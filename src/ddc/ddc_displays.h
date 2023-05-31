@@ -54,7 +54,8 @@ DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_
 DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 void        ddc_emit_display_hotplug_event();
 
-// Initialization
+// Initialization and termination
 void        init_ddc_displays();
+void        terminate_ddc_displays();
 
 #endif /* DDC_DISPLAYS_H_ */
