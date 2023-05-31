@@ -44,7 +44,7 @@ void init_base_services() {
       printf("(%s) Done\n", __func__);
 }
 
-
+// cleanup at termination helps to reveal where the real leaks are
 void release_base_services() {
-   void terminate_dsa2();
+   terminate_dsa2();
 }
