@@ -378,7 +378,7 @@ void set_persistent_capabilites(
 }
 
 
-void release_persistent_capabilities() {
+void terminate_persistent_capabilities() {
    if (capabilities_hash)
       g_hash_table_destroy(capabilities_hash);
 }

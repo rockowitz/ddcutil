@@ -204,11 +204,11 @@ void init_ddc_services() {
 }
 
 
+// also handles VCP
 void release_ddc_services() {
-   // also handles VCP
-   release_persistent_capabilities();
    terminate_ddc_packet_io();
    terminate_ddc_displays();
    terminate_ddc_display_lock();
+   terminate_persistent_capabilities();
 }
 
