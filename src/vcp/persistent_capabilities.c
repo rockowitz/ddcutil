@@ -21,6 +21,7 @@
 
 #include "base/core.h"
 #include "base/monitor_model_key.h"
+#include "base/parms.h"
 #include "base/rtti.h"
 
 #include "persistent_capabilities.h"
@@ -58,14 +59,18 @@ static void dbgrpt_capabilities_hash0(int depth, const char * msg) {
 }
 
 
-static void delete_capabilities_file() {
+/** Deletes the capabilities cache file if it exists. */
+static void
+delete_capabilities_file() {
    bool debug = false;
-   char * fn = get_capabilities_cache_file_name();
+   char * fn = capabilities_cache_file_name();
    if (regular_file_exists(fn)) {
       DBGMSF(debug, "Deleting file: %s", fn);
       int rc = unlink(fn);
       if (rc < 0) {
          // should never occur
+         SEVEREMSG("Unexpected error deleting file %s: %s",
+               fn, strerror(errno));
          fprintf(fout(), "Unexpected error deleting file %s: %s\n",
                          fn, strerror(errno));
       }
@@ -77,60 +82,63 @@ static void delete_capabilities_file() {
 }
 
 
-static Error_Info * load_persistent_capabilities_file() {
+/** If capabilities caching is enabled and the capabilities cache file
+ *  exists, load the cache file.
+ *
+ *  @param capabilities_hash_loc points to in-memory capabilities hash table
+ *  @return Error_Info struct if errors, NULL if no errors
+ *
+ *  If *capabilities_cache_loc != NULL, the capabilities file has already
+ *  been loaded.  Do nothing.
+ *
+ *  Otherwise, creates a hash table and sets *capabilities_hash_loc.
+ *  If capabilities caching enabled, attempt to load it from the cache file.
+ */
+static Error_Info *
+load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
    bool debug = false;
    if (debug || IS_TRACING()) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
       dbgrpt_capabilities_hash0(2,NULL);
    }
-   Error_Info * errs = NULL;
-   if (capabilities_cache_enabled) {
-      if (capabilities_hash) {
-         g_hash_table_destroy(capabilities_hash);
-      }
-      capabilities_hash = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
 
-      char * data_file_name = get_capabilities_cache_file_name();
-      // char * data_file_name = xdg_cache_home_file("ddcutil", "capabilities");
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
-      GPtrArray * linearray = g_ptr_array_new_with_free_func(g_free);
-      errs = file_getlines_errinfo(data_file_name, linearray);
-      free(data_file_name);
-      if (!errs) {
-         for (int ndx = 0; ndx < linearray->len; ndx++) {
-            char * aline = strtrim(g_ptr_array_index(linearray, ndx));
-            // DBGMSF(debug, "Processing line %d: %s", ndx+1, aline);
-            if (strlen(aline) > 0 && aline[0] != '*' && aline[0] != '#') {
-               char * colon = strchr(aline, ':');
-               if (!colon) {
-                  if (!errs)
-                     errs = errinfo_new(DDCRC_BAD_DATA, __func__, "Invalid capabilities record");
-                  errinfo_add_cause(errs, errinfo_new(DDCRC_BAD_DATA, __func__,
-                                                       "Line %d, No colon in %s",
-                                                        ndx+1, aline));
+   Error_Info * errs = NULL;
+   if (!*capabilities_hash_loc) {
+      *capabilities_hash_loc = g_hash_table_new_full(g_str_hash, g_str_equal, free, free);
+      if (capabilities_cache_enabled) {
+         char * data_file_name = capabilities_cache_file_name();
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
+         GPtrArray * linearray = g_ptr_array_new_with_free_func(g_free);
+         errs = file_getlines_errinfo(data_file_name, linearray);
+         free(data_file_name);
+         if (!errs) {
+            for (int ndx = 0; ndx < linearray->len; ndx++) {
+               char * aline = strtrim(g_ptr_array_index(linearray, ndx));
+               // DBGMSF(debug, "Processing line %d: %s", ndx+1, aline);
+               if (strlen(aline) > 0 && aline[0] != '*' && aline[0] != '#') {
+                  char * colon = strchr(aline, ':');
+                  if (!colon) {
+                     if (!errs)
+                        errs = errinfo_new(DDCRC_BAD_DATA, __func__, "Invalid capabilities file");
+                     errinfo_add_cause(errs,
+                        errinfo_new(DDCRC_BAD_DATA, __func__, "Line %d, No colon in %s", ndx+1, aline));
+                  }
+                  else {
+                     *colon = '\0';
+                     g_hash_table_insert(capabilities_hash, g_strdup(aline), g_strdup(colon+1));
+                  }
                }
-               else {
-                  *colon = '\0';
-                  g_hash_table_insert(capabilities_hash, g_strdup(aline), g_strdup(colon+1));
-               }
+               free(aline);
             }
-            free(aline);
+            g_ptr_array_free(linearray, true);
          }
          if (errs) {
             delete_capabilities_file();
+            g_hash_table_remove_all(*capabilities_hash_loc);
          }
-         g_ptr_array_free(linearray, true);
       }
    }
-   else {
-      if (capabilities_hash) {
-         g_hash_table_destroy(capabilities_hash);
-         capabilities_hash = NULL;
-      }
-
-      delete_capabilities_file();
-   }
-   ASSERT_IFF(capabilities_cache_enabled, capabilities_hash);
+   assert(*capabilities_hash_loc);
 
    if (debug || IS_TRACING()) {
       DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
@@ -196,6 +204,14 @@ static inline bool generic_model_name(char * model_name) {
 }
 
 
+/** Some manufacturers use generic model names and don't set a product code.
+ *  (LG is a particularly bad offender.) In that case a #DDCA_Monitor_Model_Key
+ *  is unsuitable for identifying a capabilities string.
+ *
+ *  \param  mmk   #Monitor_Model_Key value to check
+ *  \return true if **mmk** does not uniquely identify a monitor model,
+ *         false if it does
+ */
 static inline bool non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
 {
    return ( generic_model_name(mmk->model_name) &&
@@ -225,8 +241,8 @@ void dbgrpt_capabilities_hash(int depth, const char * msg) {
  *  \return name of file, normally $HOME/.cache/ddcutil/capabilities
  */
 /* caller is responsible for freeing returned value */
-char * get_capabilities_cache_file_name() {
-   return xdg_cache_home_file("ddcutil", "capabilities");
+char * capabilities_cache_file_name() {
+   return xdg_cache_home_file("ddcutil", CAPABILITIES_CACHE_FILENAME);
 }
 
 
@@ -264,7 +280,11 @@ bool enable_capabilities_cache(bool newval) {
  *  hash table and should not be freed.
  *
  *  \param mmk monitor model key
- *  \return capabilities string, NULL if not found
+ *  \return capabilities string, NULL if not found or capabilities
+ *          caching disabled
+ *
+ *  \remark
+ *  Returns NULL in case of a potentially ambiguous Monitor_Model_Key
  */
 char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
 {
@@ -275,6 +295,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
    char * result = NULL;
    if (capabilities_cache_enabled) {
       if (non_unique_model_id(mmk)) {
+         SYSLOG2(DDCA_SYSLOG_WARNING, "Non unique Monitor_Model_Key %s", mmk_repr(*mmk));
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Non unique Monitor_Model_Key. Returning NULL");
       }
       else {
@@ -282,12 +303,12 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
          Error_Info * load_errs = NULL;
          DBGMSF(debug, "capabilities_hash = %p", capabilities_hash);
          if (!capabilities_hash) {  // if not yet loaded
-            load_errs = load_persistent_capabilities_file();
+            load_errs = load_persistent_capabilities_file(&capabilities_hash);
             if (load_errs) {
                if (ERRINFO_STATUS(load_errs) == -ENOENT)
                   errinfo_free(load_errs);
                else {
-                  char * data_file_name = get_capabilities_cache_file_name();
+                  char * data_file_name = capabilities_cache_file_name();
                   SEVEREMSG("Error(s) loading persistent capabilities file %s", data_file_name);
                   free(data_file_name);
                   for (int ndx =0; ndx < load_errs->cause_ct; ndx++) {
@@ -298,16 +319,15 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
                }
             }
          }
-         if (!load_errs) {
-            char * mms = g_strdup(monitor_model_string(mmk));
-            if (debug) {
-               DBGMSG("Hash table before lookup:");
-               dbgrpt_capabilities_hash0(2, NULL);
-               DBGMSG("Looking for key: mms -> |%s|", mms);
-            }
-            result = g_hash_table_lookup (capabilities_hash, mms);
-            free(mms);
-         }  // load persistent stats successful
+         assert(capabilities_hash);
+         char * mms = g_strdup(monitor_model_string(mmk));
+         if (debug) {
+            DBGMSG("Hash table before lookup:");
+            dbgrpt_capabilities_hash0(2, NULL);
+            DBGMSG("Looking for key: mms -> |%s|", mms);
+         }
+         result = g_hash_table_lookup (capabilities_hash, mms);
+         free(mms);
       }
       g_mutex_unlock(&persistent_capabilities_mutex);
    }
@@ -337,9 +357,13 @@ void set_persistent_capabilites(
 
    g_mutex_lock(&persistent_capabilities_mutex);
    if (capabilities_cache_enabled) {
-      if (non_unique_model_id(mmk))
+      if (non_unique_model_id(mmk)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                          "Not saving capabilities for non-unique Monitor_Model_Key.");
+         SYSLOG2(DDCA_SYSLOG_WARNING,
+               "Not saving capabilities for non-unique Monitor_Model_Key: %s",
+               monitor_model_string(mmk));
+      }
       else {
          char * mms = g_strdup(monitor_model_string(mmk));
          g_hash_table_insert(capabilities_hash, mms, g_strdup(capabilities));
@@ -351,6 +375,12 @@ void set_persistent_capabilites(
    g_mutex_unlock(&persistent_capabilities_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+void release_persistent_capabilities() {
+   if (capabilities_hash)
+      g_hash_table_destroy(capabilities_hash);
 }
 
 
