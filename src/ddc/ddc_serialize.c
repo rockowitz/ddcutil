@@ -441,7 +441,8 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "mode=%s, jstring:", serialize_mode_name(mode));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_DDCIO, "%s", jstring);
-   GPtrArray * restored = g_ptr_array_new_with_free_func(destroy_display_ref);   // Display_Ref *
+   GPtrArray * restored = g_ptr_array_new();                 // Display_Ref *
+   // g_ptr_array_new_with_free_func(destroy_display_ref);   // NO, reference is copied
 
    json_error_t error;
 
