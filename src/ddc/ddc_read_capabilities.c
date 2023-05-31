@@ -130,7 +130,7 @@ ddc_get_capabilities_string(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "get_persistent_capabilities() returned |%s|",
                                     dh->dref->capabilities_string);
          if (dh->dref->capabilities_string && get_output_level() >= DDCA_OL_VERBOSE) {
-            char * s = get_capabilities_cache_file_name();
+            char * s = capabilities_cache_file_name();
             rpt_vstring(0, "Read cached capabilities string from %s", s);
             SYSLOG2(DDCA_SYSLOG_INFO, "Read cached capabilities string from %s", s);
             free(s);
