@@ -73,5 +73,6 @@ GPtrArray * get_usb_monitor_list();
 GPtrArray * get_usb_open_errors();
 void        discard_usb_monitor_list();
 void        init_usb_displays();
+void        terminate_usb_displays();
 
 #endif /* USB_DISPLAYS_H_ */

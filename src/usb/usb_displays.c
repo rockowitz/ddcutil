@@ -558,7 +558,6 @@ discard_usb_monitor_list() {
 }
 
 
-
 //
 // Functions to find Usb_Monitor_Info for a display
 //
@@ -822,3 +821,11 @@ init_usb_displays() {
    RTTI_ADD_FUNC(usb_find_monitor_by_dh);
    // dbgrpt_func_name_table(0);
 }
+
+
+void
+terminate_usb_displays() {
+   discard_usb_monitor_list();
+}
+
+
