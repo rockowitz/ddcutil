@@ -25,6 +25,7 @@
 // Initialization
 
 void init_execution_stats();
+void terminate_execution_stats();
 void reset_execution_stats();
 
 

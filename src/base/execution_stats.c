@@ -598,6 +598,13 @@ void init_execution_stats() {
 }
 
 
+/** Cleanup at program termination */
+void terminate_execution_stats() {
+   free(primary_error_code_counts);
+   free(retryable_error_code_counts);
+}
+
+
 /** Resets collected execution statistics */
 void reset_execution_stats() {
    bool debug = false || debug_global_stats_mutex;
