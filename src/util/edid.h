@@ -4,7 +4,7 @@
  * the bytes of the EDID are obtained.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef EDID_H_
@@ -83,6 +83,7 @@ Parsed_Edid * create_parsed_edid(const Byte* edidbytes);
 Parsed_Edid * create_parsed_edid2(const Byte* edidbytes, const char * source);
 void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose_synopsis, bool show_raw, int depth);
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
+Parsed_Edid * copy_parsed_edid(Parsed_Edid * original);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);
 bool          is_embedded_parsed_edid(Parsed_Edid * parsed_edid);
 

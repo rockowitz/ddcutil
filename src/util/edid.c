@@ -20,6 +20,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "debug_util.h"
 #include "pnp_ids.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -299,6 +300,20 @@ Parsed_Edid * create_parsed_edid2(const Byte* edidbytes, const char * source) {
       STRLCPY(edid->edid_source, source, EDID_SOURCE_FIELD_SIZE);
    }
    return edid;
+}
+
+
+Parsed_Edid * copy_parsed_edid(Parsed_Edid * original) {
+   bool debug = false;
+   DBGF(debug, "Starting. original=%p", original);
+   Parsed_Edid * copy =  NULL;
+   if (original) {
+      copy = create_parsed_edid(original->bytes);
+      memcpy(&copy->edid_source, original->edid_source, sizeof(original->edid_source));
+      report_parsed_edid(copy, true, 2);
+   }
+   DBGF(debug, "Done. returning %p -> ", copy);
+   return copy;
 }
 
 
