@@ -3,7 +3,7 @@
  *  Query /sys file system for information on I2C devices
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef I2C_SYSFS_H_
@@ -126,5 +126,6 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 
 
 void init_i2c_sysfs();
+void terminate_i2c_sysfs();
 
 #endif /* I2C_SYSFS_H_ */

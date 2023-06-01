@@ -611,17 +611,23 @@ static GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Display;
 
 
 void free_sys_drm_display(void * display) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. display=%p", display);
    if (display) {
       Sys_Drm_Connector * disp = display;
       free(disp->connector_name);
-      free(disp->ddc_dir_path);
       free(disp->connector_path);
-      free(disp->edid_bytes);
       free(disp->name);
-      free(disp->status);
+      free(disp->dev);
+      free(disp->ddc_dir_path);
       free(disp->base_name);
+      free(disp->base_dev);
+      free(disp->edid_bytes);
+      free(disp->enabled);
+      free(disp->status);
       free(disp);
    }
+   DBGMSF(debug, "Done.");
 }
 
 
@@ -833,7 +839,7 @@ GPtrArray * scan_sys_drm_connectors(int depth) {
          is_drm_connector,      // filter function
          NULL,                  // ordering function
          one_drm_connector,
-         sys_drm_connectors,         // accumulator
+         sys_drm_connectors,         // accumulator, GPtrArray *
          depth);
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "size of sys_drm_connectors: %d", sys_drm_connectors->len);
    return sys_drm_connectors;
@@ -1118,6 +1124,9 @@ void free_conflicting_drivers(GPtrArray* conflicts) {
 // *** Collect basic /dev/i2c-N information into Sysfs_I2C_Info records ***
 //
 
+static GPtrArray * all_i2c_info = NULL;
+
+
 void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
    if (info) {
       free(info->name);
@@ -1288,7 +1297,6 @@ GPtrArray * get_all_i2c_info(bool rescan, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
-   static GPtrArray * all_i2c_info;
    if (all_i2c_info && rescan)  {
       g_ptr_array_free(all_i2c_info, true);
       all_i2c_info = NULL;
@@ -1516,4 +1524,9 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 }
 
+
+void terminate_i2c_sysfs() {
+   if (all_i2c_info)
+      g_ptr_array_free(all_i2c_info, true);
+}
 
