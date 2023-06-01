@@ -17,6 +17,7 @@
 #include "linux_errno.h"
 #include "per_display_data.h"
 #include "per_thread_data.h"
+#include "rtti.h"
 #include "sleep.h"
 #include "tuned_sleep.h"
 
@@ -51,4 +52,5 @@ void terminate_base_services() {
    terminate_per_display_data();
    terminate_execution_stats();
    terminate_dsa2();
+   terminate_rtti();
 }
