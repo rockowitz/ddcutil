@@ -337,12 +337,14 @@ void ddc_close_all_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    assert(open_displays);
+   // ddc_dbgrpt_valid_display_handles(2);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Closing %d open displays", g_hash_table_size(open_displays));
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
       Display_Handle * dh = cur->data;
       ddc_close_display(dh);
    }
+   g_free(display_handles);
    // open_displays should be empty at this point
    TRACED_ASSERT(g_hash_table_size(open_displays) == 0);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -1011,7 +1013,7 @@ init_ddc_packet_io() {
 
 void
 terminate_ddc_packet_io() {
-   ddc_close_all_displays();
+   // ddc_close_all_displays();
    g_hash_table_destroy(open_displays);
 }
 
