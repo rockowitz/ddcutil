@@ -3,7 +3,7 @@
  *  model name, and product code, as listed in the EDID.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MONITOR_MODEL_KEY_H_
@@ -33,6 +33,10 @@ monitor_model_key_new(
       const char *   mfg_id,
       const char *   model_name,
       uint16_t       product_code);
+
+DDCA_Monitor_Model_Key *
+monitor_model_key_new_from_edid(
+      Parsed_Edid * edid);
 
 #ifdef UNUSED
 DDCA_Monitor_Model_Key *

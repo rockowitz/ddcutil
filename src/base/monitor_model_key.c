@@ -94,6 +94,22 @@ monitor_model_key_new(
 }
 
 
+DDCA_Monitor_Model_Key *
+monitor_model_key_new_from_edid(
+      Parsed_Edid * edid)
+{
+   DDCA_Monitor_Model_Key * result = NULL;
+   if (edid) {
+      result = calloc(1, sizeof(DDCA_Monitor_Model_Key));
+      memcpy(result->mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
+      memcpy(result->model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
+      result->product_code = edid->product_code;
+      result->defined = true;
+   }
+   return result;
+}
+
+
 /** Frees a Monitor_Model_Key */
 void
 monitor_model_key_free(
