@@ -439,7 +439,7 @@ find_dref(
          if (businfo->flags & I2C_BUS_ADDR_0X50)  {
             dref = create_bus_display_ref(busno);
             dref->dispno = DISPNO_INVALID;      // or should it be DISPNO_NOT_SET?
-            dref->pedid = businfo->edid;    // needed?
+            dref->pedid = copy_parsed_edid(businfo->edid);
             dref->mmid  = monitor_model_key_new(
                              dref->pedid->mfg_id,
                              dref->pedid->model_name,
@@ -695,7 +695,7 @@ main(int argc, char *argv[]) {
    bool main_debug = false;
    char * s = getenv("DDCUTIL_DEBUG_MAIN");
    if (s && strlen(s) > 0)
-      main_debug = true;
+      main_debug = false;
 
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
