@@ -67,8 +67,8 @@ typedef struct {
 // static long                 last_io_timestamp = -1;
 static uint64_t             program_start_timestamp;
 static uint64_t             resettable_start_timestamp;
-static Status_Code_Counts * primary_error_code_counts;
-static Status_Code_Counts * retryable_error_code_counts;
+static Status_Code_Counts * primary_error_code_counts = NULL;
+static Status_Code_Counts * retryable_error_code_counts = NULL;
 static GMutex               status_code_counts_mutex;
 static GMutex               global_stats_mutex;
 
@@ -281,6 +281,18 @@ Status_Code_Counts * new_status_code_counts(char * name) {
 
    DBGMSF(debug, "Done");
    return pcounts;
+}
+
+
+void free_status_code_counts(Status_Code_Counts * counts) {
+   bool debug = false;
+   DBGMSF(debug, "counts=%p", counts);
+   if (counts) {
+      g_hash_table_destroy(counts->error_counts_hash);
+      g_free(counts->name);
+      free(counts);
+   }
+   DBGMSF(debug, "Done");
 }
 
 
@@ -598,13 +610,6 @@ void init_execution_stats() {
 }
 
 
-/** Cleanup at program termination */
-void terminate_execution_stats() {
-   free(primary_error_code_counts);
-   free(retryable_error_code_counts);
-}
-
-
 /** Resets collected execution statistics */
 void reset_execution_stats() {
    bool debug = false || debug_global_stats_mutex;
@@ -664,3 +669,16 @@ void report_elapsed_summary(int depth) {
                elapsed_nanos / (1000*1000));
    rpt_nl();
 }
+
+
+
+/** Cleanup at program termination */
+void terminate_execution_stats() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   free_status_code_counts(primary_error_code_counts);
+   free_status_code_counts(retryable_error_code_counts);
+   DBGMSF(debug, "Done");
+}
+
+
