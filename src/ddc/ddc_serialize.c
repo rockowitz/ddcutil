@@ -31,9 +31,11 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
 bool display_caching_enabled = false;
 
-GPtrArray* deserialized_displays = NULL;
-GPtrArray* deserialized_buses    = NULL;
+GPtrArray* deserialized_displays = NULL;    // array of Display_Ref *
+GPtrArray* deserialized_buses    = NULL;    // array of Display_Ref *
 
+
+// #define CACHE_BUS_INFO   // not used
 
 Display_Ref * ddc_find_deserialized_display(int busno, Byte* edidbytes) {
    bool debug = false;
@@ -416,6 +418,7 @@ char * ddc_serialize_displays_and_buses() {
    }
    json_object_set_new(root, "all_displays", jdisplays);
 
+#ifdef CACHE_BUS_INFO
    GPtrArray* all_buses = i2c_get_all_buses();
    json_t* jbuses = json_array();
 
@@ -425,7 +428,7 @@ char * ddc_serialize_displays_and_buses() {
       json_decref(node);
    }
    json_object_set_new(root, "all_buses", jbuses);
-
+#endif
    char * result = json_dumps(root, JSON_INDENT(3));
 
    if (debug || IS_TRACING() ) {
@@ -441,8 +444,7 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "mode=%s, jstring:", serialize_mode_name(mode));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_DDCIO, "%s", jstring);
-   GPtrArray * restored = g_ptr_array_new();                 // Display_Ref *
-   // g_ptr_array_new_with_free_func(destroy_display_ref);   // NO, reference is copied
+   GPtrArray * restored = g_ptr_array_new();
 
    json_error_t error;
 
@@ -585,17 +587,26 @@ void ddc_restore_displays_cache() {
       char * buf = read_file_single_string(fn, debug);
       // DBGMSF(debug, "buf: |%s|", buf);
       deserialized_displays = ddc_deserialize_displays_or_buses(buf, serialize_mode_display);
+#ifdef CACHE_BUS_INFO
       deserialized_buses    = ddc_deserialize_displays_or_buses(buf, serialize_mode_bus);
+#endif
       free(buf);
    }
    else {
       DBGMSF(debug, "File not found: %s", fn);
-      deserialized_buses = g_ptr_array_new();
-      deserialized_displays = g_ptr_array_new();
+#ifdef CACHE_BUS_INFO
+      deserialized_buses    =  g_ptr_array_new();
+#endif
+      deserialized_displays =  g_ptr_array_new();
    }
    free(fn);
+#ifdef CACHE_BUS_INFO
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d Display_Ref records, %d I2C_Bus_Info records",
          deserialized_displays->len, deserialized_buses->len);
+#else
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d Display_Ref records",
+         deserialized_displays->len);
+#endif
 }
 
 
@@ -616,4 +627,21 @@ void init_ddc_serialize() {
    RTTI_ADD_FUNC(ddc_erase_displays_cache);
    RTTI_ADD_FUNC(serialize_one_display);
    RTTI_ADD_FUNC(deserialize_one_display);
+}
+
+
+void terminate_ddc_serialize() {
+   bool debug = false;
+   DBGMSF(debug, "Starting");
+   if (deserialized_buses) {
+      g_ptr_array_set_free_func(deserialized_buses,    i2c_gdestroy_bus_info);
+      g_ptr_array_free(deserialized_buses,   true);
+      deserialized_buses    = NULL;
+   }
+   if (deserialized_displays) {
+      g_ptr_array_set_free_func(deserialized_displays, gdestroy_display_ref);
+      g_ptr_array_free(deserialized_displays, true);
+      deserialized_displays = NULL;
+   }
+   DBGMSF(debug, "Done");
 }
