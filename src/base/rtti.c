@@ -21,7 +21,7 @@ static GHashTable * func_name_table = NULL;
 
 void rtti_func_name_table_add(void * func_addr, const char * func_name) {
    if (!func_name_table)
-      func_name_table =  g_hash_table_new(g_direct_hash, g_direct_equal);
+      func_name_table =  g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
    g_hash_table_insert(func_name_table, func_addr, g_strdup(func_name));
 }
 
@@ -76,5 +76,10 @@ void dbgrpt_rtti_func_name_table(int depth) {
          rpt_vstring(d1, "   %s", (char *) g_ptr_array_index(values, ndx));
       }
    }
+}
+
+
+void terminate_rtti() {
+   g_hash_table_destroy(func_name_table);
 }
 
