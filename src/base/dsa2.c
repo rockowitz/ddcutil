@@ -1297,5 +1297,6 @@ void terminate_dsa2() { // release all resources
             free_results_table(results_tables[ndx]);
       }
    }
+   free(results_tables);
 }
 
