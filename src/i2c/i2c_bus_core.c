@@ -377,12 +377,6 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
 }
 
 
-// satisfies GDestroyNotify()
-void i2c_gdestroy_bus_info(gpointer data) {
-   i2c_free_bus_info((I2C_Bus_Info*) data);
-}
-
-
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
