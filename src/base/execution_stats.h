@@ -5,7 +5,7 @@
  * These stats are global, not per thread
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
@@ -93,5 +93,7 @@ void reset_sleep_event_counts();
 void record_sleep_event(Sleep_Event_Type event_type);
 
 void report_execution_stats(int depth);
+
+void terminate_execution_stats();
 
 #endif /* EXECUTION_STATS_H_ */
