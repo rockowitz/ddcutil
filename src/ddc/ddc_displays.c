@@ -711,14 +711,14 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = NULL;
          if (display_caching_enabled) {
-            dref = ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes);
+            dref = copy_display_ref(ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes));
             if (dref)
                dref->detail = businfo;
          }
          if (!dref) {
             dref = create_bus_display_ref(businfo->busno);
             dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-            dref->pedid = businfo->edid;    // needed?
+            dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
             dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
                                                 dref->pedid->product_code);
@@ -1026,7 +1026,7 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
 /** Invokes the registered callbacks for a display hotplug event.
  */
 void ddc_emit_display_hotplug_event() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (display_hotplug_callbacks) {
       for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
