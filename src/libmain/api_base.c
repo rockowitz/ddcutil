@@ -486,7 +486,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, 0);
-      release_ddc_services();
+      terminate_ddc_services();
       terminate_base_services();
       ddc_stop_watch_displays();
       free_regex_hash_table();

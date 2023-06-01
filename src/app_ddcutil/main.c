@@ -1048,7 +1048,7 @@ bye:
       closelog();
    }
 
-   release_ddc_services();
+   terminate_ddc_services();
    terminate_base_services();
 
    return main_rc;

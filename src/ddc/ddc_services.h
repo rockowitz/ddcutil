@@ -15,7 +15,7 @@
 #include "public/ddcutil_types.h"
 
 void init_ddc_services();
-void release_ddc_services();
+void terminate_ddc_services();
 void ddc_reset_stats_main();
 void ddc_report_stats_main(
       DDCA_Stats_Type  stats,
