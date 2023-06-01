@@ -80,6 +80,7 @@ struct {
 char *           interpret_i2c_bus_flags(uint16_t flags);
 I2C_Bus_Info *   i2c_new_bus_info(int busno);
 void             i2c_free_bus_info(I2C_Bus_Info * bus_info);
+void             i2c_gdestroy_bus_info(void * data);
 GPtrArray *      i2c_get_all_buses();
 
 // Simple Bus_Info retrieval

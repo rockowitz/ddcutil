@@ -66,6 +66,7 @@ char * interpret_i2c_bus_flags(uint16_t flags) {
 #undef ADD_NAME
 
    char * joined =  join_string_g_ptr_array(names, " | ");
+   g_ptr_array_free(names, false);
    return joined;
 }
 
@@ -103,7 +104,7 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p", bus_info);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p, busno=%d", bus_info, bus_info->busno);
    if (bus_info) {
       if (memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
          assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
@@ -120,6 +121,10 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
+void i2c_gdestroy_bus_info(void * data) {
+   i2c_free_bus_info(data);
+}
 
 const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
    char * result = NULL;
