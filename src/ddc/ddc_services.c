@@ -206,12 +206,14 @@ void init_ddc_services() {
 
 // also handles VCP
 void release_ddc_services() {
+   terminate_ddc_serialize();
+   terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
    terminate_ddc_packet_io();
-   terminate_ddc_displays();
    terminate_ddc_display_lock();
    terminate_persistent_capabilities();
 #ifdef USE_USB
    terminate_usb_displays();
 #endif
+   terminate_i2c_services();
 }
 
