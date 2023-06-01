@@ -585,7 +585,8 @@ char * dpath_repr_t(DDCA_IO_Path * dpath) {
 // *** Display_Ref ***
 
 Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
-   // bool debug = false;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "io_path=%s", dpath_repr_t(&io_path));
    Display_Ref * dref = calloc(1, sizeof(Display_Ref));
    memcpy(dref->marker, DISPLAY_REF_MARKER, 4);
    dref->io_path = io_path;
@@ -598,6 +599,8 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
 
    // Per_Display_Data * pdd = pdd_get_per_display_data(io_path, true);
    // dref->pdd = pdd;
+   // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
 
@@ -610,6 +613,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
  */
 Display_Ref * create_bus_display_ref(int busno) {
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "busno=%d", busno);
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_I2C;
    io_path.path.i2c_busno = busno;
@@ -620,6 +624,8 @@ Display_Ref * create_bus_display_ref(int busno) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref,0);
    }
+   // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
 
@@ -635,6 +641,8 @@ Display_Ref * create_bus_display_ref(int busno) {
 Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_devname) {
    assert(hiddev_devname);
    bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "usb_bus=%d, usb_device=%d, hiddev_devname=%s",
+         usb_bus, usb_device, hiddev_devname);
    DDCA_IO_Path io_path;
    io_path.io_mode      = DDCA_IO_USB;
    io_path.path.hiddev_devno = hiddev_name_to_number(hiddev_devname);
@@ -644,13 +652,53 @@ Display_Ref * create_usb_display_ref(int usb_bus, int usb_device, char * hiddev_
    dref->usb_device  = usb_device;
    dref->usb_hiddev_name = g_strdup(hiddev_devname);
 
+#ifdef OLD
    if (debug) {
       DBGMSG("Done.  Constructed USB display ref:");
       dbgrpt_display_ref(dref,0);
    }
+#endif
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   // DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
 #endif
+
+
+Display_Ref * copy_display_ref(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p, iopath=%s", dref, (dref) ? dpath_repr_t(&dref->io_path) : NULL);
+   Display_Ref * copy = NULL;
+   if (dref) {
+      DDCA_IO_Path iopath = dref->io_path;
+      copy = create_base_display_ref(iopath);
+      copy->usb_bus = dref->usb_bus;
+      copy->usb_device = dref->usb_device;
+      copy->usb_hiddev_name = g_strdup(dref->usb_hiddev_name);
+      copy->vcp_version_xdf = dref->vcp_version_xdf;
+      copy->vcp_version_cmdline = dref->vcp_version_cmdline;
+      copy->flags = dref->flags;
+      copy->capabilities_string = g_strdup(dref->capabilities_string);
+      if (dref->pedid) {
+         copy->pedid = create_parsed_edid(dref->pedid->bytes);
+         memcpy(copy->pedid->edid_source, dref->pedid->edid_source, sizeof(dref->pedid->edid_source));
+      }
+      if (dref->mmid) {
+         copy->mmid = calloc(1, sizeof(DDCA_Monitor_Model_Key));
+         memcpy(copy->mmid, dref->mmid, sizeof(DDCA_Monitor_Model_Key));
+      }
+      copy->dispno = dref->dispno;
+      // do not set detail
+      // do not set dfr
+      // do not set actual_display
+      copy->actual_display_path = dref->actual_display_path;
+      copy->driver_name = g_strdup(dref->driver_name);
+      // dont set pdd
+   }
+   // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, copy);
+   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", copy);
+   return copy;
+}
 
 
 /** Frees a display reference.
@@ -682,8 +730,8 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
                free(dref->capabilities_string);
             if (dref->mmid)                  // always a private copy
                free(dref->mmid);
-            // 9/2017: what about pedid, detail2?
-            // what to do with gdl, request_queue?
+            if (dref->pedid)
+               free_parsed_edid(dref->pedid);  // private copy
             if (dref->dfr)
                dfr_free(dref->dfr);
             if (dref->driver_name)
@@ -700,7 +748,7 @@ bye:
 
 
 // wraps free_display_ref() as GDestroyNotify()
-void destroy_display_ref(void * data) {
+void gdestroy_display_ref(void * data) {
    free_display_ref((Display_Ref*) data);
 }
 
@@ -1009,6 +1057,12 @@ char * interpret_dref_flags_t(Dref_Flags flags) {
 void init_displays() {
    RTTI_ADD_FUNC(free_display_handle);
    RTTI_ADD_FUNC(free_display_ref);
+   RTTI_ADD_FUNC(create_base_display_ref);
+#ifdef USE_USB
+   RTTI_ADD_FUNC(create_usb_display_ref);
+#endif
+   RTTI_ADD_FUNC(create_bus_display_ref);
+   RTTI_ADD_FUNC(copy_display_ref);
 
 #ifdef ASYNC_REC
    displays_master_list = g_ptr_array_new();

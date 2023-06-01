@@ -198,7 +198,9 @@ typedef struct _display_ref {
    DDCA_Monitor_Model_Key * mmid;                  // will be set iff pedid
    int                      dispno;
    void *                   detail;                // I2C_Bus_Info or Usb_Monitor_Info
+#ifdef UNUSED_ASYNC
    Display_Async_Rec *      async_rec;
+#endif
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
@@ -219,7 +221,8 @@ void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
-void          destroy_display_ref(void * data);  // satisfies GDestroyNotify()
+void          gdestroy_display_ref(void * data);  // satisfies GDestroyNotify()
+Display_Ref * copy_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);
@@ -259,8 +262,10 @@ int    hiddev_name_to_number(const char * hiddev_name);
 char * hiddev_number_to_name(int hiddev_number);
 #endif
 
+#ifdef UNUSED_ASYNC
 bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);
 void unlock_display_lock(Display_Async_Rec * async_rec);
+#endif
 
 /** For recording /dev/i2c and hiddev open errors */
 typedef struct {
