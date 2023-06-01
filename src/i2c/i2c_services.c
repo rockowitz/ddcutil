@@ -19,4 +19,6 @@ void init_i2c_services() {
    init_i2c_sysfs();
 }
 
-// terminate_i2c_services() unnecessary, there's nothing to do
+void terminate_i2c_services() {
+   terminate_i2c_sysfs();
+}
