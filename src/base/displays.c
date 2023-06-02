@@ -677,7 +677,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       copy->usb_hiddev_name = g_strdup(dref->usb_hiddev_name);
       copy->vcp_version_xdf = dref->vcp_version_xdf;
       copy->vcp_version_cmdline = dref->vcp_version_cmdline;
-      copy->flags = dref->flags;
+      copy->flags = dref->flags & ~DREF_DYNAMIC_FEATURES_CHECKED;
       copy->capabilities_string = g_strdup(dref->capabilities_string);
       if (dref->pedid) {
          copy->pedid = create_parsed_edid(dref->pedid->bytes);
