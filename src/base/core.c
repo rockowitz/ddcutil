@@ -380,60 +380,98 @@ static char * formatted_wall_time() {
 // Issue messages of various types
 //
 
-// trace_callstack is per thread
-_Thread_local  GPtrArray * trace_callstack = NULL;
+#define MAX_TRACE_CALLSTACK_CALL_DEPTH 100
 
-#define INIT_CALLSTACK() \
-if (!trace_callstack) { \
-   trace_callstack = g_ptr_array_sized_new(100); \
-   g_ptr_array_set_free_func(trace_callstack, g_free); \
+// trace_callstack is per thread
+__thread  int    trace_api_call_depth = 0;
+__thread  unsigned int    trace_callstack_call_depth = 0;
+
+
+
+/** Checks if tracing is to be performed.
+ *
+ * Tracing is enabled if any of the following tests pass:
+ * - trace group
+ * - file name
+ * - function name
+ *
+ * @param trace_group group to check
+ * @param filename    file from which check is occurring
+ * @param funcname    function name
+ *
+ * @return **true** if tracing enabled, **false** if not
+ *
+ * @remark
+ * - Multiple trace group bits can be set in **trace_group**.  If any of those
+ *   group are currently being traced, the function returns **true**. That is,
+ *   a given trace location in the code can be activated by multiple trace groups.
+ * - If trace_group == TRC_ALWAYS (0xff), the function returns **true**.
+ *   Commonly, if debugging is active in a given location, the trace_group value
+ *   being checked can be set to TRC_ALWAYS, so a site can have a single debug/trace
+ *   function call.
+ *
+ * @ingroup dbgtrace
+ *
+ */
+bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
+   bool debug = false;  //str_starts_with(funcname, "ddca_");
+   if (debug)
+      printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
+              __func__, trace_group, filename, funcname);
+   bool result = false;
+// #ifdef ENABLE_TRACE
+   result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
+
+   result = result || is_traced_function(funcname) || is_traced_file(filename) || trace_api_call_depth > 0;
+// #endif
+   if (debug)
+      printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
+              __func__, trace_group, filename, funcname, trace_levels, result);
+   return result;
 }
 
 
+#ifdef UNUSED
+
+ #define INIT_CALLSTACK() \
+ if (!trace_callstack) { \
+    trace_callstack = g_ptr_array_sized_new(100); \
+    g_ptr_array_set_free_func(trace_callstack, g_free); \
+ }
+
+
+
 static void report_callstack() {
-   INIT_CALLSTACK();
-   printf("Current callstack, callstack->len=%d, trace_callstack_call_depth=%d\n",
-          trace_callstack->len, trace_callstack_call_depth);
-   for (int ndx = 0; ndx < trace_callstack->len; ndx++) {
-      printf("   trace_callstack[%d] = %s\n", ndx,
-             (char*) g_ptr_array_index(trace_callstack, ndx));
+   // INIT_CALLSTACK();
+   printf("Current callstack, trace_callstack_call_depth=%d\n",
+          trace_callstack_call_depth);
+   for (int ndx = 0; ndx < trace_callstack_call_depth; ndx++) {
+      printf("   trace_callstack[%d] = %s\n", ndx, trace_callstack[ndx]);
    }
 }
 
 
 static void push_callstack(const char * funcname) {
-   INIT_CALLSTACK();
-   bool debug = false;
+   // INIT_CALLSTACK();
+   bool debug = true;
    if (debug)
-      printf("(%s) Starting. funcname=%s, callstack->len=%d, trace_callstack_call_depth=%d\n",
-            __func__, funcname, trace_callstack->len, trace_callstack_call_depth);
-   if (trace_callstack->len != trace_callstack_call_depth-1) {
-      printf("(%s) =====> Error. callstack->len = %d, callstack_call_depth=%d\n",
-            __func__, trace_callstack->len, trace_callstack_call_depth);
-      report_callstack();
-      assert(false);
-   }
-   g_ptr_array_add(trace_callstack, strdup(funcname));
+      printf("(%s) Starting. funcname=%s, trace_callstack_call_depth=%d\n",
+            __func__, funcname, trace_callstack_call_depth);
+   assert(trace_callstack_call_depth < (MAX_TRACE_CALLSTACK_CALL_DEPTH-1));
+   trace_callstack[trace_callstack_call_depth++] = strdup(funcname);
    if (debug)
-      printf("(%s) Done.  New callstack->len = %d\n", __func__, trace_callstack->len);
+      printf("(%s) Done.  New trace_callstack_call_depth = %d\n", __func__, trace_callstack_call_depth);
 }
 
 
 static void pop_callstack(const char * funcname) {
-   INIT_CALLSTACK();
-   bool debug = false;
+   // INIT_CALLSTACK();
+   bool debug = true;
    if (debug)
-      printf("(%s) Starting. funcname=%s, callstack->len=%d, trace_callstack_call_depth=%d\n",
-            __func__, funcname, trace_callstack->len, trace_callstack_call_depth);
-   if (trace_callstack->len != trace_callstack_call_depth) {
-      printf("(%s) ======> Error. callstack->len = %d, callstack_call_depth=%d\n",
-            __func__, trace_callstack->len, trace_callstack_call_depth);
-      report_callstack();
-      show_backtrace(2);
-      assert(false);
-   }
+      printf("(%s) Starting. funcname=%s, trace_callstack_call_depth=%d\n",
+            __func__, funcname, trace_callstack_call_depth);
 
-   if (trace_callstack->len == 0) {
+   if (trace_callstack_call_depth == 0) {
       printf("(%s) ======> Error. Popping %s off of empty call stack\n", __func__, funcname);
       assert(false);
    }
@@ -451,6 +489,7 @@ static void pop_callstack(const char * funcname) {
       free(popped);
    }
 }
+#endif
 
 
 /** Core function for emitting debug and trace messages.
@@ -612,17 +651,14 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
    if (debug)
       printf("\n(%s) Starting. options=0x%04x, funcname=%s, trace_callstack_call_depth=%d\n",
             __func__, options, funcname, trace_callstack_call_depth);
-   assert(trace_callstack_call_depth >= 0);
 
    if (options & DBGTRC_OPTIONS_STARTING) {
       if (trace_callstack_call_depth > 0) {
          trace_callstack_call_depth++;
-         push_callstack(funcname);
       }
       else {
          if (is_traced_callstack_call(funcname)) {
             trace_callstack_call_depth = 1;
-            push_callstack(funcname);
          }
       }
       if (debug)
@@ -630,7 +666,6 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
    }
 
    if ((options & DBGTRC_OPTIONS_DONE) && trace_callstack_call_depth > 0) {
-      pop_callstack(funcname);
       trace_callstack_call_depth--;
    }
 
@@ -906,6 +941,6 @@ void core_errmsg_emitter(
 
 
 void init_core() {
-   trace_callstack = g_ptr_array_sized_new(100);
+//   trace_callstack = g_ptr_array_sized_new(100); //   wrong, must be initialized per thread
 
 }

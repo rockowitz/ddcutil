@@ -15,8 +15,7 @@
 
 #include "public/ddcutil_types.h"
 
-extern __thread  int  trace_api_call_depth;
-extern __thread  int  trace_callstack_call_depth;
+extern DDCA_Trace_Group trace_levels;
 
 extern DDCA_Syslog_Level syslog_level;
 
@@ -34,6 +33,7 @@ bool is_traced_api_call( const char * funcname);
 
 bool add_traced_callstack_call(const char * funcname);
 bool is_traced_callstack_call( const char * funcname);
+void dbgrpt_traced_callstack_call_table(int depth);
 
 void add_traced_file(const char * filename);
 bool is_traced_file( const char * filename);

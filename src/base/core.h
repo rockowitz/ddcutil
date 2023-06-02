@@ -89,6 +89,10 @@ typedef struct {
 // Trace message control
 //
 
+extern __thread  int  trace_api_call_depth;
+extern __thread  unsigned int  trace_callstack_call_depth;
+// extern __thread  char * trace_callstack[100];
+
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id

@@ -25,8 +25,6 @@
 
 #include "trace_control.h"
 
-_Thread_local  int  trace_api_call_depth = 0;
-_Thread_local  int  trace_callstack_call_depth = 0;
 
 DDCA_Syslog_Level syslog_level = DDCA_SYSLOG_NOT_SET;
 
@@ -136,7 +134,7 @@ DDCA_Trace_Group trace_class_name_to_value(const char * name) {
                            DDCA_TRC_NONE);
 }
 
-static DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
+DDCA_Trace_Group trace_levels = DDCA_TRC_NONE;   // 0x00
 
 /** Replaces the groups to be traced.
  *
@@ -178,20 +176,30 @@ static GPtrArray  * traced_file_table     = NULL;
 static GPtrArray  * traced_api_call_table = NULL;
 static GPtrArray  * traced_callstack_call_table = NULL;
 
-#ifdef UNUSED
-void dbgrpt_traced_function_table(int depth) {
-   if (traced_function_table) {
-      rpt_vstring(depth, "traced_function_table:");
-      if (traced_function_table) {
-         for (int ndx = 0; ndx < traced_function_table->len; ndx++) {
-            rpt_vstring(depth+1, g_ptr_array_index(traced_function_table, ndx));
-         }
+
+void dbgrpt_traced_object_table(GPtrArray * table, const char * table_name, int depth) {
+   if (table) {
+      rpt_vstring(depth, "%s:", table_name);
+      if (table->len == 0)
+         rpt_vstring(depth, "%s: empty", table_name);
+      else {
+         for (int ndx = 0; ndx < table->len; ndx++)
+            rpt_vstring(depth+1, g_ptr_array_index(table, ndx));
       }
    }
    else
-      rpt_vstring(depth, "traced_function_table: NULL");
+      rpt_vstring(depth, "%s: NULL", table_name);
+   }
+
+
+void dbgrpt_traced_function_table(int depth) {
+   dbgrpt_traced_object_table(traced_function_table, "traced_function_table", depth);
 }
-#endif
+
+void dbgrpt_traced_callstack_call_table(int depth) {
+   dbgrpt_traced_object_table(traced_callstack_call_table, "traced_callstack_call_table", depth);
+}
+
 
 
 /** Adds a function to the list of functions to be traced.
@@ -242,7 +250,7 @@ bool add_traced_api_call(const char * funcname) {
 
 
 bool add_traced_callstack_call(const char * funcname) {
-   bool debug = false;
+   bool debug = true;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
 
@@ -411,48 +419,6 @@ bool is_traced_file(const char * filename) {
       // printf("(%s) filename=|%s|, bname=|%s|, returning: %s\n", __func__, filename, bname, SBOOL(result));
       free(bname);
    }
-   return result;
-}
-
-/** Checks if tracing is to be performed.
- *
- * Tracing is enabled if any of the following tests pass:
- * - trace group
- * - file name
- * - function name
- *
- * @param trace_group group to check
- * @param filename    file from which check is occurring
- * @param funcname    function name
- *
- * @return **true** if tracing enabled, **false** if not
- *
- * @remark
- * - Multiple trace group bits can be set in **trace_group**.  If any of those
- *   group are currently being traced, the function returns **true**. That is,
- *   a given trace location in the code can be activated by multiple trace groups.
- * - If trace_group == TRC_ALWAYS (0xff), the function returns **true**.
- *   Commonly, if debugging is active in a given location, the trace_group value
- *   being checked can be set to TRC_ALWAYS, so a site can have a single debug/trace
- *   function call.
- *
- * @ingroup dbgtrace
- *
- */
-bool is_tracing(DDCA_Trace_Group trace_group, const char * filename, const char * funcname) {
-   bool debug = false;  //str_starts_with(funcname, "ddca_");
-   if (debug)
-      printf("(%s) Starting. trace_group=0x%04x, filename=%s, funcname=%s\n",
-              __func__, trace_group, filename, funcname);
-   bool result = false;
-// #ifdef ENABLE_TRACE
-   result =  (trace_group == DDCA_TRC_ALL) || (trace_levels & trace_group); // is trace_group being traced?
-
-   result = result || is_traced_function(funcname) || is_traced_file(filename) || trace_api_call_depth > 0;
-// #endif
-   if (debug)
-      printf("(%s) Done.     trace_group=0x%04x, filename=%s, funcname=%s, trace_levels=0x%04x, returning %d\n",
-              __func__, trace_group, filename, funcname, trace_levels, result);
    return result;
 }
 
