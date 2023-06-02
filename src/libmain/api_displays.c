@@ -71,7 +71,7 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
 void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
 void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);
 
-
+#ifdef REMOVED
 DDCA_Status
 ddca_enable_usb_display_detection(bool onoff) {
    return ddc_enable_usb_display_detection(onoff);
@@ -81,6 +81,7 @@ bool
 ddca_ddca_is_usb_display_detection_enabled() {
    return ddc_is_usb_display_detection_enabled();
 }
+#endif
 
 
 //

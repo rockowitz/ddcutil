@@ -127,6 +127,10 @@ Trace options:
   - ddca_trace_group_name_to_value()
   - ddca_set_trace_options()
 
+USB enablement: 
+  - ddca_enable_usb_display_detection
+  - ddca_disable_usb_display_detection 
+
 Most per-thread statistics are now instead maintained on a per-display basis.
 The following functions are no longer useful and have been removed
 - ddca_set_thread_description()

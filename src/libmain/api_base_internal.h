@@ -438,6 +438,33 @@ ddca_append_thread_description(const char * description);
 const char * ddca_get_thread_descripton();
 #endif
 
+#ifdef REMOVED
+
+/** Controls whether USB devices are checked during display detection
+ *
+ *  Must be called before any API call that triggers display detection.
+ *
+ *  @param[in] onoff
+ *  @retval    DDCRC_OK                success
+ *  @retval    DDCRC_INVALID_OPERATION display detection has already occurred
+ *  @retval    DDCRC_UNIMPLEMENTED     ddcutil not built with USB monitor support
+ *
+ *  @remark
+ *  The default is to check USB devices.
+ *
+ *  This setting is global to all threads.
+ */
+DDCA_Status
+ddca_enable_usb_display_detection(bool onoff);
+
+/** Reports whether USB devices are checked as part of display detection
+ *
+ *  @retval true  USB devices are checked
+ *  @retval false USB devices are not checked
+ */
+bool
+ddca_ddca_is_usb_display_detection_enabled();
+#endif
 
 
 
