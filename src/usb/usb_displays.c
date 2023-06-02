@@ -550,11 +550,18 @@ GPtrArray * get_usb_open_errors() {
 
 void
 discard_usb_monitor_list() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "usb_monitors=%p, usb_open_errors=%p", usb_monitors, usb_open_errors);
+
    if (usb_monitors) {
       g_ptr_array_set_free_func(usb_monitors, free_usb_monitor_info);
       g_ptr_array_free(usb_monitors, true);
       g_ptr_array_free(usb_open_errors, true);  // array of Bus_Open_Error *, no special free function needed
+      usb_monitors = NULL;
+      usb_open_errors = NULL;
    }
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -819,13 +826,14 @@ init_usb_displays() {
    RTTI_ADD_FUNC(usb_find_monitor_by_busnum_devnum);
    RTTI_ADD_FUNC(usb_find_monitor_by_dref);
    RTTI_ADD_FUNC(usb_find_monitor_by_dh);
+   RTTI_ADD_FUNC(discard_usb_monitor_list);
    // dbgrpt_func_name_table(0);
 }
 
 
 void
 terminate_usb_displays() {
-   discard_usb_monitor_list();
+    // discard_usb_monitor_list();   // unnecessary, already called
 }
 
 
