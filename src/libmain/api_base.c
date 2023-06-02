@@ -554,7 +554,7 @@ DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name) {
 
 
 DDCA_Status
-ddca_init(const char *      library_options,
+ddca_init(const char *      libopts,
           DDCA_Syslog_Level syslog_level_arg,
           DDCA_Init_Options opts)
 {
@@ -590,12 +590,12 @@ ddca_init(const char *      library_options,
    }
    else {
       Parsed_Cmd * parsed_cmd = NULL;
-      if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !library_options) {
+      if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
          parsed_cmd = new_parsed_cmd();
       }
       else {
          master_error = get_parsed_libmain_config(
-                           library_options,
+                           libopts,
                            opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE,
                            &parsed_cmd);
          ASSERT_IFF(master_error, !parsed_cmd);

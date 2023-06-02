@@ -28,11 +28,11 @@ extern "C" {
 
 /* Note on "report" functions.
  *
- * Functions whose name begin with "ddca_report" or "ddca_dbgrpt" in the name,
- * e.g. ddca_report_display_ref(), ddca_report_display_info_list(), write formatted
- * reports to (normally) the terminal. Sometimes, these are intended to display
- * data structures for debugging.  Other times, they are used to format output
- * for the ddcutil command line program.
+ * Functions whose names begin with "ddca_report" or "ddca_dbgrpt",
+ * e.g. ddca_report_display_ref(), ddca_report_display_info_list(), write
+ * formatted reports to (normally) the terminal. Sometimes, these are intended
+ * to display data structures for debugging.  Other times, they are used to
+ * format output for the ddcutil command line program.
  *
  * The operation of these functions can be tweaked in two ways.
  * - The "depth" parameter is a logical indentation depth. This enables
@@ -95,8 +95,8 @@ ddca_build_options(void);
  //
 
  /** Gets a copy of the detailed error information for the previous
-  *  API call, if the call supports detailed error information (only a
-  *  few do).
+  *  API call, if the call supports detailed error information (only
+  *  some do).
   *
   *  @return  copy of detailed error information (user must free)
   *
@@ -166,8 +166,7 @@ ddca_rc_desc(
 /** Given an external syslog level name returns the syslog level id.
  *
  *  @param  name    e.g. ERROR
- *  @return syslog level id
- *  @retval DDCA_SYSLOG_NOT FOUND if invalid name
+ *  @return syslog level id, DDCA_SYSLOG_NOT FOUND if invalid name
  *
  * @since 2.0.0
  */
@@ -183,7 +182,7 @@ DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name);
  *
  * Unless flag DDC_INIT_OPTIONS_DISABLE_CONFIG_FILE is set in **opts**,
  * libddcutil options are read from the ddcutil configuration file.
- * These are combined with any options passed in string **library_options**
+ * These are combined with any options passed in string **libopts**
  * and then processed.
  *
  * If the returned status code is other than **DDCRC_OK**, a detailed
@@ -192,7 +191,7 @@ DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name);
  * @since 2.0.0
  */
 DDCA_Status
-ddca_init(const char *      library_options,
+ddca_init(const char *      libopts,
           DDCA_Syslog_Level syslog_level,
           DDCA_Init_Options opts);
 
