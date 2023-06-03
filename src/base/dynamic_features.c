@@ -267,6 +267,18 @@ dfr_gdestroy(gpointer p) {
 // Functions private to create_monitor_dynamic_features()
 //
 
+
+/** Creates a #Error_Info using the error location (line number) and
+ *  detail, and appends it to array **errors**..
+ *
+ *  @param errors   GPtrArray of #Error_Info
+ *  @param filename name of file whose lines are being processed
+ *  @param linectr  line number of error
+ *  @param caller   function creating the error message
+ *  @param fmt      message format string
+ *  @param ..       substitution values
+ *  @return newly allocated #Error_Info struct, with status code DDCRC_BAD_DATA
+ */
 static void
 add_error(
       GPtrArray *  errors,      // array of Error_Info
@@ -404,6 +416,7 @@ finalize_feature(
  *  @param  dynamic_features_loc where to return pointer to newly allocated #Dynamic_Features_Rec,
  *                               NULL if an #Error_Info struct is returned
  *  @return pointer to #Error_Info, NULL if no error
+ *          The #Error_Info, and all of its causes, have status code DDCRC_BAD_DATA
  */
 Error_Info *
 create_monitor_dynamic_features(
