@@ -934,7 +934,9 @@ Buffer * hiddev_get_edid(int fd)  {
  *               NULL if ioctl call fails (should never happen)
  */
 char * get_hiddev_name(int fd) {
-   // printf("(%s) Starting. fd=%d\n", __func__, fd);
+   bool debug = false;
+   if (debug)
+      printf("(%s) Starting. fd=%d\n", __func__, fd);
    const int blen = 256;
    char buf1[blen];
    for (int ndx=0; ndx < blen; ndx++)
@@ -946,6 +948,7 @@ char * get_hiddev_name(int fd) {
    char * result = NULL;
    if (rc >= 0)
       result = g_strdup(buf1);
-   // printf("(%s) Returning |%s|\n", __func__, result);
+   if (debug)
+      printf("(%s) Returning |%s|\n", __func__, result);
    return result;
 }
