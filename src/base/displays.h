@@ -270,8 +270,9 @@ void unlock_display_lock(Display_Async_Rec * async_rec);
 /** For recording /dev/i2c and hiddev open errors */
 typedef struct {
    DDCA_IO_Mode io_mode;
-   int devno;   // i2c bus number or hiddev device number
-   int error;
+   int    devno;   // i2c bus number or hiddev device number
+   int    error;
+   char * detail;
 } Bus_Open_Error;
 
 
