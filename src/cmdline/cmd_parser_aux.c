@@ -48,9 +48,7 @@ static Cmd_Desc cmdinfo[] = {
 // #ifdef WATCH_COMMAND
    {CMDID_READCHANGES,  "watch",          3,  0,       0,                  Option_Explicit_Display},
 //#endif
-#ifdef USE_USB
    {CMDID_CHKUSBMON,    "chkusbmon",      3,  1,       1,                  Option_None},
-#endif
    {CMDID_PROBE,        "probe",          5,  0,       0,                  Option_Explicit_Display},
    {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0,                  Option_Explicit_Display},
    {CMDID_C1,           "c1",             2,  0,       0,                  Option_None},
