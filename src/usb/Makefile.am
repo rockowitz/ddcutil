@@ -32,7 +32,8 @@ noinst_LTLIBRARIES = libusb.la
 
 libusb_la_SOURCES = \
 usb_base.c      \
-usb_edid.c      \
 usb_displays.c  \
+usb_edid.c      \
+usb_services.c  \
 usb_vcp.c  
 endif
