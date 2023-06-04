@@ -681,9 +681,9 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
       for (int ndx = 0; ndx < open_errors->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(open_errors, ndx);
          assert(cur->io_mode != DDCA_IO_ADL);
-         rpt_vstring(d1, "%s bus:  %-2d, error: %d",
+         rpt_vstring(d1, "%s bus:  %-2d, error: %d, detail: %s",
                (cur->io_mode == DDCA_IO_I2C) ? "I2C" : "hiddev",
-               cur->devno, cur->error);
+               cur->devno, cur->error, cur->detail);
       }
    }
 }
@@ -771,8 +771,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             Bus_Open_Error * usb_boe = (Bus_Open_Error *) g_ptr_array_index(usb_open_errors, ndx);
             Bus_Open_Error * boe_copy = calloc(1, sizeof(Bus_Open_Error));
             boe_copy->io_mode = DDCA_IO_USB;
-            boe_copy->devno = usb_boe->devno;
-            boe_copy->error = usb_boe->error;
+            boe_copy->devno   = usb_boe->devno;
+            boe_copy->error   = usb_boe->error;
+            boe_copy->detail  = usb_boe->detail;
             g_ptr_array_add(bus_open_errors, boe_copy);
          }
       }
