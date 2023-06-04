@@ -410,7 +410,6 @@ GPtrArray *
 get_usb_monitor_list() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   DDCA_Output_Level ol = get_output_level();
 
    if (usb_monitors)      // already initialized?
    {
@@ -431,36 +430,33 @@ get_usb_monitor_list() {
          continue;
       }
 
-      // will need better message handling for API
-      Byte calloptions = CALLOPT_RDONLY;
-      // if (ol >= DDCA_OL_VERBOSE)  // always give the user a clue as to why detection failed
-         calloptions |= CALLOPT_ERR_MSG;
-      int fd = usb_open_hiddev_device(hiddev_fn, calloptions);
+      int fd = usb_open_hiddev_device(hiddev_fn, CALLOPT_RDONLY);
       if (fd < 0) {
-         if (ol >= DDCA_OL_VERBOSE) {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Open failed");
-            Usb_Detailed_Device_Summary * devsum =
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Open failed");
+         char * detail = NULL;
+         Usb_Detailed_Device_Summary * devsum =
                lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
-            if (devsum) {
-
-               // report_usb_detailed_device_summary(devsum, 4);
-
-               f0printf(fout(), "  USB bus %s, device %s, vid:pid: %s:%s - %s:%s\n",
+         if (devsum) {
+            // report_usb_detailed_device_summary(devsum, 4);
+            detail = g_strdup_printf("  USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
                            devsum->busnum_s,
                            devsum->devnum_s,
                            devsum->vendor_id,
                            devsum->product_id,
                            devsum->vendor_name,
                            devsum->product_name);
-               free_usb_detailed_device_summary(devsum);
-            }
-
-            Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
-            boe->io_mode = DDCA_IO_USB;
-            boe->devno = hiddev_name_to_number(hiddev_fn);    // is this simple or fully qualified?
-            boe->error = fd;
-            g_ptr_array_add(usb_open_errors, boe);
+            free_usb_detailed_device_summary(devsum);
          }
+
+         f0printf(ferr(), "Open failed for %s: errno=%s %s\n", hiddev_fn, linux_errno_desc(-fd),
+               (detail) ? detail : "");
+
+         Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
+         boe->io_mode = DDCA_IO_USB;
+         boe->devno = hiddev_name_to_number(hiddev_fn);    // is this simple or fully qualified?
+         boe->error = fd;
+         boe->detail = detail;
+         g_ptr_array_add(usb_open_errors, boe);
       }
       else {     // fd == 0 should never occur
          assert(fd != 0);
