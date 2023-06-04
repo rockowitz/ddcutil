@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 resfiles = \
+	etc/modprobe.d/nvidia-i2c.conf \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
