@@ -219,12 +219,12 @@ static bool parse_display_identifier(
       char *        modelwork,
       char *        snwork)
 {
-   bool debug = false;
    bool parsing_ok = true;
    int  explicit_display_spec_ct = 0;
 
    if (usbwork) {
 #ifdef USE_USB
+      bool debug = false;
       DBGMSF(debug, "usbwork = |%s|", usbwork);
       int busnum;
       int devicenum;
