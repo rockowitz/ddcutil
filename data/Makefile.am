@@ -9,7 +9,8 @@ resfiles = \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
-	usr/lib/udev/rules.d/60-ddcutil.rules
+	usr/lib/udev/rules.d/60-ddcutil.rules \
+	usr/lib/udev/rules.d/60-ddcutil-usb.rules
 
 distributed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf
@@ -74,4 +75,9 @@ install-data-local:
 # @xxx@ names are not defined, names with $() are 
 install-data-hook:
 	@echo "(data/install-data-hook)===> Executing rule: install-data-hook"
+	sed  -i "s|/usr|${prefix}|" ${rulesdir}/60-ddcutil-usb.rules 
+
+# uninstall-hook:
+#	@echo "(data/uninstall-hook)===> Executing rule: uninstal-hook"
+#	rm -f ${rulesdir}/60-ddcutil-usb.rules
 
