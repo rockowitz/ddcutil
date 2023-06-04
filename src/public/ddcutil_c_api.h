@@ -955,9 +955,14 @@ ddca_is_udf_enabled(void);
  * display.  Does nothing if they have already been loaded.
  *
  * @param[in] ddca_dref display reference
+ * @return    status code
  *
+ * It is not a error if no feature definition file is found,
  * Feature definition file errors can be retrieved using #ddca_get_error_detail().
  *
+ * @remark
+ * Loading feature definition files is a separate operation because errors
+ * are possible when reading and processing the definitions.
  * @since 0.9.3
  */
 DDCA_Status
@@ -968,8 +973,9 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref);
  * display.  Does nothing if they have already been loaded.
  *
  * @param[in] ddca_dh display handle
+ * @return    status code
  *
- * Feature definition file errors can be retrieved using #ddca_get_error_detail().
+ * See #ddca_dfr_check_by_dref() for detailed documentation.
  *
  * @since 0.9.3
  */
