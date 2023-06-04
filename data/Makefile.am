@@ -7,7 +7,7 @@ resfiles = \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
-	usr/lib/udev/rules.d/60-ddcutil.rules \
+	usr/lib/udev/rules.d/60-ddcutil-i2c.rules \
 	usr/lib/udev/rules.d/60-ddcutil-usb.rules
 
 distributed_modulesfiles = \
