@@ -21,6 +21,7 @@
 #include "base/core.h"
 #include "base/execution_stats.h"
 #include "base/linux_errno.h"
+#include "base/rtti.h"
 
 #include "usb/usb_base.h"
 
@@ -245,4 +246,9 @@ hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions)
       rc = -errsv;
    }
    return rc;
+}
+
+
+void init_usb_base() {
+   RTTI_ADD_FUNC(usb_open_hiddev_device);
 }
