@@ -1,25 +1,7 @@
-/* usb_base.h
- *
- * <copyright>
- * Copyright (C) 2014-2017 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
- */
+/** usb_base.h */
+
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef USB_BASE_H_
 #define USB_BASE_H_
@@ -27,6 +9,7 @@
 #include <linux/hiddev.h>
 
 #include "util/coredefs.h"
+#include "base/status_code_mgt.h"
 
 #ifdef UNUSED
 #define REPORT_IOCTL_ERROR_AND_QUIT(_ioctl_name, _rc) \
@@ -53,5 +36,7 @@ Status_Errno hiddev_get_field_info( int fd, struct hiddev_field_info *  finfo, B
 Status_Errno hiddev_get_usage_code( int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
 Status_Errno hiddev_get_usage_value(int fd, struct hiddev_usage_ref *   uref,  Byte calloptions);
 Status_Errno hiddev_get_report(     int fd, struct hiddev_report_info * rinfo, Byte calloptions);
+
+void         init_usb_base();
 
 #endif /* USB_BASE_H_ */
