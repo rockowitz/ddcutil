@@ -656,7 +656,7 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
    pdd->user_sleep_multiplier = multiplier;
    pdd->user_multiplier_source = Reset;
    if (dsa2_enabled) {
-     // dsa2_reset(pdd->dpath);     // TO DO
+      dsa2_reset_multiplier(multiplier);
    }
 }
 
