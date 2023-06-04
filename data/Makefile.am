@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 resfiles = \
-	etc/udev/rules.d/45-ddcutil-i2c.rules \
-	etc/udev/rules.d/45-ddcutil-usb.rules \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
@@ -76,8 +74,9 @@ install-data-local:
 install-data-hook:
 	@echo "(data/install-data-hook)===> Executing rule: install-data-hook"
 	sed  -i "s|/usr|${prefix}|" ${rulesdir}/60-ddcutil-usb.rules 
+	@echo "Clear out files possibly left over from earlier installation"
+	rm -f ${resdir}/45-ddcutil*
 
-# uninstall-hook:
-#	@echo "(data/uninstall-hook)===> Executing rule: uninstal-hook"
-#	rm -f ${rulesdir}/60-ddcutil-usb.rules
+uninstall-hook:
+	@echo "(data/uninstall-hook)===> Executing rule: uninstall-hook"
 
