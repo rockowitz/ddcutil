@@ -77,6 +77,7 @@ install-data-hook:
 	sed  -i "s|/usr|${prefix}|" ${rulesdir}/60-ddcutil-usb.rules 
 	@echo "Clear out files possibly left over from earlier installation"
 	rm -f ${resdir}/45-ddcutil*
+	rm -f ${rulesdir}/60-ddcutil.rules
 
 uninstall-hook:
 	@echo "(data/uninstall-hook)===> Executing rule: uninstall-hook"
