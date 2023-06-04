@@ -959,7 +959,6 @@ main(int argc, char *argv[]) {
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );
       main_rc = (is_monitor) ? EXIT_SUCCESS : EXIT_FAILURE;
 #else
-      PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
       main_rc = EXIT_FAILURE;
 #endif
    }
