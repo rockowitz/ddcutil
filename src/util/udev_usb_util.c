@@ -193,6 +193,8 @@ Usb_Detailed_Device_Summary * lookup_udev_usb_device_by_devname(const char * dev
       devsum->prop_major = g_strdup(udev_device_get_property_value(dev, "MAJOR") );
       devsum->prop_minor  = g_strdup(udev_device_get_property_value(dev, "MINOR") );
 
+      hhs4_to_uint16(devsum->vendor_id, &devsum->vid);
+      hhs4_to_uint16(devsum->product_id, &devsum->pid);
 
       // udev_device_unref(dev);
       udev_device_unref(dev0);   // freeing dev0 also frees dev

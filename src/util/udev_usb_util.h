@@ -49,8 +49,8 @@ typedef struct {
    char *    devname;          ///< e.g. /dev/usb/hiddev2
    // int       usb_busnum;
    // int       usb_devnum;
-   // uint16_t  vid;
-   // uint16_t  pid;
+   uint16_t  vid;
+   uint16_t  pid;
    char *    vendor_id;       ///< vendor id, as 4 hex characters
    char *    product_id;      ///< product id, as 4 hex characters
    char *    vendor_name;     ///< vendor name
