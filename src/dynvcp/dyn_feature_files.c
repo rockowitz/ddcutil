@@ -197,7 +197,11 @@ find_feature_def_file(
  *  @return #Error_Info struct describing errors.
  *
  *  @remark
- *  If a #Error_Info struct is returned, then a dummy #Dynamic_Features_Rec is
+ *  If a #Error_Info struct is returned, it has status code either
+ *  DDCRC_BAD_DATA, DDCRC_NOT_FOUND, or an error reading the file.
+ *
+ *  @remark
+ *  If an #Error_Info struct is returned, then a dummy #Dynamic_Features_Rec is
  *  created and returned, with flag DFR_FLAGS_NOT_FOUND set.  This record can then
  *  be saved along with with valid #Dynamic_Features_Rec instances to avoid
  *  repeatedly scanning for non-existent or invalid feature definition files.
@@ -215,16 +219,12 @@ dfr_load_by_mmk(
    Error_Info *           errs = NULL;
    Dynamic_Features_Rec * dfr  = NULL;
 
-   // dfr = dfr_lookup(mmk.mfg_id, mmk.model_name, mmk.product_code);
-
    char * simple_fn = model_id_string(mmk.mfg_id, mmk.model_name,mmk.product_code);
-
    char * fqfn = find_feature_def_file(simple_fn);
    if (fqfn) {
       GPtrArray * lines = g_ptr_array_new_with_free_func(g_free);
       errs = file_getlines_errinfo(fqfn, lines); // read file into lines
-      // DDCA_Output_Level ol = get_output_level();
-      // if (ol >= DDCA_OL_VERBOSE) {
+      // if (get_output_level() >= DDCA_OL_VERBOSE) {
       //    fprintf(fout(), "Using feature definition file: %s\n", fqfn);
       // }
       if (!errs) {
@@ -236,7 +236,7 @@ dfr_load_by_mmk(
              fqfn,
              &dfr);
 #else
-         errs = create_monitor_dynamic_features(
+         errs = create_monitor_dynamic_features(   // DDCRC_BAD_DATA
              mmk.mfg_id,
              mmk.model_name,
              mmk.product_code,
@@ -308,31 +308,19 @@ dfr_check_by_dref(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, enable_dynamic_features=%s",
                  dref_repr_t(dref), sbool(enable_dynamic_features));
+   ASSERT_IFF(dref->flags&DREF_DYNAMIC_FEATURES_CHECKED, dref->dfr);
 
    Error_Info * errs = NULL;
-   if (!enable_dynamic_features)    // global variable
-      goto bye;
-
-   if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
-      DBGMSF(debug, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
-      dref->dfr = NULL;
-      Dynamic_Features_Rec * dfr = NULL;
-      DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
-            dref->pedid->mfg_id, dref->pedid->model_name, dref->pedid->product_code);
-      errs = dfr_load_by_mmk(mmk, &dfr);
-      dref->dfr = dfr;   // will be a dummy record if errors
-      dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
-   }
-
-bye:
-   if (debug || IS_TRACING() ) {
-      if (errs) {
-         DBGTRC_DONE(debug, TRACE_GROUP, "Returning errs: ");
-         errinfo_report(errs, 2);
+   if (enable_dynamic_features) {   // global variable
+      if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
+         DDCA_Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+         errs = dfr_load_by_mmk(mmk, &dref->dfr);  // will be a dummy record if errors
+         dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
       }
-      else
-         DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. dref->dfr=%p", dref->dfr);
    }
+
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "dref->drf=%p", dref->dfr);
    return errs;
 }
 
