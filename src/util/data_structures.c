@@ -953,9 +953,6 @@ void test_value_array() {
 #endif
 
 
-
-
-
 //
 // Bit_Set_256 - A data structure containing 256 flags
 //
@@ -1279,15 +1276,12 @@ bs256_to_string_decimal(
 }
 
 
-
 int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen) {
    // printf("(%s) Starting\n", __func__);
-
 #ifndef NDEBUG
    int bit_set_ct = bs256_count(flags);
    assert(buflen >= bit_set_ct);
 #endif
-
    unsigned int bufpos = 0;
    unsigned int flagno = 0;
    // printf("(%s) bs256lags->byte=0x%s\n", __func__, hexstring(flags->byte,32));
@@ -1407,7 +1401,6 @@ bs256_iter_next(
 }
 
 
-
 // TODO:
 // Extracted from feature_list.cpp in ddcui. parse_custom_feature_list()
 // should be rewritten to call this function.
@@ -1501,6 +1494,39 @@ Bit_Set_256 bs256_from_string(
     return result;
 }
 
+
+//
+// Bit_Set_32 - A set of 32 flags
+//
+
+const Bit_Set_32 EMPTY_BIT_SET_32 = 0;
+const int BIT_SET_32_MAX = 32;
+
+bool bs32_contains(Bit_Set_32 flags, uint8_t val) {
+   assert(val < BIT_SET_32_MAX);
+   bool result = flags & (1 << val);
+   return result;
+}
+
+
+Bit_Set_32 bs32_insert(Bit_Set_32 flags, uint8_t val) {
+   Bit_Set_32 result = flags | (1 << val);
+   return result;
+}
+
+
+char* bs32_to_bitstring(Bit_Set_32 val, char * buf, int bufsz) {
+   assert(bufsz >= BIT_SET_32_MAX+1);
+
+   char result[BIT_SET_32_MAX+1];
+   for (int ndx = 0; ndx < BIT_SET_32_MAX; ndx++) {
+      result[(BIT_SET_32_MAX-1)-ndx] = (val & 0x01) ? '1' : '0';
+      val = val >> 1;
+   }
+   result[BIT_SET_32_MAX] = '\0';
+   g_strlcpy(buf, result, bufsz);
+   return buf;
+}
 
 
 //

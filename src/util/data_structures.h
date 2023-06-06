@@ -217,6 +217,21 @@ int            bs256_iter_next( Bit_Set_256_Iterator iter);
 
 
 //
+// Bit_Set_32
+//
+
+typedef uint32_t Bit_Set_32;
+
+extern const Bit_Set_32 EMPTY_BIT_SET_32;
+extern const int BIT_SET_32_MAX;
+
+bool           bs32_contains(Bit_Set_32 flags, uint8_t val);
+Bit_Set_32     bs32_insert(Bit_Set_32 flags, uint8_t val);
+char*          bs32_to_bitstring(Bit_Set_32 val, char * buf, int bufsz);
+
+
+
+//
 // Byte_Value_Array <-> Bit_Set_256 cross-compatibility functions
 //
 
