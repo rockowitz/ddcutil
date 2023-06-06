@@ -26,7 +26,7 @@ extern "C" {
 #include "ddcutil_types.h"
 
 
-/* Note on "report" functions.
+/* Note on report functions.
  *
  * Functions whose names begin with "ddca_report" or "ddca_dbgrpt",
  * e.g. ddca_report_display_ref(), ddca_report_display_info_list(), write
@@ -43,6 +43,14 @@ extern "C" {
  *   be changed by calling set_fout().
  */
 
+/* Note on convenience functions.
+ *
+ * Many functions in this API are "convenience" functions. They perform tasks
+ * that could be executed entirely on the client.  By providing access to the
+ * server's implementation of these tasks, they exist to avoid having to
+ * recreate such code on the client. In some cases, such as "free" functions,
+ * they relieve the client programmer of having to consider implementation details.
+ */
 
 //
 // Library build information
@@ -109,6 +117,9 @@ ddca_build_options(void);
   *
   *  @param[in]  ddca_erec  error information to free
   *
+  *  @remark
+  *  This is a convenience function.
+  *
   *  @since 0.9.0
   */
  void
@@ -119,6 +130,9 @@ ddca_build_options(void);
   *
   *  @param[in] ddca_erec  error information record
   *  @param[in] depth      logical indentation depth
+  *
+  *  @remark
+  *  This is a convenience function.
   */
  void
  ddca_report_error_detail(
@@ -167,6 +181,9 @@ ddca_rc_desc(
  *
  *  @param  name    e.g. ERROR
  *  @return syslog level id, DDCA_SYSLOG_NOT FOUND if invalid name
+ *
+ *  @remark
+ *  This is a convenience function.
  *
  * @since 2.0.0
  */
@@ -349,6 +366,9 @@ ddca_set_output_level(
 /** Gets the name of an output level
  *  @param[in]  val  output level id
  *  @return     output level name (do not free)
+ *
+ *  @remark
+ *  This is a convenience function.
  */
 char *
 ddca_output_level_name(
@@ -445,15 +465,15 @@ ddca_get_display_info(
 
 /** Frees a #DDCA_Display_Info struct.
  *
- *  This is a convenience function. #DDCA_Display_Info is copied to
- *  the client and contains no pointers.  It can simply be free()'d
- *  by the client.
- *
  *  @param info_rec pointer to instance to free
+ *
+ *  @remark
+ *  This is a convenience function. #DDCA_Display_Info is copied to
+ *  the client and contains no pointers.  It could simply be free()'d
+ *  by the client.
  *
  *  @since 1.2.0
  */
-
 void
 ddca_free_display_info(DDCA_Display_Info * info_rec);
 
@@ -470,11 +490,12 @@ ddca_get_display_info_list2(
 
 /** Frees a list of detected displays.
  *
- *  This is a convenience function. #DDCA_Display_Info_List
- *  contains no pointers and is copied to the client, so the
- *  list can simply be free'd by the client.
- *
  *  @param[in] dlist pointer to #DDCA_Display_Info_List
+ *
+ *  @remark
+ *  This is a convenience function. #DDCA_Display_Info_List
+ *  contains no pointers and is copied to the client. It could
+ *  simply be free'd by the client.
  */
 void
 ddca_free_display_info_list(
@@ -502,6 +523,9 @@ ddca_report_display_info(
  *
  *  @param[in]  dlist  pointer to a DDCA_Display_Info_List
  *  @param[in]  depth  logical indentation depth
+ *
+ *  @remark
+ *  This is a convenience function.
  */
 void
 ddca_report_display_info_list(
@@ -650,7 +674,7 @@ ddca_did_repr(
 // Display Reference
 //
 
-/**  @deprecated use #ddca_get_display_ref()
+/** @deprecated use #ddca_get_display_ref()
  *  Gets a display reference for a display identifier.
  *  Normally, this is a permanently allocated #DDCA_Display_Ref
  *  created by monitor detection and does not need to be freed.
@@ -687,7 +711,7 @@ ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc);
 
-/**  @deprecated All display references are persistent
+/** @deprecated All display references are persistent
  *
  * Frees a display reference.
  *
@@ -1111,6 +1135,9 @@ ddca_get_feature_name(DDCA_Vcp_Feature_Code feature_code);
  * @remark
  * The value returned in **value_name_loc** is a pointer into the table
  * data structure.  Do not free.
+ *
+ * @remark
+ * This is a convenience function.
  */
 DDCA_Status
 ddca_get_simple_nc_feature_value_name_by_table(
@@ -1166,6 +1193,9 @@ extern const DDCA_Feature_List DDCA_EMPTY_FEATURE_LIST;
  *
  *  @param[in] feature_set_id
  *  @return symbolic name (do not free)
+ *
+ * @remark
+ * This is a convenience function.
  */
 const char *
 ddca_feature_list_id_name(
@@ -1196,6 +1226,8 @@ ddca_get_feature_list_by_dref(
  *
  *  @remark
  *  Alternatively, just set vcplist = DDCA_EMPTY_FEATURE_LIST
+ *  @remark
+ *  This is a convenience function.
  *  @since 0.9.0
  */
 void
