@@ -48,11 +48,12 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
  *   -errno if failure
  *
  */
-int usb_open_hiddev_device(
+int
+usb_open_hiddev_device(
       char *       hiddev_devname,
       Call_Options calloptions)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC(debug, TRACE_GROUP, "hiddev_devname=%s, calloptions=0x%02x (%s)",
                  hiddev_devname, calloptions, interpret_call_options_t(calloptions) );
 
@@ -75,18 +76,7 @@ int usb_open_hiddev_device(
    }
    DBGMSF(debug, "open() finished, file=%d", file);
 
-   if (file >= 0)
-   {
-      // Solves problem of ddc detect not getting edid unless ddcutil env called first
-      int rc = ioctl(file, HIDIOCINITREPORT);
-      if (rc < 0) {
-         int errsv = errno;
-         // call should never fail.  always write an error message
-         REPORT_IOCTL_ERROR("HIDIOCGREPORT", errsv);
-         close(file);
-         file = -errsv;
-      }
-   }
+
    DBGTRC(debug, TRACE_GROUP, "Returning file descriptor: %d", file);
    return file;
 }
@@ -249,6 +239,73 @@ hiddev_get_report(int fd, struct hiddev_report_info * rinfo, Byte calloptions)
 }
 
 
-void init_usb_base() {
+static Bit_Set_32     ignored_hiddevs;
+static uint8_t        ignored_vid_pid_ct = 0;
+static Vid_Pid_Value* ignored_vid_pids = NULL;
+
+void
+set_ignored_hiddevs(Bit_Set_32 ignored_hiddevs_flags) {
+   bool debug = true;
+   ignored_hiddevs = ignored_hiddevs_flags;
+   char buf[BIT_SET_32_MAX+1];
+   if (debug)
+      printf("(%s) ignored_hiddevs = 0x%08x = %s\n", __func__,
+            ignored_hiddevs, bs32_to_bitstring(ignored_hiddevs, buf, BIT_SET_32_MAX+1));
+}
+
+
+bool
+is_ignored_hiddev(uint8_t hiddev_number) {
+   bool debug = true;
+   assert(hiddev_number < BIT_SET_32_MAX);
+   bool result = bs32_contains(ignored_hiddevs, hiddev_number);
+   if (debug)
+      printf("(%s) hiddev_number=%d, returning %s\n", __func__, hiddev_number, sbool(result));
+   return result;
+}
+
+
+void
+set_ignored_usb_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored) {
+   bool debug = true;
+   ignored_vid_pid_ct = ignored_ct;
+   ignored_vid_pids = calloc(ignored_ct, sizeof(uint32_t));
+   memcpy(ignored_vid_pids, ignored, ignored_ct*sizeof(uint32_t));
+   if (debug) {
+      printf("(%s) ignored_vid_pd_ct = %d\n", __func__, ignored_vid_pid_ct);
+      for (int ndx = 0; ndx < ignored_vid_pid_ct; ndx++)
+         printf("(%s) ignored_vid_pids[%d] = 0x%08x\n", __func__,  ndx, ignored_vid_pids[ndx]);
+   }
+}
+
+
+bool
+is_ignored_usb_vid_pid(uint16_t vid, uint16_t pid) {
+   Vid_Pid_Value v = VID_PID_VALUE(vid,pid);
+   return is_ignored_usb_vid_pid_value(v);
+}
+
+
+bool
+is_ignored_usb_vid_pid_value(Vid_Pid_Value vidpid) {
+   bool result = false;
+   for (int ndx = 0; ndx < ignored_vid_pid_ct; ndx++) {
+      if (vidpid == ignored_vid_pids[ndx]) {
+         result = true;
+         break;
+      }
+   }
+   return result;
+}
+
+
+void
+init_usb_base() {
    RTTI_ADD_FUNC(usb_open_hiddev_device);
+}
+
+
+void
+terminate_usb_base() {
+   free(ignored_vid_pids);
 }
