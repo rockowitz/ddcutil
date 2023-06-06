@@ -101,6 +101,8 @@ typedef enum {
                            = 0x40000000000000,
 } Parsed_Cmd_Flags;
 
+#define IGNORED_VID_PID_MAX 4
+
 typedef
 enum {VALUE_TYPE_ABSOLUTE,
       VALUE_TYPE_RELATIVE_PLUS,
@@ -146,6 +148,9 @@ struct {
 // DDCA_MCCS_Version_Id   mccs_version_id;
    int                    edid_read_size;
    uint64_t               flags;      // Parsed_Cmd_Flags
+   Bit_Set_32             ignored_hiddevs;
+   uint8_t                ignored_usb_vid_pid_ct;
+   uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
 
    int                    i1;         // for temporary use
    int                    i2;         // for temporary use

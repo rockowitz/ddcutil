@@ -15,6 +15,7 @@
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "usb/usb_base.h"
 
 #include "base/core.h"
 #include "base/parms.h"
@@ -219,7 +220,6 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       char buf[30];
       g_snprintf(buf,30, "%d,%d,%d", parsed_cmd->max_tries[0], parsed_cmd->max_tries[1],
                                         parsed_cmd->max_tries[2] );
-      rpt_str("raw_command",        NULL, parsed_cmd->raw_command,                               d1);
       rpt_str("max_retries",        NULL, buf,                                                   d1);
 
       rpt_bool("enable_failure_simulation", NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_FAILSIM,   d1);
@@ -267,7 +267,16 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("quick",             NULL, parsed_cmd->flags & CMD_FLAG_QUICK,                   d1);
       rpt_bool("mock data",         NULL, parsed_cmd->flags & CMD_FLAG_MOCK,                    d1);
       rpt_bool("profile API",       NULL, parsed_cmd->flags & CMD_FLAG_PROFILE_API,             d1);
-
+      char buf2[BIT_SET_32_MAX+1];
+      bs32_to_bitstring(parsed_cmd->ignored_hiddevs, buf2, BIT_SET_32_MAX+1);
+      rpt_vstring(d1, "ignored_hiddevs                                          : 0x%08x = |%s|",
+            parsed_cmd->ignored_hiddevs, buf2);
+      rpt_int( "ignored_vid_pid_ct", NULL, parsed_cmd->ignored_usb_vid_pid_ct, d1);
+      for (int ndx = 0; ndx < parsed_cmd->ignored_usb_vid_pid_ct; ndx++) {
+         Vid_Pid_Value v = parsed_cmd->ignored_usb_vid_pids[ndx];
+         rpt_vstring(d1, "ignored_vid_pids[%d]                                      : %04x:%04x",
+                     ndx, VID_PID_VALUE_TO_VID(v), VID_PID_VALUE_TO_PID(v) );
+      }
 
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,      d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
