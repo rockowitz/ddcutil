@@ -4,7 +4,7 @@
  *  packages such as libusb, hiddev
  */
 
-// Copyright (C) 2014-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -75,6 +75,7 @@ bool force_hid_monitor_by_vid_pid(int16_t vid, int16_t pid) {
             {0x0409, 0x02b7},    // P241W
             {0x0409, 0x042c},    // P242W
             {0x0409, 0x02bb},    // PA231W
+            {0x0409, 0x02b7},    // PA241W   (mine)
             {0x0409, 0x02b8},    // PA241W   (seen at RIT)
             {0x0409, 0x042d},    // PA242W
             {0x0409, 0x02b9},    // PA271W
