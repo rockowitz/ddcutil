@@ -17,4 +17,5 @@
 
  void terminate_usb_services() {
     terminate_usb_displays();
+    terminate_usb_base();
  }
