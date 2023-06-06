@@ -2,7 +2,7 @@
 
 # This sample file can be modified and copied to /etc/udev/rules.d.  If file 
 # /etc/udev/rules.d/60-ddcutil-usb.rules exists, it overrides a file with the 
-# same name in /usr/lib/udev/rules.d, which is installed by ddcutil installation.
+# same name in /usr/lib/udev/rules.d, which is created by ddcutil installation.
 # This can be useful in cases where the usual rules do not work as needed, or
 # during development. 
 
