@@ -154,7 +154,22 @@ bool parse_dot_separated_arg(const char * val, int * piAdapterIndex, int * piDis
 }
 
 
-bool parse_colon_separated_arg(const char * val, int * pv1, int * pv2) {
+bool parse_colon_separated_vid_pid(const char * val, uint16_t * pv1, uint16_t * pv2) {
+   Null_Terminated_String_Array parts = strsplit(val, ":");
+   bool ok = false;
+   if (ntsa_length(parts) == 2 && strlen(parts[0]) == 4 && strlen(parts[1]) == 4) {
+      ok = true;
+      // DBGMSG("parts[0] = |%s|", parts[0]);
+      // DBGMSG("parts[1] = |%s|",  parts[1]);
+      ok &= hhs4_to_uint16(parts[0], pv1);
+      ok &= hhs4_to_uint16(parts[1], pv2);
+   }
+   ntsa_free(parts,  true);
+   // DBGMSG("Returning %s *pv1=0x%04x, *pv2=0x%04x", sbool(ok), *pv1, *pv2);
+   return ok;
+}
+
+bool parse_colon_separated_arg(const char * val, int* pv1, int* pv2) {
    int rc = sscanf(val, "%d:%d", pv1, pv2);
    // DBGMSG("val=|%s| sscanf() returned %d  ", val, rc );
    bool ok = (rc == 2);
