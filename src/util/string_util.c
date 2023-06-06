@@ -1153,7 +1153,7 @@ bool hhs_to_byte_in_buf(const char * s, Byte * result)
       *result = (Byte) longtemp;
    }
 
-   // printf("(%s) Returning ok=%d\n", __func__, ok);
+   // printf("(%s) Returning ok=%s, *result=0x%02x\n", __func__, sbool(ok), *result);
    return ok;
 }
 
@@ -1216,12 +1216,14 @@ bool hhc_to_byte_in_buf(const char * p_hh, Byte * converted)
  *  @retval  >= 0 number of bytes in array,
  *  @retval  -1   string could not be converted
  *
- * If successful, the byte array whose address is returned in pBa has
+ * If successful, the byte array whose address is returned in ba_loc has
  * been malloc'd.  It is the responsibility of the caller to free it.
  */
 int hhs_to_byte_array(const char * hhs, Byte** ba_loc)
 {
-   // printf("strlen(hhs) = %ld, ba_loc=%p\n", strlen(hhs), ba_loc);
+   bool debug = false;
+   if (debug)
+      printf("(%s) strlen(hhs) = %ld, ba_loc=%p\n", __func__, strlen(hhs), ba_loc);
    if ( strlen(hhs) % 2)     // if odd number of characters
       return -1;
    char xlate[] = "0123456789ABCDEF";
@@ -1251,7 +1253,33 @@ int hhs_to_byte_array(const char * hhs, Byte** ba_loc)
    else {
       *ba_loc = ba;
    }
+   if (debug) {
+      printf("(%s) Returning: %d.  *ba_loc = %p\n", __func__, bytect, *ba_loc);
+      if (bytect > 0) {
+         printf("   0x");
+         for (int ndx = 0; ndx< bytect; ndx++) {
+            printf("%02x", ba[ndx]);
+         }
+         printf("\n");
+      }
+   }
    return bytect;
+}
+
+
+bool hhs4_to_uint16(char * hhs4, uint16_t* result_loc) {
+   // printf("(%s) Starting. hhs4 = |%s|\n", __func__, hhs4);
+   bool ok = false;
+   *result_loc = 0;
+   if (strlen(hhs4) == 4) {
+      uint8_t hi_byte;
+      uint8_t lo_byte;
+      if (hhc_to_byte_in_buf(&hhs4[0], &hi_byte) && hhc_to_byte_in_buf(&hhs4[2], &lo_byte) )
+         *result_loc = hi_byte << 8 | lo_byte;
+      ok = true;
+   }
+   // printf("(%s) Returning %s, *result_loc = 0x%04x\n", __func__, sbool(ok), *result_loc);
+   return ok;
 }
 
 

@@ -107,6 +107,7 @@ bool hhs_to_byte_in_buf(const char * s,  Byte * result);    // converts null ter
 bool any_one_byte_hex_string_to_byte_in_buf(const char * s, Byte * result);
 bool hhc_to_byte_in_buf(const char * hh, Byte * result);    // converts 2 characters at hh into buffer
 int  hhs_to_byte_array(const char * hhs, Byte** ba_loc);
+bool hhs4_to_uint16(char * hhs4, uint16_t* result);
 
 char * hexstring(const Byte * bytes, int size);  // buffer returned must be freed
 char * hexstring_t(
