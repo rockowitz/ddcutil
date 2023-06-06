@@ -804,11 +804,13 @@ main(int argc, char *argv[]) {
    parsed_cmd = parse_command(new_argc, new_argv, MODE_DDCUTIL, NULL);
    DBGMSF(main_debug, "parse_command() returned %p", parsed_cmd);
    ntsa_free(new_argv, true);
-
    if (!parsed_cmd)
       goto bye;      // main_rc == EXIT_FAILURE
 
-   assert(parsed_cmd);
+   if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
+      // prevent io
+      parsed_cmd->flags &= ~(CMD_FLAG_DSA2 | CMD_FLAG_ENABLE_CACHED_CAPABILITIES | CMD_FLAG_ENABLE_CACHED_DISPLAYS);
+   }
 
    Error_Info * errs = init_tracing(parsed_cmd);
    if (errs) {
@@ -876,6 +878,12 @@ main(int argc, char *argv[]) {
 
    Call_Options callopts = CALLOPT_NONE;
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
+
+#ifdef USE_USB
+   set_ignored_hiddevs(parsed_cmd->ignored_hiddevs);
+   Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
+   set_ignored_usb_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
+#endif
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
    DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Initialization complete, process commands");
@@ -1022,16 +1030,16 @@ main(int argc, char *argv[]) {
 bye:
    DBGTRC(main_debug, DDCA_TRC_TOP, "at label bye");
    free(untokenized_cmd_prefix);
-   if (parsed_cmd)
-      free_parsed_cmd(parsed_cmd);
    free(configure_fn);
    free_regex_hash_table();
-
-   if (dsa2_enabled)
-      dsa2_save_persistent_stats();
-
-   if (display_caching_enabled)
-      ddc_store_displays_cache();
+   if (parsed_cmd && parsed_cmd->cmd_id != CMDID_CHKUSBMON) {
+      if (dsa2_enabled)
+         dsa2_save_persistent_stats();
+      if (display_caching_enabled)
+         ddc_store_displays_cache();
+   }
+   if (parsed_cmd)
+      free_parsed_cmd(parsed_cmd);
 
    DBGTRC_DONE(main_debug, TRACE_GROUP, "main_rc=%d", main_rc);
 
