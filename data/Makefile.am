@@ -5,6 +5,8 @@
 
 resfiles = \
 	etc/modprobe.d/nvidia-i2c.conf \
+	etc/udev/rules.d/60-ddcutil-i2c.rules \
+	etc/udev/rules.d/60-ddcutil-usb.rules \
 	etc/X11/xorg.conf.d/90-nvidia-i2c.conf
 
 rulesfiles = \
