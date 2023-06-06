@@ -37,6 +37,7 @@ static char *            usbwork       = NULL;
 static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
 static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
 static bool              verbose_stats = false;
+static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
 
 
 // Callback function for processing --terse, --verbose and synonyms
@@ -111,6 +112,30 @@ stats_arg_func(const    gchar* option_name,
    }
    return ok;
 }
+
+
+static gboolean
+ignored_hiddev_arg_func(const    gchar* option_name,
+               const    gchar* value,
+               gpointer data,
+               GError** error)
+{
+   bool debug = true;
+   DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+
+   int ival;
+   bool ok =  str_to_int(value, &ival, 10);
+   // DBGMSG("ival=%d", ival);
+   if (!ok || ival < 0 || ival >= BIT_SET_32_MAX) {
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "Invalid hiddev bus number: %s", value);
+      ok = false;
+   }
+   else
+      ignored_hiddev_work = bs32_insert(ignored_hiddev_work, ival);
+   // DBGMSF(debug, "Returning %s", sbool(ok));
+   return ok;
+}
+
 
 // #define FUTURE
 #ifdef FUTURE
@@ -751,6 +776,8 @@ parse_command(
    char *   modelwork       = NULL;
    char *   snwork          = NULL;
    char *   edidwork        = NULL;
+   gchar**  ignored_vid_pid  = NULL;
+// gint     ignored_hiddev  = -1;
    char *   mccswork        = NULL;   // MCCS version
 // char *   tracework       = NULL;
    char**   cmd_and_args    = NULL;
@@ -811,6 +838,8 @@ parse_command(
          {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
          {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
          {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
+         {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid,      "USB device to ignore","vid:pid" },
+         {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 
          // Feature selection filters
          {"show-unsupported",
@@ -1167,6 +1196,7 @@ parse_command(
 
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
+   parsed_cmd->ignored_hiddevs  = ignored_hiddev_work;
    SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS, verbose_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
@@ -1231,6 +1261,14 @@ parse_command(
 #undef SET_CMDFLAG
 #undef SET_CLR_CMDFLAG
 
+#define FREEA(_ptr) \
+   do { \
+      if (_ptr) { \
+         free(_ptr); \
+         _ptr = NULL; \
+      } \
+   } while (0)
+
 
    // Create display identifier
    //
@@ -1247,12 +1285,22 @@ parse_command(
                     mfg_id_work,
                     modelwork,
                     snwork);
+   FREEA(usbwork);
+   FREEA(edidwork);
+   FREEA(mfg_id_work);
+   FREEA(modelwork);
+   FREEA(snwork);
 
-   if (maxtrywork)
+   if (maxtrywork) {
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
+      free(maxtrywork);
+      maxtrywork = NULL;
+   }
 
-   if (mccswork)
+   if (mccswork) {
       parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errmsgs);
+      FREEA(mccswork);
+   }
 
    if (syslog_work) {
       DDCA_Syslog_Level level;
@@ -1262,6 +1310,7 @@ parse_command(
          syslog_level = level;
       else
          parsing_ok = false;
+      FREEA(syslog_work);
    }
    parsed_cmd->syslog_level = syslog_level;
 
@@ -1270,6 +1319,7 @@ parse_command(
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
       parsing_ok &= ok;
+      FREEA(i1_work);
    }
 
    if (i2_work) {
@@ -1277,6 +1327,7 @@ parse_command(
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
       parsing_ok &= ok;
+      FREEA(i2_work);
    }
 
    if (fl1_work) {
@@ -1286,6 +1337,7 @@ parse_command(
      else
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL1_SET;
       parsing_ok &= ok;
+      FREEA(fl1_work);
    }
 
 
@@ -1296,11 +1348,44 @@ parse_command(
      else
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL2_SET;
       parsing_ok &= ok;
+      FREEA(fl2_work);
    }
 
 
-   if (sleep_multiplier_work)
+   if (ignored_vid_pid) {
+      int ndx = 0;
+      for (char * cur = ignored_vid_pid[ndx]; cur && ndx < 10; cur=ignored_vid_pid[++ndx]) {
+         // DBGMSG("cur[%d]=%p -> %s", ndx, cur, cur);
+         uint16_t vid;
+         uint16_t pid;
+         bool ok = parse_colon_separated_vid_pid(cur, &vid, &pid);
+         if (!ok) {
+            emit_parser_error(errmsgs, __func__, "Invalid vid:pid value: %s", cur);
+            parsing_ok = false;
+         }
+         else {
+            // DBGMSG("vid = 0x%04x, pid=0x%04x", vid, pid);
+            uint32_t ignored_vid_pid = vid << 16 | pid;
+            // DBGMSG("ignored_vid_pid = 0x%08x", ignored_vid_pid);
+            if (parsed_cmd->ignored_usb_vid_pid_ct < IGNORED_VID_PID_MAX)
+               parsed_cmd->ignored_usb_vid_pids[parsed_cmd->ignored_usb_vid_pid_ct++] = ignored_vid_pid;
+             else {
+                emit_parser_error(errmsgs, __func__, "Too many ignore-usb-vid-pid values");
+                parsing_ok = false;
+             }
+         }
+      }
+      ntsa_free(ignored_vid_pid,true);
+      ignored_vid_pid = NULL;
+   }
+
+
+   if (sleep_multiplier_work) {
       parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errmsgs);
+      free(sleep_multiplier_work);
+      sleep_multiplier_work = NULL;
+   }
+
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&
@@ -1314,8 +1399,10 @@ parse_command(
    else
       parsed_cmd->edid_read_size = edid_read_size_work;
 
-   if (trace_classes)
+   if (trace_classes) {
       parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errmsgs);
+      FREEA(trace_classes);
+   }
 
    if (trace_functions) {
       parsed_cmd->traced_functions = trace_functions;
