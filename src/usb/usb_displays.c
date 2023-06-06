@@ -93,7 +93,7 @@ dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
 }
 
 
-void
+static void
 free_usb_monitor_vcp_rec(gpointer p) {
    struct usb_monitor_vcp_rec * vrec = p;
    if (vrec) {
@@ -135,7 +135,7 @@ dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 }
 
 
-void
+static void
 free_usb_monitor_info(gpointer p) {
    struct usb_monitor_info * moninfo = p;
    if (moninfo) {
@@ -178,7 +178,7 @@ report_usb_monitors(GPtrArray * monitors, int depth) {
  *  @param  fd  file descriptor of open HID device
  *  @return array of #Usb_Monitor_Vcp_Rec for each usage
  */
-GPtrArray *
+static GPtrArray *
 collect_vcp_reports(int fd) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -196,7 +196,7 @@ collect_vcp_reports(int fd) {
 
           errno = 0;
           // eliminated CALLOPT_ERR_ABORT:
-          reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG);
+          reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG); //HIDIOCGDEVINFO
           // reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
           if (reportinfo_rc != 0) {    // no more reports
              assert( reportinfo_rc == -1);
@@ -356,11 +356,11 @@ avoid_device_by_usb_interfaces_property_string(const char * interfaces) {
 
 
 /**
- * Verifies that the device class of the Monitor is 3 (HID Device)
- * but the subclass and interface do not indicate a mouse or keybaord
+ * Verifies that the device class of the Monitor is 3 (HID Device) and
+ * that the subclass and interface do not indicate a mouse or keyboard.
  *
- *  @parmam   hiddev  device name
- *  @return   true/false
+ *  @param   hiddev  device name
+ *  @return  true/false
  */
 
 bool
@@ -425,33 +425,51 @@ get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Examining device: %s", hiddev_fn);
 
+      if (is_ignored_hiddev(hiddev_name_to_number(hiddev_fn))) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Explicitly ignored: %s", hiddev_fn);
+         continue;
+      }
+
+      // Ensures we don't touch a keyboard, mouse or some non-HID device.
+      // Probing a keyboard or mouse can hang the system.
       if (!is_possible_monitor_by_hiddev_name(hiddev_fn)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Not a possible monitor: %s", hiddev_fn);
          continue;
       }
 
+      bool deny_checked = false;
+      char * detail = NULL;
+      Bus_Open_Error * boe = NULL;
+      Usb_Detailed_Device_Summary * devsum =
+            lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
+      if (devsum) {
+         // report_usb_detailed_device_summary(devsum, 4);
+         detail = g_strdup_printf("  USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
+                        devsum->busnum_s,
+                        devsum->devnum_s,
+                        devsum->vendor_id,
+                        devsum->product_id,
+                        devsum->vendor_name,
+                        devsum->product_name);
+         bool denied = deny_hid_monitor_by_vid_pid(devsum->vid, devsum->pid);
+         denied |= is_ignored_usb_vid_pid(devsum->vid, devsum->pid);
+         deny_checked = true;
+         if (denied) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Denied monitor %s:%s", devsum->vendor_id, devsum->product_id);
+         }
+
+         free_usb_detailed_device_summary(devsum);
+         if (denied)
+            continue;
+      }
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "detail = |%s|", detail);
+
       int fd = usb_open_hiddev_device(hiddev_fn, CALLOPT_RDONLY);
       if (fd < 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Open failed");
-         char * detail = NULL;
-         Usb_Detailed_Device_Summary * devsum =
-               lookup_udev_usb_device_by_devname(hiddev_fn, /* verbose = */ false);
-         if (devsum) {
-            // report_usb_detailed_device_summary(devsum, 4);
-            detail = g_strdup_printf("  USB bus %s, device %s, vid:pid: %s:%s - %s:%s",
-                           devsum->busnum_s,
-                           devsum->devnum_s,
-                           devsum->vendor_id,
-                           devsum->product_id,
-                           devsum->vendor_name,
-                           devsum->product_name);
-            free_usb_detailed_device_summary(devsum);
-         }
-
          f0printf(ferr(), "Open failed for %s: errno=%s %s\n", hiddev_fn, linux_errno_desc(-fd),
                (detail) ? detail : "");
-
-         Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
+         boe = calloc(1, sizeof(Bus_Open_Error));
          boe->io_mode = DDCA_IO_USB;
          boe->devno = hiddev_name_to_number(hiddev_fn);    // is this simple or fully qualified?
          boe->error = fd;
@@ -461,7 +479,6 @@ get_usb_monitor_list() {
       else {     // fd == 0 should never occur
          assert(fd != 0);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "open succeeded");
-         // DBGTRC(debug, TRACE_GROUP, "Open succeeded");
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
          char *                    cgname      = NULL;
@@ -470,15 +487,39 @@ get_usb_monitor_list() {
          Usb_Monitor_Info *        moninfo =     NULL;
 
          cgname = get_hiddev_name(fd);               // HIDIOCGNAME
+
          devinfo = calloc(1,sizeof(struct hiddev_devinfo));
-         if ( hiddev_get_device_info(fd, devinfo, CALLOPT_ERR_MSG) != 0 )
+         Status_Errno rc2 = hiddev_get_device_info(fd, devinfo, CALLOPT_ERR_MSG);     //  HIDIOCGDEVINFO
+         if (rc2 != 0) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "hiddev_get_device_info() failed. rc=%d", rc2);
+            goto close;
+         }
+
+         if (!deny_checked) {
+            bool deny = deny_hid_monitor_by_vid_pid(devinfo->vendor, devinfo->product);
+            deny |= is_ignored_usb_vid_pid(devinfo->vendor, devinfo->product);
+            if (deny) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Denied monitor 0x%04x:0x%04x", devinfo->vendor, devinfo->product);
+               goto close;
+            }
+         }
+
+         // DBGMSF(debug, "Calling is_hiddev_monitor()...");
+         bool is_hid_monitor = is_hiddev_monitor(fd);           // HIDIOCGCOLLECTIONINFO
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "is_hiddev_monitor() returned %s", sbool(is_hid_monitor));
+         if (!is_hid_monitor)
             goto close;
 
-         if (deny_hid_monitor_by_vid_pid(devinfo->vendor, devinfo->product) )
+         // Solves problem of ddc detect not getting edid unless ddcutil env called first
+         DBGMSF(debug, "calling ioctl(,HIDIOCINITREPORT)...");
+         int rc = ioctl(fd, HIDIOCINITREPORT);
+         DBGMSF(debug, "ioctl() returned %d", rc);
+         if (rc < 0) {
+            int errsv = errno;
+            // call should never fail.  always write an error message
+            REPORT_IOCTL_ERROR("HIDIOCINITGREPORT", errsv);
             goto close;
-
-         if (!is_hiddev_monitor(fd))
-            goto close;
+         }
 
          parsed_edid = get_hiddev_edid_with_fallback(fd, devinfo);
          if (!parsed_edid) {
@@ -489,7 +530,7 @@ get_usb_monitor_list() {
          }
 
          DBGTRC(debug, TRACE_GROUP, "Collecting USB reports...");
-         vcp_reports = collect_vcp_reports(fd);
+         vcp_reports = collect_vcp_reports(fd);   // HIDIOCGDEVINFO
 
          moninfo = calloc(1,sizeof(Usb_Monitor_Info));
          memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
@@ -790,6 +831,7 @@ check_usb_monitor( char * device_name ) {
    DBGMSF(debug, "Examining device: %s", device_name);
    bool result = false;
 
+#ifdef OLD
    if (is_possible_monitor_by_hiddev_name(device_name))  {
       // only check if a HID device that isn't a mouse or keyboard
       int fd = open(device_name, O_RDONLY);
@@ -802,10 +844,12 @@ check_usb_monitor( char * device_name ) {
       }
       close(fd);
    }
+#endif
+   result = is_possible_monitor_by_hiddev_name(device_name);
 
    if (ol >= DDCA_OL_VERBOSE) {
       if (result)
-         printf("Device %s appears to be a USB HID compliant monitor.\n", device_name);
+         printf("Device %s may be a USB HID compliant monitor.\n", device_name);
       else
          printf("Device %s is not a USB HID compliant monitor.\n", device_name);
    }
