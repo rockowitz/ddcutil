@@ -774,8 +774,8 @@ set_ddca_error_detail_from_open_errors() {
             errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/i2c-%d",
                                              psc_desc(cur->error), cur->devno);
          else
-            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d",
-                                             psc_desc(cur->error), cur->devno);
+            errinfo = errinfo_new(cur->error, __func__, "Error %s opening /dev/usb/hiddev%d %s",
+                                             psc_desc(cur->error), cur->devno, (cur->detail) ? cur->detail : "");
          errinfo_add_cause(master_error, errinfo);
       }
       master_rc = master_error->status_code;
