@@ -546,7 +546,7 @@ ddca_get_feature_metadata_by_vspec(
    }
    *info_loc = meta;
 
-   assert( (psc==0 && *info_loc) || (psc!=0 &&!*info_loc) );
+   ASSERT_IFF(psc==0, *info_loc);
    API_EPILOG(debug, psc, "");
 }
 
@@ -939,14 +939,17 @@ ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
             free_thread_error_detail();
             Error_Info * ddc_excp = dfr_check_by_dref(dref);
             if (ddc_excp) {
-               psc = ddc_excp->status_code;
-               save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+               if (ddc_excp->status_code != DDCRC_NOT_FOUND) {
+                  psc = ddc_excp->status_code;
+                  save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+               }
                errinfo_free(ddc_excp);
             }
       }
    );
    API_EPILOG(debug, psc, "");
 }
+
 
 DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
@@ -972,7 +975,7 @@ void init_api_metadata() {
    RTTI_ADD_FUNC(ddca_get_feature_metadata_by_dh);
    // RTTI_ADD_FUNC(ddca_get_feature_name_by_dref); // error because deprecated
    RTTI_ADD_FUNC(ddca_get_simple_nc_feature_value_name_by_table);
-   // RTTI_ADD_FUNC(ddca_dfr_check_by_dref);   // error because deprecated
+   RTTI_ADD_FUNC(ddca_dfr_check_by_dref);   // error because deprecated
    RTTI_ADD_FUNC(ddca_dfr_check_by_dh);
 }
 
