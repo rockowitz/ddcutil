@@ -188,12 +188,11 @@ app_show_feature_set_values_by_dh(
       Parsed_Cmd *         parsed_cmd)
 {
    bool debug = false;
-   if (debug || IS_TRACING()) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s",
-                             dh_repr(dh), fsref_repr_t(parsed_cmd->fref),
-                             feature_set_flag_names_t(parsed_cmd->flags));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh: %s. fsref: %s, flags: %s",
+                                       dh_repr(dh), fsref_repr_t(parsed_cmd->fref),
+                                       feature_set_flag_names_t(parsed_cmd->flags));
+   if (debug || IS_TRACING())
       dbgrpt_feature_set_ref(parsed_cmd->fref,1);
-   }
 
    if (parsed_cmd->flags & CMD_FLAG_I1_SET)
       alt_source_addr = parsed_cmd->i1;
