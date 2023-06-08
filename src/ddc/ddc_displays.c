@@ -340,11 +340,10 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
       result = ddc_initial_checks_by_dh(dh);
       ddc_close_display(dh);
    }
-   // else {    // why else?
-     dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-   // }
+   dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
    if (psc == -EBUSY)
       dref->flags |= DREF_DDC_BUSY;
+   else
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref = %s", sbool(result), dref_repr_t(dref) );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dref->flags));
