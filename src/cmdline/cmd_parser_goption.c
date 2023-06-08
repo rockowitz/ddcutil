@@ -987,7 +987,7 @@ parse_command(
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
-     {"syslog",      '\0', 0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", "NONE, ERROR, WARN, INFO, NEVER"},
+      {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", "NONE, ERROR, WARN, INFO, NEVER"},
       {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
       {"failsim",    '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
@@ -1441,7 +1441,7 @@ parse_command(
    // All options processed.  Check for consistency, set defaults
 
    if (parser_mode == MODE_LIBDDCUTIL && rest_ct > 0) {
-      emit_parser_error(errmsgs,  __func__, "Unrecognized configuration file options: %s", cmd_and_args[0]);
+      emit_parser_error(errmsgs,  __func__, "Unrecognized: %s", cmd_and_args[0]);
          parsing_ok = false;
    }
    else if (parsing_ok && parser_mode == MODE_DDCUTIL && rest_ct == 0) {
