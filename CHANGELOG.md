@@ -158,14 +158,14 @@ The following functions are no longer useful and have been removed
 - ddca_append_thread_description()
 - ddca_get_thread_desription() 
 
-Remove previously deprecated functions that had been replaced by more useful versions: 
+Remove previously deprecated functions: 
 - ddca_open_display(). Use ddca_open_display2().
-...
+- ddca_create_display_ref(). Use ddca_get_display_ref()
+- ddca_free_display_ref(). Had become a NO-OP. All display references are persistent
 
 Symbols for functions and enums that had previously been removed from ddcutil_c_api.h are no longer exported.
 
-
-Options that apply only to libddcutil (Specified in the ddcutil configuration file or passed to ddcs_init())
+Options that apply only to libddcutil (Specified in the ddcutil configuration file or passed to ddca_init())
 
 - Option ***--profile-api***. Applies only to **libddcutil**.  Statistics
   for API functions that perform display IO are collected and subsequently
