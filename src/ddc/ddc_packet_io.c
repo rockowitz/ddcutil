@@ -182,7 +182,7 @@ ddc_open_display(
          TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
          DBGMSF(debug, "Calling i2c_open_bus() ...");
-         int fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
+         int fd = i2c_open_bus(dref->io_path.path.i2c_busno, CALLOPT_ERR_MSG);
          if (fd < 0) {
             ddcrc = fd;
          }

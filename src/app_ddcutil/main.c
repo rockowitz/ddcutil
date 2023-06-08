@@ -994,10 +994,10 @@ main(int argc, char *argv[]) {
          if (dref) {
             DBGMSF(main_debug,
                    "mainline - display detection complete, about to call ddc_open_display() for dref" );
-            Status_Errno_DDC ddcrc = ddc_open_display(dref, callopts |CALLOPT_ERR_MSG, &dh);
+            Status_Errno_DDC ddcrc = ddc_open_display(dref, callopts, &dh);
             ASSERT_IFF( (ddcrc==0), dh);
             if (!dh) {
-               f0printf(ferr(), "Error %s opening display ref %s", psc_desc(ddcrc), dref_repr_t(dref));
+               f0printf(ferr(), "Error opening display %s: %s", dref_repr_t(dref), psc_desc(ddcrc));
                main_rc = EXIT_FAILURE;
             }
          }  // dref

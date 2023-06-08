@@ -232,9 +232,10 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       }
       else {
          // DBGMSF(debug, "ddc_open_display() failed");
+         SYSLOG2((psc == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
+                 "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(psc));
          dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
       }
-
    }
 
    assert( !vcp_version_eq(result, DDCA_VSPEC_UNQUERIED) );

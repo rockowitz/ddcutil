@@ -295,9 +295,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             // n. requires write access since may call get_vcp_value(), which does a write
             Display_Handle * dh = NULL;
             DBGMSF(debug, "Calling ddc_open_display() ...");
-            Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+            Public_Status_Code psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
             if (psc != 0) {
-               rpt_vstring(d1, "Error opening display %s, error = %s",
+               rpt_vstring(d1, "Error opening display %s: %s",
                                   dref_short_name_t(dref), psc_desc(psc));
             }
             else {

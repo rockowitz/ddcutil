@@ -223,10 +223,9 @@ void app_probe_display_by_dh(Display_Handle * dh)
 void app_probe_display_by_dref(Display_Ref * dref) {
    FILE * fout = stdout;
    Display_Handle * dh = NULL;
-   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
    if (psc != 0) {
-      f0printf(fout, "Unable to open display %s, status code %s",
-                     dref_short_name_t(dref), psc_desc(psc) );
+      f0printf(fout, "Error opening display %s: %s", dref_short_name_t(dref), psc_desc(psc) );
    }
    else {
       app_probe_display_by_dh(dh);

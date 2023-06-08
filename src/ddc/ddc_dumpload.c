@@ -468,8 +468,9 @@ loadvcp_by_dumpload_data(
       }
 
       // return code == 0 iff dh set
-      ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+      DDCA_Status ddcrc = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (!dh) {
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s", dref_repr_t(dref), ddcrc_desc_t(ddcrc));
          psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
