@@ -120,7 +120,7 @@ ignored_hiddev_arg_func(const    gchar* option_name,
                gpointer data,
                GError** error)
 {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
 
    int ival;
