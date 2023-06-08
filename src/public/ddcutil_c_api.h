@@ -179,9 +179,9 @@ ddca_rc_desc(
 
 /** Performs library initialization.
  *
- *  @param  library_options  string of **libddcutil** options
- *  @param  syslog_level     severity cutoff for system log
- *  @param  opts             option flags
+ *  @param[in]  library_options  string of **libddcutil** options
+ *  @param[in]  syslog_level     severity cutoff for system log
+ *  @param[in]  opts             option flags
  *  @return status code
  *
  * Unless flag DDC_INIT_OPTIONS_DISABLE_CONFIG_FILE is set in **opts**,
@@ -345,7 +345,7 @@ ddca_output_level_name(
 
 /** Given an external syslog level name returns the syslog level id.
  *
- *  @param  name    e.g. ERROR
+ *  @param[in]  name    e.g. ERROR
  *  @return syslog level id, DDCA_SYSLOG_NOT FOUND if invalid name
  *
  *  @remark
@@ -405,9 +405,9 @@ ddca_get_display_refs(
  *
  *  The returned struct can simply be free()'d by the client.
  *
- *  @param  ddca_dref display reference
- *  @param  dinfo_loc where to return pointer to newly allocated #DDCA_Display_Info
- *  @param  DDCRC_OK  no error
+ *  @param[in]  ddca_dref display reference
+ *  @param[out] dinfo_loc where to return pointer to newly allocated #DDCA_Display_Info
+ *  @retval DDCRC_OK  no error
  *  @retval DDCRC_ARG invalid display reference
  *
  *  @since 1.2.0
@@ -419,7 +419,7 @@ ddca_get_display_info(
 
 /** Frees a #DDCA_Display_Info struct.
  *
- *  @param info_rec pointer to instance to free
+ *  @param[in] info_rec pointer to instance to free
  *
  *  @remark
  *  This is a convenience function. #DDCA_Display_Info is copied to
@@ -1640,7 +1640,7 @@ typedef void (*DDCA_Display_Hotplug_Callback_Func)();
 /** Registers a function to be called called when a change in displays is
  *  detected.
  *
- *  @param  func   function of type #DDCA_Display_Hotplug_Callback_Func()
+ *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func()
  *  @return DDCRC_OK
  *  @retval DDCRC_INVALID_OPERATION function already registered
  *
@@ -1651,7 +1651,7 @@ ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 
 /** Removes a function from the list of registered callbacks
  *
- *  @param  func  function that has already been registered
+ *  @param[in] func  function that has already been registered
  *  @retval DDCRC_OK  function removed from list
  *  @retval DDCRC_NOT_FOUNC function not registered
  *
