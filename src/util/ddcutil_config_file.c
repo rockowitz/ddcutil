@@ -87,7 +87,7 @@ int read_ddcutil_config_file(
       GPtrArray *    errmsgs,
       bool           verbose)
 {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       verbose = true;
    DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p, verbose=%s",
