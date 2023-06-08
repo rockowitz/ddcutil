@@ -147,6 +147,11 @@ USB enablement:
   - ddca_enable_usb_display_detection
   - ddca_disable_usb_display_detection 
 
+Miscellaneous: 
+  - ddca_enable_force_slave_adress() 
+  - ddca_is_force_slave_address_enabled()
+  - ddca_enable_error_info()
+
 Most per-thread statistics are now instead maintained on a per-display basis.
 The following functions are no longer useful and have been removed
 - ddca_set_thread_description()
