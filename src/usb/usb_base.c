@@ -243,51 +243,82 @@ static Bit_Set_32     ignored_hiddevs;
 static uint8_t        ignored_vid_pid_ct = 0;
 static Vid_Pid_Value* ignored_vid_pids = NULL;
 
+
+/** Specify /dev/usb/hiddev devices to be ignored, using hiddev bus numbers.
+ *
+ *  @param ignored_hiddev_flags bits indicate hiddev device numbers to ignore
+ */
 void
-set_ignored_hiddevs(Bit_Set_32 ignored_hiddevs_flags) {
-   bool debug = true;
+usb_ignore_hiddevs(Bit_Set_32 ignored_hiddevs_flags) {
+   bool debug = false;
    ignored_hiddevs = ignored_hiddevs_flags;
    char buf[BIT_SET_32_MAX+1];
-   if (debug)
-      printf("(%s) ignored_hiddevs = 0x%08x = %s\n", __func__,
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "ignored_hiddevs = 0x%08x = %s",
             ignored_hiddevs, bs32_to_bitstring(ignored_hiddevs, buf, BIT_SET_32_MAX+1));
 }
 
 
+/** Checks if a hiddev device is to ignored, using its /dev/usb/hiddev device number
+ *
+ *  @param  hiddev_number device number
+ *  @return true if device is to be ignored, false if not
+ */
 bool
-is_ignored_hiddev(uint8_t hiddev_number) {
-   bool debug = true;
+usb_is_ignored_hiddev(uint8_t hiddev_number) {
+   bool debug = false;
    assert(hiddev_number < BIT_SET_32_MAX);
    bool result = bs32_contains(ignored_hiddevs, hiddev_number);
-   if (debug)
-      printf("(%s) hiddev_number=%d, returning %s\n", __func__, hiddev_number, sbool(result));
+   DBGTRC_EXECUTED(debug, TRACE_GROUP,
+         "hiddev_number=%d, returning %s", hiddev_number, sbool(result));
    return result;
 }
 
 
+/** Specify /dev/usb/hiddev devices to be ignored, using vendor and product ids.
+ *
+ *  @param ignored_ct  number of devices to ignore
+ *  @param ignored     array of vendor_id/product_id values
+ *
+ *  Each value in **ignored** is specified as a combined 4 byte vendor_id/product_id value.
+ */
 void
-set_ignored_usb_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored) {
-   bool debug = true;
+usb_ignore_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored) {
+   bool debug = false;
    ignored_vid_pid_ct = ignored_ct;
    ignored_vid_pids = calloc(ignored_ct, sizeof(uint32_t));
    memcpy(ignored_vid_pids, ignored, ignored_ct*sizeof(uint32_t));
-   if (debug) {
-      printf("(%s) ignored_vid_pd_ct = %d\n", __func__, ignored_vid_pid_ct);
+   if (debug || IS_TRACING()) {
+      DBGMSG("ignored_vid_pid_ct = %d", ignored_vid_pid_ct);
       for (int ndx = 0; ndx < ignored_vid_pid_ct; ndx++)
-         printf("(%s) ignored_vid_pids[%d] = 0x%08x\n", __func__,  ndx, ignored_vid_pids[ndx]);
+         DBGMSG("   ignored_vid_pids[%d] = 0x%08x", ndx, ignored_vid_pids[ndx]);
    }
 }
 
 
+/** Checks if a hiddev device is to ignored, based on its vendor id and product id.
+ *
+ *  @param  vid  2 byte vendor id
+ *  @param  pid  2 byte product id
+ *  @return true if device is to be ignored, false if not
+ */
 bool
-is_ignored_usb_vid_pid(uint16_t vid, uint16_t pid) {
+usb_is_ignored_vid_pid(uint16_t vid, uint16_t pid) {
+   bool debug = false;
    Vid_Pid_Value v = VID_PID_VALUE(vid,pid);
-   return is_ignored_usb_vid_pid_value(v);
+   bool result = usb_is_ignored_vid_pid_value(v);
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "vid=0x%04x, pid=0x%04x, returning: %s", vid, pid, result);
+   return result;
 }
 
 
+/** Checks if a hiddev device is to ignored, based on its vendor id and product id.
+ *
+ *  @param  vidpid  4 byte combined vendor_id/product_id
+ *  @return true if device is to be ignored, false if not
+ */
 bool
-is_ignored_usb_vid_pid_value(Vid_Pid_Value vidpid) {
+usb_is_ignored_vid_pid_value(Vid_Pid_Value vidpid) {
+   bool debug = false;
    bool result = false;
    for (int ndx = 0; ndx < ignored_vid_pid_ct; ndx++) {
       if (vidpid == ignored_vid_pids[ndx]) {
@@ -295,6 +326,7 @@ is_ignored_usb_vid_pid_value(Vid_Pid_Value vidpid) {
          break;
       }
    }
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "vidpid=0x%08x, returning: %s", vidpid, result);
    return result;
 }
 
@@ -302,6 +334,11 @@ is_ignored_usb_vid_pid_value(Vid_Pid_Value vidpid) {
 void
 init_usb_base() {
    RTTI_ADD_FUNC(usb_open_hiddev_device);
+   RTTI_ADD_FUNC(usb_ignore_hiddevs);
+   RTTI_ADD_FUNC(usb_is_ignored_hiddev);
+   RTTI_ADD_FUNC(usb_ignore_vid_pid_values);
+   RTTI_ADD_FUNC(usb_is_ignored_vid_pid);
+   RTTI_ADD_FUNC(usb_is_ignored_vid_pid_value);
 }
 
 

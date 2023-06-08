@@ -45,11 +45,11 @@ typedef uint32_t Vid_Pid_Value;
 #define VID_PID_VALUE_TO_PID(_vid_pid) (_vid_pid & 0xff)
 #define VID_PID_VALUE(_vid,_pid) ( _vid << 16 | _pid)
 
-void set_ignored_hiddevs(Bit_Set_32 ignored_hiddevs);
-bool is_ignored_hiddev(uint8_t hiddev_number);
-void set_ignored_usb_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored_vid_pids);
-bool is_ignored_usb_vid_pid(uint16_t vid, uint16_t pid);
-bool is_ignored_usb_vid_pid_value(Vid_Pid_Value vidpid);
+void usb_ignore_hiddevs(Bit_Set_32 ignored_hiddevs);
+bool usb_is_ignored_hiddev(uint8_t hiddev_number);
+void usb_ignore_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored_vid_pids);
+bool usb_is_ignored_vid_pid(uint16_t vid, uint16_t pid);
+bool usb_is_ignored_vid_pid_value(Vid_Pid_Value vidpid);
 
 void init_usb_base();
 void terminate_usb_base();
