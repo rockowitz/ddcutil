@@ -98,6 +98,11 @@ int read_ddcutil_config_file(
    *config_fn_loc = NULL;
 
    char * config_fn = find_xdg_config_file("ddcutil", "ddcutilrc");
+#ifdef SEPARATE_CONFIG_FILES
+   char * config_fn = (streq(ddcutil_application, "ddcui"))
+         ? find_xdg_config_file("ddcutil", "ddcuirc")
+         : find_xdg_config_file("ddcutil", "ddcutilrc");
+#endif
    if (!config_fn) {
       DBGF(debug, "Configuration file not found");
       result = -ENOENT;
