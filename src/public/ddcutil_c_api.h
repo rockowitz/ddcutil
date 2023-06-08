@@ -177,19 +177,6 @@ ddca_rc_desc(
 // Initialization
 //
 
-/** Given an external syslog level name returns the syslog level id.
- *
- *  @param  name    e.g. ERROR
- *  @return syslog level id, DDCA_SYSLOG_NOT FOUND if invalid name
- *
- *  @remark
- *  This is a convenience function.
- *
- * @since 2.0.0
- */
-DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name);
-
-
 /** Performs library initialization.
  *
  *  @param  library_options  string of **libddcutil** options
@@ -236,28 +223,6 @@ ddca_enable_verify(
  */
 bool
 ddca_is_verify_enabled(void);
-
-
-/** Controls the force I2C slave address setting.
- *
- *  Normally, ioctl operation I2C_SLAVE is used to set the I2C slave address.
- *  If that returns EBUSY and this setting is in effect, slave address setting
- *  is retried using operation I2C_SLAVE_FORCE.
- *
- *  @param[in] onoff true/false
- *  @return  prior value
- *  @since 1.2.2
- */
-bool
-ddca_enable_force_slave_address(bool onoff);
-
-/** Query the force I2C slave address setting.
- *
- *  @return true/false
- *  @since 1.2.2
- */
-bool
-ddca_is_force_slave_address_enabled(void);
 
 
 //
@@ -377,6 +342,18 @@ ddca_set_output_level(
 char *
 ddca_output_level_name(
       DDCA_Output_Level val);   /**< output level id */
+
+/** Given an external syslog level name returns the syslog level id.
+ *
+ *  @param  name    e.g. ERROR
+ *  @return syslog level id, DDCA_SYSLOG_NOT FOUND if invalid name
+ *
+ *  @remark
+ *  This is a convenience function.
+ *
+ * @since 2.0.0
+ */
+DDCA_Syslog_Level ddca_syslog_level_from_name(const char * name);
 
 
 //
@@ -1357,7 +1334,7 @@ ddca_feature_list_string(
  * on any monitors (as of 3/2018), and applications can probably
  * safely be implemented using only the Non-Table APIs.
  *
- * Note that the functions for #DDCA_Any_Vap_Value replace those
+ * Note that the functions for #DDCA_Any_Vcp_Value replace those
  * that previously existed for #DDCA_Single_Vcp_Value.
  */
 
