@@ -277,6 +277,31 @@ ddca_get_display_ref(
    return rc;
 }
 
+
+#ifdef REMOVED
+
+/** @deprecated use #ddca_get_display_ref()
+ *  Gets a display reference for a display identifier.
+ *  Normally, this is a permanently allocated #DDCA_Display_Ref
+ *  created by monitor detection and does not need to be freed.
+ *  Use #ddca_free_display_ref() to safely free.
+ *
+ *  @param[in]  did      display identifier
+ *  @param[out] dref_loc where to return display reference
+ *  @retval     0                     success
+ *  @retval     DDCRC_ARG             did is not a valid display identifier handle
+ *  @retval     DDCRC_INVALID_DISPLAY display not found
+ *
+ *  @ingroup api_display_spec
+ */
+// __attribute__ ((deprecated ("use ddca_get_display_ref()")))
+DDCA_Status
+ddca_create_display_ref(
+      DDCA_Display_Identifier did,
+      DDCA_Display_Ref*       dref_loc);
+#endif
+
+#ifdef REMOVED
 // deprecated
 DDCA_Status
 ddca_create_display_ref(
@@ -285,8 +310,32 @@ ddca_create_display_ref(
 {
    return ddca_get_display_ref(did, dref_loc);
 }
+#endif
 
+#ifdef REMOVED
+/** @deprecated All display references are persistent
+ *
+ *  Frees a display reference.
+ *
+ *  Use this function to safely release a #DDCA_Display_Ref.
+ *  If the display reference was dynamically created, it is freed.
+ *  If the display reference was permanently allocated (normal case), does nothing.
+ *
+ *  @param[in] dref  display reference to free
+ *  @retval DDCRC_OK     success, or dref == NULL
+ *  @retval DDCRC_ARG    dref does not point to a valid display reference
+ *  @retval DDCRC_LOCKED dref is to a transient instance, and it is referenced
+ *                       by an open display handle
+ *
+ *  @ingroup api_display_spec
+ */
+// __attribute__ ((deprecated ("DDCA_Display_Refs are always persistent")))
+DDCA_Status
+ddca_free_display_ref(
+      DDCA_Display_Ref dref);
+#endif
 
+#ifdef REMOVED
 // deprecated, not needed, in library there are no transient display refs
 DDCA_Status
 ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
@@ -305,6 +354,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
    API_EPILOG_WO_RETURN(debug, psc, "");
    return psc;
 }
+#endif
 
 
 DDCA_Status
@@ -1182,7 +1232,9 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
 void init_api_displays() {
       // DBGMSG("Executing");
       RTTI_ADD_FUNC(ddca_close_display);
+#ifdef REMOVED
       RTTI_ADD_FUNC(ddca_free_display_ref);
+#endif
       RTTI_ADD_FUNC(ddca_get_display_info_list2);
       RTTI_ADD_FUNC(ddca_get_display_info);
       RTTI_ADD_FUNC(ddca_get_display_ref);
