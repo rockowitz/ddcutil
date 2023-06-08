@@ -185,6 +185,11 @@ get_parsed_libmain_config(const char * libopts_string,
    DBGF(debug, "Starting. disable_config_file = %s, libopts_string = %sn",
                sbool(disable_config_file), libopts_string);
 
+   if (libopts_string) {
+      fprintf(fout(), "Using libddcutil options passed from client: %s\n", libopts_string);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options passed from client: %s",   libopts_string);
+   }
+
    Error_Info * result = NULL;
    *parsed_cmd_loc = NULL;
 
@@ -274,8 +279,8 @@ get_parsed_libmain_config(const char * libopts_string,
       }
    #endif
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
-            fprintf(fout(), "Applying libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
-            SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying libddcutil options from %s: %s",   config_fn, untokenized_option_string);
+            fprintf(fout(), "Using libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
+            SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
       free(config_fn);
@@ -297,6 +302,10 @@ get_parsed_libmain_config(const char * libopts_string,
            ntsa_show(new_argv);
         }
       }
+
+      char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
+      fprintf(fout(), "Applying combined libddcutil options: %s\n", combined);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying combined libddcutil options: %s",   combined);
       DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
       if (debug)
@@ -304,14 +313,14 @@ get_parsed_libmain_config(const char * libopts_string,
       ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
       if (!*parsed_cmd_loc) {
          if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-            syslog(LOG_ERR, "Invalid option string: %s",  untokenized_option_string);
+            syslog(LOG_ERR, "Invalid option string: %s",  combined);
             for (int ndx = 0; ndx < errmsgs->len; ndx++) {
                 char * msg =  g_ptr_array_index(errmsgs,ndx);
                 syslog(LOG_ERR, "%s", msg);
             }
          }
          result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
-               "Invalid option string: %s",  untokenized_option_string);
+               "Invalid option string: %s",  combined);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
             char * msg =  g_ptr_array_index(errmsgs, ndx);
             errinfo_add_cause(result, errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, msg));
@@ -326,6 +335,7 @@ get_parsed_libmain_config(const char * libopts_string,
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
       // ntsa_free(cmd_name_array, false);
       // ntsa_free(new_argv, true);
+      free(combined);
       free(untokenized_option_string);
    }
    if (libopts_tokens)
