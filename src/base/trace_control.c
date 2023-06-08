@@ -250,7 +250,7 @@ bool add_traced_api_call(const char * funcname) {
 
 
 bool add_traced_callstack_call(const char * funcname) {
-   bool debug = true;
+   bool debug = false;
    if (debug)
       printf("(%s) Starting. funcname=|%s|\n", __func__, funcname);
 
