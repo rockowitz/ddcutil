@@ -53,7 +53,7 @@ usb_open_hiddev_device(
       char *       hiddev_devname,
       Call_Options calloptions)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "hiddev_devname=%s, calloptions=0x%02x (%s)",
                  hiddev_devname, calloptions, interpret_call_options_t(calloptions) );
 
