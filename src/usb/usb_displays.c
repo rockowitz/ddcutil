@@ -425,7 +425,7 @@ get_usb_monitor_list() {
       char * hiddev_fn = g_ptr_array_index(hiddev_names, devname_ndx);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Examining device: %s", hiddev_fn);
 
-      if (is_ignored_hiddev(hiddev_name_to_number(hiddev_fn))) {
+      if (usb_is_ignored_hiddev(hiddev_name_to_number(hiddev_fn))) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Explicitly ignored: %s", hiddev_fn);
          continue;
       }
@@ -452,7 +452,7 @@ get_usb_monitor_list() {
                         devsum->vendor_name,
                         devsum->product_name);
          bool denied = deny_hid_monitor_by_vid_pid(devsum->vid, devsum->pid);
-         denied |= is_ignored_usb_vid_pid(devsum->vid, devsum->pid);
+         denied |= usb_is_ignored_vid_pid(devsum->vid, devsum->pid);
          deny_checked = true;
          if (denied) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Denied monitor %s:%s", devsum->vendor_id, devsum->product_id);
@@ -497,7 +497,7 @@ get_usb_monitor_list() {
 
          if (!deny_checked) {
             bool deny = deny_hid_monitor_by_vid_pid(devinfo->vendor, devinfo->product);
-            deny |= is_ignored_usb_vid_pid(devinfo->vendor, devinfo->product);
+            deny |= usb_is_ignored_vid_pid(devinfo->vendor, devinfo->product);
             if (deny) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Denied monitor 0x%04x:0x%04x", devinfo->vendor, devinfo->product);
                goto close;

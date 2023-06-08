@@ -880,9 +880,9 @@ main(int argc, char *argv[]) {
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
 
 #ifdef USE_USB
-   set_ignored_hiddevs(parsed_cmd->ignored_hiddevs);
+   usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
    Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
-   set_ignored_usb_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
+   usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
 #endif
 
    main_rc = EXIT_SUCCESS;     // from now on assume success;
