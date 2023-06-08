@@ -2,18 +2,18 @@
 
 ## [2.0.0] 2023-nn-nn
 
-Release 2.0.0 contains extensive changes.  Shared library libddcutil is not backwards
-compatible.  
+Release 2.0.0 contains extensive changes.  Shared library libddcutil is not 
+backwards compatible.  
 
 #### Added
-- Information about the detected system configuration is optionally saved in 
-  file $HOME/.cache/ddcutil/displays, shortening startup time. Options 
-  ***--enable-displays-cache*** and ***--disable-displays-cache*** control whether
-  this feature is enabled. 
+- Information about detected displays is optionally saved in file $HOME/.cache/ddcutil/displays, 
+  shortening startup time. Options ***--enable-displays-cache*** and ***--disable-displays-cache*** 
+  control whether this feature is enabled. 
 - Install /usr/lib/modules-load.d/ddcutil.conf. Ensures that driver i2c-dev
   is loaded.
-- Options not of interest to general users are now hidden.  Option ***--hh*** 
-  exposes them, and implies option ***--help***.
+- TODO: udev rules riles
+- Command options not of interest to general users are now hidden when help is 
+  requested.  Option ***--hh*** exposes them, and implies option ***--help***.
 - Option ***--noconfig***. Do not process the configuration file.
 - Option ***--verbose***.  If specified on the command line, the options obtained
   from the configuration file are reported.
@@ -25,7 +25,10 @@ compatible.
 - Option ***--trccall***. Traces the call stack starting with the specified 
   function.  This option applies only to functions for which tracing has been enabled.
 - API performance profiling
-
+- Added options ***--ignore-hiddev*** and ***--ignore-usb-vid-pid***
+- Added: Sample file nvidia-i2c.conf that can be installed in directory 
+  /etc/modprobe.d to sent options sometimes needed by the proprieatry NVidia 
+  video driver.
 
 #### Changed
 - The dynamic sleep algorithm has been completely rewritten to both dynamically
@@ -42,7 +45,7 @@ compatible.
 - **environment --verbose**: Option ***--quickenv*** skips some slow tests such as 
   use of program i2cdetect.
 - **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
-   those devices use /sys
+  those devices use /sys
 - Detailed statistics are now maintained on a per-display instead of per-thread basis.
 - Option ***--vstats*** includes per-display stas in its reports.  It takes the same
   arguments as ***--stats***. 
@@ -52,11 +55,24 @@ compatible.
 - **environment --verbose** disables caching, reports contents of cached files.
 - loosen criteria for when to try fallback methods to read EDID when using USB 
   to communicate with Eizo monitors
+- udev rule changes: 
+  - install /usr/lib/udev/rules.d/60-ddcutil-usb.rules
+  - rename /usr/lib/udev/rules.d/60-ddcutil.rules to 60-ddcutil-i2c.rules
+  - update and rename sample rules files installed in /usr/share/data/ddcutil as 
+    60-ddcutil-i2c.rules and  60-ddcutil-usb.rules.  The user can modify these 
+    files and install them in /etc/udev/rules.d to override the files installed 
+    in /usr/lib/udev/rules.d. 
 
 #### Fixed
 - More robust checks during display detection to test for misuse of the DDC Null Message
 and all zero getvcp response to indicate unsupported features.
-- Option ***--help***. Document **ELAPSED** as a recognized statistics class
+- Option ***--help***: Document **ELAPSED** as a recognized statistics class
+- ddca_dfr_check_by_dref(): do not return an error if no user defined feature file 
+  exists for the monitor
+- Recognize (but always report failure for) CHKUSBMON command even when ddcutil not 
+  built with USB support.
+- Improve reporting of /dev/hiddev* open failures to reduce confusion caused by this
+  typically benign error.
 
 ### Shared library changes
 
