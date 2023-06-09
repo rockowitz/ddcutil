@@ -11,8 +11,8 @@
 #include "base/monitor_quirks.h"
 
 typedef struct {
-   DDCA_Monitor_Model_Key mmk;
-   Monitor_Quirk_Data     data;
+   Monitor_Model_Key    mmk;
+   Monitor_Quirk_Data   data;
 } Monitor_Quirk_Table_Entry;
 
 static Monitor_Quirk_Table_Entry quirk_table[] = {
@@ -24,7 +24,7 @@ int quirk_table_size = ARRAY_SIZE(quirk_table);
 
 
 Monitor_Quirk_Data *
-get_monitor_quirks(DDCA_Monitor_Model_Key * mmk) {
+get_monitor_quirks(Monitor_Model_Key * mmk) {
    bool debug = false;
    DBGMSF(debug, "quirk_table_size=%d, mmk=%s", quirk_table_size, mmk_repr(*mmk));
    Monitor_Quirk_Data * result = NULL;

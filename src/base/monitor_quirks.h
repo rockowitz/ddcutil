@@ -21,6 +21,6 @@ typedef struct {
 } Monitor_Quirk_Data;
 
 Monitor_Quirk_Data *
-get_monitor_quirks(DDCA_Monitor_Model_Key * mmk);
+get_monitor_quirks(Monitor_Model_Key * mmk);
 
 #endif /* MONITOR_QUIRKS_H_ */
