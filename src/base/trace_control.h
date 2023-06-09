@@ -15,6 +15,8 @@
 
 #include "public/ddcutil_types.h"
 
+#include "base/ddcutil_types_internal.h"
+
 extern DDCA_Trace_Group trace_levels;
 
 extern DDCA_Syslog_Level syslog_level;
