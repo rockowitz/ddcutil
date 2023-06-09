@@ -21,7 +21,7 @@
 
 
 /** Returns a Monitor_Model_Key on the stack. */
-DDCA_Monitor_Model_Key
+Monitor_Model_Key
 monitor_model_key_value(
       const char *   mfg_id,
       const char *   model_name,
@@ -34,7 +34,7 @@ monitor_model_key_value(
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
 
-   DDCA_Monitor_Model_Key  result;
+   Monitor_Model_Key  result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    (void) g_strlcpy(result.mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    STRLCPY(result.model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
@@ -45,9 +45,9 @@ monitor_model_key_value(
 
 
 /** Returns an "undefined" Monitor_Model_Key on the stack. */
-DDCA_Monitor_Model_Key
+Monitor_Model_Key
 monitor_model_key_undefined_value() {
-   DDCA_Monitor_Model_Key result;
+   Monitor_Model_Key result;
    memset(&result, 0, sizeof(result));
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    return result;
@@ -56,9 +56,9 @@ monitor_model_key_undefined_value() {
 
 /** Returns a Monitor Model Key on the stack with values obtained
  *  from an EDID */
-DDCA_Monitor_Model_Key
+Monitor_Model_Key
 monitor_model_key_value_from_edid(Parsed_Edid * edid) {
-   DDCA_Monitor_Model_Key result;
+   Monitor_Model_Key result;
    // memcpy(result.marker, MONITOR_MODEL_KEY_MARKER, 4);
    /* coverity[OVERRUN] */             (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
    /* coverity[overrun-buffer-val] */  (void) g_strlcpy(result.mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
@@ -75,7 +75,7 @@ monitor_model_key_value_from_edid(Parsed_Edid * edid) {
 
 
 /** Allocates and initializes a new Monitor_Model_Key on the heap. */
-DDCA_Monitor_Model_Key *
+Monitor_Model_Key *
 monitor_model_key_new(
       const char *   mfg_id,
       const char *   model_name,
@@ -84,7 +84,7 @@ monitor_model_key_new(
    assert(mfg_id && strlen(mfg_id) < EDID_MFG_ID_FIELD_SIZE);
    assert(model_name && strlen(model_name) < EDID_MODEL_NAME_FIELD_SIZE);
 
-   DDCA_Monitor_Model_Key * result = calloc(1, sizeof(DDCA_Monitor_Model_Key));
+   Monitor_Model_Key * result = calloc(1, sizeof(Monitor_Model_Key));
    // memcpy(result->marker, MONITOR_MODEL_KEY_MARKER, 4);
    STRLCPY(result->mfg_id,     mfg_id,     EDID_MFG_ID_FIELD_SIZE);
    STRLCPY(result->model_name, model_name, EDID_MODEL_NAME_FIELD_SIZE);
@@ -94,13 +94,13 @@ monitor_model_key_new(
 }
 
 
-DDCA_Monitor_Model_Key *
+Monitor_Model_Key *
 monitor_model_key_new_from_edid(
       Parsed_Edid * edid)
 {
-   DDCA_Monitor_Model_Key * result = NULL;
+   Monitor_Model_Key * result = NULL;
    if (edid) {
-      result = calloc(1, sizeof(DDCA_Monitor_Model_Key));
+      result = calloc(1, sizeof(Monitor_Model_Key));
       memcpy(result->mfg_id, edid->mfg_id, EDID_MFG_ID_FIELD_SIZE);
       memcpy(result->model_name, edid->model_name, EDID_MODEL_NAME_FIELD_SIZE);
       result->product_code = edid->product_code;
@@ -113,7 +113,7 @@ monitor_model_key_new_from_edid(
 /** Frees a Monitor_Model_Key */
 void
 monitor_model_key_free(
-      DDCA_Monitor_Model_Key * model_id)
+      Monitor_Model_Key * model_id)
 {
    free(model_id);
 }
@@ -122,8 +122,8 @@ monitor_model_key_free(
 /** Compares 2 Monitor_Model_Key values for equality */
 bool
 monitor_model_key_eq(
-      DDCA_Monitor_Model_Key mmk1,
-      DDCA_Monitor_Model_Key mmk2)
+      Monitor_Model_Key mmk1,
+      Monitor_Model_Key mmk2)
 {
    bool result = false;
    if (!mmk1.defined && !mmk2.defined) {
@@ -140,20 +140,20 @@ monitor_model_key_eq(
 
 
 #ifdef UNUSED
-DDCA_Monitor_Model_Key *
+Monitor_Model_Key *
 monitor_model_key_undefined_new() {
-   DDCA_Monitor_Model_Key * result = calloc(1, sizeof(DDCA_Monitor_Model_Key));
+   Monitor_Model_Key * result = calloc(1, sizeof(Monitor_Model_Key));
    // memcpy(result->marker, MONITOR_MODEL_KEY_MARKER, 4);
    return result;
 }
 
 // needed at API level?
-DDCA_Monitor_Model_Key
-monitor_model_key_assign(DDCA_Monitor_Model_Key old) {
+Monitor_Model_Key
+monitor_model_key_assign(Monitor_Model_Key old) {
    return old;
 }
 
-bool monitor_model_key_is_defined(DDCA_Monitor_Model_Key mmk) {
+bool monitor_model_key_is_defined(Monitor_Model_Key mmk) {
    // DDCA_Monitor_Model_Key undefined = monitor_model_key_undefined_value();
    // bool result = monitor_model_key_eq(mmk, undefined);
    return mmk.defined;
@@ -210,7 +210,7 @@ model_id_string(
  *  the current thread.  Caller should not free.
  */
 char *
-monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
+monitor_model_string(Monitor_Model_Key * model_id) {
    static GPrivate  dh_buf_key = G_PRIVATE_INIT(g_free);
    const int bufsz = 100;
    char * buf = get_thread_fixed_buffer(&dh_buf_key, bufsz);
@@ -234,7 +234,7 @@ monitor_model_string(DDCA_Monitor_Model_Key * model_id) {
 /** Returns a string representation of a Monitor_Model_Key in a format
  *  suitable for debug messages.
  */
-char * mmk_repr(DDCA_Monitor_Model_Key mmk) {
+char * mmk_repr(Monitor_Model_Key mmk) {
    // TODO: make thread safe
    static char buf[100];
    if (!mmk.defined)
