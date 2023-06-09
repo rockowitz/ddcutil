@@ -195,7 +195,7 @@ typedef struct _display_ref {
    Dref_Flags               flags;
    char *                   capabilities_string;   // added 4/2017, private copy
    Parsed_Edid *            pedid;                 // added 4/2017
-   DDCA_Monitor_Model_Key * mmid;                  // will be set iff pedid
+   Monitor_Model_Key *      mmid;                  // will be set iff pedid
    int                      dispno;
    void *                   detail;                // I2C_Bus_Info or Usb_Monitor_Info
 #ifdef UNUSED_ASYNC

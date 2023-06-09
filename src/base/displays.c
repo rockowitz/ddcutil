@@ -673,8 +673,8 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
          memcpy(copy->pedid->edid_source, dref->pedid->edid_source, sizeof(dref->pedid->edid_source));
       }
       if (dref->mmid) {
-         copy->mmid = calloc(1, sizeof(DDCA_Monitor_Model_Key));
-         memcpy(copy->mmid, dref->mmid, sizeof(DDCA_Monitor_Model_Key));
+         copy->mmid = calloc(1, sizeof(Monitor_Model_Key));
+         memcpy(copy->mmid, dref->mmid, sizeof(Monitor_Model_Key));
       }
       copy->dispno = dref->dispno;
       // do not set detail
