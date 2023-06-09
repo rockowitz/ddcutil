@@ -115,7 +115,7 @@ json_t * serialize_parsed_edid(Parsed_Edid * pedid) {
 }
 
 
-json_t * serialize_mmk(DDCA_Monitor_Model_Key * mmk) {
+json_t * serialize_mmk(Monitor_Model_Key * mmk) {
    json_t* jpath = json_object();
 
    json_t* jmfg = json_string(mmk->mfg_id);
@@ -242,12 +242,12 @@ Parsed_Edid * deserialize_parsed_edid(json_t* jpath) {
 }
 
 
-DDCA_Monitor_Model_Key * deserialize_mmid(json_t* jpath) {
+Monitor_Model_Key * deserialize_mmid(json_t* jpath) {
    bool debug = false;
    const char * mfg_id = json_string_value( json_object_get(jpath, "mfg_id"));
    const char * model_name = json_string_value( json_object_get(jpath, "model_name"));
    int          product_code = json_integer_value( json_object_get(jpath, "product_code"));
-   DDCA_Monitor_Model_Key*  mmk = monitor_model_key_new(mfg_id, model_name, product_code);
+   Monitor_Model_Key*  mmk = monitor_model_key_new(mfg_id, model_name, product_code);
 
    DBGMSF(debug, "Executed. Returning: %s", mmk_repr(*mmk) );
    return mmk;

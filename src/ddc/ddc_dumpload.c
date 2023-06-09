@@ -248,7 +248,7 @@ create_dumpload_data_from_g_ptr_array(
                      // One solution: rework data structures to parse later
                      // second solution: vcp version in dumpload data
 
-                     DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
+                     Monitor_Model_Key mmk = monitor_model_key_value(
                            data->mfg_id, data->model, data->product_code);
 
                      Display_Feature_Metadata * dfm =

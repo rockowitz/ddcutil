@@ -312,7 +312,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                //                    sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
             }
          }
-         DDCA_Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+         Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
          // DBGMSG("mmk = %s", mmk_repr(mmk) );
          Monitor_Quirk_Data * quirk = get_monitor_quirks(&mmk);
          if (quirk) {
