@@ -203,9 +203,6 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          i2c_report_active_display(curinfo, d1);
       }
       break;
-   case DDCA_IO_ADL:
-      PROGRAM_LOGIC_ERROR("ADL implementation removed");
-      break;
    case DDCA_IO_USB:
 #ifdef USE_USB
       usb_show_active_display_by_dref(dref, d1);
@@ -548,9 +545,6 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          I2C_Bus_Info * businfo = dref->detail;
          TRACED_ASSERT( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0);
          i2c_dbgrpt_bus_info(businfo, d2);
-         break;
-   case(DDCA_IO_ADL):
-         PROGRAM_LOGIC_ERROR("ADL implementation removed");
          break;
    case(DDCA_IO_USB):
 #ifdef USE_USB

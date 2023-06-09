@@ -1,6 +1,6 @@
 /** @file api_displays.c */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -992,10 +992,6 @@ ddca_report_display_info(
       switch(dinfo->path.io_mode) {
       case (DDCA_IO_I2C):
             rpt_vstring(d1, "I2C bus:              /dev/i2c-%d", dinfo->path.path.i2c_busno);
-            break;
-      case (DDCA_IO_ADL):
-            rpt_vstring(d1, "ADL adapter.display:  %d.%d",
-                            dinfo->path.path.adlno.iAdapterIndex, dinfo->path.path.adlno.iDisplayIndex);
             break;
       case (DDCA_IO_USB):
             rpt_vstring(d1, "USB bus.device:       %d.%d",

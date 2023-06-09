@@ -1,7 +1,7 @@
 /** @file ddc_strategy.c
  */
 
-// Copyright (C) 2015-2017 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -13,14 +13,12 @@
 // keep in sync w DDC_IO_Mode
 DDC_Strategy ddc_strategies[] = {
       {DDCA_IO_I2C, NULL, NULL },
-      {DDCA_IO_ADL,    NULL, NULL },
-      {DDCA_IO_USB,        NULL, NULL }
+      {DDCA_IO_USB, NULL, NULL }
 };
 
 void validate_ddc_strategies() {
    assert(  ddc_strategies[DDCA_IO_I2C].io_mode == DDCA_IO_I2C);
-   assert(  ddc_strategies[DDCA_IO_ADL].io_mode    == DDCA_IO_ADL);
-   assert(  ddc_strategies[DDCA_IO_USB].io_mode    == DDCA_IO_USB);
+   assert(  ddc_strategies[DDCA_IO_USB].io_mode == DDCA_IO_USB);
 }
 
 DDC_Raw_Writer ddc_raw_writer(Display_Handle * dh) {

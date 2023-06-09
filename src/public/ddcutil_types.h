@@ -7,7 +7,7 @@
  *  within the code that implements the API.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDCUTIL_TYPES_H_
@@ -67,8 +67,7 @@ typedef struct {
 //! Build option flags, as returned by #ddca_build_options()
 //! The enum values are defined as 1,2,4 etc so that they can be or'd.
 typedef enum {
-   /** @deprecated @brief ddcutil was built with support for AMD Display Library connected monitors */
-   DDCA_BUILT_WITH_ADL     = 0x01,
+   DDCA_BUILT_WITH_NONE    = 0x00,
    /** @brief ddcutil was built with support for USB connected monitors */
    DDCA_BUILT_WITH_USB     = 0x02,
   /** @brief ddcutil was built with support for failure simulation */
@@ -235,14 +234,6 @@ typedef void * DDCA_Display_Handle;
 ///@}
 
 
-/** @deprecated ADL adapter number/display number pair, which identifies a display */
-typedef struct {
-   int iAdapterIndex;  /**< adapter number */
-   int iDisplayIndex;  /**< display number */
-} DDCA_Adlno;
-// uses -1,-1 for unset
-
-
 //
 // VCP Feature Information
 //
@@ -304,7 +295,6 @@ typedef enum {
 /** Indicates how MCCS communication is performed */
 typedef enum {
    DDCA_IO_I2C,     /**< Use DDC to communicate with a /dev/i2c-n device */
-   DDCA_IO_ADL,     /**< @deprecated Use ADL API */
    DDCA_IO_USB      /**< Use USB reports for a USB connected monitor */
 } DDCA_IO_Mode;
 
@@ -314,7 +304,6 @@ typedef struct {
    DDCA_IO_Mode io_mode;        ///< physical access mode
    union {
       int        i2c_busno;     ///< I2C bus number
-      DDCA_Adlno adlno;         ///< @deprecated ADL iAdapterIndex/iDisplayIndex pair
       int        hiddev_devno;  ///* USB hiddev device  number
    } path;
 } DDCA_IO_Path;

@@ -679,7 +679,6 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
       rpt_vstring(depth, "Bus open errors:");
       for (int ndx = 0; ndx < open_errors->len; ndx++) {
          Bus_Open_Error * cur = g_ptr_array_index(open_errors, ndx);
-         assert(cur->io_mode != DDCA_IO_ADL);
          rpt_vstring(d1, "%s bus:  %-2d, error: %d, detail: %s",
                (cur->io_mode == DDCA_IO_I2C) ? "I2C" : "hiddev",
                cur->devno, cur->error, cur->detail);

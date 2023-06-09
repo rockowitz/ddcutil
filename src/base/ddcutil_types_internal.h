@@ -45,5 +45,15 @@ typedef enum {
 } DDCA_Trace_Group;
 
 
+#ifdef ADL
+/** @deprecated ADL adapter number/display number pair, which identifies a display */
+typedef struct {
+   int iAdapterIndex;  /**< adapter number */
+   int iDisplayIndex;  /**< display number */
+} DDCA_Adlno;
+#endif
+// uses -1,-1 for unset
+
+
 
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */

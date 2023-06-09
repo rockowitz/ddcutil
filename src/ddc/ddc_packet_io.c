@@ -212,10 +212,6 @@ ddc_open_display(
       }
       break;
 
-   case DDCA_IO_ADL:
-      PROGRAM_LOGIC_ERROR("Case DDCA_IO_ADL");
-      break;
-
    case DDCA_IO_USB:
 #ifdef USE_USB
       {
@@ -301,9 +297,6 @@ ddc_close_display(Display_Handle * dh) {
             dh->fd = -1;    // indicate invalid, in case we try to continue using dh
             break;
          }
-      case DDCA_IO_ADL:
-         break;           // nothing to do
-
       case DDCA_IO_USB:
 #ifdef USE_USB
          {
