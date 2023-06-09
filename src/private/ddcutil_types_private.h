@@ -62,18 +62,6 @@ char * (*DDCA_Func_Format_Any_Value) (
 
 
 
-
-// #define MONITOR_MODEL_KEY_MARKER "MMID"
-/** Identifies a monitor model */
-typedef struct {
-// char                marker[4];
-   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
-   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t            product_code;
-   bool                defined;
-} DDCA_Monitor_Model_Key;
-
-
 // Experimental async access - used in Python API
 
 // values are in sync with CMD_ constants defined in ddc_command_codes.h, unify?
