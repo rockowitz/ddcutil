@@ -1,14 +1,12 @@
 /** @file monitor_quirks.h */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef MONITOR_QUIRKS_H_
 #define MONITOR_QUIRKS_H_
 
-#include "private/ddcutil_types_private.h"
-
-#include "base/monitor_quirks.h"
+#include "base/monitor_model_key.h"
 
 typedef enum {
    MQ_NONE         = 0,

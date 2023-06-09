@@ -33,7 +33,6 @@
 /** \endcond */
 
 #include "public/ddcutil_types.h"
-#include "private/ddcutil_types_private.h"
 
 #include "base/core.h"
 #include "base/ddc_packets.h"

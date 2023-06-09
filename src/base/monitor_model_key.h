@@ -12,9 +12,19 @@
 #include <inttypes.h>
 
 #include "public/ddcutil_types.h"
-#include "private/ddcutil_types_private.h"
 
 #include "util/edid.h"
+
+// #define MONITOR_MODEL_KEY_MARKER "MMID"
+/** Identifies a monitor model */
+typedef struct {
+// char                marker[4];
+   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
+   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
+   uint16_t            product_code;
+   bool                defined;
+} DDCA_Monitor_Model_Key;
+
 
 DDCA_Monitor_Model_Key
 monitor_model_key_value(

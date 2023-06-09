@@ -6,8 +6,9 @@
 #ifndef PERSISTENT_CAPABILITIES_H_
 #define PERSISTENT_CAPABILITIES_H_
 
-#include "private/ddcutil_types_private.h"
 #include "util/error_info.h"
+
+#include "base/monitor_model_key.h"
 
 bool   enable_capabilities_cache(bool onoff);
 char * capabilities_cache_file_name();

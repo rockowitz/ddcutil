@@ -17,11 +17,11 @@
 /** \endcond */
 
 #include "public/ddcutil_types.h"
-#include "private/ddcutil_types_private.h"
 
 #include "core.h"
 #include "dynamic_features.h"
 #include "feature_set_ref.h"
+#include "monitor_model_key.h"
 // #include "per_display_data.h"
 #include "vcp_version.h"
 

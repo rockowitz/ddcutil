@@ -1,13 +1,13 @@
 /** @file monitor_quirks.c */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "private/ddcutil_types_private.h"
-
 #include "util/coredefs_base.h"
+
 #include "base/core.h"
 #include "base/monitor_model_key.h"
+
 #include "base/monitor_quirks.h"
 
 typedef struct {

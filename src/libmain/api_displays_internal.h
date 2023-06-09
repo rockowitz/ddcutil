@@ -10,9 +10,9 @@
 #ifndef API_DISPLAYS_INTERNAL_H_
 #define API_DISPLAYS_INTERNAL_H_
 
+#include "base/core.h"
 #include "base/displays.h"
 #include "public/ddcutil_types.h"
-#include "private/ddcutil_types_private.h"
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);

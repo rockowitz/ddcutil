@@ -10,18 +10,11 @@
 #ifndef DDCUTIL_TYPES_INTERNAL_H_
 #define DDCUTIL_TYPES_INTERNAL_H_
 
-// moved from private/ddcutil_types_private.h
-// #define MONITOR_MODEL_KEY_MARKER "MMID"
-/** Identifies a monitor model */
-typedef struct {
-// char                marker[4];
-   char                mfg_id[DDCA_EDID_MFG_ID_FIELD_SIZE];
-   char                model_name[DDCA_EDID_MODEL_NAME_FIELD_SIZE];
-   uint16_t            product_code;
-   bool                defined;
-} DDCA_Monitor_Model_Key;
 
 
+/** Callback function to report VCP value change */
+typedef void (*DDCA_Notification_Func)(DDCA_Status psc, DDCA_Any_Vcp_Value* valrec);
+typedef int (*Simple_Callback_Func)(int val);
 
 
 //

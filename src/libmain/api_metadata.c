@@ -18,6 +18,7 @@
 #include "base/displays.h"
 #include "base/feature_lists.h"
 #include "base/feature_set_ref.h"
+#include "base/monitor_model_key.h"
 #include "base/rtti.h"
 
 #include "vcp/vcp_feature_codes.h"
@@ -28,8 +29,6 @@
 #include "dynvcp/dyn_feature_codes.h"
 #include "dynvcp/dyn_feature_files.h"
 #include "dynvcp/dyn_feature_set.h"
-
-#include "private/ddcutil_c_api_private.h"
 
 #include "libmain/api_error_info_internal.h"
 #include "libmain/api_base_internal.h"

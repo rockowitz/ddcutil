@@ -11,7 +11,9 @@
 #define API_FEATURE_ACCESS_INTERNAL_H_
 
 #include "public/ddcutil_types.h"
-#include "private/ddcutil_types_private.h"
+
+#include "base/ddcutil_types_internal.h"
+#include "base/monitor_model_key.h"
 
 
 // NEVER PUBLISHED, USED INTERNALLY
