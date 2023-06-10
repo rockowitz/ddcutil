@@ -371,6 +371,16 @@ dbgrpt_any_vcp_value(
 
 #ifdef DEPRECATED
 // deprecated, does not support user defined features
+/** Returns a string containing a formatted representation of the VCP value
+ *  of a feature.  It is the responsibility of the caller to free this value.
+ *
+ *  @param[in]  ddca_dh             Display handle
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[out] formatted_value_loc Address at which to return the formatted value
+ *  @return     status code, 0 if success
+ *  @since 0.9.0
+ *  @deprecated Does not support user-supplied feature definitions
+ */
 DDCA_Status
 ddca_get_formatted_vcp_value(
       DDCA_Display_Handle    ddca_dh,
@@ -450,11 +460,26 @@ bye:
 #endif
 
 
-DDCA_Status
-ddca_format_any_vcp_value(
+   /** Returns a formatted representation of a VCP value of any type
+    *  It is the responsibility of the caller to free the returned string.
+    *
+    *  @param[in]  feature_code        VCP feature code
+    *  @param[in]  vspec               MCCS version
+    *  @param[in]  valrec              non-table VCP value
+    *  @param[out] formatted_value_loc address at which to return the formatted value.
+    *  @return                         status code, 0 if success
+    *
+    *  @remark
+    *  If the returned status code is != 0, the string returned will
+    *  contain an explanation of the error.
+    *
+    *  @since 0.9.0
+    */
+static DDCA_Status
+ddci_format_any_vcp_value(
       DDCA_Vcp_Feature_Code    feature_code,
       DDCA_MCCS_Version_Spec   vspec,
-      DDCA_Monitor_Model_Key * mmid,
+      Monitor_Model_Key * mmid,
       DDCA_Any_Vcp_Value *     anyval,
       char **                  formatted_value_loc)
 {
@@ -525,7 +550,6 @@ bye:
    return ddcrc;
 }
 
-
 DDCA_Status
 ddca_format_any_vcp_value_by_dref(
       DDCA_Vcp_Feature_Code   feature_code,
@@ -546,7 +570,7 @@ ddca_format_any_vcp_value_by_dref(
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
                   dbgrpt_display_ref(dref,1);
                }
-               ddcrc = ddca_format_any_vcp_value(
+               ddcrc = ddci_format_any_vcp_value(
                          feature_code,
                          get_vcp_version_by_dref(dref),
                          // dref->vcp_version,
@@ -563,11 +587,20 @@ ddca_format_any_vcp_value_by_dref(
 }
 
 
-DDCA_Status
-ddca_format_non_table_vcp_value(
+/** Returns a formatted representation of a non-table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  valrec              non-table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+*/
+static DDCA_Status
+ddci_format_non_table_vcp_value(
       DDCA_Vcp_Feature_Code       feature_code,
       DDCA_MCCS_Version_Spec      vspec,
-      DDCA_Monitor_Model_Key *    mmid,
+      Monitor_Model_Key *    mmid,
       DDCA_Non_Table_Vcp_Value *  valrec,
       char **                     formatted_value_loc)
 {
@@ -594,7 +627,7 @@ ddca_format_non_table_vcp_value(
    anyval.val.c_nc.sh = valrec->sh;
    anyval.val.c_nc.sl = valrec->sl;
 
-   ddcrc =  ddca_format_any_vcp_value(
+   ddcrc =  ddci_format_any_vcp_value(
                           feature_code, vspec, mmid, &anyval, formatted_value_loc);
    // assert( (ddcrc==0 &&*formatted_value_loc) || (ddcrc!=0 && !*formatted_value_loc) );
 
@@ -627,7 +660,7 @@ ddca_format_non_table_vcp_value_by_dref(
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
                   dbgrpt_display_ref(dref,1);
                }
-               ddcrc = ddca_format_non_table_vcp_value(
+               ddcrc = ddci_format_non_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
                          get_vcp_version_by_dref(dref),
@@ -643,11 +676,21 @@ ddca_format_non_table_vcp_value_by_dref(
 }
 
 
-DDCA_Status
-ddca_format_table_vcp_value(
+// NEVER PUBLISHED, USED INTERNALLY
+/** Returns a formatted representation of a table VCP value.
+ *  It is the responsibility of the caller to free the returned string.
+ *
+ *  @param[in]  feature_code        VCP feature code
+ *  @param[in]  vspec               MCCS version
+ *  @param[in]  table_value         table VCP value
+ *  @param[out] formatted_value_loc address at which to return the formatted value.
+ *  @return                         status code, 0 if success
+ */
+static DDCA_Status
+ddci_format_table_vcp_value(
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_MCCS_Version_Spec  vspec,
-      DDCA_Monitor_Model_Key * mmid,
+      Monitor_Model_Key * mmid,
       DDCA_Table_Vcp_Value *  table_value,
       char **                 formatted_value_loc)
 {
@@ -660,7 +703,7 @@ ddca_format_table_vcp_value(
    anyval.val.t.bytect = table_value->bytect;
    anyval.val.t.bytes  = table_value->bytes;   // n. copying pointer, not duplicating bytes
 
-   DDCA_Status ddcrc = ddca_format_any_vcp_value(
+   DDCA_Status ddcrc = ddci_format_any_vcp_value(
              feature_code, vspec, mmid, &anyval, formatted_value_loc);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
@@ -684,7 +727,7 @@ ddca_format_table_vcp_value_by_dref(
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
                   dbgrpt_display_ref(dref,1);
                }
-              ddcrc = ddca_format_table_vcp_value(
+              ddcrc = ddci_format_table_vcp_value(
                          feature_code,
                          // dref->vcp_version,
                          get_vcp_version_by_dref(dref),
@@ -739,8 +782,9 @@ set_single_vcp_value(
  *  This is essentially a convenience function, since a Continuous value can be
  *  set by passing its high and low bytes to #ddca_set_non_table_vcp_value_verify().
  */
+static
 DDCA_Status
-ddca_set_continuous_vcp_value_verify(
+ddci_set_continuous_vcp_value_verify(
       DDCA_Display_Handle   ddca_dh,
       DDCA_Vcp_Feature_Code feature_code,
       uint16_t              new_value,
@@ -768,6 +812,7 @@ ddca_set_continuous_vcp_value_verify(
    return rc;
 }
 
+#ifdef REMOVED
 // DEPRECATED AS OF 0.9.0
 /** Sets a Continuous VCP value.
  *
@@ -788,12 +833,13 @@ ddca_set_continuous_vcp_value(
 {
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
+   DDCA_Status ddcrc = ddci_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
+#endif
 
-
+#ifdef REMOVED
 /** \deprecated */
 DDCA_Status
 ddca_set_simple_nc_vcp_value(
@@ -803,10 +849,11 @@ ddca_set_simple_nc_vcp_value(
 {
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddca_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
+   DDCA_Status ddcrc = ddci_set_continuous_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
+#endif
 
 
 // UNPUBLISHED
@@ -831,8 +878,9 @@ ddca_set_simple_nc_vcp_value(
  *  Verified values are returned if the status code is either 0 (success),
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
+static
 DDCA_Status
-ddca_set_non_table_vcp_value_verify(
+ddci_set_non_table_vcp_value_verify(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Vcp_Feature_Code  feature_code,
       Byte                   hi_byte,
@@ -854,7 +902,7 @@ ddca_set_non_table_vcp_value_verify(
    DDCA_Status rc = 0;
    if (verified_hi_byte_loc) {
       uint16_t verified_c_value = 0;
-      rc = ddca_set_continuous_vcp_value_verify(
+      rc = ddci_set_continuous_vcp_value_verify(
                           ddca_dh,
                           feature_code, hi_byte << 8 | lo_byte,
                           &verified_c_value);
@@ -862,7 +910,7 @@ ddca_set_non_table_vcp_value_verify(
       *verified_lo_byte_loc = verified_c_value & 0xff;
    }
    else {
-      rc = ddca_set_continuous_vcp_value_verify(
+      rc = ddci_set_continuous_vcp_value_verify(
                           ddca_dh,
                           feature_code, hi_byte << 8 | lo_byte,
                           NULL);
@@ -881,7 +929,7 @@ ddca_set_non_table_vcp_value(
 {
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddca_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
+   DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
@@ -904,8 +952,9 @@ ddca_set_non_table_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 // untested
+static
 DDCA_Status
-ddca_set_table_vcp_value_verify(
+ddci_set_table_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Table_Vcp_Value *      table_value,
@@ -945,11 +994,11 @@ DDCA_Status
 ddca_set_table_vcp_value(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
-      DDCA_Table_Vcp_Value *      table_value)
+      DDCA_Table_Vcp_Value *  table_value)
 {
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddca_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
+   DDCA_Status ddcrc = ddci_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
@@ -972,8 +1021,9 @@ ddca_set_table_vcp_value(
  *  or **DDCRC_VERIFY**, i.e. the write succeeded but verification failed.
  */
 // untested for table values
+static
 DDCA_Status
-ddca_set_any_vcp_value_verify(
+ddci_set_any_vcp_value_verify(
       DDCA_Display_Handle     ddca_dh,
       DDCA_Vcp_Feature_Code   feature_code,
       DDCA_Any_Vcp_Value *    new_value,
@@ -1005,7 +1055,7 @@ ddca_set_any_vcp_value(
 {
    bool debug = false;
    API_PROLOG(debug, "feature_code=0x%02x", feature_code);
-   DDCA_Status ddcrc = ddca_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
+   DDCA_Status ddcrc = ddci_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
@@ -1066,6 +1116,7 @@ ddca_set_profile_related_values(
 }
 
 
+#ifdef REMOVED
 //
 // Vestiges of old experimental async API.
 // Never published, retained for ABI compatibility.
@@ -1097,8 +1148,10 @@ ddca_queue_get_non_table_vcp_value(
 {
    return DDCRC_UNIMPLEMENTED;
 }
+#endif
 
 
+#ifdef REMOVED
 //
 // CFFI
 //
@@ -1112,13 +1165,14 @@ ddca_pass_callback(
    DBGMSG("returning %d", callback_rc);
    return callback_rc;
 }
+#endif
 
 
 
 #ifdef FUTURE
 // which header file would this go in?
 void init_api_access_feature_codes() {
-   rtti_func_name_table_add(ddca_format_any_vcp_value, "dyn_format_nontable_feature_detail_dfm");
+   rtti_func_name_table_add(ddci_format_any_vcp_value, "dyn_format_nontable_feature_detail_dfm");
    // dbgrpt_func_name_table(0);
 }
 #endif
