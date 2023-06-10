@@ -212,7 +212,7 @@ static inline bool generic_model_name(char * model_name) {
  *  \return true if **mmk** does not uniquely identify a monitor model,
  *         false if it does
  */
-static inline bool non_unique_model_id(DDCA_Monitor_Model_Key* mmk)
+static inline bool non_unique_model_id(Monitor_Model_Key* mmk)
 {
    return ( generic_model_name(mmk->model_name) &&
             ( mmk->product_code == 0 || mmk->product_code == 0x0101) );
@@ -286,7 +286,7 @@ bool enable_capabilities_cache(bool newval) {
  *  \remark
  *  Returns NULL in case of a potentially ambiguous Monitor_Model_Key
  */
-char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
+char * get_persistent_capabilities(Monitor_Model_Key* mmk)
 {
    assert(mmk);
    bool debug = false;
@@ -348,7 +348,7 @@ char * get_persistent_capabilities(DDCA_Monitor_Model_Key* mmk)
  *  The string arguments are copied into the hash table.
  */
 void set_persistent_capabilites(
-        DDCA_Monitor_Model_Key * mmk,
+        Monitor_Model_Key * mmk,
         const char *             capabilities)
 {
    bool debug = false;
