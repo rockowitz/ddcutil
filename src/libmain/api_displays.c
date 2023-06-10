@@ -438,6 +438,22 @@ ddca_report_display_by_dref(
 //
 
 #ifdef DEPRECATED
+
+/** \deprecated Use #ddca_open_display2()
+ * Open a display
+ * @param[in]  ddca_dref    display reference for display to open
+ * @param[out] ddca_dh_loc  where to return display handle
+ * @return     status code
+ *
+ * Fails if display is already opened by another thread.
+ * \ingroup api_display_spec
+ */
+// __attribute__ ((deprecated ("use ddca_open_display2()")))
+DDCA_Status
+ddca_open_display(
+      DDCA_Display_Ref      ddca_dref,
+      DDCA_Display_Handle * ddca_dh_loc);
+
 DDCA_Status
 ddca_open_display(
       DDCA_Display_Ref      ddca_dref,
@@ -663,15 +679,17 @@ ddca_mccs_version_id_desc(DDCA_MCCS_Version_Id version_id) {
 // Monitor Model Identifier
 //
 
-const DDCA_Monitor_Model_Key DDCA_UNDEFINED_MONITOR_MODEL_KEY = {{0}};
+#ifdef REMOVED
 
-DDCA_Monitor_Model_Key
+const Monitor_Model_Key UNDEFINED_MONITOR_MODEL_KEY = {{0}};
+
+Monitor_Model_Key
 ddca_mmk(
       const char * mfg_id,
       const char * model_name,
       uint16_t     product_code)
 {
-   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   Monitor_Model_Key result = UNDEFINED_MONITOR_MODEL_KEY;
    if (mfg_id     && strlen(mfg_id)     < DDCA_EDID_MFG_ID_FIELD_SIZE &&
        model_name && strlen(model_name) < DDCA_EDID_MODEL_NAME_FIELD_SIZE)
    {
@@ -682,8 +700,8 @@ ddca_mmk(
 
 bool
 ddca_mmk_eq(
-      DDCA_Monitor_Model_Key mmk1,
-      DDCA_Monitor_Model_Key mmk2)
+      Monitor_Model_Key mmk1,
+      Monitor_Model_Key mmk2)
 {
    return monitor_model_key_eq(mmk1, mmk2);
 }
@@ -691,17 +709,17 @@ ddca_mmk_eq(
 
 bool
 ddca_mmk_is_defined(
-      DDCA_Monitor_Model_Key mmk)
+      Monitor_Model_Key mmk)
 {
    return mmk.defined;
 }
 
 
-DDCA_Monitor_Model_Key
+Monitor_Model_Key
 ddca_mmk_from_dref(
       DDCA_Display_Ref   ddca_dref)
 {
-   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   Monitor_Model_Key result = UNDEFINED_MONITOR_MODEL_KEY;
    Display_Ref * dref = (Display_Ref *) ddca_dref;
    if (valid_display_ref(dref) && dref->mmid)
       result = *dref->mmid;
@@ -709,23 +727,31 @@ ddca_mmk_from_dref(
 }
 
 
-DDCA_Monitor_Model_Key
+Monitor_Model_Key
 ddca_mmk_from_dh(
       DDCA_Display_Handle   ddca_dh)
 {
-   DDCA_Monitor_Model_Key result = DDCA_UNDEFINED_MONITOR_MODEL_KEY;
+   Monitor_Model_Key result = UNDEFINED_MONITOR_MODEL_KEY;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (valid_display_handle(dh) && dh->dref->mmid)
       result = *dh->dref->mmid;
    return result;
 }
-
+#endif
 
 //
 // Display Info
 //
 
 #ifdef DEPRECATED
+/** @deprecated use #ddca_get_display_info_list2()
+ * Gets a list of the detected displays.
+ *
+ *  Displays that do not support DDC are not included.
+ *
+ *  @return list of display summaries
+ */
+__attribute__ ((deprecated ("use ddca_get_display_info_list2()")))
 DDCA_Display_Info_List *
 ddca_get_display_info_list(void)
 {
@@ -1122,6 +1148,15 @@ dbgrpt_display_info_list(
 //
 
 #ifdef DEPRECATED
+
+// /** \deprecated */
+__attribute__ ((deprecated))
+DDCA_Status
+ddca_get_edid_by_dref(
+      DDCA_Display_Ref ddca_dref,
+      uint8_t **       pbytes_loc);   // pointer into ddcutil data structures, do not free
+
+
 // deprecated
 DDCA_Status
 ddca_get_edid_by_dref(
@@ -1166,6 +1201,19 @@ ddca_get_edid(DDCA_Display_Handle * dh, uint8_t* edid_buffer);
 //
 
 #ifdef DEPRECATED
+/** \deprecated use #ddca_report_displays()
+ * Reports on all active displays.
+ *  This function hooks into the code used by command "ddcutil detect"
+ *
+ *  @param[in] depth  logical indentation depth
+ *  @return    number of MCCS capable displays
+ */
+__attribute__ ((deprecated ("use ddca_report_displays()")))
+int
+ddca_report_active_displays(
+      int depth);
+
+
 // deprecated, use ddca_report_displays()
 int
 ddca_report_active_displays(int depth) {

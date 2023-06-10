@@ -693,6 +693,24 @@ ddca_feature_name_by_version_id(
 #endif
 
 
+#ifdef DEPRECATED
+/** Gets the VCP feature name, which may vary by MCCS version and monitor model.
+ *
+ * @param[in]  feature_code  feature code
+ * @param[in]  dref          display reference
+ * @param[out] name_loc      where to return pointer to feature name (do not free)
+ * @return     status code
+ *
+ * @since 0.9.2
+ */
+__attribute__ ((deprecated ("use ddca_get_feature_metadata_by_dref()")))
+DDCA_Status
+ddca_get_feature_name_by_dref(
+      DDCA_Vcp_Feature_Code  feature_code,
+      DDCA_Display_Ref       dref,
+      char **                name_loc);
+
+
 // deprecated
 DDCA_Status
 ddca_get_feature_name_by_dref(
@@ -715,7 +733,7 @@ ddca_get_feature_name_by_dref(
    )
    API_EPILOG(debug, psc, "");
 }
-
+#endif
 
 //
 // Display Inquiry
