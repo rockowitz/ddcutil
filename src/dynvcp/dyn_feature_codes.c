@@ -200,7 +200,7 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code    feature_code,
-     DDCA_Monitor_Model_Key   mmk,
+     Monitor_Model_Key        mmk,
      DDCA_MCCS_Version_Spec   vspec,
      bool                     with_default)
 {

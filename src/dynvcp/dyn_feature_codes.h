@@ -4,7 +4,7 @@
  * incorporate user-defined per-monitor feature information.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_FEATURE_CODES_H_
@@ -21,7 +21,7 @@
 Display_Feature_Metadata *
 dyn_get_feature_metadata_by_mmk_and_vspec(
      DDCA_Vcp_Feature_Code       feature_code,
-     DDCA_Monitor_Model_Key      mmk,
+     Monitor_Model_Key           mmk,
      DDCA_MCCS_Version_Spec      vspec,
      bool                        with_default);
 

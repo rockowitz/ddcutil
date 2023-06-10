@@ -2,7 +2,7 @@
  *
  *  Maintain dynamic feature files
  */
-// Copyright (C) 2018-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DYN_FEATURE_FILES_H_
@@ -20,12 +20,12 @@ extern bool enable_dynamic_features;
 
 Error_Info *
 dfr_load_by_mmk(
-      DDCA_Monitor_Model_Key  mmk,
+      Monitor_Model_Key       mmk,
       Dynamic_Features_Rec ** dfr_loc);
 
 Error_Info * dfr_check_by_dref(Display_Ref * dref);
 #ifdef UNUSED
-Error_Info * dfr_check_by_mmk(DDCA_Monitor_Model_Key mmk);
+Error_Info * dfr_check_by_mmk(Monitor_Model_Key mmk);
 #endif
 
 void init_dyn_feature_files();

@@ -210,7 +210,7 @@ find_feature_def_file(
  */
 Error_Info *
 dfr_load_by_mmk(
-      DDCA_Monitor_Model_Key  mmk,
+      Monitor_Model_Key  mmk,
       Dynamic_Features_Rec ** dfr_loc)
 {
    bool debug = false;
@@ -294,7 +294,7 @@ dfr_load_by_edid(
       Parsed_Edid *           edid,
       Dynamic_Features_Rec ** dfr_loc)
 {
-   DDCA_Monitor_Model_Key mmk = monitor_model_key_value(
+   Monitor_Model_Key mmk = monitor_model_key_value(
          edid->mfg_id, edid->model_name, edid->product_code);
    return dfr_load_by_mmk(mmk, dfr_loc);
 }
@@ -314,7 +314,7 @@ dfr_check_by_dref(
    if (enable_dynamic_features) {   // global variable
       if ( !(dref->flags & DREF_DYNAMIC_FEATURES_CHECKED) ) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DYNAMIC_FEATURES_CHECKED not yet set");
-         DDCA_Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
+         Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
          errs = dfr_load_by_mmk(mmk, &dref->dfr);  // will be a dummy record if errors
          dref->flags |= DREF_DYNAMIC_FEATURES_CHECKED;
       }
@@ -328,7 +328,7 @@ dfr_check_by_dref(
 #ifdef UNUSED
 Error_Info *
 dfr_check_by_mmk(
-      DDCA_Monitor_Model_Key mmk)
+      Monitor_Model_Key mmk)
 {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. dref=%s", mmk_repr(mmk));
