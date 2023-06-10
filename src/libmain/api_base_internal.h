@@ -113,11 +113,11 @@ extern DDCA_Api_Precondition_Failure_Mode api_failure_mode;
 //
 
 DDCA_Api_Precondition_Failure_Mode
-ddca_set_precondition_failure_mode(
+ddci_set_precondition_failure_mode(
       DDCA_Api_Precondition_Failure_Mode failure_mode);
 
 DDCA_Api_Precondition_Failure_Mode
-ddca_get_precondition_failure_mode();
+ddci_get_precondition_failure_mode();
 
 
 
