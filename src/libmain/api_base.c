@@ -65,6 +65,9 @@
 
 void init_api_base();
 
+//
+// Globals
+//
 
 static bool client_opened_syslog;
 
@@ -72,22 +75,24 @@ static bool client_opened_syslog;
 // Precondition Failure
 //
 
-DDCA_Api_Precondition_Failure_Mode api_failure_mode = DDCA_PRECOND_STDERR_RETURN;
+DDCI_Api_Precondition_Failure_Mode api_failure_mode = DDCI_PRECOND_STDERR_RETURN;
 
-DDCA_Api_Precondition_Failure_Mode
+#ifdef UNUSED
+static DDCI_Api_Precondition_Failure_Mode
 ddci_set_precondition_failure_mode(
-      DDCA_Api_Precondition_Failure_Mode failure_mode)
+      DDCI_Api_Precondition_Failure_Mode failure_mode)
 {
-   DDCA_Api_Precondition_Failure_Mode old = api_failure_mode;
+   DDCI_Api_Precondition_Failure_Mode old = api_failure_mode;
    api_failure_mode = failure_mode;
    return old;
 }
 
-DDCA_Api_Precondition_Failure_Mode
+static DDCI_Api_Precondition_Failure_Mode
 ddci_get_precondition_failure_mode()
 {
    return api_failure_mode;
 }
+#endif
 
 
 //
