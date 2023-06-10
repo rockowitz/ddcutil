@@ -3,7 +3,7 @@
  * Functions for creating DDC packets and interpreting DDC response packets.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -319,9 +319,7 @@ create_ddc_base_request_packet(
       packet->type = 0x00;
    // dump_buffer(packet->buf);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning packet=%p", packet);
-   if ( (debug || IS_TRACING()) && packet)
-      dbgrpt_packet(packet, 2);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "DDC_Packet", dbgrpt_packet, packet);
    return packet;
 }
 
@@ -342,12 +340,16 @@ create_ddc_multi_part_read_request_packet(
       int          offset,
       const char*  tag)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "request_type=0x%02x, request_subtype=0x%02x, offset=%d, tag=%s",
+         request_type, request_subtype, offset, tag);
    assert (request_type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST ||
            request_type == DDC_PACKET_TYPE_TABLE_READ_REQUEST );
-   DDC_Packet * packet_ptr = NULL;
 
+   DDC_Packet * packet_ptr = NULL;
    Byte ofs_hi_byte = (offset >> 16) & 0xff;
-   Byte ofs_lo_byte = offset & 0xff;
+   Byte ofs_lo_byte = offset & 0xff;   assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
 
    if (request_type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST) {
       Byte data_bytes[] = { DDC_PACKET_TYPE_CAPABILITIES_REQUEST ,
@@ -367,6 +369,7 @@ create_ddc_multi_part_read_request_packet(
 
    // DBGMSG("Done. packet_ptr=%p", packet_ptr);
    // dump_packet(packet_ptr);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "DDC_Packet", dbgrpt_packet, packet_ptr);
    return packet_ptr;
 }
 
@@ -381,6 +384,8 @@ update_ddc_multi_part_read_request_packet_offset(
       DDC_Packet * packet,
       int          new_offset)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "packet=%p, new_offset=%d", packet, new_offset);
    assert (packet->type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST ||
            packet->type == DDC_PACKET_TYPE_TABLE_READ_REQUEST );
 
@@ -407,6 +412,10 @@ update_ddc_multi_part_read_request_packet_offset(
 
    // DBGMSG("Done.");
    // dump_packet(packet);
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      DBGTRC_DONE(true, TRACE_GROUP, "");
+      dbgrpt_packet(packet,  2);
+   }
 }
 
 
@@ -429,14 +438,17 @@ create_ddc_multi_part_write_request_packet(
                 int    bytect,
                 const char * tag)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "request_type=0x%02x, request_subtype=0x%02x, offset=%d, bytect=%d, bytes_to_write=%p->%s",
+         request_type, request_subtype, offset, bytect, bytes_to_write,
+         hexstring_t(bytes_to_write, bytect));
    assert (request_type ==  DDC_PACKET_TYPE_TABLE_WRITE_REQUEST );
    assert (bytect + 4 <= 35);    // is this the right limit?, spec unclear
-   DDC_Packet * packet_ptr = NULL;
 
+   DDC_Packet * packet_ptr = NULL;
    Byte ofs_hi_byte = (offset >> 16) & 0xff;
    Byte ofs_lo_byte = offset & 0xff;
-
-
    Byte data_bytes[40] = { DDC_PACKET_TYPE_TABLE_WRITE_REQUEST,
                            request_subtype,    // VCP code
                            ofs_hi_byte,
@@ -447,6 +459,7 @@ create_ddc_multi_part_write_request_packet(
 
    // DBGMSG("Done. packet_ptr=%p", packet_ptr);
    // dump_packet(packet_ptr);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "DDC_Packet", dbgrpt_packet, packet_ptr);
    return packet_ptr;
 }
 
@@ -473,9 +486,7 @@ create_ddc_getvcp_request_packet(Byte vcp_code, const char * tag)
                        };
    DDC_Packet * pkt = create_ddc_base_request_packet(0x51, data_bytes, 2, tag);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Done. Returning %p", pkt);
-   if ( (debug || IS_TRACING()) && pkt)
-      dbgrpt_packet(pkt, 2);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "DDC_Packet",dbgrpt_packet,pkt);
    return pkt;
 }
 
@@ -504,10 +515,7 @@ create_ddc_setvcp_request_packet(Byte vcp_code, int new_value, const char * tag)
                        };
    DDC_Packet * pkt = create_ddc_base_request_packet(source_addr, data_bytes, 4, tag);
 
-   // DBGMSG("Done. rc=%d, packet_ptr%p, *packet_ptr=%p", rc, packet_ptr, *packet_ptr);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning packet=%p", pkt);
-   if ( (debug || IS_TRACING()) && pkt)
-      dbgrpt_packet(pkt, 2);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "DDC_Packet",dbgrpt_packet,pkt);
    return pkt;
 }
 
@@ -614,8 +622,10 @@ create_ddc_base_response_packet(
    else
       *packet_ptr_loc = NULL;
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
    ASSERT_IFF(result==DDCRC_OK, *packet_ptr_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   if (*packet_ptr_loc && IS_DBGTRC(debug,TRACE_GROUP))
+      dbgrpt_packet(*packet_ptr_loc, 2);
    return result;
 }
 
@@ -642,7 +652,7 @@ create_ddc_response_packet(
        int             response_bytes_buffer_size,
        DDC_Packet_Type expected_type,
        const char *    tag,
-       DDC_Packet **   packet_ptr_addr)
+       DDC_Packet **   packet_ptr_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
@@ -660,31 +670,33 @@ create_ddc_response_packet(
                           i2c_response_bytes,
                           response_bytes_buffer_size,
                           tag,
-                          packet_ptr_addr);
-   DBGMSF(debug, "create_ddc_base_response_packet() returned %d, *packet_ptr_addr=%p",
-                 result, *packet_ptr_addr);
+                          packet_ptr_loc);
+   DBGMSF(debug, "create_ddc_base_response_packet() returned %d, *packet_ptr_loc=%p",
+                 result, *packet_ptr_loc);
    if (result == 0) {
-      if (isNullPacket(*packet_ptr_addr)) {
+      if (isNullPacket(*packet_ptr_loc)) {
          result = DDCRC_NULL_RESPONSE;
       }
-      else if ( get_data_start(*packet_ptr_addr)[0] != expected_type) {
+      else if ( get_data_start(*packet_ptr_loc)[0] != expected_type) {
          result = DDCRC_DDC_DATA;      // was: DDCRC_RESPONSE_TYPE
       }
    }
 
-   if (result != DDCRC_OK && *packet_ptr_addr) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_addr);
+   if (result != DDCRC_OK && *packet_ptr_loc) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "failure, freeing response packet at %p", *packet_ptr_loc);
       // does this cause the free(readbuf) failure in try_read?
-      free_ddc_packet(*packet_ptr_addr);
-      *packet_ptr_addr = 0;
+      free_ddc_packet(*packet_ptr_loc);
+      *packet_ptr_loc = NULL;
    }
 
    if (result < 0) {
       log_status_code(result, __func__);
    }
 
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_addr=%p", *packet_ptr_addr);
-   assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
+   ASSERT_IFF( result==DDCRC_OK, *packet_ptr_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   if (*packet_ptr_loc && IS_DBGTRC(debug,TRACE_GROUP))
+      dbgrpt_packet(*packet_ptr_loc, 2);
    return result;
 }
 
