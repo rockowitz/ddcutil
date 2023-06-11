@@ -608,6 +608,7 @@ ddca_get_mccs_version_by_dh(
 }
 
 
+#ifdef NOT_PUBLISHED
 // not published
 DDCA_Status
 ddca_get_mccs_version_with_default(
@@ -620,6 +621,7 @@ ddca_get_mccs_version_with_default(
       *p_spec = default_spec;
    return rc;
 }
+#endif
 
 
 #ifdef MCCS_VERSION_ID
