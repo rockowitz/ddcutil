@@ -899,8 +899,9 @@ ddc_show_vcp_values(
       filter_feature_set(feature_set, hack42);
    }
 #endif
-   if (debug || IS_TRACING()) {
-      DBGMSG("feature_set:");
+
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      DBGTRC(true, TRACE_GROUP, "feature_set:");
       dbgrpt_dyn_feature_set(feature_set, true, 0);
    }
    psc = show_feature_set_values2_dfm(
