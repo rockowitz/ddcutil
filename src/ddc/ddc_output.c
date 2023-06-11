@@ -295,16 +295,7 @@ get_raw_value_for_feature_metadata(
 
    *pvalrec = valrec;
    ASSERT_IFF(!ddc_excp, *pvalrec);;
-
-   if (ddc_excp) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", errinfo_summary(ddc_excp));
-   }
-   else {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL, *pvalrec -> ");
-      if (debug || IS_TRACING())
-         dbgrpt_single_vcp_value(*pvalrec, 2);
-   }
-
+   DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, ddc_excp, pvalrec, dbgrpt_single_vcp_value);
    return ddc_excp;
 }
 
@@ -455,7 +446,7 @@ collect_raw_feature_set_values2_dfm(
       FILE *                msg_fh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s, msg_fh=%p", dh_repr(dh), msg_fh);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, msg_fh=%p", dh_repr(dh), msg_fh);
 
    Public_Status_Code master_status_code = 0;
    int features_ct = dyn_get_feature_set_size(feature_set);
@@ -488,16 +479,16 @@ collect_raw_feature_set_values2_dfm(
               )
       {
          // no problem
-         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions);
       }
       else {
-         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+         ERRINFO_FREE_WITH_REPORT(cur_ddc_excp, IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions);
          master_status_code = cur_status_code;
          break;
       }
    }
 
-   DBGMSF(debug, "Done.  Returning: %s", psc_desc(master_status_code));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, master_status_code, "");
    return master_status_code;
 }
 
@@ -523,7 +514,7 @@ ddc_collect_raw_subset_values(
         FILE *              msg_fh)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.  subset=%s  dh=%s, msg_fn=%p",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "subset=%s  dh=%s, msg_fn=%p",
                  feature_subset_name(subset), dh_repr(dh), msg_fh );
 
    assert(subset == VCP_SUBSET_PROFILE);  // currently the only use of this function,
@@ -546,7 +537,7 @@ ddc_collect_raw_subset_values(
 
    dyn_free_feature_set(feature_set);
 
-   DBGMSF(debug, "Returning: %s", psc_desc(psc));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;
 }
 
@@ -747,7 +738,7 @@ show_feature_set_values2_dfm(
 {
    bool debug = false;
    char * s0 = feature_set_flag_names_t(flags);
-   DBGMSF(debug, "Starting.  flags=%s, collector=%p", s0, collector);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "flags=%s, collector=%p", s0, collector);
 
    Public_Status_Code master_status_code = 0;
 
@@ -833,7 +824,7 @@ show_feature_set_values2_dfm(
       DBGMSF(debug,"ndx=%d, feature = 0x%02x Done", ndx, dfm->feature_code);
    }   // loop over features
 
-   DBGMSF(debug, "Returning: %s", psc_desc(master_status_code));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, master_status_code, "");
    return master_status_code;
 }
 
@@ -912,14 +903,13 @@ ddc_show_vcp_values(
 }
 
 
-static void init_ddc_output_func_name_table() {
-#define ADD_FUNC(_NAME) rtti_func_name_table_add(_NAME, #_NAME);
-   ADD_FUNC(get_raw_value_for_feature_metadata);
-   ADD_FUNC(ddc_get_formatted_value_for_dfm);
-#undef ADD_FUNC
-}
-
 void init_ddc_output() {
-   init_ddc_output_func_name_table();
+   RTTI_ADD_FUNC(get_raw_value_for_feature_metadata);
+   RTTI_ADD_FUNC(collect_raw_feature_set_values2_dfm);
+   RTTI_ADD_FUNC(ddc_collect_raw_subset_values);
+   RTTI_ADD_FUNC(ddc_get_formatted_value_for_dfm);
+   RTTI_ADD_FUNC(show_feature_set_values2_dfm);
+   RTTI_ADD_FUNC(ddc_show_vcp_values);
+   
 }
 
