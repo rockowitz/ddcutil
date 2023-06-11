@@ -340,6 +340,17 @@ ddca_free_any_vcp_value(
 }
 
 
+// not published
+/** Produces a debugging report of a #DDCA_Any_Vcp_Value instance.
+ *  The report is written to the current FOUT device.
+ *  @param[in]  valrec  instance to report
+ *  @param[in]  depth   logical indentation depth
+ *  @since 0.9.0
+ */
+void
+dbgrpt_any_vcp_value(
+      DDCA_Any_Vcp_Value * valrec,
+      int                  depth);
 void
 dbgrpt_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec,
@@ -368,6 +379,7 @@ dbgrpt_any_vcp_value(
       rpt_vstring(d1, "Unrecognized value type: %d", valrec->value_type);
    }
 }
+
 
 #ifdef DEPRECATED
 // deprecated, does not support user defined features

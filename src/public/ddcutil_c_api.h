@@ -1324,17 +1324,6 @@ void
 ddca_free_any_vcp_value(
       DDCA_Any_Vcp_Value * valrec);
 
-/** Produces a debugging report of a #DDCA_Any_Vcp_Value instance.
- *  The report is written to the current FOUT device.
- *  @param[in]  valrec  instance to report
- *  @param[in]  depth   logical indentation depth
- *  @since 0.9.0
- */
-void
-dbgrpt_any_vcp_value(
-      DDCA_Any_Vcp_Value * valrec,
-      int                  depth);
-
 
 //
 // Get VCP Feature Value
