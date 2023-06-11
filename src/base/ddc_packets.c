@@ -349,7 +349,7 @@ create_ddc_multi_part_read_request_packet(
 
    DDC_Packet * packet_ptr = NULL;
    Byte ofs_hi_byte = (offset >> 16) & 0xff;
-   Byte ofs_lo_byte = offset & 0xff;   assert( (result==DDCRC_OK && *packet_ptr_addr) || (result != DDCRC_OK && !*packet_ptr_addr));
+   Byte ofs_lo_byte = offset & 0xff;
 
    if (request_type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST) {
       Byte data_bytes[] = { DDC_PACKET_TYPE_CAPABILITIES_REQUEST ,
