@@ -779,7 +779,7 @@ parse_command(
    gchar**  ignored_vid_pid  = NULL;
 // gint     ignored_hiddev  = -1;
    char *   mccswork        = NULL;   // MCCS version
-// char *   tracework       = NULL;
+// // char *   tracework       = NULL;
    char**   cmd_and_args    = NULL;
    gchar**  trace_classes   = NULL;
    gchar**  trace_functions = NULL;

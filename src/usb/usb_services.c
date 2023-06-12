@@ -16,6 +16,6 @@
  }
 
  void terminate_usb_services() {
-    terminate_usb_displays();
+    // terminate_usb_displays();  // already called from termindate_ddc_services
     terminate_usb_base();
  }

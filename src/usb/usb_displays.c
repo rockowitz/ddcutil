@@ -95,18 +95,17 @@ dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
 
 static void
 free_usb_monitor_vcp_rec(gpointer p) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, DDCA_TRC_USB, "gpointer = %p", p);
    struct usb_monitor_vcp_rec * vrec = p;
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_USB, "vrec = %p", vrec);
+
    if (vrec) {
       assert(memcmp(vrec->marker, USB_MONITOR_VCP_REC_MARKER, 4) == 0);
-      // n. no need to free rinfo, finfo, uref?? - returned by API
-      // free_hiddev_report_info(vrec->rinfo);
-      // free_hiddev_field_info(vrec->finfo);
-      // free_hiddev_usage_ref(vrec->uref);
+      free(vrec->rinfo);
+      free(vrec->finfo);
+      free(vrec->uref);
       vrec->marker[3] = 'x';
       free(vrec);
-
    }
    DBGTRC_DONE(debug, DDCA_TRC_USB, "");
 }
@@ -131,7 +130,8 @@ dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
    for (feature_code = 0; feature_code < 256; feature_code++) {
       GPtrArray * monrecs = moninfo->vcp_codes[feature_code];
       if (monrecs) {
-         rpt_vstring(d1, "vcp feature code 0x%02x has %d records:", feature_code, monrecs->len);
+         rpt_vstring(d1, "vcp_codes[0x%02x]=%p is a GPtrArray with %d records:",
+               feature_code, monrecs, monrecs->len);
          for (int ndx=0; ndx<monrecs->len; ndx++) {
             dbgrpt_usb_monitor_vcp_rec( g_ptr_array_index(monrecs, ndx), d2);
          }
@@ -142,17 +142,23 @@ dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 
 static void
 free_usb_monitor_info(gpointer p) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "gpointer = %p", p);
    struct usb_monitor_info * moninfo = p;
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "moninfo = %p", moninfo);
+
    if (moninfo) {
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
+      if (debug)
+         dbgrpt_usb_monitor_info(moninfo, 2);
       free(moninfo->hiddev_device_name);
+      DBGMSF(debug, "Freeing moninfo->edid = %p", moninfo->edid);
       free_parsed_edid(moninfo->edid);
       free(moninfo->hiddev_devinfo);
       for (int ndx = 0; ndx < 256; ndx++) {
-         if (moninfo->vcp_codes[ndx])
-            free_usb_monitor_vcp_rec(moninfo->vcp_codes[ndx]);
+         if (moninfo->vcp_codes[ndx]) {
+            g_ptr_array_set_free_func(moninfo->vcp_codes[ndx], free_usb_monitor_vcp_rec);
+            g_ptr_array_free(moninfo->vcp_codes[ndx], true);
+         }
       }
       moninfo->marker[3] = 'x';
       free(moninfo);
@@ -181,6 +187,18 @@ report_usb_monitors(GPtrArray * monitors, int depth) {
 // HID Report Inquiry
 //
 
+Usb_Monitor_Vcp_Rec * create_usb_monitor_vcp_rec(Byte feature_code) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "feature_code=0x%02x", feature_code);
+   Usb_Monitor_Vcp_Rec * vcprec = calloc(1, sizeof(Usb_Monitor_Vcp_Rec));
+   memcpy(vcprec->marker, USB_MONITOR_VCP_REC_MARKER, 4);
+   vcprec->vcp_code = feature_code;
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", vcprec);
+   return vcprec;
+}
+
+
+
 /** Locates all USB HID reports for a device that relate to querying and
  *  setting VCP feature values.
  *
@@ -204,7 +222,6 @@ collect_vcp_reports(int fd) {
            //       __func__, rptct, rinfo.report_id, interpret_report_id(rinfo.report_id));
 
           errno = 0;
-          // eliminated CALLOPT_ERR_ABORT:
           reportinfo_rc = hiddev_get_report_info(fd, &rinfo, CALLOPT_ERR_MSG); //HIDIOCGDEVINFO
           // reportinfo_rc = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
           if (reportinfo_rc != 0) {    // no more reports
@@ -224,7 +241,7 @@ collect_vcp_reports(int fd) {
                    .report_id   = rinfo.report_id,
                    .field_index = fndx
              };
-             Byte callopts = CALLOPT_ERR_MSG;    //  | CALLOPT_ERR_ABORT;
+             Byte callopts = CALLOPT_ERR_MSG;
              if (debug)
                 callopts |= CALLOPT_WARN_FINDEX;
              int rc = hiddev_get_field_info(fd, &finfo, callopts);
@@ -240,16 +257,14 @@ collect_vcp_reports(int fd) {
                        .field_index = fndx,
                        .usage_index = undx
                 };
-                int rc = hiddev_get_usage_code(fd, &uref, CALLOPT_ERR_MSG); // |CALLOPT_ERR_ABORT);
+                int rc = hiddev_get_usage_code(fd, &uref, CALLOPT_ERR_MSG);
                 if (rc < 0)
                    continue;
                 if ( (uref.usage_code & 0xffff0000) != 0x00820000)  // Monitor VESA Virtual Controls page
                    continue;
                 Byte vcp_feature = uref.usage_code & 0xff;
 
-                Usb_Monitor_Vcp_Rec * vcprec = calloc(1, sizeof(Usb_Monitor_Vcp_Rec));
-                memcpy(vcprec->marker, USB_MONITOR_VCP_REC_MARKER, 4);
-                vcprec->vcp_code = vcp_feature;
+                Usb_Monitor_Vcp_Rec * vcprec = create_usb_monitor_vcp_rec(vcp_feature);
                 vcprec->report_type = report_type;
                 vcprec->report_id   = rinfo.report_id;
                 vcprec->field_index = fndx;
@@ -400,6 +415,25 @@ is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
 }
 
 
+Usb_Monitor_Info * create_usb_monitor_info(const char * hiddev_name) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "hiddev_name |%s|", hiddev_name);
+   Usb_Monitor_Info * moninfo = calloc(1,sizeof(Usb_Monitor_Info));
+   memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
+   moninfo->hiddev_device_name = g_strdup(hiddev_name);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", moninfo);
+   return moninfo;
+}
+
+
+static
+void destroy_bus_open_error(gpointer p) {
+   Bus_Open_Error * boe = p;
+   free(boe->detail);
+   free(boe);
+}
+
+
 //
 // Probe HID devices, create USB_Mon_Info data structures
 //
@@ -427,7 +461,7 @@ get_usb_monitor_list() {
    }
 
    usb_monitors = g_ptr_array_new();
-   usb_open_errors = g_ptr_array_new();
+   usb_open_errors = g_ptr_array_new_with_free_func(destroy_bus_open_error);
 
    GPtrArray * hiddev_names = get_hiddev_device_names();
    for (int devname_ndx = 0; devname_ndx < hiddev_names->len; devname_ndx++) {
@@ -488,6 +522,7 @@ get_usb_monitor_list() {
       else {     // fd == 0 should never occur
          assert(fd != 0);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "open succeeded");
+         free(detail);
          // Declare variables here and initialize them to NULL so that code at label close: works
          struct hiddev_devinfo *   devinfo     = NULL;
          char *                    cgname      = NULL;
@@ -541,9 +576,8 @@ get_usb_monitor_list() {
          DBGTRC(debug, TRACE_GROUP, "Collecting USB reports...");
          vcp_reports = collect_vcp_reports(fd);   // HIDIOCGDEVINFO
 
-         moninfo = calloc(1,sizeof(Usb_Monitor_Info));
-         memcpy(moninfo->marker, USB_MONITOR_INFO_MARKER, 4);
-         moninfo-> hiddev_device_name = g_strdup(hiddev_fn);
+
+         moninfo = create_usb_monitor_info(hiddev_fn);
          moninfo->edid = parsed_edid;
          moninfo->hiddev_devinfo = devinfo;
          devinfo = NULL;        // so that struct not freed
@@ -565,6 +599,10 @@ get_usb_monitor_list() {
          g_ptr_array_free(vcp_reports, true);
 
          g_ptr_array_add(usb_monitors, moninfo);
+         if (debug) {
+            DBGMSG("Added monitor:");
+            dbgrpt_usb_monitor_info(moninfo, 3);
+         }
 
  close:
          if (devinfo)
@@ -597,7 +635,7 @@ GPtrArray * get_usb_open_errors() {
 
 void
 discard_usb_monitor_list() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "usb_monitors=%p, usb_open_errors=%p", usb_monitors, usb_open_errors);
 
    if (usb_monitors) {
@@ -606,10 +644,9 @@ discard_usb_monitor_list() {
       g_ptr_array_free(usb_monitors, true);
       usb_monitors = NULL;
       DBGMSF(debug, "Freeing usb_open_errors = %p", usb_open_errors);
-      g_ptr_array_free(usb_open_errors, true);  // array of Bus_Open_Error *, no special free function needed
+      g_ptr_array_free(usb_open_errors, true);
       usb_open_errors = NULL;
    }
-   usb_monitors = NULL;
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -752,6 +789,8 @@ usb_is_valid_display_ref(Display_Ref * dref, bool emit_error_msg) {
  */
 void
 usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref) );
    DDCA_Output_Level output_level = get_output_level();
    rpt_vstring(depth, "USB bus:device:      %d:%d", dref->usb_bus, dref->usb_device);
 
@@ -765,10 +804,9 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
    }
    else {
       assert(output_level >= DDCA_OL_NORMAL);
-      Pci_Usb_Id_Names usb_names =  devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
-                                                     moninfo->hiddev_devinfo->product,
-                                                     0,
-                                                     2);
+      Pci_Usb_Id_Names usb_names = devid_get_usb_names(moninfo->hiddev_devinfo->vendor,
+                                                       moninfo->hiddev_devinfo->product,
+                                                       0, 2);
       char vname[80] = {'\0'};
       char dname[80] = {'\0'};
       if (usb_names.vendor_name)
@@ -785,6 +823,7 @@ usb_show_active_display_by_dref(Display_Ref * dref, int depth) {
       bool dump_edid = (output_level >= DDCA_OL_VERBOSE);
       report_parsed_edid(moninfo->edid, dump_edid /* verbose */, depth);
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -872,15 +911,19 @@ check_usb_monitor( char * device_name ) {
 
 void
 init_usb_displays() {
-   RTTI_ADD_FUNC(collect_vcp_reports);
    RTTI_ADD_FUNC(avoid_device_by_usb_interfaces_property_string);
-   RTTI_ADD_FUNC(is_possible_monitor_by_hiddev_name);
-   RTTI_ADD_FUNC(get_usb_monitor_list);
-   RTTI_ADD_FUNC(usb_find_monitor_by_busnum_devnum);
-   RTTI_ADD_FUNC(usb_find_monitor_by_dref);
-   RTTI_ADD_FUNC(usb_find_monitor_by_dh);
+   RTTI_ADD_FUNC(collect_vcp_reports);
+   RTTI_ADD_FUNC(create_usb_monitor_info);
+   RTTI_ADD_FUNC(create_usb_monitor_vcp_rec);
    RTTI_ADD_FUNC(discard_usb_monitor_list);
-   // dbgrpt_func_name_table(0);
+   RTTI_ADD_FUNC(free_usb_monitor_info);
+   RTTI_ADD_FUNC(free_usb_monitor_vcp_rec);
+   RTTI_ADD_FUNC(get_usb_monitor_list);
+   RTTI_ADD_FUNC(is_possible_monitor_by_hiddev_name);
+   RTTI_ADD_FUNC(usb_find_monitor_by_busnum_devnum);
+   RTTI_ADD_FUNC(usb_find_monitor_by_dh);
+   RTTI_ADD_FUNC(usb_find_monitor_by_dref);
+   RTTI_ADD_FUNC(usb_show_active_display_by_dref);
 }
 
 

@@ -719,8 +719,10 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
                free(dref->capabilities_string);
             if (dref->mmid)                  // always a private copy
                free(dref->mmid);
-            if (dref->pedid)
+            if (dref->pedid)  {
+               DBGMSF(debug, "Freeing dref->pedid = %p", dref->pedid);
                free_parsed_edid(dref->pedid);  // private copy
+            }
             if (dref->dfr)
                dfr_free(dref->dfr);
             if (dref->driver_name)
@@ -1047,6 +1049,7 @@ void init_displays() {
 #endif
    RTTI_ADD_FUNC(create_bus_display_ref);
    RTTI_ADD_FUNC(copy_display_ref);
+   RTTI_ADD_FUNC(dbgrpt_display_ref);
 
 #ifdef ASYNC_REC
    displays_master_list = g_ptr_array_new();

@@ -1,4 +1,4 @@
- /** @file udev_usb_util.c
+/** @file udev_usb_util.c
   *
   * USB specific udev utility functions
   */
@@ -26,6 +26,27 @@ Usb_Detailed_Device_Summary * new_usb_detailed_device_summary() {
    memcpy(devsum->marker, UDEV_DETAILED_DEVICE_SUMMARY_MARKER, 4);
    return devsum;
 }
+#ifdef REF
+char *    vendor_id;       ///< vendor id, as 4 hex characters
+char *    product_id;      ///< product id, as 4 hex characters
+char *    vendor_name;     ///< vendor name
+char *    product_name;    ///< product name
+char *    busnum_s;        ///< bus number, as a string
+char *    devnum_s;        ///< device number, as a string
+
+// to collect, then reduce to what's needed:
+char *    prop_busnum  ;
+char *    prop_devnum  ;
+char *    prop_model  ;
+char *    prop_model_id  ;
+char *    prop_usb_interfaces  ;
+char *    prop_vendor  ;
+char *    prop_vendor_from_database  ;
+char *    prop_vendor_id  ;
+char *    prop_major ;
+char *    prop_minor  ;
+} Usb_Detailed_Device_Summary;
+#endif
 
 
 /** Frees a Usb_Detailed_Device_Summary.
@@ -43,6 +64,17 @@ void free_usb_detailed_device_summary(Usb_Detailed_Device_Summary * devsum) {
       free(devsum->product_name);
       free(devsum->busnum_s);
       free(devsum->devnum_s);
+
+      free(devsum->prop_busnum);
+      free(devsum->prop_devnum);
+      free(devsum->prop_model);
+      free(devsum->prop_model_id);
+      free(devsum->prop_usb_interfaces);
+      free(devsum->prop_vendor);
+      free(devsum->prop_vendor_from_database);
+      free(devsum->prop_vendor_id);
+      free(devsum->prop_major);
+      free(devsum->prop_minor);
       free(devsum);
    }
 }

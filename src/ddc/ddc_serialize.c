@@ -210,6 +210,7 @@ DDCA_MCCS_Version_Spec deserialize_vspec(json_t* jpath) {
 
 Parsed_Edid * deserialize_parsed_edid(json_t* jpath) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Parsed_Edid * parsed_edid = NULL;
    json_t* jtmp = json_object_get(jpath, "bytes");
    if (!jtmp) {
@@ -238,6 +239,7 @@ Parsed_Edid * deserialize_parsed_edid(json_t* jpath) {
    }
    if (parsed_edid && debug)
       report_parsed_edid(parsed_edid, true, 1);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning parsed_edid=%p", parsed_edid);
    return parsed_edid;
 }
 
@@ -622,6 +624,7 @@ void ddc_erase_displays_cache() {
 
 
 void init_ddc_serialize() {
+   RTTI_ADD_FUNC(deserialize_parsed_edid);
    RTTI_ADD_FUNC(ddc_store_displays_cache);
    RTTI_ADD_FUNC(ddc_restore_displays_cache);
    RTTI_ADD_FUNC(ddc_erase_displays_cache);

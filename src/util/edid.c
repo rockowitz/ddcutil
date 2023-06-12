@@ -310,7 +310,7 @@ Parsed_Edid * copy_parsed_edid(Parsed_Edid * original) {
    if (original) {
       copy = create_parsed_edid(original->bytes);
       memcpy(&copy->edid_source, original->edid_source, sizeof(original->edid_source));
-      report_parsed_edid(copy, true, 2);
+      // report_parsed_edid(copy, true, 2);
    }
    DBGF(debug, "Done. returning %p -> ", copy);
    return copy;

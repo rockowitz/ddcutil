@@ -747,7 +747,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
                                    curmon->hiddev_devinfo->devnum,
                                    curmon->hiddev_device_name);
          dref->dispno = DISPNO_INVALID;   // -1
-         dref->pedid = curmon->edid;
+         dref->pedid = copy_parsed_edid(curmon->edid);
          if (dref->pedid)
             dref->mmid  = monitor_model_key_new(
                              dref->pedid->mfg_id,
