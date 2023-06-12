@@ -95,6 +95,8 @@ dbgrpt_usb_monitor_vcp_rec(Usb_Monitor_Vcp_Rec * vcprec, int depth) {
 
 static void
 free_usb_monitor_vcp_rec(gpointer p) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_USB, "gpointer = %p", p);
    struct usb_monitor_vcp_rec * vrec = p;
    if (vrec) {
       assert(memcmp(vrec->marker, USB_MONITOR_VCP_REC_MARKER, 4) == 0);
@@ -102,8 +104,11 @@ free_usb_monitor_vcp_rec(gpointer p) {
       // free_hiddev_report_info(vrec->rinfo);
       // free_hiddev_field_info(vrec->finfo);
       // free_hiddev_usage_ref(vrec->uref);
+      vrec->marker[3] = 'x';
       free(vrec);
+
    }
+   DBGTRC_DONE(debug, DDCA_TRC_USB, "");
 }
 
 
@@ -137,6 +142,8 @@ dbgrpt_usb_monitor_info(Usb_Monitor_Info * moninfo, int depth) {
 
 static void
 free_usb_monitor_info(gpointer p) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "gpointer = %p", p);
    struct usb_monitor_info * moninfo = p;
    if (moninfo) {
       assert(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);
@@ -147,8 +154,10 @@ free_usb_monitor_info(gpointer p) {
          if (moninfo->vcp_codes[ndx])
             free_usb_monitor_vcp_rec(moninfo->vcp_codes[ndx]);
       }
+      moninfo->marker[3] = 'x';
       free(moninfo);
    }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -571,11 +580,12 @@ get_usb_monitor_list() {
    g_ptr_array_set_free_func(hiddev_names, g_free);
    g_ptr_array_free(hiddev_names, true);
 
-   if ( debug || IS_TRACING() ) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning  %d monitors ", usb_monitors->len);
-      report_usb_monitors(usb_monitors,1);
-   }
+//   if ( debug || IS_TRACING() ) {
+//      DBGTRC_DONE(debug, TRACE_GROUP, "Returning  %d monitors ", usb_monitors->len);
+//      report_usb_monitors(usb_monitors,1);
+//   }
 
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "usb_monitors",report_usb_monitors, usb_monitors);
    return usb_monitors;
 }
 
@@ -587,16 +597,19 @@ GPtrArray * get_usb_open_errors() {
 
 void
 discard_usb_monitor_list() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "usb_monitors=%p, usb_open_errors=%p", usb_monitors, usb_open_errors);
 
    if (usb_monitors) {
       g_ptr_array_set_free_func(usb_monitors, free_usb_monitor_info);
+      DBGMSF(debug, "Freeing usb_monitors = %p", usb_monitors);
       g_ptr_array_free(usb_monitors, true);
-      g_ptr_array_free(usb_open_errors, true);  // array of Bus_Open_Error *, no special free function needed
       usb_monitors = NULL;
+      DBGMSF(debug, "Freeing usb_open_errors = %p", usb_open_errors);
+      g_ptr_array_free(usb_open_errors, true);  // array of Bus_Open_Error *, no special free function needed
       usb_open_errors = NULL;
    }
+   usb_monitors = NULL;
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
