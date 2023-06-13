@@ -324,6 +324,12 @@ bool dbgtrc_returning_expression(
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
 
+#define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
+    dbgtrc_returning_expression( \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
+          DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__)
+
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
     dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
@@ -403,6 +409,45 @@ void core_errmsg_emitter(
       const char * func,
       const char * msg, ...);
 #endif
+
+
+//
+// Use of system log
+//
+
+extern bool enable_syslog;
+extern DDCA_Syslog_Level syslog_level;
+
+DDCA_Syslog_Level syslog_level_name_to_value(const char * name);
+const char * syslog_level_name(DDCA_Syslog_Level level);
+bool test_emit_syslog(DDCA_Syslog_Level msg_level);
+int  syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level);
+extern const char * valid_syslog_levels_string;
+
+// #define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
+// #define SYSLOG(priority, format, ...) do {} while (0)
+#define SYSLOG2(_ddcutil_severity, format, ...) \
+do { \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         syslog(syslog_priority, format, ##__VA_ARGS__); \
+      } \
+   } \
+} while(0)
+
+#define MSG_W_SYSLOG(_ddcutil_severity, format, ...) \
+do { \
+   FILE * f = (_ddcutil_severity < DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
+   fprintf(f, format, ##__VA_ARGS__); \
+   fprintf(f, "\n"); \
+   if (test_emit_syslog(_ddcutil_severity)) { \
+      int syslog_priority = syslog_importance_from_ddcutil_syslog_level(_ddcutil_severity);  \
+      if (syslog_priority >= 0) { \
+         syslog(syslog_priority, format, ##__VA_ARGS__); \
+      } \
+   } \
+} while(0)
 
 
 //

@@ -844,8 +844,7 @@ bool dbgtrc_returning_expression(
    bool msg_emitted = false;
    bool in_callstack = check_callstack(options, funcname);
    if ( in_callstack || is_tracing(trace_group, filename, funcname) ) {
-      char pre_prefix[60];
-      g_snprintf(pre_prefix, 60, "Done      Returning: %s. ", retval);
+      char * pre_prefix = g_strdup_printf("Done      Returning: %s. ", retval);
       if (debug)
          printf("(%s) pre_prefix=|%s|\n", __func__, pre_prefix);
 
@@ -856,6 +855,7 @@ bool dbgtrc_returning_expression(
       //    printf("(%s) &args=%p, args=%p\n", __func__, (void*)&args, (void*)args);
       msg_emitted = vdbgtrc(trace_group, options, funcname, lineno, filename, pre_prefix, format, args);
       va_end(args);
+      free(pre_prefix);
    }
    if (debug)
       printf("(%s) Done.     Returning %s\n", __func__, sbool(msg_emitted));
@@ -938,6 +938,80 @@ void core_errmsg_emitter(
    }
 }
 #endif
+
+
+//
+// Use system log
+//
+
+DDCA_Syslog_Level syslog_level = DDCA_SYSLOG_NOT_SET;
+bool enable_syslog = true;
+
+Value_Name_Title_Table syslog_level_table = {
+      VNT(DDCA_SYSLOG_DEBUG,   "DEBUG"),
+      VNT(DDCA_SYSLOG_VERBOSE, "VERBOSE"),
+      VNT(DDCA_SYSLOG_INFO,    "INFO"),
+      VNT(DDCA_SYSLOG_NOTICE,  "NOTICE"),
+      VNT(DDCA_SYSLOG_WARNING, "WARN"),
+      VNT(DDCA_SYSLOG_ERROR,   "ERROR"),
+      VNT(DDCA_SYSLOG_NEVER,   "NEVER"),
+      VNT_END
+};
+const int syslog_level_ct = (ARRAY_SIZE(syslog_level_table)-1);
+const char * valid_syslog_levels_string = "DEBUG, VERBOSE, INFO, NOTICE, WARN, ERROR, NEVER";
+
+
+const char * syslog_level_name(DDCA_Syslog_Level level) {
+   char * result = "DDCA_SYSLOG_NOT_SET";
+   if (level != DDCA_SYSLOG_NOT_SET)
+      result = vnt_name(syslog_level_table, level);
+   return result;
+}
+
+
+DDCA_Syslog_Level syslog_level_name_to_value(const char * name) {
+   return (DDCA_Syslog_Level) vnt_find_id(syslog_level_table,
+                                          name,
+                                          true,      // search title field
+                                          true,      // ignore-case
+                                          DDCA_SYSLOG_NOT_SET);
+}
+
+
+/** Given a message severity level, test whether it should be
+ *  written to the system log.
+ *
+ *  @param  msg_level  severity of message
+ *  @return true if msg should be written to system log, false if not
+ */
+bool test_emit_syslog(DDCA_Syslog_Level msg_level) {
+   bool result =  (syslog_level != DDCA_SYSLOG_NOT_SET &&
+         msg_level <= syslog_level);
+   return result;
+}
+
+
+/** Given a ddcutil severity level for messages written to the system log,
+ *  returns the syslog priority level to be used in a syslog() call.
+ *
+ *  @param  level ddcutil severity level
+ *  @return priority for syslog() call,
+ *          -1 for msg that should never be output
+ */
+int syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level) {
+   int priority = -1;
+   switch(level) {
+   case DDCA_SYSLOG_NOT_SET: priority = -1;           break;
+   case DDCA_SYSLOG_NEVER:   priority = -1;           break;
+   case DDCA_SYSLOG_ERROR:   priority = LOG_ERR;      break;  // 3
+   case DDCA_SYSLOG_WARNING: priority = LOG_WARNING;  break;  // 4
+   case DDCA_SYSLOG_NOTICE:  priority = LOG_NOTICE;   break;  // 5
+   case DDCA_SYSLOG_INFO:    priority = LOG_INFO;     break;  // 6
+   case DDCA_SYSLOG_VERBOSE: priority = LOG_INFO;     break;  // 6
+   case DDCA_SYSLOG_DEBUG:   priority = LOG_DEBUG;    break;  // 7
+   }
+   return priority;
+}
 
 
 void init_core() {
