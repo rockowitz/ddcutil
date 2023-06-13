@@ -41,6 +41,7 @@ Value_Name_Title_Table syslog_level_table = {
       VNT_END
 };
 const int syslog_level_ct = (ARRAY_SIZE(syslog_level_table)-1);
+const char * valid_syslog_levels_string = "DEBUG, VERBOSE, INFO, NOTICE, WARN, ERROR, NEVER";
 
 
 const char * syslog_level_name(DDCA_Syslog_Level level) {
