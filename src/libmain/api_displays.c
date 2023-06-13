@@ -263,7 +263,7 @@ ddca_get_display_ref(
       rc = DDCRC_ARG;
    }
    else {
-      Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_ERR_MSG);
+      Display_Ref* dref = get_display_ref_for_display_identifier(pdid, CALLOPT_NONE);
       if (debug)
          DBGMSG("get_display_ref_for_display_identifier() returned %p", dref);
       if (dref)
