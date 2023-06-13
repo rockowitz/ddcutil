@@ -905,7 +905,7 @@ parse_command(
       {"dynamic-sleep-adjustment",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"dsa",                     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
 
-      {"nodsa",                   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_FLAG_REVERSE,
+      {"nodsa",                   '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                             G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
 
       {"disable-dsa",             '\0', G_OPTION_FLAG_HIDDEN |G_OPTION_FLAG_REVERSE,
