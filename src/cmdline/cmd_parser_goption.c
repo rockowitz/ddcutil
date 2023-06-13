@@ -26,6 +26,7 @@
 #include "base/core.h"
 #include "base/displays.h"
 #include "base/parms.h"
+#include "base/trace_control.h"
 
 #include "cmdline/cmd_parser_aux.h"
 #include "cmdline/cmd_parser.h"
@@ -516,7 +517,7 @@ bool parse_syslog_level(
    if (*result_loc == DDCA_SYSLOG_NOT_SET) {
       parsing_ok = false;
       emit_parser_error(errmsgs, __func__, "Invalid syslog level: %s", sval );
-      emit_parser_error(errmsgs, __func__, "Valid values are NEVER, ERROR, WARN, NOTICE, INFO, VERBOSE, DEBUG");
+      emit_parser_error(errmsgs, __func__, "Valid values are %s", valid_syslog_levels_string);
    }
    if (debug)
       printf("(%s) Returning %s, *result_loc = %d\n",
@@ -838,8 +839,6 @@ parse_command(
          {"model",   'l',  0, G_OPTION_ARG_STRING,   &modelwork,        "Monitor model",               "model name"},
          {"sn",      'n',  0, G_OPTION_ARG_STRING,   &snwork,           "Monitor serial number",       "serial number"},
          {"edid",    'e',  0, G_OPTION_ARG_STRING,   &edidwork,         "Monitor EDID",            "256 char hex string" },
-         {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid,      "USB device to ignore","vid:pid" },
-         {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 
          // Feature selection filters
          {"show-unsupported",
@@ -864,6 +863,7 @@ parse_command(
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
          {"very-verbose", '\0', G_OPTION_FLAG_NO_ARG | G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_CALLBACK, output_arg_func,   "Show extra verbose detail",        NULL},
+
          // Program information
          {"settings",'\0', 0, G_OPTION_ARG_NONE,     &show_settings_flag,"Show current settings",           NULL},
          {"version", 'V',  0, G_OPTION_ARG_NONE,     &version_flag,     "Show ddcutil version",             NULL},
@@ -883,25 +883,72 @@ parse_command(
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"vstats",  '\0',  G_OPTION_FLAG_OPTIONAL_ARG,
                                                 G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
-      // {"per-display-stats",
-      //             '\0', 0, G_OPTION_ARG_NONE,     &per_display_stats_flag, "Include per-display statistics",   NULL},
+      {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
+
+      // Performance
+      {"enable-capabilities-cache",
+                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
+      {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
+
+      {"enable-displays-cache",
+                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
+      {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
+                            G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
+
+      {"sleep-multiplier", '\0', 0,
+                            G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
+
+      {"enable-dynamic-sleep",    '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"disable-dynamic-sleep",   '\0', G_OPTION_FLAG_REVERSE,
+                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"dynamic-sleep-adjustment",'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"dsa",                     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+
+      {"nodsa",                   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_FLAG_REVERSE,
+                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+
+      {"disable-dsa",             '\0', G_OPTION_FLAG_HIDDEN |G_OPTION_FLAG_REVERSE,
+                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
+      {"disable-dsa2",            '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
+                                            G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+
+      {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
+
+      {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+ //   {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
+
+      {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"sleep-less" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_REVERSE,
+                                                         G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
 
       // Behavior options
+      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
+      {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
+      {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
+
+      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "Tailor feature handling to specific MCCS version",   "major.minor" },
+
+      {"udf",     '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
+      {"enable-udf",'\0',0,G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
+      {"noudf",   '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
+      {"disable-udf",'\0', G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
+
 #ifdef USE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
       {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
-
-      {"nousb",   '\0', G_OPTION_FLAG_REVERSE,
+      {"nousb",      '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
+      {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
+      {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
 #endif
-      {"mccs",    '\0', 0, G_OPTION_ARG_STRING,   &mccswork,         "MCCS version",            "major.minor" },
-
-      {"timeout-i2c-io",'\0', G_OPTION_FLAG_HIDDEN,
-                               G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
-//    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
-//                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
 
 #ifdef FUTURE
       {"force-slave-address",
@@ -909,62 +956,25 @@ parse_command(
 #endif
       {"force-slave-address",
                   '\0', 0, G_OPTION_ARG_NONE,     &force_slave_flag, "Force I2C slave address",         NULL},
-      {"force",   'f',  G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
-      {"verify",  '\0', 0, G_OPTION_ARG_NONE,     &verify_flag,      "Read VCP value after setting it", NULL},
-      {"noverify",'\0', 0, G_OPTION_ARG_NONE,     &noverify_flag,    "Do not read VCP value after setting it", NULL},
-//    {"nodetect",'\0', 0, G_OPTION_ARG_NONE,     &nodetect_flag,    "Skip initial monitor detection",  NULL},
-      {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
-      {"enable-capabilities-cache",
-                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cc_flag,   enable_cc_expl,     NULL},
-      {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
-      {"enable-displays-cache",
-                  '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
-      {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
+
       {"use-file-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
       {"use-ioctl-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
 
-      {"udf",     '\0', 0, G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
-      {"enable-udf",'\0',0,G_OPTION_ARG_NONE,     &enable_udf_flag,  enable_udf_expl,    NULL},
-      {"noudf",   '\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
-      {"disable-udf",'\0', G_OPTION_FLAG_REVERSE,
-                           G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
-      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does have a FIFO queue", NULL},
+      {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does not have a FIFO queue", NULL},
 
-      // Performance and retry
-      {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
-      {"sleep-multiplier", '\0', 0,
-                           G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
-
-      {"less-sleep" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-      {"sleep-less" ,       '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-      {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-      {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_REVERSE,
-                                                        G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
-
-      {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
-//    {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
-
-      {"dynamic-sleep-adjustment",'\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"dsa",                     '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"enable-dsa",              '\0', 0, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"no-dsa",                  '\0', G_OPTION_FLAG_REVERSE,
-                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
-      {"nodsa",                   '\0', G_OPTION_FLAG_REVERSE,
-                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
-
-      {"disable-dsa",             '\0', G_OPTION_FLAG_REVERSE,
-                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
-      {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
-      {"disable-dsa2",            '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
-                                           G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
       {"edid-read-size",
-                      '\0', 0, G_OPTION_ARG_INT,         &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
+                      '\0', 0, G_OPTION_ARG_INT,  &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
+
+      {"force",   'f',  G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
+      {"timeout-i2c-io",'\0', G_OPTION_FLAG_HIDDEN,
+                               G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
+//    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
+//                            G_OPTION_ARG_NONE,  &timeout_i2c_io_flag,   "Do not wrap DDC IO in timeout (default)",  NULL},
+
+
       {NULL},
    };
 
@@ -987,7 +997,8 @@ parse_command(
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
-      {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", "NONE, ERROR, WARN, INFO, NEVER"},
+
+
       {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
       {"failsim",    '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_FILENAME,    &failsim_fn_work,      "Enable simulation", "control file name"},
