@@ -22,7 +22,6 @@ ddcutil \- Query and change monitor settings
 
 Options can be written either before or after the command and its arguments.
 
-
 .\" ALT USING .SY .OP
 .\" .SY
 .\" .OP \-abcde
@@ -37,12 +36,12 @@ Options can be written either before or after the command and its arguments.
 
 \fBddcutil\fP communicates with monitors that implement the Monitor Control Command Set (MCCS) using the DDC/CI protocol on an I2C bus.  
 Normally, the video driver for the monitor exposes the I2C bus as devices named /dev/i2c-n.  
-Alternatively, \fBddcutil\fP can communicate monitors that use USB to communicate MMCS, provided the monitors meet the USB Monitor Control Class Specification.
+Alternatively, \fBddcutil\fP can communicate with monitors that use USB to communicate MMCS, provided the monitors meet the USB Monitor Control Class Specification.
 
 The Monitor Control Command Set describes a collection of Virtual Control Panel (VCP) features that a monitor can implement.
 Each feature is identified using a single byte.  For example, feature x10 is the brightness control. 
 
-The monitor settings that can be controlled by \fBddcutil\fP are generally speaking those that can be changed using the buttons
+The monitor settings that can be controlled by \fBddcutil\fP are, generally speaking, those that can be changed using the buttons
 on a monitor and its on screen display.  The specific capabilities vary from monitor to monitor.
 
 A particular use case for \fBddcutil\fP is as part of color profile management.  
@@ -52,7 +51,7 @@ and then restored when the calibration is applied.
 
 Another common use case is to switch the monitor input source. 
 
-This man page focuses on the \fBddcutil\fP commands and options most important to the typical user. 
+This man page describes \fBddcutil\fP commands and options most important to the typical user. 
 For complete documentation, use the \fI--help\fP option or see the web site
 .UR http://www/ddcutil.com
 .UE .
@@ -85,15 +84,18 @@ These are the most used \fbddcutil\fP commands.
 .TP
 \fBvcpinfo\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
 Describe VCP feature codes. as defined in the MCCS specification.
+Use option \fI--verbose\fP to see values for Non-Continuous features.
 .TP 
 .B "capabilities "
 Query the monitor's capabilities string 
 .TP
-\fBgetvcp\fP [ \fIfeature-code\fP | \fIfeature-group\fP ]
-Report a single VCP feature value, or a group of feature values
+\fBgetvcp\fP [ \fIfeature-code\fP | \fIfeature-group\fP ] ...
+Report a VCP feature value, or a group of feature values.
+More than one feature code can be specified. However feature codes and groups cannot be combined.
 .TP
-\fBsetvcp\fP \fIfeature-code\fP [+|-] \fInew-value\fP
-Set a single VCP feature value.  If + or - is specified, it must be surrounded by blanks, and indicates a relative value change of a Continuous VCP feature.
+\fBsetvcp\fP \fIfeature-code\fP [+|-] \fInew-value\fP ...
+Set a VCP feature value.  If + or - is specified, it must be surrounded by blanks, and indicates a relative value change of a continuous VCP feature.
+Multiple feature/value pairs (with or without [+|1]) can be specified.
 .SS Secondary Commands 
 These commands address special situations.
 .TP
@@ -106,10 +108,11 @@ Set VCP feature values from a file.  The monitor to which the values will be app
 If the monitor is not attached, nothing happens.
 .TP
 .B "scs "
-Issue DDC/CI Save Current Settings request.
+Issue DDC/CI Save Current Settings request. Most monitors do not implement this command.
+A few require it for values changed by \fFsetvcp\fP to take effect.
 .TP
 .B "chkusbmon "
-Tests if a hiddev device is a USB connected monitor, for use in udev rules.
+Tests if a hiddev device may be a USB connected monitor, for use in udev rules.
 .SS Diagnostic commands
 These commands  diagnose issues in the system configuration that affect 
 \fBddcutil\fP operation,  
@@ -157,7 +160,7 @@ Feature group names can be abbreviated to the first 3 characters.  Case is ignor
 .I new-value
 .sp
 Normally, this is a decimal number in the range 0..255, or a hexadecimal number in the range x00..xff.
-More generally, this is actually a two byte value, i.e. x00..xffff, and a few features use this 
+More generally, this is actually a two byte value, i.e. x00..xffff, and a few features on some monitors use this 
 extended range.
 
 
@@ -217,106 +220,6 @@ Show brief detail.  For command \fBgetvcp\fP, the output is in machine readable 
 Show extended detail
 
 .PP
-Options that modify behavior
-.TQ
-.BI "--mccs " "MCCS version"
-Tailor command input and 
-output to a particular MCCS version, e.g. 2.1
-.TQ
-.B "--enable-usb, --disable-usb"
-Enable or disable support for monitors that implement USB commuincation with the Virtual Control Panel.
-The default is 
-.B "--disable-usb"
-.TQ
-.B "--enable-udf, --disable-udf"
-Enable or disable support for user supplied feature definitions.
-The default is
-.B "--enable-udf"
-.TQ
-.B "enable-capabilities-cache, --disable-capabilities-cache"
-Enable or disable caching of capabilities strings, improving performance.
-The default is
-.B "--enable-capabilities-cache
-.TQ
-.B "--force-slave-address"
-Take control of slave addresses on the I2C bus even they are in use.
-.TQ
-.B "--verify | --noverify"
-Verify or do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. \fB--noverify\fP is the default.
-.TQ
-.B "--async"
-If there are multiple monitors, initial checks are performed in multiple threads, improving performance.
-.TQ
-.BI "--edid-read-size " "128|256"
-Force \fBddcutil\fP to read the specified number of bytes when reading the EDID.
-This option is a work-around for certain driver bugs.
-The default is 256. 
-
-.PP
-Options to tune execution:
-.TQ
-.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-tries)"
-Adjust the number of retries.  A value of "." or "0" leaves the setting for a retry type unchanged.
-.TQ
-.BI "--sleep-multiplier " "decimal number"
-Adjust the length of waits listed in the DDC/CI specification by this number to determine the actual 
-wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
-with poor DDC implementations may work better with sleep-multiplier values greater than 1.0. 
-
-
-.PP
-Options for diagnostic output.
-.TQ
-.BR --stats " [" all | errors | tries | calls | elapsed | time ]
-Report execution statistics.  If no argument is specified, or ALL is specified, then all statistics are 
-output.  \fBelapsed\fP is a synonym for \fBtime\fP.  \fBcalls\fP implies \fBtime\fP.
-.br Specify this option multiple times to report multiple statistics groups.
-.br
-I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus 
-to manage retries in case of failure.  This option reports retry counts and various performance statistics.
-.TQ
-.B --ddc
-Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
-
-.PP
-Debugging options. 
-.TQ
-.BI "--trace "  "trace group name"
-Enable tracing for functions in the specified trace group.  For a list of trace group names, use the 
-\fI--help\fP option. This option can be specified more than once. 
-.TQ
-.BI "--trcfunc " "function name"
-Trace the specified function, which must have been enabled for tracing.
-This option can be specified more than once. 
-.TQ
-.BI "--trcfile " "file name"
-Trace all functions in a source file that are enabled for tracing.  The argument is a simple file name, 
-with or without the ".c" suffix, e.g. "i2c_bus_core", "i2c_bus_core.c".
-This option can be specified more than once.
-.TQ
-.B --timestamp, --ts
-Preface trace messages with the time since program start.
-.TQ
-.B --wall-timestamp, --wts 
-Preface trace messages with the current wall time.
-.BR --thread-id , --tid
-Preface trace messages with the thread number.
-.TQ
-.B --syslog
-Write trace messages to the system log.
-.TQ
-.B --excp
-Report freed exceptions
-.TQ
-.B "--use-file-io"
-Use the write()/read() interface of driver i2c-dev to send and receive I2C packets.  This is the default for the nvidia proprietary driver.
-.TQ
-.B "--use-ioctl-io"
-Use the ioctl() interface of driver i2c-dev to send and receive I2C packets.  This is the default for
-video drivers other than the proprietary nvidia driver.
-
-
-.PP
 Options for program information.
 .TQ
 .BR -h , --help 
@@ -327,6 +230,105 @@ Show program version.
 .TQ
 .B "--settings"
 Report option settings in effect.
+
+.PP
+Options for diagnostic output
+.TQ
+.B --ddc
+Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
+.TQ
+.BR "["--stats | --vstats "] " " [" all | errors | tries | calls | elapsed | time ]
+Report execution statistics.  
+.br
+I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus, i.e. \fBddcutil\fP,
+to manage retries in case of failure.  This option reports retry counts and various performance statistics.
+If no argument is specified, or ALL is specified, then all statistics are 
+output.  ELAPSED is a synonym for TIME.  CALLS implies TIME.
+.br Specify this option multiple times to report multiple statistics groups.
+
+.TQ
+.BR --vstats  " [" all | errors | tries | calls | elapsed | time ] 
+Like \fB--stats\fP, but includes per-display statistics.
+.TQ
+.BI --syslog "[ " debug | verbose | info | notice | warn | error | never " ]"
+Write messages of the specified or more urgent severity level to the system log.
+The default is \fBWARN\fP.
+
+.PP
+Options that tune execution
+.TQ
+.B "--enable-capabilities-cache, --disable-capabilities-cache"
+Enable or disable caching of capabilities strings, improving performance.
+The default is
+.B --enable-capabilities-cache
+.TQ
+.B "--enable-displays-cache, --disable-displays-cache"
+Enable or disable caching of information about detected displays, improving performance.
+The default is 
+.B "--enable-displays-cache"
+.TQ
+.BI "--sleep-multiplier " "decimal number"
+Adjust the length of waits listed in the DDC/CI specification by this number to determine the actual 
+wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
+with poor DDC implementations may require sleep-multiplier values greater than 1.0. 
+.TQ
+.B "--enable-dynamic-sleep, --disable-dynamic-sleep"
+Dynamically adjust the sleep-multiplier over multiple \fBddcutil\fP invocations, improving performance. 
+The default is
+.B "--enable-dynamic-sleep"
+.TQ
+.B "--async"
+If there are several monitors, initial checks are performed in multiple threads, improving performance.
+.TQ
+.B "--lazy-sleep"
+Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
+DDC/CI operation that specified a delay, marginally improving performance.
+
+.PP
+Options that modify behavior
+.TQ
+.BI "--maxtries " "(max-read-tries, max-write-read-tries, max-multi-part-tries)"
+Adjust the number of retries.  A value of "." or "0" leaves the setting for a retry type unchanged.
+.TQ
+.B "--verify | --noverify"
+Verify or do not verify values set by \fBsetvcp\fP or \fBloadvcp\fP. \fB--noverify\fP is the default.
+.TQ
+.BI "--mccs " "MCCS version"
+Tailor command input and 
+output to a particular MCCS version, e.g. 2.1
+.TQ
+.B "--enable-udf, --disable-udf"
+Enable or disable support for user supplied feature definitions.
+The default is
+.B "--enable-udf"
+.TQ
+.B "--enable-usb, --disable-usb"
+Enable or disable support for monitors that implement USB commuincation with the Virtual Control Panel.
+(These options are available only if \fBddcutil\fP was built with USB support.)
+The default is 
+.B "--disable-usb"
+.TQ
+.BI "--ignore-usb-vid-pid" vid:pid
+Force \fBddcutil\fI to ignore a particular USB device, specified by its 4 hex digit vendor id and its 4 hex digit product id.
+.TQ
+.BI "--ignore-hiddev " hiddev-device-number
+Force \fBddcutil\fI to ignore a particular USB device, specified by /dev/usb/hiddev device number
+.TQ
+.BI "--use-file-io | --use-ioctl-io"
+Cause \fBddcutil\fP to use the write()/read() interface or the ioctl interface of driver dev-i2c to send and receive I2C packets.
+By default, \fBddcutil\fP uses the ioctl interface.  Depending on how the Nvidia proprietary
+driver was built, this can fail, in which case \fBddcutil\fP switches to using the file io interface.
+.TQ
+.B "--force-slave-address"
+Take control of slave addresses on the I2C bus even they are in use.
+Has use only for the proprietary Nvidia video driver.
+
+.TQ
+.BI "--edid-read-size " "128|256"
+Force \fBddcutil\fP to read the specified number of bytes when reading the EDID.
+This option is a work-around for certain driver bugs.
+The default is 256. 
+
 
 .SH EXECUTION ENVIRONMENT 
 
