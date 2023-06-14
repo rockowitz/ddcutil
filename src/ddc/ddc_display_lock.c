@@ -3,7 +3,7 @@
  *  opened simultaneously from multiple threads.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
@@ -37,6 +37,7 @@
 #include <glib-2.0/glib.h>
 #include <string.h>
 
+#include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -174,12 +175,12 @@ get_distinct_display_ref(Display_Ref * dref) {
  *
  *  \param  id                 distinct display identifier
  *  \param  flags              if **DDISP_WAIT** set, wait for locking
- *  \retval DDCRC_OK           success
- *  \retval DDCRC_LOCKED       locking failed, display already locked by another
- *                             thread and DDISP_WAIT not set
- *  \retval DDCRC_ALREADY_OPEN display already locked in current thread
+ *  \retval NULL               success
+ *  \retval Error_Info(DDCRC_LOCKED)       locking failed, display already locked by another
+ *                                         thread and DDISP_WAIT not set
+ *  \retval Error_Info(DDCRC_ALREADY_OPEN) display already locked in current thread
  */
-DDCA_Status
+Error_Info *
 lock_distinct_display(
       Distinct_Display_Ref   id,
       Distinct_Display_Flags flags)
@@ -187,7 +188,7 @@ lock_distinct_display(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
 
-   DDCA_Status ddcrc = 0;
+   Error_Info * err = NULL;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
@@ -197,8 +198,9 @@ lock_distinct_display(
       self_thread = true;
    g_mutex_unlock(&master_display_lock_mutex);
    if (self_thread) {
-      DBGMSG("Attempting to lock display already locked by current thread");
-      ddcrc = DDCRC_ALREADY_OPEN;    // poor
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Attempting to lock display already locked by current thread");
+      err = errinfo_new(DDCRC_ALREADY_OPEN, __func__,   // is there a better status code?
+            "Attempting to lock display already locked by current thread"); // poor
    }
    else {
       bool locked = true;
@@ -208,43 +210,44 @@ lock_distinct_display(
       else {
          locked = g_mutex_trylock(&ddesc->display_mutex);
          if (!locked)
-            ddcrc = DDCRC_LOCKED;
+            err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed");
       }
-      if (locked)
-         ddesc->display_mutex_thread = g_thread_self();
+
+      if (locked)   // record that this thread owns the lock
+          ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   return err;
 }
 
 
 /** Unlocks a distinct display.
  *
  *  \param id  distinct display identifier
- *  \retval DDCRC_LOCKED attempting to unlock a display owned by a different thread
- *  \retval DDCRC_OK
+ *  \retval Error_Info(DDCRC_LOCKED) attempting to unlock a display owned by a different thread
+ *  \retval NULL   no error
  */
-DDCA_Status
+Error_Info *
 unlock_distinct_display(Distinct_Display_Ref id) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
-   DDCA_Status ddcrc = 0;
+   Error_Info * err = NULL;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
    if (ddesc->display_mutex_thread != g_thread_self()) {
-      DBGMSG("Attempting to unlock display lock owned by different thread");
-      ddcrc = DDCRC_LOCKED;
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
+      err = errinfo_new(DDCRC_LOCKED, __func__, "Attempting to unlock display lock owned by different thread");
    }
    else {
       ddesc->display_mutex_thread = NULL;
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   return err;
 }
 
 
