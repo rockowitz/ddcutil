@@ -18,6 +18,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
 #include "util/glib_string_util.h"
@@ -50,6 +51,7 @@
 
 #include "ddc/ddc_dumpload.h"
 
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 /** Frees a #Dumpload_Data struct.  The underlying Vcp_Value_set is also freed.
  *
@@ -58,13 +60,13 @@
  */
 void free_dumpload_data(Dumpload_Data * data) {
    bool debug = false;
-   DBGMSF(debug, "Starting. data=%p", data);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "data=%p", data);
    if (data) {
       if (data->vcp_values)
          free_vcp_value_set(data->vcp_values);
       free(data);
    }
-   DBGMSF(debug, "Done.");
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -92,6 +94,7 @@ void dbgrpt_dumpload_data(Dumpload_Data * data, int depth) {
       dbgrpt_vcp_value_set(data->vcp_values, d1);
 }
 
+
 #define ADD_DATA_ERROR(_expl) \
       errinfo_add_cause(  \
          errs,            \
@@ -114,7 +117,7 @@ create_dumpload_data_from_g_ptr_array(
       Dumpload_Data ** dumpload_data_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting.");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Error_Info * errs = errinfo_new(DDCRC_BAD_DATA, __func__, NULL);
    *dumpload_data_loc = NULL;
@@ -337,6 +340,7 @@ create_dumpload_data_from_g_ptr_array(
       }
    }
    *dumpload_data_loc = data;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "");
    return errs;
 }
 
@@ -360,6 +364,8 @@ ddc_set_multiple(
       Display_Handle* dh,
       Vcp_Value_Set   vset)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Public_Status_Code psc = 0;
    Error_Info *        ddc_excp = NULL;
    int value_ct = vcp_value_set_size(vset);
@@ -379,16 +385,18 @@ ddc_set_multiple(
       ddc_excp = ddc_set_vcp_value(dh, vrec, NULL);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
       if (ddc_excp) {
-         f0printf(ferr(), "Error setting value for VCP feature code 0x%02x: %s\n",
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Error setting value for VCP feature code 0x%02x: %s",
                          feature_code, psc_desc(psc) );
          if (psc == DDCRC_RETRIES)
-            f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
-         f0printf(ferr(), "Terminating.");
+            SYSLOG2(DDCA_SYSLOG_ERROR, "    Try errors: %s", errinfo_causes_string(ddc_excp));
+         if (ndx < value_ct-1)
+            SYSLOG2(DDCA_SYSLOG_ERROR, "Not attempt to set additional values.");
          break;
       }
 
    } // for loop
 
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -409,16 +417,13 @@ loadvcp_by_dumpload_data(
       Display_Handle *  dh)
 {
    assert(pdata);
-   FILE * errf = ferr();
 
    bool debug = false;
-   if (debug) {
-        DBGMSG("Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Loading VCP settings for monitor \"%s\", sn \"%s\", dh=%p \n",
                pdata->model, pdata->serial_ascii, dh);
+   if ( IS_DBGTRC(debug, TRACE_GROUP) )
         dbgrpt_dumpload_data(pdata, 0);
-   }
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    Display_Handle * dh_argument = dh;
 
@@ -427,27 +432,28 @@ loadvcp_by_dumpload_data(
       assert(dh->dref->pedid);
       bool ok = true;
       if ( !streq(dh->dref->pedid->model_name, pdata->model) ) {
-         f0printf(errf,
-            "Monitor model in data (%s) does not match that for specified device (%s)\n",
-            pdata->model, dh->dref->pedid->model_name);
+         const char * fmt =
+            "Monitor model in data (%s) does not match that for specified device (%s)";
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->model, dh->dref->pedid->model_name);
+         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__, fmt, pdata->model, dh->dref->pedid->model_name);
          ok = false;
       }
       if (!streq(dh->dref->pedid->serial_ascii, pdata->serial_ascii) ) {
-         f0printf(errf,
-            "Monitor serial number in data (%s) does not match that for specified device (%s)\n",
-            pdata->serial_ascii, dh->dref->pedid->serial_ascii);
+         const char * fmt = "Monitor serial number in data (%s) does not match that for specified device (%s)";
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, fmt, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
+         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, pdata->serial_ascii, dh->dref->pedid->serial_ascii);
          ok = false;
       }
       if (!ok) {
-         psc = DDCRC_INVALID_DISPLAY;
          goto bye;
       }
    }
 
    else if ( strlen(pdata->mfg_id) + strlen(pdata->model) + strlen(pdata->serial_ascii) == 0) {
       // Pathological.  Someone's been messing with the VCP file.
-      f0printf(errf, "Monitor manufacturer id, model, and serial number all missing from input.\n");
-      psc = DDCRC_INVALID_DISPLAY;
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Monitor manufacturer id, model, and serial number all missing from input.");
+      ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__,
+            "Monitor manufacturer id, model, and serial number all missing from input.");
       goto bye;
    }
 
@@ -458,35 +464,31 @@ loadvcp_by_dumpload_data(
                              pdata->model,
                              pdata->serial_ascii);
       assert(did);
-      Display_Ref * dref = get_display_ref_for_display_identifier(
-                              did, CALLOPT_NONE);
+      Display_Ref * dref = get_display_ref_for_display_identifier(did, CALLOPT_NONE);
       free_display_identifier(did);
       if (!dref) {
-         f0printf(errf, "Monitor not connected: %s - %s   \n", pdata->model, pdata->serial_ascii );
-         psc = DDCRC_INVALID_DISPLAY;
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );
+         ddc_excp = errinfo_new(DDCRC_INVALID_DISPLAY, __func__,
+               "Monitor not connected: %s - %s", pdata->model, pdata->serial_ascii );
          goto bye;
       }
 
       // return code == 0 iff dh set
-      DDCA_Status ddcrc = ddc_open_display(dref, CALLOPT_NONE, &dh);
+      ddc_excp = ddc_open_display(dref, CALLOPT_NONE, &dh);
       if (!dh) {
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s", dref_repr_t(dref), ddcrc_desc_t(ddcrc));
-         psc = DDCRC_INVALID_DISPLAY;
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s", dref_repr_t(dref), ddcrc_desc_t(ddc_excp->status_code));
          goto bye;
       }
    }
 
    ddc_excp = ddc_set_multiple(dh, pdata->vcp_values);
-   psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
    // close the display only if this function opened it
    if (!dh_argument)
-      ddc_close_display(dh);
+      ddc_excp = ddc_close_display(dh);
 
 bye:
-   DBGMSF(debug, "Returning: %s", psc_desc(psc));
-   if (psc == DDCRC_RETRIES && debug)
-      DBGMSG("        Try errors: %s", errinfo_causes_string(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;;
 }
 
@@ -504,19 +506,10 @@ loadvcp_by_ntsa(
       Display_Handle *             dh)
 {
    bool debug = false;
-
-   DDCA_Output_Level output_level = get_output_level();
-   bool verbose = (output_level >= DDCA_OL_VERBOSE);
-   // DBGMSG("output_level=%d, verbose=%d", output_level, verbose);
-   if (debug) {
-      DBGMSG("Starting.  ntsa=%p", ntsa);
-      verbose = true;
-   }
-   // Public_Status_Code psc = 0;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ntsa=%p", ntsa);
+   bool verbose = (get_output_level() >= DDCA_OL_VERBOSE) || debug;
    Error_Info * ddc_excp = NULL;
-
    GPtrArray * garray = ntsa_to_g_ptr_array(ntsa);
-
    Dumpload_Data * pdata = NULL;
    ddc_excp = create_dumpload_data_from_g_ptr_array(garray, &pdata);
    DBGMSF(debug, "create_dumpload_data_from_g_ptr_array() returned %p", pdata);
@@ -538,6 +531,7 @@ loadvcp_by_ntsa(
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       free_dumpload_data(pdata);
    }
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
@@ -733,7 +727,7 @@ dumpvcp_as_dumpload_data(
       Dumpload_Data** dumpload_data_loc)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting. dh=%s", dh_repr(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    Public_Status_Code psc = 0;
    Dumpload_Data * dumped_data = calloc(1, sizeof(Dumpload_Data));
 
@@ -778,10 +772,9 @@ dumpvcp_as_dumpload_data(
    else
       *dumpload_data_loc = dumped_data;
 
-   if (debug) {
-      DBGMSG("Returning: %s, *pdumpload_data=%p", psc_desc(psc), *dumpload_data_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "*dumpload_data_loc = %p", *dumpload_data_loc);
+   if ( IS_DBGTRC(debug, TRACE_GROUP) )
       dbgrpt_dumpload_data(*dumpload_data_loc, 1);
-   }
    return psc;
 }
 
@@ -857,7 +850,7 @@ convert_dumpload_data_to_string_array(Dumpload_Data * data) {
 Public_Status_Code
 dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
    bool debug = false;
-   DBGMSF(debug, "Starting, dh=%s", dh_repr(dh));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
 
    Public_Status_Code psc    = 0;
    Dumpload_Data *    data   = NULL;
@@ -869,12 +862,19 @@ dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
       *result_loc = join_string_g_ptr_array(strings, ";");
       free_dumpload_data(data);
    }
-   DBGMSF(debug, "Returning: %s, *result_loc=|%s|", psc_desc(psc), *result_loc);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "*result_loc=|%s|", *result_loc);
    return psc;
 }
 
 
 void init_ddc_dumpload() {
+   RTTI_ADD_FUNC(free_dumpload_data);
+   RTTI_ADD_FUNC(create_dumpload_data_from_g_ptr_array);
+   RTTI_ADD_FUNC(ddc_set_multiple);
+   RTTI_ADD_FUNC(loadvcp_by_dumpload_data);
+   RTTI_ADD_FUNC(loadvcp_by_ntsa);
    RTTI_ADD_FUNC(format_timestamp);
    RTTI_ADD_FUNC(collect_machine_readable_timestamp);
+   RTTI_ADD_FUNC(dumpvcp_as_dumpload_data);
+   RTTI_ADD_FUNC(dumpvcp_as_string);
 }
