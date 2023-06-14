@@ -292,17 +292,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             // n. requires write access since may call get_vcp_value(), which does a write
             Display_Handle * dh = NULL;
             DBGMSF(debug, "Calling ddc_open_display() ...");
-            Public_Status_Code psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
-            if (psc != 0) {
+            Error_Info * err = ddc_open_display(dref, CALLOPT_NONE, &dh);
+            if (err) {
                rpt_vstring(d1, "Error opening display %s: %s",
-                                  dref_short_name_t(dref), psc_desc(psc));
+                                  dref_short_name_t(dref), psc_desc(err->status_code));
+               errinfo_free(err);
+               err = NULL;
             }
             else {
                // display controller mfg, firmware version
                rpt_vstring(d1, "Controller mfg:      %s", get_controller_mfg_string_t(dh) );
                rpt_vstring(d1, "Firmware version:    %s", get_firmware_version_string_t(dh));
                DBGMSF(debug, "Calling ddc_close_display()...");
-               ddc_close_display(dh);
+               ddc_close_display_wo_return(dh);
             }
 
             if (dref->io_path.io_mode != DDCA_IO_USB) {
