@@ -4,7 +4,7 @@
  * hiddev ioctl() calls.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -37,16 +37,11 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_USB;
 // Basic USB HID Device Operations
 //
 
-/* Open a USB device
+/** Open a USB device
  *
- * Arguments:
- *   hiddev_devname
- *   calloptions      checks CALLOPT_RDONLY, CALLOPT_ERR_MSG
- *
- * Returns:
- *   file descriptor ( >= 0) if success
- *   -errno if failure
- *
+ *  @param  hiddev_devname
+ *  @param  calloptions   option flags, checks CALLOPT_RD_ONLY, CALLOPT_ERR_MSG
+ *  @return file descriptor (>0) if success, -errno if failure
  */
 int
 usb_open_hiddev_device(
@@ -82,17 +77,12 @@ usb_open_hiddev_device(
 }
 
 
-/* Closes an open USB device.
+/** Closes an open USB device.
  *
- * Arguments:
- *   fd     file descriptor for open hiddev device
- *   device_fn
- *          if NULL, ignore
- *   failure_action  if true, exit if close fails
- *
- * Returns:
- *    0 if success
- *    -errno if close fails and exit on failure was not specified
+ *  @param fd     file descriptor for open hiddev device
+ *  @param device_fn  for use in msgs, ok if NULL
+ *  @param calloptions CALLOPT_ERR_MSG recognized
+ *  @return -errno if close fails
  */
 Status_Errno
 usb_close_device(
