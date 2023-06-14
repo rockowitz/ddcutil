@@ -1207,6 +1207,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_async_scan);
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
+   RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
