@@ -348,7 +348,8 @@ master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting ...");
    bool ok = false;
-   submaster_initializer(parsed_cmd);   // shared with libddcutil
+   if (!submaster_initializer(parsed_cmd))    // shared with libddcutil
+      goto bye;
 
 #ifdef ENABLE_ENVCMDS
    if (parsed_cmd->cmd_id != CMDID_ENVIRONMENT) {
@@ -427,7 +428,7 @@ find_dref(
    FILE * outf = fout();
    Status_Errno_DDC final_result = DDCRC_OK;
    Display_Ref * dref = NULL;
-   Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
+  // Call_Options callopts = CALLOPT_ERR_MSG;        // emit error messages
 
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
@@ -492,9 +493,11 @@ find_dref(
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detecting displays...");
          ddc_ensure_displays_detected();
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "display detection complete");
-         dref = get_display_ref_for_display_identifier(did_work, callopts);
+         dref = get_display_ref_for_display_identifier(did_work, CALLOPT_NONE);
          if (temporary_did_work)
             free_display_identifier(did_work);
+         if ( !dref)
+            f0printf(ferr(), "Display not found\n");
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
       }
    }  // !DISP_ID_BUSNO
@@ -994,10 +997,11 @@ main(int argc, char *argv[]) {
          if (dref) {
             DBGMSF(main_debug,
                    "mainline - display detection complete, about to call ddc_open_display() for dref" );
-            Status_Errno_DDC ddcrc = ddc_open_display(dref, callopts, &dh);
-            ASSERT_IFF( (ddcrc==0), dh);
+            Error_Info* err = ddc_open_display(dref, callopts, &dh);
+            ASSERT_IFF( !err, dh);
             if (!dh) {
-               f0printf(ferr(), "Error opening display %s: %s", dref_repr_t(dref), psc_desc(ddcrc));
+               f0printf(ferr(), "Error opening %s: %s\n", dref_repr_t(dref), psc_name(err->status_code));
+               errinfo_free(err);
                main_rc = EXIT_FAILURE;
             }
          }  // dref
@@ -1006,8 +1010,13 @@ main(int argc, char *argv[]) {
             main_rc = execute_cmd_with_optional_display_handle(parsed_cmd, dh);
          }
 
-         if (dh)
-               ddc_close_display(dh);
+         if (dh) {
+            Error_Info * err = ddc_close_display(dh);
+            if (err) {
+               MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s: %s", err->detail, psc_desc(err->status_code));
+               errinfo_free(err);
+            }
+         }
          if (dref && (dref->flags & DREF_TRANSIENT))
             free_display_ref(dref);
       }
