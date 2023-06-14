@@ -15,6 +15,7 @@
 /** \endcond */
 
 #include "debug_util.h"
+#include "error_info.h"
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -240,27 +241,33 @@ void fsim_clear_error_table() {
  */
 void fsim_report_error_table(int depth) {
    bool debug = false;
+
    int d1 = depth+1;
    if (debug)
       printf("(%s) d1=%d, &d1=%p\n", __func__, d1, &d1);
 
    if (fst) {
-      rpt_vstring(depth, "Failure simulation table:");
-      g_hash_table_foreach(fst, report_error_table_entry, &d1);
+      if (g_hash_table_size(fst) == 0) {
+         rpt_vstring(depth, "Failure simulation table:  EMPTY");
+      }
+      else {
+         rpt_vstring(depth, "Failure simulation table:");
+         g_hash_table_foreach(fst, report_error_table_entry, &d1);
+      }
    }
    else
       rpt_vstring(depth, "Failure simulation table not initialized");
 }
 
 
-/* Evaluates a string status code expression.
+/* Interprets a string status code expression, returning its integer value.
  *
  * The string can take the following forms:
  *     integer   e.g.     "-42"
  *     boolean   i.e.  "true" or "false"
  *     a symbolic status code name, optionally prefixed by
  *     "modulated:" or "base:".
- *     If neither "modulated" nor "vase" is specified, "modulated" is assumed
+ *     If neither "modulated" nor "base" is specified, "modulated" is assumed
  *     e.g. "DDC_RC_ALL_ZERO", "base:EBUSY"
  *
  * Arguments:
@@ -269,7 +276,6 @@ void fsim_report_error_table(int depth) {
  *
  * Returns:         true if evaluation successful, false if error
  */
-
 // Issue: should unmodulated values be negative, or should
 // an optional minus sign be recognized?
 // e.g. should we specify -EBUSY for -22?
@@ -314,7 +320,7 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
    }
 
    if (debug)
-      printf("(%s) Starting.  rc_string=%s. Returning: %s, *evaluated_rc=%d\n",
+      printf("(%s) Done  .  rc_string=%s. Returning: %s, *evaluated_rc=%d\n",
              __func__, rc_string, sbool(ok), *evaluated_rc);
    return ok;
 }
@@ -350,8 +356,7 @@ bool eval_fsim_rc(char * rc_string, int * evaluated_rc) {
  */
 bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
    bool debug = false;
-   if (debug)
-      printf("(%s) lines.len = %d\n", __func__, lines->len);
+   DBGF(debug, "Starting. ines.len = %d", lines->len);
 
    bool dummy_data_flag = false;
    // Dummy data for development
@@ -370,8 +375,8 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
       char * trimmed_line = strtrim(aline);
       if (strlen(trimmed_line) > 0 && trimmed_line[0] != '#' && trimmed_line[0] != '*') {
          Null_Terminated_String_Array pieces = strsplit(trimmed_line, " ");
-         if (debug)
-            ntsa_show(pieces);
+         // if (debug)
+         //    ntsa_show(pieces);
          bool valid_line = true;
          char * funcname = NULL;
          int    fsim_rc  = 0;
@@ -396,16 +401,13 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
                   if (*end != '\0')
                      valid_line = false;
                }
-
             }
-
             if (valid_line) {
                fsim_add_error( funcname,
                       occtype,
                       occno,
                       fsim_rc);
             }
-
          }
          if (!valid_line) {
             printf("(%s) Invalid control file line: %s\n", __func__, aline);
@@ -417,10 +419,10 @@ bool fsim_load_control_from_gptrarray(GPtrArray * lines) {
       free(trimmed_line);
    }
 
-   // fsim_report_error_table(0);
-
    if (debug)
-      printf("(%s) Returnind: %s\n", __func__, sbool(ok));
+      fsim_report_error_table(0);
+
+   DBGF(debug, "Returning: %s", __func__, sbool(ok));
    return ok;
 }
 
@@ -441,20 +443,21 @@ bool fsim_load_control_string(char * s) {
  */
 bool fsim_load_control_file(char * fn) {
    bool debug = false;
-   if (debug)
-      printf("(%s) fn=%s\n", __func__, fn);
+   DBGF(debug, "Starting. fn=%s", fn);
+
    bool verbose = true;   // should this be argument?
    GPtrArray * lines = g_ptr_array_new();
    int linect = file_getlines(fn,  lines, verbose);
-   if (debug)
-      printf("(%s) Read %d lines\n", __func__, linect);
+   DBGF(debug, "Read %d lines", linect);
    bool result = false;
    if (linect > 0)
       result = fsim_load_control_from_gptrarray(lines);
    // need free func
    g_ptr_array_free(lines, true);
+
+   DBGF(debug, "Done.     Returning: %s, loaded:", sbool(result));
    if (debug)
-      printf("(%s) Returning: %s\n", __func__, sbool(result));
+      fsim_report_error_table(2);
    return result;
 }
 
@@ -487,7 +490,6 @@ Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
                printf("(%s) call_occ_type=%d, callct = %d, occno=%d\n", __func__,
                       occ_rec->call_occ_type, frec->callct, occ_rec->occno);
             if (occ_rec->call_occ_type == FSIM_CALL_OCC_RECURRING) {
-
                if ( frec->callct % occ_rec->occno == 0) {
                   result.force_failure = true;
                   result.failure_value = occ_rec->rc;
@@ -503,7 +505,7 @@ Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
             }
          }
          if (result.force_failure) {
-            printf("Simulating failure for call %d of function %s, returning %d\n",
+            printf("Simulating failure for call %d of function %s, returning %d \n",
                    frec->callct, funcname, result.failure_value);
             // printf("Call stack:\n");
             // why wasn't this here in the original version?
@@ -518,3 +520,52 @@ Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
              __func__, funcname, result.force_failure, result.failure_value);
    return result;
 }
+
+
+bool fsim_bool_injector(bool status, const char * fn, const char * funcname) {
+   bool debug = false;
+   DBGF(debug, "Starting. status = %s, fn=%s, funcname=%s", SBOOL(status), fn, funcname);
+
+   bool result = status;
+   if (!result) {    // this is dicey  true probably means success, but not necessarily
+      Failsim_Result  fsr = fsim_check_failure(fn, funcname);
+      if (fsr.force_failure)
+         result = fsr.failure_value;
+   }
+
+   DBGF(debug, "Done.     Returning %s", SBOOL(result));
+   return result;
+}
+
+
+int   fsim_int_injector(int status, const char * fn, const char * funcname) {
+   bool debug = false;
+   DBGF(debug, "Starting. status = %d, fn=%s, funcname=%s", status, fn, funcname);
+
+   int result = status;
+   if (status == 0) {
+      Failsim_Result fsr = fsim_check_failure(fn, funcname);
+      if (fsr.force_failure)
+      result = fsr.failure_value;
+   }
+
+   DBGF(debug, "Done.     Returning %d", result);
+   return result;
+}
+
+
+Error_Info* fsim_errinfo_injector(Error_Info* erec, const char * fn, const char * funcname) {
+   bool debug = false;
+   DBGF(debug, "Starting. status = %s, fn=%s, funcname=%s", errinfo_summary(erec), fn, funcname);
+
+   Error_Info * result = erec;
+   if (!erec) {
+       Failsim_Result fsr = fsim_check_failure(fn, funcname);
+       if (fsr.force_failure)
+         result = errinfo_new(fsr.failure_value, funcname, "Injected Error");
+   }
+
+   DBGF(debug, "Done.     Returning %s", errinfo_summary(result));
+   return result;
+}
+
