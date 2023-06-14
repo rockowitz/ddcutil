@@ -16,6 +16,7 @@
 #include <string.h>
 /** \endcond */
 
+#include "util/debug_util.h"
 #include "util/string_util.h"
 
 #include "base/linux_errno.h"
@@ -439,15 +440,19 @@ Status_Code_Info * get_negative_errno_info(int errnum) {
  * @return  true if found, false if not
  */
 bool errno_name_to_number(const char * errno_name, int * perrno) {
+   bool debug = false;
+   DBGF(debug, "Starting. errno_name=%s", errno_name);
    int found = false;
    *perrno = 0;
    for (int ndx = 0; ndx < errno_desc_ct; ndx++) {
+      DBGF(debug, "Comparing: errno_desc[ndx] = %s", errno_desc[ndx].name);
        if ( streq(errno_desc[ndx].name, errno_name) ) {
           *perrno = -errno_desc[ndx].code;
           found = true;
           break;
        }
    }
+   DBGF(debug, "Done.   Returning: %s. *perrno = %d", sbool(found), *perrno);
    return found;
 }
 
