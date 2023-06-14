@@ -2,7 +2,7 @@
  *
  *  Status Code Management
  */
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -12,7 +12,9 @@
 #include <stdlib.h>
 /** \endcond */
 
+#include "util/debug_util.h"
 #include "util/string_util.h"
+
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 
@@ -233,13 +235,12 @@ static Status_Code_Info ok_status_code_info = {0, "OK", "success"};
  *  describing it.
  *
  * @param   status_code global (modulated) status code
- * @return  pointer to #Status_Code_Info for staus code, NULL if not found
+ * @return  pointer to #Status_Code_Info for status code, NULL if not found
  */
 Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
    bool debug = false && status_code;
    // use printf() instead of DBGMSG to avoid circular includes
-   if (debug)
-      printf("(%s) Starting.  rc = %d\n", __func__, status_code);
+   DBGF(debug, "Starting.  rc = %d", status_code);
 
    Status_Code_Info * pinfo = NULL;
 
@@ -247,8 +248,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
       pinfo = &ok_status_code_info;
    else {
       Retcode_Range_Id modulation = get_modulation(status_code);
-      if (debug)
-         printf("(%s) modulation=%d\n", __func__, modulation);
+      DBGF(debug,"modulation=%d", modulation);
 
       Retcode_Description_Finder finder_func = retcode_range_table[modulation].desc_finder;
       assert(finder_func != NULL);
@@ -350,10 +350,12 @@ bool status_name_to_unmodulated_number(
         const char * status_code_name,
         int *        p_error_number)
 {
+   bool debug = false;
+   DBGF(debug,"status_code_name |%s|", status_code_name);
    int  status_code = 0;
    bool found = false;
 
-   for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
+   for (int ndx = 0; ndx < retcode_range_ct; ndx++) {
       if (retcode_range_table[ndx].base_number_finder) {
          found = retcode_range_table[ndx].base_number_finder(status_code_name, &status_code);
          if (found)
@@ -362,6 +364,8 @@ bool status_name_to_unmodulated_number(
    }
 
    *p_error_number = status_code;
+   if (debug)
+      printf("(%s) Returning %s, *p_error_number = %d\n", __func__, sbool(found), *p_error_number);
    return found;
 }
 
@@ -381,7 +385,7 @@ status_name_to_modulated_number(
    Public_Status_Code psc = 0;
    bool found = false;
 
-   for (int ndx = 1; ndx < retcode_range_ct; ndx++) {
+   for (int ndx = 0; ndx < retcode_range_ct; ndx++) {
       if (retcode_range_table[ndx].number_finder) {
          found = retcode_range_table[ndx].number_finder(status_code_name, &psc);
          if (found)
