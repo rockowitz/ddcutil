@@ -445,18 +445,21 @@ bool fsim_load_control_file(char * fn) {
    bool debug = false;
    DBGF(debug, "Starting. fn=%s", fn);
 
-   bool verbose = true;   // should this be argument?
    GPtrArray * lines = g_ptr_array_new();
-   int linect = file_getlines(fn,  lines, verbose);
+   int linect = file_getlines(fn,  lines, debug);
    DBGF(debug, "Read %d lines", linect);
    bool result = false;
-   if (linect > 0)
+   if (linect > 0) {
       result = fsim_load_control_from_gptrarray(lines);
-   // need free func
+      // need free func
+   }
+   else {
+      fprintf(stderr, "Error reading %s: %s\n", fn, strerror(-linect));
+   }
    g_ptr_array_free(lines, true);
 
    DBGF(debug, "Done.     Returning: %s, loaded:", sbool(result));
-   if (debug)
+   if (debug && result)
       fsim_report_error_table(2);
    return result;
 }
