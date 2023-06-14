@@ -194,7 +194,7 @@ read_vcp_file(const char * fn)
       Error_Info * err = create_dumpload_data_from_g_ptr_array(g_line_array, &data);
       if (err) {
          if (err->status_code == DDCRC_BAD_DATA) {
-            f0printf(ferr, "Invalid data:\n");
+            f0printf(ferr, "Invalid data in file %s:\n", fn);
             for (int ndx = 0; ndx < err->cause_ct; ndx++) {
                f0printf(ferr, "   %s\n", err->causes[ndx]->detail);
             }
@@ -226,8 +226,8 @@ Status_Errno_DDC
 app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "fn=%s, dh=%p %s", fn, dh, (dh) ? dh_repr(dh):"");
-   FILE * fout = stdout;
 
+   FILE * fout = stdout;
    DDCA_Output_Level output_level = get_output_level();
    bool verbose = (output_level >= DDCA_OL_VERBOSE);
    Status_Errno_DDC ddcrc = 0;
@@ -251,7 +251,8 @@ app_loadvcp_by_file(const char * fn, Display_Handle * dh) {
       ddc_excp = loadvcp_by_dumpload_data(pdata, dh);
       if (ddc_excp) {
          ddcrc = ddc_excp->status_code;
-         ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || report_freed_exceptions);
+         f0printf(ferr(),  "%s\n", ddc_excp->detail);
+         errinfo_free(ddc_excp);
       }
       free_dumpload_data(pdata);
    }
