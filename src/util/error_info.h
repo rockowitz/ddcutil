@@ -52,19 +52,22 @@ void errinfo_init(
 void errinfo_free(
       Error_Info *   erec);
 
-#define ERRINFO_FREE_WITH_REPORT(_erec, _report) \
-   errinfo_free_with_report(_erec, (_report), __func__)
-
 void errinfo_free_with_report(
       Error_Info *  erec,
       bool          report,
       const char *  func);
+
+#define ERRINFO_FREE_WITH_REPORT(_erec, _report) \
+   errinfo_free_with_report(_erec, (_report), __func__)
 
 Error_Info * errinfo_new(
       int            status_code,
       const char *   func,
       const char *   detail,
       ...);
+
+#define ERRINFO_NEW(_status_code, _detail, ...) \
+   errinfo_new(_status_code, __func__, _detail, ##__VA_ARGS__)
 
 Error_Info * errinfo_new_with_cause(
       int            status_code,
