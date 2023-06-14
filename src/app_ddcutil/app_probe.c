@@ -7,6 +7,7 @@
 
 #include "public/ddcutil_types.h"
 
+#include "util/error_info.h"
 #include "util/report_util.h"
 
 #include "base/core.h"
@@ -223,13 +224,15 @@ void app_probe_display_by_dh(Display_Handle * dh)
 void app_probe_display_by_dref(Display_Ref * dref) {
    FILE * fout = stdout;
    Display_Handle * dh = NULL;
-   Public_Status_Code psc = ddc_open_display(dref, CALLOPT_NONE, &dh);
-   if (psc != 0) {
-      f0printf(fout, "Error opening display %s: %s", dref_short_name_t(dref), psc_desc(psc) );
+   Error_Info * err = ddc_open_display(dref, CALLOPT_NONE, &dh);
+   if (err) {
+      f0printf(fout, "Error opening display %s: %s", dref_short_name_t(dref), psc_desc(err->status_code) );
+      errinfo_free(err);
+      err = NULL;
    }
    else {
       app_probe_display_by_dh(dh);
-      ddc_close_display(dh);
+      ddc_close_display_wo_return(dh);
    }
 }
 
