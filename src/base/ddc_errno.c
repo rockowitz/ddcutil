@@ -11,6 +11,7 @@
 #include <stdio.h>
 /** \endcond */
 
+#include "util/debug_util.h"
 #include "util/glib_util.h"
 #include "util/string_util.h"
 
@@ -185,6 +186,8 @@ char * ddcrc_desc_t(int rc) {
  * ddc_error_name_to_modulated_number().
  */
 bool ddc_error_name_to_number(const char * error_name, Status_DDC * errnum_loc) {
+   bool debug = false;
+   DBGF(debug, "Starting. error_name=%s", error_name);
    int found = false;
    *errnum_loc = 0;
    for (int ndx = 0; ndx < ddcrc_desc_ct; ndx++) {
@@ -194,6 +197,7 @@ bool ddc_error_name_to_number(const char * error_name, Status_DDC * errnum_loc) 
           break;
        }
    }
+   DBGF("Done.     Returning: %s, *errnum_loc = %d", SBOOL(found), *errnum_loc);
    return found;
 }
 
