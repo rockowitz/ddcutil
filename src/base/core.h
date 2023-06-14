@@ -34,6 +34,7 @@
 
 #include "util/coredefs.h"
 #include "util/error_info.h"
+#include "util/failsim.h"
 
 #include "base/parms.h"      // ensure available to any file that includes core.h
 #include "base/core_per_thread_settings.h"
@@ -314,15 +315,19 @@ bool dbgtrc_returning_expression(
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
-    dbgtrc_ret_ddcrc( \
+   do { \
+      dbgtrc_ret_ddcrc( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
+          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
+   } while(0)
 
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
+   do { \
     dbgtrc_returning_expression( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
+          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__); \
+   } while(0)
 
 #define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
     dbgtrc_returning_expression( \
@@ -330,10 +335,22 @@ bool dbgtrc_returning_expression(
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__)
 
+#ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
+   errinfo_result = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+   do { \
     dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
+          __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
+   } while(0);
+#else
+      do { \
+       dbgtrc_returning_errinfo( \
+             (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+             __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
+      } while(0);
+#endif
+
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBGMSF_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
