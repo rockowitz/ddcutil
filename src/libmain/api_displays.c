@@ -499,6 +499,7 @@ ddca_open_display3(
    Display_Ref * dref = NULL;
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
+   Error_Info * err = NULL;
    dref = validated_ddca_display_ref(ddca_dref);
    if (!dref)
       rc = DDCRC_ARG;
@@ -513,9 +514,23 @@ ddca_open_display3(
         callopts |= CALLOPT_WAIT;
      if (options & DDCA_OPENOPT_FORCE_SLAVE_ADDR)
         callopts |= CALLOPT_FORCE_SLAVE_ADDR;
-     rc = ddc_open_display(dref,  callopts, &dh);
-     if (rc == 0)
+     err = ddc_open_display(dref,  callopts, &dh);
+     if (!err)
         *dh_loc = dh;
+   }
+
+   if (err) {
+      rc = err->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
+      errinfo_free_with_report(err, debug, __func__);
+      save_thread_error_detail(public_error_detail);
+   }
+
+   if (err) {
+      rc = err->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
+      errinfo_free_with_report(err, debug, __func__);
+      save_thread_error_detail(public_error_detail);
    }
 
    API_EPILOG_WO_RETURN(debug, rc, "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
@@ -541,17 +556,26 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    bool debug = false;
    free_thread_error_detail();
    DDCA_Status rc = 0;
+   Error_Info * err = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    API_PROLOG(debug, "dh = %s", dh_repr(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
-         rc = DDCRC_ARG;
+         err = errinfo_new(DDCRC_ARG, __func__, "Invalid display handle");
       }
       else {
          // TODO: ddc_close_display() needs an action if failure parm,
-         rc = ddc_close_display(dh);
+         err = ddc_close_display(dh);
       }
    }
+
+   if (err) {
+      rc = err->status_code;
+      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
+      errinfo_free_with_report(err, debug, __func__);
+      save_thread_error_detail(public_error_detail);
+   }
+
    API_EPILOG_WO_RETURN(debug, rc, "");
    return rc;
 }
