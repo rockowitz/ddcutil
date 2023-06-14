@@ -1,8 +1,6 @@
-/** ddc_display_selection.h
- *
- */
+/** @file ddc_display_selection.h */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_DISPLAY_SELECTION_H_
@@ -16,4 +14,6 @@ get_display_ref_for_display_identifier(
    Display_Identifier* pdid,
    Call_Options        callopts);
 
+void
+init_ddc_display_selection();
 #endif /* DDC_DISPLAY_SELECTION_H_ */

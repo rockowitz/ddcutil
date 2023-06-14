@@ -1,6 +1,6 @@
-/** ddc_display_selection.c */
+/** @file ddc_display_selection.c */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -24,6 +24,9 @@
 
 #include "public/ddcutil_types.h"
 
+#include "base/core.h"
+#include "base/rtti.h"
+
 #ifdef USE_USB
 #include "usb/usb_displays.h"
 #endif
@@ -32,6 +35,8 @@
 #include "ddc/ddc_displays.h"
 
 #include "ddc/ddc_display_selection.h"
+
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 
 //
@@ -187,7 +192,7 @@ ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
 static Display_Ref *
 ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
    bool debug = false;
-   DBGMSF(debug, "Starting. did=%s", did_repr(did));
+   DBGTRC(debug, TRACE_GROUP, "Starting. did=%s", did_repr(did));
    if (debug)
       dbgrpt_display_identifier(did, 1);
 
@@ -228,15 +233,7 @@ ddc_find_display_ref_by_display_identifier(Display_Identifier * did) {
 
    free(criteria);   // do not free pointers in criteria, they are owned by Display_Identifier
 
-   if (debug) {
-      if (result) {
-         DBGMSG("Done.     Returning: ");
-         ddc_dbgrpt_display_ref(result, 1);
-      }
-      else
-         DBGMSG("Done.     Returning NULL");
-   }
-
+   DBGTRC_RETURNING(debug, DDCA_TRC_NONE, dref_repr_t(result), "");
    return result;
 }
 
@@ -259,10 +256,13 @@ get_display_ref_for_display_identifier(
                 Call_Options        callopts)
 {
    Display_Ref * dref = ddc_find_display_ref_by_display_identifier(pdid);
-   if ( !dref && (callopts & CALLOPT_ERR_MSG) ) {
-      f0printf(ferr(), "Display not found\n");
-   }
 
    return dref;
+}
+
+
+void
+init_ddc_display_selection() {
+   RTTI_ADD_FUNC(ddc_find_display_ref_by_display_identifier);
 }
 
