@@ -84,7 +84,7 @@ int file_getlines(
       free(line);
 
       // assert(getline_rc < 0);
-      if (errno != 0) {   // was it an error or eof?file_getlines
+      if (errno != 0) {   // was it an error or eof?
          rc = -errno;
          if (verbose || debug)
             fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
