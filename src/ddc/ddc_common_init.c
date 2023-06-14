@@ -162,14 +162,16 @@ static bool init_failsim(Parsed_Cmd * parsed_cmd) {
          status_name_to_modulated_number,
          status_name_to_unmodulated_number);
    if (parsed_cmd->failsim_control_fn) {
-      bool ok = fsim_load_control_file(parsed_cmd->failsim_control_fn);
-      if (!ok) {
+      bool loaded = fsim_load_control_file(parsed_cmd->failsim_control_fn);
+      if (loaded) {
+         printf("Loaded failure simulation control file %s\n", parsed_cmd->failsim_control_fn);
+         fsim_report_error_table(2);
+      }
+      else  {
          fprintf(stderr, "Error loading failure simulation control file %s.\n",
                          parsed_cmd->failsim_control_fn);
          return false;
-
       }
-      fsim_report_error_table(0);
    }
 #endif
    return true;
