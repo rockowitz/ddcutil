@@ -5,7 +5,7 @@
  * the acyclic graph of #includes within the ddc source directory.
  */
 
-// Copyright (C) 2014-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <config.h>
@@ -223,18 +223,19 @@ DDCA_MCCS_Version_Spec get_vcp_version_by_dref(Display_Ref * dref) {
       // ddc_open_display() should not fail
       // 2/2020: but it can return -EBUSY
       // DBGMSF(debug, "Calling ddc_open_display() ...");
-      Public_Status_Code psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-      if (psc == 0) {
+      Error_Info * ddc_excp = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+      if (!ddc_excp) {
          result = set_vcp_version_xdf_by_dh(dh);
          assert( !vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED) );
          // DBGMSF(debug, "Calling ddc_close_display() ...");
-         ddc_close_display(dh);
+         ddc_close_display_wo_return(dh);
       }
       else {
          // DBGMSF(debug, "ddc_open_display() failed");
-         SYSLOG2((psc == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
-                 "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(psc));
+         SYSLOG2((ddc_excp->status_code == -EBUSY) ? DDCA_SYSLOG_INFO : DDCA_SYSLOG_ERROR,
+                 "Unable to open display %s: %s", dref_repr_t(dref), psc_desc(ddc_excp->status_code));
          dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
+         errinfo_free(ddc_excp);
       }
    }
 
