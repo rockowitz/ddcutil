@@ -4,7 +4,7 @@
  *  or the ADL API, as appropriate.  Handles I2C bus retry.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_PACKET_IO_H_
@@ -14,6 +14,7 @@
 
 #include "util/error_info.h"
 
+#include "util/error_info.h"
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
@@ -21,13 +22,15 @@
 
 extern bool DDC_Read_Bytewise;
 
-DDCA_Status ddc_open_display(
+Error_Info * ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
       Display_Handle** dh_loc);
 
-Status_Errno ddc_close_display(
+Error_Info * ddc_close_display(
       Display_Handle * dh);
+
+void ddc_close_display_wo_return();
 
 void  ddc_close_all_displays();
 

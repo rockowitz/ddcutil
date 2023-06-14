@@ -25,6 +25,7 @@
 #include "public/ddcutil_types.h"
 
 #include "util/debug_util.h"
+#include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/utilrpt.h"
@@ -126,14 +127,15 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
  *  \param  dref            display reference
  *  \param  callopts        call option flags
  *  \param  dh_loc          address at which to return display handle
- *  \return status code     as from #i2c_open_bus(), #usb_open_hiddev_device()
- *  \retval DDCRC_LOCKED    display open in another thread
- *  \retval DDCRC_ALREADY_OPEN display already open in current thread
+ *  \return Error_Info      if error, with status
+ *                            status code from  #i2c_open_bus(), #usb_open_hiddev_device()
+ *                          DDCRC_LOCKED    display open in another thread
+ *                          DDCRC_ALREADY_OPEN display already open in current thread
  *
  *  **Call_Option** flags recognized:
  *  - CALLOPT_WAIT
  */
-DDCA_Status
+Error_Info *
 ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
@@ -146,18 +148,22 @@ ddc_open_display(
    // TRACED_ASSERT(1==5);    // for testing
 
    Display_Handle * dh = NULL;
-   DDCA_Status ddcrc = 0;
+   Error_Info * err = NULL;
+   int fd = 0;
 
    Distinct_Display_Ref ddisp_ref = get_distinct_display_ref(dref);
    Distinct_Display_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
-   DDCA_Status lockrc = lock_distinct_display(ddisp_ref, ddisp_flags);
-   if (lockrc == DDCRC_LOCKED) {     // locked in another thread
-      ddcrc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
+   err = lock_distinct_display(ddisp_ref, ddisp_flags);
+   if (err)
       goto bye;
-   }
+   // if (lockrc == DDCRC_LOCKED) {     // locked in another thread
+   //    ddcrc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
+   //    goto bye;
+   // }
+
    // DBGMSF(debug, "lockrc = %s, DREF_OPEN = %s", psc_desc(lockrc), sbool(dref->flags&DREF_OPEN));
    // assumes there is only one Display_Ref for a display
    // DREF_OPEN flag will not be set if caller used a different Display_Ref on this open call
@@ -168,11 +174,12 @@ ddc_open_display(
   //     goto bye;
   //  }
 
-   if (lockrc == DDCRC_ALREADY_OPEN) {
-      ddcrc = DDCRC_ALREADY_OPEN;
-      goto bye;
-   }
+   // if (lockrc == DDCRC_ALREADY_OPEN) {
+   //    ddcrc = DDCRC_ALREADY_OPEN;
+   //    goto bye;
+   // }
 
+   assert(!err);
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
@@ -181,33 +188,29 @@ ddc_open_display(
          TRACED_ASSERT(bus_info);   // need to convert to a test?
          TRACED_ASSERT( bus_info && memcmp(bus_info, I2C_BUS_INFO_MARKER, 4) == 0);
 
-         DBGMSF(debug, "Calling i2c_open_bus() ...");
-         int fd = i2c_open_bus(dref->io_path.path.i2c_busno, CALLOPT_ERR_MSG);
-         if (fd < 0) {
-            ddcrc = fd;
+         if (!bus_info->edid) {
+            // How is this even possible?
+            // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
+            //          close(fd) fails
+            char * msg = g_strdup_printf("No EDID for device on bus /dev/"I2C"-%d", dref->io_path.path.i2c_busno);
+            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+            err = errinfo_new(DDCRC_EDID, __func__, "%s", msg);
+            free(msg);
          }
-         else {
-            if (ddcrc == 0) {
-            // else {
-               // Is this needed?
-               // 10/24/15, try disabling:
-               // sleepMillisWithTrace(DDC_TIMEOUT_MILLIS_DEFAULT, __func__, NULL);
-               dh = create_base_display_handle(fd, dref);    // n. sets dh->dref = dref
-               if (!bus_info->edid) {
-                  // How is this even possible?
-                  // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
-                  //          close(fd) fails
-                  DBGMSG("No EDID for device on bus /dev/"I2C"-%d", dref->io_path.path.i2c_busno);
-                  close(fd);
-                  ddcrc = DDCRC_EDID;
-                  free_display_handle(dh);
-                  dh = NULL;
-               }
-               if (!dref->pedid)
-                  dref->pedid = bus_info->edid;
-               if (!dref->pdd)
-                  dref->pdd = pdd_get_per_display_data(dref->io_path, true);
+
+         if (!err) {
+            DBGMSF(debug, "Calling i2c_open_bus() ...");
+            fd = i2c_open_bus(dref->io_path.path.i2c_busno, CALLOPT_ERR_MSG);
+            if (fd < 0) {
+               err = ERRINFO_NEW(fd, "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
             }
+         }
+         if (!err) {
+            dh = create_base_display_handle(fd, dref);
+            if (!dref->pedid)
+               dref->pedid = copy_parsed_edid(bus_info->edid);
+            if (!dref->pdd)
+               dref->pdd = pdd_get_per_display_data(dref->io_path, true);
          }
       }
       break;
@@ -221,14 +224,14 @@ ddc_open_display(
          //    DBGMSG("HACK FIXUP.  dref->usb_hiddev_name");
          //    dref->usb_hiddev_name = get_hiddev_devname_by_dref(dref);
          // }
-         int fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
+         fd = usb_open_hiddev_device(dref->usb_hiddev_name, callopts);
          if (fd < 0) {
-            ddcrc = fd;
+            err = ERRINFO_NEW(fd, "Error opening %s", dref->usb_hiddev_name);
          }
          else {
             dh = create_base_display_handle(fd, dref);
             if (!dref->pedid)
-               dref->pedid = usb_get_parsed_edid_by_dh(dh);
+               dref->pedid = copy_parsed_edid(usb_get_parsed_edid_by_dh(dh));
             if (!dref->pdd)
                dref->pdd = pdd_get_per_display_data(dref->io_path, true);
          }
@@ -239,29 +242,29 @@ ddc_open_display(
 #endif
       break;
    } // switch
-   TRACED_ASSERT_IFF(ddcrc == 0, dh);
-   TRACED_ASSERT(!dh || dh->dref->pedid);
-
-   if (ddcrc == 0) {
+   ASSERT_IFF(!err, dh);
+   if (!err) {
+      assert(dh->dref->pedid);
       dref->flags |= DREF_OPEN;
       // protect with lock?
       TRACED_ASSERT(open_displays);
       g_hash_table_add(open_displays, dh);
    }
    else {
-      unlock_distinct_display(ddisp_ref);
+      err = unlock_distinct_display(ddisp_ref);
+      if (err)
+         PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
    }
 
 bye:
-   if (ddcrc != 0) {
-      COUNT_STATUS_CODE(ddcrc);
+   if (err) {
+      COUNT_STATUS_CODE(err->status_code);
    }
    *dh_loc = dh;
-   TRACED_ASSERT(ddcrc <= 0);
-   TRACED_ASSERT( (ddcrc == 0 && *dh_loc) || (ddcrc < 0 && !*dh_loc) );
+   TRACED_ASSERT_IFF( !err, *dh_loc );
    // dbgrpt_distinct_display_descriptors(0);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "*dh_loc=%s", dh_repr(*dh_loc));
-   return ddcrc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "*dh_loc=%s", dh_repr(*dh_loc));
+   return err;
 }
 
 
@@ -273,15 +276,17 @@ bye:
  *  \remark
  *  Logs underlying status code if error.
  */
-Status_Errno
+Error_Info *
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, fd=%d, dpath=%s",
               dh_repr(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
    Display_Ref * dref = dh->dref;
+   Error_Info * err = NULL;
    Status_Errno rc = 0;
    if (dh->fd == -1) {
       rc = DDCRC_INVALID_OPERATION;    // or DDCRC_ARG?
+      err = errinfo_new(rc, __func__, "Invalid display handle");
    }
    else {
       switch(dh->dref->io_path.io_mode) {
@@ -291,7 +296,10 @@ ddc_close_display(Display_Handle * dh) {
             rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
-               DBGMSG("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               char * msg = g_strdup_printf("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
+               err = errinfo_new(rc, __func__, msg);
+               free(msg);
                COUNT_STATUS_CODE(rc);
             }
             dh->fd = -1;    // indicate invalid, in case we try to continue using dh
@@ -300,10 +308,13 @@ ddc_close_display(Display_Handle * dh) {
       case DDCA_IO_USB:
 #ifdef USE_USB
          {
-            rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE); // return error if failure
+            rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
-               DBGMSG("usb_close_device returned %d", rc);
+               char * msg = g_strdup_printf("usb_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
+               err = errinfo_new(rc, __func__, msg);
+               free(msg);
                COUNT_STATUS_CODE(rc);
             }
             dh->fd = -1;
@@ -317,14 +328,32 @@ ddc_close_display(Display_Handle * dh) {
 
    dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
-   unlock_distinct_display(display_id);
+   Error_Info * err2 = unlock_distinct_display(display_id);
+   if (err2) {
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err->detail);
+      if (!err)
+         err = err2;
+      else
+         ERRINFO_FREE_WITH_REPORT(err2, true);
+   }
    assert(open_displays);
    g_hash_table_remove(open_displays, dh);
 
    free_display_handle(dh);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "dref=%s", dref_repr_t(dref));
-   return rc;
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "dref=%s", dref_repr_t(dref));
+   return err;
 }
+
+
+// Handles common case where ddc_close_display()'s return value is ignored
+void ddc_close_display_wo_return(Display_Handle * dh) {
+   Error_Info * err = ddc_close_display(dh);
+   if (err) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s: %s", err->detail, psc_desc(err->status_code));
+      ERRINFO_FREE_WITH_REPORT(err, true);
+   }
+}
+
 
 void ddc_close_all_displays() {
    bool debug = false;
@@ -335,7 +364,7 @@ void ddc_close_all_displays() {
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
       Display_Handle * dh = cur->data;
-      ddc_close_display(dh);
+      ddc_close_display_wo_return(dh);
    }
    g_free(display_handles);
    // open_displays should be empty at this point
@@ -344,11 +373,8 @@ void ddc_close_all_displays() {
 }
 
 
-
 // work in progress
-
 // typedef for ddc_i2c_write_read_raw, ddc_adl_write_read_raw, ddc_write_read_raw
-
 
 typedef
 DDCA_Status (*Write_Read_Raw_Function)(
