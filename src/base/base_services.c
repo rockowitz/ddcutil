@@ -41,6 +41,7 @@ void init_base_services() {
    init_sleep_stats();
    init_status_code_mgt();
    init_tuned_sleep();
+   init_displays();
    if (debug)
       printf("(%s) Done\n", __func__);
 }
