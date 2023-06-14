@@ -433,10 +433,7 @@ char * ddc_serialize_displays_and_buses() {
 #endif
    char * result = json_dumps(root, JSON_INDENT(3));
 
-   if (debug || IS_TRACING() ) {
-      DBGMSG("Returning:");
-      DBGMSG(result);
-   }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    json_decref(root);
    return result;
 }
@@ -624,12 +621,14 @@ void ddc_erase_displays_cache() {
 
 
 void init_ddc_serialize() {
-   RTTI_ADD_FUNC(deserialize_parsed_edid);
-   RTTI_ADD_FUNC(ddc_store_displays_cache);
-   RTTI_ADD_FUNC(ddc_restore_displays_cache);
+   RTTI_ADD_FUNC(ddc_deserialize_displays_or_buses);
+   RTTI_ADD_FUNC(ddc_serialize_displays_and_buses);
    RTTI_ADD_FUNC(ddc_erase_displays_cache);
-   RTTI_ADD_FUNC(serialize_one_display);
+   RTTI_ADD_FUNC(ddc_restore_displays_cache);
+   RTTI_ADD_FUNC(ddc_store_displays_cache);
    RTTI_ADD_FUNC(deserialize_one_display);
+   RTTI_ADD_FUNC(deserialize_parsed_edid);
+   RTTI_ADD_FUNC(serialize_one_display);
 }
 
 
