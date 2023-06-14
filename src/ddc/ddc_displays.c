@@ -255,7 +255,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                      }
                      else {
                         // Time to stop chasing cases with vanishingly small probabilities
-                        DBGMSG("Feature x41 should not exist but returns non-zero value");
+                        MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x41 should not exist but returns non-zero value");
                         // just use the normal case
                         dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
                      }
@@ -332,20 +332,27 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
 
    bool result = false;
    Display_Handle * dh = NULL;
-   Public_Status_Code psc = 0;
+   Error_Info * err = NULL;
 
-   psc = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-   if (psc == 0)  {
+   err = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+   if (!err)  {
       result = ddc_initial_checks_by_dh(dh);
-      ddc_close_display(dh);
+      ddc_close_display_wo_return(dh);
+   }
+   else {
+      char * msg = g_strdup_printf("Unable to open %s: %s", dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
+      SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
+      free(msg);
    }
    dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-   if (psc == -EBUSY)
+   if (err && err->status_code == -EBUSY)
       dref->flags |= DREF_DDC_BUSY;
-   else
 
+   result = (!err);
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref = %s", sbool(result), dref_repr_t(dref) );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dref->flags));
+   if (err)
+      errinfo_free(err);
    return result;
 }
 
