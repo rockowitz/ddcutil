@@ -605,6 +605,12 @@ void ddc_restore_displays_cache() {
 #else
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "Restored %d Display_Ref records",
          deserialized_displays->len);
+   if ( IS_DBGTRC(debug, DDCA_TRC_DDCIO)) {
+      for (int ndx = 0; ndx < deserialized_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(deserialized_displays, ndx);
+         DBGMSG(" Display_Ref: %s", dref_repr_t(dref));
+      }
+   }
 #endif
 }
 
