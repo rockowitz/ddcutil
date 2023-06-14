@@ -526,13 +526,6 @@ ddca_open_display3(
       save_thread_error_detail(public_error_detail);
    }
 
-   if (err) {
-      rc = err->status_code;
-      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
-      errinfo_free_with_report(err, debug, __func__);
-      save_thread_error_detail(public_error_detail);
-   }
-
    API_EPILOG_WO_RETURN(debug, rc, "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
    TRACED_ASSERT_IFF(rc==0, *dh_loc);
    return rc;
