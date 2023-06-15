@@ -187,7 +187,7 @@ GPtrArray * get_backtrace(int stack_adjust) {
 }
 
 void show_backtrace(int stack_adjust) {
-   GPtrArray * callstack = get_backtrace(stack_adjust);
+   GPtrArray * callstack = get_backtrace(stack_adjust+2); // +2 for get_backtrace(), backtrace()
    if (!callstack) {
       perror("backtrace unavailable");
    }
