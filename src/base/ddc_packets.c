@@ -623,7 +623,7 @@ create_ddc_base_response_packet(
       *packet_ptr_loc = NULL;
 
    ASSERT_IFF(result==DDCRC_OK, *packet_ptr_loc);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   DBGTRC_RET_DDCRC2(debug, TRACE_GROUP, result, *packet_ptr_loc, "*packet_ptr_loc=%p", *packet_ptr_loc);
    if (*packet_ptr_loc && IS_DBGTRC(debug,TRACE_GROUP))
       dbgrpt_packet(*packet_ptr_loc, 2);
    return result;
@@ -694,7 +694,7 @@ create_ddc_response_packet(
    }
 
    ASSERT_IFF( result==DDCRC_OK, *packet_ptr_loc);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "*packet_ptr_loc=%p", *packet_ptr_loc);
+   DBGTRC_RET_DDCRC2(debug, TRACE_GROUP, result, *packet_ptr_loc, "*packet_ptr_loc=%p", *packet_ptr_loc);
    if (*packet_ptr_loc && IS_DBGTRC(debug,TRACE_GROUP))
       dbgrpt_packet(*packet_ptr_loc, 2);
    return result;
@@ -966,9 +966,11 @@ create_ddc_typed_response_packet(
       DDC_Packet**    packet_ptr_loc)
 {
    bool debug = false;
+   assert(i2c_response_bytes);
    DBGTRC_STARTING(debug, TRACE_GROUP, "response_bytes_buffer_size=%d, response_bytes=|%s|",
                               response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
+   *packet_ptr_loc = NULL;
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_loc);
    // n. may return DDC_NULL_RESPONSE??   (old note)
    Status_DDC rc = create_ddc_response_packet(
@@ -981,6 +983,7 @@ create_ddc_typed_response_packet(
                                psc_desc(rc), *packet_ptr_loc);
    if (rc == 0) {
       DDC_Packet * packet = *packet_ptr_loc;
+      assert(packet);
       switch (expected_type) {
 
       case DDC_PACKET_TYPE_CAPABILITIES_RESPONSE:
@@ -988,6 +991,7 @@ create_ddc_typed_response_packet(
          {
             Interpreted_Multi_Part_Read_Fragment * aux_data
                   = calloc(1, sizeof(Interpreted_Multi_Part_Read_Fragment));
+            assert(packet);
             packet->parsed.multi_part_read_fragment = aux_data;
             rc = interpret_multi_part_read_response(
                    expected_type,
@@ -1001,6 +1005,7 @@ create_ddc_typed_response_packet(
          {
             Parsed_Nontable_Vcp_Response * aux_data
                   = calloc(1, sizeof(Parsed_Nontable_Vcp_Response));
+            assert(packet);
             packet->parsed.nontable_response = aux_data;
             rc = interpret_vcp_feature_response_std(
                     get_data_start(packet),
