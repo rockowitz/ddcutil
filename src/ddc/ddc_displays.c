@@ -312,9 +312,12 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP,  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING, "dh=%s", dh_repr(dh));
+   // can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
+   // because failure simulation may assign a new value to the variable
+   bool result =  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
-   return  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
+   return  result;
 }
 
 
