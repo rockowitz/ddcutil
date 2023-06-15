@@ -661,7 +661,8 @@ ddc_get_nontable_vcp_value(
    }
    *parsed_response_loc = parsed_response;
 
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, excp, "");
+   // DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, excp, "");
+   DBGTRC_RET_ERRINFO2(debug, TRACE_GROUP, excp, *parsed_response_loc, "");
    return excp;
 }
 
