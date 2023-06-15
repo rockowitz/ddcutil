@@ -773,7 +773,7 @@ dumpvcp_as_dumpload_data(
       *dumpload_data_loc = dumped_data;
 
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "*dumpload_data_loc = %p", *dumpload_data_loc);
-   if ( IS_DBGTRC(debug, TRACE_GROUP) )
+   if ( *dumpload_data_loc && IS_DBGTRC(debug, TRACE_GROUP) )
       dbgrpt_dumpload_data(*dumpload_data_loc, 1);
    return psc;
 }
