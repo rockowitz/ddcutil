@@ -482,6 +482,7 @@ bool fsim_load_control_file(char * fn) {
  */
 Failsim_Result fsim_check_failure(const char * fn, const char * funcname) {
    bool debug = false;
+   DBGF(debug, "Starting. funcname=%s", funcname);
    Failsim_Result result = {false, 0};
    if (fst) {
       Fsim_Func_Rec * frec = g_hash_table_lookup(fst, funcname);
