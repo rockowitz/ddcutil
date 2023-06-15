@@ -314,12 +314,24 @@ bool dbgtrc_returning_expression(
     dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
-/* Care must be taken when the DBGTRC_ macros that have ENABLE_FAILSIM variants.
+#define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
+    dbgtrc_returning_expression( \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
+          DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__)
+
+/* Notes on macros that have ENABLE_FAILSIM variants.
+ *
+ * Care must be taken with the DBGTRC_ macros that have ENABLE_FAILSIM variants.
  *
  * - The macros are passed the name of a variable that may be modified by a
  *   failure simulation function. Therefore, what is specified in the return
  *   value field of these macros must be a simple variable that can be the
  *   lvalue of an assignment, not an expression or a constant.
+ *
+ * - DBGTRC__2() variants of the macros specify an lvalue expression that is to be
+ *   set to NULL if an error is injected.  The supports the common case
+ *   where the return code is 0 or NULL iff the lvalue is non-null.
  */
 
 #ifdef ENABLE_FAILSIM
@@ -330,12 +342,29 @@ bool dbgtrc_returning_expression(
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
   } while (0)
+#define DBGTRC_RET_DDCRC2(debug_flag, trace_group, rc, data_pointer, format, ...) \
+   do { \
+      int injected = fsim_int_injector(errinfo_result, __FILE__, __func__); \
+      if (injected) { \
+         rc = injected; \
+         data_pointer = NULL; \
+      } \
+      rc = fsim_int_injector(rc, __FILE__, __func__); \
+      dbgtrc_ret_ddcrc( \
+         (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+         __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
+  } while (0)
 #else
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
    dbgtrc_ret_ddcrc( \
       (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
       __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
+#define DBGTRC_RET_DDCRC2(debug_flag, trace_group, rc, data_pointer, format, ...) \
+   dbgtrc_ret_ddcrc( \
+      (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+      __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
 #endif
+
 
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
@@ -354,11 +383,6 @@ bool dbgtrc_returning_expression(
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
 #endif
 
-#define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
-    dbgtrc_returning_expression( \
-          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
-          DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, _result, format, ##__VA_ARGS__)
 
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
@@ -368,12 +392,28 @@ bool dbgtrc_returning_expression(
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
    } while(0)
+#define DBGTRC_RET_ERRINFO2(debug_flag, trace_group, errinfo_result, data_pointer, format, ...) \
+   do { \
+      Error_Info * injected = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+      if (injected) { \
+         errinfo_result = injected; \
+         data_pointer = NULL; \
+      } \
+      dbgtrc_returning_errinfo( \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
+   } while(0)
 #else
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
        dbgtrc_returning_errinfo( \
              (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
              __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
+#define DBGTRC_RET_ERRINFO2(debug_flag, trace_group, errinfo_result, pointer, format, ...) \
+       dbgtrc_returning_errinfo( \
+             (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+             __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 #endif
+
 
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
