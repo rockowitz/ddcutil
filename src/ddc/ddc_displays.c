@@ -351,8 +351,9 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
    if (err && err->status_code == -EBUSY)
       dref->flags |= DREF_DDC_BUSY;
 
-   result = (!err);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref = %s", sbool(result), dref_repr_t(dref) );
+   if (err)
+      result = false;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dref->flags));
    if (err)
       errinfo_free(err);
