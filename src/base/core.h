@@ -314,20 +314,45 @@ bool dbgtrc_returning_expression(
     dbgtrc( (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_NONE, \
             __func__, __LINE__, __FILE__, "          "format, ##__VA_ARGS__)
 
+/* Care must be taken when the DBGTRC_ macros that have ENABLE_FAILSIM variants.
+ *
+ * - The macros are passed the name of a variable that may be modified by a
+ *   failure simulation function. Therefore, what is specified in the return
+ *   value field of these macros must be a simple variable that can be the
+ *   lvalue of an assignment, not an expression or a constant.
+ */
+
+#ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
    do { \
+      rc = fsim_int_injector(rc, __FILE__, __func__); \
       dbgtrc_ret_ddcrc( \
-          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
-   } while(0)
+         (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+         __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
+  } while (0);
+#else
+#define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
+   dbgtrc_ret_ddcrc( \
+      (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
+      __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
+#endif
 
+#ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
    do { \
-    dbgtrc_returning_expression( \
+      bool_result = fsim_bool_injector(bool_result, __FILE__, __func__); \
+      dbgtrc_returning_expression( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__); \
-   } while(0)
+   } while (0)
+#else
+#define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
+    dbgtrc_returning_expression( \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
+          DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
+#endif
 
 #define DBGTRC_RETURNING(debug_flag, trace_group, _result, format, ...) \
     dbgtrc_returning_expression( \
@@ -337,18 +362,17 @@ bool dbgtrc_returning_expression(
 
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
-   errinfo_result = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
    do { \
-    dbgtrc_returning_errinfo( \
+      errinfo_result = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+      dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-   } while(0);
+   } while(0)
 #else
-      do { \
+#define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
        dbgtrc_returning_errinfo( \
              (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
-             __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
-      } while(0);
+             __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 #endif
 
 
