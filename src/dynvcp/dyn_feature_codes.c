@@ -59,8 +59,11 @@ bool dyn_format_feature_detail_sl_lookup(
    else
       snprintf(buffer, bufsz, "0x%02x", code_info->sl);
 
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, true, "*buffer=|%s|", buffer);
-   return true;
+   // can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
+   // because failure simulation may assign a new value to the variable
+   bool result = true;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "*buffer=|%s|", buffer);
+   return result;
 }
 
 
