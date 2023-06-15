@@ -58,7 +58,7 @@ parse_vcp_value(
    bool ok = str_to_int(canonical, parsed_value_loc, 0);
    free(canonical);
    if (!ok) {
-      f0printf(errf, "Not a number: \"%s\"", string_value);
+      f0printf(errf, "Not a number: \"%s\"\n", string_value);
       ok = false;
    }
    else if (*parsed_value_loc < 0 || *parsed_value_loc > 65535) {
