@@ -330,7 +330,7 @@ ddc_close_display(Display_Handle * dh) {
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
    Error_Info * err2 = unlock_distinct_display(display_id);
    if (err2) {
-      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err->detail);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);
       if (!err)
          err = err2;
       else
