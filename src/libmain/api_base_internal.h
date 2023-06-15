@@ -53,6 +53,13 @@ extern DDCI_Api_Precondition_Failure_Mode api_failure_mode;
       } \
    } while (0)
 
+
+// The return value must be contained in variable result instead of
+// being passed as a constant to DBGTRC_RET_DDCRC() because,
+// if failure simulation is enabled, the fsim_int_injector()
+// function in macro DBGTRC_RET_DDCRC() assigns a (possibly new)
+// value to variable holding the return value.
+
 #define API_PRECOND_W_EPILOG(expr) \
    do { \
       if (!(expr)) { \
@@ -67,8 +74,9 @@ extern DDCI_Api_Precondition_Failure_Mode api_failure_mode;
          if (!(api_failure_mode & DDCI_PRECOND_RETURN))  \
             abort();  \
          trace_api_call_depth--; \
-         DBGTRC_RET_DDCRC(true, DDCA_TRC_ALL, DDCRC_ARG, "Precondition failure: %s=NULL", (expr)); \
-         return DDCRC_ARG;  \
+         int result = DDCRC_ARG; \
+         DBGTRC_RET_DDCRC(true, DDCA_TRC_ALL, result, "Precondition failure: %s=NULL", (expr)); \
+         return result;  \
       } \
    } while (0)
 
