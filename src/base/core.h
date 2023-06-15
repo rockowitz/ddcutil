@@ -344,9 +344,11 @@ bool dbgtrc_returning_expression(
   } while (0)
 #define DBGTRC_RET_DDCRC2(debug_flag, trace_group, rc, data_pointer, format, ...) \
    do { \
-      int injected = fsim_int_injector(errinfo_result, __FILE__, __func__); \
+      int injected = fsim_int_injector(rc, __FILE__, __func__); \
       if (injected) { \
          rc = injected; \
+         printf("(%s) failsim: injected error, setting %s = NULL\n", __func__, #data_pointer); \
+         free(data_pointer); \
          data_pointer = NULL; \
       } \
       rc = fsim_int_injector(rc, __FILE__, __func__); \
@@ -397,7 +399,9 @@ bool dbgtrc_returning_expression(
       Error_Info * injected = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
       if (injected) { \
          errinfo_result = injected; \
+         free(data_pointer); \
          data_pointer = NULL; \
+         printf("(%s) Injected error, setting %s = NULL\n", __func__, #data_pointer); \
       } \
       dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
