@@ -329,7 +329,7 @@ bool dbgtrc_returning_expression(
       dbgtrc_ret_ddcrc( \
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
-  } while (0);
+  } while (0)
 #else
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
    dbgtrc_ret_ddcrc( \
