@@ -410,8 +410,11 @@ is_possible_monitor_by_hiddev_name(const char * hiddev_name) {
       avoid = true;
    }
 
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, !avoid, "");
-   return !avoid;
+   // can only pass a variable, not an expression, to DBGTRC_RET_BOOL()
+   // because failure simulation may assign a new value to the variable
+   bool result = !avoid;
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
 }
 
 
