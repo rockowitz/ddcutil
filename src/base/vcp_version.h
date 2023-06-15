@@ -18,6 +18,8 @@
 #include "util/coredefs.h"
 
 
+extern const char * valid_vcp_versions;                    ///< for error msgs
+
 // Both DDCA_MCCS_Version_Spec and DDCA_MCCS_Version_Id exist for historical reasons.
 // DDCA_MCCS_Version_Spec is the form in which the version number is returned from a
 // GETVCP of feature xDF.  This form is used throughout much of ddcutil.

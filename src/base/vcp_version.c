@@ -56,6 +56,7 @@ bool vcp_version_is_valid(DDCA_MCCS_Version_Spec vspec, bool allow_unknown) {
    DBGMSF(debug, "Returning: %s", SBOOL(result));
    return result;
 }
+const char * valid_vcp_versions = "1.0, 2.0, 2.1, 3.0, 2.2";
 
 /** \file
 * Note that MCCS (VCP) versioning forms a directed graph, not a linear ordering.
