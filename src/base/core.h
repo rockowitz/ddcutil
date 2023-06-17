@@ -39,6 +39,7 @@
 #include "base/parms.h"      // ensure available to any file that includes core.h
 #include "base/core_per_thread_settings.h"
 #include "base/linux_errno.h"
+#include "base/status_code_mgt.h"
 #include "base/trace_control.h"  // so don't need to repeatedly include trace_control.h
 
 //
@@ -337,24 +338,33 @@ bool dbgtrc_returning_expression(
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
    do { \
-      rc = fsim_int_injector(rc, __FILE__, __func__); \
+      if (failsim_enabled && rc != 0) { \
+         int injected = fsim_int_injector(rc, __FILE__, __func__); \
+         if (injected) { \
+            rc = injected; \
+            printf("(%s) failsim: injected error %s\n", __func__, psc_desc(rc)); \
+         } \
+      } \
       dbgtrc_ret_ddcrc( \
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
          __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
   } while (0)
-#define DBGTRC_RET_DDCRC2(debug_flag, trace_group, rc, data_pointer, format, ...) \
+#define DBGTRC_RET_DDCRC2(debug_flag, trace_group, _rc, _data_pointer, format, ...) \
    do { \
-      int injected = fsim_int_injector(rc, __FILE__, __func__); \
-      if (injected) { \
-         rc = injected; \
-         printf("(%s) failsim: injected error, setting %s = NULL\n", __func__, #data_pointer); \
-         free(data_pointer); \
-         data_pointer = NULL; \
+      if (failsim_enabled && _rc == 0) { \
+         int injected = fsim_int_injector(_rc, __FILE__, __func__); \
+         if (injected) { \
+            _rc = injected; \
+            printf("(%s) failsim: injected error %s, setting %s = NULL\n", __func__, psc_desc(_rc), #_data_pointer); \
+            if (_data_pointer) { \
+               free(_data_pointer); \
+               _data_pointer = NULL; \
+            } \
+         } \
       } \
-      rc = fsim_int_injector(rc, __FILE__, __func__); \
       dbgtrc_ret_ddcrc( \
          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
-         __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__); \
+         __func__, __LINE__, __FILE__, _rc, format, ##__VA_ARGS__); \
   } while (0)
 #else
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
@@ -368,40 +378,33 @@ bool dbgtrc_returning_expression(
 #endif
 
 
-#ifdef ENABLE_FAILSIM
-#define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
-   do { \
-      bool_result = fsim_bool_injector(bool_result, __FILE__, __func__); \
-      dbgtrc_returning_expression( \
-          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
-          DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__); \
-   } while (0)
-#else
-#define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
-    dbgtrc_returning_expression( \
-          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
-          DBGTRC_OPTIONS_DONE, \
-          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
-#endif
-
 
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
    do { \
-      errinfo_result = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+      if (failsim_enabled && !errinfo_result) { \
+         Error_Info * injected = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+         if (injected) { \
+            errinfo_result = injected; \
+            printf("(%s) Injected error %s\n", __func__, errinfo_summary(injected)); \
+         } \
+      } \
       dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__); \
    } while(0)
 #define DBGTRC_RET_ERRINFO2(debug_flag, trace_group, errinfo_result, data_pointer, format, ...) \
    do { \
-      Error_Info * injected = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
-      if (injected) { \
-         errinfo_result = injected; \
-         free(data_pointer); \
-         data_pointer = NULL; \
-         printf("(%s) Injected error, setting %s = NULL\n", __func__, #data_pointer); \
+      if (failsim_enabled && !errinfo_result) { \
+         Error_Info * injected = fsim_errinfo_injector(errinfo_result, __FILE__, __func__); \
+         if (injected) { \
+            errinfo_result = injected; \
+            if (data_pointer) { \
+               free(data_pointer); \
+               data_pointer = NULL; \
+            } \
+            printf("(%s) Injected error %s, setting %s = NULL\n", __func__, errinfo_summary(injected), #data_pointer); \
+         } \
       } \
       dbgtrc_returning_errinfo( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
@@ -418,6 +421,13 @@ bool dbgtrc_returning_expression(
              __func__, __LINE__, __FILE__, errinfo_result, format, ##__VA_ARGS__)
 #endif
 
+
+
+#define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
+    dbgtrc_returning_expression( \
+          (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
+          DBGTRC_OPTIONS_DONE, \
+          __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
 
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
