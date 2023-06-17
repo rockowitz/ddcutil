@@ -21,6 +21,8 @@
 
 // Issue:  Where to send error messages?
 
+extern bool failsim_enabled;
+
 //
 // Initialization
 //
@@ -46,7 +48,7 @@ void fsim_add_error(
        int                  rc);
 void fsim_clear_errors_for_func(char * funcname);
 void fsim_clear_error_table();
-void fsim_report_error_table(int depth);
+void fsim_report_failure_simulation_table(int depth);
 void fsim_reset_callct(char * funcname);
 
 
@@ -54,7 +56,7 @@ void fsim_reset_callct(char * funcname);
 // Bulk load error table
 //
 
-bool fsim_load_control_from_gptrarray(GPtrArray * lines);
+bool fsim_load_control_from_gptrarray(GPtrArray * lines, GPtrArray * err_msg_accumulator);
 // bool fsim_load_control_string(char * s);         // unimplemented
 bool fsim_load_control_file(char * fn);
 
