@@ -197,7 +197,7 @@ bool ddc_error_name_to_number(const char * error_name, Status_DDC * errnum_loc) 
           break;
        }
    }
-   DBGF("Done.     Returning: %s, *errnum_loc = %d", SBOOL(found), *errnum_loc);
+   DBGF(debug, "Done.     Returning: %s, *errnum_loc = %d", SBOOL(found), *errnum_loc);
    return found;
 }
 
