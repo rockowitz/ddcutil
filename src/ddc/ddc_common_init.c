@@ -165,11 +165,11 @@ static bool init_failsim(Parsed_Cmd * parsed_cmd) {
       bool loaded = fsim_load_control_file(parsed_cmd->failsim_control_fn);
       if (loaded) {
          printf("Loaded failure simulation control file %s\n", parsed_cmd->failsim_control_fn);
-         fsim_report_error_table(2);
+         fsim_report_failure_simulation_table(2);
       }
       else  {
-         fprintf(stderr, "Error loading failure simulation control file %s.\n",
-                         parsed_cmd->failsim_control_fn);
+         // fprintf(stderr, "Error loading failure simulation control file %s.\n",
+         //                 parsed_cmd->failsim_control_fn);
          return false;
       }
    }
