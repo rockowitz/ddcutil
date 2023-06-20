@@ -979,10 +979,9 @@ parse_command(
                               G_OPTION_ARG_NONE,         &report_freed_excp_flag, "Report freed exceptions", NULL},
       {"trace",      '\0', 0, G_OPTION_ARG_STRING_ARRAY, &trace_classes,        "Trace classes",  "trace class name" },
 //    {"trace",      '\0', 0, G_OPTION_ARG_STRING,       &tracework,            "Trace classes",  "comma separated list" },
-      {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,      "Trace functions","function name" },
-      {"trccall",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,          "Trace calls stack from function","function name" },
+      {"trcfunc",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_functions,  "Trace functions","function name" },
+      {"trcfrom",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_calls,      "Trace call stack from function","function name" },
       {"trcfile",    '\0', 0, G_OPTION_ARG_STRING_ARRAY, &parsed_cmd->traced_files,      "Trace files",    "file name" },
-
 
       {"timestamp",  '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
       {"ts",         '\0', 0, G_OPTION_ARG_NONE,         &timestamp_trace_flag, "Prepend trace msgs with elapsed time",  NULL},
