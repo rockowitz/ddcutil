@@ -662,7 +662,7 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
          }
       }
       if (debug)
-         printf("(%s(       trace_callstack_call_depth=%d\n", __func__, trace_callstack_call_depth);
+         printf("(%s(           trace_callstack_call_depth=%d\n", __func__, trace_callstack_call_depth);
    }
 
    if ((options & DBGTRC_OPTIONS_DONE) && trace_callstack_call_depth > 0) {
@@ -670,7 +670,7 @@ bool check_callstack(Dbgtrc_Options options, const char * funcname) {
    }
 
    if (debug)
-      printf("(%s) Done.    trace_callstack_call_depth=%d, returning %s\n",
+      printf("(%s) Done.     trace_callstack_call_depth=%d, returning %s\n",
             __func__, trace_callstack_call_depth, sbool(trace_callstack_call_depth > 0));
    return trace_callstack_call_depth > 0;
 }
