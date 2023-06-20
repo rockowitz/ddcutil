@@ -22,7 +22,7 @@ backwards compatible.
   the utility options is reported by option ***--settings***. 
 - Added utility command C1 for temporary use during development.
 - Added option ***--enable-mock-data*** for testing
-- Option ***--trccall***. Traces the call stack starting with the specified 
+- Option ***--trcfrom***. Traces the call stack starting with the specified 
   function.  This option applies only to functions for which tracing has been enabled.
 - API performance profiling
 - Added options ***--ignore-hiddev*** and ***--ignore-usb-vid-pid***
