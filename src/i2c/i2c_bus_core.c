@@ -225,7 +225,7 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
       g_ptr_array_free(lines, true);
    }
 
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "busno=%d, drm_name_fragment |%s|, Returning: %s",
                               busno, drm_name_fragment, sbool(result));
    return result;
 }
