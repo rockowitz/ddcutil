@@ -164,7 +164,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    DDCA_Any_Vcp_Value * pvalrec;
 
@@ -315,9 +315,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    // can only pass a variable, not an expression or constant, to DBGTRC_RET_BOOL()
    // because failure simulation may assign a new value to the variable
    bool result =  dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING;
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dh->dref->flags));
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
-   return  result;
+   return result;
 }
 
 
@@ -331,7 +331,7 @@ bool
 ddc_initial_checks_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref->flags: %s", interpret_dref_flags_t(dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
 
    bool result = false;
    Display_Handle * dh = NULL;
@@ -353,8 +353,9 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
 
    if (err)
       result = false;
+
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dref->flags));
    if (err)
       errinfo_free(err);
    return result;
