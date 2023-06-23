@@ -878,8 +878,8 @@ parse_command(
       {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
-      {"vstats",  '\0',  G_OPTION_FLAG_OPTIONAL_ARG,
-                                                G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
+      {"vstats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
 
       // Performance
