@@ -7,22 +7,11 @@
 // Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include <assert.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "public/ddcutil_c_api.h"
 #include "public/ddcutil_status_codes.h"
-
-
-#define DDC_ERRMSG(function_name,status_code) \
-   printf("(%s) %s() returned %d (%s): %s\n",      \
-          __func__, function_name, status_code,    \
-          ddca_rc_name(status_code),      \
-          ddca_rc_desc(status_code))
 
 
 void demo_build_information() {
@@ -37,13 +26,11 @@ void demo_build_information() {
 
    // Get build options
    uint8_t build_options = ddca_build_options();
-   printf("   Built with ADL support:        %s\n", (build_options & DDCA_BUILT_WITH_ADL)     ? "yes" : "no");
    printf("   Built with USB support:        %s\n", (build_options & DDCA_BUILT_WITH_USB)     ? "yes" : "no");
    printf("   Built with failure simulation: %s\n", (build_options & DDCA_BUILT_WITH_FAILSIM) ? "yes" : "no");
 }
 
 
 int main(int argc, char** argv) {
-   // Query library build settings.
    demo_build_information();
 }
