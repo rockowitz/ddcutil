@@ -1,0 +1,9 @@
+# Rules for USB attached monitors, which are categorized as User Interface Devices. 
+
+# Use ddcutil to check if a USB Human Interface Device appears to be a monitor.
+# If so, grant the current user access to it.
+# Note this rule may  have to be adjusted to reflect the actual path where ddcutil is installed. 
+# The -v option produces informational messages.  These are lost when the rule is normally executed 
+# by udev, but can be helpful when rules are tested using the "udevadm test" command. 
+SUBSYSTEM=="usbmisc",  KERNEL=="hiddev*", PROGRAM="/usr/bin/ddcutil chkusbmon $env{DEVNAME} -v", TAG+="uaccess"
+
