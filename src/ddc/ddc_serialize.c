@@ -414,9 +414,12 @@ char * ddc_serialize_displays_and_buses() {
    json_t* jdisplays = json_array();
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      json_t* node = serialize_one_display(g_ptr_array_index(all_displays, ndx));
-      json_array_append(jdisplays, node);
-      json_decref(node);
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING) {
+         json_t* node = serialize_one_display(dref);
+         json_array_append(jdisplays, node);
+         json_decref(node);
+      }
    }
    json_object_set_new(root, "all_displays", jdisplays);
 
@@ -635,6 +638,7 @@ void init_ddc_serialize() {
    RTTI_ADD_FUNC(deserialize_one_display);
    RTTI_ADD_FUNC(deserialize_parsed_edid);
    RTTI_ADD_FUNC(serialize_one_display);
+   RTTI_ADD_FUNC(ddc_find_deserialized_display);
 }
 
 
