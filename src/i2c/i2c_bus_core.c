@@ -311,6 +311,18 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_LVDS;
              }
              else {
+                // The check here for slave address x37 had previously been removed.
+                // It was commented out in commit 78fb4b on 4/29/2013, and the code
+                // finally delete by commit f12d7a on 3/20/2020, with the following
+                // comments:
+                //    have seen case where laptop display reports addr 37 active, but
+                //    it doesn't respond to DDC
+                // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
+                // DDC checking was therefore moved entierly to the DDC layer.
+                // 6/25/2023:
+                // Testing for slave address x37 turns out to be needed to avoid
+                // trying to reload cached display information for a display no
+                // longer present
                 int rc = i2c_detect_x37(fd);
                 if (rc == 0)
                    bus_info->flags |= I2C_BUS_ADDR_0X37;
