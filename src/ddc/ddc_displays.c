@@ -719,7 +719,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = NULL;
-         if (display_caching_enabled) {
+         // Do not restore serialized display ref if slave address x37 inactive
+         // Prevents creating a display ref with stale contents
+         if (display_caching_enabled && businfo->flags&I2C_BUS_ADDR_0X37 ) {
             dref = copy_display_ref(ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes));
             if (dref)
                dref->detail = businfo;
