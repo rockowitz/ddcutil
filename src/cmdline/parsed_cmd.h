@@ -42,7 +42,8 @@ typedef enum {
    CMDID_CHKUSBMON     =   0x4000,
    CMDID_PROBE         =   0x8000,
    CMDID_SAVE_SETTINGS = 0x010000,
-   CMDID_C1            = 0x020000,         // utility command id, for tests
+   CMDID_DISCARD_CACHE = 0x020000,
+   CMDID_C1            = 0x100000,         // utility command id, for tests
 } Cmd_Id_Type;
 
 typedef enum {
@@ -116,6 +117,14 @@ struct {
    char *            feature_value;
 } Parsed_Setvcp_Args;
 
+typedef
+enum {NO_CACHES  = 0,
+      CAPABILITIES_CACHE = 1,
+      DISPLAYS_CACHE = 2,
+      DSA2_CACHE     = 4,
+      ALL_CACHES     = 255
+} Cache_Types;
+
 /** Parsed arguments to **ddcutil** command  */
 #define PARSED_CMD_MARKER  "PCMD"
 typedef
@@ -142,6 +151,7 @@ struct {
    char *                 trace_destination;
 
    DDCA_Output_Level      output_level;
+   Cache_Types            cache_types;
    uint16_t               max_tries[3];
    float                  sleep_multiplier;
    DDCA_MCCS_Version_Spec mccs_vspec;

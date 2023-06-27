@@ -572,6 +572,49 @@ static bool parse_setvcp_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
    return parsing_ok;
 }
 
+static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
+   bool parsing_ok = true;
+   assert(parsed_cmd->argct == 1 || parsed_cmd->argct == 2);
+   strupper(parsed_cmd->args[0]);
+   if (parsed_cmd->argct == 2)
+      strupper(parsed_cmd->args[1]);
+
+   if (parsed_cmd->argct == 1) {
+      if ( is_abbrev(parsed_cmd->args[0], "CACHES", 5) )
+         parsed_cmd->cache_types = ALL_CACHES;
+      else
+         parsing_ok = false;
+   }
+
+   else {
+      if ( !is_abbrev(parsed_cmd->args[1], "CACHES", 5) ) {
+         parsing_ok = false;
+      }
+      else {
+         if (is_abbrev(parsed_cmd->args[0], "CAPABILITIES", 3) )
+            parsed_cmd->cache_types = CAPABILITIES_CACHE;
+         else if (is_abbrev(parsed_cmd->args[0], "DISPLAYS", 3) )
+            parsed_cmd->cache_types = DISPLAYS_CACHE;
+         else if (is_abbrev(parsed_cmd->args[0], "DSA", 3) )
+            parsed_cmd->cache_types = DSA2_CACHE;
+         else if (is_abbrev(parsed_cmd->args[0], "ALL", 3) )
+            parsed_cmd->cache_types = ALL_CACHES;
+         else
+            parsing_ok = false;
+      }
+   }
+
+   if (!parsing_ok) {
+      char * s = g_strdup_printf("%s %s",
+                           parsed_cmd->args[0],
+                           (parsed_cmd->argct > 1) ? parsed_cmd->args[1] : "");
+      EMIT_PARSER_ERROR(errmsgs, "Unrecognized DISCARD argument(s): %s", s);
+      g_free(s);
+   }
+
+   return parsing_ok;
+}
+
 
 static void report_ddcutil_version() {
       printf("ddcutil %s\n", get_full_ddcutil_version());
@@ -1492,6 +1535,10 @@ parse_command(
          if ( parsing_ok && parsed_cmd->cmd_id  == CMDID_VCPINFO) {
             parsed_cmd->flags &= ~CMD_FLAG_NOTABLE;
          }
+
+         if (parsing_ok && parsed_cmd->cmd_id == CMDID_DISCARD_CACHE)
+            parsing_ok &= parse_discard_args(parsed_cmd, errmsgs);
+
 
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_GETVCP
                         && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {

@@ -59,6 +59,7 @@ Value_Name_Table cmd_id_table = {
       VNT(CMDID_CHKUSBMON     ,  "chkusbmon"),
       VNT(CMDID_PROBE         ,  "probe"),
       VNT(CMDID_SAVE_SETTINGS ,  "save settings"),
+      VNT(CMDID_DISCARD_CACHE ,  "discard cache"),
       VNT(CMDID_C1            ,  "c1"),
       VNT_END
 };
@@ -245,6 +246,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
       rpt_bool("enable cached displays",
                                     NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_DISPLAYS,   d1);
+      rpt_vstring(d1, "cache types:              0x%02x", parsed_cmd->cache_types);
    // rpt_bool("clear persistent cache:",
    //                               NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE,   d1);
       rpt_str ("MCCS version spec", NULL, format_vspec(parsed_cmd->mccs_vspec),                  d1);

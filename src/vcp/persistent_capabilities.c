@@ -60,7 +60,7 @@ static void dbgrpt_capabilities_hash0(int depth, const char * msg) {
 
 
 /** Deletes the capabilities cache file if it exists. */
-static void
+void
 delete_capabilities_file() {
    bool debug = false;
    char * fn = capabilities_cache_file_name();

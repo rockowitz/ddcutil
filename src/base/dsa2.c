@@ -1037,6 +1037,7 @@ dsa2_erase_persistent_stats() {
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    char * stats_fn = dsa2_stats_cache_file_name();
    int rc = remove(stats_fn);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "remove(%s) returned: %d", stats_fn, rc);
    if (rc < 0 && errno != ENOENT)
       result = -errno;
    free(stats_fn);

@@ -900,6 +900,18 @@ main(int argc, char *argv[]) {
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
+      if (parsed_cmd->cache_types & CAPABILITIES_CACHE) {
+         delete_capabilities_file();
+      }
+      if (parsed_cmd->cache_types & DISPLAYS_CACHE) {
+         ddc_erase_displays_cache();
+      }
+      if (parsed_cmd->cache_types & DSA2_CACHE) {
+         dsa2_erase_persistent_stats();
+      }
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
       ddc_ensure_displays_detected();
