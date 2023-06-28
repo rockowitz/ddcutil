@@ -319,6 +319,7 @@ Display_Ref *  deserialize_one_display(json_t* disp_node) {
 }
 
 
+#ifdef CACHE_BUS_INFO
 json_t* serialize_one_i2c_bus(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, Before serialization:", businfo->busno);
@@ -388,7 +389,7 @@ I2C_Bus_Info * deserialize_one_i2c_bus(json_t* jbus) {
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, I2C_Bus_Info, i2c_dbgrpt_bus_info, businfo);
    return businfo;
 }
-
+#endif
 
 typedef enum {
    serialize_mode_display,
@@ -448,6 +449,10 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    DBGTRC_NOPREFIX(debug, DDCA_TRC_DDCIO, "%s", jstring);
    GPtrArray * restored = g_ptr_array_new();
 
+#ifndef CACHE_BUS_INFO
+   assert(mode == serialize_mode_display);
+#endif
+
    json_error_t error;
 
    bool ok = true;
@@ -479,8 +484,10 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
    assert(version == 1);
 
    char * all = "all_displays";
+#ifdef CACHE_BUS_INFO
    if (mode == serialize_mode_bus)
       all = "all_buses";
+#endif
 
    json_t* disp_nodes = json_object_get(root, all);
    if (!(disp_nodes && json_is_array(disp_nodes))) {
@@ -505,6 +512,7 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
          goto bye;
       }
 
+#ifdef CACHE_BUS_INFO
       if (mode == serialize_mode_display) {
          Display_Ref * dref = deserialize_one_display(one_display_or_bus);
          g_ptr_array_add(restored, dref);
@@ -513,6 +521,10 @@ GPtrArray * ddc_deserialize_displays_or_buses(const char * jstring, Serialize_Mo
          I2C_Bus_Info * businfo = deserialize_one_i2c_bus(one_display_or_bus);
          g_ptr_array_add(restored, businfo);
       }
+#else
+      Display_Ref * dref = deserialize_one_display(one_display_or_bus);
+      g_ptr_array_add(restored, dref);
+#endif
    }
 
 bye:
