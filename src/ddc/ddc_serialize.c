@@ -95,13 +95,13 @@ json_t * serialize_parsed_edid(Parsed_Edid * pedid) {
    json_t* jpath = json_object();
 
    char edid_bytes[257];
-         hexstring2(
-                   pedid->bytes,    // bytes to convert
-                   128,             // number of bytes
-                   "",              // separator string between hex digits
-                   true,            // use upper case hex characters
-                   edid_bytes,      // buffer in which to return hex string
-                   257) ;           // buffer size
+   hexstring2(
+             pedid->bytes,    // bytes to convert
+             128,             // number of bytes
+             "",              // separator string between hex digits
+             true,            // use upper case hex characters
+             edid_bytes,      // buffer in which to return hex string
+             257) ;           // buffer size
    DBGMSF(debug, "edid_bytes=%s", edid_bytes);
 
    json_t* jpath_raw = json_string(edid_bytes);
