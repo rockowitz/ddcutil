@@ -1008,7 +1008,7 @@ parse_command(
                       '\0', 0, G_OPTION_ARG_INT,  &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
 
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_NONE,     &force_flag,       "Ignore certain checks",           NULL},
+                           G_OPTION_ARG_NONE,     &force_flag,       "Deprecated",           NULL},
       {"timeout-i2c-io",'\0', G_OPTION_FLAG_HIDDEN,
                                G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
