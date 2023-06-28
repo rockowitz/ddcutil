@@ -104,19 +104,18 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 
 void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p, busno=%d", bus_info, bus_info->busno);
-   if (bus_info) {
-      if (memcmp(bus_info->marker, "BINx", 4) != 0) {   // just ignore if already freed
-         assert( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0);
-         if (bus_info->edid)
-            free_parsed_edid(bus_info->edid);
-         if (bus_info->driver)
-            free(bus_info->driver);
-         if (bus_info->drm_connector_name)
-            free(bus_info->drm_connector_name);
-         bus_info->marker[3] = 'x';
-         free(bus_info);
-      }
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p", bus_info);
+   if (bus_info)
+      DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  bus_info->marker, bus_info->busno);
+   if (bus_info && memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
+      if (bus_info->edid)
+         free_parsed_edid(bus_info->edid);
+      if (bus_info->driver)
+         free(bus_info->driver);
+      if (bus_info->drm_connector_name)
+         free(bus_info->drm_connector_name);
+      bus_info->marker[3] = 'x';
+      free(bus_info);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
