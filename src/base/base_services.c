@@ -14,6 +14,7 @@
 #include "dynamic_features.h"
 #include "dsa2.h"
 #include "execution_stats.h"
+#include "i2c_bus_base.h"
 #include "linux_errno.h"
 #include "per_display_data.h"
 #include "per_thread_data.h"
@@ -42,6 +43,7 @@ void init_base_services() {
    init_status_code_mgt();
    init_tuned_sleep();
    init_displays();
+   init_i2c_bus_base();
    if (debug)
       printf("(%s) Done\n", __func__);
 }
