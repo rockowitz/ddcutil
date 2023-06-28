@@ -422,7 +422,7 @@ find_dref(
       Display_Ref ** dref_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "did: %s, set_default_display: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "did: %s, displayid_required: %s",
                                     did_repr(parsed_cmd->pdid),
                                     displayid_requirement_name(displayid_required));
    FILE * outf = fout();
@@ -482,9 +482,9 @@ find_dref(
          final_result = DDCRC_OK;
       }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
          bool temporary_did_work = false;
          if (!did_work) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "No monitor specified, treat as  --display 1");
             did_work = create_dispno_display_identifier(1);   // default monitor
             temporary_did_work = true;
          }
@@ -495,7 +495,7 @@ find_dref(
          dref = get_display_ref_for_display_identifier(did_work, CALLOPT_NONE);
          if (temporary_did_work)
             free_display_identifier(did_work);
-         if ( !dref)
+         if (!dref)
             f0printf(ferr(), "Display not found\n");
          final_result = (dref) ? DDCRC_OK : DDCRC_INVALID_DISPLAY;
       }
