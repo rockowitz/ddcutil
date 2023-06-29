@@ -286,7 +286,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             if (psc == -EBUSY) {
                dh->dref->flags |= DREF_DDC_BUSY;
             }
-            else if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {
+            else if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
                      dh_repr(dh) );
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
