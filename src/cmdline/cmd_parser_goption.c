@@ -593,8 +593,10 @@ static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
       else {
          if (is_abbrev(parsed_cmd->args[0], "CAPABILITIES", 3) )
             parsed_cmd->cache_types = CAPABILITIES_CACHE;
+#ifdef REMOVED
          else if (is_abbrev(parsed_cmd->args[0], "DISPLAYS", 3) )
             parsed_cmd->cache_types = DISPLAYS_CACHE;
+#endif
          else if (is_abbrev(parsed_cmd->args[0], "DSA", 3) )
             parsed_cmd->cache_types = DSA2_CACHE;
          else if (is_abbrev(parsed_cmd->args[0], "ALL", 3) )
@@ -810,9 +812,11 @@ parse_command(
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
 
+#ifdef REMOVED
    gboolean enable_cd_flag = DEFAULT_ENABLE_CACHED_DISPLAYS;
    const char * enable_cd_expl =  (enable_cd_flag) ? "Enable cached displays (default)" : "Enable cached displays";
    const char * disable_cd_expl = (enable_cd_flag) ? "Disable cached displays" : "Disable cached displays (default)";
+#endif
 
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
@@ -931,10 +935,12 @@ parse_command(
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
 
+#ifdef REMOVED
       {"enable-displays-cache",
                    '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
       {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
                             G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
+#endif
 
       {"sleep-multiplier", '\0', 0,
                             G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
@@ -1293,7 +1299,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
+#ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
+#endif
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
