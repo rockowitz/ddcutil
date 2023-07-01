@@ -1693,23 +1693,23 @@ bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
  * @retval true  success
  * @retval false function already registered
  */
-bool generic_register_callback(GPtrArray* registered_callbacks, void * func) {
+bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func) {
    bool debug = false;
-   DBGF(debug, "Starting. registered_callbacks=%p, func=%p", registered_callbacks, func);
+   DBGF(debug, "Starting. registered_callbacks=%p, func=%p", *registered_callbacks_loc, func);
 
-   if (!registered_callbacks) {
-      registered_callbacks = g_ptr_array_new();
+   if (!*registered_callbacks_loc) {
+      *registered_callbacks_loc = g_ptr_array_new();
    }
 
    bool new_registration = true;
-   for (int ndx = 0; ndx < registered_callbacks->len; ndx++) {
-      if (func == g_ptr_array_index(registered_callbacks, ndx)) {
+   for (int ndx = 0; ndx < (*registered_callbacks_loc)->len; ndx++) {
+      if (func == g_ptr_array_index(*registered_callbacks_loc, ndx)) {
          new_registration = false;
          break;
       }
    }
    if (new_registration) {
-      g_ptr_array_add(registered_callbacks, func);
+      g_ptr_array_add(*registered_callbacks_loc, func);
    }
 
    DBGF(debug, "Done.     Returning %s", SBOOL(new_registration));

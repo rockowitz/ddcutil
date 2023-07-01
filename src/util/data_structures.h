@@ -251,7 +251,7 @@ bool store_bytehex_list(char * start, int len, void * data_struct, Byte_Appender
 // Callback registration
 //
 
-bool generic_register_callback(GPtrArray* registered_callbacks, void * func);
+bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func);
 bool generic_unregister_callback(GPtrArray* registered_callbacks, void *func);
 
 
