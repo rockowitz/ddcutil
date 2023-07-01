@@ -841,6 +841,11 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
 }
 
 
+bool ddc_are_displays_detected() {
+   return all_displays;
+}
+
+
 /** Initializes the master display list in global variable #all_displays and
  *  records open errors in global variable #display_open_errors.
  *
@@ -1006,7 +1011,7 @@ GPtrArray* display_hotplug_callbacks = NULL;
 
 /** Registers a display hotplug event callback
  *
- * The function must be of type DDCA_Display_Hotplub_Callback_Func
+ * The function must be of type DDCA_Display_Hotplug_Callback_Func
  *
  *  @param func function to register
  *
@@ -1014,7 +1019,7 @@ GPtrArray* display_hotplug_callbacks = NULL;
  *  It is not an error if the function is already registered.
  */
 DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool ok = generic_register_callback(display_hotplug_callbacks, func);
+   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
    return (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
 }
 
@@ -1038,7 +1043,7 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
 /** Invokes the registered callbacks for a display hotplug event.
  */
 void ddc_emit_display_hotplug_event() {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (display_hotplug_callbacks) {
       for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {

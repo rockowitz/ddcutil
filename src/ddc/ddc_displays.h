@@ -33,6 +33,7 @@ int         ddc_get_display_count(bool include_invalid_displays);
 Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, bool include_invalid);
 
 // Display Detection
+bool        ddc_are_displays_detected();
 void        ddc_ensure_displays_detected();
 void        ddc_discard_detected_displays();
 void        ddc_redetect_displays();
