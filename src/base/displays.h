@@ -156,6 +156,7 @@ bool               dsel_validate(          Display_Selector * dsel);
 extern bool ddc_never_uses_null_response_for_unsupported;
 // extern bool ddc_always_uses_null_response_for_unsupported;
 
+// Must be kept in sync with dref_flags_table
 typedef uint16_t Dref_Flags;
 #define DREF_DDC_COMMUNICATION_CHECKED                 0x0080
 #define DREF_DDC_COMMUNICATION_WORKING                 0x0040
@@ -170,6 +171,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
 #define DREF_DDC_BUSY                                  0x8000
 #define DREF_REMOVED                                   0x4000
+#define DREF_ALIVE                                     0x2000
 
 char * interpret_dref_flags_t(Dref_Flags flags);
 
@@ -226,6 +228,9 @@ Display_Ref * copy_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
 bool dref_eq(Display_Ref* this, Display_Ref* that);
+
+bool dref_set_alive(Display_Ref * dref, bool alive);
+bool dref_get_alive(Display_Ref * dref);
 
 
 // *** Display_Handle ***

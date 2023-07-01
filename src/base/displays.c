@@ -581,6 +581,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
    dref->io_path = io_path;
    dref->vcp_version_xdf = DDCA_VSPEC_UNQUERIED;
    dref->vcp_version_cmdline = DDCA_VSPEC_UNQUERIED;
+   dref->flags |= DREF_ALIVE;
 
 #ifdef ASYNC_REC
    dref->async_rec  = get_display_async_rec(io_path);    // keep?
@@ -757,6 +758,24 @@ void gdestroy_display_ref(void * data) {
  */
 bool dref_eq(Display_Ref* this, Display_Ref* that) {
    return dpath_eq(this->io_path, that->io_path);
+}
+
+
+bool dref_set_alive(Display_Ref * dref, bool alive) {
+   assert(dref);
+   bool debug = true;
+   bool old = dref->flags & DREF_ALIVE;
+   if (old != alive)
+      DBGTRC_EXECUTED(debug, DDCA_TRC_BASE, "dref=%s, alive changed: %s -> %s",
+                             dref_repr_t(dref), SBOOL(old), SBOOL(alive));
+   SETCLR_BIT(dref->flags, DREF_ALIVE, alive);
+   return old;
+}
+
+
+bool dref_get_alive(Display_Ref * dref) {
+   assert(dref);
+   return dref->flags & DREF_ALIVE;;
 }
 
 
@@ -1015,6 +1034,7 @@ Value_Name_Table dref_flags_table = {
       VN(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED),
       VN(DREF_DDC_BUSY),
       VN(DREF_REMOVED),
+      VN(DREF_ALIVE),
       VN(CALLOPT_NONE),                // special entry
       VN_END
 };
