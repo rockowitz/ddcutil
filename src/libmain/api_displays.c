@@ -1283,12 +1283,20 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 
 DDCA_Status
 ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   return ddc_register_display_hotplug_callback(func);
+   bool debug = false;
+   API_PROLOG(debug, "func=%p", func);
+   DDCA_Status result =  ddc_register_display_hotplug_callback(func);
+   API_EPILOG(debug, result, "");
+   return result;
 }
 
 DDCA_Status
 ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   return ddc_unregister_display_hotplug_callback(func);
+   bool debug = false;
+   API_PROLOG(debug, "func=%p", func);
+   DDCA_Status result = ddc_unregister_display_hotplug_callback(func);
+   API_EPILOG(debug, result, "");
+   return result;
 }
 
 
@@ -1309,5 +1317,7 @@ void init_api_displays() {
       RTTI_ADD_FUNC(ddca_open_display3);
       RTTI_ADD_FUNC(ddca_redetect_displays);
       RTTI_ADD_FUNC(ddca_report_display_by_dref);
+      RTTI_ADD_FUNC(ddca_register_display_hotplug_callback);
+      RTTI_ADD_FUNC(ddca_unregister_display_hotplug_callback)
 }
 
