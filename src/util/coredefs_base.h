@@ -2,7 +2,7 @@
  *  Portion of coredefs.h shared with ddcui
  */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef COREDEFS_BASE_H_
@@ -57,6 +57,15 @@ do { \
    strncat(_dst, _src, (_size)-1); \
   _dst[(_size)-1] = '\0'; \
 } while(0)
+
+
+#define SETCLR_BIT(_flag_var, _bit, _onoff) \
+   do { \
+      if ( (_onoff) ) \
+        _flag_var |= _bit; \
+      else \
+        _flag_var &= ~_bit; \
+   } while(0)
 
 
 #ifdef TARGET_BSD
