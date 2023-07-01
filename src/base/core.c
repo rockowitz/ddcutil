@@ -141,6 +141,7 @@ void show_output_level() {
 bool dbgtrc_show_time      = false;   ///< include elapsed time in debug/trace output
 bool dbgtrc_show_wall_time = false;   ///< include wall time in debug/trace output
 bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace output
+bool dbgtrc_trace_to_syslog_only = false;
 
 
 
@@ -612,28 +613,30 @@ static bool vdbgtrc(
 #endif
 
          // if (trace_to_syslog || (options & DBGTRC_OPTIONS_SYSLOG)) {
-         if (test_emit_syslog(DDCA_SYSLOG_DEBUG)) {
+         if (test_emit_syslog(DDCA_SYSLOG_DEBUG) || dbgtrc_trace_to_syslog_only) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
                                      elapsed_prefix, funcname, retval_info, base_msg);
             syslog(LOG_DEBUG, "%s", syslog_msg);
             free(syslog_msg);
          }
-         else if (options & DBGTRC_OPTIONS_SEVERE && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
+         else if ( (options & DBGTRC_OPTIONS_SEVERE) && test_emit_syslog(DDCA_SYSLOG_ERROR)) {
             char * syslog_msg = g_strdup_printf("%s(%-30s) %s%s",
                                      elapsed_prefix, funcname, retval_info, base_msg);
             syslog(LOG_ERR, "%s", syslog_msg);
             free(syslog_msg);
          }
 
-         FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
-                           ? thread_settings->ferr
-                           : thread_settings->fout;
-         f0puts(decorated_msg, where);
-         f0putc('\n', where);
-         fflush(where);
+         if (!dbgtrc_trace_to_syslog_only) {
+            FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
+                              ? thread_settings->ferr
+                              : thread_settings->fout;
+            f0puts(decorated_msg, where);
+            f0putc('\n', where);
+            fflush(where);
 
-         free(base_msg);
-         free(decorated_msg);
+            free(base_msg);
+            free(decorated_msg);
+         }
 
          msg_emitted = true;
       }
@@ -1012,6 +1015,114 @@ int syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level) {
    }
    return priority;
 }
+
+
+
+
+//
+// Output capture - convenience functions
+//
+
+typedef struct {
+   FILE * in_memory_file;
+   char * in_memory_bufstart; ;
+   size_t in_memory_bufsize;
+   DDCA_Capture_Option_Flags flags;
+} In_Memory_File_Desc;
+
+
+static In_Memory_File_Desc *
+get_thread_capture_buf_desc() {
+   static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
+
+   In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
+
+   // GThread * this_thread = g_thread_self();
+   // printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
+
+   if (!fdesc) {
+      fdesc = g_new0(In_Memory_File_Desc, 1);
+      g_private_set(&in_memory_key, fdesc);
+   }
+
+   // printf("(%s) Returning: %p\n", __func__, fdesc);
+   return fdesc;
+}
+
+
+void
+start_capture(DDCA_Capture_Option_Flags flags) {
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+
+   if (!fdesc->in_memory_file) {
+      fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
+      set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
+      fdesc->flags = flags;
+      if (flags & DDCA_CAPTURE_STDERR)
+         set_ferr(fdesc->in_memory_file);
+   }
+   // printf("(%s) Done.\n", __func__);
+}
+
+
+char *
+end_capture(void) {
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+
+   char * result = "\0";
+   // printf("(%s) Starting.\n", __func__);
+   assert(fdesc->in_memory_file);
+   if (fflush(fdesc->in_memory_file) < 0) {
+      set_ferr_to_default();
+      SEVEREMSG("flush() failed. errno=%d", errno);
+      return g_strdup(result);
+   }
+   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
+   result = g_strdup(fdesc->in_memory_bufstart);
+   if (fclose(fdesc->in_memory_file) < 0) {
+      set_ferr_to_default();
+      SEVEREMSG("fclose() failed. errno=%d", errno);
+      return result;
+   }
+   // free(fdesc->in_memory_file); // double free, fclose() frees in memory file
+   fdesc->in_memory_file = NULL;
+   set_fout_to_default();
+   if (fdesc->flags & DDCA_CAPTURE_STDERR)
+      set_ferr_to_default();
+
+   // printf("(%s) Done. result=%p\n", __func__, result);
+   return result;
+}
+
+
+#ifdef UNUSED
+/** Returns the current size of the in-memory capture buffer.
+ *
+ *  @return number of characters in current buffer, plus 1 for
+ *          terminating null
+ *  @retval -1 no capture buffer on current thread
+ *
+ *  @remark defined and tested but does not appear useful
+ */
+int captured_size() {
+   // printf("(%s) Starting.\n", __func__);
+   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+
+   int result = -1;
+   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
+   if (fdesc->in_memory_file) {
+      fflush(fdesc->in_memory_file);
+      result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
+   }
+   // printf("(%s) Done. result=%d\n", __func__, result);
+   return result;
+}
+#endif
+
+
+
+
 
 
 void init_core() {

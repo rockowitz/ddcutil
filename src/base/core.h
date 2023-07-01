@@ -98,8 +98,9 @@ extern __thread  unsigned int  trace_callstack_call_depth;
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
+extern bool dbgtrc_trace_to_syslog_only;
 
-void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
+// void set_libddcutil_output_destination(const char * filename, const char * traced_unit);
 
 typedef uint16_t Dbgtrc_Options;
 #define DBGTRC_OPTIONS_NONE      0x00
@@ -543,6 +544,14 @@ do { \
       } \
    } \
 } while(0)
+
+
+//
+// Output captuer
+//
+
+void   start_capture(DDCA_Capture_Option_Flags flags);
+char * end_capture(void);
 
 
 //

@@ -500,7 +500,7 @@ _ddca_terminate(void) {
          ddc_store_displays_cache();
       ddc_discard_detected_displays();
       if (requested_stats)
-         ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, 0);
+         ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
       terminate_ddc_services();
       terminate_base_services();
       ddc_stop_watch_displays();
@@ -776,102 +776,17 @@ ddca_set_ferr_to_default(void) {
 // Output capture - convenience functions
 //
 
-typedef struct {
-   FILE * in_memory_file;
-   char * in_memory_bufstart; ;
-   size_t in_memory_bufsize;
-   DDCA_Capture_Option_Flags flags;
-} In_Memory_File_Desc;
-
-
-static In_Memory_File_Desc *
-get_thread_capture_buf_desc() {
-   static GPrivate  in_memory_key = G_PRIVATE_INIT(g_free);
-
-   In_Memory_File_Desc* fdesc = g_private_get(&in_memory_key);
-
-   // GThread * this_thread = g_thread_self();
-   // printf("(%s) this_thread=%p, fdesc=%p\n", __func__, this_thread, fdesc);
-
-   if (!fdesc) {
-      fdesc = g_new0(In_Memory_File_Desc, 1);
-      g_private_set(&in_memory_key, fdesc);
-   }
-
-   // printf("(%s) Returning: %p\n", __func__, fdesc);
-   return fdesc;
-}
-
-
 void
 ddca_start_capture(DDCA_Capture_Option_Flags flags) {
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-
-   if (!fdesc->in_memory_file) {
-      fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
-      ddca_set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
-      fdesc->flags = flags;
-      if (flags & DDCA_CAPTURE_STDERR)
-         ddca_set_ferr(fdesc->in_memory_file);
-   }
-   // printf("(%s) Done.\n", __func__);
+   start_capture(flags);
 }
 
 
 char *
 ddca_end_capture(void) {
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
-
-   char * result = "\0";
-   // printf("(%s) Starting.\n", __func__);
-   assert(fdesc->in_memory_file);
-   if (fflush(fdesc->in_memory_file) < 0) {
-      ddca_set_ferr_to_default();
-      SEVEREMSG("flush() failed. errno=%d", errno);
-      return g_strdup(result);
-   }
-   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   result = g_strdup(fdesc->in_memory_bufstart);
-   if (fclose(fdesc->in_memory_file) < 0) {
-      ddca_set_ferr_to_default();
-      SEVEREMSG("fclose() failed. errno=%d", errno);
-      return result;
-   }
-   // free(fdesc->in_memory_file); // double free, fclose() frees in memory file
-   fdesc->in_memory_file = NULL;
-   ddca_set_fout_to_default();
-   if (fdesc->flags & DDCA_CAPTURE_STDERR)
-      ddca_set_ferr_to_default();
-
-   // printf("(%s) Done. result=%p\n", __func__, result);
-   return result;
+   return end_capture();
 }
 
-
-#ifdef UNUSED
-/** Returns the current size of the in-memory capture buffer.
- *
- *  @return number of characters in current buffer, plus 1 for
- *          terminating null
- *  @retval -1 no capture buffer on current thread
- *
- *  @remark defined and tested but does not appear useful
- */
-int ddca_captured_size() {
-   // printf("(%s) Starting.\n", __func__);
-   In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-
-   int result = -1;
-   // n. open_memstream() maintains a null byte at end of buffer, not included in in_memory_bufsize
-   if (fdesc->in_memory_file) {
-      fflush(fdesc->in_memory_file);
-      result = fdesc->in_memory_bufsize + 1;   // +1 for trailing \0
-   }
-   // printf("(%s) Done. result=%d\n", __func__, result);
-   return result;
-}
-#endif
 
 
 //
@@ -1291,7 +1206,7 @@ ddca_show_stats(
       int             depth)
 {
    if (stats_types)
-      ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, depth);
+      ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, false, depth);
 }
 
 
