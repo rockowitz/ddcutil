@@ -45,6 +45,10 @@ typedef struct error_info {
 
 typedef char * (*ErrInfo_Status_String)(int code);
 
+bool errinfo_all_causes_same_status(
+      Error_Info * ddc_excp,
+      int          status_code);
+
 void errinfo_init(
       ErrInfo_Status_String  name_func,
       ErrInfo_Status_String  desc_func);

@@ -70,6 +70,48 @@ errinfo_init(
 
 
 //
+// Utilities
+//
+
+/** Checks whether all causes have the same status code.
+ *  If **status_code** != 0, all causes must have that value.
+ *  If **status_code** == 0, all causes must have the same status code
+ *  value as the first cause.
+ *
+ *  @param  erec        pointer to #Error_Info instance
+ *  @param  status_code status code value to check
+ *  @return true/false
+ *
+ *  if **erec** == NULL or the instance has no causes, returns false.
+ */
+bool
+errinfo_all_causes_same_status(
+      Error_Info * erec,
+      int          status_code)
+{
+   bool debug = false;
+   DBGF(debug, "Starting. status_code=%d, erec=%s", status_code, errinfo_summary(erec));
+   bool all_same = false;
+   if (erec) {
+      VALID_ERROR_INFO_PTR(erec);
+      if (erec->cause_ct > 0) {
+         if (status_code == 0)
+            status_code = erec->causes[0]->status_code;
+         all_same = true;
+         for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
+            if (erec->causes[ndx]->status_code != status_code) {
+               all_same = false;
+               break;
+            }
+         }
+      }
+   }
+   DBGF(debug, "Returning: %s", SBOOL(all_same));
+   return all_same;
+}
+
+
+//
 // Instance destruction
 //
 
