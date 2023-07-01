@@ -602,7 +602,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_bus_display_ref(int busno) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "busno=%d", busno);
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_I2C;
@@ -614,8 +614,9 @@ Display_Ref * create_bus_display_ref(int busno) {
       DBGMSG("Done.  Constructed bus display ref %s:", dref_repr_t(dref));
       dbgrpt_display_ref(dref,0);
    }
-   // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
-   DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
+
+   DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
+   // DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
 
@@ -684,6 +685,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       copy->actual_display_path = dref->actual_display_path;
       copy->driver_name = g_strdup(dref->driver_name);
       // dont set pdd
+      copy->drm_connector = g_strdup(dref->drm_connector);
    }
    // DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, copy);
    DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", copy);
@@ -728,6 +730,8 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
                dfr_free(dref->dfr);
             if (dref->driver_name)
                free(dref->driver_name);
+            if (dref->drm_connector)
+               free(dref->drm_connector);
             dref->marker[3] = 'x';
             free(dref);
          }
@@ -818,6 +822,7 @@ void dbgrpt_display_ref(Display_Ref * dref, int depth) {
          i2c_dbgrpt_bus_info(businfo, d2);
       }
    }
+   rpt_vstring(d1, "drm_connector:   %s", dref->drm_connector);
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
@@ -894,7 +899,6 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
 
    return dh;
 }
-
 
 
 /** Reports the contents of a #Display_Handle in a format useful for debugging.
