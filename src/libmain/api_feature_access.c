@@ -116,8 +116,7 @@ ddca_get_non_table_vcp_value(
        else {
           psc = ddc_excp->status_code;
           save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
-          // errinfo_free(ddc_excp, report_freed_exceptions, __func__);
-          errinfo_free(ddc_excp);
+          ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
           DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
        }
     } );
@@ -756,7 +755,7 @@ ddca_format_table_vcp_value_by_dref(
 
 static
 DDCA_Status
-set_single_vcp_value(
+ddci_set_single_vcp_value(
       DDCA_Display_Handle    ddca_dh,
       DDCA_Any_Vcp_Value *   valrec,
       DDCA_Any_Vcp_Value **  verified_value_loc)  // NULL => do not return value
@@ -765,10 +764,12 @@ set_single_vcp_value(
    DBGTRC_STARTING(debug, DDCA_TRC_API, "ddca_dh=%p, valrec=%p, verified_value_loc = %p",
                                ddca_dh, valrec, verified_value_loc);
    DDCA_Status psc = 0;
+   free_thread_error_detail();
    WITH_VALIDATED_DH3(ddca_dh, psc, {
          Error_Info * ddc_excp = ddc_set_vcp_value(dh, valrec, verified_value_loc);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
-         errinfo_free(ddc_excp);
+         save_thread_error_detail(error_info_to_ddca_detail(ddc_excp));
+         ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug, DDCA_TRC_API));
       } );
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, "");
    return psc;
@@ -803,7 +804,6 @@ ddci_set_continuous_vcp_value_verify(
       uint16_t *            verified_value_loc)
 {
    DDCA_Status rc = 0;
-   free_thread_error_detail();
 
    DDCA_Any_Vcp_Value valrec;
    valrec.opcode = feature_code;
@@ -813,12 +813,12 @@ ddci_set_continuous_vcp_value_verify(
 
    if (verified_value_loc) {
       DDCA_Any_Vcp_Value * verified_single_value;
-      rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
+      rc = ddci_set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
       if (verified_single_value)
       *verified_value_loc = VALREC_CUR_VAL(verified_single_value);
    }
    else {
-      rc = set_single_vcp_value(ddca_dh, &valrec, NULL);
+      rc = ddci_set_single_vcp_value(ddca_dh, &valrec, NULL);
    }
 
    return rc;
@@ -904,30 +904,33 @@ ddci_set_non_table_vcp_value_verify(
    DBGTRC_STARTING(debug, DDCA_TRC_API,
           "ddca_dh=%p, feature_code=0x%02x, hi_byte=0x%02x, lo_byte=0x%02x",
           ddca_dh, feature_code, hi_byte, lo_byte);
+   DDCA_Status rc = 0;
    free_thread_error_detail();
    if ( ( verified_hi_byte_loc && !verified_lo_byte_loc) ||
         (!verified_hi_byte_loc &&  verified_lo_byte_loc )
       )
-      return DDCRC_ARG;
-
-   // unwrap into 2 cases to clarify logic and avoid compiler warning
-   DDCA_Status rc = 0;
-   if (verified_hi_byte_loc) {
-      uint16_t verified_c_value = 0;
-      rc = ddci_set_continuous_vcp_value_verify(
-                          ddca_dh,
-                          feature_code, hi_byte << 8 | lo_byte,
-                          &verified_c_value);
-      *verified_hi_byte_loc = verified_c_value >> 8;
-      *verified_lo_byte_loc = verified_c_value & 0xff;
+   {
+      rc = DDCRC_ARG;
    }
    else {
-      rc = ddci_set_continuous_vcp_value_verify(
-                          ddca_dh,
-                          feature_code, hi_byte << 8 | lo_byte,
-                          NULL);
-   }
+      // unwrap into 2 cases to clarify logic and avoid compiler warning
 
+      if (verified_hi_byte_loc) {
+         uint16_t verified_c_value = 0;
+         rc = ddci_set_continuous_vcp_value_verify(
+                             ddca_dh,
+                             feature_code, hi_byte << 8 | lo_byte,
+                             &verified_c_value);
+         *verified_hi_byte_loc = verified_c_value >> 8;
+         *verified_lo_byte_loc = verified_c_value & 0xff;
+      }
+      else {
+         rc = ddci_set_continuous_vcp_value_verify(
+                             ddca_dh,
+                             feature_code, hi_byte << 8 | lo_byte,
+                             NULL);
+      }
+   }
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "");
    return rc;
 }
@@ -974,7 +977,6 @@ ddci_set_table_vcp_value_verify(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "feature_code=0x%02x", feature_code);
-    free_thread_error_detail();
     DDCA_Status rc = 0;
 
     DDCA_Any_Vcp_Value valrec;
@@ -985,7 +987,7 @@ ddci_set_table_vcp_value_verify(
 
     if (verified_value_loc) {
        DDCA_Any_Vcp_Value * verified_single_value = NULL;
-       rc = set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
+       rc = ddci_set_single_vcp_value(ddca_dh, &valrec, &verified_single_value);
        if (verified_single_value) {
           DDCA_Table_Vcp_Value * verified_table_value = calloc(1,sizeof(DDCA_Table_Vcp_Value));
           verified_table_value->bytect = verified_single_value->val.t.bytect;
@@ -995,7 +997,7 @@ ddci_set_table_vcp_value_verify(
        }
     }
     else {
-       rc = set_single_vcp_value(ddca_dh, &valrec, NULL);
+       rc = ddci_set_single_vcp_value(ddca_dh, &valrec, NULL);
     }
 
     DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, rc, "");
@@ -1041,18 +1043,17 @@ ddci_set_any_vcp_value_verify(
       DDCA_Any_Vcp_Value *    new_value,
       DDCA_Any_Vcp_Value **   verified_value_loc)
 {
-   free_thread_error_detail();
    DDCA_Status rc = 0;
 
    if (verified_value_loc) {
       DDCA_Any_Vcp_Value * verified_single_value = NULL;
-      rc = set_single_vcp_value(ddca_dh, new_value, &verified_single_value);
+      rc = ddci_set_single_vcp_value(ddca_dh, new_value, &verified_single_value);
       if (verified_single_value) {
          *verified_value_loc = verified_single_value;       // do in need to make a copy for client?
       }
    }
    else {
-      rc = set_single_vcp_value(ddca_dh, new_value, NULL);
+      rc = ddci_set_single_vcp_value(ddca_dh, new_value, NULL);
    }
 
    return rc;
@@ -1193,6 +1194,8 @@ void init_api_access_feature_codes() {
 void init_api_feature_access() {
    // DBGMSG("Executing");
    RTTI_ADD_FUNC(ddca_get_non_table_vcp_value);
+   RTTI_ADD_FUNC(ddca_set_non_table_vcp_value);
+   RTTI_ADD_FUNC(ddci_set_single_vcp_value);
 }
 
 
