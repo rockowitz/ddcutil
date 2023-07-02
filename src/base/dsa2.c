@@ -622,8 +622,11 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
    bool debug = false;
    int next_step = prev_step;
    if (remaining_tries > 0) {   // handle maxtries failure
-      int remaining_steps = step_ct - prev_step;
+      int remaining_steps = step_ct - prev_step;  // TODO - should be step_ct - (prev_step+1)
       Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
+      // TODO: don't wait until last try to hit max step
+      // if (remaining_tries > 1) {
+      //    fadj = (1.0*remaining_steps) / (remaining_tries-1);
       Sleep_Multiplier fadj2 = fadj;
       if (fadj > .75 && fadj < 1.0)
          fadj2 = 1.0;
@@ -632,8 +635,8 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
       if (next_step > step_last)
          next_step = step_last;
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
-            "Executing prev_step=%d, remaining_tries=%d, fadj=%2.3f, fadj2=%2.3f, adjustment=%d, returning %d",
-            prev_step, remaining_tries, fadj, fadj2, adjustment, next_step);
+            "Executing prev_step=%d, remaining_tries=%d, remaining_steps=%d, fadj=%2.3f, fadj2=%2.3f, adjustment=%d, returning %d",
+            prev_step, remaining_tries, remaining_steps, fadj, fadj2, adjustment, next_step);
    }
    else {
       DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
@@ -990,7 +993,8 @@ dsa2_save_persistent_stats() {
    }
    else {
       fprintf(stats_file, "* I    interval remaining\n");
-      fprintf(stats_file, "* DEV EC C I Values\n");
+      fprintf(stats_file, "* L    current lookback\n");
+      fprintf(stats_file, "* DEV EC C I L Values\n");
       fprintf(stats_file, "* Values {tries required, step, epoch seconds}\n");
    }
 
@@ -1006,8 +1010,10 @@ dsa2_save_persistent_stats() {
          }
          else {
             fprintf(stats_file, "i2c-%d %02x %d %d %d",
-                 rtable->busno, rtable->edid_checksum_byte, rtable->cur_step,
-                 rtable->remaining_interval, rtable->cur_lookback);
+                 rtable->busno, rtable->edid_checksum_byte,
+                 rtable->cur_step,
+                 rtable->remaining_interval,
+                 rtable->cur_lookback);
          }
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
@@ -1157,23 +1163,32 @@ dsa2_restore_persistent_stats() {
 
          bool ok = (piecect >= min_pieces);
          if (ok) {
-            busno = i2c_name_to_busno(pieces[fieldndx++]);
+            busno = i2c_name_to_busno(pieces[fieldndx++]);    // field 0
             rtable = new_results_table(busno);
             // rtable->initial_step_from_cache = true;
             ok = (busno >= 0);
          }
-         ok = ok && any_one_byte_hex_string_to_byte_in_buf(pieces[fieldndx++], &rtable->edid_checksum_byte);
-         ok = ok && str_to_int(pieces[fieldndx++], &rtable->cur_step, 10);
+
+         ok = ok && any_one_byte_hex_string_to_byte_in_buf(pieces[fieldndx++], &rtable->edid_checksum_byte);  // field 1
+
+         ok = ok && str_to_int(pieces[fieldndx++], &rtable->cur_step, 10);  // field 2
+
          if (format_id == 1) {
             int isink;
-            ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
+            ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);  // field 3
          }
+
+         // format 1: field 4, format 2: field 3
          ok = ok && str_to_int(pieces[fieldndx++], &rtable->remaining_interval, 10);
+
          if (format_id == 1) {
                int isink;
-               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
-               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);
+               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);  // field 5
+               ok = ok && str_to_int(pieces[fieldndx++], &isink, 10);  // field 6
          }
+
+         // n. Format 2: field 4 (current lookback) ignored
+
          if (ok) {
             // rtable->found_failure_step = (iwork);
             rtable->cur_retry_loop_step = rtable->cur_step;
@@ -1190,6 +1205,8 @@ dsa2_restore_persistent_stats() {
                rtable->initial_lookback = Default_Look_Back;
             }
          }
+
+         // field 1: start from field 7, format 2: start from field 5
          if (piecect >= min_pieces) {   // handle no Successful_Invocation data
             for (int ndx = min_pieces; ndx < piecect; ndx++) {
                ok = ok && cirb_parse_and_add(rtable->recent_values, pieces[ndx]);
@@ -1222,9 +1239,9 @@ dsa2_restore_persistent_stats() {
 
 bye:
    if (!all_ok) {
-      result = errinfo_new(DDCRC_BAD_DATA, __func__, "Error(s) reading cached performance stats file %s", stats_fn);
+      result = ERRINFO_NEW(DDCRC_BAD_DATA, "Error(s) reading cached performance stats file %s", stats_fn);
       for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-         Error_Info * err = errinfo_new(DDCRC_BAD_DATA, __func__, g_ptr_array_index(errmsgs, ndx));
+         Error_Info * err = ERRINFO_NEW(DDCRC_BAD_DATA, g_ptr_array_index(errmsgs, ndx));
          errinfo_add_cause(result, err);
       }
    }
@@ -1280,6 +1297,7 @@ init_dsa2() {
    RTTI_ADD_FUNC(dsa2_save_persistent_stats);
    RTTI_ADD_FUNC(dsa2_too_few_errors);
    RTTI_ADD_FUNC(dsa2_too_many_errors);
+   RTTI_ADD_FUNC(dsa2_next_retry_step);
 
    results_tables = calloc(I2C_BUS_MAX+1, sizeof(Results_Table*));
 
