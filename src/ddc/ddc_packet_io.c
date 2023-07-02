@@ -832,7 +832,7 @@ ddc_write_read_with_retry(
    else {
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
          // errinfo_free(try_errors[ndx]);
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], (debug || IS_TRACING() || report_freed_exceptions) && !dbgtrc_trace_to_syslog_only);
       }
    }
 
@@ -997,7 +997,7 @@ ddc_write_only_with_retry(
       //   no errors (tryctr == 1)
       // int last_bad_try_index = tryctr-2;
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], debug || IS_TRACING() || report_freed_exceptions);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], (debug || IS_TRACING() || report_freed_exceptions) && !dbgtrc_trace_to_syslog_only);
       }
    }
 

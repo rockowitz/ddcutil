@@ -731,7 +731,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
             Sys_Drm_Connector * conn = find_sys_drm_connector_by_busno(businfo->busno);
             if (conn)
-               dref->drm_connector = conn->connector_name;
+               dref->drm_connector = g_strdup(conn->connector_name);
             dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
             dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
