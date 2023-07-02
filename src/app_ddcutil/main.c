@@ -448,7 +448,7 @@ find_dref(
             // DBGMSG("driver_name = %p -> %s", dref->driver_name, dref->driver_name);
             Sys_Drm_Connector * conn = find_sys_drm_connector_by_busno(busno);
             if (conn)
-               dref->drm_connector = conn->connector_name;
+               dref->drm_connector = g_strdup(conn->connector_name);
 
             // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
             dref->detail = businfo;
@@ -700,7 +700,7 @@ main(int argc, char *argv[]) {
    bool main_debug = false;
    char * s = getenv("DDCUTIL_DEBUG_MAIN");
    if (s && strlen(s) > 0)
-      main_debug = false;
+      main_debug = true;
 
    int main_rc = EXIT_FAILURE;
    bool start_time_reported = false;
@@ -1044,9 +1044,12 @@ main(int argc, char *argv[]) {
 #endif
       )
    {
-      ddc_report_stats_main(parsed_cmd->stats_types,
+      ddc_report_stats_main(
+            parsed_cmd->stats_types,
             parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,
-            parsed_cmd->flags & CMD_FLAG_F6, 0);
+            parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS,
+            parsed_cmd->flags & CMD_FLAG_STATS_TO_SYSLOG,
+            0);
       // report_timestamp_history();  // debugging function
    }
 
