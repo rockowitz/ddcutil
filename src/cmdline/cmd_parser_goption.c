@@ -34,10 +34,11 @@
 
 
 // Variables used by callback functions
-static char *            usbwork       = NULL;
-static DDCA_Output_Level output_level  = DDCA_OL_NORMAL;
-static DDCA_Stats_Type   stats_work    = DDCA_STATS_NONE;
-static bool              verbose_stats = false;
+static char *            usbwork        = NULL;
+static DDCA_Output_Level output_level   = DDCA_OL_NORMAL;
+static DDCA_Stats_Type   stats_work     = DDCA_STATS_NONE;
+static bool              verbose_stats  = false;
+static bool              internal_stats = false;
 static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
 
 
@@ -69,7 +70,7 @@ output_arg_func(const gchar* option_name,
 }
 
 
-// Callback function for processing --stats
+// Callback function for processing --stats, --vstats, --istats
 static gboolean
 stats_arg_func(const    gchar* option_name,
                const    gchar* value,
@@ -81,6 +82,10 @@ stats_arg_func(const    gchar* option_name,
 
    if (streq(option_name, "--vstats"))
       verbose_stats = true;
+   else if (streq(option_name, "--istats")) {
+      verbose_stats = true;
+      internal_stats = true;
+   }
 
    bool ok = true;
    if (value) {
@@ -839,6 +844,8 @@ parse_command(
    gint     dispwork        = -1;
    char *   maxtrywork      = NULL;
 // char *   trace_destination = NULL;
+   gboolean trace_to_syslog_only_flag = false;
+   gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
@@ -927,6 +934,8 @@ parse_command(
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"vstats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed performance statistics",  "stats type"},
+      {"istats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
+                                                G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show detailed and internal performance statistics",  "stats type"},
       {"syslog",      '\0',0, G_OPTION_ARG_STRING,       &syslog_work,                    "system log level", valid_syslog_levels_string},
 
       // Performance
@@ -1040,7 +1049,10 @@ parse_command(
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
-
+      {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
+      {"stats-to-syslog",'\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,         &stats_to_syslog_only_flag,  "Direct stats to syslog", NULL},
 
       {"debug-parse",'\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &debug_parse_flag,     "Report parsed command",    NULL},
       {"parse-only", '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &parse_only_flag,      "Terminate after parsing",  NULL},
@@ -1251,7 +1263,8 @@ parse_command(
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->ignored_hiddevs  = ignored_hiddev_work;
-   SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS, verbose_stats);
+   SET_CMDFLAG(CMD_FLAG_VERBOSE_STATS,     verbose_stats);
+   SET_CMDFLAG(CMD_FLAG_INTERNAL_STATS,    internal_stats);
    SET_CMDFLAG(CMD_FLAG_DDCDATA,           ddc_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_SLAVE_ADDR,  force_slave_flag);
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
@@ -1297,6 +1310,8 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_QUICK,             quick_flag);
    SET_CMDFLAG(CMD_FLAG_MOCK,              mock_data_flag);
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
+   SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
+   SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 #ifdef REMOVED

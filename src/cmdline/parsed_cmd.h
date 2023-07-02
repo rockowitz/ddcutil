@@ -100,6 +100,12 @@ typedef enum {
    CMD_FLAG_FL2_SET        = 0x20000000000000,
    CMD_FLAG_ENABLE_CACHED_DISPLAYS
                            = 0x40000000000000,
+   CMD_FLAG_TRACE_TO_SYSLOG_ONLY
+                           = 0x80000000000000,
+   CMD_FLAG_STATS_TO_SYSLOG
+                         = 0x0100000000000000,
+   CMD_FLAG_INTERNAL_STATS
+                         = 0x0200000000000000,
 } Parsed_Cmd_Flags;
 
 #define IGNORED_VID_PID_MAX 4

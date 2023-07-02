@@ -178,6 +178,9 @@ dbgrpt_ntsa(int depth, char * title, gchar** values) {
 }
 
 
+#define RPT_CMDFLAG(_desc, _flag, _depth) \
+   rpt_str(_desc, NULL, SBOOL(parsed_cmd->flags & _flag), _depth)
+
 /** Dumps the #Parsed_Command data structure
  *  \param  parsed_cmd  pointer to instance
  *  \param  depth       logical indentation depth
@@ -281,6 +284,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       }
 
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,      d1);
+      RPT_CMDFLAG("internal stats", CMD_FLAG_INTERNAL_STATS, d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
       rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
       for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
@@ -292,6 +296,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       }
       rpt_int( "edid_read_size",   NULL, parsed_cmd->edid_read_size,                d1);
       rpt_str ("library trace file", NULL, parsed_cmd->trace_destination,           d1);
+      rpt_bool("trace to syslog only", NULL, parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY, d1);
+      rpt_bool("stats to syslog only", NULL, parsed_cmd->flags & CMD_FLAG_STATS_TO_SYSLOG, d1);
       rpt_str("syslog_level",      NULL, syslog_level_name(parsed_cmd->syslog_level), d1);
       rpt_bool("i2c_io_fileio",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
       rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
