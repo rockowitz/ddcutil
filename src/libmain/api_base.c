@@ -623,7 +623,7 @@ ddca_init(const char *      libopts,
             requested_stats = parsed_cmd->stats_types;
             ptd_api_profiling_enabled = parsed_cmd->flags & CMD_FLAG_PROFILE_API;
             per_display_stats = parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS;
-            dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_F6;
+            dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
             if (!submaster_initializer(parsed_cmd))
                master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
          }
