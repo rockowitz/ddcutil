@@ -21,6 +21,7 @@ void ddc_report_stats_main(
       DDCA_Stats_Type  stats,
       bool             report_per_isplay,
       bool             include_dsa_stats,
+      bool             stats_to_syslog_only,
       int              depth);
 
 #endif /* DDC_SERVICES_H_ */

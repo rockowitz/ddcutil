@@ -85,11 +85,17 @@ void ddc_reset_stats_main() {
 void ddc_report_stats_main(DDCA_Stats_Type  stats,
                            bool             show_per_display_stats,
                            bool             include_dsa_internal,
+                           bool             stats_to_syslog_only,
                            int depth)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDC, "stats: 0x%02x, show_per_thread_stats: %s, include_dsa_internal: %s",
          stats, sbool(show_per_display_stats), sbool(include_dsa_internal));
+
+   if (stats_to_syslog_only) {
+      start_capture(DDCA_CAPTURE_STDERR);
+   }
+
    rpt_nl();
    rpt_label(depth, "EXECUTION STATISTICS");
    rpt_nl();
@@ -144,7 +150,10 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
       if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
           pdd_report_all_elapsed(include_dsa_internal, depth);
+          // rpt_nl();
+          // dsa2_report_internal_all(depth);
       }
+
 
       // Reports locks held by per_thread_data() to confirm that locking has
       // trivial affect on performance.
@@ -154,6 +163,19 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
    if (ptd_api_profiling_enabled) {
       ptd_profile_report_all_threads(0);
       ptd_profile_report_stats_summary(0);
+   }
+
+   if (stats_to_syslog_only) {
+      char * result = end_capture();
+      Null_Terminated_String_Array lines = strsplit(result, "\n");
+      free(result);
+      int len = ntsa_length(lines);
+      int ndx;
+      for (ndx=0; ndx<len; ndx++) {
+         syslog(LOG_INFO, "%s", lines[ndx]);
+         // printf("%s\n", lines[ndx]);
+      }
+      ntsa_free(lines, true);
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_DDC, "");
