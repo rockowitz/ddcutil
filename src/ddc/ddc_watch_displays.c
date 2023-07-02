@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "util/coredefs.h"
 #include "util/data_structures.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
@@ -43,7 +44,11 @@
 #include "base/rtti.h"
 /** \endcond */
 
+#include "i2c/i2c_sysfs.h"
+
 #include "src/ddc/ddc_displays.h"
+#include "src/ddc/ddc_packet_io.h"
+#include "src/ddc/ddc_vcp.h"
 
 #include "src/ddc/ddc_watch_displays.h"
 
@@ -91,6 +96,12 @@ const char * displays_change_type_name(Displays_Change_Type change_type) {
 }
 
 
+#ifdef UNUSED
+/** Checks that a thread or process id is valid.
+ *
+ *  @param id  thread or process id
+ *  @return true if valid, false if not
+ */
 bool check_thread_or_process(pid_t id) {
    struct stat buf;
    char procfn[20];
@@ -101,6 +112,69 @@ bool check_thread_or_process(pid_t id) {
    if (!result)
       DBGMSG("!!! Returning: %s", sbool(result));
    return result;
+}
+#endif
+
+
+/** Tests if communication working for a Display_Ref
+ *
+ *  @param  dref   display reference
+ *  @return true/false
+ */
+bool is_dref_alive(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   Display_Handle* dh = NULL;
+   Error_Info * erec = NULL;
+   bool is_alive = true;
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {   // punt on DDCA_IO_USB for now
+      bool check_needed = true;
+      if (dref->drm_connector) {
+         char * status = NULL;
+         RPT_ATTR_TEXT(2,&status, "/sys/class/drm", dref->drm_connector, "status");
+         if (!streq(status, "connected"))
+            check_needed = false;
+         free(status);
+      }
+      if (check_needed) {
+         erec = ddc_open_display(dref, CALLOPT_WAIT, &dh);
+         assert(!erec);
+         Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
+         erec = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_nontable_response);
+         // seen: -ETIMEDOUT, DDCRC_NULL_RESPONSE then -ETIMEDOUT, -EIO, DDCRC_DATA
+         // if (erec && errinfo_all_causes_same_status(erec, 0))
+         if (erec)
+            is_alive = false;
+         ERRINFO_FREE_WITH_REPORT(erec, IS_DBGTRC(debug, TRACE_GROUP));
+         ddc_close_display_wo_return(dh);
+      }
+   }
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, is_alive, "");
+   return is_alive;
+}
+
+
+/** Check all display references to determine if they are active.
+ *  Sets or clears the DREF_ALIVE flag in the display reference.
+ */
+void check_drefs_alive() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   if (ddc_are_displays_detected()) {
+      GPtrArray * all_displays = ddc_get_all_displays();
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         bool alive = is_dref_alive(dref);
+         if (alive != (dref->flags & DREF_ALIVE) )
+            (void) dref_set_alive(dref, alive);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, is_alive=%s",
+                         dref_repr_t(dref), SBOOL(dref->flags & DREF_ALIVE));
+      }
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "displays not yet detected");
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -336,12 +410,10 @@ gpointer watch_displays_using_poll(gpointer data) {
           "Initial active DRM connectors: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (!terminate_watch_thread) {
-     // else    // logically meaningless, since if() case exits, but avoids clang use after free warning
-     prev_displays = check_displays(prev_displays, data);
-
+      prev_displays = check_displays(prev_displays, data);
+      check_drefs_alive();
       usleep(3000*1000);
-      // printf(".");
-      // fflush(stdout);
+      // printf("."); fflush(stdout);
    }
    DBGTRC_DONE(true, TRACE_GROUP, "Terminating");
    free_watch_displays_data(wdd);
@@ -603,7 +675,8 @@ DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
+                                       SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
    DDCA_Status ddcrc = DDCRC_OK;
 
    if (watch_displays_enabled) {
@@ -695,6 +768,8 @@ ddc_stop_watch_displays()
 
 
 void init_ddc_watch_displays() {
+   RTTI_ADD_FUNC(is_dref_alive);
+   RTTI_ADD_FUNC(check_drefs_alive);
    RTTI_ADD_FUNC(check_displays);
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
