@@ -602,7 +602,7 @@ Display_Ref * create_base_display_ref(DDCA_IO_Path io_path) {
  * \return pointer to newly allocated #Display_Ref
  */
 Display_Ref * create_bus_display_ref(int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_BASE, "busno=%d", busno);
    DDCA_IO_Path io_path;
    io_path.io_mode   = DDCA_IO_I2C;
