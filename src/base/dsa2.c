@@ -19,6 +19,7 @@
  
 #include "util/coredefs.h"
 #include "util/data_structures.h"
+#include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
@@ -60,7 +61,7 @@ int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
 int   target_avg_tries_upper_bound_10    = Default_Average_Tries_Upper_Bound * 10; // multiply by 10 for integer arithmetic
 int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
-int   min_decrement_lookback = 5;
+int   min_decrement_lookback = 5;  // lookback must be at least this size for step decrement
 int   global_lookback = Default_Look_Back;
 
 
@@ -314,7 +315,6 @@ typedef struct Results_Table {
    int  cur_step;
 
    int  remaining_interval;
-   int  min_ok_step;
    int  cur_retry_loop_step;
 
    int  initial_step;
@@ -326,9 +326,10 @@ typedef struct Results_Table {
    int  total_steps_down;
    int  successful_try_ct;
    int  retryable_failure_ct;
+   int  highest_step_total_failure;
    int  reset_ct;
    Byte edid_checksum_byte;
-   Byte state;
+   Byte state;               // RTABLE_ flags
 
    // format 1
    // bool found_failure_step;
@@ -365,6 +366,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(successful_try_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
+   ONE_INT_FIELD(highest_step_total_failure);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
    rpt_vstring(d1, "state                          %s",
                    VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
@@ -391,6 +393,7 @@ Results_Table * new_results_table(int busno) {
    // rtable->found_failure_step = false;
    rtable->state = 0x00;
    rtable->initial_lookback = rtable->cur_lookback;
+   rtable->highest_step_total_failure = -1;
    return rtable;
 }
 
@@ -622,11 +625,15 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
    bool debug = false;
    int next_step = prev_step;
    if (remaining_tries > 0) {   // handle maxtries failure
-      int remaining_steps = step_ct - prev_step;  // TODO - should be step_ct - (prev_step+1)
+      int remaining_steps = step_ct - (prev_step+1);
+
       Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
-      // TODO: don't wait until last try to hit max step
-      // if (remaining_tries > 1) {
-      //    fadj = (1.0*remaining_steps) / (remaining_tries-1);
+      // don't wait until last try to hit max step
+      if (remaining_tries > 2)
+         fadj = (1.0*remaining_steps) / (remaining_tries-2);
+      if (remaining_tries > 1)
+         fadj = (1.0*remaining_steps) / (remaining_tries-1);
+
       Sleep_Multiplier fadj2 = fadj;
       if (fadj > .75 && fadj < 1.0)
          fadj2 = 1.0;
@@ -672,7 +679,7 @@ void test_dsa2_next_retry_step() {
  *  @param rtable pointer to #Results_Table to examine
  */
 static void
-dsa2_adjust_for_recent_successes(Results_Table * rtable) {
+dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    bool debug = false;
 
    // n. called only if most recent try was a success
@@ -700,69 +707,38 @@ dsa2_adjust_for_recent_successes(Results_Table * rtable) {
       if (latest_values[ndx].tryct < min_tryct)
             min_tryct = latest_values[ndx].tryct;
    }
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, actual_lookback = %d, latest_values:%s",
-         rtable->busno, actual_lookback, b);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, min_tr yct = %d, total_tryct = %d",
-                                         max_tryct, min_tryct, total_tryct);
    int last_value_pos = actual_lookback - 1;
    int most_recent_step = latest_values[last_value_pos].required_step;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "actual_lookback=%d,  most_recent_step=%d",
-                                         actual_lookback, most_recent_step);
 
-   if (dsa2_too_many_errors(max_tryct, total_tryct, actual_lookback) && rtable->cur_step < most_recent_step) {
-      if (rtable->cur_step < step_last) {
-         rtable->cur_step++;
-         rtable->total_steps_up++;
-         rtable->adjustments_up++;
-      }
-      // rtable->found_failure_step = true;
-      // rtable->min_ok_step = rtable->cur_step;
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-      //       "busno=%d, Incremented cur_step. Set found_failure_step=true, min_ok_step=%d, cur_step=%2d",
-      //       rtable->busno, rtable->min_ok_step, rtable->cur_step);
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, actual_lookback = %d, latest_values:%s",
+         rtable, rtable->busno, actual_lookback, b);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
+                                         max_tryct, min_tryct, total_tryct, most_recent_step);
+   // show_backtrace(0);
+
+   assert(most_recent_step <= step_last);
+   if (dsa2_too_many_errors(max_tryct, total_tryct, actual_lookback)
+         && rtable->cur_step < most_recent_step
+      // && rtable->cur_step < step_last  // redundant
+      )
+   {
+      rtable->cur_step++;
+      rtable->total_steps_up++;
+      rtable->adjustments_up++;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Incremented cur_step. New value: %d",
+                                            rtable->busno, rtable->cur_step);
    }
-   else {
-      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-      //        "busno=%d, Looking to decrement cur_step, cur_step=%d, found_failure_step=%s, min_ok_step = %d",
-      //        rtable->busno, rtable->cur_step, sbool(rtable->found_failure_step), rtable->min_ok_step);
-#ifdef OLD
-      if (rtable->cur_step > 0) {
-         if (total_tryct <= actual_lookback+1) {  // i.e. no more than 1 retry was required
-            rtable->cur_step--;
-            rtable->adjustments_down++;
-            if (rtable->cur_step > rtable->min_ok_step)
-               rtable->min_ok_step = rtable->cur_step;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-                  "Unconditionally decremented cur_step.  New value: %d", rtable->cur_step);
-         }
-         else if (rtable->found_failure_step) {
-            if (rtable->cur_step > rtable->min_ok_step) {
-               rtable->cur_step--;
-               rtable->adjustments_down++;
-               DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
-            }
-         }
-         else {
-            rtable->cur_step--;
-            rtable->adjustments_down++;
-            DBGTRC(debug, DDCA_TRC_NONE, "Decremented cur_step. New value: %d", rtable->cur_step);
-         }
-      }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "rtable->cur_step = 0, cannot decrement");
-      }
-#endif
-      if (actual_lookback >= min_decrement_lookback && rtable->cur_step > 0 && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback)) {
-         rtable->cur_step--;
-         rtable->total_steps_down++;
-         rtable->adjustments_down++;
-         rtable->cur_lookback = actual_lookback;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
-      }
+   else
+      if (actual_lookback >= min_decrement_lookback
+            && rtable->cur_step > 0
+            && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback))
+   {
+      rtable->cur_step--;
+      rtable->total_steps_down++;
+      rtable->adjustments_down++;
+      rtable->cur_lookback = actual_lookback;
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
    }
-   // DBGTRC_DONE(debug, DDCA_TRC_NONE,
-   //        "busno=%d, max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, rtable->min_ok_step=%d. rtable->found_failure_step=%s",
-   //         rtable->busno, max_tryct, total_tryct, rtable->cur_step, rtable->min_ok_step, sbool(rtable->found_failure_step) );
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
           "busno=%d, max_tryct=%d, total_tryct=%d, rtable->cur_step=%d",
            rtable->busno, max_tryct, total_tryct, rtable->cur_step);
@@ -840,6 +816,8 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
             rtable->total_steps_up += rtable->cur_retry_loop_step - rtable->cur_step;
             rtable->cur_step = rtable->cur_retry_loop_step;
             rtable->adjustments_up++;
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d",
+                                                  rtable->busno, rtable->cur_step);
             // rtable->min_ok_step = rtable->cur_step;
             // rtable->found_failure_step = true;
          }
@@ -847,21 +825,29 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
       else if (tries > 2) {
          rtable->remaining_interval -= 1;
          if (rtable->remaining_interval == 0) {
-            dsa2_adjust_for_recent_successes(rtable);
+            dsa2_adjust_for_rcnt_successes(rtable);
             rtable->remaining_interval = adjustment_interval;
          }
       }
       else {
-         dsa2_adjust_for_recent_successes(rtable);
+         dsa2_adjust_for_rcnt_successes(rtable);
          rtable->remaining_interval = adjustment_interval;
       }
       rtable->cur_retry_loop_step = rtable->cur_step;
    }
 
    else {    // ddcrc != 0
-      // no more tries are possible, set dummy values
+      if (rtable->cur_step < step_last) {
+         if (rtable->cur_step > rtable->highest_step_total_failure)
+            rtable->highest_step_total_failure = rtable->cur_step;
+         rtable->total_steps_up++;
+         rtable->adjustments_up++;
+         rtable->cur_step = rtable->cur_retry_loop_step + 1;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "all tries failed. busno=%d, Incremented cur_step. New value: %d",
+               rtable->busno, rtable->cur_step);
+      }
       rtable->remaining_interval = adjustment_interval;
-      rtable->cur_retry_loop_step = initial_step;    // ???
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_NONE,
@@ -879,14 +865,15 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
  *  @return multiplier value
  */
 Sleep_Multiplier
-dsa2_get_adjusted_sleep_multiplier(Results_Table * rtable) {
+dsa2_get_adjusted_sleep_mult(Results_Table * rtable) {
    bool debug = false;
    Sleep_Multiplier result = 1.0f;
    assert(rtable);
    result = steps[rtable->cur_retry_loop_step]/100.0;
    DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
-                  "rtable=%p, rtable->cur_retry_loop_step=%d, Returning: %.2f",
-                  rtable,  rtable->cur_retry_loop_step, result);
+                  "rtable=%p, busno=%d, rtable->cur_retry_loop_step=%d, Returning: %.2f",
+                  rtable,  rtable->busno, rtable->cur_retry_loop_step, result);
+   // show_backtrace(0);
    return result;
 }
 
@@ -977,7 +964,6 @@ dsa2_save_persistent_stats() {
    }
    DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
 
-
    int format_id = 2;
    fprintf(stats_file, "FORMAT %d\n", format_id);
    fprintf(stats_file, "* DEV  /dev/i2c device\n");
@@ -1003,17 +989,26 @@ dsa2_save_persistent_stats() {
          Results_Table * rtable = results_tables[ndx];
          if (debug)
             dbgrpt_results_table(rtable, 2);
+         int next_step = -1;
+         if (rtable->highest_step_total_failure >= 0) {
+            next_step = MIN(rtable->highest_step_total_failure + 1, step_last);
+            rtable->cur_step = MAX(rtable->cur_step,  next_step);
+         }
          if (format_id == 1) {
             fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
                  rtable->busno, rtable->edid_checksum_byte, rtable->cur_step, rtable->cur_lookback,
                  rtable->remaining_interval, 0, 0);
          }
-         else {
+         else {  // format_id == 2
             fprintf(stats_file, "i2c-%d %02x %d %d %d",
                  rtable->busno, rtable->edid_checksum_byte,
                  rtable->cur_step,
                  rtable->remaining_interval,
                  rtable->cur_lookback);
+            if (next_step >= 0)  {
+               fprintf(stats_file, " {%d,%d,%ld}",
+                   999, rtable->cur_step, cur_realtime_nanosec()/(1000*1000*1000));
+            }
          }
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
@@ -1199,9 +1194,6 @@ dsa2_restore_persistent_stats() {
             if (ok) {
                rtable->cur_retry_loop_step = rtable->cur_step;
                rtable->initial_step = rtable->cur_step;
-
-               // temp: dummy values
-               // rtable->found_failure_step = false;
                rtable->initial_lookback = Default_Look_Back;
             }
          }
@@ -1286,9 +1278,9 @@ void test_one_logistic(int steps) {
  */
 void
 init_dsa2() {
-   RTTI_ADD_FUNC(dsa2_adjust_for_recent_successes);
+   RTTI_ADD_FUNC(dsa2_adjust_for_rcnt_successes);
    RTTI_ADD_FUNC(dsa2_erase_persistent_stats);
-   RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_multiplier);
+   RTTI_ADD_FUNC(dsa2_get_adjusted_sleep_mult);
    RTTI_ADD_FUNC(dsa2_get_results_table_by_busno);
    RTTI_ADD_FUNC(dsa2_note_retryable_failure);
    RTTI_ADD_FUNC(dsa2_record_final);
