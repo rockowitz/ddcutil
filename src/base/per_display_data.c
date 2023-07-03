@@ -667,7 +667,7 @@ Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    float result = 1.0f;
 
    if (pdd->dsa2_enabled) {
-      result = dsa2_get_adjusted_sleep_multiplier(pdd->dsa2_data);
+      result = dsa2_get_adjusted_sleep_mult(pdd->dsa2_data);
    }
    else {
       result = pdd->user_sleep_multiplier;
