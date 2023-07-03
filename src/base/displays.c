@@ -1058,7 +1058,7 @@ char * interpret_dref_flags_t(Dref_Flags flags) {
    char * buf = get_thread_fixed_buffer(&buf_key, 300);
 
    char * buftemp = vnt_interpret_flags(flags, dref_flags_table, false, ", ");
-   g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation benign
+   g_strlcpy(buf, buftemp, 300);    // n. this is a debug msg, truncation benign
    free(buftemp);
 
    return buf;
