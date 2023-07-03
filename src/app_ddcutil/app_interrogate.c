@@ -2,7 +2,7 @@
  *  Implement the INTERROGATE command
  */
 
-// Copyright (C) 2021-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -20,7 +20,6 @@
 #include "base/core.h"
 #include "base/parms.h"
 #include "base/rtti.h"
-// #include "base/thread_sleep_data.h"
 #include "base/per_display_data.h"
 
 #include "cmdline/parsed_cmd.h"
@@ -31,10 +30,9 @@
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_services.h"
-#include "ddc/ddc_try_stats.h"
+#include "ddc/ddc_try_data.h"
 
 #include "app_sysenv/query_sysenv.h"
-
 #include "app_probe.h"
 
 #include "app_interrogate.h"

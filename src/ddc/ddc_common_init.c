@@ -43,7 +43,7 @@
 #include "ddc_displays.h"
 #include "ddc_serialize.h"
 #include "ddc_services.h"
-#include "ddc_try_stats.h"
+#include "ddc/ddc_try_data.h"
 #include "ddc_vcp.h"
 
 #include "ddc_common_init.h"

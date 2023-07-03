@@ -87,7 +87,7 @@
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
 #include "ddc/ddc_services.h"
-#include "ddc/ddc_try_stats.h"
+#include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp_version.h"
 #include "ddc/ddc_vcp.h"
 #include "ddc/ddc_watch_displays.h"

@@ -29,9 +29,8 @@
 #include "base/tuned_sleep.h"
 
 #include "ddc/ddc_packet_io.h"
-#include "ddc/ddc_try_stats.h"
-
 #include "ddc/ddc_multi_part_io.h"
+#include "ddc/ddc_try_data.h"
 
 
 // Trace management

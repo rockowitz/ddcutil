@@ -47,7 +47,7 @@
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_read_capabilities.h"
 #include "ddc/ddc_serialize.h"
-#include "ddc/ddc_try_stats.h"
+#include "ddc/ddc_try_data.h"
 #include "ddc/ddc_vcp.h"
 #ifdef BUILD_SHARED_LIB
 #include "ddc/ddc_watch_displays.h"
@@ -196,13 +196,17 @@ void init_ddc_services() {
    init_usb_services();
 #endif
 
-   // ddc:
-   try_data_init();
+   // vcp:
    init_persistent_capabilities();
    init_parse_capabilities();
    init_vcp_feature_codes();
+
+   // dyn:
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_dyn_feature_files();
+
+   // ddc:
+   init_ddc_try_data();
    init_ddc_display_selection();
    init_ddc_display_lock();
    init_ddc_display_ref_reports();
@@ -232,6 +236,7 @@ void terminate_ddc_services() {
    terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
    terminate_ddc_packet_io();
    terminate_ddc_display_lock();
+
    terminate_persistent_capabilities();
 #ifdef USE_USB
    terminate_usb_services();

@@ -50,7 +50,7 @@
 #endif
 
 #include "ddc/ddc_display_lock.h"
-#include "ddc/ddc_try_stats.h"
+#include "ddc/ddc_try_data.h"
 
 #include "ddc/ddc_packet_io.h"
 

@@ -8,6 +8,7 @@
 
 /** \cond */
 #include <assert.h>
+#include <ddc/ddc_try_data.h>
 #include <glib-2.0/glib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,9 +23,9 @@
 #include "base/ddc_errno.h"
 #include "base/display_retry_data.h"
 #include "base/parms.h"
+#include "base/rtti.h"
 #include "base/stats.h"
 
-#include "ddc/ddc_try_stats.h"
 
 //
 // Locking
@@ -158,10 +159,12 @@ void try_data_init_retry_type(Retry_Operation retry_type, Retry_Op_Value maxtrie
 
 /** Performs initialization at time of program startup.
  */
-void try_data_init() {
+void init_ddc_try_data() {
    for (int retry_type = 0; retry_type < RETRY_OP_COUNT; retry_type++) {
       try_data_init_retry_type(retry_type, default_maxtries[retry_type]);
    }
+
+   RTTI_ADD_FUNC(try_data_get_maxtries2);
 }
 
 
@@ -177,7 +180,7 @@ void try_data_init() {
 Retry_Op_Value try_data_get_maxtries2(Retry_Operation retry_type) {
    bool debug = false;
    int result = try_data[retry_type].maxtries;
-   DBGMSF(debug, "retry type=%s, returning %d", retry_type_name(retry_type), result);
+   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "retry type=%s, returning %d", retry_type_name(retry_type), result);
    return result;
 }
 
@@ -433,4 +436,5 @@ void ddc_report_ddc_stats(int depth) {
    try_data_report2(MULTI_PART_READ_OP,  depth);   //   ddc_report_multi_part_read_stats(depth);
    try_data_report2(MULTI_PART_WRITE_OP, depth);   //   ddc_report_multi_part_write_stats(depth);
 }
+
 

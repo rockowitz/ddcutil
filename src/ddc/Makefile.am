@@ -29,7 +29,7 @@ ddc_services.c              \
 ddc_strategy.c              \
 ddc_vcp.c                   \
 ddc_vcp_version.c           \
-ddc_try_stats.c 
+ddc_try_data.c 
 
 if ENABLE_SHARED_LIB_COND
 libddc_la_SOURCES += \
