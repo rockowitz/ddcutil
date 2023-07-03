@@ -649,11 +649,7 @@ ddc_write_read_with_retry(
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
                                        "expected_subtype=0x%02x, all_zero_response_ok=%s",
           dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED: %s",
-         sbool(dh->dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED: %s",
-         sbool(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
    // if (debug)
@@ -770,24 +766,13 @@ ddc_write_read_with_retry(
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d, tryctr=%d, retryable=%s",
                              psc, tryctr, sbool(retryable));
-#ifdef OLD
-      if (dsa2_enabled && psc != 0)
-         dsa2_note_retryable_failure(dh->dref->io_path,
-                                    (max_tries-1) - tryctr);  // remaining retries
-#endif
       if (psc != 0)
          pdd_note_retryable_failure_by_dh(dh, (max_tries-1) - tryctr);  // remaining retries
    }
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
-#ifdef OLD
-   if (psc == 0 && dsa2_enabled)
-      dsa2_record_final(dh->dref->io_path, psc, tryctr);
-   if (psc == 0)
-      pdd_record_adjusted_successful_sleep_multiplier_bounds(pdd);
-#endif
-   if (psc == 0)
+   // if (psc == 0)
       pdd_record_final_by_dh(dh, psc, tryctr);
 
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d (%s), retryable=%s, read_bytewise=%s",
