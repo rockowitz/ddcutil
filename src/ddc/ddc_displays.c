@@ -293,7 +293,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED");
                   dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
                }
-               dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
+
                free(parsed_response_loc0);
             }
          }  // end, communication working
@@ -318,6 +318,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          errinfo_free(ddc_excp);
 
       if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+         dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
          // Would prefer to defer checking version until actually needed to avoid additional DDC io
          // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
          // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
