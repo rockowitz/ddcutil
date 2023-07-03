@@ -160,7 +160,7 @@ bool is_dref_alive(Display_Ref * dref) {
 void check_drefs_alive() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   if (ddc_are_displays_detected()) {
+   if (ddc_displays_already_detected()) {
       GPtrArray * all_displays = ddc_get_all_displays();
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
