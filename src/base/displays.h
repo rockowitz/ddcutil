@@ -158,20 +158,23 @@ extern bool ddc_never_uses_null_response_for_unsupported;
 
 // Must be kept in sync with dref_flags_table
 typedef uint16_t Dref_Flags;
-#define DREF_DDC_COMMUNICATION_CHECKED                 0x0080
-#define DREF_DDC_COMMUNICATION_WORKING                 0x0040
-#define DREF_DDC_IS_MONITOR_CHECKED                    0x0010
+#define DREF_DDC_COMMUNICATION_CHECKED                 0x0001
+#define DREF_DDC_COMMUNICATION_WORKING                 0x0002
+#define DREF_DDC_IS_MONITOR_CHECKED                    0x0004
 #define DREF_DDC_IS_MONITOR                            0x0008
-#define DREF_TRANSIENT                                 0x0004
-#define DREF_DYNAMIC_FEATURES_CHECKED                  0x0002
-#define DREF_OPEN                                      0x0001
-#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    0x0800
-#define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x0400
-#define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0200
+
+#define DREF_UNSUPPORTED_CHECKED                       0x0010
+#define DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    0x0020
+#define DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED 0x0040
+#define DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         0x0080
 #define DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED         0x0100
-#define DREF_DDC_BUSY                                  0x8000
-#define DREF_REMOVED                                   0x4000
-#define DREF_ALIVE                                     0x2000
+
+#define DREF_DYNAMIC_FEATURES_CHECKED                  0x0200
+#define DREF_TRANSIENT                                 0x0400
+#define DREF_OPEN                                      0x0800
+#define DREF_DDC_BUSY                                  0x1000
+#define DREF_REMOVED                                   0x2000
+#define DREF_ALIVE                                     0x4000
 
 char * interpret_dref_flags_t(Dref_Flags flags);
 

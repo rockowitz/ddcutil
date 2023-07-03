@@ -1022,24 +1022,25 @@ char * hiddev_number_to_name(int hiddev_number) {
 bool ddc_never_uses_null_response_for_unsupported = false;
 // bool ddc_always_uses_null_response_for_unsupported = false;
 
-
-
 Value_Name_Table dref_flags_table = {
       VN(DREF_DDC_COMMUNICATION_CHECKED),
- //   VN(DREF_DDC_COMMUNICATION_WORKING),
+      VN(DREF_DDC_COMMUNICATION_WORKING),
       VN(DREF_DDC_IS_MONITOR_CHECKED),
       VN(DREF_DDC_IS_MONITOR),
-      VN(DREF_TRANSIENT),
-      VN(DREF_DYNAMIC_FEATURES_CHECKED),
-      VN(DREF_OPEN),
+
+      VN(DREF_UNSUPPORTED_CHECKED),
       VN(DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED),
       VN(DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED),
       VN(DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED),
       VN(DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED),
+
+      VN(DREF_TRANSIENT),
+      VN(DREF_DYNAMIC_FEATURES_CHECKED),
+      VN(DREF_OPEN),
       VN(DREF_DDC_BUSY),
       VN(DREF_REMOVED),
       VN(DREF_ALIVE),
-      VN(CALLOPT_NONE),                // special entry
+//    VN(CALLOPT_NONE),                // special entry
       VN_END
 };
 
@@ -1054,7 +1055,7 @@ Value_Name_Table dref_flags_table = {
  */
 char * interpret_dref_flags_t(Dref_Flags flags) {
    static GPrivate  buf_key = G_PRIVATE_INIT(g_free);
-   char * buf = get_thread_fixed_buffer(&buf_key, 200);
+   char * buf = get_thread_fixed_buffer(&buf_key, 300);
 
    char * buftemp = vnt_interpret_flags(flags, dref_flags_table, false, ", ");
    g_strlcpy(buf, buftemp, 200);    // n. this is a debug msg, truncation benign
