@@ -61,7 +61,7 @@ int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
 int   target_avg_tries_upper_bound_10    = Default_Average_Tries_Upper_Bound * 10; // multiply by 10 for integer arithmetic
 int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
-int   min_decrement_lookback = 5;  // lookback must be at least this size for step decrement
+int   Min_Decrement_Lookback = 5;  // lookback must be at least this size for step decrement
 int   global_lookback = Default_Look_Back;
 
 
@@ -326,7 +326,7 @@ typedef struct Results_Table {
    int  total_steps_down;
    int  successful_try_ct;
    int  retryable_failure_ct;
-   int  highest_step_total_failure;
+   int  highest_step_complete_loop_failure;
    int  reset_ct;
    Byte edid_checksum_byte;
    Byte state;               // RTABLE_ flags
@@ -366,7 +366,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(successful_try_ct);
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
-   ONE_INT_FIELD(highest_step_total_failure);
+   ONE_INT_FIELD(highest_step_complete_loop_failure);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
    rpt_vstring(d1, "state                          %s",
                    VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
@@ -393,7 +393,7 @@ Results_Table * new_results_table(int busno) {
    // rtable->found_failure_step = false;
    rtable->state = 0x00;
    rtable->initial_lookback = rtable->cur_lookback;
-   rtable->highest_step_total_failure = -1;
+   rtable->highest_step_complete_loop_failure = -1;
    return rtable;
 }
 
@@ -729,7 +729,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
                                             rtable->busno, rtable->cur_step);
    }
    else
-      if (actual_lookback >= min_decrement_lookback
+      if (actual_lookback >= Min_Decrement_Lookback
             && rtable->cur_step > 0
             && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback))
    {
@@ -838,8 +838,8 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
 
    else {    // ddcrc != 0
       if (rtable->cur_step < step_last) {
-         if (rtable->cur_step > rtable->highest_step_total_failure)
-            rtable->highest_step_total_failure = rtable->cur_step;
+         if (rtable->cur_step > rtable->highest_step_complete_loop_failure)
+            rtable->highest_step_complete_loop_failure = rtable->cur_step;
          rtable->total_steps_up++;
          rtable->adjustments_up++;
          rtable->cur_step = rtable->cur_retry_loop_step + 1;
@@ -990,8 +990,8 @@ dsa2_save_persistent_stats() {
          if (debug)
             dbgrpt_results_table(rtable, 2);
          int next_step = -1;
-         if (rtable->highest_step_total_failure >= 0) {
-            next_step = MIN(rtable->highest_step_total_failure + 1, step_last);
+         if (rtable->highest_step_complete_loop_failure >= 0) {
+            next_step = MIN(rtable->highest_step_complete_loop_failure + 1, step_last);
             rtable->cur_step = MAX(rtable->cur_step,  next_step);
          }
          if (format_id == 1) {
