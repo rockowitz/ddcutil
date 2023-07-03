@@ -764,8 +764,8 @@ ddc_write_read_with_retry(
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
       }    // rc < 0
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d, tryctr=%d, retryable=%s",
-                             psc, tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d (%s), tryctr=%d, retryable=%s",
+                             psc, psc_name(psc), tryctr, sbool(retryable));
       if (psc != 0)
          pdd_note_retryable_failure_by_dh(dh, (max_tries-1) - tryctr);  // remaining retries
    }
