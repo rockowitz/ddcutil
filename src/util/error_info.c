@@ -179,7 +179,7 @@ errinfo_free_with_report(
    if (erec) {
       if (report) {
          rpt_vstring(0, "(%s) Freeing exception:", func);
-            errinfo_report(erec, 1);
+         errinfo_report(erec, 1);
       }
       errinfo_free(erec);
    }
@@ -742,6 +742,7 @@ errinfo_causes_string(Error_Info * erec) {
 #endif
 
 
+
 /** Emits a full report of the contents of the specified #Error_Info,
  *  using report functions.
  *
@@ -781,6 +782,18 @@ errinfo_report(Error_Info * erec, int depth) {
 #endif
    // rpt_vstring(depth, "(%s) Done", __func__);
 }
+
+
+#ifdef NO
+void errinfo_free_with_report(
+      Error_Info *  erec,
+      bool          report,
+      const char *  func)
+{
+   (void) errinfo_free_with_report_collect(erec, report, func, false);
+}
+#endif
+
 
 
 void
