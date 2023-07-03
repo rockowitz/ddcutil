@@ -1028,6 +1028,7 @@ typedef struct {
    char * in_memory_bufstart; ;
    size_t in_memory_bufsize;
    DDCA_Capture_Option_Flags flags;
+   bool   in_memory_capture_active;
 } In_Memory_File_Desc;
 
 
@@ -1056,11 +1057,12 @@ start_capture(DDCA_Capture_Option_Flags flags) {
 
    if (!fdesc->in_memory_file) {
       fdesc->in_memory_file = open_memstream(&fdesc->in_memory_bufstart, &fdesc->in_memory_bufsize);
-      set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
-      fdesc->flags = flags;
-      if (flags & DDCA_CAPTURE_STDERR)
-         set_ferr(fdesc->in_memory_file);
    }
+   set_fout(fdesc->in_memory_file);   // n. ddca_set_fout() is thread specific
+   fdesc->flags = flags;
+   if (flags & DDCA_CAPTURE_STDERR)
+      set_ferr(fdesc->in_memory_file);
+   fdesc->in_memory_capture_active = true;
    // printf("(%s) Done.\n", __func__);
 }
 
@@ -1068,7 +1070,7 @@ start_capture(DDCA_Capture_Option_Flags flags) {
 char *
 end_capture(void) {
    In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-   // In_Memory_File_Desc * fdesc = &in_memory_file_desc;
+   assert(fdesc->in_memory_capture_active);
 
    char * result = "\0";
    // printf("(%s) Starting.\n", __func__);
@@ -1090,6 +1092,7 @@ end_capture(void) {
    set_fout_to_default();
    if (fdesc->flags & DDCA_CAPTURE_STDERR)
       set_ferr_to_default();
+   fdesc->in_memory_capture_active = false;
 
    // printf("(%s) Done. result=%p\n", __func__, result);
    return result;
@@ -1120,9 +1123,37 @@ int captured_size() {
 }
 #endif
 
-
-
-
+#ifdef FUTURE
+/** Releases a #Error_Info instance, including all instances it points to.
+ *  Optionally reports the instance before freeing it, taking into account
+ *  syslog redirection.
+ *
+ *  \param  erec   pointer to #Error_Info instance,
+ *                 do nothing if NULL
+ *  \param  report if true, report the instance
+ *  \param  func   name of calling function
+ */
+void
+base_errinfo_free_with_report(
+      Error_Info * erec,
+      bool         report,
+      const char * func)
+{
+   if (erec) {
+      if (report) {
+         In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
+         if ( (dbgtrc_trace_to_syslog_only && !fdesc->in_memory_capture_active) ||false) {
+            // TODO output to syslog
+         }
+         else {
+            rpt_vstring(0, "(%s) Freeing exception:", func);
+            errinfo_report(erec, 1);
+         }
+      }
+      errinfo_free(erec);
+   }
+}
+#endif
 
 
 void init_core() {
