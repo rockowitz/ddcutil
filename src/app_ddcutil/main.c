@@ -1058,7 +1058,7 @@ bye:
    free(untokenized_cmd_prefix);
    free(configure_fn);
    free_regex_hash_table();
-   if (parsed_cmd && parsed_cmd->cmd_id != CMDID_CHKUSBMON) {
+   if (parsed_cmd && parsed_cmd->cmd_id != CMDID_CHKUSBMON && parsed_cmd->cmd_id != CMDID_DISCARD_CACHE) {
       if (dsa2_enabled)
          dsa2_save_persistent_stats();
       if (display_caching_enabled)
