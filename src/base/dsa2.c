@@ -566,7 +566,7 @@ dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
 // The Algorithm
 //
 
-/** Encapsulates the algorithm used by #adjust_for_recent_successes() to
+/** Encapsulates the algorithm used by #adjust_for_rcnt_successes() to
  *  determine if recent Successful_Invocation buffer statistics indicate
  *  that the multiplier currently supplied by the dsa2 subsystem should
  *  be increased.
@@ -692,14 +692,8 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int max_tryct = 0;
    int min_tryct = 99;
    int total_tryct = 0;
-   char  b[300];
-   b[0] = '\0';
+
    for (int ndx = 0; ndx < actual_lookback; ndx++) {
-      if (debug)
-         sprintf(b + strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
-             (ndx > 0) ? ", " : "",
-             latest_values[ndx].tryct, latest_values[ndx].required_step,
-             latest_values[ndx].epoch_seconds);
 
       total_tryct += latest_values[ndx].tryct;
       if (latest_values[ndx].tryct > max_tryct)
@@ -710,6 +704,15 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int last_value_pos = actual_lookback - 1;
    int most_recent_step = latest_values[last_value_pos].required_step;
 
+   char  b[900]; b[0] = '\0';
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE) ) {
+      for (int ndx = 0; ndx < actual_lookback; ndx++) {
+         g_snprintf(b + strlen(b), 900-strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
+             (ndx > 0) ? ", " : "",
+             latest_values[ndx].tryct, latest_values[ndx].required_step,
+             latest_values[ndx].epoch_seconds);
+      }
+   }
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, rtable=%p, actual_lookback = %d, latest_values:%s",
          rtable->busno, rtable, actual_lookback, b);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
