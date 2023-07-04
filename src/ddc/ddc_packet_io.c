@@ -648,7 +648,8 @@ ddc_write_read_with_retry(
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
                                        "expected_subtype=0x%02x, all_zero_response_ok=%s",
-          dh_repr(dh), max_read_bytes, expected_response_type, expected_subtype, sbool(all_zero_response_ok)  );
+          dh_repr(dh), max_read_bytes, expected_response_type,
+          expected_subtype, sbool(all_zero_response_ok)  );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
@@ -657,8 +658,6 @@ ddc_write_read_with_retry(
 
    bool retry_null_response = !(dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED);
    bool read_bytewise = DDC_Read_Bytewise;   // normally set to DEFAULT_I2C_READ_BYTEWISE
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "retry_null_rsponse=%s", sbool(retry_null_response));
-
    DDCA_Status  psc;
    int  tryctr;
    bool retryable;
@@ -669,8 +668,9 @@ ddc_write_read_with_retry(
    int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
 
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "retry_null_response = %s, ddcrc_null_response_max = %d",
-                                         sbool(retry_null_response), ddcrc_null_response_max);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "retry_null_response=%s, ddcrc_null_response_max=%d, read_bytewise=%s",
+         sbool(retry_null_response), ddcrc_null_response_max, sbool(read_bytewise));
    Error_Info * try_errors[MAX_MAX_TRIES] = {NULL};
 
    TRACED_ASSERT(max_tries >= 0);
@@ -679,8 +679,8 @@ ddc_write_read_with_retry(
         tryctr++)
    {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "Start of try loop, tryctr=%d, max_tries=%d, rc=%d, retryable=%s, read_bytewise=%s",
-         tryctr, max_tries, psc, sbool(retryable), sbool(read_bytewise) );
+         "Start of try loop, tryctr=%d, max_tries=%d, psc=%s, retryable=%s, read_bytewise=%s",
+         tryctr, max_tries, psc_name_code(psc), sbool(retryable), sbool(read_bytewise) );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
@@ -722,8 +722,12 @@ ddc_write_read_with_retry(
                   retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
                   DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                   if (retryable) {
-                     if (ddcrc_null_response_ct == 1 && get_output_level() >= DDCA_OL_VERBOSE)
-                        f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                     if (ddcrc_null_response_ct == 1) {
+                        if (get_output_level() >= DDCA_OL_VERBOSE) {
+                           f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+                        }
+                        SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) Extended delay as recovery from DDC NULL Response", __func__);
+                     }
                      // if (max_tries > 3)
                      //    max_tries = 3;
                   }
@@ -764,8 +768,8 @@ ddc_write_read_with_retry(
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
       }    // rc < 0
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%d (%s), tryctr=%d, retryable=%s",
-                             psc, psc_name(psc), tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d, retryable=%s",
+                             psc_name_code(psc), tryctr, sbool(retryable));
       if (psc != 0)
          pdd_note_retryable_failure_by_dh(dh, (max_tries-1) - tryctr);  // remaining retries
    }
@@ -775,8 +779,8 @@ ddc_write_read_with_retry(
    // if (psc == 0)
       pdd_record_final_by_dh(dh, psc, tryctr);
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%d (%s), retryable=%s, read_bytewise=%s",
-         tryctr, psc, psc_desc(psc), sbool(retryable), sbool(read_bytewise));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%s, retryable=%s",
+         tryctr, psc_name_code(psc), sbool(retryable) );
 
    // int errct = (psc == 0) ? tryctr-1 : tryctr;
 
