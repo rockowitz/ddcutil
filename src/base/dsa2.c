@@ -756,8 +756,8 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
 void
 dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "rtable=%p, busno=%d, remaining_tries=%d, dsa2_enabled=%s",
-         rtable, rtable->busno, remaining_tries, sbool(dsa2_enabled));
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
+         rtable->busno, rtable, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
    rtable->retryable_failure_ct++;
    int prev_step = rtable->cur_retry_loop_step;
@@ -768,8 +768,8 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
                                          prev_step, remaining_tries, next_step);
    rtable->cur_retry_loop_step = next_step;
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Previous step=%d, next step = %d",
-                                     prev_step, rtable->cur_retry_loop_step);
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "busno=%d, previous step=%d, next step = %d",
+                                     rtable->busno, prev_step, rtable->cur_retry_loop_step);
 }
 
 
