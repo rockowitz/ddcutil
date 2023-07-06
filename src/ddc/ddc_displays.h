@@ -21,6 +21,8 @@
 #include "usb/usb_displays.h"
 #endif
 
+
+
 // Initial Checks
 void        ddc_set_async_threshold(int threshold);
 bool        ddc_initial_checks_by_dref(Display_Ref * dref);
