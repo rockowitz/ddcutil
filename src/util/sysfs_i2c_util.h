@@ -2,7 +2,7 @@
  *  i2c specific /sys functions
  */
 
-// Copyright (C) 2020-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2020-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_I2C_UTIL_H_
@@ -40,7 +40,7 @@ bool
 sysfs_is_ignorable_i2c_device(
       int busno);
 
-Bit_Set_256
+Bit_Set_32
 get_sysfs_drm_card_numbers();
 
 #endif /* SYSFS_I2C_UTIL_H_ */

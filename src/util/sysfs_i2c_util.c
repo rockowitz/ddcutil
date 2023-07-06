@@ -2,7 +2,7 @@
  *  i2c specific /sys functions
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
@@ -280,7 +280,7 @@ do_sysfs_drm_card_number_dir(
 }
 
 
-Bit_Set_256
+Bit_Set_32
 get_sysfs_drm_card_numbers() {
    bool debug = false;
    char * dname =
@@ -291,7 +291,7 @@ get_sysfs_drm_card_numbers() {
  #endif
    if (debug)
       printf("(%s) Examining %s\n", __func__, dname);
-   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   Bit_Set_32 result = EMPTY_BIT_SET_32;
    dir_foreach(
                  dname,
                  predicate_cardN,            // filter function
@@ -299,6 +299,6 @@ get_sysfs_drm_card_numbers() {
                  &result,                 // accumulator
                  0);
    if (debug)
-      printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs256_to_string_decimal(result, "", ", "));
+      printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs32_to_string_decimal(result, "", ", "));
    return result;
  }
