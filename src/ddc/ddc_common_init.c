@@ -91,6 +91,8 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_trace_to_syslog_only = true;                      // extern in core.h
    // if (parsed_cmd->flags & CMD_FLAG_STATS_TO_SYSLOG_ONLY)
    //     stats_to_syslog_only = true;                      // extern in
+   if (parsed_cmd->flags & CMD_FLAG_F6)
+      watch_watching = true;
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);
