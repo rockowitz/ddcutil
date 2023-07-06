@@ -493,7 +493,7 @@ _ddca_terminate(void) {
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
-         dbgrpt_distinct_display_descriptors(2);
+         dbgrpt_display_locks(2);
       if (dsa2_enabled)
          dsa2_save_persistent_stats();
       if (display_caching_enabled)

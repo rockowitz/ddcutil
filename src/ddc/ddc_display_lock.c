@@ -181,11 +181,11 @@ get_distinct_display_ref(Display_Ref * dref) {
  *  \retval Error_Info(DDCRC_ALREADY_OPEN) display already locked in current thread
  */
 Error_Info *
-lock_distinct_display(
+lock_display(
       Distinct_Display_Ref   id,
-      Distinct_Display_Flags flags)
+      Display_Lock_Flags flags)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
 
    Error_Info * err = NULL;
@@ -229,8 +229,8 @@ lock_distinct_display(
  *  \retval NULL   no error
  */
 Error_Info *
-unlock_distinct_display(Distinct_Display_Ref id) {
-   bool debug = false;
+unlock_display(Distinct_Display_Ref id) {
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
    Error_Info * err = NULL;
    Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
@@ -286,7 +286,7 @@ void unlock_all_distinct_displays() {
  *  \param depth logical indentation depth
  */
 void
-dbgrpt_distinct_display_descriptors(int depth) {
+dbgrpt_display_locks(int depth) {
    rpt_vstring(depth, "display_descriptors@%p", display_descriptors);
    g_mutex_lock(&descriptors_mutex);
    int d1 = depth+1;
@@ -314,8 +314,8 @@ init_ddc_display_lock(void) {
    display_descriptors= g_ptr_array_new_with_free_func(g_free);
 
    RTTI_ADD_FUNC(get_distinct_display_ref);
-   RTTI_ADD_FUNC(lock_distinct_display);
-   RTTI_ADD_FUNC(unlock_distinct_display);
+   RTTI_ADD_FUNC(lock_display);
+   RTTI_ADD_FUNC(unlock_display);
 }
 
 

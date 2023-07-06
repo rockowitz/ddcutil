@@ -152,11 +152,11 @@ ddc_open_display(
    int fd = 0;
 
    Distinct_Display_Ref ddisp_ref = get_distinct_display_ref(dref);
-   Distinct_Display_Flags ddisp_flags = DDISP_NONE;
+   Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
-   err = lock_distinct_display(ddisp_ref, ddisp_flags);
+   err = lock_display(ddisp_ref, ddisp_flags);
    if (err)
       goto bye;
    // if (lockrc == DDCRC_LOCKED) {     // locked in another thread
@@ -251,7 +251,7 @@ ddc_open_display(
       g_hash_table_add(open_displays, dh);
    }
    else {
-      err = unlock_distinct_display(ddisp_ref);
+      err = unlock_display(ddisp_ref);
       if (err)
          PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
    }
@@ -328,7 +328,7 @@ ddc_close_display(Display_Handle * dh) {
 
    dh->dref->flags &= (~DREF_OPEN);
    Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
-   Error_Info * err2 = unlock_distinct_display(display_id);
+   Error_Info * err2 = unlock_display(display_id);
    if (err2) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);
       if (!err)
