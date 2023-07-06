@@ -41,6 +41,8 @@
 
 #include "dsa2.h"
 
+// Trace class for this file
+static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 const bool  Default_DSA2_Enabled = DEFAULT_ENABLE_DSA2;
 const int   Default_Look_Back    = 5;
@@ -175,13 +177,13 @@ cirb_free(Circular_Invocation_Result_Buffer * cirb) {
 static void
 cirb_add(Circular_Invocation_Result_Buffer* cirb, Successful_Invocation value) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d, value=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d, value=%s",
          cirb, cirb->nextpos, cirb->ct, si_repr_t(value));
     cirb->values[cirb->nextpos] = value;
     cirb->nextpos = (cirb->nextpos+1) % cirb->size;
     if (cirb->ct < cirb->size)
        cirb->ct++;
-    DBGTRC_DONE(debug, DDCA_TRC_NONE, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d",
+    DBGTRC_DONE(debug, TRACE_GROUP, "cirb=%p, cirb->nextpos=%2d, cirb->ct=%2d",
           cirb, cirb->nextpos, cirb->ct);
 }
 
@@ -203,7 +205,7 @@ cirb_logical_to_physical_index(Circular_Invocation_Result_Buffer *cirb, int logi
                        ? logical
                        : (cirb->nextpos +logical) % cirb->size;
    }
-   DBGTRC(debug, DDCA_TRC_NONE,
+   DBGTRC(debug, TRACE_GROUP,
          "Executing logical=%2d, cirb->ct=%2d, cirb->size=%2d, cirb->nextpos=%2d, Returning: physical=%2d",
          logical, cirb->ct, cirb->size, cirb->nextpos, physical);
    return physical;
@@ -407,7 +409,7 @@ get_edid_checkbyte(int busno) {
       SEVEREMSG("i2c_find_bus_info_by_busno(%d) failed!", busno);
    assert(bus_info);
    Byte checkbyte = bus_info->edid->bytes[127];
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "busno=%d, returning 0x%02x", busno, checkbyte);
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "busno=%d, returning 0x%02x", busno, checkbyte);
    return checkbyte;
 }
 
@@ -435,7 +437,7 @@ free_results_table(Results_Table * rtable) {
 Results_Table *
 dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "bussno=%d, create_if_not_found=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bussno=%d, create_if_not_found=%s",
                                          busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
@@ -445,14 +447,14 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
          if (get_edid_checkbyte(busno) != rtable->edid_checksum_byte) {
             LOGABLE_MSG(DDCA_SYSLOG_NOTICE,
                "Discarding cached display information for bus /dev/i2c-%d. EDID has changed.", busno);
-            // DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "EDID verification failed");
+            // DBGTRC_NOPREFIX(true, TRACE_GROUP, "EDID verification failed");
             free_results_table(rtable);
             results_tables[busno] = NULL;
             rtable = NULL;
          }
          else {
             rtable->state |= RTABLE_EDID_VERIFIED;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "EDID verification succeeded");
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "EDID verification succeeded");
          }
       }
    }
@@ -464,7 +466,7 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
       rtable->state = RTABLE_BUS_DETECTED;
       rtable->edid_checksum_byte = get_edid_checkbyte(busno);
    }
-   DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Results_Table", dbgrpt_results_table, rtable);
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Results_Table", dbgrpt_results_table, rtable);
    return rtable;
 }
 
@@ -473,19 +475,19 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
 // static
 void set_multiplier(Results_Table * rtable, Sleep_Multiplier multiplier) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "multiplier=%7.3f", multiplier);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
    rtable->cur_step = multiplier_to_step(multiplier);
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set cur_step=%d", initial_step);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Set cur_step=%d", initial_step);
 }
 
 
 void
 dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dpath=%s, multiplier=%7.3f", dpath_repr_t(&dpath), multiplier);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, multiplier=%7.3f", dpath_repr_t(&dpath), multiplier);
    Results_Table * rtable = dsa2_get_results_table_by_busno(dpath_busno(dpath));
    rtable->cur_step = multiplier_to_step(multiplier);
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set cur_step=%d", initial_step);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Set cur_step=%d", initial_step);
 }
 #endif
 
@@ -512,7 +514,7 @@ multiplier_to_step(Sleep_Multiplier multiplier) {
    }
 
    int step = (ndx == step_ct) ? step_ct-1 : ndx;
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
                                          multiplier, imult, step, step, steps[step]);
    return step;
 }
@@ -540,12 +542,12 @@ void test_float_to_step_conversion() {
 void
 dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "multiplier=%7.3f", multiplier);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
    initial_step = multiplier_to_step(multiplier);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Processing Results_Table for /dev/i2c-%d", rtable->busno);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Processing Results_Table for /dev/i2c-%d", rtable->busno);
          rtable->cur_step = initial_step;
          // rtable->found_failure_step = false;
          // rtable->min_ok_step = 0;
@@ -558,7 +560,7 @@ dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
          rtable->retryable_failure_ct = 0;
       }
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "Set initial_step=%d", initial_step);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Set initial_step=%d", initial_step);
 }
 
 
@@ -579,7 +581,7 @@ dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
 static bool
 dsa2_too_many_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
          "target_greatest_tries_upper_bound=%d, target_avg_tries_upper_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
           target_greatest_tries_upper_bound,    target_avg_tries_upper_bound_10,    highest_tryct,    total_tryct,    interval);
 
@@ -587,7 +589,7 @@ dsa2_too_many_errors(int highest_tryct, int total_tryct, int interval) {
    bool result = ( highest_tryct > target_greatest_tries_upper_bound ||
                    computed_avg_10 > target_avg_tries_upper_bound_10);     // i.e. total_tryct/interval > 1.4)
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
 
@@ -595,7 +597,7 @@ dsa2_too_many_errors(int highest_tryct, int total_tryct, int interval) {
 static bool
 dsa2_too_few_errors(int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE,
+   DBGTRC_STARTING(debug, TRACE_GROUP,
          "target_greatest_tries_lower_bound=%d, target_avg_tries_lower_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
           target_greatest_tries_lower_bound,    target_avg_tries_lower_bound_10,    highest_tryct,    total_tryct,    interval);
 
@@ -603,7 +605,7 @@ dsa2_too_few_errors(int highest_tryct, int total_tryct, int interval) {
    bool result = (highest_tryct   <= target_greatest_tries_lower_bound &&
                   computed_avg_10 <= target_avg_tries_lower_bound_10);
 
-   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "computed_avg_10=%d", computed_avg_10);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
 // #endif
@@ -641,12 +643,12 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
       next_step = prev_step + adjustment;
       if (next_step > step_last)
          next_step = step_last;
-      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+      DBGTRC_EXECUTED(debug, TRACE_GROUP,
             "Executing prev_step=%d, remaining_tries=%d, remaining_steps=%d, fadj=%2.3f, fadj2=%2.3f, adjustment=%d, returning %d",
             prev_step, remaining_tries, remaining_steps, fadj, fadj2, adjustment, next_step);
    }
    else {
-      DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+      DBGTRC_EXECUTED(debug, TRACE_GROUP,
             "remaining_tries == 0, returning next_step = prev_step = %d", next_step);
    }
    return next_step;
@@ -677,11 +679,14 @@ void test_dsa2_next_retry_step() {
  *  recorded in the circular successful invocation structure.
  *
  *  @param rtable pointer to #Results_Table to examine
+ *  @return updated cur_step
  */
-static void
+static int
 dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p", rtable->busno, rtable);
 
+   int next_step = rtable->cur_step;
    // n. called only if most recent try was a success
    Successful_Invocation latest_values[MAX_RECENT_VALUES];
    int actual_lookback = cirb_get_latest(
@@ -694,7 +699,6 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int total_tryct = 0;
 
    for (int ndx = 0; ndx < actual_lookback; ndx++) {
-
       total_tryct += latest_values[ndx].tryct;
       if (latest_values[ndx].tryct > max_tryct)
             max_tryct = latest_values[ndx].tryct;
@@ -705,7 +709,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int most_recent_step = latest_values[last_value_pos].required_step;
 
    char  b[900]; b[0] = '\0';
-   if ( IS_DBGTRC(debug, DDCA_TRC_NONE) ) {
+   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
       for (int ndx = 0; ndx < actual_lookback; ndx++) {
          g_snprintf(b + strlen(b), 900-strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
              (ndx > 0) ? ", " : "",
@@ -713,38 +717,46 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
              latest_values[ndx].epoch_seconds);
       }
    }
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, rtable=%p, actual_lookback = %d, latest_values:%s",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "actual_lookback = %d, latest_values:%s",
          rtable->busno, rtable, actual_lookback, b);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
-                                         max_tryct, min_tryct, total_tryct, most_recent_step);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
+         max_tryct, min_tryct, total_tryct, most_recent_step);
    // show_backtrace(0);
 
+
+   if (most_recent_step > step_last) {
+      DBGMSG("most_recent_step=%d, step_last=%d", most_recent_step, step_last);
+      show_backtrace(0);
+   }
    assert(most_recent_step <= step_last);
+
    if (dsa2_too_many_errors(max_tryct, total_tryct, actual_lookback)
          && rtable->cur_step < most_recent_step
       // && rtable->cur_step < step_last  // redundant
       )
    {
-      rtable->cur_step++;
-      rtable->total_steps_up++;
-      rtable->adjustments_up++;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Incremented cur_step. New value: %d",
+      next_step = rtable->cur_step++;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
                                             rtable->busno, rtable->cur_step);
    }
    else
       if (actual_lookback >= Min_Decrement_Lookback
-            && rtable->cur_step > 0
-            && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback))
+            && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback)
+            && rtable->cur_step > 0)
    {
-      rtable->cur_step--;
+      next_step = rtable->cur_step - 1;
       rtable->total_steps_down++;
       rtable->adjustments_down++;
       rtable->cur_lookback = actual_lookback;
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
    }
-   DBGTRC_DONE(debug, DDCA_TRC_NONE,
-          "busno=%d, max_tryct=%d, total_tryct=%d, rtable->cur_step=%d",
-           rtable->busno, max_tryct, total_tryct, rtable->cur_step);
+
+   assert(next_step <= step_last);
+   DBGTRC_DONE(debug, TRACE_GROUP,
+          "busno=%d, max_tryct=%d, total_tryct=%d, rtable->cur_step=%d, returning: %d",
+           rtable->busno, max_tryct, total_tryct, rtable->cur_step, next_step);
+   return next_step;
 }
 
 
@@ -759,7 +771,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
 void
 dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
          rtable->busno, rtable, remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
    rtable->retryable_failure_ct++;
@@ -767,11 +779,11 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
    // has special handling for case of remaining_tries = 0;
 
    int next_step =  dsa2_next_retry_step(prev_step, remaining_tries);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dsa2_next_retry_step(%d,%d) returned %d",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dsa2_next_retry_step(%d,%d) returned %d",
                                          prev_step, remaining_tries, next_step);
    rtable->cur_retry_loop_step = next_step;
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "busno=%d, previous step=%d, next step = %d",
+   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, previous step=%d, next step = %d",
                                      rtable->busno, prev_step, rtable->cur_retry_loop_step);
 }
 
@@ -783,7 +795,7 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
  *  Response buffer. The results table for the bus is updated.
  *  Depending on how many tries were required, the current step
  *  may be adjusted up or down. The cur_retry_loop_step is reset to the
- *  (possibly update) cur_loop_step, ready to be used on the next
+ *  (possibly updated) cur_loop_step, ready to be used on the next
  *  #ddc_write_read_with_retry() operation.
  *
  *  If ddcrc != 0 (the operation failed, either because of a fatal error
@@ -799,61 +811,69 @@ dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
 void
 dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s",
                    rtable->busno, rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled));
    if (!dsa2_enabled) {
-      DBGTRC_DONE(debug, DDCA_TRC_NONE, "dsa2 not enabled");
+      DBGTRC_DONE(debug, TRACE_GROUP, "dsa2 not enabled");
       return;
    }
 
    assert(rtable);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cur_step=%d, cur_retry_loop_step=%d",
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "cur_step=%d, cur_retry_loop_step=%d",
                                          rtable->cur_step, rtable->cur_retry_loop_step);
+
+   assert(rtable->cur_retry_loop_step <= step_last);
+   assert(rtable->cur_step <= rtable->cur_retry_loop_step);
+   int next_cur_step = rtable->cur_step;
    if (ddcrc == 0) {
       rtable->successful_try_ct++;
       Successful_Invocation si = {time(NULL), tries, rtable->cur_retry_loop_step};
       cirb_add(rtable->recent_values, si);
       if (tries > 3) {
-         if (rtable->cur_step < step_last) {
-            rtable->total_steps_up += rtable->cur_retry_loop_step - rtable->cur_step;
-            rtable->cur_step = rtable->cur_retry_loop_step;
-            rtable->adjustments_up++;
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d",
+         // Too many tries. Unconditionally increase rtable->cur_step
+         next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
                                                   rtable->busno, rtable->cur_step);
-            // rtable->min_ok_step = rtable->cur_step;
-            // rtable->found_failure_step = true;
-         }
       }
       else if (tries > 2) {
          rtable->remaining_interval -= 1;
          if (rtable->remaining_interval == 0) {
-            dsa2_adjust_for_rcnt_successes(rtable);
+            next_cur_step = dsa2_adjust_for_rcnt_successes(rtable);
             rtable->remaining_interval = adjustment_interval;
          }
       }
       else {
-         dsa2_adjust_for_rcnt_successes(rtable);
+         next_cur_step = dsa2_adjust_for_rcnt_successes(rtable);
          rtable->remaining_interval = adjustment_interval;
       }
-      rtable->cur_retry_loop_step = rtable->cur_step;
    }
 
    else {    // ddcrc != 0
-      if (rtable->cur_step < step_last) {
-         if (rtable->cur_step > rtable->highest_step_complete_loop_failure)
-            rtable->highest_step_complete_loop_failure = rtable->cur_step;
-         rtable->total_steps_up++;
-         rtable->adjustments_up++;
-         if (rtable->cur_step < step_last)
-            rtable->cur_step = rtable->cur_retry_loop_step + 1;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-               "all tries failed. busno=%d, Incremented cur_step. New value: %d",
-               rtable->busno, rtable->cur_step);
-      }
+      if (rtable->cur_retry_loop_step > rtable->highest_step_complete_loop_failure)
+         rtable->highest_step_complete_loop_failure = rtable->cur_retry_loop_step;
+      next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "all tries failed. busno=%d, New cur_step: %d",
+                                            rtable->busno, next_cur_step);
       rtable->remaining_interval = adjustment_interval;
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_NONE,
+   if (next_cur_step < 0)
+      next_cur_step = 0;
+   else if (next_cur_step > step_last)
+      next_cur_step = step_last;
+   int delta = next_cur_step - rtable->cur_step;
+   if (delta < 0) {
+      rtable->adjustments_down++;
+      rtable->total_steps_down -= delta;
+   }
+   else if (delta > 0) {
+      rtable->adjustments_up++;
+      rtable->total_steps_down = rtable->total_steps_down + delta;
+   }
+   rtable->cur_step = next_cur_step;
+   rtable->cur_retry_loop_step = rtable->cur_step;  // for next read_write_with_retry() operation
+
+   DBGTRC_DONE(debug, TRACE_GROUP,
                "busno=%d, cur_step=%d, cur_retry_loop_step=%d, remaining_interval=%d",
                rtable->busno, rtable->cur_step, rtable->cur_retry_loop_step, rtable->remaining_interval);
 }
@@ -873,7 +893,7 @@ dsa2_get_adjusted_sleep_mult(Results_Table * rtable) {
    Sleep_Multiplier result = 1.0f;
    assert(rtable);
    result = steps[rtable->cur_retry_loop_step]/100.0;
-   DBGTRC_EXECUTED(debug, DDCA_TRC_NONE,
+   DBGTRC_EXECUTED(debug, TRACE_GROUP,
                   "busno=%d, rtable=%p, rtable->cur_retry_loop_step=%d, Returning: %.2f",
                   rtable->busno, rtable, rtable->cur_retry_loop_step, result);
    // show_backtrace(0);
@@ -949,7 +969,7 @@ dsa2_is_from_cache(Results_Table * rtable) {
 Status_Errno
 dsa2_save_persistent_stats() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    int result = 0;
    int results_tables_ct = 0;
    char * stats_fn = dsa2_stats_cache_file_name();
@@ -960,12 +980,12 @@ dsa2_save_persistent_stats() {
       SEVEREMSG("Error opening %s: %s", strerror(errno));
       goto bye;
    }
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened %s", stats_fn);
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opened %s", stats_fn);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx] && (results_tables[ndx]->state & RTABLE_BUS_DETECTED))
          results_tables_ct++;
    }
-   DBGTRC(debug, DDCA_TRC_NONE, "results_tables_ct = %d", results_tables_ct);
+   DBGTRC(debug, TRACE_GROUP, "results_tables_ct = %d", results_tables_ct);
 
    int format_id = 2;
    fprintf(stats_file, "FORMAT %d\n", format_id);
@@ -998,7 +1018,7 @@ dsa2_save_persistent_stats() {
             assert(next_step <= step_last);
             rtable->cur_step = MAX(rtable->cur_step,  next_step);
          }
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, rtable->cur_step=%d, next_step=%d",
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, rtable->cur_step=%d, next_step=%d",
                rtable->busno, rtable->cur_step, next_step);
          if (format_id == 1) {
             fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
@@ -1029,7 +1049,7 @@ dsa2_save_persistent_stats() {
    fclose(stats_file);
 bye:
    free(stats_fn);
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result,
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result,
                     "Wrote %d Results_Table(s)", results_tables_ct);
    return result;
 }
@@ -1044,14 +1064,14 @@ Status_Errno
 dsa2_erase_persistent_stats() {
    bool debug = false;
    Status_Errno result = 0;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * stats_fn = dsa2_stats_cache_file_name();
    int rc = remove(stats_fn);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "remove(\"%s\") returned: %d", stats_fn, rc);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "remove(\"%s\") returned: %d", stats_fn, rc);
    if (rc < 0 && errno != ENOENT)
       result = -errno;
    free(stats_fn);
-   DBGTRC_RET_DDCRC(debug, DDCA_TRC_NONE, result, "");
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -1113,7 +1133,7 @@ cirb_parse_and_add(Circular_Invocation_Result_Buffer * cirb, char * segment) {
 Error_Info *
 dsa2_restore_persistent_stats() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * stats_fn = dsa2_stats_cache_file_name();
    Error_Info * result = NULL;
 
@@ -1177,7 +1197,7 @@ dsa2_restore_persistent_stats() {
 
          ok = ok && str_to_int(pieces[fieldndx++], &rtable->cur_step, 10);  // field 2
          if (rtable->cur_step > step_last) {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, resetting invalid cur_step from %d to %d !!!",
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, resetting invalid cur_step from %d to %d !!!",
                   busno, rtable->cur_step, step_last);
             SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) busno=%d, resetting invalid cur_step from %d to %d",
                   __func__, busno, rtable->cur_step, step_last);
@@ -1232,7 +1252,7 @@ dsa2_restore_persistent_stats() {
                dbgrpt_results_table(rtable, 1);
          }
          ntsa_free(pieces, true);
-         DBGTRC(debug, DDCA_TRC_NONE, "Restored stats for /dev/i2c-%d", busno);
+         DBGTRC(debug, TRACE_GROUP, "Restored stats for /dev/i2c-%d", busno);
       }
    }
 
@@ -1258,7 +1278,7 @@ bye:
 bye0:
   free(stats_fn);
   g_ptr_array_free(line_array, true);
-  DBGTRC_RET_STRUCT(debug, DDCA_TRC_NONE, "Error_Info", errinfo_report, result);
+  DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Error_Info", errinfo_report, result);
   return result;
 }
 
