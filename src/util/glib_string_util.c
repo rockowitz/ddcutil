@@ -26,8 +26,9 @@
  *
  *  @param strings   GPtrArray of strings
  *  @param sepstr   if non-null, separator to insert between joined strings
- *
  *  @return joined string, caller is responsible for freeing
+ *
+ *  Returns "" if **strings** == NULL
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    bool debug = false;
