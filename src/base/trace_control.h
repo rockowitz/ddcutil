@@ -19,8 +19,6 @@
 
 extern DDCA_Trace_Group trace_levels;
 
-
-
 bool add_traced_function(const char * funcname);
 bool is_traced_function( const char * funcname);
 void dbgrpt_traced_function_table(int depth);
