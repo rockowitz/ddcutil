@@ -39,6 +39,7 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/ddc_errno.h"
 #include "base/linux_errno.h"
 #include "base/rtti.h"
@@ -69,7 +70,7 @@ typedef struct {
    Display_Change_Handler display_change_handler;
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
-   Bit_Set_256            drm_card_numbers;
+   Bit_Set_32             drm_card_numbers;
 } Watch_Displays_Data;
 
 
@@ -131,7 +132,8 @@ bool is_dref_alive(Display_Ref * dref) {
       bool check_needed = true;
       if (dref->drm_connector) {
          char * status = NULL;
-         RPT_ATTR_TEXT(2,&status, "/sys/class/drm", dref->drm_connector, "status");
+         int depth = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 2 : -1;
+         RPT_ATTR_TEXT(depth,&status, "/sys/class/drm", dref->drm_connector, "status");
          if (!streq(status, "connected"))
             check_needed = false;
          free(status);
@@ -356,7 +358,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
    GPtrArray * cur_displays = get_sysfs_drm_displays();
    if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
-      if ( debug || IS_TRACING() ) {
+      if ( IS_DBGTRC( debug, TRACE_GROUP) ) {
          DBGMSG("Active DRM connectors changed!");
          DBGMSG("Previous active connectors: %s", join_string_g_ptr_array_t(prev_displays, ", "));
          DBGMSG("Current  active connectors: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
@@ -389,12 +391,40 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
       g_ptr_array_free(added,         true);
    }
 
-   g_ptr_array_free(prev_displays, true);
+   // g_ptr_array_free(prev_displays, true);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s",
                               join_string_g_ptr_array_t(cur_displays, ", "));
    return cur_displays;
 }
+
+
+static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays = %s",
+                 join_string_g_ptr_array_t(prev_displays, ", "));
+
+   GPtrArray * result = NULL;
+   GPtrArray * cur_displays = check_displays(prev_displays,  data);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "cur_displays  = %s",
+         join_string_g_ptr_array_t(cur_displays, ", "));
+   if (gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
+      result = cur_displays;
+   }
+   else {
+      DBGMSG("Double checking");
+      usleep(1000*1000);  // 1 second
+      result = check_displays(prev_displays, data);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "after recheck:  %s", join_string_g_ptr_array_t(result, ", "));
+      g_ptr_array_free(cur_displays, true);
+   }
+   g_ptr_array_free(prev_displays, true);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning:      %s",
+                              join_string_g_ptr_array_t(result, ", "));
+   return result;
+}
+
+
 
 
 // How to detect main thread crash?
@@ -410,7 +440,7 @@ gpointer watch_displays_using_poll(gpointer data) {
           "Initial active DRM connectors: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
    while (!terminate_watch_thread) {
-      prev_displays = check_displays(prev_displays, data);
+      prev_displays = double_check_displays(prev_displays, data);
       check_drefs_alive();
       usleep(3000*1000);
       // printf("."); fflush(stdout);
@@ -586,7 +616,7 @@ gpointer watch_displays_using_udev(gpointer data) {
          const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
 
-         prev_displays = check_displays(prev_displays, data);
+         prev_displays = double_check_displays(prev_displays, data);
 
          udev_device_unref(dev);
       }
@@ -686,8 +716,8 @@ ddc_start_watch_displays(bool use_udev_if_possible)
    #else
             "/sys/class/drm";
    #endif
-      Bit_Set_256 drm_card_numbers = get_sysfs_drm_card_numbers();
-      if (bs256_count(drm_card_numbers) == 0) {
+      Bit_Set_32 drm_card_numbers = get_sysfs_drm_card_numbers();
+      if (bs32_count(drm_card_numbers) == 0) {
          rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
          ddcrc = DDCRC_INVALID_OPERATION;
       }
