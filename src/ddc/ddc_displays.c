@@ -75,6 +75,7 @@ static bool detect_usb_displays = true;
 static bool detect_usb_displays = false;
 #endif
 
+
 //
 // Functions to perform initial checks
 //
@@ -950,7 +951,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
          DBGMSF(debug, "Checking vs valid dref %p", cur);
-
+         
          if (cur == dref) {
             // if (cur->dispno > 0)  // why?
                result = true;
@@ -1058,7 +1059,7 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
 /** Invokes the registered callbacks for a display hotplug event.
  */
 void ddc_emit_display_hotplug_event() {
-   bool debug = true;
+   bool debug = false || watch_watching;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (display_hotplug_callbacks) {
       for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
