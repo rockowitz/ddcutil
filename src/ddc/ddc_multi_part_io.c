@@ -212,34 +212,24 @@ multi_part_read_with_retry(
          // generally means this, but could conceivably indicate a protocol error.
          // try multiple times to ensure it's really unsupported?
 
-         // just pass DDCRC_NULL_RESPONSE up the chain
-         // rc = DDCRC_DETERMINED_UNSUPPORTED;
-         // COUNT_STATUS_CODE(rc);   // double counting?
-
-         can_retry = false;
+         if (dh->dref->flags&DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Terminating loop for %s", psc_name(rc));
+            can_retry = false;
+         }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
          can_retry = false;
-
-         // just pass DDCRC_READ_ALL_ZERO up the chain:
-         // rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
-         // COUNT_STATUS_CODE(rc);   // double counting?
       }
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
          can_retry = false;
-
-         // just pass it up
-         // rc = DDCRC_DETERMINED_UNSUPPORTED;    // ??
-         // COUNT_STATUS_CODE(rc);   // double counting?
       }
       else if (rc == -EBADF) {
-         // DBGMSG("EBADF");
          can_retry = false;
       }
 
       tryctr++;
    }
-   assert( (rc<0 && ddc_excp) || (rc==0 && !ddc_excp) );
+   ASSERT_IFF( rc==0, !ddc_excp);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, rc=%d. ddc_excp=%s",
                             tryctr, rc, errinfo_summary(ddc_excp));
 
