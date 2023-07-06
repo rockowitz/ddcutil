@@ -1,6 +1,6 @@
 /** @file ddc_watch_displays.h  Watch for monitor addition and removal  */
 
-// Copyright (C) 2019-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2019-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DDC_WATCH_DISPLAYS_H_
