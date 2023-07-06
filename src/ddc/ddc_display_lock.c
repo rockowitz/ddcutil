@@ -59,11 +59,11 @@ typedef struct {
    DDCA_IO_Path io_path;
    GMutex       display_mutex;
    GThread *    display_mutex_thread;     // thread owning mutex
-} Distinct_Display_Desc;
+} Display_Lock_Record;
 
 
 
-static bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
+static bool lock_rec_matches_dref(Display_Lock_Record * ddesc, Display_Ref * dref) {
    bool result = false;
    if (dpath_eq(ddesc->io_path, dref->io_path))
       result = true;
@@ -71,18 +71,18 @@ static bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dr
 }
 
 
-static GPtrArray * display_descriptors = NULL;  // array of Distinct_Display_Desc *
-static GMutex descriptors_mutex;                // single threads access to display_descriptors
+static GPtrArray * lock_records = NULL;  // array of Diaplay_Lock_Record *
+static GMutex descriptors_mutex;                // single threads access to lock records
 static GMutex master_display_lock_mutex;
 
 
 // must be called when lock not held by current thread, o.w. deadlock
 static char *
-distinct_display_ref_repr_t(Distinct_Display_Ref id) {
+lockrec_repr_t(Distinct_Display_Ref id) {
    static GPrivate  repr_key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&repr_key, 100);
    g_mutex_lock(&descriptors_mutex);
-   Distinct_Display_Desc * ref = (Distinct_Display_Desc *) id;
+   Display_Lock_Record * ref = (Display_Lock_Record *) id;
    assert(memcmp(ref->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    g_snprintf(buf, 100, "Distinct_Display_Ref[%s @%p]", dpath_repr_t(&ref->io_path), ref);
    g_mutex_unlock(&descriptors_mutex);
@@ -98,25 +98,25 @@ get_distinct_display_ref(Display_Ref * dref) {
    void * result = NULL;
    g_mutex_lock(&descriptors_mutex);
 
-   for (int ndx=0; ndx < display_descriptors->len; ndx++) {
-      Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
-      if (display_desc_matches(cur, dref) ) {
+   for (int ndx=0; ndx < lock_records->len; ndx++) {
+      Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
+      if (lock_rec_matches_dref(cur, dref) ) {
          result = cur;
          break;
       }
    }
    if (!result) {
-      Distinct_Display_Desc * new_desc = calloc(1, sizeof(Distinct_Display_Desc));
+      Display_Lock_Record * new_desc = calloc(1, sizeof(Display_Lock_Record));
       memcpy(new_desc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4);
       new_desc->io_path           = dref->io_path;
       g_mutex_init(&new_desc->display_mutex);
-      g_ptr_array_add(display_descriptors, new_desc);
+      g_ptr_array_add(lock_records, new_desc);
       result = new_desc;
    }
 
    g_mutex_unlock(&descriptors_mutex);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result,  distinct_display_ref_repr_t(result));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result,  lockrec_repr_t(result));
    return result;
 }
 
@@ -136,10 +136,10 @@ lock_display(
       Display_Lock_Flags flags)
 {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, lockrec_repr_t(id));
 
    Error_Info * err = NULL;
-   Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
+   Display_Lock_Record * ddesc = (Display_Lock_Record *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    bool self_thread = false;
@@ -167,7 +167,7 @@ lock_display(
           ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, lockrec_repr_t(id));
    return err;
 }
 
@@ -181,9 +181,9 @@ lock_display(
 Error_Info *
 unlock_display(Distinct_Display_Ref id) {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, lockrec_repr_t(id));
    Error_Info * err = NULL;
-   Distinct_Display_Desc * ddesc = (Distinct_Display_Desc *) id;
+   Display_Lock_Record * ddesc = (Display_Lock_Record *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
    TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
@@ -196,7 +196,7 @@ unlock_display(Distinct_Display_Ref id) {
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, distinct_display_ref_repr_t(id));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, lockrec_repr_t(id));
    return err;
 }
 
@@ -213,8 +213,8 @@ void unlock_all_distinct_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    g_mutex_lock(&master_display_lock_mutex);   // are both locks needed?
    g_mutex_lock(&descriptors_mutex);
-    for (int ndx=0; ndx < display_descriptors->len; ndx++) {
-       Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
+    for (int ndx=0; ndx < lock_records->len; ndx++) {
+       Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%2d - %p  %-28s",
                                            ndx, cur,
                                            dpath_repr_t(&cur->io_path) );
@@ -237,11 +237,11 @@ void unlock_all_distinct_displays() {
  */
 void
 dbgrpt_display_locks(int depth) {
-   rpt_vstring(depth, "display_descriptors@%p", display_descriptors);
+   rpt_vstring(depth, "display_descriptors@%p", lock_records);
    g_mutex_lock(&descriptors_mutex);
    int d1 = depth+1;
-   for (int ndx=0; ndx < display_descriptors->len; ndx++) {
-      Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
+   for (int ndx=0; ndx < lock_records->len; ndx++) {
+      Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
       rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p",
                        ndx, cur,
                        dpath_repr_t(&cur->io_path), (void*) &cur->display_mutex_thread );
@@ -253,7 +253,7 @@ dbgrpt_display_locks(int depth) {
 /** Initializes this module */
 void
 init_ddc_display_lock(void) {
-   display_descriptors= g_ptr_array_new_with_free_func(g_free);
+   lock_records= g_ptr_array_new_with_free_func(g_free);
 
    RTTI_ADD_FUNC(get_distinct_display_ref);
    RTTI_ADD_FUNC(lock_display);
@@ -263,5 +263,5 @@ init_ddc_display_lock(void) {
 
 void
 terminate_ddc_display_lock() {
-   g_ptr_array_free(display_descriptors, true);
+   g_ptr_array_free(lock_records, true);
 }
