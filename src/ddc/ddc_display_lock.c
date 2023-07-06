@@ -57,11 +57,6 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 typedef struct {
    char         marker[4];
    DDCA_IO_Path io_path;
-#ifdef TOO_MANY_EDGE_CASES
-   char *       edid_mfg;
-   char *       edid_model_name;
-   char *       edid_serial_ascii;
-#endif
    GMutex       display_mutex;
    GThread *    display_mutex_thread;     // thread owning mutex
 } Distinct_Display_Desc;
@@ -96,22 +91,6 @@ static bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dr
    bool result = false;
    if (dpath_eq(ddesc->io_path, dref->io_path))
       result = true;
-#ifdef TOO_MANY_EDGE_CASES
-   else {
-      if (dref->pedid) {
-      if (streq(dref->pedid->mfg_id,       ddesc->edid_mfg)        &&
-          streq(dref->pedid->model_name,   ddesc->edid_model_name) &&
-          streq(dref->pedid->serial_ascii, ddesc->edid_serial_ascii)
-         )
-             result = true;
-      }
-      else {
-         // pathological case, should be impossible but user report
-         // re X260 laptop and Ultradock indicates possible (see note in ddc_open_display()
-         DBGMSG("Null EDID");
-      }
-   }
-#endif
    return result;
 }
 
@@ -154,11 +133,6 @@ get_distinct_display_ref(Display_Ref * dref) {
       Distinct_Display_Desc * new_desc = calloc(1, sizeof(Distinct_Display_Desc));
       memcpy(new_desc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4);
       new_desc->io_path           = dref->io_path;
-#ifdef TOO_MANY_EDGE_CASES
-      new_desc->edid_mfg          = strdup(dref->pedid->mfg_id);
-      new_desc->edid_model_name   = strdup(dref->pedid->model_name);
-      new_desc->edid_serial_ascii = strdup(dref->pedid->serial_ascii);
-#endif
       g_mutex_init(&new_desc->display_mutex);
       g_ptr_array_add(display_descriptors, new_desc);
       result = new_desc;
@@ -292,14 +266,6 @@ dbgrpt_display_locks(int depth) {
    int d1 = depth+1;
    for (int ndx=0; ndx < display_descriptors->len; ndx++) {
       Distinct_Display_Desc * cur = g_ptr_array_index(display_descriptors, ndx);
-#ifdef TOO_MANY_EDGE_CASES
-      rpt_vstring(d1, "%2d - %p  %-28s - %-4s %-13s %-13s",
-                       ndx, cur,
-                       dpath_repr_t(&cur->io_path),
-                       cur->edid_mfg,
-                       cur->edid_model_name,
-                       cur->edid_serial_ascii);
-#endif
       rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p",
                        ndx, cur,
                        dpath_repr_t(&cur->io_path), (void*) &cur->display_mutex_thread );
