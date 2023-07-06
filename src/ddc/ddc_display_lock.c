@@ -62,30 +62,6 @@ typedef struct {
 } Distinct_Display_Desc;
 
 
-#ifdef REDUNDANT
-bool io_path_eq(DDCA_IO_Path path1, DDCA_IO_Path path2) {
-   bool result = false;
-   if (path1.io_mode == path2.io_mode) {
-      switch(path1.io_mode) {
-      case DDCA_IO_I2C:
-      if (path1.path.i2c_busno == path2.path.i2c_busno)
-         result = true;
-      break;
-      case DDCA_IO_ADL:
-      if (path1.path.adlno.iAdapterIndex == path2.path.adlno.iAdapterIndex &&
-          path1.path.adlno.iDisplayIndex == path2.path.adlno.iDisplayIndex )
-         result = true;
-      break;
-      case DDCA_IO_USB:
-      if (path1.path.hiddev_devno == path2.path.hiddev_devno)
-         result = true;
-      break;
-      }
-   }
-   return result;
-}
-#endif
-
 
 static bool display_desc_matches(Distinct_Display_Desc * ddesc, Display_Ref * dref) {
    bool result = false;
