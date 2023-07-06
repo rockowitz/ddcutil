@@ -1502,6 +1502,45 @@ Bit_Set_256 bs256_from_string(
 const Bit_Set_32 EMPTY_BIT_SET_32 = 0;
 const int BIT_SET_32_MAX = 32;
 
+
+#define BB32_REPR_BUF_SZ 10
+/** Represents a #Bit_Set_32 value as a sequence of 4 hex values.
+ *
+ *  @param buf   buffer in which to return value
+ *  @param bufsz buffer size, must be at least #BB256_REPR_BUF_SZ
+ *  @param bbset value to represent
+ */
+void bb32_repr(char * buf, int bufsz, Bit_Set_32 bbset) {
+   assert(bufsz >= BB256_REPR_BUF_SZ);
+   g_snprintf(buf, bufsz, "0x%08x", bbset);
+}
+
+
+/** Returns the number of bits set in a #Bit_Set_32 instance.
+ *
+ *  @param  bbset  value to examine
+ *  @return number of bits set
+ */
+int bs32_count(
+   Bit_Set_32 bbset)
+{
+   bool debug = false;
+
+   int result = 0;
+   for (int bitndx = 0; bitndx < 32; bitndx++) {
+      unsigned char flagbit = (0x80 >> bitndx);
+      if (bbset & flagbit)
+         result += 1;
+   }
+   if (debug) {
+      char buf[BB32_REPR_BUF_SZ];
+      bb32_repr(buf, sizeof(buf), bbset);
+      printf("(%s) Returning %d. bbset: %s\n", __func__, result, buf);
+   }
+   return result;
+}
+
+
 bool bs32_contains(Bit_Set_32 flags, uint8_t val) {
    assert(val < BIT_SET_32_MAX);
    bool result = flags & (1 << val);
@@ -1512,6 +1551,74 @@ bool bs32_contains(Bit_Set_32 flags, uint8_t val) {
 Bit_Set_32 bs32_insert(Bit_Set_32 flags, uint8_t val) {
    Bit_Set_32 result = flags | (1 << val);
    return result;
+}
+
+
+/** Returns a string representation of a #Bit_Set_32 as a list of hex numbers.
+ *
+ *  The value returned is valid until the next call to this function in the
+ *  current thread.
+ *
+ *  @param  bitset value to represent
+ *  @param  decimal_format  if true,  represent values as decimal numbers
+ *                          if false, represent values as hex numbers
+ *  @param  value_prefix  prefix for each hex number, typically "0x" or ""
+ *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @return string representation, caller should not free
+ */
+static char *
+bs32_to_string_general(
+      Bit_Set_32   bitset,
+      bool         decimal_format,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   bool debug = false;
+   if (debug) {
+      printf("(%s) value_prefix=|%s|, sepstr=|%s| bitset: 0x%08x",
+             __func__, value_prefix, sepstr, bitset);
+      // rpt_hex_dump((Byte*)feature_list, 32, 2);
+   }
+
+   static GPrivate  key =     G_PRIVATE_INIT(g_free);
+   static GPrivate  len_key = G_PRIVATE_INIT(g_free);
+
+   if (!value_prefix)
+      value_prefix = "";
+   if (!sepstr)
+      sepstr = "";
+   int vsize = strlen(value_prefix) + 2 + strlen(sepstr);   // for hex
+   if (decimal_format)
+       vsize = strlen(value_prefix) + 3 + strlen(sepstr);   // for decimal
+   int bit_ct = bs32_count(bitset);
+   int reqd_size = (bit_ct*vsize)+1;   // +1 for trailing null
+
+   char * buf = get_thread_dynamic_buffer(&key, &len_key, reqd_size);
+   // char * buf = calloc(1, reqd_size);
+
+   buf[0] = '\0';
+   // printf("(%s) feature_ct=%d, vsize=%d, buf size = %d",
+   //          __func__, feature_ct, vsize, vsize*feature_ct);
+
+   for (int ndx = 0; ndx < 32; ndx++) {
+      if ( bs32_contains(bitset, ndx) ) {
+         if (decimal_format)
+            sprintf(buf + strlen(buf), "%s%d%s", value_prefix, ndx, sepstr);
+         else
+            sprintf(buf + strlen(buf), "%s%02x%s", value_prefix, ndx, sepstr);
+      }
+   }
+
+   if (bit_ct > 0)
+      buf[ strlen(buf)-strlen(sepstr)] = '\0';
+
+   // printf("(%s) wolf 4\n", __func__);
+   // DBGMSG("Returned string length: %d", strlen(buf));
+   // DBGMSG("Returning %p - %s", buf, buf);
+   if (debug)
+      printf("(%s) Returning: len=%d, %s\n", __func__, (int) strlen(buf), buf);
+
+   return buf;
 }
 
 
@@ -1529,10 +1636,48 @@ char* bs32_to_bitstring(Bit_Set_32 val, char * buf, int bufsz) {
 }
 
 
+/** Returns a string representation of a #Bit_Set_32 as a list of hex numbers.
+ *
+ *  The value returned is valid until the next call to this function or to
+ *  #bs32_to_string_decimal() in the current thread.
+ *
+ *  @param  bitset value to represent
+ *  @param  value_prefix  prefix for each hex number, typically "0x" or ""
+ *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @return string representation, caller should not free
+ */
+char *
+bs32_to_string(
+      Bit_Set_32   bitset,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   return bs32_to_string_general(bitset, false, value_prefix, sepstr);
+}
+
+/** Returns a string representation of a #Bit_Set_32 as a list of decimal numbers.
+ *
+ *  The value returned is valid until the next call to this function or to
+ *  #bs32_to_string() in the current thread.
+ *
+ *  @param  bitset value to represent
+ *  @param  value_prefix  prefix for each decimal number
+ *  @param  sepstr        string to insert between each value, typically "", ",", or " "
+ *  @return string representation, caller should not free
+ */
+char *
+bs32_to_string_decimal(
+      Bit_Set_32   bitset,
+      const char * value_prefix,
+      const char * sepstr)
+{
+   return bs32_to_string_general(bitset, true, value_prefix, sepstr);
+}
+
+
 //
 // Cross data structure functions bba <-> bs256
 //
-
 
 /** Tests if the bit number of every byte in a #Byte_Value_Array is set
  *  in a #Bit_Set_256, and conversely that for every bit set in the
@@ -1559,6 +1704,12 @@ bool bva_bs256_same_values( Byte_Value_Array bva , Bit_Set_256 bbflags) {
    }
    return result;
 }
+
+
+
+
+
+
 
 
 /** Convert a #Byte_Value_Array to a #Bit_Set_256
