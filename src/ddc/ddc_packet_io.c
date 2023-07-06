@@ -151,7 +151,7 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = 0;
 
-   Distinct_Display_Ref ddisp_ref = get_distinct_display_ref(dref);
+   Lock_Ref ddisp_ref = get_distinct_display_ref(dref);
    Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
@@ -327,7 +327,7 @@ ddc_close_display(Display_Handle * dh) {
    }
 
    dh->dref->flags &= (~DREF_OPEN);
-   Distinct_Display_Ref display_id = get_distinct_display_ref(dh->dref);
+   Lock_Ref display_id = get_distinct_display_ref(dh->dref);
    Error_Info * err2 = unlock_display(display_id);
    if (err2) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);

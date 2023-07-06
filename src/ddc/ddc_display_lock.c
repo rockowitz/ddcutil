@@ -78,19 +78,19 @@ static GMutex master_display_lock_mutex;
 
 // must be called when lock not held by current thread, o.w. deadlock
 static char *
-lockrec_repr_t(Distinct_Display_Ref id) {
+lockrec_repr_t(Lock_Ref id) {
    static GPrivate  repr_key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&repr_key, 100);
    g_mutex_lock(&descriptors_mutex);
    Display_Lock_Record * ref = (Display_Lock_Record *) id;
    assert(memcmp(ref->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
-   g_snprintf(buf, 100, "Distinct_Display_Ref[%s @%p]", dpath_repr_t(&ref->io_path), ref);
+   g_snprintf(buf, 100, "Display_Lock_Record[%s @%p]", dpath_repr_t(&ref->io_path), ref);
    g_mutex_unlock(&descriptors_mutex);
    return buf;
 }
 
 
-Distinct_Display_Ref
+Lock_Ref
 get_distinct_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
@@ -132,7 +132,7 @@ get_distinct_display_ref(Display_Ref * dref) {
  */
 Error_Info *
 lock_display(
-      Distinct_Display_Ref   id,
+      Lock_Ref   id,
       Display_Lock_Flags flags)
 {
    bool debug = true;
@@ -179,7 +179,7 @@ lock_display(
  *  \retval NULL   no error
  */
 Error_Info *
-unlock_display(Distinct_Display_Ref id) {
+unlock_display(Lock_Ref id) {
    bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, lockrec_repr_t(id));
    Error_Info * err = NULL;
