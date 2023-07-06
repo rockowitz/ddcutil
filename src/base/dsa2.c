@@ -23,6 +23,7 @@
 #include "util/error_info.h"
 #include "util/file_util.h"
 #include "util/glib_util.h"
+#include "util/glib_string_util.h"
 #include "util/i2c_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -708,6 +709,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    int last_value_pos = actual_lookback - 1;
    int most_recent_step = latest_values[last_value_pos].required_step;
 
+#ifdef OLD
    char  b[900]; b[0] = '\0';
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
       for (int ndx = 0; ndx < actual_lookback; ndx++) {
@@ -717,8 +719,22 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
              latest_values[ndx].epoch_seconds);
       }
    }
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "actual_lookback = %d, latest_values:%s",
-         rtable->busno, rtable, actual_lookback, b);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, actual_lookback = %d, latest_values:%s",
+         rtable->busno, actual_lookback, b);
+#endif
+   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
+      GPtrArray * svals = g_ptr_array_new_with_free_func(g_free);
+      for (int ndx = 0; ndx < actual_lookback; ndx++) {
+         char * s = g_strdup_printf("{tryct:%d,reqd step:%d,%ld}",
+             latest_values[ndx].tryct, latest_values[ndx].required_step,
+             latest_values[ndx].epoch_seconds);
+         g_ptr_array_add(svals, s);
+      }
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "busno=%d, actual_lookback = %d, latest_values:%s",
+            rtable->busno, actual_lookback,
+            join_string_g_ptr_array_t(svals, ", ") );
+      g_ptr_array_free(svals, true);
+   }
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
          "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
          max_tryct, min_tryct, total_tryct, most_recent_step);
