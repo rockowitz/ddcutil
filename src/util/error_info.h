@@ -131,6 +131,11 @@ char * errinfo_array_summary(
 char * errinfo_causes_string(
       Error_Info *   erec);
 
+void errinfo_report_collect(
+      Error_Info *   erec,
+      GPtrArray *    collector,
+      int            depth);
+
 void errinfo_report(
       Error_Info *   erec,
       int            depth);

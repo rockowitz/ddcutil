@@ -743,6 +743,7 @@ errinfo_causes_string(Error_Info * erec) {
 
 
 
+
 /** Emits a full report of the contents of the specified #Error_Info,
  *  using report functions.
  *
@@ -750,7 +751,7 @@ errinfo_causes_string(Error_Info * erec) {
  *  \param  depth  logical indentation depth
  */
 void
-errinfo_report(Error_Info * erec, int depth) {
+errinfo_report_collect(Error_Info * erec, GPtrArray* collector, int depth) {
    assert(erec);
    int d1 = depth+1;
 
@@ -758,17 +759,17 @@ errinfo_report(Error_Info * erec, int depth) {
    // rpt_vstring(depth, "(%s) Location: %s", __func__, (erec->func) ? erec->func : "not set");
    // rpt_vstring(depth, "(%s) errinfo_name_func=%p, errinfo_desc_func=%p", __func__, errinfo_name_func, errinfo_desc_func);
    // rpt_push_output_dest(stderr);
-   rpt_vstring(depth, "Exception in function %s: status=%s",
+   rpt_vstring_collect(depth, collector, "Exception in function %s: status=%s",
          (erec->func) ? erec->func : "not set",
          errinfo_desc_func(erec->status_code) );  // can't call psc_desc(), violates layering
    if (erec->detail)
-      rpt_label(depth+1, erec->detail);
+      rpt_label_collect(depth+1, collector, erec->detail);
    // rpt_pop_output_dest();
 
    if (erec->cause_ct > 0) {
-      rpt_vstring(depth, "Caused by: ");
+      rpt_vstring_collect(depth, collector, "Caused by: ");
       for (int ndx = 0; ndx < erec->cause_ct; ndx++) {
-         errinfo_report(erec->causes[ndx], d1);
+         errinfo_report_collect(erec->causes[ndx], collector, d1);
       }
    }
 
@@ -781,7 +782,15 @@ errinfo_report(Error_Info * erec, int depth) {
    }
 #endif
    // rpt_vstring(depth, "(%s) Done", __func__);
+
 }
+
+
+void
+errinfo_report(Error_Info * erec, int depth) {
+      errinfo_report_collect(erec, NULL, depth);
+}
+
 
 
 #ifdef NO
