@@ -736,14 +736,9 @@ ddc_write_read_with_retry(
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
-   // if (psc == 0)
-      pdd_record_final_by_dh(dh, psc, tryctr);
-
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%s, retryable=%s",
          tryctr, psc_name_code(psc), sbool(retryable) );
-
-   // int errct = (psc == 0) ? tryctr-1 : tryctr;
-
+   pdd_record_final_by_dh(dh, psc, tryctr);
 
    Error_Info * errors_found[MAX_MAX_TRIES];
    int errct = 0;
@@ -751,12 +746,12 @@ ddc_write_read_with_retry(
       if (try_errors[ndx])
          errors_found[errct++] = try_errors[ndx];
    }
-   char * s0 = (psc == 0) ? "Succeeded" : "Failed";
-   char * s1 = (errct == 1) ? "" : "s";
-
    char * s = errinfo_array_summary(errors_found, errct);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
-                   "%s,%s after %d error%s: %s", dh_repr(dh), s0, errct, s1, s);
+                   "%s,%s after %d error(s): %s",
+                   dh_repr(dh),
+                   (psc == 0) ? "Succeeded" : "Failed",
+                   errct, s);
    free(s);
 
    Error_Info * ddc_excp = NULL;
@@ -862,9 +857,7 @@ ddc_write_only(
    TRACED_ASSERT(dh->dref->io_path.io_mode == DDCA_IO_I2C);
 
    DDCA_Status psc = ddc_i2c_write_only(dh, request_packet_ptr);
-   Error_Info *  ddc_excp = NULL;
-   if (psc)
-      ddc_excp = ERRINFO_NEW(psc, NULL);
+   Error_Info *  ddc_excp = (psc) ? ERRINFO_NEW(psc,NULL) : NULL;
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
