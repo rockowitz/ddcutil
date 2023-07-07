@@ -266,11 +266,27 @@ void rpt_nl() {
  *
  * @remark This is the core function through which all output is funneled.
  */
-void rpt_title(const char * title, int depth) {
+void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
    bool debug = false;
    if (debug)
       printf("(%s) Writing to %p\n", __func__, (void*)rpt_cur_output_dest());
-   f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
+
+   if (collector) {
+      g_ptr_array_add(collector, g_strdup_printf("%*s%s\n", rpt_get_indent(depth), "", title));
+   }
+   else {
+      f0printf(rpt_cur_output_dest(), "%*s%s\n", rpt_get_indent(depth), "", title);
+   }
+}
+
+
+void rpt_title(const char * title, int depth) {
+   rpt_title_collect(title, NULL, depth);
+}
+
+
+void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
+   rpt_title_collect(text, collector, depth);
 }
 
 
@@ -325,6 +341,20 @@ void rpt_vstring(int depth, char * format, ...) {
    if (buf != buffer)
       free(buf);
 }
+
+void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
+   char * s = g_strdup_vprintf(format, ap);
+   rpt_title_collect(s, collector, depth);
+   free(s);
+}
+
+void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
+   va_list(args);
+   va_start(args, format);
+   vrpt_vstring_collect(depth, collector, format, args);
+   va_end(args);
+}
+
 
 
 /** Convenience function that writes multiple constant strings.

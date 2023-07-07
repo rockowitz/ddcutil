@@ -37,10 +37,12 @@ void rpt_flush();
 void rpt_nl();
 void rpt_title(const char * title, int depth);
 void rpt_label(int depth, const char * text);
+void rpt_label_collect(int depth, GPtrArray* collector, const char * text);
 void rpt_multiline(int depth, ...);
 void rpt_g_ptr_array(int depth, GPtrArray * strings);
 
 void rpt_vstring(int depth, char * format, ...) ;
+void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...);
 void rpt_2col(char * s1,  char * s2,  int col2offset, bool offset_absolute, int depth);
 void rpt_structure_loc(const char * name, const void * ptr, int depth);
 void rpt_hex_dump(const Byte * data, int size, int depth);
