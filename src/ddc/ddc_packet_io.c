@@ -314,7 +314,7 @@ ddc_close_display(Display_Handle * dh) {
       if (!err)
          err = err2;
       else
-         ERRINFO_FREE_WITH_REPORT(err2, true);
+         BASE_ERRINFO_FREE_WITH_REPORT(err2, true);
    }
    assert(open_displays);
    g_hash_table_remove(open_displays, dh);
@@ -774,10 +774,8 @@ ddc_write_read_with_retry(
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
-      bool emit_report = (IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions) &&
-                         !dbgtrc_trace_to_syslog_only;
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], emit_report);
+         BASE_ERRINFO_FREE_WITH_REPORT(try_errors[ndx], IS_DBGTRC(debug, TRACE_GROUP));
       }
    }
 
@@ -939,10 +937,8 @@ ddc_write_only_with_retry(
       //   succeeded after retries, there will be some errors (tryctr > 1)
       //   no errors (tryctr == 1)
       // int last_bad_try_index = tryctr-2;
-      bool emit_report = (IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions) &&
-                         !dbgtrc_trace_to_syslog_only;
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], emit_report);
+         BASE_ERRINFO_FREE_WITH_REPORT(try_errors[ndx], IS_DBGTRC(debug, TRACE_GROUP) );
       }
    }
 
