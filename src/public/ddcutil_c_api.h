@@ -383,6 +383,16 @@ ddca_show_stats(
 
 // TODO: Add functions to get stats
 
+/** Report display locks.
+ *
+ *  @param[in] depth  logical indentation depth
+ *
+ *  @since 2.0.0
+ */
+void
+ddca_report_locks(
+      int            depth);
+
 
 //
 // Display Detection

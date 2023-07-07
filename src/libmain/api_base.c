@@ -1209,6 +1209,13 @@ ddca_show_stats(
       ddc_report_stats_main( stats_types, per_display_stats, per_display_stats, false, depth);
 }
 
+void
+ddca_report_locks(
+      int             depth)
+{
+   dbgrpt_display_locks(depth);
+}
+
 
 void init_api_base() {
    // DBGMSG("Executing");
