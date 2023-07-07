@@ -546,7 +546,6 @@ do { \
 } while(0)
 
 
-#ifdef FUTURE
 void base_errinfo_free_with_report(
       Error_Info *  erec,
       bool          report,
@@ -554,7 +553,7 @@ void base_errinfo_free_with_report(
 
 #define BASE_ERRINFO_FREE_WITH_REPORT(_erec, _report) \
    base_errinfo_free_with_report(_erec, (_report), __func__)
-#endif
+
 
 //
 // Output captuer

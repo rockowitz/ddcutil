@@ -1123,7 +1123,7 @@ int captured_size() {
 }
 #endif
 
-#ifdef FUTURE
+
 /** Releases a #Error_Info instance, including all instances it points to.
  *  Optionally reports the instance before freeing it, taking into account
  *  syslog redirection.
@@ -1140,10 +1140,14 @@ base_errinfo_free_with_report(
       const char * func)
 {
    if (erec) {
-      if (report) {
-         In_Memory_File_Desc * fdesc = get_thread_capture_buf_desc();
-         if ( (dbgtrc_trace_to_syslog_only && !fdesc->in_memory_capture_active) ||false) {
-            // TODO output to syslog
+      if (report || report_freed_exceptions) {
+         if ( dbgtrc_trace_to_syslog_only) {
+            GPtrArray * collector = g_ptr_array_new_with_free_func(g_free);
+            rpt_vstring_collect(0, collector, "(%s) Freeing exception:", func);
+            for (int ndx = 0; ndx < collector->len; ndx++) {
+              syslog(LOG_NOTICE, "%s", (char*) g_ptr_array_index(collector, ndx));
+            }
+            g_ptr_array_free(collector, true);
          }
          else {
             rpt_vstring(0, "(%s) Freeing exception:", func);
@@ -1153,7 +1157,7 @@ base_errinfo_free_with_report(
       errinfo_free(erec);
    }
 }
-#endif
+
 
 
 void init_core() {
