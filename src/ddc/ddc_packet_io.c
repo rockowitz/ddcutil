@@ -194,7 +194,7 @@ ddc_open_display(
             //          close(fd) fails
             char * msg = g_strdup_printf("No EDID for device on bus /dev/"I2C"-%d", dref->io_path.path.i2c_busno);
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-            err = errinfo_new(DDCRC_EDID, __func__, "%s", msg);
+            err = ERRINFO_NEW(DDCRC_EDID, "%s", msg);
             free(msg);
          }
 
@@ -286,7 +286,7 @@ ddc_close_display(Display_Handle * dh) {
    Status_Errno rc = 0;
    if (dh->fd == -1) {
       rc = DDCRC_INVALID_OPERATION;    // or DDCRC_ARG?
-      err = errinfo_new(rc, __func__, "Invalid display handle");
+      err = ERRINFO_NEW(rc, "Invalid display handle");
    }
    else {
       switch(dh->dref->io_path.io_mode) {
@@ -313,7 +313,7 @@ ddc_close_display(Display_Handle * dh) {
                TRACED_ASSERT(rc < 0);
                char * msg = g_strdup_printf("usb_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
                MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
-               err = errinfo_new(rc, __func__, msg);
+               err = ERRINFO_NEW(rc, msg);
                free(msg);
                COUNT_STATUS_CODE(rc);
             }
@@ -604,20 +604,9 @@ ddc_write_read(
    // Convert status code to Error_Info *
    Error_Info * excp = NULL;
    if (psc < 0)
-      excp = errinfo_new(psc, __func__, NULL);
+      excp = ERRINFO_NEW(psc, NULL);
 
    DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, excp, response_packet_ptr_loc, dbgrpt_packet);
-#ifdef OLD
-   if (excp) {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(excp)  );
-   }
-   else {
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: NULL, *response_packet_ptr_loc ->");
-      if (debug || IS_TRACING())
-         dbgrpt_packet(*response_packet_ptr_loc, 2);
-   }
-#endif
-
    return excp;
 }
 
@@ -819,9 +808,10 @@ ddc_write_read_with_retry(
          COUNT_STATUS_CODE(psc);     // new status code, count it
    }
    else {
+      bool emit_report = (IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions) &&
+                         !dbgtrc_trace_to_syslog_only;
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
-         // errinfo_free(try_errors[ndx]);
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], (debug || IS_TRACING() || report_freed_exceptions) && !dbgtrc_trace_to_syslog_only);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], emit_report);
       }
    }
 
@@ -903,7 +893,7 @@ ddc_write_only(
    DDCA_Status psc = ddc_i2c_write_only(dh, request_packet_ptr);
    Error_Info *  ddc_excp = NULL;
    if (psc)
-      ddc_excp = errinfo_new(psc, __func__, NULL);
+      ddc_excp = ERRINFO_NEW(psc, NULL);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
    return ddc_excp;
@@ -985,8 +975,10 @@ ddc_write_only_with_retry(
       //   succeeded after retries, there will be some errors (tryctr > 1)
       //   no errors (tryctr == 1)
       // int last_bad_try_index = tryctr-2;
+      bool emit_report = (IS_DBGTRC(debug, TRACE_GROUP) || report_freed_exceptions) &&
+                         !dbgtrc_trace_to_syslog_only;
       for (int ndx = 0; ndx < tryctr-1; ndx++) {
-         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], (debug || IS_TRACING() || report_freed_exceptions) && !dbgtrc_trace_to_syslog_only);
+         ERRINFO_FREE_WITH_REPORT(try_errors[ndx], emit_report);
       }
    }
 
