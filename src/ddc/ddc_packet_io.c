@@ -159,27 +159,7 @@ ddc_open_display(
    err = lock_display(ddisp_ref, ddisp_flags);
    if (err)
       goto bye;
-   // if (lockrc == DDCRC_LOCKED) {     // locked in another thread
-   //    ddcrc = DDCRC_LOCKED;          // is there an appropriate errno value?  EBUSY? EACCES?
-   //    goto bye;
-   // }
 
-   // DBGMSF(debug, "lockrc = %s, DREF_OPEN = %s", psc_desc(lockrc), sbool(dref->flags&DREF_OPEN));
-   // assumes there is only one Display_Ref for a display
-   // DREF_OPEN flag will not be set if caller used a different Display_Ref on this open call
-   // TRACED_ASSERT_IFF( ddcrc == DDCRC_ALREADY_OPEN, dref->flags & DREF_OPEN);
-
-  //  if (dref->flags & DREF_OPEN) {
-  //     ddcrc = DDCRC_ALREADY_OPEN;
-  //     goto bye;
-  //  }
-
-   // if (lockrc == DDCRC_ALREADY_OPEN) {
-   //    ddcrc = DDCRC_ALREADY_OPEN;
-   //    goto bye;
-   // }
-
-   assert(!err);
    switch (dref->io_path.io_mode) {
 
    case DDCA_IO_I2C:
@@ -594,18 +574,9 @@ ddc_write_read(
           *response_packet_ptr_loc = NULL;
        }
    }
-
    free(readbuf);    // or does response_packet_ptr_loc point into here?
 
-   // already done:
-   // if (rc != 0)
-   //    COUNT_STATUS_CODE(psc);
-
-   // Convert status code to Error_Info *
-   Error_Info * excp = NULL;
-   if (psc < 0)
-      excp = ERRINFO_NEW(psc, NULL);
-
+   Error_Info * excp = (psc < 0) ? ERRINFO_NEW(psc,NULL) : NULL;
    DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, excp, response_packet_ptr_loc, dbgrpt_packet);
    return excp;
 }
