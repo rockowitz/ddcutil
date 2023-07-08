@@ -27,7 +27,7 @@ extern "C" {
 
 #define ERROR_INFO_MARKER "EINF"
 
-/** Struct for reporting errors, designed for collecting retry failures */
+/** Struct for reporting errors, designed for collecting contributing errors */
 typedef struct error_info {
    char               marker[4];    ///<  always EINF
    int                status_code;  ///<  status code
