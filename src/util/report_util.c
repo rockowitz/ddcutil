@@ -255,14 +255,17 @@ void rpt_nl() {
 }
 
 
-/** Writes a constant string to the current output destination.
+/** Writes a constant string to the current output destination, or adds
+ *  the string to a specified GPtrArray.
  *
  * A newline is appended to the string specified.
  *
  * The output is indented per the specified indentation depth.
  *
- * @param title string to write
- * @param depth logical indentation depth.
+ * @param title     string to write
+ * @param collector if non-NULL, add string to this GPtrArray instead of
+ *                  writing it to the current output destination
+ * @param depth     logical indentation depth.
  *
  * @remark This is the core function through which all output is funneled.
  */
@@ -280,11 +283,32 @@ void rpt_title_collect(const char * title, GPtrArray * collector, int depth) {
 }
 
 
+/** Writes a constant string to the current output destination.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param title string to write
+ * @param depth logical indentation depth.
+ */
 void rpt_title(const char * title, int depth) {
    rpt_title_collect(title, NULL, depth);
 }
 
 
+/** Writes a constant string to the current output destination, or
+ *  adds it to a GPtrArray if one is given.
+ *
+ * A newline is appended to the string specified.
+ *
+ * The output is indented per the specified indentation depth.
+ *
+ * @param depth     logical indentation depth.
+ * @param collector if non-NULL, append string to this GPtrArray
+ *                  instead of writing it to the current output device
+ * @param title     string to write
+ */
 void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
    rpt_title_collect(text, collector, depth);
 }
@@ -309,6 +333,7 @@ void rpt_label_collect(int depth, GPtrArray * collector, const char * text) {
 void rpt_label(int depth, const char * text) {
    rpt_title(text, depth);
 }
+
 
 /** Writes a formatted string to the current output destination.
  *
@@ -342,12 +367,39 @@ void rpt_vstring(int depth, char * format, ...) {
       free(buf);
 }
 
+
+/** Writes a formatted string to the current output destination, or
+ *  adds the string to a collector array.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ap        va_list array of arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
 void vrpt_vstring_collect(int depth, GPtrArray * collector, char * format, va_list ap) {
    char * s = g_strdup_vprintf(format, ap);
    rpt_title_collect(s, collector, depth);
    free(s);
 }
 
+
+/** Writes a formatted string to the current output destination.
+ *
+ * A newline is appended to the string specified
+ *
+ * @param  depth     logical indentation depth
+ * @param  collector if non-NULL, add string to GPtrArray instead of
+ *                   writing to current output destination
+ * @param  format    format string (normal printf argument)
+ * @param  ...       arguments
+ *
+ * @remark Note that the depth parm is first on this function because of variable args
+ */
 void rpt_vstring_collect(int depth, GPtrArray* collector, char * format, ...) {
    va_list(args);
    va_start(args, format);
