@@ -285,6 +285,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,      d1);
       RPT_CMDFLAG("internal stats", CMD_FLAG_INTERNAL_STATS, d1);
+      RPT_CMDFLAG("i2c source addr set", CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR, d1);
+      if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR)
+         rpt_vstring(d2, "explicit_i2c_source_addr:    0x%02x", parsed_cmd->explicit_i2c_source_addr);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
       rpt_int("setvcp value count:",NULL, parsed_cmd->setvcp_values->len,                       d1);
       for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {

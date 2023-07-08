@@ -106,6 +106,8 @@ typedef enum {
                          = 0x0100000000000000,
    CMD_FLAG_INTERNAL_STATS
                          = 0x0200000000000000,
+   CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
+                        =  0x0400000000000000,
 } Parsed_Cmd_Flags;
 
 #define IGNORED_VID_PID_MAX 4
@@ -166,6 +168,7 @@ struct {
    uint64_t               flags;      // Parsed_Cmd_Flags
    Bit_Set_32             ignored_hiddevs;
    uint8_t                ignored_usb_vid_pid_ct;
+   uint8_t                explicit_i2c_source_addr;
    uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
 
    int                    i1;         // for temporary use
