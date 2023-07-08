@@ -28,14 +28,13 @@ typedef struct {
    GThread *    display_mutex_thread;     // thread owning mutex
 } Display_Lock_Record;
 
-
-void                 init_ddc_display_lock(void);
-void                 terminate_ddc_display_lock();
+void                  init_ddc_display_lock(void);
+void                  terminate_ddc_display_lock();
 Display_Lock_Record * get_display_lock_record(Display_Ref * dref);
-Error_Info *         lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
-Error_Info *         lock_display_by_dref(Display_Ref * dref, Display_Lock_Flags flags);
-Error_Info *         unlock_display(Display_Lock_Record * id);
-Error_Info *         unlock_display_by_dref(Display_Ref * dref);
-void                 dbgrpt_display_locks(int depth);
+Error_Info *          lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
+Error_Info *          lock_display_by_dref(Display_Ref * dref, Display_Lock_Flags flags);
+Error_Info *          unlock_display(Display_Lock_Record * id);
+Error_Info *          unlock_display_by_dref(Display_Ref * dref);
+void                  dbgrpt_display_locks(int depth);
 
 #endif /* DDC_DISPLAY_LOCK_H_ */
