@@ -151,12 +151,11 @@ ddc_open_display(
    Error_Info * err = NULL;
    int fd = 0;
 
-   Lock_Ref ddisp_ref = get_distinct_display_ref(dref);
    Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
-   err = lock_display(ddisp_ref, ddisp_flags);
+   err = lock_display_by_dref(dref, ddisp_flags);
    if (err)
       goto bye;
 
@@ -231,7 +230,7 @@ ddc_open_display(
       g_hash_table_add(open_displays, dh);
    }
    else {
-      err = unlock_display(ddisp_ref);
+      err = unlock_display_by_dref(dref);
       if (err)
          PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
    }
@@ -307,8 +306,7 @@ ddc_close_display(Display_Handle * dh) {
    }
 
    dh->dref->flags &= (~DREF_OPEN);
-   Lock_Ref display_id = get_distinct_display_ref(dh->dref);
-   Error_Info * err2 = unlock_display(display_id);
+   Error_Info * err2 = unlock_display_by_dref(dref);
    if (err2) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);
       if (!err)
