@@ -172,6 +172,29 @@ lock_display(
 }
 
 
+
+/** Locks a display.
+ *
+ *  \param  dref               display reference
+ *  \param  flags              if **DDISP_WAIT** set, wait for locking
+ *  \retval NULL               success
+ *  \retval Error_Info(DDCRC_LOCKED)       locking failed, display already locked by another
+ *                                         thread and DDISP_WAIT not set
+ *  \retval Error_Info(DDCRC_ALREADY_OPEN) display already locked in current thread
+ */
+Error_Info *
+lock_display_by_dref(
+      Display_Ref *      dref,
+      Display_Lock_Flags flags)
+{
+    Lock_Ref lockid = get_distinct_display_ref(dref);
+    return lock_display(lockid, flags);
+}
+
+
+
+
+
 /** Unlocks a distinct display.
  *
  *  \param id  distinct display identifier
@@ -199,6 +222,25 @@ unlock_display(Lock_Ref id) {
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, lockrec_repr_t(id));
    return err;
 }
+
+
+
+/**  Unocks a display.
+ *
+ *  \param  dref   display reference
+ *  \retval NULL                      success
+ *  \retval Error_Info(DDCRC_LOCKED)  locking failed, display already locked by another thread
+ */
+Error_Info *
+unlock_display_by_dref(
+      Display_Ref *      dref)
+{
+    Lock_Ref lockid = get_distinct_display_ref(dref);
+    return unlock_display(lockid);
+}
+
+
+
 
 
 #ifdef BAD

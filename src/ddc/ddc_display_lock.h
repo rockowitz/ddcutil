@@ -26,7 +26,9 @@ void                 init_ddc_display_lock(void);
 void                 terminate_ddc_display_lock();
 Lock_Ref get_distinct_display_ref(Display_Ref * dref);
 Error_Info *         lock_display(Lock_Ref id, Display_Lock_Flags flags);
+Error_Info *         lock_display_by_dref(Display_Ref * dref, Display_Lock_Flags flags);
 Error_Info *         unlock_display(Lock_Ref id);
+Error_Info *         unlock_display_by_dref(Display_Ref * dref);
 void                 dbgrpt_display_locks(int depth);
 
 #endif /* DDC_DISPLAY_LOCK_H_ */
