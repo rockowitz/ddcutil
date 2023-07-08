@@ -20,14 +20,21 @@ typedef enum {
    DDISP_WAIT  = 0x01      ///< If true, #lock_distinct_display() should wait
 } Display_Lock_Flags;
 
-typedef void * Lock_Ref;
+#define DISPLAY_LOCK_MARKER "DDSC"
+typedef struct {
+   char         marker[4];
+   DDCA_IO_Path io_path;
+   GMutex       display_mutex;
+   GThread *    display_mutex_thread;     // thread owning mutex
+} Display_Lock_Record;
+
 
 void                 init_ddc_display_lock(void);
 void                 terminate_ddc_display_lock();
-Lock_Ref get_distinct_display_ref(Display_Ref * dref);
-Error_Info *         lock_display(Lock_Ref id, Display_Lock_Flags flags);
+Display_Lock_Record * get_display_lock_record(Display_Ref * dref);
+Error_Info *         lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
 Error_Info *         lock_display_by_dref(Display_Ref * dref, Display_Lock_Flags flags);
-Error_Info *         unlock_display(Lock_Ref id);
+Error_Info *         unlock_display(Display_Lock_Record * id);
 Error_Info *         unlock_display_by_dref(Display_Ref * dref);
 void                 dbgrpt_display_locks(int depth);
 

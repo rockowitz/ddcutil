@@ -53,14 +53,6 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
-#define DISTINCT_DISPLAY_DESC_MARKER "DDSC"
-typedef struct {
-   char         marker[4];
-   DDCA_IO_Path io_path;
-   GMutex       display_mutex;
-   GThread *    display_mutex_thread;     // thread owning mutex
-} Display_Lock_Record;
-
 
 
 static bool lock_rec_matches_dref(Display_Lock_Record * ddesc, Display_Ref * dref) {
@@ -78,24 +70,23 @@ static GMutex master_display_lock_mutex;
 
 // must be called when lock not held by current thread, o.w. deadlock
 static char *
-lockrec_repr_t(Lock_Ref id) {
+lockrec_repr_t(Display_Lock_Record * ref) {
    static GPrivate  repr_key = G_PRIVATE_INIT(g_free);
    char * buf = get_thread_fixed_buffer(&repr_key, 100);
    g_mutex_lock(&descriptors_mutex);
-   Display_Lock_Record * ref = (Display_Lock_Record *) id;
-   assert(memcmp(ref->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   assert(memcmp(ref->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    g_snprintf(buf, 100, "Display_Lock_Record[%s @%p]", dpath_repr_t(&ref->io_path), ref);
    g_mutex_unlock(&descriptors_mutex);
    return buf;
 }
 
 
-Lock_Ref
-get_distinct_display_ref(Display_Ref * dref) {
+Display_Lock_Record *
+get_display_lock_record(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 
-   void * result = NULL;
+   Display_Lock_Record * result = NULL;
    g_mutex_lock(&descriptors_mutex);
 
    for (int ndx=0; ndx < lock_records->len; ndx++) {
@@ -107,7 +98,7 @@ get_distinct_display_ref(Display_Ref * dref) {
    }
    if (!result) {
       Display_Lock_Record * new_desc = calloc(1, sizeof(Display_Lock_Record));
-      memcpy(new_desc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4);
+      memcpy(new_desc->marker, DISPLAY_LOCK_MARKER, 4);
       new_desc->io_path           = dref->io_path;
       g_mutex_init(&new_desc->display_mutex);
       g_ptr_array_add(lock_records, new_desc);
@@ -132,16 +123,15 @@ get_distinct_display_ref(Display_Ref * dref) {
  */
 Error_Info *
 lock_display(
-      Lock_Ref   id,
+      Display_Lock_Record * ddesc,
       Display_Lock_Flags flags)
 {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, lockrec_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
 
    Error_Info * err = NULL;
-   Display_Lock_Record * ddesc = (Display_Lock_Record *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    bool self_thread = false;
    g_mutex_lock(&master_display_lock_mutex);  //wrong - will hold lock during wait
    if (ddesc->display_mutex_thread == g_thread_self() )
@@ -167,10 +157,9 @@ lock_display(
           ddesc->display_mutex_thread = g_thread_self();
    }
    // need a new DDC status code
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, lockrec_repr_t(id));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    return err;
 }
-
 
 
 /** Locks a display.
@@ -187,12 +176,9 @@ lock_display_by_dref(
       Display_Ref *      dref,
       Display_Lock_Flags flags)
 {
-    Lock_Ref lockid = get_distinct_display_ref(dref);
+    Display_Lock_Record * lockid = get_display_lock_record(dref);
     return lock_display(lockid, flags);
 }
-
-
-
 
 
 /** Unlocks a distinct display.
@@ -202,13 +188,12 @@ lock_display_by_dref(
  *  \retval NULL   no error
  */
 Error_Info *
-unlock_display(Lock_Ref id) {
+unlock_display(Display_Lock_Record * ddesc) {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "id=%p -> %s", id, lockrec_repr_t(id));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    Error_Info * err = NULL;
-   Display_Lock_Record * ddesc = (Display_Lock_Record *) id;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
-   TRACED_ASSERT(memcmp(ddesc->marker, DISTINCT_DISPLAY_DESC_MARKER, 4) == 0);
+   TRACED_ASSERT(memcmp(ddesc->marker, DISPLAY_LOCK_MARKER, 4) == 0);
    g_mutex_lock(&master_display_lock_mutex);
    if (ddesc->display_mutex_thread != g_thread_self()) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "Attempting to unlock display lock owned by different thread");
@@ -219,10 +204,9 @@ unlock_display(Lock_Ref id) {
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
-   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "id=%p -> %s", id, lockrec_repr_t(id));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    return err;
 }
-
 
 
 /**  Unocks a display.
@@ -235,12 +219,9 @@ Error_Info *
 unlock_display_by_dref(
       Display_Ref *      dref)
 {
-    Lock_Ref lockid = get_distinct_display_ref(dref);
+    Display_Lock_Record * lockid = get_display_lock_record(dref);
     return unlock_display(lockid);
 }
-
-
-
 
 
 #ifdef BAD
@@ -297,7 +278,7 @@ void
 init_ddc_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
-   RTTI_ADD_FUNC(get_distinct_display_ref);
+   RTTI_ADD_FUNC(get_display_lock_record);
    RTTI_ADD_FUNC(lock_display);
    RTTI_ADD_FUNC(unlock_display);
    RTTI_ADD_FUNC(lock_display_by_dref);
