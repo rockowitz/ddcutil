@@ -300,6 +300,8 @@ init_ddc_display_lock(void) {
    RTTI_ADD_FUNC(get_distinct_display_ref);
    RTTI_ADD_FUNC(lock_display);
    RTTI_ADD_FUNC(unlock_display);
+   RTTI_ADD_FUNC(lock_display_by_dref);
+   RTTI_ADD_FUNC(unlock_display_by_dref);
 }
 
 
