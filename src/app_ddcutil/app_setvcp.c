@@ -233,7 +233,7 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
          if (ddc_excp->status_code == DDCRC_RETRIES)
             f0printf(ferr(), "    Try errors: %s\n", errinfo_causes_string(ddc_excp));
          ddcrc = ERRINFO_STATUS(ddc_excp);
-         ERRINFO_FREE_WITH_REPORT(ddc_excp, debug || IS_TRACING() || report_freed_exceptions);
+         BASE_ERRINFO_FREE_WITH_REPORT(ddc_excp, IS_DBGTRC(debug,TRACE_GROUP));
          break;
       }
    }
