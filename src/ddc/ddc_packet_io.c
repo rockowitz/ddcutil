@@ -250,10 +250,10 @@ bye:
 
 /** Closes a DDC display.
  *
- *  \param  dh            display handle
- *  \return 0 if success, or -errno if error
+ *  @param  dh  display handle
+ *  @return NULL if no error, #Error_Info struct if error
  *
- *  \remark
+ *  @remark
  *  Logs underlying status code if error.
  */
 Error_Info *
