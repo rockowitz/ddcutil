@@ -220,8 +220,8 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
    for (int ndx = 0; ndx < parsed_cmd->setvcp_values->len; ndx++) {
       Parsed_Setvcp_Args * cur =
             &g_array_index(parsed_cmd->setvcp_values, Parsed_Setvcp_Args, ndx);
-      if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-         alt_source_addr = parsed_cmd->i1;
+      if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR)
+         alt_source_addr = parsed_cmd->explicit_i2c_source_addr;
       ddc_excp = app_set_vcp_value(
             dh,
             cur->feature_code,

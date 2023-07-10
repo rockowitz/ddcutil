@@ -194,8 +194,8 @@ app_show_feature_set_values_by_dh(
    if (debug || IS_TRACING())
       dbgrpt_feature_set_ref(parsed_cmd->fref,1);
 
-   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-      alt_source_addr = parsed_cmd->i1;
+   if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR)
+      alt_source_addr = parsed_cmd->explicit_i2c_source_addr;
 
    Feature_Set_Ref *    fsref = parsed_cmd->fref;
 
