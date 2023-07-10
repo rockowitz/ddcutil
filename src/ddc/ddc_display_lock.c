@@ -126,7 +126,7 @@ lock_display(
       Display_Lock_Record * ddesc,
       Display_Lock_Flags flags)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
 
    Error_Info * err = NULL;
@@ -189,7 +189,7 @@ lock_display_by_dref(
  */
 Error_Info *
 unlock_display(Display_Lock_Record * ddesc) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
