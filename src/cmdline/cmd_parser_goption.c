@@ -862,6 +862,7 @@ parse_command(
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
+   char *   i2c_source_addr_work = NULL;
 
    gboolean hidden_help_flag = false;
    gboolean disable_config_flag = false;
@@ -1021,6 +1022,8 @@ parse_command(
 
       {"edid-read-size",
                       '\0', 0, G_OPTION_ARG_INT,  &edid_read_size_work, "Number of EDID bytes to read", "128,256" },
+      {"i2c-source-addr",
+                      '\0', 0, G_OPTION_ARG_STRING, &i2c_source_addr_work, "Alternative I2C source address", "source address"},
 
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_NONE,     &force_flag,       "Deprecated",           NULL},
@@ -1384,6 +1387,21 @@ parse_command(
       FREEA(syslog_work);
    }
    parsed_cmd->syslog_level = syslog_level;
+
+   if (i2c_source_addr_work) {
+      int ival;
+      bool ok = parse_int_work(i2c_source_addr_work, &ival, errmsgs);
+      if (ival < 0 || ival > 255) {
+         EMIT_PARSER_ERROR(errmsgs, "Source address must be a single byte value");
+         ok = false;
+      }
+      if (ok) {
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR;
+         parsed_cmd->explicit_i2c_source_addr = (uint8_t) ival;
+      }
+      parsing_ok &= ok;
+      FREEA(i2c_source_addr_work);
+   }
 
    if (i1_work) {
       bool ok = parse_int_work(i1_work, &parsed_cmd->i1, errmsgs);
