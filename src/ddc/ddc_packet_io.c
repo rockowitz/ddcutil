@@ -407,6 +407,7 @@ DDCA_Status ddc_i2c_write_read_raw(
    TRACED_ASSERT(dh);
    TRACED_ASSERT(dh->dref);
    TRACED_ASSERT(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_I2C);
+   // This function should not be called for USB
 
 #ifdef TEST_THAT_DIDNT_WORK
    bool single_byte_reads = false;   // doesn't work
@@ -462,6 +463,7 @@ DDCA_Status ddc_i2c_write_read_raw(
 }
 
 
+#ifdef OUT
 // TODO: eliminate this function, used to route I2C vs ADL calls
 // static  // allow function to appear in backtrace
 DDCA_Status ddc_write_read_raw(
@@ -505,6 +507,7 @@ DDCA_Status ddc_write_read_raw(
    }
    return psc;
 }
+#endif
 
 
 /** Writes a DDC request packet to a monitor and provides basic response parsing
@@ -544,7 +547,8 @@ ddc_write_read(
    DDCA_Status    psc;
    *response_packet_ptr_loc = NULL;
 
-   psc =  ddc_write_read_raw(
+   psc = ddc_i2c_write_read_raw(
+   // psc =  ddc_write_read_raw(
             dh,
             request_packet_ptr,
             read_bytewise,
@@ -953,7 +957,7 @@ init_ddc_packet_io_func_name_table() {
    RTTI_ADD_FUNC(ddc_close_display);
    RTTI_ADD_FUNC(ddc_i2c_write_read_raw);
    RTTI_ADD_FUNC(ddc_i2c_write_only);
-   RTTI_ADD_FUNC(ddc_write_read_raw);
+// RTTI_ADD_FUNC(ddc_write_read_raw);
    RTTI_ADD_FUNC(ddc_write_read);
    RTTI_ADD_FUNC(ddc_write_read_with_retry);
    RTTI_ADD_FUNC(ddc_write_only);
