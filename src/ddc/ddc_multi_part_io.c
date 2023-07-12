@@ -221,7 +221,7 @@ multi_part_read_with_retry(
          }
          else {
             int adjustment = multi_part_null_adjustment_millis;
-            SPECIAL_TUNED_SLEEP_WITH_TRACE(dh, adjustment, "special adjustent to recover from DDC_NULL_MSG");
+            SPECIAL_TUNED_SLEEP_WITH_TRACE(dh, adjustment, "special adjustment to recover from DDC_NULL_MSG");
             DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ad Hoc %d milliscecond sleep", adjustment);
          }
       }
