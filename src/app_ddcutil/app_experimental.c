@@ -40,7 +40,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
 
    rpt_vstring(depth+1, "Utility option --i1:          Unused");
-   rpt_vstring(depth+1, "Utility option --i2:          Unused");
+   rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
    rpt_vstring(depth+1, "Utility option --s2:          Unused");

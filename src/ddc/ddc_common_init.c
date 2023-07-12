@@ -41,6 +41,7 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #include "ddc_displays.h"
+#include "ddc_multi_part_io.h"
 #include "ddc_serialize.h"
 #include "ddc_services.h"
 #include "ddc/ddc_try_data.h"
@@ -235,6 +236,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, source);
    }
 
+   if (parsed_cmd->flags & CMD_FLAG_I2_SET)
+      multi_part_null_adjustment_millis = parsed_cmd->i2;
    dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
    if (dsa2_enabled) {
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
