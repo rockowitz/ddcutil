@@ -33,6 +33,9 @@
 #include "ddc/ddc_try_data.h"
 
 
+// temp
+int multi_part_null_adjustment_millis = 0;
+
 // Trace management
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
@@ -215,6 +218,11 @@ multi_part_read_with_retry(
          if (dh->dref->flags&DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Terminating loop for %s", psc_name(rc));
             can_retry = false;
+         }
+         else {
+            int adjustment = multi_part_null_adjustment_millis;
+            SPECIAL_TUNED_SLEEP_WITH_TRACE(dh, adjustment, "special adjustent to recover from DDC_NULL_MSG");
+            DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ad Hoc %d milliscecond sleep", adjustment);
          }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
