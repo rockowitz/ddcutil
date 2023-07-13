@@ -38,6 +38,7 @@ typedef enum {
 const char * user_multiplier_source_name(User_Multiplier_Source source);
 
 extern Sleep_Multiplier default_user_sleep_multiplier;
+extern bool pdd_null_msg_adjustment;
 
 typedef
 struct {
@@ -51,6 +52,7 @@ typedef struct Per_Display_Data {
    User_Multiplier_Source user_multiplier_source;
    struct Results_Table * dsa2_data;
    int                    total_sleep_time_millis;
+   int                    cur_loop_null_msg_ct;
    Per_Display_Try_Stats  try_stats[4];
    Sleep_Multiplier       initial_adjusted_sleep_multiplier;
    Sleep_Multiplier       final_successful_adjusted_sleep_multiplier;
@@ -93,13 +95,13 @@ void   pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool 
 void   pdd_reset_multiplier(Per_Display_Data * pdd, Sleep_Multiplier multiplier);
 Sleep_Multiplier
        pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
-void   pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries);
+void   pdd_note_retryable_failure(Per_Display_Data * pdd, DDCA_Status ddcrc, int remaining_tries);
 void   pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries);
 
 void   pdd_reset_multiplier_by_dh(Display_Handle * dh, Sleep_Multiplier multiplier);
 Sleep_Multiplier
        pdd_get_sleep_multiplier_by_dh(Display_Handle * dh);
-void   pdd_note_retryable_failure_by_dh(Display_Handle * dh, int remaining_tries);
+void   pdd_note_retryable_failure_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int remaining_tries);
 void   pdd_record_final_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int retries);
 
 void   init_per_display_data();

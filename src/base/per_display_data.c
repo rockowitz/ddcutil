@@ -43,6 +43,7 @@ static int      pdd_unlock_count = 0;
 static int      pdd_cross_thread_operation_blocked_count = 0;
 
 Sleep_Multiplier       default_user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
+bool pdd_null_msg_adjustment = false;
 User_Multiplier_Source default_user_multiplier_source = Default;
 
 void dbgrpt_per_display_data_locks(int depth) {
@@ -664,6 +665,8 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
 
 
 Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p, cur_loop_null_msg_ct=%d", pdd,pdd->cur_loop_null_msg_ct);
    float result = 1.0f;
 
    if (pdd->dsa2_enabled) {
@@ -673,15 +676,18 @@ Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
       result = pdd->user_sleep_multiplier;
    }
 
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %5.2f", result);
    return result;
 }
 
 
-void pdd_note_retryable_failure(Per_Display_Data * pdd, int remaining_tries) {
+void pdd_note_retryable_failure(Per_Display_Data * pdd, DDCA_Status ddcrc, int remaining_tries) {
    if (pdd->dsa2_enabled) {
-      dsa2_note_retryable_failure(pdd->dsa2_data, remaining_tries);
+      dsa2_note_retryable_failure(pdd->dsa2_data, ddcrc, remaining_tries);
    }
    pdd_record_adjusted_sleep_multiplier_bounds(pdd, false);
+   if (ddcrc == DDCRC_NULL_RESPONSE)
+      pdd->cur_loop_null_msg_ct++;
 }
 
 
@@ -691,6 +697,7 @@ void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
    }
    if (ddcrc == 0)
       pdd_record_adjusted_sleep_multiplier_bounds(pdd, true);
+   pdd->cur_loop_null_msg_ct = 0;
 }
 
 
@@ -707,10 +714,10 @@ float pdd_get_sleep_multiplier_by_dh(Display_Handle * dh)
 }
 
 
-void pdd_note_retryable_failure_by_dh(Display_Handle * dh, int remaining_tries)
+void pdd_note_retryable_failure_by_dh(Display_Handle * dh, DDCA_Status ddcrc, int remaining_tries)
 {
    Per_Display_Data * pdd = dh->dref->pdd;
-   pdd_note_retryable_failure(pdd, remaining_tries);
+   pdd_note_retryable_failure(pdd, ddcrc, remaining_tries);
 }
 
 
@@ -741,6 +748,7 @@ void init_per_display_data() {
    RTTI_ADD_FUNC(pdd_get_per_display_data);
    RTTI_ADD_FUNC(pdd_cross_display_operation_start);
    RTTI_ADD_FUNC(pdd_cross_display_operation_end);
+   RTTI_ADD_FUNC(pdd_get_adjusted_sleep_multiplier);
    pdd_init_per_display_data_module();
 }
 
