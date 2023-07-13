@@ -315,7 +315,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    assert (rc == DDCRC_OK);
  #endif
 
-   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F7);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
+   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
 
