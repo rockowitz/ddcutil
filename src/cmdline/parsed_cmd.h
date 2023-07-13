@@ -108,6 +108,7 @@ typedef enum {
                          = 0x0200000000000000,
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
+   CMD_FLAG_F9          =  0x0800000000000000,
 } Parsed_Cmd_Flags;
 
 #define IGNORED_VID_PID_MAX 4

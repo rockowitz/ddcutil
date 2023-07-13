@@ -855,6 +855,7 @@ parse_command(
    gboolean f6_flag         = false;
    gboolean f7_flag         = false;
    gboolean f8_flag         = false;
+   gboolean f9_flag         = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   fl1_work        = NULL;
@@ -1075,8 +1076,9 @@ parse_command(
       {"f4",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f4_flag,         "Special flag 4",    NULL},
       {"f5",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f5_flag,         "Special flag 5",    NULL},
       {"f6",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f6_flag,         "Special flag 6",    NULL},
-      {"f7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 6",    NULL},
-      {"f8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 6",    NULL},
+      {"f7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 7",    NULL},
+      {"f8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 8",    NULL},
+      {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f9_flag,         "Special flag 9",    NULL},
       {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1305,6 +1307,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F6,                f6_flag);
    SET_CMDFLAG(CMD_FLAG_F7,                f7_flag);
    SET_CMDFLAG(CMD_FLAG_F8,                f8_flag);
+   SET_CMDFLAG(CMD_FLAG_F9,                f9_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
 
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
