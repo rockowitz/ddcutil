@@ -319,6 +319,7 @@ typedef struct Results_Table {
 
    int  remaining_interval;
    int  cur_retry_loop_step;
+   int  cur_retry_loop_null_msg_ct;
 
    int  initial_step;
    int  initial_lookback;
@@ -359,6 +360,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    // ONE_INT_FIELD(min_ok_step);
    // rpt_bool("found_failure_step", NULL, rtable->found_failure_step, d1);
    ONE_INT_FIELD(cur_retry_loop_step);
+   ONE_INT_FIELD(cur_retry_loop_null_msg_ct);
 
    ONE_INT_FIELD(initial_step);
 // rpt_bool("initial_step_from_cache", NULL, rtable->initial_step_from_cache, d1);
@@ -782,15 +784,20 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
  *  for the next step execution in the current loop.
  *
  *  @param rtable            Results_Table for device
+ *  @param ddcrc             status code
  *  @param remaining_tries   number of tries remaining
  */
 void
-dsa2_note_retryable_failure(Results_Table * rtable, int remaining_tries) {
+dsa2_note_retryable_failure(Results_Table * rtable, DDCA_Status ddcrc,  int remaining_tries) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, remaining_tries=%d, dsa2_enabled=%s",
-         rtable->busno, rtable, remaining_tries, sbool(dsa2_enabled));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, ddcrc=%s, remaining_tries=%d, dsa2_enabled=%s",
+         rtable->busno, rtable, psc_name(ddcrc), remaining_tries, sbool(dsa2_enabled));
    assert(rtable);
    rtable->retryable_failure_ct++;
+   if (ddcrc == DDCRC_NULL_RESPONSE) {
+      rtable->cur_retry_loop_null_msg_ct++;
+   }
+
    int prev_step = rtable->cur_retry_loop_step;
    // has special handling for case of remaining_tries = 0;
 

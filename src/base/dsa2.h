@@ -27,7 +27,7 @@ bool         dsa2_is_from_cache(struct Results_Table * dpath);
 void         dsa2_reset_multiplier(Sleep_Multiplier multiplier);
 Sleep_Multiplier
              dsa2_get_adjusted_sleep_mult(struct Results_Table * rtable);
-void         dsa2_note_retryable_failure(struct Results_Table * rtable, int remaining_tries);
+void         dsa2_note_retryable_failure(struct Results_Table * rtable, DDCA_Status ddcrc, int remaining_tries);
 void         dsa2_record_final(struct Results_Table * rtable, DDCA_Status ddcrc, int retries);
 char *       dsa2_stats_cache_file_name();
 Status_Errno dsa2_save_persistent_stats();
