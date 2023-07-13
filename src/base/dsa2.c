@@ -449,7 +449,7 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
       if ( (rtable->state & RTABLE_FROM_CACHE) && !(rtable->state & RTABLE_EDID_VERIFIED)) {
          if (get_edid_checkbyte(busno) != rtable->edid_checksum_byte) {
             LOGABLE_MSG(DDCA_SYSLOG_NOTICE,
-               "Discarding cached display information for bus /dev/i2c-%d. EDID has changed.", busno);
+               "Discarding cached sleep adjustment data for bus /dev/i2c-%d. EDID has changed.", busno);
             // DBGTRC_NOPREFIX(true, TRACE_GROUP, "EDID verification failed");
             free_results_table(rtable);
             results_tables[busno] = NULL;
@@ -855,14 +855,16 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
       cirb_add(rtable->recent_values, si);
       if (rtable->cur_retry_loop_null_msg_ct > 0) {
          next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step for null_msg_ct=%d. New value: %d",
-                                                  rtable->busno, rtable->cur_retry_loop_null_msg_ct, next_cur_step);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "busno=%d, Incremented cur_step for null_msg_ct=%d. New value: %d",
+               rtable->busno, rtable->cur_retry_loop_null_msg_ct, next_cur_step);
       }
       else if (tries > 3){
          // Too many tries. Unconditionally increase rtable->cur_step
          next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step for tries > 3. New value: %d",
-                                                  rtable->busno, next_cur_step);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "busno=%d, Incremented cur_step for tries > 3. New value: %d",
+               rtable->busno, next_cur_step);
       }
       else if (tries > 2) {
          rtable->remaining_interval -= 1;
