@@ -19,7 +19,7 @@ void terminate_ddc_services();
 void ddc_reset_stats_main();
 void ddc_report_stats_main(
       DDCA_Stats_Type  stats,
-      bool             report_per_isplay,
+      bool             report_per_display,
       bool             include_dsa_stats,
       bool             stats_to_syslog_only,
       int              depth);
