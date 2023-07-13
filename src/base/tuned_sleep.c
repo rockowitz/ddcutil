@@ -164,7 +164,7 @@ static int get_sleep_time(
  *
  */
 static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                           "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
 
