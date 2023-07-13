@@ -290,7 +290,8 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
 {
    assert(mmk);
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "mmk -> %s", mmk_repr(*mmk));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "mmk -> %s, capabilities_cache_enabled=%s",
+         mmk_repr(*mmk), sbool(capabilities_cache_enabled));
 
    char * result = NULL;
    if (capabilities_cache_enabled) {
