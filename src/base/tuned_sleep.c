@@ -161,12 +161,18 @@ static int get_sleep_time(
  *
  *  If dynamic sleep is enabled, the sleep time is multiplied by the value
  *  returned from dsa_update_adjustment_factor().
- *
  */
-static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
+static int
+adjust_sleep_time(
+      Display_Handle *  dh,
+      Sleep_Event_Type  event_type,
+      int               spec_sleep_time_millis,
+      const char *      msg)
+{
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-                          "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
+                          "dh=%s, event_type=%s, spec_sleep_time_millis=%d, msg=%s", dh_repr(dh),
+                          sleep_event_name(event_type), spec_sleep_time_millis, msg);
 
    int null_adjustment_millis = 0;
    Per_Display_Data * pdd = dh->dref->pdd;
@@ -177,8 +183,17 @@ static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
       null_adjustment_millis = dh->dref->pdd->cur_loop_null_msg_ct * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
       if (dh->dref->pdd->cur_loop_null_msg_ct > 2)
          null_adjustment_millis = 3 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Adding %d milliseconds for Null responses", null_adjustment_millis);
       adjusted_sleep_time_millis += null_adjustment_millis;
+      char * s = g_strdup_printf(
+            "Adding %d milliseconds for %d Null response(s), busno=%d, event_type=%s, adjusted_sleep_time=%d %s",
+            null_adjustment_millis ,
+            dh->dref->pdd->cur_loop_null_msg_ct,
+            dh->dref->io_path.path.i2c_busno,
+            sleep_event_name(event_type),
+            adjusted_sleep_time_millis, (msg) ? msg : "");
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", s);
+      SYSLOG2(DDCA_SYSLOG_WARNING, s);
+      free(s);
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP,
@@ -235,7 +250,7 @@ void tuned_sleep_with_trace(
           "After get_sleep_time(). spec_sleep_time_millis = %d, deferrable sleep: %s",
           spec_sleep_time_millis,SBOOL(deferrable_sleep));
 
-   int adjusted_sleep_time_millis = adjust_sleep_time(dh, spec_sleep_time_millis);
+   int adjusted_sleep_time_millis = adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
 
