@@ -655,7 +655,7 @@ ddc_write_read_with_retry(
 
       // TESTCASES:
       // if (tryctr < 2)
-      // cur_excp = errinfo_new(DDCRC_NULL_RESPONSE, "dummy");
+      //    cur_excp = ERRINFO_NEW(DDCRC_NULL_RESPONSE, "dummy");
       // cur_excp = errinfo_new(-EIO, "dummy");
 
       psc = (cur_excp) ? cur_excp->status_code : 0;
@@ -733,7 +733,7 @@ ddc_write_read_with_retry(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d, retryable=%s",
                              psc_name_code(psc), tryctr, sbool(retryable));
       if (psc != 0)
-         pdd_note_retryable_failure_by_dh(dh, (max_tries-1) - tryctr);  // remaining retries
+         pdd_note_retryable_failure_by_dh(dh, psc, (max_tries-1) - tryctr);  // remaining retries
    }
 
    // tryctr = number of times through loop, i.e. 1..max_tries
