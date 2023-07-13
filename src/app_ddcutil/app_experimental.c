@@ -38,6 +38,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(6, "Watch display connection events");
    REPORT_FLAG_OPTION(7, "Null Msg sleep adjustment in pdd_get_adjusted_sleep_multiplier()");
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
+   REPORT_FLAG_OPTION(9, "Enable displays cache");
 
    rpt_vstring(depth+1, "Utility option --i1:          Unused");
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
