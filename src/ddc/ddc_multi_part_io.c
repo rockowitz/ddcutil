@@ -103,7 +103,9 @@ try_multi_part_read(
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, errinfo_summary(excp));
-      TUNED_SLEEP_WITH_TRACE(dh, SE_POST_CAP_TABLE_SEGMENT, NULL);
+      char * s = g_strdup_printf("Called from %s, request_subtype=0x%02x", __func__, request_subtype);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_POST_CAP_TABLE_SEGMENT, s);
+      free(s);
 
       if (excp) {
       // if (psc != 0) {
