@@ -725,7 +725,7 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
 GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s", sbool(display_caching_enabled));
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
    GPtrArray * display_list = g_ptr_array_new();
