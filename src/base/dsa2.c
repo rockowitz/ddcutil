@@ -842,8 +842,9 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
    }
 
    assert(rtable);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "cur_step=%d, cur_retry_loop_step=%d",
-                                         rtable->cur_step, rtable->cur_retry_loop_step);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         "cur_step=%d, cur_retry_loop_step=%d, cur_retry_loop_null_msg_ct=%d",
+         rtable->cur_step, rtable->cur_retry_loop_step, rtable->cur_retry_loop_null_msg_ct);
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
@@ -852,11 +853,16 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
       rtable->successful_try_ct++;
       Successful_Invocation si = {time(NULL), tries, rtable->cur_retry_loop_step};
       cirb_add(rtable->recent_values, si);
-      if (tries > 3) {
+      if (rtable->cur_retry_loop_null_msg_ct > 0) {
+         next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
+                                                  rtable->busno, next_cur_step);
+      }
+      else if (tries > 3){
          // Too many tries. Unconditionally increase rtable->cur_step
          next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
-                                                  rtable->busno, rtable->cur_step);
+                                                  rtable->busno, next_cur_step);
       }
       else if (tries > 2) {
          rtable->remaining_interval -= 1;
