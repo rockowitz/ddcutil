@@ -164,17 +164,26 @@ static int get_sleep_time(
  *
  */
 static int adjust_sleep_time(Display_Handle * dh, int spec_sleep_time_millis) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP,
                           "dh=%s, spec_sleep_time_millis=%d", dh_repr(dh), spec_sleep_time_millis);
 
+   int null_adjustment_millis = 0;
    Per_Display_Data * pdd = dh->dref->pdd;
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
+   if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment) {
+      null_adjustment_millis = dh->dref->pdd->cur_loop_null_msg_ct * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+      if (dh->dref->pdd->cur_loop_null_msg_ct > 2)
+         null_adjustment_millis = 3 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Adding %d milliseconds for Null responses", null_adjustment_millis);
+      adjusted_sleep_time_millis += null_adjustment_millis;
+   }
+
    DBGTRC_DONE(debug, TRACE_GROUP,
-         "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, Returning: %d",
-         spec_sleep_time_millis, dsa_multiplier, adjusted_sleep_time_millis);
+         "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, null_adjustment_millis=%d, Returning: %d",
+         spec_sleep_time_millis, dsa_multiplier, null_adjustment_millis, adjusted_sleep_time_millis);
    return adjusted_sleep_time_millis;
 }
 
