@@ -236,6 +236,7 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, source);
    }
 
+   pdd_null_msg_adjustment = parsed_cmd->flags & CMD_FLAG_F7;
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
       multi_part_null_adjustment_millis = parsed_cmd->i2;
    dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
