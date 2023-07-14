@@ -168,13 +168,12 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-
       Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
       Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x00, &parsed_response_loc);
+      ASSERT_IFF(ddc_excp, !parsed_response_loc);
       Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_nontable_vcp_value() for feature 0x00 returned: %s, parsed_response_loc=%p",
-                             errinfo_summary(ddc_excp), parsed_response_loc);
-      TRACED_ASSERT_IFF(psc==0, parsed_response_loc);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "ddc_get_nontable_vcp_value() for feature 0x00 returned: %s", errinfo_summary(ddc_excp));
 
       DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
       if (io_mode == DDCA_IO_USB) {
@@ -238,9 +237,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "parsed_response_loc0: mh=%d, ml=%d, sh=%d, sl=%d",
                         parsed_response_loc->mh, parsed_response_loc->ml,
                         parsed_response_loc->sh, parsed_response_loc->sl);
-#ifdef OLD
-               if (value_bytes_zero_for_any_value(pvalrec))
-#endif
                if (value_bytes_zero_for_nontable_value(parsed_response_loc))
                {
                   // try another feature that should never exist
