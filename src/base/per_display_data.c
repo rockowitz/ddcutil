@@ -350,6 +350,7 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
    if (pdd->dsa2_enabled) {
       pdd->dsa2_data = dsa2_get_results_table_by_busno(pdd->dpath.path.i2c_busno, true);
    }
+   pdd->dynamic_sleep_active = true;
 
    for (int ndx=0; ndx < RETRY_OP_COUNT; ndx++) {
       pdd->try_stats[0].retry_op = WRITE_ONLY_TRIES_OP;
@@ -664,12 +665,19 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, float multiplier) {
 }
 
 
+bool pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff) {
+   bool old = pdd->dynamic_sleep_active;
+   pdd->dynamic_sleep_active = onoff;
+   return old;
+}
+
+
 Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p, cur_loop_null_msg_ct=%d", pdd,pdd->cur_loop_null_msg_ct);
    float result = 1.0f;
 
-   if (pdd->dsa2_enabled) {
+   if (pdd->dynamic_sleep_active && pdd->dsa2_enabled) {
       result = dsa2_get_adjusted_sleep_mult(pdd->dsa2_data);
    }
    else {
@@ -682,21 +690,25 @@ Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
 
 
 void pdd_note_retryable_failure(Per_Display_Data * pdd, DDCA_Status ddcrc, int remaining_tries) {
-   if (pdd->dsa2_enabled) {
-      dsa2_note_retryable_failure(pdd->dsa2_data, ddcrc, remaining_tries);
+   if (pdd->dynamic_sleep_active) {
+      if (pdd->dsa2_enabled) {
+         dsa2_note_retryable_failure(pdd->dsa2_data, ddcrc, remaining_tries);
+      }
+      pdd_record_adjusted_sleep_multiplier_bounds(pdd, false);
+      if (ddcrc == DDCRC_NULL_RESPONSE)
+         pdd->cur_loop_null_msg_ct++;
    }
-   pdd_record_adjusted_sleep_multiplier_bounds(pdd, false);
-   if (ddcrc == DDCRC_NULL_RESPONSE)
-      pdd->cur_loop_null_msg_ct++;
 }
 
 
 void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
-   if (pdd->dsa2_enabled) {
-      dsa2_record_final(pdd->dsa2_data, ddcrc, retries);
+   if (pdd->dynamic_sleep_active) {
+      if (pdd->dsa2_enabled) {
+         dsa2_record_final(pdd->dsa2_data, ddcrc, retries);
+      }
+      if (ddcrc == 0)
+         pdd_record_adjusted_sleep_multiplier_bounds(pdd, true);
    }
-   if (ddcrc == 0)
-      pdd_record_adjusted_sleep_multiplier_bounds(pdd, true);
    pdd->cur_loop_null_msg_ct = 0;
 }
 

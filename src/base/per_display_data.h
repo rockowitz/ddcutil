@@ -58,6 +58,7 @@ typedef struct Per_Display_Data {
    Sleep_Multiplier       final_successful_adjusted_sleep_multiplier;
    Sleep_Multiplier       most_recent_adjusted_sleep_multiplier;   // may have failed
    bool                   dsa2_enabled;
+   bool                   dynamic_sleep_active;
 } Per_Display_Data;
 
 // For new displays
@@ -92,6 +93,7 @@ void   pdd_report_all_elapsed(bool include_dsa_internal, int depth);
 
 void   pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool successful);
 
+bool   pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff);
 void   pdd_reset_multiplier(Per_Display_Data * pdd, Sleep_Multiplier multiplier);
 Sleep_Multiplier
        pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
