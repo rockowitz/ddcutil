@@ -974,7 +974,7 @@ void dsa2_report_internal_all(int depth) {
 /** Returns the name of the file in directory $HOME/.cache/ddcutil that stores
  *  dynamic sleep stats
  *
- *  @return fully qualified name of file
+ *  @return fully qualified name of file, NULL if $HOME is not defined
  *
  *  Caller is responsible for freeing returned value
  */
@@ -1005,11 +1005,18 @@ dsa2_save_persistent_stats() {
    int result = 0;
    int results_tables_ct = 0;
    char * stats_fn = dsa2_stats_cache_file_name();
+   if (!stats_fn) {
+      result = -ENOENT;
+      SEVEREMSG("Unable to determine dynamic sleep cache file name");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine dynamic sleep cache file name");
+      goto bye;
+   }
    FILE * stats_file = NULL;
    result = fopen_mkdir(stats_fn, "w", ferr(), &stats_file);
    if (!stats_file) {
       result = -errno;
       SEVEREMSG("Error opening %s: %s", strerror(errno));
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening %s: %s", strerror(errno));
       goto bye;
    }
    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opened %s", stats_fn);
@@ -1098,11 +1105,13 @@ dsa2_erase_persistent_stats() {
    Status_Errno result = 0;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * stats_fn = dsa2_stats_cache_file_name();
-   int rc = remove(stats_fn);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "remove(\"%s\") returned: %d", stats_fn, rc);
-   if (rc < 0 && errno != ENOENT)
-      result = -errno;
-   free(stats_fn);
+   if (stats_fn) {
+      int rc = remove(stats_fn);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "remove(\"%s\") returned: %d", stats_fn, rc);
+      if (rc < 0 && errno != ENOENT)
+         result = -errno;
+      free(stats_fn);
+   }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
    return result;
 }
@@ -1159,8 +1168,7 @@ cirb_parse_and_add(Circular_Invocation_Result_Buffer * cirb, char * segment) {
  *
  *  The file name is determined using XDG rules
  *
- *  @retval  false a file was found but parsing failed
- *  @retval  true  loading succeeded or no file found
+ *  @return  struct Error_Info if error, NULL if no error
  */
 Error_Info *
 dsa2_restore_persistent_stats() {
@@ -1168,6 +1176,10 @@ dsa2_restore_persistent_stats() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    char * stats_fn = dsa2_stats_cache_file_name();
    Error_Info * result = NULL;
+   if (!stats_fn) {
+      result = ERRINFO_NEW(-ENOENT, "Unable to determine dynamic sleep stats file name");
+      goto bye1;
+   }
 
    // DBGMSG("stats_fn=%s", stats_fn);
    bool all_ok = true;
@@ -1310,7 +1322,8 @@ bye:
 bye0:
   free(stats_fn);
   g_ptr_array_free(line_array, true);
-  DBGTRC_RET_STRUCT(debug, TRACE_GROUP, "Error_Info", errinfo_report, result);
+bye1:
+  DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "");
   return result;
 }
 
