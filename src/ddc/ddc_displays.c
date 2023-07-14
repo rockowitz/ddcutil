@@ -167,21 +167,14 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
-   // DDCA_Any_Vcp_Value * pvalrec;
-
    if (!(dh->dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-      Parsed_Nontable_Vcp_Response* parsed_response_loc0 = NULL;
-      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x00, &parsed_response_loc0);
-      // Error_Info * ddc_excp = ddc_get_vcp_value(dh, 0x00, DDCA_NON_TABLE_VCP_VALUE, &pvalrec);
+
+      Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x00, &parsed_response_loc);
       Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
-#ifdef OLD
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_vcp_value() for feature 0x00 returned: %s, pvalrec=%p",
-                             errinfo_summary(ddc_excp), pvalrec);
-      TRACED_ASSERT( (psc == 0 && pvalrec) || (psc != 0 && !pvalrec) );
-#endif
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "ddc_get_nontable_vcp_value() for feature 0x00 returned: %s, parsed_response_loc=%p",
-                             errinfo_summary(ddc_excp), parsed_response_loc0);
-      TRACED_ASSERT_IFF(psc==0, parsed_response_loc0);
+                             errinfo_summary(ddc_excp), parsed_response_loc);
+      TRACED_ASSERT_IFF(psc==0, parsed_response_loc);
 
       DDCA_IO_Mode io_mode = dh->dref->io_path.io_mode;
       if (io_mode == DDCA_IO_USB) {
@@ -215,7 +208,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                       !ddc_never_uses_null_response_for_unsupported)  // for testing
             {
                // get a feature that always exists
-               Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+               // Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
                Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -241,20 +234,14 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             }
             else {
                TRACED_ASSERT( psc == 0);
-#ifdef OLD
-               TRACED_ASSERT(pvalrec && pvalrec->value_type == DDCA_NON_TABLE_VCP_VALUE );
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "pvalrec: value_type=%d, mh=%d, ml=%d, sh=%d, sl=%d",
-                        pvalrec->value_type, pvalrec->val.c_nc.mh, pvalrec->val.c_nc.ml,
-                        pvalrec->val.c_nc.sh, pvalrec->val.c_nc.sl);
-#endif
-               TRACED_ASSERT(parsed_response_loc0);
+               TRACED_ASSERT(parsed_response_loc);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "parsed_response_loc0: mh=%d, ml=%d, sh=%d, sl=%d",
-                        parsed_response_loc0->mh, parsed_response_loc0->ml,
-                        parsed_response_loc0->sh, parsed_response_loc0->sl);
+                        parsed_response_loc->mh, parsed_response_loc->ml,
+                        parsed_response_loc->sh, parsed_response_loc->sl);
 #ifdef OLD
                if (value_bytes_zero_for_any_value(pvalrec))
 #endif
-               if (value_bytes_zero_for_nontable_value(parsed_response_loc0))
+               if (value_bytes_zero_for_nontable_value(parsed_response_loc))
                {
                   // try another feature that should never exist
                   // ignoring the vanishingly small possibility that this actually is a CRT
@@ -295,7 +282,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                   dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
                }
 
-               free(parsed_response_loc0);
+               free(parsed_response_loc);
             }
          }  // end, communication working
 
@@ -307,7 +294,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
                      dh_repr(dh) );
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            // dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
                if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED))  // may have been forced by option --mccs
                   dh->dref->vcp_version_xdf = DDCA_VSPEC_V22;   // good enuf for test
