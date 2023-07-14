@@ -64,7 +64,7 @@ void
 delete_capabilities_file() {
    bool debug = false;
    char * fn = capabilities_cache_file_name();
-   if (regular_file_exists(fn)) {
+   if (fn && regular_file_exists(fn)) {
       DBGMSF(debug, "Deleting file: %s", fn);
       int rc = unlink(fn);
       if (rc < 0) {
@@ -97,10 +97,9 @@ delete_capabilities_file() {
 static Error_Info *
 load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
    bool debug = false;
-   if (debug || IS_TRACING()) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "capabilities_hash:");
+   if ( IS_DBGTRC(debug, TRACE_GROUP) )
       dbgrpt_capabilities_hash0(2,NULL);
-   }
 
    Error_Info * errs = NULL;
    if (!*capabilities_hash_loc) {
@@ -108,6 +107,13 @@ load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
       if (capabilities_cache_enabled) {
          char * data_file_name = capabilities_cache_file_name();
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "data_file_name: %s", data_file_name);
+         if (!data_file_name) {
+            SEVEREMSG("Unable to determine capabilities cache file name");
+            SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine capabilities cache file name");
+            errs = ERRINFO_NEW(-ENOENT, "Unable to determine capabilities cache file name");
+            goto bye;
+         }
+
          GPtrArray * linearray = g_ptr_array_new_with_free_func(g_free);
          errs = file_getlines_errinfo(data_file_name, linearray);
          free(data_file_name);
@@ -140,10 +146,10 @@ load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
    }
    assert(*capabilities_hash_loc);
 
-   if (debug || IS_TRACING()) {
-      DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
+bye:
+   DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
+   if (IS_DBGTRC(debug, TRACE_GROUP) )
       dbgrpt_capabilities_hash0(2, NULL);
-   }
 
    return errs;
 }
@@ -156,6 +162,11 @@ static void save_persistent_capabilities_file() {
                               sbool(capabilities_cache_enabled), data_file_name);
 
    if (capabilities_cache_enabled) {
+      if (!data_file_name) {
+         SEVEREMSG("Cannot determine capabilities cache file name");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Cannot determine capabilities cache file name");
+         goto bye1;
+      }
       FILE * fp = NULL;
       fopen_mkdir(data_file_name, "w", ferr(), &fp);
       if (!fp) {
@@ -172,6 +183,7 @@ static void save_persistent_capabilities_file() {
             int ct = fprintf(fp, "%s:%s\n", (char *) key, (char*) value);
             if (ct < 0) {
                SEVEREMSG("Error writing to file %s:%s", data_file_name, strerror(errno) );
+               SYSLOG2(DDCA_SYSLOG_ERROR, "Error writing to file %s:%s", data_file_name, strerror(errno) );
                break;
             }
          }
@@ -181,6 +193,7 @@ static void save_persistent_capabilities_file() {
 
 bye:
    free(data_file_name);
+bye1:
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -316,7 +329,7 @@ char * get_persistent_capabilities(Monitor_Model_Key* mmk)
                      Error_Info * cur = load_errs->causes[ndx];
                      SEVEREMSG("  %s", cur->detail);
                   }
-                  ERRINFO_FREE_WITH_REPORT(load_errs,false);
+                  BASE_ERRINFO_FREE_WITH_REPORT(load_errs,false);
                }
             }
          }
