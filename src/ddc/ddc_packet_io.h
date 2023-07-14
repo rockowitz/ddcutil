@@ -25,6 +25,8 @@ extern bool DDC_Read_Bytewise;
 typedef enum {
    Write_Read_Flags_None = 0,
    Write_Read_Flag_All_Zero_Response_Ok = 1,
+   Write_Read_Flag_Capabilities = 2,
+   Write_Read_Flag_Table_Read = 4
 } DDC_Write_Read_Flags ;
 
 Error_Info * ddc_open_display(
