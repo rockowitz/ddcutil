@@ -56,13 +56,13 @@ try_multi_part_read(
       Display_Handle * dh,
       Byte             request_type,
       Byte             request_subtype,
-      bool             all_zero_response_ok,
+      DDC_Write_Read_Flags write_read_flags,
       Buffer *         accumulator)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
-          request_type, request_subtype, sbool(all_zero_response_ok), accumulator);
+          request_type, request_subtype, sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), accumulator);
 
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
@@ -90,16 +90,13 @@ try_multi_part_read(
                                        ? DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
                                        : DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
       Byte expected_subtype = request_subtype;     // 0x00 for capabilities, VCP feature code for table read
-      DDC_Write_Read_Flags flags = Write_Read_Flags_None;
-      if (all_zero_response_ok)
-         flags |= Write_Read_Flag_All_Zero_Response_Ok;
       excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
            readbuf_size,
            expected_response_type,
            expected_subtype,
-           flags,
+           write_read_flags,
            &response_packet_ptr
           );
       psc = (excp) ? excp->status_code : 0;
@@ -150,7 +147,7 @@ try_multi_part_read(
                DBGMSG("Currently assembled fragment: |%.*s|", accumulator->len, accumulator->bytes);
                DBGMSG("cur_offset = %d", cur_offset);
             }
-            all_zero_response_ok = false;           // accept all zero response only on first fragment
+
          }
       }
       free_ddc_packet(response_packet_ptr);
@@ -184,7 +181,7 @@ multi_part_read_with_retry(
       Display_Handle * dh,
       Byte             request_type,
       Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
-      bool             all_zero_response_ok,
+      DDC_Write_Read_Flags write_read_flags,
       Buffer**         buffer_loc)
 {
    bool debug = false;
@@ -192,7 +189,7 @@ multi_part_read_with_retry(
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
-          request_type, request_subtype, sbool(all_zero_response_ok), max_multi_part_read_tries);
+          request_type, request_subtype, sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), max_multi_part_read_tries);
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;
@@ -202,6 +199,7 @@ multi_part_read_with_retry(
    bool can_retry = true;
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
+   write_read_flags |= Write_Read_Flag_All_Zero_Response_Ok;  // valid on first call
    while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
@@ -211,7 +209,7 @@ multi_part_read_with_retry(
               dh,
               request_type,
               request_subtype,
-              all_zero_response_ok,
+              write_read_flags,
               accumulator);
       try_errors[tryctr] = ddc_excp;
       rc = (ddc_excp) ? ddc_excp->status_code : 0;
@@ -240,6 +238,7 @@ multi_part_read_with_retry(
          can_retry = false;
       }
 
+      write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;           // accept all zero response only on first fragment
       tryctr++;
    }
    ASSERT_IFF( rc==0, !ddc_excp);

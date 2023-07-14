@@ -20,6 +20,8 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
+#include "ddc/ddc_packet_io.h"
+
 //temp:
 extern int multi_part_null_adjustment_millis;
 
@@ -28,7 +30,7 @@ multi_part_read_with_retry(
    Display_Handle * dh,
    Byte             request_type,
    Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
-   bool             all_zero_response_ok,
+   DDC_Write_Read_Flags write_read_flags,
    Buffer**         ppbuffer);
 
 Error_Info *

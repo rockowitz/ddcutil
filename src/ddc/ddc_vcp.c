@@ -692,7 +692,7 @@ ddc_get_table_vcp_value(
             dh,
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
-            true,                      // all_zero_response_ok
+            Write_Read_Flag_All_Zero_Response_Ok,                     // all_zero_response_ok
             &paccumulator);
    if (debug || ddc_excp) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
