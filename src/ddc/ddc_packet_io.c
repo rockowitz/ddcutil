@@ -628,9 +628,8 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
-   // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
-
+   int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   // int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
    // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "retry_null_response=%s, ddcrc_null_response_max=%d, read_bytewise=%s",
