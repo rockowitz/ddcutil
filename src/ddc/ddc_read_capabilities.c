@@ -64,7 +64,7 @@ get_capabilities_into_buffer(
                dh,
                DDC_PACKET_TYPE_CAPABILITIES_REQUEST,
                0x00,                       // no subtype for capabilities
-               Write_Read_Flags_None,                      // !all_zero_response_ok
+               Write_Read_Flag_Capabilities,                      // !all_zero_response_ok
                capabilities_buffer_loc);
    Buffer * cap_buffer = *capabilities_buffer_loc;
    ASSERT_IFF(cap_buffer, !ddc_excp);
