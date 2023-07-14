@@ -26,16 +26,18 @@
  *
  * @param fqfn fully qualified file name
  * @return     true/false
- * @remark
+ * @remark Returns false if **fqfn** is NULL
  * Trivial function copied from file_util.c to avoid dependency.
  */
 static bool
 regular_file_exists(const char * fqfn) {
    bool result = false;
-   struct stat stat_buf;
-   int rc = stat(fqfn, &stat_buf);
-   if (rc == 0) {
-      result = S_ISREG(stat_buf.st_mode);
+   if (fqfn) {
+      struct stat stat_buf;
+      int rc = stat(fqfn, &stat_buf);
+      if (rc == 0) {
+         result = S_ISREG(stat_buf.st_mode);
+      }
    }
    return result;
 }
@@ -49,6 +51,10 @@ regular_file_exists(const char * fqfn) {
  *  The returned value is guaranteed to end in '/'.
  *
  *  Caller is responsible for freeing the returned memory.
+ *
+ *  @param  envvar_name
+ *  @param  home_subdir_name
+ *  @return directory name, or NULL if undetermined
  */
 static char * xdg_home_dir(
       const char * envvar_name,
@@ -75,7 +81,8 @@ static char * xdg_home_dir(
 }
 
 
-/** Returns the name of the xdg base directory for data files
+/** Returns the name of the xdg base directory for data files, or
+ *  NULL if not set.
  *
  *  Caller is responsible for freeing the returned memory.
  */
@@ -88,7 +95,8 @@ char * xdg_data_home_dir() {
 }
 
 
-/** Returns the name of the xdg base directory for configuration files
+/** Returns the name of the xdg base directory for configuration files,
+ *  or NULL if not set.
  *
  *  Caller is responsible for freeing the returned memory.
  */
@@ -101,10 +109,11 @@ char * xdg_config_home_dir() {
 }
 
 
-/** Returns the name of the xdg base directory for cached files
-*
-*  Caller is responsible for freeing the returned memory.
-*/
+/** Returns the name of the xdg base directory for cached files,
+ *  or NULL if not set
+ *
+ * Caller is responsible for freeing the returned memory.
+ */
 char * xdg_cache_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_CACHE_HOME", ".cache");
@@ -114,10 +123,11 @@ char * xdg_cache_home_dir() {
 }
 
 
-/** Returns the name of the xdg base directory for state files
-*
-*  Caller is responsible for freeing the returned memory.
-*/
+/** Returns the name of the xdg base directory for state files,
+ *  or NULL if not set
+ *
+ *  Caller is responsible for freeing the returned memory.
+ */
 char * xdg_state_home_dir() {
    bool debug = false;
    char * result = xdg_home_dir("XDG_STATE_HOME", ".local/state");
@@ -388,11 +398,11 @@ char * find_xdg_data_file(
               __func__, application, simple_fn);
    char * result = NULL;
    char * path = xdg_data_path();
-   result = find_xdg_path_file(
-              path,
-              application,
-              simple_fn);
-   free(path);
+   if (path) {
+      result = find_xdg_path_file(path, application, simple_fn);
+      free(path);
+   }
+
    if (debug)
       printf("(%s) Done.    Returning: %s\n",
               __func__, result);
