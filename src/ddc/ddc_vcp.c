@@ -588,7 +588,7 @@ ddc_get_nontable_vcp_value(
            max_read_bytes,
            expected_response_type,
            expected_subtype,
-           false,                       // all_zero_response_ok
+           Write_Read_Flags_None,
            &response_packet_ptr
         );
    ASSERT_IFF(excp, !response_packet_ptr);

@@ -90,13 +90,16 @@ try_multi_part_read(
                                        ? DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
                                        : DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
       Byte expected_subtype = request_subtype;     // 0x00 for capabilities, VCP feature code for table read
+      DDC_Write_Read_Flags flags = Write_Read_Flags_None;
+      if (all_zero_response_ok)
+         flags |= Write_Read_Flag_All_Zero_Response_Ok;
       excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
            readbuf_size,
            expected_response_type,
            expected_subtype,
-           all_zero_response_ok,
+           flags,
            &response_packet_ptr
           );
       psc = (excp) ? excp->status_code : 0;

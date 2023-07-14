@@ -603,15 +603,17 @@ ddc_write_read_with_retry(
          int              max_read_bytes,
          Byte             expected_response_type,
          Byte             expected_subtype,
-         bool             all_zero_response_ok,
+         DDC_Write_Read_Flags flags,
          DDC_Packet **    response_packet_ptr_loc
         )
 {
    bool debug = false;
+
+   bool all_zero_response_ok = flags & Write_Read_Flag_All_Zero_Response_Ok;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
-                                       "expected_subtype=0x%02x, all_zero_response_ok=%s",
+                                       "expected_subtype=0x%02x, all_zero_response_ok=%s, %s",
           dh_repr(dh), max_read_bytes, expected_response_type,
-          expected_subtype, sbool(all_zero_response_ok)  );
+          expected_subtype, sbool(all_zero_response_ok), sbool(flags&Write_Read_Flag_All_Zero_Response_Ok)  );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);

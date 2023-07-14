@@ -22,6 +22,11 @@
 
 extern bool DDC_Read_Bytewise;
 
+typedef enum {
+   Write_Read_Flags_None = 0,
+   Write_Read_Flag_All_Zero_Response_Ok = 1,
+} DDC_Write_Read_Flags ;
+
 Error_Info * ddc_open_display(
       Display_Ref *    dref,
       Call_Options     callopts,
@@ -62,7 +67,7 @@ Error_Info * ddc_write_read_with_retry(
       int              max_read_bytes,
       Byte             expected_response_type,
       Byte             expected_subtype,
-      bool             all_zero_response_ok,
+      DDC_Write_Read_Flags flags,
   //  bool             retry_null_response,
       DDC_Packet **    response_packet_ptr_loc
      );
