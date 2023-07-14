@@ -1015,8 +1015,8 @@ dsa2_save_persistent_stats() {
    result = fopen_mkdir(stats_fn, "w", ferr(), &stats_file);
    if (!stats_file) {
       result = -errno;
-      SEVEREMSG("Error opening %s: %s", strerror(errno));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening %s: %s", strerror(errno));
+      SEVEREMSG("Error opening %s: %s", stats_fn, strerror(errno));
+      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening %s: %s", stats_fn, strerror(errno));
       goto bye;
    }
    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opened %s", stats_fn);
