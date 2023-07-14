@@ -190,6 +190,7 @@ multi_part_read_with_retry(
           "request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
           request_type, request_subtype, sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), max_multi_part_read_tries);
+   assert(write_read_flags & (Write_Read_Flag_Capabilities|Write_Read_Flag_Table_Read));
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
    Error_Info * ddc_excp = NULL;
@@ -218,7 +219,8 @@ multi_part_read_with_retry(
          // generally means this, but could conceivably indicate a protocol error.
          // try multiple times to ensure it's really unsupported?
 
-         if (dh->dref->flags&DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) {
+         // Null Msg always indicates error for Capabilities command
+         if ( write_read_flags & Write_Read_Flag_Table_Read ) {
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Terminating loop for %s", psc_name(rc));
             can_retry = false;
          }
