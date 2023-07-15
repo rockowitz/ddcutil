@@ -501,7 +501,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
-      ddc_stop_watch_displays();
+      ddc_stop_watch_displays();   // in case it has been started
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
@@ -580,6 +580,8 @@ ddca_init(const char *      libopts,
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
+   bool watch_displays = true;    // default
+
    client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
@@ -628,10 +630,12 @@ ddca_init(const char *      libopts,
                master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
          }
 
-         ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
+
       }
-      if (parsed_cmd)
+      if (parsed_cmd) {
+         watch_displays = parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS;
          free_parsed_cmd(parsed_cmd);
+      }
    }
 
    DDCA_Status ddcrc = 0;
@@ -648,6 +652,8 @@ ddca_init(const char *      libopts,
       errinfo_free(master_error);
    }
    else {
+      if (watch_displays)
+         ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
       library_initialized = true;
       // SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
