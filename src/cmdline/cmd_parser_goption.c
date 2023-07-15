@@ -847,6 +847,7 @@ parse_command(
    gboolean trace_to_syslog_only_flag = false;
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
+   gboolean watch_displays_flag = true;
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
    gboolean f3_flag         = false;
@@ -856,6 +857,9 @@ parse_command(
    gboolean f7_flag         = false;
    gboolean f8_flag         = false;
    gboolean f9_flag         = false;
+   gboolean f10_flag        = false;
+   gboolean f11_flag        = false;
+   gboolean f12_flag        = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
    char *   fl1_work        = NULL;
@@ -878,6 +882,9 @@ parse_command(
          {"profile-api",'\0', 0, G_OPTION_ARG_NONE, &profile_api_flag,      "Profile API calls", NULL},
          {"libddcutil-trace-file",
                      '\0', 0, G_OPTION_ARG_STRING,   &parsed_cmd->trace_destination,  "libddcutil trace file",  "file name"},
+         {"enable-watch-displays",  '\0', 0, G_OPTION_ARG_NONE, &watch_displays_flag, "Watch for display hotplug events", "" },
+         {"disable-watch-displays", '\0', G_OPTION_FLAG_REVERSE,
+               G_OPTION_ARG_NONE, &watch_displays_flag, "Do not watch for display hotplug events", "" },
          {NULL},
    };
 
@@ -1079,6 +1086,9 @@ parse_command(
       {"f7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 7",    NULL},
       {"f8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 8",    NULL},
       {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f9_flag,         "Special flag 9",    NULL},
+      {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f10_flag,        "Special flag 10",    NULL},
+      {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f11_flag,        "Special flag 11",    NULL},
+      {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f12_flag,        "Special flag 12",    NULL},
       {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1308,6 +1318,10 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F7,                f7_flag);
    SET_CMDFLAG(CMD_FLAG_F8,                f8_flag);
    SET_CMDFLAG(CMD_FLAG_F9,                f9_flag);
+   SET_CMDFLAG(CMD_FLAG_F10,               f10_flag);
+   SET_CMDFLAG(CMD_FLAG_F11,               f11_flag);
+   SET_CMDFLAG(CMD_FLAG_F12,               f12_flag);
+   SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS,    watch_displays_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
 
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);

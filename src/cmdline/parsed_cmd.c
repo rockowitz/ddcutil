@@ -304,6 +304,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_str("syslog_level",      NULL, syslog_level_name(parsed_cmd->syslog_level), d1);
       rpt_bool("i2c_io_fileio",    NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO,d1);
       rpt_bool("i2c_io_ioctl",     NULL, parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL, d1);
+      RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS, d1);
 
       rpt_bool("i1 set",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
       if (parsed_cmd->flags & CMD_FLAG_I1_SET) {
@@ -333,6 +334,9 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("f7",                NULL, parsed_cmd->flags & CMD_FLAG_F7,           d1);
       rpt_bool("f8",                NULL, parsed_cmd->flags & CMD_FLAG_F8,           d1);
       rpt_bool("f9",                NULL, parsed_cmd->flags & CMD_FLAG_F9,           d1);
+      RPT_CMDFLAG("f10", CMD_FLAG_F10, d1);
+      RPT_CMDFLAG("f11", CMD_FLAG_F11, d1);
+      RPT_CMDFLAG("f12", CMD_FLAG_F11, d1);
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
       rpt_str( "s3",                NULL, parsed_cmd->s3,                            d1);
