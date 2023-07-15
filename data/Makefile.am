@@ -77,10 +77,10 @@ install-data-local:
 # @xxx@ names are not defined, names with $() are 
 install-data-hook:
 	@echo "(data/install-data-hook)===> Executing rule: install-data-hook"
-	sed  -i "s|/usr|${prefix}|" ${rulesdir}/60-ddcutil-usb.rules 
+	sed  -i "s|/usr|${prefix}|" ${DESTDIR}${rulesdir}/60-ddcutil-usb.rules 
 	@echo "Clear out files possibly left over from earlier installation"
-	rm -f ${resdir}/45-ddcutil*
-	rm -f ${rulesdir}/60-ddcutil.rules
+	rm -f ${DESTDIR}${resdir}/45-ddcutil*
+	rm -f ${DESTDIR}${rulesdir}/60-ddcutil.rules
 
 uninstall-hook:
 	@echo "(data/uninstall-hook)===> Executing rule: uninstall-hook"
