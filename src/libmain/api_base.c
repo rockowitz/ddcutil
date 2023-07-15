@@ -501,9 +501,9 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
+      ddc_stop_watch_displays();
       terminate_ddc_services();
       terminate_base_services();
-      ddc_stop_watch_displays();
       free_regex_hash_table();
       library_initialized = false;
       if (flog)
