@@ -55,7 +55,7 @@
 
 
 // Experimental code
-static bool watch_displays_enabled = true;
+static bool watch_displays_enabled = false;
 static bool watching_using_udev = false;  // if false watching using poll
 
 // Trace class for this file
@@ -709,6 +709,8 @@ ddc_start_watch_displays(bool use_udev_if_possible)
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
                                        SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
    DDCA_Status ddcrc = DDCRC_OK;
+
+   watch_displays_enabled = true;   // n. changing the meaning of watch_displays_enabled
 
    if (watch_displays_enabled) {
       char * class_drm_dir =
