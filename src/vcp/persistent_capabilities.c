@@ -147,7 +147,7 @@ load_persistent_capabilities_file(GHashTable** capabilities_hash_loc) {
    assert(*capabilities_hash_loc);
 
 bye:
-   DBGTRC_RET_ERRINFO(true, TRACE_GROUP, errs, "capabilities_hash:");
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, errs, "capabilities_hash:");
    if (IS_DBGTRC(debug, TRACE_GROUP) )
       dbgrpt_capabilities_hash0(2, NULL);
 
