@@ -56,6 +56,7 @@
 
 // Experimental code
 static bool watch_displays_enabled = true;
+static bool watching_using_udev = false;  // if false watching using poll
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
@@ -400,7 +401,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 
 
 static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays = %s",
                  join_string_g_ptr_array_t(prev_displays, ", "));
 
@@ -704,7 +705,7 @@ void api_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
                                        SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
    DDCA_Status ddcrc = DDCRC_OK;
@@ -735,14 +736,27 @@ ddc_start_watch_displays(bool use_udev_if_possible)
             // data->main_thread_id = syscall(SYS_gettid);
             data->main_thread_id = get_thread_id();
             data->drm_card_numbers = drm_card_numbers;
+            void * watch_func = watch_displays_using_poll;
+            watching_using_udev = false;
+#ifdef ENABLE_UDEV
+            if (use_udev_if_possible) {
+               watch_func = watch_displays_using_udev;
+               watching_using_udev = true;
+            }
+#endif
+
             watch_thread = g_thread_new(
                              "watch_displays",             // optional thread name
+                             watch_func,
+#ifdef OLD
       #if ENABLE_UDEV
                              (use_udev_if_possible) ? watch_displays_using_udev : watch_displays_using_poll,
       #else
                              watch_displays_using_poll,
       #endif
+#endif
                              data);
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
          }
          g_mutex_unlock(&watch_thread_mutex);
       }
@@ -766,7 +780,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 DDCA_Status
 ddc_stop_watch_displays()
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
@@ -775,16 +789,27 @@ ddc_stop_watch_displays()
 
       // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
       if (watch_thread) {
-         terminate_watch_thread = true;  // signal watch thread to terminate
-   #ifndef ENABLE_UDEV
-         // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
-         // so termiate flag doesn't get checked
-         // no big deal, ddc_stop_watch_displays() is only called at program termination to
-         // release resources for tidyness
-         g_thread_join(watch_thread);
-   #endif
-         g_thread_unref(watch_thread);
+         if (watching_using_udev) {
+#ifdef ENABLE_UDEV
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting for watch thread to terminate...");
+            terminate_watch_thread = true;  // signal watch thread to terminate
+            // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
+            // so termiate flag doesn't get checked
+            // no big deal, ddc_stop_watch_displays() is only called at program termination to
+            // release resources for tidyness
+#else
+            PROGRAM_LOGIC_ERROR("watching_using_udev set when ENABLE_UDEV not set");
+#endif
+         }
+         else {     // watching using poll
+            terminate_watch_thread = true;  // signal watch thread to terminate
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
+            usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
+            g_thread_join(watch_thread);
+            //  g_thread_unref(watch_thread);
+         }
          watch_thread = NULL;
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
       }
       else
          ddcrc = DDCRC_INVALID_OPERATION;
