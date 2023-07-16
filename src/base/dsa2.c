@@ -859,11 +859,11 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
                "busno=%d, Incremented cur_step for null_msg_ct=%d. New value: %d",
                rtable->busno, rtable->cur_retry_loop_null_msg_ct, next_cur_step);
       }
-      else if (tries > 3){
+      else if (tries > 4){
          // Too many tries. Unconditionally increase rtable->cur_step
          next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "busno=%d, Incremented cur_step for tries > 3. New value: %d",
+               "busno=%d, Incremented cur_step for tries > 4. New value: %d",
                rtable->busno, next_cur_step);
       }
       else if (tries > 2) {
@@ -880,9 +880,11 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
    }
 
    else {    // ddcrc != 0
-      if (rtable->cur_retry_loop_step > rtable->highest_step_complete_loop_failure)
-         rtable->highest_step_complete_loop_failure = rtable->cur_retry_loop_step;
-      next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
+      if (ddcrc != DDCRC_ALL_RESPONSES_NULL) {    // may mean unsupported
+         rtable->highest_step_complete_loop_failure =
+               MAX(rtable->highest_step_complete_loop_failure, rtable->cur_retry_loop_step);
+         next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
+      }
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "all tries failed. busno=%d, New cur_step: %d",
                                             rtable->busno, next_cur_step);
       rtable->remaining_interval = adjustment_interval;
@@ -1052,11 +1054,13 @@ dsa2_save_persistent_stats() {
          if (debug)
             dbgrpt_results_table(rtable, 2);
          int next_step = -1;
+#ifdef ALREADY_DONE   // in dsa2_record_final
          if (rtable->highest_step_complete_loop_failure >= 0) {
             next_step = MIN(rtable->highest_step_complete_loop_failure + 1, step_last);
             assert(next_step <= step_last);
             rtable->cur_step = MAX(rtable->cur_step,  next_step);
          }
+#endif
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, rtable->cur_step=%d, next_step=%d",
                rtable->busno, rtable->cur_step, next_step);
          if (format_id == 1) {
