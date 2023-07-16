@@ -231,6 +231,7 @@ multi_part_read_with_retry(
          }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
+         rc = DDCRC_OK;
          can_retry = false;
       }
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
@@ -240,7 +241,7 @@ multi_part_read_with_retry(
          can_retry = false;
       }
 
-      write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;           // accept all zero response only on first fragment
+      // write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;           // accept all zero response only on first fragment
       tryctr++;
    }
    ASSERT_IFF( rc==0, !ddc_excp);
@@ -278,8 +279,9 @@ multi_part_read_with_retry(
    DBGTRC_RET_ERRINFO_STRUCT(debug, TRACE_GROUP, ddc_excp, buffer_loc, buffer_rpt);
 #ifdef OLD
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "*buffer_loc=%p", *buffer_loc);
-   if (IS_DBGTRC(debug, TRACE_GROUP) && *buffer_loc)
+   if (IS_DBGTRC(debug, TRACE_GROUP) && *buffer_loc) {
      buffer_rpt(*buffer_loc, 2);
+   }
 #endif
    return ddc_excp;
 }
