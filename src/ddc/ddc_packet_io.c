@@ -706,7 +706,7 @@ ddc_write_read_with_retry(
               break;
 
          case (-EIO):
-              // retryable = false;     // ??
+              retryable = false;     // ??
               break;
 
          case (-EBADF):
