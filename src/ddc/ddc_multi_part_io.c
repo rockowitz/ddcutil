@@ -147,6 +147,7 @@ try_multi_part_read(
                DBGMSG("Currently assembled fragment: |%.*s|", accumulator->len, accumulator->bytes);
                DBGMSG("cur_offset = %d", cur_offset);
             }
+            write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;
 
          }
       }
@@ -200,7 +201,9 @@ multi_part_read_with_retry(
    bool can_retry = true;
    Buffer * accumulator = buffer_new(2048, "multi part read buffer");
 
-   write_read_flags |= Write_Read_Flag_All_Zero_Response_Ok;  // valid on first call
+   // not here
+   // if (write_read_flags & Write_Read_Flag_Table_Read)
+   //    write_read_flags |= Write_Read_Flag_All_Zero_Response_Ok;  // valid on first call, can indicate unsupported on Table
    while (tryctr < max_multi_part_read_tries && rc < 0 && can_retry) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "Start of while loop. try_ctr=%d, max_multi_part_read_tries=%d",
@@ -231,8 +234,9 @@ multi_part_read_with_retry(
          }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
-         DBGMSG("Accepting DDCRC_READ_ALL_ZRO");
-         rc = DDCRC_OK;
+         DBGMSG("Accepting DDCRC_READ_ALL_ZERO");
+         // if (write_read_flags & Write_Read_Flag_All_Zero_Response_Ok)
+         //    rc = DDCRC_OK;
          can_retry = false;
       }
       else if (rc == DDCRC_ALL_TRIES_ZERO) {
@@ -242,6 +246,7 @@ multi_part_read_with_retry(
          can_retry = false;
       }
 
+      // WRONG LOCATION! This is not a fragment loop
       // write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;           // accept all zero response only on first fragment
       tryctr++;
    }
