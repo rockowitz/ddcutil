@@ -244,6 +244,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
       if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES) {
          // turn off optimization in case its on
+         DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep");
          pdd_set_dynamic_sleep_active(dref->pdd, false);
          ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
       }
@@ -268,9 +269,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          else {
             if (psc == -EBUSY) {
                dh->dref->flags |= DREF_DDC_BUSY; // communication failed, but do not set DDCRC_COMMUNICATION_WORKING
-            }
-            else {
-               dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             }
          }
 
