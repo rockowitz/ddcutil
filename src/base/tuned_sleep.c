@@ -179,7 +179,7 @@ adjust_sleep_time(
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
-   if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment) {
+   if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment_enabled) {
       switch(dh->dref->pdd->cur_loop_null_msg_ct) {
       case 1:
          null_adjustment_millis = 1 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;

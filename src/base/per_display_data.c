@@ -43,7 +43,7 @@ static int      pdd_unlock_count = 0;
 static int      pdd_cross_thread_operation_blocked_count = 0;
 
 Sleep_Multiplier       default_user_sleep_multiplier = 1.0; // may be changed by --sleep-multiplier option
-bool pdd_null_msg_adjustment = false;
+bool pdd_null_msg_adjustment_enabled = true;
 User_Multiplier_Source default_user_multiplier_source = Default;
 
 void dbgrpt_per_display_data_locks(int depth) {

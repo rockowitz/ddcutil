@@ -36,7 +36,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(4, "Read strategy tests");
    REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
    REPORT_FLAG_OPTION(6, "Watch display connection events");
-   REPORT_FLAG_OPTION(7, "Null Msg sleep adjustment in pdd_get_adjusted_sleep_multiplier()");
+   REPORT_FLAG_OPTION(7, "Unused");
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
    REPORT_FLAG_OPTION(9, "Enable displays cache");
    REPORT_FLAG_OPTION(10,"Unused");
