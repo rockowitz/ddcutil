@@ -250,6 +250,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s", errinfo_summary(ddc_excp));
+      if (psc != -EBUSY)
+         dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+
 
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
@@ -261,24 +264,21 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-
-            check_how_unsupported_reported(dh);
          }  // end, communication working
-         else {   // communication failed
+         else {
             if (psc == -EBUSY) {
-               dh->dref->flags |= DREF_DDC_BUSY;
+               dh->dref->flags |= DREF_DDC_BUSY; // communication failed, but do not set DDCRC_COMMUNICATION_WORKING
             }
             else {
-               dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-
-               if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
-                  DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-                        dh_repr(dh) );
-                  dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-                  dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
-               }
+               dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             }
+         }
+
+         if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
+            DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
+                  dh_repr(dh) );
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+            dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
          }
       }    // end, io_mode == DDC_IO_I2C
 
@@ -611,7 +611,7 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
 
 /** Mark phantom displays.
  *
- *  Solit the #Display_Ref's in a GPtrArray into those that have
+ *  Split the #Display_Ref's in a GPtrArray into those that have
  *  already been determined to be valid (dispno > 0) and those
  *  that are invalid (dispno < 0).
  *
