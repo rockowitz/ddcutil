@@ -24,7 +24,7 @@
 
 // Timeouts not part of DDC spec
 #define DDC_TIMEOUT_NONE                                 0  ///< No timeout
-#define DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT     100  ///< Used for dynamic tuned sleep in case of DDC Null Message response
+#define DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT      50  ///< Used for dynamic tuned sleep in case of DDC Null Message response
 
 
 //

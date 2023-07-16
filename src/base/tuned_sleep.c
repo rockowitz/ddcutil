@@ -180,9 +180,17 @@ adjust_sleep_time(
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
    if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment) {
-      null_adjustment_millis = dh->dref->pdd->cur_loop_null_msg_ct * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
-      if (dh->dref->pdd->cur_loop_null_msg_ct > 2)
-         null_adjustment_millis = 3 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+      switch(dh->dref->pdd->cur_loop_null_msg_ct) {
+      case 1:
+         null_adjustment_millis = 1 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         break;
+      case 2:
+         null_adjustment_millis = 2 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         break;
+      default:
+         null_adjustment_millis = 4 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         break;
+      }
       adjusted_sleep_time_millis += null_adjustment_millis;
       char * s = g_strdup_printf(
             "Adding %d milliseconds for %d Null response(s), busno=%d, event_type=%s, adjusted_sleep_time=%d %s",
