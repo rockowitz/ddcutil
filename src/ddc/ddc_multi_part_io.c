@@ -231,6 +231,7 @@ multi_part_read_with_retry(
          }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
+         DBGMSG("Accepting DDCRC_READ_ALL_ZRO");
          rc = DDCRC_OK;
          can_retry = false;
       }
