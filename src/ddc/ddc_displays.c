@@ -144,8 +144,8 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
       }
       else {
          MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-            "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds, returning mh=0x%02x ml=0x%02x sh=0%02x sl=0x%02x",
-            feature_code, parsed_response_loc->mh, parsed_response_loc->ml, parsed_response_loc->sh, parsed_response_loc->ml);
+            "busno=%d, Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds, returning mh=0x%02x ml=0x%02x sh=0%02x sl=0x%02x",
+            businfo->busno, feature_code, parsed_response_loc->mh, parsed_response_loc->ml, parsed_response_loc->sh, parsed_response_loc->ml);
       }
    }
    else if ( ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES ) {
@@ -154,8 +154,8 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
          ddc_excp = ERRINFO_NEW(DDCRC_ALL_RESPONSES_NULL, "");
       }
       else {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Testing for unsupported feature 0x%02x returned %s", feature_code, errinfo_summary(ddc_excp));
-         SYSLOG2(DDCA_SYSLOG_ERROR, "Testing for unsupported feature 0x%02x returned %s", feature_code, errinfo_summary(ddc_excp));
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Testing for unsupported feature 0x%02x returned %s", businfo->busno,feature_code, errinfo_summary(ddc_excp));
+         SYSLOG2(DDCA_SYSLOG_ERROR, "busno=%d, Testing for unsupported feature 0x%02x returned %s", businfo->busno,feature_code, errinfo_summary(ddc_excp));
       }
    }
    free(parsed_response_loc);
