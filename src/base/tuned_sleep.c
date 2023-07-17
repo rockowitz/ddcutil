@@ -208,8 +208,10 @@ adjust_sleep_time(
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP,
-         "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, null_adjustment_millis=%d, Returning: %d",
-         spec_sleep_time_millis, dsa_multiplier, null_adjustment_millis, adjusted_sleep_time_millis);
+         "spec_sleep_time_millis = %d, dsa_multiplier=%5.2f, null_adjustment_millis=%d, "
+         "Returning: %d, *null_adjustment_added_loc-%s",
+         spec_sleep_time_millis, dsa_multiplier, null_adjustment_millis,
+         adjusted_sleep_time_millis, sbool(*null_adjustment_added_loc));
    return adjusted_sleep_time_millis;
 }
 
