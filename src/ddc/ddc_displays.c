@@ -127,6 +127,42 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
    return all_same;
 }
 
+
+// test for a feature that should be unsupported
+Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
+   bool debug = false;
+   I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
+   Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
+   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "busno=%d, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", businfo->busno, feature_code, errinfo_summary(ddc_excp));
+   if (!ddc_excp) {
+      if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
+         dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
+         ddc_excp = ERRINFO_NEW(DDCRC_DETERMINED_UNSUPPORTED, "");
+      }
+      else {
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+            "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds, returning mh=0x%02x ml=0x%02x sh=0%02x sl=0x%02x",
+            feature_code, parsed_response_loc->mh, parsed_response_loc->ml, parsed_response_loc->sh, parsed_response_loc->ml);
+      }
+   }
+   else if ( ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES ) {
+      if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE)) {
+         errinfo_free(ddc_excp);
+         ddc_excp = ERRINFO_NEW(DDCRC_ALL_RESPONSES_NULL, "");
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Testing for unsupported feature 0x%02x returned %s", feature_code, errinfo_summary(ddc_excp));
+         SYSLOG2(DDCA_SYSLOG_ERROR, "Testing for unsupported feature 0x%02x returned %s", feature_code, errinfo_summary(ddc_excp));
+      }
+   }
+   free(parsed_response_loc);
+   return ddc_excp;
+}
+
+
 static void
 check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
@@ -134,58 +170,34 @@ check_how_unsupported_reported(Display_Handle * dh) {
    Display_Ref* dref = dh->dref;
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
-   Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
-   // Try a feature that should never exist
-   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x41, &parsed_response_loc);
-   if (!ddc_excp) {
-      DDCA_Vcp_Feature_Code feature_code = 0x41;
-      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
-      if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
-   }
-   if (!ddc_excp) {   // oops, looks like it's a CRT, try xdd not defined in MCCS
-      DDCA_Vcp_Feature_Code feature_code = 0xdd;
-      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
-      if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
-   }
-   if (!ddc_excp) {   // one more try, though x00 has been known to behave differently from other unsupported features
-      DDCA_Vcp_Feature_Code feature_code = 0x00;
-      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
-      if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
-   }
-   Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
+   // Try features that should never exist
+   Error_Info * erec = is_supported_feature(dh, 0x41);  // CRT only feature
+   if (!erec)
+      erec = is_supported_feature(dh, 0xdd);    // not defined in MCCS
+   if (!erec)
+      erec = is_supported_feature(dh, 0x00);
+
+   Public_Status_Code psc = ERRINFO_STATUS(erec);
 
    if (psc == 0) {
-      if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
-         dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
-      }
-      else {
-         dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
-      }
+      dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
    }
    else {
       if (psc == DDCRC_RETRIES) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Try errors: %s", errinfo_causes_string(ddc_excp));
-         if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE))
-            psc = DDCRC_ALL_RESPONSES_NULL;
+            dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // our best guess
       }
 
-      if (psc == DDCRC_REPORTED_UNSUPPORTED) {   // the monitor is well-behaved
+      else if (psc == DDCRC_DETERMINED_UNSUPPORTED) {
+         // already handled in test_unsupported_feature()
+      }
+
+      else if (psc == DDCRC_REPORTED_UNSUPPORTED) {   // the monitor is well-behaved
          dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
       }
 
       else if ( (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL) &&
             !ddc_never_uses_null_response_for_unsupported) {      // for testing
-         // feature x10 succeeded, so Null Msg really means unsupported
+         // Null Msg really means unsupported
          dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
       }
 
@@ -193,11 +205,11 @@ check_how_unsupported_reported(Display_Handle * dh) {
       // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
       // Too dangerous to always treat -EIO as unsupported
       else if (psc == -EIO) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Monitor apparently returns -EIO for unsupported features.");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Monitor apparently returns -EIO for unsupported features. This cannot be relied on.");
       }
+      free(erec);
    }
    dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
-   free(parsed_response_loc);
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
 
@@ -1220,6 +1232,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(is_phantom_display);
+   RTTI_ADD_FUNC(is_supported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
