@@ -184,13 +184,13 @@ adjust_sleep_time(
    if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment_enabled) {
       switch(dh->dref->pdd->cur_loop_null_msg_ct) {
       case 1:
-         null_adjustment_millis = 1 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         null_adjustment_millis = 25; // 1 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
          break;
       case 2:
-         null_adjustment_millis = 2 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         null_adjustment_millis = 100;  //2 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
          break;
       default:
-         null_adjustment_millis = 4 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
+         null_adjustment_millis = 200;  //4 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
          break;
       }
       *null_adjustment_added_loc = true;
