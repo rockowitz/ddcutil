@@ -142,25 +142,32 @@ static int get_sleep_time(
 }
 
 
-/** Adjusts the sleep time, using the dynamic sleep adjustment protocol
- *  set (if one is set).
+/** Calculates the sleep time to be used for a sleep event instance.
  *
- *  First the sleep multiplier is applied.  If no dynamic sleep adjustment
- *  is in effect, that is the value returned.
+ *  First, a sleep multiplier is applied to the nominal "spec sleep time".
  *
- *  If the original automatic adjustment algorithm is in effect (dsa0),
- *  what had been the normal case, the sleep time is multiplied by the
- *  per thread sleep multiplier count.
+ *  If the current loop has 1 or more DDC Null Message replies, an
+ *  additional adjustment amount may be added.
  *
- *  If the original dynamic sleep adjustment is enabled (dsa1), the
- *  sleep time is adjusted by a per thread adjustment factor determined by
- *  the algorithm.
- *  Then, if no dynamic sleep adjustment is enabled (the usual case) the sleep time is
- *  multiplied by the per thread sleep multiplier count. This count is
- *  maintained by the IO retry logic.
+ *  @param    dh                       display handle
+ *  @param    event_type               sleep event type
+ *  @param    spec_sleep_time_millis   nominal sleep time
+ *  @param    msg                      trace message
+ *  @param    null_adjustent_added_loc where to return a boolean value
+ *                                     indicating whether an adjustment for
+ *                                     DDC null values was added
+ *  @return   adjusted sleep time, in milliseconds
  *
- *  If dynamic sleep is enabled, the sleep time is multiplied by the value
- *  returned from dsa_update_adjustment_factor().
+ *  The sleep-multiplier, as returned by #pdd_get_adjusted_sleep_multiplier()
+ *  is obtained from the dynamic sleep algorithm, if one is currently
+ *  active, a sleep-multiplier given on the command line or from the configuration
+ *  file, or the default sleep-multiplier (1.0).
+ *
+ *  The nominal sleep time is:
+ *  - Sleep time for the event as given in the DDC/CI spec
+ *  - Sleep time for additional event types not in the spec
+ *  - For events of to SE_SPECIAL, the sleep time passed when
+ *    the sleep event was triggered.
  */
 static int
 adjust_sleep_time(

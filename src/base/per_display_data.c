@@ -672,6 +672,17 @@ bool pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff) {
 }
 
 
+/** Returns the sleep-multiplier in effect for the specified display.
+ *
+ *  The sleep-multiplier is, in descending order:
+ *  - Obtained from the dynamic sleep algorithm, if one is in effect
+ *  - Obtained from the command line or configuration file
+ *  - Default sleep-multiplier (1.0)
+ *
+ *  @param  pdd Per_Display_Data for the display
+ *  @return sleep-multiplier
+ */
+
 Sleep_Multiplier pdd_get_adjusted_sleep_multiplier(Per_Display_Data * pdd) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "pdd=%p, cur_loop_null_msg_ct=%d", pdd,pdd->cur_loop_null_msg_ct);
