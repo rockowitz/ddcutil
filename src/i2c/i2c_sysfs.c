@@ -1490,6 +1490,57 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth) {
 #endif
 
 
+void add_video_device_to_array(
+      const char * dirname,     //
+      const char * fn,
+      void *       data,
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
+   GPtrArray* accumulator = (GPtrArray*) data;
+   g_ptr_array_add(accumulator, g_strdup_printf("%s%s", dirname, fn));
+   RPT_ATTR_TEXT(    1, NULL, dirname, fn, "class");
+   RPT_ATTR_REALPATH(1, NULL, dirname, fn, "driver");
+}
+
+
+/** Gets all sysfs devices with class video device, i.e. x03
+ *
+ *  @return array of fully qualified device paths
+ */
+GPtrArray * get_sys_video_devices() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   GPtrArray * video_devices = g_ptr_array_new();
+   dir_filtered_ordered_foreach("/sys/bus/pci/devices",
+                       has_class_display,      // filter function
+                       NULL,                    // ordering function
+                       add_video_device_to_array,
+                       video_devices,                    // accumulator
+                       -1);
+   DBGTRC_DONE(debug, TRACE_GROUP,"Returning array with %d video devices", video_devices->len);
+   return video_devices;
+}
+
+bool all_video_devices_drm() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   GPtrArray* video_devices = get_sys_video_devices();
+   bool all_devices_drm = true;
+   for (int ndx = 0; ndx < video_devices->len; ndx++) {
+      char * device_path = g_ptr_array_index(video_devices, ndx);
+      bool found_drm = rpt_attr_note_subdir(-1, NULL, device_path, "drm");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
+      if (!found_drm)
+         all_devices_drm = false;
+   }
+   g_ptr_array_free(video_devices, true);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, all_devices_drm, "");
+   return all_devices_drm;
+}
+
+
 void init_i2c_sysfs() {
 
    // I2C_Sys_Info
@@ -1522,6 +1573,9 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_single_i2c_info);
    RTTI_ADD_FUNC(get_all_i2c_info);
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
+
+   RTTI_ADD_FUNC(get_sys_video_devices);
+   RTTI_ADD_FUNC(all_video_devices_drm);
 }
 
 

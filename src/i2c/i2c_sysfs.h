@@ -125,6 +125,10 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 #endif
 
 
+GPtrArray * get_sys_video_devices();
+bool all_video_devices_drm();
+
+
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();
 
