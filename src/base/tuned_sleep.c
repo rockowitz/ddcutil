@@ -202,7 +202,7 @@ adjust_sleep_time(
             dh->dref->io_path.path.i2c_busno,
             sleep_event_name(event_type),
             adjusted_sleep_time_millis, (msg) ? msg : "");
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", s);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%s", s);
       SYSLOG2(DDCA_SYSLOG_WARNING, "%s", s);
       free(s);
    }
