@@ -59,6 +59,7 @@ typedef struct Per_Display_Data {
    Sleep_Multiplier       most_recent_adjusted_sleep_multiplier;   // may have failed
    bool                   dsa2_enabled;
    bool                   dynamic_sleep_active;
+   bool                   cur_loop_null_adjustment_occurred;
 } Per_Display_Data;
 
 // For new displays

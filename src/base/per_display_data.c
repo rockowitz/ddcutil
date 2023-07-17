@@ -704,12 +704,13 @@ void pdd_note_retryable_failure(Per_Display_Data * pdd, DDCA_Status ddcrc, int r
 void  pdd_record_final(Per_Display_Data * pdd, DDCA_Status ddcrc, int retries) {
    if (pdd->dynamic_sleep_active) {
       if (pdd->dsa2_enabled) {
-         dsa2_record_final(pdd->dsa2_data, ddcrc, retries);
+         dsa2_record_final(pdd->dsa2_data, ddcrc, retries, pdd->cur_loop_null_adjustment_occurred);
       }
       if (ddcrc == 0)
          pdd_record_adjusted_sleep_multiplier_bounds(pdd, true);
    }
    pdd->cur_loop_null_msg_ct = 0;
+   pdd->cur_loop_null_adjustment_occurred = false;
 }
 
 

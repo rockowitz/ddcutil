@@ -417,7 +417,6 @@ get_edid_checkbyte(int busno) {
 }
 
 
-
 /** Frees a #Results_Table
  *
  *  @param rtable  pointer to table instance to free
@@ -832,10 +831,10 @@ dsa2_note_retryable_failure(Results_Table * rtable, DDCA_Status ddcrc,  int rema
  *                  in case of a fatal error of some sort
  */
 void
-dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
+dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries, bool null_adjustment_occurred) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s",
-                   rtable->busno, rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s, null_adjustment_occurred=%s",
+                   rtable->busno, rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled), sbool(null_adjustment_occurred));
    if (!dsa2_enabled) {
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa2 not enabled");
       return;
@@ -848,6 +847,7 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries) {
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
+   ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, null_adjustment_occurred);
    int next_cur_step = rtable->cur_step;
    if (ddcrc == 0) {
       rtable->successful_try_ct++;
@@ -1009,16 +1009,16 @@ dsa2_save_persistent_stats() {
    char * stats_fn = dsa2_stats_cache_file_name();
    if (!stats_fn) {
       result = -ENOENT;
-      SEVEREMSG("Unable to determine dynamic sleep cache file name");
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Unable to determine dynamic sleep cache file name");
+      // SEVEREMSG("Unable to determine dynamic sleep cache file name");
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unable to determine dynamic sleep cache file name");
       goto bye;
    }
    FILE * stats_file = NULL;
    result = fopen_mkdir(stats_fn, "w", ferr(), &stats_file);
    if (!stats_file) {
       result = -errno;
-      SEVEREMSG("Error opening %s: %s", stats_fn, strerror(errno));
-      SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening %s: %s", stats_fn, strerror(errno));
+      // SEVEREMSG("Error opening %s: %s", stats_fn, strerror(errno));
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error opening %s: %s", stats_fn, strerror(errno));
       goto bye;
    }
    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opened %s", stats_fn);

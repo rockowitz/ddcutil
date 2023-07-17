@@ -167,7 +167,8 @@ adjust_sleep_time(
       Display_Handle *  dh,
       Sleep_Event_Type  event_type,
       int               spec_sleep_time_millis,
-      const char *      msg)
+      const char *      msg,
+      bool *            null_adjustment_added_loc)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
@@ -175,6 +176,7 @@ adjust_sleep_time(
                           sleep_event_name(event_type), spec_sleep_time_millis, msg);
 
    int null_adjustment_millis = 0;
+   *null_adjustment_added_loc = false;
    Per_Display_Data * pdd = dh->dref->pdd;
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
@@ -191,6 +193,7 @@ adjust_sleep_time(
          null_adjustment_millis = 4 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
          break;
       }
+      *null_adjustment_added_loc = true;
       adjusted_sleep_time_millis += null_adjustment_millis;
       char * s = g_strdup_printf(
             "Adding %d milliseconds for %d Null response(s), busno=%d, event_type=%s, adjusted_sleep_time=%d %s",
@@ -258,7 +261,8 @@ void tuned_sleep_with_trace(
           "After get_sleep_time(). spec_sleep_time_millis = %d, deferrable sleep: %s",
           spec_sleep_time_millis,SBOOL(deferrable_sleep));
 
-   int adjusted_sleep_time_millis = adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg);
+   bool null_adjustment_added = false;
+   int adjusted_sleep_time_millis = adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg, &null_adjustment_added);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
 
@@ -286,6 +290,7 @@ void tuned_sleep_with_trace(
       Per_Display_Data * pdd2  = dh->dref->pdd;
       assert (pdd == pdd2);
       pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
+      pdd->cur_loop_null_adjustment_occurred = null_adjustment_added;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
