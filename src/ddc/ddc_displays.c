@@ -131,6 +131,7 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
 // test for a feature that should be unsupported
 Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
    bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s. feature_code=0x%02x", dh_repr(dh), feature_code);
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
@@ -167,6 +168,7 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
       }
    }
    free(parsed_response_loc);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
