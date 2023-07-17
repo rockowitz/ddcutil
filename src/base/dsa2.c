@@ -847,7 +847,9 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries, bool nul
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
-   ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, null_adjustment_occurred);
+   if (pdd_null_msg_adjustment_enabled) {
+      ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, null_adjustment_occurred);
+   }
    int next_cur_step = rtable->cur_step;
    if (ddcrc == 0) {
       rtable->successful_try_ct++;
