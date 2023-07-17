@@ -212,7 +212,7 @@ typedef struct _display_ref {
    DDCA_IO_Path *           actual_display_path;   // alt to actual_display
    char *                   driver_name;           //
    struct Per_Display_Data* pdd;
-   char *                   drm_connector;         // e.g. card0-HDMI-A-1
+   char *                   drm_connector;         // e.g. card0-HDMI-A-1  // REDUNDANT - IDENTICAL TO Bus_Info.drm_connector
 } Display_Ref;
 
 #define ASSERT_DREF_IO_MODE(_dref, _mode)  \

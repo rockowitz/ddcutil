@@ -446,9 +446,7 @@ find_dref(
                              dref->pedid->product_code);
             // dref->driver_name = get_i2c_device_sysfs_driver(busno);
             // DBGMSG("driver_name = %p -> %s", dref->driver_name, dref->driver_name);
-            Sys_Drm_Connector * conn = find_sys_drm_connector_by_busno(busno);
-            if (conn)
-               dref->drm_connector = g_strdup(conn->connector_name);
+            dref->drm_connector = g_strdup(businfo->drm_connector_name);
 
             // dref->pedid = i2c_get_parsed_edid_by_busno(did_work->busno);
             dref->detail = businfo;
