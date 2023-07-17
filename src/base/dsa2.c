@@ -807,8 +807,7 @@ dsa2_note_retryable_failure(Results_Table * rtable, DDCA_Status ddcrc,  int rema
    }
 
    int prev_step = rtable->cur_retry_loop_step;
-   // has special handling for case of remaining_tries = 0;
-
+   // has special handling for case of remaining_tries = 0:
    int next_step =  dsa2_next_retry_step(prev_step, remaining_tries);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dsa2_next_retry_step(%d,%d) returned %d",
                                          prev_step, remaining_tries, next_step);
@@ -840,30 +839,38 @@ dsa2_note_retryable_failure(Results_Table * rtable, DDCA_Status ddcrc,  int rema
  *                  in case of a fatal error of some sort
  */
 void
-dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries, bool null_adjustment_occurred) {
+dsa2_record_final(
+      Results_Table * rtable,
+      DDCA_Status     ddcrc,
+      int             tries,
+      bool            cur_loop_null_adjustment_occurred)
+{
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s, null_adjustment_occurred=%s",
-                   rtable->busno, rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled), sbool(null_adjustment_occurred));
+   assert(rtable);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "busno=%d, rtable=%p, ddcrc=%s, tries=%d dsa2_enabled=%s,"
+         " cur_loop_null_adjustment_occurred=%s",
+         rtable->busno, rtable, psc_desc(ddcrc), tries, sbool(dsa2_enabled),
+         sbool(cur_loop_null_adjustment_occurred));
    if (!dsa2_enabled) {
       DBGTRC_DONE(debug, TRACE_GROUP, "dsa2 not enabled");
       return;
    }
 
-   if (null_adjustment_occurred)
-      rtable->null_msg_max_step_for_success = MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
+   if (cur_loop_null_adjustment_occurred)
+      rtable->null_msg_max_step_for_success =
+            MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
 
-   assert(rtable);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-         "cur_step=%d, cur_retry_loop_step=%d, cur_retry_loop_null_msg_ct=%d",
-         rtable->cur_step, rtable->cur_retry_loop_step, rtable->cur_retry_loop_null_msg_ct);
-
-   if (null_adjustment_occurred)
-      rtable->null_msg_max_step_for_success = MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
+         "cur_step=%d, cur_retry_loop_step=%d, "
+         "cur_retry_loop_null_msg_ct=%d, null_msg_max_step_for_success=%d",
+         rtable->cur_step, rtable->cur_retry_loop_step,
+         rtable->cur_retry_loop_null_msg_ct, rtable->null_msg_max_step_for_success);
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
    if (pdd_null_msg_adjustment_enabled) {
-      ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, null_adjustment_occurred);
+      ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, cur_loop_null_adjustment_occurred);
    }
    int next_cur_step = rtable->cur_step;
    if (ddcrc == 0) {
