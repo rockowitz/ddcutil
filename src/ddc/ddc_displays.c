@@ -138,25 +138,28 @@ check_how_unsupported_reported(Display_Handle * dh) {
    // Try a feature that should never exist
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x41, &parsed_response_loc);
    if (!ddc_excp) {
-      ddc_excp = ddc_get_nontable_vcp_value(dh, 0x41, &parsed_response_loc);
+      DDCA_Vcp_Feature_Code feature_code = 0x41;
+      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x41 returned: %s", errinfo_summary(ddc_excp));
+               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
       if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x41 should not exist but ddc_get_nontable_vcp_value() succeeds");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
    }
    if (!ddc_excp) {   // oops, looks like it's a CRT, try xdd not defined in MCCS
-      ddc_excp = ddc_get_nontable_vcp_value(dh, 0xdd, &parsed_response_loc);
+      DDCA_Vcp_Feature_Code feature_code = 0xdd;
+      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0xdd returned: %s", errinfo_summary(ddc_excp));
+               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
       if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature xdd should not exist but ddc_get_nontable_vcp_value() succeeds");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
    }
    if (!ddc_excp) {   // one more try, though x00 has been known to behave differently from other unsupported features
-      ddc_excp = ddc_get_nontable_vcp_value(dh, 0x00, &parsed_response_loc);
+      DDCA_Vcp_Feature_Code feature_code = 0x00;
+      ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "ddc_get_nontable_vcp_value() for feature 0x00 returned: %s", errinfo_summary(ddc_excp));
+               "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
       if (!ddc_excp)
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x00 should not exist but ddc_get_nontable_vcp_value() succeeds");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds", feature_code);
    }
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
