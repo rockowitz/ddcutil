@@ -141,19 +141,22 @@ check_how_unsupported_reported(Display_Handle * dh) {
       ddc_excp = ddc_get_nontable_vcp_value(dh, 0x41, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "ddc_get_nontable_vcp_value() for feature 0x41 returned: %s", errinfo_summary(ddc_excp));
-      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x41 should not exist but ddc_get_nontable_vcp_value() succeeds");
+      if (!ddc_excp)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x41 should not exist but ddc_get_nontable_vcp_value() succeeds");
    }
    if (!ddc_excp) {   // oops, looks like it's a CRT, try xdd not defined in MCCS
       ddc_excp = ddc_get_nontable_vcp_value(dh, 0xdd, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "ddc_get_nontable_vcp_value() for feature 0xdd returned: %s", errinfo_summary(ddc_excp));
-      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature xdd should not exist but ddc_get_nontable_vcp_value() succeeds");
+      if (!ddc_excp)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature xdd should not exist but ddc_get_nontable_vcp_value() succeeds");
    }
    if (!ddc_excp) {   // one more try, though x00 has been known to behave differently from other unsupported features
       ddc_excp = ddc_get_nontable_vcp_value(dh, 0x00, &parsed_response_loc);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "ddc_get_nontable_vcp_value() for feature 0x00 returned: %s", errinfo_summary(ddc_excp));
-      MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x00 should not exist but ddc_get_nontable_vcp_value() succeeds");
+      if (!ddc_excp)
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Feature x00 should not exist but ddc_get_nontable_vcp_value() succeeds");
    }
    Public_Status_Code psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
