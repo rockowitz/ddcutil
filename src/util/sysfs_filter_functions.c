@@ -383,3 +383,28 @@ bool has_class_display_or_docking_station(
    return result;
 }
 
+
+// does dirname/simple_fn have attribute class with value display controller?
+bool has_class_display(
+      const char * dirname, const char * simple_fn)
+{
+   bool debug = false;
+   bool result = false;
+   if (debug)
+      printf("(%s) Starting. dirname=%s, simple_fn=%s\n", __func__, dirname, simple_fn);
+   char * class_val = NULL;
+   int    iclass = 0;
+   int    top_byte = 0;
+   if ( GET_ATTR_TEXT(&class_val, dirname, simple_fn, "class") ) {
+      if (str_to_int(class_val, &iclass, 16) ) {
+         top_byte = iclass >> 16;
+         if (top_byte == 0x03 )  // display controller
+            result = true;
+      }
+   }
+   if (debug)
+      printf("(%s) class_val = %s, top_byte = 0x%02x, result=%s\n", __func__, class_val, top_byte, sbool(result) );
+   free(class_val);
+   return result;
+}
+
