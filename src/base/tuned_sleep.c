@@ -262,7 +262,8 @@ void tuned_sleep_with_trace(
           spec_sleep_time_millis,SBOOL(deferrable_sleep));
 
    bool null_adjustment_added = false;
-   int adjusted_sleep_time_millis = adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg, &null_adjustment_added);
+   int adjusted_sleep_time_millis =
+         adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg, &null_adjustment_added);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
 
@@ -290,7 +291,8 @@ void tuned_sleep_with_trace(
       Per_Display_Data * pdd2  = dh->dref->pdd;
       assert (pdd == pdd2);
       pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
-      pdd->cur_loop_null_adjustment_occurred = null_adjustment_added;
+      if (null_adjustment_added)
+         pdd->cur_loop_null_adjustment_occurred = true;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
