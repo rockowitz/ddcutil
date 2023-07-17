@@ -308,10 +308,19 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             }
 
             if (dref->io_path.io_mode != DDCA_IO_USB) {
-               rpt_vstring(d1, "Monitor returns DDC Null Response for unsupported features: %s",
-                                  sbool(dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED));
-               // rpt_vstring(d1, "Monitor returns success with mh=ml=sh=sl=0 for unsupported features: %s",
-               //                    sbool(dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED));
+               if (dref->flags & DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED)
+                  rpt_vstring(d1, "Unable to determine how monitor reports unsupported features");
+               else {
+                  char * how = "unknown";
+                  // DBGMSG("flags: %s", interpret_dref_flags_t(dref->flags));
+                  if (dref->flags & DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED)
+                     how  = "invalid feature flag in DDC reply packet";
+                  else if (dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED)
+                     how  = "returns DDC Null Message";
+                  else if (dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED)
+                     how = "all data bytes 0 in DDC reply packet";
+                  rpt_vstring(d1, "Monitor uses %s to indicate unsupported feature.", how);
+               }
             }
          }
          Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
