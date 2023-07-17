@@ -331,6 +331,7 @@ typedef struct Results_Table {
    int  successful_try_ct;
    int  retryable_failure_ct;
    int  highest_step_complete_loop_failure;
+   int  null_msg_max_step_for_success;
    int  reset_ct;
    Byte edid_checksum_byte;
    Byte state;               // RTABLE_ flags
@@ -372,6 +373,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(retryable_failure_ct);
    ONE_INT_FIELD(initial_lookback);
    ONE_INT_FIELD(highest_step_complete_loop_failure);
+   ONE_INT_FIELD(null_msg_max_step_for_success);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
    rpt_vstring(d1, "state                          %s",
                    VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
@@ -399,6 +401,7 @@ Results_Table * new_results_table(int busno) {
    rtable->state = 0x00;
    rtable->initial_lookback = rtable->cur_lookback;
    rtable->highest_step_complete_loop_failure = -1;
+   rtable->null_msg_max_step_for_success = -1;
    return rtable;
 }
 
@@ -762,11 +765,17 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
             && dsa2_too_few_errors(max_tryct, total_tryct, actual_lookback)
             && rtable->cur_step > 0)
    {
-      next_step = rtable->cur_step - 1;
-      rtable->total_steps_down++;
-      rtable->adjustments_down++;
+      int floor = MIN(rtable->null_msg_max_step_for_success, 3);  // is this a good number?
+      if (next_step > floor) {
+         next_step = rtable->cur_step - 1;
+         rtable->total_steps_down++;
+         rtable->adjustments_down++;
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Not decrementing cur_step below floor=%d", floor);
+      }
       rtable->cur_lookback = actual_lookback;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
    }
 
    assert(next_step <= step_last);
@@ -840,10 +849,16 @@ dsa2_record_final(Results_Table * rtable, DDCA_Status ddcrc, int tries, bool nul
       return;
    }
 
+   if (null_adjustment_occurred)
+      rtable->null_msg_max_step_for_success = MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
+
    assert(rtable);
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
          "cur_step=%d, cur_retry_loop_step=%d, cur_retry_loop_null_msg_ct=%d",
          rtable->cur_step, rtable->cur_retry_loop_step, rtable->cur_retry_loop_null_msg_ct);
+
+   if (null_adjustment_occurred)
+      rtable->null_msg_max_step_for_success = MAX(rtable->null_msg_max_step_for_success, rtable->cur_retry_loop_step);
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
