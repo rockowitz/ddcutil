@@ -190,7 +190,9 @@ multi_part_read_with_retry(
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "request_type=0x%02x, request_subtype=0x%02x, all_zero_response_ok=%s"
           ", max_multi_part_read_tries=%d",
-          request_type, request_subtype, sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), max_multi_part_read_tries);
+          request_type, request_subtype,
+          sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok),
+          max_multi_part_read_tries);
    assert(write_read_flags & (Write_Read_Flag_Capabilities|Write_Read_Flag_Table_Read));
 
    Public_Status_Code rc = -1;   // dummy value for first call of while loop
@@ -229,8 +231,10 @@ multi_part_read_with_retry(
          }
          else {
             int adjustment = multi_part_null_adjustment_millis;
-            SPECIAL_TUNED_SLEEP_WITH_TRACE(dh, adjustment, "special adjustment to recover from DDC_NULL_MSG");
-            DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ad Hoc %d milliscecond sleep", adjustment);
+            if (adjustment > 0) {
+               SPECIAL_TUNED_SLEEP_WITH_TRACE(dh, adjustment, "special adjustment to recover from DDC_NULL_MSG");
+               DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ad Hoc %d milliscecond sleep", adjustment);
+            }
          }
       }
       else if (rc == DDCRC_READ_ALL_ZERO) {
