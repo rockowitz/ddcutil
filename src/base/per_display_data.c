@@ -337,6 +337,11 @@ Sleep_Multiplier get_global_sleep_multiplier_factor() {
 #endif
 
 
+
+/** Initialize a #Per_Display_Data struct
+ *
+ *  @oaram pdd  pointer to instance to initialize
+ */
 void pdd_init_pdd(Per_Display_Data * pdd) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -346,7 +351,7 @@ void pdd_init_pdd(Per_Display_Data * pdd) {
    pdd->initial_adjusted_sleep_multiplier          = -1.0f;
    pdd->final_successful_adjusted_sleep_multiplier = -1.0f;
    pdd->total_sleep_time_millis = 0;
-   pdd->dsa2_enabled = pdd->dpath.io_mode == DDCA_IO_I2C && dsa2_enabled;
+   pdd->dsa2_enabled = pdd->dpath.io_mode == DDCA_IO_I2C && dsa2_is_enabled();
    if (pdd->dsa2_enabled) {
       pdd->dsa2_data = dsa2_get_results_table_by_busno(pdd->dpath.path.i2c_busno, true);
    }

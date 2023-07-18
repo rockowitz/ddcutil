@@ -841,7 +841,7 @@ void query_sysenv(bool quick_env) {
       rpt_label(0, "Disabling displays cache ...");
       ddc_enable_displays_cache(false);
       rpt_label(0, "Disabling dsa stats ...");
-      dsa2_enabled = false;
+      dsa2_enable(false);
       rpt_nl();
 
       rpt_vstring(0, "*** Displays as reported by DETECT Command ***");

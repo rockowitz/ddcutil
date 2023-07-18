@@ -238,7 +238,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
 
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
       multi_part_null_adjustment_millis = parsed_cmd->i2;
-   dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
+   bool dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
+   dsa2_enable(dsa2_enabled);
    if (dsa2_enabled) {
       if (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) {
          dsa2_reset_multiplier(parsed_cmd->sleep_multiplier);

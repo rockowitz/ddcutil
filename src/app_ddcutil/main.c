@@ -138,7 +138,7 @@ report_performance_options(int depth)
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                 %s", sbool( is_deferred_sleep_enabled() ) );
-      rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_enabled));
+      rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_is_enabled()));
       rpt_vstring(d1, "Default sleep multiplier factor:     %7.2f", pdd_get_default_sleep_multiplier_factor() );
       rpt_nl();
 }
@@ -1057,7 +1057,7 @@ bye:
    free(configure_fn);
    free_regex_hash_table();
    if (parsed_cmd && parsed_cmd->cmd_id != CMDID_CHKUSBMON && parsed_cmd->cmd_id != CMDID_DISCARD_CACHE) {
-      if (dsa2_enabled)
+      if (dsa2_is_enabled())
          dsa2_save_persistent_stats();
       if (display_caching_enabled)
          ddc_store_displays_cache();

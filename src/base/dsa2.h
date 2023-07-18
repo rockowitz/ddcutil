@@ -15,8 +15,10 @@
 #include "base/core.h"
 #include "base/status_code_mgt.h"
 
-extern const bool DSA2_Enabled_Default;
-extern bool       dsa2_enabled;
+// extern const bool DSA2_Enabled_Default;   // unused
+
+void         dsa2_enable(bool yesno);
+bool         dsa2_is_enabled();
 
 bool         dsa2_set_greatest_tries_upper_bound(int tries);
 bool         dsa2_set_average_tries_upper_bound(Sleep_Multiplier avg_tries);

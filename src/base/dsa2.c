@@ -57,7 +57,7 @@ const int   Default_Greatest_Tries_Lower_Bound = 2;
 const Sleep_Multiplier
             Default_Average_Tries_Lower_Bound = 1.1;
 
-bool  dsa2_enabled           = Default_DSA2_Enabled;
+static bool  dsa2_enabled           = Default_DSA2_Enabled;
 int   initial_step           = Default_Initial_Step;
 int   adjustment_interval    = Default_Interval;
 int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
@@ -66,6 +66,16 @@ int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
 int   Min_Decrement_Lookback = 5;  // lookback must be at least this size for step decrement
 int   global_lookback = Default_Look_Back;
+
+
+bool dsa2_is_enabled() {
+   return dsa2_enabled;
+}
+
+
+void dsa2_enable(bool yesno) {
+   dsa2_enabled = yesno;
+}
 
 
 bool

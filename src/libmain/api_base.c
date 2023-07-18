@@ -494,7 +494,7 @@ _ddca_terminate(void) {
    if (library_initialized) {
       if (debug)
          dbgrpt_display_locks(2);
-      if (dsa2_enabled)
+      if (dsa2_is_enabled())
          dsa2_save_persistent_stats();
       if (display_caching_enabled)
          ddc_store_displays_cache();
