@@ -427,7 +427,7 @@ DDCA_Status ddc_i2c_write_read_raw(
                            get_packet_start(request_packet_ptr)+1 );
    DBGMSF(debug, "invoke_i2c_writer() returned %d", rc);
    if (rc == 0) {
-      TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, "Called from ddc_i2c_write_read_raw");
       // tuned_sleep_i2c_with_trace(SE_WRITE_TO_READ, __func__, NULL);
 
       // ALTERNATIVE_THAT_DIDNT_WORK:
@@ -440,7 +440,7 @@ DDCA_Status ddc_i2c_write_read_raw(
 
       // try adding sleep to see if improves capabilities read for P2411H
       // tuned_sleep_i2c_with_trace(SE_POST_READ, __func__, NULL);
-      TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, NULL);
+      TUNED_SLEEP_WITH_TRACE(dh, SE_POST_READ, "Called from ddc_i2c_write_read_raw");
 
       if (rc == 0)
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Response bytes: %s",
@@ -831,7 +831,7 @@ ddc_i2c_write_only(
          (request_packet_ptr->type == DDC_PACKET_TYPE_SAVE_CURRENT_SETTINGS )
             ? SE_POST_SAVE_SETTINGS
             : SE_POST_WRITE;
-   TUNED_SLEEP_WITH_TRACE(dh, sleep_type, NULL);
+   TUNED_SLEEP_WITH_TRACE(dh, sleep_type, "Called from ddc_i2c_write_only");
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "");
    return rc;
 }
