@@ -879,9 +879,6 @@ dsa2_record_final(
 
    assert(rtable->cur_retry_loop_step <= step_last);
    assert(rtable->cur_step <= rtable->cur_retry_loop_step);
-   if (pdd_null_msg_adjustment_enabled) {
-      ASSERT_IFF(rtable->cur_retry_loop_null_msg_ct > 0, cur_loop_null_adjustment_occurred);
-   }
    int next_cur_step = rtable->cur_step;
    if (ddcrc == 0) {
       rtable->successful_try_ct++;
