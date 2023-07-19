@@ -429,7 +429,6 @@ DDCA_Status ddc_i2c_write_read_raw(
    DBGMSF(debug, "invoke_i2c_writer() returned %d", rc);
    if (rc == 0) {
       TUNED_SLEEP_WITH_TRACE(dh, SE_WRITE_TO_READ, "Called from ddc_i2c_write_read_raw");
-      // tuned_sleep_i2c_with_trace(SE_WRITE_TO_READ, __func__, NULL);
 
       // ALTERNATIVE_THAT_DIDNT_WORK:
       // if (single_byte_reads)  // fails
@@ -641,12 +640,6 @@ ddc_write_read_with_retry(
                   retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
                   DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                   if (retryable) {
-                     if (ddcrc_null_response_ct == 1) {
-                        if (get_output_level() >= DDCA_OL_VERBOSE) {
-                           f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
-                        }
-                        SYSLOG2(DDCA_SYSLOG_NOTICE, "(%s) Extended delay as recovery from DDC NULL Response", __func__);
-                     }
                      // if (max_tries > 3)
                      //    max_tries = 3;
                   }

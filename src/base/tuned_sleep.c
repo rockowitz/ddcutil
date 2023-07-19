@@ -276,6 +276,14 @@ void tuned_sleep_with_trace(
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
 
+   Per_Display_Data * pdd = dh->dref->pdd;
+   if (pdd->cur_loop_null_msg_ct == 1) {
+      // if (get_output_level() >= DDCA_OL_VERBOSE) {
+      //    f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
+      // }
+      MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "(%s) Extended delay as recovery from DDC NULL Response", __func__);
+   }
+
    record_sleep_event(event_type);
 
    if (deferrable_sleep) {
