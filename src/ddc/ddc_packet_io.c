@@ -333,6 +333,7 @@ void ddc_close_display_wo_return(Display_Handle * dh) {
 }
 
 
+/** Closes all open displays, ignoring any errors */
 void ddc_close_all_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
