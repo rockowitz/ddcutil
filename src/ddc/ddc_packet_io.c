@@ -733,8 +733,9 @@ ddc_write_read_with_retry(
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d, retryable=%s",
                              psc_name_code(psc), tryctr, sbool(retryable));
-      if (psc != 0)
-         pdd_note_retryable_failure_by_dh(dh, psc, (max_tries-1) - tryctr);  // remaining retries
+      int remaining_tries = (max_tries-1) - tryctr;
+      if (psc != 0  && retryable && remaining_tries > 0)
+         pdd_note_retryable_failure_by_dh(dh, psc, remaining_tries);
    }
 
    // tryctr = number of times through loop, i.e. 1..max_tries
