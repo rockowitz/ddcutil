@@ -463,53 +463,6 @@ DDCA_Status ddc_i2c_write_read_raw(
 }
 
 
-#ifdef OUT
-// TODO: eliminate this function, used to route I2C vs ADL calls
-// static  // allow function to appear in backtrace
-DDCA_Status ddc_write_read_raw(
-      Display_Handle * dh,
-      DDC_Packet *     request_packet_ptr,
-      bool             read_bytewise,
-      int              max_read_bytes,
-      Byte *           readbuf,
-      int *            p_rcvd_bytes_ct
-     )
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d, readbuf=%p",
-                              dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, readbuf );
-   if (debug) {
-      // DBGMSG("request_packet_ptr->raw_bytes:");
-      // dbgrpt_buffer(request_packet_ptr->raw_bytes, 1);
-      char * s =  hexstring3_t(request_packet_ptr->raw_bytes->bytes,
-                              request_packet_ptr->raw_bytes->len, " ", 1, false );
-      DBGMSG("request_packet_ptr->raw_bytes: %s", s);
-   }
-
-   // This function should not be called for USB
-   TRACED_ASSERT(dh && dh->dref && dh->dref->io_path.io_mode == DDCA_IO_I2C);
-
-   DDCA_Status psc =  ddc_i2c_write_read_raw(
-                 dh,
-                 request_packet_ptr,
-                 read_bytewise,
-                 max_read_bytes,
-                 readbuf,
-                 p_rcvd_bytes_ct
-              );
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
-   if (psc == 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-             "*p_rcvd_bytes_ct=%d, readbuf: %s",
-             *p_rcvd_bytes_ct,
-             hexstring3_t(readbuf, *p_rcvd_bytes_ct, " ", 4, false));
-   }
-   return psc;
-}
-#endif
-
-
 /** Writes a DDC request packet to a monitor and provides basic response parsing
  *  based whether the response type is continuous, non-continuous, or table.
  *
@@ -548,7 +501,6 @@ ddc_write_read(
    *response_packet_ptr_loc = NULL;
 
    psc = ddc_i2c_write_read_raw(
-   // psc =  ddc_write_read_raw(
             dh,
             request_packet_ptr,
             read_bytewise,
@@ -667,6 +619,9 @@ ddc_write_read_with_retry(
                 "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                 dh_repr(dh),
                 ddcrc_null_response_ct);
+         MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+               "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
+               dh_repr(dh), ddcrc_null_response_ct);
       }
 
       if (psc < 0) {     // n. ADL status codes have been modulated
