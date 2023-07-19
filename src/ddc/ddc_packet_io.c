@@ -523,6 +523,13 @@ ddc_write_read(
               ddcrc_desc_t(psc), *response_packet_ptr_loc );
 
        // psc = -5;    // *** FOR TESTING ***
+#ifdef FOR_TESTING_NULL_RESPONSE
+       if (expected_subtype == 0xcb)
+       {
+          psc = DDCRC_NULL_RESPONSE;
+          DBGMSG("Setting DDC_NULL_RESPONSE");
+       }
+#endif
        if (psc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
           *response_packet_ptr_loc = NULL;
@@ -563,7 +570,7 @@ ddc_write_read_with_retry(
 
    bool all_zero_response_ok = flags & Write_Read_Flag_All_Zero_Response_Ok;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
-                                       "expected_subtype=0x%02x, all_zero_response_ok=%s, %s",
+                                       "expected_subtype=0x%02x, all_zero_response_ok=%s, Write_Flag_AllZero_response_ok: %s",
           dh_repr(dh), max_read_bytes, expected_response_type,
           expected_subtype, sbool(all_zero_response_ok), sbool(flags&Write_Read_Flag_All_Zero_Response_Ok)  );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
@@ -580,9 +587,10 @@ ddc_write_read_with_retry(
    int  ddcrc_read_all_zero_ct = 0;
    int  ddcrc_null_response_ct = 0;
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
-   int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
+   int ddcrc_null_response_max = max_tries;   // TEMP
    // int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
-   // ddcrc_null_response_max = 6;  // *** TEMP *** for testing
+   ddcrc_null_response_max = 3;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "retry_null_response=%s, ddcrc_null_response_max=%d, read_bytewise=%s",
          sbool(retry_null_response), ddcrc_null_response_max, sbool(read_bytewise));
@@ -622,7 +630,7 @@ ddc_write_read_with_retry(
          MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
                "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                dh_repr(dh), ddcrc_null_response_ct);
-      }
+       }
 
       if (psc < 0) {     // n. ADL status codes have been modulated
          DBGMSF(debug, "ddc_write_read() returned %s", psc_desc(psc) );
@@ -680,8 +688,8 @@ ddc_write_read_with_retry(
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
       }    // rc < 0
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d, retryable=%s",
-                             psc_name_code(psc), tryctr, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d,  ddcrc_null_response_ct=%d, retryable=%s",
+                             psc_name_code(psc), tryctr, ddcrc_null_response_ct, sbool(retryable));
       int remaining_tries = (max_tries-1) - tryctr;
       if (psc != 0  && retryable && remaining_tries > 0)
          pdd_note_retryable_failure_by_dh(dh, psc, remaining_tries);
@@ -689,9 +697,22 @@ ddc_write_read_with_retry(
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%s, retryable=%s",
-         tryctr, psc_name_code(psc), sbool(retryable) );
-   pdd_record_final_by_dh(dh, psc, tryctr);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%s, ddcrc_null_response_ct=%d, retryable=%s",
+         tryctr, psc_name_code(psc), ddcrc_null_response_ct, sbool(retryable) );
+
+   bool all_responses_null_meant_unsupported = false;
+   int adjusted_tryctr = tryctr;
+   if (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED
+         && !(flags & Write_Read_Flag_Capabilities)
+         && ddcrc_null_response_ct == (tryctr-1))
+   {
+      all_responses_null_meant_unsupported = true;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED and all responses null");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusting try count passed to pdd_record_final_by_dh() to 1");
+      // don't pollute the stats with try counts that don't reflect real errors
+      adjusted_tryctr = 1;
+   }
+   pdd_record_final_by_dh(dh, psc, adjusted_tryctr);
 
    Error_Info * errors_found[MAX_MAX_TRIES];
    int errct = 0;
@@ -718,8 +739,13 @@ ddc_write_read_with_retry(
          psc = DDCRC_RETRIES;
       else if (ddcrc_read_all_zero_ct == max_tries)
          psc = DDCRC_ALL_TRIES_ZERO;
-      else if (ddcrc_null_response_ct > ddcrc_null_response_max)
+      else if (all_responses_null_meant_unsupported) {
+         DBGTRC(debug, TRACE_GROUP, "converting DDCRC_ALL_RESPONSES_NULL to DDCRC_DETERMINED_UNSUPPORTED");
+         psc = DDCRC_DETERMINED_UNSUPPORTED;
+      }
+      else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
          psc = DDCRC_ALL_RESPONSES_NULL;
+      }
 
       ddc_excp = errinfo_new_with_causes(psc, errors_found, errct, __func__, NULL);
 
