@@ -59,7 +59,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 bool DDC_Read_Bytewise               = DEFAULT_DDC_READ_BYTEWISE;
-bool simulate_null_msg_means_unspported = false;
+bool simulate_null_msg_means_unsupported = false;
 
 static GHashTable * open_displays = NULL;
 

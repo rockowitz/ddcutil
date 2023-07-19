@@ -21,7 +21,7 @@
 
 
 extern bool DDC_Read_Bytewise;
-bool simulate_null_msg_means_unspported;
+extern bool simulate_null_msg_means_unsupported;
 
 typedef enum {
    Write_Read_Flags_None = 0,
