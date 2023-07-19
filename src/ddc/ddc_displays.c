@@ -203,6 +203,11 @@ check_how_unsupported_reported(Display_Handle * dh) {
 
       else if (psc == DDCRC_REPORTED_UNSUPPORTED) {   // the monitor is well-behaved
          dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+#ifdef FOR_TESTING_NULL_MSG
+      DBGMSG("Forcing DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED");
+      dref->flags &= ~DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;
+      dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
+#endif
       }
 
       else if ( (psc == DDCRC_NULL_RESPONSE || psc == DDCRC_ALL_RESPONSES_NULL) &&
