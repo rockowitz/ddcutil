@@ -142,18 +142,15 @@ void ddc_report_stats_main(DDCA_Stats_Type  stats,
            drd_report_all_display_retry_data(depth);
       }
       if (stats & DDCA_STATS_ERRORS) {
-          pdd_report_all_display_status_counts(depth);
+          pdd_report_all_per_display_error_counts(depth);
       }
       if (stats & DDCA_STATS_CALLS) {
-         pdd_report_all_display_call_stats(depth);
+         pdd_report_all_per_display_call_stats(depth);
       }
       if (stats & (DDCA_STATS_ELAPSED)) {
           // need a report_all_thread_elapsed_summary()
-          pdd_report_all_elapsed(include_dsa_internal, depth);
-          // rpt_nl();
-          // dsa2_report_internal_all(depth);
+          pdd_report_all_per_display_elapsed_stats(include_dsa_internal, depth);
       }
-
 
       // Reports locks held by per_thread_data() to confirm that locking has
       // trivial affect on performance.
