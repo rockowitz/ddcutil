@@ -556,7 +556,7 @@ void base_errinfo_free_with_report(
 
 
 //
-// Output captuer
+// Output capture
 //
 
 void   start_capture(DDCA_Capture_Option_Flags flags);
