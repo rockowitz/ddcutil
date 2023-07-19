@@ -282,7 +282,9 @@ void tuned_sleep_with_trace(
       // if (get_output_level() >= DDCA_OL_VERBOSE) {
       //    f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
       // }
-      MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "(%s) Extended delay as recovery from DDC NULL Response", __func__);
+      MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+            "(%s) Bus=%d. Extended delay as recovery from DDC NULL Response",
+            __func__, dh->dref->io_path.path.i2c_busno);
    }
 
    record_sleep_event(event_type);
