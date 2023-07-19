@@ -736,7 +736,7 @@ ddc_write_read_with_retry(
       int remaining_tries = (max_tries-1) - tryctr;
       if (psc != 0  && retryable && remaining_tries > 0)
          pdd_note_retryable_failure_by_dh(dh, psc, remaining_tries);
-   }
+   }  // for loop
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
