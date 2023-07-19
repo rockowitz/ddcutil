@@ -627,7 +627,7 @@ ddc_get_nontable_vcp_value(
          else if (value_bytes_zero(parsed_response) &&
                (dh->dref->flags & DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED) )
          {
-            // just a messages for now
+            // just a message for now
             DBGMSG("all value bytes 0, supported_opcode == true,"
                    " setting DDCRC_DETERMINED_UNSUPPORTED)");
             excp = errinfo_new(DDCRC_DETERMINED_UNSUPPORTED, __func__, "MH=ML=SH=SL=0");
