@@ -86,13 +86,13 @@ void   pdd_reset_all();
 void   dbgrpt_per_display_data(Per_Display_Data * data, int depth);
 void   dbgrpt_per_display_data_locks(int depth);
 
-void   pdd_report_all_display_status_counts(int depth);
-void   pdd_report_all_display_call_stats(int depth);
+void   pdd_report_all_per_display_error_counts(int depth);
+void   pdd_report_all_per_display_call_stats(int depth);
 
 void   pdd_report_elapsed(Per_Display_Data * pdd, bool include_dsa_internal, int depth);
-void   pdd_report_all_elapsed(bool include_dsa_internal, int depth);
+void   pdd_report_all_per_display_elapsed_stats(bool include_dsa_internal, int depth);
 
-void   pdd_record_adjusted_sleep_multiplier_bounds(Per_Display_Data * pdd, bool successful);
+void   pdd_record_adjusted_sleep_multiplier(Per_Display_Data * pdd, bool successful);
 
 bool   pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff);
 void   pdd_reset_multiplier(Per_Display_Data * pdd, Sleep_Multiplier multiplier);
