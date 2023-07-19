@@ -1022,6 +1022,14 @@ create_ddc_typed_response_packet(
       }
    }
 
+#ifdef FOR_TESTING
+      if (expected_subtype == 0xcb)
+      {
+         rc = DDCRC_NULL_RESPONSE;
+         free(*packet_ptr_loc);
+      }
+#endif
+
    if (rc != DDCRC_OK && *packet_ptr_loc) {
       free_ddc_packet(*packet_ptr_loc);
       *packet_ptr_loc = NULL;
