@@ -275,8 +275,9 @@ void tuned_sleep_with_trace(
          adjust_sleep_time(dh, event_type, spec_sleep_time_millis, msg, &null_adjustment_added);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "After adjust_sleep_time(), adjusted_sleep_time_millis = %d", adjusted_sleep_time_millis);
-
    Per_Display_Data * pdd = dh->dref->pdd;
+   if (null_adjustment_added)
+      pdd->cur_loop_null_adjustment_occurred = true;
    if (pdd->cur_loop_null_msg_ct == 1) {
       // if (get_output_level() >= DDCA_OL_VERBOSE) {
       //    f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
@@ -304,12 +305,7 @@ void tuned_sleep_with_trace(
          g_snprintf(msg_buf, 100, "Event_type: %s", evname);
 
       sleep_millis_with_trace(adjusted_sleep_time_millis, func, lineno, filename, msg_buf);
-      Per_Display_Data * pdd   = pdd_get_per_display_data(dh->dref->io_path, true);
-      Per_Display_Data * pdd2  = dh->dref->pdd;
-      assert (pdd == pdd2);
       pdd->total_sleep_time_millis += adjusted_sleep_time_millis;
-      if (null_adjustment_added)
-         pdd->cur_loop_null_adjustment_occurred = true;
    }
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -322,7 +318,7 @@ void tuned_sleep_with_trace(
  *  The delayed io start time is stored in the display reference associated with
  *  the display handle, so persists across open and close
  *
- *  @param  dh        #Display_Handle
+ *  @param  dh        Display Handle
  *  #param  func      name of function performing check
  *  @param  lineno    line number of check
  *  @param  filename  file from which the check is invoked
@@ -339,10 +335,13 @@ void check_deferred_sleep(
    DBGTRC_STARTING(debug, TRACE_GROUP,"Checking from %s() at line %d in file %s", func, lineno, filename);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "curtime=%"PRIu64", next_i2c_io_after=%"PRIu64,
                                 curtime / (1000*1000), dh->dref->next_i2c_io_after/(1000*1000));
-   if (dh->dref->next_i2c_io_after > curtime) {
+   Display_Ref * dref = dh->dref;
+   Per_Display_Data * pdd = dref->pdd;
+   if (dref->next_i2c_io_after > curtime) {
       int sleep_time = (dh->dref->next_i2c_io_after - curtime)/ (1000*1000);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Sleeping for %d milliseconds", sleep_time);
       sleep_millis_with_trace(sleep_time, func, lineno, filename, "deferred");
+      pdd->total_sleep_time_millis += sleep_time;
       DBGTRC_DONE(debug, TRACE_GROUP,"");
    }
    else {
