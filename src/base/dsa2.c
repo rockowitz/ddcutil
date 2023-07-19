@@ -992,6 +992,7 @@ void dsa2_report_internal(Results_Table * rtable, int depth) {
 }
 
 
+#ifdef UNUSED
 void dsa2_report_internal_all(int depth) {
    int d1 = depth+1;
    rpt_label(depth, "Dynamic Sleep Adjustment (algorithm 2)");
@@ -1001,6 +1002,7 @@ void dsa2_report_internal_all(int depth) {
          dsa2_report_internal(rtable, d1);
    }
 }
+#endif
 
 
 //
