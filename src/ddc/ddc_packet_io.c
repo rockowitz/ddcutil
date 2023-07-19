@@ -59,6 +59,7 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 bool DDC_Read_Bytewise               = DEFAULT_DDC_READ_BYTEWISE;
+bool simulate_null_msg_means_unspported = false;
 
 static GHashTable * open_displays = NULL;
 
@@ -522,14 +523,18 @@ ddc_write_read(
               "create_ddc_typed_response_packet() returned %s, *response_packet_ptr_loc=%p",
               ddcrc_desc_t(psc), *response_packet_ptr_loc );
 
-       // psc = -5;    // *** FOR TESTING ***
-#ifdef FOR_TESTING_NULL_RESPONSE
-       if (expected_subtype == 0xcb)
-       {
-          psc = DDCRC_NULL_RESPONSE;
-          DBGMSG("Setting DDC_NULL_RESPONSE");
+       if (psc == DDCRC_OK && simulate_null_msg_means_unsupported) {
+          DDC_Packet * pkt = *response_packet_ptr_loc;
+          if ( pkt && pkt->type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE) {
+             Parsed_Nontable_Vcp_Response * resp = pkt->parsed.nontable_response;
+             if (resp->valid_response && !resp->supported_opcode) {
+                DBGMSG("Setting DDCRC_NULL_RESPONSE for unsupported feature 0x%02x", resp->vcp_code);
+                psc = DDCRC_NULL_RESPONSE;
+             }
+          }
        }
-#endif
+
+
        if (psc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
           *response_packet_ptr_loc = NULL;
@@ -704,7 +709,7 @@ ddc_write_read_with_retry(
    int adjusted_tryctr = tryctr;
    if (dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED
          && !(flags & Write_Read_Flag_Capabilities)
-         && ddcrc_null_response_ct == (tryctr-1))
+         && ddcrc_null_response_ct == tryctr)
    {
       all_responses_null_meant_unsupported = true;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED and all responses null");

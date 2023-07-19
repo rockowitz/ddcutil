@@ -165,6 +165,8 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
 
 
 static bool init_failsim(Parsed_Cmd * parsed_cmd) {
+   bool debug = true;
+
 #ifdef ENABLE_FAILSIM
    fsim_set_name_to_number_funcs(
          status_name_to_modulated_number,
@@ -182,6 +184,11 @@ static bool init_failsim(Parsed_Cmd * parsed_cmd) {
       }
    }
 #endif
+
+   if (parsed_cmd->flags & CMD_FLAG_F7) {
+      DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
+      simulate_null_msg_means_unspported = true;
+   }
    return true;
 }
 
