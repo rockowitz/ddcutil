@@ -187,7 +187,7 @@ static bool init_failsim(Parsed_Cmd * parsed_cmd) {
 
    if (parsed_cmd->flags & CMD_FLAG_F7) {
       DBGMSF(debug, "setting simulate_null_msg_means_unspported = true");
-      simulate_null_msg_means_unspported = true;
+      simulate_null_msg_means_unsupported = true;
    }
    return true;
 }
