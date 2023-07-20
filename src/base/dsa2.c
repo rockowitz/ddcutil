@@ -1284,16 +1284,19 @@ dsa2_restore_persistent_stats() {
             // rtable->initial_step_from_cache = true;
             ok = (busno >= 0);
          }
+         assert(!ok || rtable);
 
          ok = ok && any_one_byte_hex_string_to_byte_in_buf(pieces[fieldndx++], &rtable->edid_checksum_byte);  // field 1
 
          ok = ok && str_to_int(pieces[fieldndx++], &rtable->cur_step, 10);  // field 2
-         if (rtable->cur_step > step_last) {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, resetting invalid cur_step from %d to %d !!!",
-                  busno, rtable->cur_step, step_last);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) busno=%d, resetting invalid cur_step from %d to %d",
-                  __func__, busno, rtable->cur_step, step_last);
-            rtable->cur_step = step_last;
+         if (ok) {
+            if (rtable->cur_step > step_last) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, resetting invalid cur_step from %d to %d !!!",
+                     busno, rtable->cur_step, step_last);
+               SYSLOG2(DDCA_SYSLOG_ERROR, "(%s) busno=%d, resetting invalid cur_step from %d to %d",
+                     __func__, busno, rtable->cur_step, step_last);
+               rtable->cur_step = step_last;
+            }
          }
 
          if (format_id == 1) {
