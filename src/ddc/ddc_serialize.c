@@ -578,20 +578,19 @@ bool ddc_store_displays_cache() {
          FILE * fp = NULL;
          fopen_mkdir(fn, "w", ferr(), &fp );
          if (!fp) {
-            // TODO: properly emit error message
             SEVEREMSG("Error opening file %s:%s", fn, strerror(errno));
             SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening file %s:%s", fn, strerror(errno));
          }
          else {
             size_t bytes_written = fwrite(json_text, strlen(json_text), 1, fp);
-            if (bytes_written < 0) {
-               // TODO: properly emit error message
+            if (bytes_written < strlen(json_text)) {
                SEVEREMSG("Error writing file %s:%s", fn, strerror(errno));
                SYSLOG2(DDCA_SYSLOG_ERROR, "Error writing file %s:%s", fn, strerror(errno));
             }
             else {
                ok = true;
             }
+            fclose(fp);
          }
          free(json_text);
          free(fn);
@@ -643,10 +642,22 @@ void ddc_restore_displays_cache() {
 void ddc_erase_displays_cache() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
+   bool found = false;
    char * fn = ddc_displays_cache_file_name();
-   bool found = regular_file_exists(fn);
-   if (found)
-      remove(fn);
+   if (!fn) {
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Failed to obtain cache file name");
+   }
+   else {
+      found = regular_file_exists(fn);
+      if (found) {
+        int rc = remove(fn);
+        if (rc < 0) {
+           MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error removing file %s: %s", fn, strerror(errno));
+        }
+      }
+      free(fn);
+   }
+
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "%s: %s", (found) ? "Removed file" : "File not found", fn);
 }
 
