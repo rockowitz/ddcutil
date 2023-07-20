@@ -972,6 +972,7 @@ parse_command(
       {"nodsa",                   '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                             G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
 
+      {"enable-dsa",              '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"disable-dsa",             '\0', G_OPTION_FLAG_HIDDEN |G_OPTION_FLAG_REVERSE,
                                             G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
       {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
