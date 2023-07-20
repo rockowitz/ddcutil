@@ -826,6 +826,7 @@ parse_command(
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
    gboolean profile_api_flag   = false;
+   gboolean null_msg_for_unsupported_flag = false;
 
    char *   mfg_id_work     = NULL;
    char *   modelwork       = NULL;
@@ -1072,6 +1073,8 @@ parse_command(
       {"quickenv",   '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &quick_flag,           "Skip long running tests", NULL},
       {"enable-mock-data",
                      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &mock_data_flag,       "Enable mock feature values", NULL},
+      {"force-null-msg-for-unsupported",
+                     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,        &null_msg_for_unsupported_flag, "Simulate Null Msg indicates unsupported feature", NULL},
 
       // Generic options to aid development
       {"i1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer 1", "decimal or hex number" },
@@ -1087,9 +1090,9 @@ parse_command(
       {"f7",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f7_flag,         "Special flag 7",    NULL},
       {"f8",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f8_flag,         "Special flag 8",    NULL},
       {"f9",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f9_flag,         "Special flag 9",    NULL},
-      {"f10",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f10_flag,        "Special flag 10",   NULL},
-      {"f11",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f11_flag,        "Special flag 11",   NULL},
-      {"f12",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f12_flag,        "Special flag 12",   NULL},
+      {"f10",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f10_flag,         "Special flag 10",   NULL},
+      {"f11",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f11_flag,         "Special flag 11",   NULL},
+      {"f12",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,    &f12_flag,         "Special flag 12",   NULL},
       {"s1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s1,  "Special string 1",  "string"},
       {"s2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s2,  "Special string 2",  "string"},
       {"s3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &parsed_cmd->s3,  "Special string 3",  "string"},
@@ -1333,6 +1336,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_PROFILE_API,       profile_api_flag);
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
+   SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 #ifdef REMOVED
