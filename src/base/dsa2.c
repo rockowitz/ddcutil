@@ -321,6 +321,8 @@ Value_Name_Table rtable_status_flags_table = {
       VN_END
 };
 
+static int Target_Max_Tries = 3;
+
 typedef struct Results_Table {
    Circular_Invocation_Result_Buffer * recent_values;
    // use int rather than a smaller type to simplify use of str_to_int()
@@ -594,14 +596,18 @@ dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
  *  @param true if cur_step needs to be increased, false if not
  */
 static bool
-dsa2_too_many_errors(int highest_tryct, int total_tryct, int interval) {
+dsa2_too_many_errors(int most_recent_tryct, int highest_tryct, int total_tryct, int interval) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-         "target_greatest_tries_upper_bound=%d, target_avg_tries_upper_bound_10=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
-          target_greatest_tries_upper_bound,    target_avg_tries_upper_bound_10,    highest_tryct,    total_tryct,    interval);
+         "most_recent_tryct=%d, highest_tryct=%d, total_tryct=%d, interval=%d",
+         most_recent_tryct, highest_tryct, total_tryct, interval);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+         "target_greatest_tries_upper_bound=%d, target_avg_tries_upper_bound_10=%d, Target_Max_Tries=%d",
+          target_greatest_tries_upper_bound,    target_avg_tries_upper_bound_10,    Target_Max_Tries);
 
    int computed_avg_10 = (total_tryct * 10)/interval;
-   bool result = ( highest_tryct > target_greatest_tries_upper_bound ||
+   bool result = ( most_recent_tryct > Target_Max_Tries ||
+                   highest_tryct > target_greatest_tries_upper_bound ||
                    computed_avg_10 > target_avg_tries_upper_bound_10);     // i.e. total_tryct/interval > 1.4)
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "computed_avg_10=%d", computed_avg_10);
@@ -722,6 +728,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    }
    int last_value_pos = actual_lookback - 1;
    int most_recent_step = latest_values[last_value_pos].required_step;
+   int most_recent_tryct = latest_values[last_value_pos].tryct;
 
 #ifdef OLD
    char  b[900]; b[0] = '\0';
@@ -761,7 +768,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    }
    assert(most_recent_step <= step_last);
 
-   if (dsa2_too_many_errors(max_tryct, total_tryct, actual_lookback)
+   if (dsa2_too_many_errors(most_recent_tryct, max_tryct, total_tryct, actual_lookback)
          && rtable->cur_step < most_recent_step
       // && rtable->cur_step < step_last  // redundant
       )
@@ -890,7 +897,7 @@ dsa2_record_final(
                "busno=%d, Incremented cur_step for null_msg_ct=%d. New value: %d",
                rtable->busno, rtable->cur_retry_loop_null_msg_ct, next_cur_step);
       }
-      else if (tries > 4){
+      else if (tries > Target_Max_Tries){    // 4
          // Too many tries. Unconditionally increase rtable->cur_step
          next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
