@@ -30,7 +30,7 @@ extern int  ptd_unlock_count;
 extern int  cross_thread_operation_blocked_count;
 
 typedef struct {
-   void *    function;
+   char *    function;
    int       total_calls;
    uint64_t  total_nanosec;
 } Per_Thread_Function_Stats;
