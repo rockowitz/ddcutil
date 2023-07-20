@@ -534,7 +534,6 @@ ddc_write_read(
           }
        }
 
-
        if (psc != 0 && *response_packet_ptr_loc) {  // paranoid,  should never occur
           free(*response_packet_ptr_loc);
           *response_packet_ptr_loc = NULL;
@@ -593,9 +592,9 @@ ddc_write_read_with_retry(
    int  ddcrc_null_response_ct = 0;
    int max_tries = try_data_get_maxtries2(WRITE_READ_TRIES_OP);
    // int  ddcrc_null_response_max = (retry_null_response) ? 3 : 0;
-   int ddcrc_null_response_max = max_tries;   // TEMP
+   // int ddcrc_null_response_max = max_tries;   // TEMP
    // int ddcrc_null_response_max = (retry_null_response) ? max_tries : 0;
-   ddcrc_null_response_max = 3;
+   int ddcrc_null_response_max = 3;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "retry_null_response=%s, ddcrc_null_response_max=%d, read_bytewise=%s",
          sbool(retry_null_response), ddcrc_null_response_max, sbool(read_bytewise));
@@ -632,7 +631,7 @@ ddc_write_read_with_retry(
                 "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                 dh_repr(dh),
                 ddcrc_null_response_ct);
-         MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE,
+         SYSLOG2(DDCA_SYSLOG_INFO,
                "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
                dh_repr(dh), ddcrc_null_response_ct);
        }
