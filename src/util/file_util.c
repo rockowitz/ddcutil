@@ -29,7 +29,6 @@
 #include "file_util.h"
 
 
-
 /** Reads the lines of a text file into a GPtrArray, returning a #Error_Info struct
  *  if an error occurs.
  *
@@ -268,10 +267,17 @@ char * read_file_single_string(const char * filename, bool verbose) {
    if (fp) {
      fseek (fp, 0, SEEK_END);
      length = ftell (fp);
-     fseek (fp, 0, SEEK_SET);
+     if (length < 0) {       // make coverity happy
+        if (verbose) {
+           fprintf(stderr, "ftell() error on file \"%s\", %s\n", filename, strerror(errno));
+        }
+        fclose(fp);
+        goto bye;
+     }
+     fseek(fp, 0, SEEK_SET);
      buffer = malloc (length+1);
      assert(buffer);
-     size_t len1 = fread (buffer, 1, length, fp);   // len1 assignment to avoid unused result error
+     size_t len1 = fread(buffer, 1, length, fp);   // len1 assignment to avoid unused result error
      assert(len1 == length);
      fclose (fp);
      buffer[len1] = '\0';    // ensure there's a trailing null
