@@ -514,14 +514,23 @@ void core_errmsg_emitter(
 extern bool enable_syslog;
 extern DDCA_Syslog_Level syslog_level;
 
-DDCA_Syslog_Level syslog_level_name_to_value(const char * name);
-const char * syslog_level_name(DDCA_Syslog_Level level);
-bool test_emit_syslog(DDCA_Syslog_Level msg_level);
-int  syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level);
+DDCA_Syslog_Level   syslog_level_name_to_value(const char * name);
+const char *        syslog_level_name(DDCA_Syslog_Level level);
+bool                test_emit_syslog(DDCA_Syslog_Level msg_level);
+int                 syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level);
 extern const char * valid_syslog_levels_string;
 
-// #define SYSLOG(priority, format, ...) do {if (enable_syslog) syslog(priority, format, ##__VA_ARGS__); } while(0)
-// #define SYSLOG(priority, format, ...) do {} while (0)
+
+/** The specified ddcutil severity level converted to a syslog priority and
+ *  written to the system log.
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param  fmt                message format
+ *  @param  ...                message arguments
+ *
+ *  Messages are written to the system log with the syslog priority
+ *  corresponding to the ddcutil severity.
+ */
 #define SYSLOG2(_ddcutil_severity, format, ...) \
 do { \
    if (test_emit_syslog(_ddcutil_severity)) { \
@@ -532,6 +541,20 @@ do { \
    } \
 } while(0)
 
+
+/** Writes a message to the current ferr() or fout() device and, depending on
+ *  the specified ddcutil severity and current syslog level, to the system log.
+ *
+ *  @param _ddcutil_severity   e.g. DDCA_SYSLOG_ERROR
+ *  @param  fmt                message format
+ *  @param  ...                message arguments
+ *
+ *  Messages with ddcutil severity DDCA_SYSLOG_WARNING or more severe are
+ *  written to the ferr() device.  Others are written to the fout() device.
+ *
+ *  Messages are written to the system log with the syslog priority
+ *  corresponding to the ddcutil severity.
+ */
 #define MSG_W_SYSLOG(_ddcutil_severity, format, ...) \
 do { \
    FILE * f = (_ddcutil_severity < DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
