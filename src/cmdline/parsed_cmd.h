@@ -114,6 +114,8 @@ typedef enum {
    CMD_FLAG_F12         =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS
                         =  0x8000000000000000,
+   CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE
+                       = 0x01000000000000000,
 
 } Parsed_Cmd_Flags;
 
