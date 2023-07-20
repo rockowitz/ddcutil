@@ -655,10 +655,9 @@ void ddc_erase_displays_cache() {
            MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Error removing file %s: %s", fn, strerror(errno));
         }
       }
-      free(fn);
    }
-
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "%s: %s", (found) ? "Removed file" : "File not found", fn);
+   free(fn);
 }
 
 
