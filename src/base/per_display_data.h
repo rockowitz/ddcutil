@@ -38,7 +38,6 @@ typedef enum {
 const char * user_multiplier_source_name(User_Multiplier_Source source);
 
 extern Sleep_Multiplier default_user_sleep_multiplier;
-extern bool             pdd_null_msg_adjustment_enabled;
 
 typedef
 struct {
