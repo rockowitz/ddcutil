@@ -1103,18 +1103,22 @@ dsa2_save_persistent_stats() {
 #endif
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, rtable->cur_step=%d, next_step=%d",
                rtable->busno, rtable->cur_step, next_step);
+#ifdef FORMAT1
          if (format_id == 1) {
             fprintf(stats_file, "i2c-%d %02x %d %d %d %d %d",
                  rtable->busno, rtable->edid_checksum_byte, rtable->cur_step, rtable->cur_lookback,
                  rtable->remaining_interval, 0, 0);
          }
          else {  // format_id == 2
+#endif
             fprintf(stats_file, "i2c-%d %02x %d %d %d",
                  rtable->busno, rtable->edid_checksum_byte,
                  rtable->cur_step,
                  rtable->remaining_interval,
                  rtable->cur_lookback);
+#ifdef FORMAT1
          }
+#endif
          for (int k = 0; k < rtable->recent_values->ct; k++) {
             Successful_Invocation si = cirb_get_logical(rtable->recent_values, k);
             fprintf(stats_file, " {%d,%d,%ld}", si.tryct, si.required_step, si.epoch_seconds);
@@ -1313,13 +1317,6 @@ dsa2_restore_persistent_stats() {
             rtable->cur_retry_loop_step = rtable->cur_step;
             rtable->initial_step = rtable->cur_step;
             rtable->initial_lookback = global_lookback;
-         }
-         else {
-            if (ok) {
-               rtable->cur_retry_loop_step = rtable->cur_step;
-               rtable->initial_step = rtable->cur_step;
-               rtable->initial_lookback = Default_Look_Back;
-            }
          }
 
          // field 1: start from field 7, format 2: start from field 5
