@@ -36,6 +36,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
 static bool deferred_sleep_enabled = false;
 bool suppress_se_post_read = false;
+bool null_msg_adjustment_enabled = false;
 
 
 /** Enables or disables deferred sleep.
@@ -188,7 +189,7 @@ adjust_sleep_time(
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
-   if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && pdd_null_msg_adjustment_enabled) {
+   if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && null_msg_adjustment_enabled) {
       switch(dh->dref->pdd->cur_loop_null_msg_ct) {
       case 1:
          null_adjustment_millis = 25; // 1 * DDC_TIMEOUT_MILLIS_NULL_RESPONSE_INCREMENT;
@@ -278,7 +279,7 @@ void tuned_sleep_with_trace(
    Per_Display_Data * pdd = dh->dref->pdd;
    if (null_adjustment_added)
       pdd->cur_loop_null_adjustment_occurred = true;
-   if (pdd->cur_loop_null_msg_ct == 1) {
+   if (null_msg_adjustment_enabled && pdd->cur_loop_null_msg_ct == 1) {
       // if (get_output_level() >= DDCA_OL_VERBOSE) {
       //    f0printf(fout(), "Extended delay as recovery from DDC Null Response...\n");
       // }

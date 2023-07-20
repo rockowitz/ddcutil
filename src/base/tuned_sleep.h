@@ -18,6 +18,7 @@
 #include "base/execution_stats.h"   // for Sleep_Event_Type
 
 extern bool suppress_se_post_read;
+extern bool null_msg_adjustment_enabled;
 
 bool enable_deferred_sleep(bool enable);
 bool is_deferred_sleep_enabled();
