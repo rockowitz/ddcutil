@@ -147,39 +147,54 @@ enum {NO_CACHES  = 0,
 typedef
 struct {
    char                   marker[4];      // always PCMD
+
+   // General
    char *                 raw_command;
    Parser_Mode            parser_mode;
    int                    argct;
    char *                 args[MAX_ARGS];
+   uint64_t               flags;      // Parsed_Cmd_Flags
+   DDCA_Output_Level      output_level;
+   DDCA_MCCS_Version_Spec mccs_vspec;
+// DDCA_MCCS_Version_Id   mccs_version_id;
+
+   // Commands
    Cmd_Id_Type            cmd_id;
-   Feature_Set_Ref*       fref;
    GArray *               setvcp_values;
-   DDCA_Stats_Type        stats_types;
-   char *                 failsim_control_fn;
+
+   // Behavior Modification
+   uint8_t                explicit_i2c_source_addr;
+   int                    edid_read_size;
+
+   // Display Selection
    Display_Identifier*    pdid;
 // Display_Selector*      display_selector;   // for future use
+   Bit_Set_32             ignored_hiddevs;
+   uint8_t                ignored_usb_vid_pid_ct;
+   uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
 
+   // Feature Selection
+   Feature_Set_Ref*       fref;
+
+   // Performance and Tuning
+   Cache_Types            cache_types;
+   uint16_t               max_tries[3];
+   float                  sleep_multiplier;
+   DDCA_Stats_Type        stats_types;
+
+   // Tracing and logging
    DDCA_Trace_Group       traced_groups;
    gchar **               traced_files;
    gchar **               traced_functions;
    gchar **               traced_calls;
    gchar **               traced_api_calls;
-   DDCA_Syslog_Level      syslog_level;
    char *                 trace_destination;
+   DDCA_Syslog_Level      syslog_level;
 
-   DDCA_Output_Level      output_level;
-   Cache_Types            cache_types;
-   uint16_t               max_tries[3];
-   float                  sleep_multiplier;
-   DDCA_MCCS_Version_Spec mccs_vspec;
-// DDCA_MCCS_Version_Id   mccs_version_id;
-   int                    edid_read_size;
-   uint64_t               flags;      // Parsed_Cmd_Flags
-   Bit_Set_32             ignored_hiddevs;
-   uint8_t                ignored_usb_vid_pid_ct;
-   uint8_t                explicit_i2c_source_addr;
-   uint32_t               ignored_usb_vid_pids[IGNORED_VID_PID_MAX];
+   // Other Development
+   char *                 failsim_control_fn;
 
+   // Options for temporary use
    int                    i1;         // for temporary use
    int                    i2;         // for temporary use
    char *                 s1;         // for temporary use
