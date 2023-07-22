@@ -56,6 +56,7 @@ const Sleep_Multiplier
 const int   Default_Greatest_Tries_Lower_Bound = 2;
 const Sleep_Multiplier
             Default_Average_Tries_Lower_Bound = 1.1;
+const int   Default_Step_Floor = 0;
 
 static bool  dsa2_enabled           = Default_DSA2_Enabled;
 int   initial_step           = Default_Initial_Step;
@@ -66,6 +67,7 @@ int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
 int   Min_Decrement_Lookback = 5;  // lookback must be at least this size for step decrement
 int   global_lookback = Default_Look_Back;
+int   dsa2_step_floor = Default_Step_Floor;
 
 
 bool dsa2_is_enabled() {
@@ -307,8 +309,9 @@ dbgrpt_circular_invocation_results_buffer(Circular_Invocation_Result_Buffer * ci
 #define MAX_RECENT_VALUES 20
 
 static int steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
-static int step_ct = ARRAY_SIZE(steps);         //11
-static int step_last = ARRAY_SIZE(steps)-1;     // index of last entry
+static int absolute_step_ct = ARRAY_SIZE(steps);   //  11
+static int step_last = ARRAY_SIZE(steps)-1;
+static int adjusted_step_ct = ARRAY_SIZE(steps)-1;   // 11
 
 #define RTABLE_FROM_CACHE    0x01
 #define RTABLE_BUS_DETECTED  0x02
@@ -524,13 +527,13 @@ multiplier_to_step(Sleep_Multiplier multiplier) {
    bool debug = false;
    int imult = multiplier * 100;
 
-   int ndx = 0;
-   for (; ndx < step_ct; ndx++) {
+   int ndx = dsa2_step_floor;
+   for (; ndx <= step_last ; ndx++) {
       if ( steps[ndx] >= imult )
                break;
    }
 
-   int step = (ndx == step_ct) ? step_ct-1 : ndx;
+   int step = (ndx == step_last) ? step_last-1 : ndx;
    DBGTRC_EXECUTED(debug, TRACE_GROUP, "multiplier = %7.5f, imult = %d, step=%d, steps[%d]=%d",
                                          multiplier, imult, step, step, steps[step]);
    return step;
@@ -539,7 +542,7 @@ multiplier_to_step(Sleep_Multiplier multiplier) {
 
 #ifdef TEST
 void test_float_to_step_conversion() {
-   for (int ndx = 0; ndx < step_ct; ndx++) {
+   for (int ndx = 0; ndx < adjusted_step_ct; ndx++) {
       Sleep_Multiplier f = steps[ndx] / 100.0;
       int found_ndx = multiplier_to_step(f);
       printf("ndx=%2d, steps[ndx]=%d, f=%2.5f, found_ndx=%d\n",
@@ -590,10 +593,10 @@ dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
  *  that the multiplier currently supplied by the dsa2 subsystem should
  *  be increased.
  *
- *  @param highest_tryct  highest try count for any Successful_Invocation record
- *  @param total_tryct    total number of tries reported
- *  @param interval       number of Successful_Invocation records examined
- *  @param true if cur_step needs to be increased, false if not
+ *  @param  highest_tryct  highest try count for any Successful_Invocation record
+ *  @param  total_tryct    total number of tries reported
+ *  @param  interval       number of Successful_Invocation records examined
+ *  @return true if cur_step needs to be increased, false if not
  */
 static bool
 dsa2_too_many_errors(int most_recent_tryct, int highest_tryct, int total_tryct, int interval) {
@@ -613,6 +616,7 @@ dsa2_too_many_errors(int most_recent_tryct, int highest_tryct, int total_tryct, 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "computed_avg_10=%d", computed_avg_10);
    return result;
 }
+
 
 // #ifdef PERHAPS_FUTURE
 static bool
@@ -648,7 +652,7 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
    bool debug = false;
    int next_step = prev_step;
    if (remaining_tries > 0) {   // handle maxtries failure
-      int remaining_steps = step_ct - (prev_step+1);
+      int remaining_steps = step_last - prev_step;
 
       Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
       // don't wait until last try to hit max step
@@ -773,9 +777,16 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
       // && rtable->cur_step < step_last  // redundant
       )
    {
-      next_step = rtable->cur_step++;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
+      if (next_step < step_last) {
+         next_step = rtable->cur_step++;
+         rtable->total_steps_up++;
+         rtable->adjustments_up++;
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
                                             rtable->busno, rtable->cur_step);
+      }
+      else {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Not inccrementing cur_step above step_last=%d", step_last);
+      }
    }
    else
       if (actual_lookback >= Min_Decrement_Lookback
@@ -928,8 +939,8 @@ dsa2_record_final(
       rtable->remaining_interval = adjustment_interval;
    }
 
-   if (next_cur_step < 0)
-      next_cur_step = 0;
+   if (next_cur_step < dsa2_step_floor)
+      next_cur_step = dsa2_step_floor;
    else if (next_cur_step > step_last)
       next_cur_step = step_last;
    int delta = next_cur_step - rtable->cur_step;
@@ -939,7 +950,7 @@ dsa2_record_final(
    }
    else if (delta > 0) {
       rtable->adjustments_up++;
-      rtable->total_steps_down = rtable->total_steps_down + delta;
+      rtable->total_steps_up = rtable->total_steps_up + delta;
    }
    rtable->cur_step = next_cur_step;
    rtable->cur_retry_loop_step = rtable->cur_step;  // for next read_write_with_retry() operation
@@ -985,6 +996,9 @@ void dsa2_report_internal(Results_Table * rtable, int depth) {
 // rpt_vstring(d1, "Initial step from cache: %s", sbool(rtable->initial_step_from_cache));
    rpt_vstring(d1, "Final Step:         %3d,  multiplier = %4.2f", rtable->cur_step, steps[rtable->cur_step]/100.0);
    rpt_vstring(d1, "Initial lookback ct:%3d", rtable->initial_lookback);
+   rpt_vstring(d1, "absolute_step_ct:   %3d", absolute_step_ct);
+   rpt_vstring(d1, "dsa2_step_floor     %3d", dsa2_step_floor);
+   rpt_vstring(d1, "step_last:          %3d", step_last);
    rpt_vstring(d1, "Final lookback ct:  %3d", rtable->cur_lookback);
    rpt_vstring(d1, "Adjustment interval:%3d", adjustment_interval);
    rpt_vstring(d1, "Adjustments up:     %3d", rtable->adjustments_up);
@@ -1417,6 +1431,9 @@ init_dsa2() {
    RTTI_ADD_FUNC(dsa2_next_retry_step);
 
    results_tables = calloc(I2C_BUS_MAX+1, sizeof(Results_Table*));
+
+   adjusted_step_ct = absolute_step_ct - dsa2_step_floor;   // 11;         //  initially 11
+
 
    // test_one_logistic(10);
    // test_dsa2_next_retry_step();

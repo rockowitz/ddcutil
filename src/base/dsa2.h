@@ -15,7 +15,7 @@
 #include "base/core.h"
 #include "base/status_code_mgt.h"
 
-// extern const bool DSA2_Enabled_Default;   // unused
+extern int   dsa2_step_floor;
 
 void         dsa2_enable(bool yesno);
 bool         dsa2_is_enabled();
