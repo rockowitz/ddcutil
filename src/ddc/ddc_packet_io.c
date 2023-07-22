@@ -578,6 +578,7 @@ ddc_write_read_with_retry(
           dh_repr(dh), max_read_bytes, expected_response_type,
           expected_subtype, sbool(all_zero_response_ok), sbool(flags&Write_Read_Flag_All_Zero_Response_Ok)  );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   Per_Display_Data * pdd = dh->dref->pdd;
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
    // show_backtrace(1);
    // if (debug)
@@ -628,12 +629,19 @@ ddc_write_read_with_retry(
 
       if (psc == 0 && ddcrc_null_response_ct > 0) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP | DDCA_TRC_RETRY,
-                "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
-                dh_repr(dh),
-                ddcrc_null_response_ct);
-         SYSLOG2(DDCA_SYSLOG_INFO,
-               "%s, ddc_write_read() succeeded after %d sleep and retry for DDC Null Response",
-               dh_repr(dh), ddcrc_null_response_ct);
+               "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
+               " after %d sleep and retry for DDC Null Response",
+               dh_repr(dh),
+               expected_subtype,
+               pdd_get_adjusted_sleep_multiplier(pdd),
+               ddcrc_null_response_ct);
+         SYSLOG2(DDCA_SYSLOG_DEBUG,
+               "%s, expected_subtype=0x%02x, sleep-multiplier=%5.2f, ddc_write_read() succeeded"
+               " after %d sleep and retry for DDC Null Response",
+               dh_repr(dh),
+               expected_subtype,
+               pdd_get_adjusted_sleep_multiplier(pdd),
+               ddcrc_null_response_ct);
        }
 
       if (psc < 0) {     // n. ADL status codes have been modulated
