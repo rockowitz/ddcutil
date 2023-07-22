@@ -43,7 +43,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(11,"Unused");
    REPORT_FLAG_OPTION(12,"Unused");
 
-   rpt_vstring(depth+1, "Utility option --i1:          set dsa2_step_floor");
+   rpt_vstring(depth+1, "Utility option --i1:          set dsa2_step_floor by step number");
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
@@ -51,7 +51,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --s3:          Unused");
    rpt_vstring(depth+1, "Utility option --s4:          Unused");
 
-   rpt_vstring(depth+1, "Utility option --fl1:         Unused");
+   rpt_vstring(depth+1, "Utility option --fl1:         set dsa2_step_floor, in milliseconds");
    rpt_vstring(depth+1, "Utility option --fl2:         Unused");
 
    rpt_nl();
