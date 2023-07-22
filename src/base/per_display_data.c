@@ -427,6 +427,11 @@ bool pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff) {
 }
 
 
+bool pdd_is_dynamic_sleep_active(Per_Display_Data * pdd) {
+   return pdd->dynamic_sleep_active;
+}
+
+
 /** Notes use of the current sleep multiplier.
  *
  *  Updates both the most_recent_adjusted_sleep_multiplier and

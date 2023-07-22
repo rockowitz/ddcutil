@@ -94,6 +94,7 @@ void   pdd_report_all_per_display_elapsed_stats(bool include_dsa_internal, int d
 void   pdd_record_adjusted_sleep_multiplier(Per_Display_Data * pdd, bool successful);
 
 bool   pdd_set_dynamic_sleep_active(Per_Display_Data * pdd, bool onoff);
+bool   pdd_is_dynamic_sleep_active(Per_Display_Data * pdd);
 void   pdd_reset_multiplier(Per_Display_Data * pdd, Sleep_Multiplier multiplier);
 Sleep_Multiplier
        pdd_get_adjusted_sleep_multiplier(Per_Display_Data* pdd);
