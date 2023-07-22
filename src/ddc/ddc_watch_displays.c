@@ -431,7 +431,7 @@ static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data)
 // How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
@@ -719,12 +719,19 @@ ddc_start_watch_displays(bool use_udev_if_possible)
    #else
             "/sys/class/drm";
    #endif
+
       Bit_Set_32 drm_card_numbers = get_sysfs_drm_card_numbers();
       if (bs32_count(drm_card_numbers) == 0) {
-         rpt_vstring(0, "No video cards found in %s. Disabling experimental detection of display hotplug events.", class_drm_dir);
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
+               "No DRM enabled video cards found in %s. Disabling detection of display hotplug events.",
+               class_drm_dir);
          ddcrc = DDCRC_INVALID_OPERATION;
       }
       else {
+         if (!all_video_devices_drm()) {
+            MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "Not all video cards support DRM.  Hotplug events are not not detected for connected monitors.");
+         }
          g_mutex_lock(&watch_thread_mutex);
 
          if (watch_thread)
