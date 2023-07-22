@@ -20,6 +20,7 @@
 /** \endcond */
 
 #include "coredefs_base.h"
+#include "debug_util.h"
 #include "file_util.h"
 #include "report_util.h"
 #include "string_util.h"
@@ -304,20 +305,18 @@ assemble_sysfs_path2(
 {
    assert(buffer && bufsz > 0);
    bool debug = false;
-   if (debug)
-      printf("(%s) Starting.  bufsz=%d, fn_segment=|%s|\n", __func__, bufsz, fn_segment);
+   DBGF(debug, "Starting.  bufsz=%d, fn_segment=|%s|", bufsz, fn_segment);
    STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
       char * segment = va_arg(ap, char*);
-      if (debug)
-         printf("(%s) segment |%s|\n", __func__, segment);
       if (!segment)
          break;
+      if (debug)
+      DBGF(debug, "segment |%s|", segment);
       STRLCAT(buffer, "/", bufsz);
       STRLCAT(buffer, segment, bufsz);
    }
-   if (debug)
-      printf("(%s) Returning: %s\n", __func__, buffer);
+   DBGF(debug,"Returning: %s", buffer);
    return buffer;
 }
 
@@ -680,7 +679,7 @@ rpt_attr_single_subdir(
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, *value_loc is always set = NULL
  *  \param  fn_segment first segment of directory name
- *  \param  ...        remaining segments of name
+ *  \param  ...        remaining segments of name (requires at least 2)
  *  \return true if subdirectory found, false if not
  */
 bool
