@@ -854,7 +854,11 @@ char * dref_repr_t(Display_Ref * dref) {
 
    char * buf = get_thread_fixed_buffer(&dref_repr_key, 100);
    if (dref)
+#ifdef WITH_ADDR
       g_snprintf(buf, 100, "Display_Ref[%s @%p]", dpath_short_name_t(&dref->io_path), (void*)dref);
+#else
+   g_snprintf(buf, 100, "Display_Ref[%s]", dpath_short_name_t(&dref->io_path));
+#endif
    else
       strcpy(buf, "Display_Ref[NULL]");
    return buf;
@@ -880,8 +884,13 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    dh->dref = dref;
    if (dref->io_path.io_mode == DDCA_IO_I2C) {
       dh->repr = g_strdup_printf(
+#ifdef WITH_ADDR
                      "Display_Handle[i2c-%d: fd=%d @%p]",
                      dh->dref->io_path.path.i2c_busno, dh->fd, (void*)dh);
+#else
+      "Display_Handle[i2c-%d: fd=%d]",
+      dh->dref->io_path.path.i2c_busno, dh->fd);
+#endif
    }
 #ifdef USE_USB
    else if (dref->io_path.io_mode == DDCA_IO_USB) {
