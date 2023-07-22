@@ -285,7 +285,7 @@ bool ddcmsg(DDCA_Trace_Group  trace_group,
 
          // printf("trace_to_syslog = %s\n", sbool(trace_to_syslog));
          if (test_emit_syslog(DDCA_SYSLOG_WARNING)) {
-            syslog(LOG_NOTICE, "%s", buffer);
+            syslog(LOG_WARNING, "%s", buffer);
          }
       }
       fflush(fout());
