@@ -268,6 +268,9 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       // dsa2_erase_persistent_stats();   // do i want to do this ?
    }
 
+   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+      dsa2_step_floor = parsed_cmd->i1;
+
    if (parsed_cmd->flags & CMD_FLAG_F10)
       null_msg_adjustment_enabled = true;
 
