@@ -655,7 +655,7 @@ ddca_init(const char *      libopts,
       if (watch_displays)
          ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
       library_initialized = true;
-      // SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
 
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
