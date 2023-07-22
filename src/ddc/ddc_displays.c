@@ -133,11 +133,15 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s. feature_code=0x%02x", dh_repr(dh), feature_code);
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
+   Per_Display_Data * pdd = dh->dref->pdd;
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
+
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "busno=%d, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
-            businfo->busno, feature_code, errinfo_summary(ddc_excp));
+            "busno=%d,  sleep-multiplier=%d, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
+            businfo->busno, pdd_get_adjusted_sleep_multiplier(pdd),
+            feature_code, errinfo_summary(ddc_excp));
    if (!ddc_excp) {
       if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
@@ -160,11 +164,28 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
       }
       else {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "busno=%d, Testing for unsupported feature 0x%02x returned %s",
-               businfo->busno,feature_code, errinfo_summary(ddc_excp));
+               "busno=%d, sleep-multiplier=%d, Testing for unsupported feature 0x%02x returned %s",
+               businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
+               feature_code, errinfo_summary(ddc_excp));
          SYSLOG2(DDCA_SYSLOG_ERROR,
-               "busno=%d, Testing for unsupported feature 0x%02x returned %s",
-               businfo->busno,feature_code, errinfo_summary(ddc_excp));
+               "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
+               businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
+               feature_code, errinfo_summary(ddc_excp));
+         if (pdd_is_dynamic_sleep_active(pdd) ) {
+            ERRINFO_FREE(ddc_excp);
+            DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep and retrying");
+            pdd_set_dynamic_sleep_active(dh->dref->pdd, false);
+            ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                  "busno=%d, sleep-multiplier=%5.2f, Retesting for unsupported feature 0x%02x returned %s",
+                  businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
+            SYSLOG2(DDCA_SYSLOG_ERROR,
+                  "busno=%d, sleep-multiplier=%5.2f, Reesting for unsupported feature 0x%02x returned %s",
+                  businfo->busno,
+                  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
+         }
       }
    }
    free(parsed_response_loc);
@@ -178,23 +199,33 @@ check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    Display_Ref* dref = dh->dref;
+   I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
    // Try features that should never exist
    Error_Info * erec = is_supported_feature(dh, 0x41);  // CRT only feature
-   if (!erec)
+   if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
+      ERRINFO_FREE(erec);
       erec = is_supported_feature(dh, 0xdd);    // not defined in MCCS
-   if (!erec)
+   }
+   if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
+      ERRINFO_FREE(erec);
       erec = is_supported_feature(dh, 0x00);
+   }
 
    Public_Status_Code psc = ERRINFO_STATUS(erec);
 
    if (psc == 0) {
       dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
+      SYSLOG2(DDCA_SYSLOG_ERROR,
+            "busno=%d, All features that should not exist detected. Monitor does not indicate unsupported", businfo->busno);
    }
    else {
       if (psc == DDCRC_RETRIES) {
             dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // our best guess
+            SYSLOG2(DDCA_SYSLOG_ERROR,
+                  "busno=%d, DDCRC_RETRIES failure reading all unsupported features. Setting DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED",
+                  businfo->busno);
       }
 
       else if (psc == DDCRC_DETERMINED_UNSUPPORTED) {
@@ -215,7 +246,9 @@ check_how_unsupported_reported(Display_Handle * dh) {
       // EXCEPT that it returns mh=ml=sh=sl=0 for feature 0x00  (2/2019)
       // Too dangerous to always treat -EIO as unsupported
       else if (psc == -EIO) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Monitor apparently returns -EIO for unsupported features. This cannot be relied on.");
+         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+               "busno=%d. Monitor apparently returns -EIO for unsupported features. This cannot be relied on.",
+               businfo->busno);
       }
       free(erec);
    }
@@ -264,17 +297,49 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
+   Per_Display_Data * pdd = dh->dref->pdd;
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
       // feature that always exists
-      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
-      if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES) {
-         // turn off optimization in case its on
-         DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep");
-         pdd_set_dynamic_sleep_active(dref->pdd, false);
-         ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+      Byte feature_code = 0x10;
+      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+      if (ddc_excp) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+            businfo->busno,
+            pdd_get_adjusted_sleep_multiplier(pdd),
+            feature_code,
+            errinfo_summary(ddc_excp));
+         SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
+            "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
+            businfo->busno,
+            pdd_get_adjusted_sleep_multiplier(pdd),
+            feature_code,
+            errinfo_summary(ddc_excp));
+         if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES) {
+            // turn off optimization in case its on
+            if (pdd_is_dynamic_sleep_active(pdd) ) {
+               ERRINFO_FREE(ddc_excp);
+               DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep");
+               pdd_set_dynamic_sleep_active(dref->pdd, false);
+               ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                  "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
+                  businfo->busno,
+                  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code,
+                  errinfo_summary(ddc_excp));
+               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
+                  "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
+                  businfo->busno,
+                  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code,
+                  errinfo_summary(ddc_excp));
+            }
+         }
       }
       Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
