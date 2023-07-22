@@ -496,7 +496,7 @@ dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
 void set_multiplier(Results_Table * rtable, Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
-   rtable->cur_step = multiplier_to_step(multiplier);
+   rtable->cur_step = dsa2_multiplier_to_step(multiplier);
    DBGTRC_DONE(debug, TRACE_GROUP, "Set cur_step=%d", initial_step);
 }
 
@@ -506,7 +506,7 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, multiplier=%7.3f", dpath_repr_t(&dpath), multiplier);
    Results_Table * rtable = dsa2_get_results_table_by_busno(dpath_busno(dpath));
-   rtable->cur_step = multiplier_to_step(multiplier);
+   rtable->cur_step = dsa2_multiplier_to_step(multiplier);
    DBGTRC_DONE(debug, TRACE_GROUP, "Set cur_step=%d", initial_step);
 }
 #endif
@@ -522,8 +522,8 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
  *  Relies on fact that IEEE floating point variables with whole integer values
  *  convert to correct integer variables.
  */
-static int
-multiplier_to_step(Sleep_Multiplier multiplier) {
+int
+dsa2_multiplier_to_step(Sleep_Multiplier multiplier) {
    bool debug = false;
    int imult = multiplier * 100;
 
@@ -544,7 +544,7 @@ multiplier_to_step(Sleep_Multiplier multiplier) {
 void test_float_to_step_conversion() {
    for (int ndx = 0; ndx < adjusted_step_ct; ndx++) {
       Sleep_Multiplier f = steps[ndx] / 100.0;
-      int found_ndx = multiplier_to_step(f);
+      int found_ndx = dsa2_multiplier_to_step(f);
       printf("ndx=%2d, steps[ndx]=%d, f=%2.5f, found_ndx=%d\n",
              ndx, steps[ndx], f, found_ndx);
       assert(found_ndx == ndx);
@@ -563,7 +563,7 @@ void
 dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
-   initial_step = multiplier_to_step(multiplier);
+   initial_step = dsa2_multiplier_to_step(multiplier);
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
          Results_Table * rtable = results_tables[ndx];

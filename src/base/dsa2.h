@@ -23,6 +23,7 @@ bool         dsa2_is_enabled();
 bool         dsa2_set_greatest_tries_upper_bound(int tries);
 bool         dsa2_set_average_tries_upper_bound(Sleep_Multiplier avg_tries);
 
+int          dsa2_multiplier_to_step(Sleep_Multiplier multiplier);
 struct Results_Table *
              dsa2_get_results_table_by_busno(int busno, bool create_if_not_found);
 bool         dsa2_is_from_cache(struct Results_Table * dpath);
