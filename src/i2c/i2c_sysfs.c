@@ -1499,9 +1499,10 @@ void add_video_device_to_array(
    bool debug = false;
    DBGMSF(debug, "dirname=%s, fn=%s", dirname, fn);
    GPtrArray* accumulator = (GPtrArray*) data;
-   g_ptr_array_add(accumulator, g_strdup_printf("%s%s", dirname, fn));
-   RPT_ATTR_TEXT(    1, NULL, dirname, fn, "class");
-   RPT_ATTR_REALPATH(1, NULL, dirname, fn, "driver");
+   char * s = g_strdup_printf("%s/%s", dirname, fn);
+   g_ptr_array_add(accumulator, s);
+   // RPT_ATTR_TEXT(    1, NULL, dirname, fn, "class");
+   // RPT_ATTR_REALPATH(1, NULL, dirname, fn, "driver");
 }
 
 
@@ -1509,10 +1510,10 @@ void add_video_device_to_array(
  *
  *  @return array of fully qualified device paths
  */
-GPtrArray * get_sys_video_devices() {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   GPtrArray * video_devices = g_ptr_array_new();
+GPtrArray * get_sys_video_devices(GPtrArray* video_devices) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "video_devices=%p", video_devices);
+
    dir_filtered_ordered_foreach("/sys/bus/pci/devices",
                        has_class_display,      // filter function
                        NULL,                    // ordering function
@@ -1524,13 +1525,18 @@ GPtrArray * get_sys_video_devices() {
 }
 
 bool all_video_devices_drm() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   GPtrArray* video_devices = get_sys_video_devices();
+   GPtrArray * video_devices = g_ptr_array_new();
+   get_sys_video_devices(video_devices);
    bool all_devices_drm = true;
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
-      bool found_drm = rpt_attr_note_subdir(-1, NULL, device_path, "drm");
+      char   b[PATH_MAX];
+      g_strlcpy(b, device_path, sizeof(b));
+      g_strlcat(b, "/drm", sizeof(b) );
+      // DBGMSG("Looking for |%s|", b);
+      bool found_drm = directory_exists(b);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
       if (!found_drm)
          all_devices_drm = false;
