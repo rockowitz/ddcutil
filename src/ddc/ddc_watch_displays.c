@@ -740,7 +740,8 @@ ddc_start_watch_displays(bool use_udev_if_possible)
             terminate_watch_thread = false;
             Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
             memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-            data->display_change_handler = api_display_change_handler;
+         // data->display_change_handler = api_display_change_handler;
+            data->display_change_handler = dummy_display_change_handler;
             data->main_process_id = getpid();
             // data->main_thread_id = syscall(SYS_gettid);
             data->main_thread_id = get_thread_id();
