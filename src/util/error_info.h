@@ -56,13 +56,18 @@ void errinfo_init(
 void errinfo_free(
       Error_Info *   erec);
 
+#define ERRINFO_FREE(_erec) \
+   if (_erec) \
+      errinfo_free(_erec);
+
 void errinfo_free_with_report(
       Error_Info *  erec,
       bool          report,
       const char *  func);
 
 #define ERRINFO_FREE_WITH_REPORT(_erec, _report) \
-   errinfo_free_with_report(_erec, (_report), __func__)
+   if (_erec) \
+      errinfo_free_with_report(_erec, (_report), __func__)
 
 Error_Info * errinfo_new(
       int            status_code,
