@@ -181,6 +181,19 @@ void explore_monitor_state(Display_Handle* dh) {
    else
       rpt_vstring(1, "getvcp 0x%02x succeeded", feature_code);
 
+   // test feature d6
+   Parsed_Nontable_Vcp_Response  resp;
+   parsed_response_loc = &resp;
+   feature_code = 0xd6;
+   ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   if (ddc_excp) {
+      rpt_vstring(1, "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
+   }
+   else {
+      rpt_vstring(1, "getvcp 0x%02x succeeded", feature_code);
+      rpt_vstring(1, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x", resp.mh, resp.ml, resp.sh, resp.sl);
+   }
+
 
 
 
