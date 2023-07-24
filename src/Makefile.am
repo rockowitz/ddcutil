@@ -208,7 +208,7 @@ libcommon_la_LIBADD += \
 endif
 
 if USE_X11_COND
-  libcommon_la_LIBADD += $(LIBX11_LIBS)  $(XRANDR_LIBS) 
+  libcommon_la_LIBADD += $(LIBX11_LIBS) $(XEXT_LIBS)  $(XRANDR_LIBS) 
 endif
 
 # if ENABLE_YAML_COND

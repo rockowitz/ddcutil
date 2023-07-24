@@ -652,6 +652,7 @@ dnl Force disable of options if environment commands disabled
 AS_IF([test "x$enable_x11" = "xyes"],
          [ PKG_CHECK_MODULES(LIBX11, x11)
            PKG_CHECK_MODULES(XRANDR, xrandr)
+		   PKG_CHECK_MODULES(XEXT, xext)
          ]) 
 
 AM_CONDITIONAL([USE_X11_COND], [test "x$enable_x11" = "xyes"] )
