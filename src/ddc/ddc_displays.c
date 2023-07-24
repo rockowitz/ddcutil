@@ -25,10 +25,14 @@
 #include "util/failsim.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/subprocess_util.h"
 #include "util/sysfs_util.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_usb_util.h"
 #include "util/udev_util.h"
+#endif
+#ifdef USE_X11
+#include "util/x11_util.h"
 #endif
 /** \endcond */
 
@@ -75,6 +79,7 @@ static bool detect_usb_displays = true;
 #else
 static bool detect_usb_displays = false;
 #endif
+bool monitor_state_tests = false;
 
 
 //
@@ -127,6 +132,102 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
    return all_same;
 }
 
+void explore_monitor_state(Display_Handle* dh) {
+   rpt_nl();
+   rpt_label(0, "-----------------------");
+   I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
+
+   char * connector_name = NULL;
+   // Sys_Drm_Connector * conn =  find_sys_drm_connector_by_busno(businfo->busno);
+   Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
+   if (!conn)
+      DBGMSG("i2c_check_businfo_connector() failed");
+   else
+      connector_name = conn->connector_name;
+   rpt_vstring(0, "Examining monitor state for %s bus /dev/i2c-%d, connector: %s",
+         dh->dref->pedid->model_name,
+         businfo->busno,
+         connector_name);
+   rpt_nl();
+
+
+   char * xdg_session_desktop = getenv("XDG_SESSION_DESKTOP");
+   rpt_vstring(0, "XDG_SESSION_DESKTOP:  %s", xdg_session_desktop);
+   char * xdg_current_desktop = getenv("XDG_CURRENT_DESKTOP");
+   rpt_vstring(0, "XDG_CURRENT_DESKTOP:  %s", xdg_current_desktop);
+   char * xdg_vtnr = getenv("XDG_VTNR");
+   rpt_vstring(0, "XDG_VTNR:  %s", xdg_vtnr);
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+   rpt_vstring(0, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
+
+   // test feature x10
+   pdd_set_dynamic_sleep_active(dh->dref->pdd, false);
+   Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+   Byte feature_code = 0x10;
+   Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   if (ddc_excp) {
+      rpt_vstring(1, "ddc_get_nontable_vcp_value() for feature x10 returned: %s", errinfo_summary(ddc_excp));
+   }
+   else
+      rpt_vstring(1, "getvcp 10 succeeded");
+
+   // test feature x41
+   parsed_response_loc = NULL;
+   feature_code = 0x41;
+   ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   if (ddc_excp) {
+      rpt_vstring(1, "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s", feature_code, errinfo_summary(ddc_excp));
+   }
+   else
+      rpt_vstring(1, "getvcp 0x%02x succeeded", feature_code);
+
+
+
+
+   if (streq(xdg_session_type, "x11")) {
+   //  query X11
+   execute_shell_cmd(  "xset q | grep DPMS -A 3");
+#ifdef USE_X11
+   unsigned short power_level;
+   unsigned char state;
+
+   bool ok =get_x11_dpms_info(&power_level, &state);
+   if (ok) {
+      rpt_vstring(1, "power_level=%d = %s, state=%s",
+            power_level, dpms_power_level_name(power_level), sbool(state));
+   }
+   else
+      DBGMSG("get_x11_dpms_info() failed");
+#endif
+   }
+
+   // sysfs
+   rpt_nl();
+   if (connector_name) {
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "dpms");
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "enabled");
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "status");
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "power/runtime_enabled");
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "power/runtime_status");
+      RPT_ATTR_TEXT(1, NULL, "/sys/class/drm", connector_name, "power/runtime_suspended_time");
+
+   }
+
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0", "name");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "async");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "autosuspend_delay_ms");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "control");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_active_kids");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_active_time");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_enabled");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_status");
+
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_syspended_time");
+   RPT_ATTR_TEXT(1, NULL, "/sys/class/graphics/fb0/power", "runtime_usage");
+}
+
+
+
 
 // test for a feature that should be unsupported
 Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
@@ -139,7 +240,7 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "busno=%d,  sleep-multiplier=%d, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
+            "busno=%d,  sleep-multiplier=%5.2f, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
             businfo->busno, pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code, errinfo_summary(ddc_excp));
    if (!ddc_excp) {
@@ -302,6 +403,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+
+      if (monitor_state_tests)
+         explore_monitor_state(dh);
+
       Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
       // feature that always exists
       Byte feature_code = 0x10;

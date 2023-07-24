@@ -282,6 +282,9 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    // else
    //    ddc_erase_displays_cache();
 
+   if (parsed_cmd->flags & CMD_FLAG_F11)
+      monitor_state_tests = true;
+
    DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 

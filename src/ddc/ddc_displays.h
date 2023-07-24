@@ -21,7 +21,7 @@
 #include "usb/usb_displays.h"
 #endif
 
-
+extern bool monitor_state_tests;
 
 // Initial Checks
 void        ddc_set_async_threshold(int threshold);
