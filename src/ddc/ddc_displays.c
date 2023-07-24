@@ -441,7 +441,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             // turn off optimization in case its on
             if (pdd_is_dynamic_sleep_active(pdd) ) {
                ERRINFO_FREE(ddc_excp);
-               DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep");
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                pdd_set_dynamic_sleep_active(dref->pdd, false);
                ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP,
