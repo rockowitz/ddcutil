@@ -894,7 +894,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
 Byte dpms_state;
 
 void dpms_check_x11_asleep() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    char * xdg_session_type = getenv("XDG_SESSION_TYPE");
@@ -920,7 +920,8 @@ void dpms_check_x11_asleep() {
          SYSLOG2(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed");
       }
    }
-   // pms_state |= DPMS_STATE_X11_ASLEEP; // testing
+   // dpms_state |= DPMS_STATE_X11_ASLEEP; // testing
+   dpms_state = 0;
 
 #endif
    DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x", dpms_state);
