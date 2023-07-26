@@ -275,6 +275,12 @@ bool get_x11_dpms_info(unsigned short * power_level, unsigned char * state) {
        int first_error;
        bool found_extension = XQueryExtension(disp, DPMSExtensionName, &major_opcode, &minor_opcode, &first_error);
        if (found_extension) {
+          /* The DPMSInfo function returns information about the current
+           * Display Power Management Signaling (DPMS) state.
+           * The state return parameter indicates whether or not DPMS is enabled (TRUE)
+           * or disabled (FALSE). The power_level return parameter indicates the current
+           * power level (one of DPMSModeOn, DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff.)
+           */
           result = DPMSInfo(disp, power_level, state);
        }
    }
