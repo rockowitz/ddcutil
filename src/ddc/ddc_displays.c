@@ -17,6 +17,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
+#ifdef USE_X11
+#include <X11/extensions/dpmsconst.h>
+#endif
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -422,6 +425,14 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       // feature that always exists
       Byte feature_code = 0x10;
       Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+
+#ifdef TESTING
+      if (businfo->busno == 6) {
+         ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+         DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+      }
+#endif
+
       if (ddc_excp) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "busno=%d, sleep-multiplier = %5.2f. Testing for supported feature 0x%02x returned %s",
@@ -457,11 +468,19 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             }
          }
       }
+
+      // if (businfo->busno == 6) {
+      //    ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+      //    DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+      // }
+
       Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s", errinfo_summary(ddc_excp));
+
       if (psc != -EBUSY)
          dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+
 
 
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
@@ -530,25 +549,27 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial dref->flags: %s", interpret_dref_flags_t(dref->flags));
 
    bool result = false;
-   Display_Handle * dh = NULL;
    Error_Info * err = NULL;
+   // if (!(dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
+      Display_Handle * dh = NULL;
 
-   err = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
-   if (!err)  {
-      result = ddc_initial_checks_by_dh(dh);
-      ddc_close_display_wo_return(dh);
-   }
-   else {
-      char * msg = g_strdup_printf("Unable to open %s: %s", dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
-      SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
-      free(msg);
-   }
-   dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-   if (err && err->status_code == -EBUSY)
-      dref->flags |= DREF_DDC_BUSY;
+      err = ddc_open_display(dref, CALLOPT_ERR_MSG, &dh);
+      if (!err)  {
+         result = ddc_initial_checks_by_dh(dh);
+         ddc_close_display_wo_return(dh);
+      }
+      else {
+         char * msg = g_strdup_printf("Unable to open %s: %s", dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
+         SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
+         free(msg);
+      }
+      dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
+      if (err && err->status_code == -EBUSY)
+         dref->flags |= DREF_DDC_BUSY;
 
-   if (err)
-      result = false;
+      if (err)
+         result = false;
+   // }
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
@@ -734,8 +755,6 @@ ddc_get_bus_open_errors() {
 }
 
 
-
-
 //
 // Phantom displays
 //
@@ -867,10 +886,95 @@ filter_phantom_displays(GPtrArray * all_displays) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+//
+// DPMS Detection
+//
 
-//
-// Display Detection
-//
+
+Byte dpms_state;
+
+void dpms_check_x11_asleep() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+
+   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
+
+#ifdef USE_X11
+   if (streq(xdg_session_type, "x11")) {
+      // state indicates whether or not DPMS is enabled (TRUE) or disabled (FALSE).
+      // power_level indicates the current power level (one of DPMSModeOn,
+      // DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff.)
+      unsigned short power_level;
+      unsigned char state;
+      bool ok =get_x11_dpms_info(&power_level, &state);
+      if (ok) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "power_level=%d = %s, state=%s",
+            power_level, dpms_power_level_name(power_level), sbool(state));
+         if (state && (power_level != DPMSModeOff) )
+            dpms_state |= DPMS_STATE_X11_ASLEEP;
+         dpms_state |= DPMS_STATE_X11_CHECKED;
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "get_x11_dpms_info() failed.");
+         SYSLOG2(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed");
+      }
+   }
+   // pms_state |= DPMS_STATE_X11_ASLEEP; // testing
+
+#endif
+   DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x", dpms_state);
+}
+
+
+bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno);
+
+   bool asleep = false;
+   if (!businfo->drm_connector_name) {
+      Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
+      if (!conn) {
+        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
+        SYSLOG2(DDCA_SYSLOG_ERROR, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
+      }
+      else {
+        assert(businfo->drm_connector_name);
+      }
+   }
+   if (businfo->drm_connector_name) {
+      char * dpms = NULL;
+      char * enabled = NULL;
+      RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
+      RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+      asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
+               businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
+      SYSLOG2(DDCA_SYSLOG_DEBUG,
+            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
+            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
+   }
+
+    if (businfo->busno == 6)
+       asleep = true;
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
+   return asleep;
+}
+
+
+bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
+
+   I2C_Bus_Info * businfo = (I2C_Bus_Info*) dref->detail;
+   bool result =  dpms_check_drm_asleep(businfo);
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
 
 /** Emits a debug report of a list of #Bus_Open_Error.
  *
@@ -893,6 +997,10 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
    }
 }
 
+
+//
+// Display Detection
+//
 
 /** Detects all connected displays by querying the I2C and USB subsystems.
  *
@@ -934,6 +1042,18 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
             dref->flags |= DREF_DDC_IS_MONITOR;
          }
+
+         bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
+         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+             if (dpms_check_drm_asleep_by_dref(dref)) {
+                dpms_state |= DPMS_SOME_DRM_ASLEEP;
+                asleep = true;
+             }
+         }
+         if (asleep) {
+            dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+         }
+
          g_ptr_array_add(display_list, dref);
          // dbgrpt_display_ref(dref,5);
       }
@@ -1008,6 +1128,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (int ndx = 0; ndx < display_list->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(display_list, ndx);
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+      // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+      //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
       if (dref->flags & DREF_DDC_COMMUNICATION_WORKING)
          dref->dispno = ++dispno_max;
       else if (dref->flags & DREF_DDC_BUSY)
@@ -1422,6 +1544,8 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
+   RTTI_ADD_FUNC(dpms_check_x11_asleep);
+   RTTI_ADD_FUNC(dpms_check_drm_asleep);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(is_supported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
