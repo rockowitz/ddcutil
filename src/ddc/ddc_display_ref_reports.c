@@ -212,11 +212,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       break;
    }
 
-   TRACED_ASSERT(dref->flags & DREF_DDC_COMMUNICATION_CHECKED);
+   TRACED_ASSERT(dref->flags & (DREF_DDC_COMMUNICATION_CHECKED|DREF_DPMS_SUSPEND_STANDBY_OFF));
 
    DDCA_Output_Level output_level = get_output_level();
 
    if (output_level >= DDCA_OL_NORMAL) {
+
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
          rpt_vstring(d1, "DDC communication failed");
          char msgbuf[100] = {0};
@@ -232,7 +233,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                msg = "Use non-phantom device";
             }
          }
-         else {
+         else { // non-phantom
             if (dref->io_path.io_mode == DDCA_IO_I2C)
             {
                 I2C_Bus_Info * curinfo = dref->detail;
@@ -278,13 +279,24 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
          if (msg) {
             rpt_vstring(d1, msg);
+            if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+               rpt_vstring(d1, "Display is asleep");
+            }
          }
       }
       else {    // communication working
+         if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+             rpt_vstring(d1, "DPMS reports monitor in sleep mode.  Output is likely invalid.");
+          }
+
+
+         bool comm_error_occurred = false;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);
-         if ( vspec.major   == 0)
+         if ( vspec.major   == 0) {
             rpt_vstring(d1, "VCP version:         Detection failed");
+            comm_error_occurred = true;
+         }
          else
             rpt_vstring(d1, "VCP version:         %d.%d", vspec.major, vspec.minor);
 
@@ -296,6 +308,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             if (err) {
                rpt_vstring(d1, "Error opening display %s: %s",
                                   dref_short_name_t(dref), psc_desc(err->status_code));
+               comm_error_occurred = true;
                errinfo_free(err);
                err = NULL;
             }
@@ -323,6 +336,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                }
             }
          }
+         if (comm_error_occurred) {
+            if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+               rpt_vstring(d1, "Display is asleep");
+            }
+         }
+
          Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
          // DBGMSG("mmk = %s", mmk_repr(mmk) );
          Monitor_Quirk_Data * quirk = get_monitor_quirks(&mmk);
