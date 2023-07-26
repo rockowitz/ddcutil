@@ -429,6 +429,8 @@ find_dref(
    Status_Errno_DDC final_result = DDCRC_OK;
    Display_Ref * dref = NULL;
 
+
+
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
@@ -463,6 +465,10 @@ find_dref(
             else {
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
+            }
+            if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+               // should go nowhere, but just in case:
+               f0printf(outf, "Monitor on bus /dev/i2c-%d is in a DPMS sleep mode. Expect DDC errors.", busno);
             }
          }  // has edid
          else {   // no EDID found
@@ -865,6 +871,14 @@ main(int argc, char *argv[]) {
          SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying ddcutil options from %s: %s",   configure_fn, untokenized_cmd_prefix);
       }
    }
+
+   dpms_check_x11_asleep();
+   if (dpms_state & DPMS_STATE_X11_ASLEEP) {
+      DBGMSF(true, "DPMS sleep mode is active. Terminating execution.");
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "DPMS sleep mode is active.  Terminating execution");
+     goto bye;
+   }
+
 
    if (!master_initializer(parsed_cmd))
       goto bye;
