@@ -286,7 +286,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
       else {    // communication working
          if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
-             rpt_vstring(d1, "DPMS reports monitor in sleep mode.  Output is likely invalid.");
+             rpt_vstring(d1, "DPMS reports the monitor is in sleep mode. Output is likely invalid.");
           }
 
 
