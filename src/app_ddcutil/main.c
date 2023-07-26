@@ -429,8 +429,6 @@ find_dref(
    Status_Errno_DDC final_result = DDCRC_OK;
    Display_Ref * dref = NULL;
 
-
-
    Display_Identifier * did_work = parsed_cmd->pdid;
    if (did_work && did_work->id_type == DISP_ID_BUSNO) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Special handling for explicit --busno");
