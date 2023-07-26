@@ -1,9 +1,9 @@
-/* x11_util.c
+ /** @file x11_util.c  X11 related utility functions
+ */
+
+/* Adapted from file randr-edid.c from libCEC.    How to properly handle copyright?
  *
- * * Adapted from file randr-edid.c from libCEC.    How to properly handle copyright?
- *
- * <copyright>
- * Copyright (C) 2016-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+ * Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -20,7 +20,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
  *
  *
  * Adapted from libCEC by Pulse-Eight Limited.  Pulse-Eight's copyright follows:
@@ -55,10 +54,6 @@
  * Pulse-Eight Licensing       <license@pulse-eight.com>
  *     http://www.pulse-eight.com/
  *     http://www.pulse-eight.net/
- */
-
-/** @file x11_util.c
- * X11 related utility functions
  */
 
 /** \cond */
