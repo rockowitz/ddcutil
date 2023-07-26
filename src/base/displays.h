@@ -175,6 +175,7 @@ typedef uint16_t Dref_Flags;
 #define DREF_DDC_BUSY                                  0x1000
 #define DREF_REMOVED                                   0x2000
 #define DREF_ALIVE                                     0x4000
+#define DREF_DPMS_SUSPEND_STANDBY_OFF                  0x8000
 
 char * interpret_dref_flags_t(Dref_Flags flags);
 
