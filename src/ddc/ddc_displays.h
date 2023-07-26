@@ -34,6 +34,14 @@ GPtrArray * ddc_get_bus_open_errors();
 int         ddc_get_display_count(bool include_invalid_displays);
 Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, bool include_invalid);
 
+// DPMS Detection
+#define DPMS_STATE_X11_CHECKED 0x01
+#define DPMS_STATE_X11_ASLEEP  0x02
+#define DPMS_SOME_DRM_ASLEEP   0x04
+#define DPMS_ALL_DRM_ASLEEP    0x08
+extern Byte dpms_state;
+void        dpms_check_x11_asleep();
+
 // Display Detection
 void        ddc_ensure_displays_detected();
 void        ddc_discard_detected_displays();
