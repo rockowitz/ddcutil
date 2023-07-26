@@ -390,6 +390,8 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
 
 
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Checking I2C_Bus_Info for /dev/i2c-%d", businfo->busno);
    businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
    if (drm_connector) {
@@ -404,6 +406,13 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
      }
    }
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+   char * s = interpret_i2c_bus_flags(businfo->flags);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", s);
+   free(s);
+   if (drm_connector)
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", drm_connector->connector_name);
+   else
+      DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
    return drm_connector;
 }
 
@@ -717,6 +726,7 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_bus);
+   RTTI_ADD_FUNC(i2c_check_businfo_connector);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
