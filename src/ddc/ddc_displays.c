@@ -86,22 +86,8 @@ bool monitor_state_tests = false;
 
 
 //
-// Functions to perform initial checks
+// Utility Functions
 //
-
-/** Sets the threshold for async display examination.
- *  If the number of /dev/i2c devices for which DDC communication is to be
- *  checked is greater than or equal to the threshold value, examine each
- *  device in a separate thread.
- *
- *  @param threshold  threshold value
- */
-void
-ddc_set_async_threshold(int threshold) {
-   // DBGMSG("threshold = %d", threshold);
-   async_threshold = threshold;
-}
-
 
 static inline bool
 value_bytes_zero_for_any_value(DDCA_Any_Vcp_Value * pvalrec) {
@@ -136,6 +122,10 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
 }
 
 
+//
+// Exploratory programming, DPMS detection
+//
+
 void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
    Parsed_Nontable_Vcp_Response  resp;
    Parsed_Nontable_Vcp_Response * parsed_response_loc = &resp;
@@ -157,7 +147,6 @@ void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
       }
    }
 }
-
 
 
 void explore_monitor_state(Display_Handle* dh) {
@@ -241,8 +230,16 @@ void explore_monitor_state(Display_Handle* dh) {
 }
 
 
+//
+// Monitor Checks
+//
 
-
+/** Tests a feature that should be unsupported.
+ *
+ *  @param  dh            Display Handle
+ *  @param  feature code  VCP feature code
+ *  @return Error_Info  if unsupported
+ */
 // test for a feature that should be unsupported
 Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
    bool debug = false;
@@ -309,6 +306,13 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
 }
 
 
+/** Determines how an unsupported non-table feature is reported.
+ *
+ *  @param  dh   Display Handle
+ *
+ *  Sets relevant DREF_DDC_* flags in the associated Display Reference to
+ *  indicate how unsupported features are reported.
+ */
 static void
 check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
@@ -370,8 +374,6 @@ check_how_unsupported_reported(Display_Handle * dh) {
    dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
-
-
 
 
 /** Collects initial monitor checks to perform them on a single open of the
@@ -480,8 +482,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
       if (psc != -EBUSY)
          dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-
-
 
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
@@ -886,12 +886,12 @@ filter_phantom_displays(GPtrArray * all_displays) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
 //
 // DPMS Detection
 //
 
-
-Byte dpms_state;
+Byte dpms_state;    // global
 
 void dpms_check_x11_asleep() {
    bool debug = false;
@@ -1002,6 +1002,20 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
 //
 // Display Detection
 //
+
+/** Sets the threshold for async display examination.
+ *  If the number of /dev/i2c devices for which DDC communication is to be
+ *  checked is greater than or equal to the threshold value, examine each
+ *  device in a separate thread.
+ *
+ *  @param threshold  threshold value
+ */
+void
+ddc_set_async_threshold(int threshold) {
+   // DBGMSG("threshold = %d", threshold);
+   async_threshold = threshold;
+}
+
 
 /** Detects all connected displays by querying the I2C and USB subsystems.
  *
