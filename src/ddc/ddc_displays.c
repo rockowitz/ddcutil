@@ -337,13 +337,15 @@ check_how_unsupported_reported(Display_Handle * dh) {
    if (psc == 0) {
       dh->dref->flags |= DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED;
       SYSLOG2(DDCA_SYSLOG_ERROR,
-            "busno=%d, All features that should not exist detected. Monitor does not indicate unsupported", businfo->busno);
+            "busno=%d, All features that should not exist detected. "
+            "Monitor does not indicate unsupported", businfo->busno);
    }
    else {
       if (psc == DDCRC_RETRIES) {
             dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // our best guess
             SYSLOG2(DDCA_SYSLOG_ERROR,
-                  "busno=%d, DDCRC_RETRIES failure reading all unsupported features. Setting DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED",
+                  "busno=%d, DDCRC_RETRIES failure reading all unsupported features. "
+                  "Setting DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED",
                   businfo->busno);
       }
 
