@@ -293,7 +293,7 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
                   businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
             SYSLOG2(DDCA_SYSLOG_ERROR,
-                  "busno=%d, sleep-multiplier=%5.2f, Reesting for unsupported feature 0x%02x returned %s",
+                  "busno=%d, sleep-multiplier=%5.2f, Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,
                   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
