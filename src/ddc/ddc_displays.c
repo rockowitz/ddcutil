@@ -923,7 +923,7 @@ void dpms_check_x11_asleep() {
       }
    }
    // dpms_state |= DPMS_STATE_X11_ASLEEP; // testing
-   dpms_state = 0;    // testing
+   // dpms_state = 0;    // testing
 
 #endif
    DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x", dpms_state);
