@@ -952,15 +952,15 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
       RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
       asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
-               businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
+            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
+            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
       SYSLOG2(DDCA_SYSLOG_DEBUG,
             "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
             businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
    }
 
-    if (businfo->busno == 6)
-       asleep = true;
+   // if (businfo->busno == 6)   // test case
+   //    asleep = true;
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
    return asleep;
@@ -1032,6 +1032,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
    GPtrArray * display_list = g_ptr_array_new();
+   bool all_asleep = true;
 
    int busct = i2c_detect_buses();
    DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
@@ -1065,6 +1066,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
                 dpms_state |= DPMS_SOME_DRM_ASLEEP;
                 asleep = true;
+             }
+             else {
+                all_asleep = false;
              }
          }
          if (asleep) {
@@ -1107,6 +1111,21 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          dref->detail = curmon;
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
+
+         bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
+         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+             if (dpms_check_drm_asleep_by_dref(dref)) {
+                dpms_state |= DPMS_SOME_DRM_ASLEEP;
+                asleep = true;
+             }
+             else {
+                all_asleep = false;
+             }
+         }
+         if (asleep) {
+            dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+         }
+
          g_ptr_array_add(display_list, dref);
       }
 
@@ -1124,6 +1143,10 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       }
    }
 #endif
+    if (all_asleep)
+       dpms_state |= DPMS_ALL_DRM_ASLEEP;
+    else
+       dpms_state &= ~DPMS_ALL_DRM_ASLEEP;
 
    // verbose output is distracting within scans
    // saved and reset here so that async threads are not adjusting output level
