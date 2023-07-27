@@ -870,13 +870,16 @@ main(int argc, char *argv[]) {
       }
    }
 
-   dpms_check_x11_asleep();
-   if (dpms_state & DPMS_STATE_X11_ASLEEP) {
-      DBGMSF(true, "DPMS sleep mode is active. Terminating execution.");
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "DPMS sleep mode is active.  Terminating execution");
-     goto bye;
+#ifdef USE_X11
+   if (!(parsed_cmd->flags&CMD_FLAG_F12)) {
+      dpms_check_x11_asleep();
+      if (dpms_state & DPMS_STATE_X11_ASLEEP) {
+         DBGMSF(true, "DPMS sleep mode is active. Terminating execution.");
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "DPMS sleep mode is active.  Terminating execution");
+        goto bye;
+      }
    }
-
+#endif
 
    if (!master_initializer(parsed_cmd))
       goto bye;

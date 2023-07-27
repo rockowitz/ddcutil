@@ -40,8 +40,8 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
    REPORT_FLAG_OPTION(9, "Enable displays cache");
    REPORT_FLAG_OPTION(10,"Extended sleep for DDC Null Msg");
-   REPORT_FLAG_OPTION(11,"Monitor state tests");
-   REPORT_FLAG_OPTION(12,"Unused");
+   REPORT_FLAG_OPTION(11,"Explore monitor state tests");
+   REPORT_FLAG_OPTION(12,"Skip X11 DPMS check");
 
    rpt_vstring(depth+1, "Utility option --i1:          set dsa2_step_floor by step number");
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
