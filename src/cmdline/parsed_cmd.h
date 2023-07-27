@@ -116,6 +116,8 @@ typedef enum {
                         =  0x8000000000000000,
    CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE
                        = 0x01000000000000000,
+   CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES
+                       = 0x02000000000000000,
 
 } Parsed_Cmd_Flags;
 
