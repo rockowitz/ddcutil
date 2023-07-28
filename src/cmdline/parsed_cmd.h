@@ -43,6 +43,7 @@ typedef enum {
    CMDID_PROBE         =   0x8000,
    CMDID_SAVE_SETTINGS = 0x010000,
    CMDID_DISCARD_CACHE = 0x020000,
+   CMDID_LIST_RTTI     = 0x040000,
    CMDID_C1            = 0x100000,         // utility command id, for tests
 } Cmd_Id_Type;
 

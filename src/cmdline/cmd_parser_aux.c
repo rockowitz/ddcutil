@@ -53,6 +53,7 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0,                  Option_Explicit_Display},
    {CMDID_DISCARD_CACHE,"discard",        4,  1,       2,                  Option_None},
    {CMDID_C1,           "c1",             2,  0,       0,                  Option_None},
+   {CMDID_LIST_RTTI,    "traceable",      2,  0,       0,                  Option_None},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 
