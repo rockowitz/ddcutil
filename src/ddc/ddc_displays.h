@@ -39,7 +39,9 @@ Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, 
 #define DPMS_STATE_X11_ASLEEP  0x02
 #define DPMS_SOME_DRM_ASLEEP   0x04
 #define DPMS_ALL_DRM_ASLEEP    0x08
-extern Byte dpms_state;
+typedef Byte Dpms_State;
+extern Dpms_State dpms_state;
+char *      interpret_dpms_state_t(Dpms_State state);
 void        dpms_check_x11_asleep();
 
 // Display Detection
