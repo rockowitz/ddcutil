@@ -442,13 +442,35 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       i2c_check_businfo_connector(businfo);
 
    int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
-   if (businfo->drm_connector_name && output_level >= DDCA_OL_NORMAL)
-      rpt_vstring((output_level >= DDCA_OL_VERBOSE) ? d1 : depth,
+   if (businfo->drm_connector_name && output_level >= DDCA_OL_NORMAL) {
+      int d = (output_level >= DDCA_OL_VERBOSE) ? d1 : depth;
+      rpt_vstring(d,
                           "%-*s%s", title_width, "DRM connector:",
                           (businfo->drm_connector_name)
                                ? businfo->drm_connector_name
                                : "Not found"
                  );
+      if (businfo->drm_connector_name) {
+         char * dpms    = NULL;
+         char * status  = NULL;
+         char * enabled = NULL;
+         RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
+         RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+         RPT_ATTR_TEXT(-1, &status,  "/sys/class/drm", businfo->drm_connector_name, "status");
+         if (dpms) {
+            rpt_vstring(d+1, "dpms:     %s", dpms);
+            free(dpms);
+         }
+         if (enabled) {
+            rpt_vstring(d+1, "enabled:  %s", enabled);
+            free(enabled);
+         }
+         if (status) {
+            rpt_vstring(d+1, "status:   %s", status);
+            free(status);
+         }
+      }
+   }
 
    // 08/2018 Disable.
    // Test for DDC communication is now done more sophisticatedly at the DDC level
