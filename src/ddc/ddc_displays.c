@@ -422,6 +422,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
 
+      // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
          explore_monitor_state(dh);
 
@@ -893,7 +894,20 @@ filter_phantom_displays(GPtrArray * all_displays) {
 // DPMS Detection
 //
 
-Byte dpms_state;    // global
+Dpms_State dpms_state;    // global
+
+Value_Name_Table dpms_state_flags_table = {
+      VN(DPMS_STATE_X11_CHECKED),
+      VN(DPMS_STATE_X11_ASLEEP),
+      VN(DPMS_SOME_DRM_ASLEEP),
+      VN(DPMS_ALL_DRM_ASLEEP),
+      VN_END
+};
+
+char *      interpret_dpms_state_t(Dpms_State state) {
+   return VN_INTERPRET_FLAGS_T(state, dpms_state_flags_table, "|");
+}
+
 
 void dpms_check_x11_asleep() {
    bool debug = false;
@@ -913,7 +927,7 @@ void dpms_check_x11_asleep() {
       if (ok) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "power_level=%d = %s, state=%s",
             power_level, dpms_power_level_name(power_level), sbool(state));
-         if (state && (power_level != DPMSModeOff) )
+         if (state && (power_level != DPMSModeOn) )
             dpms_state |= DPMS_STATE_X11_ASLEEP;
          dpms_state |= DPMS_STATE_X11_CHECKED;
       }
@@ -926,12 +940,12 @@ void dpms_check_x11_asleep() {
    // dpms_state = 0;    // testing
 
 #endif
-   DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x", dpms_state);
+   DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x = %s", dpms_state, interpret_dpms_state_t(dpms_state));
 }
 
 
 bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno);
 
    bool asleep = false;
