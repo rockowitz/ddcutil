@@ -827,6 +827,7 @@ parse_command(
    gboolean mock_data_flag     = false;
    gboolean profile_api_flag   = false;
    gboolean null_msg_for_unsupported_flag = false;
+   gboolean enable_heuristic_unsupported_flag = true;
 
    char *   mfg_id_work     = NULL;
    char *   modelwork       = NULL;
@@ -1014,6 +1015,11 @@ parse_command(
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
+      {"enable-heuristic-unsupported", '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_NONE,     &enable_heuristic_unsupported_flag, "Perform heuristic unsupported feature detection", NULL},
+      {"disable-heuristic-unsupported", '\0', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_HIDDEN,
+            G_OPTION_ARG_NONE, &enable_heuristic_unsupported_flag, "Recognize only DDC/CI specified unsupported feature detection", NULL},
+
 #endif
 
 #ifdef FUTURE
@@ -1337,6 +1343,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TRACE_TO_SYSLOG_ONLY, trace_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
+   SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 #ifdef REMOVED
