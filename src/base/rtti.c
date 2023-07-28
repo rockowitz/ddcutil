@@ -59,24 +59,39 @@ void * rtti_get_func_addr_by_name(const char * name) {
 }
 
 
-void dbgrpt_rtti_func_name_table(int depth) {
-   int d1 = depth+1;
-   rpt_vstring(depth, "Function name table at %p", func_name_table);
+void dbgrpt_rtti_func_name_table(int depth, bool show_internal) {
+   if (show_internal) {
+      rpt_vstring(depth, "Function name table at %p", func_name_table);
+      depth=depth+1;
+   }
    if (func_name_table) {
       GHashTableIter iter;
       gpointer key, value;
       GPtrArray * values = g_ptr_array_new();
       g_hash_table_iter_init(&iter, func_name_table);
       while (g_hash_table_iter_next(&iter, &key, &value)) {
-         rpt_vstring(d1, "%p: %s", key, (char *) value);
+         if (show_internal) {
+            rpt_vstring(depth, "%p: %s", key, (char *) value);
+         }
          g_ptr_array_add(values, value);
       }
+
       g_ptr_array_sort(values, gaux_ptr_scomp);
       for (int ndx = 0; ndx < values->len; ndx++) {
-         rpt_vstring(d1, "   %s", (char *) g_ptr_array_index(values, ndx));
+         rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(values, ndx));
       }
    }
 }
+
+
+void report_rtti_func_name_table(int depth, char * msg) {
+   if (msg) {
+      rpt_label(depth, msg);
+      depth++;
+   }
+   dbgrpt_rtti_func_name_table(depth, false);
+}
+
 
 
 void terminate_rtti() {

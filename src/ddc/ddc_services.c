@@ -222,7 +222,7 @@ void init_ddc_services() {
    RTTI_ADD_FUNC(ddc_report_stats_main);
 
    if (debug)
-      dbgrpt_rtti_func_name_table(1);
+      dbgrpt_rtti_func_name_table(1, /* show_internal*/ true);
    DBGMSF(debug, "Done");
 }
 
