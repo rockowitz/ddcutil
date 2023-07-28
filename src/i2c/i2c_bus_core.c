@@ -458,15 +458,15 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
          RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
          RPT_ATTR_TEXT(-1, &status,  "/sys/class/drm", businfo->drm_connector_name, "status");
          if (dpms) {
-            rpt_vstring(d+1, "dpms:     %s", dpms);
+            rpt_vstring(d+1,  "%-*s%s", title_width-3, "dpms:", dpms);
             free(dpms);
          }
          if (enabled) {
-            rpt_vstring(d+1, "enabled:  %s", enabled);
+            rpt_vstring(d+1,  "%-*s%s", title_width-3, "enabled:", enabled);
             free(enabled);
          }
          if (status) {
-            rpt_vstring(d+1, "status:   %s", status);
+            rpt_vstring(d+1,  "%-*s%s", title_width-3, "status:", status);
             free(status);
          }
       }
