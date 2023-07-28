@@ -916,6 +916,11 @@ main(int argc, char *argv[]) {
       main_rc = (vcpinfo_ok) ? EXIT_SUCCESS : EXIT_FAILURE;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_LIST_RTTI) {
+      report_rtti_func_name_table(0, "Functions traceable by name:");
+      main_rc = EXIT_SUCCESS;
+   }
+
    else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
       if (parsed_cmd->cache_types & CAPABILITIES_CACHE) {
          delete_capabilities_file();

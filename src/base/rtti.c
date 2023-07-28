@@ -81,6 +81,11 @@ void dbgrpt_rtti_func_name_table(int depth, bool show_internal) {
          rpt_vstring(depth, "   %s", (char *) g_ptr_array_index(values, ndx));
       }
    }
+   else {
+      if (!show_internal) {
+         rpt_label(depth, "None");
+      }
+   }
 }
 
 
