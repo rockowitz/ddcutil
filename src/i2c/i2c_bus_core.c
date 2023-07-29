@@ -451,6 +451,31 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                                : "Not found"
                  );
       if (businfo->drm_connector_name) {
+
+         char buf[100];
+         int tw = title_width;
+         g_snprintf(buf, 100, "/sys/class/drm/%s/dpms", businfo->drm_connector_name);
+         char * s = file_get_first_line(buf, false);
+         if (s) {
+            strcat(buf, ":");
+            rpt_vstring(d, "%-*s%s", tw, buf, s);
+            free(s);
+         }
+         g_snprintf(buf, 100, "/sys/class/drm/%s/enabled", businfo->drm_connector_name);
+         s = file_get_first_line(buf, false);
+         if (s) {
+            strcat(buf, ":");
+            rpt_vstring(d, "%-*s%s", tw, buf, s);
+            free(s);
+         }
+         g_snprintf(buf, 100, "/sys/class/drm/%s/status", businfo->drm_connector_name);
+         s = file_get_first_line(buf, false);
+         if (s) {
+            strcat(buf, ":");
+            rpt_vstring(d, "%-*s%s", tw, buf, s);
+            free(s);
+         }
+#ifdef OLD
          char * dpms    = NULL;
          char * status  = NULL;
          char * enabled = NULL;
@@ -469,6 +494,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
             rpt_vstring(d+1,  "%-*s%s", title_width-3, "status:", status);
             free(status);
          }
+#endif
       }
    }
 
