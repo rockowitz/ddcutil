@@ -441,7 +441,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED))
       i2c_check_businfo_connector(businfo);
 
-   int title_width = (output_level >= DDCA_OL_VERBOSE) ? 36 : 25;
+   int title_width = (output_level >= DDCA_OL_VERBOSE) ? 39 : 25;
    if (businfo->drm_connector_name && output_level >= DDCA_OL_NORMAL) {
       int d = (output_level >= DDCA_OL_VERBOSE) ? d1 : depth;
       rpt_vstring(d,
@@ -450,10 +450,11 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                                ? businfo->drm_connector_name
                                : "Not found"
                  );
+      if (output_level >= DDCA_OL_VERBOSE) {
       if (businfo->drm_connector_name) {
 
          char buf[100];
-         int tw = title_width;
+         int tw = title_width; // 35;  // title_width;
          g_snprintf(buf, 100, "/sys/class/drm/%s/dpms", businfo->drm_connector_name);
          char * s = file_get_first_line(buf, false);
          if (s) {
@@ -496,6 +497,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
          }
 #endif
       }
+      }
    }
 
    // 08/2018 Disable.
@@ -506,14 +508,14 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
    // rpt_vstring(depth, "Supports DDC:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
 
    if (output_level >= DDCA_OL_VERBOSE) {
-      rpt_vstring(d1, "Driver:                             %s", (businfo->driver) ? businfo->driver : "Unknown");
+      rpt_vstring(d1, "Driver:                                %s", (businfo->driver) ? businfo->driver : "Unknown");
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(d1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
       rpt_vstring(d1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
-      rpt_vstring(d1, "I2C address 0x50 (EDID) responsive: %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
-      rpt_vstring(d1, "Is eDP device:                      %-5s", sbool(businfo->flags & I2C_BUS_EDP));
-      rpt_vstring(d1, "Is LVDS device:                     %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
+      rpt_vstring(d1, "I2C address 0x50 (EDID) responsive:    %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(d1, "Is eDP device:                         %-5s", sbool(businfo->flags & I2C_BUS_EDP));
+      rpt_vstring(d1, "Is LVDS device:                        %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 
       // if ( !(businfo->flags & (I2C_BUS_EDP|I2C_BUS_LVDS)) )
       // rpt_vstring(d1, "I2C address 0x37 (DDC) responsive:  %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
@@ -526,7 +528,7 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       sprintf(fn, "/sys/bus/i2c/devices/i2c-%d", businfo->busno);
       char * path = NULL;
       GET_ATTR_REALPATH(&path, fn);
-      rpt_vstring(d1, "PCI device path:                    %s", path);
+      rpt_vstring(d1, "PCI device path:                       %s", path);
       free(path);
 
 #ifdef REDUNDANT
