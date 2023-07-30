@@ -345,11 +345,13 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                }
             }
          }
+#ifdef REDUNDANT
          if (comm_error_occurred) {
             if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
                rpt_vstring(d1, "Display is asleep");
             }
          }
+#endif
 
          Monitor_Model_Key mmk = monitor_model_key_value_from_edid(dref->pedid);
          // DBGMSG("mmk = %s", mmk_repr(mmk) );
