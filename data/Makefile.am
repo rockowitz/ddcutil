@@ -11,8 +11,7 @@ resfiles = \
 
 rulesfiles = \
 	usr/lib/udev/rules.d/60-ddcutil-i2c.rules \
-	usr/lib/udev/rules.d/60-ddcutil-usb.rules \
-	usr/lib/udev/rules.d/60-libddcutil-i2c.rules
+	usr/lib/udev/rules.d/60-ddcutil-usb.rules
 
 distributed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf
