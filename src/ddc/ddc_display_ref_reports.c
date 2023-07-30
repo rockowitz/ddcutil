@@ -154,14 +154,14 @@ get_controller_mfg_string_t(Display_Handle * dh) {
 
 static void report_drm_dpms_status(int depth, const char * connector_name) {
    char * drm_dpms = NULL;
-   RPT_ATTR_TEXT(11, &drm_dpms, "/sys/class/drm", connector_name, "dpms");
+   RPT_ATTR_TEXT(-1, &drm_dpms, "/sys/class/drm", connector_name, "dpms");
    if (drm_dpms && !streq(drm_dpms,"On")) {
       rpt_vstring(1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
       free(drm_dpms);
    }
 
    char * drm_status = NULL;
-   RPT_ATTR_TEXT(11, &drm_status, "/sys/class/drm", connector_name, "status");
+   RPT_ATTR_TEXT(-1, &drm_status, "/sys/class/drm", connector_name, "status");
    if (drm_status && !streq(drm_status, "connected")) {
       rpt_vstring(-1, "DRM reports the monitor status is %s.", drm_status);
       free(drm_status);
