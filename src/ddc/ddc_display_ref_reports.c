@@ -16,8 +16,10 @@
 #include <sys/stat.h>
 
 #include "util/data_structures.h"
+#include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 
 #include "public/ddcutil_types.h"
 
@@ -151,6 +153,24 @@ get_controller_mfg_string_t(Display_Handle * dh) {
 }
 
 
+static void report_drm_dpms_status(int depth, const char * connector_name) {
+   char buf[100];
+   g_snprintf(buf, 100, "/sys/class/drm/%s/dpms", connector_name);
+   char * drm_dpms = file_get_first_line(buf, false);
+   if (drm_dpms && !streq(drm_dpms,"On")) {
+      rpt_vstring(1, "DRM reports the monitor DPMS state is %s.", drm_dpms);
+   }
+
+   char * drm_status = NULL;
+   RPT_ATTR_TEXT(11, &drm_status, "sys/class/drm", connector_name, "status");
+   if (drm_status && !streq(drm_status, "connected")) {
+      rpt_vstring(1, "DRM reports the monitor status is %s.", drm_status);
+   }
+   free(drm_dpms);
+   free(drm_status);
+}
+
+
 /** Shows information about a display, specified by a #Display_Ref
  *
  *  This function is used by the DISPLAY command.
@@ -173,6 +193,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref->flags: %s", interpret_dref_flags_t(dref->flags));
    TRACED_ASSERT(dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
    int d1 = depth+1;
+
+   I2C_Bus_Info * businfo = (dref->io_path.io_mode == DDCA_IO_I2C) ? dref->detail : NULL;
+   TRACED_ASSERT(businfo && memcmp(businfo, I2C_BUS_INFO_MARKER, 4) == 0);
 
    switch(dref->dispno) {
    case DISPNO_BUSY:       // -4
@@ -197,10 +220,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    switch(dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         I2C_Bus_Info * curinfo = dref->detail;
-         TRACED_ASSERT(curinfo && memcmp(curinfo, I2C_BUS_INFO_MARKER, 4) == 0);
-
-         i2c_report_active_display(curinfo, d1);
+         i2c_report_active_display(businfo, d1);
       }
       break;
    case DDCA_IO_USB:
@@ -236,10 +256,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          else { // non-phantom
             if (dref->io_path.io_mode == DDCA_IO_I2C)
             {
-                I2C_Bus_Info * curinfo = dref->detail;
-                if (curinfo->flags & I2C_BUS_EDP)
+                if (businfo->flags & I2C_BUS_EDP)
                     msg = "This is an eDP laptop display. Laptop displays do not support DDC/CI.";
-                else if (curinfo->flags & I2C_BUS_LVDS)
+                else if (businfo->flags & I2C_BUS_LVDS)
                      msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
                 else if ( is_embedded_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
@@ -280,16 +299,15 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          if (msg) {
             rpt_vstring(d1, msg);
             if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
-               rpt_vstring(d1, "Display is asleep");
+               report_drm_dpms_status(d1, businfo->drm_connector_name);
             }
          }
-      }
+      }         // communication not working
       else {    // communication working
          if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
-             rpt_vstring(d1, "DPMS reports the monitor is in sleep mode. Output is likely invalid.");
-          }
-
-
+            report_drm_dpms_status(1, businfo->drm_connector_name);
+            rpt_label(1, "Output is likely invalid.");
+         }
          bool comm_error_occurred = false;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
          // DBGMSG("vspec = %d.%d", vspec.major, vspec.minor);
