@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 
 #include "util/data_structures.h"
-#include "util/file_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/sysfs_util.h"
@@ -154,20 +153,19 @@ get_controller_mfg_string_t(Display_Handle * dh) {
 
 
 static void report_drm_dpms_status(int depth, const char * connector_name) {
-   char buf[100];
-   g_snprintf(buf, 100, "/sys/class/drm/%s/dpms", connector_name);
-   char * drm_dpms = file_get_first_line(buf, false);
+   char * drm_dpms = NULL;
+   RPT_ATTR_TEXT(11, &drm_dpms, "/sys/class/drm", connector_name, "dpms");
    if (drm_dpms && !streq(drm_dpms,"On")) {
-      rpt_vstring(1, "DRM reports the monitor DPMS state is %s.", drm_dpms);
+      rpt_vstring(1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
+      free(drm_dpms);
    }
 
    char * drm_status = NULL;
    RPT_ATTR_TEXT(11, &drm_status, "/sys/class/drm", connector_name, "status");
    if (drm_status && !streq(drm_status, "connected")) {
-      rpt_vstring(1, "DRM reports the monitor status is %s.", drm_status);
+      rpt_vstring(-1, "DRM reports the monitor status is %s.", drm_status);
+      free(drm_status);
    }
-   free(drm_dpms);
-   free(drm_status);
 }
 
 
