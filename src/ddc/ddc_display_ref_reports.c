@@ -162,7 +162,7 @@ static void report_drm_dpms_status(int depth, const char * connector_name) {
    }
 
    char * drm_status = NULL;
-   RPT_ATTR_TEXT(11, &drm_status, "sys/class/drm", connector_name, "status");
+   RPT_ATTR_TEXT(11, &drm_status, "/sys/class/drm", connector_name, "status");
    if (drm_status && !streq(drm_status, "connected")) {
       rpt_vstring(1, "DRM reports the monitor status is %s.", drm_status);
    }
