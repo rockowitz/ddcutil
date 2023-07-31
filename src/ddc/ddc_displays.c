@@ -465,11 +465,13 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code,
             errinfo_summary(ddc_excp));
+         dref->communication_error_summary = errinfo_summary(ddc_excp);
          bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
          if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES && dynamic_sleep_active && initial_multiplier < 1.0f) {
             // turn off optimization in case it's on
             if (pdd_is_dynamic_sleep_active(pdd) ) {
                ERRINFO_FREE(ddc_excp);
+               free(dref->communication_error_summary);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
                pdd_set_dynamic_sleep_active(dref->pdd, false);
                ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
@@ -479,6 +481,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code,
                   errinfo_summary(ddc_excp));
+               dref->communication_error_summary = errinfo_summary(ddc_excp);
                SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
                   "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
                   businfo->busno,
