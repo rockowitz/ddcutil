@@ -522,9 +522,9 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(d1, "Driver:                                %s", (businfo->driver) ? businfo->driver : "Unknown");
 #ifdef DETECT_SLAVE_ADDRS
       rpt_vstring(d1, "I2C address 0x30 (EDID block#)  present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X30));
-      rpt_vstring(d1, "I2C address 0x37 (DDC)          present: %-5s", srepr(businfo->flags & I2C_BUS_ADDR_0X37));
 #endif
       rpt_vstring(d1, "I2C address 0x50 (EDID) responsive:    %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(d1, "I2C address 0x37 (DDC)  responsive:    %-5s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(d1, "Is eDP device:                         %-5s", sbool(businfo->flags & I2C_BUS_EDP));
       rpt_vstring(d1, "Is LVDS device:                        %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 
