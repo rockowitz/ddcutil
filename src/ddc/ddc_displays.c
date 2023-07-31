@@ -437,6 +437,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       if (monitor_state_tests)
          explore_monitor_state(dh);
 
+      Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
       Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
       // feature that always exists
       Byte feature_code = 0x10;
@@ -462,7 +463,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code,
             errinfo_summary(ddc_excp));
-         if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES) {
+         bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
+         if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES && dynamic_sleep_active && initial_multiplier < 1.0f) {
             // turn off optimization in case it's on
             if (pdd_is_dynamic_sleep_active(pdd) ) {
                ERRINFO_FREE(ddc_excp);
