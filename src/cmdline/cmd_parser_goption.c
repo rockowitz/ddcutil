@@ -627,7 +627,7 @@ static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
 
    if (parsed_cmd->argct == 1) {
       if ( is_abbrev(parsed_cmd->args[0], "CACHES", 5) )
-         parsed_cmd->cache_types = ALL_CACHES;
+         parsed_cmd->discarded_cache_types = ALL_CACHES;
       else
          parsing_ok = false;
    }
@@ -638,15 +638,15 @@ static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
       }
       else {
          if (is_abbrev(parsed_cmd->args[0], "CAPABILITIES", 3) )
-            parsed_cmd->cache_types = CAPABILITIES_CACHE;
+            parsed_cmd->discarded_cache_types = CAPABILITIES_CACHE;
 #ifdef REMOVED
          else if (is_abbrev(parsed_cmd->args[0], "DISPLAYS", 3) )
             parsed_cmd->cache_types = DISPLAYS_CACHE;
 #endif
          else if (is_abbrev(parsed_cmd->args[0], "DSA", 3) )
-            parsed_cmd->cache_types = DSA2_CACHE;
+            parsed_cmd->discarded_cache_types = DSA2_CACHE;
          else if (is_abbrev(parsed_cmd->args[0], "ALL", 3) )
-            parsed_cmd->cache_types = ALL_CACHES;
+            parsed_cmd->discarded_cache_types = ALL_CACHES;
          else
             parsing_ok = false;
       }
@@ -1396,7 +1396,7 @@ parse_command(
 #endif
 
    if (discarded_caches_work) {
-      parsed_cmd->cache_types = discarded_caches_work;
+      parsed_cmd->discarded_cache_types = discarded_caches_work;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
 
