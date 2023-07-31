@@ -317,6 +317,7 @@ static void
 check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
+   show_backtrace(0);
    Display_Ref* dref = dh->dref;
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
@@ -485,7 +486,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
       Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s", errinfo_summary(ddc_excp));
+            "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
+            errinfo_summary(ddc_excp), psc_desc(ddc_excp->status_code));
 
       if (psc != -EBUSY)
          dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
@@ -497,7 +499,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       }
 
       else {   // DDCA_IO_I2C
-         DBGMSG("WOLF 1");
+         DBGMSG("WOLF 1. psc=%d", psc);
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
             DBGMSG("WOLF2");
