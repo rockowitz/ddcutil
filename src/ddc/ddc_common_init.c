@@ -76,7 +76,7 @@ void emit_init_tracing_error(
 
 
 void i2c_discard_caches(Cache_Types caches) {
-   bool debug = true;
+   bool debug = false;
    if (caches & CAPABILITIES_CACHE) {
       DBGMSF(debug, "Erasing capabilities cache");
       delete_capabilities_file();
@@ -352,7 +352,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
  #endif
 
    if (parsed_cmd->flags & CMD_FLAG_DISCARD_CACHES) {
-      i2c_discard_caches(parsed_cmd->cache_types);
+      i2c_discard_caches(parsed_cmd->discarded_cache_types);
    }
 
    ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
