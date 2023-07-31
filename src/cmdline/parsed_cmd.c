@@ -330,6 +330,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("timestamp prefix:", NULL, parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE,          d1);
       rpt_bool("walltime prefix:",  NULL, parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE,           d1);
       rpt_bool("thread id prefix:", NULL, parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE,          d1);
+      rpt_bool("process id prefix:",NULL, parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE,         d1);
 
       rpt_nl();
       rpt_label(depth, "Other Development");

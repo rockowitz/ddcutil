@@ -138,9 +138,10 @@ void show_output_level() {
  *
  */
 
-bool dbgtrc_show_time      = false;   ///< include elapsed time in debug/trace output
-bool dbgtrc_show_wall_time = false;   ///< include wall time in debug/trace output
-bool dbgtrc_show_thread_id = false;   ///< include thread id in debug/trace output
+bool dbgtrc_show_time      =  false;  ///< include elapsed time in debug/trace output
+bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace output
+bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
+bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
 bool dbgtrc_trace_to_syslog_only = false;
 
 
@@ -559,9 +560,10 @@ static bool vdbgtrc(
             printf("(%s) base_msg=%p->|%s|\n", __func__, base_msg, base_msg);
             printf("(%s) retval_info=%p->|%s|\n", __func__, retval_info, retval_info);
          }
-         char  elapsed_prefix[20]  = "";
-         char  walltime_prefix[20] = "";
-         char thread_prefix[15] = "";
+         char elapsed_prefix[20]  = "";
+         char walltime_prefix[20] = "";
+         char thread_prefix[15]   = "";
+         char process_prefix[15]  = "";
          if (dbgtrc_show_time      && !(options & DBGTRC_OPTIONS_SEVERE))
             g_snprintf(elapsed_prefix, 20, "[%s]", formatted_elapsed_time_t(4));
          if (dbgtrc_show_wall_time && !(options & DBGTRC_OPTIONS_SEVERE))
@@ -571,11 +573,16 @@ static bool vdbgtrc(
             // assert(tid == thread_settings->tid);
             snprintf(thread_prefix, 15, "[%7jd]", thread_settings->tid);
          }
+         if (dbgtrc_show_process_id && !(options & DBGTRC_OPTIONS_SEVERE) ) {
+            intmax_t pid = get_process_id();
+            // assert(pid == thread_settings->pid);
+            snprintf(process_prefix, 15, "{%7jd}", pid);
+         }
          char * decorated_msg = (options & DBGTRC_OPTIONS_SEVERE)
                    ? g_strdup_printf("%s%s",
                           retval_info, base_msg)
-                   : g_strdup_printf("%s%s%s(%-30s) %s%s",
-                          thread_prefix, walltime_prefix, elapsed_prefix, funcname,
+                   : g_strdup_printf("%s%s%s%s(%-30s) %s%s",
+                          process_prefix, thread_prefix, walltime_prefix, elapsed_prefix, funcname,
                           retval_info, base_msg);
          if (debug)
             printf("(%s) decorated_msg=%p->|%s|\n", __func__, decorated_msg, decorated_msg);

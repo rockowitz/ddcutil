@@ -120,6 +120,7 @@ typedef enum {
    CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES
                                      = 0x2000,
    CMD_FLAG_DISCARD_CACHES           = 0x0400,
+   CMD_FLAG_PROCESS_ID_TRACE         = 0x0800,
 
 } Parsed_Cmd_Flags;
 

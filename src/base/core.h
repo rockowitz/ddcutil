@@ -98,6 +98,7 @@ extern __thread  unsigned int  trace_callstack_call_depth;
 extern bool dbgtrc_show_time;       // prefix debug/trace messages with elapsed time
 extern bool dbgtrc_show_wall_time;  // prefix debug/trace messages with wall time
 extern bool dbgtrc_show_thread_id;  // prefix debug/trace messages with thread id
+extern bool dbgtrc_show_process_id; // prefix debug/trace messsages with process id
 extern bool dbgtrc_trace_to_syslog_only;
 
 // void set_libddcutil_output_destination(const char * filename, const char * traced_unit);

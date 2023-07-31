@@ -824,6 +824,7 @@ parse_command(
    gboolean timestamp_trace_flag = false;
    gboolean wall_timestamp_trace_flag = false;
    gboolean thread_id_trace_flag = false;
+   gboolean process_id_trace_flag = false;
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
    gboolean async_flag     = false;
@@ -1112,6 +1113,8 @@ parse_command(
       {"wts",        '\0', 0, G_OPTION_ARG_NONE,         &wall_timestamp_trace_flag, "Prepend trace msgs with wall time",  NULL},
       {"thread-id",  '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
       {"tid",        '\0', 0, G_OPTION_ARG_NONE,         &thread_id_trace_flag, "Prepend trace msgs with thread id",  NULL},
+      {"process-id", '\0', 0, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
+      {"pid",        '\0', 0, G_OPTION_ARG_NONE,         &process_id_trace_flag, "Prepend trace msgs with process id",  NULL},
 //    {"trace-to-file",'\0',0,G_OPTION_ARG_STRING,       &parsed_cmd->trace_destination,    "Send trace output here instead of terminal", "file name or \"syslog\""},
       {"trace-to-syslog-only",'\0', G_OPTION_FLAG_HIDDEN,
                               G_OPTION_ARG_NONE,         &trace_to_syslog_only_flag,  "Direct trace output only to syslog", NULL},
@@ -1340,6 +1343,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_TIMESTAMP_TRACE,   timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_WALLTIME_TRACE,    wall_timestamp_trace_flag);
    SET_CMDFLAG(CMD_FLAG_THREAD_ID_TRACE,   thread_id_trace_flag);
+   SET_CMDFLAG(CMD_FLAG_PROCESS_ID_TRACE,  process_id_trace_flag);
    SET_CMDFLAG(CMD_FLAG_VERIFY,            verify_flag || !noverify_flag);
    // if (verify_flag || !noverify_flag)
    //    parsed_cmd->flags |= CMD_FLAG_VERIFY;
