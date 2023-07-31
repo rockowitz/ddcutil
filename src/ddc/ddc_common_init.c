@@ -76,13 +76,17 @@ void emit_init_tracing_error(
 
 
 void i2c_discard_caches(Cache_Types caches) {
+   bool debug = true;
    if (caches & CAPABILITIES_CACHE) {
+      DBGMSF(debug, "Erasing capabilities cache");
       delete_capabilities_file();
    }
    if (caches & DISPLAYS_CACHE) {
+      DBGMSF(debug, "Erasing displays cache");
       ddc_erase_displays_cache();
    }
    if (caches & DSA2_CACHE) {
+      DBGMSF(debug, "Erasing dynamic sleep cache");
       dsa2_erase_persistent_stats();
    }
 }
