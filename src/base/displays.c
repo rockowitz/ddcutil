@@ -716,22 +716,17 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             ddcrc = DDCRC_LOCKED;
          }
          else {
-            if (dref->usb_hiddev_name)       // always set using g_strdup()
-               free(dref->usb_hiddev_name);
-            if (dref->capabilities_string)   // always a private copy
-               free(dref->capabilities_string);
-            if (dref->mmid)                  // always a private copy
-               free(dref->mmid);
+            free(dref->usb_hiddev_name);        // private copy
+            free(dref->capabilities_string);    // private copy
+            free(dref->mmid);                   // private copy
             if (dref->pedid)  {
                DBGMSF(debug, "Freeing dref->pedid = %p", dref->pedid);
                free_parsed_edid(dref->pedid);  // private copy
             }
-            if (dref->dfr)
-               dfr_free(dref->dfr);
-            if (dref->driver_name)
-               free(dref->driver_name);
-            if (dref->drm_connector)
-               free(dref->drm_connector);
+            dfr_free(dref->dfr);
+            free(dref->driver_name);
+            free(dref->drm_connector);
+            free(dref->communication_error_summary);
             dref->marker[3] = 'x';
             free(dref);
          }
