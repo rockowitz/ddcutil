@@ -17,6 +17,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "util/coredefs.h"
 #include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/string_util.h"
@@ -1418,15 +1419,6 @@ parse_command(
 
 #undef SET_CMDFLAG
 #undef SET_CLR_CMDFLAG
-
-#define FREEA(_ptr) \
-   do { \
-      if (_ptr) { \
-         free(_ptr); \
-         _ptr = NULL; \
-      } \
-   } while (0)
-
 
    // Create display identifier
    //

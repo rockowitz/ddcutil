@@ -68,6 +68,15 @@ do { \
    } while(0)
 
 
+#define FREEA(_ptr) \
+   do { \
+      if (_ptr) { \
+         free(_ptr); \
+         _ptr = NULL; \
+      } \
+   } while (0)
+
+
 #ifdef TARGET_BSD
 #define I2C "iic"
 #else
