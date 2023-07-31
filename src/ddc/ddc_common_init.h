@@ -12,6 +12,7 @@
 
 #include "cmdline/parsed_cmd.h"
 
+void i2c_discard_caches(Cache_Types caches);
 Error_Info * init_tracing(Parsed_Cmd * parsed_cmd);
 bool submaster_initializer(Parsed_Cmd * parsed_cmd);
 

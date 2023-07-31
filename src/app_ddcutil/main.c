@@ -922,15 +922,7 @@ main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
-      if (parsed_cmd->cache_types & CAPABILITIES_CACHE) {
-         delete_capabilities_file();
-      }
-      if (parsed_cmd->cache_types & DISPLAYS_CACHE) {
-         ddc_erase_displays_cache();
-      }
-      if (parsed_cmd->cache_types & DSA2_CACHE) {
-         dsa2_erase_persistent_stats();
-      }
+      i2c_discard_caches(parsed_cmd->cache_types);
    }
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {

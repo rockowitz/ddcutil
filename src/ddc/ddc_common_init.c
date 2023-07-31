@@ -75,6 +75,19 @@ void emit_init_tracing_error(
 }
 
 
+void i2c_discard_caches(Cache_Types caches) {
+   if (caches & CAPABILITIES_CACHE) {
+      delete_capabilities_file();
+   }
+   if (caches & DISPLAYS_CACHE) {
+      ddc_erase_displays_cache();
+   }
+   if (caches & DSA2_CACHE) {
+      dsa2_erase_persistent_stats();
+   }
+}
+
+
 Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
@@ -333,6 +346,10 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    ddc_enable_usb_display_detection( parsed_cmd->flags & CMD_FLAG_ENABLE_USB );
    assert (rc == DDCRC_OK);
  #endif
+
+   if (parsed_cmd->flags & CMD_FLAG_DISCARD_CACHES) {
+      i2c_discard_caches(parsed_cmd->cache_types);
+   }
 
    ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    init_performance_options(parsed_cmd);
