@@ -249,9 +249,9 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          char * drm_enabled = NULL;
          char * drm_connector_name = i2c_get_drm_connector_name(businfo);
          if (drm_connector_name) { // would be null for a non drm driver
-            RPT_ATTR_TEXT(2, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
-            RPT_ATTR_TEXT(2, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
-            RPT_ATTR_TEXT(2, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
+            RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
+            RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
+            RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
          rpt_vstring(d1, "DDC communication failed");
