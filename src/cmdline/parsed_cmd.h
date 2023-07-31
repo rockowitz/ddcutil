@@ -119,6 +119,7 @@ typedef enum {
                                      = 0x1000,
    CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES
                                      = 0x2000,
+   CMD_FLAG_DISCARD_CACHES           = 0x0400,
 
 } Parsed_Cmd_Flags;
 
@@ -138,11 +139,11 @@ struct {
 } Parsed_Setvcp_Args;
 
 typedef
-enum {NO_CACHES  = 0,
+enum {NO_CACHES          = 0,
       CAPABILITIES_CACHE = 1,
-      DISPLAYS_CACHE = 2,
-      DSA2_CACHE     = 4,
-      ALL_CACHES     = 255
+      DISPLAYS_CACHE     = 2,
+      DSA2_CACHE         = 4,
+      ALL_CACHES         = 255
 } Cache_Types;
 
 /** Parsed arguments to **ddcutil** command  */

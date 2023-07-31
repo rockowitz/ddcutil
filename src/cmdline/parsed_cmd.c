@@ -307,6 +307,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("watch hotplug events", CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS, d1);
       RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
       RPT_CMDFLAG("heuristicly detect unsupported features", CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, d1);
+      RPT_CMDFLAG("discard caches", CMD_FLAG_DISCARD_CACHES, d1);
 
       rpt_bool("i1 set",           NULL, parsed_cmd->flags & CMD_FLAG_I1_SET,       d1);
       if (parsed_cmd->flags & CMD_FLAG_I1_SET) {

@@ -37,6 +37,7 @@
 static char *            usbwork        = NULL;
 static DDCA_Output_Level output_level   = DDCA_OL_NORMAL;
 static DDCA_Stats_Type   stats_work     = DDCA_STATS_NONE;
+static Cache_Types       discarded_caches_work = NO_CACHES;
 static bool              verbose_stats  = false;
 static bool              internal_stats = false;
 static Bit_Set_32        ignored_hiddev_work = 0;    // gcc claims not const??? EMPTY_BIT_SET_32;
@@ -118,6 +119,46 @@ stats_arg_func(const    gchar* option_name,
    }
    return ok;
 }
+
+
+
+// Callback function for processing --discard-cache
+static gboolean
+discard_cache_arg_func(
+               const    gchar* option_name,
+               const    gchar* value,
+               gpointer data,
+               GError** error)
+{
+   bool debug = false;
+   DBGMSF(debug,"option_name=|%s|, value|%s|, data=%p", option_name, value, data);
+
+   bool ok = true;
+   if (value) {
+      char * v2 = strdup_uc(value);
+      if ( streq(v2,"ALL") ) {
+         discarded_caches_work |= ALL_CACHES;
+      }
+      else if ( is_abbrev(v2, "CAPABILITIES",3)) {
+         discarded_caches_work |= CAPABILITIES_CACHE;
+      }
+      else if (streq(v2,"DSA") || is_abbrev(v2, "SLEEP",3)) {
+         discarded_caches_work |= DSA2_CACHE;
+      }
+      else
+         ok = false;
+      free(v2);
+   }
+   else {
+      discarded_caches_work = ALL_CACHES;
+   }
+
+   if (!ok) {
+      g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_FAILED, "invalid cache type: %s", value );
+   }
+   return ok;
+}
+
 
 
 static gboolean
@@ -991,6 +1032,10 @@ parse_command(
       {"enable-sleep-less" ,'\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
       {"disable-sleep-less",'\0', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_REVERSE,
                                                          G_OPTION_ARG_NONE, &reduce_sleeps_specified, "Deprecated",  NULL},
+      {"discard-caches",    '\0', G_OPTION_FLAG_OPTIONAL_ARG|G_OPTION_FLAG_HIDDEN,
+                                  G_OPTION_ARG_CALLBACK, discard_cache_arg_func,    "Discard performance caches",  "cache type"},
+      {"discard-cache",     '\0', G_OPTION_FLAG_OPTIONAL_ARG,
+         G_OPTION_ARG_CALLBACK, discard_cache_arg_func,    "Discard performance caches",  "cache type"},
 
       // Behavior options
       {"maxtries",'\0', 0, G_OPTION_ARG_STRING,   &maxtrywork,       "Max try adjustment",  "comma separated list" },
@@ -1349,6 +1394,12 @@ parse_command(
 #ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
 #endif
+
+   if (discarded_caches_work) {
+      parsed_cmd->cache_types = discarded_caches_work;
+      SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
+   }
+
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
