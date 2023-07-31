@@ -421,6 +421,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
+      char * drm_dpms = NULL;
+      char * drm_status = NULL;
+      RPT_ATTR_TEXT(1, &drm_dpms, "/sys/class/drm", dref->drm_connector, "dpms");
+      RPT_ATTR_TEXT(1, &drm_status, "/sys/class/drm", dref->drm_connector, "status");
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
@@ -452,7 +456,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             feature_code,
             errinfo_summary(ddc_excp));
          if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES) {
-            // turn off optimization in case its on
+            // turn off optimization in case it's on
             if (pdd_is_dynamic_sleep_active(pdd) ) {
                ERRINFO_FREE(ddc_excp);
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
@@ -493,8 +497,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       }
 
       else {   // DDCA_IO_I2C
+         DBGMSG("WOLF 1");
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
+            DBGMSG("WOLF2");
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             check_how_unsupported_reported(dh);
          }  // end, communication working
