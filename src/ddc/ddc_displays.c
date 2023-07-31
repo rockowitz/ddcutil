@@ -317,7 +317,6 @@ static void
 check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
-   show_backtrace(0);
    Display_Ref* dref = dh->dref;
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dref->detail;
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
@@ -419,6 +418,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
    I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
    Per_Display_Data * pdd = dh->dref->pdd;
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f", pdd_get_adjusted_sleep_multiplier(pdd));
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -499,10 +499,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       }
 
       else {   // DDCA_IO_I2C
-         DBGMSG("WOLF 1. psc=%d", psc);
          TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
          if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
-            DBGMSG("WOLF2");
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             check_how_unsupported_reported(dh);
          }  // end, communication working
