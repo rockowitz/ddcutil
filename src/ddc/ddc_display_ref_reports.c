@@ -237,6 +237,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    if (output_level >= DDCA_OL_NORMAL) {
 
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
+         char * drm_status = NULL;
+         char * drm_dpms = NULL;
+         char * drm_connector_name = i2c_get_drm_connector_name(businfo);
+         if (drm_connector_name) { // would be null for a non drm driver
+            RPT_ATTR_TEXT(2, &drm_dpms, "/sys/class/drm", drm_connector_name, "dpms");
+            RPT_ATTR_TEXT(2, &drm_status, "/sys/class/drm", drm_connector_name, "status");
+         }
+
          rpt_vstring(d1, "DDC communication failed");
          char msgbuf[100] = {0};
          char * msg = NULL;
@@ -260,6 +268,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                      msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
                 else if ( is_embedded_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
+                else if (drm_dpms || drm_status) {
+                   if (drm_dpms && !streq(drm_dpms,"On")) {
+                      rpt_vstring(d1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
+                   }
+                   if (drm_status && !streq(drm_status, "connected")) {
+                      rpt_vstring(d1, "DRM reports the monitor status is %s.", drm_status);
+                   }
+                }
                 // else if ( curinfo->flags & I2C_BUS_BUSY) {
                 else if ( dref->dispno == DISPNO_BUSY) {
                    rpt_label(d1, "I2C device is busy");
