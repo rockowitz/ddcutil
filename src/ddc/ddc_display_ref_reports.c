@@ -160,10 +160,17 @@ static void report_drm_dpms_status(int depth, const char * connector_name) {
       free(drm_dpms);
    }
 
+   char * drm_enabled = NULL;
+   RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", connector_name, "enabled");
+   if (drm_enabled && !streq(drm_enabled, "enabled")) {
+      rpt_vstring(1, "DRM reports the monitor is %s.", drm_enabled);
+      free(drm_enabled);
+   }
+
    char * drm_status = NULL;
    RPT_ATTR_TEXT(-1, &drm_status, "/sys/class/drm", connector_name, "status");
    if (drm_status && !streq(drm_status, "connected")) {
-      rpt_vstring(-1, "DRM reports the monitor status is %s.", drm_status);
+      rpt_vstring(1, "DRM reports the monitor status is %s.", drm_status);
       free(drm_status);
    }
 }
@@ -237,12 +244,14 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    if (output_level >= DDCA_OL_NORMAL) {
 
       if (!(dref->flags & DREF_DDC_COMMUNICATION_WORKING) ) {
-         char * drm_status = NULL;
-         char * drm_dpms = NULL;
+         char * drm_status  = NULL;
+         char * drm_dpms    = NULL;
+         char * drm_enabled = NULL;
          char * drm_connector_name = i2c_get_drm_connector_name(businfo);
          if (drm_connector_name) { // would be null for a non drm driver
-            RPT_ATTR_TEXT(2, &drm_dpms, "/sys/class/drm", drm_connector_name, "dpms");
-            RPT_ATTR_TEXT(2, &drm_status, "/sys/class/drm", drm_connector_name, "status");
+            RPT_ATTR_TEXT(2, &drm_dpms,    "/sys/class/drm", drm_connector_name, "dpms");
+            RPT_ATTR_TEXT(2, &drm_status,  "/sys/class/drm", drm_connector_name, "status");  // connected, disconnected
+            RPT_ATTR_TEXT(2, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
          rpt_vstring(d1, "DDC communication failed");
@@ -268,9 +277,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                      msg = "This is a LVDS laptop display. Laptop displays do not support DDC/CI.";
                 else if ( is_embedded_parsed_edid(dref->pedid) )
                     msg = "This appears to be a laptop display. Laptop displays do not support DDC/CI.";
-                else if (drm_dpms || drm_status) {
+                else if (drm_dpms || drm_status || drm_enabled) {
                    if (drm_dpms && !streq(drm_dpms,"On")) {
                       rpt_vstring(d1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
+                   }
+                   if (drm_enabled && !streq(drm_dpms,"enabled")) {
+                      rpt_vstring(d1, "DRM reports the monitor is %s.", drm_enabled);
                    }
                    if (drm_status && !streq(drm_status, "connected")) {
                       rpt_vstring(d1, "DRM reports the monitor status is %s.", drm_status);
