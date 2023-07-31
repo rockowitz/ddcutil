@@ -419,6 +419,15 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
 }
 
 
+char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
+   if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {
+      i2c_check_businfo_connector(businfo);
+   }
+   return businfo->drm_connector_name;
+}
+
+
+
 /** Reports a single active display.
  *
  * Output is written to the current report destination.

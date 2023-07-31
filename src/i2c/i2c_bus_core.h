@@ -35,6 +35,7 @@ extern bool i2c_force_bus;
 // Basic I2C bus operations
 Sys_Drm_Connector *
                  i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
+char *           i2c_get_drm_connector_name(I2C_Bus_Info * bus_info);
 void             i2c_check_bus(I2C_Bus_Info * bus_info);
 void             i2c_reset_bus_info(I2C_Bus_Info * bus_info);
 int              i2c_open_bus(int busno, Call_Options callopts);
