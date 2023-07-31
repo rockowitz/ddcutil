@@ -921,9 +921,9 @@ main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
-   else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
-      i2c_discard_caches(parsed_cmd->cache_types);
-   }
+   // else if (parsed_cmd->cmd_id == CMDID_DISCARD_CACHE) {
+   //    i2c_discard_caches(parsed_cmd->discarded_cache_types);
+   // }
 
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
