@@ -254,7 +254,11 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
-         rpt_vstring(d1, "DDC communication failed. %s", (dref->communication_error_summary) ? dref->communication_error_summary : "");
+         char * s = NULL;
+         if (dref->communication_error_summary)
+            g_strdup_printf("(getvcp of feature x10 returned %s)", dref->communication_error_summary);
+         rpt_vstring(d1, "DDC communication failed. %s", s);
+         free(s);
          char msgbuf[100] = {0};
          char * msg = NULL;
          if (dref->dispno == DISPNO_PHANTOM) {
