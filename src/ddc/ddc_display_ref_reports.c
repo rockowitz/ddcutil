@@ -256,7 +256,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
          char * s = NULL;
          if (dref->communication_error_summary)
-            g_strdup_printf("(getvcp of feature x10 returned %s)", dref->communication_error_summary);
+            s = g_strdup_printf("(getvcp of feature x10 returned %s)", dref->communication_error_summary);
          rpt_vstring(d1, "DDC communication failed. %s", s);
          free(s);
          char msgbuf[100] = {0};
