@@ -424,8 +424,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
       char * drm_dpms = NULL;
       char * drm_status = NULL;
-      RPT_ATTR_TEXT(1, &drm_dpms, "/sys/class/drm", dref->drm_connector, "dpms");
-      RPT_ATTR_TEXT(1, &drm_status, "/sys/class/drm", dref->drm_connector, "status");
+      RPT_ATTR_TEXT(1, &drm_dpms, "/sys/class/drm", businfo->drm_connector_name, "dpms");
+      RPT_ATTR_TEXT(1, &drm_status, "/sys/class/drm", businfo->drm_connector_name, "status");
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
@@ -487,7 +487,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
-            errinfo_summary(ddc_excp), psc_desc(ddc_excp->status_code));
+            errinfo_summary(ddc_excp), psc_desc(psc));
 
       if (psc != -EBUSY)
          dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
