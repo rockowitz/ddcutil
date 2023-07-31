@@ -182,6 +182,7 @@ struct {
 
    // Performance and Tuning
    Cache_Types            cache_types;
+   Cache_Types            discarded_cache_types;
    uint16_t               max_tries[3];
    float                  sleep_multiplier;
    DDCA_Stats_Type        stats_types;
