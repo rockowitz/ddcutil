@@ -909,12 +909,12 @@ filter_phantom_displays(GPtrArray * all_displays) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
+
 bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
-   I2C_Bus_Info * businfo = (I2C_Bus_Info*) dref->detail;
-   bool result =  dpms_check_drm_asleep(businfo);
+   bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
