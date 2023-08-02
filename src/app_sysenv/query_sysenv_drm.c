@@ -295,8 +295,14 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
 
    int edid_prop_id         = 0;
    int subconnector_prop_id = 0;
-   drmModePropertyPtr edid_prop_ptr    = NULL;
-   drmModePropertyPtr subconn_prop_ptr = NULL;
+   int dpms_prop_id         = 0;
+   int link_status_prop_id  = 0;
+   int type_prop_id         = 0;
+   drmModePropertyPtr edid_prop_ptr        = NULL;
+   drmModePropertyPtr subconn_prop_ptr     = NULL;
+   drmModePropertyPtr dpms_prop_ptr        = NULL;
+   drmModePropertyPtr link_status_prop_ptr = NULL;
+   drmModePropertyPtr type_prop_ptr        = NULL;
 
    rpt_nl();
    rpt_vstring(d1, "Scanning defined properties...");
@@ -307,7 +313,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             report_drm_modeProperty(prop_ptr, d2);
          else {
             // TMI
-            // summarize_drm_modeProperty(prop_ptr, d2);
+            summarize_drm_modeProperty(prop_ptr, d2);
          }
 
          // printf("prop_id=%d\n", prop_id);
@@ -320,7 +326,52 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             // rpt_vstring(d1, "Found subconnector property, prop_id=%d, prop_ptr->prop_id=%u", prop_id, prop_ptr->prop_id);
             subconnector_prop_id = prop_id;
             subconn_prop_ptr = prop_ptr;
+            if (subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM) {
+               // rpt_vstring(d2, "Property values table:");
+               for (int i = 0;  i < subconn_prop_ptr->count_enums; i++) {
+                  rpt_vstring(d3, "enum value: %d, enum name: %s",
+                        subconn_prop_ptr->enums[i].value, subconn_prop_ptr->enums[i].name);
+               }
+            }
          }
+         else if (streq(prop_ptr->name, "DPMS")) {
+            // rpt_vstring(d1, "Found DPMS property, prop_id=%d, prop_ptr->prop_id=%u", prop_id, prop_ptr->prop_id);
+            dpms_prop_id = prop_id;
+            dpms_prop_ptr = prop_ptr;
+            if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
+                // rpt_vstring(d2, "Property values table:");
+                for (int i = 0;  i < prop_ptr->count_enums; i++) {
+                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                         prop_ptr->enums[i].value, prop_ptr->enums[i].name);
+                }
+            }
+         }
+         else if (streq(prop_ptr->name, "link-status")) {
+            // rpt_vstring(d1, "Found link-status property, prop_id=%d, prop_ptr->prop_id=%u", prop_id, prop_ptr->prop_id);
+            link_status_prop_id = prop_id;
+            link_status_prop_ptr = prop_ptr;
+            if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
+                // rpt_vstring(d2, "Property values table:");
+                for (int i = 0;  i < prop_ptr->count_enums; i++) {
+                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                         prop_ptr->enums[i].value, prop_ptr->enums[i].name);
+                }
+            }
+         }
+
+         else if (streq(prop_ptr->name, "type")) {
+            // rpt_vstring(d1, "Found type property, prop_id=%d, prop_ptr->prop_id=%u", prop_id, prop_ptr->prop_id);
+            type_prop_id = prop_id;
+            type_prop_ptr = prop_ptr;
+            if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
+                // rpt_vstring(d2, "Property values table:");
+                for (int i = 0;  i < prop_ptr->count_enums; i++) {
+                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                         prop_ptr->enums[i].value, prop_ptr->enums[i].name);
+                }
+            }
+         }
+
          else {
             drmModeFreeProperty(prop_ptr);
          }
@@ -444,31 +495,93 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             }
          }
          else if (conn->props[ndx] == subconnector_prop_id) {
+            rpt_vstring(d2, "Subconnector property");
             assert(subconn_prop_ptr);   // if subconnector_prop_id found, subconn_prop_ptr must have been set
             uint32_t enum_value = conn->prop_values[ndx];
-            // printf("subconnector value: %d\n", enum_value);
+            // printf("subconnector value: %d, count_enums:%d\n", enum_value, subconn_prop_ptr->count_enums);
+            assert(subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM);
+            bool found = false;
+            for (int i = 0; i < subconn_prop_ptr->count_enums && !found; i++) {
+               if (subconn_prop_ptr->enums[i].value == enum_value) {
+                  rpt_vstring(d3, "Subconnector value = %2d - %s",
+                                  enum_value, subconn_prop_ptr->enums[i].name);
+                  found = true;
+               }
+            }
+            if (!found) {
+               rpt_vstring(d3, "Unrecognized subconnector value: %d", enum_value);
+            }
+         }
 
-            // assert(subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM);
-            // assert(enum_value < subconn_prop_ptr->count_enums);
+         else if (conn->props[ndx] == dpms_prop_id) {
+            rpt_vstring(d2, "DPMS property");
+            assert(dpms_prop_ptr);   // if dpms_prop_id found, dpms_prop_ptr must have been set
+            uint32_t enum_value = conn->prop_values[ndx];
+            // printf("dpms value: %d\n", enum_value);
 
-            if (subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM) {
+            assert(dpms_prop_ptr->flags & DRM_MODE_PROP_ENUM);
+
+            if (dpms_prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                bool found = false;
-                for (int i = 0; i < subconn_prop_ptr->count_enums && !found; i++) {
-                   if (subconn_prop_ptr->enums[i].value == enum_value) {
-                      rpt_vstring(d2, "Subconnector value = %d - %s",
-                                      enum_value, subconn_prop_ptr->enums[i].name);
+                for (int i = 0; i < dpms_prop_ptr->count_enums && !found; i++) {
+                   if (dpms_prop_ptr->enums[i].value == enum_value) {
+                      rpt_vstring(d3, "dpms value = %d - %s",
+                                      enum_value, dpms_prop_ptr->enums[i].name);
                       found = true;
                    }
                 }
                 if (!found) {
-                   rpt_vstring(d2, "Unrecognized subconnector value: %d", enum_value);
+                   rpt_vstring(d3, "Unrecognized dpms value: %d", enum_value);
                 }
             }
             else {
-               rpt_vstring(d2, "Subconnector not type enum!.  Value = %d", enum_value);
+               rpt_vstring(d2, "dpms not type enum!.  Value = %d", enum_value);
             }
-
          }
+
+         else if (conn->props[ndx] == link_status_prop_id) {
+            rpt_vstring(d2, "link-status property");
+            assert(link_status_prop_ptr);   // if link_status_prop_id found, link_status_prop_ptr must have been set
+            uint32_t enum_value = conn->prop_values[ndx];
+            // printf("link_status value: %d\n", enum_value);
+
+            assert(link_status_prop_ptr->flags & DRM_MODE_PROP_ENUM);
+
+            bool found = false;
+             for (int i = 0; i < link_status_prop_ptr->count_enums && !found; i++) {
+                if (link_status_prop_ptr->enums[i].value == enum_value) {
+                   rpt_vstring(d3, "link-status value = %d - %s",
+                                   enum_value, link_status_prop_ptr->enums[i].name);
+                   found = true;
+                }
+             }
+             if (!found) {
+                rpt_vstring(d2, "Unrecognized link-status value: %d", enum_value);
+             }
+         }
+
+         else if (conn->props[ndx] == type_prop_id) {
+            rpt_vstring(d2, "type property");
+            assert(type_prop_ptr);   // if type_prop_id found, type_prop_ptr must have been set
+            uint32_t enum_value = conn->prop_values[ndx];
+            // printf("type value: %d\n", enum_value);
+
+            assert(type_prop_ptr->flags & DRM_MODE_PROP_ENUM);
+
+            bool found = false;
+             for (int i = 0; i < type_prop_ptr->count_enums && !found; i++) {
+                if (type_prop_ptr->enums[i].value == enum_value) {
+                   rpt_vstring(d2, "type value = %d - %s",
+                                   enum_value, type_prop_ptr->enums[i].name);
+                   found = true;
+                }
+             }
+             if (!found) {
+                rpt_vstring(d2, "Unrecognized type value: %d", enum_value);
+             }
+         }
+
+
 #ifdef FUTURE
          else {
             drmModePropertyPtr prop_ptr = drmModeGetProperty(fd, conn->props[ndx]);
@@ -496,6 +609,15 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
    }
    if (subconn_prop_ptr) {
       drmModeFreeProperty(subconn_prop_ptr);
+   }
+   if (dpms_prop_ptr) {
+      drmModeFreeProperty(dpms_prop_ptr);
+   }
+   if (link_status_prop_ptr) {
+      drmModeFreeProperty(link_status_prop_ptr);
+   }
+   if (type_prop_ptr) {
+      drmModeFreeProperty(type_prop_ptr);
    }
    DBGMSF(debug, "freeing res=%p", (void*)res);
    drmModeFreeResources(res);
