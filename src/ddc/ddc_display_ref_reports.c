@@ -329,7 +329,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       else {    // communication working
          if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
             report_drm_dpms_status(1, businfo->drm_connector_name);
-            rpt_label(1, "Output is likely invalid.");
+            rpt_label(1, "DDC communication appears to work, but output is likely invalid.");
          }
          bool comm_error_occurred = false;
          DDCA_MCCS_Version_Spec vspec = get_vcp_version_by_dref(dref);
