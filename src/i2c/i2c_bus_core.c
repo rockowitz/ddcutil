@@ -883,6 +883,8 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 
 
 static void init_i2c_bus_core_func_name_table() {
+   RTTI_ADD_FUNC(dpms_check_x11_asleep);
+   RTTI_ADD_FUNC(dpms_check_drm_asleep);
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_check_businfo_connector);
    RTTI_ADD_FUNC(i2c_close_bus);

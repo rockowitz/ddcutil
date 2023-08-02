@@ -1526,8 +1526,6 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(filter_phantom_displays);
-   RTTI_ADD_FUNC(dpms_check_x11_asleep);
-   RTTI_ADD_FUNC(dpms_check_drm_asleep);
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(is_supported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
