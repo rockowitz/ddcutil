@@ -37,10 +37,12 @@ extern bool i2c_force_bus;
 #define DPMS_SOME_DRM_ASLEEP   0x04
 #define DPMS_ALL_DRM_ASLEEP    0x08
 typedef Byte Dpms_State;
+
 extern Dpms_State dpms_state;
-char *      interpret_dpms_state_t(Dpms_State state);
-void        dpms_check_x11_asleep();
-bool        dpms_check_drm_asleep(I2C_Bus_Info * businfo);
+
+char *           interpret_dpms_state_t(Dpms_State state);
+void             dpms_check_x11_asleep();
+bool             dpms_check_drm_asleep(I2C_Bus_Info * businfo);
 
 // Basic I2C bus operations
 Sys_Drm_Connector *
