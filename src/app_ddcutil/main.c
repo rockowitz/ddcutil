@@ -874,8 +874,8 @@ main(int argc, char *argv[]) {
    if (!(parsed_cmd->flags&CMD_FLAG_F12)) {
       dpms_check_x11_asleep();
       if (dpms_state & DPMS_STATE_X11_ASLEEP) {
-         DBGMSF(true, "DPMS sleep mode is active. Terminating execution.");
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "DPMS sleep mode is active.  Terminating execution");
+         // DBGMSF(true, "DPMS sleep mode is active. Terminating execution.");
+         MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "DPMS sleep mode is active.  Terminating execution");
         goto bye;
       }
    }
