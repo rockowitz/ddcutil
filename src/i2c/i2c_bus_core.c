@@ -396,6 +396,10 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
 
           DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
+          if (bus_info->busno == 6 || bus_info->busno == 8) {
+             ddcrc = -EBUSY;
+             bus_info->edid = NULL;
+          }
           DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
           if (ddcrc == 0) {
              bus_info->flags |= I2C_BUS_ADDR_0X50;
