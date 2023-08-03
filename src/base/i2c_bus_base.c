@@ -16,6 +16,7 @@
 #include "util/glib_string_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 
 #include "core.h"
 #include "rtti.h"
@@ -35,6 +36,25 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Local utility functions
 //
 
+Value_Name_Table i2c_bus_flags_table = {
+      VN(I2C_BUS_EXISTS),
+      VN(I2C_BUS_ACCESSIBLE),
+      VN(I2C_BUS_ADDR_0X50),
+      VN(I2C_BUS_ADDR_0X37),
+      VN(I2C_BUS_ADDR_0X30),
+      VN(I2C_BUS_EDP),
+      VN(I2C_BUS_LVDS),
+      VN(I2C_BUS_PROBED),
+      VN(I2C_BUS_VALID_NAME_CHECKED),
+      VN(I2C_BUS_HAS_VALID_NAME),
+      VN(I2C_BUS_BUSY),
+      VN(I2C_BUS_SYSFS_EDID),
+      VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
+      VN_END
+};
+
+
+
 /** Creates a string interpretation of I2C_Bus_Info.flags.
  *
  *  @param  flags flags value
@@ -44,6 +64,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
  *  Keep the names in sync with flag definitions
  */
 char * interpret_i2c_bus_flags(uint16_t flags) {
+#ifdef OLD
    GPtrArray * names = g_ptr_array_new();
 
 #define ADD_NAME(_name) \
@@ -68,6 +89,8 @@ char * interpret_i2c_bus_flags(uint16_t flags) {
    char * joined =  join_string_g_ptr_array(names, " | ");
    g_ptr_array_free(names, false);
    return joined;
+#endif
+   return VN_INTERPRET_FLAGS(flags, i2c_bus_flags_table, " | ");
 }
 
 
@@ -82,8 +105,13 @@ char * interpret_i2c_bus_flags_t(uint16_t flags) {
    strncpy(buf, sflags, required_size);
    free(sflags);
    return buf;
+
 }
 #endif
+
+char * interpret_i2c_bus_flags_t(uint16_t flags) {
+   return VN_INTERPRET_FLAGS_T(flags, i2c_bus_flags_table, " | ");
+}
 
 
 /** Allocates and initializes a new #I2C_Bus_Info struct
@@ -108,12 +136,12 @@ void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
    if (bus_info)
       DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  bus_info->marker, bus_info->busno);
    if (bus_info && memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
-      if (bus_info->edid)
+      if (bus_info->edid) {
          free_parsed_edid(bus_info->edid);
-      if (bus_info->driver)
-         free(bus_info->driver);
-      if (bus_info->drm_connector_name)
-         free(bus_info->drm_connector_name);
+         bus_info->edid = NULL;
+      }
+      FREE(bus_info->driver);
+      FREE(bus_info->drm_connector_name);
       bus_info->marker[3] = 'x';
       free(bus_info);
    }
@@ -128,7 +156,8 @@ void i2c_gdestroy_bus_info(void * data) {
 const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
    char * result = NULL;
    switch(found_by) {
-   case DRM_CONNECTOR_NOT_FOUND:      result = "DRM_CONNECTOR_NOT_FOUND";     break;
+   case DRM_CONNECTOR_NOT_CHECKED:    result = "DRM_CONNECTOR_NOT_CHECKED";    break;
+   case DRM_CONNECTOR_NOT_FOUND:      result = "DRM_CONNECTOR_NOT_FOUND";      break;
    case DRM_CONNECTOR_FOUND_BY_BUSNO: result = "DRM_CONNECTOR_FOUND_BY_BUSNO"; break;
    case DRM_CONNECTOR_FOUND_BY_EDID:  result = "DRM_CONNECTOR_FOUND_BY_EDID";  break;
    }
@@ -155,7 +184,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    assert(bus_info);
    rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
    char * s = interpret_i2c_bus_flags(bus_info->flags);
-   rpt_vstring(depth, "Flags:                   %s", s);
+   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags(bus_info->flags));
    free(s);
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
@@ -265,6 +294,25 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
    DBGMSF(debug, "Done.     Returning: %p", result);
    return result;
 }
+
+
+const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * bus_info, const char * attribute) {
+   assert(bus_info);
+   assert(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+   assert(bus_info->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
+   char * result = NULL;
+   if (bus_info->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
+      assert(bus_info->drm_connector_name);
+      RPT_ATTR_TEXT(5, &result, "/sys/class/drm", bus_info->drm_connector_name, "connected");
+   }
+   return result;
+}
+
+#ifdef UNUSED
+const char * i2c_get_drm_connected(const I2C_Bus_Info * bus_info) {
+   return i2c_get_drm_connector_attribute(bus_info, "connected");
+}
+#endif
 
 
 
