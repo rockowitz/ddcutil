@@ -68,7 +68,7 @@ do { \
    } while(0)
 
 
-#define FREEA(_ptr) \
+#define FREE(_ptr) \
    do { \
       if (_ptr) { \
          free(_ptr); \

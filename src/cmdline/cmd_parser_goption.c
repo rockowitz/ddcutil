@@ -1435,11 +1435,11 @@ parse_command(
                     mfg_id_work,
                     modelwork,
                     snwork);
-   FREEA(usbwork);
-   FREEA(edidwork);
-   FREEA(mfg_id_work);
-   FREEA(modelwork);
-   FREEA(snwork);
+   FREE(usbwork);
+   FREE(edidwork);
+   FREE(mfg_id_work);
+   FREE(modelwork);
+   FREE(snwork);
 
    if (maxtrywork) {
       parsing_ok &= parse_maxtrywork(maxtrywork, parsed_cmd, errmsgs);
@@ -1449,7 +1449,7 @@ parse_command(
 
    if (mccswork) {
       parsing_ok &= parse_mccswork(mccswork, parsed_cmd, errmsgs);
-      FREEA(mccswork);
+      FREE(mccswork);
    }
 
    if (syslog_work) {
@@ -1460,7 +1460,7 @@ parse_command(
          syslog_level = level;
       else
          parsing_ok = false;
-      FREEA(syslog_work);
+      FREE(syslog_work);
    }
    parsed_cmd->syslog_level = syslog_level;
 
@@ -1476,7 +1476,7 @@ parse_command(
          parsed_cmd->explicit_i2c_source_addr = (uint8_t) ival;
       }
       parsing_ok &= ok;
-      FREEA(i2c_source_addr_work);
+      FREE(i2c_source_addr_work);
    }
 
    if (i1_work) {
@@ -1484,7 +1484,7 @@ parse_command(
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I1_SET;
       parsing_ok &= ok;
-      FREEA(i1_work);
+      FREE(i1_work);
    }
 
    if (i2_work) {
@@ -1492,7 +1492,7 @@ parse_command(
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
       parsing_ok &= ok;
-      FREEA(i2_work);
+      FREE(i2_work);
    }
 
    if (fl1_work) {
@@ -1502,7 +1502,7 @@ parse_command(
      else
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL1_SET;
       parsing_ok &= ok;
-      FREEA(fl1_work);
+      FREE(fl1_work);
    }
 
    if (fl2_work) {
@@ -1512,7 +1512,7 @@ parse_command(
      else
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_FL2_SET;
       parsing_ok &= ok;
-      FREEA(fl2_work);
+      FREE(fl2_work);
    }
 
    if (ignored_vid_pid) {
@@ -1562,7 +1562,7 @@ parse_command(
 
    if (trace_classes) {
       parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errmsgs);
-      FREEA(trace_classes);
+      FREE(trace_classes);
    }
 
 
