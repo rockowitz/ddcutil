@@ -317,12 +317,14 @@ char * get_drm_connector_by_busno(int busno) {
    char i2cdir[40];
    g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d", businfo->busno);
    char * real_i2cdir = NULL;
+   // DBGMSG("WOLF 1");
    GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
    assert(real_i2cdir);
+   // DBGMSG("WOLF 2");
    char * adapter_dir = find_adapter(real_i2cdir, -1);
    assert(adapter_dir);
+   // DBGMSG("WOLF 3");
    result = RPT_ATTR_NOTE_SUBDIR(-1, NULL, adapter_dir, "drm");
-   DBGMSF("Done. real_i2cdir=%s, adapter_dir=%s, returning %s", real_i2cdir, adapter_dir, sbool(result));
    free(real_i2cdir);
    free(adapter_dir);
    DBGMSF(debug, "Done. Returning %s", sbool(result));
