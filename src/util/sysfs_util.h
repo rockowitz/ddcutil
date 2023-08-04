@@ -2,7 +2,7 @@
  * Functions for reading /sys file system
  */
 
-// Copyright (C) 2016-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SYSFS_UTIL_H_
@@ -113,7 +113,7 @@ rpt_attr_realpath_basename(
 #define RPT_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
    rpt_attr_realpath_basename(depth, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
-#define GET_ATTR_REALPATH_BASENAME(depth, value_loc, fn_segment, ...) \
+#define GET_ATTR_REALPATH_BASENAME(value_loc, fn_segment, ...) \
    rpt_attr_realpath_basename(-1, value_loc, fn_segment, ##__VA_ARGS__, NULL)
 
 typedef bool (*Fn_Filter)(const char * fn, const char * val);
