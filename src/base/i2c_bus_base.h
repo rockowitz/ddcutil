@@ -73,7 +73,6 @@ I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 const char *     i2c_get_drm_connector_attribute(
                      const I2C_Bus_Info * bus_info,
                      const char *         attribute);
-const char *     i2c_get_drm_connected(const I2C_Bus_Info * bus_info);
 
 #define I2C_GET_DRM_CONNECTED(_businfo) \
    i2c_get_drm_connector_attribute(bus_info, "connected")
