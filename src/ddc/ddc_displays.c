@@ -423,9 +423,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
-      if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED)) {
-         i2c_check_businfo_connector(businfo);
-      }
+      assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+      // if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED)) {
+      //    i2c_check_businfo_connector(businfo);
+      // }
 
       char * drm_dpms = NULL;
       char * drm_status = NULL;
@@ -520,7 +521,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          }  // end, communication working
          else {
             if (psc == -EBUSY) {
-               dh->dref->flags |= DREF_DDC_BUSY; // communication failed, but do not set DDCRC_COMMUNICATION_WORKING
+               dh->dref->flags |= DREF_DDC_BUSY; // communication failed, do not set DDCRC_COMMUNICATION_WORKING
             }
          }
 
@@ -715,7 +716,7 @@ ddc_get_filtered_displays(bool include_invalid_displays) {
 
 
 Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, bool ignore_invalid) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
    Display_Ref * result = NULL;
    TRACED_ASSERT(all_displays);
@@ -993,7 +994,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          if (!dref) {
             dref = create_bus_display_ref(businfo->busno);
             dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-            dref->drm_connector = g_strdup(businfo->drm_connector_name);
+            if (businfo->drm_connector_name) {
+               dref->drm_connector = g_strdup(businfo->drm_connector_name);
+            }
             dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
             dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
@@ -1112,10 +1115,10 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
       // if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
       //    dref->dispno = DISPNO_INVALID;  // does this need to be different?
-      if (dref->flags & DREF_DDC_COMMUNICATION_WORKING)
-         dref->dispno = ++dispno_max;
-      else if (dref->flags & DREF_DDC_BUSY)
+      if (dref->flags & DREF_DDC_BUSY)
          dref->dispno = DISPNO_BUSY;
+      else if (dref->flags & DREF_DDC_COMMUNICATION_WORKING)
+         dref->dispno = ++dispno_max;
       else {
          dref->dispno = DISPNO_INVALID;   // -1;
       }
