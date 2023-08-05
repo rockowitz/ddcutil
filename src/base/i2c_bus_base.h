@@ -18,7 +18,7 @@ extern GPtrArray * i2c_buses;
 
 // Retrieve and inspect bus information
 
-// Keep interpret_i2c_bus_flags() in sync with these definitions
+// Keep in sync with i2c_bus_flags_table
 #define I2C_BUS_EXISTS                 0x08
 #define I2C_BUS_ACCESSIBLE              0x04
 #define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50
