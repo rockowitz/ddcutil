@@ -1359,7 +1359,7 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
  *  The numbers are determined by examining /sys/bus/i2c.
  *
  *  This function looks only in /sys. It does not verify that the
- *  corresponding /dev/i2c-N devices exists.
+ *  corresponding /dev/i2c-N devices exist.
  */
 Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
    bool debug = false;
@@ -1411,9 +1411,9 @@ void consolidated_i2c_sysfs_report(int depth) {
    rpt_nl();
 }
 
+
+
 #ifdef FOR_FUTURE_USE
-
-
 
 Connector_Busno_Dref_Table * cbd_table = NULL;
 
@@ -1456,7 +1456,7 @@ Connector_Busno_Dref * get_cbd_by_connector(const char * connector) {
 }
 
 
-// how to handle seconday busno's
+// how to handle secondary busno's
 Connector_Busno_Dref * get_cbd_by_busno(int busno) {
    Connector_Busno_Dref * result = NULL;
    assert(cbd_table);
@@ -1510,8 +1510,9 @@ void add_video_device_to_array(
  *
  *  @return array of fully qualified device paths
  */
-GPtrArray * get_sys_video_devices(GPtrArray* video_devices) {
+GPtrArray * get_sys_video_devices() {
    bool debug = false;
+   GPtrArray * video_devices = g_ptr_array_new_with_free_func(g_free);
    DBGTRC_STARTING(debug, TRACE_GROUP, "video_devices=%p", video_devices);
 
    dir_filtered_ordered_foreach("/sys/bus/pci/devices",
@@ -1524,19 +1525,23 @@ GPtrArray * get_sys_video_devices(GPtrArray* video_devices) {
    return video_devices;
 }
 
+
 bool all_video_devices_drm() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   GPtrArray * video_devices = g_ptr_array_new();
-   get_sys_video_devices(video_devices);
-   bool all_devices_drm = true;
+
+   GPtrArray * video_devices = get_sys_video_devices();
+   bool all_devices_drm = false;
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
+      bool found_drm = RPT_ATTR_NOTE_SUBDIR((debug) ? -1 : 1, NULL, device_path, "drm");
+#ifdef OLD
       char   b[PATH_MAX];
       g_strlcpy(b, device_path, sizeof(b));
       g_strlcat(b, "/drm", sizeof(b) );
       // DBGMSG("Looking for |%s|", b);
       bool found_drm = directory_exists(b);
+#endif
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
       if (!found_drm)
          all_devices_drm = false;
@@ -1545,6 +1550,7 @@ bool all_video_devices_drm() {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, all_devices_drm, "");
    return all_devices_drm;
 }
+
 
 
 void init_i2c_sysfs() {
