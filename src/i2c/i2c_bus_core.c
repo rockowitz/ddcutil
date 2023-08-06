@@ -284,54 +284,6 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
 }
 
 
-
-
-/** If the display has an open-source conformant driver,
- *  returns the connector name.
- *
- *  If the display has a DRM driver that doesn't conform
- *  to the standard (I'm looking at you, Nvidia), or it
- *  is not a DRM driver, returns NULL.
- */
-char * get_drm_connector_by_busno(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno = %d", busno);
-   char * result = NULL;
-   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
-   if (drm_connector) {
-
-      result = g_strdup(drm_connector->connector_name);
-   }
-   DBGMSF(debug, "Done. Returning %s", result);
-   return result;
-}
-
-
-/** Checks if a display has a DRM driver by looking for
- *  subdirectory drm in the adapter directory.
- */
- bool is_drm_display(I2C_Bus_Info * businfo) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno = %d", businfo->busno);
-   bool result = false;
-   char i2cdir[40];
-   g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d", businfo->busno);
-   char * real_i2cdir = NULL;
-   // DBGMSG("WOLF 1");
-   GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
-   assert(real_i2cdir);
-   // DBGMSG("WOLF 2");
-   char * adapter_dir = find_adapter(real_i2cdir, -1);
-   assert(adapter_dir);
-   // DBGMSG("WOLF 3");
-   result = RPT_ATTR_NOTE_SUBDIR(-1, NULL, adapter_dir, "drm");
-   free(real_i2cdir);
-   free(adapter_dir);
-   DBGMSF(debug, "Done. Returning %s", sbool(result));
-   return result;
-}
-
-
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Checking I2C_Bus_Info for /dev/i2c-%d", businfo->busno);
@@ -349,12 +301,8 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
      }
    }
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      char * s = interpret_i2c_bus_flags(businfo->flags);
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final businfo flags: %s", s);
-      free(s);
-   }
-   if (drm_connector)
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", interpret_i2c_bus_flags_t(businfo->flags));
+   if (businfo->drm_connector_name)
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", drm_connector->connector_name);
    else
       DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
@@ -376,6 +324,9 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
  *  @param  busno   i2c bus number
  *  #param  drm_name_fragment  string to look for
  *  @return true/false
+ *
+ *  @remark Works only for DRM displays, therefore use only
+ *          informationally.
  */
 // Attempting to recode using opendir() and readdir() produced
 // a complicated mess.  Using execute_shell_cmd_collect() is simple.
@@ -527,11 +478,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
 
-      if (!bus_info->edid && is_drm_display(bus_info)) {
+      if (!bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
       }
 
       // i.e. for Nvidia
-      if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display(bus_info)) {
+      if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
          // at least we now have the edid
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Getting EDID from sysfs");
          Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(bus_info->edid->bytes);
@@ -633,29 +584,18 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
                  );
       if (output_level >= DDCA_OL_VERBOSE) {
       if (businfo->drm_connector_name) {
-         char buf[100];
+         char title_buf[100];
          int tw = title_width; // 35;  // title_width;
-         g_snprintf(buf, 100, "/sys/class/drm/%s/dpms", businfo->drm_connector_name);
-         char * s = file_get_first_line(buf, false);
-         if (s) {
-            strcat(buf, ":");
-            rpt_vstring(d, "%-*s%s", tw, buf, s);
-            free(s);
-         }
-         g_snprintf(buf, 100, "/sys/class/drm/%s/enabled", businfo->drm_connector_name);
-         s = file_get_first_line(buf, false);
-         if (s) {
-            strcat(buf, ":");
-            rpt_vstring(d, "%-*s%s", tw, buf, s);
-            free(s);
-         }
-         g_snprintf(buf, 100, "/sys/class/drm/%s/status", businfo->drm_connector_name);
-         s = file_get_first_line(buf, false);
-         if (s) {
-            strcat(buf, ":");
-            rpt_vstring(d, "%-*s%s", tw, buf, s);
-            free(s);
-         }
+         char * attr = "dpms";
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+         attr = "enabled";
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+         attr = "status";
+         g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
+         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+
 #ifdef OLD
          char * dpms    = NULL;
          char * status  = NULL;
