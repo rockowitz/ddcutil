@@ -212,7 +212,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    case DISPNO_PHANTOM:    // -2
       rpt_vstring(depth, "Phantom display");
       if (dref->dispno == DISPNO_PHANTOM)
-         rpt_vstring(d1, "Associated non-phantom display: %s", dref_repr_t(dref->actual_display));
+         rpt_vstring(d1, "Associated non-phantom display: %s", dref_short_name_t(dref->actual_display));
       break;
    case DISPNO_INVALID:   // -1
       rpt_vstring(depth, "Invalid display");
