@@ -29,6 +29,7 @@
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
+#include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
 #ifdef ENABLE_UDEV
 #include "util/udev_usb_util.h"
@@ -860,6 +861,46 @@ is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
 }
 
 
+/** Tests if 2 #Display_Ref instances have each have EDIDs and
+ *  they are identical.
+ *  @param dref1
+ *  @param dref2
+ *  @return true/false
+ */
+bool drefs_edid_equal(Display_Ref * dref1, Display_Ref * dref2) {
+   assert(dref1);
+   assert(dref2);
+   Parsed_Edid * pedid1 = dref1->pedid;
+   Parsed_Edid * pedid2 = dref2->pedid;
+   bool edids_equal = false;
+   if (pedid1 && pedid2) {
+      if (memcmp(pedid1->bytes, pedid2->bytes, 128) == 0) {
+         edids_equal = true;
+      }
+   }
+   return edids_equal;
+}
+
+
+/** Checks if any 2 #Display_Ref instances in a GPtrArray of instances
+*   have identical EDIDs.
+*   @param  drefs  array of Display_Refs
+*   @return true/false
+*/
+bool has_duplicate_edids(GPtrArray * drefs) {
+   bool found_duplicate = false;
+   for (int i = 0; i < drefs->len; i++) {
+      for (int j = i+1; j < drefs->len; j++) {
+         if (drefs_edid_equal(g_ptr_array_index(drefs, i), g_ptr_array_index(drefs, j)) ) {
+            found_duplicate = true;
+            break;
+         }
+      }
+   }
+   return found_duplicate;
+}
+
+
 /** Mark phantom displays.
  *
  *  Split the #Display_Ref's in a GPtrArray into those that have
@@ -883,14 +924,19 @@ filter_phantom_displays(GPtrArray * all_displays) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len = %d", all_displays->len);
    GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
    GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
+   GPtrArray* valid_non_mst_displays = g_ptr_array_sized_new(all_displays->len);
+   GPtrArray* valid_mst_displays     = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-      TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
-      if (dref->dispno < 0)     // DISPNO_INVALID, DISPNO_PHANTOM, DISPNO_REMOVED
-         g_ptr_array_add(invalid_displays, dref);
-      else
-         g_ptr_array_add(valid_displays, dref);
+      if (dref->io_path.io_mode == DDCA_IO_I2C) {
+         TRACED_ASSERT( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0 );
+         if (dref->dispno < 0)     // DISPNO_INVALID, DISPNO_PHANTOM, DISPNO_REMOVED
+            g_ptr_array_add(invalid_displays, dref);
+         else
+            g_ptr_array_add(valid_displays, dref);
+      }
    }
+
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid displays, %d invalid displays",
                               valid_displays->len, invalid_displays->len);
    if (invalid_displays->len > 0 || valid_displays->len == 0 ) {
@@ -905,8 +951,41 @@ filter_phantom_displays(GPtrArray * all_displays) {
          }
       }
    }
-   g_ptr_array_free(invalid_displays, true);
-   g_ptr_array_free(valid_displays, true);
+
+
+   for (int ndx = 0; ndx < valid_displays->len; ndx++) {
+      Display_Ref * dref = g_ptr_array_index(valid_displays, ndx);
+      I2C_Bus_Info * businfo = dref->detail;
+      char * bus_name = get_i2c_device_sysfs_name(businfo->busno);
+      if (streq(bus_name, "DPMST"))
+         g_ptr_array_add(valid_mst_displays, dref);
+      else
+         g_ptr_array_add(valid_non_mst_displays, dref);
+   }
+
+   if (valid_mst_displays->len > 0 && valid_non_mst_displays->len > 0) {
+      if (!has_duplicate_edids(valid_non_mst_displays)) {  // handle remote possibilities of 2 monitors with identical edid
+         for (int mst_ndx = 0; mst_ndx < valid_mst_displays->len; mst_ndx++) {
+            Display_Ref * valid_mst_display_ref = g_ptr_array_index(valid_mst_displays, mst_ndx);
+            for (int non_mst_ndx = 0; non_mst_ndx < valid_non_mst_displays->len; non_mst_ndx++) {
+               Display_Ref * valid_non_mst_display_ref = g_ptr_array_index(valid_non_mst_displays, non_mst_ndx);
+               Parsed_Edid * pedid1 = valid_mst_display_ref->pedid;
+               Parsed_Edid * pedid2 = valid_non_mst_display_ref->pedid;
+               if (pedid1 && pedid2) {
+                  if (memcmp(pedid1->bytes, pedid2->bytes, 128) == 0) {
+                     valid_non_mst_display_ref->dispno = DISPNO_INVALID;
+                     valid_non_mst_display_ref->actual_display = valid_mst_display_ref;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   g_ptr_array_free(valid_mst_displays, false);
+   g_ptr_array_free(valid_non_mst_displays, false);
+   g_ptr_array_free(invalid_displays, false);
+   g_ptr_array_free(valid_displays, false);
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
