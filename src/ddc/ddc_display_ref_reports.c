@@ -211,6 +211,8 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       break;
    case DISPNO_PHANTOM:    // -2
       rpt_vstring(depth, "Phantom display");
+      if (dref->dispno == DISPNO_PHANTOM)
+         rpt_vstring(d1, "Associated non-phantom display: %s", dref_repr_t(dref->actual_display));
       break;
    case DISPNO_INVALID:   // -1
       rpt_vstring(depth, "Invalid display");
@@ -326,7 +328,10 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             }
          }
       }         // communication not working
+
       else {    // communication working
+         // if (dref->dispno == DISPNO_PHANTOM)
+         //    rpt_vstring(d1, "Associated non-phantom display: %s", dref_repr_t(dref->actual_display));
          if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
             report_drm_dpms_status(1, businfo->drm_connector_name);
             rpt_label(1, "DDC communication appears to work, but output is likely invalid.");
