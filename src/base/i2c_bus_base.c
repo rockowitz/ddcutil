@@ -21,7 +21,7 @@
 #include "core.h"
 #include "rtti.h"
 
-#include "i2c/i2c_sysfs.h"    // temp
+#include "i2c/i2c_sysfs.h"
 
 #include "i2c_bus_base.h"
 
@@ -36,6 +36,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 // Local utility functions
 //
 
+// Keep in sync with definitions in i2c_bus_base.h
 Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_EXISTS),
       VN(I2C_BUS_ACCESSIBLE),
@@ -59,56 +60,21 @@ Value_Name_Table i2c_bus_flags_table = {
  *
  *  @param  flags flags value
  *  @return string interpretation, caller must free
- *
- *  @remark
- *  Keep the names in sync with flag definitions
  */
 char * interpret_i2c_bus_flags(uint16_t flags) {
-#ifdef OLD
-   GPtrArray * names = g_ptr_array_new();
-
-#define ADD_NAME(_name) \
-   if (_name & flags) g_ptr_array_add(names, #_name)
-
-   ADD_NAME(I2C_BUS_EXISTS             );
-   ADD_NAME(I2C_BUS_ACCESSIBLE         );
-   ADD_NAME(I2C_BUS_ADDR_0X50          );
-   ADD_NAME(I2C_BUS_ADDR_0X37          );
-   ADD_NAME(I2C_BUS_ADDR_0X30          );
-   ADD_NAME(I2C_BUS_EDP                );
-   ADD_NAME(I2C_BUS_LVDS               );
-   ADD_NAME(I2C_BUS_PROBED             );
-   ADD_NAME(I2C_BUS_VALID_NAME_CHECKED );
-   ADD_NAME(I2C_BUS_HAS_VALID_NAME     );
-   ADD_NAME(I2C_BUS_BUSY               );
-   ADD_NAME(I2C_BUS_SYSFS_EDID         );
-   ADD_NAME(I2C_BUS_DRM_CONNECTOR_CHECKED);
-
-#undef ADD_NAME
-
-   char * joined =  join_string_g_ptr_array(names, " | ");
-   g_ptr_array_free(names, false);
-   return joined;
-#endif
    return VN_INTERPRET_FLAGS(flags, i2c_bus_flags_table, " | ");
 }
 
 
-#ifdef NOT_WORTH_THE_SPACE
-char * interpret_i2c_bus_flags_t(uint16_t flags) {
-   static GPrivate  buffer_key = G_PRIVATE_INIT(g_free);
-   static GPrivate  buffer_len_key = G_PRIVATE_INIT(g_free);
-
-   char * sflags = interpret_i2c_bus_flags(flags);
-   int required_size = strlen(sflags) + 1;
-   char * buf = get_thread_dynamic_buffer(&buffer_key, &buffer_len_key, required_size);
-   strncpy(buf, sflags, required_size);
-   free(sflags);
-   return buf;
-
-}
-#endif
-
+/** Creates a string interpretation of I2C_Bus_Info.flags.
+ *
+ *  @param  flags flags value
+ *  @return string interpretation
+ *
+ *  The string is returned is valid until the next call
+ *  to this function in the current thread.
+ *  It must not be free'd by the caller.
+ */
 char * interpret_i2c_bus_flags_t(uint16_t flags) {
    return VN_INTERPRET_FLAGS_T(flags, i2c_bus_flags_table, " | ");
 }
@@ -183,12 +149,12 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
    DBGMSF(debug, "Starting");
    assert(bus_info);
    rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
-   char * s = interpret_i2c_bus_flags(bus_info->flags);
-   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags(bus_info->flags));
-   free(s);
+   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags_t(bus_info->flags));
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
+
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
    if ( bus_info->flags & I2C_BUS_PROBED ) {
+#ifdef OUT
       rpt_vstring(depth, "Driver:                  %s", bus_info->driver);
       rpt_vstring(depth, "Bus accessible:          %s", sbool(bus_info->flags&I2C_BUS_ACCESSIBLE ));
       rpt_vstring(depth, "Bus is eDP:              %s", sbool(bus_info->flags&I2C_BUS_EDP ));
@@ -201,9 +167,10 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
       rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
+#endif
       rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
-      rpt_vstring(depth, "Connector name checked:  %s", sbool(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
 
+      rpt_vstring(depth, "Connector name checked:  %s", sbool(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
       if (bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
          rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
             drm_connector_found_by_name(bus_info->drm_connector_found_by), bus_info->drm_connector_found_by);
@@ -255,9 +222,8 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
       bus_info = g_ptr_array_index(i2c_buses, busndx);
       // report_businfo(busInfo);
       if (debug) {
-         char * s = interpret_i2c_bus_flags(bus_info->flags);
-         DBGMSG("busno=%d, flags = 0x%04x = %s", bus_info->busno, bus_info->flags, s);
-         free(s);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, flags = 0x%04x = %s",
+            bus_info->busno, bus_info->flags, interpret_i2c_bus_flags_t(bus_info->flags));
       }
       assert( bus_info->flags & I2C_BUS_PROBED );
    }
@@ -296,6 +262,13 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 }
 
 
+/** Retrieves the value of a text attribute (e.g. enabled) in the SYSFS
+ *  DRM connector directory for an I2C bus.
+ *
+ *  @param bus_info
+ *  @param attribute  attribute name
+ *  @return attribute value, or NULL if not a DRM display
+ */
 const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * bus_info, const char * attribute) {
    assert(bus_info);
    assert(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
@@ -303,17 +276,17 @@ const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * bus_info, cons
    char * result = NULL;
    if (bus_info->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
       assert(bus_info->drm_connector_name);
-      RPT_ATTR_TEXT(5, &result, "/sys/class/drm", bus_info->drm_connector_name, "connected");
+      RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", bus_info->drm_connector_name, attribute);
    }
    return result;
 }
+
 
 #ifdef UNUSED
 const char * i2c_get_drm_connected(const I2C_Bus_Info * bus_info) {
    return i2c_get_drm_connector_attribute(bus_info, "connected");
 }
 #endif
-
 
 
 /** Reports I2C buses.
@@ -357,14 +330,10 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
 }
 
 
-static void init_i2c_bus_base_func_name_table() {
+/** Module initialization. */
+void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_free_bus_info);
-}
-
-
-void init_i2c_bus_base() {
-   init_i2c_bus_base_func_name_table();
 }
 
