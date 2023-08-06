@@ -457,7 +457,7 @@ free_results_table(Results_Table * rtable) {
 Results_Table *
 dsa2_get_results_table_by_busno(int busno, bool create_if_not_found) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bussno=%d, create_if_not_found=%s",
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, create_if_not_found=%s",
                                          busno, sbool(create_if_not_found));
    assert(busno <= I2C_BUS_MAX);
    Results_Table * rtable = results_tables[busno];
