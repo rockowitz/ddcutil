@@ -96,20 +96,20 @@ I2C_Bus_Info * i2c_new_bus_info(int busno) {
 }
 
 
-void i2c_free_bus_info(I2C_Bus_Info * bus_info) {
+void i2c_free_bus_info(I2C_Bus_Info * businfo) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bus_info = %p", bus_info);
-   if (bus_info)
-      DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  bus_info->marker, bus_info->busno);
-   if (bus_info && memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
-      if (bus_info->edid) {
-         free_parsed_edid(bus_info->edid);
-         bus_info->edid = NULL;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
+   if (businfo)
+      DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
+   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
+      if (businfo->edid) {
+         free_parsed_edid(businfo->edid);
+         businfo->edid = NULL;
       }
-      FREE(bus_info->driver);
-      FREE(bus_info->drm_connector_name);
-      bus_info->marker[3] = 'x';
-      free(bus_info);
+      FREE(businfo->driver);
+      FREE(businfo->drm_connector_name);
+      businfo->marker[3] = 'x';
+      free(businfo);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -137,56 +137,56 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
 
 /** Reports on a single I2C bus.
  *
- *  \param   bus_info    pointer to Bus_Info structure describing bus
- *  \param   depth       logical indentation depth
+ *  \param   businfo    pointer to Bus_Info structure describing bus
+ *  \param   depth      logical indentation depth
  *
  *  \remark
  *  Although this is a debug type report, it is called (indirectly) by the
  *  ENVIRONMENT command.
  */
-void i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth) {
+void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
-   assert(bus_info);
-   rpt_structure_loc("I2C_Bus_Info", bus_info, depth);
-   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags_t(bus_info->flags));
-   rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_EXISTS));
+   assert(businfo);
+   rpt_structure_loc("I2C_Bus_Info", businfo, depth);
+   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags_t(businfo->flags));
+   rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", businfo->busno, sbool(businfo->flags&I2C_BUS_EXISTS));
 
-   rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", bus_info->busno, sbool(bus_info->flags&I2C_BUS_PROBED ));
-   if ( bus_info->flags & I2C_BUS_PROBED ) {
+   rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", businfo->busno, sbool(businfo->flags&I2C_BUS_PROBED ));
+   if ( businfo->flags & I2C_BUS_PROBED ) {
 #ifdef OUT
-      rpt_vstring(depth, "Driver:                  %s", bus_info->driver);
-      rpt_vstring(depth, "Bus accessible:          %s", sbool(bus_info->flags&I2C_BUS_ACCESSIBLE ));
-      rpt_vstring(depth, "Bus is eDP:              %s", sbool(bus_info->flags&I2C_BUS_EDP ));
-      rpt_vstring(depth, "Bus is LVDS:             %s", sbool(bus_info->flags&I2C_BUS_LVDS));
-      rpt_vstring(depth, "Valid bus name checked:  %s", sbool(bus_info->flags & I2C_BUS_VALID_NAME_CHECKED));
-      rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(bus_info->flags & I2C_BUS_HAS_VALID_NAME));
+      rpt_vstring(depth, "Driver:                  %s", businfo->driver);
+      rpt_vstring(depth, "Bus accessible:          %s", sbool(businfo->flags&I2C_BUS_ACCESSIBLE ));
+      rpt_vstring(depth, "Bus is eDP:              %s", sbool(businfo->flags&I2C_BUS_EDP ));
+      rpt_vstring(depth, "Bus is LVDS:             %s", sbool(businfo->flags&I2C_BUS_LVDS));
+      rpt_vstring(depth, "Valid bus name checked:  %s", sbool(businfo->flags & I2C_BUS_VALID_NAME_CHECKED));
+      rpt_vstring(depth, "I2C bus has valid name:  %s", sbool(businfo->flags & I2C_BUS_HAS_VALID_NAME));
 #ifdef DETECT_SLAVE_ADDRS
-      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X30));
+      rpt_vstring(depth, "Address 0x30 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X30));
 #endif
-      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X37));
-      rpt_vstring(depth, "Address 0x50 present:    %s", sbool(bus_info->flags & I2C_BUS_ADDR_0X50));
-      rpt_vstring(depth, "Device busy:             %s", sbool(bus_info->flags & I2C_BUS_BUSY));
+      rpt_vstring(depth, "Address 0x37 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X37));
+      rpt_vstring(depth, "Address 0x50 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
+      rpt_vstring(depth, "Device busy:             %s", sbool(businfo->flags & I2C_BUS_BUSY));
 #endif
-      rpt_vstring(depth, "errno for open:          %d", bus_info->open_errno);
+      rpt_vstring(depth, "errno for open:          %d", businfo->open_errno);
 
-      rpt_vstring(depth, "Connector name checked:  %s", sbool(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
-      if (bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
+      rpt_vstring(depth, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
+      if (businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
          rpt_vstring(depth, "drm_connector_found_by:  %s (%d)",
-            drm_connector_found_by_name(bus_info->drm_connector_found_by), bus_info->drm_connector_found_by);
-         rpt_vstring(depth, "drm_connector_name:      %s", bus_info->drm_connector_name);
+            drm_connector_found_by_name(businfo->drm_connector_found_by), businfo->drm_connector_found_by);
+         rpt_vstring(depth, "drm_connector_name:      %s", businfo->drm_connector_name);
       }
       // not useful and clutters the output
-      // i2c_report_functionality_flags(bus_info->functionality, /* maxline */ 90, depth);
-      if ( bus_info->flags & I2C_BUS_ADDR_0X50) {
-         if (bus_info->edid) {
-            report_parsed_edid(bus_info->edid, true /* verbose */, depth);
+      // i2c_report_functionality_flags(businfo->functionality, /* maxline */ 90, depth);
+      if ( businfo->flags & I2C_BUS_ADDR_0X50) {
+         if (businfo->edid) {
+            report_parsed_edid(businfo->edid, true /* verbose */, depth);
          }
       }
    }
 
 #ifndef TARGET_BSD
-   I2C_Sys_Info * info = get_i2c_sys_info(bus_info->busno, -1);
+   I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
    dbgrpt_i2c_sys_info(info, depth);
    free_i2c_sys_info(info);
 #endif
@@ -217,20 +217,20 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
    bool debug = false;
    DBGMSF(debug, "Starting.  busndx=%d", busndx );
    assert(i2c_buses);
-   I2C_Bus_Info * bus_info = NULL;
+   I2C_Bus_Info * businfo = NULL;
    if (busndx < i2c_buses->len) {
-      bus_info = g_ptr_array_index(i2c_buses, busndx);
+      businfo = g_ptr_array_index(i2c_buses, busndx);
       // report_businfo(busInfo);
       if (debug) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, flags = 0x%04x = %s",
-            bus_info->busno, bus_info->flags, interpret_i2c_bus_flags_t(bus_info->flags));
+            businfo->busno, businfo->flags, interpret_i2c_bus_flags_t(businfo->flags));
       }
-      assert( bus_info->flags & I2C_BUS_PROBED );
+      assert( businfo->flags & I2C_BUS_PROBED );
    }
 
    DBGMSF(debug, "Done.  busndx=%d, Returning %p, busno=%d",
-                         busndx, bus_info,  (bus_info) ? bus_info->busno : -1) ;
-   return bus_info;
+                         busndx, businfo,  (businfo) ? businfo->busno : -1) ;
+   return businfo;
 }
 
 
@@ -265,26 +265,26 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 /** Retrieves the value of a text attribute (e.g. enabled) in the SYSFS
  *  DRM connector directory for an I2C bus.
  *
- *  @param bus_info
+ *  @param businfo
  *  @param attribute  attribute name
  *  @return attribute value, or NULL if not a DRM display
  */
-const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * bus_info, const char * attribute) {
-   assert(bus_info);
-   assert(bus_info->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
-   assert(bus_info->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
+const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
+   assert(businfo);
+   assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+   assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
    char * result = NULL;
-   if (bus_info->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
-      assert(bus_info->drm_connector_name);
-      RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", bus_info->drm_connector_name, attribute);
+   if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
+      assert(businfo->drm_connector_name);
+      RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", businfo->drm_connector_name, attribute);
    }
    return result;
 }
 
 
 #ifdef UNUSED
-const char * i2c_get_drm_connected(const I2C_Bus_Info * bus_info) {
-   return i2c_get_drm_connector_attribute(bus_info, "connected");
+const char * i2c_get_drm_connected(const I2C_Bus_Info * businfo) {
+   return i2c_get_drm_connector_attribute(businfo, "connected");
 }
 #endif
 

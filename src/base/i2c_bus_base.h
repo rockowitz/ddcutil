@@ -19,7 +19,7 @@ extern GPtrArray * i2c_buses;
 // Retrieve and inspect bus information
 
 // Keep in sync with i2c_bus_flags_table
-#define I2C_BUS_EXISTS                 0x08
+#define I2C_BUS_EXISTS                  0x08
 #define I2C_BUS_ACCESSIBLE              0x04
 #define I2C_BUS_ADDR_0X50               0x02      ///< detected I2C bus address 0x50
 #define I2C_BUS_ADDR_0X37               0x01      ///< detected I2C bus address 0x37
@@ -61,7 +61,7 @@ struct {
 char *           interpret_i2c_bus_flags(uint16_t flags);
 char *           interpret_i2c_bus_flags_t(uint16_t flags);
 I2C_Bus_Info *   i2c_new_bus_info(int busno);
-void             i2c_free_bus_info(I2C_Bus_Info * bus_info);
+void             i2c_free_bus_info(I2C_Bus_Info * businfo);
 void             i2c_gdestroy_bus_info(void * data);
 GPtrArray *      i2c_get_all_buses();
 
@@ -71,20 +71,20 @@ I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
 // Accessors
 const char *     i2c_get_drm_connector_attribute(
-                     const I2C_Bus_Info * bus_info,
+                     const I2C_Bus_Info * businfo,
                      const char *         attribute);
 
 #define I2C_GET_DRM_CONNECTED(_businfo) \
-   i2c_get_drm_connector_attribute(bus_info, "connected")
+   i2c_get_drm_connector_attribute(_businfo, "connected")
 
 #define I2C_GET_DRM_STATUS(_businfo) \
-   i2c_get_drm_connector_attribute(bus_info, "status")
+   i2c_get_drm_connector_attribute(_businfo, "status")
 
 #define I2C_GET_DRM_ENABLED(_businfo) \
-   i2c_get_drm_connector_attribute(bus_info, "enabled")
+   i2c_get_drm_connector_attribute(_businfo, "enabled")
 
 
-void             i2c_dbgrpt_bus_info(I2C_Bus_Info * bus_info, int depth);
+void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth);
 // Reports all detected i2c buses:
 int              i2c_dbgrpt_buses(bool report_all, int depth);
 
