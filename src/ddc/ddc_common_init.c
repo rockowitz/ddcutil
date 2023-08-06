@@ -366,6 +366,9 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
    // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F8;
 
+
+   if (parsed_cmd->flags & CMD_FLAG_F7)
+      detect_phantom_displays = false;
    ok = true;
 
 bye:
