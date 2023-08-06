@@ -1553,6 +1553,50 @@ bool all_video_devices_drm() {
 
 
 
+
+/** If the display has an open-source conformant driver,
+ *  returns the connector name.
+ *
+ *  If the display has a DRM driver that doesn't conform
+ *  to the standard (I'm looking at you, Nvidia), or it
+ *  is not a DRM driver, returns NULL.
+ */
+char * get_drm_connector_by_busno(int busno) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno = %d", busno);
+   char * result = NULL;
+   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
+   if (drm_connector) {
+      result = g_strdup(drm_connector->connector_name);
+   }
+   DBGMSF(debug, "Done. Returning %s", result);
+   return result;
+}
+
+
+/** Checks if a display has a DRM driver by looking for
+ *  subdirectory drm in the adapter directory.
+ */
+ bool is_drm_display_by_busno(int busno) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno = %d", busno);
+   bool result = false;
+   char i2cdir[40];
+   g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
+   char * real_i2cdir = NULL;
+   GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
+   assert(real_i2cdir);
+   char * adapter_dir = find_adapter(real_i2cdir, -1);
+   assert(adapter_dir);
+   result = RPT_ATTR_NOTE_SUBDIR(-1, NULL, adapter_dir, "drm");
+   free(real_i2cdir);
+   free(adapter_dir);
+   DBGMSF(debug, "Done. Returning %s", sbool(result));
+   return result;
+}
+
+
+/** Module initialization */
 void init_i2c_sysfs() {
 
    // I2C_Sys_Info
@@ -1586,11 +1630,15 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_all_i2c_info);
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 
+   // other
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(all_video_devices_drm);
+   RTTI_ADD_FUNC(get_drm_connector_by_busno);
+   RTTI_ADD_FUNC(is_drm_display_by_busno);
 }
 
 
+/** Module termination.  Release resources. */
 void terminate_i2c_sysfs() {
    if (all_i2c_info)
       g_ptr_array_free(all_i2c_info, true);

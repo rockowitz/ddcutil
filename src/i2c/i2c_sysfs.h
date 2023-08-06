@@ -128,6 +128,9 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 GPtrArray * get_sys_video_devices();
 bool all_video_devices_drm();
 
+char * get_drm_connector_by_busno(int busno);
+bool is_drm_display_by_busno(int busno);
+
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();
