@@ -973,7 +973,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
                Parsed_Edid * pedid2 = valid_non_mst_display_ref->pedid;
                if (pedid1 && pedid2) {
                   if (memcmp(pedid1->bytes, pedid2->bytes, 128) == 0) {
-                     valid_non_mst_display_ref->dispno = DISPNO_INVALID;
+                     valid_non_mst_display_ref->dispno = DISPNO_PHANTOM;
                      valid_non_mst_display_ref->actual_display = valid_mst_display_ref;
                   }
                }
