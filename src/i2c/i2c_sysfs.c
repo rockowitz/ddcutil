@@ -1560,6 +1560,9 @@ bool all_video_devices_drm() {
  *  If the display has a DRM driver that doesn't conform
  *  to the standard (I'm looking at you, Nvidia), or it
  *  is not a DRM driver, returns NULL.
+ *
+ *  @param busno
+ *  @return connector name, caller must free
  */
 char * get_drm_connector_by_busno(int busno) {
    bool debug = false;
