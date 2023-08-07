@@ -1579,19 +1579,21 @@ char * get_drm_connector_by_busno(int busno) {
  */
  bool is_drm_display_by_busno(int busno) {
    bool debug = false;
-   DBGMSF(debug, "Starting. busno = %d", busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
    bool result = false;
    char i2cdir[40];
    g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
    char * real_i2cdir = NULL;
    GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
+   DBGTRC(debug, TRACE_GROUP, "real_i2cdir = %s", real_i2cdir);
    assert(real_i2cdir);
-   char * adapter_dir = find_adapter(real_i2cdir, -1);
+   int depth = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
+   char * adapter_dir = find_adapter(real_i2cdir, depth);
    assert(adapter_dir);
-   result = RPT_ATTR_NOTE_SUBDIR(-1, NULL, adapter_dir, "drm");
+   result = RPT_ATTR_NOTE_SUBDIR(depth, NULL, adapter_dir, "drm");
    free(real_i2cdir);
    free(adapter_dir);
-   DBGMSF(debug, "Done. Returning %s", sbool(result));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -1631,6 +1633,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 
    // other
+   RTTI_ADD_FUNC(is_drm_display_by_busno);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
