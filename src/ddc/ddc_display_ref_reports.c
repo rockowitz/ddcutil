@@ -23,8 +23,10 @@
 #include "public/ddcutil_types.h"
 
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/monitor_model_key.h"
 #include "base/monitor_quirks.h"
+#include "base/per_display_data.h"
 #include "base/rtti.h"
 
 #include "i2c/i2c_bus_core.h"
@@ -44,6 +46,9 @@
 
 // Default trace class for this file
 static const DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
+
+
+struct Results_Table;
 
 //
 // Display_Ref reports
@@ -380,6 +385,12 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                      how = "all data bytes 0 in DDC reply packet";
                   rpt_vstring(d1, "Monitor uses %s to indicate unsupported feature.", how);
                }
+            }
+
+            if (dref->pdd->dsa2_enabled) {
+               struct Results_Table * rt = (void *)dref->pdd->dsa2_data;
+               Sleep_Multiplier cur_multiplier = dsa2_get_adjusted_sleep_mult(rt);
+               rpt_vstring(1, "Current dynamic sleep adjustment multiplier: %5.2f", cur_multiplier);
             }
          }
          if (comm_error_occurred) {
