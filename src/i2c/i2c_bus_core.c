@@ -426,7 +426,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGMSF(debug, "Calling i2c_open_bus..");
       int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
       if (fd >= 0) {
-          DBGMSF(debug, "Opened bus /dev/i2c-%d", bus_info->busno);
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", bus_info->busno);
           bus_info->flags |= I2C_BUS_ACCESSIBLE;
           bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
 
@@ -440,7 +440,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
              }
           }
 #endif
-          DBGMSF(debug, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
           if (ddcrc != 0) {
              bus_info->open_errno = -errno;
           }
@@ -474,20 +474,23 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_BUSY;
           }
 
-          DBGMSF(debug, "Closing bus...");
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
           i2c_close_bus(fd, CALLOPT_ERR_MSG);
       }
-
-      if (!bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
+      else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_open_bus() failed, rc = %s", linux_errno_name(-fd));
       }
 
-      // i.e. for Nvidia
-      if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
-         // at least we now have the edid
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Getting EDID from sysfs");
-         Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(bus_info->edid->bytes);
-         if (connector_rec && connector_rec->edid_bytes) {
-            bus_info->edid = create_parsed_edid2(connector_rec->edid_bytes, "SYSFS");
+      // conformant driver, so drm_connector_name set, but reading EDID failed,
+      // probably because of EBUSY.  Get the EDID so we have it for messages.
+      if (!bus_info->edid && bus_info->drm_connector_name) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
+         GByteArray*  edid_bytes = NULL;
+         int d = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
+         RPT_ATTR_EDID(d, &edid_bytes, "/sys/class/drm", bus_info->drm_connector_name, "edid");
+         if (edid_bytes && edid_bytes->len >= 128) {
+            bus_info->edid = create_parsed_edid2(edid_bytes->data, "SYSFS");
             if (debug) {
                if (bus_info->edid)
                   report_parsed_edid(bus_info->edid, false /* verbose */, 0);
@@ -500,6 +503,20 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                memcpy(bus_info->edid->edid_source, "SYSFS", 6);
             }
          }
+      }
+
+      // i.e. for Nvidia
+      // getting connector name failed, but reading the EDID was successful.
+      // find the connector name by EDID
+      if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
+         // at least we now have the edid
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Finding connector by EDID...");
+         Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(bus_info->edid->bytes);
+         if (connector_rec) {
+            bus_info->drm_connector_name = g_strdup(connector_rec->connector_name);
+            bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+         }
+
          bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       }
 
