@@ -508,7 +508,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // i.e. for Nvidia
       // getting connector name failed, but reading the EDID was successful.
       // find the connector name by EDID
-      if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
+      if (!bus_info->drm_connector_name && bus_info->edid) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Finding connector by EDID...");
          char * connector = get_drm_connector_by_edid(bus_info->edid->bytes);
          if (connector) {
