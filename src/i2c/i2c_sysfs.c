@@ -1577,6 +1577,19 @@ char * get_drm_connector_by_busno(int busno) {
 }
 
 
+char * get_drm_connector_by_edid(Byte * edid_bytes) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Finding connector by EDID...");
+   char * result = NULL;
+   Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(edid_bytes);
+   if (connector_rec) {
+      result = g_strdup(connector_rec->connector_name);
+   }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
 /** Checks if a display has a DRM driver by looking for
  *  subdirectory drm in the adapter directory.
  *

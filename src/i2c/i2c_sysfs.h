@@ -129,7 +129,8 @@ GPtrArray * get_sys_video_devices();
 bool all_video_devices_drm();
 
 char * get_drm_connector_by_busno(int busno);
-bool is_drm_display_by_busno(int busno);
+char * get_drm_connector_by_edid(Byte * edid_bytes);
+bool   is_drm_display_by_busno(int busno);
 
 
 void init_i2c_sysfs();

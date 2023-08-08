@@ -509,11 +509,10 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // getting connector name failed, but reading the EDID was successful.
       // find the connector name by EDID
       if (!bus_info->drm_connector_name && bus_info->edid && is_drm_display_by_busno(bus_info->busno)) {
-         // at least we now have the edid
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Finding connector by EDID...");
-         Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(bus_info->edid->bytes);
-         if (connector_rec) {
-            bus_info->drm_connector_name = g_strdup(connector_rec->connector_name);
+         char * connector = get_drm_connector_by_edid(bus_info->edid->bytes);
+         if (connector) {
+            bus_info->drm_connector_name = connector;
             bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
          }
 
