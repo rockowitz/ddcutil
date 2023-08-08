@@ -1526,32 +1526,32 @@ GPtrArray * get_sys_video_devices() {
 }
 
 
+/** Checks that all video devices have DRM drivers.
+ *
+ *  @return true/false
+ */
 bool all_video_devices_drm() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    GPtrArray * video_devices = get_sys_video_devices();
-   bool all_devices_drm = false;
+   bool all_devices_drm = true;
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
-      bool found_drm = RPT_ATTR_NOTE_SUBDIR((debug) ? -1 : 1, NULL, device_path, "drm");
-#ifdef OLD
-      char   b[PATH_MAX];
-      g_strlcpy(b, device_path, sizeof(b));
-      g_strlcat(b, "/drm", sizeof(b) );
-      // DBGMSG("Looking for |%s|", b);
-      bool found_drm = directory_exists(b);
-#endif
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
-      if (!found_drm)
+      int d = IS_DBGTRC(debug,DDCA_TRC_NONE) ? -1 : 1;
+      bool found_drm = RPT_ATTR_NOTE_SUBDIR(d, NULL, device_path, "drm");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
+      if (!found_drm) {
          all_devices_drm = false;
+         break;
+      }
    }
    g_ptr_array_free(video_devices, true);
+
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, all_devices_drm, "");
    return all_devices_drm;
 }
-
-
 
 
 /** If the display has an open-source conformant driver,
@@ -1579,6 +1579,12 @@ char * get_drm_connector_by_busno(int busno) {
 
 /** Checks if a display has a DRM driver by looking for
  *  subdirectory drm in the adapter directory.
+ *
+ *  Note that this test does not detect which connector
+ *  is associated with the display.
+ *
+ *  @param busno   I2C bus number
+ *  @return true/false
  */
  bool is_drm_display_by_busno(int busno) {
    bool debug = false;
@@ -1588,7 +1594,7 @@ char * get_drm_connector_by_busno(int busno) {
    g_snprintf(i2cdir, 40, "/sys/bus/i2c/devices/i2c-%d",busno);
    char * real_i2cdir = NULL;
    GET_ATTR_REALPATH(&real_i2cdir, i2cdir);
-   DBGTRC(debug, TRACE_GROUP, "real_i2cdir = %s", real_i2cdir);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "real_i2cdir = %s", real_i2cdir);
    assert(real_i2cdir);
    int depth = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
    char * adapter_dir = find_adapter(real_i2cdir, depth);
@@ -1636,7 +1642,6 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 
    // other
-   RTTI_ADD_FUNC(is_drm_display_by_busno);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
