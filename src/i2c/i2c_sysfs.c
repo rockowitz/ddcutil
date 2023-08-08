@@ -61,6 +61,8 @@ static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
  *  Caller is responsible for freeing the returned value
  */
 char * find_adapter(char * path, int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
    char * devpath = NULL;
    if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
        if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
@@ -72,6 +74,7 @@ char * find_adapter(char * path, int depth) {
            devpath = find_adapter(p2, depth);
        }
    }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, devpath, "");
    return devpath;
 }
 
@@ -1655,6 +1658,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 
    // other
+   RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
