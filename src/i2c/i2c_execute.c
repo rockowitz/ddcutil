@@ -79,7 +79,7 @@ i2c_set_addr0(int fd, uint16_t op, int addr) {
       errno=EBUSY;
    }
    else {
-      RECORD_IO_EVENT( IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
+      RECORD_IO_EVENTX(-1, IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
    }
 
    if (ioctl_rc < 0) {

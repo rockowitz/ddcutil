@@ -58,11 +58,13 @@ void log_io_call(
         uint64_t             start_time_nanos,
         uint64_t             end_time_nanos);
 
+#ifdef OLD
 #define RECORD_IO_EVENT(event_type, cmd_to_time)  { \
    uint64_t _start_time = cur_realtime_nanosec(); \
    cmd_to_time; \
    log_io_call(event_type, __func__, _start_time, cur_realtime_nanosec()); \
 }
+#endif
 
 // combines log_io_call() with record_io_finish():
 #define RECORD_IO_EVENTX(_fd, _event_type, _cmd_to_time)  { \
