@@ -238,9 +238,6 @@ int i2c_open_bus(int busno, Byte callopts) {
       fd = -errsv;
    }
    else {
-#ifdef OUT
-      RECORD_IO_FINISH_NOW(fd, IE_OPEN);
-#endif
 #ifdef PTD
       ptd_append_thread_description(filename);
 #endif
