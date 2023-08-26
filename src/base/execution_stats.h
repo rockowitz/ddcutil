@@ -61,8 +61,7 @@ void log_io_call(
 #define RECORD_IO_EVENTX(_fd, _event_type, _cmd_to_time)  { \
    uint64_t _start_time = cur_realtime_nanosec(); \
    _cmd_to_time; \
-   uint64_t  end_time = cur_realtime_nanosec(); \
-   log_io_call(_event_type, __func__, _start_time, end_time); \
+   log_io_call(_event_type, __func__, _start_time, cur_realtime_nanosec()); \
 }
 
 void report_io_call_stats(int depth);
