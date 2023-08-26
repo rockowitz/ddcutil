@@ -98,7 +98,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
       msgset.msgs  = messages;
       msgset.nmsgs = 1;
 
-      RECORD_IO_EVENTX(
+      RECORD_IO_EVENT(
             fd,
             IE_IOCTL_WRITE,
             ( rc = ioctl(fd, I2C_RDWR, &msgset) )
@@ -128,7 +128,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
 #ifdef FOR_REF
          int ndx = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
-            RECORD_IO_EVENTX(
+            RECORD_IO_EVENT(
                 fd,
                 IE_FILEIO_READ,
                 ( rc = read(fd, &rawedid->bytes[ndx], 1) )
@@ -158,7 +158,7 @@ i2c_get_edid_bytes_directly_using_ioctl(
          msgset.msgs  = messages;
          msgset.nmsgs = 1;
 
-         RECORD_IO_EVENTX(
+         RECORD_IO_EVENT(
             fd,
             IE_IOCTL_READ,
             ( rc = ioctl(fd, I2C_RDWR, &msgset))
@@ -218,7 +218,7 @@ i2c_get_edid_bytes_directly_using_fileio(
 
    if (write_before_read) {
       Byte byte_to_write = 0x00;
-      RECORD_IO_EVENTX(
+      RECORD_IO_EVENT(
           fd,
           IE_FILEIO_WRITE,
           ( rc = write(fd, &byte_to_write, 1) )
@@ -237,7 +237,7 @@ i2c_get_edid_bytes_directly_using_fileio(
       if (read_bytewise) {
          int ndx = 0;
          for (; ndx < edid_read_size && rc == 0; ndx++) {
-            RECORD_IO_EVENTX(
+            RECORD_IO_EVENT(
                 fd,
                 IE_FILEIO_READ,
                 ( rc = read(fd, &rawedid->bytes[ndx], 1) )
@@ -253,7 +253,7 @@ i2c_get_edid_bytes_directly_using_fileio(
           DBGMSF(debug, "Final single byte read returned %d, ndx=%d", rc, ndx);
       }
       else {
-         RECORD_IO_EVENTX(
+         RECORD_IO_EVENT(
              fd,
              IE_FILEIO_READ,
              ( rc = read(fd, rawedid->bytes, edid_read_size) )

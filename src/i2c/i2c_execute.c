@@ -79,7 +79,7 @@ i2c_set_addr0(int fd, uint16_t op, int addr) {
       errno=EBUSY;
    }
    else {
-      RECORD_IO_EVENTX(-1, IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
+      RECORD_IO_EVENT(-1, IE_OTHER, ( ioctl_rc = ioctl(fd, op, addr) ) );
    }
 
    if (ioctl_rc < 0) {
@@ -215,7 +215,7 @@ i2c_fileio_writer(
 
         int pollrc;
         int timeout_msec = 100;
-        RECORD_IO_EVENTX(
+        RECORD_IO_EVENT(
               fd,
               IE_OTHER,
               ( pollrc = poll(pfds, 1, timeout_msec) )
@@ -241,7 +241,7 @@ i2c_fileio_writer(
      }
      // #endif
 
-     RECORD_IO_EVENTX(
+     RECORD_IO_EVENT(
            fd,
            IE_FILEIO_WRITE,
            ( rc = write(fd, pbytes, bytect) )
@@ -304,7 +304,7 @@ i2c_fileio_reader(
       // for Acer and P2411h, reads bytes 1,3,5,7 ..
       for (int ndx=0; ndx < bytect && rc == 0; ndx++) {
          // DBGMSF(debug, "Calling read() for 1 byte, ndx=%d", ndx);
-         RECORD_IO_EVENTX(
+         RECORD_IO_EVENT(
             fd,
             IE_FILEIO_READ,
             ( rc = read(fd, readbuf+ndx, 1) )
@@ -333,7 +333,7 @@ i2c_fileio_reader(
 
          int pollrc;
          int timeout_msec = 100;
-         RECORD_IO_EVENTX(
+         RECORD_IO_EVENT(
                fd,
                IE_OTHER,
                ( pollrc = poll(pfds, 1, timeout_msec) )
@@ -359,7 +359,7 @@ i2c_fileio_reader(
       }
 // #endif
 
-      RECORD_IO_EVENTX(
+      RECORD_IO_EVENT(
          fd,
          IE_FILEIO_READ,
          ( rc = read(fd, readbuf, bytect) )
@@ -471,7 +471,7 @@ i2c_ioctl_writer(
    // if error:
    //    -1, errno is set
    // 11/15: as seen: always returns 1 for success
-   RECORD_IO_EVENTX(
+   RECORD_IO_EVENT(
          fd,
          IE_IOCTL_WRITE,
          ( rc = ioctl(fd, I2C_RDWR, &msgset) )
@@ -536,7 +536,7 @@ i2c_ioctl_reader1(
    if (IS_TRACING())
       dbgrpt_i2c_rdwr_ioctl_data(1, &msgset);
 
-   RECORD_IO_EVENTX(
+   RECORD_IO_EVENT(
       fd,
       IE_IOCTL_READ,
       ( rc = ioctl(fd, I2C_RDWR, &msgset))

@@ -55,7 +55,7 @@ usb_open_hiddev_device(
    int  file;
    int mode = (calloptions & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR;
 
-   RECORD_IO_EVENTX(
+   RECORD_IO_EVENT(
          -1,
          IE_OPEN,
          ( file = open(hiddev_devname, mode) )
@@ -96,7 +96,7 @@ usb_close_device(
 
    errno = 0;
    int rc = 0;
-   RECORD_IO_EVENTX(fd, IE_CLOSE, ( rc = close(fd) ) );
+   RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
    int errsv = errno;
    assert(rc<=0);
    if (rc < 0) {

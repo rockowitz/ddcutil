@@ -222,7 +222,7 @@ int i2c_open_bus(int busno, Byte callopts) {
    int  fd;             // Linux file descriptor
 
    snprintf(filename, 19, "/dev/"I2C"-%d", busno);
-   RECORD_IO_EVENTX(
+   RECORD_IO_EVENT(
          -1,
          IE_OPEN,
          ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
@@ -265,7 +265,7 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    Status_Errno result = 0;
    int rc = 0;
 
-   RECORD_IO_EVENTX(fd, IE_CLOSE, ( rc = close(fd) ) );
+   RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
    int errsv = errno;
    if (rc < 0) {
