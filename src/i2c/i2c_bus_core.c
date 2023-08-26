@@ -223,7 +223,8 @@ int i2c_open_bus(int busno, Byte callopts) {
    int  fd;             // Linux file descriptor
 
    snprintf(filename, 19, "/dev/"I2C"-%d", busno);
-   RECORD_IO_EVENT(
+   RECORD_IO_EVENTX(
+         -1,
          IE_OPEN,
          ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
@@ -238,7 +239,9 @@ int i2c_open_bus(int busno, Byte callopts) {
       fd = -errsv;
    }
    else {
+#ifdef OUT
       RECORD_IO_FINISH_NOW(fd, IE_OPEN);
+#endif
 #ifdef PTD
       ptd_append_thread_description(filename);
 #endif
