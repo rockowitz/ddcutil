@@ -45,13 +45,6 @@ void record_io_finish(
    record_io_finish(_fd, cur_realtime_nanosec() , _event_type, (char*) __FILE__, __LINE__, (char*) __func__); \
    while(0)
 
-// combines log_io_call() with record_io_finish():
-#define RECORD_IO_EVENTX(_fd, _event_type, _cmd_to_time)  { \
-   uint64_t _start_time = cur_realtime_nanosec(); \
-   _cmd_to_time; \
-   uint64_t  end_time = cur_realtime_nanosec(); \
-   log_io_call(_event_type, __func__, _start_time, end_time); \
-   record_io_finish(_fd, end_time, _event_type, __FILE__, __LINE__, (char *)__func__); \
-}
+
 
 #endif /* LAST_IO_EVENT_H_ */
