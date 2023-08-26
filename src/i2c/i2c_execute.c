@@ -32,7 +32,6 @@
 #include "base/core.h"
 #include "base/ddc_errno.h"
 #include "base/execution_stats.h"
-#include "base/last_io_event.h"
 #include "base/linux_errno.h"
 #include "base/parms.h"
 #include "base/rtti.h"

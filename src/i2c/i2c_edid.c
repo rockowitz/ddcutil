@@ -34,7 +34,6 @@
 #include "base/parms.h"
 #include "base/core.h"
 #include "base/execution_stats.h"
-#include "base/last_io_event.h"
 #include "base/rtti.h"
 
 #ifdef TARGET_BSD
