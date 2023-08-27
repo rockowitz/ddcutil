@@ -63,8 +63,6 @@ typedef struct {
 // Global Variables
 //
 
-// static IO_Event_Type        last_io_event;
-// static long                 last_io_timestamp = -1;
 static uint64_t             program_start_timestamp;
 static uint64_t             resettable_start_timestamp;
 static Status_Code_Counts * primary_error_code_counts = NULL;
