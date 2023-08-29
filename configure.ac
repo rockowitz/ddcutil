@@ -32,7 +32,7 @@ dnl process command line args, perform initializations
 dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
 dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
-AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
+AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com],[ddcutil14)
 
 dnl old unused cruft
 dnl AC_DEFINE( [PACKAGE_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version] )
