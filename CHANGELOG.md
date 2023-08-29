@@ -1,17 +1,15 @@
 # Changelog
 
-## [2.0.0] 2023-nn-nn
+## [2.0.0-rc2] 2023-08-29
 
 Release 2.0.0 contains extensive changes.  Shared library libddcutil is not 
 backwards compatible.  
 
 #### Added
-- Information about detected displays is optionally saved in file $HOME/.cache/ddcutil/displays, 
-  shortening startup time. Options ***--enable-displays-cache*** and ***--disable-displays-cache*** 
-  control whether this feature is enabled. 
 - Install /usr/lib/modules-load.d/ddcutil.conf. Ensures that driver i2c-dev
-  is loaded.
-- TODO: udev rules riles
+  is loaded, making configuration using group i2c unnecessary in most cases.
+- Install file /usr/share/udev/rules.d/60-ddcutil-i2c.rules, autmatically granting
+  the logged on user read/write access to /dev/i2c devices for video displays.
 - Command options not of interest to general users are now hidden when help is 
   requested.  Option ***--hh*** exposes them, and implies option ***--help***.
 - Option ***--noconfig***. Do not process the configuration file.
@@ -27,8 +25,15 @@ backwards compatible.
 - API performance profiling
 - Added options ***--ignore-hiddev*** and ***--ignore-usb-vid-pid***
 - Added: Sample file nvidia-i2c.conf that can be installed in directory 
-  /etc/modprobe.d to sent options sometimes needed by the proprieatry NVidia 
+  /etc/modprobe.d to set options sometimes needed by the proprieatry NVidia 
   video driver.
+- Added option ***--discard-cache*** to discard cached data at the start of 
+  program execution.  Valid arguments are ***capabilities***, ***dsa***, and ***all***.
+- Command **discard [capabilites|dsa|all] cache(s)** discards cached data.
+- Option ***--pid*** (alt ***--process-id***) prepends the process id to trace messages.
+- Command **traceable-functions*** lists functions that can be traced by name, 
+  i.e. ones that can be specified as a ***--trcfunc*** argument.
+- If using X11, terminate immediately if a DPMS sleep mode is active.
 
 #### Changed
 - The dynamic sleep algorithm has been completely rewritten to both dynamically
@@ -50,7 +55,7 @@ backwards compatible.
 - Option ***--vstats*** includes per-display stas in its reports.  It takes the same
   arguments as ***--stats***. 
 - Cached capabilities are not erased by ddcutil calls that are not executed with 
-  ***--enable-displays-cache***.  This makes the behavior the same as cached 
+  ***--enable-capabilities-cache***.  This makes the behavior the same as cached 
   displays and cached performance statistics.
 - **environment --verbose** disables caching, reports contents of cached files.
 - loosen criteria for when to try fallback methods to read EDID when using USB 
@@ -62,6 +67,21 @@ backwards compatible.
     60-ddcutil-i2c.rules and  60-ddcutil-usb.rules.  The user can modify these 
     files and install them in /etc/udev/rules.d to override the files installed 
     in /usr/lib/udev/rules.d. 
+- ***--enable-dsa*** is a valid sysnonym for ***--enable-dynamic-sleep***
+- Display detection improved
+  - Rework the algorithm for detecting display communication and testing how 
+    invalid features are reported.
+  - Handle the phantom monitor case where a MST capabile monitor is detected as
+    a separeate i2c bus/drm connector along with that on the video card
+- Command **detect** improved:
+  - verbose output: 
+    - Reports the sysfs DRM values for dpms, enabled, and status 
+     - Reports if I2C slave address x37 is responsive
+  - reports an error summary if DDC communication fails
+  - Issue warnings that output may be inaccurate if the monitor is sleeping 
+    or if it cannot be determined how unsupported features are indicated.
+- Messages regarding DDC data errors (controlled by option ***ddc***) are 
+  written to the system log with level LOG_WARNING instead of LOG_NOTICE.
 
 #### Fixed
 - More robust checks during display detection to test for misuse of the DDC Null Message
