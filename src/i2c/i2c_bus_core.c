@@ -302,7 +302,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", interpret_i2c_bus_flags_t(businfo->flags));
    if (businfo->drm_connector_name)
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", drm_connector->connector_name);
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
    else
       DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
    return drm_connector;
