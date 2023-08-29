@@ -910,7 +910,7 @@ dsa2_record_final(
       }
       else if (tries > Target_Max_Tries){    // 4
          // Too many tries. Unconditionally increase rtable->cur_step
-         next_cur_step = MIN(rtable->cur_retry_loop_step, step_last);
+         next_cur_step = MIN(rtable->cur_retry_loop_step+1, step_last);
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                "busno=%d, Incremented cur_step for tries > 4. New value: %d",
                rtable->busno, next_cur_step);
