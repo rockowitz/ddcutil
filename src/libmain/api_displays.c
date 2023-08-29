@@ -1281,6 +1281,49 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 }
 #endif
 
+
+#ifdef FUTURE_DDCUTIL_C_API
+
+
+//
+// Display hotplug detection
+//
+
+/** Signature of a function to be invoked by the shared library notifying the
+ *  client that a change in connected displays has been detected.
+ *
+ *  The client program should call #ddca_resdetect_displays() and then
+ *  ddca_get_display_refs() to get the currently valid display references.
+ *
+ *  @since 2.0.0
+ */
+typedef void (*DDCA_Display_Hotplug_Callback_Func)();
+
+/** Registers a function to be called called when a change in displays is
+ *  detected.
+ *
+ *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func()
+ *  @return DDCRC_OK
+ *  @retval DDCRC_INVALID_OPERATION function already registered
+ *
+ *  @since 2.0.0
+ */
+DDCA_Status
+ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+
+/** Removes a function from the list of registered callbacks
+ *
+ *  @param[in] func  function that has already been registered
+ *  @retval DDCRC_OK  function removed from list
+ *  @retval DDCRC_NOT_FOUNC function not registered
+ *
+ *  @since 2.0.0
+ */
+DDCA_Status
+ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+#endif
+
+#ifdef FUTURE_IMPLEMENTATION
 DDCA_Status
 ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
    bool debug = false;
@@ -1298,6 +1341,7 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
    API_EPILOG(debug, result, "");
    return result;
 }
+#endif
 
 
 void init_api_displays() {
@@ -1317,7 +1361,9 @@ void init_api_displays() {
       RTTI_ADD_FUNC(ddca_open_display3);
       RTTI_ADD_FUNC(ddca_redetect_displays);
       RTTI_ADD_FUNC(ddca_report_display_by_dref);
+#ifdef FUTURE
       RTTI_ADD_FUNC(ddca_register_display_hotplug_callback);
       RTTI_ADD_FUNC(ddca_unregister_display_hotplug_callback)
+#endif
 }
 
