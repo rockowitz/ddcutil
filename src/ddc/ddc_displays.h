@@ -15,6 +15,7 @@
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 
+#include "base/ddcutil_types_internal.h"
 #include "base/displays.h"
 
 #ifdef ENABLE_USB

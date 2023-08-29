@@ -1289,6 +1289,7 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 // Display hotplug detection
 //
 
+
 /** Signature of a function to be invoked by the shared library notifying the
  *  client that a change in connected displays has been detected.
  *
@@ -1297,6 +1298,7 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
  *
  *  @since 2.0.0
  */
+// temporarily defined in ddcutil_types_internal.h
 typedef void (*DDCA_Display_Hotplug_Callback_Func)();
 
 /** Registers a function to be called called when a change in displays is
