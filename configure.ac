@@ -34,12 +34,6 @@ dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com],[ddcutil14)
 
-dnl old unused cruft
-dnl AC_DEFINE( [PACKAGE_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version] )
-dnl AC_DEFINE( [PACKAGE_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
-dnl AC_DEFINE( [PACKAGE_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
-dnl AC_DEFINE( [PACKAGE_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
-
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
 dnl         symbol             value set by               comment 
@@ -47,18 +41,13 @@ AC_DEFINE( [VERSION_VMAJOR], [ ddcutil_major_version  ], [ddcutil major version]
 AC_DEFINE( [VERSION_VMINOR], [ ddcutil_minor_version  ], [ddcutil minor version] )
 AC_DEFINE( [VERSION_VMICRO], [ ddcutil_micro_version  ], [ddcutil micro version] )
 AC_DEFINE( [VERSION_VSUFFIX],[ ddcutil_version_suffix ], [ddcutil version suffix] )
-dnl AC_DEFINE( [VERSION_SUFFIX], [ ddcutil_version_suffix ], [version suffix] )
 
 dnl substitute @PACKAGE_MAJOR@ etc. in Makefile.am with the value of the environment variable
 AC_SUBST( VERSION_VMAJOR,  [ddcutil_major_version] )
 AC_SUBST( VERSION_VMINOR,  [ddcutil_minor_version] )
 AC_SUBST( VERSION_VMICRO,  [ddcutil_micro_version] )
 AC_SUBST( VERSION_VSUFFIX, [ddcutil_version_suffix] )
-dnl old: 
-dnl AC_SUBST( PACKAGE_VMAJOR,  [ddcutil_major_version] )
-dnl AC_SUBST( PACKAGE_VMINOR,  [ddcutil_minor_version] )
-dnl AC_SUBST( PACKAGE_VMICRO,  [ddcutil_micro_version] )
-dnl AC_SUBST( PACKAGE_VSUFFIX, [ddcutil_version_suffix] )
+AC_SUBST( PACKAGE_VSUFFIX, [ddcutil_version_suffix] )
 
 AC_ARG_VAR(DBG, [Turn on script debugging messages(0/1)])
 dnl AC_MSG_NOTICE([DBG = |$DBG|])
@@ -132,20 +121,6 @@ dnl Determines C compiler to use, sets output variable cc, ac_cv_prog_cc_c89
 dnl Called by other macros, but must be called explicitly at top level for proper initialization
 # AC_PROG_C99 for CENTOS 7 in OBS, EOL 6/30/2024
 m4_version_prereq(2.70, [AC_PROG_CC], [AC_PROG_CC_C99])
-
-dnl This is an obsolescent macro that checks that the C compiler supports the -c and -o options together. 
-dnl Note that, since Automake 1.14, the AC_PROG_CC is rewritten to implement such checks itself, and thus 
-dnl the explicit use of AM_PROG_CC_C_O should no longer be required.
-dnl included in case running Automake 1.13, which is the case for SuSE 13.2
-dnl but causes warning: macro 'AM_PROG_CC_C_0' not found in library on SUSE if included:
-dnl AM_PROG_CC_C_0
-
-dnl but on Suse 13.2 w automake 1.13.4, get msg that 
-dnl warning: warning: compiling 'base/common.c' in subdir requires 'AM_PROG_CC_C_O' in 'configure.ac'
-
-dnl needed for OBS
-dnl AC_PROG_CC_STDC
-
 
 dnl AC_PROG_LIBTOOL, AM_PROG_LIBTOOL are deprecated names for older versions of LT_INIT
 dnl adds support for --enable/disable -static/shared, -with/without-pic configure flags
