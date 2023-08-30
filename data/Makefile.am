@@ -26,29 +26,37 @@ installed_modulesfiles  =  usr/lib/modules-load.d/ddcutil.conf
 # Causes files (with directory structure) to be included in tarball:
 EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles)
 
+
 # Target directory (/usr/local/share/ddcutil/data or /usr/share/ddcutil/data):
 ddcutildir = $(datadir)/ddcutil/data
-# Causes files (w/o directory structure) to be installed in target directory: 
+# Causes files (w/o directory structure) to be installed in target directory:
+if !INSTALL_LIB_ONLY_COND
 ddcutil_DATA = $(resfiles)
+endif
 
 # Use prefix instead of libdir here because it appears that 
 # udev/rules.d is always a subdirectory of /usr/lib
 rulesdir = ${prefix}/lib/udev/rules.d
+if !INSTALL_LIB_ONLY_COND
 rules_DATA = $(rulesfiles)
+endif
 
 # Similar comment for modules-load.d
 installed_modulesdir = $(prefix)/lib/modules-load.d
+if !INSTALL_LIB_ONLY_COND
 installed_modules_DATA  = $(installed_modulesfiles)
+endif
 
 # include FindDDCUtil.cmake in tarball:
 EXTRA_DIST += cmake/ddcutil/FindDDCUtil.cmake
 if ENABLE_SHARED_LIB_COND
+if !INSTALL_LIB_ONLY_COND
    # where make install finds FindDDCUtil.cmake:
    cmake_DATA = cmake/ddcutil/FindDDCUtil.cmake
+endif
    # where FindDDCUtil.cmake will installed:
    cmakedir = $(libdir)/cmake/ddcutil
 endif
-
 
 # n. -local executes before target, -hook executes after
 
@@ -76,7 +84,9 @@ install-data-local:
 # @xxx@ names are not defined, names with $() are 
 install-data-hook:
 	@echo "(data/install-data-hook)===> Executing rule: install-data-hook"
+if !INSTALL_LIB_ONLY_COND
 	sed  -i "s|/usr|${prefix}|" ${DESTDIR}${rulesdir}/60-ddcutil-usb.rules 
+endif
 	@echo "Clear out files possibly left over from earlier installation"
 	rm -f ${DESTDIR}${resdir}/45-ddcutil*
 	rm -f ${DESTDIR}${rulesdir}/60-ddcutil.rules
