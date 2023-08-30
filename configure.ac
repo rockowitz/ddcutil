@@ -201,7 +201,6 @@ AC_ARG_ENABLE([lib],
 dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
-AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test -n "$adl_header_dir"] )
 AS_IF([test "x$enable_lib" = "xyes"],
       AC_MSG_NOTICE( [lib...        enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1)
