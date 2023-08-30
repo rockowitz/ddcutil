@@ -201,6 +201,7 @@ AC_ARG_ENABLE([lib],
 dnl Set flag for automake.am:
 AM_CONDITIONAL([ENABLE_SHARED_LIB_COND], [test "x$enable_lib" = "xyes"] )
 dnl ENABLE_SHARED_LIB_FLAG used in package/ddcutil_spec.in
+AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test -n "$adl_header_dir"] )
 AS_IF([test "x$enable_lib" = "xyes"],
       AC_MSG_NOTICE( [lib...        enabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 1)
@@ -209,6 +210,27 @@ AS_IF([test "x$enable_lib" = "xyes"],
       AC_MSG_NOTICE( [lib...        disabled] )
       AC_SUBST(ENABLE_SHARED_LIB_FLAG, 0)
      )
+
+dnl *** configure option: --install-lib-only
+AC_ARG_ENABLE([install-lib-only],
+              [ AS_HELP_STRING([--enable-install-lib-only=@<:@yes/no@:>@], [Install only shared shared librarys@<:@default=no@:>@] )],
+              [enable_install_lib_only=${enableval}],
+              [enable_install_lib_only=no] )
+AM_CONDITIONAL([INSTALL_LIB_ONLY_COND], [test "x$enable_install_lib_only" = "xyes"] )
+AS_IF([test "x$enable_install_lib_only" = "xyes"],
+      AC_MSG_NOTICE( [install_lib_only...        enabled] )
+     ,
+      AC_MSG_NOTICE( [install_lib_only...        disabled] )
+     )
+
+
+AS_IF([test "x$enable_lib" = "xno" -a "x$enable_install_lib_only" = "xyes" ],
+       AC_MSG_ERROR( [--disable-lib contradicts --enable-install-lib-only] )
+   ) 
+
+
+          
+
 
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
@@ -843,6 +865,7 @@ AC_MSG_RESULT([
 	required_packages:      ${required_packages}
 
 	enable_lib:             ${enable_lib}
+	enable_install_lib_only ${enable_install_lib_only}
 	enable_envcmds          ${enable_envcmds}
 	enable_udev             ${enable_udev}
 	enable_usb:             ${enable_usb}
