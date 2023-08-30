@@ -319,9 +319,30 @@ install-exec-hook:
 #	  echo "(src/Makefile) install-exec-hook: Stripping dependency_libs from libddcutil.la" ; \
 #	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
 #	fi
+if INSTALL_LIB_ONLY_COND
+	rm ${bindir}/ddcutil
+endif
 
 # objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
 
+
+# install-data:
+# 	@echo "(src/Makefile) Executing install-data ..." 
+
+
+install-data-local:
+	@echo "(src/Makefile) Executing install-data-local ..." 
+
+
+
+install-data-hook:
+	@echo "(src/Makefile) Executing install-data-hook ..." 
+if INSTALL_LIB_ONLY_COND
+	rm ${includedir}/ddcutil_macros.h
+	rm ${includedir}/ddcutil_status_codes.h
+	rm ${includedir}/ddcutil_types.h
+	rm ${includedir}/ddcutil_c_api.h
+endif
 
 uninstall-local:
 	@echo "(src/Makefile:uninstall-local) Executing..."
