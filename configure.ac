@@ -32,7 +32,7 @@ dnl process command line args, perform initializations
 dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
 dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
-AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com],[ddcutil14)
+AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
 
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
