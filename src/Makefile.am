@@ -320,7 +320,7 @@ install-exec-hook:
 #	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
 #	fi
 if INSTALL_LIB_ONLY_COND
-	rm ${bindir}/ddcutil
+	rm -f ${bindir}/ddcutil
 endif
 
 # objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
