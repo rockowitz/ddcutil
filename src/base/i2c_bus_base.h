@@ -34,7 +34,7 @@ extern GPtrArray * i2c_buses;
 #define I2C_BUS_DRM_CONNECTOR_CHECKED 0x8000
 
 typedef enum {
-   DRM_CONNECTOR_NOT_CHECKED    = 0,
+   DRM_CONNECTOR_NOT_CHECKED    = 0,    // ??? needed?
    DRM_CONNECTOR_NOT_FOUND      = 1,
    DRM_CONNECTOR_FOUND_BY_BUSNO = 2,
    DRM_CONNECTOR_FOUND_BY_EDID  = 3
