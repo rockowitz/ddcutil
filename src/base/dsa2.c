@@ -45,29 +45,31 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 
-const bool  Default_DSA2_Enabled = DEFAULT_ENABLE_DSA2;
-const int   Default_Look_Back    = 5;
-const int   Default_Initial_Step = 7;  // 1.0
-const int   Max_Recent_Values    = 20;
-const int   Default_Interval     = 3;
-const int   Default_Greatest_Tries_Upper_Bound = 3;
-const Sleep_Multiplier
-            Default_Average_Tries_Upper_Bound = 1.4;
-const int   Default_Greatest_Tries_Lower_Bound = 2;
-const Sleep_Multiplier
-            Default_Average_Tries_Lower_Bound = 1.1;
-const int   Default_Step_Floor = 0;
+// These were originally const integer etc., but when building on build.opensuse.com
+// use of these values causes a "initial element is not constant" error
+// Apparently sensitive to compiler optimization level, compiler version, -std c99 vs -std c11
+// see: https://stackoverflow.com/questions/64058577/initialiser-element-is-not-constant-error-in-c-when-using-static-const-variab
+#define   Default_DSA2_Enabled DEFAULT_ENABLE_DSA2
+#define   Default_Look_Back    5
+#define   Default_Initial_Step 7  // 1.0
+#define   Max_Recent_Values    20
+#define   Default_Interval     3
+#define   Default_Greatest_Tries_Upper_Bound 3
+#define   Default_Average_Tries_Upper_Bound 1.4
+#define   Default_Greatest_Tries_Lower_Bound 2
+#define   Default_Average_Tries_Lower_Bound 1.1
+#define   Default_Step_Floor 0
 
-static bool  dsa2_enabled           = Default_DSA2_Enabled;
-int   initial_step           = Default_Initial_Step;
-int   adjustment_interval    = Default_Interval;
+static bool  dsa2_enabled                = Default_DSA2_Enabled;
+int   initial_step                       = Default_Initial_Step;
+int   adjustment_interval                = Default_Interval;
 int   target_greatest_tries_upper_bound  = Default_Greatest_Tries_Upper_Bound;
 int   target_avg_tries_upper_bound_10    = Default_Average_Tries_Upper_Bound * 10; // multiply by 10 for integer arithmetic
 int   target_greatest_tries_lower_bound  = Default_Greatest_Tries_Lower_Bound;
 int   target_avg_tries_lower_bound_10    = Default_Average_Tries_Lower_Bound * 10;
-int   Min_Decrement_Lookback = 5;  // lookback must be at least this size for step decrement
-int   global_lookback = Default_Look_Back;
-int   dsa2_step_floor = Default_Step_Floor;
+int   Min_Decrement_Lookback             = 5;  // lookback must be at least this size for step decrement
+int   global_lookback                    = Default_Look_Back;
+int   dsa2_step_floor                    = Default_Step_Floor;
 
 
 bool dsa2_is_enabled() {
