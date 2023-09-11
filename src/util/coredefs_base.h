@@ -10,6 +10,12 @@
 
 #include "config.h"          // for TARGET_BSD, TARGET_LINUX
 
+#include <errno.h>           // to check if EBUSY defined
+
+#ifndef EBUSY
+#define EBUSY 16             // not defined in at least EPEL 8, RHEL 8 (9/11/2023)
+#endif
+
 /** Raw byte
  */
 typedef unsigned char Byte;
