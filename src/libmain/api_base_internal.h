@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <syslog.h>
-#include <threads.h>
+// #include <threads.h>  // requires glibc 2.28, header file apparently not used
 
 #include "public/ddcutil_status_codes.h"
 #include "public/ddcutil_c_api.h"

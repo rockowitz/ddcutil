@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <threads.h>
+// #include <threads.h>  // requires glibc 2.28, apparently unused
 
 #ifdef TARGET_BSD
 #include <pthread_np.h>
