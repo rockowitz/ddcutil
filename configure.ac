@@ -227,20 +227,16 @@ AS_IF([test "x$enable_lib" = "xno" -a "x$enable_install_lib_only" = "xyes" ],
        AC_MSG_ERROR( [--disable-lib contradicts --enable-install-lib-only] )
    ) 
 
-
-          
-
-
 dnl *** configure option: --enable-envcmds
 AC_ARG_ENABLE([envcmds],
               [ AS_HELP_STRING([--enable-envcmds=@<:@yes/no@:>@], [Include environment and usbenvironment@<:@default=yes@:>@] )],
               [enable_envcmds=${enableval}],
               [enable_envcmds=yes] )
-dnl AS_IF([test "x$enable_envcmds" = "xyes"],
-dnl         AC_MSG_NOTICE( [envcmds...    enabled (provisional) ]  )
-dnl       ,
-dnl         AC_MSG_NOTICE( [envcmds...    disabled] )
-dnl      )
+AS_IF([test "x$enable_envcmds" = "xyes"],
+        AC_MSG_NOTICE( [envcmds...    enabled (provisional) ]  )
+      ,
+        AC_MSG_NOTICE( [envcmds...    disabled] )
+     )
 
 dnl *** configure option: --enable-udev
 AC_ARG_ENABLE([udev],
@@ -274,10 +270,7 @@ AS_IF([test "x$enable_drm" = "xyes"],
       ,
         AC_MSG_NOTICE( [drm...        disabled] )
      )
-             
-
-              
-             
+                        
 dnl *** configure option: --enable-x11
 AC_ARG_ENABLE([x11],
               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
@@ -287,7 +280,6 @@ dnl AS_IF([test "x$enable_x11" = "xyes"],
 dnl       AC_MSG_NOTICE( [x11...      enabled (provisional)]  ),
 dnl       AC_MSG_NOTICE( [x11...      disabled] )
 dnl      )              
-
 
 dnl *** configure option: --enable-asan
 AC_ARG_ENABLE([asan],
@@ -364,6 +356,13 @@ AS_IF([test "x$enable_udev" != "xyes" -a "x$enable_usb" = "xyes" ],
        ]
    ) 
 
+# --enable-install-lib-only => --disable-envcmds
+
+AS_IF([test "x$enable_install_lib_only" = "xyes" -a "x$enable_envcmds" = "xyes"  ],
+       [ AC_MSG_NOTICE( [--enable-install-lib-only forces --disable-envcmds] )
+        enable_envcmds=no
+       ]
+   ) 
 
 # --disable-envcmds => --disable-drm, --disable-x11
 
