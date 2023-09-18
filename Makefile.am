@@ -82,10 +82,15 @@ EXTRA_DIST += m4/introspection.m4
 # Note the the entry for ddcutil.pc in the Debian .install file needs
 # to be kept in sync with where autotools puts the files.
 
+install-data-local:
+	@echo "(Makefile) install-data-local):"
+	@echo "  docdir                 = $(docdir)"
+
+	pkgconfigdir=${libdir}/pkgconfig
 if ENABLE_SHARED_LIB_COND
-   # pkgconfigdir = $(datadir)/pkgconfig
-   pkgconfigdir = ${libdir}/pkgconfig
-   pkgconfig_DATA = ddcutil.pc
+if !INSTALL_LIB_ONLY_COND
+	pkgconfig_DATA=ddcutil.pc
+endif
 
   libddcdocdir = $(datarootdir)/doc/libddcutil
 # libddcdoc_DATA = AUTHORS
@@ -178,9 +183,6 @@ show:
 # 	@echo "(uninstall-local):="
 #	ldconfig
 
-install-data-local:
-	@echo "(Makefile) install-data-local):"
-	@echo "  docdir                 = $(docdir)"
 
 # Rename to "all-local" for development
 all-local-disabled:

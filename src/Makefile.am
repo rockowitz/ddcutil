@@ -321,11 +321,34 @@ install-exec-hook:
 #	  sed -i "/dependency_libs/ s/'.*'/''/" $(DESTDIR)$(libdir)/libddcutil.la ; \
 #	fi
 if INSTALL_LIB_ONLY_COND
-	rm ${bindir}/ddcutil
+	rm -f $(DESTDIR)${bindir}/ddcutil
+	rm -f ${DESTDIR}${libdir}/libddcutil.so
 endif
 
 # objdump -p $(DESTDIR)$(libdir)/libddcutil.so | sed -n -e's/^[[:space:]]*SONAME[[:space:]]*//p' |  sed -r -e's/([0-9])\.so\./\1-/; s/\.so(\.|$)//; y/_/-/; s/(.*)/\L&/'
 
+	@echo "(src/Makefile) Completed install-exec-hook" 
+
+install-exec-local:
+	@echo "(src/Makefile) Executing install-exec-local ..." 
+	@echo "(src/Makefile) install-exec-local done" 
+
+
+install-data-local:
+	@echo "(src/Makefile) Executing install-data-local ..." 
+	@echo "(src/Makefile) install-data-local done" 
+
+
+
+install-data-hook:
+	@echo "(src/Makefile) Executing install-data-hook ..." 
+if INSTALL_LIB_ONLY_COND
+	rm -f ${DESTDIR}${includedir}/ddcutil_macros.h
+	rm -f ${DESTDIR}${includedir}/ddcutil_status_codes.h
+	rm -f ${DESTDIR}${includedir}/ddcutil_types.h
+	rm -f ${DESTDIR}${includedir}/ddcutil_c_api.h
+endif
+	@echo "(src/Makefile) install-data-hook done" 
 
 
 # install-data:

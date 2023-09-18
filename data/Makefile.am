@@ -16,12 +16,10 @@ rulesfiles = \
 distributed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf
 
-#   usr/lib/modules-load.d/libddcutil.conf
-
-installed_modulesfiles  =  usr/lib/modules-load.d/ddcutil.conf 
-# if ENABLE_SHARED_LIB_COND
-#  installed_modulesfiles += usr/lib/modules-load.d/libddcutil.conf
-# endif
+if !INSTALL_LIB_ONLY_COND
+installed_modulesfiles = \
+    usr/lib/modules-load.d/ddcutil.conf
+endif 
 
 # Causes files (with directory structure) to be included in tarball:
 EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles)
@@ -30,6 +28,7 @@ EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles)
 # Target directory (/usr/local/share/ddcutil/data or /usr/share/ddcutil/data):
 ddcutildir = $(datadir)/ddcutil/data
 # Causes files (w/o directory structure) to be installed in target directory:
+
 if !INSTALL_LIB_ONLY_COND
 ddcutil_DATA = $(resfiles)
 endif
@@ -49,13 +48,14 @@ endif
 
 # include FindDDCUtil.cmake in tarball:
 EXTRA_DIST += cmake/ddcutil/FindDDCUtil.cmake
+# where FindDDCUtil.cmake will installed:
+cmakedir = $(libdir)/cmake/ddcutil
+
 if ENABLE_SHARED_LIB_COND
 if !INSTALL_LIB_ONLY_COND
-   # where make install finds FindDDCUtil.cmake:
-   cmake_DATA = cmake/ddcutil/FindDDCUtil.cmake
+# where make install finds FindDDCUtil.cmake:
+cmake_DATA = cmake/ddcutil/FindDDCUtil.cmake
 endif
-   # where FindDDCUtil.cmake will installed:
-   cmakedir = $(libdir)/cmake/ddcutil
 endif
 
 # n. -local executes before target, -hook executes after
