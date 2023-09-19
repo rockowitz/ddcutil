@@ -191,7 +191,7 @@ get_parsed_libmain_config(const char * libopts_string,
                sbool(disable_config_file), libopts_string);
 
    if (libopts_string) {
-      fprintf(fout(), "Using libddcutil options passed from client: %s\n", libopts_string);
+      fprintf(fout(), "libddcutil: Options passed from client: %s\n", libopts_string);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options passed from client: %s",   libopts_string);
    }
 
@@ -284,7 +284,7 @@ get_parsed_libmain_config(const char * libopts_string,
       }
    #endif
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
-            fprintf(fout(), "Using libddcutil options from %s: %s\n", config_fn, untokenized_option_string);
+            fprintf(fout(), "libddcutil: Options from %s: %s\n", config_fn, untokenized_option_string);
             SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
@@ -309,7 +309,7 @@ get_parsed_libmain_config(const char * libopts_string,
       }
 
       char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
-      fprintf(fout(), "Applying combined libddcutil options: %s\n", combined);
+      fprintf(fout(), "libddcutil: Applying combined options: %s\n", combined);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying combined libddcutil options: %s",   combined);
       DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
@@ -324,8 +324,7 @@ get_parsed_libmain_config(const char * libopts_string,
                 syslog(LOG_ERR, "%s", msg);
             }
          }
-         result = errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__,
-               "Invalid option string: %s",  combined);
+         result = ERRINFO_NEW(DDCRC_INVALID_CONFIG_FILE, "Invalid option string: %s",  combined);
          for (int ndx = 0; ndx < errmsgs->len; ndx++) {
             char * msg =  g_ptr_array_index(errmsgs, ndx);
             errinfo_add_cause(result, errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, msg));
