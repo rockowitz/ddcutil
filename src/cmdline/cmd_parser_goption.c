@@ -1052,6 +1052,11 @@ parse_command(
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
       {"disable-udf",'\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_udf_flag,  disable_udf_expl,   NULL},
+      {"enable-heuristic-unsupported", '\0', G_OPTION_FLAG_HIDDEN,
+         G_OPTION_ARG_NONE,     &enable_heuristic_unsupported_flag, "Perform heuristic unsupported feature detection", NULL},
+      {"disable-heuristic-unsupported", '\0', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_HIDDEN,
+         G_OPTION_ARG_NONE, &enable_heuristic_unsupported_flag, "Recognize only DDC/CI specified unsupported feature detection", NULL},
+
 
 #ifdef USE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
@@ -1062,11 +1067,6 @@ parse_command(
                                G_OPTION_ARG_NONE, &enable_usb_flag,  disable_usb_expl, NULL},
       {"ignore-usb-vid-pid", '\0', 0, G_OPTION_ARG_STRING_ARRAY, &ignored_vid_pid, "USB device to ignore","vid:pid" },
       {"ignore-hiddev", '\0', 0, G_OPTION_ARG_CALLBACK, ignored_hiddev_arg_func,  "USB device to ignore", "hiddev number"},
-      {"enable-heuristic-unsupported", '\0', G_OPTION_FLAG_HIDDEN,
-                           G_OPTION_ARG_NONE,     &enable_heuristic_unsupported_flag, "Perform heuristic unsupported feature detection", NULL},
-      {"disable-heuristic-unsupported", '\0', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_HIDDEN,
-            G_OPTION_ARG_NONE, &enable_heuristic_unsupported_flag, "Recognize only DDC/CI specified unsupported feature detection", NULL},
-
 #endif
 
 #ifdef FUTURE
@@ -1655,7 +1655,6 @@ parse_command(
 
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_DISCARD_CACHE)
             parsing_ok &= parse_discard_args(parsed_cmd, errmsgs);
-
 
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_GETVCP
                         && (parsed_cmd->flags & CMD_FLAG_WO_ONLY) ) {
