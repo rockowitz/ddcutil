@@ -28,12 +28,14 @@ do { \
 GPtrArray * get_backtrace(int stack_adjust);
 void show_backtrace(int stack_adjust);
 
+void set_simple_dbgmsg_min_funcname_size(int new_size);
+
 bool simple_dbgmsg(
         bool              debug_flag,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
-        char *            format,
+        const char *      format,
         ...);
 
 #define DBGF(debug_flag, format, ...) \

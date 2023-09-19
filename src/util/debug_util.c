@@ -200,13 +200,18 @@ void show_backtrace(int stack_adjust) {
    }
 }
 
+static int min_funcname_size = 32;
+
+void set_simple_dbgmsg_min_funcname_size(int new_size) {
+   min_funcname_size = new_size;
+}
 
 bool simple_dbgmsg(
         bool              debug_flag,
         const char *      funcname,
         const int         lineno,
         const char *      filename,
-        char *            format,
+        const char *      format,
         ...)
 {
    bool debug_func = false;
@@ -228,7 +233,7 @@ bool simple_dbgmsg(
       char * buffer = g_strdup_vprintf(format, args);
       va_end(args);
 
-      char * buf2 = g_strdup_printf("(%-32s) %s", funcname, buffer);
+      char * buf2 = g_strdup_printf("(%-*s) %s", min_funcname_size, funcname, buffer);
 
       f0puts(buf2, stdout);
       f0putc('\n', stdout);
