@@ -431,7 +431,7 @@ static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data)
 // How to detect main thread crash?
 
 gpointer watch_displays_using_poll(gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
@@ -705,7 +705,7 @@ void api_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
                                        SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
    DDCA_Status ddcrc = DDCRC_OK;
@@ -790,7 +790,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 DDCA_Status
 ddc_stop_watch_displays()
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
    DDCA_Status ddcrc = DDCRC_OK;
 
