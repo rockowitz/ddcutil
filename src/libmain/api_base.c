@@ -580,7 +580,7 @@ ddca_init(const char *      libopts,
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
-   bool watch_displays = true;    // default
+   bool watch_displays = false;    // default
 
    client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
