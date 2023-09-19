@@ -892,7 +892,7 @@ parse_command(
    gboolean trace_to_syslog_only_flag = false;
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
-   gboolean watch_displays_flag = true;
+   gboolean watch_displays_flag = false;
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
    gboolean f3_flag         = false;
