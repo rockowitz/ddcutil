@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0-rc2] 2023-08-29
+## [2.0.0] 2023-08-29
 
 Release 2.0.0 contains extensive changes.  Shared library libddcutil is not 
 backwards compatible.  
