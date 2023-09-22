@@ -514,7 +514,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-         if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || DDCRC_DETERMINED_UNSUPPORTED) {
+         if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
          }
       }
