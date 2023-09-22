@@ -329,7 +329,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                // rpt_vstring(d2, "Property values table:");
                for (int i = 0;  i < subconn_prop_ptr->count_enums; i++) {
-                  rpt_vstring(d3, "enum value: %d, enum name: %s",
+                  rpt_vstring(d3, "enum value: %u, enum name: %s",
                         subconn_prop_ptr->enums[i].value, subconn_prop_ptr->enums[i].name);
                }
             }
@@ -341,7 +341,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                   rpt_vstring(d3, "enum value: %u, enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
@@ -353,7 +353,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                   rpt_vstring(d3, "enum value: %u, enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
@@ -366,7 +366,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %d, enum name: %s",
+                   rpt_vstring(d3, "enum value: %u, enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
