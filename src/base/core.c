@@ -640,11 +640,10 @@ static bool vdbgtrc(
             f0puts(decorated_msg, where);
             f0putc('\n', where);
             fflush(where);
-
-            free(base_msg);
-            free(decorated_msg);
          }
 
+         free(decorated_msg);
+         free(base_msg);
          msg_emitted = true;
       }
    }
