@@ -602,15 +602,26 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       if (businfo->drm_connector_name) {
          char title_buf[100];
          int tw = title_width; // 35;  // title_width;
+         char * attr_value = NULL;
+
          char * attr = "dpms";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
          g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+         rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
+         free(attr_value);
+
          attr = "enabled";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
          g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+         rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
+         free(attr_value);
+
          attr = "status";
+         attr_value = i2c_get_drm_connector_attribute(businfo, attr);
          g_snprintf(title_buf, 100, "/sys/class/drm/%s/%s", businfo->drm_connector_name, attr);
-         rpt_vstring(d, "%-*s%s", tw, title_buf, i2c_get_drm_connector_attribute(businfo, attr));
+         rpt_vstring(d, "%-*s%s", tw, title_buf, attr_value);
+         free(attr_value);
+
 
 #ifdef OLD
          char * dpms    = NULL;
