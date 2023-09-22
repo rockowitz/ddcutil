@@ -1625,13 +1625,12 @@ bs32_to_string_general(
 char* bs32_to_bitstring(Bit_Set_32 val, char * buf, int bufsz) {
    assert(bufsz >= BIT_SET_32_MAX+1);
 
-   char result[BIT_SET_32_MAX+1];
+   // char result[BIT_SET_32_MAX+1];
    for (int ndx = 0; ndx < BIT_SET_32_MAX; ndx++) {
-      result[(BIT_SET_32_MAX-1)-ndx] = (val & 0x01) ? '1' : '0';
+      buf[(BIT_SET_32_MAX-1)-ndx] = (val & 0x01) ? '1' : '0';
       val = val >> 1;
    }
-   result[BIT_SET_32_MAX] = '\0';
-   g_strlcpy(buf, result, bufsz);
+   buf[BIT_SET_32_MAX] = '\0';
    return buf;
 }
 
