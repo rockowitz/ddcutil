@@ -268,8 +268,10 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
  *  @param businfo
  *  @param attribute  attribute name
  *  @return attribute value, or NULL if not a DRM display
+ *
+ *  Caller is responsible for freeing the returned value
  */
-const char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
+char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
    assert(businfo);
    assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
    assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);

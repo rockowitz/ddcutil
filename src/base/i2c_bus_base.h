@@ -70,7 +70,7 @@ I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
 // Accessors
-const char *     i2c_get_drm_connector_attribute(
+char *           i2c_get_drm_connector_attribute(
                      const I2C_Bus_Info * businfo,
                      const char *         attribute);
 
