@@ -452,7 +452,6 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
                      free_parsed_edid(parsed_edid);
                   }
 
-
                   // DBGMSG("Before xref lookup by edid");
                   // Initial bus scan by I2C device must already have occurred,
                   // to populate the cross-reference table by bus number
@@ -542,7 +541,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
          else if (conn->props[ndx] == link_status_prop_id) {
             rpt_vstring(d2, "link-status property");
             assert(link_status_prop_ptr);   // if link_status_prop_id found, link_status_prop_ptr must have been set
-            uint32_t enum_value = conn->prop_values[ndx];
+            uint64_t enum_value = conn->prop_values[ndx];
             // printf("link_status value: %d\n", enum_value);
 
             assert(link_status_prop_ptr->flags & DRM_MODE_PROP_ENUM);
@@ -571,7 +570,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             bool found = false;
              for (int i = 0; i < type_prop_ptr->count_enums && !found; i++) {
                 if (type_prop_ptr->enums[i].value == enum_value) {
-                   rpt_vstring(d2, "type value = %d - %s",
+                   rpt_vstring(d2, "type value = %ud - %s",
                                    enum_value, type_prop_ptr->enums[i].name);
                    found = true;
                 }
