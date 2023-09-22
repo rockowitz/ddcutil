@@ -129,24 +129,26 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
 //
 
 void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
-   Parsed_Nontable_Vcp_Response  resp;
-   Parsed_Nontable_Vcp_Response * parsed_response_loc = &resp;
+   Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
    rpt_vstring(1, "Getting value of feature 0x%02x", feature_code);;
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+   ASSERT_IFF(!ddc_excp, parsed_response_loc);
    if (ddc_excp) {
       rpt_vstring(2, "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
             feature_code, errinfo_summary(ddc_excp));
    }
    else {
-      if (!resp.valid_response)
+      if (!parsed_response_loc->valid_response)
          rpt_vstring(2, "Invalid Response");
-      else if (!resp.supported_opcode)
+      else if (!parsed_response_loc->supported_opcode)
          rpt_vstring(2, "Unsupported feature code");
       else {
          rpt_vstring(2, "getvcp 0x%02x succeeded", feature_code);
          rpt_vstring(2, "mh=0x%02x, ml=0x%02x, sh=0x%02x, sl=0x%02x",
-               resp.mh, resp.ml, resp.sh, resp.sl);
+               parsed_response_loc->mh, parsed_response_loc->ml,
+               parsed_response_loc->sh, parsed_response_loc->sl);
       }
+      free(parsed_response_loc);
    }
 }
 
