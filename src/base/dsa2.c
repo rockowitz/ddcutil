@@ -1089,6 +1089,7 @@ dsa2_save_persistent_stats() {
    fprintf(stats_file, "* DEV  /dev/i2c device\n");
    fprintf(stats_file, "* EC   EDID check sum byte\n");
    fprintf(stats_file, "* C    current step\n");
+#ifdef OLD
    if (format_id == 1) {
       fprintf(stats_file, "* L    lookback\n");
       fprintf(stats_file, "* I    interval remaining\n");
@@ -1098,11 +1099,14 @@ dsa2_save_persistent_stats() {
       fprintf(stats_file, "* DEV EC C L I M F Values\n");
    }
    else {
+#endif
       fprintf(stats_file, "* I    interval remaining\n");
       fprintf(stats_file, "* L    current lookback\n");
       fprintf(stats_file, "* DEV EC C I L Values\n");
       fprintf(stats_file, "* Values {tries required, step, epoch seconds}\n");
+#ifdef OLD
    }
+#endif
 
    for (int ndx = 0; ndx < I2C_BUS_MAX; ndx++) {
       if (results_tables[ndx]) {
