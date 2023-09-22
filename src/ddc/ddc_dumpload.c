@@ -475,7 +475,8 @@ loadvcp_by_dumpload_data(
 
       // return code == 0 iff dh set
       ddc_excp = ddc_open_display(dref, CALLOPT_NONE, &dh);
-      if (!dh) {
+      ASSERT_IFF(dh, !ddc_excp);    // avoid bogus coverity error
+      if (ddc_excp) {
          SYSLOG2(DDCA_SYSLOG_ERROR, "Error opening display %s: %s", dref_repr_t(dref), ddcrc_desc_t(ddc_excp->status_code));
          goto bye;
       }
