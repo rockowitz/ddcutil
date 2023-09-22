@@ -670,9 +670,9 @@ static void report_ddcutil_version() {
       // TODO: patch values at link time
       // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef USE_USB
-      printf("Built with support for USB connected displays.\n");
+      printf("Built with support for displays using USB for MCCS communication.\n");
 #else
-      printf("Built without support for USB connected displays.\n");
+      printf("Built without support for displays using USB for MCCS communication.\n");
 #endif
 #ifdef ENABLE_FAILSIM
       printf("Built with function failure simulation.\n");
