@@ -432,11 +432,16 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       char * drm_dpms = NULL;
       char * drm_status = NULL;
       char * drm_enabled = NULL;
+      int depth = (debug) ? 1 : -1;
       if (businfo->drm_connector_name) {
-         RPT_ATTR_TEXT(-1, &drm_dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
-         RPT_ATTR_TEXT(-1, &drm_status,  "/sys/class/drm", businfo->drm_connector_name, "status");
-         RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+         RPT_ATTR_TEXT(depth, &drm_dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
+         RPT_ATTR_TEXT(depth, &drm_status,  "/sys/class/drm", businfo->drm_connector_name, "status");
+         RPT_ATTR_TEXT(depth, &drm_enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
       }
+      // not currently used, just free
+      free(drm_dpms);
+      free(drm_status);
+      free(drm_enabled);
 
       // DBGMSG("monitor_state_tests = %s", SBOOL(monitor_state_tests));
       if (monitor_state_tests)
