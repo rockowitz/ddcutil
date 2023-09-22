@@ -1304,8 +1304,6 @@ parse_command(
    }
    ntsa_free(temp_argv, true);
 
-   int explicit_display_spec_ct = 0;  // number of ways the display is explicitly specified
-
    int rwo_flag_ct = 0;
    if (rw_only_flag)   rwo_flag_ct++;
    if (ro_only_flag)   rwo_flag_ct++;
@@ -1665,7 +1663,7 @@ parse_command(
          if (parsing_ok && parsed_cmd->cmd_id == CMDID_SETVCP)
             parsing_ok &= parse_setvcp_args(parsed_cmd,errmsgs);
 
-         if (parsing_ok && explicit_display_spec_ct == 1) {
+         if (parsing_ok && parsed_cmd->pdid) {
             if (!cmdInfo->supported_options & Option_Explicit_Display) {
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
