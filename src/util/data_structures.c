@@ -1468,7 +1468,7 @@ Bit_Set_256 bs256_from_string(
            }
        }
        assert(ndx == ntsal);
-       ntsa_free(pieces, /* free_strings */ true);
+
 
        ASSERT_IFF(ok, errors->len == 0);
 
@@ -1481,7 +1481,8 @@ Bit_Set_256 bs256_from_string(
           *error_msgs_loc = g_ptr_array_to_ntsa(errors, false);
           g_ptr_array_free(errors, false);
        }
-     }
+    }
+    ntsa_free(pieces, /* free_strings */ true);
 
     if (debug) {
        const char * s = bs256_to_string(result, /*prefix*/ "x", /*sepstr*/ ",");
