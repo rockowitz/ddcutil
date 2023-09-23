@@ -232,8 +232,10 @@ ddc_open_display(
    }
    else {
       Error_Info * err2 = unlock_display_by_dref(dref);
-      if (err2)
+      if (err2) {
          PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
+         errinfo_free(err2);
+      }
    }
 
 bye:
