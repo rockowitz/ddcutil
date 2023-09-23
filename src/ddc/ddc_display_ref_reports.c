@@ -292,7 +292,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
                    if (drm_dpms && !streq(drm_dpms,"On")) {
                       rpt_vstring(d1, "DRM reports the monitor is in a DPMS sleep state (%s).", drm_dpms);
                    }
-                   if (drm_enabled && !streq(drm_dpms,"enabled")) {
+                   if (drm_enabled && !streq(drm_enabled,"enabled")) {
                       rpt_vstring(d1, "DRM reports the monitor is %s.", drm_enabled);
                    }
                    if (drm_status && !streq(drm_status, "connected")) {
