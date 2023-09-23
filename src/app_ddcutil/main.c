@@ -464,7 +464,7 @@ find_dref(
                DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Synthetic Display_Ref");
                final_result = DDCRC_OK;
             }
-            if (dref && dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+            if (dref && (dref->flags&DREF_DPMS_SUSPEND_STANDBY_OFF)) {
                // should go nowhere, but just in case:
                f0printf(outf, "Monitor on bus /dev/i2c-%d is in a DPMS sleep mode. Expect DDC errors.", busno);
             }
