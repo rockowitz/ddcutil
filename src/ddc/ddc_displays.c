@@ -289,7 +289,8 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
                feature_code, errinfo_summary(ddc_excp));
          if (pdd_is_dynamic_sleep_active(pdd) ) {
             ERRINFO_FREE(ddc_excp);
-            DBGTRC_NOPREFIX(debug|true, TRACE_GROUP, "Turning off dynamic sleep and retrying");
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep and retrying");
+            SYSLOG2(DDCA_SYSLOG_ERROR, "Turning off dynamic sleep and retrying");
             pdd_set_dynamic_sleep_active(dh->dref->pdd, false);
             ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
