@@ -276,8 +276,11 @@ void
 usb_ignore_vid_pid_values(uint8_t ignored_ct, Vid_Pid_Value* ignored) {
    bool debug = false;
    ignored_vid_pid_ct = ignored_ct;
-   ignored_vid_pids = calloc(ignored_ct, sizeof(uint32_t));
-   memcpy(ignored_vid_pids, ignored, ignored_ct*sizeof(uint32_t));
+   // explicitly handle ignored==NULL case to avoid coverity warning
+   if (ignored_ct > 0) {
+      ignored_vid_pids = calloc(ignored_ct, sizeof(uint32_t));
+      memcpy(ignored_vid_pids, ignored, ignored_ct*sizeof(uint32_t));
+   }
    if (debug || IS_TRACING()) {
       DBGMSG("ignored_vid_pid_ct = %d", ignored_vid_pid_ct);
       for (int ndx = 0; ndx < ignored_vid_pid_ct; ndx++)
