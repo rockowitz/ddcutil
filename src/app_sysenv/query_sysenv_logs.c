@@ -457,6 +457,7 @@ void probe_cache_files(int depth) {
    if (fn) {
       rpt_vstring(d0, "Reading %s:", fn);
       rpt_file_contents(fn, true, d1);
+      free(fn);
    }
    else
       rpt_label(d0, "Undetermined capabilities cache file name");
@@ -472,6 +473,7 @@ void probe_cache_files(int depth) {
       rpt_label(d0, "Undetermined dsa cache file name");
    rpt_nl();
 
+#ifdef DISPLAYS_CACHE
    fn = ddc_displays_cache_file_name();
    if (fn) {
       rpt_vstring(d0, "Reading %s:", fn);
@@ -481,5 +483,6 @@ void probe_cache_files(int depth) {
    else
       rpt_label(d0, "Undetermined displays cache file name");
    rpt_nl();
+#endif
 }
 
