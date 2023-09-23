@@ -231,8 +231,8 @@ ddc_open_display(
       g_hash_table_add(open_displays, dh);
    }
    else {
-      err = unlock_display_by_dref(dref);
-      if (err)
+      Error_Info * err2 = unlock_display_by_dref(dref);
+      if (err2)
          PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
    }
 
