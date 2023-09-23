@@ -376,8 +376,8 @@ check_how_unsupported_reported(Display_Handle * dh) {
                "busno=%d. Monitor apparently returns -EIO for unsupported features. This cannot be relied on.",
                businfo->busno);
       }
-      free(erec);
    }
+   errinfo_free(erec);
    dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
