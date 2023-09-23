@@ -136,6 +136,7 @@ void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
    if (ddc_excp) {
       rpt_vstring(2, "ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
             feature_code, errinfo_summary(ddc_excp));
+      free(ddc_excp);
    }
    else {
       if (!parsed_response_loc->valid_response)
