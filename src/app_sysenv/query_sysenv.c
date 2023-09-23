@@ -838,8 +838,10 @@ void query_sysenv(bool quick_env) {
       rpt_nl();
       rpt_label(0, "Disabling capabilities cache ...");
       enable_capabilities_cache(false);
+#ifdef DISPLAYS_CACHE
       rpt_label(0, "Disabling displays cache ...");
       ddc_enable_displays_cache(false);
+#endif
       rpt_label(0, "Disabling dsa stats ...");
       dsa2_enable(false);
       rpt_nl();
