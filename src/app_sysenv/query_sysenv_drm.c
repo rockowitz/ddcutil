@@ -329,7 +329,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (subconn_prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                // rpt_vstring(d2, "Property values table:");
                for (int i = 0;  i < subconn_prop_ptr->count_enums; i++) {
-                  rpt_vstring(d3, "enum value: %u, enum name: %s",
+                  rpt_vstring(d3, "enum value: %"PRIu64", enum name: %s",
                         subconn_prop_ptr->enums[i].value, subconn_prop_ptr->enums[i].name);
                }
             }
@@ -341,7 +341,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %u, enum name: %s",
+                   rpt_vstring(d3, "enum value: %"PRIu64", enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
@@ -353,7 +353,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %u, enum name: %s",
+                   rpt_vstring(d3, "enum value: %"PRIu64", enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
@@ -366,7 +366,7 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             if (prop_ptr->flags & DRM_MODE_PROP_ENUM) {
                 // rpt_vstring(d2, "Property values table:");
                 for (int i = 0;  i < prop_ptr->count_enums; i++) {
-                   rpt_vstring(d3, "enum value: %u, enum name: %s",
+                   rpt_vstring(d3, "enum value: %"PRIu64", enum name: %s",
                          prop_ptr->enums[i].value, prop_ptr->enums[i].name);
                 }
             }
@@ -549,13 +549,13 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             bool found = false;
              for (int i = 0; i < link_status_prop_ptr->count_enums && !found; i++) {
                 if (link_status_prop_ptr->enums[i].value == enum_value) {
-                   rpt_vstring(d3, "link-status value = %d - %s",
-                                   enum_value, link_status_prop_ptr->enums[i].name);
+                   rpt_vstring(d3, "link-status value = %u - %s",
+                                   (unsigned) enum_value, link_status_prop_ptr->enums[i].name);
                    found = true;
                 }
              }
              if (!found) {
-                rpt_vstring(d2, "Unrecognized link-status value: %d", enum_value);
+                rpt_vstring(d2, "Unrecognized link-status value: %u", (unsigned) enum_value);
              }
          }
 
@@ -570,13 +570,13 @@ static void probe_open_device_using_libdrm(int fd, int depth) {
             bool found = false;
              for (int i = 0; i < type_prop_ptr->count_enums && !found; i++) {
                 if (type_prop_ptr->enums[i].value == enum_value) {
-                   rpt_vstring(d2, "type value = %ud - %s",
+                   rpt_vstring(d2, "type value = %u - %s",
                                    enum_value, type_prop_ptr->enums[i].name);
                    found = true;
                 }
              }
              if (!found) {
-                rpt_vstring(d2, "Unrecognized type value: %d", enum_value);
+                rpt_vstring(d2, "Unrecognized type value: %u", enum_value);
              }
          }
 
