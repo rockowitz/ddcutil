@@ -1,7 +1,6 @@
-/** \file ddc_packet_io.h
+/** @file ddc_packet_io.h
  *
- *  Functions for performing DDC packet IO, using either the I2C bus API
- *  or the ADL API, as appropriate.  Handles I2C bus retry.
+ *  Functions for performing DDC packet IO,  Handles I2C bus retry.
  */
 
 // Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -14,7 +13,6 @@
 
 #include "util/error_info.h"
 
-#include "util/error_info.h"
 #include "base/core.h"
 #include "base/ddc_packets.h"
 #include "base/displays.h"
