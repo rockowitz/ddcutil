@@ -312,7 +312,6 @@ try_multi_part_write(
           "request_type=0x%02x, request_subtype=x%02x, accumulator=%p",
           request_type, request_subtype, value_to_set);
 
-   Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    int MAX_FRAGMENT_SIZE = 32;
    int max_fragment_size = MAX_FRAGMENT_SIZE - 4;    // hack
@@ -321,7 +320,7 @@ try_multi_part_write(
    DDC_Packet * request_packet_ptr  = NULL;
    int bytes_remaining = value_to_set->len;
    int offset = 0;
-   while (bytes_remaining >= 0 && psc == 0) {
+   while (bytes_remaining >= 0 && !ddc_excp) {
       int bytect_to_write = (bytes_remaining <= max_fragment_size)
                                     ? bytes_remaining
                                     : max_fragment_size;
@@ -333,9 +332,7 @@ try_multi_part_write(
                    bytect_to_write,
                    __func__);
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
-      psc = (ddc_excp) ? ddc_excp->status_code : 0;
       free_ddc_packet(request_packet_ptr);
-      assert( (!ddc_excp && psc == 0) || (ddc_excp && psc!=0) );
 
       if (!ddc_excp) {
          if (bytect_to_write == 0)   // if just wrote final empty segment to indicate done
@@ -346,7 +343,6 @@ try_multi_part_write(
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
-   assert( (ddc_excp && psc<0) || (!ddc_excp && psc==0) );
    return ddc_excp;
 }
 
