@@ -1560,7 +1560,7 @@ parse_command(
 
    if (trace_classes) {
       parsing_ok &= parse_trace_classes(trace_classes, parsed_cmd, errmsgs);
-      FREE(trace_classes);
+      ntsa_free(trace_classes, true);
    }
 
 
