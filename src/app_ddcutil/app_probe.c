@@ -203,6 +203,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
                color_temp_units,
                color_temp_increment,
                color_temp);
+         free_single_vcp_value(valrec);
       }
    }
    if (ddc_excp) {
