@@ -596,8 +596,8 @@ create_ddc_base_response_packet(
          Byte * packet_bytes = packet->raw_bytes->bytes;
          buffer_set_byte(  packet->raw_bytes, 0, 0x6f);     // implicit, would be 0x50 on access bus
          buffer_set_byte(  packet->raw_bytes, 1, 0x6e);     // i2c_response_bytes[0]
-         DBGMSG("packet->raw_bytes+2=%p, i2c_response_bytes+1=%p, 1+data_ct+1=%d",
-               packet->raw_bytes+2, i2c_response_bytes+1, 1+data_ct+1);
+         // DBGMSG("packet->raw_bytes+2=%p, i2c_response_bytes+1=%p, 1+data_ct+1=%d",
+         //       packet->raw_bytes+2, i2c_response_bytes+1, 1+data_ct+1);
          buffer_set_bytes( packet->raw_bytes, 2, i2c_response_bytes+1, 1 + data_ct + 1);
          buffer_set_length(packet->raw_bytes, 3 + data_ct + 1);
          Byte calculated_checksum = ddc_checksum(packet_bytes, 3 + data_ct, true);   // replacing right byte?
