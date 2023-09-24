@@ -1008,10 +1008,12 @@ filter_phantom_displays(GPtrArray * all_displays) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid mst_displays, %d valid_non_mst_displays",
                                     valid_mst_displays->len, valid_non_mst_displays->len);
 
-      g_ptr_array_free(valid_mst_displays, false);
-      g_ptr_array_free(valid_non_mst_displays, false);
-      g_ptr_array_free(invalid_displays, false);
-      g_ptr_array_free(valid_displays, false);
+      // n. frees the underlying array, but not the Display_Refs pointed to by
+      // array members, since no GDestroyNotify() function defined
+      g_ptr_array_free(valid_mst_displays, true);
+      g_ptr_array_free(valid_non_mst_displays, true);
+      g_ptr_array_free(invalid_displays, true);
+      g_ptr_array_free(valid_displays, true);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
