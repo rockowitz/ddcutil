@@ -204,8 +204,8 @@ void buffer_set_byte(Buffer * buf, int offset, Byte byte) {
  */
 void buffer_set_bytes(Buffer * buf, int offset, Byte * bytes, int bytect) {
    if (trace_buffer)
-      printf("(%s) Storing %d bytes at offset %d, buffer_size=%d\n",
-             __func__, bytect, offset, buf->buffer_size);
+      printf("(%s) Storing %d bytes at offset %d (buf->bytes+offset=%p), buffer_size=%d, bytes=%p, bytes+bytect=%p\n",
+             __func__, bytect, offset, buf->bytes+offset, buf->buffer_size, bytes, bytes+bytect);
    assert(offset >= 0 && (offset + bytect) <= buf->buffer_size);
 
    memcpy(buf->bytes+offset, bytes, bytect);
