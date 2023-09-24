@@ -1618,9 +1618,7 @@ parse_command(
                parsing_ok = false;
                break;
             }
-            char * thisarg = (char *) cmd_and_args[argctr];
-            char * argcopy = g_strdup(thisarg);
-            parsed_cmd->args[argctr-1] = argcopy;
+            parsed_cmd->args[argctr-1] = g_strdup(cmd_and_args[argctr]);
             argctr++;
          }
          parsed_cmd->argct = argctr-1;
