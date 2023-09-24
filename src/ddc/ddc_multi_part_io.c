@@ -67,7 +67,6 @@ try_multi_part_read(
    const int MAX_FRAGMENT_SIZE = 32;
    const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
 
-   Public_Status_Code psc = 0;
    Error_Info * excp = NULL;
 
    DDC_Packet * request_packet_ptr  = NULL;
@@ -99,7 +98,6 @@ try_multi_part_read(
            write_read_flags,
            &response_packet_ptr
           );
-      psc = (excp) ? excp->status_code : 0;
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
              "ddc_write_read_with_retry() request_type=0x%02x, request_subtype=0x%02x, returned %s",
              request_type, request_subtype, errinfo_summary(excp));
@@ -108,13 +106,11 @@ try_multi_part_read(
       free(s);
 
       if (excp) {
-      // if (psc != 0) {
          if (response_packet_ptr)
             free_ddc_packet(response_packet_ptr);
          continue;
       }
       assert(response_packet_ptr);
-      assert(!excp && psc == 0);
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
          DBGMSG("After try_write_read():");
@@ -128,9 +124,8 @@ try_multi_part_read(
       if (display_current_offset != cur_offset) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
                 "display_current_offset %d != cur_offset %d", display_current_offset, cur_offset);
-         psc = DDCRC_MULTI_PART_READ_FRAGMENT;
-         excp = errinfo_new(psc, __func__, NULL);
-         COUNT_STATUS_CODE(psc);
+         excp = ERRINFO_NEW(DDCRC_MULTI_PART_READ_FRAGMENT, NULL);
+         COUNT_STATUS_CODE(DDCRC_MULTI_PART_READ_FRAGMENT);
       }
       else {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
@@ -148,7 +143,6 @@ try_multi_part_read(
                DBGMSG("cur_offset = %d", cur_offset);
             }
             write_read_flags = write_read_flags & ~Write_Read_Flag_All_Zero_Response_Ok;
-
          }
       }
       free_ddc_packet(response_packet_ptr);
