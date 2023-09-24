@@ -573,13 +573,8 @@ ddc_get_nontable_vcp_value(
 
    Byte expected_response_type = DDC_PACKET_TYPE_QUERY_VCP_RESPONSE;
    Byte expected_subtype = feature_code;
-   // int max_read_bytes  = 20;    // actually 3 + 8 + 1, or is it 2 + 8 + 1?
-   // expected response size:
-   //  (src addr == x6e) (length) (response contents) (checkbyte)
-   //  1               + 1      + 8                 + 1           == 11
-   //  alternative is DDC Null Response, which is shorter
-   //  N. response does not include initial destination address byte of DDC/CI spec
-   int max_read_bytes = 11;
+
+   int max_read_bytes = MAX_DDC_PACKET_SIZE;
 
    // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "before ddc_write_read_with_retry(): communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
    excp = ddc_write_read_with_retry(
@@ -592,7 +587,6 @@ ddc_get_nontable_vcp_value(
            &response_packet_ptr
         );
    ASSERT_IFF(excp, !response_packet_ptr);
-//   assert( (!excp && response_packet_ptr) || (excp && !response_packet_ptr));
    if (debug || IS_TRACING() ) {
       if (excp)
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
