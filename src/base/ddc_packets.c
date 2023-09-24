@@ -258,7 +258,7 @@ void free_ddc_packet(DDC_Packet * packet) {
 DDC_Packet *
 create_empty_ddc_packet(int max_size, const char * tag) {
    bool debug = false;
-   DBGMSF(debug, "Starting. max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "max_size=%d, tag=%s", max_size, (tag) ? tag : "(nil)");
 
    DDC_Packet * packet = malloc(sizeof(DDC_Packet));
    packet->raw_bytes = buffer_new(max_size, "empty DDC packet");
@@ -272,10 +272,7 @@ create_empty_ddc_packet(int max_size, const char * tag) {
    packet->type = DDC_PACKET_TYPE_NONE;
    packet->parsed.raw_parsed = NULL;
 
-   DBGMSF(debug, "Done. Returning %p, packet->tag=%p", packet, packet->tag);
-   if (debug)
-      dbgrpt_packet(packet, 2);
-
+   DBGTRC_RET_STRUCT(debug, TRACE_GROUP, DDC_Packet, dbgrpt_packet, packet);
    return packet;
 }
 
@@ -567,10 +564,10 @@ create_ddc_base_response_packet(
    DDC_Packet ** packet_ptr_loc)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "i2c_response_bytes=%p, response_bytes_buffer_size=%d",
-                              i2c_response_bytes, response_bytes_buffer_size);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_response_bytes -> |%s|",
-                              hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "response_bytes_buffer_size=%d, i2c_response_bytes=%p->|%s|",
+         response_bytes_buffer_size, i2c_response_bytes,
+         hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
    int result = DDCRC_OK;
    DDC_Packet * packet = NULL;
@@ -580,7 +577,7 @@ create_ddc_base_response_packet(
    }
    else {
       int data_ct = i2c_response_bytes[1] & 0x7f;
-      // DBGMSG("data_ct=%d", data_ct);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "data_ct=%d", data_ct);
       if (data_ct > MAX_DDC_DATA_SIZE) {
          if ( is_double_byte(&i2c_response_bytes[1])) {
             result = DDCRC_DDC_DATA;    // was DDCRC_DOUBLE_BYTE
@@ -599,6 +596,8 @@ create_ddc_base_response_packet(
          Byte * packet_bytes = packet->raw_bytes->bytes;
          buffer_set_byte(  packet->raw_bytes, 0, 0x6f);     // implicit, would be 0x50 on access bus
          buffer_set_byte(  packet->raw_bytes, 1, 0x6e);     // i2c_response_bytes[0]
+         DBGMSG("packet->raw_bytes+2=%p, i2c_response_bytes+1=%p, 1+data_ct+1=%d",
+               packet->raw_bytes+2, i2c_response_bytes+1, 1+data_ct+1);
          buffer_set_bytes( packet->raw_bytes, 2, i2c_response_bytes+1, 1 + data_ct + 1);
          buffer_set_length(packet->raw_bytes, 3 + data_ct + 1);
          Byte calculated_checksum = ddc_checksum(packet_bytes, 3 + data_ct, true);   // replacing right byte?
@@ -656,8 +655,9 @@ create_ddc_response_packet(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-          "response_bytes_buffer_size=%d, i2c_response_bytes=|%s|",
-          response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
+          "response_bytes_buffer_size=%d, i2c_response_bytes=%p->|%s|",
+          response_bytes_buffer_size, i2c_response_bytes,
+          hexstring_t(i2c_response_bytes, response_bytes_buffer_size));
 
    if (response_bytes_buffer_size > 2 && i2c_response_bytes[0] == 0x6e
                                       && i2c_response_bytes[1] == 0x6e) {
@@ -745,7 +745,7 @@ interpret_multi_part_read_response(
       aux_data->fragment_type = response_type;    // set in caller?  would make response_type parm unnecessary
       aux_data->fragment_offset = offset_hi_byte << 8 | offset_lo_byte;
       aux_data->fragment_length = read_data_length;      // changed
-      assert(read_data_length <= MAX_DDC_CAPABILITIES_FRAGMENT_SIZE);   // ???
+      assert(read_data_length <= MAX_DDC_MULTI_PART_FRAGMENT_SIZE);   // ???
       memcpy(aux_data->bytes, read_data_start, read_data_length);    // CHANGED
       // aux_data->text[text_length] = '\0';     // CHANGED
    }
@@ -967,8 +967,10 @@ create_ddc_typed_response_packet(
 {
    bool debug = false;
    assert(i2c_response_bytes);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "response_bytes_buffer_size=%d, response_bytes=|%s|",
-                              response_bytes_buffer_size, hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "response_bytes_buffer_size=%d, i2c_response_bytes=%p -> |%s|",
+         response_bytes_buffer_size, i2c_response_bytes,
+         hexstring_t(i2c_response_bytes, response_bytes_buffer_size) );
 
    *packet_ptr_loc = NULL;
    // DBGMSG("before create_ddc_response_packet(), *packet_ptr_addr=%p", *packet_ptr_loc);
@@ -1244,6 +1246,7 @@ Status_DDC get_vcp_cur_value(DDC_Packet * packet, int * value_ptr) {
 
 
 void init_ddc_packets() {
+   RTTI_ADD_FUNC(create_empty_ddc_packet);
    RTTI_ADD_FUNC(create_ddc_base_request_packet);
    RTTI_ADD_FUNC(create_ddc_base_response_packet);
    RTTI_ADD_FUNC(create_ddc_getvcp_request_packet);
