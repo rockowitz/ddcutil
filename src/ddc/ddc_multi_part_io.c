@@ -42,33 +42,29 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
 /** Makes one attempt to read the entire capabilities string or table feature value
 *
-* @param  dh             display handle for open i2c or adl device
-* @param  request_type   DDC_PACKET_TYPE_CAPABILITIES_REQUEST or DDC_PACKET_TYPE_TABLE_REQD_REQUEST
+* @param  dh               display handle for open i2c device
+* @param  request_type     DDC_PACKET_TYPE_CAPABILITIES_REQUEST or DDC_PACKET_TYPE_TABLE_REQD_REQUEST
 * @param  request_subtype  VCP feature code for table read, ignore for capabilities
-* @param  all_zero_response_ok  if true, an all zero response is not regarded
-*         as an error
-* @param  accumulator    buffer in which to return result (already allocated)
-*
-* @return @Error_Info struct with error detail, NULL if no error
+* @param  write_read_flags if flag all_zero_response_ok is set, an all zero response is not regarded
+*                          as an error
+* @param  accumulator      buffer in which to return result (already allocated)
+* @return #Error_Info struct with error detail, NULL if no error
 */
 static Error_Info *
 try_multi_part_read(
-      Display_Handle * dh,
-      Byte             request_type,
-      Byte             request_subtype,
+      Display_Handle *     dh,
+      Byte                 request_type,
+      Byte                 request_subtype,
       DDC_Write_Read_Flags write_read_flags,
-      Buffer *         accumulator)
+      Buffer *             accumulator)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
           "request_type=0x%02x, request_subtype=x%02x, all_zero_response_ok=%s, accumulator=%p",
-          request_type, request_subtype, sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), accumulator);
-
-   const int MAX_FRAGMENT_SIZE = 32;
-   const int readbuf_size = 6 + MAX_FRAGMENT_SIZE + 1;
+          request_type, request_subtype,
+          sbool(write_read_flags & Write_Read_Flag_All_Zero_Response_Ok), accumulator);
 
    Error_Info * excp = NULL;
-
    DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
    request_packet_ptr = create_ddc_multi_part_read_request_packet(
@@ -92,7 +88,7 @@ try_multi_part_read(
       excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
-           readbuf_size,
+           MAX_DDC_PACKET_SIZE,
            expected_response_type,
            expected_subtype,
            write_read_flags,
