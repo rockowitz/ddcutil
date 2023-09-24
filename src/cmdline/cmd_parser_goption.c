@@ -1622,6 +1622,7 @@ parse_command(
             argctr++;
          }
          parsed_cmd->argct = argctr-1;
+         ntsa_free(cmd_and_args, true);
 
          // no more arguments specified
          if (argctr <= min_arg_ct) {
