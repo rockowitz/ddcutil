@@ -231,14 +231,24 @@ void free_single_vcp_value_func(gpointer data) {
 }
 
 
-   DDCA_Any_Vcp_Value *
-   create_nontable_vcp_value(
-         Byte feature_code,
-         Byte mh,
-         Byte ml,
-         Byte sh,
-         Byte sl)
-   {
+/** Creates a #DDCA_Any_Vcp_Value from the individual field values.
+ *
+ *  @param  feature_code
+ *  @param  mh
+ *  @param  ml
+ *  @param  sh
+ *  @param  sl
+ *  @return newly allocated #DDCA_Any_Vcp_Value instance
+ *          (caller is responsible for freeing)
+ */
+DDCA_Any_Vcp_Value *
+create_nontable_vcp_value(
+      Byte feature_code,
+      Byte mh,
+      Byte ml,
+      Byte sh,
+      Byte sl)
+{
    DDCA_Any_Vcp_Value * valrec = calloc(1,sizeof(DDCA_Any_Vcp_Value));
 
    valrec->value_type = DDCA_NON_TABLE_VCP_VALUE;
