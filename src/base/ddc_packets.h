@@ -20,20 +20,13 @@
 #include "base/status_code_mgt.h"
 #include "base/core.h"
 
-#ifdef UNUSED
-// was in common.h
-#define MAX_DDCCI_PACKET_SIZE   37    //  32 + 5;
-#endif
-
-// largest packet is capabilities response packet, which has 1 byte for reply op code,
-// 2 for offset, and up to 32 bytes fragment
-
-#define MAX_DDC_DATA_SIZE           35
-#define MAX_DDC_PACKET_WO_CHECKSUM  38
-#define MAX_DDC_PACKET_INC_CHECKSUM 39
-
-// also is max table fragment size
-#define MAX_DDC_CAPABILITIES_FRAGMENT_SIZE 32
+// max capabilities or table fragment size
+#define MAX_DDC_MULTI_PART_FRAGMENT_SIZE 32
+#define MAX_DDC_MULTI_PART_DATA_SIZE     35   // +3 for op-code, offset-high-byte, offset-low-byte
+#define MAX_DDC_DATA_SIZE                35   // capabilities/table response is largest possible data size
+#define MAX_DDC_PACKET_WO_CHECKSUM       38   // +3 for dest-addr, source-addr, length byte
+#define MAX_DDC_PACKET_INC_CHECKSUM      39
+#define MAX_DDC_PACKET_SIZE              39
 
 #define MAX_DDC_TAG 39
 
@@ -84,7 +77,7 @@ struct {
    int   fragment_offset;
    int   fragment_length;     // without possible terminating '\0'
    // add 1 to allow for appending a terminating '\0' in case of DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
-   Byte  bytes[MAX_DDC_CAPABILITIES_FRAGMENT_SIZE+1];
+   Byte  bytes[MAX_DDC_MULTI_PART_FRAGMENT_SIZE+1];
 } Interpreted_Multi_Part_Read_Fragment;
 
 
