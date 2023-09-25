@@ -118,14 +118,16 @@ void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
       bool        ignore_case,
-      int         limit);
+      int         limit,
+      bool        free_strings);
 
 int read_file_with_filter(
       GPtrArray *  line_array,
       const char * fn,
       char **      filter_terms,
       bool         ignore_case,
-      int          limit);
+      int          limit,
+      bool         free_strings);
 
 int rek_mkdir(
       const char * path,

@@ -106,6 +106,7 @@ file_get_last_lines(
          csb_add(csb, line, /*copy=*/ true);
 
          // printf("(%s) Retrieved line of length %zu: %s\n", __func__, read, line);
+         free(line);
          line = NULL;  // reset for next getline() call
          len  = 0;
       }
@@ -114,7 +115,6 @@ file_get_last_lines(
          if (verbose)
             fprintf(stderr, "Error reading file %s: %s\n", fn, strerror(-rc));
       }
-      free(line);
       rc = linectr;
       if (debug)
          printf("(%s) Read %d lines\n", __func__, linectr);
@@ -122,7 +122,7 @@ file_get_last_lines(
          rc = maxlines;
 
       *line_array_loc = csb_to_g_ptr_array(csb);
-      free(csb);
+      csb_free(csb,false);
 //      if (debug) {
 //         GPtrArray * la = *line_array_loc;
 //         printf("(%s) (*line_array_loc)->len=%d\n", __func__, la->len);
@@ -676,7 +676,8 @@ int read_file_with_filter(
       const char * fn,
       char **      filter_terms,
       bool         ignore_case,
-      int          limit)
+      int          limit,
+      bool         free_strings)
 {
    bool debug = false;
    if (debug) {
@@ -701,7 +702,8 @@ int read_file_with_filter(
          line_array,
          filter_terms,
          ignore_case,
-         limit);
+         limit,
+         free_strings);
    }
    else { // rc == 0
       if (debug)
@@ -725,7 +727,7 @@ int read_file_with_filter(
  *  \param limit  if 0,   return all lines that pass filter terms
  *                if > 0, return at most the first #limit lines that satisfy the filter terms
  *                if < 0, return at most the last  #limit lines that satisfy the filter terms
- *
+ *  \param free_strings free strings removed from the array
  *  \remark
  *  Consider allowing filter_terms to be regular expressions.
  */
@@ -733,7 +735,8 @@ void filter_and_limit_g_ptr_array(
       GPtrArray * line_array,
       char **     filter_terms,
       bool        ignore_case,
-      int         limit)
+      int         limit,
+      bool        free_strings)
 {
 //   bool debug = false;
 //   if (debug) {
@@ -762,6 +765,8 @@ void filter_and_limit_g_ptr_array(
          keep = apply_filter_terms(s, filter_terms, ignore_case);
       if (!keep) {
          g_ptr_array_remove_index(line_array, ndx);
+         if (free_strings)
+            free(s);
       }
    }
    gaux_ptr_array_truncate(line_array, limit);
