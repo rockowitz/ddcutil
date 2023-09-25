@@ -831,6 +831,19 @@ void query_sysenv(bool quick_env) {
 
    final_analysis(accumulator, 0);
 
+   // A quick hack to reduce the amount of output for testing
+   typedef enum {
+      Probe_Class_None = 0,
+      Probe_Class_Detect = 1,
+      Probe_Class_Drivers = 2,
+      Probe_Class_Most    = 4,
+      Probe_Class_Logs    = 8,
+      Probe_Class_Sysfs   = 16,
+      Probe_Class_All  = 255
+   } Probe_Class;
+
+   Probe_Class probe_what = Probe_Class_Logs;
+
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
       rpt_nl();
@@ -846,34 +859,43 @@ void query_sysenv(bool quick_env) {
       dsa2_enable(false);
       rpt_nl();
 
+
+      if (probe_what & Probe_Class_Detect) {
+
       rpt_vstring(0, "*** Displays as reported by DETECT Command ***");
       /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
                                  true,   // include_invalid_displays
                                  1);     // logical depth
       // printf("Detected: %d displays\n", display_ct);   // not needed
-
-      query_loaded_modules();
-      rpt_nl();
-
-      // printf("Gathering card and driver information...\n");
-      query_proc_modules_for_video();
-      if (!accumulator->is_arm) {
-         // rpt_nl();
-         // query_card_and_driver_using_lspci();
-         //rpt_nl();
-         //query_card_and_driver_using_lspci_alt();
       }
-      rpt_nl();
 
-      if ( driver_name_list_find_exact(accumulator->driver_list, "nvidia")) {
-         query_proc_driver_nvidia();
+      if (probe_what & Probe_Class_Drivers) {
+         query_loaded_modules();
          rpt_nl();
-      }
-      if (driver_name_list_find_exact(accumulator->driver_list, "amdgpu")) {
-         rpt_vstring(0, "amdgpu configuration parameters:");
-         query_sys_amdgpu_parameters(1);
+
+         // printf("Gathering card and driver information...\n");
+         query_proc_modules_for_video();
+         if (!accumulator->is_arm) {
+            // rpt_nl();
+            // query_card_and_driver_using_lspci();
+            //rpt_nl();
+            //query_card_and_driver_using_lspci_alt();
+         }
          rpt_nl();
+
+         if ( driver_name_list_find_exact(accumulator->driver_list, "nvidia")) {
+            query_proc_driver_nvidia();
+            rpt_nl();
+         }
+         if (driver_name_list_find_exact(accumulator->driver_list, "amdgpu")) {
+            rpt_vstring(0, "amdgpu configuration parameters:");
+            query_sys_amdgpu_parameters(1);
+            rpt_nl();
+         }
+
       }
+
+      if (probe_what & Probe_Class_Most) {
 
       rpt_vstring(0, "Checking display manager environment variables...");
       char * s = getenv("DISPLAY");
@@ -927,18 +949,27 @@ void query_sysenv(bool quick_env) {
       // get_i2c_smbus_devices_using_udev();
 
       probe_config_files(accumulator);
-      if (sysfs_quick_test)
-         DBGMSG("!!! Skipping log checking to speed up testing !!!");
-      else {
-         probe_logs(accumulator);
+
       }
 
-#ifdef USE_LIBDRM
-      probe_using_libdrm();
-#else
-      rpt_vstring(0, "Not built with libdrm support.  Skipping DRM related checks");
-#endif
+      if (probe_what & Probe_Class_Logs) {
+         if (sysfs_quick_test)
+            DBGMSG("!!! Skipping log checking to speed up testing !!!");
+         else {
+            probe_logs(accumulator);
+         }
+      }
 
+
+      if (probe_what & Probe_Class_Most) {
+#ifdef USE_LIBDRM
+         probe_using_libdrm();
+#else
+         rpt_vstring(0, "Not built with libdrm support.  Skipping DRM related checks");
+#endif
+      }
+
+      if (probe_what & Probe_Class_Sysfs) {
       query_drm_using_sysfs();
       rpt_nl();
 
@@ -954,6 +985,7 @@ void query_sysenv(bool quick_env) {
       dump_sysfs_i2c(accumulator);
       rpt_nl();
 
+      }
 #ifdef OLD
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
@@ -977,11 +1009,11 @@ void query_sysenv(bool quick_env) {
 #endif
 #endif
 
-      query_xdg_files(0);
-
+      if (probe_what & Probe_Class_Most) {
+         query_xdg_files(0);
+      }
       rpt_label(0, "*** environment command complete ***");
    }
-
    env_accumulator_free(accumulator);     // make Coverity happy
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
