@@ -783,7 +783,8 @@ void show_top_level_sys_entries(int depth) {
              "/proc/devices",
              names,
              false,     // ignore_case,
-             0);        // no limit
+             0,         // no limit
+             false);    // free strings
 
    for (int ndx = 0; ndx < filtered_proc_devices->len; ndx++) {
      rpt_label(depth+1, g_ptr_array_index(filtered_proc_devices, ndx));
