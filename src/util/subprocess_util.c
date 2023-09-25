@@ -190,7 +190,7 @@ GPtrArray * execute_shell_cmd_collect(const char * shell_cmd) {
  *
  *  \param  cmd        command to execute
  *  \param  fn         file name
- *  \param  filter_terms  #Null_Terminated_String_Away of filter terms
+ *  \param  filter_terms  #Null_Terminated_String_Array of filter terms
  *  \param  ignore_case   ignore case when testing filter terms
  *  \param  limit if 0, return all lines that pass filter terms
  *                if > 0, return at most the first #limit lines that satisfy the filter terms
@@ -223,7 +223,8 @@ int execute_cmd_collect_with_filter(
             line_array,
             filter_terms,
             ignore_case,
-            limit);
+            limit,
+            false);     // line_array has free function set
       }
    }
    *result_loc = line_array;
