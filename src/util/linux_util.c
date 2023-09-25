@@ -93,7 +93,7 @@ int get_kernel_config_parm(const char * parm_name, char * buffer, int bufsz)
    char * terms[2];
    terms[0] = search_str;
    terms[1] = NULL;
-   int unfiltered_ct = read_file_with_filter(lines, config_fn, terms, false, 0);
+   int unfiltered_ct = read_file_with_filter(lines, config_fn, terms, false, 0, true);
    if (debug)
       printf("(%s) read_file_with_filter() returned %d, lines->len=%d\n",
              __func__, unfiltered_ct, lines->len);
@@ -239,7 +239,7 @@ bool is_module_built_in(const char * module_name) {
     terms[0] = module_name1;
     terms[1] = module_name2;  // probably same as module_name1, but not worth optimizing
     terms[2] = NULL;
-    int unfiltered_ct = read_file_with_filter(lines, builtin_fn, terms, false, 0);
+    int unfiltered_ct = read_file_with_filter(lines, builtin_fn, terms, false, 0, true);
     if (unfiltered_ct < 0) {   //  = -errno
        fprintf(stderr, "Error reading file %s: %s\n", builtin_fn, strerror(errno));
        fprintf(stderr, "Assuming module %s is not built in to kernel\n", module_name);
