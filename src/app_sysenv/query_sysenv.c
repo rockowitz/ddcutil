@@ -831,18 +831,19 @@ void query_sysenv(bool quick_env) {
 
    final_analysis(accumulator, 0);
 
-   // A quick hack to reduce the amount of output for testing
+   // A quick hack to reduce the amount of output when testing
    typedef enum {
-      Probe_Class_None = 0,
-      Probe_Class_Detect = 1,
+      Probe_Class_None    = 0,
+      Probe_Class_Detect  = 1,
       Probe_Class_Drivers = 2,
       Probe_Class_Most    = 4,
       Probe_Class_Logs    = 8,
       Probe_Class_Sysfs   = 16,
-      Probe_Class_All  = 255
+      Probe_Class_Libdrm  = 32,
+      Probe_Class_All     = 255
    } Probe_Class;
 
-   Probe_Class probe_what = Probe_Class_Logs;
+   Probe_Class probe_what = Probe_Class_All;
 
    if (output_level >= DDCA_OL_VERBOSE) {
       rpt_nl();
@@ -861,12 +862,11 @@ void query_sysenv(bool quick_env) {
 
 
       if (probe_what & Probe_Class_Detect) {
-
-      rpt_vstring(0, "*** Displays as reported by DETECT Command ***");
-      /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
-                                 true,   // include_invalid_displays
-                                 1);     // logical depth
-      // printf("Detected: %d displays\n", display_ct);   // not needed
+         rpt_vstring(0, "*** Displays as reported by DETECT Command ***");
+         /* int display_ct =  */ ddc_report_displays(     // function used by DETECT command
+                                    true,   // include_invalid_displays
+                                    1);     // logical depth
+         // printf("Detected: %d displays\n", display_ct);   // not needed
       }
 
       if (probe_what & Probe_Class_Drivers) {
@@ -892,63 +892,62 @@ void query_sysenv(bool quick_env) {
             query_sys_amdgpu_parameters(1);
             rpt_nl();
          }
-
       }
 
       if (probe_what & Probe_Class_Most) {
 
-      rpt_vstring(0, "Checking display manager environment variables...");
-      char * s = getenv("DISPLAY");
-      rpt_vstring(1, "DISPLAY=%s", (s) ? s : "(not set)");
-      s = getenv("WAYLAND_DISPLAY");
-      rpt_vstring(1, "WAYLAND_DISPLAY=%s", (s) ? s : "(not set)");
-      s = getenv("XDG_SESSION_TYPE");
-      rpt_vstring(1, "XDG_SESSION_TYPE=%s", (s) ? s : "(not set)");
-      rpt_nl();
-
-      query_i2c_buses();
-      rpt_nl();
-
-      rpt_vstring(0,"xrandr connection report:");
-      execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
-      rpt_nl();
-
-      rpt_vstring(0,"Checking for possibly conflicting programs...");
-      execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
-      rpt_nl();
-      execute_shell_cmd_rpt("lsmod | grep ddcci | grep -v grep", 1);
-      rpt_nl();
-
-      if (sysfs_quick_test)
-         DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
-      else {
-         query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                   "i2cdetect -y %d",   // command to issue
-                                   "i2cdetect");        // command name for error message
+         rpt_vstring(0, "Checking display manager environment variables...");
+         char * s = getenv("DISPLAY");
+         rpt_vstring(1, "DISPLAY=%s", (s) ? s : "(not set)");
+         s = getenv("WAYLAND_DISPLAY");
+         rpt_vstring(1, "WAYLAND_DISPLAY=%s", (s) ? s : "(not set)");
+         s = getenv("XDG_SESSION_TYPE");
+         rpt_vstring(1, "XDG_SESSION_TYPE=%s", (s) ? s : "(not set)");
          rpt_nl();
-         query_using_shell_command(accumulator->dev_i2c_device_numbers,
-                                   "get-edid -b %d -i | parse-edid",   // command to issue
-                                   "get-edid | parse-edid");        // command name for error message
 
-         if (get_output_level() >= DDCA_OL_VV) {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: test_read_variants()");
-            test_edid_read_variants(accumulator);
+         query_i2c_buses();
+         rpt_nl();
+
+         rpt_vstring(0,"xrandr connection report:");
+         execute_shell_cmd_rpt("xrandr|grep connected", 1 /* depth */);
+         rpt_nl();
+
+         rpt_vstring(0,"Checking for possibly conflicting programs...");
+         execute_shell_cmd_rpt("ps aux | grep ddccontrol | grep -v grep", 1);
+         rpt_nl();
+         execute_shell_cmd_rpt("lsmod | grep ddcci | grep -v grep", 1);
+         rpt_nl();
+
+         if (sysfs_quick_test)
+            DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
+         else {
+            query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                      "i2cdetect -y %d",   // command to issue
+                                      "i2cdetect");        // command name for error message
+            rpt_nl();
+            query_using_shell_command(accumulator->dev_i2c_device_numbers,
+                                      "get-edid -b %d -i | parse-edid",   // command to issue
+                                      "get-edid | parse-edid");        // command name for error message
+
+            if (get_output_level() >= DDCA_OL_VV) {
+               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: test_read_variants()");
+               test_edid_read_variants(accumulator);
+            }
          }
-      }
-      raw_scan_i2c_devices(accumulator);
+         raw_scan_i2c_devices(accumulator);
 
 #ifdef USE_X11
-      query_x11();
+         query_x11();
 #endif
 
 #ifdef ENABLE_UDEV
-      probe_i2c_devices_using_udev();
+         probe_i2c_devices_using_udev();
 #endif
 
-      // temp
-      // get_i2c_smbus_devices_using_udev();
+         // temp
+         // get_i2c_smbus_devices_using_udev();
 
-      probe_config_files(accumulator);
+         probe_config_files(accumulator);
 
       }
 
@@ -960,8 +959,7 @@ void query_sysenv(bool quick_env) {
          }
       }
 
-
-      if (probe_what & Probe_Class_Most) {
+      if (probe_what & Probe_Class_Libdrm) {
 #ifdef USE_LIBDRM
          probe_using_libdrm();
 #else
@@ -970,22 +968,22 @@ void query_sysenv(bool quick_env) {
       }
 
       if (probe_what & Probe_Class_Sysfs) {
-      query_drm_using_sysfs();
-      rpt_nl();
+         query_drm_using_sysfs();
+         rpt_nl();
 
-      rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 0);
-      execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
-      rpt_title("Query file system for i2c nodes under /sys/class/drm/card*/ddc/i2c-dev/...", 0);
-      execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/ddc/i2c-dev/i2c*", 1);
+         rpt_title("Query file system for i2c nodes under /sys/class/drm/card*...", 0);
+         execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/i2c*", 1);
+         rpt_title("Query file system for i2c nodes under /sys/class/drm/card*/ddc/i2c-dev/...", 0);
+         execute_shell_cmd_rpt("ls -ld /sys/class/drm/card*/card*/ddc/i2c-dev/i2c*", 1);
 
-      device_xref_report(0);
+         device_xref_report(0);
 
-      probe_modules_d(0);
+         probe_modules_d(0);
 
-      dump_sysfs_i2c(accumulator);
-      rpt_nl();
-
+         dump_sysfs_i2c(accumulator);
+         rpt_nl();
       }
+
 #ifdef OLD
       if (get_output_level() >= DDCA_OL_VV) {
          rpt_nl();
