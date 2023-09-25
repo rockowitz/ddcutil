@@ -214,6 +214,9 @@ static bool simple_ioctl_read_edid(
       bool write_before_read,
       int  depth)
 {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d, read_size=%d, write_before_read=%s",
+                 busno, read_size, sbool(write_before_read));
    assert(read_size == 128 || read_size == 256);
    rpt_nl();
    rpt_vstring(depth, "Attempting simple %d byte EDID read of /dev/i2c-%d, %s initial write",
@@ -222,7 +225,8 @@ static bool simple_ioctl_read_edid(
                   );
    int rc = 0;
    char i2cdev[20];
-   Byte edid_buf[256];
+   // Byte edid_buf[256];  // valgrind reports uninitialized value error, so dynamically allocate buffer
+   Byte * edid_buf = calloc(1, 256);
    snprintf(i2cdev, 20, "/dev/i2c-%d", busno);
    bool ok = false;
    int fd = open(i2cdev, O_RDWR );
@@ -238,6 +242,8 @@ static bool simple_ioctl_read_edid(
             rpt_label(depth, "Continuing");
          }
       }
+      DBGMSF(debug, "Calling i2c_ioctl_reader(), read_bytewise=false, read_size=%d, edid_buf=%p",
+                    read_size, edid_buf);
       rc = i2c_ioctl_reader(fd, 0x50, false, read_size, edid_buf);
       if (rc < 0) {
          rpt_vstring(depth,"read failed. errno = %s", linux_errno_desc(errno));
@@ -249,6 +255,8 @@ static bool simple_ioctl_read_edid(
 
       close(fd);
    }
+   free(edid_buf);
+   DBGMSF(debug, "Returning: %s", sbool(ok));
    return ok;
 }
 
