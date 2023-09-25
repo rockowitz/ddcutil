@@ -75,6 +75,7 @@ typedef struct {
 Circular_String_Buffer * csb_new(int size);
 void csb_add(Circular_String_Buffer * csb, char * line, bool copy);
 GPtrArray * csb_to_g_ptr_array(Circular_String_Buffer * csb);
+void csb_free(Circular_String_Buffer * csb, bool free_strings);
 
 
 //

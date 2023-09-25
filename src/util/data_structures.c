@@ -361,7 +361,7 @@ void buffer_rpt(Buffer * buffer, int depth) {
 /** Allocates a new #Circular_String_Buffer
  *
  *  @param  size  buffer size (number of entries)
- *  @return newly allocated #Circular_String_Buffer
+ *  @return pointer to newly allocated #Circular_String_Buffer
  */
 Circular_String_Buffer *
 csb_new(int size) {
@@ -375,7 +375,7 @@ csb_new(int size) {
 
 /** Appends a string to a #Circular_String_Buffer.
  *
- *  @param   csb   #Circular_String_Buffer
+ *  @param   csb   pointer to #Circular_String_Buffer
  *  @param   line  string to append
  *  @param   copy  if true, a copy of the string is appended to the buffer
  *                 if false, the string itself is appended
@@ -384,13 +384,37 @@ void
 csb_add(Circular_String_Buffer * csb, char * line, bool copy) {
     int nextpos = csb->ct % csb->size;
     // printf("(%s) Adding at ct %d, pos %d, line |%s|\n", __func__, csb->ct, nextpos, line);
-    if (csb->lines[nextpos])
+    if (csb->lines[nextpos] && copy)
        free(csb->lines[nextpos]);
-    if (copy)
-       csb->lines[nextpos] = g_strdup(line);
-    else
-       csb->lines[nextpos] = line;
+    csb->lines[nextpos] = (copy) ? g_strdup(line) : line;
     csb->ct++;
+}
+
+
+/** Frees a #Circular_String_Buffer
+ *
+ *  @param  csb pointer to #Circular_String_Buffer
+ *  @param  free_strings  free the strings pointed to by the #Cirular_String_Buffer
+ */
+
+void
+csb_free(Circular_String_Buffer * csb, bool free_strings) {
+   if (free_strings) {
+      int first = 0;
+      if (csb->ct > csb->size)
+         first = csb->ct % csb->size;
+      // printf("(%s) first=%d\n", __func__, first);
+
+      for (int ndx = 0; ndx < csb->ct; ndx++) {
+         int pos = (first + ndx) % csb->size;
+         char * s = csb->lines[pos];
+         // printf("(%s) line %d, |%s|\n", __func__, ndx, s);
+         free(s);
+      }
+      csb->ct = 0;
+   }
+   free(csb->lines);
+   free(csb);
 }
 
 
@@ -398,7 +422,7 @@ csb_add(Circular_String_Buffer * csb, char * line, bool copy) {
  *  allocated GPtrArray. The count of lines in the now empty #Circular_String_Buffer
  *  is set to 0.
  *
- *   @param csb #Circular_String_Buffer to convert
+ *   @param csb pointer to #Circular_String_Buffer to convert
  *   @return    newly allocated #GPtrArray
  */
 GPtrArray *
