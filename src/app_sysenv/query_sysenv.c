@@ -833,14 +833,16 @@ void query_sysenv(bool quick_env) {
 
    // A quick hack to reduce the amount of output when testing
    typedef enum {
-      Probe_Class_None    = 0,
-      Probe_Class_Detect  = 1,
-      Probe_Class_Drivers = 2,
-      Probe_Class_Most    = 4,
-      Probe_Class_Logs    = 8,
-      Probe_Class_Sysfs   = 16,
-      Probe_Class_Libdrm  = 32,
-      Probe_Class_All     = 255
+      Probe_Class_None        = 0,
+      Probe_Class_Detect      = 1,
+      Probe_Class_Drivers     = 2,
+      Probe_Class_Most        = 4,
+      Probe_Class_Logs        = 8,
+      Probe_Class_Sysfs       = 16,
+      Probe_Class_Libdrm      = 32,
+      Probe_Class_I2cdetect   = 64,
+      Probe_Class_Local_Files = 128,
+      Probe_Class_All         = 255
    } Probe_Class;
 
    Probe_Class probe_what = Probe_Class_All;
@@ -917,6 +919,9 @@ void query_sysenv(bool quick_env) {
          rpt_nl();
          execute_shell_cmd_rpt("lsmod | grep ddcci | grep -v grep", 1);
          rpt_nl();
+      }
+
+      if (probe_what & Probe_Class_I2cdetect) {
 
          if (sysfs_quick_test)
             DBGMSG("!!! Skipping i2cdetect and get-edid|parse-edid to speed up testing !!!");
@@ -928,12 +933,15 @@ void query_sysenv(bool quick_env) {
             query_using_shell_command(accumulator->dev_i2c_device_numbers,
                                       "get-edid -b %d -i | parse-edid",   // command to issue
                                       "get-edid | parse-edid");        // command name for error message
-
-            if (get_output_level() >= DDCA_OL_VV) {
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: test_read_variants()");
-               test_edid_read_variants(accumulator);
-            }
          }
+      }
+
+      if (probe_what & Probe_Class_Most) {
+         if (get_output_level() >= DDCA_OL_VV) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "--VV only output: test_read_variants()");
+            test_edid_read_variants(accumulator);
+         }
+
          raw_scan_i2c_devices(accumulator);
 
 #ifdef USE_X11
