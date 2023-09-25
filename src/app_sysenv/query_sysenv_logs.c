@@ -106,13 +106,13 @@ static bool probe_log(
       DBGMSF(debug, "file_get_last_lines() returned %d", rc);
       DBGMSF(debug, "before filter, found_lines->len = %d", found_lines->len);
       filter_and_limit_g_ptr_array(
-            found_lines, filter_terms, ignore_case, limit);
+            found_lines, filter_terms, ignore_case, limit, /* free_strings= */ true);
       DBGMSF(debug, "after filter, found_lines->len = %d", found_lines->len);
 
    }
    else {
       found_lines = g_ptr_array_new_full(1000, g_free);
-      rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit);
+      rc = read_file_with_filter(found_lines, log_fn, filter_terms, ignore_case, limit, false);
    }
 
    if (rc < 0) {
@@ -132,6 +132,7 @@ static bool probe_log(
       }
       file_found = true;
    }
+   g_ptr_array_set_free_func(found_lines,  g_free);
    g_ptr_array_free(found_lines, true);
 
 bye:
@@ -141,7 +142,18 @@ bye:
 }
 
 
-
+/** Issue a command and report the output to the terminal.
+ *
+ *  @param  cmd          command to issue
+ *  @param  filter_terms if non-null, use these terms to filter the output
+ *  @param  ignore_case  ignore case when filtering
+ *  @param  limit        report at most this number of lines
+ *  @param  limit if 0, return all lines that pass filter terms
+ *                if > 0, return at most the first #limit lines that satisfy the filter terms
+ *                if < 0, return at most the last  #limit lines that satisfy the filter terms
+ *  @param  depth        logical indentation depth of output
+ *  @return true if at least 1 line was output, false if not
+ */
 static bool probe_cmd(
       char *  cmd,
       char ** filter_terms,
