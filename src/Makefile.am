@@ -310,6 +310,11 @@ endif
 # 	@echo  $(DESTDIR)$(libdir)
 
 
+install-exec-local:
+	@echo "(src/Makefile) Executing install-exec-local ..." 
+	@echo "(src/Makefile) install-exec-local done" 
+
+
 install-exec-hook:
 	@echo "(src/Makefile) Executing install-exec-hook ..." 
 	rm -f $(DESTDIR)$(libdir)/libddcutil.la  
@@ -329,15 +334,9 @@ endif
 
 	@echo "(src/Makefile) Completed install-exec-hook" 
 
-install-exec-local:
-	@echo "(src/Makefile) Executing install-exec-local ..." 
-	@echo "(src/Makefile) install-exec-local done" 
-
-
 install-data-local:
 	@echo "(src/Makefile) Executing install-data-local ..." 
 	@echo "(src/Makefile) install-data-local done" 
-
 
 
 install-data-hook:
@@ -349,25 +348,6 @@ if INSTALL_LIB_ONLY_COND
 	rm -f ${DESTDIR}${includedir}/ddcutil_c_api.h
 endif
 	@echo "(src/Makefile) install-data-hook done" 
-
-
-# install-data:
-# 	@echo "(src/Makefile) Executing install-data ..." 
-
-
-install-data-local:
-	@echo "(src/Makefile) Executing install-data-local ..." 
-
-
-
-install-data-hook:
-	@echo "(src/Makefile) Executing install-data-hook ..." 
-if INSTALL_LIB_ONLY_COND
-	rm ${includedir}/ddcutil_macros.h
-	rm ${includedir}/ddcutil_status_codes.h
-	rm ${includedir}/ddcutil_types.h
-	rm ${includedir}/ddcutil_c_api.h
-endif
 
 
 uninstall-local:
