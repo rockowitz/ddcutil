@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0] 2023-08-29
+## [2.0.0] 2023-09-25
 
 Release 2.0.0 contains extensive changes.  Shared library libddcutil is not 
 backwards compatible.  
@@ -67,7 +67,7 @@ backwards compatible.
     60-ddcutil-i2c.rules and  60-ddcutil-usb.rules.  The user can modify these 
     files and install them in /etc/udev/rules.d to override the files installed 
     in /usr/lib/udev/rules.d. 
-- ***--enable-dsa*** is a valid sysnonym for ***--enable-dynamic-sleep***
+- ***--enable-dsa*** is a valid synonym for ***--enable-dynamic-sleep***
 - Display detection improved
   - Rework the algorithm for detecting display communication and testing how 
     invalid features are reported.
@@ -80,12 +80,12 @@ backwards compatible.
   - reports an error summary if DDC communication fails
   - Issue warnings that output may be inaccurate if the monitor is sleeping 
     or if it cannot be determined how unsupported features are indicated.
-- Messages regarding DDC data errors (controlled by option ***ddc***) are 
+- Messages regarding DDC data errors (controlled by option ***--ddc***) are 
   written to the system log with level LOG_WARNING instead of LOG_NOTICE.
 
 #### Fixed
 - More robust checks during display detection to test for misuse of the DDC Null Message
-and all zero getvcp response to indicate unsupported features.
+  and all zero getvcp response to indicate unsupported features.
 - Option ***--help***: Document **ELAPSED** as a recognized statistics class
 - ddca_dfr_check_by_dref(): do not return an error if no user defined feature file 
   exists for the monitor
@@ -93,10 +93,17 @@ and all zero getvcp response to indicate unsupported features.
   built with USB support.
 - Improve reporting of /dev/hiddev* open failures to reduce confusion caused by this
   typically benign error.
+- Check that no display identifier is included on commands that don't use one
+- Increase buffer size to allow for a Get Feature Reply packet that contains an 
+  incorrectly large length field.
+- Change the USB infomation shown for option ***--version*** to emphasize that
+  ddcutil uses USB for communicating with the monitor's Virtual Control Pandl, 
+  not for video transmission.
+- Memory leaks
 
 ### Shared library changes
 
-The shared library **libddcutil** is not backwardly compatible.  
+The shared library **libddcutil** in is not backwardly compatible.  
 The SONAME is now libddcutil.so.5. The released library file is libddcutil.so.5.0.0.
 
 Library initialization has been reworked extensively to move operations 
@@ -199,6 +206,14 @@ Options that apply only to libddcutil (Specified in the ddcutil configuration fi
   Use runtime option ***-syslog NEVER*** to disable all writes to the system log.
 - Use of shared library **libkmod** eliminated.
 - Shared library **libjansson** is now required
+
+## [1.4.5] 2023-09-18
+
+#### Building ddcutil
+
+- The autotools **configure** command now recognizes ***--enable-install-lib-only***.  If specified, 
+  command **make install** only installs the shared library. This is intended to facilitate installation 
+  of **libddcutil.so.4** along with the upcoming **libddcutil.so.5**.
 
 
 ## [1.4.2] 2023-02-17
