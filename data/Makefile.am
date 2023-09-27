@@ -3,6 +3,28 @@
 # Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+# The proper location for pkgconfig files is ambiguous, and the 
+# subject of much discussion.  .
+# However, it appears that: 
+#   - /usr/lib64/pkgconfig should hold x64 specific pkgconfig files
+#   - /usr/lib/pkgconfig should hold i386 specific pkgconfig files
+#   - /usr/share/pkgconfig should hold architecture agnostic pkgconfig files
+#
+# The tail wags the dog. libddcutil-dev can contain
+#   usr/*/pkgconfig
+# or 
+#   usr/lib/x86_64-linux-gnu/pkgconfig
+# but there's no way to "or" these two statements. 
+#
+# When building on OBS, the same libddcutil-dev.install is used for all (Debian based) builds, 
+# and if using $(libdir) the location of ddcutil.pc will depend on platform, e.g. 
+# some times it will be /usr/lib/x86_64-linux-gnu/pkgconfig, sometimes something else. 
+# 
+# Note the the entry for ddcutil.pc in the Debian .install file needs
+# to be kept in sync with where autotools puts the files.
+
+
+
 resfiles = \
 	etc/modprobe.d/nvidia-i2c.conf \
 	etc/udev/rules.d/60-ddcutil-i2c.rules \
@@ -21,16 +43,22 @@ installed_modulesfiles = \
     usr/lib/modules-load.d/ddcutil.conf
 endif 
 
+pkgconfigfiles = \
+    ddcutil.pc
+
 # Causes files (with directory structure) to be included in tarball:
-EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles)
+EXTRA_DIST = $(resfiles) $(rulesfiles) $(distributed_modulesfiles) ddcutil.pc.in
 
-
+# Target directory
+pkgconfigdir = ${libdir}/pkgconfig
+   
 # Target directory (/usr/local/share/ddcutil/data or /usr/share/ddcutil/data):
 ddcutildir = $(datadir)/ddcutil/data
 # Causes files (w/o directory structure) to be installed in target directory:
 
 if !INSTALL_LIB_ONLY_COND
 ddcutil_DATA = $(resfiles)
+pkgconfig_DATA = ddcutil.pc
 endif
 
 # Use prefix instead of libdir here because it appears that 

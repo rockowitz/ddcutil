@@ -30,37 +30,11 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-introspection
 # endif
 EXTRA_DIST += m4/introspection.m4 
 
+# install-data-local:
+#	@echo "(Makefile) install-data-local):"
+#	@echo "  docdir                 = $(docdir)"
 
-# The proper location for pkgconfig files is ambiguous, and the 
-# subject of much discussion.  .
-# However, it appears that: 
-#   - /usr/lib64/pkgconfig should hold x64 specific pkgconfig files
-#   - /usr/lib/pkgconfig should hold i386 specific pkgconfig files
-#   - /usr/share/pkgconfig should hold architecture agnostic pkgconfig files
-#
-# The tail wags the dog. libddcutil-dev can contain
-#   usr/*/pkgconfig
-# or 
-#   usr/lib/x86_64-linux-gnu/pkgconfig
-# but there's no way to "or" these two statements. 
-#
-# When building on OBS, the same libddcutil-dev.install is used for all (Debian based) builds, 
-# and if using $(libdir) the location of ddcutil.pc will depend on platform, e.g. 
-# some times it will be /usr/lib/x86_64-linux-gnu/pkgconfig, sometimes something else. 
-# 
-# Note the the entry for ddcutil.pc in the Debian .install file needs
-# to be kept in sync with where autotools puts the files.
-
-install-data-local:
-	@echo "(Makefile) install-data-local):"
-	@echo "  docdir                 = $(docdir)"
-
-	pkgconfigdir=${libdir}/pkgconfig
 if ENABLE_SHARED_LIB_COND
-if !INSTALL_LIB_ONLY_COND
-	pkgconfig_DATA=ddcutil.pc
-endif
-
   libddcdocdir = $(datarootdir)/doc/libddcutil
 # libddcdoc_DATA = AUTHORS
 endif

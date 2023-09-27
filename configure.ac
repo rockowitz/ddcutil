@@ -87,7 +87,8 @@ AC_CONFIG_FILES([
 	docs/Makefile
 	docs/doxygen/Makefile
 	src/public/ddcutil_macros.h
-   ddcutil.pc
+    ddcutil.pc
+    data/ddcutil.pc
   ],
  )
 dnl AC_CONFIG_FILES(package/upload_obsrpm, [chmod +x package/upload_obsrpm] )
