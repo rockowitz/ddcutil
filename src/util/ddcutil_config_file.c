@@ -175,8 +175,10 @@ int merge_command_tokens(
       char *** merged_argv_loc)
 {
    bool debug = false;
-   DBGF(debug, "Starting. old_argc=%d, old_argc=%p, config_token_ct=%d, config_tokens=%p, merged_argv_loc=%p",
+   DBGF(debug, "Starting. old_argc=%d, old_argv=%p, config_token_ct=%d, config_tokens=%p, merged_argv_loc=%p",
                old_argc, old_argv, config_token_ct, config_tokens, merged_argv_loc);
+   assert(old_argc == ntsa_length(old_argv));
+   assert(config_token_ct == ntsa_length(config_tokens));
 
    *merged_argv_loc = NULL;
    int merged_argc  = 0;
@@ -257,6 +259,7 @@ int apply_config_file(
 {
    bool debug = false;
    DBGF(debug, "Starting. application_name=%s, errmsgs=%p", application_name, (void*)errmsgs);
+   assert(old_argc == ntsa_length(old_argv));
    if (debug) {
       for (int ndx = 0; ndx < old_argc; ndx++) {
          DBGF(true, "old_argv[%d] = |%s|", ndx, old_argv[ndx]);
