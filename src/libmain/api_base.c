@@ -230,7 +230,7 @@ get_parsed_libmain_config(const char * libopts_string,
       DBGF(debug, "Calling apply_config_file()...");
       int apply_config_rc = apply_config_file(
                                     "libddcutil",  // use this section of config file
-                                    1, cmd_name_array,
+                                    ntsa_length(cmd_name_array), cmd_name_array,
                                     &new_argc,
                                     &new_argv,
                                     &untokenized_option_string,
@@ -291,23 +291,8 @@ get_parsed_libmain_config(const char * libopts_string,
       free(config_fn);
    }
 
-   if (!result) {
+   if (!result) {   // if no errors
       assert(new_argc >= 1);
-      if (libopts_token_ct > 0) {
-        int newest_argc = new_argc + libopts_token_ct;
-        Null_Terminated_String_Array newest_argv = reallocarray(new_argv, newest_argc+1, sizeof(char*));
-        for (int ndx = 0; ndx < libopts_token_ct; ndx++) {
-           newest_argv[new_argc+ndx] = libopts_tokens[ndx];   // strdup?
-           newest_argv[new_argc+libopts_token_ct] = NULL;
-        }
-        new_argv = newest_argv;
-        new_argc = new_argc + libopts_token_ct;
-        if (debug) {
-           DBGF(true, "After libopts tokens applied:");
-           ntsa_show(new_argv);
-        }
-      }
-
       char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
       fprintf(fout(), "libddcutil: Applying combined options: %s\n", combined);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying combined libddcutil options: %s",   combined);
