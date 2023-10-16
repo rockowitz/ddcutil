@@ -1079,7 +1079,8 @@ parse_command(
       {"use-file-io",
                   '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_fileio_flag,"Use i2c-dev write()/read() calls by default",     NULL},
       {"use-ioctl-io",
-                  '\0', 0, G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
+                  '\0', G_OPTION_FLAG_HIDDEN,
+                           G_OPTION_ARG_NONE,     &i2c_io_ioctl_flag, "Use i2c-dev ioctl() calls by default",     NULL},
 
       {"x52-no-fifo",'\0',0,G_OPTION_ARG_NONE,    &x52_no_fifo_flag, "Feature x52 does not have a FIFO queue", NULL},
 
