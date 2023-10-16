@@ -94,10 +94,12 @@ typedef struct ddca_error_detail {
 // Initialization
 //
 
+//! Options passed to #ddca_init()
 typedef enum {
-   DDCA_INIT_OPTIONS_NONE                 = 0,
-   DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE  = 1,
-   DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG = 2
+   DDCA_INIT_OPTIONS_NONE                  = 0,
+   DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE   = 1,  ///< Do not process configuration file
+   DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG  = 2,  ///< Client has already opened syslog
+   DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS      = 4   ///< Emit msgs re how config file and passed options merged
 } DDCA_Init_Options;
 
 
