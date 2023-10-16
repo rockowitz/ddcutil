@@ -29,6 +29,8 @@
  *  @return joined string, caller is responsible for freeing
  *
  *  Returns "" if **strings** == NULL
+ *
+ *  @TODO: add sort argument
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    bool debug = false;
