@@ -69,7 +69,8 @@ void init_api_base();
 // Globals
 //
 
-static bool client_opened_syslog;
+static bool client_opened_syslog = false;
+static bool enable_init_msgs = false;
 
 //
 // Precondition Failure
@@ -110,7 +111,9 @@ ddca_ddcutil_version(void) {
 #endif
             sscanf(get_base_ddcutil_version(),
                       "%hhu.%hhu.%hhu", &vspec.major, &vspec.minor, &vspec.micro);
+#ifndef NDEBUG
       assert(ct == 3);
+#endif
       vspec_init = true;
    }
    DBGMSG("Returning: %d.%d.%d", vspec.major, vspec.minor, vspec.micro);
@@ -191,7 +194,8 @@ get_parsed_libmain_config(const char * libopts_string,
                sbool(disable_config_file), libopts_string);
 
    if (libopts_string) {
-      fprintf(fout(), "libddcutil: Options passed from client: %s\n", libopts_string);
+      if (enable_init_msgs)
+         fprintf(fout(), "libddcutil: Options passed from client: %s\n", libopts_string);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options passed from client: %s",   libopts_string);
    }
 
@@ -284,7 +288,8 @@ get_parsed_libmain_config(const char * libopts_string,
       }
    #endif
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
-            fprintf(fout(), "libddcutil: Options from %s: %s\n", config_fn, untokenized_option_string);
+            if (enable_init_msgs)
+               fprintf(fout(), "libddcutil: Options from %s: %s\n", config_fn, untokenized_option_string);
             SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
@@ -294,7 +299,8 @@ get_parsed_libmain_config(const char * libopts_string,
    if (!result) {   // if no errors
       assert(new_argc >= 1);
       char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
-      fprintf(fout(), "libddcutil: Applying combined options: %s\n", combined);
+      if (enable_init_msgs)
+         fprintf(fout(), "libddcutil: Applying combined options: %s\n", combined);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying combined libddcutil options: %s",   combined);
       DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
       *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
@@ -566,6 +572,7 @@ ddca_init(const char *      libopts,
 
    bool watch_displays = false;    // default
 
+   enable_init_msgs     = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
    client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
    if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
       syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
