@@ -783,7 +783,7 @@ dumpvcp_as_dumpload_data(
 /** Converts a Dumpload_Data structure to an array of strings
  *
  *  \param data     pointer to Dumpload_Data instance
- *  \return         array of strings
+ *  \return         array of strings, caller must free
  *
  * \remark
  * Note that the result shares no memory with data
@@ -861,6 +861,7 @@ dumpvcp_as_string(Display_Handle * dh, char ** result_loc) {
    if (psc == 0) {
       GPtrArray * strings = convert_dumpload_data_to_string_array(data);
       *result_loc = join_string_g_ptr_array(strings, ";");
+      g_ptr_array_free(strings, true);
       free_dumpload_data(data);
    }
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "*result_loc=|%s|", *result_loc);
