@@ -103,8 +103,6 @@ typedef enum {
 } DDCA_Init_Options;
 
 
-
-
 //
 // Message Control
 //
@@ -126,12 +124,10 @@ typedef enum {
 // Tracing
 //
 
-
-
 //! ddcutil message severity
 //!
-//! will be mapped to syslog() severity
-//! gaps in value allow for further refinement
+//! Will be mapped to syslog() severity
+//! Gaps in values allow for further refinement
 typedef enum {
    DDCA_SYSLOG_NOT_SET  =  -1,
    DDCA_SYSLOG_NEVER    =   0,
