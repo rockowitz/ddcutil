@@ -238,6 +238,8 @@ void add_traced_file(const char * filename) {
 }
 
 
+// n.b. caller must free result
+// TODO: add sort option to join_string_g_ptr_array()
 static char * get_gptrarray_as_joined_string(GPtrArray * arry, bool sort) {
    char * result = NULL;
    if (arry) {
@@ -308,7 +310,9 @@ bool is_traced_api_call(const char * funcname) {
    bool debug = false;
    if (debug) {
       printf("(%s) Starting. funcname = %s\n", __func__, funcname);
-      printf("(%s) traced_api_calls: %s\n", __func__, get_gptrarray_as_joined_string(traced_api_call_table, true) );
+      char * buf = get_gptrarray_as_joined_string(traced_api_call_table, true);
+      printf("(%s) traced_api_calls: %s\n", __func__, buf);
+      free(buf);
    }
 
    bool result = (traced_api_call_table && gaux_string_ptr_array_find(traced_api_call_table, funcname) >= 0);
@@ -323,7 +327,9 @@ bool is_traced_callstack_call(const char * funcname) {
    bool debug = false;
    if (debug) {
       printf("(%s) Starting. funcname = %s\n", __func__, funcname);
-      printf("(%s) traced_callstack_calls: %s\n", __func__, get_gptrarray_as_joined_string(traced_callstack_call_table, true) );
+      char * buf = get_gptrarray_as_joined_string(traced_callstack_call_table, true);
+      printf("(%s) traced_callstack_calls: %s\n", __func__, buf );
+      free(buf);
    }
 
    bool result = (traced_callstack_call_table && gaux_string_ptr_array_find(traced_callstack_call_table, funcname) >= 0);
