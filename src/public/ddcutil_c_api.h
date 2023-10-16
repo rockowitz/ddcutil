@@ -1545,7 +1545,8 @@ ddca_set_any_vcp_value(
  *  calibrated and restored when the calibration is applied.
  *
  *  @param[in]  ddca_dh                   display handle
- *  @param[out] profile_values_string_loc address at which to return string
+ *  @param[out] profile_values_string_loc address at which to return string,
+ *                                        caller is responsible for freeing
  *  @return     status code
  */
 DDCA_Status
