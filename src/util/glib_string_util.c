@@ -5,7 +5,7 @@
  *  glib_string_util.c/h exists to avoid circular dependencies within directory util.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -24,13 +24,9 @@
 /** Joins a GPtrArray containing pointers to character strings
  *  into a single string,
  *
- *  @param strings   GPtrArray of strings
+ *  @param strings  GPtrArray of strings
  *  @param sepstr   if non-null, separator to insert between joined strings
- *  @return joined string, caller is responsible for freeing
- *
- *  Returns "" if **strings** == NULL
- *
- *  @TODO: add sort argument
+ *  @return         joined string, "" if strings==NULL, caller is responsible for freeing
  */
 char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
    bool debug = false;
@@ -75,23 +71,64 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
 }
 
 
+/** Joins a GPtrArray containing pointers to character strings into
+ *  a single string, optionally sorting the strings before joining.
+ *
+ *  @param strings  GPtrArray of strings
+ *  @param sepstr   if non-null, separator to insert between joined strings
+ *  @param sort     if true, sort the strings before joining
+ *  @return         joined string, "" if strings==NULL, caller is responsible for freeing
+ */
+char * join_string_g_ptr_array2(GPtrArray* strings, char * sepstr, bool sort) {
+   char * result = NULL;
+   if (strings) {
+      if (sort)
+         g_ptr_array_sort(strings, gaux_ptr_scomp);
+      result = join_string_g_ptr_array(strings, sepstr);
+   }
+   return result;
+}
+
+
 /** Joins a GPtrArray containing pointers to character strings
  *  into a single string,
  *
  *  The result is returned in a thread-specific private buffer that is
  *  valid until the next call of this function in the current thread.
  *
- *  @param strings   GPtrArray of strings
+ *  @param strings  GPtrArray of strings
  *  @param sepstr   if non-null, separator to insert between joined strings
- *
- *  @return joined string, do not free
+ *  @return         joined string, "" if strings==NULL, do not free
  */
-
 char * join_string_g_ptr_array_t(GPtrArray* strings, char * sepstr) {
    static GPrivate  buffer_key = G_PRIVATE_INIT(g_free);
    static GPrivate  buffer_len_key = G_PRIVATE_INIT(g_free);
 
    char * catenated = join_string_g_ptr_array(strings, sepstr);
+   int required_size = strlen(catenated) + 1;
+   char * buf = get_thread_dynamic_buffer(&buffer_key, &buffer_len_key, required_size);
+   strncpy(buf, catenated, required_size);
+   free(catenated);
+   return buf;
+}
+
+
+/** Joins a GPtrArray containing pointers to character strings
+ *  into a single string, optionally sorting the strings before joining.
+ *
+ *  The result is returned in a thread-specific private buffer that is
+ *  valid until the next call of this function in the current thread.
+ *
+ *  @param strings  GPtrArray of strings
+ *  @param sepstr   if non-null, separator to insert between joined strings
+ *  @oaram sort     if true, sort strings before joining
+ *  @return         joined string, "" if strings=NULL, do not free
+ */
+char * join_string_g_ptr_array2_t(GPtrArray* strings, char * sepstr, bool sort) {
+   static GPrivate  buffer_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  buffer_len_key = G_PRIVATE_INIT(g_free);
+
+   char * catenated = join_string_g_ptr_array2(strings, sepstr, sort);
    int required_size = strlen(catenated) + 1;
    char * buf = get_thread_dynamic_buffer(&buffer_key, &buffer_len_key, required_size);
    strncpy(buf, catenated, required_size);
