@@ -79,13 +79,16 @@ char * join_string_g_ptr_array(GPtrArray* strings, char * sepstr) {
  *  @param sort     if true, sort the strings before joining
  *  @return         joined string, "" if strings==NULL, caller is responsible for freeing
  */
-char * join_string_g_ptr_array2(GPtrArray* strings, char * sepstr, bool sort) {
+char * join_string_g_ptr_array2(
+      GPtrArray* strings, char * sepstr, bool sort) {
    char * result = NULL;
    if (strings) {
       if (sort)
          g_ptr_array_sort(strings, gaux_ptr_scomp);
       result = join_string_g_ptr_array(strings, sepstr);
    }
+   else
+      result = g_strdup("");
    return result;
 }
 
