@@ -231,9 +231,9 @@ ddca_is_verify_enabled(void);
 
 /** Sets the sleep multiplier factor for the open display on current thread.
  *
- *  The semantics of this function has changed. Prior to release 1.5,
+ *  The semantics of this function has changed. Prior to release 2.0,
  *  this function set the sleep multiplier for the current thread.
- *  As of release 1.5, it sets the sleep multiplier for open display
+ *  As of release 2.0, it sets the sleep multiplier for open display
  *  (if any) on the current thread.
  *
  *  @param[in]  multiplier, must be >= 0 and <= 10
@@ -244,7 +244,7 @@ ddca_set_sleep_multiplier(double multiplier);
 
 /** Gets the sleep multiplier for the open display on the current thread
  *
- *  As of release 1.5, the semantics of this function has changed.
+ *  As of release 2.0, the semantics of this function has changed.
  *  See #ddca_set_sleep_multiplier().
  *
  *  @return  sleep multiplier, -1.0f if no display open on current thread
