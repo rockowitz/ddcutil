@@ -116,7 +116,7 @@ typedef enum {
    DDCA_OL_TERSE  =0x04,         /**< Brief   output  */
    DDCA_OL_NORMAL =0x08,         /**< Normal  output */
    DDCA_OL_VERBOSE=0x10,         /**< Verbose output */
-   DDCA_OL_VV=0x20               /**< Very verbose output */
+   DDCA_OL_VV     =0x20          /**< Very verbose output */
 } DDCA_Output_Level;
 
 
