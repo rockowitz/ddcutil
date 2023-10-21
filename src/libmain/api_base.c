@@ -181,6 +181,46 @@ ddca_libddcutil_filename(void) {
 }
 
 
+Error_Info* perform_parse(
+      int     new_argc,
+      char ** new_argv,
+      char *  combined,
+      Parsed_Cmd ** parsed_cmd_loc)
+{
+   GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
+   bool debug = false;
+
+   Error_Info * result = NULL;
+   DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
+   *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
+   DBGF(debug, "*parsed_cmd_loc=%p, errmsgs->len=%d", *parsed_cmd_loc, errmsgs->len);
+   ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
+   if (!*parsed_cmd_loc) {
+      if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
+         syslog(LOG_ERR, "Invalid option string: %s",  combined);
+         for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+             char * msg =  g_ptr_array_index(errmsgs,ndx);
+             syslog(LOG_ERR, "%s", msg);
+         }
+      }
+      result = ERRINFO_NEW(DDCRC_INVALID_CONFIG_FILE, "Invalid option string: %s",  combined);
+      for (int ndx = 0; ndx < errmsgs->len; ndx++) {
+         char * msg =  g_ptr_array_index(errmsgs, ndx);
+         errinfo_add_cause(result, errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, msg));
+      }
+   }
+   else {
+      if (debug)
+         dbgrpt_parsed_cmd(*parsed_cmd_loc, 1);
+   }
+   g_ptr_array_free(errmsgs, true);
+   ASSERT_IFF(*parsed_cmd_loc, !result);
+   return result;
+
+}
+
+
+
 //
 // Initialization
 //
@@ -206,16 +246,17 @@ get_parsed_libmain_config(const char * libopts_string,
    int libopts_token_ct = 0;
    if (libopts_string) {
       libopts_token_ct = tokenize_options_line(libopts_string, &libopts_tokens);
-      DBGF(debug, "libopts_token_ct = %d, libopts_tokens:", libopts_token_ct);
+      DBGF(debug, "libopts_token_ct = %d, libopts_tokens=%p:", libopts_token_ct,libopts_tokens);
       if (debug)
-         rpt_ntsa(libopts_tokens, 3);
+         ntsa_show(libopts_tokens);
    }
    Null_Terminated_String_Array cmd_name_array = calloc(2 + libopts_token_ct, sizeof(char*));
-   cmd_name_array[0] = "libddcutil";   // so libddcutil not a special case for parser
+   cmd_name_array[0] = strdup("libddcutil");   // so libddcutil not a special case for parser
    int ndx = 0;
    for (; ndx < libopts_token_ct; ndx++)
-      cmd_name_array[ndx+1] = libopts_tokens[ndx];
+      cmd_name_array[ndx+1] = g_strdup(libopts_tokens[ndx]);
    cmd_name_array[ndx+1] = NULL;
+   ntsa_free(libopts_tokens,true);
 
    DBGF(debug, "cmd_name_array=%p, cmd_name_array[1]=%p -> %s",
                 cmd_name_array, cmd_name_array[0], cmd_name_array[0]);
@@ -223,13 +264,15 @@ get_parsed_libmain_config(const char * libopts_string,
    char ** new_argv = NULL;
    int     new_argc = 0;
    char *  untokenized_option_string = NULL;
-   GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
+
    if (disable_config_file) {
       DBGF(debug, "config file disabled");
-      new_argv = cmd_name_array;
+      new_argv = ntsa_copy(cmd_name_array, true);
       new_argc = ntsa_length(cmd_name_array);
+      ntsa_free(cmd_name_array, true);
    }
    else {
+      GPtrArray * errmsgs = g_ptr_array_new_with_free_func(g_free);
       char *  config_fn = NULL;
       DBGF(debug, "Calling apply_config_file()...");
       int apply_config_rc = apply_config_file(
@@ -240,10 +283,11 @@ get_parsed_libmain_config(const char * libopts_string,
                                     &untokenized_option_string,
                                     &config_fn,
                                     errmsgs);
+      ntsa_free(cmd_name_array, true);
       assert(apply_config_rc <= 0);
       ASSERT_IFF(apply_config_rc == 0, errmsgs->len == 0);
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
-      ntsa_free(cmd_name_array, false);
+
       DBGF(debug, "apply_config_file() returned: %d (%s), new_argc=%d, new_argv=%p:",
                   apply_config_rc, psc_desc(apply_config_rc), new_argc, new_argv);
 
@@ -254,6 +298,7 @@ get_parsed_libmain_config(const char * libopts_string,
             errinfo_add_cause(result,
                   errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, g_ptr_array_index(errmsgs, ndx)));
          }
+
       }
       else if (apply_config_rc == -ENOENT) {
          result = errinfo_new(-ENOENT, __func__, "Configuration file not found");
@@ -287,12 +332,14 @@ get_parsed_libmain_config(const char * libopts_string,
          }
       }
    #endif
+
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
             if (enable_init_msgs)
                fprintf(fout(), "libddcutil: Options from %s: %s\n", config_fn, untokenized_option_string);
             SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options from %s: %s",   config_fn, untokenized_option_string);
          }
       }
+      g_ptr_array_free(errmsgs, true);
       free(config_fn);
    }
 
@@ -302,39 +349,17 @@ get_parsed_libmain_config(const char * libopts_string,
       if (enable_init_msgs)
          fprintf(fout(), "libddcutil: Applying combined options: %s\n", combined);
       SYSLOG2(DDCA_SYSLOG_NOTICE,"Applying combined libddcutil options: %s",   combined);
-      DBGF(debug, "Calling parse_command(), errmsgs=%p\n", errmsgs);
-      *parsed_cmd_loc = parse_command(new_argc, new_argv, MODE_LIBDDCUTIL, errmsgs);
-      if (debug)
-      DBGF(debug, "*parsed_cmd_loc=%p, errmsgs->len=%d", *parsed_cmd_loc, errmsgs->len);
-      ASSERT_IFF(*parsed_cmd_loc, errmsgs->len == 0);
-      if (!*parsed_cmd_loc) {
-         if (test_emit_syslog(DDCA_SYSLOG_ERROR)) {
-            syslog(LOG_ERR, "Invalid option string: %s",  combined);
-            for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-                char * msg =  g_ptr_array_index(errmsgs,ndx);
-                syslog(LOG_ERR, "%s", msg);
-            }
-         }
-         result = ERRINFO_NEW(DDCRC_INVALID_CONFIG_FILE, "Invalid option string: %s",  combined);
-         for (int ndx = 0; ndx < errmsgs->len; ndx++) {
-            char * msg =  g_ptr_array_index(errmsgs, ndx);
-            errinfo_add_cause(result, errinfo_new(DDCRC_INVALID_CONFIG_FILE, __func__, msg));
-         }
-      }
-      else {
-         assert(*parsed_cmd_loc);
-         if (debug)
-            dbgrpt_parsed_cmd(*parsed_cmd_loc, 1);
-         ntsa_free(new_argv, false);
-      }
+
+      result = perform_parse(new_argc, new_argv, combined, parsed_cmd_loc);
+
+         ntsa_free(new_argv, true);
+
       // DBGF(debug, "Calling ntsa_free(cmd_name_array=%p", cmd_name_array);
       // ntsa_free(cmd_name_array, false);
       // ntsa_free(new_argv, true);
       free(combined);
       free(untokenized_option_string);
    }
-   if (libopts_tokens)
-      ntsa_free(libopts_tokens, false);
 
    DBGF(debug, "Done.     *parsed_cmd_loc=%p. Returning %s",
               *parsed_cmd_loc, errinfo_summary(result));
