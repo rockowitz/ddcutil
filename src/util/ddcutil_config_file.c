@@ -40,20 +40,18 @@
  */
 int tokenize_options_line(const char * string, char ***tokens_loc) {
    bool debug = false;
-   if (debug)
-      printf("(%s) string -> |%s|\n", __func__, string);
+   DBGF(debug,"string -> |%s|", string);
    wordexp_t p;
    int flags = WRDE_NOCMD;
    if (debug)
       flags |= WRDE_SHOWERR;
    int rc = wordexp(string, &p, flags);
-   if (debug)
-      printf("(%s) wordexp returned %d\n", __func__, rc);
+   DBGF(debug, "wordexp returned %d", rc);
    *tokens_loc = p.we_wordv;
    if (debug) {
-      printf("(%s) Tokens:\n", __func__);
+      DBGF(debug,"Tokens:");
       ntsa_show(*tokens_loc);
-      printf("(%s) Returning: %zd\n", __func__, p.we_wordc);
+      DBGF(debug, "Returning: %zd", p.we_wordc);
    }
    return p.we_wordc;
 }
@@ -68,8 +66,6 @@ int tokenize_options_line(const char * string, char ***tokens_loc) {
  *                                  where to return untokenized string of options obtained from
  *                                  the configuration file
  *  @param  errmsgs                 if non-NULL, collects error messages as text strings
- *  @param  errinfo_accumulator     if non-NULL, collects error mgs as Error_Info recs
- *  @param  verbose                 issue error messages if true
  *  @retval 0                       success
  *  @retval -ENOENT                 config file not found
  *  @retval -EBADMSG                config file syntax error
@@ -84,14 +80,11 @@ int read_ddcutil_config_file(
       const char *   ddcutil_application,
       char **        config_fn_loc,
       char **        untokenized_option_string_loc,
-      GPtrArray *    errmsgs,
-      bool           verbose)
+      GPtrArray *    errmsgs)
 {
    bool debug = false;
-   if (debug)
-      verbose = true;
-   DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p, verbose=%s",
-               ddcutil_application, (void*)errmsgs, SBOOL(verbose));
+   DBGF(debug, "Starting. ddcutil_application=%s, errmsgs=%p",
+               ddcutil_application, (void*)errmsgs);
 
    int result = 0;
    *untokenized_option_string_loc = NULL;
@@ -113,7 +106,7 @@ int read_ddcutil_config_file(
    int load_rc = ini_file_load(config_fn, errmsgs, &ini_file);
    ASSERT_IFF(load_rc==0, ini_file);
    DBGF(debug, "ini_file_load() returned %d", load_rc);
-   if (debug || verbose) {
+   if (debug) {
       if (errmsgs && errmsgs->len > 0) {
          fprintf(stderr, "(read_ddcutil_config_file) Error(s) processing configuration file: %s\n", config_fn);
          for (guint ndx = 0; ndx < errmsgs->len; ndx++) {
@@ -276,8 +269,7 @@ int apply_config_file(
                            application_name,
                            configure_fn_loc,
                            untokenized_config_options_loc,
-                           errmsgs,
-                           debug);   // verbose
+                           errmsgs);
    ASSERT_IFF(read_config_rc==0, *untokenized_config_options_loc);
    DBGF(debug, "read_ddcutil_config_file() returned %d, configure_fn: %s",
              read_config_rc, *configure_fn_loc);

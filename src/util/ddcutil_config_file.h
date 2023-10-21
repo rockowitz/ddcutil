@@ -22,8 +22,7 @@ int read_ddcutil_config_file(
       const char *   ddcutil_application,
       char **        config_fn_loc,
       char **        untokenized_option_string_loc,
-      GPtrArray *    errmsgs,
-      bool           verbose);
+      GPtrArray *    errmsgs);
 
 int apply_config_file(
       const char * ddcutil_application,     // "ddcutil", "ddcui", "libddcutil"
