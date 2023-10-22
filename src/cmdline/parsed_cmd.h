@@ -55,6 +55,7 @@ typedef enum {
    CMD_FLAG_SHOW_UNSUPPORTED         = 0x0010,
    CMD_FLAG_ENABLE_FAILSIM           = 0x0020,
    CMD_FLAG_VERIFY                   = 0x0040,
+   CMD_FLAG_SKIP_DDC_CHECKS          = 0x0080,
 #ifdef OLD
    CMD_FLAG_NODETECT                 = 0x0080,  // UNUSED
 #endif
