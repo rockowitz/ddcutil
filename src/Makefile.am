@@ -258,7 +258,6 @@ ddcutil_LDADD =   \
    libapp.la \
    libcommon.la 
 
-
 #needed?
 ddcutil_LDFLAGS =  
 ddcutil_LDFLAGS += -pie
@@ -269,6 +268,7 @@ if ASAN_COND
    ddcutil_LDFLAGS += -fsanitize=address
    # needed? 
    ddcutil_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
+   ddcutil_LDADD += -lasan
 endif
 
 
@@ -293,6 +293,7 @@ if ASAN_COND
    libddcutil_la_LDFLAGS += -fsanitize=address
    # needed? 
    libddcutil_la_LDFLAGS += -fsanitize-address-use-after-scope -fno-omit-frame-pointer
+   libddcutil_la_LIBADD += -lasan
 endif
 
 # doesn't prevent creation of .la 
