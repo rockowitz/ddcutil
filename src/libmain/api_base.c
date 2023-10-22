@@ -1003,62 +1003,6 @@ ddca_is_force_slave_address_enabled(void) {
 #endif
 
 
-#ifdef REMOVED
-//
-// Tracing
-//
-
-bool
-ddca_add_traced_function(const char * funcname) {
-   return add_traced_function(funcname);
-}
-
-#ifdef UNNEEDED
-bool
-ddca_add_traced_api_call(const char * funcname) {
-   return add_traced_api_call(funcname);
-}
-#endif
-
-
-void
-ddca_add_traced_file(const char * filename) {
-   add_traced_file(filename);
-}
-
-
-void
-ddca_set_trace_groups(DDCA_Trace_Group trace_flags) {
-   set_trace_groups(trace_flags);
-}
-
-
-void
-ddca_add_trace_groups(DDCA_Trace_Group trace_flags) {
-   add_trace_groups(trace_flags);
-}
-
-
-DDCA_Trace_Group
-ddca_trace_group_name_to_value(char * name) {
-   return trace_class_name_to_value(name);
-}
-
-
-void
-ddca_set_trace_options(DDCA_Trace_Options  options) {
-   // DBGMSG("options = 0x%02x", options);
-   // global variables in core.c
-
-   if (options & DDCA_TRCOPT_TIMESTAMP)
-      dbgtrc_show_time = true;
-   if (options & DDCA_TRCOPT_WALLTIME)
-      dbgtrc_show_time = true;
-   if (options & DDCA_TRCOPT_THREAD_ID)
-      dbgtrc_show_thread_id = true;
-}
-#endif
-
 //
 // Statistics
 //
