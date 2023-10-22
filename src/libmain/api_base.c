@@ -1010,34 +1010,6 @@ ddca_is_force_slave_address_enabled(void) {
 // TODO: Add functions to access ddcutil's runtime error statistics
 
 
-#ifdef UNUSED
-void
-ddca_register_thread_dref(DDCA_Display_Ref dref) {
-   ptd_register_thread_dref( (Display_Ref *) dref);
-}
-#endif
-
-#ifdef REMOVED
-void
-ddca_set_thread_description(
-      const char * description)
-{
-   ptd_set_thread_description( description );
-}
-
-void
-ddca_append_thread_description(
-      const char * description)
-{
-   ptd_append_thread_description(description);
-}
-
-const char *
-ddca_get_thread_descripton() {
-   return ptd_get_thread_description_t();
-}
-#endif
-
 void
 ddca_reset_stats(void) {
    // DBGMSG("Executing");
