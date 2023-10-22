@@ -312,27 +312,6 @@ get_parsed_libmain_config(const char * libopts_string,
          if (debug)
             ntsa_show(new_argv);
 
-   #ifdef OUT
-      // TODO: set msgs in Error_Info records
-      if (errmsgs->len > 0) {
-         f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
-         SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
-         for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
-            f0printf(fout(),     "   %s\n", g_ptr_array_index(errmsgs, ndx));
-            SYSLOG(LOG_WARNING,  "   %s",   (char*) g_ptr_array_index(errmsgs, ndx));
-         }
-      }
-      // alt:
-      if (errinfo_accumulator->len > 0) {
-         f0printf(ferr(),    "Error(s) reading libddcutil configuration from file %s:\n", config_fn);
-         SYSLOG(LOG_WARNING, "Error(s) reading libddcutil configuration from file %s:",   config_fn);
-         for (int ndx = 0; ndx < errinfo_accumulator->len; ndx++) {
-            f0printf(fout(),     "   %s\n", errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
-            SYSLOG(LOG_WARNING,  "   %s",   errinfo_summary( g_ptr_array_index(errinfo_accumulator, ndx)));
-         }
-      }
-   #endif
-
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
             if (enable_init_msgs)
                fprintf(fout(), "libddcutil: Options from %s: %s\n", config_fn, untokenized_option_string);
