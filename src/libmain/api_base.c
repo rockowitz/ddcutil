@@ -859,18 +859,6 @@ ddca_is_verify_enabled() {
 
 
 #ifdef REMOVED
-// deprecated, now a NOOP
-bool
-ddca_enable_sleep_suppression(bool newval) {
-   return false;
-}
-
-// deprecated, now a NOOP
-bool
-ddca_is_sleep_suppression_enabled() {
-   return false;
-}
-
 
 // *** FOR CURRENT THREAD
 double
