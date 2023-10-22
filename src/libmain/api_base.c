@@ -741,28 +741,6 @@ ddca_rc_desc(DDCA_Status status_code) {
 }
 
 
-#ifdef REMOVED
-/** Enable display of internal exception reports (Error_Info).
- *
- *  @param[in] enable  true/false
- *  @return prior value
- */
-bool
-ddca_enable_error_info(
-      bool enable);
-#endif
-
-#ifdef REMOVED
-// quick and dirty for now
-// TODO: make thread safe, wrap in mutex
-bool
-ddca_enable_error_info(bool enable) {
-   bool old_value = report_freed_exceptions;
-   report_freed_exceptions = enable;            // global in core.c
-   return old_value;
-}
-#endif
-
 //
 // Output redirection
 //
