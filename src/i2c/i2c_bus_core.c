@@ -155,6 +155,8 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
       RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
       RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
       asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
+      free(dpms);
+      free(enabled);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
             businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
