@@ -962,19 +962,6 @@ ddca_set_timeout_millis(
 }
 #endif
 
-#ifdef FUTURE
-bool
-ddca_enable_force_slave_address(bool onoff) {
-   return false;
-}
-
-
-bool
-ddca_is_force_slave_address_enabled(void) {
-   return false;
-}
-#endif
-
 
 #ifdef REMOVED
 
