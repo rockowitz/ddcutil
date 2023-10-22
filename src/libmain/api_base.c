@@ -857,15 +857,6 @@ ddca_is_verify_enabled() {
    return ddc_get_verify_setvcp();
 }
 
-#ifdef NOT_NEEDED
-void ddca_lock_default_sleep_multiplier() {
-   lock_default_sleep_multiplier();
-}
-
-void ddca_unlock_sleep_multiplier() {
-   unlock_default_sleep_multiplier();
-}
-#endif
 
 #ifdef REMOVED
 // deprecated, now a NOOP
