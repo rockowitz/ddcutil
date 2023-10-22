@@ -169,8 +169,10 @@ void terminate_per_thread_data() {
 // Locking
 //
 
+#ifdef PTD
 static void ptd_init(Per_Thread_Data * ptd) {
 }
+#endif
 
 
 /** Gets the #Per_Thread_Data struct for the current thread, using the
@@ -202,9 +204,10 @@ Per_Thread_Data * ptd_get_per_thread_data() {
       DBGMSF(debug, "==> Per_Thread_Data not found for thread %d", cur_thread_id);
       data = g_new0(Per_Thread_Data, 1);
       data->thread_id = cur_thread_id;
+      data->sleep_multiplier = -1.0f;
       g_private_set(&lock_depth, GINT_TO_POINTER(0));
-      ptd_init(data);
 #ifdef PTD
+      ptd_init(data);
       DBGMSF(debug, "Initialized: %s. thread_sleep_data_defined: %s. thread_retry_data_defined; %s",
            sbool(data->initialized),
            sbool( data->thread_sleep_data_defined), sbool( data->thread_retry_data_defined));
