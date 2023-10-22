@@ -789,40 +789,6 @@ ddca_output_level_name(DDCA_Output_Level val) {
    return output_level_name(val);
 }
 
-#ifdef REMOVED
-
-
-/** Controls whether messages describing DDC protocol errors are output
- *
- *  @param[in] onoff    if true, errors will be issued
- *  @return    prior value
- *
- *  This setting is global to all threads.
- */
-bool
-ddca_enable_report_ddc_errors(
-      bool onoff);
-
-/** Indicates whether messages describing DDC protocol errors are output.
- *
- *  This setting is global to all threads.
- */
-bool
-ddca_is_report_ddc_errors_enabled(void);
-#endif
-
-#ifdef REMOVED
-bool
-ddca_enable_report_ddc_errors(bool onoff) {
-   return enable_report_ddc_errors(onoff);
-}
-
-
-bool
-ddca_is_report_ddc_errors_enabled(void) {
-   return is_report_ddc_errors_enabled();
-}
-#endif
 
 //
 // Global Settings
