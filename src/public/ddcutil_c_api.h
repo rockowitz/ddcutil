@@ -229,27 +229,35 @@ ddca_is_verify_enabled(void);
 // Performance
 //
 
-/** Sets the sleep multiplier factor for the open display on current thread.
+
+/** Sets an explicit sleep multiplier factor for the current thread.
+ *  If set, it takes precedence over any other sleep multiplier calculation.
  *
- *  The semantics of this function has changed. Prior to release 2.0,
- *  this function set the sleep multiplier for the current thread.
- *  As of release 2.0, it sets the sleep multiplier for open display
- *  (if any) on the current thread.
+ *  @deprecated
+ *  This function provides backwards compatibility with applications
+ *  written for libddcutil release 1.x.  It's use in new applications
+ *  is discouraged.
  *
  *  @param[in]  multiplier, must be >= 0 and <= 10
- *  @return     old multiplier, -1.0f if invalid multiplier specified, or no display open
+ *  @return     old multiplier, -1.0f if invalid multiplier specified
+ *              or multiplier was not previously set
  */
-double
+__attribute__ ((deprecated)) double
 ddca_set_sleep_multiplier(double multiplier);
 
-/** Gets the sleep multiplier for the open display on the current thread
+
+/** Gets the explicit sleep multiplier for the current thread.
  *
- *  As of release 2.0, the semantics of this function has changed.
+ *  @deprecated
+ *  This function provides backwards compatibility with applications
+ *  written for libddcutil release 1.x.  It's use in new applications
+ *  is discouraged.
+ *
  *  See #ddca_set_sleep_multiplier().
  *
- *  @return  sleep multiplier, -1.0f if no display open on current thread
+ *  @return  sleep multiplier, -1.0f if not set
  */
-double
+__attribute__ ((deprecated)) double
 ddca_get_sleep_multiplier();
 
 
