@@ -1009,7 +1009,6 @@ ddca_is_force_slave_address_enabled(void) {
 
 // TODO: Add functions to access ddcutil's runtime error statistics
 
-
 void
 ddca_reset_stats(void) {
    // DBGMSG("Executing");
