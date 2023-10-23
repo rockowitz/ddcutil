@@ -1385,7 +1385,6 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_F12,               f12_flag);
    SET_CMDFLAG(CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS,    watch_displays_flag);
    SET_CMDFLAG(CMD_FLAG_X52_NO_FIFO,       x52_no_fifo_flag);
-
    SET_CMDFLAG(CMD_FLAG_SHOW_SETTINGS,     show_settings_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_FILEIO,     i2c_io_fileio_flag);
    SET_CMDFLAG(CMD_FLAG_I2C_IO_IOCTL,      i2c_io_ioctl_flag);
@@ -1396,6 +1395,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_STATS_TO_SYSLOG, stats_to_syslog_only_flag);
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
+   SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 #ifdef REMOVED
@@ -1406,7 +1406,6 @@ parse_command(
       parsed_cmd->discarded_cache_types = discarded_caches_work;
       SET_CMDFLAG(CMD_FLAG_DISCARD_CACHES, true);
    }
-
 
    if (failsim_fn_work) {
 #ifdef ENABLE_FAILSIM
