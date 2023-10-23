@@ -1,15 +1,16 @@
 # Changelog
 
-## [1.4.2] 2023-02-17
+## [1.4.5] 2023-10-22
 
 ### Added 
 
-- **ddcutil** installation installs files /usr/lib/modules-load.d/ddcutil.conf
-  and /usr/lib/modules-load.d#libddcutil.conf to ensure that kernel module 
-  i2c-dev is loaded at boot time if it is not built into the kernel. There are
-  two files so that when split up into distribution packages, each of the 
-  command line **ddcutil** package and the shared library **libddcutil** 
-  package installs a file.  
+- **ddcutil** installation installs file /usr/lib/modules-load.d/ddcutil.conf
+  to ensure that kernel module i2c-dev is loaded at boot time if it is not 
+  built into the kernel.
+- If configure option --enable-install-lib-only is set, only the shared 
+  library **libddcutil.so.4** is built and installed. This is to facilitate
+  installation of **libddcutil.so.4** along with **libddcutil.so.5** from 
+  release 2.0. 
 
 ## [1.4.1] 2023-01-16
 
