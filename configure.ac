@@ -18,7 +18,7 @@ m4_define([ddcutil_major_version], [1])
 m4_define([ddcutil_minor_version], [4])
 m4_define([ddcutil_micro_version], [5])
 dnl ddcutil_version_suffix does not begin with hyphen, e.g. "dev", not "-dev"
-m4_define([ddcutil_version_suffix], ["dev"])
+m4_define([ddcutil_version_suffix], [""])
 # m4_ifelse(ddcutil_version_suffix,[], m4_define([ddcutil_version], [a]),define([ddcutil_version],[b]))
 dnl mf_define( [ddcutil_version], m4_format([%s.%s.%s%s],[ddcutil_major_version],[ddcutil_minor_version],[ddcutil_micro_version],[ddcutil_version_suffix])
 m4_define([ddcutil_version], [ddcutil_major_version.ddcutil_minor_version.ddcutil_micro_version])
@@ -33,7 +33,6 @@ dnl sets among several output vars including  PACKAGE_NAME, PACKAGE_VERSION,
 dnl PACKAGE_TARNAME (name of output package)
 dnl causes VERSION to be set in config.h
 AC_INIT([ddcutil],[ddcutil_version],[rockowitz@minsoft.com])
-dnl AC_INIT([libddcutil4],[ddcutil_version],[rockowitz@minsoft.com])
 
 dnl define preprocessor symbols
 dnl was AC_DEFINE_UNQUOTED, but don't need extra handling?
