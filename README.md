@@ -58,6 +58,11 @@ $ ddcutil interrogate
 
 For further information about technical support, see https://www.ddcutil.com/tech_support.
 
+## Maintaining **ddcutil** in Linux Distributions
+
+Those responsible for maintaining **ddcutil** related packages in Linux distributions should see
+[Notes for Linux Distribution Maintainers](https://www.ddcutil.com/mult_shared_libs).
+
 ## Author
 
 Sanford Rockowitz  <rockowitz@minsoft.com>
