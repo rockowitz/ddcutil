@@ -361,6 +361,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
 
+   skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
 
    // for testing
    ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
