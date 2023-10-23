@@ -85,6 +85,7 @@ static bool detect_usb_displays = true;
 static bool detect_usb_displays = false;
 #endif
 bool monitor_state_tests = false;
+bool skip_ddc_checks = false;
 
 
 //
@@ -584,6 +585,15 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
 
    bool result = false;
    Error_Info * err = NULL;
+
+   if (skip_ddc_checks) {
+      dref->flags |= (DREF_DDC_COMMUNICATION_CHECKED |
+                      DREF_DDC_COMMUNICATION_WORKING |
+                      DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_repr_t(dref));
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
+   }
+   else {
    // if (!(dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
       Display_Handle * dh = NULL;
 
@@ -604,6 +614,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
       if (err)
          result = false;
    // }
+   }
 
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Final flags: %s", interpret_dref_flags_t(dref->flags));
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref = %s", dref_repr_t(dref) );
