@@ -913,6 +913,7 @@ parse_command(
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
    char *   i2c_source_addr_work = NULL;
+   gboolean skip_ddc_checks_flag = false;
 
    gboolean hidden_help_flag = false;
    gboolean disable_config_flag = false;
@@ -976,6 +977,8 @@ parse_command(
          // Miscellaneous
          // move to preparser_options if also implemented for libddcutil
          {"noconfig",'\0', 0, G_OPTION_ARG_NONE,     &disable_config_flag, "Do not process configuration file", NULL},
+         {"skip-ddc-checks",'\0', G_OPTION_FLAG_HIDDEN,
+                              G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
       {NULL},
    };
 
@@ -1668,6 +1671,17 @@ parse_command(
                EMIT_PARSER_ERROR(errmsgs,  "%s does not support explicit display option\n", cmdInfo->cmd_name);
                parsing_ok = false;
             }
+         }
+
+         if (parsing_ok && !(parsed_cmd->cmd_id == CMDID_GETVCP || parsed_cmd->cmd_id == CMDID_SETVCP)) {
+            if (skip_ddc_checks_flag) {
+               EMIT_PARSER_ERROR(errmsgs, "Option --skip-ddc-checks valid only for getvcp or setvcp");
+               parsing_ok = false;
+            }
+         }
+         if (parsing_ok && skip_ddc_checks_flag && buswork < 0) {
+            EMIT_PARSER_ERROR(errmsgs, "Option --skip-ddc-checks valid only with option --bus");
+            parsing_ok = false;
          }
       }  // recognized command
    }
