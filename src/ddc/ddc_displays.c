@@ -592,6 +592,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
                       DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "dref=%s, skipping initial ddc checks", dref_repr_t(dref));
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Skipping initial ddc checks");
+      result = true;
    }
    else {
    // if (!(dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
