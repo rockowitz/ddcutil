@@ -1048,7 +1048,7 @@ main(int argc, char *argv[]) {
    DBGTRC(main_debug, DDCA_TRC_TOP, "After command processing");
 
    if (parsed_cmd->stats_types != DDCA_STATS_NONE
-         && ddc_displays_already_detected()
+         && ( ddc_displays_already_detected() || parsed_cmd->pdid->id_type == DISP_ID_BUSNO)
 #ifdef ENABLE_ENVCMDS
          && parsed_cmd->cmd_id != CMDID_INTERROGATE
 #endif
