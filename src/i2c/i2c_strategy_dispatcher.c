@@ -141,14 +141,15 @@ is_nvidia_einval_bug(
       int                 busno,
       int                 rc)
 {
+   bool debug = false;
    bool result = false;
    if ( rc == -EINVAL && strategy_id == I2C_IO_STRATEGY_IOCTL) {
       char * driver_name = get_i2c_sysfs_driver_by_busno(busno);
       if (streq(driver_name, "nvidia")) {
          nvidia_einval_bug_encountered = true;
          i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);   // the new normal
-         char * msg = "nvida/i2c-dev bug encountered. Forcing future io I2C_IO_STRATEGY_FILEIO. Retrying";
-         DBGTRC(true, TRACE_GROUP, msg);
+         char * msg = "nvida/i2c-dev bug encountered. Forcing future io to I2C_IO_STRATEGY_FILEIO. Retrying";
+         DBGTRC(debug, TRACE_GROUP, msg);
          SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
          result = true;
       }
