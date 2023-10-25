@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.0.1] 2023-10-25
+
+#### Added
+- Experimental option --skip-ddc-checks
+  Assumes DDC communication is working and the monitor uses the 
+  unspported feature bit in Get Feature Reply packets as per 
+  the DDC/CI spec.
+
+#### Changed
+- Turned off unconditional message reporting rare Nvidia/i2c-dev driver 
+  compatibility error.  The incompatibility has been full diagnosed as
+  being caused by use of a legacy proprietary Nvidia driver. 
+  A message is still written to the system log.
+- Revert ddca_get_sleep_multiplier(), ddca_set_sleep_multiplier() to 
+  their pre 2.0 semantics changing the multiplier on the current thread.
+
+#### Shared Library
+- Function ddca_init(): recognize flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS,
+  which controls whether messages are output re how the option string
+  passed to the libddcutil parser is assembled from the ddca_init() 
+  libopts argument and the configuration file.
+
+#### Fixed
+- Fixed cause of assert() failure in ddca_init() when the libopts string
+  argument has a value and the configuration file is enabled  but 
+  no options are obtained from the configuation file.
+- Contents of the libopts arg were added twice to the string passed to 
+  the libddcutil parser.
+- Memory leaks.
+
+#### Building
+- Link libasan into binaries if --enable-asan
+
 ## [2.0.0] 2023-09-25
 
 Release 2.0.0 contains extensive changes.  Shared library libddcutil is not 
