@@ -51,15 +51,6 @@ void drd_set_default_max_tries(Retry_Operation rcls, uint16_t maxtries) {
 }
 
 
-#define GLOBAL_MAXTRIES_MARKER "GLMX"
-typedef
-struct {
-   char marker[4];
-   Retry_Operation rcls;
-   uint16_t        maxtries;
-} Global_Maxtries_Args;
-
-
 static void wrap_report_display_retry_data(Per_Display_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
    // rpt_vstring(depth, "Per_Display_Data:");  // needed?
@@ -138,19 +129,12 @@ void drd_reset_all_displays_tries() {
 }
 #endif
 
-
+#ifdef UNUSED
 // static
 void drd_record_display_successful_tries(Per_Display_Data * data, Retry_Operation type_id, int tryct) {
    bool debug = false;
-   // DBGMSF(debug, "type_id=%d - %s, tryct=%d",
-   //               type_id, retry_type_name(type_id), tryct);
-   // Per_Display_Data * data = drd_get_display_retry_data();
-
-   // Per_Display_Try_Stats * typedata = &data->try_stats[type_id];
    DBGMSF(debug, "type_id=%d - %s, tryct=%d, Per_Display_Data: %p",
                  type_id, retry_type_name(type_id), tryct, data);
-   // assert(0 < tryct && tryct <= typedata.max_tries);   // max_tries commented out
-   // typedata->counters[tryct+1] += 1;
    data->try_stats[type_id].counters[tryct+1]++;
    DBGMSF(debug, "new counters value: %d", data->try_stats[type_id].counters[tryct+1]);
 }
@@ -158,16 +142,15 @@ void drd_record_display_successful_tries(Per_Display_Data * data, Retry_Operatio
 
 // static
 void drd_record_display_failed_max_tries(Per_Display_Data * data, Retry_Operation type_id) {
-   // Per_Display_Data * data = drd_get_display_retry_data();
    data->try_stats[type_id].counters[1]++;
 }
 
 
 // static
 void drd_record_display_failed_fatally(Per_Display_Data * data, Retry_Operation type_id) {
-   // Per_Display_Data * data = drd_get_display_retry_data();
    data->try_stats[type_id].counters[0]++;
 }
+#endif
 
 
 void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, int rc, int tryct) {
@@ -176,11 +159,6 @@ void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, i
                   dpath_repr_t(&pdd->dpath),
                  type_id, retry_type_name(type_id), rc, tryct);
 
-   // pdd_cross_display_operation_block();
-
-   // bool this_function_locked = pdd_lock_if_unlocked();
-   // Per_Display_Data * data = drd_get_display_retry_data();
-   // Per_Display_Try_Stats* typedata = &data->try_stats[type_id];
    int index = 0;
    if (rc == 0) {
       index = tryct+1;
@@ -193,8 +171,6 @@ void drd_record_display_tries(Per_Display_Data * pdd, Retry_Operation type_id, i
       index = 0;
    }
    pdd->try_stats[type_id].counters[index]+= 1;
-   //typedata->counters[index] +=1;
-   // pdd_unlock_if_needed(this_function_locked);
 }
 
 
@@ -258,7 +234,7 @@ uint16_t display_index_of_highest_non_zero_counter(uint16_t* counters) {
  *  for a given display.
  *
  *  This function is also used to report summary data stored in a
- *  summary Per_Display instance.
+ *  summary Per_Display_Data instance.
  *
  *  \param  retry_type       type of transaction being reported
  *  \param  for_all_threads  indicates whether this call is for a real display,
@@ -348,22 +324,19 @@ void report_display_try_typed_data_by_data(
 
 /** Reports all try statistics for a single display
  *
- * \param  for_all_threads  indicates whether this call is for a real display,
- *                          or for a synthesized data record containing data that
- *                          summarizes all threads
- * \param   data            pointer to record for one thread
- * \param   depth           logical indentation depth
+ * \param  for_all_displays  indicates whether this call is for a real display,
+ *                           or for a synthesized data record containing data that
+ *                           summarizes all displays
+ * \param   data             pointer to record for one display
+ * \param   depth            logical indentation depth
  */
 void report_display_all_types_data_by_data(
       bool              for_all_displays,   // controls message
       Per_Display_Data* data,
       int               depth)
 {
-   // rpt_vstring(depth, "Tries data for thread %d", data->thread_id);
-   // for DD_WRITE_ONLY, DD_WRITE_READ, etc.
    for (int try_type_ndx = 0; try_type_ndx < RETRY_OP_COUNT; try_type_ndx++) {
       Retry_Operation type_id = (Retry_Operation) try_type_ndx;
       report_display_try_typed_data_by_data( type_id, for_all_displays, data, depth+1);
-      // rpt_nl();
    }
 }
