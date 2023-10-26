@@ -53,32 +53,28 @@ void drd_set_default_max_tries(Retry_Operation rcls, uint16_t maxtries) {
 
 static void wrap_report_display_retry_data(Per_Display_Data * data, void * arg) {
    int depth = GPOINTER_TO_INT(arg);
-   // rpt_vstring(depth, "Per_Display_Data:");  // needed?
    rpt_vstring(depth, "Retry data for display on %s:", dpath_short_name_t(&data->dpath));
-   report_display_all_types_data_by_data(false,    // for_all_threads
+   report_display_all_types_data_by_data(false,    // for_all_displays
                                         data,
                                         depth);
 }
 
 
 /** Report all #Per_Display_Data structs.  Note that this report includes
- *  structs for threads that have been closed.
+ *  structs for displays that may have been disconnected.
  *
  *  \param depth  logical indentation depth
  */
 void drd_report_all_display_retry_data(int depth) {
    bool debug = false;
    DBGMSF(debug, "Starting");
+
    rpt_label(depth, "Per display retry data");
    assert(per_display_data_hash);
    pdd_cross_display_operation_block(__func__);
-      // bool this_function_locked = pdd_lock_if_unlocked();
-      pdd_apply_all_sorted(&wrap_report_display_retry_data, GINT_TO_POINTER(depth+1) );
-      // pdd_unlock_if_needed(this_function_locked);
-   // rpt_nl();
-   // rpt_label(depth, "per thread data structure locks: ");
-   // dbgrpt_per_display_data_locks(depth+1);
-   rpt_nl();
+   // bool this_function_locked = pdd_lock_if_unlocked();
+   pdd_apply_all_sorted(&wrap_report_display_retry_data, GINT_TO_POINTER(depth+1) );
+   // pdd_unlock_if_needed(this_function_locked);
 
    DBGMSF(debug, "Done");
 }
@@ -237,7 +233,7 @@ uint16_t display_index_of_highest_non_zero_counter(uint16_t* counters) {
  *  summary Per_Display_Data instance.
  *
  *  \param  retry_type       type of transaction being reported
- *  \param  for_all_threads  indicates whether this call is for a real display,
+ *  \param  for_all_displays indicates whether this call is for a real display,
  *                           or for a synthesized data record containing data that
  *                           summarizes all displays
  *  \param  data             pointer to per-thread data
@@ -245,20 +241,19 @@ uint16_t display_index_of_highest_non_zero_counter(uint16_t* counters) {
  */
 void report_display_try_typed_data_by_data(
       Retry_Operation     retry_type,
-      bool                for_all_threads_total,
+      bool                for_all_displays_total,
       Per_Display_Data *  data,
       int                 depth)
 {
    // bool debug = false;
    int d1 = depth+1;
    int d2 = depth+2;
-   // rpt_nl();
-   ASSERT_IFF( (retry_type == -1), for_all_threads_total );
+   ASSERT_IFF( (retry_type == -1), for_all_displays_total );
    // bool this_function_locked = pdd_lock_if_unlocked();
 
    int total_attempts_for_one_type =  get_display_total_tries_for_one_type_by_data(retry_type, data);
 
-   if (for_all_threads_total) {  // reporting a synthesized summary record
+   if (for_all_displays_total) {  // reporting a synthesized summary record
       rpt_vstring(depth, "Total %s retry statistics for all displays", retry_type_name(retry_type) );
    }
    else {      // normal case, reporting one thread
