@@ -558,7 +558,7 @@ do { \
  */
 #define MSG_W_SYSLOG(_ddcutil_severity, format, ...) \
 do { \
-   FILE * f = (_ddcutil_severity < DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
+   FILE * f = (_ddcutil_severity <= DDCA_SYSLOG_WARNING) ? ferr() : fout(); \
    fprintf(f, format, ##__VA_ARGS__); \
    fprintf(f, "\n"); \
    if (test_emit_syslog(_ddcutil_severity)) { \
