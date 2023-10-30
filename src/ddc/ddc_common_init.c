@@ -108,9 +108,7 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE)     // process id on debug and trace messages?
        dbgtrc_show_process_id = true;                     // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
-       dbgtrc_trace_to_syslog_only = true;                      // extern in core.h
-   // if (parsed_cmd->flags & CMD_FLAG_STATS_TO_SYSLOG_ONLY)
-   //     stats_to_syslog_only = true;                      // extern in
+       dbgtrc_trace_to_syslog_only = true;                // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_F6)
       watch_watching = true;
 
