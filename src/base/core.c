@@ -142,8 +142,7 @@ bool dbgtrc_show_time      =  false;  ///< include elapsed time in debug/trace o
 bool dbgtrc_show_wall_time =  false;  ///< include wall time in debug/trace output
 bool dbgtrc_show_thread_id =  false;  ///< include thread id in debug/trace output
 bool dbgtrc_show_process_id = false;  ///< include process id in debug/trace output
-bool dbgtrc_trace_to_syslog_only = false;
-
+bool dbgtrc_trace_to_syslog_only = false; ///< send trace output only to system log
 
 
 #ifdef UNUSED
@@ -208,9 +207,9 @@ bool report_freed_exceptions = false;
 // Report DDC data errors
 //
 
-
 static bool report_ddc_errors = false;
 static GMutex report_ddc_errors_mutex;
+
 
 bool enable_report_ddc_errors(bool onoff) {
    g_mutex_lock(&report_ddc_errors_mutex);
@@ -219,6 +218,7 @@ bool enable_report_ddc_errors(bool onoff) {
    g_mutex_unlock(&report_ddc_errors_mutex);
    return old_val;
 }
+
 
 bool is_report_ddc_errors_enabled() {
    bool old_val = report_ddc_errors;
@@ -321,9 +321,6 @@ bool logable_msg(DDCA_Syslog_Level log_level,
 }
 
 
-
-
-
 /** Tells whether DDC data errors are reported.
  *  Output is written to the current **FOUT** device.
  */
@@ -340,8 +337,6 @@ void show_ddcutil_version() {
                               SHOW_REPORTING_MIN_TITLE_SIZE,
                               get_full_ddcutil_version());
 }
-
-
 
 
 /** Reports output levels for:
@@ -877,7 +872,6 @@ bool dbgtrc_returning_expression(
 // error messages and possible program termination.
 //
 
-
 /** Called when a condition that should be impossible has been detected.
  *  Issues messages to the current **FERR** device and the system log.
  *
@@ -1023,8 +1017,6 @@ int syslog_importance_from_ddcutil_syslog_level(DDCA_Syslog_Level level) {
 }
 
 
-
-
 //
 // Output capture - convenience functions
 //
@@ -1165,8 +1157,5 @@ base_errinfo_free_with_report(
 }
 
 
-
 void init_core() {
-//   trace_callstack = g_ptr_array_sized_new(100); //   wrong, must be initialized per thread
-
 }
