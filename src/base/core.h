@@ -336,7 +336,6 @@ bool dbgtrc_returning_expression(
  *   set to NULL if an error is injected.  The supports the common case
  *   where the return code is 0 or NULL iff the lvalue is non-null.
  */
-
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_DDCRC(debug_flag, trace_group, rc, format, ...) \
    do { \
@@ -378,8 +377,6 @@ bool dbgtrc_returning_expression(
       (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), DBGTRC_OPTIONS_DONE, \
       __func__, __LINE__, __FILE__, rc, format, ##__VA_ARGS__)
 #endif
-
-
 
 #ifdef ENABLE_FAILSIM
 #define DBGTRC_RET_ERRINFO(debug_flag, trace_group, errinfo_result, format, ...) \
@@ -424,13 +421,11 @@ bool dbgtrc_returning_expression(
 #endif
 
 
-
 #define DBGTRC_RET_BOOL(debug_flag, trace_group, bool_result, format, ...) \
     dbgtrc_returning_expression( \
           (debug_flag) || trace_callstack_call_depth > 0  ? DDCA_TRC_ALL : (trace_group), \
           DBGTRC_OPTIONS_DONE, \
           __func__, __LINE__, __FILE__, SBOOL(bool_result), format, ##__VA_ARGS__)
-
 
 // typedef (*dbg_struct_func)(void * structptr, int depth);
 #define DBGMSF_RET_STRUCT(_flag, _structname, _dbgfunc, _structptr) \
