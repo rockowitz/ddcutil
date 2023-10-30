@@ -824,7 +824,7 @@ bool dbgtrc_returning_errinfo(
 }
 
 
-/** dbgtrc() variant that reports a return code specified as a string.
+/** dbgtrc() variant that reports a return value specified as a string.
  */
 bool dbgtrc_returning_expression(
         DDCA_Trace_Group  trace_group,
