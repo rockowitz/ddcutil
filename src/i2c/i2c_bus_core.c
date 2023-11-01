@@ -449,6 +449,19 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           else {
              bus_info->flags |= I2C_BUS_ADDR_0X50;
 
+             if ( IS_EDP_DEVICE(bus_info->busno) ) {
+                DBGMSF(debug, "eDP device detected");
+                bus_info->flags |= I2C_BUS_EDP;
+             }
+             else if ( IS_LVDS_DEVICE(bus_info->busno) ) {
+                DBGMSF(debug, "LVDS device detected");
+                bus_info->flags |= I2C_BUS_LVDS;
+             }
+             if (bus_info->flags & (I2C_BUS_EDP | I2C_BUS_LVDS)) {
+                DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking x37");
+
+             }
+             else {
              // The check here for slave address x37 had previously been removed.
              // It was commented out in commit 78fb4b on 4/29/2013, and the code
              // finally delete by commit f12d7a on 3/20/2020, with the following
@@ -474,6 +487,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->flags |= I2C_BUS_ADDR_0X37;
              else if (rc == -EBUSY)
                 bus_info->flags |= I2C_BUS_BUSY;
+             }
           }
 
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
