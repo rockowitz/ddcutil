@@ -452,18 +452,23 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       if (monitor_state_tests)
          explore_monitor_state(dh);
 
-      Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
-      Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
-      // feature that always exists
-      Byte feature_code = 0x10;
-      Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
-
-#ifdef TESTING
-      if (businfo->busno == 6) {
-         ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
-         DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+      if (businfo->flags & I2C_BUS_LAPTOP) {
+         DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking feature x10");
+         dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
-#endif
+      else {
+         Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+         Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
+         // feature that always exists
+         Byte feature_code = 0x10;
+         Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
+
+   #ifdef TESTING
+         if (businfo->busno == 6) {
+            ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+            DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+         }
+   #endif
 
       if (ddc_excp) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
@@ -478,87 +483,88 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code,
             errinfo_summary(ddc_excp));
-         dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-         bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
-         if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES && dynamic_sleep_active && initial_multiplier < 1.0f) {
-            // turn off optimization in case it's on
-            if (pdd_is_dynamic_sleep_active(pdd) ) {
-               ERRINFO_FREE(ddc_excp);
-               FREE(dref->communication_error_summary);
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
-               pdd_set_dynamic_sleep_active(dref->pdd, false);
-               ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
-               DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                  "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
-                  businfo->busno,
-                  pdd_get_adjusted_sleep_multiplier(pdd),
-                  feature_code,
-                  errinfo_summary(ddc_excp));
-               dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
-               SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
-                  "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
-                  businfo->busno,
-                  pdd_get_adjusted_sleep_multiplier(pdd),
-                  feature_code,
-                  errinfo_summary(ddc_excp));
-            }
-         }
-      }
-
-      // if (businfo->busno == 6) {
-      //    ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
-      //    DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
-      // }
-
-      Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
-            errinfo_summary(ddc_excp), psc_desc(psc));
-
-      if (psc != -EBUSY)
-         dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
-
-      if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-         if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-         }
-      }
-
-      else {   // DDCA_IO_I2C
-         TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
-         if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            check_how_unsupported_reported(dh);
-         }  // end, communication working
-         else {
-            if (psc == -EBUSY) {
-               dh->dref->flags |= DREF_DDC_BUSY; // communication failed, do not set DDCRC_COMMUNICATION_WORKING
+            dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
+            bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
+            if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES && dynamic_sleep_active && initial_multiplier < 1.0f) {
+               // turn off optimization in case it's on
+               if (pdd_is_dynamic_sleep_active(pdd) ) {
+                  ERRINFO_FREE(ddc_excp);
+                  FREE(dref->communication_error_summary);
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep");
+                  pdd_set_dynamic_sleep_active(dref->pdd, false);
+                  ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
+                  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
+                     businfo->busno,
+                     pdd_get_adjusted_sleep_multiplier(pdd),
+                     feature_code,
+                     errinfo_summary(ddc_excp));
+                  dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
+                  SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
+                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
+                     businfo->busno,
+                     pdd_get_adjusted_sleep_multiplier(pdd),
+                     feature_code,
+                     errinfo_summary(ddc_excp));
+               }
             }
          }
 
-         if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
-            DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-                  dh_repr(dh) );
-            dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
-            dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
-         }
-      }    // end, io_mode == DDC_IO_I2C
+         // if (businfo->busno == 6) {
+         //    ddc_excp = ERRINFO_NEW(DDCRC_BAD_DATA, "Dummy error");
+         //    DBGMSG("Setting dummy ddc_excp(DDCRC_BAD_DATA)");
+         // }
 
-      if (ddc_excp)
-         errinfo_free(ddc_excp);
+         Public_Status_Code psc = ERRINFO_STATUS(ddc_excp);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "ddc_get_nontable_vcp_value() for feature 0x10 returned: %s, status: %s",
+               errinfo_summary(ddc_excp), psc_desc(psc));
 
-      if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+         if (psc != -EBUSY)
+            dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
-         // Would prefer to defer checking version until actually needed to avoid additional DDC io
-         // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
-         // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
-         if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
-            set_vcp_version_xdf_by_dh(dh);
-         }
+         if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
+            if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+            }
       }
 
-      pdd_set_dynamic_sleep_active(dref->pdd, true);   // in case it was set false
+         else {   // DDCA_IO_I2C
+            TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
+            if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+               check_how_unsupported_reported(dh);
+            }  // end, communication working
+            else {
+               if (psc == -EBUSY) {
+                  dh->dref->flags |= DREF_DDC_BUSY; // communication failed, do not set DDCRC_COMMUNICATION_WORKING
+               }
+            }
+
+            if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
+               DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
+                     dh_repr(dh) );
+               dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
+               dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
+            }
+         }    // end, io_mode == DDC_IO_I2C
+
+         if (ddc_excp)
+            errinfo_free(ddc_excp);
+
+         if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
+
+            // Would prefer to defer checking version until actually needed to avoid additional DDC io
+            // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
+            // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
+            if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
+               set_vcp_version_xdf_by_dh(dh);
+            }
+         }
+
+         pdd_set_dynamic_sleep_active(dref->pdd, true);   // in case it was set false
       free(parsed_response_loc);
+      }
    }  // end, !DREF_DDC_COMMUNICATION_CHECKED
 
 
