@@ -335,7 +335,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
 // Simplicity has its virtues.
 static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
    bool debug = false;
-   // DBGMSF(debug, "Starting.  busno=%d", busno);
+   // DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno=%d, drm_name_fragment=|%s|", busno, drm_name_fragment);
    bool result = false;
 
    char cmd[100];
@@ -404,7 +404,7 @@ i2c_detect_x37(int fd) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
@@ -949,6 +949,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_discard_buses);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_display);
+   RTTI_ADD_FUNC(is_laptop_drm_connector);
 }
 
 
