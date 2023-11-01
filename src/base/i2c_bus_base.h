@@ -26,6 +26,7 @@ extern GPtrArray * i2c_buses;
 #define I2C_BUS_ADDR_0X30               0x80      ///< detected write-only addr to specify EDID block number
 #define I2C_BUS_EDP                     0x40      ///< bus associated with eDP display
 #define I2C_BUS_LVDS                    0x20      ///< bus associated with LVDS display
+#define I2C_BUS_LAPTOP                  (I2C_BUS_EDP|I2C_BUS_LAPTOP) ///< bus associated with laptop display
 #define I2C_BUS_PROBED                  0x10      ///< has bus been checked?
 #define I2C_BUS_VALID_NAME_CHECKED    0x0800
 #define I2C_BUS_HAS_VALID_NAME        0x0400
