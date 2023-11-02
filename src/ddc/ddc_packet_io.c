@@ -667,7 +667,7 @@ ddc_write_read_with_retry(
                      //    max_tries = 3;
                   }
                   else {
-                     SYSLOG2(DDCA_SYSLOG_WARNING,
+                     MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
                            "Maximum retries (%d) for DDC Null Response exceeded",
                            ddcrc_null_response_max);
                   }
