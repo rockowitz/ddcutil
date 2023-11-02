@@ -261,11 +261,17 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
             RPT_ATTR_TEXT(-1, &drm_enabled, "/sys/class/drm", drm_connector_name, "enabled");  //enabled, disabled
          }
 
-         char * s = NULL;
-         if (dref->communication_error_summary)
-            s = g_strdup_printf("(getvcp of feature x10 returned %s)", dref->communication_error_summary);
-         rpt_vstring(d1, "DDC communication failed. %s", s);
-         free(s);
+         I2C_Bus_Info * bus_info = dref->detail;
+         if (!(bus_info->flags & I2C_BUS_LAPTOP)) {
+            char * s = NULL;
+            if (dref->communication_error_summary) {
+               s = g_strdup_printf("(getvcp of feature x10 returned %s)", dref->communication_error_summary);
+               rpt_vstring(d1, "DDC communication failed. %s", s);
+            }
+            else
+               rpt_vstring(d1, "DDC communication failed");
+            free(s);
+         }
          char msgbuf[100] = {0};
          char * msg = NULL;
          if (dref->dispno == DISPNO_PHANTOM) {
