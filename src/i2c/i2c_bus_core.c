@@ -368,8 +368,8 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 
 static bool is_laptop_drm_connector_name(const char * connector_name) {
    bool debug = true;
-   bool result = str_ends_with(connector_name, "-eDP-") ||
-                 str_ends_with(connector_name, "-LVDS-");
+   bool result = strstr(connector_name, "-eDP-") ||
+                 strstr(connector_name, "-LVDS-");
    DBGF(debug, "connector_name=|%s|, returning %s", connector_name, sbool(result));
    return result;
 }
