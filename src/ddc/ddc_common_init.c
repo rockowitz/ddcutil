@@ -20,6 +20,7 @@
 #endif
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_i2c_util.h"
 
 #include "base/core.h"
 #include "base/display_retry_data.h"
@@ -320,6 +321,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (!init_failsim(parsed_cmd))
       goto bye;      // main_rc == EXIT_FAILURE
 
+
    // init_ddc_services();   // n. initializes start timestamp
    // global variable in dyn_dynamic_features:
    enable_dynamic_features = parsed_cmd->flags & CMD_FLAG_ENABLE_UDF;
@@ -339,6 +341,8 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    // TMI:
    // if (show_recoverable_errors)
    //    parsed_cmd->stats = true;
+
+   all_video_drivers_implement_drm = check_all_video_adapters_implement_drm();
 
    init_max_tries(parsed_cmd);
    enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
