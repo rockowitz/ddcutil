@@ -343,6 +343,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    //    parsed_cmd->stats = true;
 
    all_video_drivers_implement_drm = check_all_video_adapters_implement_drm();
+   get_sys_drm_connectors(false);  // initializes global sys_drm_connectors
 
    init_max_tries(parsed_cmd);
    enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
