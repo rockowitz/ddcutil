@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <linux/limits.h>
 #include <glib-2.0/glib.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -320,10 +321,15 @@ GPtrArray * get_video_adapter_devices() {
 bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
    bool debug = true;
    bool result = true;
-   int depth = (debug) ? 1 : -1;
+   // int depth = (debug) ? 1 : -1;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
-      bool ok = rpt_attr_note_subdir(depth, NULL, g_ptr_array_index(adapter_devices, ndx), "drm");
-      if (!ok)
+      char buf[PATH_MAX];
+      strcpy(buf, g_ptr_array_index(adapter_devices, ndx));
+      strcat(buf, "drm");
+
+      //  bool ok = rpt_attr_note_subdir(depth, NULL, g_ptr_array_index(adapter_devices, ndx), "drm");
+      DBGF(debug, "Checking directory |%s|", buf);
+      if (!directory_exists(buf))
          result = false;
    }
    DBGF(debug, "Returning: %s", sbool(result));
