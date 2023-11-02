@@ -661,9 +661,15 @@ ddc_write_read_with_retry(
                {
                   retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
                   DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
+
                   if (retryable) {
                      // if (max_tries > 3)
                      //    max_tries = 3;
+                  }
+                  else {
+                     SYSLOG2(DDCA_SYSLOG_WARNING,
+                           "Maximum retries (%d) for DDC Null Response exceeded",
+                           ddcrc_null_response_max);
                   }
                }
                break;
