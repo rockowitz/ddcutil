@@ -267,7 +267,10 @@ Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code fea
          ddc_excp = ERRINFO_NEW(DDCRC_DETERMINED_UNSUPPORTED, "");
       }
       else {
-         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+         if (get_output_level() >= DDCA_OL_VERBOSE)
+            rpt_vstring(0, "/dev/i2c-%d, Feature 0x%02x should not exist, but the monitor reports it as valid",
+                  businfo->busno, feature_code);
+         SYSLOG2(DDCA_SYSLOG_WARNING,
             "busno=%d, Feature 0x%02x should not exist but ddc_get_nontable_vcp_value() succeeds,"
             " returning mh=0x%02x ml=0x%02x sh=0x%02x sl=0x%02x",
             businfo->busno, feature_code,
