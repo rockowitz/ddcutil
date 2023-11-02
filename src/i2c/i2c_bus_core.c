@@ -442,7 +442,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
          bus_info->drm_connector_name = connector;
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
          if ( is_laptop_drm_connector_name(connector))
-            bus_info->flags |= I2C_BUS_LAPTOP;
+            bus_info->flags |= I2C_BUS_LVDS_OR_EDP;
 
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                        "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
@@ -502,12 +502,12 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 if (!bus_info->drm_connector_name &&    // if not already checked for laptop
                     is_laptop_parsed_edid(bus_info->edid) )
                 {
-                      bus_info->flags |= I2C_BUS_LAPTOP;
+                      bus_info->flags |= I2C_BUS_APPARENT_LAPTOP;
                 }
              }
           }
 
-          if (bus_info->flags & (I2C_BUS_LAPTOP)) {
+          if (bus_info->flags & (I2C_BUS_LVDS_OR_EDP)) {
              DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking x37");
           }
           else {  // start, x37 check
@@ -693,6 +693,8 @@ void i2c_report_active_display(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(d1, "Is eDP device:                         %-5s", sbool(businfo->flags & I2C_BUS_EDP));
       rpt_vstring(d1, "Is LVDS device:                        %-5s", sbool(businfo->flags & I2C_BUS_LVDS));
 #endif
+      rpt_vstring(d1, "Is LVDS or EDP display:                %-5s", sbool(businfo->flags & I2C_BUS_LVDS_OR_EDP));
+      rpt_vstring(d1, "Is laptop display by EDID:             %-5s", sbool(businfo->flags & I2C_BUS_APPARENT_LAPTOP));
       rpt_vstring(d1, "Is laptop display:                     %-5s", sbool(businfo->flags & I2C_BUS_LAPTOP));
 
       // if ( !(businfo->flags & (I2C_BUS_EDP|I2C_BUS_LVDS)) )

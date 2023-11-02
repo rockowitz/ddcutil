@@ -452,8 +452,8 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       if (monitor_state_tests)
          explore_monitor_state(dh);
 
-      if (businfo->flags & I2C_BUS_LAPTOP) {
-         DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking feature x10");
+      if (businfo->flags & I2C_BUS_LVDS_OR_EDP) {
+         DBGTRC(debug, TRACE_GROUP, "Laptop display definitely detected, not checking feature x10");
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
       else {

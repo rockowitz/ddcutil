@@ -43,14 +43,16 @@ Value_Name_Table i2c_bus_flags_table = {
       VN(I2C_BUS_ADDR_0X50),
       VN(I2C_BUS_ADDR_0X37),
       VN(I2C_BUS_ADDR_0X30),
-      VN(I2C_BUS_EDP),
-      VN(I2C_BUS_LVDS),
+//      VN(I2C_BUS_EDP),
+//      VN(I2C_BUS_LVDS),
       VN(I2C_BUS_PROBED),
       VN(I2C_BUS_VALID_NAME_CHECKED),
       VN(I2C_BUS_HAS_VALID_NAME),
       VN(I2C_BUS_BUSY),
       VN(I2C_BUS_SYSFS_EDID),
       VN(I2C_BUS_DRM_CONNECTOR_CHECKED),
+      VN(I2C_BUS_LVDS_OR_EDP),
+      VN(I2C_BUS_APPARENT_LAPTOP),
       VN_END
 };
 
