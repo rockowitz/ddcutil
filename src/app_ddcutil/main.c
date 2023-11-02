@@ -888,6 +888,9 @@ main(int argc, char *argv[]) {
 
    // xdg_tests(); // for development
 
+   all_video_drivers_implement_drm = check_all_video_adapters_implement_drm();
+
+
    if (parsed_cmd->flags & CMD_FLAG_F2) {
       consolidated_i2c_sysfs_report(0);
       // rpt_label(0, "*** Tests Done ***");
