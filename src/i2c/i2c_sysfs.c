@@ -1566,7 +1566,7 @@ bool all_video_devices_drm() {
  *  @return connector name, caller must free
  */
 char * get_drm_connector_by_busno(int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. busno = %d", busno);
    char * result = NULL;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);

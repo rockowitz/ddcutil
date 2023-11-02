@@ -367,7 +367,7 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 
 
 static bool is_laptop_drm_connector_name(const char * connector_name) {
-   bool debug = true;
+   bool debug = false;
    bool result = strstr(connector_name, "-eDP-") ||
                  strstr(connector_name, "-LVDS-");
    DBGF(debug, "connector_name=|%s|, returning %s", connector_name, sbool(result));
@@ -419,7 +419,7 @@ i2c_detect_x37(int fd) {
  *  @param  bus_info  pointer to #I2C_Bus_Info struct in which information will be set
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    // void i2c_bus_check_valid_name(bus_info);  // unnecessary

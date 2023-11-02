@@ -319,7 +319,7 @@ GPtrArray * get_video_adapter_devices() {
 }
 
 bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
-   bool debug = true;
+   bool debug = false;
    bool result = true;
    // int depth = (debug) ? 1 : -1;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
@@ -337,7 +337,7 @@ bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
 }
 
 bool check_all_video_adapters_implement_drm() {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting");
 
    GPtrArray * devices = get_video_adapter_devices();
