@@ -304,7 +304,7 @@ assemble_sysfs_path2(
       va_list       ap)
 {
    assert(buffer && bufsz > 0);
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "Starting.  bufsz=%d, fn_segment=|%s|", bufsz, fn_segment);
    STRLCPY(buffer, fn_segment, bufsz-1);
    while(true) {
@@ -689,7 +689,7 @@ rpt_attr_note_subdir(
       const char * fn_segment,
       ...)
 {
-   bool debug = true;
+   bool debug = false;
    DBGF(debug, "fn_segment=|%s|", fn_segment);
 
    char pb1[PATH_MAX];
