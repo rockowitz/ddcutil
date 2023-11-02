@@ -244,9 +244,8 @@ void explore_monitor_state(Display_Handle* dh) {
  *
  *  @param  dh            Display Handle
  *  @param  feature code  VCP feature code
- *  @return Error_Info  if unsupported
+ *  @return Error_Info    if supported
  */
-// test for a feature that should be unsupported
 Error_Info * is_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s. feature_code=0x%02x", dh_repr(dh), feature_code);
