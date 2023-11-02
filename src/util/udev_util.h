@@ -2,7 +2,7 @@
  * UDEV utility functions
  */
 
-// Copyright (C) 2016-2020 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2016-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef UDEV_UTIL_H_
@@ -29,7 +29,7 @@ void free_udev_device_summaries(GPtrArray* summaries);
 GPtrArray * summarize_udev_subsystem_devices(char * subsystem);
 GPtrArray * find_devices_by_sysattr_name(char * name);
 
-// Function returns true if keeep, false if discard
+// Function returns true if keep, false if discard
 typedef bool (*Udev_Summary_Filter_Func)(Udev_Device_Summary * summary);
 GPtrArray * filter_device_summaries(GPtrArray * summaries, Udev_Summary_Filter_Func func);
 
