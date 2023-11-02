@@ -951,17 +951,20 @@ bool detect_phantom_displays = true;  // for testing
  *  to DISPNO_INVALID and save a pointer to the valid display ref.
  *
  *  @param all_displays array of pointers to #Display_Ref
+ *  @return true if phantom displays detected, false if not
  *
  *  @remark
  *  This handles the case where DDC communication works for one
  *  /dev/i2c bus but not another.  It does not handle the case where
  *  communication succeeds on both /dev/i2c devices.
  */
-void
+bool
 filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len=%d, detect_phantom_displays=%s",
          all_displays->len, sbool(detect_phantom_displays));
+
+   bool phantom_displays_found = false;
    if (detect_phantom_displays && all_displays->len > 1) {
       GPtrArray* valid_displays   = g_ptr_array_sized_new(all_displays->len);
       GPtrArray* invalid_displays = g_ptr_array_sized_new(all_displays->len);
@@ -992,7 +995,6 @@ filter_phantom_displays(GPtrArray * all_displays) {
             }
          }
       }
-
 
       for (int ndx = 0; ndx < valid_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(valid_displays, ndx);
@@ -1026,6 +1028,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "%d valid mst_displays, %d valid_non_mst_displays",
                                     valid_mst_displays->len, valid_non_mst_displays->len);
 
+      phantom_displays_found = invalid_displays->len > 0;
       // n. frees the underlying array, but not the Display_Refs pointed to by
       // array members, since no GDestroyNotify() function defined
       g_ptr_array_free(valid_mst_displays, true);
@@ -1033,7 +1036,8 @@ filter_phantom_displays(GPtrArray * all_displays) {
       g_ptr_array_free(invalid_displays, true);
       g_ptr_array_free(valid_displays, true);
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, phantom_displays_found, "");
+   return phantom_displays_found;
 }
 
 
@@ -1250,8 +1254,16 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       }
    }
 
-
-   filter_phantom_displays(display_list);
+   bool phantom_displays_found = filter_phantom_displays(display_list);
+   if (phantom_displays_found) {
+      // in case a display other than the last was marked phantom
+      int next_valid_display = 1;
+      for (int ndx = 0; ndx < display_list->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(display_list, ndx);
+         if (dref->dispno > 0)
+            dref->dispno = next_valid_display++;
+      }
+   }
 
    if (bus_open_errors->len > 0) {
       *i2c_open_errors_loc = bus_open_errors;
