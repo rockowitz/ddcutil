@@ -826,6 +826,8 @@ void one_drm_connector(
  *
  *  @param  depth  logical indentation depth, if < 0 do not emit report
  *  @return array of #Sys_Drm_Connector structs, one for each connector found
+ *
+ *  Returns GPtrArray with 0 entries if no DRM displays found
  */
 
 GPtrArray * scan_sys_drm_connectors(int depth) {
@@ -1356,8 +1358,8 @@ static bool is_potential_i2c_display(Sysfs_I2C_Info * info) {
 
 
 /** Return the bus numbers for all video adapter i2c buses, filtering out
- *  those, such as ones with SMBUS in their name, that are cannot be used
- *  for DDC/CI communication with a monitor.
+ *  those, such as ones with SMBUS in their name, that are definitely not
+ *  used for DDC/CI communication with a monitor.
  *
  *  The numbers are determined by examining /sys/bus/i2c.
  *
