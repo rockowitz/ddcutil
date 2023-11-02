@@ -1544,7 +1544,7 @@ bool all_video_devices_drm() {
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
       int d = IS_DBGTRC(debug,DDCA_TRC_NONE) ? -1 : 1;
-      bool found_drm = RPT_ATTR_NOTE_SUBDIR(d, NULL, device_path, "drm");
+      bool found_drm = RPT_ATTR_NOTE_SUBDIR(d, NULL, NULL, device_path, "drm");
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
       if (!found_drm) {
