@@ -338,7 +338,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
          }
          if (msg) {
             rpt_vstring(d1, msg);
-            if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF) {
+            if (dref->dispno > 0 && (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)) {
                report_drm_dpms_status(d1, businfo->drm_connector_name);
             }
          }
