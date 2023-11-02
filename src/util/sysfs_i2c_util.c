@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include "coredefs_base.h"
+#include "debug_util.h"
 #include "file_util.h"
 #include "i2c_util.h"
 #include "report_util.h"
@@ -302,3 +303,42 @@ get_sysfs_drm_card_numbers() {
       printf("(%s) Done.    Returning DRM card numbers: %s\n", __func__, bs32_to_string_decimal(result, "", ", "));
    return result;
  }
+
+
+/** Returns the paths to all video devices in /sys/devices, i.e. those
+ *  subdirectories (direct or indirect) having class = 0x03
+ *
+ *  @return array of directory names, caller must free
+ */
+GPtrArray * get_video_adapter_devices() {
+   char * cmd = "find /sys/devices -name class | xargs grep x03 -l | sed 's|class||'";
+   GPtrArray * result = execute_shell_cmd_collect(cmd);
+   g_ptr_array_set_free_func(result, g_free);
+   return result;
+}
+
+bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
+   bool debug = true;
+   bool result = true;
+   int depth = (debug) ? 1 : -1;
+   for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
+      bool ok = rpt_attr_note_subdir(depth, NULL, g_ptr_array_index(adapter_devices, ndx), "drm");
+      if (!ok)
+         result = false;
+   }
+   DBGF(debug, "Returning: %s", sbool(result));
+   return result;
+}
+
+bool check_all_video_adapters_implement_drm() {
+   bool debug = true;
+   DBGF(debug, "Starting");
+
+   GPtrArray * devices = get_video_adapter_devices();
+   bool all_drm = check_all_video_adapters_drm(devices);
+   g_ptr_array_free(devices, true);
+
+   DBGF(debug, "Done.  Returning %s", sbool(all_drm));
+   return all_drm;
+}
+

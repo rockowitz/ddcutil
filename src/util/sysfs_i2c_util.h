@@ -43,5 +43,14 @@ sysfs_is_ignorable_i2c_device(
 Bit_Set_32
 get_sysfs_drm_card_numbers();
 
+GPtrArray *
+get_video_adapter_devices();
+
+bool
+check_all_video_adapters_drm(GPtrArray * adapter_devices);
+
+bool
+check_all_video_adapters_implement_drm();
+
 #endif /* SYSFS_I2C_UTIL_H_ */
 
