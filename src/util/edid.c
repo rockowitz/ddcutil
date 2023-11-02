@@ -530,7 +530,7 @@ void report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth) {
 /** Heuristic test for a laptop display.  Observed laptop displays
  *  never have the model name and serial numbers set.
  */
-bool is_embedded_parsed_edid(Parsed_Edid * parsed_edid) {
+bool is_laptop_parsed_edid(Parsed_Edid * parsed_edid) {
    assert(parsed_edid);
    bool result = streq(parsed_edid->model_name,  "") &&
                  streq(parsed_edid->serial_ascii,"");

@@ -85,6 +85,6 @@ void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose_synopsis,
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 Parsed_Edid * copy_parsed_edid(Parsed_Edid * original);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);
-bool          is_embedded_parsed_edid(Parsed_Edid * parsed_edid);
+bool          is_laptop_parsed_edid(Parsed_Edid * parsed_edid);
 
 #endif /* EDID_H_ */
