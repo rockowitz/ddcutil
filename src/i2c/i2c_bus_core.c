@@ -68,6 +68,7 @@
 
 #include "i2c/i2c_bus_core.h"
 
+bool all_video_devices_implement_drm = false;
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
@@ -75,6 +76,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Another ugly global variable for testing purposes
 bool i2c_force_bus = false;
+bool all_video_drivers_implement_drm;
 
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
@@ -408,100 +410,25 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
 
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
-
    // void i2c_bus_check_valid_name(bus_info);  // unnecessary
    assert( (bus_info->flags & I2C_BUS_EXISTS) &&
            (bus_info->flags & I2C_BUS_VALID_NAME_CHECKED) &&
            (bus_info->flags & I2C_BUS_HAS_VALID_NAME)
          );
-
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
-      DBGMSF(debug, "Probing");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
-      char * connector = get_drm_connector_by_busno(bus_info->busno); // may or may not succeed, depending on the driver
+      // may or may not succeed, depending on the driver:
+      char * connector = get_drm_connector_by_busno(bus_info->busno);
+      bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+      // connector = NULL;   // *** TEST ***
       if (connector) {
          bus_info->drm_connector_name = connector;
          bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-         bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
-      }
-      DBGMSF(debug, "Calling i2c_open_bus..");
-      int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
-      if (fd >= 0) {
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", bus_info->busno);
-          bus_info->flags |= I2C_BUS_ACCESSIBLE;
-          bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
 
-          DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
-#ifdef TEST
-          if (!ddcrc) {
-             if (bus_info->busno == 6 || bus_info->busno == 8) {
-                ddcrc = -EBUSY;
-                bus_info->edid = NULL;
-                DBGMSG("Forcing -EBUSY on get_parsed_edid_by_fd()");
-             }
-          }
-#endif
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
-          if (ddcrc != 0) {
-             bus_info->open_errno = -errno;
-          }
-          else {
-             bus_info->flags |= I2C_BUS_ADDR_0X50;
-
-             if ( IS_EDP_DEVICE(bus_info->busno) ) {
-                DBGMSF(debug, "eDP device detected");
-                bus_info->flags |= I2C_BUS_EDP;
-             }
-             else if ( IS_LVDS_DEVICE(bus_info->busno) ) {
-                DBGMSF(debug, "LVDS device detected");
-                bus_info->flags |= I2C_BUS_LVDS;
-             }
-             if (bus_info->flags & (I2C_BUS_EDP | I2C_BUS_LVDS)) {
-                DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking x37");
-
-             }
-             else {
-             // The check here for slave address x37 had previously been removed.
-             // It was commented out in commit 78fb4b on 4/29/2013, and the code
-             // finally delete by commit f12d7a on 3/20/2020, with the following
-             // comments:
-             //    have seen case where laptop display reports addr 37 active, but
-             //    it doesn't respond to DDC
-             // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
-             // DDC checking was therefore moved entierly to the DDC layer.
-             // 6/25/2023:
-             // Testing for slave address x37 turns out to be needed to avoid
-             // trying to reload cached display information for a display no
-             // longer present
-             int rc = i2c_detect_x37(fd);
-#ifdef TEST
-             if (rc == 0) {
-                if (bus_info->busno == 6 || bus_info->busno == 8) {
-                     rc = -EBUSY;
-                     DBGMSG("Forcing -EBUSY on i2c_detect_37()");
-                }
-             }
-#endif
-             if (rc == 0)
-                bus_info->flags |= I2C_BUS_ADDR_0X37;
-             else if (rc == -EBUSY)
-                bus_info->flags |= I2C_BUS_BUSY;
-             }
-          }
-
-          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
-          i2c_close_bus(fd, CALLOPT_ERR_MSG);
-      }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_open_bus() failed, rc = %s", linux_errno_name(-fd));
-      }
-
-      // conformant driver, so drm_connector_name set, but reading EDID failed,
-      // probably because of EBUSY.  Get the EDID so we have it for messages.
-      if (!bus_info->edid && bus_info->drm_connector_name) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
+                       "Getting edid from sysfs for connector %s", bus_info->drm_connector_name);
          GByteArray*  edid_bytes = NULL;
          int d = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
          RPT_ATTR_EDID(d, &edid_bytes, "/sys/class/drm", bus_info->drm_connector_name, "edid");
@@ -514,12 +441,86 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                   DBGMSG("create_parsed_edid() failed");
             }
             if (bus_info->edid) {
-               bus_info->flags |= I2C_BUS_ADDR_0X50;  // ???
+               bus_info->flags |= I2C_BUS_ADDR_0X50;
                bus_info->flags |= I2C_BUS_SYSFS_EDID;
                memcpy(bus_info->edid->edid_source, "SYSFS", 6);
+               if ( is_laptop_parsed_edid(bus_info->edid) )
+                  bus_info->flags |= I2C_BUS_LAPTOP;
             }
          }
       }
+
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
+      int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
+      if (fd < 0) {
+         bus_info->open_errno = fd;
+      }
+      else {    //open succeeded
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", bus_info->busno);
+          bus_info->flags |= I2C_BUS_ACCESSIBLE;
+          bus_info->functionality = i2c_get_functionality_flags_by_fd(fd);
+
+          if (!bus_info->edid) {
+             DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
+#ifdef TEST
+             if (!ddcrc) {
+                if (bus_info->busno == 6 || bus_info->busno == 8) {
+                   ddcrc = -EBUSY;
+                   bus_info->edid = NULL;
+                   DBGMSG("Forcing -EBUSY on get_parsed_edid_by_fd()");
+                }
+             }
+#endif
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
+             if (ddcrc != 0) {
+                bus_info->open_errno =  ddcrc;
+             }
+             else {
+                bus_info->flags |= I2C_BUS_ADDR_0X50;
+
+                if (is_laptop_parsed_edid(bus_info->edid) )
+                      bus_info->flags |= I2C_BUS_LAPTOP;
+                }
+             }
+
+             if (bus_info->flags & (I2C_BUS_LAPTOP)) {
+                DBGTRC(debug, TRACE_GROUP, "Laptop display detected, not checking x37");
+             }
+             else {  // start, x37 check
+                // The check here for slave address x37 had previously been removed.
+                // It was commented out in commit 78fb4b on 4/29/2013, and the code
+                // finally delete by commit f12d7a on 3/20/2020, with the following
+                // comments:
+                //    have seen case where laptop display reports addr 37 active, but
+                //    it doesn't respond to DDC
+                // 8/2017: If DDC turned off on U3011 monitor, addr x37 still detected
+                // DDC checking was therefore moved entirely to the DDC layer.
+                // 6/25/2023:
+                // Testing for slave address x37 turns out to be needed to avoid
+                // trying to reload cached display information for a display no
+                // longer present
+                int rc = i2c_detect_x37(fd);
+   #ifdef TEST
+                if (rc == 0) {
+                   if (bus_info->busno == 6 || bus_info->busno == 8) {
+                        rc = -EBUSY;
+                        DBGMSG("Forcing -EBUSY on i2c_detect_37()");
+                   }
+                }
+   #endif
+                if (rc == 0)
+                   bus_info->flags |= I2C_BUS_ADDR_0X37;
+                else if (rc == -EBUSY)
+                   bus_info->flags |= I2C_BUS_BUSY;
+             }    // end x37 check
+
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
+          i2c_close_bus(fd, CALLOPT_ERR_MSG);
+      }
+
+      // conformant driver, so drm_connector_name set, but reading EDID failed,
+      // probably because of EBUSY.  Get the EDID so we have it for messages.
+
 
       // i.e. for Nvidia
       // getting connector name failed, but reading the EDID was successful.
@@ -531,26 +532,15 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
             bus_info->drm_connector_name = connector;
             bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
          }
-
-         bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       }
 
-      if (bus_info->drm_connector_name) {
-         if ( IS_EDP_DEVICE(bus_info->busno) ) {
-            DBGMSF(debug, "eDP device detected");
-            bus_info->flags |= I2C_BUS_EDP;
-         }
-         else if ( IS_LVDS_DEVICE(bus_info->busno) ) {
-            DBGMSF(debug, "LVDS device detected");
-            bus_info->flags |= I2C_BUS_LVDS;
-         }
-      }
    }   // probing complete
 
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
       // DBGTRC_NOPREFIX(true, TRACE_GROUP, "flags = %s", interpret_i2c_bus_flags_t(bus_info->flags));
       DBGTRC_NOPREFIX(true, TRACE_GROUP, "bus_info:");
       i2c_dbgrpt_bus_info(bus_info, 2);
+      DBGTRC_DONE(true, TRACE_GROUP, "");
    }
 }
 
