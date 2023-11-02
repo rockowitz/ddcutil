@@ -607,13 +607,13 @@ void dbgrpt_sys_bus_i2c(int depth) {
 //  *** Scan /sys by drm connector - uses struct Sys_Drm_Connector ***
 //
 
-static GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Display;
+GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
 
 // from query_sysenv_sysfs
 // 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
 
 
-void free_sys_drm_display(void * display) {
+void free_sys_drm_connector(void * display) {
    bool debug = false;
    DBGMSF(debug, "Starting. display=%p", display);
    if (display) {
@@ -833,12 +833,8 @@ void one_drm_connector(
 GPtrArray * scan_sys_drm_connectors(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
-   if (sys_drm_connectors) {
-      g_ptr_array_free(sys_drm_connectors, true);
-      sys_drm_connectors = NULL;
-   }
-   GPtrArray * sys_drm_connectors = g_ptr_array_new_with_free_func(free_sys_drm_display);
 
+   GPtrArray * sys_drm_connectors = g_ptr_array_new_with_free_func(free_sys_drm_connector);
    dir_filtered_ordered_foreach(
          "/sys/class/drm",
          is_drm_connector,      // filter function
@@ -1570,7 +1566,7 @@ bool all_video_devices_drm() {
  *  @return connector name, caller must free
  */
 char * get_drm_connector_by_busno(int busno) {
-   bool debug = false;
+   bool debug = true;
    DBGMSF(debug, "Starting. busno = %d", busno);
    char * result = NULL;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);

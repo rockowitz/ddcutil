@@ -15,6 +15,8 @@
 #include "util/coredefs_base.h"
 #include "util/data_structures.h"
 
+extern GPtrArray * sys_drm_connectors;
+
 char * find_adapter(char * path, int depth);
 char * get_driver_for_adapter(char * adapter_path, int depth);
 char * get_driver_for_busno(int busno);
