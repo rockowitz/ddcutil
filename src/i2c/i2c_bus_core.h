@@ -30,6 +30,7 @@
 #define I2C_SLAVE_ADDR_MAX 128
 
 extern bool i2c_force_bus;
+extern bool all_video_drivers_implement_drm;
 
 // DPMS Detection
 #define DPMS_STATE_X11_CHECKED 0x01
