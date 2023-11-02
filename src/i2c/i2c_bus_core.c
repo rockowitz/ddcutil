@@ -76,7 +76,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 // Another ugly global variable for testing purposes
 bool i2c_force_bus = false;
-bool all_video_drivers_implement_drm;
+bool all_video_drivers_implement_drm = false;
 
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
