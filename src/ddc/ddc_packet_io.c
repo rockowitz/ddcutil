@@ -33,6 +33,7 @@
 
 #include "base/core.h"
 #include "base/ddc_errno.h"
+#include "base/ddc_packets.h"
 #include "base/displays.h"
 #include "base/dsa2.h"
 #include "base/execution_stats.h"
@@ -659,18 +660,21 @@ ddc_write_read_with_retry(
          switch (psc) {
          case DDCRC_NULL_RESPONSE:
                {
-                  retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
-                  DBGMSF(debug, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
-
-                  if (retryable) {
-                     // if (max_tries > 3)
-                     //    max_tries = 3;
+                  bool may_mean_unsupported_feature =
+                        (expected_response_type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE &&
+                         dh->dref->flags & DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED) ||
+                        expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
+                  if (may_mean_unsupported_feature) {
+                     retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
+                     DBGTRC(debug, DDCA_TRC_NONE, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
+                     if (!retryable) {
+                        MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
+                              "Feature 0x%02x, maximum retries (%d) for DDC Null Response exceeded",
+                              expected_subtype, ddcrc_null_response_max);
+                     }
                   }
-                  else {
-                     MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-                           "Maximum retries (%d) for DDC Null Response exceeded",
-                           ddcrc_null_response_max);
-                  }
+                  else
+                     retryable = true;
                }
                break;
 
