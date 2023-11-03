@@ -466,8 +466,7 @@ char * commands_list_help =
        "   watch                                   Watch display for reported changes (under development)\n"
 #endif
        "   discard (all|capabilities|dsa) cache(s) Delete cache files\n"
-       "   traceable-functions                     List traceable functions\n"
-      "\n";
+       "   traceable-functions                     List traceable functions\n";
 
 #ifdef OLD
 char * command_argument_help =
@@ -514,9 +513,10 @@ char * monitor_selection_option_help =
        "  The monitor to be communicated with can be specified using the following options:\n"
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
-       "  --bus <bus number>, for /dev/"I2C"-<bus number>\n"
+       "  --bus <i2c bus number>, /dev/"I2C" bus number\n"
 #ifdef USE_USB
        "  --usb <usb bus number>.<usb device number>, for monitors communicating via USB\n"
+       "  --hiddev <hiddev device number>, for monitors communicationg via USB\n"
 #endif
        "  --edid <hex string>, where <hex string> is a 256 hex character representation of the\n"
        "          128 byte first block of the EDID\n"

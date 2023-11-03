@@ -1180,6 +1180,12 @@ parse_command(
       unhide_options(debug_options);
    }
 
+   bool preparse_verbose = ntsa_find(temp_argv, "--verbose") >= 0 ||
+                           ntsa_find(temp_argv, "-v") >= 0;
+   bool preparse_terse   = ntsa_find(temp_argv, "--terse") >= 0 ||
+                           ntsa_find(temp_argv, "-t")      >= 0 ||
+                           ntsa_find(temp_argv, "--brief") >= 0;
+
    GOptionGroup * all_options = g_option_group_new(
          "group name", "group description", "help description", NULL, NULL);
    if (parser_mode == MODE_DDCUTIL) {
@@ -1254,23 +1260,45 @@ parse_command(
    // const char * pieces3[] = {commands_list_help, command_argument_help};
    // char * help_summary = strjoin(pieces3, 2, NULL);
 
-   char * cmd_args_help = assemble_command_argument_help();
-   // const char * pieces3[] = {commands_list_help, command_argument_help, cmd_args_help}; // TEMP commands_list_help
-   const char * pieces3[] = {commands_list_help, cmd_args_help};
-   char * help_summary = strjoin(pieces3, 2, NULL);
-   free(cmd_args_help);
 
-   const char * pieces4[] = {monitor_selection_option_help,
-                             tracing_multiple_call_option_help,
-                             "\n",
-                             trcfunc_multiple_call_option_help,
-                             "\n",
-                             trcfile_multiple_call_option_help,
-                             "\n",
-                             stats_multiple_call_option_help,
-                             "\n",
-                             maxtries_option_help};
-   char * help_description = strjoin(pieces4, 10, NULL);
+   char * help_summary = NULL;
+   if (preparse_verbose) {
+      char * cmd_args_help = assemble_command_argument_help();
+      const char * pieces[] = {commands_list_help, "\n", cmd_args_help};
+      help_summary = strjoin(pieces, 3, NULL);
+      free(cmd_args_help);
+   }
+   else {
+      // const char * pieces[] = {commands_list_help, "\n"};
+      // help_summary = strjoin(pieces, 2, NULL);
+      help_summary = g_strdup(commands_list_help);
+   }
+
+   char * help_description = NULL;
+   if (preparse_verbose) {
+      const char * pieces[] = {monitor_selection_option_help,
+                               tracing_multiple_call_option_help,
+                               "\n",
+                               trcfunc_multiple_call_option_help,
+                               "\n",
+                               trcfile_multiple_call_option_help,
+                               "\n",
+                               stats_multiple_call_option_help,
+                               "\n",
+                               maxtries_option_help,
+                               NULL};
+      help_description = strjoin(pieces, -1, NULL);
+   }
+   else if (preparse_terse) {
+      help_description = NULL;
+   }
+   else {
+      // const char * help_pieces[] = {monitor_selection_option_help};
+      // help_description = strjoin(help_pieces, 1, NULL);
+      // help_description = g_strdup(monitor_selection_option_help);
+      help_description = g_strdup("For detailed help, use option \"--verbose\"");
+                              //    "\nTo see all options, use option \"--hh\"");
+   }
 
    // on --help, comes after usage line, before option detail
    g_option_context_set_summary(context, help_summary);
