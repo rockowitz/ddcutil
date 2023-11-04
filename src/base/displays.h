@@ -60,25 +60,6 @@ char *  dpath_short_name_t(DDCA_IO_Path * dpath);
 char *  dpath_repr_t(DDCA_IO_Path * dpath);  // value valid until next call
 int     dpath_hash(DDCA_IO_Path path);
 
-// *** Display_Async ***
-
-#define DISPLAY_ASYNC_REC_MARKER "DSNC"
-/** Async processing  for display */
-typedef struct Display_Async {
-   char           marker[4];
-   DDCA_IO_Path   dpath;        // key
-
-   // Global_Display_Lock gdl;
-
-   GThread *     thread_owning_display_lock;     // id of thread owning lock (type int is placeholder)
-   GMutex        display_lock;
-
-   // for future request queue structure
-   GQueue *      request_queue;
-   GMutex        request_queue_lock;
-   GThread *     request_execution_thread;  // or in DH?
-} Display_Async_Rec;
-
 
 // *** Display_Identifier ***
 
@@ -204,9 +185,6 @@ typedef struct _display_ref {
    Monitor_Model_Key *      mmid;                  // will be set iff pedid
    int                      dispno;
    void *                   detail;                // I2C_Bus_Info or Usb_Monitor_Info
-#ifdef UNUSED_ASYNC
-   Display_Async_Rec *      async_rec;
-#endif
    Dynamic_Features_Rec *   dfr;                   // user defined feature metadata
    uint64_t                 next_i2c_io_after;     // nanosec
    struct _display_ref *    actual_display;        // if dispno == -2
@@ -273,11 +251,6 @@ typedef Byte Display_Selection_Options;
 int    hiddev_name_to_number(const char * hiddev_name);
 #ifdef UNUSED
 char * hiddev_number_to_name(int hiddev_number);
-#endif
-
-#ifdef UNUSED_ASYNC
-bool lock_display_lock(Display_Async_Rec * async_rec, bool wait);
-void unlock_display_lock(Display_Async_Rec * async_rec);
 #endif
 
 /** For recording /dev/i2c and hiddev open errors */
