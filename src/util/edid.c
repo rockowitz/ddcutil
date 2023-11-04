@@ -15,8 +15,7 @@
 
 /** \cond */
 #include <assert.h>
-#include <inttypes.h>
-#include <stdio.h>
+#include <inttypes.h>  // printf() format macros for stdint.h
 #include <string.h>
 /** \endcond */
 
@@ -536,5 +535,4 @@ bool is_laptop_parsed_edid(Parsed_Edid * parsed_edid) {
                  streq(parsed_edid->serial_ascii,"");
    return result;
 }
-
 
