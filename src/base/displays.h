@@ -22,10 +22,7 @@
 #include "dynamic_features.h"
 #include "feature_set_ref.h"
 #include "monitor_model_key.h"
-// #include "per_display_data.h"
 #include "vcp_version.h"
-
-typedef void * Global_Display_Lock;
 
 
 /** \file
