@@ -918,14 +918,15 @@ char * interpret_dref_flags_t(Dref_Flags flags) {
 
 
 void init_displays() {
-   RTTI_ADD_FUNC(free_display_handle);
-   RTTI_ADD_FUNC(free_display_ref);
+   RTTI_ADD_FUNC(copy_display_ref);
+   RTTI_ADD_FUNC(create_base_display_handle);
    RTTI_ADD_FUNC(create_base_display_ref);
+   RTTI_ADD_FUNC(create_bus_display_ref);
 #ifdef USE_USB
    RTTI_ADD_FUNC(create_usb_display_ref);
 #endif
-   RTTI_ADD_FUNC(create_bus_display_ref);
-   RTTI_ADD_FUNC(copy_display_ref);
    RTTI_ADD_FUNC(dbgrpt_display_ref);
+   RTTI_ADD_FUNC(free_display_handle);
+   RTTI_ADD_FUNC(free_display_ref);
 }
 
