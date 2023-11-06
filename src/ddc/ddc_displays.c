@@ -241,13 +241,17 @@ void explore_monitor_state(Display_Handle* dh) {
 // Monitor Checks
 //
 
-/** Tests a feature that should be unsupported.
+/** Verify that a feature code that should never be valid is in fact
+ *  reported as unsupported.
  *
  *  @param  dh            Display Handle
  *  @param  feature code  VCP feature code
  *  @return Error_Info    if supported
  */
-Error_Info * verify_supported_feature(Display_Handle * dh, DDCA_Vcp_Feature_Code feature_code) {
+static Error_Info * verify_unsupported_feature(
+      Display_Handle * dh,
+      DDCA_Vcp_Feature_Code feature_code)
+{
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s. feature_code=0x%02x", dh_repr(dh), feature_code);
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
@@ -332,14 +336,14 @@ check_how_unsupported_reported(Display_Handle * dh) {
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
    // Try features that should never exist
-   Error_Info * erec = verify_supported_feature(dh, 0x41);  // CRT only feature
+   Error_Info * erec = verify_unsupported_feature(dh, 0x41);  // CRT only feature
    if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
       ERRINFO_FREE(erec);
-      erec = verify_supported_feature(dh, 0xdd);    // not defined in MCCS
+      erec = verify_unsupported_feature(dh, 0xdd);    // not defined in MCCS
    }
    if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
       ERRINFO_FREE(erec);
-      erec = verify_supported_feature(dh, 0x00);
+      erec = verify_unsupported_feature(dh, 0x00);
    }
 
    Public_Status_Code psc = ERRINFO_STATUS(erec);
@@ -1682,7 +1686,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(has_duplicate_edids);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(is_phantom_display);
-   RTTI_ADD_FUNC(verify_supported_feature);
+   RTTI_ADD_FUNC(verify_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
