@@ -36,9 +36,10 @@ Error_Info * ddc_open_display(
 Error_Info * ddc_close_display(
       Display_Handle * dh);
 
-void ddc_close_display_wo_return();
+void ddc_close_display_wo_return(
+      Display_Handle * dh);
 
-void  ddc_close_all_displays();
+void ddc_close_all_displays();
 
 bool ddc_is_valid_display_handle(Display_Handle * dh);
 
