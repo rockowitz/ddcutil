@@ -318,16 +318,20 @@ GPtrArray * get_video_adapter_devices() {
    return result;
 }
 
-bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
+
+/** Check that all video adapter devices in /sys have drivers that
+ *  implement drm.
+ *
+ *  @param  adapter_devices array of /sys directory names for video adapter devices
+ *  @return true if all adapter video drivers implement drm
+ */
+bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
    bool debug = false;
    bool result = true;
-   // int depth = (debug) ? 1 : -1;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       char buf[PATH_MAX];
       g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
       g_strlcat(buf, "drm", PATH_MAX);
-
-      //  bool ok = rpt_attr_note_subdir(depth, NULL, g_ptr_array_index(adapter_devices, ndx), "drm");
       DBGF(debug, "Checking directory |%s|", buf);
       if (!directory_exists(buf))
          result = false;
@@ -336,12 +340,17 @@ bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
    return result;
 }
 
+
+/** Checks that all video adapters on the system have drivers that implement drm.
+ *
+ *  @return true if all video adapters have drivers implementing drm, false if not
+ */
 bool check_all_video_adapters_implement_drm() {
    bool debug = false;
    DBGF(debug, "Starting");
 
    GPtrArray * devices = get_video_adapter_devices();
-   bool all_drm = check_all_video_adapters_drm(devices);
+   bool all_drm = check_video_adapters_list_implements_drm(devices);
    g_ptr_array_free(devices, true);
 
    DBGF(debug, "Done.  Returning %s", sbool(all_drm));
