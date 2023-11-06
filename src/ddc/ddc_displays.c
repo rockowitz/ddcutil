@@ -746,9 +746,14 @@ ddc_get_filtered_displays(bool include_invalid_displays) {
 }
 
 
-Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, bool ignore_invalid) {
+Display_Ref *
+ddc_get_display_ref_by_drm_connector(
+      const char * connector_name,
+      bool         ignore_invalid)
+{
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
    Display_Ref * result = NULL;
    TRACED_ASSERT(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -765,7 +770,7 @@ Display_Ref * ddc_get_display_ref_by_drm_connector(const char * connector_name, 
                continue;
             }
             // TODO: handle drm_connector_name not yet checked
-            if (businfo->drm_connector_name && streq(businfo->drm_connector_name, connector_name)) {
+            if (businfo->drm_connector_name && streq(businfo->drm_connector_name,connector_name)) {
                result = cur;
                break;
             }
@@ -949,7 +954,7 @@ bool detect_phantom_displays = true;  // for testing
  *  already been determined to be valid (dispno > 0) and those
  *  that are invalid (dispno < 0).
  *
- *  For each invalid array, check to see if it is a phantom display
+ *  For each invalid display ref, check to see if it is a phantom display
  *  corresponding to one of the valid displays.  If so, set its dispno
  *  to DISPNO_INVALID and save a pointer to the valid display ref.
  *
@@ -958,8 +963,8 @@ bool detect_phantom_displays = true;  // for testing
  *
  *  @remark
  *  This handles the case where DDC communication works for one
- *  /dev/i2c bus but not another.  It does not handle the case where
- *  communication succeeds on both /dev/i2c devices.
+ *  /dev/i2c bus but not another. It also handles the case wehere
+ *  there are 2 valid display refs and one connector has name DPMST.
  */
 bool
 filter_phantom_displays(GPtrArray * all_displays) {
@@ -1011,11 +1016,13 @@ filter_phantom_displays(GPtrArray * all_displays) {
       }
 
       if (valid_mst_displays->len > 0 && valid_non_mst_displays->len > 0) {
-         if (!has_duplicate_edids(valid_non_mst_displays)) {  // handle remote possibilities of 2 monitors with identical edid
+         // handle remote possibility of 2 monitors with identical edid:
+         if (!has_duplicate_edids(valid_non_mst_displays)) {
             for (int mst_ndx = 0; mst_ndx < valid_mst_displays->len; mst_ndx++) {
                Display_Ref * valid_mst_display_ref = g_ptr_array_index(valid_mst_displays, mst_ndx);
                for (int non_mst_ndx = 0; non_mst_ndx < valid_non_mst_displays->len; non_mst_ndx++) {
-                  Display_Ref * valid_non_mst_display_ref = g_ptr_array_index(valid_non_mst_displays, non_mst_ndx);
+                  Display_Ref * valid_non_mst_display_ref =
+                        g_ptr_array_index(valid_non_mst_displays, non_mst_ndx);
                   Parsed_Edid * pedid1 = valid_mst_display_ref->pedid;
                   Parsed_Edid * pedid2 = valid_non_mst_display_ref->pedid;
                   if (pedid1 && pedid2) {
@@ -1104,7 +1111,7 @@ ddc_set_async_threshold(int threshold) {
 GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s", sbool(display_caching_enabled));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s",sbool(display_caching_enabled));
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
    GPtrArray * display_list = g_ptr_array_new();
@@ -1120,7 +1127,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          // Do not restore serialized display ref if slave address x37 inactive
          // Prevents creating a display ref with stale contents
          if (display_caching_enabled && (businfo->flags&I2C_BUS_ADDR_0X37) ) {
-            dref = copy_display_ref(ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes));
+            dref = copy_display_ref(
+                       ddc_find_deserialized_display(businfo->busno, businfo->edid->bytes));
             if (dref)
                dref->detail = businfo;
          }
@@ -1384,7 +1392,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
          }
       }
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s. dref=%p, dispno=%d", sbool(result), dref, dref->dispno);
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref=%p, dispno=%d", dref, dref->dispno);
    return result;
 }
 
