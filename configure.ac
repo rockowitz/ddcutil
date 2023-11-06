@@ -298,6 +298,19 @@ dnl       AC_MSG_NOTICE( [x11...      enabled (provisional)]  ),
 dnl       AC_MSG_NOTICE( [x11...      disabled] )
 dnl      )              
 
+dnl *** configure option: --enable-static-functions-visible
+AC_ARG_ENABLE([static-functions-visible],
+              [ AS_HELP_STRING( [--enable-static-functions-visible=@<:@no/yes@:>@], [Remove static qualifier from function names)@<:@default=no@:>@] )],
+              [enable_static_functions_visible=${enableval}],
+              [enable_static_functions_visible=no] )
+AM_CONDITIONAL([STATIC_FUNCTIONS_VISIBLE_COND], [test "x$enable_static_functions_visible" = "xyes"] )
+AS_IF( [test "x$enable_static_functions_visible" = "xyes"],
+         AC_DEFINE( [STATIC_FUNCTIONS_VISIBLE], [1], [If defined, remove static qualifier from function declarations.])
+         AC_MSG_NOTICE( [static_functions_visible...enabled] )
+      ,
+         AC_MSG_NOTICE( [static_functions_visible...disabled] )
+     )
+
 dnl *** configure option: --enable-asan
 AC_ARG_ENABLE([asan],
               [ AS_HELP_STRING( [--enable-asan=@<:@no/yes@:>@], [Build for asan (address sanitizer)@<:@default=no@:>@] )],
@@ -310,6 +323,8 @@ AS_IF( [test "x$enable_asan" = "xyes"],
       ,
          AC_MSG_NOTICE( [asan..........disabled] )
      )
+
+
 
 dnl dnl *** configure option: --enable-trace
 dnl AC_ARG_ENABLE([trace],
@@ -886,8 +901,9 @@ AC_MSG_RESULT([
 	enable_usb:             ${enable_usb}
 	enable_drm:             ${enable_drm}   
 	enable_x11:             ${enable_x11}   
-dnl	enable_trace:           ${enable_trace}  
+dnl	enable_trace:           ${enable_trace}
 	enable_asan:            ${enable_asan}
+	enable_static_functions_visible:  ${enable_static_functions_visible}
 
 	Developer-only options:
 	enable_targetbsd:       ${enable_targetbsd}

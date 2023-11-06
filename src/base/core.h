@@ -49,6 +49,13 @@
 #define ASSERT_MARKER(_struct_ptr, _marker_value) \
    assert(_struct_ptr && memcmp(_struct_ptr->marker, _marker_value, 4) == 0)
 
+// Remove static function qualifier to make it visible to asan, valgrind, backtrace
+#ifdef STATIC_FUNCTIONS_VISIBLE
+#define STATIC
+#else
+#define STATIC static
+#endif
+
 
 //
 // Miscellaneous types
