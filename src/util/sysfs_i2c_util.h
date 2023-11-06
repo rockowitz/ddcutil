@@ -47,7 +47,7 @@ GPtrArray *
 get_video_adapter_devices();
 
 bool
-check_all_video_adapters_drm(GPtrArray * adapter_devices);
+check_video_adapters_list_implements_drm(GPtrArray * adapter_devices);
 
 bool
 check_all_video_adapters_implement_drm();
