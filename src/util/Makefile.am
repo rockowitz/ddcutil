@@ -70,8 +70,6 @@ if ENABLE_FAILSIM_COND
 libutil_la_SOURCES += failsim.c
 endif
 
-# libutil_la_SOURCES += systemd_util.c
-
 libutilaux_la_SOURCES = 
 if USE_LIBDRM_COND
 libutilaux_la_SOURCES += libdrm_util.c
@@ -84,11 +82,6 @@ endif
 # if ENABLE_YAML_COND
 #  libutil_la_SOURCES += libyaml_dbgutil.c
 # endif
-
-
-
-dist-hook0:
-	@echo "(src/util/Makefile) dist-hook"
 
 # Rename to "all-local" for development
 all-local-disabled:
