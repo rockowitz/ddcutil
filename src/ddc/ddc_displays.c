@@ -130,7 +130,7 @@ all_causes_same_status(Error_Info * ddc_excp, DDCA_Status psc) {
 // Exploratory programming, DPMS detection
 //
 
-void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
+static void explore_monitor_one_feature(Display_Handle * dh, Byte feature_code) {
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
    rpt_vstring(1, "Getting value of feature 0x%02x", feature_code);;
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
@@ -248,7 +248,8 @@ void explore_monitor_state(Display_Handle* dh) {
  *  @param  feature code  VCP feature code
  *  @return Error_Info    if supported
  */
-static Error_Info * verify_unsupported_feature(
+static Error_Info *
+verify_unsupported_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code feature_code)
 {
@@ -423,16 +424,16 @@ check_how_unsupported_reported(Display_Handle * dh) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-// static   // non-static for backtrace
-bool
+static bool
 ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Initial flags: %s",interpret_dref_flags_t(dh->dref->flags));
    I2C_Bus_Info * businfo = (I2C_Bus_Info*) dh->dref->detail;
    Per_Display_Data * pdd = dh->dref->pdd;
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f", pdd_get_adjusted_sleep_multiplier(pdd));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusted sleep-multiplier = %5.2f",
+                                       pdd_get_adjusted_sleep_multiplier(pdd));
 
    Display_Ref * dref = dh->dref;
    if (!(dref->flags & DREF_DDC_COMMUNICATION_CHECKED)) {
@@ -446,9 +447,9 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       char * drm_enabled = NULL;
       int depth = (debug) ? 1 : -1;
       if (businfo->drm_connector_name) {
-         RPT_ATTR_TEXT(depth, &drm_dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
-         RPT_ATTR_TEXT(depth, &drm_status,  "/sys/class/drm", businfo->drm_connector_name, "status");
-         RPT_ATTR_TEXT(depth, &drm_enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
+         RPT_ATTR_TEXT(depth, &drm_dpms,   "/sys/class/drm",businfo->drm_connector_name, "dpms");
+         RPT_ATTR_TEXT(depth, &drm_status, "/sys/class/drm",businfo->drm_connector_name, "status");
+         RPT_ATTR_TEXT(depth, &drm_enabled,"/sys/class/drm",businfo->drm_connector_name, "enabled");
       }
       // not currently used, just free
       free(drm_dpms);
@@ -492,7 +493,10 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             errinfo_summary(ddc_excp));
             dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
             bool dynamic_sleep_active = pdd_is_dynamic_sleep_active(pdd);
-            if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES && dynamic_sleep_active && initial_multiplier < 1.0f) {
+            if (ERRINFO_STATUS(ddc_excp) == DDCRC_RETRIES &&
+                                            dynamic_sleep_active &&
+                                            initial_multiplier < 1.0f)
+            {
                // turn off optimization in case it's on
                if (pdd_is_dynamic_sleep_active(pdd) ) {
                   ERRINFO_FREE(ddc_excp);
@@ -501,18 +505,20 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
                   pdd_set_dynamic_sleep_active(dref->pdd, false);
                   ddc_excp = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_response_loc);
                   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
-                     businfo->busno,
-                     pdd_get_adjusted_sleep_multiplier(pdd),
-                     feature_code,
-                     errinfo_summary(ddc_excp));
+                        "busno=%d, sleep-multiplier=%5.2f. "
+                        "Retesting for supported feature 0x%02x returned %s",
+                        businfo->busno,
+                        pdd_get_adjusted_sleep_multiplier(pdd),
+                        feature_code,
+                        errinfo_summary(ddc_excp));
                   dref->communication_error_summary = g_strdup(errinfo_summary(ddc_excp));
                   SYSLOG2((ddc_excp) ? DDCA_SYSLOG_ERROR : DDCA_SYSLOG_INFO,
-                     "busno=%d, sleep-multiplier=%5.2f. Retesting for supported feature 0x%02x returned %s",
-                     businfo->busno,
-                     pdd_get_adjusted_sleep_multiplier(pdd),
-                     feature_code,
-                     errinfo_summary(ddc_excp));
+                        "busno=%d, sleep-multiplier=%5.2f."
+                        "Retesting for supported feature 0x%02x returned %s",
+                        businfo->busno,
+                        pdd_get_adjusted_sleep_multiplier(pdd),
+                        feature_code,
+                        errinfo_summary(ddc_excp));
                }
             }
          }
@@ -531,26 +537,33 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             dh->dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
 
          if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-            if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+            if (psc == 0 ||
+                psc == DDCRC_REPORTED_UNSUPPORTED ||
+                psc == DDCRC_DETERMINED_UNSUPPORTED)
+            {
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
             }
       }
 
          else {   // DDCA_IO_I2C
-            TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED);  // only set at higher levels, unless USB
-            if (psc == 0 || psc == DDCRC_REPORTED_UNSUPPORTED || psc == DDCRC_DETERMINED_UNSUPPORTED) {
+            TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED); // only set at higher levels, unless USB
+            if (psc == 0 ||
+                psc == DDCRC_REPORTED_UNSUPPORTED ||
+                psc == DDCRC_DETERMINED_UNSUPPORTED)
+            {
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
                check_how_unsupported_reported(dh);
             }  // end, communication working
             else {
                if (psc == -EBUSY) {
-                  dh->dref->flags |= DREF_DDC_BUSY; // communication failed, do not set DDCRC_COMMUNICATION_WORKING
+                  // communication failed, do not set DDCRC_COMMUNICATION_WORKING
+                  dh->dref->flags |= DREF_DDC_BUSY;
                }
             }
 
             if ( i2c_force_bus /* && psc == DDCRC_RETRIES */) {  // used only when testing
-               DBGTRC_NOPREFIX(debug || true , TRACE_GROUP, "dh=%s, Forcing DDC communication success.",
-                     dh_repr(dh) );
+               DBGTRC_NOPREFIX(debug || true , TRACE_GROUP,
+                     "dh=%s, Forcing DDC communication success.", dh_repr(dh) );
                dh->dref->flags |= DREF_DDC_COMMUNICATION_WORKING;
                dh->dref->flags |= DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED;   // good_enuf_for_test
             }
@@ -560,11 +573,12 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
             errinfo_free(ddc_excp);
 
          if ( dh->dref->flags & DREF_DDC_COMMUNICATION_WORKING ) {
-
-            // Would prefer to defer checking version until actually needed to avoid additional DDC io
-            // during monitor detection.  Unfortunately, this would introduce ddc_open_display(), with
-            // its possible error states, into other functions, e.g. ddca_get_feature_list_by_dref()
-            if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) { // may have been forced by option --mccs
+            // Would prefer to defer checking version until actually needed to avoid
+            // additional DDC io during monitor detection.  Unfortunately, this would
+            // introduce ddc_open_display(), with its possible error states,
+            // into other functions, e.g. ddca_get_feature_list_by_dref()
+            if ( vcp_version_eq(dh->dref->vcp_version_xdf, DDCA_VSPEC_UNQUERIED)) {
+               // may have been forced by option --mccs
                set_vcp_version_xdf_by_dh(dh);
             }
          }
@@ -617,7 +631,8 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
          ddc_close_display_wo_return(dh);
       }
       else {
-         char * msg = g_strdup_printf("Unable to open %s: %s", dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
+         char * msg = g_strdup_printf("Unable to open %s: %s",
+                                      dpath_repr_t(&dref->io_path), psc_desc(err->status_code));
          SYSLOG2(DDCA_SYSLOG_WARNING, "%s", msg);
          free(msg);
       }
@@ -642,7 +657,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
  *
  *  @param data display reference
  */
-void *
+static void *
 threaded_initial_checks_by_dref(gpointer data) {
    bool debug = false;
 
@@ -661,9 +676,11 @@ threaded_initial_checks_by_dref(gpointer data) {
  *
  *  @param all_displays #GPtrArray of pointers to #Display_Ref
  */
-void ddc_async_scan(GPtrArray * all_displays) {
+static void
+ddc_async_scan(GPtrArray * all_displays) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d", all_displays, all_displays->len);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d",
+                                       all_displays, all_displays->len);
 
    GPtrArray * threads = g_ptr_array_new();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
@@ -693,7 +710,7 @@ void ddc_async_scan(GPtrArray * all_displays) {
  *
  *  @param all_displays #GPtrArray of pointers to #Display_Ref
  */
-void
+static void
 ddc_non_async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
@@ -735,6 +752,7 @@ ddc_get_filtered_displays(bool include_invalid_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
    TRACED_ASSERT(all_displays);
+
    GPtrArray * result = g_ptr_array_sized_new(all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_displays, ndx);
@@ -849,7 +867,7 @@ edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
  *    - attribute enabled must exist and equal "disabled"
  *    - attribute edid must not exist
  */
-bool
+static bool
 is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
    char * invalid_repr = g_strdup(dref_repr_t(invalid_dref));
@@ -933,7 +951,8 @@ bool drefs_edid_equal(Display_Ref * dref1, Display_Ref * dref2) {
 *   @param  drefs  array of Display_Refs
 *   @return true/false
 */
-bool has_duplicate_edids(GPtrArray * drefs) {
+static bool
+has_duplicate_edids(GPtrArray * drefs) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drefs->len = %d", drefs->len);
    bool found_duplicate = false;
@@ -970,7 +989,7 @@ bool detect_phantom_displays = true;  // for testing
  *  /dev/i2c bus but not another. It also handles the case wehere
  *  there are 2 valid display refs and one connector has name DPMST.
  */
-bool
+static bool
 filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len=%d, detect_phantom_displays=%s",
@@ -1055,7 +1074,7 @@ filter_phantom_displays(GPtrArray * all_displays) {
 }
 
 
-bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
+static bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
@@ -1111,8 +1130,7 @@ ddc_set_async_threshold(int threshold) {
  *  @param  open_errors_loc where to return address of #GPtrArray of #Bus_Open_Error
  *  @return array of #Display_Ref
  */
-// static
-GPtrArray *
+static GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s",sbool(display_caching_enabled));
@@ -1446,6 +1464,7 @@ ddc_enable_usb_display_detection(bool onoff) {
 }
 
 
+#ifdef UNUSED
 /** Indicates whether USB displays are to be detected
  *
  *  @return true/false
@@ -1454,6 +1473,7 @@ bool
 ddc_is_usb_display_detection_enabled() {
    return detect_usb_displays;
 }
+#endif
 
 
 //
