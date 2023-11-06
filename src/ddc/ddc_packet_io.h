@@ -70,7 +70,6 @@ Error_Info * ddc_write_read_with_retry(
       Byte             expected_response_type,
       Byte             expected_subtype,
       DDC_Write_Read_Flags flags,
-  //  bool             retry_null_response,
       DDC_Packet **    response_packet_ptr_loc
      );
 
