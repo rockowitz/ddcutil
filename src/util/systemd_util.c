@@ -1,31 +1,9 @@
-/* systemd_util.c
- *
- * Created on: Nov 4, 2017
- *     Author: rock
- *
- * <copyright>
- * Copyright (C) 2014-2015 Sanford Rockowitz <rockowitz@minsoft.com>
- *
- * Licensed under the GNU General Public License Version 2
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * </endcopyright>
+/** @file systemd_util.c
+ *  Functions for reading the systemd journal.
  */
 
-// for strcasestr():
-// #define _GNU_SOURCE
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
 #include <systemd/sd-journal.h>
@@ -100,7 +78,15 @@ char * d_strcasestr(const char * haystack, const char * needle) {
 #endif
 
 
-
+/** Reads lines for the current boot from the systemd journal.
+ *
+ *  Optionally, lines are filtered to include only those containing one of a
+ *  list of terms.  A limit to the number of lines returned can be specified.
+ *
+ *  @param filter_terms  list of filter terms
+ *  @param ignore case   if true, case is ignored when testing filter terms
+ *  @param limit         ignored
+ */
 GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, int limit) {
    bool debug = false;
    if (debug) {
@@ -162,6 +148,4 @@ GPtrArray * get_current_boot_messages(char ** filter_terms, bool ignore_case, in
 
    return lines;
 }
-
-
 
