@@ -24,5 +24,6 @@ extern Dpms_State dpms_state;
 char *           interpret_dpms_state_t(Dpms_State state);
 void             dpms_check_x11_asleep();
 bool             dpms_check_drm_asleep(I2C_Bus_Info * businfo);
+void             init_i2c_dpms();
 
 #endif /* I2C_DPMS_H_ */

@@ -22,6 +22,7 @@
 #endif
 
 #include "base/core.h"
+#include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
 #include "i2c/i2c_dpms.h"
@@ -29,6 +30,7 @@
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
+
 //
 // DPMS Detection
 //
@@ -43,7 +45,7 @@ Value_Name_Table dpms_state_flags_table = {
       VN_END
 };
 
-char *      interpret_dpms_state_t(Dpms_State state) {
+char * interpret_dpms_state_t(Dpms_State state) {
    return VN_INTERPRET_FLAGS_T(state, dpms_state_flags_table, "|");
 }
 
@@ -130,3 +132,11 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
    return asleep;
 }
+
+
+void init_i2c_dpms() {
+   RTTI_ADD_FUNC(dpms_check_drm_asleep);
+   RTTI_ADD_FUNC(dpms_check_x11_asleep);
+}
+
+

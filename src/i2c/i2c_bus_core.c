@@ -241,7 +241,7 @@ static bool is_laptop_drm_connector(int busno, char * drm_name_fragment) {
 #endif
 
 
-static bool is_laptop_drm_connector_name(const char * connector_name) {
+bool is_laptop_drm_connector_name(const char * connector_name) {
    bool debug = false;
    bool result = strstr(connector_name, "-eDP-") ||
                  strstr(connector_name, "-LVDS-");
@@ -824,8 +824,6 @@ bool i2c_is_valid_bus(int busno, Call_Options callopts) {
 
 
 static void init_i2c_bus_core_func_name_table() {
-   RTTI_ADD_FUNC(dpms_check_x11_asleep);
-   RTTI_ADD_FUNC(dpms_check_drm_asleep);
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_check_businfo_connector);
    RTTI_ADD_FUNC(i2c_close_bus);
