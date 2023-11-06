@@ -248,7 +248,7 @@ void explore_monitor_state(Display_Handle* dh) {
  *  @param  feature code  VCP feature code
  *  @return Error_Info    if supported
  */
-static Error_Info *
+STATIC Error_Info *
 verify_unsupported_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code feature_code)
@@ -328,7 +328,7 @@ verify_unsupported_feature(
  *  Sets relevant DREF_DDC_* flags in the associated Display Reference to
  *  indicate how unsupported features are reported.
  */
-static void
+STATIC void
 check_how_unsupported_reported(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s", dh_repr(dh));
@@ -424,7 +424,7 @@ check_how_unsupported_reported(Display_Handle * dh) {
  *  Output level should have been set <= DDCA_OL_NORMAL prior to this call since
  *  verbose output is distracting.
  */
-static bool
+STATIC bool
 ddc_initial_checks_by_dh(Display_Handle * dh) {
    bool debug = false;
    TRACED_ASSERT(dh && dh->dref);
@@ -657,7 +657,7 @@ ddc_initial_checks_by_dref(Display_Ref * dref) {
  *
  *  @param data display reference
  */
-static void *
+STATIC void *
 threaded_initial_checks_by_dref(gpointer data) {
    bool debug = false;
 
@@ -676,7 +676,7 @@ threaded_initial_checks_by_dref(gpointer data) {
  *
  *  @param all_displays #GPtrArray of pointers to #Display_Ref
  */
-static void
+STATIC void
 ddc_async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p, display_count=%d",
@@ -710,7 +710,7 @@ ddc_async_scan(GPtrArray * all_displays) {
  *
  *  @param all_displays #GPtrArray of pointers to #Display_Ref
  */
-static void
+STATIC void
 ddc_non_async_scan(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d displays", all_displays->len);
@@ -841,7 +841,7 @@ ddc_get_bus_open_errors() {
 // Phantom displays
 //
 
-static bool
+STATIC bool
 edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
    bool result = false;
    result = streq(edid1->mfg_id,        edid2->mfg_id)        &&
@@ -867,7 +867,7 @@ edid_ids_match(Parsed_Edid * edid1, Parsed_Edid * edid2) {
  *    - attribute enabled must exist and equal "disabled"
  *    - attribute edid must not exist
  */
-static bool
+STATIC bool
 is_phantom_display(Display_Ref* invalid_dref, Display_Ref * valid_dref) {
    bool debug = false;
    char * invalid_repr = g_strdup(dref_repr_t(invalid_dref));
@@ -985,11 +985,11 @@ bool detect_phantom_displays = true;  // for testing
  *  @return true if phantom displays detected, false if not
  *
  *  @remark
- *  This handles the case where DDC communication works for one
- *  /dev/i2c bus but not another. It also handles the case wehere
- *  there are 2 valid display refs and one connector has name DPMST.
+ *  This handles the case where DDC communication works for one /dev/i2c bus
+ *  but not another. It also handles the case where there are 2 valid display
+ *  refs and the connector for one has name DPMST.
  */
-static bool
+STATIC bool
 filter_phantom_displays(GPtrArray * all_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays->len=%d, detect_phantom_displays=%s",
@@ -1074,17 +1074,6 @@ filter_phantom_displays(GPtrArray * all_displays) {
 }
 
 
-static bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
-
-   bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-
 /** Emits a debug report of a list of #Bus_Open_Error.
  *
  *  @param open_errors  array of #Bus_Open_Error
@@ -1130,7 +1119,7 @@ ddc_set_async_threshold(int threshold) {
  *  @param  open_errors_loc where to return address of #GPtrArray of #Bus_Open_Error
  *  @return array of #Display_Ref
  */
-static GPtrArray *
+STATIC GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s",sbool(display_caching_enabled));

@@ -22,6 +22,7 @@
 #endif
 
 #include "base/core.h"
+#include "base/displays.h"
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
@@ -134,8 +135,20 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
 }
 
 
+bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
+
+   bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
 void init_i2c_dpms() {
    RTTI_ADD_FUNC(dpms_check_drm_asleep);
+   RTTI_ADD_FUNC(dpms_check_drm_asleep_by_dref);
    RTTI_ADD_FUNC(dpms_check_x11_asleep);
 }
 
