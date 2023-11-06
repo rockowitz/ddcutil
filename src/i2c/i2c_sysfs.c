@@ -39,6 +39,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
+#include "base/i2c_bus_base.h"
 #include "i2c/i2c_sysfs.h"
 
 static const DDCA_Trace_Group  TRACE_GROUP = DDCA_TRC_NONE;
@@ -1589,6 +1590,34 @@ char * get_drm_connector_by_edid(Byte * edid_bytes) {
    DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
+
+
+Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Checking I2C_Bus_Info for /dev/i2c-%d", businfo->busno);
+   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
+   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
+   if (drm_connector) {
+     businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
+     businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
+   }
+   else if (businfo->edid) {
+     drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
+     if (drm_connector) {
+        businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
+        businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
+     }
+   }
+   businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", interpret_i2c_bus_flags_t(businfo->flags));
+   if (businfo->drm_connector_name)
+      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
+   else
+      DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
+   return drm_connector;
+}
+
+
 
 
 /** Checks if a display has a DRM driver by looking for

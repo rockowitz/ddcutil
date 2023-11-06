@@ -15,6 +15,8 @@
 #include "util/coredefs_base.h"
 #include "util/data_structures.h"
 
+#include "base/i2c_bus_base.h"
+
 extern GPtrArray * sys_drm_connectors;
 
 char * find_adapter(char * path, int depth);
@@ -88,6 +90,8 @@ void        report_conflicting_drivers(GPtrArray * conflicts, int depth);   // f
 void        free_conflicting_drivers(GPtrArray* conflicts);
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
 char *      conflicting_driver_names_string_t(GPtrArray * conflicts);
+Sys_Drm_Connector *
+                 i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 
 
 typedef struct {
@@ -133,7 +137,6 @@ bool all_video_devices_drm();
 char * get_drm_connector_by_busno(int busno);
 char * get_drm_connector_by_edid(Byte * edid_bytes);
 bool   is_drm_display_by_busno(int busno);
-
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();
