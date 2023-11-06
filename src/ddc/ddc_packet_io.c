@@ -173,7 +173,8 @@ ddc_open_display(
             // How is this even possible?
             // 1/2017:  Observed with x260 laptop and Ultradock, See ddcutil user report.
             //          close(fd) fails
-            char * msg = g_strdup_printf("No EDID for device on bus /dev/"I2C"-%d", dref->io_path.path.i2c_busno);
+            char * msg = g_strdup_printf("No EDID for device on bus /dev/"I2C"-%d",
+                                          dref->io_path.path.i2c_busno);
             MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
             err = ERRINFO_NEW(DDCRC_EDID, "%s", msg);
             free(msg);
@@ -263,7 +264,7 @@ Error_Info *
 ddc_close_display(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, dref=%s, fd=%d, dpath=%s",
-              dh_repr(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path) ) ;
+              dh_repr(dh), dref_repr_t(dh->dref), dh->fd, dpath_short_name_t(&dh->dref->io_path));
    Display_Ref * dref = dh->dref;
    Error_Info * err = NULL;
    Status_Errno rc = 0;
@@ -279,7 +280,8 @@ ddc_close_display(Display_Handle * dh) {
             rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
-               char * msg = g_strdup_printf("i2c_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               char * msg = g_strdup_printf("i2c_close_bus returned %d, errno=%s",
+                                            rc, psc_desc(errno) );
                SYSLOG2(DDCA_SYSLOG_ERROR, "%s", msg);
                err = errinfo_new(rc, __func__, msg);
                free(msg);
@@ -294,7 +296,8 @@ ddc_close_display(Display_Handle * dh) {
             rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
-               char * msg = g_strdup_printf("usb_close_bus returned %d, errno=%s", rc, psc_desc(errno) );
+               char * msg = g_strdup_printf("usb_close_bus returned %d, errno=%s",
+                                            rc, psc_desc(errno) );
                MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "%s", msg);
                err = ERRINFO_NEW(rc, msg);
                free(msg);
@@ -343,7 +346,7 @@ void ddc_close_all_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    assert(open_displays);
    // ddc_dbgrpt_valid_display_handles(2);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Closing %d open displays", g_hash_table_size(open_displays));
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Closing %d open displays",g_hash_table_size(open_displays));
    GList * display_handles = g_hash_table_get_keys(open_displays);
    for (GList * cur = display_handles; cur; cur = cur->next) {
       Display_Handle * dh = cur->data;
@@ -455,7 +458,7 @@ DDCA_Status ddc_i2c_write_read_raw(
          rc = DDCRC_READ_ALL_ZERO;
          // printf("(%s) All zero response.", __func__ );
          // DBGMSG("Request was: %s",
-         //        hexstring(get_packet_start(request_packet_ptr)+1, get_packet_len(request_packet_ptr)-1));
+         // hexstring(get_packet_start(request_packet_ptr)+1,get_packet_len(request_packet_ptr)-1));
       }
    }
    if (rc < 0) {
@@ -493,11 +496,14 @@ ddc_write_read(
      )
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, read_bytewise=%s, max_read_bytes=%d,"
-                                       " expected_response_type=0x%02x, expected_subtype=0x%02x",
-          dh_repr(dh), SBOOL(read_bytewise), max_read_bytes, expected_response_type, expected_subtype  );
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "dh=%s, read_bytewise=%s, max_read_bytes=%d,"
+         " expected_response_type=0x%02x, expected_subtype=0x%02x",
+          dh_repr(dh), SBOOL(read_bytewise), max_read_bytes,
+          expected_response_type, expected_subtype  );
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding 1 to max_read_bytes to allow for initial double 0x63 quirk");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "Adding 1 to max_read_bytes to allow for initial double 0x63 quirk");
    max_read_bytes++;   //allow for quirk of double 0x6e at start
    Byte * readbuf = calloc(1, max_read_bytes);
    int    bytes_received = max_read_bytes;
@@ -531,7 +537,7 @@ ddc_write_read(
           if ( pkt && pkt->type == DDC_PACKET_TYPE_QUERY_VCP_RESPONSE) {
              Parsed_Nontable_Vcp_Response * resp = pkt->parsed.nontable_response;
              if (resp->valid_response && !resp->supported_opcode) {
-                DBGMSG("Setting DDCRC_NULL_RESPONSE for unsupported feature 0x%02x", resp->vcp_code);
+                DBGMSG("Setting DDCRC_NULL_RESPONSE for unsupported feature 0x%02x",resp->vcp_code);
                 psc = DDCRC_NULL_RESPONSE;
              }
           }
@@ -576,10 +582,12 @@ ddc_write_read_with_retry(
    bool debug = false;
 
    bool all_zero_response_ok = flags & Write_Read_Flag_All_Zero_Response_Ok;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
-                                       "expected_subtype=0x%02x, all_zero_response_ok=%s, Write_Flag_AllZero_response_ok: %s",
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, "
+         "expected_subtype=0x%02x, all_zero_response_ok=%s, Write_Flag_AllZero_response_ok: %s",
           dh_repr(dh), max_read_bytes, expected_response_type,
-          expected_subtype, sbool(all_zero_response_ok), sbool(flags&Write_Read_Flag_All_Zero_Response_Ok)  );
+          expected_subtype, sbool(all_zero_response_ok),
+          sbool(flags&Write_Read_Flag_All_Zero_Response_Ok) );
    DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref flags: %s", interpret_dref_flags_t(dh->dref->flags));
    Per_Display_Data * pdd = dh->dref->pdd;
    TRACED_ASSERT(dh->dref->io_path.io_mode != DDCA_IO_USB);
@@ -610,8 +618,10 @@ ddc_write_read_with_retry(
         tryctr++)
    {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-         "Start of try loop, tryctr=%d, max_tries=%d, psc=%s, retryable=%s, read_bytewise=%s, sleep-multiplier=%5.2f",
-         tryctr, max_tries, psc_name_code(psc), sbool(retryable), sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd) );
+         "Start of try loop, tryctr=%d, max_tries=%d, psc=%s, retryable=%s, "
+         "read_bytewise=%s, sleep-multiplier=%5.2f",
+         tryctr, max_tries, psc_name_code(psc), sbool(retryable),
+         sbool(read_bytewise), pdd_get_adjusted_sleep_multiplier(pdd) );
 
       Error_Info * cur_excp = ddc_write_read(
                 dh,
@@ -666,7 +676,8 @@ ddc_write_read_with_retry(
                         expected_response_type == DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
                   if (may_mean_unsupported_feature) {
                      retryable = (++ddcrc_null_response_ct <= ddcrc_null_response_max);
-                     DBGTRC(debug, DDCA_TRC_NONE, "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
+                     DBGTRC(debug, DDCA_TRC_NONE,
+                           "DDCRC_NULL_RESPONSE, retryable=%s", sbool(retryable));
                      if (!retryable) {
                         MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
                               "Feature 0x%02x, maximum retries (%d) for DDC Null Response exceeded",
@@ -679,9 +690,9 @@ ddc_write_read_with_retry(
                break;
 
          case (DDCRC_READ_ALL_ZERO):
-              // when is DDCRC_READ_ALL_ZERO actually an error vs the response of the monitor instead of NULL response?
-              // On Dell monitors (P2411, U3011) all zero response occurs on unsupported Table features
-              // But also seen as a bad response
+              // Sometimes an all-zero response indicates an unsupported feature
+              // instead of an error.  On Dell P2411 and U3011 the all zero response occurs
+              // when reading an unsupported table feature.
               retryable = (all_zero_response_ok) ? false : true;
               ddcrc_read_all_zero_ct++;
               break;
@@ -696,7 +707,8 @@ ddc_write_read_with_retry(
               break;
 
          case (-ENXIO):    // no such device or address, i915 driver
-              retryable = false;  // have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
+              // But have seen success after 7 retries of errors including ENXIO, DDCRC_DATA, make retryable?
+              retryable = false;
               break;
 
          case (-EBUSY):
@@ -712,8 +724,9 @@ ddc_write_read_with_retry(
          //    call_dynamic_tuned_sleep_i2c(SE_DDC_NULL, tryctr+1);
       }    // rc < 0
 
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Bottom of try loop. psc=%s, tryctr=%d,  ddcrc_null_response_ct=%d, retryable=%s",
-                             psc_name_code(psc), tryctr, ddcrc_null_response_ct, sbool(retryable));
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "Bottom of try loop. psc=%s, tryctr=%d,  ddcrc_null_response_ct=%d, retryable=%s",
+            psc_name_code(psc), tryctr, ddcrc_null_response_ct, sbool(retryable));
       int remaining_tries = (max_tries-1) - tryctr;
       if (psc != 0  && retryable && remaining_tries > 0)
          pdd_note_retryable_failure_by_dh(dh, psc, remaining_tries);
@@ -721,7 +734,8 @@ ddc_write_read_with_retry(
 
    // tryctr = number of times through loop, i.e. 1..max_tries
    assert(tryctr >= 1 && tryctr <= max_tries);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After try loop. tryctr=%d, psc=%s, ddcrc_null_response_ct=%d, retryable=%s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "After try loop. tryctr=%d, psc=%s, ddcrc_null_response_ct=%d, retryable=%s",
          tryctr, psc_name_code(psc), ddcrc_null_response_ct, sbool(retryable) );
 
    bool all_responses_null_meant_unsupported = false;
@@ -731,8 +745,10 @@ ddc_write_read_with_retry(
          && ddcrc_null_response_ct == tryctr)
    {
       all_responses_null_meant_unsupported = true;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED and all responses null");
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "adjusting try count passed to pdd_record_final_by_dh() to 1");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED and all responses null");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+            "adjusting try count passed to pdd_record_final_by_dh() to 1");
       // don't pollute the stats with try counts that don't reflect real errors
       adjusted_tryctr = 1;
    }
@@ -764,7 +780,8 @@ ddc_write_read_with_retry(
       else if (ddcrc_read_all_zero_ct == max_tries)
          psc = DDCRC_ALL_TRIES_ZERO;
       else if (all_responses_null_meant_unsupported) {
-         DBGTRC(debug, TRACE_GROUP, "converting DDCRC_ALL_RESPONSES_NULL to DDCRC_DETERMINED_UNSUPPORTED");
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+               "Converting DDCRC_ALL_RESPONSES_NULL to DDCRC_DETERMINED_UNSUPPORTED");
          psc = DDCRC_DETERMINED_UNSUPPORTED;
       }
       else if (ddcrc_null_response_ct > ddcrc_null_response_max) {
