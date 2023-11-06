@@ -17,7 +17,6 @@ distclean-local:
 	@echo "(src/util/Makefile) distclean-local"
 
 # Intermediate Libraries
-
 noinst_LTLIBRARIES = libutil.la libutilaux.la
 
 libutil_la_SOURCES = \
