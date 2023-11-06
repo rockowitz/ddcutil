@@ -324,8 +324,8 @@ bool check_all_video_adapters_drm(GPtrArray * adapter_devices) {
    // int depth = (debug) ? 1 : -1;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       char buf[PATH_MAX];
-      strcpy(buf, g_ptr_array_index(adapter_devices, ndx));
-      strcat(buf, "drm");
+      g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
+      g_strlcat(buf, "drm", PATH_MAX);
 
       //  bool ok = rpt_attr_note_subdir(depth, NULL, g_ptr_array_index(adapter_devices, ndx), "drm");
       DBGF(debug, "Checking directory |%s|", buf);
