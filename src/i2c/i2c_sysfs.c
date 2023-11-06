@@ -1592,6 +1592,16 @@ char * get_drm_connector_by_edid(Byte * edid_bytes) {
 }
 
 
+/** If possible, determines the drm connector for an I2C bus number.
+ *  If insufficient fields exist in sysfs to do this with absolute
+ *  assurance, EDID comparison is used.
+ *
+ *  Fields drm_connector_name and drm_connector_found_by are set.
+ *  If the drm connector cannot be determined, drm_connector_found_by
+ *  is set to DRM_CONNECTOR_NOT_FOUND.
+ *
+ *  @param businfo   I2C_Bus_Info record
+ */
 Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Checking I2C_Bus_Info for /dev/i2c-%d", businfo->busno);
