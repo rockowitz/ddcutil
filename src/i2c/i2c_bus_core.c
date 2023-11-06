@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #ifdef USE_X11
-#include <X11/extensions/dpmsconst.h>
+// #include <X11/extensions/dpmsconst.h>
 #endif
 /** \endcond */
 
@@ -61,6 +61,7 @@
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
+#include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
 #include "i2c/i2c_execute.h"
@@ -80,99 +81,6 @@ bool all_video_drivers_implement_drm = false;
 
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
-
-//
-// DPMS Detection
-//
-
-Dpms_State dpms_state;    // global
-
-Value_Name_Table dpms_state_flags_table = {
-      VN(DPMS_STATE_X11_CHECKED),
-      VN(DPMS_STATE_X11_ASLEEP),
-      VN(DPMS_SOME_DRM_ASLEEP),
-      VN(DPMS_ALL_DRM_ASLEEP),
-      VN_END
-};
-
-char *      interpret_dpms_state_t(Dpms_State state) {
-   return VN_INTERPRET_FLAGS_T(state, dpms_state_flags_table, "|");
-}
-
-
-void dpms_check_x11_asleep() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-
-   char * xdg_session_type = getenv("XDG_SESSION_TYPE");
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "XDG_SESSION_TYPE = |%s|", xdg_session_type);
-
-#ifdef USE_X11
-   if (streq(xdg_session_type, "x11")) {
-      // state indicates whether or not DPMS is enabled (TRUE) or disabled (FALSE).
-      // power_level indicates the current power level (one of DPMSModeOn,
-      // DPMSModeStandby, DPMSModeSuspend, or DPMSModeOff.)
-      unsigned short power_level;
-      unsigned char state;
-      bool ok =get_x11_dpms_info(&power_level, &state);
-      if (ok) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "power_level=%d = %s, state=%s",
-            power_level, dpms_power_level_name(power_level), sbool(state));
-         if (state && (power_level != DPMSModeOn) )
-            dpms_state |= DPMS_STATE_X11_ASLEEP;
-         dpms_state |= DPMS_STATE_X11_CHECKED;
-      }
-      else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "get_x11_dpms_info() failed.");
-         SYSLOG2(DDCA_SYSLOG_ERROR, "get_x11_dpms_info() failed");
-      }
-   }
-   // dpms_state |= DPMS_STATE_X11_ASLEEP; // testing
-   // dpms_state = 0;    // testing
-
-#endif
-   DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x = %s", dpms_state, interpret_dpms_state_t(dpms_state));
-}
-
-
-bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
-   bool debug = false;
-   assert(businfo);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno);
-
-   bool asleep = false;
-   if (!businfo->drm_connector_name) {   // is this necessary?
-      Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
-      if (!conn) {
-        DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
-        SYSLOG2(DDCA_SYSLOG_ERROR, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
-      }
-      else {
-        assert(businfo->drm_connector_name);
-      }
-   }
-   if (businfo->drm_connector_name) {
-      char * dpms = NULL;
-      char * enabled = NULL;
-      RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
-      RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
-      asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
-      free(dpms);
-      free(enabled);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
-            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
-      SYSLOG2(DDCA_SYSLOG_DEBUG,
-            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
-            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
-   }
-
-   // if (businfo->busno == 6)   // test case
-   //    asleep = true;
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
-   return asleep;
-}
 
 
 //
@@ -278,32 +186,6 @@ Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
    assert(result <= 0);
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
    return result;
-}
-
-
-Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Checking I2C_Bus_Info for /dev/i2c-%d", businfo->busno);
-   businfo->drm_connector_found_by = DRM_CONNECTOR_NOT_FOUND;
-   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(businfo->busno);
-   if (drm_connector) {
-     businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_BUSNO;
-     businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
-   }
-   else if (businfo->edid) {
-     drm_connector = find_sys_drm_connector_by_edid(businfo->edid->bytes);
-     if (drm_connector) {
-        businfo->drm_connector_name = g_strdup(drm_connector->connector_name);
-        businfo->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
-     }
-   }
-   businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", interpret_i2c_bus_flags_t(businfo->flags));
-   if (businfo->drm_connector_name)
-      DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
-   else
-      DBGTRC_RETURNING(debug, TRACE_GROUP, NULL, "");
-   return drm_connector;
 }
 
 
