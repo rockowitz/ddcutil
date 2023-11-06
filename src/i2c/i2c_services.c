@@ -13,8 +13,8 @@
 
 /** Master initializer for directory i2c */
 void init_i2c_services() {
-   init_i2c_drm();
    init_i2c_bus_core();
+   init_i2c_dpms();
    init_i2c_edid();
    init_i2c_execute();
    init_i2c_strategy_dispatcher();
