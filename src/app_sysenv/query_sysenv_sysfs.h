@@ -25,7 +25,6 @@ void query_loaded_modules_using_sysfs();
 void query_sys_bus_i2c(Env_Accumulator * accum);
 void query_sys_amdgpu_parameters(int depth);
 void query_drm_using_sysfs();
-void show_relevant_char_major_numbers();
 void dump_sysfs_i2c(Env_Accumulator * accum);
 void init_query_sysenv_sysfs();
 
