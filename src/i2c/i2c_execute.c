@@ -386,26 +386,26 @@ bye:
 }
 
 
-void
+STATIC void
 dbgrpt_i2c_msg(int depth, struct i2c_msg message) {
    rpt_vstring(depth, "addr:    0x%04x", message.addr);   //      __u16 addr;
    rpt_vstring(depth, "flags:   0x%04x", message.flags);
    // #define I2C_M_RD     0x0001   /* guaranteed to be 0x0001! */
-   // #define I2C_M_TEN    0x0010   /* use only if I2C_FUNC_10BIT_ADDR */
+   // #define I2C_M_TEN          0x0010   /* use only if I2C_FUNC_10BIT_ADDR */
    // #define I2C_M_DMA_SAFE     0x0200   /* use only in kernel space */
    // #define I2C_M_RECV_LEN     0x0400   /* use only if I2C_FUNC_SMBUS_READ_BLOCK_DATA */
    // #define I2C_M_NO_RD_ACK    0x0800   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
    // #define I2C_M_IGNORE_NAK   0x1000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
    // #define I2C_M_REV_DIR_ADDR 0x2000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
    // #define I2C_M_NOSTART      0x4000   /* use only if I2C_FUNC_NOSTART */
-   // #define I2C_M_STOP      0x8000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
+   // #define I2C_M_STOP         0x8000   /* use only if I2C_FUNC_PROTOCOL_MANGLING */
    rpt_vstring(depth, "len:     0x%04x (%d)", message.len, message.len);  // __u16
    // rpt_vstring(depth, "buf:     %p ->  %s", message.buf, hexstring_t(message.buf, message.len)); // __u8 *buf;
    rpt_vstring(depth, "buf:     %p", message.buf); // __u8 *buf;
 }
 
 
-void
+STATIC void
 dbgrpt_i2c_rdwr_ioctl_data(int depth, struct i2c_rdwr_ioctl_data * data) {
    bool debug = false;
    DBGMSF(debug, "data=%p", data);
@@ -511,8 +511,7 @@ i2c_ioctl_writer(
  * @retval 0    success
  * @retval <0   negative Linux errno value
  */
-// static  // disable to allow name in back trace
-Status_Errno_DDC
+STATIC Status_Errno_DDC
 i2c_ioctl_reader1(
       int    fd,
       Byte   slave_addr,
