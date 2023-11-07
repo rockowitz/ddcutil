@@ -225,6 +225,7 @@ typedef struct {
    Display_Ref* dref;
    int          fd;     // file descriptor
    char *       repr;
+   bool         testing_unsupported_feature_active;
 } Display_Handle;
 
 Display_Handle * create_base_display_handle(int fd, Display_Ref * dref);
