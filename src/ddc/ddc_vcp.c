@@ -391,7 +391,8 @@ ddc_set_vcp_value(
            )
          )
       {
-         f0printf(verbose_msg_dest, "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
+         f0printf(verbose_msg_dest,
+               "Verifying that value of feature 0x%02x successfully set...\n", vrec->opcode);
          DDCA_Any_Vcp_Value * newval = NULL;
          ddc_excp = ddc_get_vcp_value(
              dh,
@@ -400,10 +401,12 @@ ddc_set_vcp_value(
              &newval);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
-            f0printf(verbose_msg_dest, "(%s) Read after write failed. get_vcp_value() returned: %s\n",
-                           __func__, psc_desc(psc));
+            f0printf(verbose_msg_dest,
+                  "(%s) Read after write failed. get_vcp_value() returned: %s\n",
+                  __func__, psc_desc(psc));
             if (psc == DDCRC_RETRIES)
-               f0printf(verbose_msg_dest, "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
+               f0printf(verbose_msg_dest,
+                     "(%s)    Try errors: %s\n", __func__, errinfo_causes_string(ddc_excp));
             // psc = DDCRC_VERIFY;
          }
          else {
@@ -412,7 +415,7 @@ ddc_set_vcp_value(
             // dbgrpt_ddca_single_vcp_value(newval, 3);
 
             if (! single_vcp_value_equal(vrec,newval)) {
-               ddc_excp = errinfo_new(DDCRC_VERIFY, __func__, "Current value does not match value set");
+               ddc_excp = ERRINFO_NEW(DDCRC_VERIFY, "Current value does not match value set");
                f0printf(verbose_msg_dest, "Current value does not match value set.\n");
             }
             else {
@@ -426,11 +429,13 @@ ddc_set_vcp_value(
       }
       else {
          if (!is_rereadable_feature(dh, vrec->opcode) )
-            f0printf(verbose_msg_dest, "Feature 0x%02x does not support verification\n", vrec->opcode);
+            f0printf(verbose_msg_dest, ""
+                  "Feature 0x%02x does not support verification\n", vrec->opcode);
          else
-            f0printf(verbose_msg_dest, "Feature 0x%02x, value 0x%02x does not support verification\n",
-                                       vrec->opcode,
-                                       vrec->val.c_nc.sl);
+            f0printf(verbose_msg_dest,
+                  "Feature 0x%02x, value 0x%02x does not support verification\n",
+                  vrec->opcode,
+                  vrec->val.c_nc.sl);
       }
    }
 
@@ -501,18 +506,18 @@ mock_get_nontable_vcp_value(
    #endif
 
       if (feature_code == 0x00) {
-         // pseudo_errinfo = errinfo_new(DDCRC_NULL_RESPONSE, __func__, "Pseudo Null Response for feature 0x00");
+         // pseudo_errinfo = ERRINFO_NEW(DDCRC_NULL_RESPONSE, "Pseudo Null Response for feature 0x00");
          Parsed_Nontable_Vcp_Response * resp = create_all_zero_response(feature_code);
          *resp_loc = resp;
       }
 
       if (feature_code == 0x10) {
-         pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x10");
+         pseudo_errinfo = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "Pseudo Null Response for feature 0x10");
       }
 
       if (feature_code == 0x41) {
          // *resp_loc = create_all_zero_response(feature_code);
-         pseudo_errinfo = errinfo_new(DDCRC_INTERNAL_ERROR, __func__, "Pseudo Null Response for feature 0x41");
+         pseudo_errinfo = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "Pseudo Null Response for feature 0x41");
       }
 
       if (debug) {
@@ -551,7 +556,8 @@ ddc_get_nontable_vcp_value(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%s, Reading feature 0x%02x", dh_repr(dh), feature_code);
-   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+   //                 "communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
 
    Error_Info * excp = NULL;
    Parsed_Nontable_Vcp_Response * parsed_response = NULL;
@@ -576,7 +582,9 @@ ddc_get_nontable_vcp_value(
 
    int max_read_bytes = MAX_DDC_PACKET_SIZE;
 
-   // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "before ddc_write_read_with_retry(): communication flags: %s", interpret_dref_flags_t(dh->dref->flags));
+   // DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+   //                 "before ddc_write_read_with_retry(): communication flags: %s",
+   //                 interpret_dref_flags_t(dh->dref->flags));
    excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -597,7 +605,8 @@ ddc_get_nontable_vcp_value(
    if (!excp) {
       assert(response_packet_ptr);
       // dump_packet(response_packet_ptr);
-      Public_Status_Code psc = get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
+      Public_Status_Code psc =
+            get_interpreted_vcp_code(response_packet_ptr, true /* make_copy */, &parsed_response);   // ???
       if (psc == 0) {
 #ifdef NO_LONGER_NEEDED
          if (parsed_response->vcp_code != feature_code) {
@@ -686,7 +695,7 @@ ddc_get_table_vcp_value(
             dh,
             DDC_PACKET_TYPE_TABLE_READ_REQUEST,
             feature_code,
-            Write_Read_Flag_All_Zero_Response_Ok | Write_Read_Flag_Table_Read,                     // all_zero_response_ok
+            Write_Read_Flag_All_Zero_Response_Ok | Write_Read_Flag_Table_Read,
             &paccumulator);
    if (debug || ddc_excp) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
