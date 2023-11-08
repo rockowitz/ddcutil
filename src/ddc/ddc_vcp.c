@@ -96,7 +96,7 @@ ddc_save_current_settings(
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
       // command line parser should block this case
       PROGRAM_LOGIC_ERROR("MCCS over USB does not have Save Current Settings command");
-      ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__,
+      ddc_excp = ERRINFO_NEW(DDCRC_UNIMPLEMENTED,
                               "MCCS over USB does not have Save Current Settings command" );
    }
    else {
@@ -198,7 +198,7 @@ set_table_vcp_value(
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
       psc = DDCRC_INTERNAL_ERROR;
 #endif
-      ddc_excp = errinfo_new(psc, __func__, "Error setting feature value");
+      ddc_excp = ERRINFO_NEW(psc, "Error setting feature value");
    }
    else {
       // TODO: clean up function signatures
@@ -250,7 +250,7 @@ ddc_get_verify_setvcp() {
 }
 
 
-static bool
+STATIC bool
 is_rereadable_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code opcode)
@@ -290,7 +290,7 @@ is_rereadable_feature(
 }
 
 
-static bool
+STATIC bool
 is_unreadable_sl_value(
       DDCA_Vcp_Feature_Code opcode,
       Byte                  sl_value)
@@ -313,7 +313,7 @@ is_unreadable_sl_value(
 }
 
 
-static bool
+STATIC bool
 single_vcp_value_equal(
       DDCA_Any_Vcp_Value * vrec1,
       DDCA_Any_Vcp_Value * vrec2)
@@ -453,7 +453,6 @@ static Parsed_Nontable_Vcp_Response * create_all_zero_response(Byte feature_code
    resp->ml = 0;
    resp->sh = 0;
    resp->sl = 0;
-
    return resp;
 }
 
@@ -501,7 +500,7 @@ mock_get_nontable_vcp_value(
 
    #ifdef TEST_EIO
       if (feature_code == 0x45) {
-         pseudo_errinfo = errinfo_new(-EIO, __func__, "Pseudo EIO error");
+         pseudo_errinfo = ERRINFO_NEW(-EIO, "Pseudo EIO error");
       }
    #endif
 
@@ -595,7 +594,7 @@ ddc_get_nontable_vcp_value(
            &response_packet_ptr
         );
    ASSERT_IFF(excp, !response_packet_ptr);
-   if (debug || IS_TRACING() ) {
+   if ( IS_DBGTRC(debug, TRACE_GROUP)) {
       if (excp)
          DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                 "ddc_write_read_with_retry() returned %s, response_packet_ptr=%p",
@@ -618,10 +617,10 @@ ddc_get_nontable_vcp_value(
 #endif
 
          if (!parsed_response->valid_response)  {
-            excp = errinfo_new(DDCRC_DDC_DATA, __func__, "Invalid getvcp response");  // was DDCRC_INVALID_DATA
+            excp = ERRINFO_NEW(DDCRC_DDC_DATA, "Invalid getvcp response");  // was DDCRC_INVALID_DATA
          }
          else if (!parsed_response->supported_opcode) {
-            excp = errinfo_new(DDCRC_REPORTED_UNSUPPORTED, __func__, "Unsupported feature");
+            excp = ERRINFO_NEW(DDCRC_REPORTED_UNSUPPORTED, "Unsupported feature");
             if (!value_bytes_zero(parsed_response)) {
                // for exploring
                DBGMSG("supported_opcode == false, but not all value bytes 0");
@@ -633,7 +632,7 @@ ddc_get_nontable_vcp_value(
             // just a message for now
             DBGMSG("all value bytes 0, supported_opcode == true,"
                    " setting DDCRC_DETERMINED_UNSUPPORTED)");
-            excp = errinfo_new(DDCRC_DETERMINED_UNSUPPORTED, __func__, "MH=ML=SH=SL=0");
+            excp = ERRINFO_NEW(DDCRC_DETERMINED_UNSUPPORTED, "MH=ML=SH=SL=0");
          }
 
          if (excp) {
@@ -642,7 +641,7 @@ ddc_get_nontable_vcp_value(
          }
       }
       else {
-         excp = errinfo_new(psc, __func__, NULL);
+         excp = ERRINFO_NEW(psc, NULL);
       }
    }
 
@@ -776,11 +775,11 @@ ddc_get_vcp_value(
                    free(parsed_nontable_response);
                 }
                 else
-                   ddc_excp = errinfo_new(psc, __func__, NULL);
+                   ddc_excp = ERRINFO_NEW(psc, NULL);
                 break;
 
           case (DDCA_TABLE_VCP_VALUE):
-                ddc_excp = errinfo_new(DDCRC_UNIMPLEMENTED, __func__,
+                ddc_excp = ERRINFO_NEW(DDCRC_UNIMPLEMENTED,
                                         "Table features not supported for USB connection");
                 break;
           }
