@@ -24,9 +24,9 @@
 #define DDCRC_DDC_DATA               (-(RCRANGE_DDC_START+1 ) )  ///< DDC data error
 #define DDCRC_NULL_RESPONSE          (-(RCRANGE_DDC_START+2 ) )  //!< DDC Null Response received
 #define DDCRC_MULTI_PART_READ_FRAGMENT (-(RCRANGE_DDC_START+3) ) ///< Error in multi-part read fragment
-#define DDCRC_ALL_TRIES_ZERO         (-(RCRANGE_DDC_START+4 ) )  ///< packet data entirely 0
+#define DDCRC_ALL_TRIES_ZERO         (-(RCRANGE_DDC_START+4 ) )  ///< packet data entirely 0 for all tries
 #define DDCRC_REPORTED_UNSUPPORTED   (-(RCRANGE_DDC_START+5 ) )  ///< DDC reply says unsupported
-#define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+6 ) )  ///<
+#define DDCRC_READ_ALL_ZERO          (-(RCRANGE_DDC_START+6 ) )  ///< all bytes in response packet 0
 #define DDCRC_RETRIES                (-(RCRANGE_DDC_START+7 ) )  ///< too many retries
 #define DDCRC_EDID                   (-(RCRANGE_DDC_START+8 ) )  ///< still in use, use DDCRC_READ_EDID or DDCRC_INVALID_EDID
 #define DDCRC_READ_EDID              (-(RCRANGE_DDC_START+9 ) )  ///< error reading EDID

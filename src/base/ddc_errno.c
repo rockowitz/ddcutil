@@ -31,11 +31,11 @@
 // small subset of DDCRC_PACKET_SIZE, DDCRC_RESPONSE_ENVELOPE, DDCRC_CHECKSUM
 
 static Status_Code_Info ddcrc_info[] = {
-      EDENTRY(DDCRC_OK                       , "success"                         ),
-      EDENTRY(DDCRC_DDC_DATA                 , "DDC data error"                  ),
-      EDENTRY(DDCRC_NULL_RESPONSE            , "received DDC null response"      ),
-      EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"               ),
-      EDENTRY(DDCRC_ALL_TRIES_ZERO           , "every try response 0x00"          ),    // applies to multi-try exchange
+      EDENTRY(DDCRC_OK                       , "success"                          ),
+      EDENTRY(DDCRC_DDC_DATA                 , "DDC data error"                   ),
+      EDENTRY(DDCRC_NULL_RESPONSE            , "received DDC null response"       ),
+      EDENTRY(DDCRC_MULTI_PART_READ_FRAGMENT , "error in fragment"                ),
+      EDENTRY(DDCRC_ALL_TRIES_ZERO           , "every try all response bytes 0x00" ),
       EDENTRY(DDCRC_REPORTED_UNSUPPORTED     , "DDC reports facility unsupported" ),
       EDENTRY(DDCRC_READ_ALL_ZERO            , "packet contents entirely 0x00"    ),
       EDENTRY(DDCRC_RETRIES                  , "maximum retries exceeded"         ),
