@@ -275,7 +275,8 @@ validate_environment()
 }
 
 
-int verify_i2c_access() {   // non-static to enable tracing
+STATIC int
+verify_i2c_access() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
@@ -344,7 +345,7 @@ int verify_i2c_access() {   // non-static to enable tracing
  *   \param  parsed_cmd  parsed command line
  *   \return ok if successful, false if error
  */
-static bool
+STATIC bool
 master_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting ...");
@@ -373,7 +374,7 @@ bye:
 }
 
 
-static void
+STATIC void
 ensure_vcp_version_set(Display_Handle * dh)
 {
    bool debug = false;
