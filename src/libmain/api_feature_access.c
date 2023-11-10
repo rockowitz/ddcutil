@@ -305,8 +305,8 @@ ddca_get_any_vcp_value_using_implicit_type(
    if (ddcrc == 0) {
       ddcrc = ddca_get_any_vcp_value_using_explicit_type(
                  ddca_dh,
-                 call_type,
                  feature_code,
+                 call_type,
                  valrec_loc);
    }
    assert( (ddcrc==0 && *valrec_loc) || (ddcrc!=0 && !*valrec_loc) );
