@@ -241,15 +241,22 @@ void explore_monitor_state(Display_Handle* dh) {
 // Monitor Checks
 //
 
-/** Verify that a feature code that should never be valid is in fact
- *  reported as unsupported.
+/** Attempt to read a non-table feature code that should never be valid.
+ *  Check that it is in fact reported as unsupported.
  *
  *  @param  dh            Display Handle
  *  @param  feature code  VCP feature code
- *  @return Error_Info    if supported
+ *  @return Error_Info    if unsupported, NULL if supported
+ *
+ *  @remark
+ *  Possible return settings
+ *  Error_Info.status = DDCRC_DETERMINED_UNSUPPORTED, set DREF_DDC_USES_MH_ML_SHL_SL_ZERO_FOR_UNSUPPORTED
+ *  Error_Info.status = DDCRC_ALL_RESPONSES_NULL, set DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED
+ *  Error_Info.status = DDCRC_RETRIES
+ *
  */
 STATIC Error_Info *
-verify_unsupported_feature(
+read_unsupported_feature(
       Display_Handle * dh,
       DDCA_Vcp_Feature_Code feature_code)
 {
@@ -258,6 +265,9 @@ verify_unsupported_feature(
    I2C_Bus_Info * businfo = (I2C_Bus_Info *) dh->dref->detail;
    Per_Display_Data * pdd = dh->dref->pdd;
    Parsed_Nontable_Vcp_Response * parsed_response_loc = NULL;
+   // turns off possible abbreviated NULL msg handling in ddc_write_read_with_retry()
+   dh->testing_unsupported_feature_active = true;
+   bool dynamic_sleep_was_active = false;
 
    Error_Info * ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
 
@@ -265,11 +275,12 @@ verify_unsupported_feature(
             "busno=%d,  sleep-multiplier=%5.2f, ddc_get_nontable_vcp_value() for feature 0x%02x returned: %s",
             businfo->busno, pdd_get_adjusted_sleep_multiplier(pdd),
             feature_code, errinfo_summary(ddc_excp));
+retry:
    if (!ddc_excp) {
       if (value_bytes_zero_for_nontable_value(parsed_response_loc)) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Setting DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED");
          dh->dref->flags |= DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED;
-         ddc_excp = ERRINFO_NEW(DDCRC_DETERMINED_UNSUPPORTED, "");
+         ddc_excp = ERRINFO_NEW(DDCRC_DETERMINED_UNSUPPORTED, "Set DREF_DDC_USES_MH_ML_SH_SL for unsupported");
       }
       else {
          if (get_output_level() >= DDCA_OL_VERBOSE)
@@ -287,34 +298,42 @@ verify_unsupported_feature(
       if (all_causes_same_status(ddc_excp, DDCRC_NULL_RESPONSE)) {
          errinfo_free(ddc_excp);
          ddc_excp = ERRINFO_NEW(DDCRC_ALL_RESPONSES_NULL, "");
+         dh->dref->flags |= DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED;
       }
       else {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-               "busno=%d, sleep-multiplier=%d, Testing for unsupported feature 0x%02x returned %s",
-               businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
-               feature_code, errinfo_summary(ddc_excp));
-         SYSLOG2(DDCA_SYSLOG_ERROR,
-               "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
-               businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
-               feature_code, errinfo_summary(ddc_excp));
+         if (!dynamic_sleep_was_active) {
+            DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+                  "busno=%d, sleep-multiplier=%d, Testing for unsupported feature 0x%02x returned %s",
+                  businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
+            SYSLOG2(DDCA_SYSLOG_ERROR,
+                  "busno=%d, sleep-multiplier=%5.2f, Testing for unsupported feature 0x%02x returned %s",
+                  businfo->busno,  pdd_get_adjusted_sleep_multiplier(pdd),
+                  feature_code, errinfo_summary(ddc_excp));
+         }
          if (pdd_is_dynamic_sleep_active(pdd) ) {
+            dynamic_sleep_was_active = true;
             ERRINFO_FREE(ddc_excp);
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Turning off dynamic sleep and retrying");
             SYSLOG2(DDCA_SYSLOG_ERROR, "Turning off dynamic sleep and retrying");
-            pdd_set_dynamic_sleep_active(dh->dref->pdd, false);
+            pdd_set_dynamic_sleep_active(pdd, false);
             ddc_excp = ddc_get_nontable_vcp_value(dh, feature_code, &parsed_response_loc);
             DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                   "busno=%d, sleep-multiplier=%5.2f, Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
             SYSLOG2(DDCA_SYSLOG_ERROR,
-                  "busno=%d, sleep-multiplier=%5.2f, Retesting for unsupported feature 0x%02x returned %s",
+                  "busno=%d, sleep-multiplier =%5.2f, Retesting for unsupported feature 0x%02x returned %s",
                   businfo->busno,
                   pdd_get_adjusted_sleep_multiplier(pdd),
                   feature_code, errinfo_summary(ddc_excp));
+            goto retry;
          }
       }
    }
+   if (dynamic_sleep_was_active)
+      pdd_set_dynamic_sleep_active(pdd, true);
+   dh->testing_unsupported_feature_active = false;
    free(parsed_response_loc);
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
@@ -327,6 +346,11 @@ verify_unsupported_feature(
  *
  *  Sets relevant DREF_DDC_* flags in the associated Display Reference to
  *  indicate how unsupported features are reported.
+ *  Possible values:
+ *     DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED
+ *     DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED
+ *     DREF_DDC_USES_MH_ML_SHL_SL_ZERO_FOR_UNSUPPORTED
+ *     DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED
  */
 STATIC void
 check_how_unsupported_reported(Display_Handle * dh) {
@@ -337,14 +361,14 @@ check_how_unsupported_reported(Display_Handle * dh) {
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
    // Try features that should never exist
-   Error_Info * erec = verify_unsupported_feature(dh, 0x41);  // CRT only feature
+   Error_Info * erec = read_unsupported_feature(dh, 0x41);  // CRT only feature
    if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
       ERRINFO_FREE(erec);
-      erec = verify_unsupported_feature(dh, 0xdd);    // not defined in MCCS
+      erec = read_unsupported_feature(dh, 0xdd);    // not defined in MCCS
    }
    if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
       ERRINFO_FREE(erec);
-      erec = verify_unsupported_feature(dh, 0x00);
+      erec = read_unsupported_feature(dh, 0x00);
    }
 
    Public_Status_Code psc = ERRINFO_STATUS(erec);
@@ -365,7 +389,7 @@ check_how_unsupported_reported(Display_Handle * dh) {
       }
 
       else if (psc == DDCRC_DETERMINED_UNSUPPORTED) {
-         // already handled in test_unsupported_feature()
+         // already handled in read_unsupported_feature()
       }
 
       else if (psc == DDCRC_REPORTED_UNSUPPORTED) {   // the monitor is well-behaved
@@ -389,6 +413,11 @@ check_how_unsupported_reported(Display_Handle * dh) {
    }
    errinfo_free(erec);
    dh->dref->flags |= DREF_UNSUPPORTED_CHECKED;
+   assert(dh->dref->flags & (DREF_DDC_USES_DDC_FLAG_FOR_UNSUPPORTED         |
+                             DREF_DDC_USES_NULL_RESPONSE_FOR_UNSUPPORTED    |
+                             DREF_DDC_USES_MH_ML_SH_SL_ZERO_FOR_UNSUPPORTED |
+                             DREF_DDC_DOES_NOT_INDICATE_UNSUPPORTED ) );
+
    DBGTRC_DONE(debug, TRACE_GROUP, "dref->flags=%s", interpret_dref_flags_t(dref->flags));
 }
 
@@ -1695,7 +1724,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(has_duplicate_edids);
    RTTI_ADD_FUNC(filter_phantom_displays);
    RTTI_ADD_FUNC(is_phantom_display);
-   RTTI_ADD_FUNC(verify_unsupported_feature);
+   RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
