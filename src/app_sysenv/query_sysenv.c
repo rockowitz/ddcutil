@@ -858,7 +858,7 @@ void query_sysenv(bool quick_env) {
       rpt_label(0, "Disabling displays cache ...");
       ddc_enable_displays_cache(false);
 #endif
-      rpt_label(0, "Disabling dsa stats ...");
+      rpt_label(0, "Disabling dynamic sleep ...");
       dsa2_enable(false);
       rpt_nl();
 
