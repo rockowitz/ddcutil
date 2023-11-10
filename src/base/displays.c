@@ -785,7 +785,8 @@ void dbgrpt_display_handle(Display_Handle * dh, const char * msg, int depth) {
             rpt_vstring(d1, "hiddev_device_name:  %s", dh->dref->usb_hiddev_name);
             break;
          }
-         rpt_vstring(d1, "testing_unsupported_feature_active: %s", dh->testing_unsupported_feature_active);
+         rpt_vstring(d1, "testing_unsupported_feature_active: %s",
+                          sbool(dh->testing_unsupported_feature_active));
       }
       // rpt_vstring(d1, "vcp_version:         %d.%d", dh->vcp_version.major, dh->vcp_version.minor);
    }
