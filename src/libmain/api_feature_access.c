@@ -162,7 +162,7 @@ ddca_get_table_vcp_value(
             *table_value_loc = tv;
             buffer_free(p_table_bytes, __func__);
          }
-         TRACED_ASSERT( (psc==0 && *table_value_loc) || (psc!=0 && !*table_value_loc));
+         TRACED_ASSERT_IFF(psc==0, *table_value_loc);
          DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc,
                 "ddca_dh=%p->%s, feature_code=0x%02x, *table_value_loc=%p",
                 ddca_dh, dh_repr(ddca_dh), feature_code, *table_value_loc);
@@ -251,7 +251,7 @@ ddca_get_any_vcp_value_using_explicit_type(
    }
 
    API_EPILOG_WO_RETURN(debug, rc, "*valrec_loc=%p", *valrec_loc);
-   assert( (rc==0 && *valrec_loc) || (rc!=0 && !*valrec_loc) );
+   ASSERT_IFF(rc == 0, *valrec_loc);
    return rc;
 }
 
@@ -309,7 +309,7 @@ ddca_get_any_vcp_value_using_implicit_type(
                  call_type,
                  valrec_loc);
    }
-   assert( (ddcrc==0 && *valrec_loc) || (ddcrc!=0 && !*valrec_loc) );
+   ASSERT_IFF(ddcrc==0, *valrec_loc);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
 }
