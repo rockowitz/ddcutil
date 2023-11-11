@@ -308,8 +308,6 @@ dbgrpt_circular_invocation_results_buffer(Circular_Invocation_Result_Buffer * ci
 // Results Tables
 //
 
-#define MAX_RECENT_VALUES 20
-
 static int steps[] = {0,5,10,20,30,50,70,100,130, 160, 200};    // multiplier * 100
 static int absolute_step_ct = ARRAY_SIZE(steps);   //  11
 static int step_last = ARRAY_SIZE(steps)-1;
@@ -411,7 +409,7 @@ Results_Table * new_results_table(int busno) {
    rtable->initial_step = initial_step;
    rtable->cur_step = initial_step;
    rtable->cur_lookback = global_lookback;
-   rtable->recent_values = cirb_new(MAX_RECENT_VALUES);
+   rtable->recent_values = cirb_new(Max_Recent_Values);
    rtable->remaining_interval = Default_Interval;
    // rtable->min_ok_step = 0;
    // rtable->found_failure_step = false;
@@ -715,7 +713,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
 
    int next_step = rtable->cur_step;
    // n. called only if most recent try was a success
-   Successful_Invocation latest_values[MAX_RECENT_VALUES];
+   Successful_Invocation latest_values[Max_Recent_Values];
    int actual_lookback = cirb_get_latest(
                               rtable->recent_values,
                               -1,     // rtable->lookback,
