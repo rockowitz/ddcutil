@@ -330,8 +330,9 @@ bool check_video_adapters_list_implements_drm(GPtrArray * adapter_devices) {
    bool result = true;
    for (int ndx = 0; ndx < adapter_devices->len; ndx++) {
       char buf[PATH_MAX];
-      g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
-      g_strlcat(buf, "drm", PATH_MAX);
+      // (void) casts to avoid coverity warning re unused return value
+      (void) g_strlcpy(buf, g_ptr_array_index(adapter_devices, ndx), PATH_MAX);
+      (void) g_strlcat(buf, "drm", PATH_MAX);
       DBGF(debug, "Checking directory |%s|", buf);
       if (!directory_exists(buf))
          result = false;
