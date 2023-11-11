@@ -52,7 +52,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_SLEEP;
 #define   Default_DSA2_Enabled DEFAULT_ENABLE_DSA2
 #define   Default_Look_Back    5
 #define   Default_Initial_Step 7  // 1.0
-#define   Max_Recent_Values    20
+#define   Max_Recent_Values    100
 #define   Default_Interval     3
 #define   Default_Greatest_Tries_Upper_Bound 3
 #define   Default_Average_Tries_Upper_Bound 1.4
