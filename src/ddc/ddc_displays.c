@@ -361,10 +361,12 @@ check_how_unsupported_reported(Display_Handle * dh) {
    assert(dref->io_path.io_mode == DDCA_IO_I2C);
 
    // Try features that should never exist
-   Error_Info * erec = read_unsupported_feature(dh, 0x41);  // CRT only feature
-   if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
+   Error_Info * erec = read_unsupported_feature(dh, 0xdd);  // not defined in MCCS
+   if ((!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) &&
+       is_input_digital(dh->dref->pedid))
+   {
       ERRINFO_FREE(erec);
-      erec = read_unsupported_feature(dh, 0xdd);    // not defined in MCCS
+      erec = read_unsupported_feature(dh, 0x41);    // CRT only feature
    }
    if (!erec || ERRINFO_STATUS(erec) == DDCRC_RETRIES) {
       ERRINFO_FREE(erec);
