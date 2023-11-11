@@ -577,7 +577,6 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
       }
 
          else {   // DDCA_IO_I2C
-            TRACED_ASSERT(psc != DDCRC_DETERMINED_UNSUPPORTED); // only set at higher levels, unless USB
             if (psc == 0 ||
                 psc == DDCRC_REPORTED_UNSUPPORTED ||
                 psc == DDCRC_DETERMINED_UNSUPPORTED)
