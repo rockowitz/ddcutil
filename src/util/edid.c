@@ -509,6 +509,17 @@ void report_parsed_edid_base(
 }
 
 
+/** Reports whether this is an analog or digital display.
+ *
+ *  @param edid    pointer to parse edid struct
+ *  @retval false  analog display
+ *  @retval true   digital display
+ */
+bool is_input_digital(Parsed_Edid * edid) {
+   return edid->video_input_definition & 0x80;
+}
+
+
 /** Writes a summary of an EDID to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *

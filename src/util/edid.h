@@ -75,6 +75,7 @@ struct {
 Parsed_Edid * create_parsed_edid(const Byte* edidbytes);
 Parsed_Edid * create_parsed_edid2(const Byte* edidbytes, const char * source);
 void          report_parsed_edid_base(Parsed_Edid * edid, bool verbose_synopsis, bool show_raw, int depth);
+bool          is_input_digital(Parsed_Edid * edid);
 void          report_parsed_edid(Parsed_Edid * edid, bool verbose, int depth);
 Parsed_Edid * copy_parsed_edid(Parsed_Edid * original);
 void          free_parsed_edid(Parsed_Edid * parsed_edid);
