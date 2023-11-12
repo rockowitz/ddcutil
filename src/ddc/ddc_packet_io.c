@@ -580,7 +580,6 @@ ddc_write_read_with_retry(
         )
 {
    bool debug = false;
-
    bool all_zero_response_ok = flags & Write_Read_Flag_All_Zero_Response_Ok;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "dh=%s, max_read_bytes=%d, expected_response_type=0x%02x, expected_subtype=0x%02x,"
@@ -936,8 +935,6 @@ ddc_write_only_with_retry(
       try_errors[tryctr] = cur_excp;
       if (psc == -EBUSY)
          retryable = false;
-
-      // try_status_codes[tryctr] = psc;   // for future Ddc_Error mechanism
    }
 
    Error_Info * ddc_excp = NULL;
@@ -956,9 +953,7 @@ ddc_write_only_with_retry(
 
       if (retryable) {
          psc = DDCRC_RETRIES;
-
          ddc_excp = errinfo_new_with_causes(psc, try_errors, tryctr, __func__, NULL);
-
          if (psc != try_errors[tryctr-1]->status_code)
             COUNT_STATUS_CODE(psc);     // new status code, count it
       }
@@ -976,10 +971,9 @@ ddc_write_only_with_retry(
          BASE_ERRINFO_FREE_WITH_REPORT(try_errors[ndx], IS_DBGTRC(debug, TRACE_GROUP) );
       }
    }
-
    try_data_record_tries2(dh, WRITE_ONLY_TRIES_OP, psc, tryctr);
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", errinfo_summary(ddc_excp));
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
    return ddc_excp;
 }
 
