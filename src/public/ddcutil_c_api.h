@@ -864,7 +864,7 @@ ddca_report_parsed_capabilities(
       int                      depth);
 
 /** Returns the VCP feature codes defined in a
- *  parsed capabilities record as a #DDCA_Feature_LIst
+ *  parsed capabilities record as a #DDCA_Feature_List
  *
  *  @param[in] parsed_caps  parsed capabilities
  *  @return bitfield of feature ids
