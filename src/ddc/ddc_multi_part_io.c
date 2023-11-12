@@ -4,7 +4,7 @@
  * Capabilities.
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -84,7 +84,7 @@ try_multi_part_read(
       Byte expected_response_type = (request_type == DDC_PACKET_TYPE_CAPABILITIES_REQUEST)
                                        ? DDC_PACKET_TYPE_CAPABILITIES_RESPONSE
                                        : DDC_PACKET_TYPE_TABLE_READ_RESPONSE;
-      Byte expected_subtype = request_subtype;     // 0x00 for capabilities, VCP feature code for table read
+      Byte expected_subtype = request_subtype;  // 0x00 for capabilities, VCP feature code for table read
       excp = ddc_write_read_with_retry(
            dh,
            request_packet_ptr,
@@ -110,7 +110,8 @@ try_multi_part_read(
 
       if ( IS_TRACING_BY_FUNC_OR_FILE() || debug ) {
          DBGMSG("After try_write_read():");
-         dbgrpt_interpreted_multi_read_fragment(response_packet_ptr->parsed.multi_part_read_fragment, 0);
+         dbgrpt_interpreted_multi_read_fragment(
+               response_packet_ptr->parsed.multi_part_read_fragment, 0);
       }
 
       Interpreted_Multi_Part_Read_Fragment * aux_data_ptr =
@@ -124,7 +125,8 @@ try_multi_part_read(
          COUNT_STATUS_CODE(DDCRC_MULTI_PART_READ_FRAGMENT);
       }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "display_current_offset = %d matches cur_offset", display_current_offset);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "display_current_offset = %d matches cur_offset", display_current_offset);
 
          fragment_size = aux_data_ptr->fragment_length;         // ***
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "fragment_size = %d", fragment_size);
@@ -158,7 +160,7 @@ try_multi_part_read(
 *  @param  dh                    handle of open display
 *  @param  request_type
 *  @param  request_subtype       VCP function code for table read, ignore for capabilities
-*  @param  all_zero_response_ok  if true, zero response is not an error
+*  @param  write_read_flags
 *  @param  buffer_loc            address at which to return newly allocated #Buffer in which
 *                                result is returned
 *  @retval  NULL    success
@@ -171,7 +173,7 @@ Error_Info *
 multi_part_read_with_retry(
       Display_Handle * dh,
       Byte             request_type,
-      Byte             request_subtype,   // VCP feature code for table read, ignore for capabilities
+      Byte             request_subtype, // VCP feature code for table read, ignore for capabilities
       DDC_Write_Read_Flags write_read_flags,
       Buffer**         buffer_loc)
 {
