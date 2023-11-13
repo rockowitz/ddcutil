@@ -261,8 +261,6 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, source);
    }
 
-   if (parsed_cmd->flags & CMD_FLAG_I2_SET)
-      multi_part_null_adjustment_millis = parsed_cmd->i2;
    bool dsa2_enabled = parsed_cmd->flags & CMD_FLAG_DSA2;
    dsa2_enable(dsa2_enabled);
    if (dsa2_enabled) {
@@ -286,24 +284,34 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
       // dsa2_erase_persistent_stats();   // do i want to do this ?
    }
 
-   if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
-       dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
-
-   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-      dsa2_step_floor = parsed_cmd->i1;
-
-   if (parsed_cmd->flags & CMD_FLAG_F10)
-      null_msg_adjustment_enabled = true;
-
    if (display_caching_enabled)
       ddc_restore_displays_cache();
    // else
    //    ddc_erase_displays_cache();
 
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+}
+
+
+STATIC void
+init_experimental_options(Parsed_Cmd* parsed_cmd) {
+   suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
+   ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
+   // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F8;
+   EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
+   if (parsed_cmd->flags & CMD_FLAG_F7)
+      detect_phantom_displays = false;
+   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
+   if (parsed_cmd->flags & CMD_FLAG_F10)
+      null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags & CMD_FLAG_F11)
       monitor_state_tests = true;
-
-   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
+   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+      dsa2_step_floor = parsed_cmd->i1;
+   if (parsed_cmd->flags & CMD_FLAG_I2_SET)
+        multi_part_null_adjustment_millis = parsed_cmd->i2;
+   if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
+       dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
 }
 
 
@@ -328,8 +336,7 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGMSF(debug, "          Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
-   suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
-   EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
+
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
@@ -360,19 +367,10 @@ bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
       i2c_discard_caches(parsed_cmd->discarded_cache_types);
    }
 
-   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    init_performance_options(parsed_cmd);
    enable_capabilities_cache(parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES);
-
    skip_ddc_checks = parsed_cmd->flags & CMD_FLAG_SKIP_DDC_CHECKS;
-
-   // for testing
-   ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
-   // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F8;
-
-
-   if (parsed_cmd->flags & CMD_FLAG_F7)
-      detect_phantom_displays = false;
+   init_experimental_options(parsed_cmd);
    ok = true;
 
 bye:
