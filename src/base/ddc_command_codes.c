@@ -2,7 +2,7 @@
  *  DDC/CI command codes
  */
 
-// Copyright (C) 2014-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "ddc_command_codes.h"
@@ -44,29 +44,6 @@ Cmd_Code_Table_Entry cmd_code_table[] = {
 };
 static
 int ddc_cmd_code_count = sizeof(cmd_code_table)/sizeof(Cmd_Code_Table_Entry);
-
-
-#ifdef UNUSED
-static
-Cmd_Code_Table_Entry * get_ddc_cmd_struct_by_index(int ndx) {
-   // DBGMSG("ndx=%d, cmd_code_count=%d  ", ndx, cmd_code_count );
-   assert( 0 <= ndx && ndx < ddc_cmd_code_count);
-   return &cmd_code_table[ndx];
-}
-#endif
-
-// Commented out as part of removing printf statements from code that
-// is part of library.  This function is not currently used.  If needed,
-// this function can be passed a message collector of some sort, or
-// just implemented in the caller.
-//void list_cmd_codes() {
-//   printf("DDC command codes:\n");
-//   int ndx = 0;
-//   for (;ndx < ddc_cmd_code_count; ndx++) {
-//      Cmd_Code_Table_Entry entry = cmd_code_table[ndx];
-//      printf("  %02x - %-30s\n", entry.cmd_code, entry.name);
-//   }
-//}
 
 
 static
