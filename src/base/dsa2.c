@@ -348,6 +348,7 @@ typedef struct Results_Table {
    int  highest_step_complete_loop_failure;
    int  null_msg_max_step_for_success;
    int  reset_ct;
+   int  latest_avg_tryct_10;
    Byte edid_checksum_byte;
    Byte state;               // RTABLE_ flags
 
@@ -389,6 +390,7 @@ dbgrpt_results_table(Results_Table * rtable, int depth) {
    ONE_INT_FIELD(initial_lookback);
    ONE_INT_FIELD(highest_step_complete_loop_failure);
    ONE_INT_FIELD(null_msg_max_step_for_success);
+   ONE_INT_FIELD(latest_avg_tryct_10);
    rpt_vstring(d1, "edid_checksum_byte                    0x%02x", rtable->edid_checksum_byte);
    rpt_vstring(d1, "state                          %s",
                    VN_INTERPRET_FLAGS_T(rtable->state, rtable_status_flags_table, "|"));
@@ -716,13 +718,14 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    Successful_Invocation latest_values[Max_Recent_Values];
    int actual_lookback = cirb_get_latest(
                               rtable->recent_values,
-                              -1,     // rtable->lookback,
+                              10,     // rtable->lookback,
                               latest_values);
    assert(actual_lookback > 0);
    int max_tryct = 0;
    int min_tryct = 99;
    int total_tryct = 0;
 
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "actual_lookback=%d", actual_lookback);
    for (int ndx = 0; ndx < actual_lookback; ndx++) {
       total_tryct += latest_values[ndx].tryct;
       if (latest_values[ndx].tryct > max_tryct)
@@ -736,7 +739,7 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
 
 #ifdef OLD
    char  b[900]; b[0] = '\0';
-   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE) ) {
       for (int ndx = 0; ndx < actual_lookback; ndx++) {
          g_snprintf(b + strlen(b), 900-strlen(b), "%s{tryct:%d,reqd step:%d,%ld}",
              (ndx > 0) ? ", " : "",
@@ -744,10 +747,10 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
              latest_values[ndx].epoch_seconds);
       }
    }
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, actual_lookback = %d, latest_values:%s",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, actual_lookback = %d, latest_values:%s",
          rtable->busno, actual_lookback, b);
 #endif
-   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE) ) {
       GPtrArray * svals = g_ptr_array_new_with_free_func(g_free);
       for (int ndx = 0; ndx < actual_lookback; ndx++) {
          char * s = g_strdup_printf("{tryct:%d,reqd step:%d,%ld}",
@@ -755,12 +758,12 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
              latest_values[ndx].epoch_seconds);
          g_ptr_array_add(svals, s);
       }
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "busno=%d, actual_lookback = %d, latest_values:%s",
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, actual_lookback = %d, latest_values:%s",
             rtable->busno, actual_lookback,
             join_string_g_ptr_array_t(svals, ", ") );
       g_ptr_array_free(svals, true);
    }
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
          "max_tryct = %d, min_tryct = %d, total_tryct = %d, most_recent_step=%d",
          max_tryct, min_tryct, total_tryct, most_recent_step);
    // show_backtrace(0);
@@ -772,20 +775,23 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
    }
    assert(most_recent_step <= step_last);
 
+   rtable->latest_avg_tryct_10 = (total_tryct*10)/actual_lookback;
+   DBGTRC_NOPREFIX(debug,  DDCA_TRC_NONE, "latest_avg_tryct = %4.1f", rtable->latest_avg_tryct_10/10.0);
    if (dsa2_too_many_errors(most_recent_tryct, max_tryct, total_tryct, actual_lookback)
          && rtable->cur_step < most_recent_step
       // && rtable->cur_step < step_last  // redundant
       )
    {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "latest_avg_tryct = %4.1f", rtable->latest_avg_tryct_10/10.0);
       if (next_step < step_last) {
          next_step = rtable->cur_step++;
          rtable->total_steps_up++;
          rtable->adjustments_up++;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Incremented cur_step. New value: %d",
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Incremented cur_step. New value: %d",
                                             rtable->busno, rtable->cur_step);
       }
       else {
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Not inccrementing cur_step above step_last=%d", step_last);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not inccrementing cur_step above step_last=%d", step_last);
       }
    }
    else
@@ -798,10 +804,10 @@ dsa2_adjust_for_rcnt_successes(Results_Table * rtable) {
          next_step = rtable->cur_step - 1;
          rtable->total_steps_down++;
          rtable->adjustments_down++;
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, Decremented cur_step. New value: %d", rtable->busno, rtable->cur_step);
       }
       else {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Not decrementing cur_step below floor=%d", floor);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Not decrementing cur_step below floor=%d", floor);
       }
       rtable->cur_lookback = actual_lookback;
    }
@@ -1007,6 +1013,7 @@ void dsa2_report_internal(Results_Table * rtable, int depth) {
    rpt_vstring(d1, "Total steps down:   %3d", rtable->total_steps_down);
    rpt_vstring(d1, "Successes:          %3d", rtable->successful_try_ct);
    rpt_vstring(d1, "Retryable Failures: %3d", rtable->retryable_failure_ct);
+   rpt_vstring(d1, "Latest avg tryct:  %4.1f", rtable->latest_avg_tryct_10/10.0);
 }
 
 
