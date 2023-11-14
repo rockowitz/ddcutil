@@ -968,6 +968,24 @@ dsa2_record_final(
 }
 
 
+Sleep_Multiplier
+dsa2_step_to_multiplier(int step) {
+   bool debug = false;
+   Sleep_Multiplier result = 1.0f;
+   assert(step >= 0 && step <= step_last);
+   result = steps[step]/100.0;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP,
+                  "step=%d, Returning: %.2f",
+                  step, result);
+   return result;
+}
+
+
+Sleep_Multiplier dsa2_get_minimum_multiplier() {
+   return dsa2_step_to_multiplier(dsa2_step_floor);
+}
+
+
 /** Gets the current sleep multiplier value for a device
  *
  *  Converts the internal step number for the current retry loop
