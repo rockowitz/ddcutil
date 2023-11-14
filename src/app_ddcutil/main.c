@@ -139,7 +139,9 @@ report_performance_options(int depth)
       int d1 = depth+1;
       rpt_label(depth, "Performance and Retry Options:");
       rpt_vstring(d1, "Deferred sleep enabled:                 %s", sbool( is_deferred_sleep_enabled() ) );
-      rpt_vstring(d1, "Dynamic sleep algorithm 2 enabled:      %s", sbool(dsa2_is_enabled()));
+      rpt_vstring(d1, "Dynamic sleep algorithm enabled:        %s", sbool(dsa2_is_enabled()));
+      if (dsa2_is_enabled())
+      rpt_vstring(d1, "Minimum dynamic sleep multiplier:    %7.2f", dsa2_get_minimum_multiplier());
       rpt_vstring(d1, "Default sleep multiplier factor:     %7.2f", pdd_get_default_sleep_multiplier_factor() );
       rpt_nl();
 }
@@ -170,10 +172,11 @@ report_all_options(Parsed_Cmd * parsed_cmd, char * config_fn, char * default_opt
     if (config_fn)
        rpt_vstring(depth, "%.*s%-*s%s", 0, "", 28, "Configuration file options:", default_options);
 
-    report_build_options(depth);
+    // report_build_options(depth);
     show_reporting();  // uses fout()
     report_optional_features(parsed_cmd, depth);
     report_tracing(depth);
+    rpt_nl();
     report_performance_options(depth);
     report_experimental_options(parsed_cmd, depth);
 
