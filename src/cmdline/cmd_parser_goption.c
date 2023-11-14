@@ -441,6 +441,35 @@ static bool parse_int_work(char * sval, int * result_loc, GPtrArray * errmsgs) {
 
 
 static bool parse_sleep_multiplier(
+      const char*  sval,
+      float *      result_loc,
+      GPtrArray*   errmsgs)
+{
+   bool debug = false;
+
+   bool arg_ok = false;
+   if (sval) {
+      DBGMSF(debug, "sval = |%s|", sval);
+      float multiplier = 0.0f;
+      arg_ok = str_to_float(sval, &multiplier);
+      if (arg_ok) {
+         if (multiplier < 0.0f || multiplier >= 100.0)
+            arg_ok = false;
+      }
+
+      if (arg_ok) {
+         *result_loc = multiplier;
+      }
+      else {
+         EMIT_PARSER_ERROR(errmsgs, "Invalid sleep-multiplier: %s", sval );
+      }
+   }
+   return arg_ok;
+}
+
+
+#ifdef OLD
+static bool parse_sleep_multiplier0(
       const char*  sleep_multiplier_work,
       Parsed_Cmd*  parsed_cmd,
       GPtrArray*   errmsgs)
@@ -469,6 +498,7 @@ static bool parse_sleep_multiplier(
    }
    return arg_ok;
 }
+#endif
 
 
 static void unhide_options(GOptionEntry * options) {
@@ -912,6 +942,7 @@ parse_command(
    char *   failsim_fn_work = NULL;
    // gboolean enable_failsim_flag = false;
    char *   sleep_multiplier_work = NULL;
+   char *   min_dynamic_sleep_work = NULL;
    char *   i2c_source_addr_work = NULL;
    gboolean skip_ddc_checks_flag = false;
 
@@ -1026,6 +1057,8 @@ parse_command(
       {"dsa2",                    '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &enable_dsa2_flag, enable_dsa2_expl,  NULL},
       {"disable-dsa2",            '\0', G_OPTION_FLAG_HIDDEN | G_OPTION_FLAG_REVERSE,
                                             G_OPTION_ARG_NONE, &enable_dsa2_flag, disable_dsa2_expl, NULL},
+      {"min-dynamic-multiplier", '\0', G_OPTION_FLAG_HIDDEN,
+                                  G_OPTION_ARG_STRING,  &min_dynamic_sleep_work, "Lowest allowed dynamic sleep multiplier", "number"},
 
       {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
 
@@ -1572,10 +1605,22 @@ parse_command(
    }
 
    if (sleep_multiplier_work) {
-      parsing_ok &= parse_sleep_multiplier(sleep_multiplier_work, parsed_cmd, errmsgs);
-      free(sleep_multiplier_work);
-      sleep_multiplier_work = NULL;
+      float multiplier = 0.0f;
+      if (parse_sleep_multiplier(sleep_multiplier_work, &multiplier, errmsgs) ) {
+         parsed_cmd->sleep_multiplier = multiplier;
+         parsed_cmd->flags |= CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER;
+      }
+      else {
+         parsing_ok = false;
+      }
+      FREE(sleep_multiplier_work);
    }
+
+   if (min_dynamic_sleep_work) {
+      parsing_ok &= parse_sleep_multiplier(min_dynamic_sleep_work, &parsed_cmd->min_dynamic_multiplier, errmsgs);
+      FREE(min_dynamic_sleep_work);
+   }
+
 
    DBGMSF(debug, "edid_read_size_work = %d", edid_read_size_work);
    if (edid_read_size_work !=  -1 &&

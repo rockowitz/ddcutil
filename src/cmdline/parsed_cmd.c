@@ -119,6 +119,7 @@ Parsed_Cmd *  new_parsed_cmd() {
    parsed_cmd->output_level = DDCA_OL_NORMAL;
    parsed_cmd->edid_read_size = -1;   // if set, values are >= 0
    parsed_cmd->sleep_multiplier = 1.0;
+   parsed_cmd->min_dynamic_multiplier = -1.0;
    parsed_cmd->i1 = -1;               // if set, values are >= 0
 #ifdef OLD
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
@@ -294,6 +295,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    // rpt_bool("clear persistent cache:",
    //                               NULL, parsed_cmd->flags & CMD_FLAG_CLEAR_PERSISTENT_CACHE,   d1);
       rpt_vstring(d1, "sleep multiplier                                         : %.3f", parsed_cmd->sleep_multiplier);
+      rpt_vstring(d1, "min dynamic sleep multiplier                             : %.3f", parsed_cmd->min_dynamic_multiplier);
       rpt_bool("explicit sleep multiplier", NULL, parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER, d1);
 #ifdef OLD
       rpt_bool("timeout I2C IO:",   NULL, parsed_cmd->flags & CMD_FLAG_TIMEOUT_I2C_IO,          d1);
