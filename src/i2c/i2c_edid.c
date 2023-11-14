@@ -361,6 +361,7 @@ retry:
    while (tryctr < max_tries && rc != 0) {
       int edid_read_size = EDID_Read_Size;
       if (EDID_Read_Size == 0)
+
          edid_read_size = (tryctr < 2) ? 128 : 256;
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
                     "Trying EDID read. tryctr=%d, max_tries=%d,"
@@ -370,12 +371,16 @@ retry:
 
       char * called_func_name = NULL;
       if (EDID_Read_Uses_I2C_Layer) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "Calling i2c_get_edid_bytes_using_i2c_layer, cur_strategy_id = %s...",
+                i2c_io_strategy_id_name(cur_strategy_id));
          rc = i2c_get_edid_bytes_using_i2c_layer(fd, rawedid, edid_read_size, read_bytewise);
          called_func_name = "i2c_get_edid_bytes_using_i2c_layer";
       }
       else {   // use local functions
          if (cur_strategy_id == I2C_IO_STRATEGY_IOCTL) {
-            DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Calling i2c_get_edid_bytes_directly_using_ioctl()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_ioctl";
             rc = i2c_get_edid_bytes_directly_using_ioctl(
                fd,
@@ -390,7 +395,8 @@ retry:
             }
          }
          else {
-            DBGMSF(debug, "Calling i2c_get_edid_bytes_directly_using_fileio()...");
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                  "Calling i2c_get_edid_bytes_directly_using_fileio()...");
             called_func_name = "i2c_get_edid_bytes_directly_using_fileio";
             rc = i2c_get_edid_bytes_directly_using_fileio(fd, rawedid, edid_read_size, read_bytewise);
          }
