@@ -34,7 +34,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
-   REPORT_FLAG_OPTION(5, "EDID read does not use I2C layer");
+   REPORT_FLAG_OPTION(5, "EDID read uses I2C layer");
    REPORT_FLAG_OPTION(6, "Watch display connection events");
    REPORT_FLAG_OPTION(7, "Disable phantom display detection");
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
@@ -43,7 +43,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(11,"Explore monitor state tests");
    REPORT_FLAG_OPTION(12,"Skip X11 DPMS check");
 
-   rpt_vstring(depth+1, "Utility option --i1:          set dsa2_step_floor by step number");
+   rpt_vstring(depth+1, "Utility option --i1:          Unused");
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
@@ -51,7 +51,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    rpt_vstring(depth+1, "Utility option --s3:          Unused");
    rpt_vstring(depth+1, "Utility option --s4:          Unused");
 
-   rpt_vstring(depth+1, "Utility option --fl1:         set dsa2_step_floor, in milliseconds");
+   rpt_vstring(depth+1, "Utility option --fl1:         Unused");
    rpt_vstring(depth+1, "Utility option --fl2:         Unused");
 
    rpt_nl();
