@@ -1,5 +1,5 @@
-/** #file common_init.h
-  *  Initialization that must be performed very early by both ddcutil and libddcutil
+/** @file common_init.h
+  * Initialization that must be performed very early by both ddcutil and libddcutil
   */
 
 // Copyright (C) 2021-2023 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -10,6 +10,7 @@
 
 #include <glib-2.0/glib.h>
 
+#include "util/error_info.h"
 #include "cmdline/parsed_cmd.h"
 
 void i2c_discard_caches(Cache_Types caches);
