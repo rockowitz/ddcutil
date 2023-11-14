@@ -50,6 +50,7 @@
 
 #include "ddc_common_init.h"
 
+
 /** Assembles a #Error_Info struct and appends it to an array.
  *
  *  @param errinfo_accumulator  array of #Error_Info
@@ -58,7 +59,8 @@
  *  @param format               msg template
  *  @param ...                  substitution arguments
  */
-void emit_init_tracing_error(
+STATIC void
+emit_init_tracing_error(
       GPtrArray*   errinfo_accumulator,
       const char * func,
       DDCA_Status  errcode,
@@ -71,12 +73,12 @@ void emit_init_tracing_error(
    vsnprintf(buffer, 200, format, args);
    va_end(args);
    va_end(args);
-
    g_ptr_array_add(errinfo_accumulator, errinfo_new(errcode, func, buffer));
 }
 
 
-void i2c_discard_caches(Cache_Types caches) {
+STATIC void
+i2c_discard_caches(Cache_Types caches) {
    bool debug = false;
    if (caches & CAPABILITIES_CACHE) {
       DBGMSF(debug, "Erasing capabilities cache");
@@ -93,23 +95,24 @@ void i2c_discard_caches(Cache_Types caches) {
 }
 
 
-Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
+Error_Info *
+init_tracing(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    Error_Info * result = NULL;
    GPtrArray* errinfo_accumulator = g_ptr_array_new_with_free_func(g_free);
    if (debug)
       printf("(%s) Starting.\n",__func__);
-   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)      // timestamps on debug and trace messages?
-       dbgtrc_show_time = true;                           // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)       // wall timestamps on debug and trace messages?
-       dbgtrc_show_wall_time = true;                      // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)      // thread id on debug and trace messages?
-       dbgtrc_show_thread_id = true;                      // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE)     // process id on debug and trace messages?
-       dbgtrc_show_process_id = true;                     // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_TIMESTAMP_TRACE)    // timestamps on debug and trace messages?
+       dbgtrc_show_time = true;                         // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_WALLTIME_TRACE)     // wall timestamps on debug and trace messages?
+       dbgtrc_show_wall_time = true;                    // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_THREAD_ID_TRACE)    // thread id on debug and trace messages?
+       dbgtrc_show_thread_id = true;                    // extern in core.h
+   if (parsed_cmd->flags & CMD_FLAG_PROCESS_ID_TRACE)   // process id on debug and trace messages?
+       dbgtrc_show_process_id = true;                   // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
-       dbgtrc_trace_to_syslog_only = true;                // extern in core.h
+       dbgtrc_trace_to_syslog_only = true;              // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_F6)
       watch_watching = true;
 
@@ -176,13 +179,15 @@ Error_Info * init_tracing(Parsed_Cmd * parsed_cmd)
 
    // dbgrpt_traced_function_table(2);
    if (errinfo_accumulator->len > 0)
-      result = errinfo_new_with_causes_gptr(-EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
+      result = errinfo_new_with_causes_gptr(
+            -EINVAL, errinfo_accumulator, __func__, "Invalid trace option(s):");
    g_ptr_array_free(errinfo_accumulator, false);
    return result;
 }
 
 
-static bool init_failsim(Parsed_Cmd * parsed_cmd) {
+STATIC bool
+init_failsim(Parsed_Cmd * parsed_cmd) {
    bool debug = true;
 
 #ifdef ENABLE_FAILSIM
@@ -211,11 +216,13 @@ static bool init_failsim(Parsed_Cmd * parsed_cmd) {
 }
 
 
-static void init_max_tries(Parsed_Cmd * parsed_cmd)
+STATIC void
+init_max_tries(Parsed_Cmd * parsed_cmd)
 {
    // n. MAX_MAX_TRIES checked during command line parsing
    if (parsed_cmd->max_tries[0] > 0) {
-      try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);  // resets highest, lowest
+      // resets highest, lowest:
+      try_data_init_retry_type(WRITE_ONLY_TRIES_OP, parsed_cmd->max_tries[0]);
 
       // redundant
       drd_set_default_max_tries(0, parsed_cmd->max_tries[0]);
@@ -242,7 +249,8 @@ static void init_max_tries(Parsed_Cmd * parsed_cmd)
 }
 
 
-static void init_performance_options(Parsed_Cmd * parsed_cmd)
+STATIC void
+init_performance_options(Parsed_Cmd * parsed_cmd)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE,
@@ -257,7 +265,8 @@ static void init_performance_options(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->sleep_multiplier >= 0) {
-      User_Multiplier_Source  source = (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) ? Explicit : Default;
+      User_Multiplier_Source  source =
+            (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) ? Explicit : Default;
       pdd_set_default_sleep_multiplier_factor(parsed_cmd->sleep_multiplier, source);
    }
 
@@ -301,7 +310,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
    if (parsed_cmd->flags & CMD_FLAG_F7)
       detect_phantom_displays = false;
-   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9);   // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
+   ddc_enable_displays_cache(parsed_cmd->flags & CMD_FLAG_F9); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags & CMD_FLAG_F10)
       null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags & CMD_FLAG_F11)
@@ -321,7 +330,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
  *  @param  parsed_cmd   parsed command
  *  @return ok if initialization succeeded, false if not
  */
-bool submaster_initializer(Parsed_Cmd * parsed_cmd) {
+bool
+submaster_initializer(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    bool ok = false;
    DBGMSF(debug, "Starting  parsed_cmd = %p", parsed_cmd);
