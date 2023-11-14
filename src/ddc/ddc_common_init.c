@@ -77,7 +77,7 @@ emit_init_tracing_error(
 }
 
 
-STATIC void
+void
 i2c_discard_caches(Cache_Types caches) {
    bool debug = false;
    if (caches & CAPABILITIES_CACHE) {
@@ -288,6 +288,12 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
             errinfo_free(stats_errs);
          }
       }
+      if (parsed_cmd->min_dynamic_multiplier >= 0.0f) {
+          dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->min_dynamic_multiplier);
+          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+                "min_dynamic_multiplier = %3.1f, setting dsa2_step_floor = %d",
+                parsed_cmd->min_dynamic_multiplier, dsa2_step_floor);
+      }
    }
    else {
       // dsa2_erase_persistent_stats();   // do i want to do this ?
@@ -315,12 +321,12 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags & CMD_FLAG_F11)
       monitor_state_tests = true;
-   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-      dsa2_step_floor = parsed_cmd->i1;
+   // if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+   //    dsa2_step_floor = parsed_cmd->i1;
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
-   if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
-       dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
+   // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
+   //     dsa2_step_floor = dsa2_multiplier_to_step(parsed_cmd->fl1);
 }
 
 
