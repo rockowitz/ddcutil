@@ -1751,6 +1751,7 @@ parse_command(
             }
          }
 
+#ifdef OUT
          if (parsing_ok && !(parsed_cmd->cmd_id == CMDID_GETVCP || parsed_cmd->cmd_id == CMDID_SETVCP)) {
             if (skip_ddc_checks_flag) {
                EMIT_PARSER_ERROR(errmsgs, "Option --skip-ddc-checks valid only for getvcp or setvcp");
@@ -1761,6 +1762,7 @@ parse_command(
             EMIT_PARSER_ERROR(errmsgs, "Option --skip-ddc-checks valid only with option --bus");
             parsing_ok = false;
          }
+#endif
       }  // recognized command
    }
 
