@@ -56,36 +56,44 @@ typedef enum {
    CMD_FLAG_ENABLE_FAILSIM           = 0x0020,
    CMD_FLAG_VERIFY                   = 0x0040,
    CMD_FLAG_SKIP_DDC_CHECKS          = 0x0080,
-#ifdef OLD
-   CMD_FLAG_NODETECT                 = 0x0080,  // UNUSED
-#endif
+
    CMD_FLAG_ASYNC                    = 0x0100,
    CMD_FLAG_REPORT_FREED_EXCP        = 0x0200,
    CMD_FLAG_NOTABLE                  = 0x0400,
    CMD_FLAG_THREAD_ID_TRACE          = 0x0800,
+   CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE
+                                     = 0x1000,
+   CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES
+                                     = 0x2000,
+   CMD_FLAG_DISCARD_CACHES           = 0x4000,
+   CMD_FLAG_PROCESS_ID_TRACE         = 0x8000,
+
    CMD_FLAG_RW_ONLY                = 0x010000,
    CMD_FLAG_RO_ONLY                = 0x020000,
    CMD_FLAG_WO_ONLY                = 0x040000,
+
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,
-#ifdef OLD
-   CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io
-   CMD_FLAG_REDUCE_SLEEPS          = 0x800000,  // --sleep-less, etc
-#endif
+   CMD_FLAG_F13                    = 0x400000,
+   CMD_FLAG_F14                    = 0x800000,
+
    CMD_FLAG_F1                   = 0x01000000,
    CMD_FLAG_F2                   = 0x02000000,
    CMD_FLAG_F3                   = 0x04000000,
    CMD_FLAG_F4                   = 0x08000000,
    CMD_FLAG_F5                   = 0x10000000,
    CMD_FLAG_F6                   = 0x20000000,
+
    CMD_FLAG_DEFER_SLEEPS         = 0x80000000,
    CMD_FLAG_X52_NO_FIFO        = 0x0100000000,
    CMD_FLAG_VERBOSE_STATS      = 0x0200000000,
    CMD_FLAG_SHOW_SETTINGS      = 0x0400000000,
    CMD_FLAG_ENABLE_CACHED_CAPABILITIES
                                = 0x0800000000,
-// CMD_FLAG_CLEAR_PERSISTENT_CACHE = 0x1000000000,
+// CMD_FLAG_CLEAR_PERSISTENT_CACHE
+//                             = 0x1000000000,
    CMD_FLAG_WALLTIME_TRACE     = 0x2000000000,
+
    CMD_FLAG_I2C_IO_FILEIO    = 0x010000000000,
    CMD_FLAG_I2C_IO_IOCTL     = 0x020000000000,
    CMD_FLAG_I1_SET           = 0x040000000000,
@@ -93,7 +101,9 @@ typedef enum {
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
                              = 0x100000000000,
    CMD_FLAG_DSA2             = 0x200000000000,
+
    CMD_FLAG_QUICK            = 0x800000000000,
+
    CMD_FLAG_F7             = 0x01000000000000,
    CMD_FLAG_F8             = 0x02000000000000,
    CMD_FLAG_MOCK           = 0x04000000000000,
@@ -116,12 +126,12 @@ typedef enum {
    CMD_FLAG_F12         =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS
                         =  0x8000000000000000,
-   CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE
-                                     = 0x1000,
-   CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES
-                                     = 0x2000,
-   CMD_FLAG_DISCARD_CACHES           = 0x4000,
-   CMD_FLAG_PROCESS_ID_TRACE         = 0x8000,
+
+#ifdef OLD
+   CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io
+   CMD_FLAG_REDUCE_SLEEPS          = 0x800000,  // --sleep-less, etc
+   CMD_FLAG_NODETECT                 = 0x0080,  // UNUSED
+#endif
 
 } Parsed_Cmd_Flags;
 

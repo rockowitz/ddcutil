@@ -398,6 +398,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("f10", CMD_FLAG_F10, d1);
       RPT_CMDFLAG("f11", CMD_FLAG_F11, d1);
       RPT_CMDFLAG("f12", CMD_FLAG_F12, d1);
+      RPT_CMDFLAG("f13", CMD_FLAG_F13, d1);
+      RPT_CMDFLAG("f14", CMD_FLAG_F14, d1);
       rpt_str( "s1",                NULL, parsed_cmd->s1,                            d1);
       rpt_str( "s2",                NULL, parsed_cmd->s2,                            d1);
       rpt_str( "s3",                NULL, parsed_cmd->s3,                            d1);
