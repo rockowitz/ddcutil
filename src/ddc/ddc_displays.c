@@ -79,7 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 static GPtrArray * all_displays = NULL;         // all detected displays, array of Display_Ref *
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
-static int async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
+static int ddc_detect_async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
 #ifdef USE_USB
 static bool detect_usb_displays = true;
 #else
@@ -1140,7 +1140,7 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
 void
 ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
-   async_threshold = threshold;
+   ddc_detect_async_threshold = threshold;
 }
 
 
@@ -1281,9 +1281,9 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
-   DBGMSF(debug, "display_list->len=%d, async_threshold=%d",
-                 display_list->len, async_threshold);
-   if (display_list->len >= async_threshold)
+   DBGMSF(debug, "display_list->len=%d, ddc_detect_async_threshold=%d",
+                 display_list->len, ddc_detect_async_threshold);
+   if (display_list->len >= ddc_detect_async_threshold)
       ddc_async_scan(display_list);
    else
       ddc_non_async_scan(display_list);
