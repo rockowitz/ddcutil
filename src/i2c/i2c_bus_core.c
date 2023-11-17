@@ -721,19 +721,23 @@ int i2c_detect_buses() {
          DBGMSF(debug, "Checking busno = %d", busno);
          I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
          businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
-         i2c_check_bus(businfo);
-         if (debug || IS_TRACING() )
-            i2c_dbgrpt_bus_info(businfo, 0);
-         if (debug) {
-            GPtrArray * conflicts = collect_conflicting_drivers(busno, -1);
-            // report_conflicting_drivers(conflicts);
-            DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
-            free_conflicting_drivers(conflicts);
-         }
          DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
          g_ptr_array_add(i2c_buses, businfo);
       }
       bva_free(i2c_bus_bva);
+
+      for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
+         I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
+         i2c_check_bus(businfo);
+         if (debug || IS_TRACING() )
+            i2c_dbgrpt_bus_info(businfo, 0);
+         if (debug) {
+            GPtrArray * conflicts = collect_conflicting_drivers(businfo->busno, -1);
+            // report_conflicting_drivers(conflicts);
+            DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
+            free_conflicting_drivers(conflicts);
+         }
+      }
    }
    int result = i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
