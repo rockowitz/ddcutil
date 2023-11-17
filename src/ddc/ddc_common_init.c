@@ -327,8 +327,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
    if (parsed_cmd->flags & CMD_FLAG_F14)
       force_read_edid = true;
-   // if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-   //    dsa2_step_floor = parsed_cmd->i1;
+   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+      i2c_businfo_async_threshold = parsed_cmd->i1;
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)

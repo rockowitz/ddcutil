@@ -79,6 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_bus = false;
 bool all_video_drivers_implement_drm = false;
 bool force_read_edid = false;
+int  i2c_businfo_async_threshold = 4;
 
 static GMutex  open_failures_mutex;
 static Bit_Set_256 open_failures_reported;
@@ -697,6 +698,76 @@ Byte_Value_Array get_i2c_devices_by_existence_test() {
 }
 
 
+STATIC void *
+threaded_initial_checks_by_businfo(gpointer data) {
+   bool debug = false;
+
+   I2C_Bus_Info * businfo = data;
+   TRACED_ASSERT(memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0 );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno );
+
+   i2c_check_bus(businfo);
+   // g_thread_exit(NULL);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning NULL. bus=/dev/i2c-%d", businfo->busno );
+   return NULL;
+}
+
+
+/** Spawns threads to perform initial checks and waits for them all to complete.
+ *
+ *  @param all_displays #GPtrArray of pointers to #I2c_Bus_Info
+ */
+STATIC void
+i2c_async_scan(GPtrArray * i2c_buses) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "i2c_buses=%p, bus count=%d",
+                                       i2c_buses, i2c_buses->len);
+
+   GPtrArray * threads = g_ptr_array_new();
+   for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
+      TRACED_ASSERT( memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0 );
+
+      char buf[16];
+      g_snprintf(buf, 16, "/dev/i2c-%d", businfo->busno);
+      GThread * th =
+      g_thread_new(
+            buf,                // thread name
+            threaded_initial_checks_by_businfo,
+            businfo);                            // pass pointer to display ref as data
+      g_ptr_array_add(threads, th);
+   }
+   DBGMSF(debug, "Started %d threads", threads->len);
+   for (int ndx = 0; ndx < threads->len; ndx++) {
+      GThread * thread = g_ptr_array_index(threads, ndx);
+      g_thread_join(thread);  // implicitly unrefs the GThread
+   }
+   DBGMSF(debug, "Threads joined");
+   g_ptr_array_free(threads, true);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+#ifdef UNUSED
+/** Loops through a list of I2C_Bus_Info, performing initial checks on each.
+ *
+ *  @param i2c_buses #GPtrArray of pointers to #I2C_Bus_Info
+ */
+void
+i2c_non_async_scan(GPtrArray * i2c_buses) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "checking %d buses", i2c_buses->len);
+
+   for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
+      i2c_check_bus(businfo);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+#endif
+
+
 int i2c_detect_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
@@ -706,7 +777,6 @@ int i2c_detect_buses() {
    // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
    if (!i2c_buses) {
-
 #ifdef ENABLE_UDEV
       // do not include devices with ignorable name, etc.:
       Byte_Value_Array i2c_bus_bva =
@@ -726,9 +796,18 @@ int i2c_detect_buses() {
       }
       bva_free(i2c_bus_bva);
 
+      if (i2c_buses->len < i2c_businfo_async_threshold) {
+         for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
+            I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
+            i2c_check_bus(businfo);
+         }
+      }
+      else {
+         i2c_async_scan(i2c_buses);
+      }
+
       for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
          I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
-         i2c_check_bus(businfo);
          if (debug || IS_TRACING() )
             i2c_dbgrpt_bus_info(businfo, 0);
          if (debug) {

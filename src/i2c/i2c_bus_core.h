@@ -32,6 +32,7 @@
 extern bool i2c_force_bus;
 extern bool all_video_drivers_implement_drm;
 extern bool force_read_edid;
+extern int  i2c_businfo_async_threshold;
 
 // Basic I2C bus operations
 
