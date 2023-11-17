@@ -31,9 +31,7 @@
 
 extern bool i2c_force_bus;
 extern bool all_video_drivers_implement_drm;
-#ifdef TEST_EDID_SMBUS
 extern bool force_read_edid;
-#endif
 
 // Basic I2C bus operations
 
