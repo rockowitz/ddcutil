@@ -379,6 +379,11 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
          rpt_int_as_hex(
                   "i2 as hex",      NULL, parsed_cmd->i2,                            d1);
       }
+      if (parsed_cmd->flags & CMD_FLAG_I3_SET) {
+         rpt_int( "i3",             NULL, parsed_cmd->i3,                            d1);
+         rpt_int_as_hex(
+                  "i3 as hex",      NULL, parsed_cmd->i3,                            d1);
+      }
 
       rpt_bool("fl1 set",           NULL, parsed_cmd->flags & CMD_FLAG_FL1_SET,     d1);
       if (parsed_cmd->flags & CMD_FLAG_FL1_SET)

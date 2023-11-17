@@ -939,6 +939,7 @@ parse_command(
    gboolean f14_flag        = false;
    char *   i1_work         = NULL;
    char *   i2_work         = NULL;
+   char *   i3_work         = NULL;
    char *   fl1_work        = NULL;
    char *   fl2_work        = NULL;
    char *   failsim_fn_work = NULL;
@@ -1559,6 +1560,14 @@ parse_command(
       bool ok = parse_int_work(i2_work, &parsed_cmd->i2, errmsgs);
       if (ok)
          parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I2_SET;
+      parsing_ok &= ok;
+      FREE(i2_work);
+   }
+
+   if (i3_work) {
+      bool ok = parse_int_work(i3_work, &parsed_cmd->i3, errmsgs);
+      if (ok)
+         parsed_cmd->flags = parsed_cmd->flags | CMD_FLAG_I3_SET;
       parsing_ok &= ok;
       FREE(i2_work);
    }

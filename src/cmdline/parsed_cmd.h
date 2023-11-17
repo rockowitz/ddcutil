@@ -101,7 +101,7 @@ typedef enum {
    CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER
                              = 0x100000000000,
    CMD_FLAG_DSA2             = 0x200000000000,
-
+   CMD_FLAG_I3_SET           = 0x400000000000,
    CMD_FLAG_QUICK            = 0x800000000000,
 
    CMD_FLAG_F7             = 0x01000000000000,
@@ -215,6 +215,7 @@ struct {
    // Options for temporary use
    int                    i1;         // for temporary use
    int                    i2;         // for temporary use
+   int                    i3;         // for temporary use
    char *                 s1;         // for temporary use
    char *                 s2;         // for temporary use
    char *                 s3;         // for temporary use
