@@ -263,6 +263,9 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
       ddc_set_async_threshold(threshold);
    }
+   if (parsed_cmd->flags & CMD_FLAG_I3_SET) {
+      ddc_set_async_threshold(parsed_cmd->i3);
+   }
 
    if (parsed_cmd->sleep_multiplier >= 0) {
       User_Multiplier_Source  source =
