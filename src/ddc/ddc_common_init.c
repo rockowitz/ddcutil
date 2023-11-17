@@ -321,6 +321,12 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags & CMD_FLAG_F11)
       monitor_state_tests = true;
+#ifdef TEST_EDID_SMBUS
+   if (parsed_cmd->flags & CMD_FLAG_F13)
+      EDID_Read_Uses_Smbus = true;
+#endif
+   if (parsed_cmd->flags & CMD_FLAG_F14)
+      force_read_edid = true;
    // if (parsed_cmd->flags & CMD_FLAG_I1_SET)
    //    dsa2_step_floor = parsed_cmd->i1;
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
