@@ -203,8 +203,8 @@ app_show_feature_set_values_by_dh(
    Feature_Set_Flags flags = 0x00;
    if (parsed_cmd->flags & CMD_FLAG_SHOW_UNSUPPORTED)
       flags |= FSF_SHOW_UNSUPPORTED;
-   if (parsed_cmd->flags & CMD_FLAG_FORCE)
-      flags |= FSF_FORCE;
+   // if (parsed_cmd->flags & CMD_FLAG_FORCE)
+   //    flags |= FSF_FORCE;                     // unused for getvcp, 11/18/2023
    if (parsed_cmd->flags & CMD_FLAG_NOTABLE)
       flags |= FSF_NOTABLE;
    if (parsed_cmd->flags & CMD_FLAG_RW_ONLY)
