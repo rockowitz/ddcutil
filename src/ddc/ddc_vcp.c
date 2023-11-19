@@ -256,7 +256,7 @@ is_rereadable_feature(
       DDCA_Vcp_Feature_Code opcode)
 {
    bool debug = false;
-   DBGMSF(debug, "Starting opcode = 0x%02x", opcode);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "opcode = 0x%02x", opcode);
 
    // readable features that should not be read after write
    DDCA_Vcp_Feature_Code unrereadable_features[] = {
@@ -285,7 +285,7 @@ is_rereadable_feature(
       }
    }
 
-   DBGMSF(debug, "Returning: %s", sbool(result));
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -835,6 +835,7 @@ void init_ddc_vcp() {
    RTTI_ADD_FUNC(ddc_save_current_settings);
    RTTI_ADD_FUNC(ddc_set_nontable_vcp_value);
    RTTI_ADD_FUNC(ddc_set_vcp_value);
+   RTTI_ADD_FUNC(is_rereadable_feature);
    RTTI_ADD_FUNC(set_table_vcp_value);
 }
 
