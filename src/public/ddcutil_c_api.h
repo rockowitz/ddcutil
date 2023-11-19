@@ -235,7 +235,7 @@ ddca_is_verify_enabled(void);
  *
  *  @deprecated
  *  This function provides backwards compatibility with applications
- *  written for libddcutil release 1.x.  It's use in new applications
+ *  written for libddcutil release 1.x.  Its use in new applications
  *  is discouraged.
  *
  *  @param[in]  multiplier, must be >= 0 and <= 10
