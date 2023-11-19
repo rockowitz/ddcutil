@@ -719,7 +719,7 @@ threaded_initial_checks_by_businfo(gpointer data) {
  */
 STATIC void
 i2c_async_scan(GPtrArray * i2c_buses) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "i2c_buses=%p, bus count=%d",
                                        i2c_buses, i2c_buses->len);
 
