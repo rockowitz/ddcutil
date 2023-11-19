@@ -140,7 +140,9 @@ char * fsref_repr_t(Feature_Set_Ref * fsref) {
 
 static
 Value_Name_Title_Table feature_set_flag_table = {
+#ifdef UNUSED
       VNT(FSF_FORCE,            "force"),
+#endif
       VNT(FSF_SHOW_UNSUPPORTED, "report unsupported features"),
       VNT(FSF_NOTABLE,          "do not report table features"),
       VNT(FSF_RW_ONLY,          "include only RW features"),

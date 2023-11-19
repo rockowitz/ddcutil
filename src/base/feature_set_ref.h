@@ -78,8 +78,10 @@ typedef enum {
    FSF_RO_ONLY               = 0x08,
    FSF_WO_ONLY               = 0x10,
 
+#ifdef UNUSED
    // applies to single feature feature set
    FSF_FORCE                 = 0x20
+#endif
 } Feature_Set_Flags;
 #define FSF_READABLE_ONLY    (FSF_RW_ONLY | FSF_RO_ONLY)
 
