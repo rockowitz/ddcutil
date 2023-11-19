@@ -187,6 +187,12 @@ adjust_sleep_time(
    *null_adjustment_added_loc = false;
    Per_Display_Data * pdd = dh->dref->pdd;
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+   // hack to test conjecture that dynamic sleep can set post write sleep time time low
+   if (event_type == SE_POST_WRITE || event_type == SE_POST_SAVE_SETTINGS) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Forcing dsa_multiplier = 1.0 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS");
+      SYSLOG2(DDCA_SYSLOG_WARNING, "Forcing dsa_multiplier = 1.0 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS");
+      dsa_multiplier = 1.0;
+   }
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
    if (dh->dref->pdd->cur_loop_null_msg_ct > 0 && null_msg_adjustment_enabled) {
