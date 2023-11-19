@@ -102,20 +102,20 @@ app_set_vcp_value(
 
    dfm = dyn_get_feature_metadata_by_dh(feature_code,dh, (force || feature_code >= 0xe0) );
    if (!dfm) {
-      ddc_excp = errinfo_new(DDCRC_UNKNOWN_FEATURE, __func__,
+      ddc_excp = ERRINFO_NEW(DDCRC_UNKNOWN_FEATURE,
                               "Unrecognized VCP feature code: 0x%02x", feature_code);
       goto bye;
    }
 
    if (!(dfm->feature_flags & DDCA_WRITABLE)) {
-      ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__,
+      ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                  "Feature 0x%02x (%s) is not writable", feature_code, dfm->feature_name);
       goto bye;
    }
 
    if (dfm->feature_flags & DDCA_TABLE) {
       if (value_type != VALUE_TYPE_ABSOLUTE) {
-         ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__,
+         ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                                  "Relative VCP values valid only for Continuous VCP features");
          goto bye;
       }
@@ -123,7 +123,7 @@ app_set_vcp_value(
       Byte * value_bytes;
       int bytect = hhs_to_byte_array(new_value, &value_bytes);
       if (bytect < 0) {    // bad hex string
-         ddc_excp = errinfo_new(DDCRC_ARG, __func__, "Invalid hex value");
+         ddc_excp = ERRINFO_NEW(DDCRC_ARG, "Invalid hex value");
          goto bye;
       }
 
@@ -137,13 +137,13 @@ app_set_vcp_value(
       good_value = parse_vcp_value(new_value, &itemp);
       if (!good_value) {
          // what is better status code?
-         ddc_excp = errinfo_new(DDCRC_ARG, __func__,  "Invalid VCP value: %s", new_value);
+         ddc_excp = ERRINFO_NEW(DDCRC_ARG, "Invalid VCP value: %s", new_value);
          goto bye;
       }
 
       if (value_type != VALUE_TYPE_ABSOLUTE) {
          if ( !(dfm->feature_flags & DDCA_CONT) ) {
-            ddc_excp = errinfo_new(DDCRC_INVALID_OPERATION, __func__,
+            ddc_excp = ERRINFO_NEW(DDCRC_INVALID_OPERATION,
                            "Relative VCP values valid only for Continuous VCP features");
             goto bye;
          }
