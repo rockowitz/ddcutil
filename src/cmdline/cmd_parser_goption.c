@@ -1427,7 +1427,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_RW_ONLY,           rw_only_flag);
    SET_CMDFLAG(CMD_FLAG_RO_ONLY,           ro_only_flag);
    SET_CMDFLAG(CMD_FLAG_WO_ONLY,           wo_only_flag);
-   SET_CMDFLAG(CMD_FLAG_FORCE,             force_flag);
+   SET_CMDFLAG(CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE,             force_flag);
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_UDF,    enable_udf_flag);
 #ifdef USE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);

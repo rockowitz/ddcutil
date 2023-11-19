@@ -227,7 +227,7 @@ app_setvcp(Parsed_Cmd * parsed_cmd, Display_Handle * dh)
             cur->feature_code,
             cur->feature_value_type,
             cur->feature_value,
-            parsed_cmd->flags & CMD_FLAG_FORCE);
+            parsed_cmd->flags & CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE);
       if (ddc_excp) {
          f0printf(ferr(), "%s\n", ddc_excp->detail);
          if (ddc_excp->status_code == DDCRC_RETRIES)

@@ -49,7 +49,7 @@ typedef enum {
 
 typedef enum {
    CMD_FLAG_DDCDATA                  = 0x0001,
-   CMD_FLAG_FORCE                    = 0x0002,
+   CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE                    = 0x0002,
    CMD_FLAG_FORCE_SLAVE_ADDR         = 0x0004,
    CMD_FLAG_TIMESTAMP_TRACE          = 0x0008,  // prepend trace and debug msgs with elapsed time
    CMD_FLAG_SHOW_UNSUPPORTED         = 0x0010,

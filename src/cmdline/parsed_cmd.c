@@ -74,7 +74,7 @@ const char *  cmdid_name(Cmd_Id_Type id) {
 #ifdef FUTURE
 Value_Name_Table cmd_flag_table = {
       VNT(CMD_FLAG_DDCDATA,          "report DDC errors"),
-      VNT(CMD_FLAG_FORCE,            "ignore certain errors"),
+      VNT(CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE,            "ignore certain errors"),
       VNT(CMD_FLAG_FORCE_SLAVE_ADDR, "force slave address setting"),
       VNT(CMD_FLAG_TIMESTAMP_TRACE,  "include timestamp on trace messages"),
       VNT(CMD_FLAG_SHOW_UNSUPPORTED, "show unsupported VCP features"),
@@ -228,7 +228,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR, d1);
       rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
       rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,                    d1);
-      rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE,                    d1);
+      rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE,                    d1);
 
       rpt_bool("enable udf",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_UDF,               d1);
       rpt_bool("x52 not fifo:",     NULL, parsed_cmd->flags & CMD_FLAG_X52_NO_FIFO,             d1);
