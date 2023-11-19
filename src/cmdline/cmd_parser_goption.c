@@ -849,6 +849,7 @@ parse_command(
 // gboolean stats_flag       = false;
    gboolean ddc_flag         = false;
    gboolean force_flag       = false;
+   gboolean allow_unrecognized_feature_flag = false;
    gboolean force_slave_flag = false;
    gboolean show_unsupported_flag = false;
    gboolean version_flag     = false;
@@ -890,11 +891,11 @@ parse_command(
    const char * enable_cc_expl =  (enable_cc_flag) ? "Enable cached capabilities (default)" : "Enable cached capabilities";
    const char * disable_cc_expl = (enable_cc_flag) ? "Disable cached capabilities" : "Disable cached capabilities (default)";
 
-#ifdef REMOVED
+// #ifdef REMOVED
    gboolean enable_cd_flag = DEFAULT_ENABLE_CACHED_DISPLAYS;
    const char * enable_cd_expl =  (enable_cd_flag) ? "Enable cached displays (default)" : "Enable cached displays";
    const char * disable_cd_expl = (enable_cd_flag) ? "Disable cached displays" : "Disable cached displays (default)";
-#endif
+// #endif
 
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
@@ -1035,12 +1036,12 @@ parse_command(
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
 
-#ifdef REMOVED
+// #ifdef REMOVED
       {"enable-displays-cache",
                    '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
       {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
                             G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
-#endif
+// #endif
 
       {"sleep-multiplier", '\0', 0,
                             G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
@@ -1130,6 +1131,8 @@ parse_command(
 
       {"force",   'f',  G_OPTION_FLAG_HIDDEN,
                            G_OPTION_ARG_NONE,     &force_flag,       "Deprecated",           NULL},
+      {"permit-unknown-feature",
+                     '\0', 0, G_OPTION_ARG_NONE,  &allow_unrecognized_feature_flag, "setvcp of unrecognized feature ok", NULL},
       {"timeout-i2c-io",'\0', G_OPTION_FLAG_HIDDEN,
                                G_OPTION_ARG_NONE, &timeout_i2c_io_flag, "Deprecated",  NULL},
 //    {"no-timeout-ddc-io",'\0',G_OPTION_FLAG_REVERSE,
@@ -1385,9 +1388,17 @@ parse_command(
    }
 
    if (reduce_sleeps_specified)
-      fprintf(stderr, "Deprecated option ignored: --enable-sleep-less, --disable-sleep-less, etc.\n");
+      EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --enable-sleep-less, --disable-sleep-less, etc.");
    if (timeout_i2c_io_flag)
-      fprintf(stderr, "Deprecated option ignored: --timeout-i2c-io\n");
+      EMIT_PARSER_ERROR(errmsgs, "Deprecated option ignored: --timeout-i2c-io");
+   if (force_flag) {
+      EMIT_PARSER_ERROR(errmsgs,"Deprecated option --force:  Use --permit-unknown-feature");
+      allow_unrecognized_feature_flag = force_flag;
+   }
+   if (enable_cd_flag) {
+      EMIT_PARSER_ERROR(errmsgs, "Warning: Experimental display information caching enabled");
+   }
+
 
 #define SET_CMDFLAG(_bit, _flag) \
    do { \
@@ -1467,9 +1478,9 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
-#ifdef REMOVED
+// #ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);
-#endif
+// #endif
 
    if (discarded_caches_work) {
       parsed_cmd->discarded_cache_types = discarded_caches_work;
