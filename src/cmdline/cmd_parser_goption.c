@@ -1174,6 +1174,7 @@ parse_command(
       // Generic options to aid development
       {"i1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i1_work,         "Special integer 1", "decimal or hex number" },
       {"i2",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i2_work,         "Special integer 2", "decimal or hex number" },
+      {"i3",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &i3_work,         "Special integer 3", "decimal or hex number" },
       {"fl1",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl1_work,        "Special floating point number 1", "floating point number" },
       {"fl2",     '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_STRING,   &fl2_work,        "Special floating point number 2", "floating point number" },
       {"f1",      '\0', G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,     &f1_flag,         "Special flag 1",    NULL},
