@@ -189,9 +189,16 @@ adjust_sleep_time(
    double dsa_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
    // hack to test conjecture that dynamic sleep can set post write sleep time time low
    if (event_type == SE_POST_WRITE || event_type == SE_POST_SAVE_SETTINGS) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Forcing dsa_multiplier = 1.0 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS");
-      SYSLOG2(DDCA_SYSLOG_WARNING, "Forcing dsa_multiplier = 1.0 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS");
-      dsa_multiplier = 1.0;
+      if (dsa_multiplier < 1.0) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS", dsa_multiplier);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "Replacing adjusted sleep multiplier %3.2f with 1.00 for SE_POST_WRITE or SE_POST_SAVE_SETTINGS", dsa_multiplier);
+         dsa_multiplier = 1.0;
+      }
+      else {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS", dsa_multiplier);
+         SYSLOG2(DDCA_SYSLOG_WARNING, "Keeping adjusted sleep multiplier %3.2f for SE_POST_WRITE or SE_POST_SAVE_SETTINGS", dsa_multiplier);
+
+      }
    }
    int adjusted_sleep_time_millis = spec_sleep_time_millis * dsa_multiplier;
 
