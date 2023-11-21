@@ -986,6 +986,7 @@ ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 
 
 void init_api_metadata() {
+   RTTI_ADD_FUNC(ddca_free_feature_metadata);
    RTTI_ADD_FUNC(ddca_get_feature_list_by_dref);
    RTTI_ADD_FUNC(ddca_get_feature_metadata_by_vspec);
    RTTI_ADD_FUNC(ddca_get_feature_metadata_by_dref);
