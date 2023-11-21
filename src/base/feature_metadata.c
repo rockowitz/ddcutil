@@ -486,3 +486,8 @@ dfm_from_ddca_feature_metadata(
    return dfm;
 }
 
+
+void init_feature_metadata() {
+   RTTI_ADD_FUNC(init_feature_metadata);
+}
+

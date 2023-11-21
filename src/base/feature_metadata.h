@@ -152,4 +152,6 @@ dfm_to_ddca_feature_metadata(Display_Feature_Metadata * dfm);
 Display_Feature_Metadata *
 dfm_from_ddca_feature_metadata(DDCA_Feature_Metadata * meta);
 
+void init_feature_metadata();
+
 #endif /* FEATURE_METADATA_H_ */
