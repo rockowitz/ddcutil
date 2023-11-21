@@ -329,6 +329,65 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
 }
 
 
+/** Replaces every character in a string whose value is > 127 with
+ *  the string "<xHH>", where HH is the hex value of the character.
+ *
+ *  @param   s  string to convert
+ *  @return  newly allocated modified character string
+ *
+ *  The caller is responsible for freeing the returned string
+ */
+char * base_asciify(char * s) {
+   int badct = 0;
+   int ndx = 0;
+   while (s[ndx]) {
+      if (s[ndx] & 0x80)
+         badct++;
+      ndx++;
+   }
+   int reqd = ndx + 1 + 4*badct;
+   char* result = malloc(reqd);
+   int respos = 0;
+   ndx = 0;
+   while(s[ndx]) {
+      // printf("s[ndx] = %u\n", (unsigned char)s[ndx]);
+      if ( !(s[ndx] & 0x80)) {
+         result[respos++] = s[ndx];
+      }
+      else {
+         sprintf(result+respos, "<x%02x>", (unsigned char) s[ndx]);
+         respos += 5;
+      }
+      ndx++;
+   }
+   result[respos] = '\0';
+   // printf("respos=%d, reqd=%d\n", respos, reqd);
+   assert(respos == (reqd-1));
+   return result;
+}
+
+
+/** Replaces every character in a string whose value is > 127 with
+ *  the string "<xHH>", where HH is the hex value of the character.
+ *
+ *  @param   s  string to convert
+ *  @return  converted string
+ *
+ *  The returned value is valid until the next call to this function
+ *  in the current thread.
+ */
+char * base_asciify_t(char * s) {
+   static GPrivate  x_key = G_PRIVATE_INIT(g_free);
+   static GPrivate  x_len_key = G_PRIVATE_INIT(g_free);
+
+   char * buftemp = base_asciify(s);
+   char * buf = get_thread_dynamic_buffer(&x_key, &x_len_key, strlen(s)+1);
+   strcpy(buf, buftemp);
+   free(buftemp);
+   return buf;
+}
+
+
 /** Writes EDID summary to the current report output destination.
  * (normally stdout, but may be changed by rpt_push_output_dest())
  *
@@ -357,10 +416,10 @@ void report_parsed_edid_base(
    if (edid) {
       rpt_vstring(depth,"EDID synopsis:");
       rpt_vstring(d1,"Mfg id:               %s - %s",     edid->mfg_id, pnp_name(edid->mfg_id));
-      rpt_vstring(d1,"Model:                %s",          edid->model_name);
+      rpt_vstring(d1,"Model:                %s",          base_asciify(edid->model_name));
       rpt_vstring(d1,"Product code:         %u  (0x%04x)", edid->product_code, edid->product_code);
    // rpt_vstring(d1,"Product code:         %u",          edid->product_code);
-      rpt_vstring(d1,"Serial number:        %s",          edid->serial_ascii);
+      rpt_vstring(d1,"Serial number:        %s",          base_asciify(edid->serial_ascii));
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
       rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
@@ -370,7 +429,11 @@ void report_parsed_edid_base(
       rpt_vstring(d1,"Manufacture year:     %d,  Week: %d", edid->year, edid->manufacture_week);
       if (verbose_synopsis) {
          rpt_vstring(d1,"EDID version:         %d.%d",       edid->edid_version_major, edid->edid_version_minor);
-         rpt_vstring(d1,"Extra descriptor:        %s",          edid->extra_descriptor_string);
+#ifdef TEST_ASCIIFY
+         char bad[] = {0x81, 0x32, 0x83, 0x34, 0x85, 0x00};
+         strcpy(edid->extra_descriptor_string, bad);
+#endif
+         rpt_vstring(d1,"Extra descriptor:        %s",          base_asciify(edid->extra_descriptor_string));
          char explbuf[100];
          explbuf[0] = '\0';
          if (edid->video_input_definition & 0x80) {
