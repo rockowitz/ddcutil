@@ -44,12 +44,6 @@ struct {
 
 
 
-
-
-
-
-
-
 #define DYNAMIC_FEATURES_REC_MARKER "DFRC"
 typedef struct {
    char                       marker[4];
