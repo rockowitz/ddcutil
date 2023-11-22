@@ -645,6 +645,8 @@ ddca_free_feature_metadata_contents(DDCA_Feature_Metadata info) {
 
 void
 ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
+   bool debug = false;
+   API_PROLOG(debug, "metadata=%p", metadata);
    if (metadata) {
       // Internal DDCA_Feature_Metadata instances (DDCA_PERSISTENT_METADATA) should never make it out into the wild
       if ( (memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) &&
@@ -653,6 +655,7 @@ ddca_free_feature_metadata(DDCA_Feature_Metadata* metadata) {
          free_ddca_feature_metadata(metadata);
       }
    }
+   API_EPILOG_WO_RETURN(debug, 0, "");
 }
 
 
