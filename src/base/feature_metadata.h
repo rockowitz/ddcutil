@@ -4,7 +4,7 @@
  * display-specific feature metadata.
  */
 
-// Copyright (C) 2018-2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef FEATURE_METADATA_H_
@@ -18,6 +18,8 @@
 #include "ddcutil_types.h"
 
 #include "util/data_structures.h"
+
+#include "base/dynamic_features.h"
 
 
 /** Simple stripped-down version of Parsed_Nontable_Vcp_Response */
@@ -103,6 +105,10 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags);
 void
 dbgrpt_ddca_feature_metadata(DDCA_Feature_Metadata * md, int depth);
 
+
+void
+dbgrpt_dyn_feature_metadata(Dyn_Feature_Metadata * md, int depth);
+
 void
 free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata);
 
@@ -150,7 +156,7 @@ DDCA_Feature_Metadata *
 dfm_to_ddca_feature_metadata(Display_Feature_Metadata * dfm);
 
 Display_Feature_Metadata *
-dfm_from_ddca_feature_metadata(DDCA_Feature_Metadata * meta);
+dfm_from_dyn_feature_metadata(Dyn_Feature_Metadata * meta);
 
 void init_feature_metadata();
 

@@ -25,7 +25,7 @@
 
 #include "base/feature_metadata.h"
 
-// #include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
+#include "base/dynamic_features.h"   // oops for dbgreport_feature_metadata()
 
 
 /** Thread safe function that returns a string representation of a #Nontable_Vcp_Value
@@ -94,6 +94,7 @@ interpret_feature_flags_t(DDCA_Version_Feature_Flags flags) {
 
    return buffer;
 }
+
 
 
 // SL value tables
@@ -285,7 +286,30 @@ dbgrpt_ddca_feature_metadata(
    rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
    rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
    dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
-   dbgrpt_sl_value_table(md->latest_sl_values, "Latest feature values", d1);
+}
+
+
+
+/** Output a debug report of a #Dyn_Feature_Metadata instance
+ *
+ *  @param  md     instance to report
+ *  @param  depth  logical indentation depth
+ */
+void
+dbgrpt_dyn_feature_metadata(
+      Dyn_Feature_Metadata * md,
+      int                     depth)
+{
+   int d0 = depth;
+   int d1 = depth+1;
+   rpt_structure_loc("DDCA_Feature_Metadata", md, depth);
+   rpt_vstring(d0, "Feature code:      0x%02x", md->feature_code);
+   rpt_vstring(d1, "MCCS version:      %d.%d",  md->vcp_version.major, md->vcp_version.minor);
+   rpt_vstring(d1, "Feature name:      %s",     md->feature_name);
+   rpt_vstring(d1, "Description:       %s",     md->feature_desc);
+   rpt_vstring(d1, "Feature flags:     0x%04x", md->feature_flags);
+   rpt_vstring(d1, "Interpreted flags: %s", interpret_feature_flags_t(md->feature_flags));
+   dbgrpt_sl_value_table(md->sl_values, "Feature values", d1);
 }
 
 
@@ -298,10 +322,13 @@ dbgrpt_ddca_feature_metadata(
 void
 free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
    bool debug = false;
-   DBGMSF(debug, "Executing. metadata = %p", metadata);
+   DBGTRC_STARTING(debug, DDCA_TRC_VCP, "metadata = %p", metadata);
    if ( metadata && memcmp(metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0) {
       if (debug)
          dbgrpt_ddca_feature_metadata(metadata, 2);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_VCP,
+            "feature_code=0x%02x, DDCA_PERSISTENT_METADATA set: %s",
+            metadata->feature_code, sbool(metadata->feature_flags & DDCA_PERSISTENT_METADATA));
       assert(!(metadata->feature_flags & DDCA_PERSISTENT_METADATA));
       if (!(metadata->feature_flags & DDCA_PERSISTENT_METADATA)) {
          free(metadata->feature_name);
@@ -311,6 +338,9 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
       }
       metadata->marker[3] = 'x';
    }
+   else
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_VCP, "Invalid metadata pointer: %p", metadata);
+   DBGTRC_DONE(debug, DDCA_TRC_VCP, "");
 }
 
 
@@ -368,11 +398,12 @@ dfm_free(
       Display_Feature_Metadata * meta)
 {
    bool debug = false;
-   DBGMSF(debug, "Executing. meta=%p", meta);
+   DBGTRC_STARTING(debug, DDCA_TRC_VCP, "Executing. meta=%p", meta);
    if (debug)
       dbgrpt_display_feature_metadata(meta, 2);
    if (meta) {
       assert(memcmp(meta->marker, DISPLAY_FEATURE_METADATA_MARKER, 4) == 0);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_VCP, "feature_code = 0x%02x", meta->feature_code);
       meta->marker[3] = 'x';
       free(meta->feature_name);
       free(meta->feature_desc);
@@ -380,6 +411,7 @@ dfm_free(
       // free_sl_value_table(meta->latest_sl_values);
       free(meta);
    }
+   DBGTRC_DONE(debug, DDCA_TRC_VCP, "");
 }
 
 
@@ -462,8 +494,8 @@ dfm_to_ddca_feature_metadata(
  *  It is the responsibility of the caller to free the returned instance
  */
 Display_Feature_Metadata *
-dfm_from_ddca_feature_metadata(
-      DDCA_Feature_Metadata * ddca_meta)
+dfm_from_dyn_feature_metadata(
+      Dyn_Feature_Metadata * ddca_meta)
 {
    bool debug = false;
    DBGMSF(debug, "Starting");
@@ -480,7 +512,7 @@ dfm_from_ddca_feature_metadata(
    dfm->nontable_formatter_sl = NULL;
    dfm->table_formatter = NULL;
    dfm->vcp_version =  DDCA_VSPEC_UNQUERIED;
-   dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);      // OR DUPLICATE?
+   dfm->sl_values = copy_sl_value_table(ddca_meta->sl_values);
    // dfm->latest_sl_values = copy_sl_value_table(ddca_meta->latest_sl_values);
    DBGMSF(debug, "Done. dfm=%p");
    return dfm;
@@ -488,6 +520,7 @@ dfm_from_ddca_feature_metadata(
 
 
 void init_feature_metadata() {
+   RTTI_ADD_FUNC(dfm_free);
    RTTI_ADD_FUNC(init_feature_metadata);
 }
 

@@ -94,9 +94,9 @@ dyn_get_feature_metadata_by_dfr_and_vspec_dfm(
     Display_Feature_Metadata * result = NULL;
 
     if (dfr) {
-       DDCA_Feature_Metadata * dfr_metadata = get_dynamic_feature_metadata(dfr, feature_code);
+       Dyn_Feature_Metadata * dfr_metadata = get_dynamic_feature_metadata(dfr, feature_code);
        if (dfr_metadata) {
-          result = dfm_from_ddca_feature_metadata(dfr_metadata);
+          result = dfm_from_dyn_feature_metadata(dfr_metadata);
           result->vcp_version = vspec;    // ??
 
           if (dfr_metadata->feature_flags & DDCA_SIMPLE_NC) {
@@ -432,7 +432,7 @@ dyn_get_feature_name(
    if (dref) {
       DBGMSF(debug, "dref->dfr=%s", dfr_repr_t(dref->dfr));
       if (dref->dfr) {
-         DDCA_Feature_Metadata * dfr_metadata = get_dynamic_feature_metadata(dref->dfr, feature_code);
+         Dyn_Feature_Metadata * dfr_metadata = get_dynamic_feature_metadata(dref->dfr, feature_code);
          if (dfr_metadata)
             result = dfr_metadata->feature_name;
       }

@@ -49,11 +49,11 @@ char * dyn_feature_set_repr_t(Dyn_Feature_Set * fset) {
 
 
 static Display_Feature_Metadata *
-dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_metadata)
+dyn_create_dynamic_feature_from_dfr_metadata_dfm(Dyn_Feature_Metadata * dfr_metadata)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. id=0x%02x", dfr_metadata->feature_code);
-   Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(dfr_metadata);
+   Display_Feature_Metadata * dfm = dfm_from_dyn_feature_metadata(dfr_metadata);
 
    if (dfr_metadata->feature_flags & DDCA_SIMPLE_NC) {
       if (dfr_metadata->sl_values)
@@ -79,7 +79,7 @@ dyn_create_dynamic_feature_from_dfr_metadata_dfm(DDCA_Feature_Metadata * dfr_met
 }
 
 #ifdef UNUSED
-static DDCA_Feature_Metadata *
+static Dyn_Feature_Metadata *
 dyn_create_feature_metadata_from_vcp_feature_table_entry(
       VCP_Feature_Table_Entry * pentry,
       DDCA_MCCS_Version_Spec    vspec)
@@ -90,7 +90,7 @@ dyn_create_feature_metadata_from_vcp_feature_table_entry(
    if (pentry->vcp_global_flags & DDCA_SYNTHETIC_VCP_FEATURE_TABLE_ENTRY)
       free_synthetic_vcp_entry(pentry);
 
-   DDCA_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(dfm);
+   Dyn_Feature_Metadata * meta = dfm_to_ddca_feature_metadata(dfm);
    dfm_free(dfm);
    return meta;
 }
@@ -106,8 +106,8 @@ dyn_create_dynamic_feature_from_vcp_feature_table_entry_dfm(
    bool debug = false;
    DBGMSF(debug, "Starting. id=0x%02x", vfte->code);
    // Internal_Feature_Metadata * ifm = calloc(1, sizeof(Internal_Feature_Metadata));
-   DDCA_Feature_Metadata * meta = dyn_create_feature_metadata_from_vcp_feature_table_entry(vfte, vspec);
-   Display_Feature_Metadata * dfm = dfm_from_ddca_feature_metadata(meta);
+   Dyn_Feature_Metadata * meta = dyn_create_feature_metadata_from_vcp_feature_table_entry(vfte, vspec);
+   Display_Feature_Metadata * dfm = dfm_from_dyn_feature_metadata(meta);
    free_ddca_feature_metadata(meta);
    free(meta);
 
@@ -187,7 +187,7 @@ dyn_create_feature_set(
           g_hash_table_iter_init(&iter, dref->dfr->features);
           bool found = g_hash_table_iter_next(&iter, &hash_key, &hash_value);
           while (found) {
-             DDCA_Feature_Metadata * feature_metadata = hash_value;
+             Dyn_Feature_Metadata * feature_metadata = hash_value;
              assert( memcmp(feature_metadata, DDCA_FEATURE_METADATA_MARKER, 4) == 0 );
 
              // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED, FSF_FORCE,

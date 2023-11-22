@@ -93,10 +93,10 @@ dbgrpt_dynamic_features_rec(
    if (dfr->features) {
       rpt_vstring(d1, "features count: %d", g_hash_table_size(dfr->features));
       for (int ndx = 1; ndx < 256; ndx++) {
-         DDCA_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
+         Dyn_Feature_Metadata * cur_feature = g_hash_table_lookup(dfr->features,
                GINT_TO_POINTER(ndx));
          if (cur_feature)
-            dbgrpt_ddca_feature_metadata(cur_feature, d1);
+            dbgrpt_dyn_feature_metadata(cur_feature, d1);
       }
    }
 }
@@ -123,14 +123,14 @@ dfr_repr_t(Dynamic_Features_Rec * dfr) {
 }
 
 
-/** Gets a #DDCA_Feature_Metadata record from the features hash table
+/** Gets a #Dyn_Feature_Metadata record from the features hash table
  *  of a #Dynamic_Features_Rec.
  *
  *  @param  dfr          pointer to dynamic feature record
  *  @param  feature_code feature code
  *  @return pointer to feature metadata, NULL if not found
  */
-DDCA_Feature_Metadata *
+Dyn_Feature_Metadata *
 get_dynamic_feature_metadata(
       Dynamic_Features_Rec * dfr,
       uint8_t                feature_code)
@@ -138,7 +138,7 @@ get_dynamic_feature_metadata(
    bool debug = false;
    DBGMSF(debug, "dfr=%s, feature_code=0x%02x", dfr_repr_t(dfr), feature_code);
 
-   DDCA_Feature_Metadata * result = NULL;
+   Dyn_Feature_Metadata * result = NULL;
    if (dfr && dfr->features)
       result = g_hash_table_lookup(dfr->features, GINT_TO_POINTER(feature_code));
 
@@ -147,7 +147,7 @@ get_dynamic_feature_metadata(
 }
 
 
-/** Free a #DDCA_Feature_Metadata record.
+/** Free a #Dyn_Feature_Metadata record.
  *
  *  @param data pointer to record
  *
@@ -155,17 +155,17 @@ get_dynamic_feature_metadata(
  */
 void
 free_feature_metadata(
-      gpointer data)    // i.e. DDCA_Feature_Metadata *
+      gpointer data)    // i.e. Dyn_Feature_Metadata *
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting. DDCA_Feature_Metadata * data = %p", data);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Starting. Dyn_Feature_Metadata * data = %p", data);
 
-   DDCA_Feature_Metadata * info = (DDCA_Feature_Metadata*) data;
+   Dyn_Feature_Metadata * info = (Dyn_Feature_Metadata*) data;
    assert(info && memcmp(info->marker, DDCA_FEATURE_METADATA_MARKER, 4) == 0);
    // compare vs ddca_free_metadata_contents()
 
    if (debug)
-      dbgrpt_ddca_feature_metadata(info, 2);
+      dbgrpt_dyn_feature_metadata(info, 2);
 
    free(info->feature_desc);
    free(info->feature_name);
@@ -316,7 +316,7 @@ add_error(
 
 static bool
 attr_keyword(
-      DDCA_Feature_Metadata * cur_feature_metadata,
+      Dyn_Feature_Metadata * cur_feature_metadata,
       char *                  keyword)
 {
    bool debug = false;
@@ -361,7 +361,7 @@ switch_bits(
 static void
 finalize_feature(
       Dynamic_Features_Rec *  frec,
-      DDCA_Feature_Metadata * cur_feature_metadata,
+      Dyn_Feature_Metadata * cur_feature_metadata,
       GArray *                cur_feature_values,
       const char *            filename,
       GPtrArray *             errors)
@@ -442,7 +442,7 @@ create_monitor_dynamic_features(
                               NULL,                     // key_destroy_func
                               free_feature_metadata);   // value_destroy_func
 
-   DDCA_Feature_Metadata * cur_feature_metadata = NULL;
+   Dyn_Feature_Metadata * cur_feature_metadata = NULL;
    GArray * cur_feature_values = NULL;
 
    int     linectr = 0;
@@ -522,7 +522,7 @@ create_monitor_dynamic_features(
                   }
                }
 
-               cur_feature_metadata = calloc(1, sizeof(DDCA_Feature_Metadata));
+               cur_feature_metadata = calloc(1, sizeof(Dyn_Feature_Metadata));
                memcpy(cur_feature_metadata->marker, DDCA_FEATURE_METADATA_MARKER, 4);
                cur_feature_metadata->feature_flags = DDCA_USER_DEFINED | DDCA_PERSISTENT_METADATA;
 
