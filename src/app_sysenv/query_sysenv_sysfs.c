@@ -427,6 +427,7 @@ void each_video_pci_device(
    free(device_class);
 
 bye:
+   DBGMSF(debug, "Done");
    return;
 }
 
@@ -489,6 +490,7 @@ void query_card_and_driver_using_sysfs(Env_Accumulator * accum) {
       // each entry in /sys/bus/pci/devices is a symbolic link
       dir_foreach(pci_devices_dir_name, /*fn_filter*/ NULL, each_video_pci_device, accum, 0);
    }
+   DBGMSF(debug, "Done");
 }
 
 // end query_card_and_driver_using_sysfs() section
