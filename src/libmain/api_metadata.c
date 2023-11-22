@@ -618,7 +618,7 @@ ddca_get_feature_metadata_by_dh(
                }
                *metadata_loc = external_metadata;
                ASSERT_IFF(psc == 0, *metadata_loc);
-                if (psc == 0 && debug) {
+                if (psc == 0 && IS_DBGTRC(debug,TRACE_GROUP)) {
                    dbgrpt_ddca_feature_metadata(external_metadata, 5);
                 }
          }
