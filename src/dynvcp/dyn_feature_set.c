@@ -49,7 +49,7 @@ char * dyn_feature_set_repr_t(Dyn_Feature_Set * fset) {
 
 
 static Display_Feature_Metadata *
-dyn_create_dynamic_feature_from_dfr_metadata_dfm(Dyn_Feature_Metadata * dfr_metadata)
+dyn_create_dynamic_feature_from_dfr_metadata(Dyn_Feature_Metadata * dfr_metadata)
 {
    bool debug = false;
    DBGMSF(debug, "Starting. id=0x%02x", dfr_metadata->feature_code);
@@ -190,8 +190,8 @@ dyn_create_feature_set(
              Dyn_Feature_Metadata * feature_metadata = hash_value;
              assert( memcmp(feature_metadata, DDCA_FEATURE_METADATA_MARKER, 4) == 0 );
 
-             // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED, FSF_FORCE,
-             // which do not apply in this context
+             // Test Feature_Set_Flags other than FSF_SHOW_UNSUPPORTED,
+             // which does not apply in this context
              bool include = true;
              //     Feature_Set_Flags                     //DDCA_Feature_Flags
              if ( ((feature_set_flags & FSF_NOTABLE) &&  (feature_metadata->feature_flags & DDCA_TABLE)) ||
@@ -202,7 +202,7 @@ dyn_create_feature_set(
                 include = false;
              if (include) {
                 Display_Feature_Metadata * dfm =
-                   dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
+                   dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
                 g_ptr_array_add(members_dfm, dfm);
              }
 
@@ -304,7 +304,7 @@ dyn_create_single_feature_set_by_hexid2(
       DDCA_Featurfree_dfm_funce_Metadata * feature_metadata  =
          get_dynamic_feature_metadata(dref->dfr, feature_code);
       if (feature_metadata) {
-         dfm = dyn_create_dynamic_feature_from_dfr_metadata_dfm(feature_metadata);
+         dfm = dyn_create_dynamic_feature_from_dfr_metadata(feature_metadata);
       }
    }
 
