@@ -416,10 +416,10 @@ void report_parsed_edid_base(
    if (edid) {
       rpt_vstring(depth,"EDID synopsis:");
       rpt_vstring(d1,"Mfg id:               %s - %s",     edid->mfg_id, pnp_name(edid->mfg_id));
-      rpt_vstring(d1,"Model:                %s",          base_asciify(edid->model_name));
+      rpt_vstring(d1,"Model:                %s",          base_asciify_t(edid->model_name));
       rpt_vstring(d1,"Product code:         %u  (0x%04x)", edid->product_code, edid->product_code);
    // rpt_vstring(d1,"Product code:         %u",          edid->product_code);
-      rpt_vstring(d1,"Serial number:        %s",          base_asciify(edid->serial_ascii));
+      rpt_vstring(d1,"Serial number:        %s",          base_asciify_t(edid->serial_ascii));
       // Binary serial number is typically 0x00000000 or 0x01010101, but occasionally
       // useful for differentiating displays that share a generic ASCII "serial number"
       rpt_vstring(d1,"Binary serial number: %"PRIu32" (0x%08x)", edid->serial_binary, edid->serial_binary);
@@ -433,7 +433,7 @@ void report_parsed_edid_base(
          char bad[] = {0x81, 0x32, 0x83, 0x34, 0x85, 0x00};
          strcpy(edid->extra_descriptor_string, bad);
 #endif
-         rpt_vstring(d1,"Extra descriptor:        %s",          base_asciify(edid->extra_descriptor_string));
+         rpt_vstring(d1,"Extra descriptor:        %s",          base_asciify_t(edid->extra_descriptor_string));
          char explbuf[100];
          explbuf[0] = '\0';
          if (edid->video_input_definition & 0x80) {
