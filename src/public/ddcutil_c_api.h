@@ -1035,7 +1035,7 @@ ddca_get_feature_metadata_by_dh(
       bool                        create_default_if_not_found,
       DDCA_Feature_Metadata **    meta_loc);
 
-/** Frees a #DDCA_Feature_Metadata instance.
+/** Frees a #DDCA_Feature_Metadata instance
  *
  *  @param[in] metadata pointer to instance
  *  @retval   0  normal
@@ -1043,6 +1043,8 @@ ddca_get_feature_metadata_by_dh(
  *
  *  @remark
  *  It is not an error if the ***metadata*** pointer argument is NULL
+ *  @remark
+ *  This is a convenience function.
  */
 void
 ddca_free_feature_metadata(DDCA_Feature_Metadata * metadata);
