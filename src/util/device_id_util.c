@@ -543,7 +543,7 @@ load_device_ids(Device_Id_Type id_type, GPtrArray * all_lines) {
                                    &this_name);
                    // transitional:
 
-                   guint this_id = this_subvendor_id << 16 | this_subdevice_id;
+                   guint this_id = (guint) this_subvendor_id << 16 | this_subdevice_id;
 
                    if (ct != 3) {
                       printf("(%s) Error reading line: %s\n", __func__, a_line+tabct);
