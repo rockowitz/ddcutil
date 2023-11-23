@@ -69,8 +69,14 @@ void init_api_base();
 // Globals
 //
 
+bool library_initialized = false;
 static bool client_opened_syslog = false;
 static bool enable_init_msgs = false;
+static FILE * flog = NULL;
+static DDCA_Stats_Type requested_stats = 0;
+static bool per_display_stats = false;
+static bool dsa_detail_stats;
+
 
 //
 // Precondition Failure
@@ -367,12 +373,6 @@ void atexit_func() {
 }
 #endif
 
-static FILE * flog = NULL;
-
-bool library_initialized = false;
-DDCA_Stats_Type requested_stats = 0;
-bool per_display_stats = false;
-bool dsa_detail_stats;
 
 
 /** Initializes the ddcutil library module.
@@ -574,33 +574,31 @@ ddca_init(const char *      libopts,
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
 
-   bool watch_displays = false;    // default
-
-   enable_init_msgs     = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
-   client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
-   if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
-      syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
-
-   if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
-      enable_syslog = true;
-      if (!client_opened_syslog) {
-      openlog("libddcutil",       // prepended to every log message
-              LOG_CONS | LOG_PID, // write to system console if error sending to system logger
-                                  // include caller's process id
-              LOG_USER);          // generic user program, syslogger can use to determine how to handle
-      }
-      // special handling for start and termination msgs
-      // always output if syslog is opened
-      syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
-                get_full_ddcutil_version(), ddca_libddcutil_filename());
-   }
-   syslog_level = syslog_level_arg;  // global in trace_control.h
-
    Error_Info * master_error = NULL;
    if (library_initialized) {
-      master_error = errinfo_new(DDCRC_INVALID_OPERATION, __func__, "libddcutil already initialized");
+      master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
+      SYSLOG2(DDCA_SYSLOG_ERROR, "libddcutil already initialized");
    }
    else {
+      enable_init_msgs     = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
+      client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
+      if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
+         syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
+      if (syslog_level_arg > DDCA_SYSLOG_NEVER) {
+         enable_syslog = true;
+         if (!client_opened_syslog) {
+         openlog("libddcutil",       // prepended to every log message
+                 LOG_CONS | LOG_PID, // write to system console if error sending to system logger
+                                     // include caller's process id
+                 LOG_USER);          // generic user program, syslogger can use to determine how to handle
+         }
+         // special handling for start and termination msgs
+         // always output if syslog is opened
+         syslog(LOG_NOTICE, "Initializing libddcutil.  ddcutil version: %s, shared library: %s",
+                   get_full_ddcutil_version(), ddca_libddcutil_filename());
+      }
+      syslog_level = syslog_level_arg;  // global in trace_control.h
+
       Parsed_Cmd * parsed_cmd = NULL;
       if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
          parsed_cmd = new_parsed_cmd();
@@ -623,14 +621,11 @@ ddca_init(const char *      libopts,
             dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
             if (!submaster_initializer(parsed_cmd))
                master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
+            if (!master_error && parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS )
+               ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
          }
-
-
       }
-      if (parsed_cmd) {
-         watch_displays = parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS;
-         free_parsed_cmd(parsed_cmd);
-      }
+      free_parsed_cmd(parsed_cmd);
    }
 
    DDCA_Status ddcrc = 0;
@@ -647,8 +642,6 @@ ddca_init(const char *      libopts,
       errinfo_free(master_error);
    }
    else {
-      if (watch_displays)
-         ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
       library_initialized = true;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
