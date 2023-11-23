@@ -39,7 +39,7 @@ const char * get_ddcutil_version_suffix() {
 
 /** Returns the full ddcutil version, e.g. "1.2.3", "1.2.3-dev".
  *
- *  \return full ddcutil version, no not free.
+ *  \return full ddcutil version, do not free.
  */
 const char * get_full_ddcutil_version() {
    static char full_ddcutil_version[20] = {0};

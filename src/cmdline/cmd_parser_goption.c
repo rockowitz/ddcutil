@@ -695,8 +695,8 @@ static bool parse_discard_args(Parsed_Cmd * parsed_cmd, GPtrArray* errmsgs) {
 }
 
 
-static void report_ddcutil_version() {
-      printf("ddcutil %s\n", get_full_ddcutil_version());
+static void report_ddcutil_build_info() {
+
       // TODO: patch values at link time
       // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
 #ifdef USE_USB
@@ -1676,13 +1676,19 @@ parse_command(
    }
 
    if (version_flag) {
-      report_ddcutil_version();
+      const char * version = get_full_ddcutil_version();
+      const char * prefix = (output_level > DDCA_OL_TERSE) ? "ddcutil " : "";
+      printf("%s%s\n", prefix, version);
+      if (output_level >= DDCA_OL_VERBOSE)
+         report_ddcutil_build_info();
       // if no command specified, include license in version information and terminate
       if (rest_ct == 0) {
-         puts("Copyright (C) 2015-2023 Sanford Rockowitz");
-         puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
-         puts("This is free software: you are free to change and redistribute it.");
-         puts("There is NO WARRANTY, to the extent permitted by law.");
+         if (output_level > DDCA_OL_TERSE) {
+            puts("Copyright (C) 2015-2023 Sanford Rockowitz");
+            puts("License GPLv2: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>");
+            puts("This is free software: you are free to change and redistribute it.");
+            puts("There is NO WARRANTY, to the extent permitted by law.");
+         }
          exit(0);
       }
    }
