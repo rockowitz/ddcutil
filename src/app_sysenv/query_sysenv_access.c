@@ -107,7 +107,7 @@ Byte_Value_Array identify_i2c_devices() {
    Byte_Value_Array bva4 = NULL;
 #endif
 
-   bva1 = get_i2c_devices_by_existence_test();
+   bva1 = get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ true);
    if (redundant_i2c_device_identification_checks) {     // normally false, set true for testing
       bva2 = get_i2c_devices_by_ls();
 #ifdef ENABLE_UDEV

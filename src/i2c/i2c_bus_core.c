@@ -686,12 +686,12 @@ int i2c_device_count() {
  *
  *  @return Byte_Value_Array containing the valid bus numbers
  */
-Byte_Value_Array get_i2c_devices_by_existence_test() {
+Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices) {
    Byte_Value_Array bva = bva_create();
    for (int busno=0; busno < I2C_BUS_MAX; busno++) {
       if (i2c_device_exists(busno)) {
-         // if (!is_ignorable_i2c_device(busno))
-         bva_append(bva, busno);
+         if (include_ignorable_devices || !is_ignorable_i2c_device(busno))
+            bva_append(bva, busno);
       }
    }
    return bva;
@@ -782,7 +782,8 @@ int i2c_detect_buses() {
       Byte_Value_Array i2c_bus_bva =
             get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
 #else
-      Byte_Value_Array i2c_bus_bva = get_i2c_devices_by_existence_test();
+      Byte_Value_Array i2c_bus_bva =
+            get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
       i2c_buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
       g_ptr_array_set_free_func(i2c_buses, i2c_gdestroy_bus_info);
