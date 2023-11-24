@@ -520,6 +520,23 @@ typedef struct {
 #define VALREC_CUR_VAL(valrec) ( valrec->val.c_nc.sh << 8 | valrec->val.c_nc.sl )
 #define VALREC_MAX_VAL(valrec) ( valrec->val.c_nc.mh << 8 | valrec->val.c_nc.ml )
 
+typedef enum {
+   DISPLAY_EVENT_CONNECTED    = 1,
+   DISPLAY_EVENT_DISCONNETED  = 2,
+} DDCA_Display_Event_Type;
+
+
+
+typedef struct {
+   DDCA_Display_Ref *      dref;
+   DDCA_Display_Event_Type event_type;
+   void *                  unused[3];
+} DDCA_Display_Change_Event;
+
+
+
+
+
 
 #ifdef __cplusplus
 }
