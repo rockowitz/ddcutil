@@ -65,7 +65,7 @@ char * find_adapter(char * path, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "path=%s", path);
    char * devpath = NULL;
-   if ( RPT_ATTR_NOTE_SUBDIR(depth, NULL, path, "device") ) {
+   if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, path, "device") ) {
        if ( RPT_ATTR_TEXT(depth, NULL, path, "device", "class") ) {
           RPT_ATTR_REALPATH(depth, &devpath, path, "device");
        }
@@ -161,6 +161,10 @@ bool is_drm_connector(const char * dirname, const char * simple_fn) {
    return result;
 }
 
+
+bool fn_equal(const char * filename, const char * val) {
+   return streq(filename, val);
+}
 
 bool fn_starts_with(const char * filename, const char * val) {
    return str_starts_with(filename, val);
@@ -751,13 +755,13 @@ void one_drm_connector(
             rpt_nl();
 
          // Examine ddc subdirectory - does not exist on Nvidia driver
-         bool has_ddc_subdir = RPT_ATTR_NOTE_SUBDIR(-1, NULL, dirname, fn, "ddc");
+         bool has_ddc_subdir = RPT_ATTR_NOTE_INDIRECT_SUBDIR(-1, NULL, dirname, fn, "ddc");
          if (has_ddc_subdir) {
             RPT_ATTR_REALPATH(-1, &cur->ddc_dir_path,    dirname, fn, "ddc");
             // e.g. /sys/class/drm/card0-DP-1/ddc/name:
             RPT_ATTR_TEXT(d0, &cur->base_name, dirname, fn, "ddc", "name");
 
-            bool has_i2c_dev_subdir = RPT_ATTR_NOTE_SUBDIR(-1, NULL, dirname, fn, "ddc", "i2c-dev");
+            bool has_i2c_dev_subdir = RPT_ATTR_NOTE_INDIRECT_SUBDIR(-1, NULL, dirname, fn, "ddc", "i2c-dev");
             if (has_i2c_dev_subdir) {
                // looking for e.g. /sys/bus/drm/card0-DP-1/ddc/i2c-dev/i2c-1
                has_i2c_subdir =
@@ -1541,9 +1545,7 @@ bool all_video_devices_drm() {
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
       int d = IS_DBGTRC(debug,DDCA_TRC_NONE) ? -1 : 1;
-      bool found_drm = RPT_ATTR_NOTE_SUBDIR(d, NULL, NULL, device_path, "drm");
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
-            "device_path=|%s|, found drm=%s", device_path, sbool(found_drm));
+      bool found_drm = RPT_ATTR_SINGLE_SUBDIR(d, NULL, fn_equal, "drm", device_path);
       if (!found_drm) {
          all_devices_drm = false;
          break;
@@ -1652,7 +1654,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    int depth = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
    char * adapter_dir = find_adapter(real_i2cdir, depth);
    assert(adapter_dir);
-   result = RPT_ATTR_NOTE_SUBDIR(depth, NULL, adapter_dir, "drm");
+   result = RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, NULL, adapter_dir, "drm");
    free(real_i2cdir);
    free(adapter_dir);
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
