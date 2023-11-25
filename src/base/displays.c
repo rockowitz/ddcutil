@@ -461,7 +461,6 @@ Display_Ref * create_bus_display_ref(int busno) {
    }
 
    DBGTRC_RET_STRUCT(debug, DDCA_TRC_BASE, "Display_Ref", dbgrpt_display_ref, dref);
-   // DBGTRC_DONE(debug, DDCA_TRC_BASE, "Returning %p", dref);
    return dref;
 }
 
