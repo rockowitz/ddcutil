@@ -176,13 +176,13 @@ void each_drm_device(const char * dirname, const char * fn, void * accumulator, 
    if (i2cN_subdir) {
       rpt_nl();
       RPT_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir, "device");
-      RPT_ATTR_NOTE_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev");
+      RPT_ATTR_NOTE_INDIRECT_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev");
       RPT_ATTR_TEXT(         d1, NULL, drm_cardX_dir, i2cN_subdir, "name");
       RPT_ATTR_REALPATH(     d1, NULL, drm_cardX_dir, i2cN_subdir, "subsystem");
 
       rpt_nl();
       // e.g. /sys/class/drm-card0-DP-1/i2c-13/i2c-dev
-      RPT_ATTR_NOTE_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir);   // or can subdir name vary?
+      RPT_ATTR_NOTE_INDIRECT_SUBDIR(  d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir);   // or can subdir name vary?
 
       // e.g. /sys/class/drm-card0-DP-1/i2c-13/i2c-dev/i2c-13
       RPT_ATTR_TEXT(        d1, NULL, drm_cardX_dir, i2cN_subdir, "i2c-dev", i2cN_subdir, "dev");
