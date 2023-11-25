@@ -1604,6 +1604,7 @@ parse_command(
       FREE(fl2_work);
    }
 
+#ifdef USE_USB
    if (ignored_vid_pid) {
       int ndx = 0;
       for (char * cur = ignored_vid_pid[ndx]; cur && ndx < 10; cur=ignored_vid_pid[++ndx]) {
@@ -1630,6 +1631,7 @@ parse_command(
       ntsa_free(ignored_vid_pid,true);
       ignored_vid_pid = NULL;
    }
+#endif
 
    if (sleep_multiplier_work) {
       float multiplier = 0.0f;
