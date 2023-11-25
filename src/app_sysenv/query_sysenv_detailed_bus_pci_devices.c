@@ -84,7 +84,7 @@ void rpt_0037_subdir(int depth, char * fq_i2c_dir_name, int busno) {
          RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN,  "idType");
          // RPT_ATTR_TEXT(d0, NULL, fqfn, fn_0037, ddcciN,  "idVendor");
          char * backlight_subdir = NULL;
-         if ( RPT_ATTR_NOTE_SUBDIR(d0, &backlight_subdir, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN) ) {
+         if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(d0, &backlight_subdir, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN) ) {
             RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "actual_brightness");
             RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "brightness");
             RPT_ATTR_TEXT(d0, NULL, fq_i2c_dir_name, fn_0037, ddcciN, "backlight", ddcciN, "max_brightness");
