@@ -1255,7 +1255,7 @@ bs256_to_string_general(
    // DBGMSG("Returned string length: %d", strlen(buf));
    // DBGMSG("Returning %p - %s", buf, buf);
    if (debug)
-   printf("(%s) Returning: len=%d, %s\n", __func__, (int) strlen(buf), buf);
+      printf("(%s) Returning: string of length %d: |%s|\n", __func__, (int) strlen(buf), buf);
 
    return buf;
 }
