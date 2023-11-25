@@ -4,7 +4,7 @@
  *  that focuses on attributes determined to be of significance.
  */
 
-// Copyright (C) 2018-2021 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <glib-2.0/glib.h>
@@ -24,9 +24,10 @@
 #include "util/sysfs_util.h"
 
 #include "base/core.h"
-#include "query_sysenv_simplified_sys_bus_pci_devices.h"
 
 #include "query_sysenv_sysfs_common.h"
+
+#include "query_sysenv_simplified_sys_bus_pci_devices.h"
 
 
 // Default trace class for this file
@@ -146,7 +147,7 @@ void report_one_pci_device(
          NULL,
          depth);
 
-   if ( RPT_ATTR_NOTE_SUBDIR(0, NULL, dirname, fn, "drm"))  {
+   if ( RPT_ATTR_NOTE_INDIRECT_SUBDIR(0, NULL, dirname, fn, "drm"))  {
          char * drmdir = g_strdup_printf("%s/%s/drm", dirname, fn);
          dir_filtered_ordered_foreach(
                drmdir,
