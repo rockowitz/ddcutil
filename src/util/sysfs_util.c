@@ -674,7 +674,7 @@ rpt_attr_single_subdir(
 }
 
 
-/** Reports whether a given directory exists.
+/** Reports whether an indirect directory exists.
  *
  *  \param  depth      logical indentation depth, if < 0, output nothing
  *  \param  value_loc  if non-NULL, *value_loc is always set = NULL
@@ -683,7 +683,7 @@ rpt_attr_single_subdir(
  *  \return true if subdirectory found, false if not
  */
 bool
-rpt_attr_note_subdir(
+rpt_attr_note_indirect_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,

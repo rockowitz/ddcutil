@@ -134,13 +134,13 @@ rpt_attr_single_subdir(
    rpt_attr_single_subdir(-1, value_loc, predicate_func, predicate_val, fn_segment, ##__VA_ARGS__, NULL)
 
 bool
-rpt_attr_note_subdir(
+rpt_attr_note_indirect_subdir(
       int          depth,
       char **      value_loc,
       const char * fn_segment,
       ...);
 
-#define RPT_ATTR_NOTE_SUBDIR(depth, value_loc, fn_segment, ...) \
-   rpt_attr_note_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
+#define RPT_ATTR_NOTE_INDIRECT_SUBDIR(depth, value_loc, fn_segment, ...) \
+   rpt_attr_note_indirect_subdir(depth, value_loc, fn_segment,  ##__VA_ARGS__, NULL)
 
 #endif /* SYSFS_UTIL_H_ */
