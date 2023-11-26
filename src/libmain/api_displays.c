@@ -1273,13 +1273,8 @@ typedef void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Repo
 
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
-
-DDCA_Status
-ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   ddc_register_display_detection_callback(func);
-   return DDCRC_OK;
-}
 #endif
+
 
 
 #ifdef FUTURE_DDCUTIL_C_API
@@ -1325,47 +1320,50 @@ DDCA_Status
 ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 #endif
 
-#ifdef FUTURE_IMPLEMENTATION
+
+//
+// Display status change communication
+//
+
 DDCA_Status
-ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
    API_PROLOG(debug, "func=%p", func);
-   DDCA_Status result =  ddc_register_display_hotplug_callback(func);
+   DDCA_Status result =  ddc_register_display_detection_callback(func);
    API_EPILOG(debug, result, "");
    return result;
 }
 
 DDCA_Status
-ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
    API_PROLOG(debug, "func=%p", func);
-   DDCA_Status result = ddc_unregister_display_hotplug_callback(func);
+   DDCA_Status result = ddc_unregister_display_detection_callback(func);
    API_EPILOG(debug, result, "");
    return result;
 }
-#endif
 
+const char *
+   ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
+      return ddc_display_event_type_name(event_type);
+}
+
+
+//
+// Module initialization
+//
 
 void init_api_displays() {
-      // DBGMSG("Executing");
-      RTTI_ADD_FUNC(ddca_close_display);
-#ifdef REMOVED
-      RTTI_ADD_FUNC(ddca_free_display_ref);
-#endif
-      RTTI_ADD_FUNC(ddca_get_display_info_list2);
-      RTTI_ADD_FUNC(ddca_get_display_info);
-      RTTI_ADD_FUNC(ddca_get_display_ref);
-      RTTI_ADD_FUNC(ddca_get_display_refs);
-#ifdef DEPRECATED
-      RTTI_ADD_FUNC(ddca_open_display);
-#endif
-      RTTI_ADD_FUNC(ddca_open_display2);
-      RTTI_ADD_FUNC(ddca_open_display3);
-      RTTI_ADD_FUNC(ddca_redetect_displays);
-      RTTI_ADD_FUNC(ddca_report_display_by_dref);
-#ifdef FUTURE
-      RTTI_ADD_FUNC(ddca_register_display_hotplug_callback);
-      RTTI_ADD_FUNC(ddca_unregister_display_hotplug_callback)
-#endif
+   RTTI_ADD_FUNC(ddca_close_display);
+   RTTI_ADD_FUNC(ddca_get_display_info_list2);
+   RTTI_ADD_FUNC(ddca_get_display_info);
+   RTTI_ADD_FUNC(ddca_get_display_ref);
+   RTTI_ADD_FUNC(ddca_get_display_refs);
+   RTTI_ADD_FUNC(ddca_open_display2);
+   RTTI_ADD_FUNC(ddca_open_display3);
+   RTTI_ADD_FUNC(ddca_redetect_displays);
+   RTTI_ADD_FUNC(ddca_report_display_by_dref);
+   RTTI_ADD_FUNC(ddca_register_display_detection_callback);
+   RTTI_ADD_FUNC(ddca_unregister_display_detection_callback);
 }
 
