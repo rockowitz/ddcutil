@@ -807,7 +807,7 @@ ddc_get_display_ref_by_drm_connector(
       const char * connector_name,
       bool         ignore_invalid)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
    Display_Ref * result = NULL;
@@ -836,7 +836,7 @@ ddc_get_display_ref_by_drm_connector(
       }
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %p", result);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s = %p", dref_repr_t(result), result);
    return result;
 }
 
@@ -1150,6 +1150,15 @@ void ddc_set_async_threshold(int threshold) {
 
 static bool all_displays_asleep = true;
 
+Display_Ref * get_display_ref_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
+   Display_Ref * dref = NULL;
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   return dref;
+}
+
 Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
@@ -1176,7 +1185,7 @@ Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
          all_displays_asleep = false;
       }
    }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    return dref;
 }
 
@@ -1549,7 +1558,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  It is not an error if the function is already registered.
  */
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
    bool ok = generic_register_callback(&display_detection_callbacks, func);
    DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
@@ -1569,7 +1578,7 @@ DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callb
  *  #reeval DDCRC_NOT_FOUND function not in list of registered functions
  */
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
    bool ok =  generic_unregister_callback(display_detection_callbacks, func);
    DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
@@ -1581,7 +1590,7 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
 /** Invokes the registered callbacks for a display detection event.
  */
 void ddc_emit_display_detection_event(DDCA_Display_Detection_Event evt) {
-   bool debug = true || watch_watching;
+   bool debug = false || watch_watching;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
@@ -1767,7 +1776,7 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
 
 
 bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p", businfo);
    assert(businfo);
    if (IS_DBGTRC(debug, DDCA_TRC_NONE))
@@ -1780,11 +1789,14 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
    // i2c_check_bus(businfo);
    if (businfo->flags & I2C_BUS_ADDR_0X50) {
-      Display_Ref * old_dref = ddc_get_display_ref_by_drm_connector(drm_connector_name, /*ignore_invalid*/ false);
+      Display_Ref * old_dref = ddc_get_display_ref_by_drm_connector(
+                                  drm_connector_name, /*ignore_invalid=*/ false);
       if (old_dref) {
-         SEVEREMSG("Active Display_Ref already exists for DRM connector %s", drm_connector_name);
-         // how to handle?
-         old_dref->flags |= DREF_REMOVED;
+         if (!(old_dref->flags & DREF_REMOVED)) {
+            SEVEREMSG("Display_Ref exists for DRM connector %s but DREF_REMOVED not set",
+                  drm_connector_name);
+            old_dref->flags |= DREF_REMOVED;
+         }
       }
       Display_Ref * dref = create_bus_display_ref(businfo->busno);
       dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
@@ -1813,15 +1825,11 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-
-bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
+Display_Ref * get_dref_by_busno(int busno) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
 
-   // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
-   // i2c_dbgrpt_buses(/* report_all */ true, 2);
-
-   bool found = false;
+   Display_Ref * result = NULL;
    assert(all_displays);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       // If a display is repeatedly removed and added on a particular connector,
@@ -1831,20 +1839,40 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert(dref);
       // DBGMSG("Checking dref %s", dref_repr_t(dref));
-      // dbgrpt_display_ref(dref, 2);
       if (dref->io_path.io_mode == DDCA_IO_I2C) {
-         if (dref->flags & DREF_REMOVED)  {
-            DBGMSG("DREF_REMOVED set");
-            continue;
-         }
-         dref->flags |= DREF_REMOVED;
-         DDCA_Display_Detection_Event report;
-         report.event_type = DISPLAY_EVENT_DISCONNETED;
-         report.dref = (void*) dref;
-         ddc_emit_display_detection_event(report);
-         found = true;
-         break;
+          if (dref->flags & DREF_REMOVED)  {
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED set");
+             continue;
+          }
+          if (dref->io_path.path.i2c_busno == busno) {
+             result = dref;
+             break;
+          }
       }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s = %p", dref_repr_t(result), result);
+   return result;
+}
+
+
+
+bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
+   bool found = false;
+
+   // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
+   // i2c_dbgrpt_buses(/* report_all */ true, 2);
+
+   Display_Ref * dref = get_dref_by_busno(businfo->busno);
+   assert(dref);  // is failure possible?
+   if (dref) {
+      found = true;
+      dref->flags |= DREF_REMOVED;
+      DDCA_Display_Detection_Event report;
+      report.event_type = DISPLAY_EVENT_DISCONNETED;
+      report.dref = (void*) dref;
+      ddc_emit_display_detection_event(report);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
