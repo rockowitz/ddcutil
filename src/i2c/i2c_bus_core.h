@@ -35,27 +35,31 @@ extern bool force_read_edid;
 extern int  i2c_businfo_async_threshold;
 
 // Basic I2C bus operations
+bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
+int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
+Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
-char *           i2c_get_drm_connector_name(I2C_Bus_Info * bus_info);
-void             i2c_check_bus(I2C_Bus_Info * bus_info);
-void             i2c_reset_bus_info(I2C_Bus_Info * bus_info);
+// Bus open and close
+void             add_open_failures_reported(Bit_Set_256 failures);
+void             include_open_failures_reported(int busno);
 int              i2c_open_bus(int busno, Call_Options callopts);
 Status_Errno     i2c_close_bus(int fd, Call_Options callopts);
 
-void             i2c_report_active_display(I2C_Bus_Info * businfo, int depth);
-
-bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
-int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
-Byte_Value_Array get_i2c_devices_by_existence_test();
-
-void             add_open_failures_reported(Bit_Set_256 failures);
-void             include_open_failures_reported(int busno);
+// Bus inspection
+void             i2c_check_bus(I2C_Bus_Info * bus_info);
+Error_Info *     i2c_check_open_bus_alive(Display_Handle * dh);
 
 // Bus inventory - detect and probe buses
+Bit_Set_256 buses_to_bitset(GPtrArray * buses);   // buses: array of I2C_Bus_Info
+GPtrArray *      i2c_detect_buses0();
 int              i2c_detect_buses();            // creates internal array of Bus_Info for I2C buses
 void             i2c_discard_buses();
 I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 
+// Reports
+void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
+
+// Initialization
 void             init_i2c_bus_core();
 
 #endif /* I2C_BUS_CORE_H_ */
