@@ -236,7 +236,7 @@ dfr_load_by_mmk(
              fqfn,
              &dfr);
 #else
-         errs = create_monitor_dynamic_features(   // DDCRC_BAD_DATA
+         errs = create_dynamic_features_rec(   // DDCRC_BAD_DATA
              mmk.mfg_id,
              mmk.model_name,
              mmk.product_code,
