@@ -232,7 +232,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
    switch(dref->io_path.io_mode) {
    case DDCA_IO_I2C:
       {
-         i2c_report_active_display(businfo, d1);
+         i2c_report_active_bus(businfo, d1);
       }
       break;
    case DDCA_IO_USB:
