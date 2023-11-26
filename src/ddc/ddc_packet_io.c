@@ -28,6 +28,7 @@
 #include "util/edid.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 #include "util/utilrpt.h"
 /** \endcond */
 
@@ -44,6 +45,7 @@
 #include "base/per_display_data.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
 #ifdef USE_USB
@@ -59,10 +61,11 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
-bool DDC_Read_Bytewise               = DEFAULT_DDC_READ_BYTEWISE;
+bool DDC_Read_Bytewise  = DEFAULT_DDC_READ_BYTEWISE;
 bool simulate_null_msg_means_unsupported = false;
 
 static GHashTable * open_displays = NULL;
+static GMutex open_displays_mutex;
 
 #ifdef DEPRECATED
 // Deprecated - use all_bytes_zero() in string_util.c
@@ -97,7 +100,9 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
+   g_mutex_lock (&open_displays_mutex);
    bool result = g_hash_table_contains(open_displays, dh);
+   g_mutex_unlock(&open_displays_mutex);
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
@@ -106,6 +111,7 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
 void ddc_dbgrpt_valid_display_handles(int depth) {
    rpt_vstring(depth, "Valid display handle = open_displays:");
    assert(open_displays);
+   g_mutex_lock (&open_displays_mutex);
    GList * display_handles = g_hash_table_get_keys(open_displays);
    if (g_list_length(display_handles) > 0) {
       for (GList * cur = display_handles; cur; cur = cur->next) {
@@ -117,6 +123,7 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
       rpt_vstring(depth+1, "None");
    }
    g_list_free(display_handles);
+   g_mutex_unlock(&open_displays_mutex);
 }
 
 
@@ -133,6 +140,7 @@ void ddc_dbgrpt_valid_display_handles(int depth) {
  *                            status code from  #i2c_open_bus(), #usb_open_hiddev_device()
  *                          DDCRC_LOCKED    display open in another thread
  *                          DDCRC_ALREADY_OPEN display already open in current thread
+ *                          DDCRC_DISCONNECTED display has been disconnected
  *
  *  **Call_Option** flags recognized:
  *  - CALLOPT_WAIT
@@ -152,6 +160,15 @@ ddc_open_display(
    Display_Handle * dh = NULL;
    Error_Info * err = NULL;
    int fd = 0;
+
+   if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
+      char * status;
+      RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
+      if (streq(status, "disconnected")) {
+         err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+         goto bye;
+      }
+   }
 
    Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
@@ -721,6 +738,17 @@ ddc_write_read_with_retry(
 
          default:
               retryable = true;     // for now
+         }
+
+         if (psc == -EIO || psc == -ENXIO) {
+            Error_Info * err = i2c_check_open_bus_alive(dh) ;
+            if (!err) {
+               if (dpms_check_drm_asleep_by_dref(dh->dref))
+                       psc = DDCRC_DPMS_ASLEEP;
+            }
+
+            if (err)
+               psc = err->status_code;
          }
 
          // try exponential backoff on all errors, not just SE_DDC_NULL
