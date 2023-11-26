@@ -419,7 +419,7 @@ finalize_feature(
  *          The #Error_Info, and all of its causes, have status code DDCRC_BAD_DATA
  */
 Error_Info *
-create_monitor_dynamic_features(
+create_dynamic_features_rec(
       const char * mfg_id,
       const char * model_name,
       uint16_t     product_code,
@@ -643,7 +643,7 @@ create_monitor_dynamic_features(
 
 
 void init_base_dynamic_features() {
-   RTTI_ADD_FUNC(create_monitor_dynamic_features);
+   RTTI_ADD_FUNC(create_dynamic_features_rec);
    RTTI_ADD_FUNC(free_feature_metadata);
    RTTI_ADD_FUNC(dfr_new);
    RTTI_ADD_FUNC(dfr_free);

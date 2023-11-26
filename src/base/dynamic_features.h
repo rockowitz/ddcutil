@@ -3,9 +3,8 @@
  * Dynamic Feature Record definition, creation, destruction, and conversion
  */
 
-// Copyright (C) 2022 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2022-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 
 #ifndef BASE_DYNAMIC_FEATURES_H_
 #define BASE_DYNAMIC_FEATURES_H_
@@ -25,7 +24,7 @@ typedef enum {
    DFR_FLAGS_NOT_FOUND = 1
 } DFR_Flags;
 
-// Replaces use of DDCA_Feture_Metadata for representing dynamic spec read from file
+// Replaces use of DDCA_Feature_Metadata for representing dynamic spec read from file
 #define DYN_FEATURE_METADATA_MARKER  "DMET"
 /** Describes a VCP feature code, as read from a dynamic feature record.
  */
@@ -41,7 +40,6 @@ struct {
    char *                                feature_desc;   /**< feature description */
    // possibly add pointers to formatting functions
 } Dyn_Feature_Metadata;
-
 
 
 #define DYNAMIC_FEATURES_REC_MARKER "DFRC"
@@ -77,7 +75,7 @@ dfr_gdestroy(
       gpointer p);
 
 Error_Info *
-create_monitor_dynamic_features(
+create_dynamic_features_rec(
       const char *            mfg_id,
       const char *            model_name,
       uint16_t                product_code,
