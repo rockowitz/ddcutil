@@ -111,6 +111,32 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
    return result;
 }
 
+// called if display removed
+void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
+   bool debug = true;
+   assert(bus_info);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
+   bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
+   if (bus_info->edid) {
+      free_parsed_edid(bus_info->edid);
+      bus_info->edid = NULL;
+   }
+   if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Final bus_info:");
+      i2c_dbgrpt_bus_info(bus_info, 2);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
+   if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {    // ??? when can this be false? ???
+      i2c_check_businfo_connector(businfo);
+   }
+   return businfo->drm_connector_name;
+}
+
+
 
 /** Reports on a single I2C bus.
  *
