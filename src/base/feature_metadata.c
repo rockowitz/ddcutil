@@ -335,7 +335,7 @@ dfm_free(
       Display_Feature_Metadata * meta)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_VCP, "Executing. meta=%p", meta);
+   DBGTRC_STARTING(debug, DDCA_TRC_VCP, "meta=%p", meta);
    if (debug)
       dbgrpt_display_feature_metadata(meta, 2);
    if (meta) {
@@ -506,7 +506,6 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata) {
 
    DBGTRC_DONE(debug, DDCA_TRC_VCP, "");
 }
-
 
 
 void init_feature_metadata() {
