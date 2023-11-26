@@ -12,6 +12,8 @@
 #include "public/ddcutil_types.h"
 /** \endcond */
 
+#ifdef OLD_HOTPLUG_VERSION
+
 typedef enum {Changed_None    = 0,
               Changed_Added   = 1,
               Changed_Removed = 2,
@@ -24,6 +26,7 @@ typedef void (*Display_Change_Handler)(
                  Displays_Change_Type change_type,
                  GPtrArray *          removed,
                  GPtrArray *          added);
+#endif
 
 DDCA_Status ddc_start_watch_displays(bool use_udev_if_possible);
 DDCA_Status ddc_stop_watch_displays();
