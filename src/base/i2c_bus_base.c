@@ -28,8 +28,6 @@
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
-/** All I2C buses.  GPtrArray of pointers to #I2C_Bus_Info - shared with i2c_bus_selector.c */
-/* static */ GPtrArray * i2c_buses = NULL;
 
 
 //
@@ -57,7 +55,6 @@ Value_Name_Table i2c_bus_flags_table = {
 };
 
 
-
 /** Creates a string interpretation of I2C_Bus_Info.flags.
  *
  *  @param  flags flags value
@@ -73,53 +70,13 @@ char * interpret_i2c_bus_flags(uint16_t flags) {
  *  @param  flags flags value
  *  @return string interpretation
  *
- *  The string is returned is valid until the next call
- *  to this function in the current thread.
- *  It must not be free'd by the caller.
+ *  The string returned is valid until the next call to this function in
+ *  the current thread.  It must not be free'd by the caller.
  */
 char * interpret_i2c_bus_flags_t(uint16_t flags) {
    return VN_INTERPRET_FLAGS_T(flags, i2c_bus_flags_table, " | ");
 }
 
-
-/** Allocates and initializes a new #I2C_Bus_Info struct
- *
- * @param busno I2C bus number
- * @return newly allocated #I2C_Bus_Info
- */
-I2C_Bus_Info * i2c_new_bus_info(int busno) {
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
-   I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
-   memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
-   businfo->busno = busno;
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", businfo);
-   return businfo;
-}
-
-
-void i2c_free_bus_info(I2C_Bus_Info * businfo) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
-   if (businfo)
-      DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
-   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
-      if (businfo->edid) {
-         free_parsed_edid(businfo->edid);
-         businfo->edid = NULL;
-      }
-      FREE(businfo->driver);
-      FREE(businfo->drm_connector_name);
-      businfo->marker[3] = 'x';
-      free(businfo);
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
-void i2c_gdestroy_bus_info(void * data) {
-   i2c_free_bus_info(data);
-}
 
 const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
    char * result = NULL;
@@ -133,9 +90,27 @@ const char * drm_connector_found_by_name(Drm_Connector_Found_By found_by) {
 }
 
 
-//
-// Bus Reports
-//
+/** Retrieves the value of a text attribute (e.g. enabled) in the SYSFS
+ *  DRM connector directory for an I2C bus.
+ *
+ *  @param businfo
+ *  @param attribute  attribute name
+ *  @return attribute value, or NULL if not a DRM display
+ *
+ *  Caller is responsible for freeing the returned value
+ */
+char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
+   assert(businfo);
+   assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
+   assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
+   char * result = NULL;
+   if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
+      assert(businfo->drm_connector_name);
+      RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", businfo->drm_connector_name, attribute);
+   }
+   return result;
+}
+
 
 /** Reports on a single I2C bus.
  *
@@ -185,28 +160,180 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
             report_parsed_edid(businfo->edid, true /* verbose */, depth);
          }
       }
+      rpt_vstring(depth, "last_checked_asleep:       %s", businfo->last_checked_dpms_asleep);
    }
-
 #ifndef TARGET_BSD
    I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
    dbgrpt_i2c_sys_info(info, depth);
    free_i2c_sys_info(info);
 #endif
-
    DBGMSF(debug, "Done");
+}
+
+//
+// Lifecycle
+//
+
+/** Allocates and initializes a new #I2C_Bus_Info struct
+ *
+ * @param busno I2C bus number
+ * @return newly allocated #I2C_Bus_Info
+ */
+I2C_Bus_Info * i2c_new_bus_info(int busno) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "busno=%d", busno);
+   I2C_Bus_Info * businfo = calloc(1, sizeof(I2C_Bus_Info));
+   memcpy(businfo->marker, I2C_BUS_INFO_MARKER, 4);
+   businfo->busno = busno;
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p", businfo);
+   return businfo;
+}
+
+
+/** Frees a #I2C_Bus_Info struct
+ *
+ *  @param businfo pointer to struct
+ */
+void i2c_free_bus_info(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
+   if (businfo)
+      DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
+   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
+      if (businfo->edid) {
+         free_parsed_edid(businfo->edid);
+         businfo->edid = NULL;
+      }
+      FREE(businfo->driver);
+      FREE(businfo->drm_connector_name);
+      businfo->marker[3] = 'x';
+      free(businfo);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+// For g_ptr_array_set_free_func()
+void i2c_gdestroy_bus_info(void * data) {
+   i2c_free_bus_info(data);
+}
+
+
+
+/** Updates an existing #I2C_Bus_Info struct with recent
+ *  data from a source sruct.  Modifies those fields which
+ *  can change.
+ *
+ *  @param old
+ *  @param new
+ */
+void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
+   assert(existing);
+   assert(new);
+   if (existing->edid) {
+      free_parsed_edid(existing->edid);
+   }
+   if (new->edid)
+      existing->edid = copy_parsed_edid(new->edid);
+   else
+      existing->edid = NULL;
+
+#define COPY_BIT(_old, _new, _bit) \
+   if (_new->flags & _bit) \
+      _old->flags |= _bit; \
+   else                    \
+      _old->flags &= ~_bit;
+
+   COPY_BIT(existing, new, I2C_BUS_ADDR_0X50);
+   COPY_BIT(existing, new, I2C_BUS_ADDR_0X37);
+   COPY_BIT(existing, new, I2C_BUS_ADDR_0X30);
+   COPY_BIT(existing, new, I2C_BUS_PROBED);
+   COPY_BIT(existing, new, I2C_BUS_SYSFS_EDID);
+   COPY_BIT(existing, new, I2C_BUS_DRM_CONNECTOR_CHECKED);
+#undef COPY_BIT
+
+   if (existing->drm_connector_name) {
+      free(existing->drm_connector_name);
+      existing->drm_connector_name = NULL;
+   }
+   if (new->drm_connector_name)
+      existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
+   existing->drm_connector_found_by = new->drm_connector_found_by;
+
+   existing->last_checked_dpms_asleep = new->last_checked_dpms_asleep;
 }
 
 
 //
-// Bus_Info retrieval
+// Generic Bus_Info retrieval
 //
+
+I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d", busno);
+
+   I2C_Bus_Info * result = NULL;
+   for (int ndx = 0; ndx < buses->len; ndx++) {
+      I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
+      if (cur_info->busno == busno) {
+         result = cur_info;
+         break;
+      }
+   }
+
+   DBGMSF(debug, "Done.     Returning: %p", result);
+   return result;
+}
+
+
+int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
+   bool debug = true;
+   DBGMSF(debug, "Starting. busno=%d", busno);
+
+   int result = -1;
+   for (int ndx = 0; ndx < buses->len; ndx++) {
+      I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
+      if (cur_info->busno == busno) {
+         result = ndx;
+         break;
+      }
+   }
+
+   DBGMSF(debug, "Done.     Returning: %d", result);
+   return result;
+}
+
+
+//
+// Operations on the set of all buses
+//
+
+/* static */ GPtrArray * i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
+Bit_Set_256 connected_buses;    // cant initialize here, "not a constant"  = EMPTY_BIT_SET_256;
 
 
 GPtrArray * i2c_get_all_buses() {
    return i2c_buses;
 }
 
-// Simple Bus_Info retrieval
+
+/** Retrieves bus information by I2C bus number.
+ *
+ * @param   busno    bus number
+ *
+ * @return  pointer to Bus_Info struct for the bus,\n
+ *          NULL if invalid bus number
+ */
+I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
+   bool debug = false;
+   DBGMSF(debug, "Starting. busno=%d", busno);
+
+   I2C_Bus_Info * result = i2c_find_bus_info_in_gptrarray_by_busno(i2c_buses, busno);
+
+   DBGMSF(debug, "Done.     Returning: %p", result);
+   return result;
+}
+
 
 /** Retrieves bus information by its index in the i2c_buses array
  *
@@ -234,63 +361,6 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
                          busndx, businfo,  (businfo) ? businfo->busno : -1) ;
    return businfo;
 }
-
-
-/** Retrieves bus information by I2C bus number.
- *
- * If the bus information does not already exist in the #I2C_Bus_Info struct for the
- * bus, it is calculated by calling check_i2c_bus()
- *
- * @param   busno    bus number
- *
- * @return  pointer to Bus_Info struct for the bus,\n
- *          NULL if invalid bus number
- */
-I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
-   bool debug = false;
-   DBGMSF(debug, "Starting. busno=%d", busno);
-
-   I2C_Bus_Info * result = NULL;
-   for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
-      I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
-      if (cur_info->busno == busno) {
-         result = cur_info;
-         break;
-      }
-   }
-
-   DBGMSF(debug, "Done.     Returning: %p", result);
-   return result;
-}
-
-
-/** Retrieves the value of a text attribute (e.g. enabled) in the SYSFS
- *  DRM connector directory for an I2C bus.
- *
- *  @param businfo
- *  @param attribute  attribute name
- *  @return attribute value, or NULL if not a DRM display
- *
- *  Caller is responsible for freeing the returned value
- */
-char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute) {
-   assert(businfo);
-   assert(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED);
-   assert(businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_CHECKED);
-   char * result = NULL;
-   if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
-      assert(businfo->drm_connector_name);
-      RPT_ATTR_TEXT(-1, &result, "/sys/class/drm", businfo->drm_connector_name, attribute);
-   }
-   return result;
-}
-
-
-#ifdef UNUSED
-const char * i2c_get_drm_connected(const I2C_Bus_Info * businfo) {
-   return i2c_get_drm_connector_attribute(businfo, "connected");
-}
-#endif
 
 
 /** Reports I2C buses.
@@ -339,5 +409,7 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_free_bus_info);
+
+   connected_buses = EMPTY_BIT_SET_256;
 }
 
