@@ -309,7 +309,7 @@ int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno
 //
 
 /* static */ GPtrArray * i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
-Bit_Set_256 connected_buses;    // cant initialize here, "not a constant"  = EMPTY_BIT_SET_256;
+Bit_Set_256 connected_buses;    // = EMPTY_BIT_SET_256;  can't initialize here, "not a constant"
 
 
 GPtrArray * i2c_get_all_buses() {
