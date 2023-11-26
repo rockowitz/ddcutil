@@ -115,10 +115,12 @@ free_ddca_feature_metadata(DDCA_Feature_Metadata * metadata);
 
 // Display_Feature_Metadata
 
-// merges DDCA_Version_Feature_Info, DDCA_Feature_Metadata, Internal_Feature_Metadata
-
 #define DISPLAY_FEATURE_METADATA_MARKER "DFMD"
-/** Internal version of display specific feature metadata, includes formatting functions */
+/** Internal version of display specific feature metadata, includes formatting functions
+ *
+ *  Represents merged internal metadata from vcp_code_tables.c, synthetic metadata,
+ *  and user defined features, for a specific VCP version.
+ * */
 typedef
 struct {
    char                                    marker[4];
@@ -128,7 +130,6 @@ struct {
    char *                                  feature_name;
    char *                                  feature_desc;
    DDCA_Feature_Value_Entry *              sl_values;     /**< valid when DDCA_SIMPLE_NC set */
-   // DDCA_Feature_Value_Entry *           latest_sl_values;
    DDCA_Feature_Flags                      feature_flags;
    Format_Normal_Feature_Detail_Function   nontable_formatter;
    Format_Normal_Feature_Detail_Function2  nontable_formatter_sl;
