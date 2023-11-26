@@ -88,6 +88,10 @@ static bool detect_usb_displays = false;
 bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
 
+void ddc_add_display_ref(Display_Ref * dref) {
+   g_ptr_array_add(all_displays, dref);
+}
+
 
 //
 // Utility Functions
@@ -803,13 +807,15 @@ ddc_get_display_ref_by_drm_connector(
       const char * connector_name,
       bool         ignore_invalid)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
    Display_Ref * result = NULL;
    TRACED_ASSERT(all_displays);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays->len=%d", all_displays->len);
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * cur = g_ptr_array_index(all_displays, ndx);
+      // ddc_dbgrpt_display_ref(cur, 4);
       bool pass_filter = true;
       if (ignore_invalid) {
          pass_filter = (cur->dispno > 0 || !(cur->flags&DREF_REMOVED));
@@ -1137,10 +1143,41 @@ void dbgrpt_bus_open_errors(GPtrArray * open_errors, int depth) {
  *
  *  @param threshold  threshold value
  */
-void
-ddc_set_async_threshold(int threshold) {
+void ddc_set_async_threshold(int threshold) {
    // DBGMSG("threshold = %d", threshold);
    ddc_detect_async_threshold = threshold;
+}
+
+static bool all_displays_asleep = true;
+
+Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
+   Display_Ref * dref = NULL;
+   if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
+      dref = create_bus_display_ref(businfo->busno);
+      dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+      if (businfo->drm_connector_name) {
+         dref->drm_connector = g_strdup(businfo->drm_connector_name);
+      }
+      dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
+      dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
+                                          dref->pedid->model_name,
+                                          dref->pedid->product_code);
+      dref->detail = businfo;
+      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+      dref->flags |= DREF_DDC_IS_MONITOR;
+
+      bool asleep = dpms_check_drm_asleep(businfo);
+      if (asleep) {
+         dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+      }
+      else {
+         all_displays_asleep = false;
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   return dref;
 }
 
 
@@ -1156,13 +1193,15 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
    GPtrArray * display_list = g_ptr_array_new();
-   bool all_asleep = true;
+
 
    int busct = i2c_detect_buses();
    DBGMSF(debug, "i2c_detect_buses() returned: %d", busct);
    guint busndx = 0;
    for (busndx=0; busndx < busct; busndx++) {
+      DBGMSF(debug, "busndx = %d", busndx);
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
+      // i2c_dbgrpt_bus_info(businfo, 2);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = NULL;
          // Do not restore serialized display ref if slave address x37 inactive
@@ -1195,15 +1234,14 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
                 asleep = true;
              }
              else {
-                all_asleep = false;
+                all_displays_asleep = false;
              }
          }
          if (asleep) {
             dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
          }
-
-         g_ptr_array_add(display_list, dref);
          // dbgrpt_display_ref(dref,5);
+         g_ptr_array_add(display_list, dref);
       }
       else if ( !(businfo->flags & I2C_BUS_ACCESSIBLE) ) {
          Bus_Open_Error * boe = calloc(1, sizeof(Bus_Open_Error));
@@ -1246,7 +1284,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
                 asleep = true;
              }
              else {
-                all_asleep = false;
+                all_displays_asleep = false;
              }
          }
          if (asleep) {
@@ -1270,7 +1308,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       }
    }
 #endif
-    if (all_asleep)
+    if (all_displays_asleep)
        dpms_state |= DPMS_ALL_DRM_ASLEEP;
     else
        dpms_state &= ~DPMS_ALL_DRM_ASLEEP;
@@ -1281,7 +1319,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    if (olev == DDCA_OL_VERBOSE)
       set_output_level(DDCA_OL_NORMAL);
 
-   DBGMSF(debug, "display_list->len=%d, ddc_detect_async_threshold=%d",
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "display_list->len=%d, ddc_detect_async_threshold=%d",
                  display_list->len, ddc_detect_async_threshold);
    if (display_list->len >= ddc_detect_async_threshold)
       ddc_async_scan(display_list);
@@ -1496,55 +1534,75 @@ ddc_is_usb_display_detection_enabled() {
 
 
 //
-// Simple handling of display hotplug events
+// Simple handling of display detection events
 //
 
-GPtrArray* display_hotplug_callbacks = NULL;
+GPtrArray* display_detection_callbacks = NULL;
 
-/** Registers a display hotplug event callback
+/** Registers a display detection event callback
  *
- * The function must be of type DDCA_Display_Hotplug_Callback_Func
+ * The function must be of type DDCA_Display_Detection_Callback_Func
  *
  *  @param func function to register
  *
- *  The function must be of type DDDCA_Display_Hotplug_Callback_Func.
+ *  The function must be of type DDDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
  */
-DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
-   return (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
+DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok = generic_register_callback(&display_detection_callbacks, func);
+   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
 }
 
 
-/** Deregisters a hotplug event callback function
+/** Deregisters a detection event callback function
  *
- *  @@aram function of type DDCA_Display_Hotplug_Callback_func
+ *  @@aram function of type DDCA_Display_Detection_Callback_func
  */
-/** Deregisters a hotplug event callback function
+/** Deregisters a detection event callback function
  *
  *  @param  function to dregister
  *  @retval DDCRC_OK normal return
  *  #reeval DDCRC_NOT_FOUND function not in list of registered functions
  */
-DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
-   return (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
+DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok =  generic_unregister_callback(display_detection_callbacks, func);
+   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
 }
 
 
-/** Invokes the registered callbacks for a display hotplug event.
+/** Invokes the registered callbacks for a display detection event.
  */
-void ddc_emit_display_hotplug_event() {
-   bool debug = false || watch_watching;
+void ddc_emit_display_detection_event(DDCA_Display_Detection_Event evt) {
+   bool debug = true || watch_watching;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   if (display_hotplug_callbacks) {
-      for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
-         DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
-         func();
+   if (display_detection_callbacks) {
+      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
+         DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
+         func(evt);
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
-         (display_hotplug_callbacks) ? display_hotplug_callbacks->len : 0);
+         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
+}
+
+
+const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
+   char * result = NULL;
+   switch(event_type) {
+   case DISPLAY_EVENT_CONNECTED:   result = "DISPLAY_EVENT_CONNECTED";    break;
+   case DISPLAY_EVENT_DISCONNETED: result = "DISPLAY_EVENT_DISCONNECTED"; break;
+   case DISPLAY_EVENT_DPMS_AWAKE:  result = "DPMS_EVENT_DPMS_AWAKE";      break;
+   case DISPLAY_EVENT_DPMS_ASLEEP: result = "DPMS_EVENT_DPMS_ASLEEP";     break;
+   }
+   return result;
 }
 
 
@@ -1706,6 +1764,96 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
 #endif
 
 
+
+
+bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p", businfo);
+   assert(businfo);
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      i2c_dbgrpt_bus_info(businfo, 4);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "busno=%d", businfo->busno);
+
+   bool ok = false;
+   char * drm_connector_name = businfo->drm_connector_name;
+   // Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);  // unused
+
+   // i2c_check_bus(businfo);
+   if (businfo->flags & I2C_BUS_ADDR_0X50) {
+      Display_Ref * old_dref = ddc_get_display_ref_by_drm_connector(drm_connector_name, /*ignore_invalid*/ false);
+      if (old_dref) {
+         SEVEREMSG("Active Display_Ref already exists for DRM connector %s", drm_connector_name);
+         // how to handle?
+         old_dref->flags |= DREF_REMOVED;
+      }
+      Display_Ref * dref = create_bus_display_ref(businfo->busno);
+      dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
+      dref->pedid = businfo->edid;    // needed?
+      dref->mmid  = monitor_model_key_new(
+                       dref->pedid->mfg_id,
+                       dref->pedid->model_name,
+                       dref->pedid->product_code);
+
+      // drec->detail.bus_detail = businfo;
+      dref->detail = businfo;
+      dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
+      dref->flags |= DREF_DDC_IS_MONITOR;
+
+      g_ptr_array_add(all_displays, dref);
+
+      DDCA_Display_Detection_Event report;
+      report.dref = (void*) dref;
+      report.event_type = DISPLAY_EVENT_CONNECTED;
+      ddc_emit_display_detection_event(report);
+      ok = true;
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
+   return ok;
+}
+
+
+
+bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
+
+   // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
+   // i2c_dbgrpt_buses(/* report_all */ true, 2);
+
+   bool found = false;
+   assert(all_displays);
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      // If a display is repeatedly removed and added on a particular connector,
+      // there will be multiple Display_Ref records.  All but one should already
+      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
+      // an I2C_Bus_Info struct.
+      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      assert(dref);
+      // DBGMSG("Checking dref %s", dref_repr_t(dref));
+      // dbgrpt_display_ref(dref, 2);
+      if (dref->io_path.io_mode == DDCA_IO_I2C) {
+         if (dref->flags & DREF_REMOVED)  {
+            DBGMSG("DREF_REMOVED set");
+            continue;
+         }
+         dref->flags |= DREF_REMOVED;
+         DDCA_Display_Detection_Event report;
+         report.event_type = DISPLAY_EVENT_DISCONNETED;
+         report.dref = (void*) dref;
+         ddc_emit_display_detection_event(report);
+         found = true;
+         break;
+      }
+   }
+
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
+   return found;
+}
+
+
+
+
 void
 init_ddc_displays() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
@@ -1713,7 +1861,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
-   RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
+   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
    RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
