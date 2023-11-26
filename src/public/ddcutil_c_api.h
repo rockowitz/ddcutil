@@ -1575,8 +1575,8 @@ ddca_get_profile_related_values(
  *  @remark
  *  If **ddca_dh** is NULL, this function opens the first display
  *  that matches the display identifiers in the **profile_values_string**.
- *  If **ddca_dh** is non-NULL, then the identifiers in **profile_values_string**
- *  must be consistent with the open display.
+ *  If **ddca_dh** is non-NULL, then the identifiers in
+ *  **profile_values_string**  must be consistent with the open display.
  *  @remark
  *  The non-NULL case exists to handle the unusual situation where multiple
  *  displays have the same manufacturer, model, and serial number,
@@ -1590,6 +1590,57 @@ ddca_set_profile_related_values(
       DDCA_Display_Handle  ddca_dh,
       char *               profile_values_string);
 
+
+//
+//  Report display status changes
+//
+
+// Signature of callback function
+
+typedef
+void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event);
+
+// Yes, a DDCA_Display_Detection_Event is being passed on the stack not allocated
+// on the heap. Callback invocation is extremely infrequent and passing the
+// event on the stack relieves clients of responsibility for memory management.
+
+/** Registers a function to be called called when a change in display status is
+ *  detected.
+ *
+ *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
+ *  @return    DDCRC_OK
+ *  @retval    DDCRC_INVALID_OPERATION function already registered
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+
+/** Removes a function from the list of registered callbacks
+ *
+ *  @param[in] func            function that has already been registered
+ *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_NOT_FOUND function not registered
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+
+
+/** Returns the name of a #DDCA_Display_Event_Type
+ *
+ *  @param  event_type  event type id
+ *  @return             printable event type name
+ *
+ *  @remark
+ *  The value returned exists in an internal ddcutil table.
+ *  Caller should not free.
+ *
+ *  @since 2.0.2
+ */
+const char *
+   ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
 #ifdef __cplusplus
