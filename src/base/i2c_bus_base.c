@@ -113,7 +113,7 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
 
 // called if display removed
 void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
-   bool debug = true;
+   bool debug = false;
    assert(bus_info);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
    bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
@@ -122,7 +122,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
       bus_info->edid = NULL;
    }
    if ( IS_DBGTRC(debug, TRACE_GROUP) ) {
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "Final bus_info:");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Final bus_info:");
       i2c_dbgrpt_bus_info(bus_info, 2);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -186,7 +186,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
             report_parsed_edid(businfo->edid, true /* verbose */, depth);
          }
       }
-      rpt_vstring(depth, "last_checked_asleep:       %s", businfo->last_checked_dpms_asleep);
+      rpt_vstring(depth, "last_checked_asleep:       %s", sbool(businfo->last_checked_dpms_asleep));
    }
 #ifndef TARGET_BSD
    I2C_Sys_Info * info = get_i2c_sys_info(businfo->busno, -1);
@@ -313,7 +313,7 @@ I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int 
 
 
 int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
-   bool debug = true;
+   bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
    int result = -1;
