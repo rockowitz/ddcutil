@@ -11,10 +11,9 @@
 #include <stdbool.h>
 #include <glib-2.0/glib.h>
 
+#include "util/data_structures.h"
 #include "util/edid.h"
 
-// shared with i2c_bus_selector.c
-extern GPtrArray * i2c_buses;
 
 // Retrieve and inspect bus information
 
@@ -60,26 +59,17 @@ struct {
    char *           drm_connector_name; ///< from /sys
    Drm_Connector_Found_By
                     drm_connector_found_by;
+   bool             last_checked_dpms_asleep;
 } I2C_Bus_Info;
 
 char *           interpret_i2c_bus_flags(uint16_t flags);
 char *           interpret_i2c_bus_flags_t(uint16_t flags);
-I2C_Bus_Info *   i2c_new_bus_info(int busno);
-void             i2c_free_bus_info(I2C_Bus_Info * businfo);
-void             i2c_gdestroy_bus_info(void * data);
-GPtrArray *      i2c_get_all_buses();
-
-// Simple Bus_Info retrieval
-I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
-I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 
 // Accessors
-char *           i2c_get_drm_connector_attribute(
-                     const I2C_Bus_Info * businfo,
-                     const char *         attribute);
+char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char * attribute);
 
-#define I2C_GET_DRM_CONNECTED(_businfo) \
-   i2c_get_drm_connector_attribute(_businfo, "connected")
+#define I2C_GET_DRM_DPMS(_businfo) \
+   i2c_get_drm_connector_attribute(_businfo, "dpms")
 
 #define I2C_GET_DRM_STATUS(_businfo) \
    i2c_get_drm_connector_attribute(_businfo, "status")
@@ -88,9 +78,32 @@ char *           i2c_get_drm_connector_attribute(
    i2c_get_drm_connector_attribute(_businfo, "enabled")
 
 
+// Lifecycle
+I2C_Bus_Info *   i2c_new_bus_info(int busno);
+void             i2c_free_bus_info(I2C_Bus_Info * businfo);
+void             i2c_gdestroy_bus_info(void * data);
+
+void             i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new_info);
+
+// Generalized Bus_Info retrieval
+I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno);
+int              i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno);
+
 void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth);
-// Reports all detected i2c buses:
-int              i2c_dbgrpt_buses(bool report_all, int depth);
+
+
+//
+// Detected Buses
+//
+
+// shared with i2c_bus_selector.c
+extern GPtrArray * i2c_buses;
+extern Bit_Set_256 connected_buses;
+
+GPtrArray *      i2c_get_all_buses();
+I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
+I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
+int              i2c_dbgrpt_buses(bool report_all, int depth);  // Reports all detected i2c buses
 
 void init_i2c_bus_base();
 
