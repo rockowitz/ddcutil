@@ -52,7 +52,6 @@
 #define DDCRC_INVALID_CONFIG_FILE    (-(RCRANGE_DDC_START+28) ) ///< config file syntax
 #define DDCRC_DISCONNECTED           (-(RCRANGE_DDC_START+29) ) ///< display has been disconnected
 #define DDCRC_DPMS_ASLEEP            (-(RCRANGE_DDC_START+30) ) ///< display is in a DPMS sleep mode
-#define DDCRC_INVALID_CONFIG_FILE    (-(RCRANGE_DDC_START+28) ) ///< config file syntax
 // #define DDCRC_CAP_FATAL              (-(RCRANGE_DDC_START+28) ) ///< invalid, unusable capabilities string"
 // #define DDCRC_CAP_WARNING            (-(RCRANGE_DDC_START+29) ) ///< capabilities string has errors but is beautiful
 

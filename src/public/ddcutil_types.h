@@ -525,7 +525,7 @@ typedef struct {
 
 
 //
-// For reporting display connection changes to client
+// For reporting display status changes to client
 //
 
 typedef enum {
@@ -542,6 +542,8 @@ typedef struct {
    void *                  unused[3];
 } DDCA_Display_Detection_Event;
 
+typedef
+void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event);
 
 #ifdef __cplusplus
 }
