@@ -261,6 +261,58 @@ __attribute__ ((deprecated)) double
 ddca_get_sleep_multiplier();
 
 
+/** Sets an explicit sleep multiplier factor for the specified display.
+ *  If set, it takes precedence over any other sleep multiplier calculation,
+ *  except for (deprecated) thread sleep multiplier.
+ *
+ *  @param[in]  dref        display reference
+ *  @param[in]  multiplier  must be >= 0 and <= 10
+ *  @retval     DDCRC_OK
+ *  @retval     DDCRC_ARG   invalid display reference or multiplier value
+ */
+DDCA_Status
+ddca_set_display_sleep_multiplier(
+      DDCA_Display_Ref       dref,
+      DDCA_Sleep_Multiplier  multiplier);
+
+
+/** Gets the current effective sleep multiplier for the specified display.
+ *
+ *  This value can vary if dynamic sleep adjustment is active.
+ *
+ *  @param   dref           display reference
+ *  @param   multiplier_loc where to return answer
+ *  @retval  DDCRC_OK
+ *  @retval  DDCRC_ARG      invalid display reference
+ */
+DDCA_Status
+ddca_get_current_display_sleep_multiplier(
+      DDCA_Display_Ref        dref,
+      DDCA_Sleep_Multiplier*  multiplier_loc);
+
+
+/** Controls whether dynamic sleep adjustment is enabled.
+ *  This is a global setting that applies to all displays.
+ *
+ *  @param  onoff
+ *  @return previous setting
+ *
+ *  @since 2.0.2
+ */
+bool
+ddca_enable_dynamic_sleep(bool onoff);
+
+
+/** Reports whether dynamic sleep adjustment is enabled.
+ *
+ *  @return current setting
+ *
+ *  @since 2.0.2
+ */
+bool
+ddca_is_dynamic_sleep_enabled();
+
+
 //
 // Output Redirection
 //
