@@ -154,6 +154,11 @@ typedef enum {
    DDCA_STATS_ALL      = 0xFF     ///< indicates all statistics types
 } DDCA_Stats_Type;
 
+
+//
+// Miscellaneous types
+//
+
 typedef double DDCA_Sleep_Multiplier;
 
 //
