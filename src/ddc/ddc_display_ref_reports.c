@@ -401,7 +401,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
 
             if (dref->pdd->dsa2_enabled) {
                struct Results_Table * rt = (void *)dref->pdd->dsa2_data;
-               Sleep_Multiplier cur_multiplier = dsa2_get_adjusted_sleep_mult(rt);
+               DDCA_Sleep_Multiplier cur_multiplier = dsa2_get_adjusted_sleep_mult(rt);
                rpt_vstring(1, "Current dynamic sleep adjustment multiplier: %5.2f", cur_multiplier);
             }
          }
