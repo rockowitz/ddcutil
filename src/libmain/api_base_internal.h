@@ -186,6 +186,17 @@ ddci_get_precondition_failure_mode();
         if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
    } while(0)
 
+
+#define API_EPILOG_NO_RETURN(_debug_flag, _format, ...) \
+   do { \
+        dbgtrc( \
+          (_debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+          __func__, __LINE__, __FILE__, _format, ##__VA_ARGS__); \
+        if (trace_api_call_depth > 0) \
+           trace_api_call_depth--; \
+        if (ptd_api_profiling_enabled) ptd_profile_function_end(__func__); \
+   } while(0)
+
 #ifdef UNUSED
 #define API_EPILOGX(_debug_flag, _trace_groups, _rc, _format, ...) \
    do { \
