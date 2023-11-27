@@ -19,8 +19,10 @@
 #include "util/string_util.h"
 
 #include "base/core.h"
+#include "base/dsa2.h"
 #include "base/displays.h"
 #include "base/monitor_model_key.h"
+#include "base/per_display_data.h"
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
@@ -1322,7 +1324,7 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
 
 
 //
-// Display status change communication
+// Display Status Change Communication
 //
 
 DDCA_Status
@@ -1346,6 +1348,85 @@ ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func 
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
       return ddc_display_event_type_name(event_type);
+}
+
+
+//
+// Sleep Multiplier Control
+//
+
+DDCA_Status
+ddca_set_display_sleep_multiplier(
+      DDCA_Display_Ref      ddca_dref,
+      DDCA_Sleep_Multiplier multiplier)
+{
+   bool debug = false;
+    API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
+    free_thread_error_detail();
+    DDCA_Status rc = 0;
+    assert(library_initialized);
+    Display_Ref * dref = NULL;
+    VALIDATE_DDCA_DREF2(ddca_dref, dref, rc, /*debug=*/false);
+    if (rc == 0)  {
+       Per_Display_Data * pdd = dref->pdd;
+
+       if (multiplier >= 0.0 && multiplier <= 10.0) {
+          pdd_reset_multiplier(pdd, multiplier);
+       }
+       else
+          rc = DDCRC_ARG;
+    }
+    API_EPILOG_WO_RETURN(debug, rc, "");
+    return rc;
+}
+
+
+DDCA_Status
+ddca_get_current_display_sleep_multiplier(
+      DDCA_Display_Ref        ddca_dref,
+      DDCA_Sleep_Multiplier*  multiplier_loc)
+{
+   bool debug = false;
+    API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
+    free_thread_error_detail();
+    DDCA_Status rc = 0;
+    assert(library_initialized);
+    Display_Ref * dref = NULL;
+    VALIDATE_DDCA_DREF2(ddca_dref, dref, rc, /*debug=*/false);
+    if (rc == 0) {
+       Per_Display_Data * pdd = dref->pdd;
+       *multiplier_loc = pdd->final_successful_adjusted_sleep_multiplier;
+    }
+    API_EPILOG_WO_RETURN(debug, rc, "");
+    return rc;
+}
+
+
+bool
+ddca_enable_dynamic_sleep(bool onoff)
+{
+   bool debug = false;
+   API_PROLOG(debug, "");
+   free_thread_error_detail();
+
+   bool old = pdd_is_dynamic_sleep_enabled();
+   pdd_enable_dynamic_sleep_all(onoff);
+
+   API_EPILOG_NO_RETURN(debug, "Returning %s", sbool(old));
+   return old;
+}
+
+
+bool ddca_is_dynamic_sleep_enabled()
+{
+   bool debug = false;
+   API_PROLOG(debug, "");
+   free_thread_error_detail();
+
+   bool result = pdd_is_dynamic_sleep_enabled();
+
+   API_EPILOG_NO_RETURN(debug, "Returning %s", sbool(result));
+   return result;
 }
 
 
