@@ -748,7 +748,7 @@ void pdd_reset_multiplier(Per_Display_Data * pdd, DDCA_Sleep_Multiplier multipli
    pdd->user_sleep_multiplier = multiplier;
    pdd->user_multiplier_source = Reset;
    if (pdd->dsa2_enabled) {
-      dsa2_reset_multiplier(multiplier);
+      dsa2_reset_results_table(pdd->dpath.path.i2c_busno, multiplier);
    }
 }
 
