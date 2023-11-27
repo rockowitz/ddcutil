@@ -94,7 +94,7 @@ dsa2_set_greatest_tries_upper_bound(int tries) {
 
 
 bool
-dsa2_set_average_tries_upper_bound(Sleep_Multiplier avg_tries) {
+dsa2_set_average_tries_upper_bound(DDCA_Sleep_Multiplier avg_tries) {
    bool result = false;
    if (1.0 <= avg_tries && avg_tries <= MAX_MAX_TRIES) {
       target_avg_tries_upper_bound_10 = avg_tries * 10;
@@ -450,6 +450,25 @@ free_results_table(Results_Table * rtable) {
    }
 }
 
+#ifdef FUTURE
+Results_Table * reset_results_table(int busno, float sleep_multiplier) {
+   Results_Table * rtable = results_tables[busno];
+   if (rtable) {
+      free_results_table(rtable);
+      results_tables[busno] = NULL;
+      rtable = NULL;
+   }
+   rtable = new_results_table[busno];
+   results_tables[busno] = rtable;
+   rtable->cur_step = initial_step;
+   rtable->cur_retry_loop_step = initial_step;
+   rtable->state = RTABLE_BUS_DETECTED;
+   rtable->edid_checksum_byte = get_edid_checkbyte(busno);
+   if (sleep_multiplier >= 0) {
+      dsa2_multiplier_to_step(sleep_multiplier)
+#endif
+   
+
 
 /** Returns the #Results_Table for an I2C bus number
  *
@@ -525,7 +544,7 @@ dsa2_set_multiplier_by_path(DDCA_IO_Path dpath, Sleep_Multiplier multiplier) {
  *  convert to correct integer variables.
  */
 int
-dsa2_multiplier_to_step(Sleep_Multiplier multiplier) {
+dsa2_multiplier_to_step(DDCA_Sleep_Multiplier multiplier) {
    bool debug = false;
    int imult = multiplier * 100;
 
@@ -545,7 +564,7 @@ dsa2_multiplier_to_step(Sleep_Multiplier multiplier) {
 #ifdef TEST
 void test_float_to_step_conversion() {
    for (int ndx = 0; ndx < adjusted_step_ct; ndx++) {
-      Sleep_Multiplier f = steps[ndx] / 100.0;
+      DDCA_Sleep_Multiplier f = steps[ndx] / 100.0;
       int found_ndx = dsa2_multiplier_to_step(f);
       printf("ndx=%2d, steps[ndx]=%d, f=%2.5f, found_ndx=%d\n",
              ndx, steps[ndx], f, found_ndx);
@@ -562,7 +581,7 @@ void test_float_to_step_conversion() {
  *  @param multiplier sleep multiplier value
  */
 void
-dsa2_reset_multiplier(Sleep_Multiplier multiplier) {
+dsa2_reset_multiplier(DDCA_Sleep_Multiplier multiplier) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "multiplier=%7.3f", multiplier);
    initial_step = dsa2_multiplier_to_step(multiplier);
@@ -656,14 +675,14 @@ dsa2_next_retry_step(int prev_step, int remaining_tries)  {
    if (remaining_tries > 0) {   // handle maxtries failure
       int remaining_steps = step_last - prev_step;
 
-      Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
+      DDCA_Sleep_Multiplier fadj = (1.0*remaining_steps)/remaining_tries;
       // don't wait until last try to hit max step
       if (remaining_tries > 2)
          fadj = (1.0*remaining_steps) / (remaining_tries-2);
       if (remaining_tries > 1)
          fadj = (1.0*remaining_steps) / (remaining_tries-1);
 
-      Sleep_Multiplier fadj2 = fadj;
+      DDCA_Sleep_Multiplier fadj2 = fadj;
       if (fadj > .75 && fadj < 1.0)
          fadj2 = 1.0;
       int adjustment = fadj2;
@@ -968,10 +987,10 @@ dsa2_record_final(
 }
 
 
-Sleep_Multiplier
+DDCA_Sleep_Multiplier
 dsa2_step_to_multiplier(int step) {
    bool debug = false;
-   Sleep_Multiplier result = 1.0f;
+   DDCA_Sleep_Multiplier result = 1.0f;
    assert(step >= 0 && step <= step_last);
    result = steps[step]/100.0;
    DBGTRC_EXECUTED(debug, TRACE_GROUP,
@@ -981,7 +1000,7 @@ dsa2_step_to_multiplier(int step) {
 }
 
 
-Sleep_Multiplier dsa2_get_minimum_multiplier() {
+DDCA_Sleep_Multiplier dsa2_get_minimum_multiplier() {
    return dsa2_step_to_multiplier(dsa2_step_floor);
 }
 
@@ -994,10 +1013,10 @@ Sleep_Multiplier dsa2_get_minimum_multiplier() {
  *  @param  rtable #Results_Table for device
  *  @return multiplier value
  */
-Sleep_Multiplier
+DDCA_Sleep_Multiplier
 dsa2_get_adjusted_sleep_mult(Results_Table * rtable) {
    bool debug = false;
-   Sleep_Multiplier result = 1.0f;
+   DDCA_Sleep_Multiplier result = 1.0f;
    assert(rtable);
    result = steps[rtable->cur_retry_loop_step]/100.0;
    DBGTRC_EXECUTED(debug, TRACE_GROUP,
@@ -1416,7 +1435,7 @@ bye1:
 
 
 #ifdef DIDNT_WORK
-Sleep_Multiplier logistic(double x) {
+DDCA_Sleep_Multiplier logistic(double x) {
   // const double M_E =   2.7182818284590452354;
    double k = .5;
   double result =  exp(k*x)/(1+exp(k*x));
