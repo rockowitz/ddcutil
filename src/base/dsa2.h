@@ -32,6 +32,7 @@ struct Results_Table *
                  dsa2_get_results_table_by_busno(int busno, bool create_if_not_found);
 bool             dsa2_is_from_cache(struct Results_Table * dpath);
 void             dsa2_reset_multiplier(DDCA_Sleep_Multiplier multiplier);
+void             dsa2_reset_results_table(int busno, DDCA_Sleep_Multiplier sleep_multiplier);
 DDCA_Sleep_Multiplier
                  dsa2_get_adjusted_sleep_mult(struct Results_Table * rtable);
 void             dsa2_note_retryable_failure(

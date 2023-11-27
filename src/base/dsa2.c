@@ -450,24 +450,31 @@ free_results_table(Results_Table * rtable) {
    }
 }
 
-#ifdef FUTURE
-Results_Table * reset_results_table(int busno, float sleep_multiplier) {
+void
+dsa2_reset_results_table(int busno, DDCA_Sleep_Multiplier sleep_multiplier)
+{
    Results_Table * rtable = results_tables[busno];
    if (rtable) {
       free_results_table(rtable);
-      results_tables[busno] = NULL;
-      rtable = NULL;
    }
-   rtable = new_results_table[busno];
+   rtable = new_results_table(busno);
    results_tables[busno] = rtable;
+
+   int initial_step = (sleep_multiplier >= 0)
+                         ? dsa2_multiplier_to_step(sleep_multiplier)
+                         : dsa2_multiplier_to_step(1.0f);
+   rtable->initial_step = initial_step;
    rtable->cur_step = initial_step;
    rtable->cur_retry_loop_step = initial_step;
    rtable->state = RTABLE_BUS_DETECTED;
    rtable->edid_checksum_byte = get_edid_checkbyte(busno);
-   if (sleep_multiplier >= 0) {
-      dsa2_multiplier_to_step(sleep_multiplier)
-#endif
-   
+   rtable->adjustments_down = 0;
+   rtable->adjustments_up = 0;
+   rtable->total_steps_up = 0;
+   rtable->total_steps_down = 0;
+   rtable->successful_try_ct = 0;
+   rtable->retryable_failure_ct = 0;
+}
 
 
 /** Returns the #Results_Table for an I2C bus number
