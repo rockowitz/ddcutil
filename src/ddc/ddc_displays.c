@@ -500,7 +500,7 @@ ddc_initial_checks_by_dh(Display_Handle * dh) {
          dref->flags |= DREF_DDC_COMMUNICATION_CHECKED;
       }
       else {
-         Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
+         DDCA_Sleep_Multiplier initial_multiplier = pdd_get_adjusted_sleep_multiplier(pdd);
          Parsed_Nontable_Vcp_Response* parsed_response_loc = NULL;
          // feature that always exists
          Byte feature_code = 0x10;
