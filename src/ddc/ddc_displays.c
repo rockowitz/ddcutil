@@ -1446,7 +1446,7 @@ ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    ddc_discard_detected_displays();
-   // i2c_detect_buses(); // called in ddc_detect_all_displays()
+   get_sys_drm_connectors(/*rescan=*/true);
    all_displays = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
       ddc_dbgrpt_drefs("all_displays:", all_displays, 1);
