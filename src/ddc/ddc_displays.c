@@ -1607,9 +1607,9 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
    case DDCA_EVENT_CONNECTED:   result = "DDCA_EVENT_CONNECTED";       break;
-   case DDCA_EVENT_DISCONNETED: result = "DISPLAY_EVENT_DISCONNECTED"; break;
-   case DDCA_EVENT_DPMS_AWAKE:  result = "DPMS_EVENT_DPMS_AWAKE";      break;
-   case DDCA_EVENT_DPMS_ASLEEP: result = "DPMS_EVENT_DPMS_ASLEEP";     break;
+   case DDCA_EVENT_DISCONNETED: result = "DDCA_EVENT_DISCONNECTED";    break;
+   case DDCA_EVENT_DPMS_AWAKE:  result = "DDCA_EVENT_DPMS_AWAKE";      break;
+   case DDCA_EVENT_DPMS_ASLEEP: result = "DDCA_EVENT_DPMS_ASLEEP";     break;
    }
    return result;
 }
