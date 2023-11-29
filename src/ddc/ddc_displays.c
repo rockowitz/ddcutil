@@ -1606,10 +1606,10 @@ void ddc_emit_display_detection_event(DDCA_Display_Detection_Event evt) {
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
-   case DISPLAY_EVENT_CONNECTED:   result = "DISPLAY_EVENT_CONNECTED";    break;
-   case DISPLAY_EVENT_DISCONNETED: result = "DISPLAY_EVENT_DISCONNECTED"; break;
-   case DISPLAY_EVENT_DPMS_AWAKE:  result = "DPMS_EVENT_DPMS_AWAKE";      break;
-   case DISPLAY_EVENT_DPMS_ASLEEP: result = "DPMS_EVENT_DPMS_ASLEEP";     break;
+   case DDCA_EVENT_CONNECTED:   result = "DDCA_EVENT_CONNECTED";       break;
+   case DDCA_EVENT_DISCONNETED: result = "DISPLAY_EVENT_DISCONNECTED"; break;
+   case DDCA_EVENT_DPMS_AWAKE:  result = "DPMS_EVENT_DPMS_AWAKE";      break;
+   case DDCA_EVENT_DPMS_ASLEEP: result = "DPMS_EVENT_DPMS_ASLEEP";     break;
    }
    return result;
 }
@@ -1815,7 +1815,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
       DDCA_Display_Detection_Event report;
       report.dref = (void*) dref;
-      report.event_type = DISPLAY_EVENT_CONNECTED;
+      report.event_type = DDCA_EVENT_CONNECTED;
       ddc_emit_display_detection_event(report);
       ok = true;
    }
@@ -1870,7 +1870,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
       found = true;
       dref->flags |= DREF_REMOVED;
       DDCA_Display_Detection_Event report;
-      report.event_type = DISPLAY_EVENT_DISCONNETED;
+      report.event_type = DDCA_EVENT_DISCONNETED;
       report.dref = (void*) dref;
       ddc_emit_display_detection_event(report);
    }

@@ -211,7 +211,7 @@ void recheck_bus_info() {
          if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
             DDCA_Display_Detection_Event report;
             report.dref = (void*) get_dref_by_busno(businfo->busno);
-            report.event_type = (is_dpms_asleep) ? DISPLAY_EVENT_DPMS_ASLEEP : DISPLAY_EVENT_DPMS_AWAKE;
+            report.event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
             ddc_emit_display_detection_event(report);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
