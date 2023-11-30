@@ -536,25 +536,24 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
    return copy;
 }
 
+//#define CK_INVALIDATED_MARKER(_marker, _marker_name)  ( (memcmp(_marker, _marker_name, 3) == 0) && (_marker[3] = 'x')))
+//    assert( !(INVALIDATED_MARKER(dref->marker, DISPLAY_REF_MARKER));
+
 
 /** Frees a display reference.
  *
  *  \param  dref  ptr to display reference to free, if NULL no operation is performed
  *  \retval DDCRC_OK       success
- *  \retval DDCRC_ARG      invalid display reference
  *  \retval DDCRC_LOCKED   display reference not marked as transient
  */
 DDCA_Status free_display_ref(Display_Ref * dref) {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p -> %s", dref, dref_repr_t(dref));
+   DBGTRC_STARTING(debug, DDCA_TRC_BASE, "dref=%p", dref);
    DDCA_Status ddcrc = 0;
    if (dref) {
-      if ( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
-         ddcrc = DDCRC_ARG;
-         DBGMSG("Invalid dref.");
-         rpt_hex_dump((Byte*) dref->marker, 4, 2);
-         goto bye;
-      }
+      assert ( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_BASE, "dref=%s, DREF_TRANSIENT=%s, DREF_OPEN=%s",
+            dref_repr_t(dref), SBOOL(dref->flags & DREF_TRANSIENT), SBOOL(dref->flags&DREF_OPEN));
       if (dref->flags & DREF_TRANSIENT)  {
          if (dref->flags & DREF_OPEN) {
             ddcrc = DDCRC_LOCKED;
@@ -564,7 +563,7 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
             free(dref->capabilities_string);    // private copy
             free(dref->mmid);                   // private copy
             if (dref->pedid)  {
-               DBGMSF(debug, "Freeing dref->pedid = %p", dref->pedid);
+               DBGTRC(debug, DDCA_TRC_NONE, "Freeing dref->pedid = %p", dref->pedid);
                free_parsed_edid(dref->pedid);  // private copy
             }
             dfr_free(dref->dfr);
@@ -576,7 +575,6 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
          }
       }
    }
-bye:
    DBGTRC_RET_DDCRC(debug, DDCA_TRC_BASE, ddcrc, "");
    return ddcrc;
 }
