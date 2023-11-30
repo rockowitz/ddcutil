@@ -98,10 +98,14 @@ void dpms_check_x11_asleep() {
 bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d", businfo->busno);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d, flags: %s",
+         businfo->busno, i2c_interpret_bus_flags(businfo->flags));
 
    bool asleep = false;
-   if (!businfo->drm_connector_name) {   // is this necessary?
+
+   // ASSERT_IFF( !(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED), !businfo->drm_connector_found_by);
+
+   if (!(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED)) {
       Sys_Drm_Connector * conn =  i2c_check_businfo_connector(businfo);
       if (!conn) {
         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "i2c_check_businfo_connector() failed for bus %d", businfo->busno);
