@@ -621,11 +621,11 @@ ddca_init(const char *      libopts,
             dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
             if (!submaster_initializer(parsed_cmd))
                master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
-            if (!master_error && parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS )
+            if (!master_error && (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) )
                ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
+            free_parsed_cmd(parsed_cmd);
          }
       }
-      free_parsed_cmd(parsed_cmd);
    }
 
    DDCA_Status ddcrc = 0;
