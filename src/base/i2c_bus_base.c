@@ -60,7 +60,7 @@ Value_Name_Table i2c_bus_flags_table = {
  *  @param  flags flags value
  *  @return string interpretation, caller must free
  */
-char * interpret_i2c_bus_flags(uint16_t flags) {
+char * i2c_interpret_bus_flags(uint16_t flags) {
    return VN_INTERPRET_FLAGS(flags, i2c_bus_flags_table, " | ");
 }
 
@@ -73,7 +73,7 @@ char * interpret_i2c_bus_flags(uint16_t flags) {
  *  The string returned is valid until the next call to this function in
  *  the current thread.  It must not be free'd by the caller.
  */
-char * interpret_i2c_bus_flags_t(uint16_t flags) {
+char * i2c_interpret_bus_flags_t(uint16_t flags) {
    return VN_INTERPRET_FLAGS_T(flags, i2c_bus_flags_table, " | ");
 }
 
@@ -130,10 +130,20 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
 
 
 char * i2c_get_drm_connector_name(I2C_Bus_Info * businfo) {
+   bool debug = false;
+   char * result = NULL;
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "busno=%d, drm_connector_found_by=%s drm_connector_name=|%s|",
+         businfo->busno, drm_connector_found_by_name(businfo->drm_connector_found_by),
+         businfo->drm_connector_name);
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "flags: %s", i2c_interpret_bus_flags_t(businfo->flags) );
+
    if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) ) {    // ??? when can this be false? ???
-      i2c_check_businfo_connector(businfo);
+      result = businfo->drm_connector_name;
    }
-   return businfo->drm_connector_name;
+
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   return result;
 }
 
 
@@ -152,7 +162,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
    DBGMSF(debug, "Starting");
    assert(businfo);
    rpt_structure_loc("I2C_Bus_Info", businfo, depth);
-   rpt_vstring(depth, "Flags:                   %s", interpret_i2c_bus_flags_t(businfo->flags));
+   rpt_vstring(depth, "Flags:                   %s", i2c_interpret_bus_flags_t(businfo->flags));
    rpt_vstring(depth, "Bus /dev/i2c-%d found:   %s", businfo->busno, sbool(businfo->flags&I2C_BUS_EXISTS));
 
    rpt_vstring(depth, "Bus /dev/i2c-%d probed:  %s", businfo->busno, sbool(businfo->flags&I2C_BUS_PROBED ));
@@ -378,7 +388,7 @@ I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
       // report_businfo(busInfo);
       if (debug) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, flags = 0x%04x = %s",
-            businfo->busno, businfo->flags, interpret_i2c_bus_flags_t(businfo->flags));
+            businfo->busno, businfo->flags, i2c_interpret_bus_flags_t(businfo->flags));
       }
       assert( businfo->flags & I2C_BUS_PROBED );
    }
@@ -433,8 +443,9 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
 /** Module initialization. */
 void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_dbgrpt_buses);
-   RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_free_bus_info);
+   RTTI_ADD_FUNC(i2c_get_drm_connector_name);
+   RTTI_ADD_FUNC(i2c_new_bus_info);
 
    connected_buses = EMPTY_BIT_SET_256;
 }
