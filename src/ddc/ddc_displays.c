@@ -1947,6 +1947,7 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(is_phantom_display);
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
+   RTTI_ADD_FUNC(ddc_validate_display_ref);
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING
    RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
