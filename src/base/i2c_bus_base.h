@@ -62,8 +62,8 @@ struct {
    bool             last_checked_dpms_asleep;
 } I2C_Bus_Info;
 
-char *           interpret_i2c_bus_flags(uint16_t flags);
-char *           interpret_i2c_bus_flags_t(uint16_t flags);
+char *           i2c_interpret_bus_flags(uint16_t flags);
+char *           i2c_interpret_bus_flags_t(uint16_t flags);
 
 // Accessors
 char *           i2c_get_drm_connector_name(I2C_Bus_Info * bus_info);
