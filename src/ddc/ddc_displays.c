@@ -1426,6 +1426,8 @@ ddc_discard_detected_displays() {
 #ifndef NDEBUG
          DDCA_Status ddcrc = free_display_ref(dref);
          TRACED_ASSERT(ddcrc==0);
+#else
+         free_display_ref(dref);
 #endif
       }
       g_ptr_array_free(all_displays, true);
@@ -1447,6 +1449,7 @@ ddc_redetect_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
    ddc_discard_detected_displays();
    get_sys_drm_connectors(/*rescan=*/true);
+   i2c_detect_buses();
    all_displays = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
       ddc_dbgrpt_drefs("all_displays:", all_displays, 1);
