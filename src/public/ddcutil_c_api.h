@@ -1647,10 +1647,6 @@ ddca_set_profile_related_values(
 //  Report display status changes
 //
 
-// Yes, a DDCA_Display_Detection_Event is being passed on the stack not allocated
-// on the heap. Callback invocation is extremely infrequent and passing the
-// event on the stack relieves clients of responsibility for memory management.
-
 /** Registers a function to be called called when a change in display status is
  *  detected.
  *

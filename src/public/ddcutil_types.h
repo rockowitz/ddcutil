@@ -542,6 +542,14 @@ typedef struct {
    void *                  unused[3];
 } DDCA_Display_Detection_Event;
 
+
+/** Signature of function passed to #ddca_register_display_connection_callback().
+ *
+ *  Note, the DDCA_Display_Detection_Event is passed on the stack, not allocated
+ *  on the heap. Callback invocation is extremely infrequent, the struct size is
+ *  small, and passing the event on the stack relieves clients of responsibility
+ *   for memory management.
+ */
 typedef
 void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event);
 
