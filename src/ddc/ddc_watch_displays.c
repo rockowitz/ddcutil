@@ -1054,11 +1054,13 @@ ddc_stop_watch_displays()
 
 
 void init_ddc_watch_displays() {
-   RTTI_ADD_FUNC(recheck_bus_info);
-   RTTI_ADD_FUNC(is_dref_alive);
    RTTI_ADD_FUNC(check_drefs_alive);
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
+   RTTI_ADD_FUNC(i2c_detect_buses);
+   RTTI_ADD_FUNC(i2c_detect_buses0);
+   RTTI_ADD_FUNC(is_dref_alive);
+   RTTI_ADD_FUNC(recheck_bus_info);
    RTTI_ADD_FUNC(watch_displays_using_poll);
 #ifdef OLD_HOTPLUG_VERSION
    RTTI_ADD_FUNC(check_displays);
