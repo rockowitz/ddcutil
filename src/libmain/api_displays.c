@@ -58,6 +58,21 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
 }
 
 
+
+DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc) {
+   if (dref_loc)
+      *dref_loc = NULL;
+   Display_Ref * dref = (Display_Ref *) ddca_dref;
+   DDCA_Status result = ddc_validate_display_ref(dref);
+   if (result == DDCRC_OK)
+      *dref_loc = dref;
+   return result;
+}
+
+
+
+
+
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh) {
@@ -1446,5 +1461,6 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_report_display_by_dref);
    RTTI_ADD_FUNC(ddca_register_display_detection_callback);
    RTTI_ADD_FUNC(ddca_unregister_display_detection_callback);
+   RTTI_ADD_FUNC(validate_ddca_display_ref);
 }
 
