@@ -611,7 +611,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
    }   // probing complete
 
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
-      DBGTRC_NOPREFIX(true, TRACE_GROUP, "flags = %s", interpret_i2c_bus_flags_t(bus_info->flags));
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "flags = %s", i2c_interpret_bus_flags_t(bus_info->flags));
 
       // DBGTRC_NOPREFIX(true, TRACE_GROUP, "bus_info:");
       // i2c_dbgrpt_bus_info(bus_info, 2);
@@ -722,6 +722,7 @@ GPtrArray * i2c_detect_buses0() {
       if (buses->len < i2c_businfo_async_threshold) {
          for (int ndx = 0; ndx < buses->len; ndx++) {
             I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Caling i2c_check_bus() synchronously");
             i2c_check_bus(businfo);
          }
       }
@@ -1045,6 +1046,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_bus);
    RTTI_ADD_FUNC(is_laptop_drm_connector_name);
+   RTTI_ADD_FUNC(threaded_initial_checks_by_businfo);
 }
 
 
