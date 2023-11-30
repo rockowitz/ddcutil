@@ -895,24 +895,24 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    if (!sys_drm_connectors)
      sys_drm_connectors = scan_sys_drm_connectors(-1);
    Sys_Drm_Connector * result = NULL;
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_I2C, "After scan_sys_drm_connectors(), sys_drm_displays=%p",
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After scan_sys_drm_connectors(), sys_drm_displays=%p",
    //                                     (void*) sys_drm_displays);
    if (sys_drm_connectors) {
       for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
          Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
          // DBGMSG("cur->busno = %d", cur->i2c_busno);
          if (busno >= 0 && cur->i2c_busno == busno) {
-            // DBGMSG("Matched");
+            DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector name");
             result = cur;
             break;
          }
          if (edid && cur->edid_size >= 128 && (memcmp(edid, cur->edid_bytes,128) == 0)) {
-            DBGMSF(debug, "Matched by edid");
+            DBGTRC(debug, DDCA_TRC_NONE, "Matched by edid");
             result = cur;
             break;
          }
          if (connector_name && streq(connector_name, cur->connector_name)) {
-            DBGMSF(debug, "Matched by connector_name");
+            DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector_name");
             result = cur;
             break;
          }
@@ -927,7 +927,8 @@ Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
    Sys_Drm_Connector * result = find_sys_drm_connector(busno, NULL, NULL);
-   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p: %s",
+         result, (result) ? result->connector_name : "NOT FOUND");
    return result;
 }
 
@@ -1570,13 +1571,13 @@ bool all_video_devices_drm() {
  */
 char * get_drm_connector_by_busno(int busno) {
    bool debug = false;
-   DBGMSF(debug, "Starting. busno = %d", busno);
+   DBGTRC(debug, TRACE_GROUP, "Starting. busno = %d", busno);
    char * result = NULL;
    Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
    if (drm_connector) {
       result = g_strdup(drm_connector->connector_name);
    }
-   DBGMSF(debug, "Done. Returning %s", result);
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
 
@@ -1621,7 +1622,7 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
      }
    }
    businfo->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", interpret_i2c_bus_flags_t(businfo->flags));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Final businfo flags: %s", i2c_interpret_bus_flags_t(businfo->flags));
    if (businfo->drm_connector_name)
       DBGTRC_DONE(debug, TRACE_GROUP, "Returning: SYS_Drm_Connector for %s", businfo->drm_connector_name);
    else
@@ -1680,6 +1681,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
+   RTTI_ADD_FUNC(get_drm_connector_by_busno);
 
    // conflicting drivers
    RTTI_ADD_FUNC(one_n_nnnn);
