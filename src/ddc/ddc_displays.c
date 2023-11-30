@@ -1488,6 +1488,47 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
 }
 
 
+/** Replacement for #ddc_is_valid_display_ref() that returns a status code
+ *  indicating why a display ref is invalid.
+ *
+ *  @param   dref   display reference to validate
+ *  @retval  DDCRC_OK
+ *  @retval  DDCRC_INTERNAL_ERROR
+ *  @retval  DDCRC_DISCONNECTED
+ *  @retval  DDCRC_DPMS_ASLEEP
+ *  @retval  DDCRC_INVALID_DISPLAY    not found
+ */
+DDCA_Status
+ddc_validate_display_ref(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
+   assert(all_displays);
+   DDCA_Status ddcrc = DDCRC_ARG;
+   if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
+      goto bye;
+   }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
+   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+      Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
+      if (cur == dref) {
+         // need to check for dref->dispno < 0 ?
+         if (dref->flags & DREF_REMOVED)
+            ddcrc = DDCRC_DISCONNECTED;
+         else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+            ddcrc = DDCRC_DPMS_ASLEEP;
+         else
+            ddcrc = DDCRC_OK;
+         break;
+      }
+   }
+bye:
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p, dispno=%d", dref, dref->dispno);
+   return ddcrc;
+}
+
+
+
+
 /** Indicates whether displays have already been detected
  *
  *  @return true/false
