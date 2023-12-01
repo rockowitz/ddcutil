@@ -42,9 +42,11 @@ static inline bool valid_display_handle(Display_Handle * dh) {
    return (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) == 0);
 }
 
+#ifdef UNUSED
 static inline bool valid_display_ref(Display_Ref * dref) {
    return (dref && memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
 }
+#endif
 
 
 Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
@@ -58,7 +60,6 @@ Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
 }
 
 
-
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc) {
    if (dref_loc)
       *dref_loc = NULL;
@@ -68,9 +69,6 @@ DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** 
       *dref_loc = dref;
    return result;
 }
-
-
-
 
 
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
@@ -1369,13 +1367,11 @@ ddca_set_display_sleep_multiplier(
    bool debug = false;
     API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
     free_thread_error_detail();
-    DDCA_Status rc = 0;
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    VALIDATE_DDCA_DREF2(ddca_dref, dref, rc, /*debug=*/false);
+    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
     if (rc == 0)  {
        Per_Display_Data * pdd = dref->pdd;
-
        if (multiplier >= 0.0 && multiplier <= 10.0) {
           pdd_reset_multiplier(pdd, multiplier);
        }
@@ -1395,13 +1391,12 @@ ddca_get_current_display_sleep_multiplier(
    bool debug = false;
     API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
     free_thread_error_detail();
-    DDCA_Status rc = 0;
     assert(library_initialized);
     Display_Ref * dref = NULL;
-    VALIDATE_DDCA_DREF2(ddca_dref, dref, rc, /*debug=*/false);
+    DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
     if (rc == 0) {
        Per_Display_Data * pdd = dref->pdd;
-       *multiplier_loc = pdd->final_successful_adjusted_sleep_multiplier;
+       *multiplier_loc        = pdd->final_successful_adjusted_sleep_multiplier;
     }
     API_EPILOG_WO_RETURN(debug, rc, "");
     return rc;
