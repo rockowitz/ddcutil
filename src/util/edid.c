@@ -23,6 +23,7 @@
 #include "pnp_ids.h"
 #include "report_util.h"
 #include "string_util.h"
+#include "debug_util.h"
 
 #include "edid.h"
 
@@ -322,6 +323,9 @@ Parsed_Edid * copy_parsed_edid(Parsed_Edid * original) {
  */
 void free_parsed_edid(Parsed_Edid * parsed_edid) {
    assert( parsed_edid );
+   show_backtrace(1);
+   DBGF(true, "(free_parsed_edid) parsed_edid=%p", parsed_edid);
+   ASSERT_WITH_BACKTRACE(memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0);
    assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
    parsed_edid->marker[3] = 'x';
    // n. Parsed_Edid contains no pointers
