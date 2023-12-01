@@ -14,7 +14,7 @@
 #include "base/displays.h"
 #include "public/ddcutil_types.h"
 
-Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
+// Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
 
@@ -61,11 +61,9 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       assert(library_initialized); \
       _ddcrc = 0; \
       free_thread_error_detail(); \
-      Display_Ref * dref = validated_ddca_display_ref(_ddca_dref); \
-      if (!dref)  { \
-         _ddcrc = DDCRC_ARG; \
-      } \
-      else { \
+      Display_Ref * dref = NULL; \
+      _ddcrc = validate_ddca_display_ref(_ddca_dref, &dref); \
+      if (_ddcrc == 0) { \
          (_action); \
       } \
    } while(0);
