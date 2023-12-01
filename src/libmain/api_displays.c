@@ -490,7 +490,7 @@ typedef enum {
 } DDCA_Open_Options;
 
 
-static
+STATIC
 DDCA_Status
 ddca_open_display3(
       DDCA_Display_Ref      ddca_dref,
@@ -787,7 +787,7 @@ ddca_get_display_info_list(void)
 #endif
 
 
-static void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
+STATIC void init_display_info(Display_Ref * dref, DDCA_Display_Info * curinfo) {
    bool debug = false;
    DBGMSF(debug, "dref=%p, curinfo=%p", dref,curinfo);
    memcpy(curinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4);
@@ -861,7 +861,7 @@ ddca_get_display_info(
 }
 
 
-static DDCA_Status
+STATIC DDCA_Status
 set_ddca_error_detail_from_open_errors() {
    bool debug = false;
    GPtrArray * errs = ddc_get_bus_open_errors();
