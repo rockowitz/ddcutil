@@ -436,12 +436,10 @@ ddca_report_display_by_dref(
    bool debug = false;
    API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
    free_thread_error_detail();
-   DDCA_Status rc = 0;
-
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
-   VALIDATE_DDCA_DREF2(ddca_dref, dref, rc, /*debug=*/false);
+   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
    if (rc == 0)
       ddc_report_display_by_dref(dref, depth);
 
@@ -517,14 +515,8 @@ ddca_open_display3(
    *dh_loc = NULL;        // in case of error
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
-   dref = validated_ddca_display_ref(ddca_dref);
-   if (!dref)
-      rc = DDCRC_ARG;
-   else {
-      // for testing failure:
-      // TRACED_ASSERT(1==2);
-      // assert(1==2);
-
+   rc  = validate_ddca_display_ref(ddca_dref, &dref);
+   if (!rc) {
      Display_Handle* dh = NULL;
      Call_Options callopts = CALLOPT_NONE;
      if (options & DDCA_OPENOPT_WAIT)
@@ -534,13 +526,12 @@ ddca_open_display3(
      err = ddc_open_display(dref,  callopts, &dh);
      if (!err)
         *dh_loc = dh;
-   }
-
-   if (err) {
-      rc = err->status_code;
-      DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
-      errinfo_free_with_report(err, debug, __func__);
-      save_thread_error_detail(public_error_detail);
+     else {
+        rc = err->status_code;
+        DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(err);
+        errinfo_free_with_report(err, debug, __func__);
+        save_thread_error_detail(public_error_detail);
+     }
    }
 
    API_EPILOG_WO_RETURN(debug, rc, "*dh_loc=%p -> %s", *dh_loc, dh_repr(*dh_loc));
