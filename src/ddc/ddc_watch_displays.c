@@ -139,20 +139,20 @@ void recheck_bus_info() {
       DBGMSF(debug, "Waiting 3 sec for old_buses");
       usleep(3000*1000);
    }
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_buses=%p, len=%d", old_buses, old_buses->len);
    Bit_Set_256 old_bitset = buses_to_bitset(old_buses);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
 
    GPtrArray * new_buses = i2c_detect_buses0();
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_buses=%p, len=%d", new_buses, new_buses->len);
    Bit_Set_256 new_bitset = buses_to_bitset(new_buses);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_bitset has %d bits set", bs256_count(new_bitset));
+   
    Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_bitset, new_bitset);
-   Bit_Set_256 newly_connected_buses_bitset = bs256_and_not(new_bitset, old_bitset);
+   Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_bitset, old_bitset);
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_disconnected_buses_bitset has %d bits set",
          bs256_count(newly_disconnected_buses_bitset));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_connected_buses_bitset has %d bits set",
          bs256_count(newly_connected_buses_bitset));
+   
    Bit_Set_256_Iterator iter = bs256_iter_new(newly_disconnected_buses_bitset);
    int busno;
    while(true) {
@@ -162,8 +162,10 @@ void recheck_bus_info() {
       I2C_Bus_Info * businfo =  i2c_find_bus_info_in_gptrarray_by_busno(old_buses, busno);
       ddc_remove_display_by_businfo(businfo);
       i2c_reset_bus_info(businfo);
+      get_sys_drm_connectors(/*rescan=*/true);
    }
    bs256_iter_free(iter);
+   
    iter = bs256_iter_new(newly_connected_buses_bitset);
    while(true) {
       busno = bs256_iter_next(iter);
