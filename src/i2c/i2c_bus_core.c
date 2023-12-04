@@ -321,7 +321,7 @@ bool is_laptop_drm_connector_name(const char * connector_name) {
 //
 
 bool i2c_check_edid_exists_by_dh(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
    Buffer * edidbuf = buffer_new(256, "");
    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(dh->fd, edidbuf);
@@ -333,7 +333,7 @@ bool i2c_check_edid_exists_by_dh(Display_Handle * dh) {
 
 
 bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno = %d", businfo->busno);
    bool result = false;
    int fd = i2c_open_bus(businfo->busno, CALLOPT_ERR_MSG);
@@ -352,7 +352,7 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
 
 
 Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name = %s", drm_connector_name);
    assert(sys_drm_connectors);
    assert(drm_connector_name);
@@ -375,7 +375,7 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
 
 
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
-   bool debug = true;
+   bool debug = false;
    assert(dh->dref->io_path.io_mode == DDCA_IO_I2C);
    I2C_Bus_Info * businfo = dh->dref->detail;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, businfo=%p", businfo->busno, businfo );
@@ -455,6 +455,7 @@ i2c_detect_x37(int fd) {
 }
 
 
+
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -464,7 +465,7 @@ i2c_detect_x37(int fd) {
  */
 void i2c_check_bus(I2C_Bus_Info * bus_info) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, buf_info=%p", bus_info->busno, bus_info );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, bus_info=%p", bus_info->busno, bus_info );
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "force_read_edid=%s", sbool(force_read_edid));
    assert(bus_info && ( memcmp(bus_info->marker, I2C_BUS_INFO_MARKER, 4) == 0) );
    assert( (bus_info->flags & I2C_BUS_EXISTS) &&
@@ -479,7 +480,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
       // may or may not succeed, depending on the driver:
+      // char * connector2 = find_sysfs_drm_connector_by_busno(sysfs_drm_connector_names, bus_info->busno);
       char * connector = get_drm_connector_by_busno(bus_info->busno);
+      // DBGMSF(debug, "connector2: |%s|", connector2);
+      // DBGMSF(debug, "connector:  |%s|", connector);
+  //    assert(streq(connector2, connector));
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
       if (connector) {
@@ -671,7 +676,6 @@ i2c_async_scan(GPtrArray * i2c_buses) {
 }
 
 
-#ifdef UNUSED
 /** Loops through a list of I2C_Bus_Info, performing initial checks on each.
  *
  *  @param i2c_buses #GPtrArray of pointers to #I2C_Bus_Info
@@ -683,12 +687,11 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 
    for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_check_bus() synchronously");
       i2c_check_bus(businfo);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-#endif
-
 
 
 GPtrArray * i2c_detect_buses0() {
@@ -719,12 +722,8 @@ GPtrArray * i2c_detect_buses0() {
       }
       bva_free(i2c_bus_bva);
 
-      if (buses->len < i2c_businfo_async_threshold) {
-         for (int ndx = 0; ndx < buses->len; ndx++) {
-            I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Caling i2c_check_bus() synchronously");
-            i2c_check_bus(businfo);
-         }
+      if (true || buses->len < i2c_businfo_async_threshold) {
+         i2c_non_async_scan(buses);
       }
       else {
          i2c_async_scan(buses);
@@ -1047,6 +1046,21 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_report_active_bus);
    RTTI_ADD_FUNC(is_laptop_drm_connector_name);
    RTTI_ADD_FUNC(threaded_initial_checks_by_businfo);
+}
+
+
+GPtrArray* drm_connector_names = NULL;
+
+void subinit_i2c_bus_core() {
+   bool debug = false;
+   sysfs_drm_connector_names = get_sysfs_drm_connector_names();
+   if (debug) {
+      DBGMSG("drm_connector_names:");
+      for (int ndx = 0; ndx < sysfs_drm_connector_names->len; ndx++) {
+         DBGMSG("   %s", g_ptr_array_index(sysfs_drm_connector_names, ndx));
+      }
+   }
+
 }
 
 

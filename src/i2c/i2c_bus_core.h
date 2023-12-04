@@ -60,6 +60,7 @@ I2C_Bus_Info *   i2c_detect_single_bus(int busno);
 void             i2c_report_active_bus(I2C_Bus_Info * businfo, int depth);
 
 // Initialization
+void             subinit_i2c_bus_core();
 void             init_i2c_bus_core();
 
 #endif /* I2C_BUS_CORE_H_ */
