@@ -515,8 +515,7 @@ Display_Ref * copy_display_ref(Display_Ref * dref) {
       copy->flags = dref->flags & ~DREF_DYNAMIC_FEATURES_CHECKED;
       copy->capabilities_string = g_strdup(dref->capabilities_string);
       if (dref->pedid) {
-         copy->pedid = create_parsed_edid(dref->pedid->bytes);
-         memcpy(copy->pedid->edid_source, dref->pedid->edid_source, sizeof(dref->pedid->edid_source));
+         copy->pedid = copy_parsed_edid(dref->pedid);
       }
       if (dref->mmid) {
          copy->mmid = calloc(1, sizeof(Monitor_Model_Key));
