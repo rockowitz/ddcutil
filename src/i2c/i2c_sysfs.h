@@ -18,6 +18,7 @@
 #include "base/i2c_bus_base.h"
 
 extern GPtrArray * sys_drm_connectors;
+extern GPtrArray * sys_drm_connectors_fixedinfo;
 
 char * find_adapter(char * path, int depth);
 char * get_driver_for_adapter(char * adapter_path, int depth);
@@ -41,6 +42,15 @@ typedef struct {
    char *  ddc_i2c_dev_name;
    char *  ddc_i2c_dev_dev;
 } I2C_Sys_Info;
+
+typedef struct {
+   char * pci_device_path;
+   char * driver;
+   char * connector;
+   char * drm_connector_path;
+   char * device_name;
+   int   buno;
+} I2C_Fixed_Sys_Info;
 
 void           free_i2c_sys_info(I2C_Sys_Info * info);
 I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
@@ -66,8 +76,32 @@ typedef struct {
    char * status;
 } Sys_Drm_Connector;
 
+
+
+typedef struct {
+   char * connector_name;
+   char * connector_path;
+   int    i2c_busno;
+
+   char * name;
+   //  char * dev;
+   char * ddc_dir_path;
+   bool   is_aux_channel;
+   int    base_busno;
+   char * base_name;
+   char * base_dev;
+   Byte * edid_bytes;
+   gsize  edid_size;
+
+} Sys_Drm_Connector_FixedInfo;
+
+
+
+
 GPtrArray*          get_sys_drm_connectors(bool rescan);
+GPtrArray*          get_sys_drm_connectors_sysinfo(bool rescan);
 void                report_sys_drm_connectors(int depth);
+void                report_sys_drm_connectors_fixedinfo(int depth);
 Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
@@ -137,6 +171,11 @@ bool all_video_devices_drm();
 char * get_drm_connector_by_busno(int busno);
 char * get_drm_connector_by_edid(Byte * edid_bytes);
 bool   is_drm_display_by_busno(int busno);
+
+extern GPtrArray * sysfs_drm_connector_names;
+GPtrArray * get_sysfs_drm_connector_names();
+char * find_sysfs_drm_connector_by_busno(GPtrArray* connector_names, int busno);
+char * get_sysfs_drm_connector_by_edid(GPtrArray* connector_names, Byte * edid);
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();
