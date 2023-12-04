@@ -1790,7 +1790,7 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
          }
          Display_Ref * dref = create_bus_display_ref(busno);
          dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-         dref->pedid = businfo->edid;    // needed?
+         dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
          dref->mmid  = monitor_model_key_new(
                           dref->pedid->mfg_id,
                           dref->pedid->model_name,
