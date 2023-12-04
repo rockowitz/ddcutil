@@ -1227,7 +1227,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             if (businfo->drm_connector_name) {
                dref->drm_connector = g_strdup(businfo->drm_connector_name);
             }
-            dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
+            dref->pedid = copy_parsed_edid(businfo->edid);
             dref->mmid  = monitor_model_key_new(dref->pedid->mfg_id,
                                                 dref->pedid->model_name,
                                                 dref->pedid->product_code);
@@ -1844,7 +1844,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       }
       Display_Ref * dref = create_bus_display_ref(businfo->busno);
       dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-      dref->pedid = businfo->edid;    // needed?
+      dref->pedid = copy_parsed_edid(businfo->edid);
       dref->mmid  = monitor_model_key_new(
                        dref->pedid->mfg_id,
                        dref->pedid->model_name,
