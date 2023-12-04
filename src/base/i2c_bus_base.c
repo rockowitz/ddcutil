@@ -235,7 +235,7 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
    if (businfo)
       DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
-   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
+   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) != 0) {   // just ignore if already freed
       if (businfo->edid) {
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;

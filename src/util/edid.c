@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <inttypes.h>  // printf() format macros for stdint.h
 #include <string.h>
+#include <syslog.h>
 /** \endcond */
 
 #include "debug_util.h"
@@ -322,16 +323,27 @@ Parsed_Edid * copy_parsed_edid(Parsed_Edid * original) {
  * @param  parsed_edid  pointer to Parsed_Edid struct to free
  */
 void free_parsed_edid(Parsed_Edid * parsed_edid) {
+   bool debug = false;
    assert( parsed_edid );
-   show_backtrace(1);
-   DBGF(true, "(free_parsed_edid) parsed_edid=%p", parsed_edid);
-   ASSERT_WITH_BACKTRACE(memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0);
-   assert( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 );
-   parsed_edid->marker[3] = 'x';
-   // n. Parsed_Edid contains no pointers
-   free(parsed_edid);
+   // show_backtrace(1);
+   DBGF(debug, "(free_parsed_edid) parsed_edid=%p", parsed_edid);
+   // ASSERT_WITH_BACKTRACE(memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0);
+   if ( memcmp(parsed_edid->marker, EDID_MARKER_NAME, 4)==0 ) {
+      parsed_edid->marker[3] = 'x';
+      // n. Parsed_Edid contains no pointers
+      free(parsed_edid);
+   }
+   else {
+      char * s = g_strdup_printf("Invalid free of Parsed_Edid@%p, marker=%s",
+            parsed_edid, hexstring_t((unsigned char *) parsed_edid->marker, 4));
+      DBGF(true, "%s", s);
+      syslog(LOG_USER|LOG_ERR, "(%s) %s", __func__, s);
+   }
 }
 
+
+// TODO: generalize to base_asciify(char* s, char* prefix, char* suffix)
+//       move to string_util.h
 
 /** Replaces every character in a string whose value is > 127 with
  *  the string "<xHH>", where HH is the hex value of the character.
