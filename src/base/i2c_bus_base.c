@@ -29,7 +29,6 @@
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 
-
 //
 // Local utility functions
 //
@@ -118,6 +117,10 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
    bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
    if (bus_info->edid) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
+            bus_info->edid, hexstring_t((Byte*) bus_info->marker, 4));
+      SYSLOG2(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=%s",
+            bus_info->edid, hexstring_t((Byte*) bus_info->marker,4));
       free_parsed_edid(bus_info->edid);
       bus_info->edid = NULL;
    }
@@ -235,8 +238,12 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo = %p", businfo);
    if (businfo)
       DBGTRC(debug, TRACE_GROUP, "marker = |%.4s|, busno = %d",  businfo->marker, businfo->busno);
-   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) != 0) {   // just ignore if already freed
+   if (businfo && memcmp(businfo->marker, I2C_BUS_INFO_MARKER, 4) == 0) {   // just ignore if already freed
       if (businfo->edid) {
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
+               businfo->edid, hexstring_t((Byte*) businfo->marker,4));
+         SYSLOG2(DDCA_SYSLOG_DEBUG, "Calling free_parsed_edid for %p, marker=0x%s",
+                                    businfo->edid, hexstring_t((Byte*)businfo->marker,4));
          free_parsed_edid(businfo->edid);
          businfo->edid = NULL;
       }
@@ -304,7 +311,8 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
 // Generic Bus_Info retrieval
 //
 
-I2C_Bus_Info *   i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
+I2C_Bus_Info *
+i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
