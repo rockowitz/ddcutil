@@ -70,6 +70,7 @@ void init_api_base();
 //
 
 bool library_initialized = false;
+bool library_initialization_failed = false;
 static bool client_opened_syslog = false;
 static bool enable_init_msgs = false;
 static FILE * flog = NULL;
@@ -581,6 +582,7 @@ ddca_init(const char *      libopts,
    }
    else {
       enable_init_msgs     = opts & DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS;
+      // enable_init_msgs = true;  // *** TEMP ***
       client_opened_syslog = opts & DDCA_INIT_OPTIONS_CLIENT_OPENED_SYSLOG;
       if (syslog_level_arg == DDCA_SYSLOG_NOT_SET)
          syslog_level_arg = DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL;              // libddcutil default
@@ -640,9 +642,13 @@ ddca_init(const char *      libopts,
          }
       }
       errinfo_free(master_error);
+      library_initialization_failed = true;
    }
    else {
+      i2c_detect_buses();
+      ddc_ensure_displays_detected();
       library_initialized = true;
+      library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
 
