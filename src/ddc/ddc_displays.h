@@ -57,7 +57,7 @@ bool        ddc_add_display_by_drm_connector(const char * drm_connector);
 bool        ddc_remove_display_by_drm_connector(const char * drm_connector);
 #endif
 bool        ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
-Display_Ref * get_dref_by_busno(int busno);
+Display_Ref * ddc_get_dref_by_busno(int busno);
 bool        ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
