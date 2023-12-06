@@ -78,7 +78,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool all_video_drivers_implement_drm = false;
 bool force_read_edid = false;
-int  i2c_businfo_async_threshold = 4;
+int  i2c_businfo_async_threshold = BUS_CHECK_ASYNC_THRESHOLD;
 
 //
 // Simple /dev/i2c inquiry
@@ -476,15 +476,17 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
 
    if (!(bus_info->flags & I2C_BUS_PROBED)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
-      bool edid_checked = false;
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
       // may or may not succeed, depending on the driver:
-      // char * connector2 = find_sysfs_drm_connector_by_busno(sysfs_drm_connector_names, bus_info->busno);
+      char * connector2 = find_sysfs_drm_connector_by_busno(sysfs_drm_connector_names, bus_info->busno);
       char * connector = get_drm_connector_by_busno(bus_info->busno);
-      // DBGMSF(debug, "connector2: |%s|", connector2);
-      // DBGMSF(debug, "connector:  |%s|", connector);
-  //    assert(streq(connector2, connector));
+      //  assert(streq(connector2, connector));
+      if ( !streq(connector2, connector) && debug ) {
+         DBGMSF(debug, "connector2: |%s|", connector2);
+         DBGMSF(debug, "connector:  |%s|", connector);
+      }
+
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
       if (connector) {
@@ -500,7 +502,6 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
             // int d = IS_DBGTRC(debug, TRACE_GROUP) ? 1 : -1;
             int d = -1;
             RPT_ATTR_EDID(d, &edid_bytes, "/sys/class/drm", bus_info->drm_connector_name, "edid");
-            edid_checked = true;
             if (edid_bytes && edid_bytes->len >= 128) {
                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Got edid from sysfs");
                bus_info->edid = create_parsed_edid2(edid_bytes->data, "SYSFS");
@@ -513,8 +514,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                if (bus_info->edid) {
                   bus_info->flags |= I2C_BUS_ADDR_0X50;
                   bus_info->flags |= I2C_BUS_SYSFS_EDID;
-                  bus_info->flags |= I2C_BUS_SYSFS_EDID;
-                  memcpy(bus_info->edid->edid_source, "SYSFS", 6);
+                  // memcpy(bus_info->edid->edid_source, "SYSFS", 6); // redundant
                }
             }
          }
@@ -536,7 +536,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           }
 #endif
 
-          if (!bus_info->edid && !edid_checked) {
+          if (!bus_info->edid) {
              DDCA_Status ddcrc = i2c_get_parsed_edid_by_fd(fd, &bus_info->edid);
 #ifdef TEST
              if (!result) {
@@ -600,12 +600,12 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // conformant driver, so drm_connector_name set, but reading EDID failed,
       // probably because of EBUSY.  Get the EDID so we have it for messages.
 
-      // i.e. for Nvidia
-      // getting connector name failed, but reading the EDID was successful.
-      // find the connector name by EDID
+      // Not all drivers provide for getting the bus number directly using
+      // /sys/bus/drm.  If the connector name is not yet set but reading
+      // the EDID was successful, find the connector name by EDID
       if (!bus_info->drm_connector_name && bus_info->edid) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Finding connector by EDID...");
-         char * connector = get_drm_connector_by_edid(bus_info->edid->bytes);
+         char * connector = get_drm_connector_by_edid(bus_info->edid->bytes);  // NULL if not drm driver
          if (connector) {
             bus_info->drm_connector_name = connector;
             bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
@@ -722,7 +722,7 @@ GPtrArray * i2c_detect_buses0() {
       }
       bva_free(i2c_bus_bva);
 
-      if (true || buses->len < i2c_businfo_async_threshold) {
+      if (buses->len < i2c_businfo_async_threshold) {
          i2c_non_async_scan(buses);
       }
       else {
@@ -783,13 +783,15 @@ int i2c_detect_buses() {
 
    if (!i2c_buses) {
       i2c_buses = i2c_detect_buses0();
-      g_ptr_array_set_free_func(i2c_buses, i2c_gdestroy_bus_info);
-      connected_buses = buses_to_bitset(i2c_buses);
+      g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+      // connected_buses = buses_to_bitset(i2c_buses);
    }
    int result = i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
+
+
 
 
 /** Discard all known buses */
