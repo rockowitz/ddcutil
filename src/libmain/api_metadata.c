@@ -221,7 +221,8 @@ ddca_get_feature_list_by_dref(
       DDCA_Feature_List*      feature_list_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_subset_id=%d=0x%08x=%s, ddca_dref=%p, "
               "include_table_features=%s, feature_list_loc=%p",
               feature_set_id, feature_set_id, ddca_feature_list_id_name(feature_set_id),
           ddca_dref,
@@ -441,8 +442,8 @@ ddca_get_feature_flags_by_vspec(
       DDCA_Feature_Flags *          feature_flags)
 {
    bool debug = false;
-   API_PROLOG(debug, "");
    free_thread_error_detail();
+   API_PROLOGX(debug, "");
    DDCA_Status psc = DDCRC_ARG;
    // assert(feature_flags);
    API_PRECOND_W_EPILOG(feature_flags);
@@ -519,10 +520,11 @@ ddca_get_feature_metadata_by_vspec(
       DDCA_Feature_Metadata **    info_loc) //
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, vspec=%s, create_default_if_not_found=%s, info_loc=%p",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, vspec=%s, create_default_if_not_found=%s, info_loc=%p",
                  feature_code, format_vspec_verbose(vspec), sbool(create_default_if_not_found), info_loc);
    assert(info_loc);
-   free_thread_error_detail();
+
    DDCA_Feature_Metadata * meta = NULL;
    DDCA_Status psc = DDCRC_ARG;
    Display_Feature_Metadata * dfm =
@@ -558,7 +560,8 @@ ddca_get_feature_metadata_by_dref(
       DDCA_Feature_Metadata **    metadata_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, ddca_dref=%p, create_default_if_not_found=%s, meta_loc=%p",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, ddca_dref=%p, create_default_if_not_found=%s, meta_loc=%p",
                      feature_code, ddca_dref, sbool(create_default_if_not_found), metadata_loc);
    assert(metadata_loc);
 
@@ -595,7 +598,8 @@ ddca_get_feature_metadata_by_dh(
    bool debug = false;
    // if (feature_code == 0xca)
    //    debug = true;
-   API_PROLOG(debug,
+   free_thread_error_detail();
+   API_PROLOGX(debug,
           "feature_code=0x%02x, ddca_dh=%p->%s, create_default_if_not_found=%s, metadata_loc=%p",
           feature_code, ddca_dh, dh_repr(ddca_dh), sbool(create_default_if_not_found), metadata_loc);
    API_PRECOND_W_EPILOG(metadata_loc);
@@ -854,11 +858,12 @@ ddca_get_simple_nc_feature_value_name_by_table(
       char**                      value_name_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_value_table = %p, feature_value = 0x%02x", feature_value_table, feature_value);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_value_table = %p, feature_value = 0x%02x", feature_value_table, feature_value);
    // DBGMSG("feature_value_table=%p", feature_value_table);
    // DBGMSG("*feature_value_table=%p", *feature_value_table);
    DDCA_Status rc = 0;
-   free_thread_error_detail();
+
    assert(value_name_loc);
    DDCA_Feature_Value_Entry * feature_value_entries = feature_value_table;
    *value_name_loc = sl_value_table_lookup(feature_value_entries, feature_value);
@@ -951,12 +956,13 @@ DDCA_Status
 ddca_dfr_check_by_dref(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
 
    DDCA_Status psc = 0;
    WITH_VALIDATED_DR3(ddca_dref, psc,
       {
-            free_thread_error_detail();
+
             Error_Info * ddc_excp = dfr_check_by_dref(dref);
             if (ddc_excp) {
                if (ddc_excp->status_code != DDCRC_NOT_FOUND) {
@@ -975,7 +981,8 @@ DDCA_Status
 ddca_dfr_check_by_dh(DDCA_Display_Handle ddca_dh)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dh=%p", ddca_dh);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dh=%p", ddca_dh);
    DDCA_Status psc = 0;
    WITH_VALIDATED_DH3(ddca_dh, psc,
       {

@@ -266,7 +266,7 @@ ddca_get_display_ref(
 {
    free_thread_error_detail();
    bool debug = false;
-   API_PROLOG(debug, "did=%p, dref_loc=%p", did, dref_loc);
+   API_PROLOGX(debug, "did=%p, dref_loc=%p", did, dref_loc);
    assert(library_initialized);
    API_PRECOND_W_EPILOG(dref_loc);
    *dref_loc = NULL;
@@ -375,7 +375,7 @@ ddca_free_display_ref(DDCA_Display_Ref ddca_dref) {
 DDCA_Status
 ddca_redetect_displays() {
    bool debug = false;
-   API_PROLOG(debug, "");
+   API_PROLOGX(debug, "");
    ddc_redetect_displays();
    API_EPILOG(debug, 0, "");
 }
@@ -432,8 +432,8 @@ ddca_report_display_by_dref(
       int              depth)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
    free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
    assert(library_initialized);
 
    Display_Ref * dref = NULL;
@@ -498,13 +498,13 @@ ddca_open_display3(
       DDCA_Display_Handle * dh_loc)
 {
    bool debug = false;
-   API_PROLOG(debug,
+   free_thread_error_detail();
+   API_PROLOGX(debug,
           "ddca_dref=%p, options=0x%02x, dh_loc=%p, on thread %d",
           ddca_dref, options, dh_loc, get_thread_id());
    DBGTRC_NOPREFIX(debug, DDCA_TRC_API,
           "library_initialized=%s, ddc_displays_already_detected() = %ld",
           sbool(library_initialized), ddc_displays_already_detected());
-   free_thread_error_detail();
    TRACED_ASSERT(library_initialized);
    TRACED_ASSERT(ddc_displays_already_detected());
 
@@ -557,7 +557,7 @@ ddca_close_display(DDCA_Display_Handle ddca_dh) {
    DDCA_Status rc = 0;
    Error_Info * err = NULL;
    Display_Handle * dh = (Display_Handle *) ddca_dh;
-   API_PROLOG(debug, "dh = %s", dh_repr(dh));
+   API_PROLOGX(debug, "dh = %s", dh_repr(dh));
    if (dh) {
       if (memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 )  {
          err = errinfo_new(DDCRC_ARG, __func__, "Invalid display handle");
@@ -843,7 +843,7 @@ ddca_get_display_info(
       DDCA_Display_Info ** dinfo_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
+   API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
    API_PRECOND_W_EPILOG(dinfo_loc);
    DDCA_Status ddcrc = 0;
 
@@ -894,9 +894,10 @@ ddca_get_display_refs(
       bool                include_invalid_displays,
       DDCA_Display_Ref**  drefs_loc)
 {
-   bool debug = false;
-   API_PROLOG(debug, "include_invalid_displays=%s", SBOOL(include_invalid_displays));
+   bool debug = true;
    free_thread_error_detail();
+   API_PROLOGX(debug, "include_invalid_displays=%s", SBOOL(include_invalid_displays));
+
    API_PRECOND_W_EPILOG(drefs_loc);
    int dref_ct = 0;
    DDCA_Status ddcrc = 0;
@@ -938,9 +939,10 @@ ddca_get_display_info_list2(
       bool                      include_invalid_displays,
       DDCA_Display_Info_List**  dlist_loc)
 {
-   bool debug = false;
-   API_PROLOG(debug, "");
+   bool debug = true;
    free_thread_error_detail();
+   API_PROLOGX(debug, "");
+
    int filtered_ct = 0;
    API_PRECOND_W_EPILOG(dlist_loc);
 
@@ -1024,7 +1026,7 @@ ddca_report_display_info(
       int                 depth)
 {
    bool debug = false;
-   API_PROLOG(debug, "Starting. dinfo=%p, dinfo->dispno=%d, depth=%d", dinfo, dinfo->dispno, depth);
+   API_PROLOGX(debug, "Starting. dinfo=%p, dinfo->dispno=%d, depth=%d", dinfo, dinfo->dispno, depth);
    DDCA_Status rc = 0;
    API_PRECOND_W_EPILOG(dinfo);
    API_PRECOND_W_EPILOG(memcmp(dinfo->marker, DDCA_DISPLAY_INFO_MARKER, 4) == 0);
@@ -1256,7 +1258,10 @@ int
 ddca_report_displays(bool include_invalid_displays, int depth) {
    bool debug = false;
    API_PROLOG(debug, "");
-   int display_ct = ddc_report_displays(include_invalid_displays, depth);
+   int display_ct = 0;
+   if (!library_initialization_failed) {
+      display_ct = ddc_report_displays(include_invalid_displays, depth);
+   }
    DBGTRC_DONE(debug, DDCA_TRC_API, "Returning: %d", display_ct);
    DISABLE_API_CALL_TRACING();
    return display_ct;
@@ -1340,6 +1345,7 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
    return result;
 }
 
+
 DDCA_Status
 ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
@@ -1348,6 +1354,7 @@ ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func 
    API_EPILOG(debug, result, "");
    return result;
 }
+
 
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
@@ -1365,8 +1372,9 @@ ddca_set_display_sleep_multiplier(
       DDCA_Sleep_Multiplier multiplier)
 {
    bool debug = false;
-    API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
-    free_thread_error_detail();
+   free_thread_error_detail();
+    API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
+
     assert(library_initialized);
     Display_Ref * dref = NULL;
     DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
@@ -1389,8 +1397,9 @@ ddca_get_current_display_sleep_multiplier(
       DDCA_Sleep_Multiplier*  multiplier_loc)
 {
    bool debug = false;
-    API_PROLOG(debug, "ddca_dref=%p", ddca_dref);
-    free_thread_error_detail();
+   free_thread_error_detail();
+    API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
+
     assert(library_initialized);
     Display_Ref * dref = NULL;
     DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);

@@ -87,7 +87,8 @@ ddca_get_non_table_vcp_value(
       DDCA_Non_Table_Vcp_Value*  valrec)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dh=%p, feature_code=0x%02x, valrec=%p",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dh=%p, feature_code=0x%02x, valrec=%p",
                                ddca_dh, feature_code, valrec );
    DDCA_Status psc = API_PRECOND_RVALUE(valrec);
    if (psc != 0)
@@ -134,7 +135,8 @@ ddca_get_table_vcp_value(
       DDCA_Table_Vcp_Value ** table_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug,
+   free_thread_error_detail();
+   API_PROLOGX(debug,
          "ddca_dh=%p, feature_code=0x%02x, table_value_loc=%p",
          ddca_dh, feature_code, table_value_loc);
    DDCA_Status psc = API_PRECOND_RVALUE(table_value_loc);
@@ -212,7 +214,7 @@ get_value_type(
       DDCA_Vcp_Value_Type *       p_value_type)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
+   API_PROLOGX(debug, "ddca_dh=%p, feature_code=0x%02x", ddca_dh, feature_code);
 
    DDCA_Status ddcrc = DDCRC_NOT_FOUND;
    DDCA_MCCS_Version_Spec vspec     = get_vcp_version_by_dh(ddca_dh);
@@ -238,7 +240,8 @@ ddca_get_any_vcp_value_using_explicit_type(
        DDCA_Any_Vcp_Value **       valrec_loc)
 {
    bool debug = false;
-   API_PROLOG(debug,
+   free_thread_error_detail();
+   API_PROLOGX(debug,
           "Starting. ddca_dh=%p, feature_code=0x%02x, call_type=%d, valrec_loc=%p",
           ddca_dh, feature_code, call_type, valrec_loc);
    assert(valrec_loc);
@@ -296,9 +299,9 @@ ddca_get_any_vcp_value_using_implicit_type(
        DDCA_Any_Vcp_Value **       valrec_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code = 0x%02x", feature_code);
-   assert(valrec_loc);
    free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code = 0x%02x", feature_code);
+   assert(valrec_loc);
 
    DDCA_Vcp_Value_Type call_type;
    DDCA_Status ddcrc = get_value_type(ddca_dh, feature_code, &call_type);
@@ -495,7 +498,8 @@ ddci_format_any_vcp_value(
       char **                  formatted_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, vspec=%d.%d, mmid=%p -> %s",
                  feature_code,
                  vspec.major, vspec.minor,
                  mmid,
@@ -503,7 +507,6 @@ ddci_format_any_vcp_value(
                  );
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
-   free_thread_error_detail();
 
    *formatted_value_loc = NULL;
    Display_Feature_Metadata * dfm = NULL;
@@ -569,7 +572,8 @@ ddca_format_any_vcp_value_by_dref(
       char **                 formatted_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, ddca_dref=%p, valrec=%s",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, ddca_dref=%p, valrec=%s",
              feature_code,
              ddca_dref,
              summarize_single_vcp_value(valrec) );
@@ -661,7 +665,8 @@ ddca_format_non_table_vcp_value_by_dref(
       char **                     formatted_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, ddca_dref=%p",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, ddca_dref=%p",
                           feature_code, ddca_dref);
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
@@ -729,7 +734,8 @@ ddca_format_table_vcp_value_by_dref(
       char **                 formatted_value_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x, ddca_dref=%p", feature_code, ddca_dref);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x, ddca_dref=%p", feature_code, ddca_dref);
    assert(formatted_value_loc);
    DDCA_Status ddcrc = 0;
    WITH_VALIDATED_DR3(ddca_dref, ddcrc,
@@ -943,7 +949,8 @@ ddca_set_non_table_vcp_value(
       Byte                   lo_byte)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x", feature_code);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_non_table_vcp_value_verify(ddca_dh, feature_code, hi_byte, lo_byte, NULL, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
@@ -1011,7 +1018,8 @@ ddca_set_table_vcp_value(
       DDCA_Table_Vcp_Value *  table_value)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x", feature_code);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_table_vcp_value_verify(ddca_dh, feature_code, table_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
@@ -1067,7 +1075,8 @@ ddca_set_any_vcp_value(
       DDCA_Any_Vcp_Value *    new_value)
 {
    bool debug = false;
-   API_PROLOG(debug, "feature_code=0x%02x", feature_code);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "feature_code=0x%02x", feature_code);
    DDCA_Status ddcrc = ddci_set_any_vcp_value_verify(ddca_dh, feature_code, new_value, NULL);
    API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return ddcrc;
@@ -1080,7 +1089,8 @@ ddca_get_profile_related_values(
       char**              profile_values_string_loc)
 {
    bool debug = false;
-   API_PROLOG(debug,
+   free_thread_error_detail();
+   API_PROLOGX(debug,
           "ddca_dh=%p, profile_values_string_loc=%p",
           ddca_dh, profile_values_string_loc);
    DDCA_Status psc = API_PRECOND_RVALUE(profile_values_string_loc);
@@ -1109,12 +1119,12 @@ ddca_set_profile_related_values(
       char *               profile_values_string)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_h=%p, profile_values_string = %s",
+   free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_h=%p, profile_values_string = %s",
                      ddca_dh, profile_values_string);
    DDCA_Status psc = 0;
    WITH_VALIDATED_DH3(ddca_dh, psc,
       {
-         free_thread_error_detail();
          Error_Info * ddc_excp = loadvcp_by_string(profile_values_string, dh);
          psc = (ddc_excp) ? ddc_excp->status_code : 0;
          if (ddc_excp) {
