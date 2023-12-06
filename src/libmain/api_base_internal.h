@@ -23,6 +23,7 @@
 
 
 extern bool library_initialized;
+extern bool library_initialization_failed;
 
 #define DDCI_PRECOND_STDERR 0x01
 #define DDCI_PRECOND_RETURN 0x02
@@ -141,6 +142,21 @@ ddci_get_precondition_failure_mode();
 
 #define API_PROLOG(debug_flag, format, ...) \
    do { \
+      if (!library_initialized)  { \
+         ddca_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
+      } \
+      if (trace_api_call_depth > 0 || is_traced_api_call(__func__) ) \
+         trace_api_call_depth++; \
+      dbgtrc( (debug_flag) ? DDCA_TRC_ALL : DDCA_TRC_API, DBGTRC_OPTIONS_NONE, \
+            __func__, __LINE__, __FILE__, "Starting  "format, ##__VA_ARGS__); \
+      if (ptd_api_profiling_enabled) ptd_profile_function_start(__func__); \
+  } while(0)
+
+
+#define API_PROLOGX(debug_flag, format, ...) \
+   do { \
+      if (library_initialization_failed) \
+         return DDCRC_UNINITIALIZED; \
       if (!library_initialized)  { \
          ddca_init(NULL, DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL, DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE); \
       } \
