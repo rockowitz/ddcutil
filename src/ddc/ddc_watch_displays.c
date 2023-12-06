@@ -133,14 +133,15 @@ bool check_thread_or_process(pid_t id) {
 void recheck_bus_info() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   GPtrArray * old_buses = NULL;
+   GPtrArray * old_buses = i2c_get_all_buses();
    // may need to wait on startup
-   while (!(old_buses = i2c_get_all_buses())) {
+   while (!old_buses) {
       DBGMSF(debug, "Waiting 3 sec for old_buses");
+      old_buses = i2c_get_all_buses();
       usleep(3000*1000);
    }
    Bit_Set_256 old_bitset = buses_to_bitset(old_buses);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
 
    GPtrArray * new_buses = i2c_detect_buses0();
    Bit_Set_256 new_bitset = buses_to_bitset(new_buses);
@@ -148,10 +149,13 @@ void recheck_bus_info() {
    
    Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_bitset, new_bitset);
    Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_bitset, old_bitset);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_disconnected_buses_bitset has %d bits set",
-         bs256_count(newly_disconnected_buses_bitset));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_connected_buses_bitset has %d bits set",
-         bs256_count(newly_connected_buses_bitset));
+   int ct =  bs256_count(newly_disconnected_buses_bitset);
+   if (ct > 0)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_disconnected_buses_bitset has %d bits set", ct);
+   ct = bs256_count(newly_connected_buses_bitset);
+   if (ct > 0)
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_connected_buses_bitset has %d bits set", ct);
+
    
    Bit_Set_256_Iterator iter = bs256_iter_new(newly_disconnected_buses_bitset);
    int busno;
@@ -177,42 +181,44 @@ void recheck_bus_info() {
       // I2C_Bus_Info * new_businfo =  i2c_find_bus_info_in_gptrarray_by_busno(new_buses, busno);
       I2C_Bus_Info * new_businfo = g_ptr_array_index(new_buses, new_index);
       if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo");
-         i2c_dbgrpt_bus_info(new_businfo, 4);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo: /dev/i2c-%d @%p", new_businfo->busno, new_businfo);
+         // i2c_dbgrpt_bus_info(new_businfo, 4);
       }
       int old_index = i2c_find_bus_info_index_in_gptrarray_by_busno(old_buses, busno);
       I2C_Bus_Info * old_businfo = NULL;
       if (old_index >= 0) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "====> Updating %d, old businfo:", old_index);
-
          old_businfo = g_ptr_array_index(old_buses, old_index);
-
-         if ( IS_DBGTRC(debug, DDCA_TRC_NONE))
-            i2c_dbgrpt_bus_info(old_businfo, 4);
-
          i2c_update_bus_info(old_businfo, new_businfo);
-
-         if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "===> Updated businfo: ");
-            i2c_dbgrpt_bus_info(old_businfo, 4);
-         }
+         ddc_add_display_by_businfo(old_businfo);  // performs emit
       }
       else {
          g_ptr_array_steal_index(new_buses, new_index);
          g_ptr_array_add(old_buses, new_businfo);
+         ddc_add_display_by_businfo(new_businfo);  // performs emit
       }
-      ddc_add_display_by_businfo(old_businfo);  // performs emit
+      // ddc_add_display_by_businfo(old_businfo);  // performs emit
 
    }
-   g_ptr_array_free(new_buses, false);   // free the array, not the Bus_Info structs
+   g_ptr_array_set_free_func(new_buses, i2c_gdestroy_bus_info);
+   g_ptr_array_free(new_buses, true);
 
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Checking sleep state");
    for (int ndx = 0; ndx < old_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(old_buses, ndx);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, businfo=%p", ndx, businfo);
+      // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d", businfo->busno);
       if (businfo->flags & I2C_BUS_ADDR_0X50) {
+         // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "bus=%d, I2C_BUS_ADDR_0X50 set", businfo->busno);
          bool is_dpms_asleep = dpms_check_drm_asleep(businfo);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, is_dpms_asleep=%s, last_checked_dpms_asleep=%s",
+               businfo->busno, sbool(is_dpms_asleep), sbool(businfo->last_checked_dpms_asleep));
          if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
             DDCA_Display_Detection_Event report;
-            report.dref = (void*) get_dref_by_busno(businfo->busno);
+            Display_Ref * dref = ddc_get_dref_by_busno(businfo->busno);
+            assert(dref);
+            DBGTRC(debug, DDCA_TRC_NONE, "event dref=%p->%s", dref, dref_repr_t(dref));
+            report.dref = (DDCA_Display_Ref) dref;
             report.event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
             ddc_emit_display_detection_event(report);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
@@ -222,7 +228,6 @@ void recheck_bus_info() {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
-
 
 
 /** Tests if communication working for a Display_Ref
