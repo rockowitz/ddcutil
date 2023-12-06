@@ -1283,6 +1283,37 @@ bool hhs4_to_uint16(char * hhs4, uint16_t* result_loc) {
 }
 
 
+
+/** Converts a single byte to a 2 byte hex string.
+ *
+ *  @param ch        byte to convert
+ *  @param out       buffer to write to, must be at least 3 bytes
+ *  @param uppercase if true, use uppercase letters
+ */
+static void byte_to_hs(const unsigned char ch, char * out, bool uppercase) {
+   bool debug = false;
+   if (debug)
+      printf("(%s) out=%p\n", __func__, out);
+   assert(out);
+   unsigned int hi = ch >> 4;
+   unsigned int lo = ch & 0x0f;
+   assert (hi < 16);
+   assert (lo < 16);
+   char uptable[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A','B','C','D', 'E', 'F'};
+   char lotable[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a','b','c','d', 'e', 'f'};
+
+   if (uppercase) {
+      out[0] = uptable[hi];
+      out[1] = uptable[lo];
+   }
+   else {
+      out[0] = lotable[hi];
+      out[1] = lotable[lo];
+   }
+   out[2] = '\0';
+}
+
+
 /** Converts a sequence of bytes to its representation as a string of hex characters.
  *
  *  @param  bytes     pointer to bytes
@@ -1434,14 +1465,18 @@ char * hexstring3_t(
    char * buf = get_thread_dynamic_buffer(&hexstring3_key, &hexstring3_len_key, required_size);
    // char * buf = get_thread_private_buffer(&hexstring3_key, NULL, required_size);
 
-   char * pattern = (uppercase) ? "%02X" : "%02x";
+   // char * pattern = (uppercase) ? "%02X" : "%02x";
+   // if (debug)
+   //    printf("(%s) pattern=%s, buf=%p\n", __func__,  pattern, buf);
 
    // int incr1 = 2 + sepsize;
    *buf = '\0';
    for (int i=0; i < len; i++) {
       if (debug)
          printf("(%s) i=%d, buf=%p, strlen(buf)=%ld\n", __func__, i, buf, strlen(buf));
-      sprintf(buf+strlen(buf), pattern, bytes[i]);
+      // sprintf(buf+strlen(buf), pattern, bytes[i]);
+      byte_to_hs(bytes[i], buf+strlen(buf), uppercase);
+
       bool insert_sepstr = (hunk_size == 0)
                                ? (i < (len-1) && sepstr)
                                : (i < (len-1) && sepstr && (i+1)%hunk_size == 0);
