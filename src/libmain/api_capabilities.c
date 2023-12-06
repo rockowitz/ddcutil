@@ -55,8 +55,8 @@ ddca_get_capabilities_string(
       char**               pcaps_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dh=%s", dh_repr((Display_Handle *) ddca_dh ) );
    API_PRECOND_W_EPILOG(pcaps_loc);
    *pcaps_loc = NULL;
    Error_Info * ddc_excp = NULL;
@@ -132,9 +132,9 @@ ddca_parse_capabilities_string(
       DDCA_Capabilities **     parsed_capabilities_loc)
 {
    bool debug = false;
-   API_PROLOG(debug, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
-                     parsed_capabilities_loc, capabilities_string);
    free_thread_error_detail();
+   API_PROLOGX(debug, "parsed_capabilities_loc=%p, capabilities_string: |%s|",
+                     parsed_capabilities_loc, capabilities_string);
    API_PRECOND_W_EPILOG(parsed_capabilities_loc);
    DDCA_Status ddcrc = DDCRC_BAD_DATA;
    DDCA_Capabilities * result = NULL;
@@ -252,9 +252,9 @@ ddca_report_parsed_capabilities_by_dref(
 {
    bool debug = false;
    DDCA_Status ddcrc = 0;
-   API_PROLOG(debug, "Starting. p_caps=%p, ddca_dref=%s",
-                      p_caps, dref_repr_t((Display_Ref*) ddca_dref));
    free_thread_error_detail();
+   API_PROLOGX(debug, "Starting. p_caps=%p, ddca_dref=%s",
+                      p_caps, dref_repr_t((Display_Ref*) ddca_dref));
    API_PRECOND_W_EPILOG(p_caps);   // no need to check marker, DDCA_CAPABILITIES not opaque
 
    Display_Ref * dref = NULL;
@@ -362,11 +362,11 @@ ddca_report_parsed_capabilities_by_dh(
       int                      depth)
 {
    bool debug = false;
-   API_PROLOG(debug, "p_caps=%p, ddca_dh=%s, depth=%d",
-                      p_caps, ddca_dh_repr(ddca_dh), depth);
-
-   DDCA_Status ddcrc = 0;
    free_thread_error_detail();
+   API_PROLOGX(debug, "p_caps=%p, ddca_dh=%s, depth=%d",
+                      p_caps, ddca_dh_repr(ddca_dh), depth);
+   DDCA_Status ddcrc = 0;
+
 
    Display_Handle * dh = (Display_Handle *) ddca_dh;
    if (dh == NULL || memcmp(dh->marker, DISPLAY_HANDLE_MARKER, 4) != 0 ) {
