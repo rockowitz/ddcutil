@@ -894,7 +894,7 @@ ddca_get_display_refs(
       bool                include_invalid_displays,
       DDCA_Display_Ref**  drefs_loc)
 {
-   bool debug = true;
+   bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "include_invalid_displays=%s", SBOOL(include_invalid_displays));
 
@@ -939,7 +939,7 @@ ddca_get_display_info_list2(
       bool                      include_invalid_displays,
       DDCA_Display_Info_List**  dlist_loc)
 {
-   bool debug = true;
+   bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "");
 
