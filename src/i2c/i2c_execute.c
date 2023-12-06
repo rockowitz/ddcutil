@@ -521,6 +521,11 @@ i2c_ioctl_reader1(
    DBGTRC_STARTING(debug, TRACE_GROUP, "fd=%d, fn=%s, slave_addr=0x%02x, bytect=%d, readbuf=%p",
                  fd, filename_for_fd_t(fd), slave_addr, bytect, readbuf);
 
+   // If read fails, readbuf will not be set.
+   // Initialize it here, otherwise valgrind complains about uninitialized variable
+   // in hexstring_t()
+   memset(readbuf, 0x00, bytect);
+
    int rc = 0;
    // messages needs to be allocated, cannot be on stack:
    struct i2c_msg * messages = calloc(1, sizeof(struct i2c_msg));
@@ -561,6 +566,7 @@ i2c_ioctl_reader1(
       rc = -errsv;
 
    free(messages);
+   // DBGMSG("readbuf=%p, bytect=%d", readbuf, bytect);
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, rc, "readbuf: %s", hexstring_t(readbuf, bytect));
    return rc;
 }
