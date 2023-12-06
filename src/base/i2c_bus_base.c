@@ -271,8 +271,20 @@ void i2c_gdestroy_bus_info(void * data) {
  *  @param new
  */
 void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
+   bool debug = false;
    assert(existing);
    assert(new);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, existing=%p, new=%p",
+         existing->busno, existing, new);
+
+
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Initial bus info:");
+      i2c_dbgrpt_bus_info(existing, 4);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new bus info:");
+      i2c_dbgrpt_bus_info(new, 4);
+   }
+
    if (existing->edid) {
       free_parsed_edid(existing->edid);
    }
@@ -299,11 +311,21 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
       free(existing->drm_connector_name);
       existing->drm_connector_name = NULL;
    }
-   if (new->drm_connector_name)
-      existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
-   existing->drm_connector_found_by = new->drm_connector_found_by;
-
+   if (!existing->drm_connector_name) {
+      if (new->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
+         if (new->drm_connector_name)
+            existing->drm_connector_name = g_strdup_printf("%s", new->drm_connector_name);
+         existing->drm_connector_found_by = new->drm_connector_found_by;
+         existing->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
+      }
+   }
    existing->last_checked_dpms_asleep = new->last_checked_dpms_asleep;
+
+   if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updated bus info:");
+      i2c_dbgrpt_bus_info(existing, 4);
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
 
@@ -357,6 +379,8 @@ Bit_Set_256 connected_buses;    // = EMPTY_BIT_SET_256;  can't initialize here, 
 
 
 GPtrArray * i2c_get_all_buses() {
+   bool debug = false;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "Returning %p", i2c_buses);
    return i2c_buses;
 }
 
@@ -381,28 +405,25 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 
 /** Retrieves bus information by its index in the i2c_buses array
  *
- * @param   busndx
+ *  @param   busndx
  *
- * @return  pointer to Bus_Info struct for the bus,\n
- *          NULL if invalid index
+ *  @return  pointer to Bus_Info struct for the bus,\n
+ *           NULL if invalid index
  */
 I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
    bool debug = false;
-   DBGMSF(debug, "Starting.  busndx=%d", busndx );
+   DBGMSF(debug, "busndx=%d", busndx);
    assert(i2c_buses);
+
    I2C_Bus_Info * businfo = NULL;
    if (busndx < i2c_buses->len) {
       businfo = g_ptr_array_index(i2c_buses, busndx);
-      // report_businfo(busInfo);
-      if (debug) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, flags = 0x%04x = %s",
-            businfo->busno, businfo->flags, i2c_interpret_bus_flags_t(businfo->flags));
-      }
-      assert( businfo->flags & I2C_BUS_PROBED );
+      DBGMSF(debug, "busno=%d, flags = 0x%04x = %s",
+            businfo->busno, businfo->flags, i2c_interpret_bus_flags_t(businfo->flags) );
    }
 
-   DBGMSF(debug, "Done.  busndx=%d, Returning %p, busno=%d",
-                         busndx, businfo,  (businfo) ? businfo->busno : -1) ;
+   DBGMSF(debug, "Done.  Returning businfo-%p. busndx=%d, busno=%d",
+                 businfo,  busndx, (businfo) ? businfo->busno : -1 );
    return businfo;
 }
 
@@ -454,7 +475,8 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_free_bus_info);
    RTTI_ADD_FUNC(i2c_get_drm_connector_name);
    RTTI_ADD_FUNC(i2c_new_bus_info);
+   RTTI_ADD_FUNC(i2c_reset_bus_info);
 
-   connected_buses = EMPTY_BIT_SET_256;
+   // connected_buses = EMPTY_BIT_SET_256;
 }
 
