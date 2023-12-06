@@ -110,6 +110,7 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
    return result;
 }
 
+
 // called if display removed
 void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
@@ -262,7 +263,6 @@ void i2c_gdestroy_bus_info(void * data) {
 }
 
 
-
 /** Updates an existing #I2C_Bus_Info struct with recent
  *  data from a source sruct.  Modifies those fields which
  *  can change.
@@ -276,8 +276,6 @@ void  i2c_update_bus_info(I2C_Bus_Info * existing, I2C_Bus_Info* new) {
    assert(new);
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, existing=%p, new=%p",
          existing->busno, existing, new);
-
-
    if ( IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Initial bus info:");
       i2c_dbgrpt_bus_info(existing, 4);
@@ -476,6 +474,7 @@ void init_i2c_bus_base() {
    RTTI_ADD_FUNC(i2c_get_drm_connector_name);
    RTTI_ADD_FUNC(i2c_new_bus_info);
    RTTI_ADD_FUNC(i2c_reset_bus_info);
+   RTTI_ADD_FUNC(i2c_update_bus_info);
 
    // connected_buses = EMPTY_BIT_SET_256;
 }
