@@ -1131,9 +1131,6 @@ void report_sys_drm_connectors(int depth) {
 }
 
 
-
-
-
 Sys_Drm_Connector *
 find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    bool debug = false;
