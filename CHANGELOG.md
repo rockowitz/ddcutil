@@ -1,37 +1,77 @@
 # Changelog
 
-## [2.0.1] 2023-10-25
+## [2.0.2] 2023-12-25
+
+### General
 
 #### Added
-- Experimental option --skip-ddc-checks
-  Assumes DDC communication is working and the monitor uses the 
-  unspported feature bit in Get Feature Reply packets as per 
-  the DDC/CI spec.
+- Option ***--skip-ddc-checks***
+  - Assumes DDC communication is working and the monitor properly uses the 
+    unsupported feature bit in Get Feature Reply packets, improving initialization time.
+- Option ***--min-dynamic-multiplier***  (possibly rename --dsa-floor)
 
 #### Changed
-- Turned off unconditional message reporting rare Nvidia/i2c-dev driver 
+- Options ***--verbose***, and ***--brief*** affect ***--help*** output: 
+  - Only show detailed build informmation when ***--verbose*** specified
+  - Show only the version, without prefix, if ***--brief*** specified
+- I2C bus examination during initialization is parallelized, improving performance
+  (This is distinct from the ddc protocol checking.)
+- Command detect: better msgs for laptop display
+  - do not report "DDC communication failed"
+  - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
+- Better accomodate the variation in use of sysfs by different drivers
+- Deprecate vaguely named option ***--force***.  Replace its single use with ***--permit-unknown-feature***.
+- Turned off unconditional message that reported an elusive Nvidia/i2c-dev driver 
   compatibility error.  The incompatibility has been full diagnosed as
   being caused by use of a legacy proprietary Nvidia driver. 
   A message is still written to the system log.
+- **configure** option ***--enable-asan*** causes libasan to be linked into binaries 
+
+#### Fixed
+- Better handling of DDC Null Message recognition and adjustments
+- Dynamic sleep: make it easier to reduce time - once high didn't come down
+- Command detect: ensure output of model name, serial number, and extra display descriptor 
+  use only ASCII character in the range 0..127.
+- Some USB only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
+- Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
+  that aggressive optimization caused setvcp to fail.
+- Memory leaks.
+
+### Shared library
+
+#### Added
+- Implemented display status change detection
+  - Requires DRM video drivers (e.g. amdgpu, i915)
+  - Can detect physical connection/disconnection and DPMS sleep changes, but
+    the effect of turning a monitor on or off is monitor dependant and 
+    cannot reliably be detected.
+  - API uses callbacks to report report status changes to client
+    - event type: DDCA_Display_Event_Type
+    - callback function signature: DDCA_Display_Detection_Callback_Func
+    - ddca_register_display_detection_callback() 
+    - ddca_unregister_display_detection_callback() 
+    - ddca_display_event_type_name()
+    - new status codes possible for many current API functions: 
+      DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
+  - Sleep multiplier control:
+    - dsa2_enable_dynamic_sleep() 
+    - dsa_disable_dynamic_sleep() 
+    - dsa_get_current_sleep_multiplier() 
+    - sda_set_display_sleep_multiplier() 
+
+#### Changed
+- Functions that depend on initialization and that return a status code now 
+  return DDCRC_UNINITIALIZED if ddca_init() failed
 - Revert ddca_get_sleep_multiplier(), ddca_set_sleep_multiplier() to 
   their pre 2.0 semantics changing the multiplier on the current thread.
 
-#### Shared Library
-- Function ddca_init(): recognize flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS,
-  which controls whether messages are output re how the option string
-  passed to the libddcutil parser is assembled from the ddca_init() 
-  libopts argument and the configuration file.
-
 #### Fixed
+- Argument passing on ddca_get_any_vcp_value_using_implicit_type()
 - Fixed cause of assert() failure in ddca_init() when the libopts string
-  argument has a value and the configuration file is enabled  but 
+  argument has a value and the configuration file is enabled but 
   no options are obtained from the configuation file.
 - Contents of the libopts arg were added twice to the string passed to 
   the libddcutil parser.
-- Memory leaks.
-
-#### Building
-- Link libasan into binaries if --enable-asan
 
 ## [2.0.0] 2023-09-25
 
