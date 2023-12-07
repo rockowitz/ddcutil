@@ -1339,7 +1339,8 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
-   API_PROLOG(debug, "func=%p", func);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
    DDCA_Status result =  ddc_register_display_detection_callback(func);
    API_EPILOG(debug, result, "");
    return result;
@@ -1349,7 +1350,8 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 DDCA_Status
 ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
-   API_PROLOG(debug, "func=%p", func);
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
    DDCA_Status result = ddc_unregister_display_detection_callback(func);
    API_EPILOG(debug, result, "");
    return result;
