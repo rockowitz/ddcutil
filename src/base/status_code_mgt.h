@@ -101,6 +101,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code);
 char * psc_desc(     Public_Status_Code status_code);
 char * psc_name_code(Public_Status_Code status_code);
 char * psc_name(     Public_Status_Code status_code);
+char * psc_text(Public_Status_Code psc);
 
 bool status_name_to_unmodulated_number(
         const char *         status_code_name,

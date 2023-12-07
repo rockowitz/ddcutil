@@ -270,8 +270,7 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
 
 #define GSC_WORKBUF_SIZE 300
 
-/** Returns a description string for a #Public_Status_Code.
- *  Normally this has the form: symbolic-name(numeric-value): description
+/** Returns only the description string for a #Public_Status_Code.
  *  Synthesizes a description if information for the status code cannot be found.
  *
  *  @param  psc  status code number
@@ -281,9 +280,26 @@ Status_Code_Info * find_status_code_info(Public_Status_Code status_code) {
  *  The value returned is valid until the next call of this function in the
  *  same thread. Caller should not free.
  */
+char * psc_text(Public_Status_Code psc) {
+   static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
+   char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
+   Status_Code_Info * pinfo = find_status_code_info(psc);
+   if (pinfo) {
+      if (pinfo->description)
+         snprintf(workbuf, GSC_WORKBUF_SIZE, "%s", pinfo->description);
+      else
+         snprintf(workbuf, GSC_WORKBUF_SIZE, "%s", pinfo->name);
+   }
+   else {
+      snprintf(workbuf, GSC_WORKBUF_SIZE, "%d", psc);
+   }
+   return workbuf;
+}
+
 char * psc_desc(Public_Status_Code psc) {
    static GPrivate  psc_desc_key = G_PRIVATE_INIT(g_free);
    char * workbuf = get_thread_fixed_buffer(&psc_desc_key, GSC_WORKBUF_SIZE);
+
    Status_Code_Info * pinfo = find_status_code_info(psc);
    if (pinfo) {
       snprintf(workbuf, GSC_WORKBUF_SIZE, "%s(%d): %s",
