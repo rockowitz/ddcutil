@@ -113,6 +113,11 @@ A few require it for values changed by \fFsetvcp\fP to take effect.
 .TP
 .B "chkusbmon "
 Tests if a hiddev device may be a USB connected monitor, for use in udev rules.
+.TP
+.BI "discard " all|capabilities|dsa cache[s]
+Discard cached files used for performance improvement.
+.B "traceable-functions"
+Lists functions that can be specifically traced using an option like \fI--trcfunc\fP or \fI--trcfrom\fP
 .SS Diagnostic commands
 These commands  diagnose issues in the system configuration that affect 
 \fBddcutil\fP operation,  
@@ -237,8 +242,9 @@ Options for diagnostic output
 .B --ddc
 Reports DDC protocol errors.  These may reflect I2C bus errors, or deviations by monitors from the MCCS specification.
 .TQ
-.BR "["--stats | --vstats "] " " [" all | errors | tries | calls | elapsed | time ]
-Report execution statistics.  
+.BR "["--stats | --vstats | --istats"] " " [" all | errors | tries | calls | elapsed | time ]
+Report execution statistics.  \fB--vstats\fP reports statistics on a per monitor basis. 
+\fB--istats\fP reports additional internal data.
 .br
 I2C bus communication is an inherently unreliable.  It is the responsibility of the program using the bus, i.e. \fBddcutil\fP,
 to manage retries in case of failure.  This option reports retry counts and various performance statistics.
@@ -262,23 +268,31 @@ Enable or disable caching of capabilities strings, improving performance.
 The default is
 .B --enable-capabilities-cache
 .TQ
-.B "--enable-displays-cache, --disable-displays-cache"
-Enable or disable caching of information about detected displays, improving performance.
-The default is 
+.\" .B "--enable-displays-cache, --disable-displays-cache"
+.\" Enable or disable caching of information about detected displays, improving performance.
+.\" The default is 
 .B "--enable-displays-cache"
 .TQ
 .BI "--sleep-multiplier " "decimal number"
 Adjust the length of waits listed in the DDC/CI specification by this number to determine the actual 
 wait time.  Well behaved monitors work with sleep-multiplier values less than 1.0, while monitors
-with poor DDC implementations may require sleep-multiplier values greater than 1.0. 
+with poor DDC implementations may require sleep-multiplier values greater than 1.0.  In general,
+newer option \fB--enable-dynamic-sleep\fP will provide better performance.
 .TQ
 .B "--enable-dynamic-sleep, --disable-dynamic-sleep"
 Dynamically adjust the sleep-multiplier over multiple \fBddcutil\fP invocations, improving performance. 
 The default is
 .B "--enable-dynamic-sleep"
 .TQ
-.B "--async"
-If there are several monitors, initial checks are performed in multiple threads, improving performance.
+.B "--enable-async-ddc-checks, --disable-async-ddc-checks"
+If there are several monitors, initial DDC checks are performed in multiple threads, improving performance.
+This option was formerly (and ambiguously) named \fB--async\fP.  The default is 
+.B "--enable-async-ddc-checks"
+.TQ
+.B "--enable-async-i2c-bus-checks, --disable-async-i2c-bus-checks"
+During display detection, examine I2C buses in parallel to see if a monitor is present.
+These are low level checks that do not test DDC communication. The default is
+.B "--enable-async-i2c-bus-checks"
 .TQ
 .B "--lazy-sleep"
 Peform mandated sleeps before the next DDC/CI operation instead of immediately after the
@@ -303,7 +317,7 @@ The default is
 .B "--enable-udf"
 .TQ
 .B "--enable-usb, --disable-usb"
-Enable or disable support for monitors that implement USB commuincation with the Virtual Control Panel.
+Enable or disable support for monitors that implement USB communication with the Virtual Control Panel.
 (These options are available only if \fBddcutil\fP was built with USB support.)
 The default is 
 .B "--disable-usb"
@@ -316,8 +330,8 @@ Force \fBddcutil\fI to ignore a particular USB device, specified by /dev/usb/hid
 .TQ
 .BI "--use-file-io | --use-ioctl-io"
 Cause \fBddcutil\fP to use the write()/read() interface or the ioctl interface of driver dev-i2c to send and receive I2C packets.
-By default, \fBddcutil\fP uses the ioctl interface.  Depending on how the Nvidia proprietary
-driver was built, this can fail, in which case \fBddcutil\fP switches to using the file io interface.
+By default, \fBddcutil\fP uses the ioctl interface.  For older Nvidia proprietary
+driver are built this can fail, in which case \fBddcutil\fP switches to using the file io interface.
 .TQ
 .B "--force-slave-address"
 Take control of slave addresses on the I2C bus even they are in use.
