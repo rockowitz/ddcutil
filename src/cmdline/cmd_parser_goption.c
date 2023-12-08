@@ -860,6 +860,7 @@ parse_command(
    gboolean verify_flag    = false;
    gboolean noverify_flag  = false;
    gboolean async_flag     = false;
+   gboolean async_check_i2c_flag = true;
    gboolean report_freed_excp_flag = false;
    gboolean notable_flag   = true;
    gboolean rw_only_flag   = false;
@@ -1012,8 +1013,7 @@ parse_command(
          // Miscellaneous
          // move to preparser_options if also implemented for libddcutil
          {"noconfig",'\0', 0, G_OPTION_ARG_NONE,     &disable_config_flag, "Do not process configuration file", NULL},
-         {"skip-ddc-checks",'\0', G_OPTION_FLAG_HIDDEN,
-                              G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
+
       {NULL},
    };
 
@@ -1064,7 +1064,15 @@ parse_command(
       {"min-dynamic-multiplier", '\0', G_OPTION_FLAG_HIDDEN,
                                   G_OPTION_ARG_STRING,  &min_dynamic_sleep_work, "Lowest allowed dynamic sleep multiplier", "number"},
 
-      {"async",   '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
+      {"enable-async-ddc-checks",  '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
+      {"disable-async-ddc-checks",  '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Disable asynchronous display detection", NULL},
+      {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
+      {"enable-async-i2c-bus-checks",  '\0', 0, G_OPTION_ARG_NONE, &async_check_i2c_flag, "Enable parallel examination of /dev/i2c devices", NULL},
+      {"disable-async-i2c-bus-checks", '\0', G_OPTION_FLAG_REVERSE,
+                                          G_OPTION_ARG_NONE, &async_check_i2c_flag, "Disable parallel examination of /dev/i2c devices", NULL},
+
+      {"skip-ddc-checks",'\0', G_OPTION_FLAG_HIDDEN,
+                                  G_OPTION_ARG_NONE,     &skip_ddc_checks_flag,     "Skip initial DDC checks",  NULL},
 
       {"lazy-sleep",  '\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
  //   {"defer-sleeps",'\0', 0, G_OPTION_ARG_NONE, &deferred_sleep_flag, "Delay sleeps if possible",  NULL},
@@ -1431,6 +1439,7 @@ parse_command(
 #ifdef OLD
    SET_CMDFLAG(CMD_FLAG_NODETECT,          nodetect_flag);
 #endif
+   SET_CMDFLAG(CMD_FLAG_ASYNC_I2C_CHECK,   async_check_i2c_flag);
    SET_CMDFLAG(CMD_FLAG_ASYNC,             async_flag);
    SET_CMDFLAG(CMD_FLAG_REPORT_FREED_EXCP, report_freed_excp_flag);
    SET_CMDFLAG(CMD_FLAG_NOTABLE,           notable_flag);
