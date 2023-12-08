@@ -227,6 +227,12 @@ Error_Info* perform_parse(
 }
 
 
+static inline void emit_parse_info_msg(const char * msg, GPtrArray* infomsgs) {
+   if (infomsgs)
+      g_ptr_array_add(infomsgs, g_strdup_printf("%s%s", "libddcutil: ", msg));
+   SYSLOG2(DDCA_SYSLOG_NOTICE,"%s", msg);
+}
+
 
 //
 // Initialization
@@ -243,11 +249,7 @@ get_parsed_libmain_config(const char * libopts_string,
 
    char * msg = g_strdup_printf("Options passed from client: %s",
                                 (libopts_string) ? libopts_string : "");
-   // if (enable_init_msgs)
-   //    fprintf(fout(), "libddcutil: %s\n", msg);
-   if (infomsgs)
-      g_ptr_array_add(infomsgs, g_strdup_printf("libddcutil: %s", msg));
-   SYSLOG2(DDCA_SYSLOG_NOTICE,"Using libddcutil options passed from client: %s",   libopts_string);
+   emit_parse_info_msg(msg, infomsgs);
    free(msg);
 
    Error_Info * result = NULL;
@@ -324,13 +326,9 @@ get_parsed_libmain_config(const char * libopts_string,
             ntsa_show(new_argv);
 
          if (untokenized_option_string && strlen(untokenized_option_string) > 0) {
-            char * msg = g_strdup_printf("Using libddcutil options from %s: %s",
+            char * msg = g_strdup_printf("Using options from %s: %s",
                                          config_fn, untokenized_option_string);
-            // if (enable_init_msgs)
-            //    fprintf(fout(), "libddcutil: %s\n", msg);
-            if (infomsgs)
-               g_ptr_array_add(infomsgs, g_strdup_printf("%s", msg));
-            SYSLOG2(DDCA_SYSLOG_NOTICE,"%s", msg);
+            emit_parse_info_msg(msg, infomsgs);
             free(msg);
          }
       }
@@ -341,13 +339,8 @@ get_parsed_libmain_config(const char * libopts_string,
    if (!result) {   // if no errors
       assert(new_argc >= 1);
       char * combined = strjoin((const char**)(new_argv+1), new_argc, " ");
-
-      char * msg = g_strdup_printf("Applying combined libddcutil options: %s", combined);
-      // if (enable_init_msgs)
-      //    fprintf(fout(), "%s\n", msg);
-      if (infomsgs)
-         g_ptr_array_add(infomsgs, g_strdup_printf("%s", msg));
-      SYSLOG2(DDCA_SYSLOG_NOTICE,"%s", msg);
+      char * msg = g_strdup_printf("Applying combined options: %s", combined);
+      emit_parse_info_msg(msg, infomsgs);
       free(msg);
 
       result = perform_parse(new_argc, new_argv, combined, parsed_cmd_loc);
@@ -602,9 +595,10 @@ void report_parse_errors(Error_Info * erec) {
 
 
 DDCA_Status
-ddca_init(const char *      libopts,
+ddci_init(const char *      libopts,
           DDCA_Syslog_Level syslog_level_arg,
-          DDCA_Init_Options opts)
+          DDCA_Init_Options opts,
+          char***           infomsg_loc)
 {
    bool debug = false;
    char * s = getenv("DDCUTIL_DEBUG_LIBINIT");
@@ -612,6 +606,9 @@ ddca_init(const char *      libopts,
       debug = true;
 
    DBGF(debug, "Starting. library_initialized=%s", sbool(library_initialized));
+
+   if (infomsg_loc)
+      *infomsg_loc = NULL;
 
    Error_Info * master_error = NULL;
    if (library_initialized) {
@@ -639,7 +636,8 @@ ddca_init(const char *      libopts,
       }
       syslog_level = syslog_level_arg;  // global in trace_control.h
 
-      GPtrArray* infomsgs = g_ptr_array_new_with_free_func(g_free);
+      GPtrArray* infomsgs = NULL;
+         infomsgs = g_ptr_array_new_with_free_func(g_free);
 
       Parsed_Cmd * parsed_cmd = NULL;
       if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
@@ -653,9 +651,12 @@ ddca_init(const char *      libopts,
                            &parsed_cmd);
          ASSERT_IFF(master_error, !parsed_cmd);
 
-         if (enable_init_msgs && infomsgs->len > 0) {
+         if (enable_init_msgs && infomsgs && infomsgs->len > 0) {
             for (int ndx = 0; ndx < infomsgs->len; ndx++)
                fprintf(fout(), "%s\n", (char*) g_ptr_array_index(infomsgs, ndx));
+         }
+         if (infomsg_loc) {
+            *infomsg_loc = g_ptr_array_to_ntsa(infomsgs, /*duplicate=*/true);
          }
          g_ptr_array_free(infomsgs, true);
 
@@ -689,11 +690,10 @@ ddca_init(const char *      libopts,
             SYSLOG2(DDCA_SYSLOG_ERROR, "%s", master_error->causes[ndx]->detail);
          }
       }
-#ifdef MAYBE
       if (enable_init_msgs) {
+         printf("(%s) calling report_parse_errors()\n", __func__);
          report_parse_errors(master_error);
       }
-#endif
       errinfo_free(master_error);
       library_initialization_failed = true;
    }
@@ -709,6 +709,26 @@ ddca_init(const char *      libopts,
 
    return ddcrc;
 }
+
+
+DDCA_Status
+ddca_init(const char *      libopts,
+          DDCA_Syslog_Level syslog_level_arg,
+          DDCA_Init_Options opts)
+{
+   return ddci_init(libopts, syslog_level_arg, opts, NULL);
+}
+
+DDCA_Status
+ddca_init2(const char *     libopts,
+          DDCA_Syslog_Level syslog_level_arg,
+          DDCA_Init_Options opts,
+          char***           infomsg_loc
+          )
+{
+   return ddci_init(libopts, syslog_level_arg, opts, infomsg_loc);
+}
+
 
 
 //
