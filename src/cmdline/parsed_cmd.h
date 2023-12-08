@@ -49,7 +49,7 @@ typedef enum {
 
 typedef enum {
    CMD_FLAG_DDCDATA                  = 0x0001,
-   CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE                    = 0x0002,
+   CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE = 0x0002,
    CMD_FLAG_FORCE_SLAVE_ADDR         = 0x0004,
    CMD_FLAG_TIMESTAMP_TRACE          = 0x0008,  // prepend trace and debug msgs with elapsed time
    CMD_FLAG_SHOW_UNSUPPORTED         = 0x0010,
@@ -71,6 +71,7 @@ typedef enum {
    CMD_FLAG_RW_ONLY                = 0x010000,
    CMD_FLAG_RO_ONLY                = 0x020000,
    CMD_FLAG_WO_ONLY                = 0x040000,
+   CMD_FLAG_ASYNC_I2C_CHECK        = 0x080000,
 
    CMD_FLAG_ENABLE_UDF             = 0x100000,
    CMD_FLAG_ENABLE_USB             = 0x200000,

@@ -340,8 +340,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_str("failsim_control_fn", NULL, parsed_cmd->failsim_control_fn,                        d1);
       rpt_bool("mock data",         NULL, parsed_cmd->flags & CMD_FLAG_MOCK,                    d1);
       RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
-      RPT_CMDFLAG("skip ddc checks", CMD_FLAG_SKIP_DDC_CHECKS, d1);
-
+      RPT_CMDFLAG("skip ddc checks",      CMD_FLAG_SKIP_DDC_CHECKS, d1);
+      RPT_CMDFLAG("async I2C bus checks", CMD_FLAG_ASYNC_I2C_CHECK, d1);
 
       rpt_nl();
       rpt_label(depth, "Unsorted");
