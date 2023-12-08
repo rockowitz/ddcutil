@@ -179,6 +179,9 @@ ddca_rc_desc(
 
 /** Performs library initialization.
  *
+ *  @deprecated
+ *  Use ddca_init2()
+ *
  *  @param[in]  library_options  string of **libddcutil** options
  *  @param[in]  syslog_level     severity cutoff for system log
  *  @param[in]  opts             option flags
@@ -198,6 +201,35 @@ DDCA_Status
 ddca_init(const char *      libopts,
           DDCA_Syslog_Level syslog_level,
           DDCA_Init_Options opts);
+
+
+/** Performs library initialization.
+ *
+ *  @param[in]  library_options  string of **libddcutil** options
+ *  @param[in]  syslog_level     severity cutoff for system log
+ *  @param[in]  opts             option flags
+ *  @param[out] infomsg_loc      if non-null, return null terminated list of
+ *                               informational msgs here
+ *  @return status code
+ *
+ * Unless flag DDC_INIT_OPTIONS_DISABLE_CONFIG_FILE is set in **opts**,
+ * libddcutil options are read from the ddcutil configuration file.
+ * These are combined with any options passed in string **libopts**
+ * and then processed.
+ *
+ * If the returned status code is other than **DDCRC_OK**, a detailed
+ * error report can be obtained using #ddca_get_error_detail().
+ *
+ * The caller is responsible for freeing the null terminated list of
+ * messages returned in infomsg_loc.
+ *
+ * @since 2.0.2
+ */
+DDCA_Status
+ddca_init2(const char *     libopts,
+          DDCA_Syslog_Level syslog_level_arg,
+          DDCA_Init_Options opts,
+          char***           infomsg_loc);
 
 
 //
