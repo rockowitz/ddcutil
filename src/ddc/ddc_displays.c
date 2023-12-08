@@ -1915,7 +1915,7 @@ Display_Ref * ddc_get_dref_by_busno(int busno) {
           }
       }
    }
-   assert(non_removed_ct <= 0);
+   assert(non_removed_ct <= 1);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p= %s", result, dref_repr_t(result));
    return result;
