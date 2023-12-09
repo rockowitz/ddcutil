@@ -1638,24 +1638,34 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
 
 /** Invokes the registered callbacks for a display detection event.
  */
-void ddc_emit_display_detection_event(DDCA_Display_Detection_Event evt) {
-   bool debug = false || watch_watching;
-   Display_Ref * dref = (Display_Ref*) evt.dref;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "evt.dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
-         evt.dref, dref_repr_t((Display_Ref*) evt.dref), sbool(dref->flags&DREF_REMOVED),
-         evt.event_type, ddc_display_event_type_name(evt.event_type));
-   // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
 
+/** Invokes the registered callbacks for a display detection event.
+ */
+void ddc_emit_display_detection_event(Display_Ref * dref, DDCA_Display_Event_Type event_type) {
+   bool debug = false || watch_watching;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
+         dref, dref_repr_t(dref), sbool(dref->flags&DREF_REMOVED),
+         event_type, ddc_display_event_type_name(event_type));
+   DDCA_Display_Detection_Event report;
+   report.dref = (void*) dref;
+   report.event_type = event_type;
+
+   // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, %s",
+         dref_repr_t(dref), ddc_display_event_type_name(event_type));
+
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
          DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func(evt);
+         func(report);
       }
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 }
+
 
 
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
@@ -1867,10 +1877,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
-      DDCA_Display_Detection_Event report;
-      report.dref = (void*) dref;
-      report.event_type = DDCA_EVENT_CONNECTED;
-      ddc_emit_display_detection_event(report);
+      ddc_emit_display_detection_event(dref, DDCA_EVENT_CONNECTED);
       ok = true;
    }
    else {
@@ -1943,10 +1950,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    if (dref) {
       found = true;
       dref->flags |= DREF_REMOVED;
-      DDCA_Display_Detection_Event report;
-      report.event_type = DDCA_EVENT_DISCONNETED;
-      report.dref = (void*) dref;
-      ddc_emit_display_detection_event(report);
+      ddc_emit_display_detection_event(dref, DDCA_EVENT_DISCONNETED);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
