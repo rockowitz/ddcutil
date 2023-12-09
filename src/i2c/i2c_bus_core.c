@@ -67,6 +67,8 @@
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_edid.h"
 
+#include "ddc/ddc_display_lock.h"      // TODO: <=== violates layering, need to fix
+
 #include "i2c/i2c_bus_core.h"
 
 
@@ -198,6 +200,18 @@ int i2c_open_bus(int busno, Byte callopts) {
    char filename[20];
    int  fd;             // Linux file descriptor
 
+   Display_Lock_Flags ddisp_flags = DDISP_NONE;
+      ddisp_flags |= DDISP_WAIT;
+
+   DDCA_IO_Path dpath;
+   dpath.io_mode = DDCA_IO_I2C;
+   dpath.path.i2c_busno = busno;
+   Error_Info * err = lock_display_by_dpath(dpath, ddisp_flags);
+   if (err) {
+      fd = err->status_code;
+      goto bye;
+   }
+
    snprintf(filename, 19, "/dev/"I2C"-%d", busno);
    RECORD_IO_EVENT(
          -1,
@@ -215,6 +229,7 @@ int i2c_open_bus(int busno, Byte callopts) {
       fd = -errsv;
    }
 
+bye:
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
    return fd;
 }
@@ -222,20 +237,26 @@ int i2c_open_bus(int busno, Byte callopts) {
 
 /** Closes an open I2C bus device.
  *
+ * @param  busno     i2c_bus_number
  * @param  fd        Linux file descriptor
  * @param  callopts  call option flags, controlling failure action
  *
  * @retval 0  success
  * @retval <0 negative Linux errno value if close fails
  */
-Status_Errno i2c_close_bus(int fd, Call_Options callopts) {
+Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP,
-          "fd=%d - %s, callopts=%s",
-          fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
+          "busno=%d, fd=%d - %s, callopts=%s",
+          busno, fd, filename_for_fd_t(fd), interpret_call_options_t(callopts));
 
    Status_Errno result = 0;
    int rc = 0;
+
+   DDCA_IO_Path dpath;
+   dpath.io_mode = DDCA_IO_I2C;
+   dpath.path.i2c_busno = busno;
+   unlock_display_by_dpath(dpath);
 
    RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
@@ -344,7 +365,7 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
       if (rc == 0)
          result = true;
       buffer_free(edidbuf, "");
-      i2c_close_bus(fd, CALLOPT_ERR_MSG);
+      i2c_close_bus(businfo->busno,fd, CALLOPT_ERR_MSG);
     }
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
@@ -594,7 +615,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
           }    // end x37 check
 
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Closing bus...");
-          i2c_close_bus(fd, CALLOPT_ERR_MSG);
+          i2c_close_bus(bus_info->busno, fd, CALLOPT_ERR_MSG);
       }
 
       // conformant driver, so drm_connector_name set, but reading EDID failed,

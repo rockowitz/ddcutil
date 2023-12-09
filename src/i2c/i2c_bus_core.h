@@ -43,7 +43,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_device
 void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
 int              i2c_open_bus(int busno, Call_Options callopts);
-Status_Errno     i2c_close_bus(int fd, Call_Options callopts);
+Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
 void             i2c_check_bus(I2C_Bus_Info * bus_info);

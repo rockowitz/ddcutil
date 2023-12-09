@@ -456,7 +456,7 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
             free_parsed_edid(edid);
             edid = NULL;
          }
-         i2c_close_bus(fd, CALLOPT_ERR_MSG);
+         i2c_close_bus(busno,fd, CALLOPT_ERR_MSG);
       }
    }
 

@@ -294,7 +294,7 @@ ddc_close_display(Display_Handle * dh) {
       case DDCA_IO_I2C:
          {
             DBGMSF(debug, "Calling is2_close_bus() ...");
-            rc = i2c_close_bus(dh->fd, CALLOPT_NONE);
+            rc = i2c_close_bus(dh->dref->io_path.path.i2c_busno, dh->fd, CALLOPT_NONE);
             if (rc != 0) {
                TRACED_ASSERT(rc < 0);
                char * msg = g_strdup_printf("i2c_close_bus returned %d, errno=%s",
