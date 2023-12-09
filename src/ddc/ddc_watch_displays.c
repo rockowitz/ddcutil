@@ -214,13 +214,11 @@ void recheck_bus_info() {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, is_dpms_asleep=%s, last_checked_dpms_asleep=%s",
                businfo->busno, sbool(is_dpms_asleep), sbool(businfo->last_checked_dpms_asleep));
          if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
-            DDCA_Display_Detection_Event report;
             Display_Ref * dref = ddc_get_dref_by_busno(businfo->busno);
             assert(dref);
             DBGTRC(debug, DDCA_TRC_NONE, "event dref=%p->%s", dref, dref_repr_t(dref));
-            report.dref = (DDCA_Display_Ref) dref;
-            report.event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_display_detection_event(report);
+            DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
+            ddc_emit_display_detection_event(dref, event_type);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
       }
