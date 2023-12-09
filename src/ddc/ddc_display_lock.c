@@ -55,12 +55,23 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
 
 
 
+static bool lock_rec_matches_io_path(Display_Lock_Record * ddesc, DDCA_IO_Path path) {
+   bool result = false;
+   // i2c_busno and hiddev are same size, to following works for DDCA_IO_USB
+   if (ddesc->io_path.io_mode == path.io_mode && ddesc->io_path.path.i2c_busno == path.path.i2c_busno)
+      result = true;
+   return result;
+}
+
+
+#ifdef UNUSED
 static bool lock_rec_matches_dref(Display_Lock_Record * ddesc, Display_Ref * dref) {
    bool result = false;
    if (dpath_eq(ddesc->io_path, dref->io_path))
       result = true;
    return result;
 }
+#endif
 
 
 static GPtrArray * lock_records = NULL;  // array of Diaplay_Lock_Record *
@@ -82,16 +93,16 @@ lockrec_repr_t(Display_Lock_Record * ref) {
 
 
 Display_Lock_Record *
-get_display_lock_record(Display_Ref * dref) {
+get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "io_path=%s", dpath_repr_t(&io_path));
 
    Display_Lock_Record * result = NULL;
    g_mutex_lock(&descriptors_mutex);
 
    for (int ndx=0; ndx < lock_records->len; ndx++) {
       Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
-      if (lock_rec_matches_dref(cur, dref) ) {
+      if (lock_rec_matches_io_path(cur, io_path) ) {
          result = cur;
          break;
       }
@@ -99,7 +110,7 @@ get_display_lock_record(Display_Ref * dref) {
    if (!result) {
       Display_Lock_Record * new_desc = calloc(1, sizeof(Display_Lock_Record));
       memcpy(new_desc->marker, DISPLAY_LOCK_MARKER, 4);
-      new_desc->io_path           = dref->io_path;
+      new_desc->io_path           = io_path;
       g_mutex_init(&new_desc->display_mutex);
       g_ptr_array_add(lock_records, new_desc);
       result = new_desc;
@@ -108,6 +119,18 @@ get_display_lock_record(Display_Ref * dref) {
    g_mutex_unlock(&descriptors_mutex);
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result,  lockrec_repr_t(result));
+   return result;
+
+}
+
+Display_Lock_Record *
+get_display_lock_record(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+
+   Display_Lock_Record * result = get_display_lock_record_by_dpath(dref->io_path);
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result, lockrec_repr_t(result));
    return result;
 }
 
@@ -181,6 +204,17 @@ lock_display_by_dref(
 }
 
 
+Error_Info *
+lock_display_by_dpath(
+      DDCA_IO_Path       dpath,
+      Display_Lock_Flags flags)
+{
+    Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
+    return lock_display(lockid, flags);
+}
+
+
+
 /** Unlocks a distinct display.
  *
  *  \param id  distinct display identifier
@@ -209,7 +243,7 @@ unlock_display(Display_Lock_Record * ddesc) {
 }
 
 
-/**  Unocks a display.
+/**  Unlocks a display.
  *
  *  \param  dref   display reference
  *  \retval NULL                      success
@@ -220,6 +254,14 @@ unlock_display_by_dref(
       Display_Ref *      dref)
 {
     Display_Lock_Record * lockid = get_display_lock_record(dref);
+    return unlock_display(lockid);
+}
+
+Error_Info *
+unlock_display_by_dpath(
+      DDCA_IO_Path   dpath)
+{
+    Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
     return unlock_display(lockid);
 }
 
@@ -279,9 +321,11 @@ init_ddc_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
    RTTI_ADD_FUNC(get_display_lock_record);
+   RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
    RTTI_ADD_FUNC(lock_display);
    RTTI_ADD_FUNC(unlock_display);
    RTTI_ADD_FUNC(lock_display_by_dref);
+   RTTI_ADD_FUNC(unlock_display_by_dpath);
    RTTI_ADD_FUNC(unlock_display_by_dref);
 }
 
