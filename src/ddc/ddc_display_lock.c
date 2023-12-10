@@ -124,6 +124,8 @@ get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
 
 }
 
+
+#ifdef UNUSED
 static Display_Lock_Record *
 get_display_lock_record_by_dref(Display_Ref * dref) {
    bool debug = false;
@@ -134,6 +136,7 @@ get_display_lock_record_by_dref(Display_Ref * dref) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result, lockrec_repr_t(result));
    return result;
 }
+#endif
 
 
 /** Locks a distinct display.
@@ -351,13 +354,13 @@ void
 init_ddc_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
-   RTTI_ADD_FUNC(get_display_lock_record_by_dref);
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
    RTTI_ADD_FUNC(lock_display);
    RTTI_ADD_FUNC(lock_display_by_dpath);
    RTTI_ADD_FUNC(unlock_display);
    RTTI_ADD_FUNC(unlock_display_by_dpath);
 #ifdef UNUSED
+   RTTI_ADD_FUNC(get_display_lock_record_by_dref);
    RTTI_ADD_FUNC(lock_display_by_dref);
    RTTI_ADD_FUNC(unlock_display_by_dref);
 #endif
