@@ -229,6 +229,8 @@ void init_ddc_services() {
 
 // also handles VCP
 void terminate_ddc_services() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
    terminate_ddc_serialize();
    terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
    terminate_ddc_packet_io();
@@ -239,5 +241,6 @@ void terminate_ddc_services() {
    terminate_usb_services();
 #endif
    terminate_i2c_services();
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "");
 }
 

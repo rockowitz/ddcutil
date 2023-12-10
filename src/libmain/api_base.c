@@ -486,7 +486,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
  */
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
@@ -498,7 +498,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
-      ddc_stop_watch_displays();   // in case it has been started
+      ddc_stop_watch_displays();   // in case it was started
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();

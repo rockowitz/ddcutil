@@ -150,7 +150,7 @@ lock_display(
       Display_Lock_Record * ddesc,
       Display_Lock_Flags flags)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
 
    Error_Info * err = NULL;
@@ -234,7 +234,7 @@ lock_display_by_dpath(
  */
 Error_Info *
 unlock_display(Display_Lock_Record * ddesc) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    Error_Info * err = NULL;
    // TODO:  If this function is exposed in API, change assert to returning illegal argument status code
@@ -343,5 +343,8 @@ init_ddc_display_lock(void) {
 
 void
 terminate_ddc_display_lock() {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
    g_ptr_array_free(lock_records, true);
+   DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "");
 }
