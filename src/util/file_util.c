@@ -174,13 +174,15 @@ file_get_first_line(
            printf("Nothing to read from %s\n", fn);
       }
       else {
-         if (strlen(single_line) > 0)
+         if (strlen(single_line) > 0) {
+            // single_line has trailing \n, replace it with '\0'
             single_line[strlen(single_line)-1] = '\0';
-         // printf("\n%s", single_line);     // single_line has trailing \n
+            // printf("\n%s", single_line);     // single_line has trailing \n
+         }
       }
       fclose(fp);
    }
-   // printf("(%s) fn=|%s|, returning: |%s|\n", __func__, fn, single_line);
+   // printf("(%s) fn=|%s|, returning: %p -> |%s|\n", __func__, fn, single_line, single_line);
    return single_line;
 }
 
