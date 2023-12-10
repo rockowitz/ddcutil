@@ -307,7 +307,7 @@ bool logable_msg(DDCA_Syslog_Level log_level,
    // char buffer[500];
    va_list(args);
    va_start(args, format);
-   char * buffer = g_strdup_printf(format, args);
+   char * buffer = g_strdup_vprintf(format, args);
    // vsnprintf(buffer, 500, format, args);
    f0printf(fout(), "%s\n", buffer);
    if (test_emit_syslog(log_level)) {
@@ -632,8 +632,9 @@ static bool vdbgtrc(
             FILE * where = (options & DBGTRC_OPTIONS_SEVERE)
                               ? thread_settings->ferr
                               : thread_settings->fout;
-            f0puts(decorated_msg, where);
-            f0putc('\n', where);
+            f0printf(where, "%s\n", decorated_msg);
+            // f0puts(decorated_msg, where);
+            // f0putc('\n', where);
             fflush(where);
          }
 
