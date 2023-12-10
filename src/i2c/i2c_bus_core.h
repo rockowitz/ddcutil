@@ -33,6 +33,9 @@ extern bool i2c_force_bus;
 extern bool all_video_drivers_implement_drm;
 extern bool force_read_edid;
 extern int  i2c_businfo_async_threshold;
+extern bool cross_instance_locks_enabled;
+
+void i2c_enable_cross_instance_locks(bool yesno);
 
 // Basic I2C bus operations
 bool             i2c_device_exists(int busno); // Simple bus detection, no side effects

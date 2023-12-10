@@ -15,6 +15,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -81,6 +82,13 @@ bool i2c_force_bus = false;  // Another ugly global variable for testing purpose
 bool all_video_drivers_implement_drm = false;
 bool force_read_edid = false;
 int  i2c_businfo_async_threshold = BUS_CHECK_ASYNC_THRESHOLD;
+bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
+
+void i2c_enable_cross_instance_locks(bool yesno) {
+   bool debug = false;
+   cross_instance_locks_enabled = yesno;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "yesno = %s", SBOOL(yesno));
+}
 
 //
 // Simple /dev/i2c inquiry
@@ -191,7 +199,7 @@ void include_open_failures_reported(int busno) {
  *  @retval -errno  negative Linux errno if open fails
  *
  *  Call options recognized
- *  - CALLOPT_ERR_MSG
+ *  - CALLOPT_WAIT
  */
 int i2c_open_bus(int busno, Byte callopts) {
    bool debug = false;
@@ -228,6 +236,26 @@ int i2c_open_bus(int busno, Byte callopts) {
          f0printf(ferr(), "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
       fd = -errsv;
    }
+   else if (cross_instance_locks_enabled) {
+      int operation = LOCK_EX;
+      if ( !(callopts & CALLOPT_WAIT) )
+         operation |= LOCK_NB;
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling flock(%d,..)...", fd);
+      int rc = flock(fd, operation);
+      if (rc < 0) {
+         errsv = errno;
+         DBGTRC_NOPREFIX(true, TRACE_GROUP, "flock() returned: %s", psc_desc(-errsv));
+         if (errsv == EWOULDBLOCK) {
+            // CALLOPT_WAIT was not specified
+            close(fd);
+            fd = DDCRC_LOCKED;  // need a different status code for cross-process?
+         }
+         else {
+            DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ignoring unexpected error from flock(): %s",
+                            psc_desc(-errsv));
+         }
+      }
+   }
 
 bye:
    DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
@@ -253,6 +281,15 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    Status_Errno result = 0;
    int rc = 0;
 
+   if (cross_instance_locks_enabled) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling flock(%d,LOCK_UN)...", fd);
+      int rc = flock(fd, LOCK_UN);
+      if (rc < 0) {
+         int errsv = errno;
+         DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock(..,LOCK_UN): %s",
+               psc_desc(-errsv));
+      }
+   }
    DDCA_IO_Path dpath;
    dpath.io_mode = DDCA_IO_I2C;
    dpath.path.i2c_busno = busno;
@@ -1065,6 +1102,7 @@ static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_detect_single_bus);
    RTTI_ADD_FUNC(i2c_detect_x37);
    RTTI_ADD_FUNC(i2c_discard_buses);
+   RTTI_ADD_FUNC(i2c_enable_cross_instance_locks);
    RTTI_ADD_FUNC(i2c_open_bus);
    RTTI_ADD_FUNC(i2c_report_active_bus);
    RTTI_ADD_FUNC(is_laptop_drm_connector_name);
@@ -1083,7 +1121,6 @@ void subinit_i2c_bus_core() {
          DBGMSG("   %s", g_ptr_array_index(sysfs_drm_connector_names, ndx));
       }
    }
-
 }
 
 
