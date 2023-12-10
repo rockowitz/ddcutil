@@ -366,6 +366,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
+   i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
    set_output_level(parsed_cmd->output_level);  // current thread
    set_default_thread_output_level(parsed_cmd->output_level); // for future threads
