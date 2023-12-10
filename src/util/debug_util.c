@@ -73,12 +73,16 @@ static char * extract_function(char * bt_line, bool name_only) {
    }
    if (name_only) {
       char *p = strchr(result, '+');
-      if (p)
+      if (p) {
          *p = '\0';
+         char * res = g_strdup(result);
+         free(result);
+         result = res;
+      }
    }
 
    if (debug)
-      printf("(%s) Returning |%s|\n", __func__, result);
+      printf("(%s) Returning %p -> |%s|\n", __func__, result, result);
    return result;
 }
 #endif
@@ -136,6 +140,11 @@ void show_backtrace(int stack_adjust)
 }
 #endif
 
+/** Returns an array of function names for the backtrace stack.
+ *
+ *  @param stack_adjust  adjust the start of the reported functions
+ *  @return array of strings of names of functions, caller must deep free
+ */
 GPtrArray * get_backtrace(int stack_adjust) {
 #ifdef HAVE_EXECINFO_H
    bool debug = false;
@@ -168,7 +177,7 @@ GPtrArray * get_backtrace(int stack_adjust) {
          }
          else {
             // printf("   %s\n", strings[j]);
-            char * s = extract_function(strings[j], true);
+            char * s = extract_function(strings[j], true); // caller must free s
             if (debug)
                printf("   %s\n", s);
             g_ptr_array_add(result, s);
@@ -196,6 +205,7 @@ void show_backtrace(int stack_adjust) {
       for (int ndx = 0; ndx < callstack->len; ndx++) {
          printf("   %s\n", (char *) g_ptr_array_index(callstack, ndx));
       }
+      g_ptr_array_set_free_func(callstack, g_free);
       g_ptr_array_free(callstack, true);
    }
 }
