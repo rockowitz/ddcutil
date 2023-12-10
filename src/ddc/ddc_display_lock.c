@@ -75,8 +75,8 @@ static bool lock_rec_matches_dref(Display_Lock_Record * ddesc, Display_Ref * dre
 #endif
 
 
-static GPtrArray * lock_records = NULL;  // array of Diaplay_Lock_Record *
-static GMutex descriptors_mutex;                // single threads access to lock records
+static GPtrArray * lock_records = NULL;   // array of Diaplay_Lock_Record *
+static GMutex descriptors_mutex;          // single threads access to lock records
 static GMutex master_display_lock_mutex;
 
 
@@ -93,7 +93,7 @@ lockrec_repr_t(Display_Lock_Record * ref) {
 }
 
 
-Display_Lock_Record *
+static Display_Lock_Record *
 get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "io_path=%s", dpath_repr_t(&io_path));
@@ -124,8 +124,8 @@ get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
 
 }
 
-Display_Lock_Record *
-get_display_lock_record(Display_Ref * dref) {
+static Display_Lock_Record *
+get_display_lock_record_by_dref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
 
@@ -188,6 +188,7 @@ lock_display(
 }
 
 
+#ifdef UNUSED
 /** Locks a display.
  *
  *  \param  dref               display reference
@@ -204,13 +205,23 @@ lock_display_by_dref(
 {
     bool debug = false;
     DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, flags=0x%02x", dref_repr_t(dref), flags);
-    Display_Lock_Record * lockid = get_display_lock_record(dref);
+    Display_Lock_Record * lockid = get_display_lock_record_by_dref(dref);
     Error_Info * result = lock_display(lockid, flags);
     DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dref=%s", dref_repr_t(dref));
     return result;
 }
+#endif
 
 
+/** Locks a display, specified by its io path
+ *
+ *  \param  dpath              display path
+ *  \param  flags              if **DDISP_WAIT** set, wait for locking
+ *  \retval NULL               success
+ *  \retval Error_Info(DDCRC_LOCKED)       locking failed, display already locked by another
+ *                                         thread and DDISP_WAIT not set
+ *  \retval Error_Info(DDCRC_ALREADY_OPEN) display already locked in current thread
+ */
 Error_Info *
 lock_display_by_dpath(
       DDCA_IO_Path       dpath,
@@ -254,6 +265,7 @@ unlock_display(Display_Lock_Record * ddesc) {
 }
 
 
+#ifdef UNUSED
 /**  Unlocks a display.
  *
  *  \param  dref   display reference
@@ -264,10 +276,18 @@ Error_Info *
 unlock_display_by_dref(
       Display_Ref *      dref)
 {
-    Display_Lock_Record * lockid = get_display_lock_record(dref);
+    Display_Lock_Record * lockid = get_display_lock_record_by_dref(dref);
     return unlock_display(lockid);
 }
+#endif
 
+
+/**  Unlocks a display, specified by its io path
+ *
+ *  \param  dpath                     io path
+ *  \retval NULL                      success
+ *  \retval Error_Info(DDCRC_LOCKED)  locking failed, display already locked by another thread
+ */
 Error_Info *
 unlock_display_by_dpath(
       DDCA_IO_Path   dpath)
@@ -331,13 +351,16 @@ void
 init_ddc_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
-   RTTI_ADD_FUNC(get_display_lock_record);
+   RTTI_ADD_FUNC(get_display_lock_record_by_dref);
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
    RTTI_ADD_FUNC(lock_display);
+   RTTI_ADD_FUNC(lock_display_by_dpath);
    RTTI_ADD_FUNC(unlock_display);
-   RTTI_ADD_FUNC(lock_display_by_dref);
    RTTI_ADD_FUNC(unlock_display_by_dpath);
+#ifdef UNUSED
+   RTTI_ADD_FUNC(lock_display_by_dref);
    RTTI_ADD_FUNC(unlock_display_by_dref);
+#endif
 }
 
 
