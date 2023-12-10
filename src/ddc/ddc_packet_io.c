@@ -170,13 +170,15 @@ ddc_open_display(
       }
    }
 
-   Display_Lock_Flags ddisp_flags = DDISP_NONE;
+#ifdef NO
+    Display_Lock_Flags ddisp_flags = DDISP_NONE;
    if (callopts & CALLOPT_WAIT)
       ddisp_flags |= DDISP_WAIT;
 
    err = lock_display_by_dref(dref, ddisp_flags);
    if (err)
       goto bye;
+#endif
 
    switch (dref->io_path.io_mode) {
 
@@ -199,7 +201,7 @@ ddc_open_display(
 
          if (!err) {
             DBGMSF(debug, "Calling i2c_open_bus() ...");
-            fd = i2c_open_bus(dref->io_path.path.i2c_busno, CALLOPT_ERR_MSG);
+            fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
             if (fd < 0) {
                err = ERRINFO_NEW(fd, "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
             }
@@ -250,11 +252,13 @@ ddc_open_display(
       g_hash_table_add(open_displays, dh);
    }
    else {
+#ifdef NO
       Error_Info * err2 = unlock_display_by_dref(dref);
       if (err2) {
          PROGRAM_LOGIC_ERROR("unlock_distinct_display() returned %s", errinfo_summary(err));
          errinfo_free(err2);
       }
+#endif
    }
 
 bye:
@@ -330,6 +334,7 @@ ddc_close_display(Display_Handle * dh) {
    }
 
    dh->dref->flags &= (~DREF_OPEN);
+#ifdef NO
    Error_Info * err2 = unlock_display_by_dref(dref);
    if (err2) {
       SYSLOG2(DDCA_SYSLOG_ERROR, "%s", err2->detail);
@@ -338,6 +343,7 @@ ddc_close_display(Display_Handle * dh) {
       else
          BASE_ERRINFO_FREE_WITH_REPORT(err2, true);
    }
+#endif
    assert(open_displays);
    g_hash_table_remove(open_displays, dh);
 
