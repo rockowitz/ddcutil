@@ -84,6 +84,7 @@ typedef enum {
    CMD_FLAG_F4                   = 0x08000000,
    CMD_FLAG_F5                   = 0x10000000,
    CMD_FLAG_F6                   = 0x20000000,
+   CMD_FLAG_FLOCK                = 0x40000000,
 
    CMD_FLAG_DEFER_SLEEPS         = 0x80000000,
    CMD_FLAG_X52_NO_FIFO        = 0x0100000000,

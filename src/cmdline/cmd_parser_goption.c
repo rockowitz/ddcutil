@@ -898,6 +898,10 @@ parse_command(
    const char * disable_cd_expl = (enable_cd_flag) ? "Disable cached displays" : "Disable cached displays (default)";
 // #endif
 
+   gboolean enable_flock_flag = DEFAULT_ENABLE_FLOCK;
+   const char * enable_flock_expl =  (enable_flock_flag) ? "Enable cross-instance locking (default)" : "Enable cross-instance locking";
+   const char * disable_flock_expl = (enable_flock_flag) ? "Disable cross-instance locking" : "Disable cross-instance locking (default)";
+
    gboolean quick_flag         = false;
    gboolean mock_data_flag     = false;
    gboolean profile_api_flag   = false;
@@ -1104,7 +1108,10 @@ parse_command(
          G_OPTION_ARG_NONE,     &enable_heuristic_unsupported_flag, "Perform heuristic unsupported feature detection", NULL},
       {"disable-heuristic-unsupported", '\0', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_HIDDEN,
          G_OPTION_ARG_NONE, &enable_heuristic_unsupported_flag, "Recognize only DDC/CI specified unsupported feature detection", NULL},
-
+      {"enable-cross-instance-locks",
+            '\0', 0, G_OPTION_ARG_NONE,     &enable_flock_flag,   enable_flock_expl,     NULL},
+      {"disable-cross-instance-locks", '\0', G_OPTION_FLAG_REVERSE,
+                     G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
 
 #ifdef USE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
@@ -1485,6 +1492,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, null_msg_for_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_HEURISTIC_UNSUPPORTED_FEATURES, enable_heuristic_unsupported_flag);
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
+   SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
 
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 // #ifdef REMOVED

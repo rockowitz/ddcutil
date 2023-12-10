@@ -304,6 +304,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       rpt_bool("defer sleeps",      NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                    d1);
 
+
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,      d1);
       RPT_CMDFLAG("internal stats", CMD_FLAG_INTERNAL_STATS, d1);
 
@@ -342,6 +343,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
       RPT_CMDFLAG("simulate Null Msg indicates unsupported", CMD_FLAG_NULL_MSG_INDICATES_UNSUPPORTED_FEATURE, d1);
       RPT_CMDFLAG("skip ddc checks",      CMD_FLAG_SKIP_DDC_CHECKS, d1);
       RPT_CMDFLAG("async I2C bus checks", CMD_FLAG_ASYNC_I2C_CHECK, d1);
+      RPT_CMDFLAG("enable_flock",         CMD_FLAG_FLOCK, d1);
 
       rpt_nl();
       rpt_label(depth, "Unsorted");
