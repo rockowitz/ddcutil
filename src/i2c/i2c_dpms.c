@@ -99,7 +99,7 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
    bool debug = false;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d, flags: %s",
-         businfo->busno, i2c_interpret_bus_flags(businfo->flags));
+         businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
 
    bool asleep = false;
 
