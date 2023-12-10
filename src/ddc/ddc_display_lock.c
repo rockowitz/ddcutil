@@ -37,6 +37,7 @@
 #include <glib-2.0/glib.h>
 #include <string.h>
 
+#include "util/debug_util.h"
 #include "util/error_info.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
@@ -181,6 +182,8 @@ lock_display(
    }
    // need a new DDC status code
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
+   if (err)
+      show_backtrace(2);
    return err;
 }
 
@@ -199,8 +202,12 @@ lock_display_by_dref(
       Display_Ref *      dref,
       Display_Lock_Flags flags)
 {
+    bool debug = false;
+    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, flags=0x%02x", dref_repr_t(dref), flags);
     Display_Lock_Record * lockid = get_display_lock_record(dref);
-    return lock_display(lockid, flags);
+    Error_Info * result = lock_display(lockid, flags);
+    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dref=%s", dref_repr_t(dref));
+    return result;
 }
 
 
@@ -209,8 +216,12 @@ lock_display_by_dpath(
       DDCA_IO_Path       dpath,
       Display_Lock_Flags flags)
 {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, flags=0x%02x", dpath_repr_t(&dpath), flags);
     Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
-    return lock_display(lockid, flags);
+    Error_Info * result = lock_display(lockid, flags);
+    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dpath=%s", dpath_repr_t(&dpath));
+    return result;
 }
 
 
