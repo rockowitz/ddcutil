@@ -229,7 +229,7 @@ void init_ddc_services() {
 
 // also handles VCP
 void terminate_ddc_services() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
    terminate_ddc_serialize();
    terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()

@@ -370,7 +370,7 @@ init_ddc_display_lock(void) {
 
 void
 terminate_ddc_display_lock() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
    g_ptr_array_free(lock_records, true);
    DBGTRC_DONE(debug, DDCA_TRC_DDCIO, "");
