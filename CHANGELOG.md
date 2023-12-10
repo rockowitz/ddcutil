@@ -36,6 +36,8 @@
 - Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
   that aggressive optimization caused setvcp to fail.
 - Memory leaks.
+- cross-thread locking
+  - handle situtations where display ref does not yet exists, e.g. reading EDID
 
 ### Shared library
 
@@ -54,10 +56,17 @@
     - new status codes possible for many current API functions: 
       DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
   - Sleep multiplier control:
-    - dsa2_enable_dynamic_sleep() 
-    - dsa_disable_dynamic_sleep() 
-    - dsa_get_current_sleep_multiplier() 
-    - sda_set_display_sleep_multiplier() 
+    - ddca_enable_dynamic_sleep() 
+    - ddca_disable_dynamic_sleep() 
+    - ddca_get_current_sleep_multiplier() 
+    - ddca_set_display_sleep_multiplier() 
+  - ddca_init2(): 
+    Has additional argument for collecting informational msgs, 
+    for use with not setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS
+  - ddca_stop_watch_displays(), ddca_start_watch_displays()
+  - cross-instance locking (experimental)
+    - --enable-cross-instance-locks
+
 
 #### Changed
 - Functions that depend on initialization and that return a status code now 
