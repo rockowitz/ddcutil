@@ -58,7 +58,7 @@
 
 
 // Experimental code
-static bool watch_displays_enabled = false;
+// static bool watch_displays_enabled = false;
 #ifdef OLD_HOTPLUG_VERSION
 static bool watching_using_udev = false;  // if false watching using poll
 #endif
@@ -832,54 +832,44 @@ void api_display_change_handler(
 #endif
 
 
-
-/** Starts thread that watches for addition or removal of displays
+/** Starts thread that watches for addition or removal of displays.
+ *
+ *  If the thread is already running, does nothing.
  *
  *  \retval  DDCRC_OK
- *  \retval  DDCRC_INVALID_OPERATION  thread already running
  */
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
-                                       SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "use_udev_if_possible=%s, watch_thread=%p",
+                                       SBOOL(use_udev_if_possible), watch_thread );
    if (use_udev_if_possible)
       return DDCRC_ARG;
 
    DDCA_Status ddcrc = DDCRC_OK;
 
-   watch_displays_enabled = true;   // n. changing the meaning of watch_displays_enabled
+   g_mutex_lock(&watch_thread_mutex);
+   if (!watch_thread) {
+      terminate_watch_thread = false;
+      Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
+      memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
 
-   if (watch_displays_enabled) {
-         g_mutex_lock(&watch_thread_mutex);
+      data->main_process_id = getpid();
+      // data->main_thread_id = syscall(SYS_gettid);
+      data->main_thread_id = get_thread_id();
 
-         if (watch_thread)
-            ddcrc = DDCRC_INVALID_OPERATION;
-         else {
-            terminate_watch_thread = false;
-            Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-            memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-
-            data->main_process_id = getpid();
-            // data->main_thread_id = syscall(SYS_gettid);
-            data->main_thread_id = get_thread_id();
-
-            watch_thread = g_thread_new(
-                             "watch_displays",             // optional thread name
-                             watch_displays_using_poll,
-                             data);
-            SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
-         }
-         g_mutex_unlock(&watch_thread_mutex);
-
+      watch_thread = g_thread_new(
+                       "watch_displays",             // optional thread name
+                       watch_displays_using_poll,
+                       data);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
    }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
-                                        SBOOL(watch_displays_enabled), watch_thread);
+   g_mutex_unlock(&watch_thread_mutex);
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
-
-
 
 
 // only makes sense if polling!
@@ -896,22 +886,21 @@ DDCA_Status
 ddc_stop_watch_displays()
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_thread=%p", watch_thread );
    DDCA_Status ddcrc = DDCRC_OK;
 
-   if (watch_displays_enabled) {
-      g_mutex_lock(&watch_thread_mutex);
+   g_mutex_lock(&watch_thread_mutex);
 
-      if (watch_thread) {
-         terminate_watch_thread = true;  // signal watch thread to terminate
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
-         usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
-         g_thread_join(watch_thread);
-         //  g_thread_unref(watch_thread);
-      }
+   if (watch_thread) {
+      terminate_watch_thread = true;  // signal watch thread to terminate
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
+      usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
+      g_thread_join(watch_thread);
+      //  g_thread_unref(watch_thread);
       watch_thread = NULL;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
+
    else
       ddcrc = DDCRC_INVALID_OPERATION;
 
