@@ -231,6 +231,9 @@ ddca_init2(const char *     libopts,
           DDCA_Init_Options opts,
           char***           infomsg_loc);
 
+DDCA_Status
+ddca_stop_watch_displays();
+
 
 //
 // Global Settings

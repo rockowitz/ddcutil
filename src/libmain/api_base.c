@@ -730,6 +730,12 @@ ddca_init2(const char *     libopts,
 }
 
 
+DDCA_Status
+ddca_stop_watch_displays() {
+   ddc_stop_watch_displays();
+   return DDCRC_OK;
+}
+
 
 //
 // Error Detail
