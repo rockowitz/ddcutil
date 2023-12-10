@@ -200,6 +200,7 @@ void recheck_bus_info() {
       // ddc_add_display_by_businfo(old_businfo);  // performs emit
 
    }
+   bs256_iter_free(iter);
    g_ptr_array_set_free_func(new_buses, i2c_gdestroy_bus_info);
    g_ptr_array_free(new_buses, true);
 
