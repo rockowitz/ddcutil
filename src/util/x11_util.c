@@ -278,6 +278,7 @@ bool get_x11_dpms_info(unsigned short * power_level, unsigned char * state) {
            */
           result = DPMSInfo(disp, power_level, state);
        }
+       XCloseDisplay(disp);
    }
    return result;
 }
