@@ -248,12 +248,17 @@ ddca_start_watch_displays();
  *  This function is a hack.  Without it, the thread can
  *  continue running even though the application has exited.
  *
+ *  @param wait  Wait for watch thread to actually terminate
  *  @retval DDCRC_OK
+ *
+ *  If this function is being called as part of termination
+ *  by the client, there's no need to wait for the watch thread
+ *  the actually finish.
  *
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_stop_watch_displays();
+ddca_stop_watch_displays(bool wait);
 
 
 //

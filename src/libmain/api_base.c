@@ -486,7 +486,7 @@ init_library_trace_file(char * library_trace_file, bool enable_syslog, bool debu
  */
 void __attribute__ ((destructor))
 _ddca_terminate(void) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_API, "library_initialized = %s", SBOOL(library_initialized));
    if (library_initialized) {
       if (debug)
@@ -498,7 +498,7 @@ _ddca_terminate(void) {
       ddc_discard_detected_displays();
       if (requested_stats)
          ddc_report_stats_main(requested_stats, per_display_stats, dsa_detail_stats, false, 0);
-      ddc_stop_watch_displays();   // in case it was started
+      ddc_stop_watch_displays(/*wait=*/ false);   // in case it was started
       terminate_ddc_services();
       terminate_base_services();
       free_regex_hash_table();
@@ -610,6 +610,7 @@ ddci_init(const char *      libopts,
    if (infomsg_loc)
       *infomsg_loc = NULL;
 
+   Parsed_Cmd * parsed_cmd = NULL;
    Error_Info * master_error = NULL;
    if (library_initialized) {
       master_error = ERRINFO_NEW(DDCRC_INVALID_OPERATION, "libddcutil already initialized");
@@ -639,7 +640,6 @@ ddci_init(const char *      libopts,
       GPtrArray* infomsgs = NULL;
          infomsgs = g_ptr_array_new_with_free_func(g_free);
 
-      Parsed_Cmd * parsed_cmd = NULL;
       if ((opts & DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE) && !libopts) {
          parsed_cmd = new_parsed_cmd();
       }
@@ -672,9 +672,6 @@ ddci_init(const char *      libopts,
             dsa_detail_stats = parsed_cmd->flags & CMD_FLAG_INTERNAL_STATS;
             if (!submaster_initializer(parsed_cmd))
                master_error = ERRINFO_NEW(DDCRC_UNINITIALIZED, "Initialization failed");
-            if (!master_error && (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS) )
-               ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
-            free_parsed_cmd(parsed_cmd);
          }
       }
    }
@@ -700,10 +697,13 @@ ddci_init(const char *      libopts,
    else {
       i2c_detect_buses();
       ddc_ensure_displays_detected();
+      if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS)
+         ddc_start_watch_displays(/*use_udev_if_possible=*/ false);
       library_initialized = true;
       library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");
    }
+   free_parsed_cmd(parsed_cmd);
 
    DBGF(debug, "Done.    Returning: %s", psc_desc(ddcrc));
 
@@ -733,7 +733,7 @@ ddca_init2(const char *     libopts,
 
 DDCA_Status
 ddca_start_watch_displays() {
-   bool debug = true;
+   bool debug = false;
    API_PROLOG(debug, "Starting");
    ddc_start_watch_displays(false);
    API_EPILOG(debug, DDCRC_OK, "");
@@ -742,10 +742,10 @@ ddca_start_watch_displays() {
 
 
 DDCA_Status
-ddca_stop_watch_displays() {
-   bool debug = true;
+ddca_stop_watch_displays(bool wait) {
+   bool debug = false;
    API_PROLOG(debug, "Starting");
-   ddc_stop_watch_displays();
+   ddc_stop_watch_displays(wait);
    API_EPILOG(debug, DDCRC_OK, "");
 }
 
@@ -1127,6 +1127,9 @@ ddca_report_locks(
 
 void init_api_base() {
    // DBGMSG("Executing");
+   RTTI_ADD_FUNC(_ddca_terminate);
+   RTTI_ADD_FUNC(ddca_start_watch_displays);
+   RTTI_ADD_FUNC(ddca_stop_watch_displays);
 #ifdef REMOVED
    RTTI_ADD_FUNC(ddca_set_sleep_multiplier);
    RTTI_ADD_FUNC(ddca_set_default_sleep_multiplier);
