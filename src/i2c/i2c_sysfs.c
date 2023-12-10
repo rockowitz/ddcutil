@@ -1636,9 +1636,11 @@ void consolidated_i2c_sysfs_report(int depth) {
    rpt_label(d0, "*** Sys_Drm_Connector report: Detailed /sys/class/drm report: ***");
    report_sys_drm_connectors(d1);
    rpt_nl();
-   rpt_label(d0, "*** Sys_Drm_Connector_FixedInfo report: Simplified /sys/class/drm report: ***");
-   report_sys_drm_connectors_fixedinfo(d1);
-   rpt_nl();
+
+   // not currently used, and leaks memory
+   // rpt_label(d0, "*** Sys_Drm_Connector_FixedInfo report: Simplified /sys/class/drm report: ***");
+   // report_sys_drm_connectors_fixedinfo(d1);
+   // rpt_nl();
 
    rpt_label(d0, "*** Sysfs_I2C_Info report ***");
    GPtrArray * reports = get_all_i2c_info(true, -1);
