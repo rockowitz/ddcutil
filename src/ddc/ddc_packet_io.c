@@ -164,10 +164,11 @@ ddc_open_display(
    if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
       char * status;
       RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", dref->drm_connector, "status");
-      if (streq(status, "disconnected")) {
+      if (streq(status, "disconnected"))
          err = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display disconnected");
+      free(status);
+      if (err)
          goto bye;
-      }
    }
 
 #ifdef NO
