@@ -144,27 +144,29 @@ Parsed_Cmd *  new_parsed_cmd() {
 void free_parsed_cmd(Parsed_Cmd * parsed_cmd) {
    bool debug = false;
    DBGMSF(debug, "Starting.  parsed_cmd=%p", parsed_cmd);
-   assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
-   int ndx = 0;
-   for (; ndx < parsed_cmd->argct; ndx++)
-      free(parsed_cmd->args[ndx]);
-   if (parsed_cmd->pdid)
-      free_display_identifier(parsed_cmd->pdid);
-   free(parsed_cmd->raw_command);
-   free(parsed_cmd->failsim_control_fn);
-   free(parsed_cmd->fref);
-   ntsa_free(parsed_cmd->traced_files, true);
-   ntsa_free(parsed_cmd->traced_functions, true);
-   ntsa_free(parsed_cmd->traced_calls, true);
-   ntsa_free(parsed_cmd->traced_api_calls, true);
-   g_array_free(parsed_cmd->setvcp_values, true);
-   free(parsed_cmd->s1);
-   free(parsed_cmd->s2);
-   free(parsed_cmd->s3);
-   free(parsed_cmd->s4);
+      if (parsed_cmd) {
+      assert ( memcmp(parsed_cmd->marker,PARSED_CMD_MARKER,4) == 0);
+      int ndx = 0;
+      for (; ndx < parsed_cmd->argct; ndx++)
+         free(parsed_cmd->args[ndx]);
+      if (parsed_cmd->pdid)
+         free_display_identifier(parsed_cmd->pdid);
+      free(parsed_cmd->raw_command);
+      free(parsed_cmd->failsim_control_fn);
+      free(parsed_cmd->fref);
+      ntsa_free(parsed_cmd->traced_files, true);
+      ntsa_free(parsed_cmd->traced_functions, true);
+      ntsa_free(parsed_cmd->traced_calls, true);
+      ntsa_free(parsed_cmd->traced_api_calls, true);
+      g_array_free(parsed_cmd->setvcp_values, true);
+      free(parsed_cmd->s1);
+      free(parsed_cmd->s2);
+      free(parsed_cmd->s3);
+      free(parsed_cmd->s4);
 
-   parsed_cmd->marker[3] = 'x';
-   free(parsed_cmd);
+      parsed_cmd->marker[3] = 'x';
+      free(parsed_cmd);
+   }
    DBGMSF(debug, "Done");
 }
 
