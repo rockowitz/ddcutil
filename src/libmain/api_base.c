@@ -730,10 +730,23 @@ ddca_init2(const char *     libopts,
 }
 
 
+
+DDCA_Status
+ddca_start_watch_displays() {
+   bool debug = true;
+   API_PROLOG(debug, "Starting");
+   ddc_start_watch_displays(false);
+   API_EPILOG(debug, DDCRC_OK, "");
+}
+
+
+
 DDCA_Status
 ddca_stop_watch_displays() {
+   bool debug = true;
+   API_PROLOG(debug, "Starting");
    ddc_stop_watch_displays();
-   return DDCRC_OK;
+   API_EPILOG(debug, DDCRC_OK, "");
 }
 
 
