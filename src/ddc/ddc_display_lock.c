@@ -339,6 +339,7 @@ dbgrpt_display_locks(int depth) {
    rpt_vstring(depth, "display_descriptors@%p", lock_records);
    g_mutex_lock(&descriptors_mutex);
    int d1 = depth+1;
+   rpt_label(depth,"index lock-record-ptr   dpath             display_mutex_thread");
    for (int ndx=0; ndx < lock_records->len; ndx++) {
       Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
       rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p",
