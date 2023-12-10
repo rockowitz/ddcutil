@@ -544,6 +544,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
          DBGMSF(debug, "connector2: |%s|", connector2);
          DBGMSF(debug, "connector:  |%s|", connector);
       }
+      free(connector2);
 
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
@@ -575,6 +576,8 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                   // memcpy(bus_info->edid->edid_source, "SYSFS", 6); // redundant
                }
             }
+            if (edid_bytes)
+               g_byte_array_free(edid_bytes,true);
          }
       }
 
