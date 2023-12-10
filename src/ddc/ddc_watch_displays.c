@@ -132,7 +132,7 @@ bool check_thread_or_process(pid_t id) {
  */
 void recheck_bus_info() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    GPtrArray * old_buses = i2c_get_all_buses();
    // may need to wait on startup
    while (!old_buses) {
@@ -204,7 +204,7 @@ void recheck_bus_info() {
    g_ptr_array_set_free_func(new_buses, i2c_gdestroy_bus_info);
    g_ptr_array_free(new_buses, true);
 
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Checking sleep state");
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");
    for (int ndx = 0; ndx < old_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(old_buses, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, businfo=%p", ndx, businfo);
@@ -225,7 +225,7 @@ void recheck_bus_info() {
       }
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
+   DBGTRC_DONE(debug, DDCA_TRC_NONE, "");
 }
 
 
@@ -544,7 +544,7 @@ static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data)
 // How to detect main thread crash?
 
 #ifdef OLD_HOTPLUG_VERSION
-gpointer watch_displays_using_poll(gpointer data) {
+gpointer ddc_watch_displays_using_poll(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
@@ -569,7 +569,7 @@ gpointer watch_displays_using_poll(gpointer data) {
 
 
 
-gpointer watch_displays_using_poll(gpointer data) {
+gpointer ddc_watch_displays_using_poll(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Watch_Displays_Data * wdd = data;
@@ -861,7 +861,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
-                       watch_displays_using_poll,
+                       ddc_watch_displays_using_poll,
                        data);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
    }
@@ -876,33 +876,31 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 // locks udev_monitor_receive_device() blocks
 
 /** Halts thread that watches for addition or removal of displays.
- *
- *  Does not return until the watch thread exits.
+ *  If **wait** is specified, does not return until the watch thread exits.
+ *  Otherwise returns immediately.
  *
  *  \retval  DDCRC_OK
- *  \retval  DDCRC_INVALID_OPERATION  no watch thread running
  */
 DDCA_Status
-ddc_stop_watch_displays()
+ddc_stop_watch_displays(bool wait)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_thread=%p", watch_thread );
+   DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
    DDCA_Status ddcrc = DDCRC_OK;
 
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
       terminate_watch_thread = true;  // signal watch thread to terminate
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
-      usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
-      g_thread_join(watch_thread);
+      // DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
+      // usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
+      if (wait)
+         g_thread_join(watch_thread);
+
       //  g_thread_unref(watch_thread);
       watch_thread = NULL;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
    }
-
-   else
-      ddcrc = DDCRC_INVALID_OPERATION;
 
    g_mutex_unlock(&watch_thread_mutex);
 
@@ -962,7 +960,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
             // data->main_thread_id = syscall(SYS_gettid);
             data->main_thread_id = get_thread_id();
             data->drm_card_numbers = drm_card_numbers;
-            void * watch_func = watch_displays_using_poll;
+            void * watch_func = ddc_watch_displays_using_poll;
             watching_using_udev = false;
 #ifdef ENABLE_UDEV
             if (use_udev_if_possible) {
@@ -975,9 +973,9 @@ ddc_start_watch_displays(bool use_udev_if_possible)
                              watch_func,
 #ifdef OLD
       #if ENABLE_UDEV
-                             (use_udev_if_possible) ? watch_displays_using_udev : watch_displays_using_poll,
+                             (use_udev_if_possible) ? watch_displays_using_udev : ddc_watch_displays_using_poll,
       #else
-                             watch_displays_using_poll,
+                             ddc_watch_displays_using_poll,
       #endif
 #endif
                              data);
@@ -1056,7 +1054,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(is_dref_alive);
    RTTI_ADD_FUNC(recheck_bus_info);
-   RTTI_ADD_FUNC(watch_displays_using_poll);
+   RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef OLD_HOTPLUG_VERSION
    RTTI_ADD_FUNC(check_displays);
    RTTI_ADD_FUNC(dummy_display_change_handler);

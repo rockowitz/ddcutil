@@ -29,7 +29,7 @@ typedef void (*Display_Change_Handler)(
 #endif
 
 DDCA_Status ddc_start_watch_displays(bool use_udev_if_possible);
-DDCA_Status ddc_stop_watch_displays();
+DDCA_Status ddc_stop_watch_displays(bool wait);
 
 void init_ddc_watch_displays();
 
