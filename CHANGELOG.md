@@ -8,7 +8,7 @@
 - Option ***--skip-ddc-checks***
   - Assumes DDC communication is working and the monitor properly uses the 
     unsupported feature bit in Get Feature Reply packets, improving initialization time.
-- Option ***--min-dynamic-multiplier***  (possibly rename --dsa-floor)
+- Option ***--min-dynamic-multiplier***  (experimental, possibly rename --dsa-floor)
 
 #### Changed
 - Options ***--verbose***, and ***--brief*** affect ***--help*** output: 
@@ -20,11 +20,12 @@
   - do not report "DDC communication failed"
   - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
 - Better accomodate the variation in use of sysfs by different drivers
-- Deprecate vaguely named option ***--force***.  Replace its single use with ***--permit-unknown-feature***.
-- Turned off unconditional message that reported an elusive Nvidia/i2c-dev driver 
-  compatibility error.  The incompatibility has been full diagnosed as
-  being caused by use of a legacy proprietary Nvidia driver. 
-  A message is still written to the system log.
+- Deprecate vaguely named option ***--force***.  Replace its single use with 
+  option ***--permit-unknown-feature***.
+- Turned off unconditional message that reported an elusive Nvidia/i2c-dev
+  driver compatibility error.  The incompatibility has been full diagnosed 
+  as being caused by use of a legacy proprietary Nvidia driver. A message
+  is still written to the system log.
 - **configure** option ***--enable-asan*** causes libasan to be linked into binaries 
 
 #### Fixed
