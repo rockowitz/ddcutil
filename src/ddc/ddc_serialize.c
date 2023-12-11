@@ -683,7 +683,7 @@ void terminate_ddc_serialize() {
       deserialized_buses    = NULL;
    }
    if (deserialized_displays) {
-      g_ptr_array_set_free_func(deserialized_displays, gdestroy_display_ref);
+      g_ptr_array_set_free_func(deserialized_displays, (GDestroyNotify) free_display_ref);
       g_ptr_array_free(deserialized_displays, true);
       deserialized_displays = NULL;
    }
