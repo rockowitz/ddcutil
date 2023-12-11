@@ -112,7 +112,7 @@ char * i2c_get_drm_connector_attribute(const I2C_Bus_Info * businfo, const char 
 }
 
 
-// called if display removed
+// called if display removed, bus may or may not still exist
 void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
    assert(bus_info);
