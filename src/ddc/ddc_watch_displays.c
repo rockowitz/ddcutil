@@ -130,7 +130,7 @@ bool check_thread_or_process(pid_t id) {
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
  */
-void ddc_recheck_bus_info() {
+void ddc_recheck_bus() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    GPtrArray * old_buses = i2c_get_all_buses();
@@ -574,7 +574,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
    while (!terminate_watch_thread) {
-      ddc_recheck_bus_info();
+      ddc_recheck_bus();
       usleep(3000*1000);
       // printf("."); fflush(stdout);
    }
@@ -1051,7 +1051,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(is_dref_alive);
-   RTTI_ADD_FUNC(ddc_recheck_bus_info);
+   RTTI_ADD_FUNC(ddc_recheck_bus);
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef OLD_HOTPLUG_VERSION
    RTTI_ADD_FUNC(check_displays);
