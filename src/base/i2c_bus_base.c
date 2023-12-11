@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <assert.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <string.h>
 
@@ -117,6 +118,8 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    assert(bus_info);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
    bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
+   if (i2c_device_exists(bus_info->busno))
+      bus_info->flags |= I2C_BUS_EXISTS;
    if (bus_info->edid) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,  "Calling free_parsed_edid for %p, marker=%s",
             bus_info->edid, hexstring_t((Byte*) bus_info->marker, 4));
@@ -465,6 +468,61 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %d", reported_ct);
    return reported_ct;
 }
+
+
+//
+// Simple /dev/i2c inquiry
+//
+
+/** Checks if an I2C bus with a given number exists.
+ *
+ * @param   busno     bus number
+ *
+ * @return  true/false
+ */
+bool i2c_device_exists(int busno) {
+   bool result = false;
+   bool debug = false;
+   int  errsv;
+   char namebuf[20];
+   struct stat statbuf;
+   int  rc = 0;
+   sprintf(namebuf, "/dev/"I2C"-%d", busno);
+   errno = 0;
+   rc = stat(namebuf, &statbuf);
+   errsv = errno;
+   if (rc == 0) {
+      DBGMSF(debug, "Found %s", namebuf);
+      result = true;
+   }
+   else {
+      DBGMSF(debug,  "stat(%s) returned %d, errno=%s",
+                     namebuf, rc, linux_errno_desc(errsv) );
+   }
+
+   DBGMSF(debug, "busno=%d, returning %s", busno, sbool(result) );
+   return result;
+}
+
+
+/** Returns the number of I2C buses on the system, by looking for
+ *  devices named /dev/i2c-n.
+ *
+ *  Note that no attempt is made to open the devices.
+ */
+int i2c_device_count() {
+   bool debug = false;
+   int  busct = 0;
+
+   for (int busno=0; busno < I2C_BUS_MAX; busno++) {
+      if (i2c_device_exists(busno))
+         busct++;
+   }
+   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Returning %d", busct );
+   return busct;
+}
+
+
 
 
 /** Module initialization. */

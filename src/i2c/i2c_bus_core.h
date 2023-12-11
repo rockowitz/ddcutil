@@ -37,9 +37,6 @@ extern bool cross_instance_locks_enabled;
 
 void i2c_enable_cross_instance_locks(bool yesno);
 
-// Basic I2C bus operations
-bool             i2c_device_exists(int busno); // Simple bus detection, no side effects
-int              i2c_device_count();           // simple /dev/i2c-n count, no side effects
 Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_devices);
 
 // Bus open and close
