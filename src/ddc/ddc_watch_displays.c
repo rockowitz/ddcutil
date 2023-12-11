@@ -186,8 +186,8 @@ void ddc_recheck_bus_info() {
       int old_index = i2c_find_bus_info_index_in_gptrarray_by_busno(old_buses, busno);
       I2C_Bus_Info * old_businfo = NULL;
       if (old_index >= 0) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
          old_businfo = g_ptr_array_index(old_buses, old_index);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
          i2c_update_bus_info(old_businfo, new_businfo);
          ddc_add_display_by_businfo(old_businfo);  // performs emit
       }
@@ -215,7 +215,7 @@ void ddc_recheck_bus_info() {
          if (is_dpms_asleep != businfo->last_checked_dpms_asleep) {
             Display_Ref * dref = ddc_get_dref_by_busno(businfo->busno);
             assert(dref);
-            DBGTRC(debug, DDCA_TRC_NONE, "event dref=%p->%s", dref, dref_repr_t(dref));
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
             DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
             ddc_emit_display_detection_event(dref, event_type);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
