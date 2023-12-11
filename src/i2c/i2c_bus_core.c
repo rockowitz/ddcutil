@@ -722,6 +722,11 @@ GPtrArray * i2c_detect_buses0() {
       Byte_Value_Array i2c_bus_bva =
             get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
+      if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+         char * s = bva_as_string(i2c_bus_bva, /*as_hex*/ false, ", ");
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+         free(s);
+      }
       GPtrArray * buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
 
       for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
