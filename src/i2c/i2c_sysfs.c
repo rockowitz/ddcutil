@@ -2060,6 +2060,9 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_sysfs_drm_connector_by_busno);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_by_edid);
    RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
+
+   RTTI_ADD_FUNC(get_drm_connector_by_edid);
+   RTTI_ADD_FUNC(get_drm_connector_by_busno);
 }
 
 
