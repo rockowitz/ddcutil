@@ -130,7 +130,7 @@ bool check_thread_or_process(pid_t id) {
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
  */
-void recheck_bus_info() {
+void ddc_recheck_bus_info() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    GPtrArray * old_buses = i2c_get_all_buses();
@@ -145,7 +145,7 @@ void recheck_bus_info() {
 
    GPtrArray * new_buses = i2c_detect_buses0();
    Bit_Set_256 new_bitset = buses_to_bitset(new_buses);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_bitset has %d bits set", bs256_count(new_bitset));
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_bitset has %d bits set", bs256_count(new_bitset));
    
    Bit_Set_256 newly_disconnected_buses_bitset = bs256_and_not(old_bitset, new_bitset);
    Bit_Set_256 newly_connected_buses_bitset    = bs256_and_not(new_bitset, old_bitset);
@@ -576,7 +576,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
 
    while (!terminate_watch_thread) {
-      recheck_bus_info();
+      ddc_recheck_bus_info();
       usleep(3000*1000);
       // printf("."); fflush(stdout);
    }
@@ -1053,7 +1053,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_buses0);
    RTTI_ADD_FUNC(is_dref_alive);
-   RTTI_ADD_FUNC(recheck_bus_info);
+   RTTI_ADD_FUNC(ddc_recheck_bus_info);
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
 #ifdef OLD_HOTPLUG_VERSION
    RTTI_ADD_FUNC(check_displays);
