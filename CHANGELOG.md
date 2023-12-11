@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.2] 2023-12-25
+## [2.0.2] 2023-12-11
 
 ### General
 
@@ -35,11 +35,14 @@
 - Some USB only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
 - Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
   that aggressive optimization caused setvcp to fail.
+- Cross-thread locking handles situtations where adisplay ref does not yet exist, e.g. reading EDID
 - Memory leaks.
-- cross-thread locking
-  - handle situtations where display ref does not yet exists, e.g. reading EDID
 
 ### Shared library
+
+The shared library **libddcutil** is backwardly compatible with the one in 
+ddcutil 2.0.0. The SONAME is unchanged as libddcutil.so.5. The released library
+file is libddcutil.so.5.x.x. 
 
 #### Added
 - Implemented display status change detection
@@ -61,18 +64,21 @@
     - ddca_get_current_sleep_multiplier() 
     - ddca_set_display_sleep_multiplier() 
   - ddca_init2(): 
-    Has additional argument for collecting informational msgs, 
-    for use with not setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS
+    Has additional argument for collecting informational msgs. Allows for not
+    issuing information messages regarding options assembly and parsing directly
+    from libddcutil (currently enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
+    bus instead gives client complete control as to what to do with the messages.
   - ddca_stop_watch_displays(), ddca_start_watch_displays()
-  - cross-instance locking (experimental)
-    - --enable-cross-instance-locks
-
+  - Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
+    coordinate access when multiple instances of libddcutil are executing.
+    Enabled by option ***--enable-cross-instance-locks***.
 
 #### Changed
 - Functions that depend on initialization and that return a status code now 
-  return DDCRC_UNINITIALIZED if ddca_init() failed
+  return DDCRC_UNINITIALIZED if ddca_init() failed.
 - Revert ddca_get_sleep_multiplier(), ddca_set_sleep_multiplier() to 
   their pre 2.0 semantics changing the multiplier on the current thread.
+  However, these functions are marked as deprecated.
 
 #### Fixed
 - Argument passing on ddca_get_any_vcp_value_using_implicit_type()
