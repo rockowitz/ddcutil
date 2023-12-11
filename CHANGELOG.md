@@ -141,8 +141,8 @@ backwards compatible.
 - **environment --verbose**: extended sysfs scan for ARM SOC devices to explore how 
   those devices use /sys
 - Detailed statistics are now maintained on a per-display instead of per-thread basis.
-- Option ***--vstats*** includes per-display stas in its reports.  It takes the same
-  arguments as ***--stats***. 
+- Option ***--vstats*** includes per-display statistics in its reports.  It takes
+  the same arguments as ***--stats***. 
 - Cached capabilities are not erased by ddcutil calls that are not executed with 
   ***--enable-capabilities-cache***.  This makes the behavior the same as cached 
   displays and cached performance statistics.
