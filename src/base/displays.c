@@ -578,11 +578,12 @@ DDCA_Status free_display_ref(Display_Ref * dref) {
    return ddcrc;
 }
 
-
+#ifdef UNNEEDED
 // wraps free_display_ref() as GDestroyNotify()
 void gdestroy_display_ref(void * data) {
    free_display_ref((Display_Ref*) data);
 }
+#endif
 
 
 /** Tests if 2 #Display_Ref instances specify the same path to the
