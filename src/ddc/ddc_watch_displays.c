@@ -178,7 +178,6 @@ void ddc_recheck_bus_info() {
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Newly detected busno %d", busno);
       int new_index = i2c_find_bus_info_index_in_gptrarray_by_busno(new_buses, busno);
-      // I2C_Bus_Info * new_businfo =  i2c_find_bus_info_in_gptrarray_by_busno(new_buses, busno);
       I2C_Bus_Info * new_businfo = g_ptr_array_index(new_buses, new_index);
       if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo: /dev/i2c-%d @%p", new_businfo->busno, new_businfo);
@@ -187,24 +186,23 @@ void ddc_recheck_bus_info() {
       int old_index = i2c_find_bus_info_index_in_gptrarray_by_busno(old_buses, busno);
       I2C_Bus_Info * old_businfo = NULL;
       if (old_index >= 0) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "====> Updating %d, old businfo:", old_index);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Updating businfo for /dev/i2c-%d", old_businfo->busno);
          old_businfo = g_ptr_array_index(old_buses, old_index);
          i2c_update_bus_info(old_businfo, new_businfo);
          ddc_add_display_by_businfo(old_businfo);  // performs emit
       }
       else {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding businfo for newly detected /dev/i2c-%d", new_businfo->busno);
          g_ptr_array_steal_index(new_buses, new_index);
          g_ptr_array_add(old_buses, new_businfo);
          ddc_add_display_by_businfo(new_businfo);  // performs emit
       }
-      // ddc_add_display_by_businfo(old_businfo);  // performs emit
-
    }
    bs256_iter_free(iter);
    g_ptr_array_set_free_func(new_buses, i2c_gdestroy_bus_info);
    g_ptr_array_free(new_buses, true);
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");
    for (int ndx = 0; ndx < old_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(old_buses, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, businfo=%p", ndx, businfo);
