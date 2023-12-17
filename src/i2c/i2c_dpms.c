@@ -118,17 +118,25 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
    if (businfo->drm_connector_name) {
       char * dpms = NULL;
       char * enabled = NULL;
+      char * status  = NULL;
       RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
       RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
-      asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
+      RPT_ATTR_TEXT(-1, &status,  "/sys/class/drm", businfo->drm_connector_name, "status");
+      // Nvidia driver reports enabled value as "disabled" 
+      // asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
+      asleep = !streq(dpms, "On");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,
             "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
             businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
       SYSLOG2(DDCA_SYSLOG_DEBUG,
             "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
             businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
+      SYSLOG2(DDCA_SYSLOG_DEBUG,
+            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/status=%s",
+            businfo->drm_connector_name, dpms, businfo->drm_connector_name, status);
       free(dpms);
       free(enabled);
+      free(status);
    }
 
    // if (businfo->busno == 6)   // test case
