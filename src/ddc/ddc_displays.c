@@ -1155,6 +1155,7 @@ void ddc_set_async_threshold(int threshold) {
 
 static bool all_displays_asleep = true;
 
+#ifdef UNUSED
 Display_Ref * get_display_ref_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
@@ -1193,6 +1194,7 @@ Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
    DBGTRC_DONE(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
    return dref;
 }
+#endif
 
 
 /** Detects all connected displays by querying the I2C and USB subsystems.
