@@ -199,7 +199,7 @@ void ddc_recheck_bus() {
       }
    }
    bs256_iter_free(iter);
-   g_ptr_array_set_free_func(new_buses, i2c_gdestroy_bus_info);
+   g_ptr_array_set_free_func(new_buses, (GDestroyNotify) i2c_free_bus_info);
    g_ptr_array_free(new_buses, true);
 
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");

@@ -1204,10 +1204,12 @@ void free_sys_conflicting_driver(Sys_Conflicting_Driver * rec) {
 }
 
 
+#ifdef UNUSED
 static
 void free_sys_conflicting_driver0(void * rec) {
    free_sys_conflicting_driver((Sys_Conflicting_Driver*) rec);
 }
+#endif
 
 
 char * best_conflicting_driver_name(Sys_Conflicting_Driver* rec) {
@@ -1308,7 +1310,7 @@ GPtrArray * collect_conflicting_drivers(int busno, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, depth=%d", busno, depth);
 
-   GPtrArray * conflicting_drivers = g_ptr_array_new_with_free_func(free_sys_conflicting_driver0);
+   GPtrArray * conflicting_drivers = g_ptr_array_new_with_free_func((GDestroyNotify) free_sys_conflicting_driver);
    collect_conflicting_drivers0(conflicting_drivers, busno, depth);
 
    DBGTRC_DONE(debug, TRACE_GROUP,  "Returning: %p", (void*)conflicting_drivers);
@@ -1320,7 +1322,7 @@ GPtrArray * collect_conflicting_drivers_for_any_bus(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    GPtrArray* all_connectors = get_sys_drm_connectors(false);
-   GPtrArray * conflicting_drivers = g_ptr_array_new_with_free_func(free_sys_conflicting_driver0);
+   GPtrArray * conflicting_drivers = g_ptr_array_new_with_free_func((GDestroyNotify) free_sys_conflicting_driver);
    for (int ndx = 0; ndx < all_connectors->len; ndx++) {
       Sys_Drm_Connector * cur = g_ptr_array_index(all_connectors, ndx);
       DBGMSF(debug, "cur->i2c_busno=%d", cur->i2c_busno);
@@ -1391,10 +1393,12 @@ void free_sysfs_i2c_info(Sysfs_I2C_Info * info) {
 }
 
 
+#ifdef UNUSED
 // GDestroyNotify
 void destroy_sysfs_i2c_info(void * info) {
    free_sysfs_i2c_info( (Sysfs_I2C_Info*) info);
 }
+#endif
 
 
 void dbgrpt_sysfs_i2c_info(Sysfs_I2C_Info * info, int depth) {
@@ -1553,7 +1557,7 @@ GPtrArray * get_all_i2c_info(bool rescan, int depth) {
       all_i2c_info = NULL;
    }
    if (!all_i2c_info) {
-      all_i2c_info = g_ptr_array_new_with_free_func(destroy_sysfs_i2c_info);
+      all_i2c_info = g_ptr_array_new_with_free_func((GDestroyNotify) free_sysfs_i2c_info);
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "newly allocated all_i2c_info=%p", all_i2c_info);
       dir_ordered_foreach(
             "/sys/bus/i2c/devices",

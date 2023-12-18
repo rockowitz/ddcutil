@@ -831,7 +831,7 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    if (i2c_device_exists(busno) ) {
       if (!i2c_buses) {
          i2c_buses = g_ptr_array_sized_new(1);
-         g_ptr_array_set_free_func(i2c_buses, i2c_gdestroy_bus_info);
+         g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;

@@ -87,16 +87,18 @@ void free_parsed_hid_field(Parsed_Hid_Field * phf) {
    }
 }
 
+#ifdef UNUSED
 // wrap free_parsed_hid_field() in signature of GDestroyNotify()
 void free_parsed_hid_field_func(gpointer data) {
    free_parsed_hid_field((Parsed_Hid_Field *) data);
 }
+#endif
 
 
 void free_parsed_hid_report(Parsed_Hid_Report * phr) {
    if (phr) {
       if (phr->hid_fields) {
-          g_ptr_array_set_free_func(phr->hid_fields, free_parsed_hid_field_func);
+          g_ptr_array_set_free_func(phr->hid_fields, (GDestroyNotify) free_parsed_hid_field);
           g_ptr_array_free(phr->hid_fields, true);
       }
       free(phr);
@@ -109,28 +111,31 @@ void free_parsed_hid_report_func(gpointer data) {
 }
 
 
+#ifdef UNUSED
 void free_parsed_hid_collection_func(gpointer data);   // forward ref
+#endif
 
 
 void free_parsed_hid_collection(Parsed_Hid_Collection * phc) {
    if (phc) {
       if (phc->reports) {
-         g_ptr_array_set_free_func(phc->reports, free_parsed_hid_report_func);
+         g_ptr_array_set_free_func(phc->reports,(GDestroyNotify) free_parsed_hid_field);
          g_ptr_array_free(phc->reports, true);
       }
       if (phc->child_collections) {
-         g_ptr_array_set_free_func(phc->child_collections, free_parsed_hid_collection_func);
+         g_ptr_array_set_free_func(phc->child_collections, (GDestroyNotify) free_parsed_hid_collection);
          g_ptr_array_free(phc->child_collections, true);
       }
       free(phc);
    }
 }
 
-
+#ifdef UNUSED
 // wrap free_parsed_hid_collection() in signature of GDestroyNotify()
 void free_parsed_hid_collection_func(gpointer data) {
    free_parsed_hid_collection((Parsed_Hid_Collection *) data);
 }
+#endif
 
 
 

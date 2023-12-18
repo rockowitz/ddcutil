@@ -260,10 +260,12 @@ void i2c_free_bus_info(I2C_Bus_Info * businfo) {
 }
 
 
+#ifdef UNUSED
 // For g_ptr_array_set_free_func()
 void i2c_gdestroy_bus_info(void * data) {
    i2c_free_bus_info(data);
 }
+#endif
 
 
 /** Updates an existing #I2C_Bus_Info struct with recent

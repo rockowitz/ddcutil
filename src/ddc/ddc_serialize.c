@@ -678,7 +678,7 @@ void terminate_ddc_serialize() {
    bool debug = false;
    DBGMSF(debug, "Starting");
    if (deserialized_buses) {
-      g_ptr_array_set_free_func(deserialized_buses,    i2c_gdestroy_bus_info);
+      g_ptr_array_set_free_func(deserialized_buses, (GDestroyNotify) i2c_free_bus_info);
       g_ptr_array_free(deserialized_buses,   true);
       deserialized_buses    = NULL;
    }

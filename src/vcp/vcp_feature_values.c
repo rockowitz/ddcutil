@@ -225,10 +225,12 @@ void free_single_vcp_value(DDCA_Any_Vcp_Value * vcp_value) {
 }
 
 
+#ifdef UNUSED
 // wrap free_single_vcp_value() in signature of GDestroyNotify()
 void free_single_vcp_value_func(gpointer data) {
    free_single_vcp_value((DDCA_Any_Vcp_Value *) data);
 }
+#endif
 
 
 /** Creates a #DDCA_Any_Vcp_Value from the individual field values.
@@ -448,7 +450,7 @@ Single_Vcp_Value * any_vcp_value_to_single_vcp_value(DDCA_Any_Vcp_Value * anyval
 
 Vcp_Value_Set vcp_value_set_new(int initial_size){
    GPtrArray* ga = g_ptr_array_sized_new(initial_size);
-   g_ptr_array_set_free_func(ga, free_single_vcp_value_func);
+   g_ptr_array_set_free_func(ga, (GDestroyNotify) free_single_vcp_value);
    return ga;
 }
 

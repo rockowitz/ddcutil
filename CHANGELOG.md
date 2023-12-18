@@ -80,6 +80,8 @@ file is libddcutil.so.5.x.x.
 - Revert ddca_get_sleep_multiplier(), ddca_set_sleep_multiplier() to 
   their pre 2.0 semantics changing the multiplier on the current thread.
   However, these functions are marked as deprecated.
+- **configure** option ***--enable-x11*** is deprecated. ddcutil no longer
+  makes any use of the X11 API. 
 
 #### Fixed
 - Argument passing on ddca_get_any_vcp_value_using_implicit_type()
