@@ -1040,12 +1040,10 @@ parse_command(
       {"disable-capabilities-cache", '\0', G_OPTION_FLAG_REVERSE,
                            G_OPTION_ARG_NONE,     &enable_cc_flag,   disable_cc_expl ,   NULL},
 
-// #ifdef REMOVED
       {"enable-displays-cache",
-                   '\0', 0, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
-      {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE,
+                   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &enable_cd_flag,   enable_cd_expl,     NULL},
+      {"disable-displays-cache", '\0', G_OPTION_FLAG_REVERSE|G_OPTION_FLAG_HIDDEN,
                             G_OPTION_ARG_NONE,     &enable_cd_flag,   disable_cd_expl ,   NULL},
-// #endif
 
       {"sleep-multiplier", '\0', 0,
                             G_OPTION_ARG_STRING,   &sleep_multiplier_work, "Multiplication factor for DDC sleeps", "number"},
