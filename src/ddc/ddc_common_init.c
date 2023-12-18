@@ -319,7 +319,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
    if (parsed_cmd->flags & CMD_FLAG_F7)
       detect_phantom_displays = false;
-   ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_F9|CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
+   ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags & CMD_FLAG_F10)
       null_msg_adjustment_enabled = true;
    if (parsed_cmd->flags & CMD_FLAG_F11)
