@@ -51,6 +51,7 @@ char * interpret_dpms_state_t(Dpms_State state) {
 }
 
 
+#ifdef UNUSED
 void dpms_check_x11_asleep() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -93,6 +94,7 @@ void dpms_check_x11_asleep() {
 #endif
    DBGTRC_DONE(debug, TRACE_GROUP, "dpms_state = 0x%02x = %s", dpms_state, interpret_dpms_state_t(dpms_state));
 }
+#endif
 
 
 bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
@@ -161,7 +163,7 @@ bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
 void init_i2c_dpms() {
    RTTI_ADD_FUNC(dpms_check_drm_asleep);
    RTTI_ADD_FUNC(dpms_check_drm_asleep_by_dref);
-   RTTI_ADD_FUNC(dpms_check_x11_asleep);
+   // RTTI_ADD_FUNC(dpms_check_x11_asleep);
 }
 
 
