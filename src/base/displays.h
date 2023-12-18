@@ -204,7 +204,6 @@ void          dbgrpt_display_ref(Display_Ref * dref, int depth);
 char *        dref_short_name_t(Display_Ref * dref);
 char *        dref_repr_t(Display_Ref * dref);  // value valid until next call
 DDCA_Status   free_display_ref(Display_Ref * dref);
-void          gdestroy_display_ref(void * data);  // satisfies GDestroyNotify()
 Display_Ref * copy_display_ref(Display_Ref * dref);
 
 // Do two Display_Ref's identify the same device?
