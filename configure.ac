@@ -289,15 +289,15 @@ AS_IF([test "x$enable_drm" = "xyes"],
      )
 
 dnl *** configure option: --enable-x11
-dnl AC_ARG_ENABLE([x11],
-dnl               [ AS_HELP_STRING( [--enable-x11=@<:@yes/no@:>@], [Use X11 in diagnostics@<:@default=yes@:>@] )],
-dnl               [enable_x11=${enableval}],
-dnl               [enable_x11=yes] )
+AC_ARG_ENABLE([x11],
+              [ AS_HELP_STRING( [--enable-x11=@<:@no/yes@:>@], [Deprecated option X11 ignored.] )],
+              [enable_x11=${enableval}],
+              [enable_x11=yes] )
 enable_x11=no
-dnl AS_IF([test "x$enable_x11" = "xyes"],
-dnl       AC_MSG_NOTICE( [x11...      enabled (provisional)]  ),
-dnl       AC_MSG_NOTICE( [x11...      disabled] )
-dnl      )              
+ AS_IF([test "x$enable_x11" = "xyes"],
+       AC_MSG_NOTICE( [x11...      Deprecated option ignored]  ),
+       AC_MSG_NOTICE( [x11...      disabled] )
+      )              
 
 dnl *** configure option: --enable-static-functions-visible
 AC_ARG_ENABLE([static-functions-visible],
