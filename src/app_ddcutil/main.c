@@ -875,6 +875,7 @@ main(int argc, char *argv[]) {
       }
    }
 
+#ifdef UNUSED
 #ifdef USE_X11
    if (!(parsed_cmd->flags&CMD_FLAG_F12)) {
       dpms_check_x11_asleep();
@@ -884,6 +885,7 @@ main(int argc, char *argv[]) {
         goto bye;
       }
    }
+#endif
 #endif
 
    if (!master_initializer(parsed_cmd))
