@@ -1643,7 +1643,11 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
 
 /** Invokes the registered callbacks for a display detection event.
  */
-void ddc_emit_display_detection_event(Display_Ref * dref, DDCA_Display_Event_Type event_type) {
+void ddc_emit_display_detection_event(
+      DDCA_Display_Event_Type event_type,
+      Display_Ref* dref,
+      DDCA_IO_Path io_path)
+{
    bool debug = false || watch_watching;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
          dref, dref_repr_t(dref), sbool(dref->flags&DREF_REMOVED),
@@ -1651,12 +1655,13 @@ void ddc_emit_display_detection_event(Display_Ref * dref, DDCA_Display_Event_Typ
    DDCA_Display_Detection_Event report;
    report.dref = (void*) dref;
    report.event_type = event_type;
+   report.io_path = (dref) ? dref->io_path : io_path;
 
    // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, %s",
-         dref_repr_t(dref), ddc_display_event_type_name(event_type));
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, %s, busno=%d",
+         dref_repr_t(dref), ddc_display_event_type_name(event_type), io_path.path.i2c_busno);
 
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
@@ -1881,7 +1886,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
-      ddc_emit_display_detection_event(dref, DDCA_EVENT_CONNECTED);
+      ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
       ok = true;
    }
    else {
@@ -1954,7 +1959,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    if (dref) {
       found = true;
       dref->flags |= DREF_REMOVED;
-      ddc_emit_display_detection_event(dref, DDCA_EVENT_DISCONNETED);
+      ddc_emit_display_detection_event(DDCA_EVENT_DISCONNETED, dref, dref->io_path);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
