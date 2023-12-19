@@ -140,6 +140,54 @@ void ddc_recheck_bus() {
       old_buses = i2c_get_all_buses();
       usleep(3000*1000);
    }
+
+
+   Byte_Value_Array bva = i2c_detect_attached_buses();
+   Bit_Set_256  cur_buses = bs256_from_bva(bva);
+   bva_free(bva);
+   Bit_Set_256  newly_attached_buses_bitset = bs256_and_not(cur_buses, connected_buses);
+   Bit_Set_256  newly_detached_buses_bitset = bs256_and_not(connected_buses, cur_buses);
+
+   bool changed = false;
+   if (bs256_count(newly_detached_buses_bitset) > 0) {
+      Bit_Set_256_Iterator iter = bs256_iter_new(newly_detached_buses_bitset);
+      int busno;
+      while(true) {
+         busno = bs256_iter_next(iter);
+         if (busno < 0)
+            break;
+         DDCA_IO_Path iopath;
+         iopath.io_mode = DDCA_IO_I2C;
+         iopath.path.i2c_busno = busno;
+         ddc_emit_display_detection_event(DDCA_EVENT_BUS_DETACHED, NULL, iopath);
+
+      }
+      bs256_iter_free(iter);
+      changed = true;
+   }
+
+   if (bs256_count(newly_attached_buses_bitset) > 0) {
+      Bit_Set_256_Iterator iter = bs256_iter_new(newly_attached_buses_bitset);
+      int busno;
+      while(true) {
+         busno = bs256_iter_next(iter);
+         if (busno < 0)
+            break;
+         DDCA_IO_Path iopath;
+         iopath.io_mode = DDCA_IO_I2C;
+         iopath.path.i2c_busno = busno;
+         ddc_emit_display_detection_event(DDCA_EVENT_BUS_ATTACHED, NULL, iopath);
+
+      }
+      bs256_iter_free(iter);
+      changed = true;
+   }
+
+
+   if (changed)
+      get_sys_drm_connectors(/*rescan=*/true);
+
+
    Bit_Set_256 old_bitset = i2c_buses_to_bitset(old_buses);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
 
@@ -215,7 +263,7 @@ void ddc_recheck_bus() {
             assert(dref);
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleep change event for dref=%p->%s", dref, dref_repr_t(dref));
             DDCA_Display_Event_Type event_type = (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE;
-            ddc_emit_display_detection_event(dref, event_type);
+            ddc_emit_display_detection_event(event_type, dref, dref->io_path);
             businfo->last_checked_dpms_asleep = is_dpms_asleep;
          }
       }
