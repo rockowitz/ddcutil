@@ -1069,7 +1069,7 @@ parse_command(
       {"enable-async-ddc-checks",  '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
       {"disable-async-ddc-checks",  '\0', 0, G_OPTION_ARG_NONE,     &async_flag,       "Disable asynchronous display detection", NULL},
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection", NULL},
-      {"enable-async-i2c-bus-checks",  '\0', 0, G_OPTION_ARG_NONE, &async_check_i2c_flag, "Enable parallel examination of /dev/i2c devices", NULL},
+      {"enable-async-i2c-bus-checks",  '\0', 0, G_OPTION_ARG_NONE, &async_check_i2c_flag, "Enable parallel examination of /dev/i2c devices (default)", NULL},
       {"disable-async-i2c-bus-checks", '\0', G_OPTION_FLAG_REVERSE,
                                           G_OPTION_ARG_NONE, &async_check_i2c_flag, "Disable parallel examination of /dev/i2c devices", NULL},
 

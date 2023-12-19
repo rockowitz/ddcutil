@@ -267,6 +267,12 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       ddc_set_async_threshold(parsed_cmd->i3);
    }
 
+   if (parsed_cmd->flags & CMD_FLAG_ASYNC_I2C_CHECK)
+      i2c_businfo_async_threshold = BUS_CHECK_ASYNC_THRESHOLD;
+   else
+      i2c_businfo_async_threshold = 999;
+
+
    if (parsed_cmd->sleep_multiplier >= 0) {
       User_Multiplier_Source  source =
             (parsed_cmd->flags & CMD_FLAG_EXPLICIT_SLEEP_MULTIPLIER) ? Explicit : Default;
