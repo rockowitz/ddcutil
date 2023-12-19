@@ -92,6 +92,7 @@ void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth);
 extern GPtrArray * i2c_buses;
 extern Bit_Set_256 connected_buses;
 
+Byte_Value_Array i2c_detect_attached_buses();
 GPtrArray *      i2c_get_all_buses();
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
