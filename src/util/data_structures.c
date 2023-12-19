@@ -1520,6 +1520,17 @@ Bit_Set_256 bs256_from_string(
 }
 
 
+Bit_Set_256 bs256_from_bva(Byte_Value_Array bva) {
+   Bit_Set_256 result = EMPTY_BIT_SET_256;
+   int ct = bva_length(bva);
+   for (int ndx = 0; ndx < ct; ndx++) {
+      Byte bitno = bva_get(bva, ndx);
+      result = bs256_insert(result, bitno);
+   }
+   return result;
+}
+
+
 //
 // Bit_Set_32 - A set of 32 flags
 //

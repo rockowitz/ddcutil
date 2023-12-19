@@ -203,6 +203,7 @@ char *         bs256_repr(Bit_Set_256 flags, char * buffer, int buflen);
 char *         bs256_to_string(Bit_Set_256 set, const char * value_prefix, const char * septr);   // provides for bbf_to_string()
 char *         bs256_to_string_decimal(Bit_Set_256 set, const char * value_prefix, const char * septr);
 Bit_Set_256    bs256_from_string(char * unparsed_string, Null_Terminated_String_Array * error_msgs_loc);
+Bit_Set_256    bs256_from_bva(Byte_Value_Array bva);
 
 int bs256_to_bytes(Bit_Set_256 flags, Byte * buffer, int buflen);
 Buffer * bs256_to_buffer(Bit_Set_256 flags);
