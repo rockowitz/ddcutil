@@ -316,7 +316,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    suppress_se_post_read = parsed_cmd->flags & CMD_FLAG_F1;
    ddc_never_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F3;
    // ddc_always_uses_null_response_for_unsupported = parsed_cmd->flags & CMD_FLAG_F8;
-   EDID_Read_Uses_I2C_Layer = parsed_cmd->flags & CMD_FLAG_F5;
+
+   if (parsed_cmd->flags & CMD_FLAG_F5)
+      EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
    if (parsed_cmd->flags & CMD_FLAG_F7)
       detect_phantom_displays = false;
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS

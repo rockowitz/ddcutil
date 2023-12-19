@@ -34,7 +34,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
    REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
-   REPORT_FLAG_OPTION(5, "EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(5, "Use non-default value for EDID read uses I2C layer");
    REPORT_FLAG_OPTION(6, "Watch display connection events");
    REPORT_FLAG_OPTION(7, "Disable phantom display detection");
    REPORT_FLAG_OPTION(8, "Use UDEV to watch for display changes");
