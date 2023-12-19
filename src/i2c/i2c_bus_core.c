@@ -787,7 +787,8 @@ GPtrArray * i2c_detect_buses0() {
       }
    }
 
-   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p containing %d buses", buses, buses->len);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C,
+         "Returning: %p containing %d I2C_Bus_Info records", buses, buses->len);
    return buses;
 }
 
@@ -819,8 +820,7 @@ Bit_Set_256      i2c_buses_to_bitset(GPtrArray * buses) {
 
 /** Detect buses if not already detected.
  *
- *  Stores the result in globals array i2c_buses and
- *  bitset #connected_buses
+ *  Stores the result in global array i2c_buses
  *
  *  @return number of i2c buses
  */
