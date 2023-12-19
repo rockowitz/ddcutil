@@ -541,6 +541,7 @@ typedef enum {
 typedef struct {
    DDCA_Display_Ref *      dref;
    DDCA_Display_Event_Type event_type;
+   DDCA_IO_Path            io_path;
    void *                  unused[3];
 } DDCA_Display_Detection_Event;
 
