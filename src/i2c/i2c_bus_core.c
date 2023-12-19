@@ -831,7 +831,7 @@ int i2c_detect_buses() {
    if (!i2c_buses) {
       i2c_buses = i2c_detect_buses0();
       g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
-      // connected_buses =      i2c_buses_to_bitset(i2c_buses);
+      connected_buses = i2c_buses_to_bitset(i2c_buses);
    }
    int result = i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
@@ -1117,5 +1117,6 @@ void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
    attached_buses = EMPTY_BIT_SET_256;
+   connected_buses = EMPTY_BIT_SET_256;
 }
 
