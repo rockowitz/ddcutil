@@ -76,7 +76,7 @@
 // Default trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 
-static GPtrArray * all_displays = NULL;         // all detected displays, array of Display_Ref *
+static GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
 static int ddc_detect_async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
@@ -89,7 +89,7 @@ bool monitor_state_tests = false;
 bool skip_ddc_checks = false;
 
 void ddc_add_display_ref(Display_Ref * dref) {
-   g_ptr_array_add(all_displays, dref);
+   g_ptr_array_add(all_display_refs, dref);
 }
 
 
@@ -776,8 +776,8 @@ ddc_non_async_scan(GPtrArray * all_displays) {
 GPtrArray *
 ddc_get_all_displays() {
    // ddc_ensure_displays_detected();
-   TRACED_ASSERT(all_displays);
-   return all_displays;
+   TRACED_ASSERT(all_display_refs);
+   return all_display_refs;
 }
 
 
@@ -790,11 +790,11 @@ GPtrArray *
 ddc_get_filtered_displays(bool include_invalid_displays) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "include_invalid_displays=%s", sbool(include_invalid_displays));
-   TRACED_ASSERT(all_displays);
+   TRACED_ASSERT(all_display_refs);
 
-   GPtrArray * result = g_ptr_array_sized_new(all_displays->len);
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * cur = g_ptr_array_index(all_displays, ndx);
+   GPtrArray * result = g_ptr_array_sized_new(all_display_refs->len);
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
       if (include_invalid_displays || cur->dispno > 0) {
          g_ptr_array_add(result, cur);
       }
@@ -816,10 +816,10 @@ ddc_get_display_ref_by_drm_connector(
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "connector_name=%s, ignore_invalid=%s", connector_name, sbool(ignore_invalid));
    Display_Ref * result = NULL;
-   TRACED_ASSERT(all_displays);
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays->len=%d", all_displays->len);
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref * cur = g_ptr_array_index(all_displays, ndx);
+   TRACED_ASSERT(all_display_refs);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "all_displays->len=%d", all_display_refs->len);
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref * cur = g_ptr_array_index(all_display_refs, ndx);
       // ddc_dbgrpt_display_ref(cur, 4);
       bool pass_filter = true;
       if (ignore_invalid) {
@@ -854,10 +854,10 @@ ddc_get_display_ref_by_drm_connector(
 int
 ddc_get_display_count(bool include_invalid_displays) {
    int display_ct = -1;
-   if (all_displays) {
+   if (all_display_refs) {
       display_ct = 0;
-      for (int ndx=0; ndx<all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      for (int ndx=0; ndx<all_display_refs->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
          TRACED_ASSERT(memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);
          if (dref->dispno > 0 || include_invalid_displays) {
             display_ct++;
@@ -1399,13 +1399,13 @@ void
 ddc_ensure_displays_detected() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   if (!all_displays) {
+   if (!all_display_refs) {
       // i2c_detect_buses();  // called in ddc_detect_all_displays()
-      all_displays = ddc_detect_all_displays(&display_open_errors);
+      all_display_refs = ddc_detect_all_displays(&display_open_errors);
    }
    DBGTRC_DONE(debug, TRACE_GROUP,
                "all_displays=%p, all_displays has %d displays",
-               all_displays, all_displays->len);
+               all_display_refs, all_display_refs->len);
 }
 
 
@@ -1426,9 +1426,9 @@ ddc_discard_detected_displays() {
 #ifdef USE_USB
    discard_usb_monitor_list();
 #endif
-   if (all_displays) {
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+   if (all_display_refs) {
+      for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
          dref->flags |= DREF_TRANSIENT;  // hack to allow all Display References to be freed
 #ifndef NDEBUG
          DDCA_Status ddcrc = free_display_ref(dref);
@@ -1437,8 +1437,8 @@ ddc_discard_detected_displays() {
          free_display_ref(dref);
 #endif
       }
-      g_ptr_array_free(all_displays, true);
-      all_displays = NULL;
+      g_ptr_array_free(all_display_refs, true);
+      all_display_refs = NULL;
       if (display_open_errors) {
          g_ptr_array_free(display_open_errors, true);
          display_open_errors = NULL;
@@ -1453,17 +1453,17 @@ ddc_discard_detected_displays() {
 void
 ddc_redetect_displays() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_displays);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    ddc_discard_detected_displays();
    get_sys_drm_connectors(/*rescan=*/true);
    i2c_detect_buses();
-   all_displays = ddc_detect_all_displays(&display_open_errors);
+   all_display_refs = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
-      ddc_dbgrpt_drefs("all_displays:", all_displays, 1);
+      ddc_dbgrpt_drefs("all_displays:", all_display_refs, 1);
       // dbgrpt_valid_display_refs(1);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "all_displays=%p, all_displays->len = %d",
-                                   all_displays, all_displays->len);
+                                   all_display_refs, all_display_refs->len);
 }
 
 
@@ -1478,9 +1478,9 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
    bool result = false;
-   if (all_displays) {
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
+   if (all_display_refs) {
+      for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+         Display_Ref* cur = g_ptr_array_index(all_display_refs, ndx);
          DBGMSF(debug, "Checking vs valid dref %p", cur);
          
          if (cur == dref) {
@@ -1509,14 +1509,14 @@ DDCA_Status
 ddc_validate_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
-   assert(all_displays);
+   assert(all_display_refs);
    DDCA_Status ddcrc = DDCRC_ARG;
    if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       goto bye;
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
-      Display_Ref* cur = g_ptr_array_index(all_displays, ndx);
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+      Display_Ref* cur = g_ptr_array_index(all_display_refs, ndx);
       if (cur == dref) {
          // need to check for dref->dispno < 0 ?
          if (dref->flags & DREF_REMOVED)
@@ -1544,8 +1544,8 @@ bool
 ddc_displays_already_detected()
 {
    bool debug = false;
-   DBGTRC_EXECUTED(debug, TRACE_GROUP, "Returning %s", SBOOL(all_displays));
-   return all_displays;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "Returning %s", SBOOL(all_display_refs));
+   return all_display_refs;
 }
 
 
@@ -1673,10 +1673,12 @@ void ddc_emit_display_detection_event(Display_Ref * dref, DDCA_Display_Event_Typ
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
-   case DDCA_EVENT_CONNECTED:   result = "DDCA_EVENT_CONNECTED";       break;
-   case DDCA_EVENT_DISCONNETED: result = "DDCA_EVENT_DISCONNECTED";    break;
-   case DDCA_EVENT_DPMS_AWAKE:  result = "DDCA_EVENT_DPMS_AWAKE";      break;
-   case DDCA_EVENT_DPMS_ASLEEP: result = "DDCA_EVENT_DPMS_ASLEEP";     break;
+   case DDCA_EVENT_CONNECTED:    result = "DDCA_EVENT_CONNECTED";      break;
+   case DDCA_EVENT_DISCONNETED:  result = "DDCA_EVENT_DISCONNECTED";   break;
+   case DDCA_EVENT_DPMS_AWAKE:   result = "DDCA_EVENT_DPMS_AWAKE";     break;
+   case DDCA_EVENT_DPMS_ASLEEP:  result = "DDCA_EVENT_DPMS_ASLEEP";    break;
+   case DDCA_EVENT_BUS_ATTACHED: result = "DDCA_EVENT_BUS_ATTACHED";   break;
+   case DDCA_EVENT_BUS_DETACHED: result = "DDCA_EVENT_BUS_DETACHED";   break;
    }
    return result;
 }
@@ -1740,13 +1742,13 @@ bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
 
    bool found = false;
-   assert(all_displays);
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+   assert(all_display_refs);
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       // If a display is repeatedly removed and added on a particular connector,
       // there will be multiple Display_Ref records.  All but one should already
       // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
       // an I2C_Bus_Info struct.
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
       assert(dref);
       DBGMSG("Checking dref %s", dref_repr_t(dref));
       dbgrpt_display_ref(dref, 2);
@@ -1824,7 +1826,7 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
 
-         g_ptr_array_add(all_displays, dref);
+         g_ptr_array_add(all_display_refs, dref);
 
          DDCA_Display_Detection_Report report = {dref, DDCA_DISPLAY_ADDED};
          ddc_emit_display_detection_event(report);
@@ -1875,7 +1877,7 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
       dref->flags |= DREF_DDC_IS_MONITOR;
 
       ddc_initial_checks_by_dref(dref);
-      g_ptr_array_add(all_displays, dref);
+      g_ptr_array_add(all_display_refs, dref);
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
             "Display %s found on bus %d", dref_repr_t(dref), businfo->busno);
@@ -1901,16 +1903,16 @@ bool ddc_add_display_by_businfo(I2C_Bus_Info * businfo) {
 Display_Ref * ddc_get_dref_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", busno);
-   assert(all_displays);
+   assert(all_display_refs);
 
    Display_Ref * result = NULL;
    int non_removed_ct = 0;
-   for (int ndx = 0; ndx < all_displays->len; ndx++) {
+   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
       // If a display is repeatedly removed and added on a particular connector,
       // there will be multiple Display_Ref records.  All but one should already
       // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
       // an I2C_Bus_Info struct.
-      Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
       // DBGMSG("Checking dref %s", dref_repr_t(dref));
       if (dref->io_path.io_mode == DDCA_IO_I2C) {
           if (dref->flags & DREF_REMOVED)  {
@@ -1941,7 +1943,7 @@ Display_Ref * ddc_get_dref_by_busno(int busno) {
 bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno = %d", businfo->busno);
-   assert(all_displays);
+   assert(all_display_refs);
 
    // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
    // i2c_dbgrpt_buses(/* report_all */ true, 2);
