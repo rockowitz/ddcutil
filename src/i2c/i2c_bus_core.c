@@ -564,6 +564,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 bus_info->open_errno =  ddcrc;
              }
              else {
+                DBGTRC(debug, DDCA_TRC_NONE, "already have EDID");
                 bus_info->flags |= I2C_BUS_ADDR_0X50;
 
                 if (!bus_info->drm_connector_name &&    // if not already checked for laptop
@@ -699,11 +700,36 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
 
    for (int ndx = 0; ndx < i2c_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(i2c_buses, ndx);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_check_bus() synchronously");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_check_bus() synchronously for bus %d", businfo->busno);
       i2c_check_bus(businfo);
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
+
+Bit_Set_256 attached_buses;
+
+Byte_Value_Array i2c_detect_attached_buses() {
+#ifdef ENABLE_UDEV
+   // do not include devices with ignorable name, etc.:
+   Byte_Value_Array i2c_bus_bva =
+            get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
+#else
+   Byte_Value_Array i2c_bus_bva =
+            get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
+#endif
+   return i2c_bus_bva;;
+}
+
+
+#ifdef UNUSED
+void i2c_check_attached_buses() {
+   Bit_Set_256 cur_attached_buses = i2c_detect_attached_buses();
+   if (!bs256_eq(cur_attached_buses, attached_buses)) {   // will be rare
+      Bit_Set_256 newly_attached_buses = bs256_and_not(cur_attached_buses, attached_buses);
+      Bit_Set_256 newly_detached_buses = bs256_and_not(attached_buses, cur_attached_buses);
+   }
+}
+#endif
 
 
 GPtrArray * i2c_detect_buses0() {
@@ -714,49 +740,53 @@ GPtrArray * i2c_detect_buses0() {
    // GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
    // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
-#ifdef ENABLE_UDEV
-      // do not include devices with ignorable name, etc.:
-      Byte_Value_Array i2c_bus_bva =
-            get_i2c_device_numbers_using_udev(/*include_ignorable_devices=*/ false);
-#else
-      Byte_Value_Array i2c_bus_bva =
-            get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
-#endif
-      if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-         char * s = bva_as_string(i2c_bus_bva, /*as_hex*/ false, ", ");
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
-         free(s);
-      }
-      GPtrArray * buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
 
-      for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
-         int busno = bva_get(i2c_bus_bva, ndx);
-         DBGMSF(debug, "Checking busno = %d", busno);
-         I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
-         businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
-         DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
-         g_ptr_array_add(buses, businfo);
-      }
-      bva_free(i2c_bus_bva);
+   Byte_Value_Array i2c_bus_bva = i2c_detect_attached_buses();
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
+      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+      free(s);
+   }
 
-      if (buses->len < i2c_businfo_async_threshold) {
-         i2c_non_async_scan(buses);
-      }
-      else {
-         i2c_async_scan(buses);
-      }
+   GPtrArray * buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
 
+   for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
+      int busno = bva_get(i2c_bus_bva, ndx);
+      DBGMSF(debug, "Checking busno = %d", busno);
+      I2C_Bus_Info * businfo = i2c_new_bus_info(busno);
+      businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
+      DBGMSF(debug, "Valid bus: /dev/"I2C"-%d", busno);
+      g_ptr_array_add(buses, businfo);
+   }
+   bva_free(i2c_bus_bva);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses->len = %d, i2c_businfo_async_threhold=%d",
+         buses->len, i2c_businfo_async_threshold);
+
+
+   if (buses->len < i2c_businfo_async_threshold) {
+      i2c_non_async_scan(buses);
+   }
+   else {
+      i2c_async_scan(buses);
+   }
+
+   if (debug) {
       for (int ndx = 0; ndx < buses->len; ndx++) {
          I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
-         // if (debug || IS_TRACING() )
-         //    i2c_dbgrpt_bus_info(businfo, 0);
-         if (debug) {
-            GPtrArray * conflicts = collect_conflicting_drivers(businfo->busno, -1);
-            // report_conflicting_drivers(conflicts);
-            // DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
-            free_conflicting_drivers(conflicts);
-         }
+         i2c_dbgrpt_bus_info(businfo, 0);
       }
+   }
+
+   if (debug) {
+      for (int ndx = 0; ndx < buses->len; ndx++) {
+         I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
+         GPtrArray * conflicts = collect_conflicting_drivers(businfo->busno, -1);
+         report_conflicting_drivers(conflicts, 1);
+         DBGMSG("Conflicting drivers: %s", conflicting_driver_names_string_t(conflicts));
+         free_conflicting_drivers(conflicts);
+      }
+   }
+
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p containing %d buses", buses, buses->len);
    return buses;
 }
@@ -768,7 +798,7 @@ GPtrArray * i2c_detect_buses0() {
  *  @param  buses   array of I2C_Bus_Info
  *  @return bit set
  */
-Bit_Set_256 buses_to_bitset(GPtrArray * buses) {
+Bit_Set_256      i2c_buses_to_bitset(GPtrArray * buses) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
    assert(buses);
@@ -801,7 +831,7 @@ int i2c_detect_buses() {
    if (!i2c_buses) {
       i2c_buses = i2c_detect_buses0();
       g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
-      // connected_buses = buses_to_bitset(i2c_buses);
+      // connected_buses =      i2c_buses_to_bitset(i2c_buses);
    }
    int result = i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
@@ -1086,5 +1116,6 @@ void subinit_i2c_bus_core() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
+   attached_buses = EMPTY_BIT_SET_256;
 }
 
