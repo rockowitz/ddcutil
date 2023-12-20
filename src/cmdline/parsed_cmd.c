@@ -120,6 +120,8 @@ Parsed_Cmd *  new_parsed_cmd() {
    parsed_cmd->edid_read_size = -1;   // if set, values are >= 0
    parsed_cmd->sleep_multiplier = 1.0;
    parsed_cmd->min_dynamic_multiplier = -1.0;
+   parsed_cmd->i2c_bus_check_async_min = -1;
+   parsed_cmd->ddc_check_async_min = -1;
    parsed_cmd->i1 = -1;               // if set, values are >= 0
 #ifdef OLD
    parsed_cmd->flags |= CMD_FLAG_NODETECT;
@@ -229,7 +231,7 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 
       rpt_bool("force_slave_addr", NULL, parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR, d1);
       rpt_bool("verify_setvcp",    NULL, parsed_cmd->flags & CMD_FLAG_VERIFY,           d1);
-      rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,                    d1);
+//    rpt_bool("async",             NULL, parsed_cmd->flags & CMD_FLAG_ASYNC,                    d1);
       rpt_bool("force",             NULL, parsed_cmd->flags & CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE,                    d1);
 
       rpt_bool("enable udf",        NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_UDF,               d1);
@@ -285,7 +287,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
    char *                 failsim_control_fn;
 
 #endif
-      rpt_nl();
+
+   rpt_nl();
       rpt_label(depth, "Performance and Tuning");
       rpt_bool("enable cached capabilities",
                                  NULL, parsed_cmd->flags & CMD_FLAG_ENABLE_CACHED_CAPABILITIES, d1);
@@ -305,6 +308,8 @@ void dbgrpt_parsed_cmd(Parsed_Cmd * parsed_cmd, int depth) {
 #endif
       rpt_bool("defer sleeps",      NULL, parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS,            d1);
       rpt_bool("dsa2 enabled",      NULL, parsed_cmd->flags & CMD_FLAG_DSA2,                    d1);
+      rpt_int("i2c_bus_check_async_min", NULL, parsed_cmd->i2c_bus_check_async_min,             d1);
+      rpt_int("ddc_check_async_min", NULL, parsed_cmd->ddc_check_async_min,                     d1);
 
 
       rpt_bool("verbose stats:", NULL, parsed_cmd->flags & CMD_FLAG_VERBOSE_STATS,      d1);

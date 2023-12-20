@@ -57,7 +57,7 @@ typedef enum {
    CMD_FLAG_VERIFY                   = 0x0040,
    CMD_FLAG_SKIP_DDC_CHECKS          = 0x0080,
 
-   CMD_FLAG_ASYNC                    = 0x0100,
+   CMD_FLAG_UNUSED1                  = 0x0100,
    CMD_FLAG_REPORT_FREED_EXCP        = 0x0200,
    CMD_FLAG_NOTABLE                  = 0x0400,
    CMD_FLAG_THREAD_ID_TRACE          = 0x0800,
@@ -201,6 +201,8 @@ struct {
    float                  sleep_multiplier;
    float                  min_dynamic_multiplier;
    DDCA_Stats_Type        stats_types;
+   int16_t                i2c_bus_check_async_min;
+   int16_t                ddc_check_async_min;
 
    // Tracing and logging
    DDCA_Trace_Group       traced_groups;

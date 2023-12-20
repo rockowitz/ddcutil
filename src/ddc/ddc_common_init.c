@@ -258,9 +258,10 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
                          "sleep_multiplier: %5.2f", parsed_cmd->sleep_multiplier);
    enable_deferred_sleep( parsed_cmd->flags & CMD_FLAG_DEFER_SLEEPS);
 
+#ifdef OLD
    int threshold = DISPLAY_CHECK_ASYNC_NEVER;
    if (parsed_cmd->flags & CMD_FLAG_ASYNC) {
-      threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD;
+      threshold = DEFAULT_DDC_CHECK_ASYNC_MIN;
       ddc_set_async_threshold(threshold);
    }
    if (parsed_cmd->flags & CMD_FLAG_I3_SET) {
@@ -268,9 +269,22 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
    }
 
    if (parsed_cmd->flags & CMD_FLAG_ASYNC_I2C_CHECK)
-      i2c_businfo_async_threshold = BUS_CHECK_ASYNC_THRESHOLD;
+      i2c_businfo_async_threshold = I2C_BUS_CHECK_ASYNC_MIN;
    else
       i2c_businfo_async_threshold = 999;
+#endif
+
+   int threshold = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
+   if (parsed_cmd->i2c_bus_check_async_min >= 0) {
+      threshold = parsed_cmd->i2c_bus_check_async_min;
+   }
+   i2c_businfo_async_threshold = threshold;
+
+   threshold = DEFAULT_DDC_CHECK_ASYNC_MIN;
+   if (parsed_cmd->ddc_check_async_min >= 0) {
+      threshold= parsed_cmd->ddc_check_async_min;
+   }
+   ddc_set_async_threshold(threshold);
 
 
    if (parsed_cmd->sleep_multiplier >= 0) {
@@ -338,8 +352,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
 #endif
    if (parsed_cmd->flags & CMD_FLAG_F14)
       force_read_edid = true;
-   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
-      i2c_businfo_async_threshold = parsed_cmd->i1;
+
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)

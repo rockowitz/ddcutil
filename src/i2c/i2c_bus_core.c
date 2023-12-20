@@ -72,16 +72,13 @@
 
 #include "i2c/i2c_bus_core.h"
 
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
-
-
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool all_video_drivers_implement_drm = false;
 bool force_read_edid = false;
-int  i2c_businfo_async_threshold = BUS_CHECK_ASYNC_THRESHOLD;
+int  i2c_businfo_async_threshold = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
 
 void i2c_enable_cross_instance_locks(bool yesno) {
@@ -106,8 +103,6 @@ Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_device
    }
    return bva;
 }
-
-
 
 
 //

@@ -115,7 +115,9 @@
 #define DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT   DISPLAY_CHECK_ASYNC_NEVER
 
 /** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
-#define BUS_CHECK_ASYNC_THRESHOLD 4
+#define DEFAULT_I2C_BUS_CHECK_ASYNC_MIN 4
+#define DEFAULT_DDC_CHECK_ASYNC_MIN 3
+
 
 /* Syslog */
 
