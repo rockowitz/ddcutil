@@ -554,12 +554,13 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
                 }
              }
 #endif
-             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "i2c_get_parsed_edid_by_fd() returned %s", psc_desc(ddcrc));
+             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, i2c_get_parsed_edid_by_fd() returned %s",
+                   bus_info->busno, psc_desc(ddcrc));
              if (ddcrc != 0) {
                 bus_info->open_errno =  ddcrc;
              }
              else {
-                DBGTRC(debug, DDCA_TRC_NONE, "already have EDID");
+                DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "busno=%d, already have EDID", bus_info->busno);
                 bus_info->flags |= I2C_BUS_ADDR_0X50;
 
                 if (!bus_info->drm_connector_name &&    // if not already checked for laptop
@@ -735,16 +736,13 @@ GPtrArray * i2c_detect_buses0() {
    // GPtrArray * i2c_infos = get_all_i2c_info(true, -1);
    // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
-
    Byte_Value_Array i2c_bus_bva = i2c_detect_attached_buses();
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
       DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
       free(s);
    }
-
    GPtrArray * buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
-
    for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
       int busno = bva_get(i2c_bus_bva, ndx);
       DBGMSF(debug, "Checking busno = %d", busno);
@@ -754,10 +752,9 @@ GPtrArray * i2c_detect_buses0() {
       g_ptr_array_add(buses, businfo);
    }
    bva_free(i2c_bus_bva);
+
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses->len = %d, i2c_businfo_async_threhold=%d",
          buses->len, i2c_businfo_async_threshold);
-
-
    if (buses->len < i2c_businfo_async_threshold) {
       i2c_non_async_scan(buses);
    }
