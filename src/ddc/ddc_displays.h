@@ -61,10 +61,9 @@ Display_Ref * ddc_get_dref_by_busno(int busno);
 bool        ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
-void        ddc_emit_display_detection_event(
-               DDCA_Display_Event_Type event_type,
-               Display_Ref* dref,
-               DDCA_IO_Path io_path);
+void        ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
+                                             Display_Ref*            dref,
+                                             DDCA_IO_Path            io_path);
 const char* ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 // Initialization and termination
