@@ -184,8 +184,10 @@ void ddc_recheck_bus() {
    }
 
 
-   if (changed)
+   if (changed) {
+      connected_buses = cur_buses;
       get_sys_drm_connectors(/*rescan=*/true);
+   }
 
 
    Bit_Set_256 old_bitset = i2c_buses_to_bitset(old_buses);
