@@ -6,9 +6,11 @@
 
 #### Added
 - Option ***--skip-ddc-checks***
-  - Assumes DDC communication is working and the monitor properly uses the 
-    unsupported feature bit in Get Feature Reply packets, improving initialization time.
+  - Skips initialization checks to confirm that DDC communication is working
+    and the monitor properly uses the unsupported feature bit in Get Feature 
+    Reply packets, thereby improving initialization time.
 - Option ***--min-dynamic-multiplier***  (experimental, possibly rename --dsa-floor)
+- Options ***enable-async-i2c-bus_checks***, ***--disable-async_bus-checks***
 
 #### Changed
 - Options ***--verbose***, and ***--brief*** affect ***--help*** output: 
@@ -26,14 +28,17 @@
   driver compatibility error.  The incompatibility has been full diagnosed 
   as being caused by use of a legacy proprietary Nvidia driver. A message
   is still written to the system log.
+- Options ***--enable-displays-cache***, ***--disable-displays-cache*** are marked
+  hidden since displays caching is not a released feature
 - **configure** option ***--enable-asan*** causes libasan to be linked into binaries 
+- **configure** option ***--enable-x11*** is deprecated. The X11 API is no longer used.
 
 #### Fixed
 - Better handling of DDC Null Message recognition and adjustments
 - Dynamic sleep: make it easier to reduce time - once high didn't come down
 - Command detect: ensure output of model name, serial number, and extra display descriptor 
   use only ASCII character in the range 0..127.
-- Some USB only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
+- Some USB-only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
 - Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
   that aggressive optimization caused setvcp to fail.
 - Cross-thread locking handles situtations where adisplay ref does not yet exist, e.g. reading EDID
