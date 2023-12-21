@@ -79,7 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 static GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
-static int ddc_detect_async_threshold = DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT;
+static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_MIN;
 #ifdef USE_USB
 static bool detect_usb_displays = true;
 #else
@@ -1638,20 +1638,25 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
 }
 
 
-/** Invokes the registered callbacks for a display detection event.
- */
-
-/** Invokes the registered callbacks for a display detection event.
+/** Executes the registered callbacks for a display detection event.
+ *
+ *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
+ *  @param  dref        display reference, NULL if DDCA_EVENT_BUS_ATTACHED
+ *                                              or DDCA_EVENT_BUS_DETACHED
+ *  @param  io_path     for DDCA_EVENT_BUS_ATTACHED or DDCA_EVENT_BUS_DETACHED
  */
 void ddc_emit_display_detection_event(
       DDCA_Display_Event_Type event_type,
-      Display_Ref* dref,
-      DDCA_IO_Path io_path)
+      Display_Ref*            dref,
+      DDCA_IO_Path            io_path)
 {
    bool debug = false || watch_watching;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
-         dref, dref_repr_t(dref), sbool(dref->flags&DREF_REMOVED),
-         event_type, ddc_display_event_type_name(event_type));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
+         dref, dref_repr_t(dref), event_type, ddc_display_event_type_name(event_type));
+   if (dref)
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_REMOVED=%s", SBOOL(dref->flags&DREF_REMOVED));
+   else
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "io_path=%s", dpath_repr_t(&io_path));
    DDCA_Display_Detection_Event report;
    report.dref = (void*) dref;
    report.event_type = event_type;
