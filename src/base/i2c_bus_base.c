@@ -117,7 +117,7 @@ void i2c_reset_bus_info(I2C_Bus_Info * bus_info) {
    bool debug = false;
    assert(bus_info);
    DBGTRC_STARTING(debug, TRACE_GROUP, "businfo=%p, busno = %d", bus_info, bus_info->busno);
-   bus_info->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
+   bus_info->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
    if (i2c_device_exists(bus_info->busno))
       bus_info->flags |= I2C_BUS_EXISTS;
    if (bus_info->edid) {
@@ -343,7 +343,7 @@ i2c_find_bus_info_in_gptrarray_by_busno(GPtrArray * buses, int busno) {
 
    I2C_Bus_Info * result = NULL;
    for (int ndx = 0; ndx < buses->len; ndx++) {
-      I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
+      I2C_Bus_Info * cur_info = g_ptr_array_index(all_i2c_buses, ndx);
       if (cur_info->busno == busno) {
          result = cur_info;
          break;
@@ -361,7 +361,7 @@ int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno
 
    int result = -1;
    for (int ndx = 0; ndx < buses->len; ndx++) {
-      I2C_Bus_Info * cur_info = g_ptr_array_index(i2c_buses, ndx);
+      I2C_Bus_Info * cur_info = g_ptr_array_index(all_i2c_buses, ndx);
       if (cur_info->busno == busno) {
          result = ndx;
          break;
@@ -377,15 +377,7 @@ int   i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses, int busno
 // Operations on the set of all buses
 //
 
-/* static */ GPtrArray * i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
-Bit_Set_256 connected_buses;    // = EMPTY_BIT_SET_256;  can't initialize here, "not a constant"
-
-
-GPtrArray * i2c_get_all_buses() {
-   bool debug = false;
-   DBGTRC_EXECUTED(debug, TRACE_GROUP, "Returning %p", i2c_buses);
-   return i2c_buses;
-}
+GPtrArray * all_i2c_buses = NULL;  ///  array of  #I2C_Bus_Info
 
 
 /** Retrieves bus information by I2C bus number.
@@ -399,7 +391,7 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
    bool debug = false;
    DBGMSF(debug, "Starting. busno=%d", busno);
 
-   I2C_Bus_Info * result = i2c_find_bus_info_in_gptrarray_by_busno(i2c_buses, busno);
+   I2C_Bus_Info * result = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
 
    DBGMSF(debug, "Done.     Returning: %p", result);
    return result;
@@ -416,11 +408,11 @@ I2C_Bus_Info * i2c_find_bus_info_by_busno(int busno) {
 I2C_Bus_Info * i2c_get_bus_info_by_index(guint busndx) {
    bool debug = false;
    DBGMSF(debug, "busndx=%d", busndx);
-   assert(i2c_buses);
+   assert(all_i2c_buses);
 
    I2C_Bus_Info * businfo = NULL;
-   if (busndx < i2c_buses->len) {
-      businfo = g_ptr_array_index(i2c_buses, busndx);
+   if (busndx < all_i2c_buses->len) {
+      businfo = g_ptr_array_index(all_i2c_buses, busndx);
       DBGMSF(debug, "busno=%d, flags = 0x%04x = %s",
             businfo->busno, businfo->flags, i2c_interpret_bus_flags_t(businfo->flags) );
    }
@@ -446,8 +438,8 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "report_all=%s", sbool(report_all));
 
-   assert(i2c_buses);
-   int busct = i2c_buses->len;
+   assert(all_i2c_buses);
+   int busct = all_i2c_buses->len;
    int reported_ct = 0;
 
    puts("");
@@ -457,7 +449,7 @@ int i2c_dbgrpt_buses(bool report_all, int depth) {
       rpt_vstring(depth, "I2C buses with monitors detected at address 0x50:");
 
    for (int ndx = 0; ndx < busct; ndx++) {
-      I2C_Bus_Info * busInfo = g_ptr_array_index(i2c_buses, ndx);
+      I2C_Bus_Info * busInfo = g_ptr_array_index(all_i2c_buses, ndx);
       if ( (busInfo->flags & I2C_BUS_ADDR_0X50) || report_all) {
          rpt_nl();
          i2c_dbgrpt_bus_info(busInfo, depth);
