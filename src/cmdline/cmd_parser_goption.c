@@ -889,10 +889,10 @@ parse_command(
    // int      ddc_check_async_min = DEFAULT_DDC_CHECK_ASYNC_MIN;
    char     i2c_bus_check_async_expl[80];
    g_snprintf(i2c_bus_check_async_expl, 80, "Threshold for parallel examination of I2C buses. Default=%d.",
-         DEFAULT_I2C_BUS_CHECK_ASYNC_MIN);
+         DEFAULT_BUS_CHECK_ASYNC_THRESHOLD);
    char     ddc_check_async_expl[80];
    g_snprintf(ddc_check_async_expl, 80, "Threshold for parallel examination of possible DDC devices. Default=%d.",
-         DEFAULT_DDC_CHECK_ASYNC_MIN);
+         DEFAULT_DDC_CHECK_ASYNC_THRESHOLD);
    const char * enable_dsa2_expl  = (enable_dsa2_flag) ? "Enable dynamic sleep algorithm (default)" : "Enable dynamic sleep algorithm";
    const char * disable_dsa2_expl = (enable_dsa2_flag) ? "Disable dynamic sleep algorithm" : "Disable dynamic sleep algorithm (default)";
 
@@ -1083,7 +1083,7 @@ parse_command(
 #endif
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
 
-      {"i2c-bus-check-async-min",'\0', G_OPTION_FLAG_NONE,
+      {"i2c-bus-check-async-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
       {"ddc-check-async-min",   '\0', G_OPTION_FLAG_NONE,
                                      G_OPTION_ARG_INT, &parsed_cmd->ddc_check_async_min, ddc_check_async_expl, NULL},
