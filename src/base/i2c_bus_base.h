@@ -89,11 +89,10 @@ int              i2c_find_bus_info_index_in_gptrarray_by_busno(GPtrArray * buses
 void             i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth);
 
 // Detected Buses
-extern GPtrArray * i2c_buses;
-extern Bit_Set_256 connected_buses;
+extern GPtrArray * all_i2c_buses;
 
 Byte_Value_Array i2c_detect_attached_buses();
-GPtrArray *      i2c_get_all_buses();
+Bit_Set_256      i2c_detect_attached_buses_as_bitset();
 I2C_Bus_Info *   i2c_get_bus_info_by_index(guint busndx);
 I2C_Bus_Info *   i2c_find_bus_info_by_busno(int busno);
 int              i2c_dbgrpt_buses(bool report_all, int depth);  // Reports all detected i2c buses
