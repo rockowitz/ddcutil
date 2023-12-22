@@ -77,8 +77,8 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 
 bool i2c_force_bus = false;  // Another ugly global variable for testing purposes
 bool all_video_drivers_implement_drm = false;
-bool force_read_edid = false;
-int  i2c_businfo_async_threshold = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
+bool force_read_edid = true;
+int  i2c_businfo_async_threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
 bool cross_instance_locks_enabled = DEFAULT_ENABLE_FLOCK;
 
 void i2c_enable_cross_instance_locks(bool yesno) {
@@ -702,9 +702,10 @@ i2c_non_async_scan(GPtrArray * i2c_buses) {
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-Bit_Set_256 attached_buses;
+// Bit_Set_256 attached_buses;
 
 Byte_Value_Array i2c_detect_attached_buses() {
+   bool debug = false;
 #ifdef ENABLE_UDEV
    // do not include devices with ignorable name, etc.:
    Byte_Value_Array i2c_bus_bva =
@@ -713,7 +714,20 @@ Byte_Value_Array i2c_detect_attached_buses() {
    Byte_Value_Array i2c_bus_bva =
             get_i2c_devices_by_existence_test(/*include_ignorable_devices=*/ false);
 #endif
+   if (IS_DBGTRC(debug, TRACE_GROUP)) {
+      char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
+      DBGTRC_EXECUTED(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
+      free(s);
+   }
    return i2c_bus_bva;;
+}
+
+
+Bit_Set_256 i2c_detect_attached_buses_as_bitset() {
+   Byte_Value_Array bva = i2c_detect_attached_buses();
+   Bit_Set_256  cur_buses = bs256_from_bva(bva);
+   bva_free(bva);
+   return cur_buses;
 }
 
 
@@ -728,6 +742,11 @@ void i2c_check_attached_buses() {
 #endif
 
 
+/** Detect all currently attached buses and checks each to see if a display
+ *  is connected, i.e. if an EDID is present
+ *
+ *  @return  array of #I2C_Bus_Info for all attached buses
+ */
 GPtrArray * i2c_detect_buses0() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "");
@@ -737,11 +756,6 @@ GPtrArray * i2c_detect_buses0() {
    // dbgrpt_all_sysfs_i2c_info(i2c_infos, 2);
 
    Byte_Value_Array i2c_bus_bva = i2c_detect_attached_buses();
-   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      char * s = bva_as_string(i2c_bus_bva,  false,  ", ");
-      DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "possible i2c device bus numbers: %s", s);
-      free(s);
-   }
    GPtrArray * buses = g_ptr_array_sized_new(bva_length(i2c_bus_bva));
    for (int ndx = 0; ndx < bva_length(i2c_bus_bva); ndx++) {
       int busno = bva_get(i2c_bus_bva, ndx);
@@ -785,26 +799,28 @@ GPtrArray * i2c_detect_buses0() {
 }
 
 
-/** Creates a bit set in which the nth bit is set corresponding
- *  to the bus number of each bus in an array of I2C_Bus_Info.
+/** Creates a bit set in which the nth bit is set corresponding to the number
+ *  of each bus in an array of #I2C_Bus_Info for which a monitor is connected,
+ *  i.e. for which an EDID is detected.
  *
  *  @param  buses   array of I2C_Bus_Info
  *  @return bit set
  */
-Bit_Set_256      i2c_buses_to_bitset(GPtrArray * buses) {
+Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "buses=%p", buses);
-   assert(buses);
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "buses->len=%d", buses->len);
+   assert(businfo_array);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d", businfo_array, businfo_array->len);
+
    Bit_Set_256 result = EMPTY_BIT_SET_256;
-   for (int ndx = 0; ndx < buses->len; ndx++) {
-      I2C_Bus_Info * businfo = g_ptr_array_index(buses, ndx);
+   for (int ndx = 0; ndx < businfo_array->len; ndx++) {
+      I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
       if (businfo->flags & I2C_BUS_ADDR_0X50) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "BUS_ADDR_0X50 set");
          result = bs256_insert(result, businfo->busno);
       }
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal(result, "", ", "));
    return result;
 }
@@ -812,35 +828,35 @@ Bit_Set_256      i2c_buses_to_bitset(GPtrArray * buses) {
 
 /** Detect buses if not already detected.
  *
- *  Stores the result in global array i2c_buses
+ *  Stores the result in global array all_i2c_buses and also
+ *  the bitset connected_buses.
  *
  *  @return number of i2c buses
  */
 int i2c_detect_buses() {
    bool debug = false;
-   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "i2c_buses = %p", i2c_buses);
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "all_i2c_buses = %p", all_i2c_buses);
 
-   if (!i2c_buses) {
-      i2c_buses = i2c_detect_buses0();
-      g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
-      connected_buses = i2c_buses_to_bitset(i2c_buses);
+   if (!all_i2c_buses) {
+      all_i2c_buses = i2c_detect_buses0();
+      g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+      // connected_buses = buses_bitset_from_businfo_array(all_i2c_buses);
    }
-   int result = i2c_buses->len;
+   int result = all_i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
    return result;
 }
-
-
 
 
 /** Discard all known buses */
 void i2c_discard_buses() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   if (i2c_buses) {
-      g_ptr_array_free(i2c_buses, true);
-      i2c_buses= NULL;
+   if (all_i2c_buses) {
+      g_ptr_array_free(all_i2c_buses, true);
+      all_i2c_buses= NULL;
    }
+   // connected_buses = EMPTY_BIT_SET_256;
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -851,16 +867,16 @@ I2C_Bus_Info * i2c_detect_single_bus(int busno) {
    I2C_Bus_Info * businfo = NULL;
 
    if (i2c_device_exists(busno) ) {
-      if (!i2c_buses) {
-         i2c_buses = g_ptr_array_sized_new(1);
-         g_ptr_array_set_free_func(i2c_buses, (GDestroyNotify) i2c_free_bus_info);
+      if (!all_i2c_buses) {
+         all_i2c_buses = g_ptr_array_sized_new(1);
+         g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
       }
       businfo = i2c_new_bus_info(busno);
       businfo->flags = I2C_BUS_EXISTS | I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME;
       i2c_check_bus(businfo);
       if (debug)
          i2c_dbgrpt_bus_info(businfo, 0);
-      g_ptr_array_add(i2c_buses, businfo);
+      g_ptr_array_add(all_i2c_buses, businfo);
    }
 
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "busno=%d, returning: %p", busno, businfo);
@@ -1108,7 +1124,7 @@ void subinit_i2c_bus_core() {
 void init_i2c_bus_core() {
    init_i2c_bus_core_func_name_table();
    open_failures_reported = EMPTY_BIT_SET_256;
-   attached_buses = EMPTY_BIT_SET_256;
-   connected_buses = EMPTY_BIT_SET_256;
+   // attached_buses = EMPTY_BIT_SET_256;
+   // connected_buses = EMPTY_BIT_SET_256;
 }
 
