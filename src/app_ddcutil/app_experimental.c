@@ -43,7 +43,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Unused");
    REPORT_FLAG_OPTION(13, "Unused");
-   REPORT_FLAG_OPTION(14, "Do not try to get EDID from /sys");
+   REPORT_FLAG_OPTION(14, "Try to get EDID from /sys");
 
    rpt_vstring(depth+1, "Utility option --i1:          Unused");
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
