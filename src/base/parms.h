@@ -92,6 +92,18 @@
 
 
 //
+// Asynchronous Initialization
+//
+
+#define CHECK_ASYNC_NEVER 99
+/** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
+#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
+/** Parallelize DDC communication checks if three are least this number of /dev/i2c devices having an EDID */
+// on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
+#define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 2
+
+
+//
 // *** Miscellaneous
 //
 
@@ -107,22 +119,5 @@
 /** Maximum command arguments */
 // #define MAX_ARGS (MAX_SETVCP_VALUES*2)   // causes CMDID_* undefined
 #define MAX_ARGS 100        // hack
-
-/** Parallelize display checks during initialization if at least this number of displays */
-// on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
-#ifdef OLD
-#define DISPLAY_CHECK_ASYNC_NEVER    0xff
-#define DISPLAY_CHECK_ASYNC_THRESHOLD_STANDARD  3
-#define DISPLAY_CHECK_ASYNC_THRESHOLD_DEFAULT   DISPLAY_CHECK_ASYNC_NEVER
-#endif
-
-/** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
-#define DEFAULT_I2C_BUS_CHECK_ASYNC_MIN 4
-#define DEFAULT_DDC_CHECK_ASYNC_MIN 2
-
-
-/* Syslog */
-
-
 
 #endif /* PARMS_H_ */
