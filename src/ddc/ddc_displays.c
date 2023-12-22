@@ -79,7 +79,7 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDC;
 static GPtrArray * all_display_refs = NULL;         // all detected displays, array of Display_Ref *
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
-static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_MIN;
+static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
 #ifdef USE_USB
 static bool detect_usb_displays = true;
 #else
@@ -1995,7 +1995,6 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(read_unsupported_feature);
    RTTI_ADD_FUNC(threaded_initial_checks_by_dref);
    RTTI_ADD_FUNC(ddc_validate_display_ref);
-   RTTI_ADD_FUNC(i2c_reset_bus_info);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno);
 
