@@ -178,11 +178,9 @@ void ddc_recheck_bus() {
       changed = true;
    }
 
-
    if (changed) {
       get_sys_drm_connectors(/*rescan=*/true);
    }
-
 
    Bit_Set_256 old_connected_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
