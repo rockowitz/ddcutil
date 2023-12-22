@@ -274,14 +274,14 @@ init_performance_options(Parsed_Cmd * parsed_cmd)
       i2c_businfo_async_threshold = 999;
 #endif
 
-   int threshold = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
+   int threshold = DEFAULT_BUS_CHECK_ASYNC_THRESHOLD;
    if (parsed_cmd->i2c_bus_check_async_min >= 0) {
       threshold = parsed_cmd->i2c_bus_check_async_min;
    }
    i2c_businfo_async_threshold = threshold;
    // DBGMSG("set i2c_businfo_async_threshold = %d", threshold);
 
-   threshold = DEFAULT_DDC_CHECK_ASYNC_MIN;
+   threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
    if (parsed_cmd->ddc_check_async_min >= 0) {
       threshold= parsed_cmd->ddc_check_async_min;
    }
@@ -353,7 +353,7 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       EDID_Read_Uses_Smbus = true;
 #endif
    if (parsed_cmd->flags & CMD_FLAG_F14)
-      force_read_edid = true;
+      force_read_edid = false;
 
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
