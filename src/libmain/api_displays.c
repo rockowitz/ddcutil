@@ -381,30 +381,14 @@ ddca_redetect_displays() {
 }
 
 
-// static char dref_work_buf[100];
-
 const char *
 ddca_dref_repr(DDCA_Display_Ref ddca_dref) {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p", ddca_dref);
    char * result = NULL;
-   Display_Ref * dref = validated_ddca_display_ref(ddca_dref);
+   Display_Ref * dref = NULL;
+   validate_ddca_display_ref(ddca_dref, &dref);
    if (dref) {
-#ifdef TOO_MUCH_WORK
-      char * dref_type_name = io_mode_name(dref->ddc_io_mode);
-      switch (dref->ddc_io_mode) {
-      case(DISP_ID_BUSNO):
-         snprintf(dref_work_buf, 100,
-                  "Display Ref Type: %s, bus=/dev/i2c-%d", dref_type_name, dref->io_path.i2c_busno);
-         break;
-      case(DISP_ID_ADL):
-         snprintf(dref_work_buf, 100,
-                  "Display Ref Type: %s, adlno=%d.%d", dref_type_name, dref->io_path.adlno.iAdapterIndex, dref->io_path.adlno.iDisplayIndex);
-         break;
-      }
-      *repr = did_work_buf;
-#endif
-      // result = dref_short_name(dref);
       result = dref_repr_t(dref);
    }
    DBGMSF(debug, "Done.     Returning: %s", result);
@@ -419,7 +403,8 @@ ddca_dbgrpt_display_ref(
 {
    bool debug = false;
    DBGMSF(debug, "Starting.  ddca_dref = %p, depth=%d", ddca_dref, depth);
-   Display_Ref * dref = validated_ddca_display_ref(ddca_dref);
+   Display_Ref * dref = NULL;
+   validate_ddca_display_ref(ddca_dref, &dref);
    rpt_vstring(depth, "DDCA_Display_Ref at %p:", dref);
    if (dref)
       dbgrpt_display_ref(dref, depth+1);
