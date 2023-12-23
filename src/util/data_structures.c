@@ -1006,8 +1006,8 @@ Bit_Set_256 bs256_insert(
     result.bytes[bytendx] |= flagbit;
 
     if (debug) {
-       char * bs1 = g_strdup(bs256_to_string(bitset,  "",""));
-       char * bs2 = g_strdup(bs256_to_string(result, "",""));
+       char * bs1 = g_strdup(bs256_to_string_t(bitset,  "",""));
+       char * bs2 = g_strdup(bs256_to_string_t(result, "",""));
        printf("(%s) old bitstring=%s, value %d, returning: %s\n",
               __func__, bs1, bitno, bs2);
        free( bs1);
@@ -1202,7 +1202,7 @@ int bs256_count(
  *  @return string representation, caller should not free
  */
 static char *
-bs256_to_string_general(
+bs256_to_string_general_t(
       Bit_Set_256  bitset,
       bool         decimal_format,
       const char * value_prefix,
@@ -1272,12 +1272,12 @@ bs256_to_string_general(
  *  @return string representation, caller should not free
  */
 char *
-bs256_to_string(
+bs256_to_string_t(
       Bit_Set_256  bitset,
       const char * value_prefix,
       const char * sepstr)
 {
-   return bs256_to_string_general(bitset, false, value_prefix, sepstr);
+   return bs256_to_string_general_t(bitset, false, value_prefix, sepstr);
 }
 
 /** Returns a string representation of a #Bit_Set_256 as a list of decimal numbers.
@@ -1291,12 +1291,12 @@ bs256_to_string(
  *  @return string representation, caller should not free
  */
 char *
-bs256_to_string_decimal(
+bs256_to_string_decimal_t(
       Bit_Set_256  bitset,
       const char * value_prefix,
       const char * sepstr)
 {
-   return bs256_to_string_general(bitset, true, value_prefix, sepstr);
+   return bs256_to_string_general_t(bitset, true, value_prefix, sepstr);
 }
 
 
@@ -1509,7 +1509,7 @@ Bit_Set_256 bs256_from_string(
     ntsa_free(pieces, /* free_strings */ true);
 
     if (debug) {
-       const char * s = bs256_to_string(result, /*prefix*/ "x", /*sepstr*/ ",");
+       const char * s = bs256_to_string_t(result, /*prefix*/ "x", /*sepstr*/ ",");
        printf("Returning bit set: %s\n", s);
        if (*error_msgs_loc) {
           printf("(bs256_from_string) Returning error messages:\n");
