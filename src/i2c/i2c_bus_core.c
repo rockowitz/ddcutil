@@ -809,19 +809,20 @@ GPtrArray * i2c_detect_buses0() {
 Bit_Set_256 buses_bitset_from_businfo_array(GPtrArray * businfo_array, bool only_connected) {
    bool debug = false;
    assert(businfo_array);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d", businfo_array, businfo_array->len);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "businfo_array=%p, len=%d, only_connected=%s",
+         businfo_array, businfo_array->len, SBOOL(only_connected));
 
    Bit_Set_256 result = EMPTY_BIT_SET_256;
    for (int ndx = 0; ndx < businfo_array->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(businfo_array, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "businfo=%p", businfo);
-      if (businfo->flags & I2C_BUS_ADDR_0X50) {
+      if (!only_connected || businfo->flags & I2C_BUS_ADDR_0X50) {
          // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "BUS_ADDR_0X50 set");
          result = bs256_insert(result, businfo->busno);
       }
    }
 
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal(result, "", ", "));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning %s", bs256_to_string_decimal_t(result, "", ", "));
    return result;
 }
 
@@ -840,7 +841,6 @@ int i2c_detect_buses() {
    if (!all_i2c_buses) {
       all_i2c_buses = i2c_detect_buses0();
       g_ptr_array_set_free_func(all_i2c_buses, (GDestroyNotify) i2c_free_bus_info);
-      // connected_buses = buses_bitset_from_businfo_array(all_i2c_buses);
    }
    int result = all_i2c_buses->len;
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %d", result);
