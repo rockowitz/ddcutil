@@ -14,47 +14,8 @@
 #include "base/displays.h"
 #include "public/ddcutil_types.h"
 
-// Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref);
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
-
-#ifdef UNUSED
-#define VALIDATE_DDCA_DREF(_ddca_dref, _dref, _debug) \
-   do { \
-      _dref = validated_ddca_display_ref(_ddca_dref); \
-      if (!_dref) { \
-         DBGTRC_DONE(_debug, DDCA_TRC_API, "Returning DDCRC_ARG"); \
-         return DDCRC_ARG; \
-      } \
-   } while(0)
-#endif
-
-
-#define VALIDATE_DDCA_DREF2(_ddca_dref, _dref, _rc, _debug) \
-   do { \
-      _dref = validated_ddca_display_ref(_ddca_dref); \
-      if (!_dref) { \
-         _rc = DDCRC_ARG; \
-      } \
-   } while(0)
-
-
-#ifdef OLD
-#define WITH_VALIDATED_DR(ddca_dref, action) \
-   do { \
-      assert(library_initialized); \
-      DDCA_Status psc = 0; \
-      free_thread_error_detail(); \
-      Display_Ref * dref = validated_ddca_display_ref(ddca_dref); \
-      if (!dref)  { \
-         psc = DDCRC_ARG; \
-      } \
-      else { \
-         (action); \
-      } \
-      return psc; \
-   } while(0);
-#endif
 
 #define WITH_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
    do { \

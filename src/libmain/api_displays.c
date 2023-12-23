@@ -49,17 +49,6 @@ static inline bool valid_display_ref(Display_Ref * dref) {
 #endif
 
 
-Display_Ref * validated_ddca_display_ref(DDCA_Display_Ref ddca_dref) {
-   Display_Ref * dref = (Display_Ref *) ddca_dref;
-   if (dref) {
-      if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0  ||
-          !ddc_is_valid_display_ref(dref) )
-         dref=NULL;
-   }
-   return dref;
-}
-
-
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc) {
    if (dref_loc)
       *dref_loc = NULL;
