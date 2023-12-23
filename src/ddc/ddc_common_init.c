@@ -45,7 +45,8 @@
 #include "ddc_multi_part_io.h"
 #include "ddc_serialize.h"
 #include "ddc_services.h"
-#include "ddc/ddc_try_data.h"
+#include "ddc_try_data.h"
+#include "ddc_watch_displays.h"
 #include "ddc_vcp.h"
 
 #include "ddc_common_init.h"
@@ -115,6 +116,8 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_F6)
       watch_watching = true;
+   if (parsed_cmd->flags & CMD_FLAG_F8)
+      slow_watch = true;
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);
