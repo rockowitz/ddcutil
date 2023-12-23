@@ -28,6 +28,8 @@ typedef void (*Display_Change_Handler)(
                  GPtrArray *          added);
 #endif
 
+extern bool slow_watch;
+
 DDCA_Status ddc_start_watch_displays(bool use_udev_if_possible);
 DDCA_Status ddc_stop_watch_displays(bool wait);
 

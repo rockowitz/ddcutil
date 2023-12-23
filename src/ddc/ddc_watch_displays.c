@@ -10,7 +10,6 @@
 
 #include "config.h"
 #include "public/ddcutil_types.h"
-#include "ddc/ddc_watch_displays.h"
 
 /** \cond */
 #include <assert.h>
@@ -50,11 +49,11 @@
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_sysfs.h"
 
-#include "src/ddc/ddc_displays.h"
-#include "src/ddc/ddc_packet_io.h"
-#include "src/ddc/ddc_vcp.h"
+#include "ddc/ddc_displays.h"
+#include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_vcp.h"
 
-#include "src/ddc/ddc_watch_displays.h"
+#include "ddc/ddc_watch_displays.h"
 
 
 // Experimental code
@@ -90,6 +89,9 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
       free(wdd);
    }
 }
+
+
+bool slow_watch = false;
 
 
 #ifdef OLD_HOTPLUG_VERSION
@@ -139,7 +141,13 @@ void ddc_recheck_bus() {
       usleep(1000*1000);
    }
 
-   Bit_Set_256  old_attached_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, false);
+   Bit_Set_256  old_attached_buses_bitset  = buses_bitset_from_businfo_array(all_i2c_buses, false);
+   Bit_Set_256  old_connected_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
+
+   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset has %d bits set", bs256_count(old_connected_buses_bitset));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_attached_buses_bitset: %s",  bs256_to_string_decimal_t(old_attached_buses_bitset, "", ",") );
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset: %s",bs256_to_string_decimal_t(old_connected_buses_bitset, "", ","));
+
    Bit_Set_256  cur_attached_buses_bitset = i2c_detect_attached_buses_as_bitset();
    Bit_Set_256  newly_attached_buses_bitset = bs256_and_not(cur_attached_buses_bitset, old_attached_buses_bitset);
    Bit_Set_256  newly_detached_buses_bitset = bs256_and_not(old_attached_buses_bitset, cur_attached_buses_bitset);
@@ -171,8 +179,16 @@ void ddc_recheck_bus() {
          DDCA_IO_Path iopath;
          iopath.io_mode = DDCA_IO_I2C;
          iopath.path.i2c_busno = busno;
-         ddc_emit_display_detection_event(DDCA_EVENT_BUS_ATTACHED, NULL, iopath);
 
+         I2C_Bus_Info * new_businfo = i2c_new_bus_info(iopath.path.i2c_busno);
+         new_businfo->flags = I2C_BUS_VALID_NAME_CHECKED | I2C_BUS_HAS_VALID_NAME | I2C_BUS_EXISTS;
+         i2c_check_bus(new_businfo);
+         g_ptr_array_add(all_i2c_buses, new_businfo);
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Added businfo for bus /dev/i2c-%d", new_businfo->busno);
+         if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+            i2c_dbgrpt_bus_info(new_businfo, 1);
+         DBGTRC(true, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
+         ddc_emit_display_detection_event(DDCA_EVENT_BUS_ATTACHED, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -182,8 +198,6 @@ void ddc_recheck_bus() {
       get_sys_drm_connectors(/*rescan=*/true);
    }
 
-   Bit_Set_256 old_connected_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_bitset has %d bits set", bs256_count(old_bitset));
 
    GPtrArray * new_buses = i2c_detect_buses0();
    Bit_Set_256 new_connected_buses_bitset = buses_bitset_from_businfo_array(new_buses, true);
@@ -621,7 +635,10 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
 
    while (!terminate_watch_thread) {
       ddc_recheck_bus();
-      usleep(3000*1000);
+      int microsec = 3000*1000;
+      if (slow_watch)
+         microsec *= 5;
+      usleep(microsec);
       // printf("."); fflush(stdout);
    }
    DBGTRC_DONE(true, TRACE_GROUP, "Terminating");
