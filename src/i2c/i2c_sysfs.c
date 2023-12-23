@@ -1628,7 +1628,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
          result = bs256_insert(result, cur->busno);
    }
    // result = bs256_insert(result, 33); // for testing
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", bs256_to_string(result, "0x", ", "));
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s", bs256_to_string_t(result, "0x", ", "));
    return result;
 }
 
@@ -1653,7 +1653,7 @@ void consolidated_i2c_sysfs_report(int depth) {
 
    rpt_label(d0, "*** Sysfs I2C devices possibly associated with displays ***");
    Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();
-   rpt_vstring(d0, "I2C buses to check: %s", bs256_to_string(buses, "x", " "));
+   rpt_vstring(d0, "I2C buses to check: %s", bs256_to_string_t(buses, "x", " "));
    rpt_nl();
 
    rpt_label(d0, "*** Sys_Conflicting_Driver report: Check for Conflicting Device Drivers ***");

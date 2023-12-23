@@ -104,7 +104,7 @@ void app_probe_display_by_dh(Display_Handle * dh)
       free(s0);
 #endif
       f0printf(fout, "\nReadable features declared in capabilities string: %s\n",
-                     bs256_to_string(features_declared, "x", ", "));
+                     bs256_to_string_t(features_declared, "x", ", "));
 
       Bit_Set_256 caps_not_seen = bs256_and_not(features_declared, features_seen);
       Bit_Set_256 seen_not_caps = bs256_and_not(features_seen, features_declared);

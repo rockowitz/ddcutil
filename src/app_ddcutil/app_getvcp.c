@@ -167,7 +167,7 @@ app_show_vcp_subset_values_by_dh(
 
    if (features_seen)
       DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "features_seen=%s",
-                                           bs256_to_string(*features_seen, "x", ", ") );
+                                           bs256_to_string_t(*features_seen, "x", ", ") );
    else
       DBGTRC_RET_DDCRC(debug, TRACE_GROUP, psc, "");
    return psc;

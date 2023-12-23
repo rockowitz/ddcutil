@@ -292,7 +292,7 @@ verify_i2c_access() {
    Bit_Set_256 buses = get_possible_ddc_ci_bus_numbers();  //sysfs bus numbers, not dev-i2c
    buses_ct = bs256_count(buses);
    DBGTRC(debug, TRACE_GROUP, "/sys/bus/i2c/devices to check: %s",
-                              bs256_to_string_decimal(buses, "i2c-", ", "));
+                              bs256_to_string_decimal_t(buses, "i2c-", ", "));
    if (buses_ct == 0) {
       fprintf(stderr, "No /sys/bus/i2c buses that might be used for DDC/CI communication found.\n");
       fprintf(stderr, "No display adapters with i2c buses appear to exist.\n");
@@ -324,13 +324,13 @@ verify_i2c_access() {
 
       if (buses_without_devices_ct > 0) {
          fprintf(stderr, "/sys/bus/i2c buses without /dev/i2c-N devices: %s\n",
-                bs256_to_string_decimal(buses_without_devices, "/sys/bus/i2c/devices/i2c-", " ") );
+                bs256_to_string_decimal_t(buses_without_devices, "/sys/bus/i2c/devices/i2c-", " ") );
          fprintf(stderr, "Driver i2c_dev must be loaded or builtin\n");
          fprintf(stderr, "See https://www.ddcutil.com/kernel_module\n");
       }
       if (inaccessible_devices_ct > 0) {
          fprintf(stderr, "Devices possibly used for DDC/CI communication cannot be opened: %s\n",
-                bs256_to_string_decimal(inaccessible_devices, "/dev/i2c-", " "));
+                bs256_to_string_decimal_t(inaccessible_devices, "/dev/i2c-", " "));
          fprintf(stderr, "See https://www.ddcutil.com/i2c_permissions\n");
       }
    }

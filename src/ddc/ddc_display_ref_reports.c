@@ -540,7 +540,7 @@ record_i2c_edid_use(GPtrArray * edid_use_records, Display_Ref * dref) {
          EDID_Use_Record * cur = get_edid_use_record(edid_use_records, binfo->edid->bytes);
          cur->bus_numbers = bs256_insert(cur->bus_numbers, binfo->busno);
          DBGTRC_DONE(debug, DDCA_TRC_NONE, "Updated bus list %s for edid %s",
-                         bs256_to_string_decimal(cur->bus_numbers, NULL, ", "),
+                         bs256_to_string_decimal_t(cur->bus_numbers, NULL, ", "),
                          hexstring_t(binfo->edid->bytes+122,6));
       }
    }
@@ -561,7 +561,7 @@ report_ambiguous_connector_for_edid(GPtrArray * edid_use_records, int depth) {
       EDID_Use_Record * cur_use_record = g_ptr_array_index(edid_use_records, ndx);
       if (bs256_count(cur_use_record->bus_numbers) > 1) {
          rpt_vstring(depth,"Displays with I2C bus numbers %s have identical EDIDs.",
-                             bs256_to_string_decimal(cur_use_record->bus_numbers, NULL, ", "));
+                             bs256_to_string_decimal_t(cur_use_record->bus_numbers, NULL, ", "));
          rpt_label(depth, "DRM connector names may not be accurate.");
       }
    }

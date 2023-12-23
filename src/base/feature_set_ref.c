@@ -112,7 +112,7 @@ char * feature_subset_names(VCP_Feature_Subset subset_ids) {
 void dbgrpt_feature_set_ref(Feature_Set_Ref * fsref, int depth) {
    rpt_vstring(depth, "subset: %s (%d)",  feature_subset_name(fsref->subset), fsref->subset);
 //   rpt_vstring(depth, "specific_feature:  0x%02x", fsref->specific_feature);
-   rpt_vstring(depth, "multi features: %s", bs256_to_string(fsref->features,  "x", " "));
+   rpt_vstring(depth, "multi features: %s", bs256_to_string_t(fsref->features,  "x", " "));
 }
 
 
@@ -131,7 +131,7 @@ char * fsref_repr_t(Feature_Set_Ref * fsref) {
    //         fsref->specific_feature);
               bs256_first_bit_set(fsref->features));
    else if (fsref->subset == VCP_SUBSET_MULTI_FEATURES)
-      snprintf(buf, 200, "[VCP_SUBSET_MULTI_FEATURES, %s]", bs256_to_string(fsref->features, "x", " "));
+      snprintf(buf, 200, "[VCP_SUBSET_MULTI_FEATURES, %s]", bs256_to_string_t(fsref->features, "x", " "));
    else
       snprintf(buf, 200, "[%s]",  feature_subset_name(fsref->subset));
    return buf;
