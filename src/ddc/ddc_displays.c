@@ -1511,6 +1511,8 @@ ddc_validate_display_ref(Display_Ref * dref) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
    assert(all_display_refs);
    DDCA_Status ddcrc = DDCRC_ARG;
+   if (!dref)
+      goto bye;
    if (memcmp(dref->marker, DISPLAY_REF_MARKER, 4) != 0) {
       goto bye;
    }
@@ -1529,7 +1531,10 @@ ddc_validate_display_ref(Display_Ref * dref) {
       }
    }
 bye:
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p, dispno=%d", dref, dref->dispno);
+   if (dref)
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p, dispno=%d", dref, dref->dispno);
+   else
+      DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "dref=%p", dref);
    return ddcrc;
 }
 
