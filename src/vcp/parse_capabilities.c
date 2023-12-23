@@ -821,7 +821,7 @@ Bit_Set_256 get_parsed_capabilities_feature_ids(
       }
    }
 
-   DBGMSF(debug, "Returning Bit_Set_256: %s", bs256_to_string(flags, "x", ", ") );
+   DBGMSF(debug, "Returning Bit_Set_256: %s", bs256_to_string_t(flags, "x", ", ") );
    return flags;
 }
 
