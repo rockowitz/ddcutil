@@ -6,13 +6,13 @@
 // Copyright (C) 2015-2023 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
  
-
 #ifndef API_DISPLAYS_INTERNAL_H_
 #define API_DISPLAYS_INTERNAL_H_
 
+#include "public/ddcutil_types.h"
+
 #include "base/core.h"
 #include "base/displays.h"
-#include "public/ddcutil_types.h"
 
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
@@ -28,7 +28,6 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
          (_action); \
       } \
    } while(0);
-
 
 #ifdef UNUSED
 #define WITH_VALIDATED_DH2(ddca_dh, action) \
