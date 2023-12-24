@@ -1656,12 +1656,17 @@ void ddc_emit_display_detection_event(
       DDCA_IO_Path            io_path)
 {
    bool debug = false || watch_watching;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
-         dref, dref_repr_t(dref), event_type, ddc_display_event_type_name(event_type));
-   if (dref)
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DREF_REMOVED=%s", SBOOL(dref->flags&DREF_REMOVED));
-   else
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "io_path=%s", dpath_repr_t(&io_path));
+   if (dref) {
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s%s, DREF_REMOVED=%s, event_type=%d=%s",
+            dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
+            event_type, ddc_display_event_type_name(event_type));
+   }
+   else {
+      DBGTRC_STARTING(debug, TRACE_GROUP, "io_path=%s, event_type=%d=%s",
+            dpath_repr_t(&io_path),
+            event_type, ddc_display_event_type_name(event_type));
+   }
+
    DDCA_Display_Detection_Event report;
    report.dref = (void*) dref;
    report.event_type = event_type;
@@ -1679,6 +1684,7 @@ void ddc_emit_display_detection_event(
          func(report);
       }
    }
+
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
          (display_detection_callbacks) ? display_detection_callbacks->len : 0);
 }
