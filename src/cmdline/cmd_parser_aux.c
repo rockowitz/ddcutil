@@ -52,9 +52,12 @@ static Cmd_Desc cmdinfo[] = {
    {CMDID_PROBE,        "probe",          5,  0,       0,                  Option_Explicit_Display},
    {CMDID_SAVE_SETTINGS,"scs",            3,  0,       0,                  Option_Explicit_Display},
    {CMDID_DISCARD_CACHE,"discard",        4,  1,       2,                  Option_None},
-   {CMDID_C1,           "c1",             2,  0,       0,                  Option_None},
    {CMDID_LIST_RTTI,    "traceable-functions",
                                           2,  0,       0,                  Option_None},
+   {CMDID_C1,           "c1",             2,  0,       9,                  Option_None},
+   {CMDID_C2,           "c2",             2,  0,       9,                  Option_None},
+   {CMDID_C3,           "c3",             2,  0,       9,                  Option_None},
+   {CMDID_C4,           "c4",             2,  0,       9,                  Option_None},
 };
 static int cmdct = sizeof(cmdinfo)/sizeof(Cmd_Desc);
 

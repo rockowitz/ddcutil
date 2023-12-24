@@ -941,6 +941,17 @@ main(int argc, char *argv[]) {
       main_rc = EXIT_SUCCESS;
    }
 
+   else if (parsed_cmd->cmd_id == CMDID_C2) {
+      DBGMSG("Executing temporarily defined command C2: noop");
+      main_rc = EXIT_SUCCESS;
+   }
+
+   else if (parsed_cmd->cmd_id == CMDID_C3 || parsed_cmd->cmd_id == CMDID_C4) {
+      Cmd_Desc * desc = get_command(parsed_cmd->cmd_id);
+      DBGMSG("Unrecognized command: %s", desc->cmd_name);
+      main_rc = EXIT_FAILURE;
+   }
+
 #ifdef INCLUDE_TESTCASES
    else if (parsed_cmd->cmd_id == CMDID_LISTTESTS) {
       show_test_cases();

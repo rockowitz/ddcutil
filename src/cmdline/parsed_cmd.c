@@ -62,6 +62,9 @@ Value_Name_Table cmd_id_table = {
       VNT(CMDID_DISCARD_CACHE ,  "discard cache"),
       VNT(CMDID_LIST_RTTI     ,  "traceable functions"),
       VNT(CMDID_C1            ,  "c1"),
+      VNT(CMDID_C2            ,  "c2"),
+      VNT(CMDID_C3            ,  "c3"),
+      VNT(CMDID_C4            ,  "c4"),
       VNT_END
 };
 
