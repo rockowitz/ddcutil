@@ -35,10 +35,10 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
    REPORT_FLAG_OPTION(4, "Read strategy tests");
    REPORT_FLAG_OPTION(5, "Use non-default value for EDID read uses I2C layer");
-   REPORT_FLAG_OPTION(6, "Watch display connection events");
+   REPORT_FLAG_OPTION(6, "Debug watch display connection events");
    REPORT_FLAG_OPTION(7, "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
-   REPORT_FLAG_OPTION(9,  "Unused");
+   REPORT_FLAG_OPTION(9,  "Watch using udev");
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Unused");
