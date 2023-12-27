@@ -31,6 +31,7 @@
 /** \endcond */
 
 #include "file_util.h"
+#include "report_util.h"
 #include "string_util.h"
 #include "subprocess_util.h"
 
@@ -349,3 +350,14 @@ intmax_t get_process_id()
    pid_t pid = syscall(SYS_getpid);
    return pid;
 }
+
+
+void rpt_lsof(const char * fqfn, int depth) {
+   // rpt_vstring(depth, "Programs with %s open:");
+   char cmd[PATH_MAX+20];
+   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
+   execute_shell_cmd_rpt(cmd, depth);
+}
+
+
+

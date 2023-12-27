@@ -24,4 +24,6 @@ bool is_module_loadable(const char * module_name);
 intmax_t get_thread_id();
 intmax_t get_process_id();
 
+void rpt_lsof(const char * fqfn, int depth);
+
 #endif /* LINUX_UTIL_H_ */
