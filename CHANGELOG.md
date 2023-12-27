@@ -41,7 +41,7 @@
 - Some USB-only code was not iftested out when **configure** option ***--disable-usb*** was set. (Issue 355)
 - Always set sleep multiplier to at least 1.0 for commands **setvcp** and **scs**. Addresses reports
   that aggressive optimization caused setvcp to fail.
-- Cross-thread locking handles situtations where adisplay ref does not yet exist, e.g. reading EDID
+- Cross-thread locking handles situtations where a display ref does not yet exist, e.g. reading EDID
 - Memory leaks.
 
 ### Shared library
@@ -76,8 +76,8 @@ file is libddcutil.so.5.x.x.
     bus instead gives client complete control as to what to do with the messages.
   - ddca_stop_watch_displays(), ddca_start_watch_displays()
   - Cross-instance locking (experimental). Uses flock() to coordinate I2C bus
-    coordinate access when multiple instances of libddcutil are executing.
-    Enabled by option ***--enable-cross-instance-locks***.
+    access when multiple instances of libddcutil are executing. Enabled by option
+    ***--enable-cross-instance-locks***.
 
 #### Changed
 - Functions that depend on initialization and that return a status code now 
