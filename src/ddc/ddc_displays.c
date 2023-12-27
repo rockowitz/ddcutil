@@ -45,6 +45,7 @@
 
 #include "base/core.h"
 #include "base/ddc_packets.h"
+#include "base/dsa2.h"
 #include "base/feature_metadata.h"
 #include "base/linux_errno.h"
 #include "base/monitor_model_key.h"
@@ -65,12 +66,13 @@
 
 #include "dynvcp/dyn_feature_files.h"
 
+#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_serialize.h"
-#include "ddc/ddc_vcp.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_vcp.h"
+#include "ddc/ddc_watch_displays.h"
 
-#include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 
 // Default trace class for this file
@@ -1455,7 +1457,14 @@ ddc_redetect_displays() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "all_displays=%p", all_display_refs);
    ddc_discard_detected_displays();
+   if (dsa2_is_enabled())
+      dsa2_save_persistent_stats();
+   free_sysfs_drm_connector_names();
+
+   init_sysfs_drm_connector_names();
    get_sys_drm_connectors(/*rescan=*/true);
+   if (dsa2_is_enabled())
+      dsa2_restore_persistent_stats();
    i2c_detect_buses();
    all_display_refs = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
@@ -1517,17 +1526,35 @@ ddc_validate_display_ref(Display_Ref * dref) {
       goto bye;
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
-   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-      Display_Ref* cur = g_ptr_array_index(all_display_refs, ndx);
-      if (cur == dref) {
-         // need to check for dref->dispno < 0 ?
-         if (dref->flags & DREF_REMOVED)
+   if (watching_using_udev) {
+      if (dref->drm_connector) {
+         int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
+         bool found_edid = RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid");
+         if (!found_edid)
             ddcrc = DDCRC_DISCONNECTED;
-         else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+         else if (dpms_check_drm_asleep_by_dref(dref))
             ddcrc = DDCRC_DPMS_ASLEEP;
          else
             ddcrc = DDCRC_OK;
-         break;
+      }
+      else {
+         DBGMSG("dref->drm_connector not set.  returning DDCRC_OK");
+         ddcrc = DDCRC_OK;
+      }
+   }
+   else {
+      for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
+         Display_Ref* cur = g_ptr_array_index(all_display_refs, ndx);
+         if (cur == dref) {
+            // need to check for dref->dispno < 0 ?
+            if (dref->flags & DREF_REMOVED)
+               ddcrc = DDCRC_DISCONNECTED;
+            else if (dref->flags & DREF_DPMS_SUSPEND_STANDBY_OFF)
+               ddcrc = DDCRC_DPMS_ASLEEP;
+            else
+               ddcrc = DDCRC_OK;
+            break;
+         }
       }
    }
 bye:
@@ -1603,6 +1630,7 @@ ddc_is_usb_display_detection_enabled() {
 //
 
 GPtrArray* display_detection_callbacks = NULL;
+GPtrArray* display_hotplug_callbacks = NULL;
 
 /** Registers a display detection event callback
  *
@@ -1614,13 +1642,25 @@ GPtrArray* display_detection_callbacks = NULL;
  *  It is not an error if the function is already registered.
  */
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
    bool ok = generic_register_callback(&display_detection_callbacks, func);
    DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
+
+
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
+   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
 
 
 /** Deregisters a detection event callback function
@@ -1643,6 +1683,16 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
 }
 
 
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
+   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
 /** Executes the registered callbacks for a display detection event.
  *
  *  @param  event_type  e.g. DDCA_EVENT_CONNECTED, DDCA_EVENT_AWAKE
@@ -1657,7 +1707,7 @@ void ddc_emit_display_detection_event(
 {
    bool debug = false || watch_watching;
    if (dref) {
-      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s%s, DREF_REMOVED=%s, event_type=%d=%s",
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
             event_type, ddc_display_event_type_name(event_type));
    }
@@ -1703,6 +1753,41 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    }
    return result;
 }
+
+// SIMPLE
+
+uint64_t last_emit_millisec = 0;
+uint64_t double_tap_millisec = 500;
+
+void ddc_emit_display_hotplug_event()
+{
+   bool debug = true || watch_watching;
+   uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd", last_emit_millisec, cur_emit_millisec);
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
+   int callback_ct = 0;
+
+   if ( (cur_emit_millisec - last_emit_millisec) > double_tap_millisec) {
+      DBGMSF(debug, "emitting");
+      if (display_hotplug_callbacks) {
+         for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
+            DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
+            func();
+         }
+         callback_ct =  display_hotplug_callbacks->len;
+      }
+   }
+   else {
+      DBGMSF(debug, "double tap ");
+   }
+   last_emit_millisec = cur_emit_millisec;
+
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
+}
+
+
 
 
 #ifdef DETAILED_DISPLAY_CHANGE_HANDLING

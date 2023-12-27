@@ -66,6 +66,13 @@ void        ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
                                              DDCA_IO_Path            io_path);
 const char* ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
 
+// simpler
+
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+void        ddc_emit_display_hotplug_event();
+
+
 // Initialization and termination
 void        init_ddc_displays();
 void        terminate_ddc_displays();
