@@ -287,3 +287,59 @@ void report_udev_device(struct udev_device * dev, int depth) {
       }
    }
 }
+
+
+void show_udev_list_entries(
+      struct udev_list_entry * entries,
+      char * title)
+{
+   printf( "   %s: \n", title);
+   struct udev_list_entry * cur = NULL;
+   udev_list_entry_foreach(cur, entries) {
+      const char * name  = udev_list_entry_get_name(cur);
+      const char * value = udev_list_entry_get_value(cur);
+      printf("      %s  -> %s\n", name, value);
+   }
+}
+
+
+void show_sysattr_list_entries(
+      struct udev_device *       dev,
+      struct udev_list_entry * head)
+{
+   int d1 = 1;
+   int d2 = 2;
+
+   rpt_vstring(d1, "Sysattrs:");
+   struct udev_list_entry * cur_entry = NULL;
+   udev_list_entry_foreach(cur_entry, head) {
+      const char * attr_name   = udev_list_entry_get_name(cur_entry);
+#ifndef NDEBUG
+      const char * attr_value  = udev_list_entry_get_value(cur_entry);
+      assert(attr_value == NULL);
+#endif
+      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
+      // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
+      if (attr_value2 && strchr(attr_value2, '\n')) {
+      // if (streq(attr_name, "uevent")) {
+         // output is annoying to visually scan since it contains newlines
+         char * av = g_strdup(attr_value2);
+         char * p = av;
+         while (*p) {
+            if (*p == 0x0a)
+               *p = ',';
+            p++;
+         }
+         rpt_vstring(d2, "%s -> %s", attr_name, av);
+         free(av);
+      }
+      // n. attr_name "descriptors" returns a hex value, not a null-terminated string
+      //    should display as hex, but how to determine length?
+      // for example of reading, see http://fossies.org/linux/systemd/src/udev/udev-builtin-usb_id.c
+      // not worth pursuing
+      else {
+         rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
+      }
+   }
+}
+

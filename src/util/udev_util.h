@@ -35,4 +35,11 @@ GPtrArray * filter_device_summaries(GPtrArray * summaries, Udev_Summary_Filter_F
 
 void report_udev_device(struct udev_device * dev, int depth);
 
+void show_udev_list_entries(
+      struct udev_list_entry * entries,
+      char * title);
+void show_sysattr_list_entries(
+      struct udev_device *       dev,
+      struct udev_list_entry * head);
+
 #endif /* UDEV_UTIL_H_ */
