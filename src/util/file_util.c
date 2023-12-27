@@ -14,6 +14,7 @@
 #include <glib-2.0/glib.h>
 #include <linux/limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -863,3 +864,26 @@ int fopen_mkdir(
    return rc;
 }
 
+
+long get_inode_by_fn(const char * fqfn) {
+   long result = -1;
+   if (fqfn) {
+      struct stat stat_buf;
+      int rc = stat(fqfn, &stat_buf);
+      if (rc == 0) {
+         result = stat_buf.st_ino;
+      }
+   }
+   return result;
+}
+
+
+long get_inode_by_fd(int fd) {
+   long result = -1;
+   struct stat stat_buf;
+   int rc = fstat(fd, &stat_buf);
+   if (rc == 0) {
+      result = stat_buf.st_ino;
+   }
+   return result;
+}

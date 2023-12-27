@@ -139,4 +139,9 @@ int fopen_mkdir(
       FILE *       ferr,
       FILE **      fp_loc);
 
+long get_inode_by_fn(const char * fqfn);
+
+long get_inode_by_fd(int fd);
+
+
 #endif /* FILE_UTIL_H_ */
