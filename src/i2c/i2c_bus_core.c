@@ -28,11 +28,12 @@
 #include "util/coredefs_base.h"
 #include "util/debug_util.h"
 #include "util/edid.h"
+#include "util/error_info.h"
 #include "util/failsim.h"
 #include "util/file_util.h"
 #include "util/glib_string_util.h"
 #include "util/i2c_util.h"
-#include "util/report_util.h"
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 #include "util/subprocess_util.h"
@@ -125,7 +126,7 @@ void add_open_failures_reported(Bit_Set_256 failures) {
 }
 
 
-/** Adds a bus number to the set of open failures reported.
+/** Adds a single bus number to the set of open failures already reported.
  *
  *  @param  busno     /dev/i2c-N bus number
  */
@@ -141,71 +142,112 @@ void include_open_failures_reported(int busno) {
  *  @param busno     bus number
  *  @param callopts  call option flags, controlling failure action
  *
+ *
  *  @retval >=0     Linux file descriptor
  *  @retval -errno  negative Linux errno if open fails
  *
  *  Call options recognized
  *  - CALLOPT_WAIT
  */
-int i2c_open_bus(int busno, Byte callopts) {
+Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "busno=%d, callopts=0x%02x", busno, callopts);
 
    char filename[20];
-   int  fd;             // Linux file descriptor
+   Error_Info * master_error = NULL;
+   *fd_loc = -1;   // ?
 
-   Display_Lock_Flags ddisp_flags = DDISP_NONE;
-      ddisp_flags |= DDISP_WAIT;
-
+   Display_Lock_Flags ddisp_flags = DDISP_WAIT;
    DDCA_IO_Path dpath;
    dpath.io_mode = DDCA_IO_I2C;
    dpath.path.i2c_busno = busno;
-   Error_Info * err = lock_display_by_dpath(dpath, ddisp_flags);
-   if (err) {
-      fd = err->status_code;
+   master_error = lock_display_by_dpath(dpath, ddisp_flags);
+   if (master_error) {
       goto bye;
    }
 
+   int fd = -1;
    snprintf(filename, 19, "/dev/"I2C"-%d", busno);
    RECORD_IO_EVENT(
          -1,
          IE_OPEN,
          ( fd = open(filename, (callopts & CALLOPT_RDONLY) ? O_RDONLY : O_RDWR) )
          );
-   // DBGMSG("post open, fd=%d", fd);
-   // returns file descriptor if successful
-   // -1 if error, and errno is set
-   int errsv = errno;
+   // if successful returns file descriptor, if fail, returns -1 and errno is set
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "open(%s) returned %d", filename, fd);
 
    if (fd < 0) {
-      if (!bs256_contains(open_failures_reported, busno))
-         f0printf(ferr(), "Open failed for %s: errno=%s\n", filename, linux_errno_desc(errsv));
-      fd = -errsv;
+      master_error = ERRINFO_NEW(-errno, "Open failed for %s", filename);
+      unlock_display_by_dpath(dpath);
+      goto bye;
    }
-   else if (cross_instance_locks_enabled) {
-      int operation = LOCK_EX;
-      if ( !(callopts & CALLOPT_WAIT) )
-         operation |= LOCK_NB;
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling flock(%d,..)...", fd);
-      int rc = flock(fd, operation);
-      if (rc < 0) {
-         errsv = errno;
-         DBGTRC_NOPREFIX(true, TRACE_GROUP, "flock() returned: %s", psc_desc(-errsv));
-         if (errsv == EWOULDBLOCK) {
-            // CALLOPT_WAIT was not specified
-            close(fd);
-            fd = DDCRC_LOCKED;  // need a different status code for cross-process?
+
+   if (cross_instance_locks_enabled) {
+      int operation = LOCK_EX|LOCK_NB;
+      uint64_t start_nanos = cur_realtime_nanosec();
+      uint64_t max_wait_sec = 0;
+      uint64_t max_nanos = start_nanos;
+      int flock_poll_millisec = 500;
+      int flock_poll_microsec = flock_poll_millisec * 1000;
+      if (callopts & CALLOPT_WAIT) {
+         max_wait_sec = 3;
+      }
+      max_nanos = start_nanos + (max_wait_sec * 1000 * 1000 * 1000);
+      Status_Errno lockrc = 0;
+      while(true) {
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling flock(%d,0x%04x)...", fd, operation);
+         int flockrc = flock(fd, operation);
+         if (flockrc == 0)  {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock succeeded");
+            break;
          }
-         else {
-            DBGTRC_NOPREFIX(true, TRACE_GROUP, "Ignoring unexpected error from flock(): %s",
-                            psc_desc(-errsv));
-         }
+         assert(flockrc == -1);
+         int errsv = errno;
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "flock() returned: %s", psc_desc(-errsv));
+         if (errsv == EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
+           uint64_t now = cur_realtime_nanosec();
+           if (now < max_nanos) {
+              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping");
+              usleep(flock_poll_microsec);
+              continue;
+           }
+           else {
+              DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Max wait exceeded for %s", filename);
+              if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
+                 rpt_vstring(0, "Programs holding %s open:", filename);
+                 rpt_lsof(filename, 1);
+              }
+              lockrc = DDCRC_FLOCKED;
+              break;
+           }
+        }
+        else {
+            DBGTRC_NOPREFIX(true, TRACE_GROUP, "Unexpected error from flock() for %s: %s",
+                  filename, psc_desc(-errsv));
+            lockrc = -errsv;
+            break;
+        }
+     }
+     if (lockrc != 0) {
+        DBGTRC_NOPREFIX(true, TRACE_GROUP, "Cross instance locking failed");
+         close(*fd_loc);
+         unlock_display_by_dpath(dpath);
+         master_error = ERRINFO_NEW(lockrc, "Cross instance locking failed. busno=%d", busno);
       }
    }
 
 bye:
-   DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
-   return fd;
+   if (master_error) {
+      // DBGTRC_RET_DDCRC(true, TRACE_GROUP, fd, "busno=%d", busno);
+   }
+   else {
+      *fd_loc = fd;
+      // DBGTRC_DONE(debug, TRACE_GROUP, "busno=%d, Returning file descriptor: %d", busno, fd);
+   }
+
+   ASSERT_IFF(master_error, *fd_loc == -1);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, master_error, "busno=%d, Set file descriptor *fd_loc = %d", busno, *fd_loc);
+   return master_error;
 }
 
 
@@ -254,7 +296,7 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
       result = -errsv;
    }
    assert(result <= 0);
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d, filename=%s",fd, filename_for_fd_t(fd));
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "fd=%d",fd);
    return result;
 }
 
@@ -340,8 +382,9 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "busno = %d", businfo->busno);
    bool result = false;
-   int fd = i2c_open_bus(businfo->busno, CALLOPT_ERR_MSG);
-   if (fd >= 0) {    //open succeeded
+   int fd = -1;
+   Error_Info * erec = i2c_open_bus(businfo->busno, CALLOPT_ERR_MSG, &fd);
+   if (!erec) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", businfo->busno);
       Buffer * edidbuf = buffer_new(256, "");
       Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(fd, edidbuf);
@@ -350,6 +393,8 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
       buffer_free(edidbuf, "");
       i2c_close_bus(businfo->busno,fd, CALLOPT_ERR_MSG);
     }
+   else
+      ERRINFO_FREE(erec);
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
@@ -459,7 +504,6 @@ i2c_detect_x37(int fd) {
 }
 
 
-
 /** Inspects an I2C bus.
  *
  *  Takes the number of the bus to be inspected from the #I2C_Bus_Info struct passed
@@ -482,16 +526,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
-      // may or may not succeed, depending on the driver:
-      char * connector2 = find_sysfs_drm_connector_by_busno(sysfs_drm_connector_names, bus_info->busno);
       char * connector = get_drm_connector_by_busno(bus_info->busno);
-      //  assert(streq(connector2, connector));
-      if ( !streq(connector2, connector) && debug ) {
-         DBGMSF(debug, "connector2: |%s|", connector2);
-         DBGMSF(debug, "connector:  |%s|", connector);
-      }
-      free(connector2);
-
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
       if (connector) {
@@ -528,9 +563,11 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       }
 
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling i2c_open_bus..");
-      int fd = i2c_open_bus(bus_info->busno, CALLOPT_ERR_MSG);
+      int fd = -1;
+      Error_Info *err = i2c_open_bus(bus_info->busno, CALLOPT_WAIT, &fd);
       if (fd < 0) {
-         bus_info->open_errno = fd;
+         bus_info->open_errno = err->status_code;
+         ERRINFO_FREE(err);
       }
       else {    //open succeeded
           DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Opened bus /dev/i2c-%d", bus_info->busno);
@@ -1107,17 +1144,8 @@ static void init_i2c_bus_core_func_name_table() {
 }
 
 
-GPtrArray* drm_connector_names = NULL;
-
 void subinit_i2c_bus_core() {
-   bool debug = false;
-   sysfs_drm_connector_names = get_sysfs_drm_connector_names();
-   if (debug) {
-      DBGMSG("drm_connector_names:");
-      for (int ndx = 0; ndx < sysfs_drm_connector_names->len; ndx++) {
-         DBGMSG("   %s", g_ptr_array_index(sysfs_drm_connector_names, ndx));
-      }
-   }
+   init_sysfs_drm_connector_names();
 }
 
 
