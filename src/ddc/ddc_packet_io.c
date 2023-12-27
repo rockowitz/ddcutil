@@ -114,11 +114,14 @@ ddc_validate_display_handle(Display_Handle * dh) {
    DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
    assert(open_displays);
 
-   DDCA_Status result = DDCRC_OK;
-   g_mutex_lock (&open_displays_mutex);
-   if (!g_hash_table_contains(open_displays, dh) )
-      result = DDCRC_ARG;
-   g_mutex_unlock(&open_displays_mutex);
+   DDCA_Status result = ddc_validate_display_ref(dh->dref);
+   if (result == DDCRC_OK) {
+      g_mutex_lock (&open_displays_mutex);
+      if (!g_hash_table_contains(open_displays, dh) )
+         result = DDCRC_ARG;
+      g_mutex_unlock(&open_displays_mutex);
+   }
+
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
