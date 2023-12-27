@@ -935,7 +935,7 @@ main(int argc, char *argv[]) {
    else if (parsed_cmd->cmd_id == CMDID_C1) {
       DBGMSG("Executing temporarily defined command C1");
       ddc_ensure_displays_detected();
-      ddc_start_watch_displays(false);
+      ddc_start_watch_displays(parsed_cmd->flags&CMD_FLAG_F9);
       DBGMSG("Sleeping for 60 minutes");
       sleep(60*60);
       main_rc = EXIT_SUCCESS;
