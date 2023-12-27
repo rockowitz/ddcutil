@@ -36,6 +36,7 @@
 #include "util/sysfs_filter_functions.h"
 #include "util/sysfs_i2c_util.h"
 #include "util/sysfs_util.h"
+#include "util/udev_util.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -58,9 +59,7 @@
 
 // Experimental code
 // static bool watch_displays_enabled = false;
-#ifdef OLD_HOTPLUG_VERSION
-static bool watching_using_udev = false;  // if false watching using poll
-#endif
+bool ddc_watching_using_udev = false;  // if false watching using poll
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
@@ -74,6 +73,7 @@ typedef struct {
    char                   marker[4];
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
+
 #ifdef OLD_HOTPLUG_VERSION
    Display_Change_Handler display_change_handler;
    Bit_Set_32             drm_card_numbers;
@@ -109,24 +109,24 @@ const char * displays_change_type_name(Displays_Change_Type change_type) {
 #endif
 
 
-#ifdef UNUSED
+
 /** Checks that a thread or process id is valid.
  *
  *  @param id  thread or process id
  *  @return true if valid, false if not
  */
 bool check_thread_or_process(pid_t id) {
+   bool debug = false;
    struct stat buf;
    char procfn[20];
    snprintf(procfn, 20, "/proc/%d", id);
    int rc = stat(procfn, &buf);
    bool result = (rc == 0);
-   DBGMSG("File: %s, returning %s", procfn, sbool(result));
+   DBGMSF(debug, "File: %s, returning %s", procfn, sbool(result));
    if (!result)
       DBGMSG("!!! Returning: %s", sbool(result));
    return result;
 }
-#endif
 
 
 /** Primary function to check for changes in display status (disconnect, DPMS),
@@ -197,7 +197,6 @@ void ddc_recheck_bus() {
    if (changed) {
       get_sys_drm_connectors(/*rescan=*/true);
    }
-
 
    GPtrArray * new_buses = i2c_detect_buses0();
    Bit_Set_256 new_connected_buses_bitset = buses_bitset_from_businfo_array(new_buses, true);
@@ -350,163 +349,6 @@ void check_drefs_alive() {
 }
 
 
-#ifdef OLD
-/** Gets a list of all displays known to DRM.
- *
- *  \param sysfs_drm_cards
- *  \bool  verbose
- *  \return GPtrArray of connector names for DRM displays
- *
- *  \remark
- *  The caller is responsible for freeing the returned #GPtrArray.
- */
-GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
-{
-   bool debug = false;
-   int  depth = 0;
-   int  d1    = depth+1;
-   int  d2    = depth+2;
-
-   struct dirent *dent;
-   DIR           *dir1;
-   char          *dname;
-   char          dnbuf[90];
-   const int     cardname_sz = 20;
-   char          cardname[cardname_sz];
-
-   GPtrArray * connected_displays = g_ptr_array_new();
-   g_ptr_array_set_free_func(connected_displays, g_free);
-
-#ifdef TARGET_BSD
-   dname = "/compat/linux/sys/class/drm";
-#else
-   dname = "/sys/class/drm";
-#endif
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s...", dname);
-   Byte_Bit_Flags iter = bbf_iter_new(sysfs_drm_cards);
-   int cardno = -1;
-   while ( (cardno = bbf_iter_next(iter)) >= 0) {
-      snprintf(cardname, cardname_sz, "card%d", cardno);
-      snprintf(dnbuf, 80, "%s/%s", dname, cardname);
-      dir1 = opendir(dnbuf);
-      DBGMSF(debug, "dnbuf=%s", dnbuf);
-      if (!dir1) {
-         // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
-         break;
-      }
-      else {
-         while ((dent = readdir(dir1)) != NULL) {
-            // DBGMSG("%s", dent->d_name);
-            // char cur_fn[100];
-            if (str_starts_with(dent->d_name, cardname)) {
-               if (verbose)
-                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
-               char cur_dir_name[PATH_MAX];
-               g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
-               char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
-               // rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
-               if (verbose)
-                  rpt_vstring(d2, "Display: %s, status=%s", dent->d_name, s_status);
-               // edid present iff status == "connected"
-               if (streq(s_status, "connected")) {
-                  if (verbose) {
-                     GByteArray * gba_edid = read_binary_sysfs_attr(
-                           cur_dir_name, "edid", 128, /*verbose=*/ true);
-                     if (gba_edid) {
-                        rpt_vstring(d2, "%s/edid:", cur_dir_name);
-                        rpt_hex_dump(gba_edid->data, gba_edid->len, d2);
-                        g_byte_array_free(gba_edid, true);
-                     }
-                     else {
-                        rpt_vstring(d2, "Reading %s/edid failed.", cur_dir_name);
-                     }
-                  }
-
-                  g_ptr_array_add(connected_displays, g_strdup(dent->d_name));
-               }
-               free(s_status);
-               if (verbose)
-                  rpt_nl();
-            }
-         }
-         closedir(dir1);
-      }
-   }
-   bbf_iter_free(iter);
-   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Connected displays: %s",
-                              join_string_g_ptr_array_t(connected_displays, ", "));
-   return connected_displays;
-}
-#endif
-
-
-#ifdef OLD_HOTPLUG_VERSION
-/** Examines a single connector, e.g. card0-HDMI-1, in a directory /sys/class/drm/cardN
- *  to determine if it is has a monitor connected.  If so, appends the simple
- *  connector name to the list of active connectors
- *
- *  @param  dirname    directory to examine, <device>/drm/cardN
- *  @param  simple_fn  filename to examine
- *  @param  data       GPtrArray of connected monitors
- *  @param  depth      if >= 0, emits a report with this logical indentation depth
- *
- *  @remark
- *  Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
- * to sysfs_i2c_util.c?
- */
-static
-void get_sysfs_drm_examine_one_connector(
-      const char * dirname,     // <device>/drm/cardN
-      const char * simple_fn,   // card0-HDMI-1 etc
-      void *       data,        // GPtrArray collecting connector names
-      int          depth)
-{
-   bool debug = false;
-   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
-   GPtrArray * connected_displays = (GPtrArray *) data;
-
-   char * status = NULL;
-   bool found_status = RPT_ATTR_TEXT(-1, &status, dirname, simple_fn, "status");
-   if (found_status && streq(status,"connected")) {
-         g_ptr_array_add(connected_displays, g_strdup(simple_fn));
-      }
-   g_free(status);
-
-   DBGMSF(debug, "Added connector %s", simple_fn);
-}
-
-
-/**Checks /sys/class/drm for connectors with active displays.
- *
- * @return newly allocated GPtrArray of DRM connector names, sorted
- */
-static
-GPtrArray * get_sysfs_drm_displays() {
-   bool debug = false;
-   char * dname =
- #ifdef TARGET_BSD
-              "/compat/linux/sys/class/drm";
- #else
-              "/sys/class/drm";
- #endif
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
-   GPtrArray * connected_displays = g_ptr_array_new_with_free_func(g_free);
-   dir_filtered_ordered_foreach(
-                 dname,
-                 is_card_connector_dir,   // filter function
-                 NULL,                    // ordering function
-                 get_sysfs_drm_examine_one_connector,
-                 connected_displays,      // accumulator
-                 0);
-   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Connected displays: %s",
-                              join_string_g_ptr_array_t(connected_displays, ", "));
-   return connected_displays;
- }
-#endif
-
-
 #ifdef OLD_HOTPLUG_VERSION
 /** Obtains a list of currently connected displays and compares it to the
  *  previously detected list
@@ -528,7 +370,7 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
    // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
    Displays_Change_Type change_type = Changed_None;
 
-   GPtrArray * cur_displays = get_sysfs_drm_displays();
+   GPtrArray * cur_displays = get_sysfs_drm_connector_names();
    if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
       if ( IS_DBGTRC( debug, TRACE_GROUP) ) {
          DBGMSG("Active DRM connectors changed!");
@@ -571,7 +413,8 @@ static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
 }
 
 
-static GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
+//static
+GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays = %s",
                  join_string_g_ptr_array_t(prev_displays, ", "));
@@ -648,64 +491,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
 }
 
 
-
-#ifdef OLD_HOTPLUG_VERSION
-#ifdef ENABLE_UDEV
-void show_udev_list_entries(
-      struct udev_list_entry * entries,
-      char * title)
-{
-   printf( "   %s: \n", title);
-   struct udev_list_entry * cur = NULL;
-   udev_list_entry_foreach(cur, entries) {
-      const char * name  = udev_list_entry_get_name(cur);
-      const char * value = udev_list_entry_get_value(cur);
-      printf("      %s  -> %s\n", name, value);
-   }
-}
-
-
-void show_sysattr_list_entries(
-      struct udev_device *       dev,
-      struct udev_list_entry * head)
-{
-   int d1 = 1;
-   int d2 = 2;
-
-   rpt_vstring(d1, "Sysattrs:");
-   struct udev_list_entry * cur_entry = NULL;
-   udev_list_entry_foreach(cur_entry, head) {
-      const char * attr_name   = udev_list_entry_get_name(cur_entry);
-#ifndef NDEBUG
-      const char * attr_value  = udev_list_entry_get_value(cur_entry);
-      assert(attr_value == NULL);
-#endif
-      const char * attr_value2 = udev_device_get_sysattr_value(dev, attr_name);
-      // hex_dump( (Byte*) attr_value2, strlen(attr_value2)+1);
-      if (attr_value2 && strchr(attr_value2, '\n')) {
-      // if (streq(attr_name, "uevent")) {
-         // output is annoying to visually scan since it contains newlines
-         char * av = g_strdup(attr_value2);
-         char * p = av;
-         while (*p) {
-            if (*p == 0x0a)
-               *p = ',';
-            p++;
-         }
-         rpt_vstring(d2, "%s -> %s", attr_name, av);
-         free(av);
-      }
-      // n. attr_name "descriptors" returns a hex value, not a null-terminated string
-      //    should display as hex, but how to determine length?
-      // for example of reading, see http://fossies.org/linux/systemd/src/udev/udev-builtin-usb_id.c
-      // not worth pursuing
-      else {
-         rpt_vstring(d2, "%s -> %s", attr_name, attr_value2);
-      }
-   }
-}
-#endif
-
+#ifdef UNUSED
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
    assert (flags != -1);
@@ -716,19 +502,20 @@ void set_fd_blocking(int fd) {
    fcntl(fd, F_SETFL, flags);
    assert(rc != -1);
 }
+#endif
 
-#ifdef ENABLE_UDEV
+// #ifdef ENABLE_UDEV
 gpointer watch_displays_using_udev(gpointer data) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
 
-   // DBGMSG("Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
-   // pid_t cur_pid = getpid();
-   // pid_t cur_tid = get_thread_id();
-   // DBGMSG("Our process id: %d, our thread id: %d", cur_pid, cur_tid);
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
+   pid_t cur_pid = getpid();
+   pid_t cur_tid = get_thread_id();
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
    struct udev* udev;
    udev = udev_new();
@@ -738,84 +525,87 @@ gpointer watch_displays_using_udev(gpointer data) {
    udev_monitor_enable_receiving(mon);
 
    // make udev_monitor_receive_device() blocking
-   int fd = udev_monitor_get_fd(mon);
-   set_fd_blocking(fd);
+   // int fd = udev_monitor_get_fd(mon);
+   // set_fd_blocking(fd);
 
-   GPtrArray * prev_displays = get_sysfs_drm_displays();
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-          "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
+  //  GPtrArray * prev_displays = get_sysfs_drm_connector_names();
+  //  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
+  //         "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
 
+   struct udev_device * dev = NULL;
    while (true) {
-
-      // Doesn't work to kill thread, udev_monitor_receive_device() is blocking
-      // leave in so that code checkers are fooled into thinking that
-      // free_watch_displays_data() is called at program termination
-      if (terminate_watch_thread) {
-         DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
-         free_watch_displays_data(wdd);
-         g_ptr_array_free(prev_displays, true);
-         g_thread_exit(0);
-         assert(false);    // avoid clang warning re wdd use after free
-      }
-
-      // Doesn't work to detect client crash, main thread and process remains for some time.
-      // 11/2020: is this even needed since terminate_watch_thread check added?
-#ifdef DOESNT_WORK
-      bool pid_found = check_thread_or_process(cur_pid);
-      if (!pid_found) {
-         DBGMSG("Process %d not found", cur_pid);
-      }
-      bool tid_found = check_thread_or_process(cur_tid);
-      if (!pid_found || !tid_found) {
-         DBGMSG("Thread %d not found", cur_tid);
-         g_thread_exit(GINT_TO_POINTER(-1));
-         break;
-      }
-#endif
-
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Blocking until there is data");
-      // by default, is non-blocking as of libudev 171, use fcntl() to make file descriptor blocking
-      struct udev_device* dev = udev_monitor_receive_device(mon);
-      if (dev) {
-         if (debug) {
-            printf("Got Device\n");
-            // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
-            // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
-            // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
-
-            printf("   Action:    %s\n", udev_device_get_action(   dev));     // "change"
-            printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
-            printf("   subsystem: %s\n", udev_device_get_subsystem(dev));     // drm
-            printf("   devtype:   %s\n", udev_device_get_devtype(  dev));     // drm_minor
-            printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
-            printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
-            printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
-            printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
-            printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
-            printf("   driver:    %s\n", udev_device_get_driver(  dev));
-
-            struct udev_list_entry * entries = NULL;
-            entries = udev_device_get_devlinks_list_entry(dev);
-            show_udev_list_entries(entries, "devlinks");
-
-            entries = udev_device_get_properties_list_entry(dev);
-            show_udev_list_entries(entries, "properties");
-
-            entries = udev_device_get_tags_list_entry(dev);
-            show_udev_list_entries(entries, "tags");
-
-            entries = udev_device_get_sysattr_list_entry(dev);
-            //show_udev_list_entries(entries, "sysattrs");
-            show_sysattr_list_entries(dev,entries);
+      dev = udev_monitor_receive_device(mon);
+      while ( !dev ) {
+         int sleep_secs = 4;
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
+         usleep(sleep_secs * 1000000);
+         if (terminate_watch_thread) {
+            DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
+            free_watch_displays_data(wdd);
+            // g_ptr_array_free(prev_displays, true);
+            g_thread_exit(0);
+            assert(false);    // avoid clang warning re wdd use after free
          }
 
-         const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
+         // Doesn't work to detect client crash, main thread and process remains for some time.
+         // 11/2020: is this even needed since terminate_watch_thread check added?
+         // #ifdef DOESNT_WORK
+         bool pid_found = check_thread_or_process(cur_pid);
+         if (!pid_found) {
+            DBGMSG("Process %d not found", cur_pid);
+         }
+         bool tid_found = check_thread_or_process(cur_tid);
+         if (!pid_found || !tid_found) {
+            DBGMSG("Thread %d not found", cur_tid);
+            g_thread_exit(GINT_TO_POINTER(-1));
+            break;
+         }
+         // #endif
 
-         prev_displays = double_check_displays(prev_displays, data);
-
-         udev_device_unref(dev);
+         dev = udev_monitor_receive_device(mon);
       }
+      assert(dev);
+      if (debug) {
+         printf("Got Device\n");
+         // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
+         // printf("   Subsystem: %s\n", udev_device_get_subsystem(dev));  // drm
+         // printf("   Devtype: %s\n", udev_device_get_devtype(dev));      // drm_minor
+
+         printf("   Action:    %s\n", udev_device_get_action(   dev));     // "change"
+         printf("   devpath:   %s\n", udev_device_get_devpath(  dev));
+         printf("   subsystem: %s\n", udev_device_get_subsystem(dev));     // drm
+         printf("   devtype:   %s\n", udev_device_get_devtype(  dev));     // drm_minor
+         printf("   syspath:   %s\n", udev_device_get_syspath(  dev));
+         printf("   sysname:   %s\n", udev_device_get_sysname(  dev));
+         printf("   sysnum:    %s\n", udev_device_get_sysnum(   dev));
+         printf("   devnode:   %s\n", udev_device_get_devnode(  dev));     // /dev/dri/card0
+         printf("   initialized: %d\n", udev_device_get_is_initialized(  dev));
+         printf("   driver:    %s\n", udev_device_get_driver(  dev));
+
+         struct udev_list_entry * entries = NULL;
+         entries = udev_device_get_devlinks_list_entry(dev);
+         show_udev_list_entries(entries, "devlinks");
+
+         entries = udev_device_get_properties_list_entry(dev);
+         show_udev_list_entries(entries, "properties");
+
+         entries = udev_device_get_tags_list_entry(dev);
+         show_udev_list_entries(entries, "tags");
+
+         entries = udev_device_get_sysattr_list_entry(dev);
+         //show_udev_list_entries(entries, "sysattrs");
+         show_sysattr_list_entries(dev,entries);
+      }
+
+
+      const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
+
+      // prev_displays = double_check_displays(prev_displays, data);
+      ddc_emit_display_hotplug_event();
+
+      udev_device_unref(dev);
+#ifdef NO
       else {
          // Failure indicates main thread has died.  Kill this one too.
          int errsv=errno;
@@ -826,6 +616,7 @@ gpointer watch_displays_using_udev(gpointer data) {
          g_thread_exit(GINT_TO_POINTER(-1));
          // break;
       }
+#endif
 
       // printf(".");
       // fflush(stdout);
@@ -833,9 +624,9 @@ gpointer watch_displays_using_udev(gpointer data) {
 
     return NULL;
 }
-#endif
+// #endif
 
-
+#ifdef OLD_HOTPLUG_VERSION
 void dummy_display_change_handler(
         Displays_Change_Type changes,
         GPtrArray *          removed,
@@ -885,7 +676,7 @@ void api_display_change_handler(
 #endif
 
    // simpler
-   // ddc_emit_display_detection_event();
+   // ddc_emit_display_hotplug_event();
 
 
    DBGTRC_DONE(debug, TRACE_GROUP, "");
@@ -902,19 +693,19 @@ void api_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "use_udev_if_possible=%s, watch_thread=%p",
                                        SBOOL(use_udev_if_possible), watch_thread );
-   if (use_udev_if_possible)
-      return DDCRC_ARG;
-
    DDCA_Status ddcrc = DDCRC_OK;
+   ddc_watching_using_udev = use_udev_if_possible;
 
    g_mutex_lock(&watch_thread_mutex);
    if (!watch_thread) {
       terminate_watch_thread = false;
       Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+   // data->display_change_handler = api_display_change_handler;
+   // data->display_change_handler = dummy_display_change_handler;
 
       data->main_process_id = getpid();
       // data->main_thread_id = syscall(SYS_gettid);
@@ -922,7 +713,9 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
-                       ddc_watch_displays_using_poll,
+                       (use_udev_if_possible) ?
+                             watch_displays_using_udev :
+                             ddc_watch_displays_using_poll,
                        data);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
    }
@@ -1022,11 +815,11 @@ ddc_start_watch_displays(bool use_udev_if_possible)
             data->main_thread_id = get_thread_id();
             data->drm_card_numbers = drm_card_numbers;
             void * watch_func = ddc_watch_displays_using_poll;
-            watching_using_udev = false;
+            ddc_watching_using_udev = false;
 #ifdef ENABLE_UDEV
             if (use_udev_if_possible) {
                watch_func = watch_displays_using_udev;
-               watching_using_udev = true;
+               ddc_watching_using_udev = true;
             }
 #endif
             watch_thread = g_thread_new(
@@ -1073,7 +866,7 @@ ddc_stop_watch_displays()
 
       // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
       if (watch_thread) {
-         if (watching_using_udev) {
+         if (ddc_watching_using_udev) {
 
 #ifdef ENABLE_UDEV
             DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting for watch thread to terminate...");
