@@ -159,7 +159,7 @@ ddc_open_display(
 
    Display_Handle * dh = NULL;
    Error_Info * err = NULL;
-   int fd = 0;
+   int fd = -1;
 
    if (dref->drm_connector && strlen(dref->drm_connector) > 0) {
       char * status;
@@ -202,9 +202,9 @@ ddc_open_display(
 
          if (!err) {
             DBGMSF(debug, "Calling i2c_open_bus() ...");
-            fd = i2c_open_bus(dref->io_path.path.i2c_busno, callopts);
+            Error_Info * err2 = i2c_open_bus(dref->io_path.path.i2c_busno, callopts, &fd);
             if (fd < 0) {
-               err = ERRINFO_NEW(fd, "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
+               err = errinfo_new_with_cause(err->status_code, err2, __func__, "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
             }
          }
          if (!err) {
