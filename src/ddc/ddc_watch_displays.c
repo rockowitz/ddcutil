@@ -506,7 +506,7 @@ void set_fd_blocking(int fd) {
 
 // #ifdef ENABLE_UDEV
 gpointer watch_displays_using_udev(gpointer data) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    Watch_Displays_Data * wdd = data;
@@ -693,7 +693,7 @@ void api_display_change_handler(
 DDCA_Status
 ddc_start_watch_displays(bool use_udev_if_possible)
 {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "use_udev_if_possible=%s, watch_thread=%p",
                                        SBOOL(use_udev_if_possible), watch_thread );
    DDCA_Status ddcrc = DDCRC_OK;
