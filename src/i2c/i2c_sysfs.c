@@ -2112,7 +2112,7 @@ GPtrArray * sysfs_drm_connector_names = NULL;
  */
 
 GPtrArray * get_sysfs_drm_connector_names() {
-   bool debug = true;
+   bool debug = false;
    char * dname =
  #ifdef TARGET_BSD
               "/compat/linux/sys/class/drm";
