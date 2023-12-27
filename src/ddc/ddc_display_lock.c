@@ -39,6 +39,7 @@
 
 #include "util/debug_util.h"
 #include "util/error_info.h"
+#include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
 
@@ -87,7 +88,7 @@ lockrec_repr_t(Display_Lock_Record * ref) {
    char * buf = get_thread_fixed_buffer(&repr_key, 100);
    g_mutex_lock(&descriptors_mutex);
    assert(memcmp(ref->marker, DISPLAY_LOCK_MARKER, 4) == 0);
-   g_snprintf(buf, 100, "Display_Lock_Record[%s @%p]", dpath_repr_t(&ref->io_path), ref);
+   g_snprintf(buf, 100, "Display_Lock_Record[%s tid=%jd @%p]", dpath_repr_t(&ref->io_path), ref->linux_thread_id, ref);
    g_mutex_unlock(&descriptors_mutex);
    return buf;
 }
@@ -121,7 +122,6 @@ get_display_lock_record_by_dpath(DDCA_IO_Path io_path) {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %p -> %s", result,  lockrec_repr_t(result));
    return result;
-
 }
 
 
@@ -165,24 +165,28 @@ lock_display(
       self_thread = true;
    g_mutex_unlock(&master_display_lock_mutex);
    if (self_thread) {
-      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Attempting to lock display already locked by current thread");
+      MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Attempting to lock display already locked by current thread, tid=%jd", get_thread_id());
       err = errinfo_new(DDCRC_ALREADY_OPEN, __func__,   // is there a better status code?
             "Attempting to lock display already locked by current thread"); // poor
+      goto bye;
+   }
+
+   bool locked = true;
+   if (flags & DDISP_WAIT) {
+      g_mutex_lock(&ddesc->display_mutex);
    }
    else {
-      bool locked = true;
-      if (flags & DDISP_WAIT) {
-         g_mutex_lock(&ddesc->display_mutex);
-      }
-      else {
-         locked = g_mutex_trylock(&ddesc->display_mutex);
-         if (!locked)
-            err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed");
-      }
-
-      if (locked)   // record that this thread owns the lock
-          ddesc->display_mutex_thread = g_thread_self();
+      locked = g_mutex_trylock(&ddesc->display_mutex);
+      if (!locked)
+         err = errinfo_new(DDCRC_LOCKED, __func__, "Locking failed");
    }
+
+   if (locked) {  // note that this thread owns the lock
+       ddesc->display_mutex_thread = g_thread_self();
+       ddesc->linux_thread_id = get_thread_id();
+   }
+
+bye:
    // need a new DDC status code
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, err, "ddesc=%p -> %s", ddesc, lockrec_repr_t(ddesc));
    if (err)
@@ -260,6 +264,7 @@ unlock_display(Display_Lock_Record * ddesc) {
    }
    else {
       ddesc->display_mutex_thread = NULL;
+      ddesc->linux_thread_id = 0;
       g_mutex_unlock(&ddesc->display_mutex);
    }
    g_mutex_unlock(&master_display_lock_mutex);
@@ -342,9 +347,9 @@ dbgrpt_display_locks(int depth) {
    rpt_label(depth,"index  lock-record-ptr  dpath                         display_mutex_thread");
    for (int ndx=0; ndx < lock_records->len; ndx++) {
       Display_Lock_Record * cur = g_ptr_array_index(lock_records, ndx);
-      rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p",
+      rpt_vstring(d1, "%2d - %p  %-28s  thread ptr=%p, thread id=%d",
                        ndx, cur,
-                       dpath_repr_t(&cur->io_path), (void*) &cur->display_mutex_thread );
+                       dpath_repr_t(&cur->io_path), (void*) &cur->display_mutex_thread, cur->linux_thread_id );
    }
    g_mutex_unlock(&descriptors_mutex);
 }

@@ -8,6 +8,7 @@
 #define DDC_DISPLAY_LOCK_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "ddcutil_types.h"
 
@@ -26,6 +27,7 @@ typedef struct {
    DDCA_IO_Path io_path;
    GMutex       display_mutex;
    GThread *    display_mutex_thread;     // thread owning mutex
+   intmax_t     linux_thread_id;
 } Display_Lock_Record;
 
 void                  init_ddc_display_lock(void);
