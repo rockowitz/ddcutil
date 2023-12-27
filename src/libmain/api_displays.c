@@ -1310,12 +1310,17 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
 // Display Status Change Communication
 //
 
+
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
-   DDCA_Status result =  ddc_register_display_detection_callback(func);
+
+   DDCA_Status result = (i2c_all_video_devices_drm())
+                      ? ddc_register_display_detection_callback(func)
+                      : DDCRC_INVALID_OPERATION;
+
    API_EPILOG(debug, result, "");
    return result;
 }
@@ -1326,7 +1331,11 @@ ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func 
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
-   DDCA_Status result = ddc_unregister_display_detection_callback(func);
+
+   DDCA_Status result = (i2c_all_video_devices_drm())
+                      ? ddc_unregister_display_detection_callback(func)
+                      : DDCRC_INVALID_OPERATION;
+
    API_EPILOG(debug, result, "");
    return result;
 }
@@ -1336,6 +1345,39 @@ const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
       return ddc_display_event_type_name(event_type);
 }
+
+// SIMPLER VERSION
+
+
+DDCA_Status
+ddca_register_display_hotplug_callback(DDCA_Display_Detection_Callback_Func func) {
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
+
+   DDCA_Status result = (i2c_all_video_devices_drm())
+                      ? ddc_register_display_hotplug_callback(func)
+                      : DDCRC_INVALID_OPERATION;
+
+   API_EPILOG(debug, result, "");
+   return result;
+}
+
+DDCA_Status
+ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
+
+   DDCA_Status result = (i2c_all_video_devices_drm())
+                      ? ddc_unregister_display_hotplug_callback(func)
+                      : DDCRC_INVALID_OPERATION;
+
+   API_EPILOG(debug, result, "");
+   return result;
+}
+
+
 
 
 //
