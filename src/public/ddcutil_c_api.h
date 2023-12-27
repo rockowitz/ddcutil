@@ -1747,6 +1747,35 @@ const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
+// SIMPLER ALTERNATIVE
+
+
+/** Registers a function to be called called when a change in display status is
+ *  detected.
+ *
+ *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func
+ *  @return    DDCRC_OK
+ *  @retval    DDCRC_INVALID_OPERATION function already registered, not all video devices DRM
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+
+/** Removes a function from the list of registered callbacks
+ *
+ *  @param[in] func            function that has already been registered
+ *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_NOT_FOUND function not registered
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+
+
+
+
 #ifdef __cplusplus
 }
 #endif
