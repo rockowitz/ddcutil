@@ -525,7 +525,7 @@ typedef struct {
 
 
 //
-// For reporting display status changes to client
+// For reporting display status changes to client (TODO: Release at most 1 mechanism)
 //
 
 typedef enum {
@@ -555,6 +555,18 @@ typedef struct {
  */
 typedef
 void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event);
+
+
+// SIMPLER ALTERNATIVE
+/** Signature of a function to be invoked by the shared library notifying the
+ *  client that a change in connected displays has been detected.
+ *
+ *  The client program should call #ddca_redetect_displays() and then
+ *  ddca_get_display_refs() to get the currently valid display references.
+ *
+ *  @since 2.0.2
+ */
+typedef void (*DDCA_Display_Hotplug_Callback_Func)();
 
 #ifdef __cplusplus
 }
