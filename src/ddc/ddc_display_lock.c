@@ -236,10 +236,10 @@ lock_display_by_dpath(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dpath=%s, flags=0x%02x", dpath_repr_t(&dpath), flags);
-    Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
-    Error_Info * result = lock_display(lockid, flags);
-    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dpath=%s", dpath_repr_t(&dpath));
-    return result;
+   Display_Lock_Record * lockid = get_display_lock_record_by_dpath(dpath);
+   Error_Info * result = lock_display(lockid, flags);
+   DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "dpath=%s", dpath_repr_t(&dpath));
+   return result;
 }
 
 
