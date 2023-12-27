@@ -43,6 +43,14 @@ typedef struct {
    char *  ddc_i2c_dev_dev;
 } I2C_Sys_Info;
 
+void           free_i2c_sys_info(I2C_Sys_Info * info);
+I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
+void           dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth);
+void           dbgrpt_sys_bus_i2c(int depth);
+Bit_Set_256    get_possible_ddc_ci_bus_numbers();
+
+
+// An attempt to simplify I2C_Sys_Info for production use
 typedef struct {
    char * pci_device_path;
    char * driver;
@@ -52,11 +60,7 @@ typedef struct {
    int   buno;
 } I2C_Fixed_Sys_Info;
 
-void           free_i2c_sys_info(I2C_Sys_Info * info);
-I2C_Sys_Info * get_i2c_sys_info(int busno, int depth);
-void           dbgrpt_i2c_sys_info(I2C_Sys_Info * info, int depth);
-void           dbgrpt_sys_bus_i2c(int depth);
-Bit_Set_256    get_possible_ddc_ci_bus_numbers();
+
 
 
 typedef struct {
@@ -76,8 +80,16 @@ typedef struct {
    char * status;
 } Sys_Drm_Connector;
 
+GPtrArray*          get_sys_drm_connectors(bool rescan);
+// GPtrArray*          get_sys_drm_connectors_sysinfo(bool rescan);
+void                report_sys_drm_connectors(int depth);
+Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
+Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
+void                free_sys_drm_connectors();
+Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 
 
+// An attempt to simplify Sys_Drm_Connector for production use
 typedef struct {
    char * connector_name;
    char * connector_path;
@@ -95,17 +107,7 @@ typedef struct {
 
 } Sys_Drm_Connector_FixedInfo;
 
-
-
-
-GPtrArray*          get_sys_drm_connectors(bool rescan);
-GPtrArray*          get_sys_drm_connectors_sysinfo(bool rescan);
-void                report_sys_drm_connectors(int depth);
 void                report_sys_drm_connectors_fixedinfo(int depth);
-Sys_Drm_Connector * find_sys_drm_connector(int busno, Byte * raw_edid, const char * connector_name);
-Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno);
-Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid);
-void                free_sys_drm_connectors();
 
 
 typedef struct {
@@ -124,8 +126,6 @@ void        report_conflicting_drivers(GPtrArray * conflicts, int depth);   // f
 void        free_conflicting_drivers(GPtrArray* conflicts);
 GPtrArray * conflicting_driver_names(GPtrArray * conflicts);
 char *      conflicting_driver_names_string_t(GPtrArray * conflicts);
-Sys_Drm_Connector *
-                 i2c_check_businfo_connector(I2C_Bus_Info * bus_info);
 
 
 typedef struct {
@@ -138,9 +138,10 @@ typedef struct {
    GPtrArray * conflicting_driver_names;
 } Sysfs_I2C_Info;
 
-GPtrArray * get_all_i2c_info(bool rescan, int depth);
+GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth);
 void        dbgrpt_all_sysfs_i2c_info(GPtrArray * infos, int depth);
 char *      get_conflicting_drivers_for_bus(int busno);
+
 
 void consolidated_i2c_sysfs_report(int depth);
 
@@ -166,7 +167,7 @@ void dbgrpt_cbd_table(Connector_Busno_Dref_Table * cbd_table, int depth);
 
 
 GPtrArray * get_sys_video_devices();
-bool all_video_devices_drm();
+bool   i2c_all_video_devices_drm();
 
 char * get_drm_connector_by_busno(int busno);
 char * get_drm_connector_by_edid(Byte * edid_bytes);
@@ -174,8 +175,12 @@ bool   is_drm_display_by_busno(int busno);
 
 extern GPtrArray * sysfs_drm_connector_names;
 GPtrArray * get_sysfs_drm_connector_names();
-char * find_sysfs_drm_connector_by_busno(GPtrArray* connector_names, int busno);
-char * get_sysfs_drm_connector_by_edid(GPtrArray* connector_names, Byte * edid);
+void init_sysfs_drm_connector_names();
+void free_sysfs_drm_connector_names_array(GPtrArray* drm_connector_names);
+void free_sysfs_drm_connector_names();
+char * find_sysfs_drm_connector_name_by_busno(GPtrArray* connector_names, int busno);
+char * get_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
+
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();

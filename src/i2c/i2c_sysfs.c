@@ -1177,6 +1177,29 @@ Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
 }
 
 
+/** If the display has an open-source conformant driver,
+ *  returns the connector name.
+ *
+ *  If the display has a DRM driver that doesn't conform
+ *  to the standard (I'm looking at you, Nvidia), or it
+ *  is not a DRM driver, returns NULL.
+ *
+ *  @param busno
+ *  @return connector name, caller must free
+ */
+char * get_drm_connector_by_busno(int busno) {
+   bool debug = false;
+   DBGTRC(debug, TRACE_GROUP, "Starting. busno = %d", busno);
+   char * result = NULL;
+   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
+   if (drm_connector) {
+      result = g_strdup(drm_connector->connector_name);
+   }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", (void*) raw_edid);
@@ -1184,6 +1207,21 @@ Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
+
+
+char * get_drm_connector_by_edid(Byte * edid_bytes) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Finding connector by EDID...");
+   char * result = NULL;
+   Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(edid_bytes);
+   if (connector_rec) {
+      result = g_strdup(connector_rec->connector_name);
+   }
+   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
+   return result;
+}
+
+
 
 
 //
@@ -1548,7 +1586,7 @@ void get_single_i2c_info(
  *
  *  The returned array is cached.  Caller should not free.
  */
-GPtrArray * get_all_i2c_info(bool rescan, int depth) {
+GPtrArray * get_all_sysfs_i2c_info(bool rescan, int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
 
@@ -1620,7 +1658,7 @@ Bit_Set_256 get_possible_ddc_ci_bus_numbers() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    Bit_Set_256 result = EMPTY_BIT_SET_256;
-   GPtrArray * allinfo = get_all_i2c_info(true, -1);
+   GPtrArray * allinfo = get_all_sysfs_i2c_info(true, -1);
    for (int ndx = 0; ndx < allinfo->len; ndx++) {
       Sysfs_I2C_Info* cur = g_ptr_array_index(allinfo, ndx);
       if (!sysfs_is_ignorable_i2c_device(cur->busno))
@@ -1647,7 +1685,7 @@ void consolidated_i2c_sysfs_report(int depth) {
    // rpt_nl();
 
    rpt_label(d0, "*** Sysfs_I2C_Info report ***");
-   GPtrArray * reports = get_all_i2c_info(true, -1);
+   GPtrArray * reports = get_all_sysfs_i2c_info(true, -1);
    dbgrpt_all_sysfs_i2c_info(reports, d1);
    rpt_nl();
 
@@ -1790,8 +1828,8 @@ GPtrArray * get_sys_video_devices() {
  *
  *  @return true/false
  */
-bool all_video_devices_drm() {
-   bool debug = false;
+bool i2c_all_video_devices_drm() {
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    GPtrArray * video_devices = get_sys_video_devices();
@@ -1809,42 +1847,6 @@ bool all_video_devices_drm() {
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, all_devices_drm, "");
    return all_devices_drm;
-}
-
-
-/** If the display has an open-source conformant driver,
- *  returns the connector name.
- *
- *  If the display has a DRM driver that doesn't conform
- *  to the standard (I'm looking at you, Nvidia), or it
- *  is not a DRM driver, returns NULL.
- *
- *  @param busno
- *  @return connector name, caller must free
- */
-char * get_drm_connector_by_busno(int busno) {
-   bool debug = false;
-   DBGTRC(debug, TRACE_GROUP, "Starting. busno = %d", busno);
-   char * result = NULL;
-   Sys_Drm_Connector * drm_connector = find_sys_drm_connector_by_busno(busno);
-   if (drm_connector) {
-      result = g_strdup(drm_connector->connector_name);
-   }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-
-char * get_drm_connector_by_edid(Byte * edid_bytes) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "Finding connector by EDID...");
-   char * result = NULL;
-   Sys_Drm_Connector * connector_rec = find_sys_drm_connector_by_edid(edid_bytes);
-   if (connector_rec) {
-      result = g_strdup(connector_rec->connector_name);
-   }
-   DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
-   return result;
 }
 
 
@@ -1884,8 +1886,6 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
 }
 
 
-
-
 /** Checks if a display has a DRM driver by looking for
  *  subdirectory drm in the adapter directory.
  *
@@ -1914,6 +1914,166 @@ Sys_Drm_Connector * i2c_check_businfo_connector(I2C_Bus_Info * businfo) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
    return result;
 }
+
+
+
+#ifdef OLD
+/** Gets a list of all displays known to DRM.
+ *
+ *  \param sysfs_drm_cards
+ *  \bool  verbose
+ *  \return GPtrArray of connector names for DRM displays
+ *
+ *  \remark
+ *  The caller is responsible for freeing the returned #GPtrArray.
+ */
+GPtrArray * get_sysfs_drm_displays_old(Byte_Bit_Flags sysfs_drm_cards, bool verbose)
+{
+   bool debug = false;
+   int  depth = 0;
+   int  d1    = depth+1;
+   int  d2    = depth+2;
+
+   struct dirent *dent;
+   DIR           *dir1;
+   char          *dname;
+   char          dnbuf[90];
+   const int     cardname_sz = 20;
+   char          cardname[cardname_sz];
+
+   GPtrArray * connected_displays = g_ptr_array_new();
+   g_ptr_array_set_free_func(connected_displays, g_free);
+
+#ifdef TARGET_BSD
+   dname = "/compat/linux/sys/class/drm";
+#else
+   dname = "/sys/class/drm";
+#endif
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s...", dname);
+   Byte_Bit_Flags iter = bbf_iter_new(sysfs_drm_cards);
+   int cardno = -1;
+   while ( (cardno = bbf_iter_next(iter)) >= 0) {
+      snprintf(cardname, cardname_sz, "card%d", cardno);
+      snprintf(dnbuf, 80, "%s/%s", dname, cardname);
+      dir1 = opendir(dnbuf);
+      DBGMSF(debug, "dnbuf=%s", dnbuf);
+      if (!dir1) {
+         // rpt_vstring(d1, "Unable to open sysfs directory %s: %s\n", dnbuf, strerror(errno));
+         break;
+      }
+      else {
+         while ((dent = readdir(dir1)) != NULL) {
+            // DBGMSG("%s", dent->d_name);
+            // char cur_fn[100];
+            if (str_starts_with(dent->d_name, cardname)) {
+               if (verbose)
+                  rpt_vstring(d1, "Found connector: %s", dent->d_name);
+               char cur_dir_name[PATH_MAX];
+               g_snprintf(cur_dir_name, PATH_MAX, "%s/%s", dnbuf, dent->d_name);
+               char * s_status = read_sysfs_attr(cur_dir_name, "status", false);
+               // rpt_vstring(d2, "%s/status: %s", cur_dir_name, s_status);
+               if (verbose)
+                  rpt_vstring(d2, "Display: %s, status=%s", dent->d_name, s_status);
+               // edid present iff status == "connected"
+               if (streq(s_status, "connected")) {
+                  if (verbose) {
+                     GByteArray * gba_edid = read_binary_sysfs_attr(
+                           cur_dir_name, "edid", 128, /*verbose=*/ true);
+                     if (gba_edid) {
+                        rpt_vstring(d2, "%s/edid:", cur_dir_name);
+                        rpt_hex_dump(gba_edid->data, gba_edid->len, d2);
+                        g_byte_array_free(gba_edid, true);
+                     }
+                     else {
+                        rpt_vstring(d2, "Reading %s/edid failed.", cur_dir_name);
+                     }
+                  }
+
+                  g_ptr_array_add(connected_displays, g_strdup(dent->d_name));
+               }
+               free(s_status);
+               if (verbose)
+                  rpt_nl();
+            }
+         }
+         closedir(dir1);
+      }
+   }
+   bbf_iter_free(iter);
+   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Connected displays: %s",
+                              join_string_g_ptr_array_t(connected_displays, ", "));
+   return connected_displays;
+}
+#endif
+
+
+#ifdef OLD_HOTPLUG_VERSION
+/** Examines a single connector, e.g. card0-HDMI-1, in a directory /sys/class/drm/cardN
+ *  to determine if it is has a monitor connected.  If so, appends the simple
+ *  connector name to the list of active connectors
+ *
+ *  @param  dirname    directory to examine, <device>/drm/cardN
+ *  @param  simple_fn  filename to examine
+ *  @param  data       GPtrArray of connected monitors
+ *  @param  depth      if >= 0, emits a report with this logical indentation depth
+ *
+ *  @remark
+ *  Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
+ * to sysfs_i2c_util.c?
+ */
+static
+void get_sysfs_drm_examine_one_connector(
+      const char * dirname,     // <device>/drm/cardN
+      const char * simple_fn,   // card0-HDMI-1 etc
+      void *       data,        // GPtrArray collecting connector names
+      int          depth)
+{
+   bool debug = false;
+   DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
+   GPtrArray * connected_displays = (GPtrArray *) data;
+
+   char * status = NULL;
+   bool found_status = RPT_ATTR_TEXT(-1, &status, dirname, simple_fn, "status");
+   if (found_status && streq(status,"connected")) {
+         g_ptr_array_add(connected_displays, g_strdup(simple_fn));
+      }
+   g_free(status);
+
+   DBGMSF(debug, "Added connector %s", simple_fn);
+}
+
+
+/**Checks /sys/class/drm for connectors with active displays.
+ *
+ * @return newly allocated GPtrArray of DRM connector names, sorted
+ */
+static
+GPtrArray * get_sysfs_drm_displays() {
+   bool debug = false;
+   char * dname =
+ #ifdef TARGET_BSD
+              "/compat/linux/sys/class/drm";
+ #else
+              "/sys/class/drm";
+ #endif
+   DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
+   GPtrArray * connected_displays = g_ptr_array_new_with_free_func(g_free);
+   dir_filtered_ordered_foreach(
+                 dname,
+                 is_card_connector_dir,   // filter function
+                 NULL,                    // ordering function
+                 get_sysfs_drm_examine_one_connector,
+                 connected_displays,      // accumulator
+                 0);
+   g_ptr_array_sort(connected_displays, gaux_ptr_scomp);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning Connected displays: %s",
+                              join_string_g_ptr_array_t(connected_displays, ", "));
+   return connected_displays;
+ }
+#endif
+
+
 
 
  /** Adds a single connector, e.g. card0-HDMI-1, the list of all connectors
@@ -1952,7 +2112,7 @@ GPtrArray * sysfs_drm_connector_names = NULL;
  */
 
 GPtrArray * get_sysfs_drm_connector_names() {
-   bool debug = false;
+   bool debug = true;
    char * dname =
  #ifdef TARGET_BSD
               "/compat/linux/sys/class/drm";
@@ -1975,7 +2135,29 @@ GPtrArray * get_sysfs_drm_connector_names() {
  }
 
 
-char * find_sysfs_drm_connector_by_busno(GPtrArray* connector_names, int busno) {
+void init_sysfs_drm_connector_names() {
+   sysfs_drm_connector_names = get_sysfs_drm_connector_names();
+}
+
+
+void free_sysfs_drm_connector_names_array(GPtrArray* drm_connector_names) {
+   if (drm_connector_names) {
+      g_ptr_array_free(drm_connector_names, true);
+   }
+}
+
+
+void free_sysfs_drm_connector_names() {
+   if (sysfs_drm_connector_names) {
+      free_sysfs_drm_connector_names_array(sysfs_drm_connector_names);
+      sysfs_drm_connector_names = NULL;
+   }
+}
+
+
+#ifdef OUT
+// Wrong!  On amdgpu, for DP device realpath is connector with EDID, for HDMI and DVI device is adapter
+char * find_sysfs_drm_connector_name_by_busno(GPtrArray* connector_names, int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "connector_names=%p, busno=%d", connector_names, busno);
 
@@ -1993,9 +2175,16 @@ char * find_sysfs_drm_connector_by_busno(GPtrArray* connector_names, int busno) 
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning %s", result);
    return result;
 }
+#endif
 
 
-char * find_sysfs_drm_connector_by_edid(GPtrArray* connector_names, Byte * edid) {
+/** Searches connectors for one with matching EDID
+ *
+ *  @param  connector_names  array of connector names
+ *  @param  edid             pointer to 128 byte EDID
+ *  @return name of connector with matching EDID (caller must free)
+ */
+char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", edid);
 
@@ -2035,7 +2224,9 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(scan_sys_drm_connectors);
    RTTI_ADD_FUNC(report_sys_drm_connectors);
    RTTI_ADD_FUNC(find_sys_drm_connector);
+#ifdef OUT
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
+#endif
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
 
@@ -2051,19 +2242,19 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(simple_one_n_nnnn);
    RTTI_ADD_FUNC(get_i2c_info);
    RTTI_ADD_FUNC(get_single_i2c_info);
-   RTTI_ADD_FUNC(get_all_i2c_info);
+   RTTI_ADD_FUNC(get_all_sysfs_i2c_info);
    RTTI_ADD_FUNC(get_possible_ddc_ci_bus_numbers);
 
    // other
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
-   RTTI_ADD_FUNC(all_video_devices_drm);
+   RTTI_ADD_FUNC(i2c_all_video_devices_drm);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
    RTTI_ADD_FUNC(is_drm_display_by_busno);
 
-   RTTI_ADD_FUNC(find_sysfs_drm_connector_by_busno);
-   RTTI_ADD_FUNC(find_sysfs_drm_connector_by_edid);
-   RTTI_ADD_FUNC(get_sysfs_drm_connector_names);
+// RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
+   RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
+   RTTI_ADD_FUNC(init_sysfs_drm_connector_names);
 
    RTTI_ADD_FUNC(get_drm_connector_by_edid);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
