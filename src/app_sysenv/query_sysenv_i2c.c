@@ -357,9 +357,12 @@ void raw_scan_i2c_devices(Env_Accumulator * accum) {
 
          rpt_label(d2, "Obtain and interpret EDID using normal i2c functions...");
          rpt_nl();
-         int fd = i2c_open_bus(busno, CALLOPT_ERR_MSG);
-         if (fd < 0)
+         int fd = -1;
+         Error_Info * erec = i2c_open_bus(busno, CALLOPT_ERR_MSG, &fd);
+         if (erec) {
+            ERRINFO_FREE(erec);
             continue;
+         }
 
          unsigned long functionality = i2c_get_functionality_flags_by_fd(fd);
          // DBGMSG("i2c_get_functionality_flags_by_fd() returned %ul", functionality);
