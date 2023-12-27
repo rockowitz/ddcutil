@@ -45,6 +45,7 @@
 #include "base/per_display_data.h"
 
 #include "i2c/i2c_bus_core.h"
+#include "i2c/i2c_display_lock.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
@@ -52,7 +53,6 @@
 #include "usb/usb_displays.h"
 #endif
 
-#include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_try_data.h"
 
 #include "ddc/ddc_packet_io.h"
@@ -106,6 +106,23 @@ ddc_is_valid_display_handle(Display_Handle * dh) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
    return result;
 }
+
+
+DDCA_Status
+ddc_validate_display_handle(Display_Handle * dh) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dh=%p", dh);
+   assert(open_displays);
+
+   DDCA_Status result = DDCRC_OK;
+   g_mutex_lock (&open_displays_mutex);
+   if (!g_hash_table_contains(open_displays, dh) )
+      result = DDCRC_ARG;
+   g_mutex_unlock(&open_displays_mutex);
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "dh=%s", dh_repr(dh));
+   return result;
+}
+
 
 
 void ddc_dbgrpt_valid_display_handles(int depth) {
