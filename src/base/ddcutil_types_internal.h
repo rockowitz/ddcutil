@@ -62,16 +62,6 @@ typedef struct {
 // uses -1,-1 for unset
 
 
-/** Signature of a function to be invoked by the shared library notifying the
- *  client that a change in connected displays has been detected.
- *
- *  The client program should call #ddca_resdetect_displays() and then
- *  ddca_get_display_refs() to get the currently valid display references.
- *
- *  @since 2.0.0
- */
-typedef void (*DDCA_Display_Hotplug_Callback_Func)();
-
 
 
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */
