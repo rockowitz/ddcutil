@@ -16,6 +16,7 @@
 
 DDCA_Status validate_ddca_display_ref(DDCA_Display_Ref ddca_dref, Display_Ref** dref_loc);
 Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
+DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc);
 
 #define WITH_VALIDATED_DR3(_ddca_dref, _ddcrc, _action) \
    do { \
@@ -53,15 +54,11 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh);
       assert(library_initialized); \
       _ddcrc = 0; \
       free_thread_error_detail(); \
-      Display_Handle * dh = validated_ddca_display_handle(ddca_dh); \
-      if (!dh)  { \
-         _ddcrc = DDCRC_ARG; \
-         DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, _ddcrc, "ddca_dh=%p", ddca_dh); \
-      } \
-      else { \
+      Display_Handle * dh = NULL; \
+      _ddcrc = validate_ddca_display_handle(ddca_dh, &dh ); \
+      if (_ddcrc == 0)  { \
          (action); \
       } \
-      /* DBGTRC_RET_DDCRC(debug, DDCA_TRC_API, psc, ""); */ \
    } while(0);
 
 

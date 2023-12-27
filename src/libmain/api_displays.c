@@ -71,6 +71,21 @@ Display_Handle * validated_ddca_display_handle(DDCA_Display_Handle ddca_dh) {
 }
 
 
+DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Handle** dh_loc) {
+   if (dh_loc)
+      *dh_loc = NULL;
+   Display_Handle * dh = (Display_Handle *) ddca_dh;
+   DDCA_Status result = DDCRC_ARG;
+   if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER,4) == 0) {
+      result = ddc_validate_display_handle(dh);
+   }
+   if (result == DDCRC_OK)
+      *dh_loc = dh;
+   return result;
+}
+
+
+
 // forward declarations
 void dbgrpt_display_info(DDCA_Display_Info * dinfo, int depth);
 void dbgrpt_display_info_list(DDCA_Display_Info_List * dlist, int depth);

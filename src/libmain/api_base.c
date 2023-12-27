@@ -42,10 +42,10 @@
 #include "cmdline/parsed_cmd.h"
 
 #include "i2c/i2c_bus_core.h"   // for testing watch_devices
+#include "i2c/i2c_display_lock.h"
 #include "i2c/i2c_execute.h"    // for i2c_set_addr()
 
 #include "ddc/ddc_common_init.h"
-#include "ddc/ddc_display_lock.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_multi_part_io.h"
 #include "ddc/ddc_packet_io.h"
