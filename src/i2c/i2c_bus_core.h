@@ -14,8 +14,9 @@
 #include <stdio.h>
 /** \endcond */
 
-#include "util/edid.h"
 #include "util/data_structures.h"
+#include "util/edid.h"
+#include "util/error_info.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -42,7 +43,7 @@ Byte_Value_Array get_i2c_devices_by_existence_test(bool include_ignorable_device
 // Bus open and close
 void             add_open_failures_reported(Bit_Set_256 failures);
 void             include_open_failures_reported(int busno);
-int              i2c_open_bus(int busno, Call_Options callopts);
+Error_Info *     i2c_open_bus(int busno, Byte callopts, int * fd_loc);
 Status_Errno     i2c_close_bus(int busno, int fd, Call_Options callopts);
 
 // Bus inspection
