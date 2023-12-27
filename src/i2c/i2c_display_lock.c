@@ -1,4 +1,4 @@
-/** \f ddc_display_lock.c
+/** \f i2c_display_lock.c
  *  Provides locking for displays to ensure that a given display is not
  *  opened simultaneously from multiple threads.
  */
@@ -31,7 +31,6 @@
  * Given the imminent release of 2.0.0-rc1, such changes are left to a future release.
  */
 
-
 #include <assert.h>
 
 #include <glib-2.0/glib.h>
@@ -47,14 +46,13 @@
 #include "base/rtti.h"
 #include "base/status_code_mgt.h"
 
-#include "ddc/ddc_display_lock.h"
+#include "i2c/i2c_display_lock.h"
 
 #include "ddcutil_types.h"
 #include "ddcutil_status_codes.h"
 
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_DDCIO;
-
 
 
 static bool lock_rec_matches_io_path(Display_Lock_Record * ddesc, DDCA_IO_Path path) {
@@ -357,7 +355,7 @@ dbgrpt_display_locks(int depth) {
 
 /** Initializes this module */
 void
-init_ddc_display_lock(void) {
+init_i2c_display_lock(void) {
    lock_records= g_ptr_array_new_with_free_func(g_free);
 
    RTTI_ADD_FUNC(get_display_lock_record_by_dpath);
@@ -374,7 +372,7 @@ init_ddc_display_lock(void) {
 
 
 void
-terminate_ddc_display_lock() {
+terminate_i2c_display_lock() {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_DDCIO, "");
    g_ptr_array_free(lock_records, true);

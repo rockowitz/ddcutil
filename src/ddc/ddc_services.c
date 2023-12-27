@@ -38,7 +38,7 @@
 #endif
 
 #include "ddc/ddc_display_selection.h"
-#include "ddc/ddc_display_lock.h"
+#include "i2c/i2c_display_lock.h"
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_dumpload.h"
@@ -202,10 +202,12 @@ void init_ddc_services() {
    init_dyn_feature_codes();    // must come after init_vcp_feature_codes()
    init_dyn_feature_files();
 
+   // i2c:
+   init_i2c_display_lock();
+
    // ddc:
    init_ddc_try_data();
    init_ddc_display_selection();
-   init_ddc_display_lock();
    init_ddc_display_ref_reports();
    init_ddc_displays();
    init_ddc_dumpload();
@@ -234,7 +236,7 @@ void terminate_ddc_services() {
    terminate_ddc_serialize();
    terminate_ddc_displays();  // must be called before terminate_ddc_packet_io()
    terminate_ddc_packet_io();
-   terminate_ddc_display_lock();
+   terminate_i2c_display_lock();
 
    terminate_persistent_capabilities();
 #ifdef USE_USB

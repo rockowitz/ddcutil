@@ -63,13 +63,12 @@
 #else
 #include "i2c/wrap_i2c-dev.h"
 #endif
+#include "i2c/i2c_display_lock.h"
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
 #include "i2c/i2c_execute.h"
 #include "i2c/i2c_edid.h"
-
-#include "ddc/ddc_display_lock.h"      // TODO: <=== violates layering, need to fix
 
 #include "i2c/i2c_bus_core.h"
 

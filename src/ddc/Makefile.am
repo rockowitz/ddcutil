@@ -16,7 +16,6 @@ noinst_LTLIBRARIES = libddc.la
 libddc_la_SOURCES =         \
 ddc_common_init.c           \
 ddc_displays.c              \
-ddc_display_lock.c          \
 ddc_display_ref_reports.c   \
 ddc_display_selection.c     \
 ddc_dumpload.c              \

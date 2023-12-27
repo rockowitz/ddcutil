@@ -23,6 +23,7 @@ noinst_LTLIBRARIES = libi2c.la
 libi2c_la_SOURCES =       \
 i2c_bus_core.c            \
 i2c_bus_selector.c        \
+i2c_display_lock.c        \
 i2c_dpms.c                \
 i2c_edid.c                \
 i2c_execute.c             \

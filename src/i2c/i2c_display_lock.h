@@ -1,4 +1,4 @@
-/* @file ddc_display_lock.h
+/* @file i2c_display_lock.h
  */
 
 // Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
@@ -30,8 +30,8 @@ typedef struct {
    intmax_t     linux_thread_id;
 } Display_Lock_Record;
 
-void                  init_ddc_display_lock(void);
-void                  terminate_ddc_display_lock();
+void                  init_i2c_display_lock(void);
+void                  terminate_i2c_display_lock();
 Error_Info *          lock_display(Display_Lock_Record * id, Display_Lock_Flags flags);
 Error_Info *          lock_display_by_dpath(DDCA_IO_Path dpath, Display_Lock_Flags flags);
 Error_Info *          unlock_display(Display_Lock_Record * id);
