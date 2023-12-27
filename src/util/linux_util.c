@@ -360,4 +360,12 @@ void rpt_lsof(const char * fqfn, int depth) {
 }
 
 
+// to do: tailor the output to what is useful
+GPtrArray* rpt_lsof_collect(const char * fqfn) {
+   char cmd[PATH_MAX+20];
+   g_snprintf(cmd, PATH_MAX+20, "lsof %s", fqfn);
+   return execute_shell_cmd_collect(cmd);
+}
+
+
 

@@ -8,6 +8,7 @@
 #ifndef LINUX_UTIL_H_
 #define LINUX_UTIL_H_
 
+#include <glib-2.0/glib.h>
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -25,5 +26,6 @@ intmax_t get_thread_id();
 intmax_t get_process_id();
 
 void rpt_lsof(const char * fqfn, int depth);
+GPtrArray* rpt_lsof_collect(const char * fqfn);
 
 #endif /* LINUX_UTIL_H_ */
