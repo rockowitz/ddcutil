@@ -888,7 +888,7 @@ parse_command(
    // int      i2c_bus_check_async_min = DEFAULT_I2C_BUS_CHECK_ASYNC_MIN;
    // int      ddc_check_async_min = DEFAULT_DDC_CHECK_ASYNC_MIN;
    char     i2c_bus_check_async_expl[80];
-   g_snprintf(i2c_bus_check_async_expl, 80, "Threshold for parallel examination of I2C buses. Default=%d.",
+   g_snprintf(i2c_bus_check_async_expl, 80, "Threshold for parallel examination of I2C buses (Experimental). Default=%d.",
          DEFAULT_BUS_CHECK_ASYNC_THRESHOLD);
    char     ddc_check_async_expl[80];
    g_snprintf(ddc_check_async_expl, 80, "Threshold for parallel examination of possible DDC devices. Default=%d.",
