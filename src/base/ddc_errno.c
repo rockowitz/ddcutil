@@ -64,6 +64,7 @@ static Status_Code_Info ddcrc_info[] = {
       EDENTRY(DDCRC_INVALID_CONFIG_FILE      , "configuration file error"),
       EDENTRY(DDCRC_DISCONNECTED             , "display no longer connected"),
       EDENTRY(DDCRC_DPMS_ASLEEP              , "display is in a DPMS sleep mode"),
+      EDENTRY(DDCRC_FLOCKED                  , "another process holds flock"),
    // EDENTRY(DDCRC_CAP_FATAL                , "incorrect, unusable capabilities string"),
    // EDENTRY(DDCRC_CAP_WARNING              , "errors in capabilities string, but usable")
     };
