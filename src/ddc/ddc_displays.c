@@ -1640,7 +1640,7 @@ GPtrArray* display_detection_callbacks = NULL;
  */
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
    bool ok = generic_register_callback(&display_detection_callbacks, func);
    DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
@@ -1656,7 +1656,7 @@ DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callb
  */
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
    bool ok =  generic_unregister_callback(display_detection_callbacks, func);
    DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
