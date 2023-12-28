@@ -57,23 +57,31 @@
 #include "ddc/ddc_watch_displays.h"
 
 
-// Experimental code
-// static bool watch_displays_enabled = false;
-bool ddc_watching_using_udev = false;  // if false watching using poll
-
 // Trace class for this file
 static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_NONE;
 
-static bool terminate_watch_thread = false;
+static bool      terminate_watch_thread = false;
 static GThread * watch_thread = NULL;
 static GMutex    watch_thread_mutex;
+
+DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Simple_Udev;
+bool             ddc_slow_watch = false;
+
+const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
+   char * result = NULL;
+   switch (mode) {
+   case Watch_Mode_Full_Poll:   result = "Watch_Mode_Full_Poll";   break;
+   case Watch_Mode_Simple_Udev: result = "Watch_Mode_Simple_Udev"; break;
+   }
+   return result;
+}
+
 
 #define WATCH_DISPLAYS_DATA_MARKER "WDDM"
 typedef struct {
    char                   marker[4];
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
-
 #ifdef OLD_HOTPLUG_VERSION
    Display_Change_Handler display_change_handler;
    Bit_Set_32             drm_card_numbers;
@@ -91,9 +99,6 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
-bool slow_watch = false;
-
-
 #ifdef OLD_HOTPLUG_VERSION
 const char * displays_change_type_name(Displays_Change_Type change_type) {
    char * result = NULL;
@@ -109,10 +114,9 @@ const char * displays_change_type_name(Displays_Change_Type change_type) {
 #endif
 
 
-
 /** Checks that a thread or process id is valid.
  *
- *  @param id  thread or process id
+ *  @param  id  thread or process id
  *  @return true if valid, false if not
  */
 bool check_thread_or_process(pid_t id) {
@@ -145,7 +149,7 @@ void ddc_recheck_bus() {
    Bit_Set_256  old_connected_buses_bitset = buses_bitset_from_businfo_array(all_i2c_buses, true);
 
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset has %d bits set", bs256_count(old_connected_buses_bitset));
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_attached_buses_bitset: %s",  bs256_to_string_decimal_t(old_attached_buses_bitset, "", ",") );
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_attached_buses_bitset: %s", bs256_to_string_decimal_t(old_attached_buses_bitset, "", ",") );
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "old_connected_buses_bitset: %s",bs256_to_string_decimal_t(old_connected_buses_bitset, "", ","));
 
    Bit_Set_256  cur_attached_buses_bitset = i2c_detect_attached_buses_as_bitset();
@@ -211,7 +215,6 @@ void ddc_recheck_bus() {
    if (ct > 0)
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "newly_connected_buses_bitset has %d bits set", ct);
 
-   
    Bit_Set_256_Iterator iter = bs256_iter_new(newly_disconnected_buses_bitset);
    int busno;
    while(true) {
@@ -479,7 +482,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    while (!terminate_watch_thread) {
       ddc_recheck_bus();
       int microsec = 3000*1000;
-      if (slow_watch)
+      if (ddc_slow_watch)
          microsec *= 5;
       usleep(microsec);
       // printf("."); fflush(stdout);
@@ -691,14 +694,13 @@ void api_display_change_handler(
  *  \retval  DDCRC_OK
  */
 DDCA_Status
-ddc_start_watch_displays(bool use_udev_if_possible)
-{
+ddc_start_watch_displays() {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "use_udev_if_possible=%s, watch_thread=%p",
-                                       SBOOL(use_udev_if_possible), watch_thread );
-   DDCA_Status ddcrc = DDCRC_OK;
-   ddc_watching_using_udev = use_udev_if_possible;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p",
+                                       ddc_watch_mode_name(ddc_watch_mode),
+                                       watch_thread );
 
+   DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
    if (!watch_thread) {
       terminate_watch_thread = false;
@@ -713,7 +715,7 @@ ddc_start_watch_displays(bool use_udev_if_possible)
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
-                       (use_udev_if_possible) ?
+                       (ddc_watch_mode == Watch_Mode_Full_Poll) ?
                              watch_displays_using_udev :
                              ddc_watch_displays_using_poll,
                        data);
@@ -740,8 +742,8 @@ ddc_stop_watch_displays(bool wait)
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "wait=%s, watch_thread=%p", SBOOL(wait), watch_thread );
-   DDCA_Status ddcrc = DDCRC_OK;
 
+   DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
 
    if (watch_thread) {
@@ -761,7 +763,6 @@ ddc_stop_watch_displays(bool wait)
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
    return ddcrc;
 }
-
 
 
 #ifdef OLD_HOTPLUG_VERSION

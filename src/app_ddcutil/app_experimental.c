@@ -18,6 +18,7 @@
 #include "ddc/ddc_display_ref_reports.h"
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_packet_io.h"
+#include "ddc/ddc_watch_displays.h"
 
 #include "app_experimental.h"
 
@@ -29,16 +30,18 @@ rpt_vstring(depth+1, "Utility option --f"#_flagno" %s %s",   \
 void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
+   char buf0[80];
+   snprintf(buf0, 80, "Flip watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
    rpt_label(depth, "Experimental Options:");
-   REPORT_FLAG_OPTION(1, "Suppress SE_POST_READ");
-   REPORT_FLAG_OPTION(2, "Experimental sysfs analysis");    // was Filter phantom displays
-   REPORT_FLAG_OPTION(3, "DDC Null Message never indicates invalid feature");
-   REPORT_FLAG_OPTION(4, "Read strategy tests");
-   REPORT_FLAG_OPTION(5, "Use non-default value for EDID read uses I2C layer");
-   REPORT_FLAG_OPTION(6, "Debug watch display connection events");
-   REPORT_FLAG_OPTION(7, "Disable phantom display detection");
+   REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
+   REPORT_FLAG_OPTION(2,  "Experimental sysfs analysis");    // was Filter phantom displays
+   REPORT_FLAG_OPTION(3,  "DDC Null Message never indicates invalid feature");
+   REPORT_FLAG_OPTION(4,  "Read strategy tests");
+   REPORT_FLAG_OPTION(5,  "Use non-default value for EDID read uses I2C layer");
+   REPORT_FLAG_OPTION(6,  "Debug watch display connection events");
+   REPORT_FLAG_OPTION(7,  "Disable phantom display detection");
    REPORT_FLAG_OPTION(8,  "Slow down watch display polling");
-   REPORT_FLAG_OPTION(9,  "Watch using udev");
+   REPORT_FLAG_OPTION(9,  buf0);
    REPORT_FLAG_OPTION(10, "Extended sleep for DDC Null Msg");
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Unused");

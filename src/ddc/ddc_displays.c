@@ -1528,7 +1528,7 @@ ddc_validate_display_ref(Display_Ref * dref) {
       goto bye;
    }
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "dref = %s", dref_repr_t(dref));
-   if (ddc_watching_using_udev) {
+   if (ddc_watch_mode == Watch_Mode_Simple_Udev) {
       if (dref->drm_connector) {
          int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
          bool found_edid = RPT_ATTR_EDID(d, NULL, "/sys/class/drm/", dref->drm_connector, "edid");

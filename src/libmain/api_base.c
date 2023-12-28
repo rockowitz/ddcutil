@@ -698,7 +698,7 @@ ddci_init(const char *      libopts,
       i2c_detect_buses();
       ddc_ensure_displays_detected();
       if (parsed_cmd->flags&CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS)
-         ddc_start_watch_displays(/*use_udev_if_possible=*/ parsed_cmd->flags&CMD_FLAG_F9);
+         ddc_start_watch_displays();
       library_initialized = true;
       library_initialization_failed = false;
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Library initialization complete.");

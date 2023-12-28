@@ -117,7 +117,7 @@ init_tracing(Parsed_Cmd * parsed_cmd)
    if (parsed_cmd->flags & CMD_FLAG_F6)
       watch_watching = true;
    if (parsed_cmd->flags & CMD_FLAG_F8)
-      slow_watch = true;
+      ddc_slow_watch = true;
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);
@@ -387,7 +387,6 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    DBGMSF(debug, "          Setting enable_dynamic_features = %s", sbool(enable_dynamic_features));
    if (parsed_cmd->edid_read_size >= 0)
       EDID_Read_Size = parsed_cmd->edid_read_size;
-
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_FILEIO)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_FILEIO);
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
