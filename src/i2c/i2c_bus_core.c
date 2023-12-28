@@ -229,7 +229,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          }
          assert(flockrc == -1);
          int errsv = errno;
-         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "flock() returned: %s", psc_desc(-errsv));
+         DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "busno=%d, flock() returned: %s", busno, psc_desc(-errsv));
          if (errsv == EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
            uint64_t now = cur_realtime_nanosec();
            if (now < max_nanos) {
