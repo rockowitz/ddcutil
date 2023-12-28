@@ -1033,7 +1033,8 @@ parse_command(
    //  long_name short flags option-type          gpointer           description                    arg description
 
       // Diagnostic output
-      {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
+      {"ddc",     '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors (Deprecated, use --ddcdata)", NULL},
+      {"ddcdata", '\0', 0, G_OPTION_ARG_NONE,     &ddc_flag,         "Report DDC protocol and data errors", NULL},
       {"stats",   's',  G_OPTION_FLAG_OPTIONAL_ARG,
                            G_OPTION_ARG_CALLBACK, stats_arg_func,    "Show performance statistics",  "stats type"},
       {"vstats",  '\0', G_OPTION_FLAG_OPTIONAL_ARG,
