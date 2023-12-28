@@ -184,20 +184,47 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
    if (cross_instance_locks_enabled) {
       int operation = LOCK_EX|LOCK_NB;
       uint64_t start_nanos = cur_realtime_nanosec();
-      uint64_t max_wait_sec = 0;
+      uint64_t max_wait_millisec = 0;
       uint64_t max_nanos = start_nanos;
-      int flock_poll_millisec = 500;
+      int flock_poll_millisec = FLOCK_POLL_MILLISEC;
       int flock_poll_microsec = flock_poll_millisec * 1000;
       if (callopts & CALLOPT_WAIT) {
-         max_wait_sec = 3;
+         max_wait_millisec = FLOCK_MAX_WAIT_MILLISEC;
       }
-      max_nanos = start_nanos + (max_wait_sec * 1000 * 1000 * 1000);
+      max_nanos = start_nanos + (max_wait_millisec * 1000 * 1000);
       Status_Errno lockrc = 0;
       while(true) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling flock(%d,0x%04x)...", fd, operation);
          int flockrc = flock(fd, operation);
          if (flockrc == 0)  {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock succeeded");
+#ifdef EXPLORING
+            int inode = get_inode_by_fd(fd);
+            intmax_t pid = get_process_id();
+            DBGMSG("pid=%jd filename = %s, inode=%d", pid, filename, inode);
+            execute_shell_cmd_rpt("lslocks|grep /dev/i2c", 1);
+            char cmd[80];
+            // g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d", inode);
+            // execute_shell_cmd_rpt(cmd, 1);
+            g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
+            execute_shell_cmd_rpt(cmd, 1);
+            GPtrArray * pids_locking_inode = execute_shell_cmd_collect(cmd);
+            rpt_vstring(1, "Processing locking inode %jd:", inode);
+            for (int ndx = 0; ndx < pids_locking_inode->len; ndx++) {
+               rpt_vstring(2, "%s", g_ptr_array_index(pids_locking_inode, ndx));
+            }
+
+            // g_snprintf(cmd, 80, "ls /proc/%jd", pid);
+            // execute_shell_cmd_rpt(cmd, 1);
+            // g_snprintf(cmd, 80, "cat /proc/%jd/cmdline", pid);
+            // execute_shell_cmd_rpt(cmd, 1);
+            g_snprintf(cmd, 80, "cat /proc/%jd/status | egrep -e Name -e State -e '^Pid:'", pid);
+            execute_shell_cmd_rpt(cmd, 1);
+            GPtrArray * pids = execute_shell_cmd_collect(cmd);
+            for (int ndx = 0; ndx < pids->len; ndx++) {
+               rpt_vstring(3, "%s", g_ptr_array_index(pids, ndx));
+            }
+#endif
             break;
          }
          assert(flockrc == -1);
@@ -215,6 +242,29 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
               if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
                  rpt_vstring(0, "Programs holding %s open:", filename);
                  rpt_lsof(filename, 1);
+                 int inode = get_inode_by_fn(filename);
+                 int inode2 = get_inode_by_fd(fd);
+                 assert(inode == inode2);
+                 char cmd[80];
+                 g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d", inode);
+                 // execute_shell_cmd_rpt(cmd, 1);
+                 // g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
+                 // execute_shell_cmd_rpt(cmd, 1);
+                 GPtrArray * pids = execute_shell_cmd_collect(cmd);
+                 rpt_vstring(1, "Processes locking inode %jd", inode);
+                 for (int ndx = 0; ndx < pids->len; ndx++) {
+                    char * spid = g_ptr_array_index(pids, ndx);
+                    rpt_vstring(2, "%s", spid);
+                    g_snprintf(cmd, 80, "cat /proc/%s/status | egrep -e Name -e State -e '^Pid:'", spid);
+                    execute_shell_cmd_rpt(cmd, 1);
+                    GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
+                    for (int k = 0; k < status_lines->len; k ++) {
+                       rpt_vstring(4, "%s", g_ptr_array_index(status_lines, k));
+                    }
+                    rpt_nl();
+                 }
+
+
               }
               lockrc = DDCRC_FLOCKED;
               break;
@@ -227,8 +277,8 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
             break;
         }
      }
-     if (lockrc != 0) {
-        DBGTRC_NOPREFIX(true, TRACE_GROUP, "Cross instance locking failed");
+      if (lockrc != 0) {
+         DBGTRC_NOPREFIX(true, TRACE_GROUP, "Cross instance locking failed");
          close(*fd_loc);
          unlock_display_by_dpath(dpath);
          master_error = ERRINFO_NEW(lockrc, "Cross instance locking failed. busno=%d", busno);
