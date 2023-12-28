@@ -53,6 +53,7 @@
 #include "usb/usb_displays.h"
 #endif
 
+#include "ddc/ddc_displays.h"
 #include "ddc/ddc_try_data.h"
 
 #include "ddc/ddc_packet_io.h"
