@@ -1011,7 +1011,7 @@ has_duplicate_edids(GPtrArray * drefs) {
    return found_duplicate;
 }
 
-bool detect_phantom_displays = true;  // for testing
+bool detect_phantom_displays = true;
 
 
 /** Mark phantom displays.
@@ -1476,6 +1476,7 @@ ddc_redetect_displays() {
 }
 
 
+#ifdef UNUSED
 /** Checks that a #Display_Ref is in array **all_displays**
  *  of all valid #Display_Ref values.
  *
@@ -1483,7 +1484,7 @@ ddc_redetect_displays() {
  *  @return true/false
  */
 bool
-ddc_is_valid_display_ref(Display_Ref * dref) {
+ddc_is_known_display_ref(Display_Ref * dref) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p -> %s", dref, dref_repr_t(dref));
    bool result = false;
@@ -1502,6 +1503,7 @@ ddc_is_valid_display_ref(Display_Ref * dref) {
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "dref=%p, dispno=%d", dref, dref->dispno);
    return result;
 }
+#endif
 
 
 /** Replacement for #ddc_is_valid_display_ref() that returns a status code
@@ -1566,8 +1568,6 @@ bye:
 }
 
 
-
-
 /** Indicates whether displays have already been detected
  *
  *  @return true/false
@@ -1626,15 +1626,12 @@ ddc_is_usb_display_detection_enabled() {
 
 
 //
-// Simple handling of display detection events
+// Extended display status change handling
 //
 
 GPtrArray* display_detection_callbacks = NULL;
-GPtrArray* display_hotplug_callbacks = NULL;
 
-/** Registers a display detection event callback
- *
- * The function must be of type DDCA_Display_Detection_Callback_Func
+/** Registers a display status change event callback
  *
  *  @param func function to register
  *
@@ -1651,25 +1648,9 @@ DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callb
 }
 
 
-DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
-   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-
-
-/** Deregisters a detection event callback function
+/** Unregisters a detection event callback function
  *
- *  @@aram function of type DDCA_Display_Detection_Callback_func
- */
-/** Deregisters a detection event callback function
- *
- *  @param  function to dregister
+ *  @@aram  function of type DDCA_Display_Detection_Callback_func
  *  @retval DDCRC_OK normal return
  *  #reeval DDCRC_NOT_FOUND function not in list of registered functions
  */
@@ -1677,16 +1658,6 @@ DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Cal
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
    bool ok =  generic_unregister_callback(display_detection_callbacks, func);
-   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
    DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
@@ -1740,7 +1711,6 @@ void ddc_emit_display_detection_event(
 }
 
 
-
 const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
@@ -1754,16 +1724,54 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    return result;
 }
 
-// SIMPLE
+
+//
+//  Simpler mechanism that just reports when a UDEV hotplug event has occurred.
+//
+
+GPtrArray* display_hotplug_callbacks = NULL;
+
+
+/** Registers a display hotplug event callback
+ *
+ *  @param func function to register
+ *
+ *  The function must be of type DDDCA_Display_Hotplug_Callback_Func.
+ *  It is not an error if the function is already registered.
+ */
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
+   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
+/** Unregisters a display hotplug callback function
+ *
+ *  @param  function to deregister
+ *  @retval DDCRC_OK normal return
+ */
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
+   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
 
 uint64_t last_emit_millisec = 0;
 uint64_t double_tap_millisec = 500;
 
-void ddc_emit_display_hotplug_event()
-{
+
+void ddc_emit_display_hotplug_event() {
    bool debug = true || watch_watching;
    uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd", last_emit_millisec, cur_emit_millisec);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd",
+                                       last_emit_millisec, cur_emit_millisec);
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
    int callback_ct = 0;
@@ -1783,52 +1791,17 @@ void ddc_emit_display_hotplug_event()
    }
    last_emit_millisec = cur_emit_millisec;
 
-
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
 }
 
 
 
 
-#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
-
+#ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
 //
 // Modify local data structures before invoking client callback functions.
 // Too many edge cases
 //
-
-
-GPtrArray* display_detection_callbacks = NULL;
-
-bool ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
-   bool result = generic_register_callback(display_detection_callbacks, func);
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, result, "");
-   return result;
-}
-
-bool ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func fund) {
-   // TO DO
-   return true;
-}
-
-
-
-void
-ddc_emit_display_detection_event(DDCA_Display_Detection_Report report) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s, operation=%d", dref_repr_t(report.dref), report.operation);
-   if (display_detection_callbacks) {
-      for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
-         DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
-         func(report);
-      }
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks",
-         (display_detection_callbacks) ? display_detection_callbacks->len : 0);
-}
-
 
 /** Process a display removal event.
  *
@@ -2068,8 +2041,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
-void
-init_ddc_displays() {
+void init_ddc_displays() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
    RTTI_ADD_FUNC(ddc_async_scan);
@@ -2081,7 +2053,6 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
-   RTTI_ADD_FUNC(ddc_is_valid_display_ref);
    RTTI_ADD_FUNC(ddc_non_async_scan);
    RTTI_ADD_FUNC(ddc_redetect_displays);
    RTTI_ADD_FUNC(drefs_edid_equal);
@@ -2093,13 +2064,6 @@ init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_validate_display_ref);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno);
-
-#ifdef DETAILED_DISPLAY_CHANGE_HANDLING
-   RTTI_ADD_FUNC(ddc_add_display_by_drm_connector);
-   RTTI_ADD_FUNC(ddc_remove_display_by_drm_connector);
-   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
-#endif
 }
 
 
