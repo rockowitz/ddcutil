@@ -1829,7 +1829,7 @@ GPtrArray * get_sys_video_devices() {
  *  @return true/false
  */
 bool i2c_all_video_devices_drm() {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
 
    GPtrArray * video_devices = get_sys_video_devices();
