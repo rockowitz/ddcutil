@@ -238,33 +238,40 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
               continue;
            }
            else {
-              DBGTRC_NOPREFIX(true, DDCA_TRC_NONE, "Max wait exceeded for %s", filename);
+              MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Max wait exceeded for %s", filename);
               if (IS_DBGTRC(true, DDCA_TRC_NONE)) {
-                 rpt_vstring(0, "Programs holding %s open:", filename);
-                 rpt_lsof(filename, 1);
-                 int inode = get_inode_by_fn(filename);
-                 int inode2 = get_inode_by_fd(fd);
-                 assert(inode == inode2);
                  char cmd[80];
-                 g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d", inode);
-                 // execute_shell_cmd_rpt(cmd, 1);
-                 // g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
-                 // execute_shell_cmd_rpt(cmd, 1);
+
+                 MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Programs holding %s open:", filename);
+                 rpt_lsof(filename, 1);
+                 g_snprintf(cmd, 80, "lsof %s", filename);
+                 GPtrArray* lsof_lines = execute_shell_cmd_collect(cmd);
+                 for (int ndx = 0; ndx < lsof_lines->len; ndx++) {
+                    MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", (char*) g_ptr_array_index(lsof_lines, ndx));
+                 }
+                 g_ptr_array_free(lsof_lines, true);
+
+                 int inode = get_inode_by_fn(filename);
+                 // int inode2 = get_inode_by_fd(fd);
+                 // assert(inode == inode2);
+
+                 MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "Processes locking %s (inode %d): ", filename, inode);
+                 g_snprintf(cmd, 80, "cat /proc/locks | cut -d' ' -f'7 8' | grep 00:05:%d | cut -d' ' -f'1'", inode);
+                 execute_shell_cmd_rpt(cmd, 1);  // *** TEMP ***
                  GPtrArray * pids = execute_shell_cmd_collect(cmd);
-                 rpt_vstring(1, "Processes locking inode %jd", inode);
+                 // rpt_vstring(1, "Processes locking inode %jd", inode);
                  for (int ndx = 0; ndx < pids->len; ndx++) {
                     char * spid = g_ptr_array_index(pids, ndx);
-                    rpt_vstring(2, "%s", spid);
+                    rpt_vstring(2, "%s", spid);  // *** TEMP ***
                     g_snprintf(cmd, 80, "cat /proc/%s/status | egrep -e Name -e State -e '^Pid:'", spid);
-                    execute_shell_cmd_rpt(cmd, 1);
+                    execute_shell_cmd_rpt(cmd, 1); // *** TEMP ***
                     GPtrArray * status_lines = execute_shell_cmd_collect(cmd);
                     for (int k = 0; k < status_lines->len; k ++) {
-                       rpt_vstring(4, "%s", g_ptr_array_index(status_lines, k));
+                       MSG_W_SYSLOG(DDCA_SYSLOG_WARNING, "   %s", (char*) g_ptr_array_index(status_lines, k));
                     }
                     rpt_nl();
+                    g_ptr_array_free(status_lines, true);
                  }
-
-
               }
               lockrc = DDCRC_FLOCKED;
               break;
