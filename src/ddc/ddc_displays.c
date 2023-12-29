@@ -1796,8 +1796,6 @@ void ddc_emit_display_hotplug_event() {
 }
 
 
-
-
 #ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
 //
 // Modify local data structures before invoking client callback functions.
@@ -2049,7 +2047,6 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
-
    RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
