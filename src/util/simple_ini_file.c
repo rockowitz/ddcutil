@@ -171,7 +171,7 @@ int ini_file_load(
       DBGF(debug, "config_lines->len = %d", config_lines->len);
       for (guint ndx = 0; ndx < config_lines->len; ndx++) {
          char * line = g_ptr_array_index(config_lines, ndx);
-         DBGF(debug, "Processing line %d: |%s|\n", ndx+1, line);
+         DBGF(debug, "Processing line %d: |%s|", ndx+1, line);
          char * trimmed = trim_in_place(line);
          // DBGMSF(debug, "line=%d. trimmed=|%s|", ndx+1, trimmed);
 
@@ -191,8 +191,21 @@ int ini_file_load(
          else if ( is_kv(trimmed, &key, &value) ) {
             if (cur_segment) {
                char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
-               DBGF(debug, "Inserting %s -> %s", full_key, value);
-               g_hash_table_insert(ini_file_hash, full_key, value);
+               char * old_value = g_hash_table_lookup(ini_file_hash, full_key);
+               if (old_value) {
+                  DBGF(debug, "old value = %p -> %s", old_value, old_value);
+                  char * new_value = g_strdup_printf("%s %s", old_value, value);
+                  DBGF(debug, "Replacing %s -> %p = %s", full_key, new_value, new_value);
+                  g_hash_table_replace(ini_file_hash, full_key, new_value);
+                  if (debug) {
+                     char * updated_value = g_hash_table_lookup(ini_file_hash, full_key);
+                     DBGF(debug, "updated value = %p = %s", updated_value, updated_value);
+                  }
+               }
+               else {
+                  DBGF(debug, "Inserting %s -> %s", full_key, value);
+                  g_hash_table_insert(ini_file_hash, full_key, value);
+               }
             }
             else {
                DBGF(debug, "trimmed: |%s|", trimmed);
