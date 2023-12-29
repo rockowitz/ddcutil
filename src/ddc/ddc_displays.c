@@ -1207,7 +1207,8 @@ Display_Ref * detect_display_by_businfo(I2C_Bus_Info * businfo) {
 STATIC GPtrArray *
 ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s",sbool(display_caching_enabled));
+   DBGTRC_STARTING(debug, TRACE_GROUP, "display_caching_enabled=%s, detect_usb_displays=%s",
+         sbool(display_caching_enabled), sbool(detect_usb_displays));
 
    dispno_max = 0;
    GPtrArray * bus_open_errors = g_ptr_array_new();
@@ -1639,7 +1640,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  It is not an error if the function is already registered.
  */
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
    bool ok = generic_register_callback(&display_detection_callbacks, func);
    DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
@@ -1740,8 +1741,8 @@ GPtrArray* display_hotplug_callbacks = NULL;
  *  It is not an error if the function is already registered.
  */
 DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
    bool ok = generic_register_callback(&display_hotplug_callbacks, func);
    DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
@@ -1756,7 +1757,7 @@ DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_
  */
 DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p");
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
    bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
    DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
@@ -1768,7 +1769,7 @@ uint64_t double_tap_millisec = 500;
 
 
 void ddc_emit_display_hotplug_event() {
-   bool debug = true || watch_watching;
+   bool debug = false || watch_watching;
    uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
    DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd",
                                        last_emit_millisec, cur_emit_millisec);
@@ -2048,7 +2049,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
-   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
+
    RTTI_ADD_FUNC(ddc_get_all_displays);
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
@@ -2064,6 +2065,14 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_validate_display_ref);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno);
+
+   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
+   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
+   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
+
+   RTTI_ADD_FUNC(ddc_register_display_hotplug_callback);
+   RTTI_ADD_FUNC(ddc_unregister_display_hotplug_callback);
+   RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
 }
 
 
