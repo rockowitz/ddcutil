@@ -1277,54 +1277,9 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 
 
 
-#ifdef FUTURE_DDCUTIL_C_API
-
-
-//
-// Display hotplug detection
-//
-
-
-/** Signature of a function to be invoked by the shared library notifying the
- *  client that a change in connected displays has been detected.
- *
- *  The client program should call #ddca_resdetect_displays() and then
- *  ddca_get_display_refs() to get the currently valid display references.
- *
- *  @since 2.0.0
- */
-// temporarily defined in ddcutil_types_internal.h
-typedef void (*DDCA_Display_Hotplug_Callback_Func)();
-
-/** Registers a function to be called called when a change in displays is
- *  detected.
- *
- *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func()
- *  @return DDCRC_OK
- *  @retval DDCRC_INVALID_OPERATION function already registered
- *
- *  @since 2.0.0
- */
-DDCA_Status
-ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
-
-/** Removes a function from the list of registered callbacks
- *
- *  @param[in] func  function that has already been registered
- *  @retval DDCRC_OK  function removed from list
- *  @retval DDCRC_NOT_FOUNC function not registered
- *
- *  @since 2.0.0
- */
-DDCA_Status
-ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
-#endif
-
-
 //
 // Display Status Change Communication
 //
-
 
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
@@ -1332,9 +1287,7 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
 
-   DDCA_Status result = (i2c_all_video_devices_drm())
-                      ? ddc_register_display_detection_callback(func)
-                      : DDCRC_INVALID_OPERATION;
+   DDCA_Status result = ddc_register_display_detection_callback(func);
 
    API_EPILOG(debug, result, "");
    return result;
@@ -1347,9 +1300,7 @@ ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func 
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
 
-   DDCA_Status result = (i2c_all_video_devices_drm())
-                      ? ddc_unregister_display_detection_callback(func)
-                      : DDCRC_INVALID_OPERATION;
+   DDCA_Status result = ddc_unregister_display_detection_callback(func);
 
    API_EPILOG(debug, result, "");
    return result;
@@ -1365,18 +1316,22 @@ const char *
 
 
 DDCA_Status
-ddca_register_display_hotplug_callback(DDCA_Display_Detection_Callback_Func func) {
+ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
    bool debug = false;
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
 
-   DDCA_Status result = (i2c_all_video_devices_drm())
+   DDCA_Status result = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   result = (i2c_all_video_devices_drm())
                       ? ddc_register_display_hotplug_callback(func)
                       : DDCRC_INVALID_OPERATION;
+#endif
 
    API_EPILOG(debug, result, "");
    return result;
 }
+
 
 DDCA_Status
 ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
@@ -1384,15 +1339,11 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
    free_thread_error_detail();
    API_PROLOGX(debug, "func=%p", func);
 
-   DDCA_Status result = (i2c_all_video_devices_drm())
-                      ? ddc_unregister_display_hotplug_callback(func)
-                      : DDCRC_INVALID_OPERATION;
+   DDCA_Status result =  ddc_register_display_hotplug_callback(func);
 
    API_EPILOG(debug, result, "");
    return result;
 }
-
-
 
 
 //
