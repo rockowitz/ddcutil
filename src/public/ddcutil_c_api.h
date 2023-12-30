@@ -1709,11 +1709,12 @@ ddca_set_profile_related_values(
 //
 
 /** Registers a function to be called called when a change in display status is
- *  detected.
+ *  detected. It is not an error if the function is already registered.
  *
  *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
  *  @return    DDCRC_OK
- *  @retval    DDCRC_INVALID_OPERATION function already registered
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
  *
  *  @since 2.0.2
  */
@@ -1724,6 +1725,8 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
  *
  *  @param[in] func            function that has already been registered
  *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
  *  @retval    DDCRC_NOT_FOUND function not registered
  *
  *  @since 2.0.2
@@ -1749,13 +1752,13 @@ const char *
 
 // SIMPLER ALTERNATIVE
 
-
 /** Registers a function to be called called when a change in display status is
  *  detected.
  *
  *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func
- *  @return    DDCRC_OK
- *  @retval    DDCRC_INVALID_OPERATION function already registered, not all video devices DRM
+ *  @retval    DDCRC_OK
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
  *
  *  @since 2.0.2
  */
@@ -1766,14 +1769,14 @@ ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
  *
  *  @param[in] func            function that has already been registered
  *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
  *  @retval    DDCRC_NOT_FOUND function not registered
  *
  *  @since 2.0.2
  */
 DDCA_Status
 ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
-
-
 
 
 #ifdef __cplusplus
