@@ -770,13 +770,10 @@ ddc_write_read_with_retry(
 
          if (psc == -EIO || psc == -ENXIO) {
             Error_Info * err = i2c_check_open_bus_alive(dh) ;
-            if (!err) {
-               if (dpms_check_drm_asleep_by_dref(dh->dref))
-                       psc = DDCRC_DPMS_ASLEEP;
-            }
-
-            if (err)
+            if (err) {
                psc = err->status_code;
+               retryable = false;
+            }
          }
 
          // try exponential backoff on all errors, not just SE_DDC_NULL
