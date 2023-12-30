@@ -425,10 +425,12 @@ bool is_laptop_drm_connector_name(const char * connector_name) {
 bool i2c_check_edid_exists_by_dh(Display_Handle * dh) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "dh = %s", dh_repr(dh));
+
    Buffer * edidbuf = buffer_new(256, "");
    Status_Errno_DDC rc = i2c_get_raw_edid_by_fd(dh->fd, edidbuf);
    bool result = (rc == 0);
    buffer_free(edidbuf, "");
+
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
    return result;
 }
@@ -456,6 +458,8 @@ bool i2c_check_edid_exists_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
+#ifdef OUT
+// *** wrong for Nvidia driver ***
 Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name = %s", drm_connector_name);
@@ -465,7 +469,7 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
    Error_Info * result = NULL;
    char * status;
    RPT_ATTR_TEXT(-1, &status, "/sys/class/drm", drm_connector_name, "status");
-   if (streq(status, "disconnected"))
+   if (streq(status, "disconnected"))   // *** WRONG Nvidia driver always reports "disconnected"
          result = ERRINFO_NEW(DDCRC_DISCONNECTED, "Display was disconnected");
    else {
       char * dpms;
@@ -477,7 +481,15 @@ Error_Info * i2c_check_bus_responsive_using_drm(const char * drm_connector_name)
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "");
    return result;
 }
+#endif
 
+
+/**
+ *
+ *  @param  dh     display handle
+ *  @retval NULL   ok
+ *  @retval Error_Info with status DDCRC_DISCONNECTED or DDCRC_DPMS_ASLEEP
+ */
 
 Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
    bool debug = false;
@@ -491,15 +503,24 @@ Error_Info * i2c_check_open_bus_alive(Display_Handle * dh) {
            (businfo->flags & I2C_BUS_PROBED)
          );
    assert(sys_drm_connectors);
+
    Error_Info * result = NULL;
+   bool edid_exists = false;
    if (businfo->drm_connector_name) {
-      result = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);
+      edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", businfo->drm_connector_name, "edid");
+      // edid_exists = i2c_check_bus_responsive_using_drm(businfo->drm_connector_name);  // fails for Nvidia
    }
    else {
       // read edid
-      bool b = i2c_check_edid_exists_by_dh(dh);
-      if (!b)
-         result = ERRINFO_NEW(DDCRC_DISCONNECTED,
+      edid_exists = i2c_check_edid_exists_by_dh(dh);
+   }
+   if (!edid_exists) {
+      result = ERRINFO_NEW(DDCRC_DISCONNECTED,
+               "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
+   }
+   else {
+      if (dpms_check_drm_asleep_by_dref(dh->dref))
+         result = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
                "/dev/i2c-%d", dh->dref->io_path.path.i2c_busno);
    }
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, result, "");
