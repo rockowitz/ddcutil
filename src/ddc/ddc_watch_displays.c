@@ -396,6 +396,7 @@ void ddc_emit_display_hotplug_event() {
 }
 
 
+#ifdef ENABLE_UDEV
 #ifdef UNUSED
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
@@ -511,7 +512,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 
     return NULL;
 }
-
+#endif
 
 //
 // Common to both variants
@@ -546,9 +547,13 @@ ddc_start_watch_displays() {
 
       watch_thread = g_thread_new(
                        "watch_displays",             // optional thread name
+#ifdef ENABLE_UDEV
                        (ddc_watch_mode == Watch_Mode_Full_Poll) ?
                              watch_displays_using_udev :
                              ddc_watch_displays_using_poll,
+#else
+                       ddc_watch_displays_using_poll,
+#endif
                        data);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
    }
