@@ -455,7 +455,7 @@ rpt_attr_binary(
  *  \return true if attribute found, false if not
  *
  *  \remark
- *  *value_loc is set iff result is true
+ *  if result == true, *value_loc will be set iff non-null
  */
 bool
 rpt_attr_edid(
