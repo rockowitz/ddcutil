@@ -161,7 +161,7 @@ discard_cache_arg_func(
 }
 
 
-
+#ifdef ENABLE_USB
 static gboolean
 ignored_hiddev_arg_func(const    gchar* option_name,
                const    gchar* value,
@@ -183,6 +183,7 @@ ignored_hiddev_arg_func(const    gchar* option_name,
    // DBGMSF(debug, "Returning %s", sbool(ok));
    return ok;
 }
+#endif
 
 
 // #define FUTURE
