@@ -1634,7 +1634,10 @@ GPtrArray* display_detection_callbacks = NULL;
 
 /** Registers a display status change event callback
  *
- *  @param func function to register
+ *  @param  func      function to register
+ *  @retval DDCRC_OK
+ *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                  or not all video devices support DRM
  *
  *  The function must be of type DDDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
@@ -1642,26 +1645,42 @@ GPtrArray* display_detection_callbacks = NULL;
 DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-   bool ok = generic_register_callback(&display_detection_callbacks, func);
-   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
+
+   DDCA_Status result = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   if (i2c_all_video_devices_drm() &&
+       generic_register_callback(&display_detection_callbacks, func) )
+   {
+      result = DDCRC_OK;
+   }
+#endif
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
 }
 
 
 /** Unregisters a detection event callback function
  *
- *  @@aram  function of type DDCA_Display_Detection_Callback_func
+ *  @param  function of type DDCA_Display_Detection_Callback_func
  *  @retval DDCRC_OK normal return
- *  #reeval DDCRC_NOT_FOUND function not in list of registered functions
+ *  @retval DDCRC_NOT_FOUND function not in list of registered functions
+ *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                  or not all video devices support DRM
  */
 DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-   bool ok =  generic_unregister_callback(display_detection_callbacks, func);
-   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
+
+   DDCA_Status result = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   if (i2c_all_video_devices_drm() ) {
+       result = generic_register_callback(&display_detection_callbacks, func);
+   }
+#endif
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, result, "");
+   return result;
 }
 
 
@@ -1724,200 +1743,6 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    }
    return result;
 }
-
-
-//
-//  Simpler mechanism that just reports when a UDEV hotplug event has occurred.
-//
-
-GPtrArray* display_hotplug_callbacks = NULL;
-
-
-/** Registers a display hotplug event callback
- *
- *  @param func function to register
- *
- *  The function must be of type DDDCA_Display_Hotplug_Callback_Func.
- *  It is not an error if the function is already registered.
- */
-DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-   bool ok = generic_register_callback(&display_hotplug_callbacks, func);
-   DDCA_Status ddcrc = (ok) ? DDCRC_OK : DDCRC_INVALID_OPERATION;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-/** Unregisters a display hotplug callback function
- *
- *  @param  function to deregister
- *  @retval DDCRC_OK normal return
- */
-DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-   bool ok =  generic_unregister_callback(display_hotplug_callbacks, func);
-   DDCA_Status ddcrc =  (ok) ? DDCRC_OK : DDCRC_NOT_FOUND;
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-uint64_t last_emit_millisec = 0;
-uint64_t double_tap_millisec = 500;
-
-
-void ddc_emit_display_hotplug_event() {
-   bool debug = false || watch_watching;
-   uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd",
-                                       last_emit_millisec, cur_emit_millisec);
-
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
-   int callback_ct = 0;
-
-   if ( (cur_emit_millisec - last_emit_millisec) > double_tap_millisec) {
-      DBGMSF(debug, "emitting");
-      if (display_hotplug_callbacks) {
-         for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
-            DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
-            func();
-         }
-         callback_ct =  display_hotplug_callbacks->len;
-      }
-   }
-   else {
-      DBGMSF(debug, "double tap ");
-   }
-   last_emit_millisec = cur_emit_millisec;
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
-}
-
-
-#ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
-//
-// Modify local data structures before invoking client callback functions.
-// Too many edge cases
-//
-
-/** Process a display removal event.
- *
- *  The currently active Display_Ref for the specified DRM connector
- *  name is located.  It is marked removed, and the associated
- *  I2C_Bus_Info struct is reset.
- *
- *  @param drm_connector    connector name, e.g. card0-DP-1
- *  @remark
- *  Does not handle displays using USB for communication
- */
-bool ddc_remove_display_by_drm_connector(const char * drm_connector) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector = %s", drm_connector);
-
-   // DBGTRC_NOPREFIX(true, TRACE_GROUP, "All existing Bus_Info recs:");
-   // i2c_dbgrpt_buses(/* report_all */ true, 2);
-
-   bool found = false;
-   assert(all_display_refs);
-   for (int ndx = 0; ndx < all_display_refs->len; ndx++) {
-      // If a display is repeatedly removed and added on a particular connector,
-      // there will be multiple Display_Ref records.  All but one should already
-      // be flagged DDCA_DISPLAY_REMOVED, and should not have a pointer to
-      // an I2C_Bus_Info struct.
-      Display_Ref * dref = g_ptr_array_index(all_display_refs, ndx);
-      assert(dref);
-      DBGMSG("Checking dref %s", dref_repr_t(dref));
-      dbgrpt_display_ref(dref, 2);
-      if (dref->io_path.io_mode == DDCA_IO_I2C) {
-         if (dref->flags & DDCA_DISPLAY_REMOVED)  {
-            DBGMSG("DDCA_DISPLAY_REMOVED set");
-            continue;
-         }
-         I2C_Bus_Info * businfo = dref->detail;
-         // DBGMSG("businfo = %p", businfo);
-         assert(businfo);
-         DBGMSG("Checking I2C_Bus_Info for %d", businfo->busno);
-         if (!(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED))
-            i2c_check_businfo_connector(businfo);
-         DBGMSG("drm_connector_found_by = %s (%d)",
-               drm_connector_found_by_name(businfo->drm_connector_found_by),
-               businfo->drm_connector_found_by);
-         if (businfo->drm_connector_found_by != DRM_CONNECTOR_NOT_FOUND) {
-            DBGMSG("comparing %s", businfo->drm_connector_name);
-            if (streq(businfo->drm_connector_name, drm_connector)) {
-               DBGMSG("Found drm_connector %s", drm_connector);
-               dref->flags |= DREF_REMOVED;
-               i2c_reset_bus_info(businfo);
-               DDCA_Display_Detection_Report report;
-               report.operation = DDCA_DISPLAY_REMOVED;
-               report.dref = dref;
-               ddc_emit_display_detection_event(report);
-               found = true;
-               break;
-            }
-         }
-      }
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
-   return found;
-}
-
-
-bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
-   bool debug = true;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "drm_connector_name = %s", drm_connector_name);
-
-   bool ok = false;
-   Sys_Drm_Connector * conrec = find_sys_drm_connector(-1, NULL, drm_connector_name);
-   if (conrec) {
-      int busno = conrec->i2c_busno;
-      // TODO: ensure that there's no I2c_Bus_Info record for the bus
-      I2C_Bus_Info * businfo = i2c_find_bus_info_by_busno(busno);
-      if (!businfo)
-         businfo = i2c_new_bus_info(busno);
-      if (businfo->flags&I2C_BUS_PROBED) {
-         SEVEREMSG("Display added for I2C bus %d still marked in use", busno);
-         i2c_reset_bus_info(businfo);
-      }
-
-      i2c_check_bus(businfo);
-      if (businfo->flags & I2C_BUS_ADDR_0X50) {
-         Display_Ref * old_dref = ddc_get_display_ref_by_drm_connector(drm_connector_name, /*ignore_invalid*/ false);
-         if (old_dref) {
-            SEVEREMSG("Active Display_Ref already exists for DRM connector %s", drm_connector_name);
-            // how to handle?
-            old_dref->flags |= DREF_REMOVED;
-         }
-         Display_Ref * dref = create_bus_display_ref(busno);
-         dref->dispno = DISPNO_INVALID;   // -1, guilty until proven innocent
-         dref->pedid = copy_parsed_edid(businfo->edid);    // needed?
-         dref->mmid  = monitor_model_key_new(
-                          dref->pedid->mfg_id,
-                          dref->pedid->model_name,
-                          dref->pedid->product_code);
-
-         // drec->detail.bus_detail = businfo;
-         dref->detail = businfo;
-         dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
-         dref->flags |= DREF_DDC_IS_MONITOR;
-
-         g_ptr_array_add(all_display_refs, dref);
-
-         DDCA_Display_Detection_Report report = {dref, DDCA_DISPLAY_ADDED};
-         ddc_emit_display_detection_event(report);
-
-         ok = true;
-      }
-   }
-
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, ok, "");
-   return ok;
-}
-
-#endif
 
 
 /** If a display is present on a specified bus adds a Display_Ref
@@ -2040,6 +1865,71 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
 }
 
 
+#ifdef UNUSED
+/** Tests if communication working for a Display_Ref
+ *
+ *  @param  dref   display reference
+ *  @return true/false
+ */
+bool is_dref_alive(Display_Ref * dref) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
+   Display_Handle* dh = NULL;
+   Error_Info * erec = NULL;
+   bool is_alive = true;
+   if (dref->io_path.io_mode == DDCA_IO_I2C) {   // punt on DDCA_IO_USB for now
+      bool check_needed = true;
+      if (dref->drm_connector) {
+         char * status = NULL;
+         int depth = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 2 : -1;
+         RPT_ATTR_TEXT(depth,&status, "/sys/class/drm", dref->drm_connector, "status");
+         if (!streq(status, "connected"))  // WRONG: Nvidia driver always "disconnected", check edid instead
+            check_needed = false;
+         free(status);
+      }
+      if (check_needed) {
+         erec = ddc_open_display(dref, CALLOPT_WAIT, &dh);
+         assert(!erec);
+         Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
+         erec = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_nontable_response);
+         // seen: -ETIMEDOUT, DDCRC_NULL_RESPONSE then -ETIMEDOUT, -EIO, DDCRC_DATA
+         // if (erec && errinfo_all_causes_same_status(erec, 0))
+         if (erec)
+            is_alive = false;
+         ERRINFO_FREE_WITH_REPORT(erec, IS_DBGTRC(debug, TRACE_GROUP));
+         ddc_close_display_wo_return(dh);
+      }
+   }
+   DBGTRC_RET_BOOL(debug, TRACE_GROUP, is_alive, "");
+   return is_alive;
+}
+
+
+/** Check all display references to determine if they are active.
+ *  Sets or clears the DREF_ALIVE flag in the display reference.
+ */
+void check_drefs_alive() {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   if (ddc_displays_already_detected()) {
+      GPtrArray * all_displays = ddc_get_all_displays();
+      for (int ndx = 0; ndx < all_displays->len; ndx++) {
+         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
+         bool alive = is_dref_alive(dref);
+         if (alive != (dref->flags & DREF_ALIVE) )
+            (void) dref_set_alive(dref, alive);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, is_alive=%s",
+                         dref_repr_t(dref), SBOOL(dref->flags & DREF_ALIVE));
+      }
+   }
+   else {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "displays not yet detected");
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+#endif
+
+
 void init_ddc_displays() {
    RTTI_ADD_FUNC(check_how_unsupported_reported);
    RTTI_ADD_FUNC(ddc_add_display_by_businfo);
@@ -2066,10 +1956,6 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_register_display_detection_callback);
    RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
    RTTI_ADD_FUNC(ddc_emit_display_detection_event);
-
-   RTTI_ADD_FUNC(ddc_register_display_hotplug_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_hotplug_callback);
-   RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
 }
 
 

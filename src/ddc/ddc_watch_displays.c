@@ -99,21 +99,6 @@ void free_watch_displays_data(Watch_Displays_Data * wdd) {
 }
 
 
-#ifdef OLD_HOTPLUG_VERSION
-const char * displays_change_type_name(Displays_Change_Type change_type) {
-   char * result = NULL;
-   switch(change_type)
-   {
-   case Changed_None:    result = "Changed_None";    break;
-   case Changed_Added:   result = "Changed_Added";   break;
-   case Changed_Removed: result = "Changed_Removed"; break;
-   case Changed_Both:    result = "Changed_Both";    break;
-   }
-   return result;
-}
-#endif
-
-
 /** Checks that a thread or process id is valid.
  *
  *  @param  id  thread or process id
@@ -132,6 +117,10 @@ bool check_thread_or_process(pid_t id) {
    return result;
 }
 
+
+//
+//  Variant Watch_Mode_Full_Poll
+//
 
 /** Primary function to check for changes in display status (disconnect, DPMS),
  *  modify internal data structures, and emit client notifications.
@@ -244,7 +233,8 @@ void ddc_recheck_bus() {
       int new_index = i2c_find_bus_info_index_in_gptrarray_by_busno(new_buses, busno);
       I2C_Bus_Info * new_businfo = g_ptr_array_index(new_buses, new_index);
       if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo: /dev/i2c-%d @%p", new_businfo->busno, new_businfo);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "new_businfo: /dev/i2c-%d @%p",
+               new_businfo->busno, new_businfo);
          // i2c_dbgrpt_bus_info(new_businfo, 4);
       }
       I2C_Bus_Info * old_businfo = i2c_find_bus_info_in_gptrarray_by_busno(all_i2c_buses, busno);
@@ -254,7 +244,8 @@ void ddc_recheck_bus() {
          ddc_add_display_by_businfo(old_businfo);  // performs emit
       }
       else {
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding businfo for newly detected /dev/i2c-%d", new_businfo->busno);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+               "Adding businfo for newly detected /dev/i2c-%d", new_businfo->busno);
          g_ptr_array_steal_index(new_buses, new_index);
          g_ptr_array_add(all_i2c_buses, new_businfo);
          ddc_add_display_by_businfo(new_businfo);  // performs emit
@@ -265,6 +256,7 @@ void ddc_recheck_bus() {
    g_ptr_array_free(new_buses, true);
 
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Checking sleep state");
+   assert(all_i2c_buses);
    for (int ndx = 0; ndx < all_i2c_buses->len; ndx++) {
       I2C_Bus_Info * businfo = g_ptr_array_index(all_i2c_buses, ndx);
       // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "ndx=%d, businfo=%p", ndx, businfo);
@@ -289,190 +281,6 @@ void ddc_recheck_bus() {
 }
 
 
-/** Tests if communication working for a Display_Ref
- *
- *  @param  dref   display reference
- *  @return true/false
- */
-bool is_dref_alive(Display_Ref * dref) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%s", dref_repr_t(dref));
-   Display_Handle* dh = NULL;
-   Error_Info * erec = NULL;
-   bool is_alive = true;
-   if (dref->io_path.io_mode == DDCA_IO_I2C) {   // punt on DDCA_IO_USB for now
-      bool check_needed = true;
-      if (dref->drm_connector) {
-         char * status = NULL;
-         int depth = ( IS_DBGTRC(debug, TRACE_GROUP) ) ? 2 : -1;
-         RPT_ATTR_TEXT(depth,&status, "/sys/class/drm", dref->drm_connector, "status");
-         if (!streq(status, "connected"))
-            check_needed = false;
-         free(status);
-      }
-      if (check_needed) {
-         erec = ddc_open_display(dref, CALLOPT_WAIT, &dh);
-         assert(!erec);
-         Parsed_Nontable_Vcp_Response * parsed_nontable_response = NULL;  // vs interpreted ..
-         erec = ddc_get_nontable_vcp_value(dh, 0x10, &parsed_nontable_response);
-         // seen: -ETIMEDOUT, DDCRC_NULL_RESPONSE then -ETIMEDOUT, -EIO, DDCRC_DATA
-         // if (erec && errinfo_all_causes_same_status(erec, 0))
-         if (erec)
-            is_alive = false;
-         ERRINFO_FREE_WITH_REPORT(erec, IS_DBGTRC(debug, TRACE_GROUP));
-         ddc_close_display_wo_return(dh);
-      }
-   }
-   DBGTRC_RET_BOOL(debug, TRACE_GROUP, is_alive, "");
-   return is_alive;
-}
-
-
-/** Check all display references to determine if they are active.
- *  Sets or clears the DREF_ALIVE flag in the display reference.
- */
-void check_drefs_alive() {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   if (ddc_displays_already_detected()) {
-      GPtrArray * all_displays = ddc_get_all_displays();
-      for (int ndx = 0; ndx < all_displays->len; ndx++) {
-         Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
-         bool alive = is_dref_alive(dref);
-         if (alive != (dref->flags & DREF_ALIVE) )
-            (void) dref_set_alive(dref, alive);
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "dref=%s, is_alive=%s",
-                         dref_repr_t(dref), SBOOL(dref->flags & DREF_ALIVE));
-      }
-   }
-   else {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "displays not yet detected");
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
-#ifdef OLD_HOTPLUG_VERSION
-/** Obtains a list of currently connected displays and compares it to the
- *  previously detected list
- *
- *  Reports each change to the display_change_handler() in the Watch_Displays_Data struct
- *
- *  @param prev_displays   GPtrArray of previously detected displays
- *  @param data  pointer to a Watch_Displays_Data struct
- *  @return GPtrArray of currently detected monitors
- */
-static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays=%s",
-                 join_string_g_ptr_array_t(prev_displays, ", "));
-
-   Watch_Displays_Data * wdd = data;
-   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
-
-   // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
-   Displays_Change_Type change_type = Changed_None;
-
-   GPtrArray * cur_displays = get_sysfs_drm_connector_names();
-   if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
-      if ( IS_DBGTRC( debug, TRACE_GROUP) ) {
-         DBGMSG("Active DRM connectors changed!");
-         DBGMSG("Previous active connectors: %s", join_string_g_ptr_array_t(prev_displays, ", "));
-         DBGMSG("Current  active connectors: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
-      }
-
-      GPtrArray * removed = gaux_unique_string_ptr_arrays_minus(prev_displays, cur_displays);
-      if (removed->len > 0) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Removed DRM connectors: %s", join_string_g_ptr_array_t(removed, ", ") );
-         change_type = Changed_Removed;
-      }
-
-      GPtrArray * added = gaux_unique_string_ptr_arrays_minus(cur_displays, prev_displays);
-      if (added->len > 0) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Added DRM connectors: %s", join_string_g_ptr_array_t(added, ", ") );
-         change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
-      }
-
-   //    if (change_type != Changed_None) {
-      // assert( change_type != Changed_Both);
-      // DBGMSG("wdd->display_change_handler = %p (%s)",
-      //         wdd->display_change_handler,
-      //         rtti_get_func_name_by_addr(wdd->display_change_handler) );
-      if (wdd->display_change_handler) {
-         wdd->display_change_handler( change_type, removed, added);
-      }
-      // }
-      g_ptr_array_free(removed,       true);
-      g_ptr_array_free(added,         true);
-   }
-
-   // g_ptr_array_free(prev_displays, true);
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s",
-                              join_string_g_ptr_array_t(cur_displays, ", "));
-   return cur_displays;
-}
-
-
-//static
-GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays = %s",
-                 join_string_g_ptr_array_t(prev_displays, ", "));
-
-   GPtrArray * result = NULL;
-   GPtrArray * cur_displays = check_displays(prev_displays,  data);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "cur_displays  = %s",
-         join_string_g_ptr_array_t(cur_displays, ", "));
-   if (gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
-      result = cur_displays;
-   }
-   else {
-      DBGMSG("Double checking");
-      usleep(1000*1000);  // 1 second
-      result = check_displays(prev_displays, data);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "after recheck:  %s", join_string_g_ptr_array_t(result, ", "));
-      g_ptr_array_free(cur_displays, true);
-   }
-   g_ptr_array_free(prev_displays, true);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning:      %s",
-                              join_string_g_ptr_array_t(result, ", "));
-   return result;
-}
-#endif
-
-
-
-// How to detect main thread crash?
-
-#ifdef OLD_HOTPLUG_VERSION
-gpointer ddc_watch_displays_using_poll(gpointer data) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   Watch_Displays_Data * wdd = data;
-   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0);
-
-   GPtrArray * prev_displays = get_sysfs_drm_displays();  // GPtrArray of DRM connector names
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-          "Initial active DRM connectors: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
-
-   while (!terminate_watch_thread) {
-      prev_displays = double_check_displays(prev_displays, data);
-      check_drefs_alive();
-      usleep(3000*1000);
-      // printf("."); fflush(stdout);
-   }
-   DBGTRC_DONE(true, TRACE_GROUP, "Terminating");
-   free_watch_displays_data(wdd);
-   g_thread_exit(0);
-   return NULL;    // satisfy compiler check that value returned
-}
-#endif
-
-
-
 gpointer ddc_watch_displays_using_poll(gpointer data) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
@@ -494,28 +302,118 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
 }
 
 
+//
+// Variant Watch_Displays_Simple_Udev
+//
+// Watches for udev hotplug events and sends a simple notification to clients,
+// with the expectation that they will call then ddca_redetect_displays().
+//
+
+GPtrArray* display_hotplug_callbacks = NULL;
+
+
+/** Registers a display hotplug event callback
+ *
+ *  @param func function to register
+ *
+ *  The function must be of type #DDCA_Display_Hotplug_Callback_Func.
+ *  It is not an error if the function is already registered.
+ */
+DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
+
+   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   ddcrc = i2c_all_video_devices_drm() &&
+            generic_register_callback(&display_hotplug_callbacks, func);
+#endif
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
+/** Unregisters a display hotplug callback function
+ *
+ *  @param  function to deregister
+ *  @retval DDCRC_OK normal return
+ *  @retval DDCRC_NOT_FOUND
+ */
+DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
+
+   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   if (i2c_all_video_devices_drm() ) {
+       ddcrc = generic_unregister_callback(display_hotplug_callbacks, func);
+   }
+#endif
+
+   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
+   return ddcrc;
+}
+
+
+// When a display is disconnected and then reconnected, a udev event for
+// the disconnection is not received until immediately before the connection
+// event.  Address this situation by treating this "double tap" as a single
+// hotplug event.  Unfortunately, because a disconnect udev event is not
+// received in a timely manner, clients will have to discover that a display
+// has been disconnected by failure of an API call.
+
+static uint64_t last_emit_millisec = 0;
+static uint64_t double_tap_millisec = 500;
+
+
+void ddc_emit_display_hotplug_event() {
+   bool debug = false || watch_watching;
+   uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
+   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd",
+                                       last_emit_millisec, cur_emit_millisec);
+
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
+   int callback_ct = 0;
+
+   if ( (cur_emit_millisec - last_emit_millisec) > double_tap_millisec) {
+      DBGMSF(debug, "emitting");
+      if (display_hotplug_callbacks) {
+         for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
+            DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
+            DDCA_Display_Hotplug_Event event = {NULL, NULL};
+            func(event);
+         }
+         callback_ct =  display_hotplug_callbacks->len;
+      }
+   }
+   else {
+      DBGMSF(debug, "double tap ");
+   }
+   last_emit_millisec = cur_emit_millisec;
+
+   DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
+}
+
+
 #ifdef UNUSED
 void set_fd_blocking(int fd) {
    int flags = fcntl(fd, F_GETFL, /* ignored for F_GETFL */ 0);
    assert (flags != -1);
    flags &= ~O_NONBLOCK;
-#ifndef NDEBUG
-   int rc =
-#endif
-   fcntl(fd, F_SETFL, flags);
+   (void) fcntl(fd, F_SETFL, flags);
    assert(rc != -1);
 }
 #endif
 
-// #ifdef ENABLE_UDEV
+
 gpointer watch_displays_using_udev(gpointer data) {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
-
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "Caller process id: %d, caller thread id: %d",
+         wdd->main_process_id, wdd->main_thread_id);
 
-   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Caller process id: %d, caller thread id: %d", wdd->main_process_id, wdd->main_thread_id);
    pid_t cur_pid = getpid();
    pid_t cur_tid = get_thread_id();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
@@ -567,7 +465,7 @@ gpointer watch_displays_using_udev(gpointer data) {
 
          dev = udev_monitor_receive_device(mon);
       }
-      assert(dev);
+
       if (debug) {
          printf("Got Device\n");
          // printf("   Node: %s\n", udev_device_get_devnode(dev));         // /dev/dri/card0
@@ -600,7 +498,6 @@ gpointer watch_displays_using_udev(gpointer data) {
          show_sysattr_list_entries(dev,entries);
       }
 
-
       const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
 
@@ -608,84 +505,17 @@ gpointer watch_displays_using_udev(gpointer data) {
       ddc_emit_display_hotplug_event();
 
       udev_device_unref(dev);
-#ifdef NO
-      else {
-         // Failure indicates main thread has died.  Kill this one too.
-         int errsv=errno;
-         DBGTRC_DONE(debug, TRACE_GROUP,
-                            "No Device from udev_monitor_receive_device()."
-                            " An error occurred. errno=%d=%s. Terminating thread.",
-                            errsv, linux_errno_name(errsv));
-         g_thread_exit(GINT_TO_POINTER(-1));
-         // break;
-      }
-#endif
 
-      // printf(".");
-      // fflush(stdout);
+      // printf("."); fflush(stdout);
    }  // while
 
     return NULL;
 }
-// #endif
-
-#ifdef OLD_HOTPLUG_VERSION
-void dummy_display_change_handler(
-        Displays_Change_Type changes,
-        GPtrArray *          removed,
-        GPtrArray *          added)
-{
-   bool debug = true;
-   // DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
-   if (removed && removed->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
-   }
-   if (added && added->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
-   }
-   // DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
 
 
-void api_display_change_handler(
-        Displays_Change_Type changes,
-        GPtrArray *          removed,
-        GPtrArray *          added)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "changes = %s", displays_change_type_name(changes));
-
-#ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
-   if (removed && removed->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed displays: %s", join_string_g_ptr_array_t(removed, ", ") );
-      if (removed) {
-         for (int ndx = 0; ndx < removed->len; ndx++) {
-             bool ok = ddc_remove_display_by_drm_connector(g_ptr_array_index(removed, ndx));
-             if (!ok)
-                DBGMSG("Display with drm connector %s not found", g_ptr_array_index(removed,ndx));
-         }
-      }
-   }
-   if (added && added->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   displays: %s", join_string_g_ptr_array_t(added, ", ") );
-      if (added) {
-         for (int ndx = 0; ndx < added->len; ndx++) {
-             bool ok = ddc_add_display_by_drm_connector(g_ptr_array_index(added, ndx));
-             if (!ok)
-                DBGMSG("Display with drm connector %s already exists", g_ptr_array_index(added,ndx));
-         }
-      }
-   }
-#endif
-
-   // simpler
-   // ddc_emit_display_hotplug_event();
-
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-#endif
-
+//
+// Common to both variants
+//
 
 /** Starts thread that watches for addition or removal of displays.
  *
@@ -699,15 +529,16 @@ ddc_start_watch_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "watch_mode = %s, watch_thread=%p",
                                        ddc_watch_mode_name(ddc_watch_mode),
                                        watch_thread );
-
    DDCA_Status ddcrc = DDCRC_OK;
    g_mutex_lock(&watch_thread_mutex);
    if (!watch_thread) {
       terminate_watch_thread = false;
       Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
       memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
+#ifdef OLD_HOTPLUG_VERSION
    // data->display_change_handler = api_display_change_handler;
    // data->display_change_handler = dummy_display_change_handler;
+#endif
 
       data->main_process_id = getpid();
       // data->main_thread_id = syscall(SYS_gettid);
@@ -727,9 +558,6 @@ ddc_start_watch_displays() {
    return ddcrc;
 }
 
-
-// only makes sense if polling!
-// locks udev_monitor_receive_device() blocks
 
 /** Halts thread that watches for addition or removal of displays.
  *  If **wait** is specified, does not return until the watch thread exits.
@@ -765,157 +593,15 @@ ddc_stop_watch_displays(bool wait)
 }
 
 
-#ifdef OLD_HOTPLUG_VERSION
-/** Starts thread that watches for addition or removal of displays
- *
- *  \retval  DDCRC_OK
- *  \retval  DDCRC_INVALID_OPERATION  thread already running
- */
-DDCA_Status
-ddc_start_watch_displays(bool use_udev_if_possible)
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s, use_udev_if_possible=%s",
-                                       SBOOL(watch_displays_enabled), SBOOL(use_udev_if_possible) );
-   DDCA_Status ddcrc = DDCRC_OK;
-
-   watch_displays_enabled = true;   // n. changing the meaning of watch_displays_enabled
-
-   if (watch_displays_enabled) {
-      char * class_drm_dir =
-   #ifdef TARGET_BSD
-            "/compat/sys/class/drm";
-   #else
-            "/sys/class/drm";
-   #endif
-
-      Bit_Set_32 drm_card_numbers = get_sysfs_drm_card_numbers();
-      if (bs32_count(drm_card_numbers) == 0) {
-         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR,
-               "No DRM enabled video cards found in %s. Disabling detection of display hotplug events.",
-               class_drm_dir);
-         ddcrc = DDCRC_INVALID_OPERATION;
-      }
-      else {
-         if (!all_video_devices_drm()) {
-            MSG_W_SYSLOG(DDCA_SYSLOG_WARNING,
-               "Not all video cards support DRM.  Hotplug events are not not detected for connected monitors.");
-         }
-         g_mutex_lock(&watch_thread_mutex);
-
-         if (watch_thread)
-            ddcrc = DDCRC_INVALID_OPERATION;
-         else {
-            terminate_watch_thread = false;
-            Watch_Displays_Data * data = calloc(1, sizeof(Watch_Displays_Data));
-            memcpy(data->marker, WATCH_DISPLAYS_DATA_MARKER, 4);
-         // data->display_change_handler = api_display_change_handler;
-            data->display_change_handler = dummy_display_change_handler;
-            data->main_process_id = getpid();
-            // data->main_thread_id = syscall(SYS_gettid);
-            data->main_thread_id = get_thread_id();
-            data->drm_card_numbers = drm_card_numbers;
-            void * watch_func = ddc_watch_displays_using_poll;
-            ddc_watching_using_udev = false;
-#ifdef ENABLE_UDEV
-            if (use_udev_if_possible) {
-               watch_func = watch_displays_using_udev;
-               ddc_watching_using_udev = true;
-            }
-#endif
-            watch_thread = g_thread_new(
-                             "watch_displays",             // optional thread name
-                             watch_func,
-#ifdef OLD
-      #if ENABLE_UDEV
-                             (use_udev_if_possible) ? watch_displays_using_udev : ddc_watch_displays_using_poll,
-      #else
-                             ddc_watch_displays_using_poll,
-      #endif
-#endif
-                             data);
-            SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread started");
-         }
-         g_mutex_unlock(&watch_thread_mutex);
-      }
-   }
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_displays_enabled=%s. watch_thread=%p",
-                                        SBOOL(watch_displays_enabled), watch_thread);
-   return ddcrc;
-}
-
-
-// only makes sense if polling!
-// locks udev_monitor_receive_device() blocks
-
-/** Halts thread that watches for addition or removal of displays.
- *
- *  Does not return until the watch thread exits.
- *
- *  \retval  DDCRC_OK
- *  \retval  DDCRC_INVALID_OPERATION  no watch thread running
- */
-DDCA_Status
-ddc_stop_watch_displays()
-{
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "watch_displays_enabled=%s", SBOOL(watch_displays_enabled) );
-   DDCA_Status ddcrc = DDCRC_OK;
-
-   if (watch_displays_enabled) {
-      g_mutex_lock(&watch_thread_mutex);
-
-      // does not work if watch_displays_using_udev(), loop doesn't wake up unless there's a udev event
-      if (watch_thread) {
-         if (ddc_watching_using_udev) {
-
-#ifdef ENABLE_UDEV
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting for watch thread to terminate...");
-            terminate_watch_thread = true;  // signal watch thread to terminate
-            // if using udev, thread never terminates because udev_monitor_receive_device() is blocking,
-            // so termiate flag doesn't get checked
-            // no big deal, ddc_stop_watch_displays() is only called at program termination to
-            // release resources for tidyness
-#else
-            PROGRAM_LOGIC_ERROR("watching_using_udev set when ENABLE_UDEV not set");
-#endif
-         }
-         else {     // watching using poll
-            terminate_watch_thread = true;  // signal watch thread to terminate
-            DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Waiting %d millisec for watch thread to terminate...", 4000);
-            usleep(4000*1000);  // greater than the sleep in watch_displays_using_poll()
-            g_thread_join(watch_thread);
-            //  g_thread_unref(watch_thread);
-         }
-         watch_thread = NULL;
-         SYSLOG2(DDCA_SYSLOG_NOTICE, "Watch thread terminated.");
-      }
-      else
-         ddcrc = DDCRC_INVALID_OPERATION;
-
-      g_mutex_unlock(&watch_thread_mutex);
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "watch_thread=%p", watch_thread);
-   return ddcrc;
-}
-#endif
-
-
 void init_ddc_watch_displays() {
-   RTTI_ADD_FUNC(check_drefs_alive);
    RTTI_ADD_FUNC(ddc_start_watch_displays);
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
-   RTTI_ADD_FUNC(i2c_detect_buses);
-   RTTI_ADD_FUNC(i2c_detect_buses0);
-   RTTI_ADD_FUNC(is_dref_alive);
    RTTI_ADD_FUNC(ddc_recheck_bus);
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
-#ifdef OLD_HOTPLUG_VERSION
-   RTTI_ADD_FUNC(check_displays);
-   RTTI_ADD_FUNC(dummy_display_change_handler);
-   RTTI_ADD_FUNC(api_display_change_handler);
+   RTTI_ADD_FUNC(ddc_register_display_hotplug_callback);
+   RTTI_ADD_FUNC(ddc_unregister_display_hotplug_callback);
+   RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(watch_displays_using_udev);
-#endif
 #endif
 }
