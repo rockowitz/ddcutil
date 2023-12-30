@@ -1877,7 +1877,9 @@ bool bs256_store_bytehex_list(Bit_Set_256 * pbitset, char * start, int len) {
  * @param  array of registered callbacks
  * @param  function to add
  * @retval true  success
- * @retval false function already registered
+ *
+ * @remark
+ * It is not an error if the function is already registered.
  */
 bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func) {
    bool debug = false;
@@ -1898,8 +1900,9 @@ bool generic_register_callback(GPtrArray** registered_callbacks_loc, void * func
       g_ptr_array_add(*registered_callbacks_loc, func);
    }
 
-   DBGF(debug, "Done.     Returning %s", SBOOL(new_registration));
-   return new_registration;
+   bool result = true;
+   DBGF(debug, "Done.     Returning %s", SBOOL(result));
+   return result;
 }
 
 
