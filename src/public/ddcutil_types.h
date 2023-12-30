@@ -546,7 +546,11 @@ typedef struct {
 } DDCA_Display_Detection_Event;
 
 
-/** Signature of function passed to #ddca_register_display_connection_callback().
+/** Signature of a function to be invoked by the shared library notifying the
+ *  client that a change in connected displays has been detected.
+ *
+ *  The client program should call #ddca_resdetect_displays() and then
+ *  #ddca_get_display_refs() to get the currently valid display references.
  *
  *  Note, the DDCA_Display_Detection_Event is passed on the stack, not allocated
  *  on the heap. Callback invocation is extremely infrequent, the struct size is
@@ -558,15 +562,27 @@ void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event)
 
 
 // SIMPLER ALTERNATIVE
+
+typedef struct {
+   void * unused1;
+   void * unused2;
+} DDCA_Display_Hotplug_Event;
+
 /** Signature of a function to be invoked by the shared library notifying the
  *  client that a change in connected displays has been detected.
  *
  *  The client program should call #ddca_redetect_displays() and then
  *  ddca_get_display_refs() to get the currently valid display references.
  *
+ *  Note, the DDCA_Display_Hotplug_Event is define with two unused fields to
+ *  allow for future extensions without breaking the API.  It is passed on the
+ *  stack, not allocated on the heap. Callback invocation is extremely
+ *  infrequent, the struct size is small, and passing the event on the stack
+ *  relieves clients of responsibility for memory management.
+ *
  *  @since 2.0.2
  */
-typedef void (*DDCA_Display_Hotplug_Callback_Func)();
+typedef void (*DDCA_Display_Hotplug_Callback_Func)(DDCA_Display_Hotplug_Event);
 
 #ifdef __cplusplus
 }
