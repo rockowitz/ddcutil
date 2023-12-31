@@ -19,7 +19,7 @@
 #include "util/report_util.h"
 /** \endcond */
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 #endif
@@ -231,7 +231,7 @@ app_read_changes(Display_Handle * dh, bool force_no_fifo, bool* changes_reported
 }
 
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 static void
 app_read_changes_usb(Display_Handle * dh) {
    bool debug = false;
@@ -291,7 +291,7 @@ app_read_changes_forever(Display_Handle * dh, bool force_no_fifo) {
    reset_vcp_x02(dh);
    while(true) {
       bool changes_reported = false;
-#ifdef USE_USB
+#ifdef ENABLE_USB
       if (dh->dref->io_path.io_mode == DDCA_IO_USB)
          app_read_changes_usb(dh);
       else

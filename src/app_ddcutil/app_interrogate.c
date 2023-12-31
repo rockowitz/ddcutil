@@ -80,7 +80,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
 
    // ENVIRONMENT command
    query_sysenv(parsed_cmd->flags & CMD_FLAG_QUICK);
-#ifdef USE_USB
+#ifdef ENABLE_USB
    // 7/2017: disable, USB attached monitors are rare, and this just
    // clutters the output
    f0printf(fout(), "\nSkipping USB environment exploration.\n");

@@ -18,7 +18,7 @@
 #include "util/string_util.h"
 #include "util/report_util.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb_util/hiddev_reports.h"
 #include "usb_util/hiddev_util.h"
 #endif

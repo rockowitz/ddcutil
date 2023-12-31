@@ -74,7 +74,7 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -117,7 +117,7 @@
 #ifdef ENABLE_ENVCMDS
 #include "app_sysenv/app_sysenv_services.h"
 #include "app_sysenv/query_sysenv.h"
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "app_sysenv/query_sysenv_usb.h"
 #endif
 #endif
@@ -904,7 +904,7 @@ main(int argc, char *argv[]) {
    Call_Options callopts = CALLOPT_NONE;
    i2c_forceable_slave_addr_flag = parsed_cmd->flags & CMD_FLAG_FORCE_SLAVE_ADDR;
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
    usb_ignore_hiddevs(parsed_cmd->ignored_hiddevs);
    Vid_Pid_Value * values = (parsed_cmd->ignored_usb_vid_pid_ct == 0) ? NULL : parsed_cmd->ignored_usb_vid_pids;
    usb_ignore_vid_pid_values(parsed_cmd->ignored_usb_vid_pid_ct, values);
@@ -993,7 +993,7 @@ main(int argc, char *argv[]) {
    }
 
    else if (parsed_cmd->cmd_id == CMDID_USBENV) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command USBENV...");
       dup2(1,2);   // redirect stderr to stdout
       query_usbenv();
@@ -1006,7 +1006,7 @@ main(int argc, char *argv[]) {
 #endif
 
    else if (parsed_cmd->cmd_id == CMDID_CHKUSBMON) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       // DBGMSG("Processing command chkusbmon...\n");
       DBGTRC_NOPREFIX(main_debug, TRACE_GROUP, "Processing command CHKUSBMON...");
       bool is_monitor = check_usb_monitor( parsed_cmd->args[0] );

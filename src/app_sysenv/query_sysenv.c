@@ -419,7 +419,7 @@ static void probe_i2c_devices_using_udev() {
    char * subsys_name = "i2c-dev";
    rpt_vstring(0,"*** Probe I2C devices using udev, susbsystem %s ***", subsys_name);
    sysenv_rpt_current_time(NULL, 1);
-   // probe_udev_subsystem() is in udev_util.c, which is only linked in if USE_USB
+   // probe_udev_subsystem() is in udev_util.c, which is only linked in if ENABLE_USB
 
    // Detailed scan of I2C device information.   TMI
    // probe_udev_subsystem(subsys_name, /*show_usb_parent=*/ false, 1);
