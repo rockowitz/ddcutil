@@ -1836,7 +1836,7 @@ bool i2c_all_video_devices_drm() {
    bool all_devices_drm = true;
    for (int ndx = 0; ndx < video_devices->len; ndx++) {
       char * device_path = g_ptr_array_index(video_devices, ndx);
-      int d = IS_DBGTRC(debug,DDCA_TRC_NONE) ? -1 : 1;
+      int d = IS_DBGTRC(debug,DDCA_TRC_NONE) ? 1 : -1;
       bool found_drm = RPT_ATTR_SINGLE_SUBDIR(d, NULL, fn_equal, "drm", device_path);
       if (!found_drm) {
          all_devices_drm = false;
