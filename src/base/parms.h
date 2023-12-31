@@ -76,9 +76,7 @@
 // *** Option Defaults
 //
 
-#ifdef USE_USB
-#define DEFAULT_ENABLE_USB false
-#else
+#ifdef ENABLE_USB
 #define DEFAULT_ENABLE_USB false
 #endif
 #define DEFAULT_ENABLE_UDF true
