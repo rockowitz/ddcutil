@@ -106,10 +106,10 @@ void report_build_options(int depth) {
    NOT_SET(USE_LIBDRM);
 #endif
 
-#ifdef USE_USB
-   IS_SET(USE_USB);
+#ifdef ENABLE_USB
+   IS_SET(ENABLE_USB);
 #else
-   NOT_SET(USE_USB);
+   NOT_SET(ENABLE_USB);
 #endif
 
 #ifdef UNUSED

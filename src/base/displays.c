@@ -465,7 +465,7 @@ Display_Ref * create_bus_display_ref(int busno) {
 }
 
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 /** Creates a #Display_Ref for IO mode #DDCA_IO_USB
  *
  * @param  usb_bus USB bus number
@@ -729,7 +729,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
       dh->dref->io_path.path.i2c_busno, dh->fd);
 #endif
    }
-#ifdef USE_USB
+#ifdef ENABLE_USB
    else if (dref->io_path.io_mode == DDCA_IO_USB) {
       dh->repr = g_strdup_printf(
                 "Display_Handle[usb: %d:%d, %s/hiddev%d @%p]",
@@ -740,7 +740,7 @@ Display_Handle * create_base_display_handle(int fd, Display_Ref * dref) {
    }
 #endif
    else {
-      // DDCA_IO_USB if !USE_USB
+      // DDCA_IO_USB if !ENABLE_USB
       PROGRAM_LOGIC_ERROR("Unimplemented io_mode = %d", dref->io_path.io_mode);
       dh->repr = NULL;
    }
@@ -823,7 +823,7 @@ void   free_display_handle(Display_Handle * dh) {
 
 // *** Miscellaneous ***
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 /** Given a hiddev device name, e.g. /dev/usb/hiddev3,
  *  extract its number, e.g. 3.
  *
@@ -921,7 +921,7 @@ void init_displays() {
    RTTI_ADD_FUNC(create_base_display_handle);
    RTTI_ADD_FUNC(create_base_display_ref);
    RTTI_ADD_FUNC(create_bus_display_ref);
-#ifdef USE_USB
+#ifdef ENABLE_USB
    RTTI_ADD_FUNC(create_usb_display_ref);
 #endif
    RTTI_ADD_FUNC(dbgrpt_display_ref);
