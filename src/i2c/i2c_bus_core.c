@@ -1208,6 +1208,7 @@ void i2c_report_active_bus(I2C_Bus_Info * businfo, int depth) {
 static void init_i2c_bus_core_func_name_table() {
    RTTI_ADD_FUNC(i2c_check_bus);
    RTTI_ADD_FUNC(i2c_check_businfo_connector);
+   RTTI_ADD_FUNC(i2c_check_open_bus_alive);
    RTTI_ADD_FUNC(i2c_close_bus);
    RTTI_ADD_FUNC(i2c_detect_buses);
    RTTI_ADD_FUNC(i2c_detect_single_bus);
