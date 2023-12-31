@@ -301,7 +301,7 @@ static bool parse_display_identifier(
    int  explicit_display_spec_ct = 0;
 
    if (usbwork) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       bool debug = false;
       DBGMSF(debug, "usbwork = |%s|", usbwork);
       int busnum;
@@ -337,7 +337,7 @@ static bool parse_display_identifier(
    }
 
    if (hidwork >= 0) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       // avoid memory leak in case parsed_cmd->pdid set in more than 1 way
       if (parsed_cmd->pdid)
          free_display_identifier(parsed_cmd->pdid);
@@ -700,7 +700,7 @@ static void report_ddcutil_build_info() {
 
       // TODO: patch values at link time
       // printf("Built %s at %s\n", BUILD_DATE, BUILD_TIME);
-#ifdef USE_USB
+#ifdef ENABLE_USB
       printf("Built with support for displays using USB for MCCS communication.\n");
 #else
       printf("Built without support for displays using USB for MCCS communication.\n");
@@ -870,7 +870,7 @@ parse_command(
    gboolean enable_udf_flag = DEFAULT_ENABLE_UDF;
    const char * enable_udf_expl  = (enable_udf_flag) ? "Enable User Defined Features (default)" : "Enable User Defined Features";
    const char * disable_udf_expl = (enable_udf_flag) ? "Disable User Defined Features" : "Disable User Defined Features (default)";
-#ifdef USE_USB
+#ifdef ENABLE_USB
    gboolean enable_usb_flag = DEFAULT_ENABLE_USB;
    const char * enable_usb_expl  = (enable_usb_flag) ? "Detect USB devices (default)" : "Detect USB devices";
    const char * disable_usb_expl = (enable_usb_flag) ? "Ignore USB devices" : "Ignore USB devices (default)";
@@ -1128,7 +1128,7 @@ parse_command(
       {"disable-cross-instance-locks", '\0', G_OPTION_FLAG_REVERSE,
                      G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
                                G_OPTION_ARG_NONE, &enable_usb_flag,  enable_usb_expl, NULL},
       {"disable-usb",'\0', G_OPTION_FLAG_REVERSE,
@@ -1472,7 +1472,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_WO_ONLY,           wo_only_flag);
    SET_CMDFLAG(CMD_FLAG_FORCE_UNRECOGNIZED_VCP_CODE,  allow_unrecognized_feature_flag);
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_UDF,    enable_udf_flag);
-#ifdef USE_USB
+#ifdef ENABLE_USB
    SET_CMDFLAG(CMD_FLAG_ENABLE_USB,        enable_usb_flag);
 #endif
 #ifdef OLD
@@ -1637,7 +1637,7 @@ parse_command(
       FREE(fl2_work);
    }
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
    if (ignored_vid_pid) {
       int ndx = 0;
       for (char * cur = ignored_vid_pid[ndx]; cur && ndx < 10; cur=ignored_vid_pid[++ndx]) {

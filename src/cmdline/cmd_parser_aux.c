@@ -454,7 +454,7 @@ char * commands_list_help =
 #endif
 #ifdef ENABLE_ENVCMDS
        "   environment                             Probe execution environment\n"
-#ifdef USE_USB
+#ifdef ENABLE_USB
        "   usbenv                                  Probe for USB connected monitors\n"
 #endif
 #endif
@@ -462,7 +462,7 @@ char * commands_list_help =
 #ifdef ENABLE_ENVCMDS
        "   interrogate                             Report everything possible\n"
 #endif
-#ifdef USE_USB
+#ifdef ENABLE_USB
        "   chkusbmon                               Check if USB device is monitor (for UDEV)\n"
 #endif
 #ifdef DEPRECATED
@@ -517,7 +517,7 @@ char * monitor_selection_option_help =
        "  --display <display_number>, where <display_number> ranges from 1 to the number of\n"
        "    displays detected\n"
        "  --bus <i2c bus number>, /dev/"I2C" bus number\n"
-#ifdef USE_USB
+#ifdef ENABLE_USB
        "  --usb <usb bus number>.<usb device number>, for monitors communicating via USB\n"
        "  --hiddev <hiddev device number>, for monitors communicationg via USB\n"
 #endif
