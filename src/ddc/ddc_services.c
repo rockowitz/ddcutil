@@ -33,7 +33,7 @@
 
 #include "i2c/i2c_services.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_services.h"
 #endif
 
@@ -189,7 +189,7 @@ void init_ddc_services() {
    init_i2c_services();
 
    // usb
-#ifdef USE_USB
+#ifdef ENABLE_USB
    init_usb_services();
 #endif
 
@@ -239,7 +239,7 @@ void terminate_ddc_services() {
    terminate_i2c_display_lock();
 
    terminate_persistent_capabilities();
-#ifdef USE_USB
+#ifdef ENABLE_USB
    terminate_usb_services();
 #endif
    terminate_i2c_services();

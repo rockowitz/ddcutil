@@ -31,7 +31,7 @@
 
 #include "i2c/i2c_bus_core.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #include "usb/usb_vcp.h"
 #endif
@@ -142,7 +142,7 @@ ddc_set_nontable_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       psc = usb_set_nontable_vcp_value(dh, feature_code, new_value);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
@@ -192,7 +192,7 @@ set_table_vcp_value(
    Public_Status_Code psc = 0;
    Error_Info * ddc_excp = NULL;
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       psc = DDCRC_UNIMPLEMENTED;
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
@@ -754,7 +754,7 @@ ddc_get_vcp_value(
 
    // why are we coming here for USB?
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       DBGMSF(debug, "USB case");
       Public_Status_Code psc = 0;
 

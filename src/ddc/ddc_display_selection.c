@@ -27,7 +27,7 @@
 #include "base/core.h"
 #include "base/rtti.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -100,7 +100,7 @@ ddc_test_display_ref_criteria(Display_Ref * dref, Display_Criteria * criteria) {
          goto bye;
    }
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
    if (criteria->hiddev >= 0) {
       if (dref->io_path.io_mode != DDCA_IO_USB)
          goto bye;

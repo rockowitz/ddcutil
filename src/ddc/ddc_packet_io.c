@@ -49,7 +49,7 @@
 #include "i2c/i2c_dpms.h"
 #include "i2c/i2c_strategy_dispatcher.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -239,7 +239,7 @@ ddc_open_display(
       break;
 
    case DDCA_IO_USB:
-#ifdef USE_USB
+#ifdef ENABLE_USB
       {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Opening USB device: %s", dref->usb_hiddev_name);
          TRACED_ASSERT(dref && dref->usb_hiddev_name);
@@ -334,7 +334,7 @@ ddc_close_display(Display_Handle * dh) {
             break;
          }
       case DDCA_IO_USB:
-#ifdef USE_USB
+#ifdef ENABLE_USB
          {
             rc = usb_close_device(dh->fd, dh->dref->usb_hiddev_name, CALLOPT_NONE);
             if (rc != 0) {

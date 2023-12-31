@@ -25,7 +25,7 @@
 #include "base/status_code_mgt.h"
 #include "base/tuned_sleep.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -122,7 +122,7 @@ ddc_get_capabilities_string(
    Error_Info * ddc_excp = NULL;
    if (!dh->dref->capabilities_string) {
       if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
          // newly created string, can just  reference
          dh->dref->capabilities_string = usb_get_capabilities_string_by_dh(dh);
 #else

@@ -148,7 +148,7 @@ ddca_ddcutil_extended_version_string(void) {
 // Indicates whether the ddcutil library was built with support for USB connected monitors.
 bool
 ddca_built_with_usb(void) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
    return true;
 #else
    return false;
@@ -163,7 +163,7 @@ ddca_built_with_usb(void) {
 DDCA_Build_Option_Flags
 ddca_build_options(void) {
    uint8_t result = 0x00;
-#ifdef USE_USB
+#ifdef ENABLE_USB
          result |= DDCA_BUILT_WITH_USB;
 #endif
 #ifdef FAILSIM_ENABLED

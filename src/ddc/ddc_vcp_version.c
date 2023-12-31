@@ -22,7 +22,7 @@
 #include "base/displays.h"
 #include "base/status_code_mgt.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_vcp.h"
 #endif
 
@@ -45,7 +45,7 @@ set_vcp_version_xdf_by_dh(Display_Handle * dh)
    dh->dref->vcp_version_xdf = DDCA_VSPEC_UNKNOWN;
 
    if (dh->dref->io_path.io_mode == DDCA_IO_USB) {
-#ifdef USE_USB
+#ifdef ENABLE_USB
       // DBGMSG("Trying to get VESA version...");
       __s32 vesa_ver =  usb_get_vesa_version(dh->fd);
       DBGMSF(debug, "VESA version from usb_get_vesa_version(): 0x%08x", vesa_ver);

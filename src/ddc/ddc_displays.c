@@ -60,7 +60,7 @@
 #include "i2c/i2c_strategy_dispatcher.h"
 #include "i2c/i2c_sysfs.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -82,7 +82,7 @@ static GPtrArray * all_display_refs = NULL;         // all detected displays, ar
 static GPtrArray * display_open_errors = NULL;  // array of Bus_Open_Error
 static int dispno_max = 0;                      // highest assigned display number
 static int ddc_detect_async_threshold = DEFAULT_DDC_CHECK_ASYNC_THRESHOLD;
-#ifdef USE_USB
+#ifdef ENABLE_USB
 static bool detect_usb_displays = true;
 #else
 static bool detect_usb_displays = false;
@@ -1271,7 +1271,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
       }
    }
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
    if (detect_usb_displays) {
       GPtrArray * usb_monitors = get_usb_monitor_list();  // array of USB_Monitor_Info
       // DBGMSF(debug, "Found %d USB displays", usb_monitors->len);
@@ -1426,7 +1426,7 @@ ddc_discard_detected_displays() {
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    // grab locks to prevent any opens?
    ddc_close_all_displays();
-#ifdef USE_USB
+#ifdef ENABLE_USB
    discard_usb_monitor_list();
 #endif
    if (all_display_refs) {
@@ -1600,7 +1600,7 @@ ddc_enable_usb_display_detection(bool onoff) {
    DBGMSF(debug, "Starting. onoff=%s", sbool(onoff));
 
    DDCA_Status rc = DDCRC_UNIMPLEMENTED;
-#ifdef USE_USB
+#ifdef ENABLE_USB
    if (ddc_displays_already_detected()) {
       rc = DDCRC_INVALID_OPERATION;
    }

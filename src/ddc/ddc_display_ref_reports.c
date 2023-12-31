@@ -32,7 +32,7 @@
 #include "i2c/i2c_bus_core.h"
 #include "i2c/i2c_sysfs.h"
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #include "usb/usb_displays.h"
 #endif
 
@@ -236,7 +236,7 @@ ddc_report_display_by_dref(Display_Ref * dref, int depth) {
       }
       break;
    case DDCA_IO_USB:
-#ifdef USE_USB
+#ifdef ENABLE_USB
       usb_show_active_display_by_dref(dref, d1);
 #else
       PROGRAM_LOGIC_ERROR("ddcutil not built with USB support");
@@ -646,7 +646,7 @@ ddc_dbgrpt_display_ref(Display_Ref * dref, int depth) {
          i2c_dbgrpt_bus_info(businfo, d2);
          break;
    case(DDCA_IO_USB):
-#ifdef USE_USB
+#ifdef ENABLE_USB
          rpt_vstring(d1, "USB device information: ");
          Usb_Monitor_Info * moninfo = dref->detail;
          TRACED_ASSERT(memcmp(moninfo->marker, USB_MONITOR_INFO_MARKER, 4) == 0);

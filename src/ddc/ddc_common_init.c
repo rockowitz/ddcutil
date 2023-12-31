@@ -407,7 +407,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    init_max_tries(parsed_cmd);
    enable_mock_data = parsed_cmd->flags & CMD_FLAG_MOCK;
 
-#ifdef USE_USB
+#ifdef ENABLE_USB
 #ifndef NDEBUG
    DDCA_Status rc =
 #endif
