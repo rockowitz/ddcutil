@@ -449,7 +449,7 @@ AS_IF([test "x$enable_udev" = "xyes"],
 
 AM_CONDITIONAL([ENABLE_USB_COND], [test "x$enable_usb" = "xyes"] )
 AS_IF([test "x$enable_usb" = "xyes"],
-        AC_DEFINE( [USE_USB], [1], [If defined, use usb.])
+        AC_DEFINE( [ENABLE_USB], [1], [If defined, enable USB communication.])
         AC_SUBST(  ENABLE_USB_FLAG, [1] )
         AC_MSG_NOTICE( [usb...        enabled]  )
       ,
