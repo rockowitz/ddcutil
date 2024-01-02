@@ -248,6 +248,17 @@ gaux_ptr_array_copy(
 }
 
 
+// has signature GCopyFunc
+gpointer g_string_copy_func(gconstpointer src, gpointer data) {
+   return (gpointer) g_strdup((gchar*) src);
+}
+
+GPtrArray *
+gaux_deep_copy_string_array(GPtrArray * old_array) {
+   return g_ptr_array_copy(old_array, g_string_copy_func, NULL);
+}
+
+
 GPtrArray *
 gaux_ptr_array_from_null_terminated_array(
       gpointer *     src,

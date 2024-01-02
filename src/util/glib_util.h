@@ -73,6 +73,10 @@ gaux_ptr_array_copy(
       GDestroyNotify element_free_func);
 
 GPtrArray *
+gaux_deep_copy_string_array(
+      GPtrArray * old_names);
+
+GPtrArray *
 gaux_ptr_array_from_null_terminated_array(
       gpointer *     src,
       GAuxDupFunc    dup_func,
