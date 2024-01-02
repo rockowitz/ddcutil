@@ -1709,50 +1709,6 @@ ddca_set_profile_related_values(
 //
 
 /** Registers a function to be called called when a change in display status is
- *  detected. It is not an error if the function is already registered.
- *
- *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
- *  @return    DDCRC_OK
- *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
- *                                     or not all video devices support DRM
- *
- *  @since 2.0.2
- */
-DDCA_Status
-ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
-
-/** Removes a function from the list of registered callbacks
- *
- *  @param[in] func            function that has already been registered
- *  @retval    DDCRC_OK        function removed from list
- *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
- *                                     or not all video devices support DRM
- *  @retval    DDCRC_NOT_FOUND function not registered
- *
- *  @since 2.0.2
- */
-DDCA_Status
-ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
-
-
-/** Returns the name of a #DDCA_Display_Event_Type
- *
- *  @param  event_type  event type id
- *  @return             printable event type name
- *
- *  @remark
- *  The value returned exists in an internal ddcutil table.
- *  Caller should not free.
- *
- *  @since 2.0.2
- */
-const char *
-   ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
-
-
-// SIMPLER ALTERNATIVE
-
-/** Registers a function to be called called when a change in display status is
  *  detected.
  *
  *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func

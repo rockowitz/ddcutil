@@ -1281,6 +1281,51 @@ ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func fu
 // Display Status Change Communication
 //
 
+#ifdef UNUSED_HEADER_FILE
+
+/** Registers a function to be called called when a change in display status is
+ *  detected. It is not an error if the function is already registered.
+ *
+ *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
+ *  @return    DDCRC_OK
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+
+/** Removes a function from the list of registered callbacks
+ *
+ *  @param[in] func            function that has already been registered
+ *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
+ *  @retval    DDCRC_NOT_FOUND function not registered
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+
+
+/** Returns the name of a #DDCA_Display_Event_Type
+ *
+ *  @param  event_type  event type id
+ *  @return             printable event type name
+ *
+ *  @remark
+ *  The value returned exists in an internal ddcutil table.
+ *  Caller should not free.
+ *
+ *  @since 2.0.2
+ */
+const char *
+   ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
+#endif
+
+#ifdef UNUSED
 DDCA_Status
 ddca_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
    bool debug = false;
@@ -1311,6 +1356,7 @@ const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type) {
       return ddc_display_event_type_name(event_type);
 }
+#endif
 
 // SIMPLER VERSION
 
@@ -1438,8 +1484,8 @@ void init_api_displays() {
    RTTI_ADD_FUNC(ddca_open_display3);
    RTTI_ADD_FUNC(ddca_redetect_displays);
    RTTI_ADD_FUNC(ddca_report_display_by_dref);
-   RTTI_ADD_FUNC(ddca_register_display_detection_callback);
-   RTTI_ADD_FUNC(ddca_unregister_display_detection_callback);
+   // RTTI_ADD_FUNC(ddca_register_display_detection_callback);
+   // RTTI_ADD_FUNC(ddca_unregister_display_detection_callback);
    RTTI_ADD_FUNC(validate_ddca_display_ref);
 }
 

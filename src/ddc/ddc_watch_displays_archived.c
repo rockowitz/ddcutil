@@ -5,6 +5,7 @@
 
 
 
+
 #ifdef  DETAILED_DISPLAY_CHANGE_HANDLING
 //
 // Modify local data structures before invoking client callback functions.
@@ -131,11 +132,20 @@ bool ddc_add_display_by_drm_connector(const char * drm_connector_name) {
 
 
 #ifdef OLD_HOTPLUG_VERSION
+typedef enum {Changed_None    = 0,
+              Changed_Added   = 1,
+              Changed_Removed = 2,
+              Changed_Both    = 3,  // n. == Changed_Added | Changed_Removed
+} Displays_Change_Type;
+
+const char * displays_change_type_name(Displays_Change_Type change_type);
+
+
 const char * displays_change_type_name(Displays_Change_Type change_type) {
    char * result = NULL;
    switch(change_type)
    {
-   case Changed_None:    result = "Changed_None";    break;
+   case Changed_None:    result = "Changed_None";        break;
    case Changed_Added:   result = "Changed_Added";   break;
    case Changed_Removed: result = "Changed_Removed"; break;
    case Changed_Both:    result = "Changed_Both";    break;
@@ -144,97 +154,6 @@ const char * displays_change_type_name(Displays_Change_Type change_type) {
 }
 #endif
 
- 
-#ifdef OLD_HOTPLUG_VERSION
-/** Obtains a list of currently connected displays and compares it to the
- *  previously detected list
- *
- *  Reports each change to the display_change_handler() in the Watch_Displays_Data struct
- *
- *  @param prev_displays   GPtrArray of previously detected displays
- *  @param data  pointer to a Watch_Displays_Data struct
- *  @return GPtrArray of currently detected monitors
- */
-static GPtrArray * check_displays(GPtrArray * prev_displays, gpointer data) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays=%s",
-                 join_string_g_ptr_array_t(prev_displays, ", "));
-
-   Watch_Displays_Data * wdd = data;
-   assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
-
-   // typedef enum _change_type {Changed_None = 0, Changed_Added = 1, Changed_Removed = 2, Changed_Both = 3 } Change_Type;
-   Displays_Change_Type change_type = Changed_None;
-
-   GPtrArray * cur_displays = get_sysfs_drm_connector_names();
-   if ( !gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
-      if ( IS_DBGTRC( debug, TRACE_GROUP) ) {
-         DBGMSG("Active DRM connectors changed!");
-         DBGMSG("Previous active connectors: %s", join_string_g_ptr_array_t(prev_displays, ", "));
-         DBGMSG("Current  active connectors: %s", join_string_g_ptr_array_t(cur_displays,  ", "));
-      }
-
-      GPtrArray * removed = gaux_unique_string_ptr_arrays_minus(prev_displays, cur_displays);
-      if (removed->len > 0) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Removed DRM connectors: %s", join_string_g_ptr_array_t(removed, ", ") );
-         change_type = Changed_Removed;
-      }
-
-      GPtrArray * added = gaux_unique_string_ptr_arrays_minus(cur_displays, prev_displays);
-      if (added->len > 0) {
-         DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-                "Added DRM connectors: %s", join_string_g_ptr_array_t(added, ", ") );
-         change_type = (change_type == Changed_None) ? Changed_Added : Changed_Both;
-      }
-
-   //    if (change_type != Changed_None) {
-      // assert( change_type != Changed_Both);
-      // DBGMSG("wdd->display_change_handler = %p (%s)",
-      //         wdd->display_change_handler,
-      //         rtti_get_func_name_by_addr(wdd->display_change_handler) );
-      if (wdd->display_change_handler) {
-         wdd->display_change_handler( change_type, removed, added);
-      }
-      // }
-      g_ptr_array_free(removed,       true);
-      g_ptr_array_free(added,         true);
-   }
-
-   // g_ptr_array_free(prev_displays, true);
-
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning: %s",
-                              join_string_g_ptr_array_t(cur_displays, ", "));
-   return cur_displays;
-}
-
-
-//static
-GPtrArray* double_check_displays(GPtrArray* prev_displays, gpointer data) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "prev_displays = %s",
-                 join_string_g_ptr_array_t(prev_displays, ", "));
-
-   GPtrArray * result = NULL;
-   GPtrArray * cur_displays = check_displays(prev_displays,  data);
-   DBGTRC_NOPREFIX(debug, TRACE_GROUP, "cur_displays  = %s",
-         join_string_g_ptr_array_t(cur_displays, ", "));
-   if (gaux_unique_string_ptr_arrays_equal(prev_displays, cur_displays) ) {
-      result = cur_displays;
-   }
-   else {
-      DBGMSG("Double checking");
-      usleep(1000*1000);  // 1 second
-      result = check_displays(prev_displays, data);
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "after recheck:  %s", join_string_g_ptr_array_t(result, ", "));
-      g_ptr_array_free(cur_displays, true);
-   }
-   g_ptr_array_free(prev_displays, true);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning:      %s",
-                              join_string_g_ptr_array_t(result, ", "));
-   return result;
-}
-#endif
 
 
 // How to detect main thread crash?
