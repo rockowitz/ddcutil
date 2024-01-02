@@ -173,14 +173,27 @@ char * get_drm_connector_by_busno(int busno);
 char * get_drm_connector_by_edid(Byte * edid_bytes);
 bool   is_drm_display_by_busno(int busno);
 
-extern GPtrArray * sysfs_drm_connector_names;
-GPtrArray * get_sysfs_drm_connector_names();
-void init_sysfs_drm_connector_names();
-void free_sysfs_drm_connector_names_array(GPtrArray* drm_connector_names);
-void free_sysfs_drm_connector_names();
-char * find_sysfs_drm_connector_name_by_busno(GPtrArray* connector_names, int busno);
-char * get_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
+
+typedef struct {
+   GPtrArray * all_connectors;
+   GPtrArray * connectors_having_edid;
+} Sysfs_Connector_Names;
+
+// Sysfs_Connector_Names sysfs_drm_connector_names;
+
+
+Sysfs_Connector_Names get_sysfs_drm_connector_names();
+bool sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2);
+
+void free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct);
+void dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth);
+
+gpointer g_string_copy_func(gconstpointer src, gpointer data);
+GPtrArray * gaux_deep_copy_string_array(GPtrArray * old_names);
+Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original);
+
+char * find_sysfs_drm_connector_name_by_edid(GPtrArray* connector_names, Byte * edid);
 
 void init_i2c_sysfs();
 void terminate_i2c_sysfs();

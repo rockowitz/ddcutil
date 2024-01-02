@@ -2075,43 +2075,44 @@ GPtrArray * get_sysfs_drm_displays() {
 
 
 
-
- /** Adds a single connector, e.g. card0-HDMI-1, the list of all connectors
- *
- *  @param  dirname    directory to examine, <device>/drm/cardN
- *  @param  simple_fn  filename to examine
- *  @param  data       GPtrArray of connected monitors
- *  @param  depth      if >= 0, emits a report with this logical indentation depth
- *
- *  @remark
- *  Move get_sysfs_drm_examine_one_connector(), get_sysfs_drm_displays()
- * to sysfs_i2c_util.c?
- */
+ /** Adds a single connector name, e.g. card0-HDMI-1, to the accumulated
+  *  list of all connections, and if the connector has a valid EDID, to
+  *  the accumlated list of connectors have a valid EDID.
+  *
+  *  @param  dirname    directory to examine, <device>/drm/cardN
+  *  @param  simple_fn  filename to examine
+  *  @param  data       pointer to Sysfs_Connector_Names instance
+  *  @param  depth      if >= 0, emits a report with this logical indentation depth
+  */
 static
 void get_sysfs_drm_add_one_connector_name(
       const char * dirname,     // <device>/drm/cardN
       const char * simple_fn,   // card0-HDMI-1 etc
-      void *       data,        // GPtrArray collecting connector names
+      void *       data,        // pointer to Sysfs_Connector_Names collecting connector names
       int          depth)
 {
    bool debug = false;
+   Sysfs_Connector_Names * accum = (Sysfs_Connector_Names*) data;
    DBGMSF(debug, "Starting. dirname=%s, simple_fn=%s", dirname, simple_fn);
 
-   GPtrArray * connector_names = (GPtrArray *) data;
-   g_ptr_array_add(connector_names, g_strdup(simple_fn));
-
-   DBGMSF(debug, "Added connector %s", simple_fn);
+   g_ptr_array_add(accum->all_connectors, strdup(simple_fn));
+   bool collect = GET_ATTR_EDID(NULL, dirname, simple_fn, "edid");
+   if (collect) {
+      g_ptr_array_add(accum->connectors_having_edid, g_strdup(simple_fn));
+      DBGMSF(debug, "Added connector %s", simple_fn);
+   }
+   DBGMSF(debug, "Connector %s has edid = %s", simple_fn, SBOOL(collect));
 }
 
 
-GPtrArray * sysfs_drm_connector_names = NULL;
-
-/**Checks /sys/class/drm for connectors with active displays.
+/**Checks /sys/class/drm for connectors.
  *
- * @return newly allocated GPtrArray of DRM connector names, sorted
+ * @return struct Sysfs_Connector_Names
+ *
+ * @remark
+ * Note the result is returned on the stack, not the heap
  */
-
-GPtrArray * get_sysfs_drm_connector_names() {
+Sysfs_Connector_Names get_sysfs_drm_connector_names() {
    bool debug = false;
    char * dname =
  #ifdef TARGET_BSD
@@ -2120,38 +2121,84 @@ GPtrArray * get_sysfs_drm_connector_names() {
               "/sys/class/drm";
  #endif
    DBGTRC_STARTING(debug, TRACE_GROUP, "Examining %s", dname);
-   GPtrArray * drm_connector_names = g_ptr_array_new_with_free_func(g_free);
+
+   Sysfs_Connector_Names connector_names = {NULL, NULL};
+   connector_names.all_connectors = g_ptr_array_new_with_free_func(g_free);
+   connector_names.connectors_having_edid = g_ptr_array_new_with_free_func(g_free);
+
    dir_filtered_ordered_foreach(
                  dname,
                  is_card_connector_dir,   // filter function
                  NULL,                    // ordering function
                  get_sysfs_drm_add_one_connector_name,
-                 drm_connector_names,      // accumulator
+                 &connector_names,      // accumulator
                  0);
-   g_ptr_array_sort(drm_connector_names, gaux_ptr_scomp);
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning all display connector names: %s",
-                              join_string_g_ptr_array_t(drm_connector_names, ", "));
-   return drm_connector_names;
+   g_ptr_array_sort(connector_names.all_connectors, gaux_ptr_scomp);
+   g_ptr_array_sort(connector_names.connectors_having_edid, gaux_ptr_scomp);
+
+   DBGTRC_RET_STRUCT_VALUE(debug, DDCA_TRC_NONE, Sysfs_Connector_Names,
+                                  dbgrpt_sysfs_connector_names, connector_names);
+   return connector_names;
  }
 
 
-void init_sysfs_drm_connector_names() {
-   sysfs_drm_connector_names = get_sysfs_drm_connector_names();
+/** Tests if two Sysfs_Connector_Names instances have the same lists
+ *  for all connectors and for connectors having a valid EDID
+ *
+ *  @param cn1  first  instance
+ *  @param cn2  second instance
+ *  @return     true if the arrays in each instance contain the same connector names
+ */
+bool sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Names cn2) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn1:");
+      dbgrpt_sysfs_connector_names(cn1, 1);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn2:");
+      dbgrpt_sysfs_connector_names(cn2, 1);
+   }
+
+   bool result = gaux_unique_string_ptr_arrays_equal(cn1.all_connectors,
+                                                     cn2.all_connectors);
+   result &= gaux_unique_string_ptr_arrays_equal(cn1.connectors_having_edid,
+                                                 cn2.connectors_having_edid);
+
+   DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, result, "");
+   return result;
 }
 
 
-void free_sysfs_drm_connector_names_array(GPtrArray* drm_connector_names) {
-   if (drm_connector_names) {
-      g_ptr_array_free(drm_connector_names, true);
+/** Emit a debugging report of a #Sysfs_Connector_Names instance.
+ *
+ *  @param connector_names   Sysfs_Connector_Names instance, not a pointer
+ *  @param depth             logical indentation depth
+ */
+void dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int depth) {
+   rpt_vstring(depth, "all_connectors         @%p: %s", connector_names.all_connectors,
+                      join_string_g_ptr_array_t(connector_names.all_connectors,         ", ") );
+   rpt_vstring(depth, "connectors_having_edid @%p: %s", connector_names.connectors_having_edid,
+                      join_string_g_ptr_array_t(connector_names.connectors_having_edid, ", ") );
+}
+
+
+void free_sysfs_connector_names_contents(Sysfs_Connector_Names names_struct) {
+   if (names_struct.all_connectors) {
+      g_ptr_array_free(names_struct.all_connectors, true);
+      names_struct.all_connectors = NULL;
+   }
+   if (names_struct.connectors_having_edid) {
+      g_ptr_array_free(names_struct.connectors_having_edid, true);
+      names_struct.connectors_having_edid = NULL;
    }
 }
 
 
-void free_sysfs_drm_connector_names() {
-   if (sysfs_drm_connector_names) {
-      free_sysfs_drm_connector_names_array(sysfs_drm_connector_names);
-      sysfs_drm_connector_names = NULL;
-   }
+Sysfs_Connector_Names copy_sysfs_connector_names_struct(Sysfs_Connector_Names original) {
+   Sysfs_Connector_Names result = {NULL, NULL};
+   result.all_connectors = gaux_deep_copy_string_array(original.all_connectors);
+   result.connectors_having_edid = gaux_deep_copy_string_array(original.connectors_having_edid);
+   return result;
 }
 
 
@@ -2254,7 +2301,7 @@ void init_i2c_sysfs() {
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
-   RTTI_ADD_FUNC(init_sysfs_drm_connector_names);
+// RTTI_ADD_FUNC(init_sysfs_drm_connector_names);
 
    RTTI_ADD_FUNC(get_drm_connector_by_edid);
    RTTI_ADD_FUNC(get_drm_connector_by_busno);
