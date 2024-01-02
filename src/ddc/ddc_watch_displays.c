@@ -82,10 +82,10 @@ typedef struct {
    char                   marker[4];
    pid_t                  main_process_id;
    pid_t                  main_thread_id;
-#ifdef OLD_HOTPLUG_VERSION
+// #ifdef OLD_HOTPLUG_VERSION
    Display_Change_Handler display_change_handler;
    Bit_Set_32             drm_card_numbers;
-#endif
+// #endif
 } Watch_Displays_Data;
 
 
@@ -364,20 +364,25 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
 // has been disconnected by failure of an API call.
 
 static uint64_t last_emit_millisec = 0;
-static uint64_t double_tap_millisec = 500;
+static uint64_t double_tap_millisec = 5000;
 
 
 void ddc_emit_display_hotplug_event() {
    bool debug = false || watch_watching;
    uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "last_emit_millisec = %jd, cur_emit_millisec %jd",
-                                       last_emit_millisec, cur_emit_millisec);
+   DBGTRC_STARTING(debug, TRACE_GROUP,
+         "last_emit_millisec = %jd, cur_emit_millisec = %jd, double_tap_millisec = %jd",
+         last_emit_millisec, cur_emit_millisec, double_tap_millisec);
 
    SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Hotplug_Event");
    int callback_ct = 0;
 
-   if ( (cur_emit_millisec - last_emit_millisec) > double_tap_millisec) {
-      DBGMSF(debug, "emitting");
+   uint64_t delta_millisec = cur_emit_millisec - last_emit_millisec;
+   if ( delta_millisec > double_tap_millisec) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+            "delta_millisec = %jd, invoking registered callback functions", delta_millisec);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,
+            "delta_millisec = %jd, invoking registered callback functions", delta_millisec);
       if (display_hotplug_callbacks) {
          for (int ndx = 0; ndx < display_hotplug_callbacks->len; ndx++)  {
             DDCA_Display_Hotplug_Callback_Func func = g_ptr_array_index(display_hotplug_callbacks, ndx);
@@ -388,12 +393,161 @@ void ddc_emit_display_hotplug_event() {
       }
    }
    else {
-      DBGMSF(debug, "double tap ");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "delta_millisec = %jd, double tap", delta_millisec);
+      SYSLOG2(DDCA_SYSLOG_NOTICE,
+         "delta_millisec = %jd, double tap", delta_millisec);
    }
    last_emit_millisec = cur_emit_millisec;
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
 }
+
+
+void ddc_hotplug_change_handler(
+        GPtrArray *          connectors_removed,
+        GPtrArray *          connectors_added,
+        GPtrArray *          connectors_having_edid_removed,
+        GPtrArray *          connectors_having_edid_added)
+{
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   bool emit = false;
+   if (connectors_removed && connectors_removed->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed connectors: %s", join_string_g_ptr_array_t(connectors_removed, ", ") );
+      emit = true;
+   }
+   if (connectors_added && connectors_added->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added connectors;  %s", join_string_g_ptr_array_t(connectors_added, ", ") );
+      emit = true;
+   }
+   if (connectors_having_edid_removed && connectors_having_edid_removed->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed connectors having EDID: %s", join_string_g_ptr_array_t(connectors_having_edid_removed, ", ") );
+      emit = true;
+   }
+   if (connectors_having_edid_added && connectors_having_edid_added->len > 0) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   connectors having EDID: %s", join_string_g_ptr_array_t(connectors_having_edid_added, ", ") );
+      emit = true;
+   }
+
+   if (emit) {
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling ddc_emit_hotplug_event():");
+      ddc_emit_display_hotplug_event();
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
+
+
+/** Repeatedly calls #get_sysfs_drm_connector_names() until the value read
+ *  equals the prior value.
+ *
+ *  @oaram prior  initial connector value
+ *  @return stabilized value
+ */
+Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior) {
+   bool debug = false;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_STARTING(true, DDCA_TRC_NONE,"prior:");
+      dbgrpt_sysfs_connector_names(prior, 2);
+   }
+
+   bool stable = false;
+   while (!stable) {
+      usleep(1000*1000);  // 1 second
+      Sysfs_Connector_Names latest = get_sysfs_drm_connector_names();
+      if (sysfs_connector_names_equal(prior, latest))
+            stable = true;
+      free_sysfs_connector_names_contents(prior);
+      prior = latest;
+   }
+
+   DBGTRC_RET_STRUCT_VALUE(debug, DDCA_TRC_NONE, Sysfs_Connector_Names, dbgrpt_sysfs_connector_names, prior);
+   return prior;
+}
+
+
+/** Obtains a list of currently connected displays and compares it to the
+ *  previously detected list
+ *
+ *  If any changes were detected, calls the hotplug_change_handler
+ *  (old) Reports each change to the display_change_handler() in the Watch_Displays_Data struct
+ *
+ *  @param prev_displays   GPtrArray of previously detected displays
+ *  @return GPtrArray of currently detected monitors
+ */
+//static
+Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_names) {
+   bool debug = false;
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGTRC_STARTING(true, DDCA_TRC_NONE, "prev_connector_names:");
+      dbgrpt_sysfs_connector_names(prev_connector_names, 2);
+   }
+
+   Sysfs_Connector_Names new_connector_names = get_sysfs_drm_connector_names();
+   if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
+      DBGMSG("new_connector_names:");
+      dbgrpt_sysfs_connector_names(new_connector_names, 1);
+   }
+
+   bool connector_names_changed = false;
+   if (!sysfs_connector_names_equal(prev_connector_names, new_connector_names)) {
+      Sysfs_Connector_Names stabilized_names = stabilized_connector_names(new_connector_names);
+      if (IS_DBGTRC(debug, DDCA_TRC_NONE))  {
+         DBGTRC(true, DDCA_TRC_NONE, "after recheck:");
+         dbgrpt_sysfs_connector_names(stabilized_names, 2);
+      }
+      // free_connector_names_arrays(new_connector_names); // done in stabilized_arrays
+      new_connector_names = stabilized_names;
+      connector_names_changed = !sysfs_connector_names_equal(prev_connector_names, new_connector_names);
+   }
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connector_names_changed = %s", SBOOL(connector_names_changed));
+
+   if (connector_names_changed) {
+         GPtrArray * connectors_removed =
+               gaux_unique_string_ptr_arrays_minus(prev_connector_names.all_connectors,
+                                                    new_connector_names.all_connectors);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_removed: %s",
+                   join_string_g_ptr_array_t(connectors_removed, ", ") );
+
+         GPtrArray * connectors_added =
+               gaux_unique_string_ptr_arrays_minus( new_connector_names.all_connectors,
+                                                   prev_connector_names.all_connectors);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors added: %s",
+                  join_string_g_ptr_array_t(connectors_added, ", ") );
+
+         GPtrArray * connectors_having_edid_removed =
+               gaux_unique_string_ptr_arrays_minus(prev_connector_names.connectors_having_edid,
+                                                    new_connector_names.connectors_having_edid);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s",
+                  join_string_g_ptr_array_t(connectors_having_edid_removed, ", ") );
+
+         GPtrArray * connectors_having_edid_added =
+               gaux_unique_string_ptr_arrays_minus( new_connector_names.connectors_having_edid,
+                                                   prev_connector_names.connectors_having_edid);
+         DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s",
+                  join_string_g_ptr_array_t(connectors_having_edid_added, ", ") );
+
+         ddc_hotplug_change_handler(connectors_removed,
+                                connectors_added,
+                                connectors_having_edid_removed,
+                                connectors_having_edid_added);
+
+         // if (wdd->display_change_handler) {
+         //    wdd->display_change_handler( change_type, removed, added);
+         // }
+         // }
+         g_ptr_array_free(connectors_removed,       true);
+         g_ptr_array_free(connectors_added,         true);
+         g_ptr_array_free(connectors_having_edid_removed, true);
+         g_ptr_array_free(connectors_having_edid_added, true);
+   }
+
+   free_sysfs_connector_names_contents(prev_connector_names);
+   DBGTRC_DONE(debug, TRACE_GROUP, "Returning:");
+   if (IS_DBGTRC(debug, TRACE_GROUP))
+      dbgrpt_sysfs_connector_names(new_connector_names, 2);
+   return new_connector_names;
+}
+
 
 
 #ifdef ENABLE_UDEV
@@ -407,8 +561,7 @@ void set_fd_blocking(int fd) {
 }
 #endif
 
-
-gpointer watch_displays_using_udev(gpointer data) {
+gpointer ddc_watch_displays_using_udev(gpointer data) {
    bool debug = false;
    Watch_Displays_Data * wdd = data;
    assert(wdd && memcmp(wdd->marker, WATCH_DISPLAYS_DATA_MARKER, 4) == 0 );
@@ -423,23 +576,30 @@ gpointer watch_displays_using_udev(gpointer data) {
    udev = udev_new();
    assert(udev);
    struct udev_monitor* mon = udev_monitor_new_from_netlink(udev, "udev");
-   udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // alt "hidraw"
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "drm_dp_aux_dev", NULL);   // alt "hidraw"
+   udev_monitor_filter_add_match_subsystem_devtype(mon, "drm", NULL);   // detects
+   // udev_monitor_filter_add_match_subsystem_devtype(mon, "kernel", NULL);   // alt "hidraw" // does not detect
+   // udev_monitor_filter_add_match_subsystem_devtype(mon,  "i2c-dev", NULL);  // does not detect
+   //udev_monitor_filter_add_match_subsystem_devtype(mon,  "i2c", NULL); // does not detect
    udev_monitor_enable_receiving(mon);
 
    // make udev_monitor_receive_device() blocking
    // int fd = udev_monitor_get_fd(mon);
    // set_fd_blocking(fd);
 
-  //  GPtrArray * prev_displays = get_sysfs_drm_connector_names();
-  //  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-  //         "Initial connected displays: %s", join_string_g_ptr_array_t(prev_displays, ", ") );
+  Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
+  DBGTRC_NOPREFIX(true, TRACE_GROUP,
+        "Initial existing connectors: %s", join_string_g_ptr_array_t(current_connector_names.all_connectors, ", ") );
+  DBGTRC_NOPREFIX(true, TRACE_GROUP,
+        "Initial connectors having edid: %s", join_string_g_ptr_array_t(current_connector_names.connectors_having_edid, ", ") );
 
    struct udev_device * dev = NULL;
    while (true) {
       dev = udev_monitor_receive_device(mon);
       while ( !dev ) {
          int sleep_secs = 4;
-         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
+         if (debug)
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
          usleep(sleep_secs * 1000000);
          if (terminate_watch_thread) {
             DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
@@ -502,13 +662,14 @@ gpointer watch_displays_using_udev(gpointer data) {
       const char * hotplug = udev_device_get_property_value(dev, "HOTPLUG");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
 
-      // prev_displays = double_check_displays(prev_displays, data);
-      ddc_emit_display_hotplug_event();
+      current_connector_names = ddc_check_displays(current_connector_names);
 
       udev_device_unref(dev);
 
       // printf("."); fflush(stdout);
    }  // while
+
+   free_sysfs_connector_names_contents(current_connector_names);
 
     return NULL;
 }
@@ -549,8 +710,8 @@ ddc_start_watch_displays() {
                        "watch_displays",             // optional thread name
 #ifdef ENABLE_UDEV
                        (ddc_watch_mode == Watch_Mode_Full_Poll) ?
-                             watch_displays_using_udev :
-                             ddc_watch_displays_using_poll,
+                             ddc_watch_displays_using_poll :
+                             ddc_watch_displays_using_udev,
 #else
                        ddc_watch_displays_using_poll,
 #endif
@@ -607,6 +768,8 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_unregister_display_hotplug_callback);
    RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
 #ifdef ENABLE_UDEV
-   RTTI_ADD_FUNC(watch_displays_using_udev);
+   RTTI_ADD_FUNC(ddc_check_displays);
+   RTTI_ADD_FUNC(ddc_watch_displays_using_udev);
+   RTTI_ADD_FUNC(ddc_hotplug_change_handler);
 #endif
 }

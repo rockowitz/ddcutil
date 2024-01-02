@@ -12,21 +12,12 @@
 #include "public/ddcutil_types.h"
 /** \endcond */
 
-#ifdef OLD_HOTPLUG_VERSION
-
-typedef enum {Changed_None    = 0,
-              Changed_Added   = 1,
-              Changed_Removed = 2,
-              Changed_Both    = 3  // n. == Changed_Added | Changed_Removed
-} Displays_Change_Type;
-
-const char * displays_change_type_name(Displays_Change_Type change_type);
 
 typedef void (*Display_Change_Handler)(
-                 Displays_Change_Type change_type,
-                 GPtrArray *          removed,
-                 GPtrArray *          added);
-#endif
+                 GPtrArray *          buses_removed,
+                 GPtrArray *          buses_added,
+                 GPtrArray *          connectors_removed,
+                 GPtrArray *          connectors_added);
 
 typedef enum {
    Watch_Mode_Full_Poll,
