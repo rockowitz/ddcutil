@@ -1223,7 +1223,7 @@ static void init_i2c_bus_core_func_name_table() {
 
 
 void subinit_i2c_bus_core() {
-   init_sysfs_drm_connector_names();
+   // init_sysfs_drm_connector_names();
 }
 
 
