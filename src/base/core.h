@@ -451,6 +451,17 @@ do { \
    } \
 } while(0)
 
+#define DBGTRC_RET_STRUCT_VALUE(_flag, _trace_group, _structname, _dbgfunc, _structval) \
+do { \
+   if ( (_flag)  || trace_callstack_call_depth > 0 || is_tracing(_trace_group, __FILE__, __func__) )  { \
+      dbgtrc(DDCA_TRC_ALL, DBGTRC_OPTIONS_DONE, \
+             __func__, __LINE__, __FILE__, \
+             "Returning %s value:", #_structname); \
+      _dbgfunc(_structval, 2); \
+   } \
+} while(0)
+
+
 #define DBGTRC_RET_ERRINFO_STRUCT(_debug_flag, _trace_group, _errinfo_result, \
                                   _structptr_loc, _dbgfunc)                   \
 do { \
