@@ -255,7 +255,9 @@ gpointer g_string_copy_func(gconstpointer src, gpointer data) {
 
 GPtrArray *
 gaux_deep_copy_string_array(GPtrArray * old_array) {
-   return g_ptr_array_copy(old_array, g_string_copy_func, NULL);
+   GPtrArray * result = g_ptr_array_copy(old_array, g_string_copy_func, NULL);
+   g_ptr_array_set_free_func(result, g_free);
+   return result;
 }
 
 
