@@ -1460,9 +1460,9 @@ ddc_redetect_displays() {
    ddc_discard_detected_displays();
    if (dsa2_is_enabled())
       dsa2_save_persistent_stats();
-   free_sysfs_drm_connector_names();
+   // free_sysfs_drm_connector_names();
 
-   init_sysfs_drm_connector_names();
+   // init_sysfs_drm_connector_names();
    get_sys_drm_connectors(/*rescan=*/true);
    if (dsa2_is_enabled())
       dsa2_restore_persistent_stats();
