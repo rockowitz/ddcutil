@@ -773,6 +773,7 @@ ddc_write_read_with_retry(
             if (err) {
                psc = err->status_code;
                retryable = false;
+               errinfo_free(err);
             }
          }
 
