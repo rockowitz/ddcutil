@@ -2,10 +2,8 @@
  *  DPMS related functions
  */
 
-// Copyright (C) 2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2023-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#include "public/ddcutil_types.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -20,6 +18,10 @@
 #ifdef USE_X11
 #include "util/x11_util.h"
 #endif
+
+#include "public/ddcutil_types.h"
+
+#include "config.h"
 
 #include "base/core.h"
 #include "base/displays.h"
@@ -39,8 +41,10 @@ static DDCA_Trace_Group TRACE_GROUP = DDCA_TRC_I2C;
 Dpms_State dpms_state;    // global
 
 Value_Name_Table dpms_state_flags_table = {
+#ifdef USE_X11
       VN(DPMS_STATE_X11_CHECKED),
       VN(DPMS_STATE_X11_ASLEEP),
+#endif
       VN(DPMS_SOME_DRM_ASLEEP),
       VN(DPMS_ALL_DRM_ASLEEP),
       VN_END
