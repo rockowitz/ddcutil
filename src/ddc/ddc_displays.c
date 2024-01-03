@@ -1753,6 +1753,7 @@ void ddc_emit_display_detection_event(
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
          DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
          func(report);
+         free(func);
       }
    }
 
