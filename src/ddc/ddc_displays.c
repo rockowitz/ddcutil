@@ -5,10 +5,8 @@
  *  This file and ddc_display_ref_reports.c cross-reference each other.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#include "config.h"
 
 /** \cond */
 #include <assert.h>
@@ -20,6 +18,8 @@
 #ifdef USE_X11
 #include <X11/extensions/dpmsconst.h>
 #endif
+
+#include "config.h"
 
 #include "util/data_structures.h"
 #include "util/debug_util.h"
@@ -1246,6 +1246,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
             dref->flags |= DREF_DDC_IS_MONITOR;
          }
 
+#ifdef USE_X11
          bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
          if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
@@ -1256,9 +1257,16 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
                 all_displays_asleep = false;
              }
          }
-         if (asleep) {
+#else
+         if (dpms_check_drm_asleep_by_dref(dref)) {
+            dpms_state |= DPMS_SOME_DRM_ASLEEP;
             dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
-         }
+          }
+          else {
+             all_displays_asleep = false;
+          }
+#endif
+
          // dbgrpt_display_ref(dref,5);
          g_ptr_array_add(display_list, dref);
       }
@@ -1296,6 +1304,7 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          dref->flags |= DREF_DDC_IS_MONITOR_CHECKED;
          dref->flags |= DREF_DDC_IS_MONITOR;
 
+#ifdef OUT
          bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
          if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
              if (dpms_check_drm_asleep_by_dref(dref)) {
@@ -1309,9 +1318,30 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
          if (asleep) {
             dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
          }
-
+#endif
+#ifdef USE_X11
+         bool asleep = dpms_state&DPMS_STATE_X11_ASLEEP;
+         if (!asleep & !(dpms_state&DPMS_STATE_X11_CHECKED)) {
+             if (dpms_check_drm_asleep_by_dref(dref)) {
+                dpms_state |= DPMS_SOME_DRM_ASLEEP;
+                asleep = true;
+             }
+             else {
+                all_displays_asleep = false;
+             }
+         }
+#else
+         if (dpms_check_drm_asleep_by_dref(dref)) {
+            dpms_state |= DPMS_SOME_DRM_ASLEEP;
+            dref->flags |= DREF_DPMS_SUSPEND_STANDBY_OFF;
+          }
+          else {
+             all_displays_asleep = false;
+          }
+#endif
          g_ptr_array_add(display_list, dref);
       }
+
 
       GPtrArray * usb_open_errors = get_usb_open_errors();
       if (usb_open_errors && usb_open_errors->len > 0) {
