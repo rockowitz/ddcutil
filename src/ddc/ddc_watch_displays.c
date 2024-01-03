@@ -604,9 +604,6 @@ void  watch_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors
 }
 
 
-
-
-
 #ifdef ENABLE_UDEV
 #ifdef UNUSED
 void set_fd_blocking(int fd) {
