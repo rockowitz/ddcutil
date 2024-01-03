@@ -107,8 +107,7 @@ ddc_save_current_settings(
 
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
 
-      if (request_packet_ptr)
-         free_ddc_packet(request_packet_ptr);
+      free_ddc_packet(request_packet_ptr);
    }
 
    DBGTRC_RET_ERRINFO(debug, TRACE_GROUP, ddc_excp, "");
