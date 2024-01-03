@@ -784,6 +784,21 @@ ddca_get_display_ref(
       DDCA_Display_Identifier did,
       DDCA_Display_Ref*       dref_loc);
 
+
+/** Checks whether the monitor for a #DDCA_Display_Ref
+ *  is in a DPMS sleep state
+ *
+ *  @param dref   display reference
+ *  @retval DDCRC_OK  monitor not asleep
+ *  @retval DDCRC_ASLEEP  monitor in a DPMS sleep state
+ *  @retval DDCRC_DISCONNECTED monitor has been disconnected
+ *  @return validation failures, invalid state
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_check_dref_dpms_asleep(DDCA_Display_Ref dref);
+
 /** Returns a string representation of a display reference
  *
  *  The returned value is valid until the next call to this function on
