@@ -96,6 +96,28 @@ void dpms_check_x11_asleep() {
 }
 #endif
 
+bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
+   bool debug = true;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "drm_connector_name=%s", drm_connector_name);
+   assert(drm_connector_name);
+
+   char * dpms = NULL;
+  char * enabled = NULL;
+  char * status  = NULL;
+  int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? -1 : 1;
+  RPT_ATTR_TEXT(d, &dpms,    "/sys/class/drm", drm_connector_name, "dpms");
+  RPT_ATTR_TEXT(d, &enabled, "/sys/class/drm", drm_connector_name, "enabled");
+  RPT_ATTR_TEXT(d, &status,  "/sys/class/drm", drm_connector_name, "status");
+  // Nvidia driver reports enabled value as "disabled"
+  // asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
+  bool asleep = !streq(dpms, "On");
+
+  free(dpms);
+  free(enabled);
+  free(status);
+  return asleep;
+}
+
 
 bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
    bool debug = false;
@@ -104,7 +126,6 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
          businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
 
    bool asleep = false;
-
    // ASSERT_IFF( !(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED), !businfo->drm_connector_found_by);
 
    if (!(businfo->flags&I2C_BUS_DRM_CONNECTOR_CHECKED)) {
@@ -118,31 +139,8 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
       }
    }
    if (businfo->drm_connector_name) {
-      char * dpms = NULL;
-      char * enabled = NULL;
-      char * status  = NULL;
-      RPT_ATTR_TEXT(-1, &dpms,    "/sys/class/drm", businfo->drm_connector_name, "dpms");
-      RPT_ATTR_TEXT(-1, &enabled, "/sys/class/drm", businfo->drm_connector_name, "enabled");
-      RPT_ATTR_TEXT(-1, &status,  "/sys/class/drm", businfo->drm_connector_name, "status");
-      // Nvidia driver reports enabled value as "disabled" 
-      // asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
-      asleep = !streq(dpms, "On");
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP,
-            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
-            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
-      SYSLOG2(DDCA_SYSLOG_DEBUG,
-            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/enabled=%s",
-            businfo->drm_connector_name, dpms, businfo->drm_connector_name, enabled);
-      SYSLOG2(DDCA_SYSLOG_DEBUG,
-            "/sys/class/drm/%s/dpms=%s, /sys/class/drm/%s/status=%s",
-            businfo->drm_connector_name, dpms, businfo->drm_connector_name, status);
-      free(dpms);
-      free(enabled);
-      free(status);
+      asleep = dpms_check_drm_asleep_by_connector(businfo->drm_connector_name);
    }
-
-   // if (businfo->busno == 6)   // test case
-   //    asleep = true;
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, asleep, "");
    return asleep;
