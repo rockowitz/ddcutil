@@ -2,7 +2,7 @@
  *
  * I2C bus detection and inspection
  */
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -339,7 +339,15 @@ Status_Errno i2c_close_bus(int busno, int fd, Call_Options callopts) {
    DDCA_IO_Path dpath;
    dpath.io_mode = DDCA_IO_I2C;
    dpath.path.i2c_busno = busno;
-   unlock_display_by_dpath(dpath);
+   Error_Info * erec = unlock_display_by_dpath(dpath);
+   if (erec) {
+      char * s = g_strdup_printf("Unexpected error %s from unlock_display_by_dpath(%s)",
+            psc_name(erec->status_code), dpath_repr_t(&dpath));
+      DBGTRC_NOPREFIX(true, TRACE_GROUP, "%s", s);
+      SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+      free(s);
+      errinfo_free(erec);
+   }
 
    RECORD_IO_EVENT(fd, IE_CLOSE, ( rc = close(fd) ) );
    assert( rc == 0 || rc == -1);   // per documentation
