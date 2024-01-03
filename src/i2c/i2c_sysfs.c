@@ -1200,6 +1200,9 @@ char * get_drm_connector_by_busno(int busno) {
 }
 
 
+
+
+
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", (void*) raw_edid);
@@ -1220,6 +1223,16 @@ char * get_drm_connector_by_edid(Byte * edid_bytes) {
    DBGTRC_RETURNING(debug, TRACE_GROUP, result, "");
    return result;
 }
+
+
+Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, DDCA_TRC_I2C, "name=|%s|", name);
+   Sys_Drm_Connector * result = find_sys_drm_connector(-1, NULL, name);
+   DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
+   return result;
+}
+
 
 
 

@@ -171,6 +171,7 @@ bool   i2c_all_video_devices_drm();
 
 char * get_drm_connector_by_busno(int busno);
 char * get_drm_connector_by_edid(Byte * edid_bytes);
+Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 bool   is_drm_display_by_busno(int busno);
 
 
