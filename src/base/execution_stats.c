@@ -3,7 +3,7 @@
  *  Record execution statistics, mainly the count and elapsed time of system calls.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /** \cond */
@@ -635,7 +635,9 @@ void reset_execution_stats() {
 void report_elapsed_stats(int depth) {
    uint64_t end_nanos = cur_realtime_nanosec();
    if (program_start_timestamp != resettable_start_timestamp) {
+      g_mutex_lock(&global_stats_mutex);    // not really needed, make coverity happy
       uint64_t cur_elapsed_nanos = end_nanos - resettable_start_timestamp;
+      g_mutex_unlock(&global_stats_mutex);
       rpt_vstring(depth,
             "Elapsed milliseconds since last reset (nanosec):%10"PRIu64"  (%13"PRIu64")",
             cur_elapsed_nanos / (1000*1000),
