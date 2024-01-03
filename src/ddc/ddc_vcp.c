@@ -569,10 +569,9 @@ ddc_get_nontable_vcp_value(
       }
    }
 
-   DDC_Packet * request_packet_ptr  = NULL;
    DDC_Packet * response_packet_ptr = NULL;
-   request_packet_ptr = create_ddc_getvcp_request_packet(
-                           feature_code, "ddc_get_nontable_vcp_value:request packet");
+   DDC_Packet * request_packet_ptr = create_ddc_getvcp_request_packet(
+                                  feature_code, "ddc_get_nontable_vcp_value:request packet");
    // dump_packet(request_packet_ptr);
 
    Byte expected_response_type = DDC_PACKET_TYPE_QUERY_VCP_RESPONSE;
@@ -644,8 +643,7 @@ ddc_get_nontable_vcp_value(
       }
    }
 
-   if (request_packet_ptr)
-      free_ddc_packet(request_packet_ptr);
+   free_ddc_packet(request_packet_ptr);
    if (response_packet_ptr)
       free_ddc_packet(response_packet_ptr);
 
