@@ -413,11 +413,11 @@ void ddc_hotplug_change_handler(
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    bool emit = false;
    if (connectors_removed && connectors_removed->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed connectors: %s", join_string_g_ptr_array_t(connectors_removed, ", ") );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detached connectors: %s", join_string_g_ptr_array_t(connectors_removed, ", ") );
       emit = true;
    }
    if (connectors_added && connectors_added->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added connectors;  %s", join_string_g_ptr_array_t(connectors_added, ", ") );
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Attached connectors;  %s", join_string_g_ptr_array_t(connectors_added, ", ") );
       emit = true;
    }
    if (connectors_having_edid_removed && connectors_having_edid_removed->len > 0) {
@@ -548,6 +548,63 @@ Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_na
    return new_connector_names;
 }
 
+void emit_sleep_change_event(const char * connector, bool asleep) {
+   bool debug = true;
+   DBGTRC_EXECUTED(debug, TRACE_GROUP, "connector=%s, asleep=%s", connector, sbool(asleep));
+}
+
+void  watch_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors) {
+   bool debug = true || watch_watching;
+   DBGTRC_STARTING(debug, DDCA_TRC_NONE, "active_connectors =%s",
+         join_string_g_ptr_array_t(active_connectors, ""));
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleepy_connectors= %s",
+         join_string_g_ptr_array_t(sleepy_connectors, ", "));
+
+   // remove from the sleepy_connectors array any connector that is not currently active
+   // so that it will not be marked asleep when it becomes active
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Initial sleepy_connectors->len=%s", sleepy_connectors->len);
+   for (int sleepy_ndx = 0; sleepy_ndx < sleepy_connectors->len; sleepy_ndx++) {
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Top of loop sleepy_connectors->len=%s", sleepy_connectors->len);
+      char * sleepy_connector = g_ptr_array_index(sleepy_connectors, sleepy_ndx);
+      guint found_loc = 0;
+      bool currently_connected = g_ptr_array_find_with_equal_func(
+                                 active_connectors, sleepy_connector, gaux_streq, &found_loc);
+      if (!currently_connected) {
+         g_ptr_array_remove_index_fast(sleepy_connectors, sleepy_ndx);
+         DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "after removed %s, sleepy_connectors->len=%d",
+               sleepy_connector, sleepy_connectors->len);
+      }
+   }
+   // turn off is asleep if connector no longer has a monitor
+   DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE,
+         "sleepy_connectors after removing inactive connectors = %s",
+          join_string_g_ptr_array_t(sleepy_connectors, ", "));
+
+
+   for (int active_conn_ndx = 0; active_conn_ndx < active_connectors->len; active_conn_ndx++) {
+      char * connector = g_ptr_array_index(active_connectors, active_conn_ndx);
+      bool is_dpms_asleep = dpms_check_drm_asleep_by_connector(connector);
+      guint found_sleepy_loc = 0;
+      bool last_checked_dpms_asleep = g_ptr_array_find_with_equal_func(sleepy_connectors,
+                          connector, g_str_equal, &found_sleepy_loc);
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "connector =%s, last_checked_dpms_asleep=%s, is_dpms_asleep=%s",
+            connector, sbool (last_checked_dpms_asleep), sbool(is_dpms_asleep));
+      if (is_dpms_asleep != last_checked_dpms_asleep) {
+         emit_sleep_change_event(connector, is_dpms_asleep);
+         if (is_dpms_asleep) {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to sleepy_connectors", connector);
+            g_ptr_array_add(sleepy_connectors, connector);
+         }
+         else {
+            DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Removing %s from sleepy_connectors", connector);
+            g_ptr_array_remove_index(sleepy_connectors, found_sleepy_loc);
+         }
+      }
+   }
+}
+
+
+
 
 
 #ifdef ENABLE_UDEV
@@ -572,6 +629,8 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    pid_t cur_tid = get_thread_id();
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Our process id: %d, our thread id: %d", cur_pid, cur_tid);
 
+   GPtrArray * sleepy_connectors = g_ptr_array_new_with_free_func(g_free);
+
    struct udev* udev;
    udev = udev_new();
    assert(udev);
@@ -588,9 +647,9 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
    // set_fd_blocking(fd);
 
   Sysfs_Connector_Names current_connector_names = get_sysfs_drm_connector_names();
-  DBGTRC_NOPREFIX(true, TRACE_GROUP,
+  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
         "Initial existing connectors: %s", join_string_g_ptr_array_t(current_connector_names.all_connectors, ", ") );
-  DBGTRC_NOPREFIX(true, TRACE_GROUP,
+  DBGTRC_NOPREFIX(debug, TRACE_GROUP,
         "Initial connectors having edid: %s", join_string_g_ptr_array_t(current_connector_names.connectors_having_edid, ", ") );
 
    struct udev_device * dev = NULL;
@@ -663,6 +722,8 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP,"HOTPLUG: %s", hotplug);     // "1"
 
       current_connector_names = ddc_check_displays(current_connector_names);
+
+      watch_asleep(current_connector_names.connectors_having_edid, sleepy_connectors);
 
       udev_device_unref(dev);
 
