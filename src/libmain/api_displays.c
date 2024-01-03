@@ -17,6 +17,7 @@
 #include "util/linux_util.h"
 #include "util/report_util.h"
 #include "util/string_util.h"
+#include "util/sysfs_util.h"
 
 #include "base/core.h"
 #include "base/dsa2.h"
@@ -26,6 +27,7 @@
 #include "base/rtti.h"
 
 #include "i2c/i2c_sysfs.h"
+#include "i2c/i2c_dpms.h"
 
 #include "ddc/ddc_displays.h"
 #include "ddc/ddc_display_ref_reports.h"
@@ -431,6 +433,47 @@ ddca_report_display_by_dref(
       ddc_report_display_by_dref(dref, depth);
 
    API_EPILOG_WO_RETURN(debug, rc, "");
+   return rc;
+}
+
+
+DDCA_Status
+ddca_check_dref_dpms_asleep(DDCA_Display_Ref ddca_dref)
+{
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
+   assert(library_initialized);
+
+   Error_Info * errinfo = NULL;
+   Display_Ref * dref = NULL;
+   DDCA_Status rc = validate_ddca_display_ref(ddca_dref, &dref);
+   if (rc != 0)
+      errinfo = ERRINFO_NEW(rc, "");
+   else {
+      assert(sys_drm_connectors);
+      if (!dref->drm_connector) {
+         errinfo = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "dref->drm_connector == NULL");
+      }
+      else {
+        bool edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", dref->drm_connector, "edid");
+        if (!edid_exists) {
+           errinfo = ERRINFO_NEW(DDCRC_DISCONNECTED,
+                    "/dev/i2c-%d", dref->io_path.path.i2c_busno);
+        }
+        else {
+           if (dpms_check_drm_asleep_by_dref(dref))
+              errinfo = ERRINFO_NEW(DDCRC_DPMS_ASLEEP,
+                    "/dev/i2c-%d", dref->io_path.path.i2c_busno);
+        }
+      }
+   }
+   DDCA_Status ddcrc = errinfo->status_code;
+   DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(errinfo);
+   errinfo_free_with_report(errinfo, debug, __func__);
+   save_thread_error_detail(public_error_detail);
+
+   API_EPILOG_WO_RETURN(debug, ddcrc, "");
    return rc;
 }
 
@@ -1390,6 +1433,8 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
    API_EPILOG(debug, result, "");
    return result;
 }
+
+
 
 
 //
