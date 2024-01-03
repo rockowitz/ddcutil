@@ -338,6 +338,7 @@ void free_parsed_edid(Parsed_Edid * parsed_edid) {
             parsed_edid, hexstring_t((unsigned char *) parsed_edid->marker, 4));
       DBGF(true, "%s", s);
       syslog(LOG_USER|LOG_ERR, "(%s) %s", __func__, s);
+      free(s);
    }
 }
 
@@ -357,7 +358,7 @@ char * base_asciify(char * s) {
    int badct = 0;
    int ndx = 0;
    while (s[ndx]) {
-      if (s[ndx] & 0x80)
+      if (s[ndx] & 0x80 || s[ndx] < 32)
          badct++;
       ndx++;
    }
@@ -367,7 +368,8 @@ char * base_asciify(char * s) {
    ndx = 0;
    while(s[ndx]) {
       // printf("s[ndx] = %u\n", (unsigned char)s[ndx]);
-      if ( !(s[ndx] & 0x80)) {
+      bool is_printable = s[ndx] >=32 && s[ndx] < 128 ;
+      if ( is_printable) {
          result[respos++] = s[ndx];
       }
       else {
