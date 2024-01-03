@@ -1,6 +1,6 @@
 /** @file api_displays.c */
 
-// Copyright (C) 2018-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2018-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "config.h"
@@ -81,7 +81,7 @@ DDCA_Status validate_ddca_display_handle(DDCA_Display_Handle ddca_dh, Display_Ha
    if (dh && memcmp(dh->marker, DISPLAY_HANDLE_MARKER,4) == 0) {
       result = ddc_validate_display_handle(dh);
    }
-   if (result == DDCRC_OK)
+   if (result == DDCRC_OK && dh_loc)
       *dh_loc = dh;
    return result;
 }
