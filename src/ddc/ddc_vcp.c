@@ -3,10 +3,8 @@
  *  Basic functions to get and set single values and save current settings.
  */
 
-// Copyright (C) 2014-2023 Sanford Rockowitz <rockowitz@minsoft.com>
+// Copyright (C) 2014-2024 Sanford Rockowitz <rockowitz@minsoft.com>
 // SPDX-License-Identifier: GPL-2.0-or-later
-
-#include <config.h>
 
 /** \cond */
 #include <assert.h>
@@ -16,6 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <config.h>
 
 #include "util/error_info.h"
 #include "util/report_util.h"
@@ -157,8 +157,7 @@ ddc_set_nontable_vcp_value(
       ddc_excp = ddc_write_only_with_retry(dh, request_packet_ptr);
       psc = (ddc_excp) ? ddc_excp->status_code : 0;
 
-      if (request_packet_ptr)
-         free_ddc_packet(request_packet_ptr);
+      free_ddc_packet(request_packet_ptr);
    }
 
    if ( psc==DDCRC_RETRIES )
