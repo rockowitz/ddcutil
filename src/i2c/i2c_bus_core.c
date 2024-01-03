@@ -153,6 +153,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
    char filename[20];
    Error_Info * master_error = NULL;
+   assert(fd_loc);
    *fd_loc = -1;   // ?
 
    Display_Lock_Flags ddisp_flags = DDISP_WAIT;
