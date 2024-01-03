@@ -224,8 +224,10 @@ ddc_open_display(
          if (!err) {
             DBGMSF(debug, "Calling i2c_open_bus() ...");
             Error_Info * err2 = i2c_open_bus(dref->io_path.path.i2c_busno, callopts, &fd);
-            if (fd < 0) {
-               err = errinfo_new_with_cause(err->status_code, err2, __func__, "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
+            ASSERT_IFF(err2, fd == -1);
+            if (err2) {
+               err = errinfo_new_with_cause(err->status_code, err2, __func__,
+                               "Opening /dev/i2c-%d", dref->io_path.path.i2c_busno);
             }
          }
          if (!err) {
