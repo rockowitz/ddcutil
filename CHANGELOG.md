@@ -10,19 +10,22 @@
     and the monitor properly uses the unsupported feature bit in Get Feature 
     Reply packets, thereby improving initialization time.
 - Option ***--min-dynamic-multiplier***  (experimental, possibly rename --dsa-floor)
-- Options ***enable-async-i2c-bus_checks***, ***--disable-async_bus-checks***
 
 #### Changed
+- Multiple "Options:" lines in an ini file segment are combined
 - Options ***--verbose***, and ***--brief*** affect ***--help*** output: 
   - Only show detailed build informmation when ***--verbose*** specified
   - Show only the version, without prefix, if ***--brief*** specified
-- I2C bus examination during initialization is parallelized, improving performance
-  (This is distinct from the ddc protocol checking.)
+- I2C bus examination during initialization can be parallelized, improving performance
+  (This is distinct from the ddc protocol checking.) This is an experimental
+  feature.  It can be enabled by using a low value as an argument to option 
+  ***--i2c-bus-check-async-theshold***, e.g. ***--i2c-bus-check-async-threshold 4***.
+- ***--ddc-check-async-threshold
 - Command detect: better msgs for laptop display
   - do not report "DDC communication failed"
   - report "Is laptop display" instead of "Is eDP device" or "Is LVDS device"
 - Better accomodate the variation in use of sysfs by different drivers
-- Deprecate vaguely named option ***--force***.  Replace its single use with 
+- Deprecate vaguely named option ***--force***.  Replace its single use with  
   option ***--permit-unknown-feature***.
 - Turned off unconditional message that reported an elusive Nvidia/i2c-dev
   driver compatibility error.  The incompatibility has been full diagnosed 
@@ -32,6 +35,9 @@
   hidden since displays caching is not a released feature
 - **configure** option ***--enable-asan*** causes libasan to be linked into binaries 
 - **configure** option ***--enable-x11*** is deprecated. The X11 API is no longer used.
+- Option ***--ddcdata*** is an alternative name for ***--ddc***.  ***--ddcdata*** more
+  clearly indicates that it causes DDC data errors to be reported.  Option name 
+  ***--ddc*** is deprecated. 
 
 #### Fixed
 - Better handling of DDC Null Message recognition and adjustments
@@ -51,25 +57,26 @@ ddcutil 2.0.0. The SONAME is unchanged as libddcutil.so.5. The released library
 file is libddcutil.so.5.x.x. 
 
 #### Added
-- Implemented display status change detection
+- Implemented display hotplug event detection
   - Requires DRM video drivers (e.g. amdgpu, i915)
-  - Can detect physical connection/disconnection and DPMS sleep changes, but
+  - Can detect physical connection/disconnection, but
     the effect of turning a monitor on or off is monitor dependant and 
     cannot reliably be detected.
   - API uses callbacks to report report status changes to client
-    - event type: DDCA_Display_Event_Type
-    - callback function signature: DDCA_Display_Detection_Callback_Func
-    - ddca_register_display_detection_callback() 
-    - ddca_unregister_display_detection_callback() 
-    - ddca_display_event_type_name()
+    - event type: DDCA_Display_Hotplug_Type
+    - callback function signature: DDCA_Display_Hotplug_Callback_Func
+    - ddca_register_display_hotplug_callback() 
+    - ddca_unregister_display_hotplug_callback() 
     - new status codes possible for many current API functions: 
       DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
+    - When a hotplug event is reported, the client should call 
+      ddca_redetect_monitors().
   - Sleep multiplier control:
     - ddca_enable_dynamic_sleep() 
     - ddca_disable_dynamic_sleep() 
     - ddca_get_current_sleep_multiplier() 
     - ddca_set_display_sleep_multiplier() 
-  - ddca_init2(): 
+  - ddca_init2() replaces ddca_init(), which is deprecated: 
     Has additional argument for collecting informational msgs. Allows for not
     issuing information messages regarding options assembly and parsing directly
     from libddcutil (currently enabled by setting flag DDCA_INIT_OPTIONS_ENABLE_INIT_MSGS),
