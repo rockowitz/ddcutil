@@ -141,7 +141,6 @@ void include_open_failures_reported(int busno) {
  *  @param busno     bus number
  *  @param callopts  call option flags, controlling failure action
  *
- *
  *  @retval >=0     Linux file descriptor
  *  @retval -errno  negative Linux errno if open fails
  *
@@ -288,7 +287,7 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
      }
       if (lockrc != 0) {
          DBGTRC_NOPREFIX(true, TRACE_GROUP, "Cross instance locking failed");
-         close(*fd_loc);
+         close(fd);
          unlock_display_by_dpath(dpath);
          master_error = ERRINFO_NEW(lockrc, "Cross instance locking failed. busno=%d", busno);
       }
