@@ -1494,8 +1494,14 @@ ddc_redetect_displays() {
 
    // init_sysfs_drm_connector_names();
    get_sys_drm_connectors(/*rescan=*/true);
-   if (dsa2_is_enabled())
-      dsa2_restore_persistent_stats();
+   if (dsa2_is_enabled()) {
+      Error_Info * erec = dsa2_restore_persistent_stats();
+      if (erec) {
+         MSG_W_SYSLOG(DDCA_SYSLOG_ERROR, "Unexpected error from dsa2_restore_persistent_stats(): %s",
+               errinfo_summary(erec));
+         free(erec);
+      }
+   }
    i2c_detect_buses();
    all_display_refs = ddc_detect_all_displays(&display_open_errors);
    if (debug) {
