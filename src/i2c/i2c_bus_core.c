@@ -177,7 +177,10 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
 
    if (fd < 0) {
       master_error = ERRINFO_NEW(-errno, "Open failed for %s", filename);
-      unlock_display_by_dpath(dpath);
+      Error_Info * err = unlock_display_by_dpath(dpath);
+      // only error returned is DDCRC_LOCKED, which is impossible in this case
+      assert(!err);    // avoid coverity warning
+      free(err);
       goto bye;
    }
 
