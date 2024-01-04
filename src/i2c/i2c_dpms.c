@@ -108,19 +108,19 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
    char * dpms = NULL;
    char * enabled = NULL;
    char * status  = NULL;
-   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? -1 : 1;
+   int d = (IS_DBGTRC(debug, DDCA_TRC_NONE)) ? 1 : -1;
    RPT_ATTR_TEXT(d, &dpms,    "/sys/class/drm", drm_connector_name, "dpms");
    RPT_ATTR_TEXT(d, &enabled, "/sys/class/drm", drm_connector_name, "enabled");
    RPT_ATTR_TEXT(d, &status,  "/sys/class/drm", drm_connector_name, "status");
    // Nvidia driver reports enabled value as "disabled"
    // asleep = !( streq(dpms, "On") && streq(enabled, "enabled") );
    bool asleep = !streq(dpms, "On");
-
    free(dpms);
    free(enabled);
    free(status);
-   return asleep;
+
    DBGTRC_RET_BOOL(debug, DDCA_TRC_NONE, asleep, "");
+   return asleep;
 }
 
 
