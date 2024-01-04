@@ -797,7 +797,7 @@ ddca_get_display_ref(
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_check_dref_dpms_asleep(DDCA_Display_Ref dref);
+ddca_check_dref_status(DDCA_Display_Ref dref);
 
 /** Returns a string representation of a display reference
  *
@@ -1748,6 +1748,37 @@ ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
  */
 DDCA_Status
 ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+
+
+
+/** Registers a function to be called called when a change in DPMS sleep status is
+ *  detected.
+ *
+ *  @param[in] func   function of type #DDCA_Display_Sleep_Event_Callback_Func
+ *  @retval    DDCRC_OK
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
+
+/** Removes a function from the list of registered sleep event callbacks
+ *
+ *  @param[in] func            function that has already been registered
+ *  @retval    DDCRC_OK        function removed from list
+ *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
+ *                                     or not all video devices support DRM
+ *  @retval    DDCRC_NOT_FOUND function not registered
+ *
+ *  @since 2.0.2
+ */
+DDCA_Status
+ddca_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
+
+
+
 
 
 #ifdef __cplusplus
