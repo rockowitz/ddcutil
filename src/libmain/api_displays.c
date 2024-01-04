@@ -34,6 +34,7 @@
 #include "ddc/ddc_display_selection.h"
 #include "ddc/ddc_packet_io.h"
 #include "ddc/ddc_vcp_version.h"
+#include "ddc/ddc_watch_displays.h"
 
 #include "libmain/api_base_internal.h"
 #include "libmain/api_error_info_internal.h"
@@ -438,7 +439,7 @@ ddca_report_display_by_dref(
 
 
 DDCA_Status
-ddca_check_dref_dpms_asleep(DDCA_Display_Ref ddca_dref)
+ddca_check_dref_status(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
    free_thread_error_detail();
@@ -1434,6 +1435,37 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
    return result;
 }
 
+
+
+DDCA_Status
+ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func) {
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
+
+   DDCA_Status result = DDCRC_INVALID_OPERATION;
+#ifdef ENABLE_UDEV
+   result = (i2c_all_video_devices_drm())
+                      ? ddc_register_display_sleep_event_callback(func)
+                      : DDCRC_INVALID_OPERATION;
+#endif
+
+   API_EPILOG(debug, result, "");
+   return result;
+}
+
+
+DDCA_Status
+ddca_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func) {
+   bool debug = false;
+   free_thread_error_detail();
+   API_PROLOGX(debug, "func=%p", func);
+
+   DDCA_Status result =  ddc_register_display_sleep_event_callback(func);
+
+   API_EPILOG(debug, result, "");
+   return result;
+}
 
 
 
