@@ -574,7 +574,7 @@ GPtrArray* display_sleep_change_callbacks = NULL;
  *  The function must be of type #DDCA_Display_sleep_change_Callback_Func.
  *  It is not an error if the function is already registered.
  */
-DDCA_Status ddc_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func) {
+DDCA_Status ddc_register_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -595,7 +595,7 @@ DDCA_Status ddc_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_C
  *  @retval DDCRC_OK normal return
  *  @retval DDCRC_NOT_FOUND
  */
-DDCA_Status ddc_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func) {
+DDCA_Status ddc_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -624,7 +624,7 @@ void ddc_emit_sleep_change_event(const char * connector_name, bool asleep) {
     if (display_sleep_change_callbacks) {
        callback_ct =  display_sleep_change_callbacks->len;
        for (int ndx = 0; ndx < display_sleep_change_callbacks->len; ndx++)  {
-          DDCA_Display_Sleep_Evemt_Callback_Func func = g_ptr_array_index(display_sleep_change_callbacks, ndx);
+          DDCA_Display_Sleep_Event_Callback_Func func = g_ptr_array_index(display_sleep_change_callbacks, ndx);
           DDCA_Display_Sleep_Event event = {dref, asleep};
           func(event);
        }

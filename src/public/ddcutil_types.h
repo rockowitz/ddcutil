@@ -557,7 +557,7 @@ typedef struct {
 /** Signature of a function to be invoked by the shared library notifying the
  *  client that a change in the DPMS sleep state of a display has been detected.
  */
-typedef void (*DDCA_Display_Sleep_Evemt_Callback_Func)(DDCA_Display_Sleep_Event);
+typedef void (*DDCA_Display_Sleep_Event_Callback_Func)(DDCA_Display_Sleep_Event);
 
 #ifdef __cplusplus
 }

@@ -1762,7 +1762,7 @@ ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
+ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func);
 
 /** Removes a function from the list of registered sleep event callbacks
  *
@@ -1775,7 +1775,7 @@ ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Fun
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
+ddca_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func);
 
 
 
