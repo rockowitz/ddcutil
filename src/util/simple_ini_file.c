@@ -188,13 +188,14 @@ int ini_file_load(
             cur_segment = seg_name;
          }
 
-         else if ( is_kv(trimmed, &key, &value) ) {
+         else if ( is_kv(trimmed, &key, &value) ) {  // allocates key, value
             if (cur_segment) {
                char * full_key = g_strdup_printf("%s/%s", cur_segment, key); // allocates full_key
                char * old_value = g_hash_table_lookup(ini_file_hash, full_key);
                if (old_value) {
                   DBGF(debug, "old value = %p -> %s", old_value, old_value);
-                  char * new_value = g_strdup_printf("%s %s", old_value, value);
+                  char * new_value = g_strdup_printf("%s %s", old_value, value);  // free's old_value
+                  free(value);
                   DBGF(debug, "Replacing %s -> %p = %s", full_key, new_value, new_value);
                   g_hash_table_replace(ini_file_hash, full_key, new_value);
                   if (debug) {
