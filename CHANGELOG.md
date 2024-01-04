@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.2] 2023-12-11
+## [2.0.2] 2024-01-04
 
 ### General
 
@@ -71,6 +71,12 @@ file is libddcutil.so.5.x.x.
       DDCRC_DISCONNECTED, DDCRC_DPMS_ASLEEP
     - When a hotplug event is reported, the client should call 
       ddca_redetect_monitors().
+  - DPMS sleep status (awake/asleep) are reported using a similar
+    set of API calls: 
+    - event type: DDCA_Display_Sleep_Event 
+    - callback function signature: DDCA_Display_Sleep_Event_Callback_Func
+    - ddca_register_display_sleep_event_callback() 
+    - ddca_unregister_display_sleep_event_callback() 
   - Sleep multiplier control:
     - ddca_enable_dynamic_sleep() 
     - ddca_disable_dynamic_sleep() 
