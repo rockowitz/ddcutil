@@ -469,7 +469,7 @@ Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior) {
    }
    if (stablect > 1) {
       DBGTRC(true, TRACE_GROUP, "Required %d calls to get_sysfs_drm_connector_names()", stablect);
-      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d calls to get_sysfs_drm_connector_names()", __func__, stablect);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "%s required %d extra calls to get_sysfs_drm_connector_names()", __func__, stablect-1);
    }
 
    DBGTRC_RET_STRUCT_VALUE(debug, DDCA_TRC_NONE, Sysfs_Connector_Names, dbgrpt_sysfs_connector_names, prior);
