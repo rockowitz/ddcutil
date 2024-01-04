@@ -83,7 +83,7 @@
 #define DEFAULT_ENABLE_CACHED_CAPABILITIES true
 #define DEFAULT_ENABLE_CACHED_DISPLAYS false
 #define DEFAULT_ENABLE_DSA2 true
-#define DEFAULT_ENABLE_FLOCK false
+#define DEFAULT_ENABLE_FLOCK true
 
 #define DEFAULT_DDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_WARNING
 #define DEFAULT_LIBDDCUTIL_SYSLOG_LEVEL DDCA_SYSLOG_NOTICE
@@ -95,7 +95,7 @@
 
 #define CHECK_ASYNC_NEVER 99
 /** Parallelize bus checks if at least this number of checkable /dev/i2c devices exist */
-#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD CHECK_ASYNC_NEVER
+#define DEFAULT_BUS_CHECK_ASYNC_THRESHOLD 5
 /** Parallelize DDC communication checks if three are least this number of /dev/i2c devices having an EDID */
 // on banner with 4 displays, async  detect: 1.7 sec, non-async 3.4 sec
 #define DEFAULT_DDC_CHECK_ASYNC_THRESHOLD 2
