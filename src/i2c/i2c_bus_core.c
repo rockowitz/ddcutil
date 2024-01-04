@@ -613,7 +613,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Probing");
       bus_info->flags |= I2C_BUS_PROBED;
       bus_info->driver = get_driver_for_busno(bus_info->busno);
-      char * connector = get_drm_connector_by_busno(bus_info->busno);
+      char * connector = get_drm_connector_name_by_busno(bus_info->busno);
       bus_info->flags |= I2C_BUS_DRM_CONNECTOR_CHECKED;
       // connector = NULL;   // *** TEST ***
       if (connector) {
@@ -738,7 +738,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
       // the EDID was successful, find the connector name by EDID
       if (!bus_info->drm_connector_name && bus_info->edid) {
          DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Finding connector by EDID...");
-         char * connector = get_drm_connector_by_edid(bus_info->edid->bytes);  // NULL if not drm driver
+         char * connector = get_drm_connector_name_by_edid(bus_info->edid->bytes);  // NULL if not drm driver
          if (connector) {
             bus_info->drm_connector_name = connector;
             bus_info->drm_connector_found_by = DRM_CONNECTOR_FOUND_BY_EDID;
