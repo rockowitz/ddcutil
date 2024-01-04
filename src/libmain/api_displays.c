@@ -439,7 +439,7 @@ ddca_report_display_by_dref(
 
 
 DDCA_Status
-ddca_check_dref_status(DDCA_Display_Ref ddca_dref)
+ddca_dref_state(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
    free_thread_error_detail();
