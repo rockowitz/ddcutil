@@ -125,7 +125,7 @@ bool dpms_check_drm_asleep_by_connector(const char * drm_connector_name) {
 
 
 bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
-   bool debug = false;
+   bool debug = true;
    assert(businfo);
    DBGTRC_STARTING(debug, TRACE_GROUP, "bus = /dev/i2c-%d, flags: %s",
          businfo->busno, i2c_interpret_bus_flags_t(businfo->flags));
@@ -153,7 +153,7 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
 
 
 bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
-   bool debug = false;
+   bool debug = true;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
    bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);

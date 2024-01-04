@@ -457,7 +457,8 @@ ddca_dref_state(DDCA_Display_Ref ddca_dref)
          errinfo = ERRINFO_NEW(DDCRC_INTERNAL_ERROR, "dref->drm_connector == NULL");
       }
       else {
-        bool edid_exists = GET_ATTR_EDID(NULL, "/sys/class/drm/", dref->drm_connector, "edid");
+         int d = (debug) ? 1 : -1;
+        bool edid_exists = RPT_ATTR_EDID(d, NULL, "/sys/class/drm", dref->drm_connector, "edid");
         if (!edid_exists) {
            errinfo = ERRINFO_NEW(DDCRC_DISCONNECTED,
                     "/dev/i2c-%d", dref->io_path.path.i2c_busno);
@@ -469,7 +470,7 @@ ddca_dref_state(DDCA_Display_Ref ddca_dref)
         }
       }
    }
-   DDCA_Status ddcrc = errinfo->status_code;
+   DDCA_Status ddcrc = ERRINFO_STATUS(errinfo);
    DDCA_Error_Detail * public_error_detail = error_info_to_ddca_detail(errinfo);
    errinfo_free_with_report(errinfo, debug, __func__);
    save_thread_error_detail(public_error_detail);
