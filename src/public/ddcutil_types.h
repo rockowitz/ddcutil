@@ -539,7 +539,7 @@ typedef struct {
  *  The client program should call #ddca_redetect_displays() and then
  *  ddca_get_display_refs() to get the currently valid display references.
  *
- *  Note, the DDCA_Display_Hotplug_Event is defined with two unused fields to
+ *  Note: The DDCA_Display_Hotplug_Event is defined with two unused fields to
  *  allow for future extensions without breaking the API.  It is passed on the
  *  stack, not allocated on the heap. Callback invocation is extremely
  *  infrequent, the struct size is small, and passing the event on the stack
@@ -548,6 +548,16 @@ typedef struct {
  *  @since 2.0.2
  */
 typedef void (*DDCA_Display_Hotplug_Callback_Func)(DDCA_Display_Hotplug_Event);
+
+typedef struct {
+   DDCA_Display_Ref dref;
+   bool             asleep;
+} DDCA_Display_Sleep_Event;
+
+/** Signature of a function to be invoked by the shared library notifying the
+ *  client that a change in the DPMS sleep state of a display has been detected.
+ */
+typedef void (*DDCA_Display_Sleep_Evemt_Callback_Func)(DDCA_Display_Sleep_Event);
 
 #ifdef __cplusplus
 }
