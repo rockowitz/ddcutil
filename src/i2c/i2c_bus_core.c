@@ -195,8 +195,10 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
       }
       max_nanos = start_nanos + (max_wait_millisec * 1000 * 1000);
       Status_Errno lockrc = 0;
+      int flock_call_ct = 0;
       while(true) {
          DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling flock(%d,0x%04x)...", fd, operation);
+         flock_call_ct++;
          int flockrc = flock(fd, operation);
          if (flockrc == 0)  {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "flock succeeded");
@@ -235,7 +237,9 @@ Error_Info * i2c_open_bus(int busno, Byte callopts, int* fd_loc) {
          if (errsv == EWOULDBLOCK ) {          // n. EWOULDBLOCK == EAGAIN
            uint64_t now = cur_realtime_nanosec();
            if (now < max_nanos) {
-              DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping");
+              // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Resource locked. Sleeping");
+              if (flock_call_ct == 1)
+                 MSG_W_SYSLOG(DDCA_SYSLOG_NOTICE, "%s locked.  Retrying...", filename);
               usleep(flock_poll_microsec);
               continue;
            }
