@@ -30,6 +30,8 @@ extern bool           ddc_slow_watch;
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode);
 DDCA_Status  ddc_start_watch_displays();
 DDCA_Status  ddc_stop_watch_displays(bool wait);
+DDCA_Status  ddc_register_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
+DDCA_Status  ddc_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Evemt_Callback_Func func);
 void         init_ddc_watch_displays();
 
 #endif /* DDC_WATCH_DISPLAYS_H_ */
