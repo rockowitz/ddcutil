@@ -205,7 +205,6 @@ bool gaux_unique_string_ptr_arrays_equal(GPtrArray *first, GPtrArray* second) {
  *  The returned array may have length 0.
  */
 GPtrArray * gaux_unique_string_ptr_arrays_minus(GPtrArray *first, GPtrArray* second) {
-   // returns first - second
       assert(first);
       assert(second);
       // to consider: only allocate result if there's actually a difference
