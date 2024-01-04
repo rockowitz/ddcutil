@@ -153,7 +153,7 @@ bool dpms_check_drm_asleep(I2C_Bus_Info * businfo) {
 
 
 bool dpms_check_drm_asleep_by_dref(Display_Ref * dref) {
-   bool debug = true;
+   bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "dref = %s", dref_repr_t(dref));
 
    bool result = dpms_check_drm_asleep((I2C_Bus_Info*) dref->detail);
