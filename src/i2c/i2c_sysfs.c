@@ -166,6 +166,7 @@ bool fn_equal(const char * filename, const char * val) {
    return streq(filename, val);
 }
 
+
 bool fn_starts_with(const char * filename, const char * val) {
    return str_starts_with(filename, val);
 }
@@ -176,6 +177,7 @@ bool is_n_nnnn(const char * dirname, const char * simple_fn) {
    DBGMSF(false,"dirname=%s. simple_fn=%s, returning %s", dirname, simple_fn, SBOOL(result));
    return result;
 }
+
 
 #ifdef NOT_NEEDED   // just set func arg to NULL
 bool fn_any(const char * filename, const char * ignore) {
@@ -612,18 +614,23 @@ void dbgrpt_sys_bus_i2c(int depth) {
 //  *** Scan /sys by drm connector - uses struct Sys_Drm_Connector ***
 //
 
-GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
-GPtrArray * sys_drm_connectors_fixedinfo = NULL;
-
 // from query_sysenv_sysfs
 // 9/28/2021 Requires hardening, testing on other than amdgpu, MST etc
 
+GPtrArray * sys_drm_connectors = NULL;  // Sys_Drm_Connector
+GPtrArray * sys_drm_connectors_fixedinfo = NULL;  // future
 
-void free_sys_drm_connector(void * display) {
+
+/** Frees a Sys_Drm_Connector instance
+ *
+ *  @param pointer to instance to free
+ */
+void free_sys_drm_connector(void * conninfo) {
    bool debug = false;
-   DBGMSF(debug, "Starting. display=%p", display);
-   if (display) {
-      Sys_Drm_Connector * disp = display;
+   DBGMSF(debug, "Starting. conninfo=%p", conninfo);
+   if (conninfo) {
+      Sys_Drm_Connector * disp = conninfo;
+      assert(memcmp(disp->marker, SYS_DRM_CONNECTOR_MARKER, 4) == 0);
       free(disp->connector_name);
       free(disp->connector_path);
       free(disp->name);
@@ -639,6 +646,7 @@ void free_sys_drm_connector(void * display) {
    DBGMSF(debug, "Done.");
 }
 
+// future simplified version
 void free_sys_drm_connector_fixedinfo(void * display) {
    bool debug = false;
    DBGMSF(debug, "Starting. display=%p", display);
@@ -660,12 +668,16 @@ void free_sys_drm_connector_fixedinfo(void * display) {
 }
 
 
+/** Frees the persistent GPtrArray of #Sys_Drm_Connector instances pointed
+ *  to by global sys_drm_connectors.
+ */
 void free_sys_drm_connectors() {
    if (sys_drm_connectors)
       g_ptr_array_free(sys_drm_connectors, true);
    sys_drm_connectors = NULL;
 }
 
+// future simplified version
 void free_sys_drm_connectors_fixedinfo() {
    if (sys_drm_connectors_fixedinfo)
       g_ptr_array_free(sys_drm_connectors_fixedinfo, true);
@@ -673,8 +685,12 @@ void free_sys_drm_connectors_fixedinfo() {
 }
 
 
-
-void report_one_sys_drm_display(int depth, Sys_Drm_Connector * cur)
+/** Reports the contents of one #Sys_Drm_Connector instance
+ *
+ *  @param depth logical indentation depth
+ *  @param cur   pointer to instance
+ */
+void report_one_sys_drm_connector(int depth, Sys_Drm_Connector * cur)
 {
    int d0 = depth;
    int d1 = depth+1;
@@ -699,8 +715,7 @@ void report_one_sys_drm_display(int depth, Sys_Drm_Connector * cur)
       rpt_label(d1,"edid:        None");
 }
 
-
-
+// Simplified variant
 void report_one_sys_drm_display_fixedinfo(int depth, Sys_Drm_Connector_FixedInfo * cur)
 {
    int d0 = depth;
@@ -727,9 +742,10 @@ void report_one_sys_drm_display_fixedinfo(int depth, Sys_Drm_Connector_FixedInfo
 }
 
 
-
-
-// typedef Dir_Foreach_Func
+/** Scans a single connector directory of /sys/class/drm.
+ *
+ *  Has typedef Dir_Foreach_Func
+ */
 void one_drm_connector(
       const char *  dirname,      // /sys/class/drm
       const char *  fn,           // e.g. card0-DP-1
@@ -744,6 +760,7 @@ void one_drm_connector(
    GPtrArray * drm_displays = accumulator;
 
    Sys_Drm_Connector * cur = calloc(1, sizeof(Sys_Drm_Connector));
+   memcpy(cur->marker, SYS_DRM_CONNECTOR_MARKER, 4);
    cur->i2c_busno = -1;      // 0 is valid bus number
    cur->base_busno = -1;
    g_ptr_array_add(drm_displays, cur);
@@ -883,9 +900,7 @@ void one_drm_connector(
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
-
-
-// typedef Dir_Foreach_Func
+// simplified variant
 void one_drm_connector_fixedinfo(
       const char *  dirname,      // /sys/class/drm
       const char *  fn,           // e.g. card0-DP-1
@@ -1016,15 +1031,16 @@ void one_drm_connector_fixedinfo(
 }
 
 
-
-/**
+/** Collects information from all connector subdirectories of /sys/class/drm,
+ *  optionally emitting a report.
  *
  *  @param  depth  logical indentation depth, if < 0 do not emit report
  *  @return array of #Sys_Drm_Connector structs, one for each connector found
  *
  *  Returns GPtrArray with 0 entries if no DRM displays found
+ *
+ *  Also sets global #sys_drm_connectors
  */
-
 GPtrArray * scan_sys_drm_connectors(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
@@ -1041,6 +1057,7 @@ GPtrArray * scan_sys_drm_connectors(int depth) {
    return sys_drm_connectors;
 }
 
+// future simplified variant
 GPtrArray * scan_sys_drm_connectors_fixedinfo(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "depth=%d", depth);
@@ -1058,9 +1075,13 @@ GPtrArray * scan_sys_drm_connectors_fixedinfo(int depth) {
 }
 
 
-
-
-
+/** Gets the value of global #sys_drm_connectors.
+ *
+ *  @param rescan free the existing data structure
+ *
+ *  If sys_drm_connectors == NULL or rescan was set,
+ *  scan the /sys/class/drm/<connector> directories
+ */
 GPtrArray* get_sys_drm_connectors(bool rescan) {
    if (sys_drm_connectors && rescan) {
       g_ptr_array_free(sys_drm_connectors, true);
@@ -1071,6 +1092,7 @@ GPtrArray* get_sys_drm_connectors(bool rescan) {
    return sys_drm_connectors;
 }
 
+// future simplified variant
 GPtrArray* get_sys_drm_connectors_fixedinfo(bool rescan) {
    if (sys_drm_connectors_fixedinfo && rescan) {
       g_ptr_array_free(sys_drm_connectors_fixedinfo, true);
@@ -1082,7 +1104,34 @@ GPtrArray* get_sys_drm_connectors_fixedinfo(bool rescan) {
 }
 
 
+/** Reports the contents of the array of #Sys_Drm_Connector instances
+ *  pointed to by global #sys_drm_connectors. If #sys_drm_connectors is
+ *  not NULL, scan the /sys/class/drm/<connecter> tree.
+ */
+void report_sys_drm_connectors(int depth) {
+   bool debug = false;
+   DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
+   int d0 = depth;
+   int d1 = (debug) ? 2 : -1;
+   rpt_nl();
+   rpt_label(d0, "Display connectors reported by DRM:");
+   if (!sys_drm_connectors)
+     sys_drm_connectors = scan_sys_drm_connectors(d1);
+   GPtrArray * displays = sys_drm_connectors;
+   if (!displays || displays->len == 0) {
+      rpt_label(d1, "None");
+   }
+   else {
+      for (int ndx = 0; ndx < displays->len; ndx++) {
+         Sys_Drm_Connector * cur = g_ptr_array_index(displays, ndx);
+         report_one_sys_drm_connector(depth, cur);
+         rpt_nl();
+      }
+   }
+   DBGTRC_DONE(debug, TRACE_GROUP, "");
+}
 
+// future simplified variant
 void report_sys_drm_connectors_fixedinfo(int depth) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
@@ -1107,30 +1156,15 @@ void report_sys_drm_connectors_fixedinfo(int depth) {
 }
 
 
-void report_sys_drm_connectors(int depth) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "depth=%d", depth);
-   int d0 = depth;
-   int d1 = (debug) ? 2 : -1;
-   rpt_nl();
-   rpt_label(d0, "Display connectors reported by DRM:");
-   if (!sys_drm_connectors)
-     sys_drm_connectors = scan_sys_drm_connectors(d1);
-   GPtrArray * displays = sys_drm_connectors;
-   if (!displays || displays->len == 0) {
-      rpt_label(d1, "None");
-   }
-   else {
-      for (int ndx = 0; ndx < displays->len; ndx++) {
-         Sys_Drm_Connector * cur = g_ptr_array_index(displays, ndx);
-         report_one_sys_drm_display(depth, cur);
-         rpt_nl();
-      }
-   }
-   DBGTRC_DONE(debug, TRACE_GROUP, "");
-}
-
-
+/** Find a #Sys_Drm_Connector instance using one of the I2C bus number,
+ *  EDID value, or DRM connector name.
+ *
+ *  @param  busno   I2C bus number
+ *  @param  edid    pointer to 128 byte EDID
+ *  @param  connector_name  e.g. card0-HDMI-A-1
+ *
+ *  Scans /sys/class/drm if global #sys_class_drm not already set
+ */
 Sys_Drm_Connector *
 find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
    bool debug = false;
@@ -1138,28 +1172,25 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
                                         busno, (void*)edid, connector_name);
    if (!sys_drm_connectors)
      sys_drm_connectors = scan_sys_drm_connectors(-1);
+   assert(sys_drm_connectors);
    Sys_Drm_Connector * result = NULL;
-   // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "After scan_sys_drm_connectors(), sys_drm_displays=%p",
-   //                                     (void*) sys_drm_displays);
-   if (sys_drm_connectors) {
-      for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
-         Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
-         // DBGMSG("cur->busno = %d", cur->i2c_busno);
-         if (busno >= 0 && cur->i2c_busno == busno) {
-            DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector name");
-            result = cur;
-            break;
-         }
-         if (edid && cur->edid_size >= 128 && (memcmp(edid, cur->edid_bytes,128) == 0)) {
-            DBGTRC(debug, DDCA_TRC_NONE, "Matched by edid");
-            result = cur;
-            break;
-         }
-         if (connector_name && streq(connector_name, cur->connector_name)) {
-            DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector_name");
-            result = cur;
-            break;
-         }
+   for (int ndx = 0; ndx < sys_drm_connectors->len; ndx++) {
+      Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
+      // DBGMSG("cur->busno = %d", cur->i2c_busno);
+      if (busno >= 0 && cur->i2c_busno == busno) {
+         DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector name");
+         result = cur;
+         break;
+      }
+      if (edid && cur->edid_size >= 128 && (memcmp(edid, cur->edid_bytes,128) == 0)) {
+         DBGTRC(debug, DDCA_TRC_NONE, "Matched by edid");
+         result = cur;
+         break;
+      }
+      if (connector_name && streq(connector_name, cur->connector_name)) {
+         DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector_name");
+         result = cur;
+         break;
       }
    }
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
@@ -1167,6 +1198,11 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
 }
 
 
+/** Searches for a Sys_Drm_Connector instance by I2C bus number.
+ *
+ *  @param  I2C bus number
+ *  @return pointer to instance, NULL if not found
+ */
 Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "busno=%d", busno);
@@ -1187,7 +1223,7 @@ Sys_Drm_Connector * find_sys_drm_connector_by_busno(int busno) {
  *  @param busno
  *  @return connector name, caller must free
  */
-char * get_drm_connector_by_busno(int busno) {
+char * get_drm_connector_name_by_busno(int busno) {
    bool debug = false;
    DBGTRC(debug, TRACE_GROUP, "Starting. busno = %d", busno);
    char * result = NULL;
@@ -1200,9 +1236,11 @@ char * get_drm_connector_by_busno(int busno) {
 }
 
 
-
-
-
+/** Searches for a Sys_Drm_Connector instance by EDID.
+ *
+ *  @param  pointer to 128 byte EDID value
+ *  @return pointer to instance, NULL if not found
+ */
 Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "edid=%p", (void*) raw_edid);
@@ -1212,7 +1250,12 @@ Sys_Drm_Connector * find_sys_drm_connector_by_edid(Byte * raw_edid) {
 }
 
 
-char * get_drm_connector_by_edid(Byte * edid_bytes) {
+/** Gets the DRM connector name, e.g. card0-DP-3, using the EDID.
+ *
+ *  @param  edid_bytes  pointer to 128 byte EDID
+ *  @return connector name, NULL if not found
+ */
+char * get_drm_connector_name_by_edid(Byte * edid_bytes) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "Finding connector by EDID...");
    char * result = NULL;
@@ -1225,6 +1268,11 @@ char * get_drm_connector_by_edid(Byte * edid_bytes) {
 }
 
 
+/** Searches for a Sys_Drm_Connector instance by the connector name
+ *
+ *  @param  connector name
+ *  @return pointer to instance, NULL if not found
+ */
 Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_I2C, "name=|%s|", name);
@@ -1232,9 +1280,6 @@ Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name) 
    DBGTRC_DONE(debug, DDCA_TRC_I2C, "Returning: %p", (void*) result);
    return result;
 }
-
-
-
 
 
 //
@@ -2166,9 +2211,9 @@ bool sysfs_connector_names_equal(Sysfs_Connector_Names cn1, Sysfs_Connector_Name
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "");
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn1:");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn1 = %p:", cn1);
       dbgrpt_sysfs_connector_names(cn1, 1);
-      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn2:");
+      DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "cn2 = %p:", cn2);
       dbgrpt_sysfs_connector_names(cn2, 1);
    }
 
@@ -2192,6 +2237,13 @@ void dbgrpt_sysfs_connector_names(Sysfs_Connector_Names connector_names, int dep
                       join_string_g_ptr_array_t(connector_names.all_connectors,         ", ") );
    rpt_vstring(depth, "connectors_having_edid @%p: %s", connector_names.connectors_having_edid,
                       join_string_g_ptr_array_t(connector_names.connectors_having_edid, ", ") );
+
+   #ifdef FOR_DEBUGGING
+   rpt_vstring(depth, "all_connectors         @%p:", connector_names.all_connectors);
+   rpt_vstring(depth+3, "%s", join_string_g_ptr_array_t(connector_names.all_connectors,         ", ") );
+   rpt_vstring(depth, "connectors_having_edid         @%p:", connector_names.connectors_having_edid);
+   rpt_vstring(depth+3, "%s", join_string_g_ptr_array_t(connector_names.connectors_having_edid,         ", ") );
+#endif
 }
 
 
@@ -2288,7 +2340,7 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_sys_drm_connector_by_busno);
 #endif
    RTTI_ADD_FUNC(find_sys_drm_connector_by_edid);
-   RTTI_ADD_FUNC(get_drm_connector_by_busno);
+   RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
 
    // conflicting drivers
    RTTI_ADD_FUNC(one_n_nnnn);
@@ -2309,15 +2361,15 @@ void init_i2c_sysfs() {
    RTTI_ADD_FUNC(find_adapter);
    RTTI_ADD_FUNC(get_sys_video_devices);
    RTTI_ADD_FUNC(i2c_all_video_devices_drm);
-   RTTI_ADD_FUNC(get_drm_connector_by_busno);
+   RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(is_drm_display_by_busno);
 
 // RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_busno);
    RTTI_ADD_FUNC(find_sysfs_drm_connector_name_by_edid);
 // RTTI_ADD_FUNC(init_sysfs_drm_connector_names);
 
-   RTTI_ADD_FUNC(get_drm_connector_by_edid);
-   RTTI_ADD_FUNC(get_drm_connector_by_busno);
+   RTTI_ADD_FUNC(get_drm_connector_name_by_edid);
+   RTTI_ADD_FUNC(get_drm_connector_name_by_busno);
 }
 
 
