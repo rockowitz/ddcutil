@@ -412,25 +412,32 @@ void ddc_hotplug_change_handler(
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    bool emit = false;
    if (connectors_removed && connectors_removed->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Detached connectors: %s", join_string_g_ptr_array_t(connectors_removed, ", ") );
+      char * s =  join_string_g_ptr_array_t(connectors_removed, ", ");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_removed: %s", s );
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors detached: %s", s);
       emit = true;
    }
    if (connectors_added && connectors_added->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Attached connectors;  %s", join_string_g_ptr_array_t(connectors_added, ", ") );
+      char * s =  join_string_g_ptr_array_t(connectors_added, ", ");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM connectors attached: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors added: %s", s);
       emit = true;
    }
    if (connectors_having_edid_removed && connectors_having_edid_removed->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Removed connectors having EDID: %s", join_string_g_ptr_array_t(connectors_having_edid_removed, ", ") );
+      char * s =  join_string_g_ptr_array_t(connectors_having_edid_removed, ", ");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays disconnected: %s", s);
       emit = true;
    }
    if (connectors_having_edid_added && connectors_having_edid_added->len > 0) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Added   connectors having EDID: %s", join_string_g_ptr_array_t(connectors_having_edid_added, ", ") );
+      char * s = join_string_g_ptr_array_t(connectors_having_edid_added, ", ");
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s", s);
+      SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays connected: %s", s);
       emit = true;
    }
 
    if (emit) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling ddc_emit_hotplug_event():");
-      ddc_emit_display_hotplug_event();
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
