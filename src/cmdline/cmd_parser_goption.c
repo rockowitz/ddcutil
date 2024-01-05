@@ -1085,9 +1085,9 @@ parse_command(
 #endif
       {"async",   '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,     &async_flag,       "Enable asynchronous display detection (deprecated)", NULL},
 
-      {"i2c-bus-check-async-threshold",'\0', G_OPTION_FLAG_HIDDEN,
+      {"i2c-bus-async-checks-min",'\0', G_OPTION_FLAG_HIDDEN,
                                          G_OPTION_ARG_INT, &parsed_cmd->i2c_bus_check_async_min, i2c_bus_check_async_expl, NULL},
-      {"ddc-check-async-threshold",    '\0', G_OPTION_FLAG_NONE,
+      {"ddc-async-checks-min",    '\0', G_OPTION_FLAG_NONE,
                                      G_OPTION_ARG_INT, &parsed_cmd->ddc_check_async_min, ddc_check_async_expl, NULL},
 
       {"skip-ddc-checks",'\0', G_OPTION_FLAG_HIDDEN,
