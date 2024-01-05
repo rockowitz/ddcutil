@@ -602,14 +602,12 @@ bool dref_eq(Display_Ref* this, Display_Ref* that) {
 }
 
 
-bool watch_watching = false;
-
 bool dref_set_alive(Display_Ref * dref, bool alive) {
    assert(dref);
    bool debug = true;
    bool old = dref->flags & DREF_ALIVE;
    if (old != alive)
-      DBGTRC_EXECUTED(debug || watch_watching, DDCA_TRC_BASE, "dref=%s, alive changed: %s -> %s",
+      DBGTRC_EXECUTED(debug, DDCA_TRC_BASE, "dref=%s, alive changed: %s -> %s",
                              dref_repr_t(dref), SBOOL(old), SBOOL(alive));
    SETCLR_BIT(dref->flags, DREF_ALIVE, alive);
    return old;

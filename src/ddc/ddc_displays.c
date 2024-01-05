@@ -1732,7 +1732,7 @@ void ddc_emit_display_detection_event(
       Display_Ref*            dref,
       DDCA_IO_Path            io_path)
 {
-   bool debug = false || watch_watching;
+   bool debug = false;
    if (dref) {
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),

@@ -367,7 +367,7 @@ static uint64_t double_tap_millisec = 5000;
 
 
 void ddc_emit_display_hotplug_event() {
-   bool debug = false || watch_watching;
+   bool debug = false;
    uint64_t cur_emit_millisec = cur_realtime_nanosec() / (1000*1000);
    DBGTRC_STARTING(debug, TRACE_GROUP,
          "last_emit_millisec = %jd, cur_emit_millisec = %jd, double_tap_millisec = %jd",
@@ -637,7 +637,7 @@ void ddc_emit_sleep_change_event(const char * connector_name, bool asleep) {
 
 
 void  ddc_watch_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors) {
-   bool debug = false || watch_watching;
+   bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "active_connectors =%s",
          join_string_g_ptr_array_t(active_connectors, ", "));
    DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "sleepy_connectors= %s",

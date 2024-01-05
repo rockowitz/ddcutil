@@ -114,8 +114,6 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_process_id = true;                   // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_F6)
-      watch_watching = true;
    if (parsed_cmd->flags & CMD_FLAG_F8)
       ddc_slow_watch = true;
 
