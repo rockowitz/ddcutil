@@ -113,6 +113,7 @@ typedef enum {
    CMD_FLAG_F8             = 0x02000000000000,
    CMD_FLAG_MOCK           = 0x04000000000000,
    CMD_FLAG_PROFILE_API    = 0x08000000000000,
+
    CMD_FLAG_FL1_SET        = 0x10000000000000,
    CMD_FLAG_FL2_SET        = 0x20000000000000,
    CMD_FLAG_ENABLE_CACHED_DISPLAYS
@@ -120,17 +121,21 @@ typedef enum {
    CMD_FLAG_TRACE_TO_SYSLOG_ONLY
                            = 0x80000000000000,
    CMD_FLAG_STATS_TO_SYSLOG
+
                          = 0x0100000000000000,
    CMD_FLAG_INTERNAL_STATS
                          = 0x0200000000000000,
    CMD_FLAG_EXPLICIT_I2C_SOURCE_ADDR
                         =  0x0400000000000000,
    CMD_FLAG_F9          =  0x0800000000000000,
+
    CMD_FLAG_F10         =  0x1000000000000000,
    CMD_FLAG_F11         =  0x2000000000000000,
    CMD_FLAG_F12         =  0x4000000000000000,
    CMD_FLAG_WATCH_DISPLAY_HOTPLUG_EVENTS
                         =  0x8000000000000000,
+
+
 
 #ifdef OLD
    CMD_FLAG_TIMEOUT_I2C_IO         = 0x400000,  // UNUSED  --timeout-i2c-io
@@ -139,6 +144,10 @@ typedef enum {
 #endif
 
 } Parsed_Cmd_Flags;
+
+typedef enum {
+   CMD_FLAG_TRY_GET_EDID_FROM_SYSFS =  0x01,
+} Parsed_Cmd_Flags2;
 
 #define IGNORED_VID_PID_MAX 4
 
@@ -175,6 +184,7 @@ struct {
    int                    argct;
    char *                 args[MAX_ARGS];
    uint64_t               flags;      // Parsed_Cmd_Flags
+   uint64_t               flags2;     // Parsed_Cmd_Flags2
    DDCA_Output_Level      output_level;
    DDCA_MCCS_Version_Spec mccs_vspec;
 // DDCA_MCCS_Version_Id   mccs_version_id;

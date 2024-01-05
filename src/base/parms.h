@@ -105,6 +105,8 @@
 // *** Miscellaneous
 //
 
+#define DEFAULT_TRY_GET_EDID_FROM_SYSFS  true
+
 #define FLOCK_POLL_MILLISEC      500
 #define FLOCK_MAX_WAIT_MILLISEC 3000
 

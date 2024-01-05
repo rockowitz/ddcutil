@@ -938,6 +938,20 @@ parse_command(
    gboolean stats_to_syslog_only_flag = false;
    gint     edid_read_size_work = -1;
    gboolean watch_displays_flag = false;
+
+   gboolean try_get_edid_from_sysfs = DEFAULT_TRY_GET_EDID_FROM_SYSFS;
+
+   char *   enable_tgefs_expl = NULL;
+   char *  disable_tgefs_expl = NULL;
+   if (DEFAULT_TRY_GET_EDID_FROM_SYSFS) {
+      enable_tgefs_expl = "get EDID from /sys when possible (default)";
+      disable_tgefs_expl = "do not try to get EDID from /sys";
+   }
+   else {
+      enable_tgefs_expl = "get EDID from /sys when possible";
+      disable_tgefs_expl = "do not try to get EDID from /sys (default)";
+   }
+
    gboolean f1_flag         = false;
    gboolean f2_flag         = false;
    gboolean f3_flag         = false;
@@ -1127,6 +1141,11 @@ parse_command(
             '\0', 0, G_OPTION_ARG_NONE,     &enable_flock_flag,   enable_flock_expl,     NULL},
       {"disable-cross-instance-locks", '\0', G_OPTION_FLAG_REVERSE,
                      G_OPTION_ARG_NONE,     &enable_flock_flag,   disable_flock_expl ,   NULL},
+
+      {"enable-try-get-edid-from-sysfs", '\0', 0,
+                            G_OPTION_ARG_NONE,    &try_get_edid_from_sysfs,   enable_tgefs_expl, NULL},
+      {"disable-try-get-edid-from-sysfs", '\0', G_OPTION_FLAG_REVERSE,
+                           G_OPTION_ARG_NONE,     &try_get_edid_from_sysfs,   disable_tgefs_expl, NULL},
 
 #ifdef ENABLE_USB
       {"enable-usb", '\0', G_OPTION_FLAG_NONE,
@@ -1446,6 +1465,14 @@ parse_command(
          parsed_cmd->flags &= ~_bit; \
    } while(0)
 
+#define SET_CLR_CMDFLAG2(_bit, _flag) \
+   do { \
+      if (_flag) \
+         parsed_cmd->flags2 |= _bit; \
+      else \
+         parsed_cmd->flags2 &= ~_bit; \
+   } while(0)
+
    parsed_cmd->output_level     = output_level;
    parsed_cmd->stats_types      = stats_work;
    parsed_cmd->ignored_hiddevs  = ignored_hiddev_work;
@@ -1510,6 +1537,7 @@ parse_command(
    SET_CMDFLAG(CMD_FLAG_SKIP_DDC_CHECKS,   skip_ddc_checks_flag);
    SET_CMDFLAG(CMD_FLAG_FLOCK,             enable_flock_flag);
 
+   SET_CLR_CMDFLAG2(CMD_FLAG_TRY_GET_EDID_FROM_SYSFS,    try_get_edid_from_sysfs);
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_CAPABILITIES, enable_cc_flag);
 // #ifdef REMOVED
    SET_CLR_CMDFLAG(CMD_FLAG_ENABLE_CACHED_DISPLAYS, enable_cd_flag);

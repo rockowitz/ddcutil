@@ -31,9 +31,7 @@ void
 report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
 {
    char buf0[80];
-   char buf1[80];
    snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
-   snprintf(buf1, 80, "Use non-default value for don't get EDID from /sys (default = %s)", SBOOL(force_read_edid));
 
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
@@ -49,9 +47,9 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    REPORT_FLAG_OPTION(11, "Explore monitor state tests");
    REPORT_FLAG_OPTION(12, "Unused");
    REPORT_FLAG_OPTION(13, "Unused");
-   REPORT_FLAG_OPTION(14, buf1);
+   REPORT_FLAG_OPTION(14, "Unused");
 
-   rpt_vstring(depth+1, "Utility option --i1:          Unused");
+   rpt_vstring(depth+1, "Utility option --i1:          Extra seconds to wait after apparent display disconnect (default = %d)", DEFAULT_EXTRA_STABILIZE_SECS);
    rpt_vstring(depth+1, "Utility option --i2:          NULL Response Hack Millis");
 
    rpt_vstring(depth+1, "Utility option --s1:          Unused");
