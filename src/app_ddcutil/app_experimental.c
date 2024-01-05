@@ -33,7 +33,7 @@ report_experimental_options(Parsed_Cmd * parsed_cmd, int depth)
    char buf0[80];
    char buf1[80];
    snprintf(buf0, 80, "Use non-default watch mode (default = %s)", ddc_watch_mode_name(ddc_watch_mode));
-   snprintf(buf1, 80, "Use non-default value for get EDID from /sys (default = %s)", SBOOL(force_read_edid));
+   snprintf(buf1, 80, "Use non-default value for don't get EDID from /sys (default = %s)", SBOOL(force_read_edid));
 
    rpt_label(depth, "Experimental Options:");
    REPORT_FLAG_OPTION(1,  "Suppress SE_POST_READ");
