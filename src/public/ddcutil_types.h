@@ -528,36 +528,45 @@ typedef struct {
 // For reporting display status changes to client
 //
 
+typedef enum {
+   DDCA_EVENT_CONNECTOR_ATTACHED,
+   DDCA_EVENT_CONNECTOR_DETACHED,
+   DDCA_EVENT_CONNECTED,
+   DDCA_EVENT_DISCONNECTED,
+   DDCA_EVENT_DPMS_AWAKE,
+   DDCA_EVENT_DPMS_ASLEEP,
+} DDCA_Display_Event_Type;
+
+
 typedef struct {
-   void * unused1;
-   void * unused2;
-} DDCA_Display_Hotplug_Event;
+   DDCA_Display_Ref *      dref;
+   DDCA_Display_Event_Type event_type;
+   DDCA_IO_Path            io_path;
+   void *                  unused[2];
+} DDCA_Display_Status_Event;
+
 
 /** Signature of a function to be invoked by the shared library notifying the
  *  client that a change in connected displays has been detected.
  *
- *  The client program should call #ddca_redetect_displays() and then
- *  ddca_get_display_refs() to get the currently valid display references.
+ *  The client program should call #ddca_resdetect_displays() and then
+ *  #ddca_get_display_refs() to get the currently valid display references.
+ *
+ *  Note, the DDCA_Display_Detection_Event is passed on the stack, not allocated
+ *  on the heap. Callback invocation is extremely infrequent, the struct size is
+ *  small, and passing the event on the stack relieves clients of responsibility
+ *  for memory management.
  *
  *  Note: The DDCA_Display_Hotplug_Event is defined with two unused fields to
- *  allow for future extensions without breaking the API.  It is passed on the
+ *  allow for future extensions without breaking the ABI.  It is passed on the
  *  stack, not allocated on the heap. Callback invocation is extremely
  *  infrequent, the struct size is small, and passing the event on the stack
  *  relieves clients of responsibility for memory management.
- *
- *  @since 2.0.2
  */
-typedef void (*DDCA_Display_Hotplug_Callback_Func)(DDCA_Display_Hotplug_Event);
+typedef
+void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
 
-typedef struct {
-   DDCA_Display_Ref dref;
-   bool             asleep;
-} DDCA_Display_Sleep_Event;
 
-/** Signature of a function to be invoked by the shared library notifying the
- *  client that a change in the DPMS sleep state of a display has been detected.
- */
-typedef void (*DDCA_Display_Sleep_Event_Callback_Func)(DDCA_Display_Sleep_Event);
 
 #ifdef __cplusplus
 }
