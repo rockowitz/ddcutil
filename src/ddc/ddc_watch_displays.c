@@ -439,6 +439,7 @@ void ddc_hotplug_change_handler(
 
    if (emit) {
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling ddc_emit_hotplug_event():");
+      ddc_emit_display_hotplug_event();
    }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
@@ -656,7 +657,7 @@ void ddc_emit_sleep_change_event(const char * connector_name, bool asleep) {
 }
 
 
-void  ddc_watch_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors) {
+void  ddc_check_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "active_connectors =%s",
          join_string_g_ptr_array_t(active_connectors, ", "));
@@ -815,7 +816,7 @@ gpointer ddc_watch_displays_using_udev(gpointer data) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Sleeping for %d seconds", sleep_secs);
          usleep(sleep_secs * 1000000);
 
-         ddc_watch_asleep(current_connector_names.connectors_having_edid, sleepy_connectors);
+         ddc_check_asleep(current_connector_names.connectors_having_edid, sleepy_connectors);
 
          if (terminate_watch_thread) {
             DBGTRC_DONE(true, TRACE_GROUP, "Terminating thread");
@@ -958,7 +959,7 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
    RTTI_ADD_FUNC(ddc_emit_sleep_change_event);
 #ifdef ENABLE_UDEV
-   RTTI_ADD_FUNC(ddc_watch_asleep);
+   RTTI_ADD_FUNC(ddc_check_asleep);
    RTTI_ADD_FUNC(stabilized_connector_names);
    RTTI_ADD_FUNC(ddc_check_displays);
    RTTI_ADD_FUNC(ddc_watch_displays_using_udev);
