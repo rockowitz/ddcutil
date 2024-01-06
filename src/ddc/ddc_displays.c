@@ -1220,7 +1220,8 @@ ddc_detect_all_displays(GPtrArray ** i2c_open_errors_loc) {
    for (busndx=0; busndx < busct; busndx++) {
       DBGMSF(debug, "busndx = %d", busndx);
       I2C_Bus_Info * businfo = i2c_get_bus_info_by_index(busndx);
-      // i2c_dbgrpt_bus_info(businfo, 2);
+      // if (IS_DBGTRC(debug, DDCA_TRC_NONE))
+      //    i2c_dbgrpt_bus_info(businfo, 2);
       if ( (businfo->flags & I2C_BUS_ADDR_0X50)  && businfo->edid ) {
          Display_Ref * dref = NULL;
          // Do not restore serialized display ref if slave address x37 inactive
