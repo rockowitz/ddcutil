@@ -538,10 +538,23 @@ typedef enum {
 } DDCA_Display_Event_Type;
 
 
+/** Event record passed by a display status callback function.
+ *
+ *  @remark
+ *  Strictly speaking, connector names can have a maximum length of 32 characters.
+ *  In practice, no connector names longer than 16 characters have ever been
+ *  seen.  Therefore, it should be safe for connector_name to allow for a
+ *  maximum of 31 printable characters and a termination byte.
+ *
+ *  @remark
+ *  The DDCA_Display_Status_Event is defined with two unused fields to allow
+ *  for future extension without breaking the ABI.
+ */
 typedef struct {
-   DDCA_Display_Ref *      dref;
    DDCA_Display_Event_Type event_type;
    DDCA_IO_Path            io_path;
+   char                    connector_name[32];
+   DDCA_Display_Ref *      dref;
    void *                  unused[2];
 } DDCA_Display_Status_Event;
 
@@ -549,19 +562,14 @@ typedef struct {
 /** Signature of a function to be invoked by the shared library notifying the
  *  client that a change in connected displays has been detected.
  *
- *  The client program should call #ddca_resdetect_displays() and then
+ *  The client program should call #ddca_redetect_displays() and then
  *  #ddca_get_display_refs() to get the currently valid display references.
  *
- *  Note, the DDCA_Display_Detection_Event is passed on the stack, not allocated
- *  on the heap. Callback invocation is extremely infrequent, the struct size is
- *  small, and passing the event on the stack relieves clients of responsibility
- *  for memory management.
- *
- *  Note: The DDCA_Display_Hotplug_Event is defined with two unused fields to
- *  allow for future extensions without breaking the ABI.  It is passed on the
- *  stack, not allocated on the heap. Callback invocation is extremely
- *  infrequent, the struct size is small, and passing the event on the stack
- *  relieves clients of responsibility for memory management.
+ *  @remark
+ *  The DDCA_Display_Status_Event is passed on the stack, not allocated on
+ *  the heap. Callback invocation is extremely infrequent, the struct size is
+ *  not large, and passing the event on the stack relieves clients of
+ *  responsibility for memory management.
  */
 typedef
 void (*DDCA_Display_Status_Callback_Func)(DDCA_Display_Status_Event event);
