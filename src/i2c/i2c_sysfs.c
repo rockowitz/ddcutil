@@ -1178,7 +1178,7 @@ find_sys_drm_connector(int busno, Byte * edid, const char * connector_name) {
       Sys_Drm_Connector * cur = g_ptr_array_index(sys_drm_connectors, ndx);
       // DBGMSG("cur->busno = %d", cur->i2c_busno);
       if (busno >= 0 && cur->i2c_busno == busno) {
-         DBGTRC(debug, DDCA_TRC_NONE, "Matched by connector name");
+         DBGTRC(debug, DDCA_TRC_NONE, "Matched by bus number");
          result = cur;
          break;
       }
