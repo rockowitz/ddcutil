@@ -302,62 +302,6 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    return NULL;    // satisfy compiler check that value returned
 }
 
-#ifdef OLD
-//
-// Variant Watch_Displays_Simple_Udev
-//
-// Watches for udev hotplug events and sends a simple notification to clients,
-// with the expectation that they will call then ddca_redetect_displays().
-//
-
-GPtrArray* display_hotplug_callbacks = NULL;
-
-
-/** Registers a display hotplug event callback
- *
- *  @param func function to register
- *
- *  The function must be of type #DDCA_Display_Hotplug_Callback_Func.
- *  It is not an error if the function is already registered.
- */
-DDCA_Status ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-
-   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
-   ddcrc = i2c_all_video_devices_drm() &&
-            generic_register_callback(&display_hotplug_callbacks, func);
-#endif
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-/** Unregisters a display hotplug callback function
- *
- *  @param  function to deregister
- *  @retval DDCRC_OK normal return
- *  @retval DDCRC_NOT_FOUND
- */
-DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-
-   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
-   if (i2c_all_video_devices_drm() ) {
-       ddcrc = generic_unregister_callback(display_hotplug_callbacks, func);
-   }
-#endif
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-#endif
-
-
 #ifdef WHERE_DOES_THIS_GO
 // When a display is disconnected and then reconnected, a udev event for
 // the disconnection is not received until immediately before the connection
