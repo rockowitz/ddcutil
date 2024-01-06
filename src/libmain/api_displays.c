@@ -443,7 +443,7 @@ ddca_dref_state(DDCA_Display_Ref ddca_dref)
 {
    bool debug = false;
    free_thread_error_detail();
-   API_PROLOGX(debug, "ddca_dref=%p", ddca_dref);
+   API_PROLOGX(debug, "ddca_dref = %p", ddca_dref);
    assert(library_initialized);
 
    Error_Info * errinfo = NULL;
