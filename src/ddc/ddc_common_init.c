@@ -114,8 +114,6 @@ init_tracing(Parsed_Cmd * parsed_cmd)
        dbgtrc_show_process_id = true;                   // extern in core.h
    if (parsed_cmd->flags & CMD_FLAG_TRACE_TO_SYSLOG_ONLY)
        dbgtrc_trace_to_syslog_only = true;              // extern in core.h
-   if (parsed_cmd->flags & CMD_FLAG_F8)
-      ddc_slow_watch = true;
 
    report_freed_exceptions = parsed_cmd->flags & CMD_FLAG_REPORT_FREED_EXCP;   // extern in core.h
    add_trace_groups(parsed_cmd->traced_groups);
@@ -344,6 +342,8 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
       EDID_Read_Uses_I2C_Layer = !EDID_Read_Uses_I2C_Layer;
    if (parsed_cmd->flags & CMD_FLAG_F7)
       detect_phantom_displays = false;
+   if (parsed_cmd->flags & CMD_FLAG_F8)
+      ddc_slow_watch = true;
    ddc_enable_displays_cache(parsed_cmd->flags & (CMD_FLAG_ENABLE_CACHED_DISPLAYS)); // was CMD_FLAG_ENABLE_CACHED_DISPLAYS
    if (parsed_cmd->flags & CMD_FLAG_F10)
       null_msg_adjustment_enabled = true;
@@ -353,9 +353,9 @@ init_experimental_options(Parsed_Cmd* parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_F13)
       EDID_Read_Uses_Smbus = true;
 #endif
-   if (parsed_cmd->flags & CMD_FLAG_F14)
-      force_read_edid = false;
 
+   if (parsed_cmd->flags & CMD_FLAG_I1_SET)
+      extra_stabilize_seconds = parsed_cmd->i1;
    if (parsed_cmd->flags & CMD_FLAG_I2_SET)
         multi_part_null_adjustment_millis = parsed_cmd->i2;
    // if (parsed_cmd->flags & CMD_FLAG_FL1_SET)
@@ -390,6 +390,7 @@ submaster_initializer(Parsed_Cmd * parsed_cmd) {
    if (parsed_cmd->flags & CMD_FLAG_I2C_IO_IOCTL)
       i2c_set_io_strategy_by_id(I2C_IO_STRATEGY_IOCTL);
    i2c_enable_cross_instance_locks(parsed_cmd->flags & CMD_FLAG_FLOCK);
+   force_read_edid = !(parsed_cmd->flags2 & CMD_FLAG_TRY_GET_EDID_FROM_SYSFS);  // extern in i2c_bus_core.h
    ddc_set_verify_setvcp(parsed_cmd->flags & CMD_FLAG_VERIFY);
    set_output_level(parsed_cmd->output_level);  // current thread
    set_default_thread_output_level(parsed_cmd->output_level); // for future threads

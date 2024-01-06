@@ -66,6 +66,7 @@ static GMutex    watch_thread_mutex;
 
 DDC_Watch_Mode   ddc_watch_mode = Watch_Mode_Simple_Udev;
 bool             ddc_slow_watch = false;
+int              extra_stabilize_seconds = DEFAULT_EXTRA_STABILIZE_SECS;
 
 const char * ddc_watch_mode_name(DDC_Watch_Mode mode) {
    char * result = NULL;
@@ -447,13 +448,28 @@ void ddc_hotplug_change_handler(
  *  equals the prior value.
  *
  *  @oaram prior  initial connector value
+ *  @param some_displays_disconnected
  *  @return stabilized value
  */
-Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior) {
+Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior, bool some_displays_disconnected) {
    bool debug = false;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE,"prior:");
       dbgrpt_sysfs_connector_names(prior, 2);
+   }
+
+   // Special handling for case of apparently disconnected displays.
+   // It has been observed that in some cases (Samsung U32H750) a disconnect is followed a
+   // few seconds later by a connect. Wait a few seconds to avoid triggering events
+   // in this case.
+   if (some_displays_disconnected) {
+      if (extra_stabilize_seconds > 0) {
+         char * s = g_strdup_printf("Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
+         DBGTRC(true, TRACE_GROUP, "%s", s);
+         SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+         free(s);
+         usleep(extra_stabilize_seconds * 1000000);
+      }
    }
 
    int stablect = 0;
@@ -481,7 +497,6 @@ Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior) {
  *  previously detected list
  *
  *  If any changes were detected, calls the hotplug_change_handler
- *  (old) Reports each change to the display_change_handler() in the Watch_Displays_Data struct
  *
  *  @param prev_displays   GPtrArray of previously detected displays
  *  @return GPtrArray of currently detected monitors
@@ -501,7 +516,16 @@ Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_na
    }
 
    if (!sysfs_connector_names_equal(prev_connector_names, new_connector_names)) {
-      Sysfs_Connector_Names stabilized_names = stabilized_connector_names(new_connector_names);
+      // Detect need for special handling for case of display disconnected.
+      GPtrArray * connectors_having_edid_removed =
+            gaux_unique_string_ptr_arrays_minus(prev_connector_names.connectors_having_edid,
+                                                 new_connector_names.connectors_having_edid);
+      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s",
+               join_string_g_ptr_array_t(connectors_having_edid_removed, ", ") );
+      bool detected_displays_removed = connectors_having_edid_removed->len > 0;
+      g_ptr_array_free(connectors_having_edid_removed, true);
+
+      Sysfs_Connector_Names stabilized_names = stabilized_connector_names(new_connector_names, detected_displays_removed);
       if (IS_DBGTRC(debug, DDCA_TRC_NONE))  {
          DBGTRC(true, DDCA_TRC_NONE, "stabilized_names:");
          dbgrpt_sysfs_connector_names(stabilized_names, 2);
@@ -552,11 +576,7 @@ Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_na
    }
 
    free_sysfs_connector_names_contents(prev_connector_names);
-#ifdef OLD
-   DBGTRC_DONE(debug, TRACE_GROUP, "Returning:");
-   if (IS_DBGTRC(debug, TRACE_GROUP))
-      dbgrpt_sysfs_connector_names(new_connector_names, 2);
-#endif
+
    DBGTRC_RET_STRUCT_VALUE(debug, TRACE_GROUP, Sysfs_Drm_Connector_Names,
                                   dbgrpt_sysfs_connector_names, new_connector_names);
    return new_connector_names;
@@ -630,7 +650,7 @@ void ddc_emit_sleep_change_event(const char * connector_name, bool asleep) {
        }
     }
 
-    SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d sleep event callbacks, Display_Ref=%s, connector=%s, alseep=%s",
+    SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d sleep event callbacks, Display_Ref=%s, connector=%s, asleep=%s",
           callback_ct, dref_repr_t(dref), connector_name, SBOOL(asleep));
     DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
 }
