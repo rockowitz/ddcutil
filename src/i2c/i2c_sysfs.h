@@ -173,7 +173,6 @@ Sys_Drm_Connector * find_sys_drm_connector_by_connector_name(const char * name);
 bool   is_drm_display_by_busno(int busno);
 
 
-
 typedef struct {
    GPtrArray * all_connectors;
    GPtrArray * connectors_having_edid;
