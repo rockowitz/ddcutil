@@ -357,16 +357,20 @@ void ddc_hotplug_change_handler(
         GPtrArray *          connectors_having_edid_added)
 {
    bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "");
+   DBGTRC_STARTING(true, TRACE_GROUP, "");
 
    if (connectors_removed && connectors_removed->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_removed, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_removed: %s", s );
       SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors detached: %s", s);
       for (int ndx = 0; ndx < connectors_removed->len; ndx++) {
-         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, g_ptr_array_index(connectors_removed, ndx));
+         char * connector_name = g_ptr_array_index(connectors_removed, ndx);
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
-            // emit error msgs
+            char buf[80];
+            g_snprintf(buf, 80, "Sys_Drm_Connector not found for connector %s", connector_name);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
          }
          else {
             DDCA_IO_Path path;
@@ -382,9 +386,13 @@ void ddc_hotplug_change_handler(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM connectors attached: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors added: %s", s);
       for (int ndx = 0; ndx < connectors_added->len; ndx++) {
-         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, g_ptr_array_index(connectors_added, ndx));
+         char * connector_name = g_ptr_array_index(connectors_added, ndx);
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
          if (!conn) {
-            // emit error msgs
+            char buf[100];
+            g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
          }
          else {
             DDCA_IO_Path path;
@@ -400,11 +408,14 @@ void ddc_hotplug_change_handler(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays disconnected: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_removed->len; ndx++) {
+         char * connector_name = g_ptr_array_index(connectors_having_edid_removed, ndx);
          Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
-                                  g_ptr_array_index(connectors_having_edid_removed, ndx),
-                                  /* include_invalid */ false);
+                                             connector_name, /* include_invalid */ false);
          if (!dref) {
-            // emit error msgs
+            char buf[100];
+            g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
          }
          else {
             ddc_emit_display_detection_event(DDCA_EVENT_DISCONNECTED, dref, dref->io_path);
@@ -417,11 +428,14 @@ void ddc_hotplug_change_handler(
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays connected: %s", s);
       for (int ndx = 0; ndx < connectors_having_edid_added->len; ndx++) {
+         char * connector_name = g_ptr_array_index(connectors_having_edid_added, ndx);
          Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
-                                g_ptr_array_index(connectors_having_edid_added, ndx),
-                                /* include_invalid */ false);
+                                  connector_name, /* include_invalid */ false);
          if (!dref) {
-            // emit error msgs
+            char buf[100];
+            g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
+            DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
+            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
          }
          else {
             ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
@@ -443,7 +457,7 @@ void ddc_hotplug_change_handler(
 Sysfs_Connector_Names
 stabilized_connector_names(Sysfs_Connector_Names prior,
                            bool                  some_displays_disconnected) {
-   bool debug = false;
+   bool debug = true;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE,"prior:");
       dbgrpt_sysfs_connector_names(prior, 2);
@@ -495,7 +509,7 @@ stabilized_connector_names(Sysfs_Connector_Names prior,
  */
 //static
 Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_names) {
-   bool debug = false;
+   bool debug = true;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE, "prev_connector_names:");
       dbgrpt_sysfs_connector_names(prev_connector_names, 2);
