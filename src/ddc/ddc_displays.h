@@ -33,7 +33,7 @@ bool         ddc_initial_checks_by_dref(Display_Ref * dref);
 
 // Get Display Information
 void         ddc_add_display_ref(Display_Ref * dref);
-GPtrArray *  ddc_get_all_displays();  // returns GPtrArray of Display_Ref instances, including invalid displays
+GPtrArray *  ddc_get_all_display_refs();  // returns GPtrArray of Display_Ref instances, including invalid displays
 GPtrArray *  ddc_get_filtered_displays(bool include_invalid_displays);
 GPtrArray *  ddc_get_bus_open_errors();
 int          ddc_get_display_count(bool include_invalid_displays);
@@ -55,17 +55,19 @@ DDCA_Status  ddc_validate_display_ref(Display_Ref * dref);
 bool         ddc_add_display_by_businfo(I2C_Bus_Info * businfo);
 Display_Ref* ddc_get_dref_by_busno(int busno);
 bool         ddc_remove_display_by_businfo(I2C_Bus_Info * businfo);
-DDCA_Status  ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
-DDCA_Status  ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func);
+DDCA_Status  ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func);
+DDCA_Status  ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func);
 void         ddc_emit_display_detection_event(DDCA_Display_Event_Type event_type,
                                               Display_Ref*            dref,
                                               DDCA_IO_Path            io_path);
 const char*  ddc_display_event_type_name(DDCA_Display_Event_Type event_type);
 
+#ifdef OLD
 // Report Hotplug Event (alternative, simpler)
 DDCA_Status  ddc_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 DDCA_Status  ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
 void         ddc_emit_display_hotplug_event();
+#endif
 
 // Initialization and termination
 void         init_ddc_displays();
