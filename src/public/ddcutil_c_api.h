@@ -1724,17 +1724,17 @@ ddca_set_profile_related_values(
 //
 
 /** Registers a function to be called called when a change in display status is
- *  detected.
+ *  detected. It is not an error if the function is already registered.
  *
- *  @param[in] func   function of type #DDCA_Display_Hotplug_Callback_Func
- *  @retval    DDCRC_OK
+ *  @param[in] func   function of type #DDCA_Display_Detection_Callback_Func()
+ *  @return    DDCRC_OK
  *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                     or not all video devices support DRM
  *
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
 
 /** Removes a function from the list of registered callbacks
  *
@@ -1747,36 +1747,22 @@ ddca_register_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
  *  @since 2.0.2
  */
 DDCA_Status
-ddca_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callback_Func func);
+ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
 
 
-
-/** Registers a function to be called called when a change in DPMS sleep status is
- *  detected.
+/** Returns the name of a #DDCA_Display_Event_Type
  *
- *  @param[in] func   function of type #DDCA_Display_Sleep_Event_Callback_Func
- *  @retval    DDCRC_OK
- *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
- *                                     or not all video devices support DRM
+ *  @param  event_type  event type id
+ *  @return             printable event type name
  *
- *  @since 2.0.2
- */
-DDCA_Status
-ddca_register_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func);
-
-/** Removes a function from the list of registered sleep event callbacks
- *
- *  @param[in] func            function that has already been registered
- *  @retval    DDCRC_OK        function removed from list
- *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
- *                                     or not all video devices support DRM
- *  @retval    DDCRC_NOT_FOUND function not registered
+ *  @remark
+ *  The value returned exists in an internal ddcutil table.
+ *  Caller should not free.
  *
  *  @since 2.0.2
  */
-DDCA_Status
-ddca_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func);
-
+const char *
+   ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
 
 
 
