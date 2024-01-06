@@ -62,43 +62,5 @@ typedef struct {
 // uses -1,-1 for unset
 
 
-// for detailed display change handling
-// from ddcutil_types.h
-
-typedef enum {
-   DDCA_EVENT_CONNECTED    = 1,
-   DDCA_EVENT_DISCONNETED  = 2,
-   DDCA_EVENT_DPMS_AWAKE   = 4,
-   DDCA_EVENT_DPMS_ASLEEP  = 8,
-   DDCA_EVENT_BUS_ATTACHED = 16,
-   DDCA_EVENT_BUS_DETACHED = 32,
-} DDCA_Display_Event_Type;
-
-
-typedef struct {
-   DDCA_Display_Ref *      dref;
-   DDCA_Display_Event_Type event_type;
-   DDCA_IO_Path            io_path;
-   void *                  unused[3];
-} DDCA_Display_Detection_Event;
-
-
-/** Signature of a function to be invoked by the shared library notifying the
- *  client that a change in connected displays has been detected.
- *
- *  The client program should call #ddca_resdetect_displays() and then
- *  #ddca_get_display_refs() to get the currently valid display references.
- *
- *  Note, the DDCA_Display_Detection_Event is passed on the stack, not allocated
- *  on the heap. Callback invocation is extremely infrequent, the struct size is
- *  small, and passing the event on the stack relieves clients of responsibility
- *  for memory management.
- */
-typedef
-void (*DDCA_Display_Detection_Callback_Func)(DDCA_Display_Detection_Event event);
-
-
-
-
 
 #endif /* DDCUTIL_TYPES_INTERNAL_H_ */
