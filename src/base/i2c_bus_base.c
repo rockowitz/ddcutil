@@ -188,7 +188,7 @@ void i2c_dbgrpt_bus_info(I2C_Bus_Info * businfo, int depth) {
       rpt_vstring(depth, "Address 0x50 present:    %s", sbool(businfo->flags & I2C_BUS_ADDR_0X50));
       rpt_vstring(depth, "Device busy:             %s", sbool(businfo->flags & I2C_BUS_BUSY));
 #endif
-      rpt_vstring(depth, "errno for open:          %d", businfo->open_errno);
+      rpt_vstring(depth, "errno for open:          %s", psc_desc(businfo->open_errno));
 
       rpt_vstring(depth, "Connector name checked:  %s", sbool(businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED));
       if (businfo->flags & I2C_BUS_DRM_CONNECTOR_CHECKED) {
