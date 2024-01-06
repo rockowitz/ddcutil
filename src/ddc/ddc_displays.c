@@ -1761,8 +1761,8 @@ void ddc_emit_display_detection_event(
    // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
 
-   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, %s, busno=%d",
-         dref_repr_t(dref), ddc_display_event_type_name(event_type), io_path.path.i2c_busno);
+   SYSLOG2(DDCA_SYSLOG_NOTICE, "DDCA_Display_Detection_Event(%s, dref=%s, busno=%d",
+         ddc_display_event_type_name(event_type), dref_repr_t(dref), io_path.path.i2c_busno);
 
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
