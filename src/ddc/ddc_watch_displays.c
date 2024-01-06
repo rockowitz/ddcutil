@@ -157,7 +157,7 @@ void ddc_recheck_bus() {
          DDCA_IO_Path iopath;
          iopath.io_mode = DDCA_IO_I2C;
          iopath.path.i2c_busno = busno;
-         ddc_emit_display_detection_event(DDCA_EVENT_BUS_DETACHED, NULL, iopath);
+         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_DETACHED, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -182,7 +182,7 @@ void ddc_recheck_bus() {
          if (IS_DBGTRC(debug, DDCA_TRC_NONE))
             i2c_dbgrpt_bus_info(new_businfo, 1);
          DBGTRC(true, DDCA_TRC_NONE, "Emitting DDCA_EVENT_BUS_ATTACHED for bus /dev/i2c-%d", iopath.path.i2c_busno);
-         ddc_emit_display_detection_event(DDCA_EVENT_BUS_ATTACHED, NULL, iopath);
+         ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ATTACHED, NULL, iopath);
       }
       bs256_iter_free(iter);
       changed = true;
@@ -302,7 +302,7 @@ gpointer ddc_watch_displays_using_poll(gpointer data) {
    return NULL;    // satisfy compiler check that value returned
 }
 
-
+#ifdef OLD
 //
 // Variant Watch_Displays_Simple_Udev
 //
@@ -355,7 +355,10 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
    DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
    return ddcrc;
 }
+#endif
 
+
+#ifdef WHERE_DOES_THIS_GO
 // When a display is disconnected and then reconnected, a udev event for
 // the disconnection is not received until immediately before the connection
 // event.  Address this situation by treating this "double tap" as a single
@@ -365,7 +368,6 @@ DDCA_Status ddc_unregister_display_hotplug_callback(DDCA_Display_Hotplug_Callbac
 
 static uint64_t last_emit_millisec = 0;
 static uint64_t double_tap_millisec = 5000;
-
 
 void ddc_emit_display_hotplug_event() {
    bool debug = false;
@@ -401,6 +403,7 @@ void ddc_emit_display_hotplug_event() {
 
    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
 }
+#endif
 
 
 void ddc_hotplug_change_handler(
@@ -411,36 +414,77 @@ void ddc_hotplug_change_handler(
 {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
-   bool emit = false;
+
    if (connectors_removed && connectors_removed->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_removed, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_removed: %s", s );
       SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors detached: %s", s);
-      emit = true;
+      for (int ndx = 0; ndx < connectors_removed->len; ndx++) {
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, g_ptr_array_index(connectors_removed, ndx));
+         if (!conn) {
+            // emit error msgs
+         }
+         else {
+            DDCA_IO_Path path;
+            path.io_mode = DDCA_IO_I2C;
+            path.path.i2c_busno = conn->i2c_busno;
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_DETACHED, NULL, path);
+         }
+      }
    }
+
    if (connectors_added && connectors_added->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_added, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "DRM connectors attached: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "DRM connectors added: %s", s);
-      emit = true;
+      for (int ndx = 0; ndx < connectors_added->len; ndx++) {
+         Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, g_ptr_array_index(connectors_added, ndx));
+         if (!conn) {
+            // emit error msgs
+         }
+         else {
+            DDCA_IO_Path path;
+            path.io_mode = DDCA_IO_I2C;
+            path.path.i2c_busno = conn->i2c_busno;
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTOR_ATTACHED, NULL, path);
+         }
+      }
    }
+
    if (connectors_having_edid_removed && connectors_having_edid_removed->len > 0) {
       char * s =  join_string_g_ptr_array_t(connectors_having_edid_removed, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_removed: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays disconnected: %s", s);
-      emit = true;
+      for (int ndx = 0; ndx < connectors_having_edid_removed->len; ndx++) {
+         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
+                                  g_ptr_array_index(connectors_having_edid_removed, ndx),
+                                  /* include_invalid */ false);
+         if (!dref) {
+            // emit error msgs
+         }
+         else {
+            ddc_emit_display_detection_event(DDCA_EVENT_DISCONNECTED, dref, dref->io_path);
+         }
+      }
    }
+
    if (connectors_having_edid_added && connectors_having_edid_added->len > 0) {
       char * s = join_string_g_ptr_array_t(connectors_having_edid_added, ", ");
       DBGTRC_NOPREFIX(debug, TRACE_GROUP, "connectors_having_edid_added: %s", s);
       SYSLOG2(DDCA_SYSLOG_NOTICE, "Displays connected: %s", s);
-      emit = true;
+      for (int ndx = 0; ndx < connectors_having_edid_added->len; ndx++) {
+         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
+                                g_ptr_array_index(connectors_having_edid_added, ndx),
+                                /* include_invalid */ false);
+         if (!dref) {
+            // emit error msgs
+         }
+         else {
+            ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
+         }
+      }
    }
 
-   if (emit) {
-      DBGTRC_NOPREFIX(debug, TRACE_GROUP, "Calling ddc_emit_hotplug_event():");
-      ddc_emit_display_hotplug_event();
-   }
    DBGTRC_DONE(debug, TRACE_GROUP, "");
 }
 
@@ -452,7 +496,9 @@ void ddc_hotplug_change_handler(
  *  @param some_displays_disconnected
  *  @return stabilized value
  */
-Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior, bool some_displays_disconnected) {
+Sysfs_Connector_Names
+stabilized_connector_names(Sysfs_Connector_Names prior,
+                           bool                  some_displays_disconnected) {
    bool debug = false;
    if (IS_DBGTRC(debug, DDCA_TRC_NONE)) {
       DBGTRC_STARTING(true, DDCA_TRC_NONE,"prior:");
@@ -465,7 +511,8 @@ Sysfs_Connector_Names stabilized_connector_names(Sysfs_Connector_Names prior, bo
    // in this case.
    if (some_displays_disconnected) {
       if (extra_stabilize_seconds > 0) {
-         char * s = g_strdup_printf("Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
+         char * s = g_strdup_printf(
+               "Delaying %d seconds to avoid a false disconnect/connect sequence...", extra_stabilize_seconds);
          DBGTRC(true, TRACE_GROUP, "%s", s);
          SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
          free(s);
@@ -584,79 +631,6 @@ Sysfs_Connector_Names ddc_check_displays(Sysfs_Connector_Names prev_connector_na
 }
 
 
-
-GPtrArray* display_sleep_change_callbacks = NULL;
-
-
-/** Registers a display sleep_change event callback
- *
- *  @param func function to register
- *
- *  The function must be of type #DDCA_Display_sleep_change_Callback_Func.
- *  It is not an error if the function is already registered.
- */
-DDCA_Status ddc_register_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-
-   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
-   ddcrc = i2c_all_video_devices_drm() &&
-            generic_register_callback(&display_sleep_change_callbacks, func);
-#endif
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-/** Unregisters a display sleep_change callback function
- *
- *  @param  function to deregister
- *  @retval DDCRC_OK normal return
- *  @retval DDCRC_NOT_FOUND
- */
-DDCA_Status ddc_unregister_display_sleep_event_callback(DDCA_Display_Sleep_Event_Callback_Func func) {
-   bool debug = false;
-   DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
-
-   DDCA_Status ddcrc = DDCRC_INVALID_OPERATION;
-#ifdef ENABLE_UDEV
-   if (i2c_all_video_devices_drm() ) {
-       ddcrc = generic_unregister_callback(display_sleep_change_callbacks, func);
-   }
-#endif
-
-   DBGTRC_RET_DDCRC(debug, TRACE_GROUP, ddcrc, "");
-   return ddcrc;
-}
-
-
-void ddc_emit_sleep_change_event(const char * connector_name, bool asleep) {
-   bool debug = false;
-   Display_Ref * dref = ddc_get_display_ref_by_drm_connector(connector_name, /*include_invalid*/ false);
-   DBGTRC_STARTING(debug, TRACE_GROUP, "display_ref=%s, connector=%s, asleep=%s",
-         dref_repr_t(dref), connector_name, sbool(asleep));
-
-    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Calling registered callback functions");
-    // SYSLOG2(DDCA_SYSLOG_NOTICE, "Calling registered callback functions");
-
-    int callback_ct = 0;
-    if (display_sleep_change_callbacks) {
-       callback_ct =  display_sleep_change_callbacks->len;
-       for (int ndx = 0; ndx < display_sleep_change_callbacks->len; ndx++)  {
-          DDCA_Display_Sleep_Event_Callback_Func func = g_ptr_array_index(display_sleep_change_callbacks, ndx);
-          DDCA_Display_Sleep_Event event = {dref, asleep};
-          func(event);
-       }
-    }
-
-    SYSLOG2(DDCA_SYSLOG_NOTICE, "Executed %d sleep event callbacks, Display_Ref=%s, connector=%s, asleep=%s",
-          callback_ct, dref_repr_t(dref), connector_name, SBOOL(asleep));
-    DBGTRC_DONE(debug, TRACE_GROUP, "Executed %d callbacks", callback_ct);
-}
-
-
 void  ddc_check_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connectors) {
    bool debug = false;
    DBGTRC_STARTING(debug, DDCA_TRC_NONE, "active_connectors =%s",
@@ -702,7 +676,16 @@ void  ddc_check_asleep(GPtrArray * active_connectors,  GPtrArray * sleepy_connec
             connector, sbool (last_checked_dpms_asleep), sbool(is_dpms_asleep));
 
       if (is_dpms_asleep != last_checked_dpms_asleep) {
-         ddc_emit_sleep_change_event(connector, is_dpms_asleep);
+         Display_Ref * dref = ddc_get_display_ref_by_drm_connector(connector, /* include_invalid */ false);
+         if (!dref) {
+            // emit error msgs
+         }
+         else {
+            ddc_emit_display_detection_event(
+                  (is_dpms_asleep) ? DDCA_EVENT_DPMS_ASLEEP : DDCA_EVENT_DPMS_AWAKE,
+                  dref,
+                  dref->io_path);
+         }
          if (is_dpms_asleep) {
             DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Adding %s to sleepy_connectors", connector);
             g_ptr_array_add(sleepy_connectors, g_strdup(connector));
@@ -954,10 +937,6 @@ void init_ddc_watch_displays() {
    RTTI_ADD_FUNC(ddc_stop_watch_displays);
    RTTI_ADD_FUNC(ddc_recheck_bus);
    RTTI_ADD_FUNC(ddc_watch_displays_using_poll);
-   RTTI_ADD_FUNC(ddc_register_display_hotplug_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_hotplug_callback);
-   RTTI_ADD_FUNC(ddc_emit_display_hotplug_event);
-   RTTI_ADD_FUNC(ddc_emit_sleep_change_event);
 #ifdef ENABLE_UDEV
    RTTI_ADD_FUNC(ddc_check_asleep);
    RTTI_ADD_FUNC(stabilized_connector_names);
