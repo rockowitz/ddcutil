@@ -223,7 +223,7 @@ ddca_init(const char *      libopts,
  * The caller is responsible for freeing the null terminated list of
  * messages returned in infomsg_loc.
  *
- * @since 2.0.2
+ * @since 2.1.0
  */
 DDCA_Status
 ddca_init2(const char *     libopts,
@@ -238,7 +238,7 @@ ddca_init2(const char *     libopts,
  *
  *  @retval DDCRC_OK
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 DDCA_Status
 ddca_start_watch_displays();
@@ -255,7 +255,7 @@ ddca_start_watch_displays();
  *  by the client, there's no need to wait for the watch thread
  *  the actually finish.
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 DDCA_Status
 ddca_stop_watch_displays(bool wait);
@@ -358,7 +358,7 @@ ddca_get_current_display_sleep_multiplier(
  *  @param  onoff
  *  @return previous setting
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 bool
 ddca_enable_dynamic_sleep(bool onoff);
@@ -368,7 +368,7 @@ ddca_enable_dynamic_sleep(bool onoff);
  *
  *  @return current setting
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 bool
 ddca_is_dynamic_sleep_enabled();
@@ -794,7 +794,7 @@ ddca_get_display_ref(
  *  @retval DDCRC_DISCONNECTED monitor has been disconnected
  *  @return validation failures, invalid state
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 DDCA_Status
 ddca_dref_state(DDCA_Display_Ref dref);
@@ -1731,7 +1731,7 @@ ddca_set_profile_related_values(
  *  @retval    DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                     or not all video devices support DRM
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 DDCA_Status
 ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
@@ -1744,7 +1744,7 @@ ddca_register_display_status_callback(DDCA_Display_Status_Callback_Func func);
  *                                     or not all video devices support DRM
  *  @retval    DDCRC_NOT_FOUND function not registered
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 DDCA_Status
 ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
@@ -1759,7 +1759,7 @@ ddca_unregister_display_status_callback(DDCA_Display_Status_Callback_Func func);
  *  The value returned exists in an internal ddcutil table.
  *  Caller should not free.
  *
- *  @since 2.0.2
+ *  @since 2.1.0
  */
 const char *
    ddca_display_event_type_name(DDCA_Display_Event_Type event_type);
