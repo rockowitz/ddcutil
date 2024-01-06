@@ -776,7 +776,7 @@ ddc_non_async_scan(GPtrArray * all_displays) {
  *  @return **GPtrArray of #Display_Ref instances
  */
 GPtrArray *
-ddc_get_all_displays() {
+ddc_get_all_display_refs() {
    // ddc_ensure_displays_detected();
    TRACED_ASSERT(all_display_refs);
    return all_display_refs;
@@ -1678,7 +1678,7 @@ GPtrArray* display_detection_callbacks = NULL;
  *  The function must be of type DDDCA_Display_Detection_Callback_Func.
  *  It is not an error if the function is already registered.
  */
-DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -1704,7 +1704,7 @@ DDCA_Status ddc_register_display_detection_callback(DDCA_Display_Detection_Callb
  *  @retval DDCRC_INVALID_OPERATION ddcutil not built with UDEV support,
  *                                  or not all video devices support DRM
  */
-DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Detection_Callback_Func func) {
+DDCA_Status ddc_unregister_display_detection_callback(DDCA_Display_Status_Callback_Func func) {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "func=%p", func);
 
@@ -1744,10 +1744,12 @@ void ddc_emit_display_detection_event(
             event_type, ddc_display_event_type_name(event_type));
    }
 
-   DDCA_Display_Detection_Event report;
+   DDCA_Display_Status_Event report;
    report.dref = (void*) dref;
    report.event_type = event_type;
    report.io_path = (dref) ? dref->io_path : io_path;
+   report.unused[0] = 0;
+   report.unused[1] = 0;
 
    // dbgrpt_display_ref((Display_Ref*) evt.dref, 4);
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "DREF_REMOVED = %s", sbool(dref->flags&DREF_REMOVED));
@@ -1757,7 +1759,7 @@ void ddc_emit_display_detection_event(
 
    if (display_detection_callbacks) {
       for (int ndx = 0; ndx < display_detection_callbacks->len; ndx++)  {
-         DDCA_Display_Detection_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
+         DDCA_Display_Status_Callback_Func func = g_ptr_array_index(display_detection_callbacks, ndx);
          func(report);
          free(func);
       }
@@ -1772,11 +1774,11 @@ const char * ddc_display_event_type_name(DDCA_Display_Event_Type event_type) {
    char * result = NULL;
    switch(event_type) {
    case DDCA_EVENT_CONNECTED:    result = "DDCA_EVENT_CONNECTED";      break;
-   case DDCA_EVENT_DISCONNETED:  result = "DDCA_EVENT_DISCONNECTED";   break;
+   case DDCA_EVENT_DISCONNECTED: result = "DDCA_EVENT_DISCONNECTED";   break;
    case DDCA_EVENT_DPMS_AWAKE:   result = "DDCA_EVENT_DPMS_AWAKE";     break;
    case DDCA_EVENT_DPMS_ASLEEP:  result = "DDCA_EVENT_DPMS_ASLEEP";    break;
-   case DDCA_EVENT_BUS_ATTACHED: result = "DDCA_EVENT_BUS_ATTACHED";   break;
-   case DDCA_EVENT_BUS_DETACHED: result = "DDCA_EVENT_BUS_DETACHED";   break;
+   case DDCA_EVENT_CONNECTOR_ATTACHED: result = "DDCA_EVENT_BUS_ATTACHED";   break;
+   case DDCA_EVENT_CONNECTOR_DETACHED: result = "DDCA_EVENT_BUS_DETACHED";   break;
    }
    return result;
 }
@@ -1894,7 +1896,7 @@ bool ddc_remove_display_by_businfo(I2C_Bus_Info * businfo) {
    if (dref) {
       found = true;
       dref->flags |= DREF_REMOVED;
-      ddc_emit_display_detection_event(DDCA_EVENT_DISCONNETED, dref, dref->io_path);
+      ddc_emit_display_detection_event(DDCA_EVENT_DISCONNECTED, dref, dref->io_path);
    }
 
    DBGTRC_RET_BOOL(debug, TRACE_GROUP, found, "");
@@ -1949,7 +1951,7 @@ void check_drefs_alive() {
    bool debug = false;
    DBGTRC_STARTING(debug, TRACE_GROUP, "");
    if (ddc_displays_already_detected()) {
-      GPtrArray * all_displays = ddc_get_all_displays();
+      GPtrArray * all_displays = ddc_get_all_display_refs();
       for (int ndx = 0; ndx < all_displays->len; ndx++) {
          Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
          bool alive = is_dref_alive(dref);
@@ -1974,7 +1976,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_detect_all_displays);
    RTTI_ADD_FUNC(ddc_discard_detected_displays);
    RTTI_ADD_FUNC(ddc_displays_already_detected);
-   RTTI_ADD_FUNC(ddc_get_all_displays);
+   RTTI_ADD_FUNC(ddc_get_all_display_refs);
    RTTI_ADD_FUNC(ddc_get_display_ref_by_drm_connector);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dh);
    RTTI_ADD_FUNC(ddc_initial_checks_by_dref);
@@ -1989,10 +1991,6 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_validate_display_ref);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno);
-
-   RTTI_ADD_FUNC(ddc_register_display_detection_callback);
-   RTTI_ADD_FUNC(ddc_unregister_display_detection_callback);
-   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
 }
 
 
