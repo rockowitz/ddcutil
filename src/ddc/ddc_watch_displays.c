@@ -432,10 +432,27 @@ void ddc_hotplug_change_handler(
          Display_Ref * dref = ddc_get_display_ref_by_drm_connector(
                                   connector_name, /* include_invalid */ false);
          if (!dref) {
+            // Expected since display changes detected do not presently modify
+            // the list of display refs.
             char buf[100];
             g_snprintf(buf, 100, "dref not found for connector %s", connector_name);
             DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
-            SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            SYSLOG2(DDCA_SYSLOG_NOTICE, "%s", s);
+
+            // As there's no dref, report the io path for the display
+            Sys_Drm_Connector * conn = find_sys_drm_connector(-1, NULL, connector_name);
+            if (!conn) {
+               char buf[100];
+               g_snprintf(buf, 100, "Sys_Drm_Connector not found for connector %s", connector_name);
+               DBGTRC_NOPREFIX(true, DDCA_TRC_NONE,"%s", s);
+               SYSLOG2(DDCA_SYSLOG_ERROR, "%s", s);
+            }
+            else {
+               DDCA_IO_Path path;
+               path.io_mode = DDCA_IO_I2C;
+               path.path.i2c_busno = conn->i2c_busno;
+               ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, NULL, path);
+            }
          }
          else {
             ddc_emit_display_detection_event(DDCA_EVENT_CONNECTED, dref, dref->io_path);
