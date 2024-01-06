@@ -1734,9 +1734,15 @@ void ddc_emit_display_detection_event(
 {
    bool debug = false;
    if (dref) {
+#ifdef OLD
       DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, DREF_REMOVED=%s, event_type=%d=%s",
             dref, dref_repr_t(dref), SBOOL(dref->flags&DREF_REMOVED),
             event_type, ddc_display_event_type_name(event_type));
+#endif
+      DBGTRC_STARTING(debug, TRACE_GROUP, "dref=%p->%s, event_type=%d=%s",
+            dref, dref_repr_t(dref),
+            event_type, ddc_display_event_type_name(event_type));
+
    }
    else {
       DBGTRC_STARTING(debug, TRACE_GROUP, "io_path=%s, event_type=%d=%s",
@@ -1991,6 +1997,7 @@ void init_ddc_displays() {
    RTTI_ADD_FUNC(ddc_validate_display_ref);
    RTTI_ADD_FUNC(ddc_remove_display_by_businfo);
    RTTI_ADD_FUNC(ddc_get_dref_by_busno);
+   RTTI_ADD_FUNC(ddc_emit_display_detection_event);
 }
 
 
