@@ -98,7 +98,7 @@ void app_interrogate(Parsed_Cmd * parsed_cmd)
 #ifdef TSD
    tsd_dsa_enable_globally(parsed_cmd->flags & CMD_FLAG_DSA);   // should this apply to INTERROGATE?
 #endif
-   GPtrArray * all_displays = ddc_get_all_displays();
+   GPtrArray * all_displays = ddc_get_all_display_refs();
    for (int ndx=0; ndx < all_displays->len; ndx++) {
       Display_Ref * dref = g_ptr_array_index(all_displays, ndx);
       assert( memcmp(dref->marker, DISPLAY_REF_MARKER, 4) == 0);

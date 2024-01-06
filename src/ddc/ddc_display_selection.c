@@ -165,7 +165,7 @@ bye:
 static Display_Ref *
 ddc_find_display_ref_by_criteria(Display_Criteria * criteria) {
    Display_Ref * result = NULL;
-   GPtrArray * all_displays = ddc_get_all_displays();
+   GPtrArray * all_displays = ddc_get_all_display_refs();
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
       Display_Ref * drec = g_ptr_array_index(all_displays, ndx);
       TRACED_ASSERT(memcmp(drec->marker, DISPLAY_REF_MARKER, 4) == 0);

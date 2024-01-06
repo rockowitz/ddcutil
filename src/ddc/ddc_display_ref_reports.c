@@ -587,7 +587,7 @@ ddc_report_displays(bool include_invalid_displays, int depth) {
    ddc_ensure_displays_detected();
 
    int display_ct = 0;
-   GPtrArray * all_displays = ddc_get_all_displays();
+   GPtrArray * all_displays = ddc_get_all_display_refs();
    GPtrArray * edid_use_records = create_edid_use_table();
    // DBGTRC_NOPREFIX(debug, DDCA_TRC_NONE, "Created edid_use_records = %p", edid_use_records);
    for (int ndx=0; ndx<all_displays->len; ndx++) {

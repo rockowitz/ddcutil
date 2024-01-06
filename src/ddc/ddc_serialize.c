@@ -411,7 +411,7 @@ char * ddc_serialize_displays_and_buses() {
    json_t* root = json_object();
    json_object_set_new(root, "version", json_integer(1));
 
-   GPtrArray* all_displays = ddc_get_all_displays();
+   GPtrArray* all_displays = ddc_get_all_display_refs();
    json_t* jdisplays = json_array();
 
    for (int ndx = 0; ndx < all_displays->len; ndx++) {
