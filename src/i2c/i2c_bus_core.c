@@ -749,7 +749,7 @@ void i2c_check_bus(I2C_Bus_Info * bus_info) {
          }
       }
 
-      bus_info->last_checked_dpms_asleep = dpms_check_drm_asleep(bus_info);
+      bus_info->last_checked_dpms_asleep = dpms_check_drm_asleep_by_businfo(bus_info);
    }   // probing complete
 
    if ( IS_DBGTRC(debug, TRACE_GROUP)) {
